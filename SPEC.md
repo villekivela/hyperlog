@@ -194,9 +194,14 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      +15 s / skip; it vibrates when rest ends with the screen off.
    - **Every tap is saved immediately**; a session survives back gestures, app kills and reboots.
      Logged sets stay editable during and after the session; editing one never resets the timer.
-   - **Prefills** follow what just happened (a changed weight carries to the next sets; drop reps
-     prefill from last time). Weights that don't exist on the equipment's ladder are flagged, not
-     silently accepted.
+   - **Prefills** follow what just happened (each set takes the previous set's weight and reps; drop
+     reps prefill from last time's drops).
+   - **Weight check**: a weight 1.5× or more (or half or less) of the reference, or not on the
+     equipment's ladder, is shown with the reason ("10× last set") and three real weights to pick;
+     the first ✓ doesn't log it, a second ✓ keeps it.
+   - **Corrections**: tapping any logged set, drop or mini-set loads it into the pad; ✓ saves, the
+     hide key cancels. Finished exercises reopen from the session list and from "Session done".
+     Back cancels a correction, then asks before leaving the session.
    - Drops and myo mini-sets record no RIR; they are taken to failure.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
    repeat week, deload week, shift the remaining plan by N weeks.

@@ -1,7 +1,7 @@
 # Logging screen: design note
 
 The in-workout screen where sets are logged. The prototype in `prototype/` implements this note
-(round 4). Screenshots from the phone are in `screens/`.
+(round 4 with the fixes from `test-report.md`). Screenshots from the phone are in `screens/`.
 
 ## Principles
 
@@ -10,7 +10,8 @@ The in-workout screen where sets are logged. The prototype in `prototype/` imple
 2. **Every decision for a set is on the pad.** Digits, one-rung/one-rep steps, RIR, full/partial,
    ✓. The thumb never has to reach up the screen to log.
 3. **Planned things look planned, done things look done.** Prefilled values are muted, logged
-   values are full contrast. An RIR ring is a target and a filled RIR dot is a result.
+   values are full contrast. An RIR ring is a target and a filled RIR dot is a result. Anything
+   logged can be tapped and corrected.
 4. **A technique is visible before it starts.** The technique is named under its set, and its
    drops or mini-sets appear as planned sub-rows with their weights.
 5. **One clock, shown only when there is something to wait for.** No rest before drops, myo
@@ -58,6 +59,7 @@ Colour comes from the dynamic theme, light and dark:
 | Keys | surfaceContainerHighest |
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Prefilled values | outline |
+| Weight warning | error (cell outline and value, strip text and `warning` symbol) |
 | Last time | onSurfaceVariant |
 | Technique label and symbols | tertiary; onSurfaceVariant once done |
 | Timer pill | secondaryContainer, drained with primary at 24% |
@@ -69,7 +71,7 @@ RIR is the one fixed scale and does not follow the theme: 0 `#D9645B`, 1–2 `#E
 
 ```
  status bar
- Superset with Seated Leg Curl                (only in a superset)
+ A1 with Seated Leg Curl  40.5 × 12 ●1        (only in a superset: partner and its last set)
  Leg Extension                    [⏱ 1:42]  ⋮   ← name opens prescription; timer opens rest sheet
        Target      Last       kg   Reps  RIR
 ┌────────────────────────────────────────────┐
@@ -102,13 +104,18 @@ and the focused one has a fill and a primary outline. The RIR column shows the s
 filled dot. A locked cell (myo mini-set weight) stays muted and can't be tapped.
 
 **Set row, done.** Values at full contrast and a filled RIR dot with the logged RIR. Partials
-read `12 + 6`.
+read `12 + 6`. Tapping it loads it into the pad for a correction.
+
+**Set row, being corrected.** Looks like the active row, but the set number is replaced by an
+`edit` symbol and the pad's hide key becomes `close` (cancel). The set to do now goes back to
+its upcoming look until the correction is saved or cancelled.
 
 **Sub-row (drop, myo mini-set).** 48 dp, with a `subdirectory_arrow_right` symbol in the set
-column. Target: a 0 ring for a drop (to failure), the rep target for a mini-set. kg shows the
-planned drop weight, computed from the set weight and rounded down to the equipment's ladder.
-It updates live while the main set's weight is being typed. A done sub-row ends in a check
-(no RIR is logged for follow-ups).
+column. Target: a 0 ring for a drop (to failure), the rep target for a mini-set. Last: last
+time's drop (`18 × 7`). kg shows the planned drop weight, computed from the set weight and
+rounded down to the equipment's ladder. It updates live while the main set's weight is being
+typed. Drop reps are prefilled from last time's drops (else 6), muted like every prefill. A done
+sub-row ends in a check (no RIR is logged for drops or mini-sets) and can be tapped to correct.
 
 **Technique label.** One 32 dp line under its set, aligned with the Target column: symbol and
 name in tertiary (`trending_down` Drop set, `repeat` Myo-reps, mini-sets of 4, `unfold_less`
@@ -119,7 +126,12 @@ was done.
 field:
 - Reps of a set: RIR 0–4+ as filled dots, then the F/P toggle.
 - Weight: five rungs of the equipment's ladder around the current value.
-- Drop or mini-set: progress ("Drop 1 of 2", "Mini-set 2") and **Finish set**.
+- Weight that looks wrong: `warning` symbol, the reason ("10× last set", "3× lighter than the
+  plan", "Not on this equipment") and three real rungs near the expected weight.
+- Drop or mini-set: progress ("Drop 1 of 2", "Mini-set 2 of 5") and **Finish set**.
+
+**Hidden pad.** The pad folds down to its bottom row's corners: keyboard (show pad) at the left
+and ✓ at the right, still over the gesture area. ✓ there logs the set as shown.
 
 Keys: digits, backspace, − and + (one ladder rung for weight, one rep for reps), hide keyboard,
 `.` (weight only) and ✓. ✓ is one key, the same size as the others, filled primary. On the weight
@@ -130,16 +142,28 @@ up (`+0:12`) in a muted container until the next set is logged. Before a myo min
 15 s breathing countdown with an `air` symbol. Tapping it during rest opens the rest sheet:
 −15, the time, +15, End rest.
 
-**Next line.** "Next" and the next exercise outside the current one (or superset). It sits above
-the pad, or above the gesture area when the pad is hidden. Tap opens the session list.
+**Superset line.** Above the name: `A1 with Seated Leg Curl`, then the partner's last logged set
+and its RIR dot, so the place in the round is clear without a second table.
+
+**Next line.** "Next" and the next exercise outside the current one (or superset); "Last
+exercise" alone when nothing follows. Tap opens the session list. While looking at a finished
+exercise it reads "Now" and the current exercise, and tap goes back.
 
 **Sheets** (modal bottom sheets, surfaceContainerLow, 24 dp margins):
-- *Session list:* status symbol (done, now, upcoming), superset tag, name, a summary line (logged
-  sets, or set count and rep range) with technique symbols, and a tonal **Start** on exercises not
-  yet done. Start makes that exercise current and ends the rest.
-- *Prescription:* name, equipment, each set (reps, RIR ring, technique), rest, why the weight was
-  suggested, the technique note, and **Technique video**.
+- *Session list:* status symbol (done, now, upcoming), superset tag, name, a summary (logged sets
+  as `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0`, drops and mini-sets after it; never broken inside a set;
+  or set count and rep range) with technique symbols. A tonal **Start** on exercises not yet
+  done, **Open** on finished ones.
+- *Prescription:* name, equipment, each set (reps, RIR ring, technique with its numbers, e.g.
+  "2 drops of 25%"), rest, why the weight was suggested, the technique note, and
+  **Technique video**.
 - *Rest:* see Timer.
+
+**Session done.** Every exercise with its summary. Tapping one opens its table to look at or
+correct; back returns to the summary.
+
+**Leave dialog.** Back on the session screen asks "Leave the session?" (Stay / Leave). In the
+real app the session is saved continuously and back simply leaves it running.
 
 ## Interaction rules
 
@@ -153,10 +177,29 @@ the pad, or above the gesture area when the pad is hidden. Tap opens the session
 | Reps of a drop or myo set | Logs the main set; rest stops; the first drop or mini-set becomes active |
 | Drop sub-row | Logs the drop; after the last planned drop the set closes and rest starts |
 | Myo mini-set | Logs the mini-set; closes the set when it misses the target or hits the maximum, else starts the next breathing countdown |
-| Nothing typed (empty drop reps) | Disabled look, does nothing |
+| Correcting a logged row | Saves the correction; the set to do now becomes active again. Rest is not touched |
+| Weight looks wrong, first time | Does not log: buzzes, focuses the weight and shows why in the strip. The key turns into ✓ |
+| Weight looks wrong, second ✓ | Logs the weight as typed (odd plates happen) |
+| Nothing typed | Disabled look, does nothing |
 
 Prefilled values are real values: ✓ without typing logs the set as planned. The first key on a
 field replaces the prefill. − / + step from the current value.
+
+**Prefills follow what just happened.** The next set takes the last logged set's weight and its
+reps (capped at the set's top of range). The first set takes the suggestion and the top of the
+range. A correction to an earlier set feeds the prefills of the sets after it. The SPEC rule of
+adjusting weight by the RIR gap is not in the prototype.
+
+**Weight check.** A typed weight is flagged when it is 1.5× or more, or half or less, of the
+reference (the last set, else the plan or planned drop), or not on the equipment's ladder.
+
+**Corrections.** Tap any logged row or sub-row: it loads into the pad. ✓ saves, × or back
+cancels. Finished exercises are reached through the session list (Open) or Session done.
+Corrections never restart or reset the rest timer.
+
+**Order.** Sets follow the session order, supersets alternating A1 → A2. An exercise started from
+the session list stays current, with its superset partner, until all of their sets are logged;
+then the session goes back to the first unfinished set.
 
 **Rest.**
 - Logging a set starts the exercise's rest (per exercise, e.g. 2:30 bench, 1:30 laterals).
@@ -166,11 +209,15 @@ field replaces the prefill. − / + step from the current value.
   full rest.
 - Rest never resets when an earlier set is changed.
 - When rest ends the phone vibrates and the timer counts up.
-- Starting another exercise from the session list ends the rest.
+- Starting another exercise from the session list keeps the clock running, so it still counts
+  from the last set.
+- Pulling rest past zero with −15 buzzes once.
+- Not in the prototype: the buzz with the screen off. The real app needs an ongoing notification
+  with the countdown and an alarm-class vibration.
 
 **Pad.**
 - The pad is visible by default, for the active row.
-- The hide-keyboard key hides it. The Next line drops to the gesture area.
+- The hide-keyboard key hides it, leaving the keyboard and ✓ keys.
 - Tapping any value in the active row brings the pad back, focused on that value.
 - F/P: F types full reps, P types partials into the same cell (`12 + 6`). While typing partials
   the full reps are muted.
