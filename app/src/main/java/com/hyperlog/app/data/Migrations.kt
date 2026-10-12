@@ -4,7 +4,20 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11)
+
+/** v11: Changes (#16). Accepted Changes are kept per program, with the position they moved. */
+object Migration10To11 : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `plan_change` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `program_id` INTEGER NOT NULL, " +
+                "`json` TEXT NOT NULL, `accepted_at` INTEGER NOT NULL, `accepted_on` INTEGER NOT NULL, `week_before` INTEGER NOT NULL, " +
+                "`day_before` INTEGER NOT NULL, `week_after` INTEGER NOT NULL, `day_after` INTEGER NOT NULL, `block_id` TEXT, " +
+                "`reverted_at` INTEGER, FOREIGN KEY(`program_id`) REFERENCES `program`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_plan_change_program_id` ON `plan_change` (`program_id`)")
+    }
+}
 
 /** v10: warm-ups (#14). A session exercise counts the warm-ups ticked off before its first work set. */
 object Migration9To10 : Migration(9, 10) {

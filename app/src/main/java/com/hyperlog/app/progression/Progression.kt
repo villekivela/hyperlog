@@ -51,6 +51,17 @@ data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: St
     }
 
     val estimated: Boolean get() = kind == Kind.Estimated
+
+    /**
+     * This suggestion moved by an accepted Change's load adjustment of [percent], to the nearest
+     * rung, saying so after the reason.
+     */
+    fun adjusted(percent: Int, ladder: WeightLadder): Suggestion {
+        val target = kg * (100 + percent) / 100.0
+        val moved = ladder.rungs[ladder.nearestIndex(target)]
+        val note = "${abs(percent)}% ${if (percent < 0) "lighter" else "heavier"} for a Change"
+        return copy(kg = moved, why = listOfNotNull(why, note).joinToString(" · "))
+    }
 }
 
 /** An e1RM and the set it comes from. */

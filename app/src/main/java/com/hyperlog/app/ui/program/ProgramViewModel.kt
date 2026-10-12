@@ -5,7 +5,10 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.coach.Change
 import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.ui.coach.ChangeReview
+import kotlinx.coroutines.flow.first
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.Programs
@@ -68,6 +71,37 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     fun closeErrors() {
         _errors.value = null
+    }
+
+    private val _review = MutableStateFlow<ChangeReview?>(null)
+
+    /** The Change waiting for accept or reject, with its diff; null when none is. */
+    val review: StateFlow<ChangeReview?> = _review.asStateFlow()
+
+    /** Shows [change]'s diff against the running program's plan, for accept or reject. */
+    fun propose(change: Change) {
+        viewModelScope.launch {
+            val active = programs.active.first() ?: return@launch
+            val diff = programs.preview(change) ?: return@launch
+            val block = active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.name
+            _review.value = ChangeReview(change, diff, active.program, block)
+        }
+    }
+
+    /** Applies the Change under review and keeps it as history. */
+    fun accept() {
+        val review = _review.value ?: return
+        _review.value = null
+        viewModelScope.launch { programs.accept(review.change) }
+    }
+
+    /** Drops the Change under review; nothing changes. */
+    fun reject() {
+        _review.value = null
+    }
+
+    fun revert(changeId: Long) {
+        viewModelScope.launch { programs.revert(changeId) }
     }
 }
 

@@ -13,14 +13,16 @@ import androidx.room.RoomDatabase
         ExerciseEntity::class, SessionEntity::class, SessionExerciseEntity::class, LoggedSetEntity::class,
         GymEntity::class, EquipmentItemEntity::class, SharedLadderEntity::class, GymExerciseItemEntity::class,
         ProgramEntity::class, StartingWeightEntity::class, SetExtensionEntity::class, SetTechniqueEntity::class,
+        PlanChangeEntity::class,
     ],
-    version = 10,
+    version = 11,
 )
 abstract class HyperlogDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao
     abstract fun exercises(): ExerciseDao
     abstract fun gyms(): GymDao
     abstract fun programs(): ProgramDao
+    abstract fun planChanges(): PlanChangeDao
     abstract fun startingWeights(): StartingWeightDao
 
     companion object {

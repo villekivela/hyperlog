@@ -290,6 +290,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      RIR or technique. Edits apply to this session only, with an optional "keep for the rest of the
      block" that saves them as a Change (the Changes ticket). The next session of the day has the
      program as written.
+     - **Keep edits for the block** (session ⋮, shown while the session has edits it can keep)
+       makes a `rest_of_block` Change, "Keep Day A edits for the rest of Build", and opens its
+       diff. It keeps swaps, removals, set counts, an RIR change every set of an exercise shares,
+       and added exercises with sets logged (their logged sets become the prescription: count,
+       rep range, lowest RIR). Reps targets, techniques and the order stay in the session.
      - **Swap** (⋮ → Swap exercise, or the session list row's ⋮) offers the slot's planned exercise
        and alternatives, then the library's exercises with the same movement pattern; a search
        covers the whole library. The swapped exercise keeps the slot (and its superset partner and
@@ -417,6 +422,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        **Resume session**, which reopens the session exactly as it was.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
    repeat week, deload week, shift the remaining plan by N weeks. Reached from Today's top bar.
+   - **The actions are Changes**, chips under the Next line while the program runs: **Skip day**
+     (`skip_day`), **Repeat week** (`repeat_week`), **Deload week** (`deload_week` for the week
+     you're in) and **Shift plan** (`shift_program`, 1–8 weeks later, picked by steps first). Each
+     opens its diff, and applies only on Accept. Accepted Changes are listed under **Changes**
+     with Revert (Coaching).
    - Each block is a heading (`Build · weeks 3–6`), each week a row of day tokens (A, B, C…): done,
      next (the one filled shape) or to come. The current week names its next day.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
@@ -430,7 +440,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      position to the day after it (the next day of the block, then the next week's first day); a
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
-   - Design: `docs/design/program-and-today.md`.
+   - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see below.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
 
@@ -532,7 +542,46 @@ diff against the current plan; you accept or reject it.
 ```
 
 Operations: `swap`, `remove`, `add`, `adjust_sets`, `adjust_load` (percent), `adjust_rir`, `skip_day`,
-`deload_week`, `shift_program`. Scope is either a date range (temporary) or `rest_of_program`.
+`deload_week`, `shift_program`, `repeat_week`. Scope is a date range (temporary), `rest_of_program`
+or `rest_of_block`.
+
+**What each one does.** The program runs as a sequence, so a Change covers sessions by the date
+they are trained on. Plan edits apply, in order, to every day trained on a date in scope;
+position operations run once, when the Change is accepted.
+
+| Operation | JSON | Effect |
+| --- | --- | --- |
+| `swap` | `slot`, `exercise` | The slot does the exercise instead (an alternative's own sets, else the slot's). The session reads "In place of …". |
+| `remove` | `slot` | The slot is left out. |
+| `add` | `day`, `exercise`, `sets` (program-file set lines: `count`, `reps`, `rir`, `rest`), `after`? | The exercise is added to that day after slot `after` (else at the end), labelled `+`. |
+| `adjust_sets` | `slot`, `sets` (1–10) | The slot does that many sets: its first ones, or its last set repeated without its technique. |
+| `adjust_load` | `slot`?, `percent` (−50…50) | Suggested weights move by the percent, to the nearest rung, on top of progression; the why-line ends "· 10% lighter for a Change". No slot: every slot. |
+| `adjust_rir` | `slot`?, `by` (−5…5) | Target RIR moves by `by` (+1 = one more in reserve), 0–10. No slot: every slot. |
+| `skip_day` | — | The next day is passed over. |
+| `deload_week` | `week`? | That program week (the one you're in when left out) is a deload: half its sets per slot (rounded up), RIR + 2, no techniques, and it never lowers the estimate. |
+| `shift_program` | `weeks` (≠ 0) | The rest of the plan starts that many weeks later: the position goes back that many weeks (to week 1 at most), so they are trained again. Negative moves it earlier, skipping weeks. |
+| `repeat_week` | — | The week of the last day trained runs again from its first day. |
+
+Every operation may carry a `reason`. Slots are named by id; a block reusing an id means the same
+place, so a `rest_of_program` edit follows the slot into later blocks, and `rest_of_block` stops at
+the end of the block the Change was accepted in. A date range covers its first and last day;
+`rest_of_…` starts the day it is accepted.
+
+- **Validation** (pasted or built) names every problem by path, like program import:
+  `operations[0].slot: unknown slot "rows"`. Slots, days and exercises must be known, values in
+  range, the summary not blank, and `to` not before `from`.
+- **The diff** shows the summary and the scope, then where the next day moves and how many days
+  are left (before → after), then the first day of each kind in the block it edits (each day
+  of each block once), slot by slot: swapped (`In place of …`), removed (struck through), added
+  (`+`), sets before → after, and a moved load. A date range looks one week of days ahead per week
+  of dates; `rest_of_block` to the end of the block; `rest_of_program` to the end. Nothing changes
+  until **Accept**; **Reject**, × and Back drop it.
+- **History.** Accepted Changes are kept with the day they were accepted, the position they moved
+  from and to, and the block. The Program screen lists them, newest first, each with **Revert**
+  (asking first). Reverting stops its plan edits and takes its move of the position back; days
+  trained since still count (the position moves back by the same number of days). Reverted ones
+  stay in the list, struck through. A running session follows an accept or revert at once.
+- **Reorders stay in the session.** No operation moves a slot; the order is the program's.
 
 ### Rules (offline, built in)
 

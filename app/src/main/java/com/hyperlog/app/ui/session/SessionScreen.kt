@@ -72,6 +72,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.Change
+import com.hyperlog.app.session.keptEdits
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
@@ -117,6 +119,8 @@ fun SessionScreen(
     actions: SessionActions,
     onLeave: () -> Unit,
     modifier: Modifier = Modifier,
+    /** "Keep edits for the block": shows the session's edits as a Change for review. */
+    onKeepEdits: (Change) -> Unit = {},
 ) {
     var showLeave by rememberSaveable { mutableStateOf(false) }
     var showList by rememberSaveable { mutableStateOf(false) }
@@ -131,6 +135,7 @@ fun SessionScreen(
     var removing by rememberSaveable { mutableStateOf<Long?>(null) }
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
+    val keepSummary = session.day?.let { day -> stringResource(R.string.session_keep_summary, day.day.name, day.block.name) }
     KeepScreenOn()
 
     // Back steps out of a correction, then out of a finished exercise, and only then asks to leave.
@@ -183,7 +188,7 @@ fun SessionScreen(
                         onSetOptions = {},
                         onSwap = null,
                         onRemove = null,
-                        swappedFrom = viewing.slot?.exercise?.takeIf { it != viewing.exercise.id }
+                        swappedFrom = viewing.inPlaceOf
                             ?.let { id -> exercises.firstOrNull { it.id == id }?.name },
                     )
                     SetTable(
@@ -218,7 +223,8 @@ fun SessionScreen(
                         // Once a set is logged on it, the exercise is what was done.
                         onSwap = if (current.sets.isEmpty()) { { swapping = current.id } } else null,
                         onRemove = if (current.sets.isEmpty()) { { removing = current.id } } else null,
-                        swappedFrom = current.slot?.exercise?.takeIf { it != current.exercise.id }
+                        onKeepEdits = keepSummary?.let { summary -> session.keptEdits(summary)?.let { change -> { onKeepEdits(change) } } },
+                        swappedFrom = current.inPlaceOf
                             ?.let { id -> exercises.firstOrNull { it.id == id }?.name },
                     )
                     if (current.needsMachine) {
@@ -403,6 +409,8 @@ private fun Header(
     onRemove: (() -> Unit)?,
     /** The planned exercise's name when the slot was swapped in this session. */
     swappedFrom: String?,
+    /** Keeps the session's edits for the rest of the block; null when there are none to keep. */
+    onKeepEdits: (() -> Unit)? = null,
 ) {
     var menu by remember { mutableStateOf(false) }
     val cs = MaterialTheme.colorScheme
@@ -471,6 +479,13 @@ private fun Header(
                         text = { Text(stringResource(R.string.edit_remove_exercise)) },
                         leadingIcon = { SymbolIcon(Symbol.Delete, null) },
                         onClick = { menu = false; remove() },
+                    )
+                }
+                onKeepEdits?.let { keep ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.session_keep_edits)) },
+                        leadingIcon = { SymbolIcon(Symbol.Keep, null) },
+                        onClick = { menu = false; keep() },
                     )
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))

@@ -179,6 +179,10 @@ data class PlannedSlot(
     val note: String?,
     val sets: List<PlannedSet>,
     val alternativeSets: Map<String, List<PlannedSet>> = emptyMap(),
+    /** How far accepted Changes move this slot's suggested weights, in percent (−10 = 10% lighter). */
+    val loadPercent: Int = 0,
+    /** The program's exercise for the slot, when a Change swapped it for [exercise]. */
+    val inPlaceOf: String? = null,
 ) {
     /** The sets for [exerciseId]: an alternative's own, else the slot's. */
     fun setsFor(exerciseId: String): List<PlannedSet> = alternativeSets[exerciseId] ?: sets

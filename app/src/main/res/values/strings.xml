@@ -306,4 +306,53 @@
     <string name="edit_max_up">Raise the top of the range</string>
     <string name="edit_rir_down">Less in reserve</string>
     <string name="edit_rir_up">More in reserve</string>
+
+    <!-- Changes (#16) -->
+    <string name="change_review_title">Review change</string>
+    <string name="change_accept">Accept</string>
+    <string name="change_reject">Reject</string>
+    <string name="change_scope_program">Rest of the program</string>
+    <string name="change_scope_block">Rest of %1$s</string>
+    <string name="change_scope_dates">%1$s – %2$s</string>
+    <string name="change_next">Next</string>
+    <string name="change_left">Left</string>
+    <plurals name="change_days_left">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="change_finished">Finished</string>
+    <string name="change_nothing">Nothing in the plan changes.</string>
+    <string name="change_deload">Deload</string>
+    <string name="change_removed">Removed</string>
+    <string name="change_added">Added</string>
+    <string name="change_load">Weights %1$s</string>
+    <string name="change_day_head">Week %1$d · %2$s</string>
+    <string name="program_changes">Changes</string>
+    <string name="program_change_accepted">%1$s · accepted %2$s</string>
+    <string name="program_change_reverted">Reverted</string>
+    <string name="program_change_revert">Revert</string>
+    <string name="program_revert_title">Revert “%1$s”?</string>
+    <string name="program_revert_body">Its edits to the plan stop, and any move of the position is taken back. Sessions trained since still count.</string>
+    <string name="program_action_skip">Skip day</string>
+    <string name="program_action_repeat">Repeat week</string>
+    <string name="program_action_deload">Deload week</string>
+    <string name="program_action_shift">Shift plan</string>
+    <string name="program_skip_summary">Skip week %1$d · %2$s</string>
+    <string name="program_repeat_summary">Repeat week %1$d</string>
+    <string name="program_deload_summary">Week %1$d as a deload</string>
+    <plurals name="program_shift_summary">
+        <item quantity="one">The plan %d week later</item>
+        <item quantity="other">The plan %d weeks later</item>
+    </plurals>
+    <string name="program_shift_title">Shift the plan</string>
+    <string name="program_shift_body">The rest of the plan starts later, so the weeks before it are trained again.</string>
+    <plurals name="program_shift_weeks">
+        <item quantity="one">%d week later</item>
+        <item quantity="other">%d weeks later</item>
+    </plurals>
+    <string name="program_shift_fewer">One week fewer</string>
+    <string name="program_shift_more">One week more</string>
+    <string name="program_review">Review</string>
+    <string name="session_keep_edits">Keep edits for the block</string>
+    <string name="session_keep_summary">Keep %1$s edits for the rest of %2$s</string>
 </resources>

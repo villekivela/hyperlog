@@ -168,7 +168,7 @@ class PastSessionEditor(
 
     private suspend fun title(row: SessionEntity): String? {
         if (row.programId == null || row.week == null || row.dayIndex == null) return null
-        return programs.program(row.programId)?.plannedDay(Position(row.week, row.dayIndex))?.day?.name
+        return programs.plannedDay(row.programId, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))?.day?.name
     }
 
     /** Reads session [sessionId] as it is stored: each exercise with its sets, plan and last time before it. */
@@ -181,7 +181,7 @@ class PastSessionEditor(
         val shared = gyms.shared()
         val gym = row.gymId?.let { gyms.gym(it) }
         val day = if (row.programId == null || row.week == null || row.dayIndex == null) null
-        else programs.program(row.programId)?.plannedDay(Position(row.week, row.dayIndex))
+        else programs.plannedDay(row.programId, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
             val sets = dao.sets(se.id).map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
             if (sets.isEmpty()) return@mapNotNull null

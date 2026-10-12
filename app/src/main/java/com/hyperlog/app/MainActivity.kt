@@ -30,6 +30,7 @@ import com.hyperlog.app.ui.library.ExerciseEditor
 import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
+import com.hyperlog.app.ui.coach.ChangeReviewScreen
 import com.hyperlog.app.ui.program.ProgramViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -145,7 +146,13 @@ private fun App(
 
     val running = session
     val finished = summary
+    val review by programModel.review.collectAsStateWithLifecycle()
     if (running != null) AskForNotifications()
+    // A Change under review covers whatever proposed it: the Program screen or the session.
+    review?.let { r ->
+        ChangeReviewScreen(r, exercises.associate { it.id to it.name }, onAccept = programModel::accept, onReject = programModel::reject)
+        return
+    }
     // Session done reads the finished session back, so a correction made from it shows at once.
     LaunchedEffect(finished?.sessionId) { finished?.let { pastModel.open(it.sessionId) } }
     val done = pastSession?.takeIf { it.id == finished?.sessionId }
@@ -162,6 +169,7 @@ private fun App(
             exercises,
             actions = sessions,
             onLeave = { left = true },
+            onKeepEdits = programModel::propose,
         )
         editing != null -> {
             val id = editing
@@ -241,6 +249,8 @@ private fun App(
             onBack = { screen = Screen.Today },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
+            onPropose = programModel::propose,
+            onRevert = programModel::revert,
         )
         screen == Screen.Past && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         screen == Screen.Past && pastSession != null -> PastSessionScreen(

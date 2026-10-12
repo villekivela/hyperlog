@@ -263,4 +263,21 @@ class MigrationTest {
         assertEquals(0, db.sessions().sessionExercises(1).single().warmupsDone)
         db.close()
     }
+
+    @Test
+    fun version10ProgramsStartWithNoChanges() = runTest {
+        val file = context.getDatabasePath("migration-test-10.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(10, file) { db ->
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, week, day_index, active) VALUES (1, 'P', '{}', 0, 3, 1, 1)")
+        }
+
+        // Room checks the migrated tables against the v11 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(emptyList<PlanChangeEntity>(), db.planChanges().changes(1))
+        assertEquals(3, db.programs().program(1)!!.week)
+        db.close()
+    }
 }

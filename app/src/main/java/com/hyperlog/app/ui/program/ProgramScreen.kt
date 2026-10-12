@@ -50,7 +50,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.Change
+import com.hyperlog.app.coach.ProgramActions
 import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.ui.coach.scopeText
+import com.hyperlog.app.ui.coach.shortDate
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.ui.text.style.TextDecoration
 import com.hyperlog.app.program.Block
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.session.Tnum
@@ -76,6 +86,10 @@ fun ProgramScreen(
     /** The starter program, offered with no program and kept in the menu; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
+    /** Shows a Program action's Change for review; it applies only once accepted. */
+    onPropose: (Change) -> Unit = {},
+    /** Reverts the accepted Change with this id. */
+    onRevert: (Long) -> Unit = {},
 ) {
     /** The replacement waiting for "Replace <title>?": a file, or the starter program. */
     var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
@@ -123,7 +137,7 @@ fun ProgramScreen(
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
                 }
                 active == null -> NoProgram(onImport)
-                else -> ProgramWeeks(active)
+                else -> ProgramWeeks(active, onPropose, onRevert)
             }
         }
     }
@@ -170,10 +184,12 @@ private fun NoProgram(onImport: () -> Unit) {
 }
 
 @Composable
-private fun ProgramWeeks(active: ActiveProgram) {
+private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onRevert: (Long) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
     val next = active.next
+    var shifting by rememberSaveable { mutableStateOf(false) }
+    var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Column(Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 8.dp)) {
@@ -201,6 +217,17 @@ private fun ProgramWeeks(active: ActiveProgram) {
                         Text(stringResource(R.string.program_finished), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
+                if (next != null) {
+                    Spacer(Modifier.height(16.dp))
+                    ProgramActionRow(active, onPropose, onShift = { shifting = true })
+                }
+            }
+        }
+        val history = active.history.asReversed()
+        if (history.isNotEmpty()) {
+            item(key = "changes") { SectionHead(stringResource(R.string.program_changes)) }
+            items(history, key = { "change-${it.id}" }) { record ->
+                ChangeRow(record, program, onRevert = { reverting = record.id })
             }
         }
         program.blocks.forEach { block ->
@@ -212,6 +239,125 @@ private fun ProgramWeeks(active: ActiveProgram) {
         }
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
     }
+    if (shifting) {
+        ShiftDialog(
+            onReview = { weeks, summary -> shifting = false; onPropose(ProgramActions.shift(summary, weeks)) },
+            onDismiss = { shifting = false },
+        )
+    }
+    active.history.firstOrNull { it.id == reverting }?.let { record ->
+        AlertDialog(
+            onDismissRequest = { reverting = null },
+            title = { Text(stringResource(R.string.program_revert_title, record.change.summary)) },
+            text = { Text(stringResource(R.string.program_revert_body)) },
+            confirmButton = { TextButton(onClick = { reverting = null }) { Text(stringResource(R.string.program_cancel)) } },
+            dismissButton = {
+                TextButton(onClick = { reverting = null; onRevert(record.id) }) { Text(stringResource(R.string.program_change_revert)) }
+            },
+        )
+    }
+}
+
+/**
+ * Skip day, repeat week, deload week and shift plan: each makes a Change and opens its review,
+ * so nothing moves until it is accepted.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ProgramActionRow(active: ActiveProgram, onPropose: (Change) -> Unit, onShift: () -> Unit) {
+    val position = active.position
+    val next = active.next ?: return
+    val skip = stringResource(R.string.program_skip_summary, position.week, next.day.name)
+    val repeat = stringResource(R.string.program_repeat_summary, ProgramActions.repeatedWeek(position))
+    val deload = stringResource(R.string.program_deload_summary, position.week)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ActionChip(stringResource(R.string.program_action_skip), Symbol.SkipNext) { onPropose(ProgramActions.skipDay(skip)) }
+        ActionChip(stringResource(R.string.program_action_repeat), Symbol.Replay) { onPropose(ProgramActions.repeatWeek(repeat)) }
+        ActionChip(stringResource(R.string.program_action_deload), Symbol.Spa) { onPropose(ProgramActions.deloadWeek(deload, position.week)) }
+        ActionChip(stringResource(R.string.program_action_shift), Symbol.MoreTime, onShift)
+    }
+}
+
+@Composable
+private fun ActionChip(label: String, symbol: Symbol, onClick: () -> Unit) {
+    AssistChip(
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = { SymbolIcon(symbol, null, Modifier.size(AssistChipDefaults.IconSize)) },
+    )
+}
+
+@Composable
+private fun SectionHead(text: String) {
+    Text(
+        text,
+        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = Margin).padding(top = 20.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.Medium,
+    )
+}
+
+/** An accepted Change: its summary, period and day, with Revert while it is in force. */
+@Composable
+private fun ChangeRow(record: ChangeRecord, program: Program, onRevert: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val reverted = record.revertedAt != null
+    val block = program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = 8.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                record.change.summary,
+                style = MaterialTheme.typography.bodyLarge.copy(textDecoration = if (reverted) TextDecoration.LineThrough else null),
+                color = if (reverted) cs.onSurfaceVariant else cs.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                if (reverted) stringResource(R.string.program_change_reverted)
+                else stringResource(R.string.program_change_accepted, scopeText(record.change.scope, block), shortDate(record.accepted.acceptedOn)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = cs.onSurfaceVariant,
+            )
+        }
+        if (!reverted) {
+            IconButton(onClick = onRevert) { SymbolIcon(Symbol.Undo, stringResource(R.string.program_change_revert), tint = cs.onSurfaceVariant) }
+        }
+    }
+}
+
+/** How many weeks later the rest of the plan starts, by steps. */
+@Composable
+private fun ShiftDialog(onReview: (Int, String) -> Unit, onDismiss: () -> Unit) {
+    var weeks by rememberSaveable { mutableStateOf(1) }
+    val summary = pluralStringResource(R.plurals.program_shift_summary, weeks, weeks)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.program_shift_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.program_shift_body))
+                Spacer(Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { weeks-- }, enabled = weeks > 1) { SymbolIcon(Symbol.Remove, stringResource(R.string.program_shift_fewer)) }
+                    Text(
+                        pluralStringResource(R.plurals.program_shift_weeks, weeks, weeks),
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium.merge(Tnum),
+                        textAlign = TextAlign.Center,
+                    )
+                    IconButton(onClick = { weeks++ }, enabled = weeks < ProgramActions.MAX_SHIFT_WEEKS) {
+                        SymbolIcon(Symbol.Add, stringResource(R.string.program_shift_more))
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onReview(weeks, summary) }) { Text(stringResource(R.string.program_review)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.program_cancel)) } },
+    )
 }
 
 @Composable

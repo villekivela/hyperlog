@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,6 +36,13 @@ class SessionRuntime private constructor(application: Application, private val d
     init {
         scope.launch {
             logger.state.map { it?.restNotice() }.distinctUntilChanged().collect { timer.show(it) }
+        }
+        // An accepted or reverted Change edits the running session's day too.
+        scope.launch {
+            ProgramStore.get(application).active.map { it?.history }.distinctUntilChanged().drop(1).collect {
+                loaded.await()
+                logger.planChanged()
+            }
         }
     }
 

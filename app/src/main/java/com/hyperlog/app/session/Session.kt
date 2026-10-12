@@ -52,6 +52,9 @@ data class SessionExercise(
     /** How many of its warm-ups are ticked off. */
     val warmupsDone: Int = 0,
 ) {
+    /** The program's exercise for its slot, when it was swapped in the session or by a Change. */
+    val inPlaceOf: String? get() = slot?.let { s -> (s.inPlaceOf ?: s.exercise).takeIf { it != exercise.id } }
+
     /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = plan != null && sets.size >= plan.size
 

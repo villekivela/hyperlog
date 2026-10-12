@@ -93,8 +93,9 @@ class SessionLogger(
      * program is finished.
      */
     suspend fun startDay(program: ActiveProgram, gymId: Long?) = locked {
-        val day = program.next ?: return@locked
-        if (_state.value != null) return@locked
+        if (program.finished || _state.value != null) return@locked
+        // The day as trained today, with the Changes in force for today's date.
+        val day = programs.plannedDay(program.id, program.position, programs.dateOf(clock())) ?: return@locked
         db.withTransaction {
             val sessionId = dao.insertSession(
                 SessionEntity(
@@ -361,6 +362,12 @@ class SessionLogger(
         if (untouched(session, session.currentId)) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
         reload()
     }
+
+    /**
+     * A Change was accepted or reverted: the session's day is read again with the Changes in
+     * force, and an untouched prefill follows its suggestion.
+     */
+    suspend fun planChanged() = historyChanged()
 
     /** The set to do of [exerciseId] still has the prefill it started with: nothing has been typed into it. */
     private suspend fun untouched(session: ActiveSession, exerciseId: Long?): Boolean {
@@ -676,7 +683,8 @@ class SessionLogger(
         val shared = gyms.shared()
         val gym = row.gymId?.let { gyms.gym(it) }
         val day = row.programId?.let { id ->
-            if (row.week == null || row.dayIndex == null) null else programs.program(id)?.plannedDay(Position(row.week, row.dayIndex))
+            if (row.week == null || row.dayIndex == null) null
+            else programs.plannedDay(id, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))
         }
         checked = null
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.map { se ->
@@ -707,7 +715,7 @@ class SessionLogger(
                     history(se.exerciseId, row.id, perMachine, machine?.id),
                     ladder.ladder,
                 ) ?: start?.takeIf { sets.isEmpty() }?.suggestion(plan.first(), ladder.ladder)
-            }
+            }?.let { s -> slot?.loadPercent?.takeIf { it != 0 }?.let { s.adjusted(it, ladder.ladder) } ?: s }
             SessionExercise(
                 id = se.id,
                 exercise = exercise,
@@ -808,7 +816,7 @@ class SessionLogger(
     private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?): List<Performance> =
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
-            else programs.program(past.programId)?.plannedDay(Position(past.week, past.dayIndex))
+            else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
             val plan = past.sets?.let(PlannedSetJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
             Performance(workSets(dao.sets(past.id).map { loggedSet(it) }, plan), deload = day?.deload == true)
         }
