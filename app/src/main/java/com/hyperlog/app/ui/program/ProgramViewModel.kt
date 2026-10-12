@@ -1,0 +1,71 @@
+package com.hyperlog.app.ui.program
+
+import android.app.Application
+import android.net.Uri
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.ProgramParser
+import com.hyperlog.app.program.Programs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/** The Program screen's state: the program running, and the problems of a file just rejected. */
+class ProgramViewModel(application: Application) : AndroidViewModel(application) {
+    private val programs = ProgramStore.get(application)
+
+    val active: StateFlow<ActiveProgram?> = programs.active.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val _errors = MutableStateFlow<List<String>?>(null)
+
+    /** The problems of the last file rejected, until closed. */
+    val errors: StateFlow<List<String>?> = _errors.asStateFlow()
+
+    /** Reads the file at [uri] and imports it if it is valid. */
+    fun import(uri: Uri) {
+        viewModelScope.launch {
+            val text = withContext(Dispatchers.IO) {
+                runCatching { getApplication<Application>().contentResolver.openInputStream(uri)?.use { it.bufferedReader().readText() } }.getOrNull()
+            }
+            if (text == null) {
+                _errors.value = listOf(getApplication<Application>().getString(com.hyperlog.app.R.string.program_unreadable))
+                return@launch
+            }
+            importText(text)
+        }
+    }
+
+    fun importText(text: String) {
+        viewModelScope.launch {
+            val result = programs.import(text)
+            _errors.value = (result as? ProgramParser.Result.Invalid)?.errors
+        }
+    }
+
+    fun closeErrors() {
+        _errors.value = null
+    }
+}
+
+/** One [Programs] for the app, so its parsed programs are shared by the screens and the session. */
+object ProgramStore {
+    @Volatile private var instance: Pair<HyperlogDatabase, Programs>? = null
+
+    fun get(application: Application): Programs {
+        val db = HyperlogDatabase.get(application)
+        instance?.let { (d, p) -> if (d === db) return p }
+        return synchronized(this) {
+            instance?.takeIf { it.first === db }?.second ?: Programs(db, merged = mergedIds(application)).also { instance = db to it }
+        }
+    }
+
+    private fun mergedIds(application: Application) =
+        runCatching { com.hyperlog.app.library.LibrarySeed.fromAssets(application).merged }.getOrDefault(emptyMap())
+}

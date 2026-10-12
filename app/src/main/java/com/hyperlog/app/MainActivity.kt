@@ -22,6 +22,10 @@ import com.hyperlog.app.ui.gym.LadderKind
 import com.hyperlog.app.ui.library.ExerciseEditor
 import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.library.LibraryViewModel
+import com.hyperlog.app.ui.program.ProgramScreen
+import com.hyperlog.app.ui.program.ProgramViewModel
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.hyperlog.app.ui.session.SessionDoneScreen
 import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.session.SessionViewModel
@@ -33,17 +37,18 @@ class MainActivity : ComponentActivity() {
     private val sessions: SessionViewModel by viewModels()
     private val library: LibraryViewModel by viewModels()
     private val gyms: GymsViewModel by viewModels()
+    private val programs: ProgramViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms) }
+            HyperlogTheme { App(sessions, library, gyms, programs) }
         }
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms }
+private enum class Screen { Today, Settings, Library, Gyms, Program }
 
 /** Marks a new exercise in the editor, which otherwise holds the id of the one being edited. */
 private const val NewExercise = ""
@@ -59,7 +64,7 @@ private const val PlateLadder = -2L
  * and goes to Today.
  */
 @Composable
-private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel: GymsViewModel) {
+private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel: GymsViewModel, programModel: ProgramViewModel) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
     val summary by sessions.summary.collectAsStateWithLifecycle()
@@ -72,6 +77,11 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
     val dumbbells by gymsModel.dumbbells.collectAsStateWithLifecycle()
     val plates by gymsModel.plates.collectAsStateWithLifecycle()
     val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
+    val program by programModel.active.collectAsStateWithLifecycle()
+    val importErrors by programModel.errors.collectAsStateWithLifecycle()
+    val pickProgram = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(programModel::import)
+    }
     var gymId by rememberSaveable { mutableStateOf<Long?>(null) }
     /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -161,6 +171,13 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
             onNew = { editing = NewExercise },
             onBack = { screen = Screen.Settings; libraryQuery = "" },
         )
+        screen == Screen.Program -> ProgramScreen(
+            program,
+            importErrors,
+            onImport = { programModel.closeErrors(); pickProgram.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+            onCloseErrors = programModel::closeErrors,
+            onBack = { screen = Screen.Today },
+        )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
@@ -172,12 +189,15 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
             onSettings = { screen = Screen.Settings },
             sessionRunning = running != null,
             onResume = { left = false },
-            onStart = { gym ->
+            onStart = { gym, adHoc ->
                 left = false
-                sessions.start(gym)
+                sessions.start(gym, adHoc)
             },
             gyms = gyms,
             usualGymId = usualGym,
+            program = program,
+            exerciseNames = exercises.associate { it.id to it.name },
+            onProgram = { screen = Screen.Program },
         )
     }
 }

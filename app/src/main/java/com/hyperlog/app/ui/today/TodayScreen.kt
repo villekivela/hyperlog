@@ -25,6 +25,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.PlannedDay
+import com.hyperlog.app.ui.program.SetSummary
+import com.hyperlog.app.ui.session.Tnum
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -49,9 +57,10 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
 
 /**
- * Today: the next day's prescription. Until there is a program, it says so and offers an ad-hoc
- * session, or the way back into the one running. Starting one asks for the gym, with today's
- * usual gym picked; with no gyms set up it starts straight away.
+ * Today: the next day of the program, with Start session, or with no program (or a finished one)
+ * an ad-hoc session. While a session runs it offers the way back in. Starting asks for the gym,
+ * with today's usual gym picked; with no gyms set up it starts straight away
+ * (docs/design/program-and-today.md).
  */
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -59,29 +68,40 @@ fun TodayScreen(
     onSettings: () -> Unit,
     sessionRunning: Boolean,
     onResume: () -> Unit,
-    onStart: (gymId: Long?) -> Unit,
+    /** Starts a session at the gym (null with no gyms): the program's next day, or ad hoc when [adHoc]. */
+    onStart: (gymId: Long?, adHoc: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     gyms: List<Gym> = emptyList(),
     usualGymId: Long? = null,
+    program: ActiveProgram? = null,
+    exerciseNames: Map<String, String> = emptyMap(),
+    onProgram: () -> Unit = {},
 ) {
-    var picking by rememberSaveable { mutableStateOf(false) }
-    val onSession: () -> Unit = {
+    /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
+    var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val start: (Boolean) -> Unit = { adHoc ->
         when {
             sessionRunning -> onResume()
-            gyms.isEmpty() -> onStart(null)
-            else -> picking = true
+            gyms.isEmpty() -> onStart(null, adHoc)
+            else -> picking = adHoc
         }
     }
-    if (picking && !sessionRunning) {
-        StartSheet(gyms, usualGymId, onStart = { picking = false; onStart(it) }, onDismiss = { picking = false })
+    val kind = picking
+    if (kind != null && !sessionRunning) {
+        StartSheet(gyms, usualGymId, onStart = { picking = null; onStart(it, kind) }, onDismiss = { picking = null })
     }
+    val next = program?.next
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.today_title)) },
+                // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.
+                title = { Text(stringResource(R.string.today_title), Modifier.padding(start = 8.dp)) },
                 actions = {
+                    IconButton(onClick = onProgram) {
+                        SymbolIcon(Symbol.ViewTimeline, stringResource(R.string.program_title))
+                    }
                     IconButton(onClick = onSettings) {
                         SymbolIcon(Symbol.Settings, stringResource(R.string.settings))
                     }
@@ -89,40 +109,108 @@ fun TodayScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
-    ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            SymbolIcon(
-                Symbol.FitnessCenter,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.today_empty_title),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.today_empty_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(32.dp))
-            Button(onClick = onSession) {
-                Text(stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session))
+        bottomBar = {
+            if (next != null) {
+                Row(
+                    Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (!sessionRunning) {
+                        TextButton(onClick = { start(true) }) { Text(stringResource(R.string.today_ad_hoc)) }
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Button(onClick = { start(false) }) {
+                        Text(stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session))
+                    }
+                }
             }
-            // Optical centre: sit a little above the middle, clear of the large app bar.
-            Spacer(Modifier.height(96.dp))
+        },
+    ) { padding ->
+        if (next != null) {
+            NextDay(next, exerciseNames, Modifier.padding(padding))
+        } else {
+            val finished = program?.finished == true
+            Column(
+                modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                SymbolIcon(
+                    if (finished) Symbol.Flag else Symbol.FitnessCenter,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    stringResource(if (finished) R.string.program_finished else R.string.today_empty_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(if (finished) R.string.program_finished_body else R.string.today_no_program_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(32.dp))
+                Button(onClick = { start(true) }) {
+                    Text(stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session))
+                }
+                if (program == null && !sessionRunning) {
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
+                }
+                // Optical centre: sit a little above the middle, clear of the large app bar.
+                Spacer(Modifier.height(96.dp))
+            }
         }
     }
 }
+
+/** The day to train: week and block, its name, and a line per slot with its sets. */
+@Composable
+private fun NextDay(day: PlannedDay, names: Map<String, String>, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    LazyColumn(modifier.fillMaxSize()) {
+        item {
+            Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 16.dp)) {
+                Text(
+                    stringResource(R.string.today_week_block, day.position.week, day.block.name),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = cs.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(day.day.name, style = MaterialTheme.typography.headlineSmall)
+            }
+        }
+        items(day.slots, key = { it.id }) { slot ->
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 24.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Text(
+                    slot.label,
+                    Modifier.width(40.dp),
+                    style = MaterialTheme.typography.labelLarge.merge(Tnum),
+                    color = cs.onSurfaceVariant,
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        names[slot.exercise] ?: slot.exercise,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    SetSummary(slot.sets)
+                }
+            }
+        }
+    }
+}
+
 
 /**
  * Where you train today: the gyms as a single choice, today's usual one picked and saying why,
@@ -183,5 +271,5 @@ internal fun StartSheetContent(gyms: List<Gym>, usualGymId: Long?, onStart: (Lon
 @Preview
 @Composable
 private fun TodayScreenPreview() {
-    HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onResume = {}, onStart = {}) }
+    HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _ -> }) }
 }

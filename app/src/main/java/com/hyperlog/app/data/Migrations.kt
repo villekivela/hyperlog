@@ -4,7 +4,26 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5)
+
+/**
+ * v5: programs (#6). Imported programs with their position; sessions gain the program day they
+ * train, and session exercises the slot they fill. Existing sessions stay ad hoc.
+ */
+object Migration4To5 : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `program` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, " +
+                "`source` TEXT NOT NULL, `imported_at` INTEGER NOT NULL, `week` INTEGER NOT NULL, `day_index` INTEGER NOT NULL, " +
+                "`active` INTEGER NOT NULL)",
+        )
+        db.execSQL("ALTER TABLE session ADD COLUMN program_id INTEGER REFERENCES program(id) ON UPDATE NO ACTION ON DELETE SET NULL")
+        db.execSQL("ALTER TABLE session ADD COLUMN week INTEGER")
+        db.execSQL("ALTER TABLE session ADD COLUMN day_index INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_session_program_id` ON `session` (`program_id`)")
+        db.execSQL("ALTER TABLE session_exercise ADD COLUMN slot_id TEXT")
+    }
+}
 
 /**
  * v2: the exercise library (#3). The exercise table gains the library's fields; the library sync

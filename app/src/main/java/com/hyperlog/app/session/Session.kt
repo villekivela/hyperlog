@@ -7,6 +7,9 @@ import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.program.PlannedDay
+import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.PlannedSlot
 
 /** One exercise in a session, with what has been logged and what was done last time. */
 data class SessionExercise(
@@ -25,7 +28,14 @@ data class SessionExercise(
      * "Which machine?" before any set, and the pad has no entry until it is answered.
      */
     val needsMachine: Boolean = false,
-)
+    /** The program slot it fills; null when added ad hoc. */
+    val slot: PlannedSlot? = null,
+    /** This week's sets for it from the program; null for an ad-hoc exercise, whose sets are open-ended. */
+    val plan: List<PlannedSet>? = null,
+) {
+    /** Every planned set is logged. An ad-hoc exercise is never done. */
+    val done: Boolean get() = plan != null && sets.size >= plan.size
+}
 
 /** The running session, as it is on screen. */
 data class ActiveSession(
@@ -43,6 +53,8 @@ data class ActiveSession(
     val weightCheck: WeightCheck? = null,
     /** Where the session is trained, with its equipment; null when no gym is set up. */
     val gym: Gym? = null,
+    /** The program day this session trains; null for an ad-hoc session. */
+    val day: PlannedDay? = null,
 ) {
     val current: SessionExercise? get() = exercises.firstOrNull { it.id == currentId }
 }

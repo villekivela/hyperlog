@@ -30,8 +30,11 @@ data class ExerciseEntity(
 /** A session. One with no [finishedAt] is running; there is at most one. */
 @Entity(
     tableName = "session",
-    foreignKeys = [ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.SET_NULL)],
-    indices = [Index("gym_id")],
+    foreignKeys = [
+        ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.SET_NULL),
+        ForeignKey(ProgramEntity::class, ["id"], ["program_id"], onDelete = ForeignKey.SET_NULL),
+    ],
+    indices = [Index("gym_id"), Index("program_id")],
 )
 data class SessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -46,6 +49,11 @@ data class SessionEntity(
     @Embedded(prefix = "entry_") val entry: EntryColumns? = null,
     /** Where the session is trained; null when no gym is set up. */
     @ColumnInfo(name = "gym_id") val gymId: Long? = null,
+    /** The program whose day this session trains; null for an ad-hoc session. */
+    @ColumnInfo(name = "program_id") val programId: Long? = null,
+    /** The program day trained: its week and its index in that week's block. */
+    val week: Int? = null,
+    @ColumnInfo(name = "day_index") val dayIndex: Int? = null,
 )
 
 data class EntryColumns(
@@ -78,6 +86,8 @@ data class SessionExerciseEntity(
      * null for free weights and while the session doesn't know the machine yet.
      */
     @ColumnInfo(name = "equipment_item_id") val equipmentItemId: Long? = null,
+    /** The program slot it fills, in a session of a program day; null when added ad hoc. */
+    @ColumnInfo(name = "slot_id") val slotId: String? = null,
 )
 
 @Entity(

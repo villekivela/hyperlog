@@ -14,7 +14,7 @@ A run of consecutive weeks within a program that share the same days, such as Ac
 _Avoid_: Phase, mesocycle
 
 **Week override**:
-A change to a set prescription that applies only to particular weeks of its block, such as a lower target RIR in week 1.
+A change to a set prescription that applies only to particular weeks of its block, such as a lower target RIR in week 1. A day or a whole block can carry one for all of its sets.
 
 **Day**:
 One planned training session in a program: an ordered list of groups.
@@ -37,6 +37,13 @@ _Avoid_: Option, substitute
 **Set prescription**:
 What a set should be: its type, target reps (a fixed number or a range), target RIR, rest and any intensity technique.
 _Avoid_: Target set, planned set
+
+**Top set**:
+The heaviest work set of an exercise in a session, the one progression judges.
+
+**Back-off set**:
+A work set after the top set at a lighter weight: the top set's weight minus a percentage, rounded down to a rung.
+_Avoid_: Drop (that's part of a drop set)
 
 **Position**:
 Where you are in a program: which program, which week, and which day comes next.

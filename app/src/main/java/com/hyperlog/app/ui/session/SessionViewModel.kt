@@ -14,6 +14,8 @@ import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionLogger
 import com.hyperlog.app.session.SessionSummary
+import com.hyperlog.app.ui.program.ProgramStore
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,7 +52,8 @@ interface SessionActions {
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
     private val db = HyperlogDatabase.get(application)
     private val library = ExerciseLibrary(db)
-    private val logger = SessionLogger(db)
+    private val programs = ProgramStore.get(application)
+    private val logger = SessionLogger(db, programs = programs)
     private val gyms = Gyms(db)
     private val _loaded = MutableStateFlow(false)
     private val _summary = MutableStateFlow<SessionSummary?>(null)
@@ -78,7 +81,11 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     /** The gym to preselect for a session started now; null with no gyms. */
     val usualGym: StateFlow<Long?> = gyms.usualGymToday().stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    fun start(gymId: Long?) = run { logger.start(gymId) }
+    /** Starts a session at [gymId]: the program's next day, or ad hoc when [adHoc] or with no day to train. */
+    fun start(gymId: Long?, adHoc: Boolean = false) = run {
+        val program = if (adHoc) null else programs.active.first()
+        if (program?.next != null) logger.startDay(program, gymId) else logger.start(gymId)
+    }
     fun dismissSummary() { _summary.value = null }
 
     /** Runs the session just finished again. */

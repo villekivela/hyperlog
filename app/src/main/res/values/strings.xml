@@ -148,4 +148,53 @@
     <string name="ladder_preview">Real weights</string>
     <string name="ladder_incomplete">Fill in the fields to see the weights</string>
     <string name="ladder_rung_count">%1$d weights</string>
+
+    <!-- Program (#6) -->
+    <string name="program_title">Program</string>
+    <string name="program_import">Import program</string>
+    <string name="program_import_short">Import a program</string>
+    <string name="program_none_body">Programs are JSON files; docs/program-format.md in the Hyperlog repository describes the format.</string>
+    <string name="program_next">Next</string>
+    <!-- "Week 3 · Day A — Heavy bench" -->
+    <string name="program_week_day">Week %1$d · %2$s</string>
+    <!-- Block head: "Build · weeks 3–6" or "Deload · week 12" -->
+    <string name="program_block_weeks">%1$s · weeks %2$d–%3$d</string>
+    <string name="program_block_week">%1$s · week %2$d</string>
+    <string name="program_finished">Program finished</string>
+    <string name="program_finished_body">Import the next one from Program, or train ad hoc.</string>
+    <string name="program_replace_title">Replace %1$s?</string>
+    <string name="program_replace_body">The new program starts at week 1, day 1. Past sessions are kept.</string>
+    <string name="program_replace">Replace</string>
+    <string name="program_cancel">Cancel</string>
+    <string name="program_not_imported">Not imported</string>
+    <plurals name="program_problems">
+        <item quantity="one">1 problem. Fix it and import again; nothing changed.</item>
+        <item quantity="other">%1$d problems. Fix them and import again; nothing changed.</item>
+    </plurals>
+    <string name="program_close">Close</string>
+    <string name="program_choose_file">Choose file</string>
+    <string name="program_unreadable">The file couldn\'t be read.</string>
+    <string name="program_day_done">Day %1$s, done</string>
+    <string name="program_day_next">Day %1$s, next</string>
+    <string name="program_day_upcoming">Day %1$s</string>
+    <string name="today_week_block">Week %1$d · %2$s</string>
+    <string name="today_ad_hoc">Ad-hoc session</string>
+    <string name="today_no_program_body">Import a program to train it day by day, or start an ad-hoc session.</string>
+    <string name="col_target">Target</string>
+    <string name="session_day_done">Day done</string>
+    <string name="sheet_rest">Rest %1$s</string>
+    <string name="sheet_program_note">Program note</string>
+    <string name="sheet_technique_note">Technique note</string>
+    <!-- Set summaries: "2 × 6–8 @ 1" -->
+    <string name="plan_sets">%1$d × %2$s</string>
+    <string name="plan_sets_rir">%1$d × %2$s @ %3$d</string>
+    <string name="technique_dropset">Drop set, %1$d drops of %2$d%%</string>
+    <string name="technique_dropset_one">Drop set, 1 drop of %1$d%%</string>
+    <string name="technique_myo">Myo-reps, mini-sets of %1$d</string>
+    <string name="technique_partials_failure">Lengthened partials to failure</string>
+    <string name="technique_partials_count">Lengthened partials, %1$d</string>
+    <string name="technique_iso_stretch">Iso hold %1$d s, stretch</string>
+    <string name="technique_iso_contraction">Iso hold %1$d s, contraction</string>
+    <string name="technique_failure">To failure</string>
+    <string name="technique_backoff">Back-off, top set − %1$d%%</string>
 </resources>

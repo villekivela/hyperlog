@@ -27,6 +27,7 @@ internal val RowPad = Margin - RowInset
 internal val RowHeight = 64.dp
 internal val LabelHeight = 32.dp
 internal val ColSet = 32.dp
+internal val ColTarget = 88.dp
 internal val ColKg = 64.dp
 internal val ColReps = 80.dp
 internal val ColRir = 24.dp

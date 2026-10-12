@@ -19,6 +19,10 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.ladderFor
 import com.hyperlog.app.library.toExercise
+import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.Position
+import com.hyperlog.app.program.Programs
+import com.hyperlog.app.program.plannedEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +36,11 @@ import kotlinx.coroutines.sync.withLock
  * Calls run one at a time in the order they were made, so taps can be fired from the UI without
  * waiting for each other.
  */
-class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> Long = System::currentTimeMillis) {
+class SessionLogger(
+    private val db: HyperlogDatabase,
+    private val clock: () -> Long = System::currentTimeMillis,
+    private val programs: Programs = Programs(db, clock),
+) {
     private val dao = db.sessions()
     private val gyms = Gyms(db)
     private val mutex = Mutex()
@@ -56,6 +64,41 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         }
     }
 
+    /**
+     * Starts a session of [program]'s next day at [gymId]: its slots become the session's
+     * exercises, in order, each with this week's sets. Does nothing if a session is running or the
+     * program is finished.
+     */
+    suspend fun startDay(program: ActiveProgram, gymId: Long?) = locked {
+        val day = program.next ?: return@locked
+        if (_state.value != null) return@locked
+        db.withTransaction {
+            val sessionId = dao.insertSession(
+                SessionEntity(
+                    startedAt = clock(), gymId = gymId, programId = program.id,
+                    week = day.position.week, dayIndex = day.position.day,
+                ),
+            )
+            val ids = day.slots.mapIndexed { i, slot ->
+                val id = dao.insertSessionExercise(
+                    SessionExerciseEntity(sessionId = sessionId, exerciseId = slot.exercise, position = i, slotId = slot.id),
+                )
+                rememberMachine(id, gymId, slot.exercise)
+                id
+            }
+            dao.updateSession(dao.session(sessionId)!!.copy(currentSessionExerciseId = ids.firstOrNull()))
+        }
+        reload()
+    }
+
+    /** A machine done at [gymId] before is on the same machine again; otherwise the screen asks. */
+    private suspend fun rememberMachine(sessionExerciseId: Long, gymId: Long?, exerciseId: String) {
+        val equipment = db.exercises().get(exerciseId)?.toExercise()?.equipment
+        if (gymId != null && equipment?.perMachine == true) {
+            gyms.remembered(gymId, exerciseId)?.let { dao.setEquipmentItem(sessionExerciseId, it) }
+        }
+    }
+
     /** Adds [exerciseId] after the others and makes it the one on screen. */
     suspend fun addExercise(exerciseId: String) = locked {
         val session = _state.value ?: return@locked
@@ -65,12 +108,7 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             )
             val row = dao.session(session.id)!!
             dao.updateSession(row.copy(currentSessionExerciseId = id, entry = null))
-            // A machine done here before is on the same machine again; otherwise the screen asks.
-            val gym = session.gym
-            val equipment = db.exercises().get(exerciseId)?.toExercise()?.equipment
-            if (gym != null && equipment?.perMachine == true) {
-                gyms.remembered(gym.id, exerciseId)?.let { dao.setEquipmentItem(id, it) }
-            }
+            rememberMachine(id, session.gym?.id, exerciseId)
         }
         reload()
     }
@@ -158,11 +196,18 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
                 }
                 checked = null
                 lastLoggedAt = now
+                val rest = current.plan?.getOrNull(current.sets.size)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
+                // With the exercise's planned sets done, the first exercise with sets left comes up.
+                val finishesExercise = current.plan != null && current.sets.size + 1 >= current.plan.size
+                val next = if (finishesExercise) session.exercises.firstOrNull { it.id != current.id && it.plan != null && !it.done } else null
                 db.withTransaction {
                     dao.insertSet(result.set.toEntity(current.id, current.sets.size, now))
                     // The next set's entry is worked out again from what was just logged.
                     dao.updateSession(
-                        dao.session(session.id)!!.copy(entry = null, restEndsAt = now + DEFAULT_REST_MS, restTotalMs = DEFAULT_REST_MS),
+                        dao.session(session.id)!!.copy(
+                            entry = null, restEndsAt = now + rest, restTotalMs = rest,
+                            currentSessionExerciseId = next?.id ?: current.id,
+                        ),
                     )
                 }
                 reload()
@@ -206,6 +251,7 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             return@locked null
         }
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
+        session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         _state.value = null
         SessionSummary(session.id, session.startedAt, now, logged.map { ExerciseSummary(it.exercise.name, it.sets) })
     }
@@ -246,6 +292,9 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         val library = db.exercises().all().associate { it.id to it.toExercise() }
         val shared = gyms.shared()
         val gym = row.gymId?.let { gyms.gym(it) }
+        val day = row.programId?.let { id ->
+            if (row.week == null || row.dayIndex == null) null else programs.program(id)?.plannedDay(Position(row.week, row.dayIndex))
+        }
         checked = null
         val exercises = dao.sessionExercises(row.id).map { se ->
             val exercise = library.getValue(se.exerciseId)
@@ -259,6 +308,7 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
                 perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
                 else -> dao.lastTime(se.exerciseId, row.id)
             }
+            val slot = day?.slot(se.slotId)
             SessionExercise(
                 id = se.id,
                 exercise = exercise,
@@ -268,13 +318,17 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
                 ladderKnown = ladder.known,
                 machine = machine,
                 needsMachine = needsMachine,
+                slot = slot,
+                plan = slot?.setsFor(se.exerciseId),
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
         var entry = row.entry?.toEntry()
-        if (current?.needsMachine == true) entry = null
-        if (entry == null && current != null && !current.needsMachine) {
-            entry = SetEntry.prefill(current.sets.lastOrNull() ?: current.lastTime.firstOrNull())
+        if (current?.needsMachine == true || current?.done == true) entry = null
+        if (entry == null && current != null && !current.needsMachine && !current.done) {
+            val plan = current.plan
+            entry = if (plan != null) plannedEntry(plan, current.sets, current.lastTime, current.ladder)
+            else SetEntry.prefill(current.sets.lastOrNull() ?: current.lastTime.firstOrNull())
             dao.updateSession(row.copy(entry = entry.toColumns()))
         }
         _state.value = ActiveSession(
@@ -287,6 +341,7 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             restEndsAt = row.restEndsAt,
             restTotalMs = row.restTotalMs,
             gym = gym,
+            day = day,
         )
     }
 

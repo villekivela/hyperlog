@@ -56,8 +56,8 @@ configuration, iOS, web, any server.
 | **Block** | A run of weeks (`weekStart..weekEnd`) that share the same days, e.g. Accumulation 1–7. |
 | **Day** | One planned session: an ordered list of groups. |
 | **Group** | Exercises done together: `straight` or `superset`. |
-| **Slot** | A place in a day for one exercise. It has a primary exercise and alternatives (`options`). |
-| **Set prescription** | Type (`warmup`, `work`, `amrap`, `drop`, `myo`), reps, optional target RIR, rest, load rule. |
+| **Slot** | A place in a day for one exercise. It has a planned exercise and alternatives. |
+| **Set prescription** | A work set's reps (fixed or a range), optional target RIR, rest, intensity technique and back-off rule. |
 | **Position** | Where you are: program, week, next day. |
 | **Session** | What was done on a date: sets with weight, reps, RIR. It's a record and is never recalculated. |
 | **Change** | A proposed edit to the plan (see Coaching). Accepted changes are kept as history. |
@@ -67,21 +67,34 @@ configuration, iOS, web, any server.
 | **Estimate** | The per-exercise (per-machine for machines) e1RM from reps + RIR that drives load suggestions. |
 | **Intensity technique** | How a work set is extended: drop set, myo-reps, lengthened partials, iso hold, failure. |
 
-Programs use a JSON shape close to the legacy one (`meta`, `blocks[].days[].groups[].exercises[].options[].sets[]`),
-but legacy programs are **not** imported. Programs are written fresh for this app once intensity
-techniques work (below).
+Programs use a JSON shape close to the legacy one, `blocks[].days[].groups[].slots[]`, each slot
+with an `exercise`, its `alternatives` and its `sets[]`. **`docs/program-format.md` is the format's
+reference.** Legacy programs are **not** imported; programs are written fresh for this app.
+
+- **Sets belong to the slot.** A slot's set prescriptions apply to every alternative by default; an
+  alternative may override them with its own sets.
+- **Only work sets are written.** Warm-ups are generated (Screens → Today), and drops and myo
+  mini-sets are part of their technique, so set lines have no type. A line can stand for several
+  identical sets (`count`).
+- **One program runs at a time.** Importing another replaces it and starts it at week 1, day 1;
+  the old one stays as the record of its sessions. Past sessions are kept.
 
 **Authoring.** Programs are JSON files, written with Claude's help from a Nippard PDF or sheet,
 and imported through a strict validator that names the exact path of every error
 (`blocks[1].days[0].groups[2]…: unknown exercise "bb_row"`). No in-app program editor in v1.
 
 **Top set and back-off.** A set can be a back-off from an earlier set of the same exercise: its
-weight is that set's weight minus a percentage (default 10%), rounded down to a rung. Progression
-judges the top set.
+weight is that set's weight minus a percentage (default 10%), rounded down to a rung (the lightest
+rung if none is below). Progression judges the top set. Until the top set is logged, the back-off
+rows show the weight worked out from the top set's planned or typed weight.
 
-**Week overrides.** Days are defined once per block; any set field can be overridden for given
-weeks of the block, e.g. `"weeks": {"1": {"rir": 3}, "4": {"sets": 2, "technique": null}}`. This
-covers ramp-in weeks, techniques that start in week 2, and deload weeks without duplicating days.
+**Week overrides.** Days are defined once per block; a set line's fields can be overridden for
+given weeks of the block, e.g. `"weeks": {"1": {"rir": 3}, "4": {"count": 2, "technique": null}}`.
+Weeks are program weeks (`"7-11"` for a range) inside the block. A day or a block can override all
+of its sets for given weeks too: a target RIR (`rir`) or a change to it (`rirAdd`), no techniques
+(`technique: null`), and `fewerSets` (sets removed from the end of every slot, one always stays).
+The line's own override applies first, then the block's, then the day's. This covers ramp-in
+weeks, techniques that start in week 3, and deload weeks without duplicating days.
 
 Load is prescribed as **rep range + RIR**: weight is suggested from recent sessions on that
 exercise. Percentage-of-training-max programs (SBS-style AMRAP) are out of v1.
@@ -202,6 +215,18 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    reps, RIR, technique follow-ups), rest timer, technique video link and note for each exercise,
    swap to an alternative, add or change an intensity technique on a set. Works without a program
    too (ad-hoc session).
+   - **With a program**, Today shows the next day: week and block, the day's name, and each slot's
+     exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after). **Start
+     session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
+     program says so and offers an ad-hoc session.
+   - **A program day's session** has a row for every planned set from the start, with a Target
+     column (reps and an RIR ring). The first set prefills from last time's first set at the top
+     of the range and the target RIR; later sets follow the set before (reps capped at the top of
+     the range, or the top of a new range). Rest after a set is the program's rest for it. After an
+     exercise's last planned set the first exercise with sets left comes up. When every planned
+     set is logged, the pad gives way to **Day done** and Finish session.
+   - The **prescription sheet** (tap the exercise name) shows every set's target, technique or
+     back-off rule, the rest, the slot note and the exercise's technique note.
    - **Edit on the fly:** add, remove, reorder or swap exercises; add or remove sets; change reps,
      RIR or technique. Edits apply to this session only, with an optional "keep for the rest of the
      block" that saves them as a Change.
@@ -264,7 +289,16 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        session list) asks "Finish the session?" (Keep going / Finish). Session done offers
        **Resume session**, which reopens the session exactly as it was.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
-   repeat week, deload week, shift the remaining plan by N weeks.
+   repeat week, deload week, shift the remaining plan by N weeks. Reached from Today's top bar.
+   - Each block is a heading (`Build · weeks 3–6`), each week a row of day tokens (A, B, C…): done,
+     next (the one filled shape) or to come. The current week names its next day.
+   - **Import program** picks a JSON file. A file with problems shows them all, path then message,
+     and imports nothing. Importing over a program asks first ("Replace <title>?").
+   - **Position**: the program runs as a sequence. Finishing a session of the next day moves the
+     position to the day after it (the next day of the block, then the next week's first day); a
+     session with nothing logged is discarded and moves nothing; finishing a resumed session again
+     doesn't move it twice. After the last day the program is finished.
+   - Design: `docs/design/program-and-today.md`.
 3. **Coach** — see below.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
 
@@ -348,7 +382,7 @@ You pick a situation and constraints:
   effort).
 - Constraints: no grip, no axial load, no overhead, home (dumbbells/bodyweight), max N minutes.
 
-The rules produce a Change. Swaps come from the slot's own `options` first, then from library
+The rules produce a Change. Swaps come from the slot's own alternatives first, then from library
 exercises with the same `movementPattern` that meet the constraints (equipment, plus a small
 per-exercise tag table such as `grip: high|low|none`). Time off maps to fixed steps: up to 7 days,
 resume as planned; 8–14 days, a reduced-volume re-entry session; more than 14 days, repeat the

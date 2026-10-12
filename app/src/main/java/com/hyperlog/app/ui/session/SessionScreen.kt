@@ -87,6 +87,12 @@ import com.hyperlog.app.library.search
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.session.SessionExercise
+import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.plannedWeight
+import com.hyperlog.app.ui.program.SetSummary
+import com.hyperlog.app.ui.program.symbol
+import com.hyperlog.app.ui.program.techniqueText
+import androidx.compose.material3.Button
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlinx.coroutines.delay
@@ -165,7 +171,7 @@ fun SessionScreen(
                         SetTable(current, session.entry, session.weightCheck != null, actions, Modifier.weight(1f))
                     }
                     val index = session.exercises.indexOf(current)
-                    val next = session.exercises.getOrNull(index + 1)
+                    val next = session.exercises.drop(index + 1).firstOrNull { !it.done }
                     NextLine(
                         label = if (next != null) stringResource(R.string.session_next) else null,
                         name = next?.exercise?.name ?: stringResource(R.string.session_last_exercise),
@@ -177,6 +183,8 @@ fun SessionScreen(
             if (current != null && entry != null) {
                 // A weight check always shows, even with the pad folded away.
                 if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions) else HiddenPad(entry, actions)
+            } else if (current != null && current.done && session.exercises.all { it.plan == null || it.done }) {
+                DayDoneBar(onFinish = { showFinish = true })
             } else {
                 Spacer(Modifier.navigationBarsPadding())
             }
@@ -229,6 +237,8 @@ fun SessionScreen(
         Sheet(onDismiss = { showDetails = false }) {
             ExerciseSheet(
                 current.exercise,
+                plan = current.plan,
+                slotNote = current.slot?.note,
                 machine = current.machine?.let { m -> stringResource(R.string.machine_at, m.name, session.gym?.name.orEmpty()) },
                 // The machine can change until a set is logged on it; after that the sets belong to it.
                 onChangeMachine = if (current.machine != null && current.sets.isEmpty()) {
@@ -362,8 +372,13 @@ private fun SetTable(current: SessionExercise, entry: SetEntry?, weightFlagged: 
     LaunchedEffect(current.id, current.sets.size) {
         if (current.sets.isNotEmpty()) listState.animateScrollToItem(current.sets.size)
     }
+    val plan = current.plan
     LazyColumn(modifier.fillMaxWidth().padding(horizontal = RowInset), state = listState) {
-        item { ColumnHeads(showLast = current.lastTime.isNotEmpty()) }
+        item { ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null) }
+        if (plan != null) {
+            plannedRows(current, plan, entry, weightFlagged, actions)
+            return@LazyColumn
+        }
         items(current.sets.size) { i ->
             DoneRow(i + 1, current.lastTime.getOrNull(i), current.sets[i])
         }
@@ -382,8 +397,79 @@ private fun SetTable(current: SessionExercise, entry: SetEntry?, weightFlagged: 
     }
 }
 
+/**
+ * A program exercise: a row for every planned set from the start, done, active or to come. A run
+ * of back-offs is headed by its rule, and a technique is named under its set.
+ */
+private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(
+    current: SessionExercise,
+    plan: List<PlannedSet>,
+    entry: SetEntry?,
+    weightFlagged: Boolean,
+    actions: SessionActions,
+) {
+    val logged = current.sets
+    val rows = maxOf(plan.size, logged.size)
+    for (i in 0 until rows) {
+        val target = plan.getOrNull(i)
+        val backoff = target?.backoff
+        if (backoff != null && plan.getOrNull(i - 1)?.backoff == null) {
+            item(key = "backoff-$i") { Label(Symbol.SouthEast, stringResource(R.string.technique_backoff, backoff.percent), done = i < logged.size) }
+        }
+        val last = current.lastTime.getOrNull(i)
+        item(key = "set-$i") {
+            when {
+                i < logged.size -> DoneRow(i + 1, last, logged[i], target)
+                i == logged.size && entry != null -> ActiveRow(i + 1, last, entry, weightFlagged, actions, target)
+                else -> {
+                    val kg = plannedWeight(i, plan, logged, current.lastTime, current.ladder, entry?.weightKg)
+                    val activeRange = plan.getOrNull(logged.size)?.reps
+                    val reps = if (entry != null && target?.reps == activeRange) entry.full else target?.reps?.max?.toString().orEmpty()
+                    UpcomingRow(i + 1, last, kg?.let(::formatKg).orEmpty(), reps, target)
+                }
+            }
+        }
+        target?.technique?.let { t ->
+            item(key = "technique-$i") { Label(t.symbol(), techniqueText(t), done = i < logged.size) }
+        }
+    }
+}
+
+/** A technique or back-off rule: one 32 dp line aligned with the Target column, muted once done. */
 @Composable
-private fun UpcomingRow(n: Int, last: LoggedSet, weight: String, reps: String) {
+private fun Label(symbol: Symbol, text: String, done: Boolean) {
+    val color = if (done) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.tertiary
+    Row(
+        Modifier.fillMaxWidth().height(LabelHeight).padding(start = RowPad + ColSet, end = RowPad),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SymbolIcon(symbol, null, Modifier.size(18.dp), tint = color)
+        Spacer(Modifier.width(8.dp))
+        Text(text, style = MaterialTheme.typography.labelLarge, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** The set's target: reps and the target RIR as a ring. */
+@Composable
+private fun Target(target: PlannedSet?) {
+    Row(Modifier.width(ColTarget), verticalAlignment = Alignment.CenterVertically) {
+        if (target != null) {
+            Text(
+                target.reps.toString(),
+                style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+            target.rir?.let {
+                Spacer(Modifier.width(8.dp))
+                RirMark(it, filled = false)
+            }
+        }
+    }
+}
+
+@Composable
+private fun UpcomingRow(n: Int, last: LoggedSet?, weight: String, reps: String, target: PlannedSet? = null) {
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     val color = MaterialTheme.colorScheme.outline
     Row(
@@ -391,6 +477,7 @@ private fun UpcomingRow(n: Int, last: LoggedSet, weight: String, reps: String) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SetNumber(n, active = false)
+        if (target != null) Target(target)
         Last(last)
         Text(weight, Modifier.width(ColKg), color = color, textAlign = TextAlign.Center, style = value)
         Text(reps, Modifier.width(ColReps), color = color, textAlign = TextAlign.Center, style = value, maxLines = 1)
@@ -400,15 +487,31 @@ private fun UpcomingRow(n: Int, last: LoggedSet, weight: String, reps: String) {
 
 /** The column heads. "Last" only shows once there is a last time to compare with. */
 @Composable
-private fun ColumnHeads(showLast: Boolean) {
+private fun ColumnHeads(showLast: Boolean, showTarget: Boolean = false) {
     val c = MaterialTheme.colorScheme.onSurfaceVariant
     val st = MaterialTheme.typography.labelMedium
     Row(Modifier.fillMaxWidth().height(LabelHeight).padding(horizontal = RowPad), verticalAlignment = Alignment.Bottom) {
         Spacer(Modifier.width(ColSet))
+        if (showTarget) Text(stringResource(R.string.col_target), Modifier.width(ColTarget), style = st, color = c)
         Text(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), style = st, color = c)
         Text(stringResource(R.string.col_kg), Modifier.width(ColKg), style = st, color = c, textAlign = TextAlign.Center)
         Text(stringResource(R.string.col_reps), Modifier.width(ColReps), style = st, color = c, textAlign = TextAlign.Center)
         Text(stringResource(R.string.col_rir), Modifier.width(ColRir), style = st, color = c, textAlign = TextAlign.Center)
+    }
+}
+
+/** Every planned set is logged: the pad gives way to Finish session. */
+@Composable
+private fun DayDoneBar(onFinish: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).navigationBarsPadding()
+            .padding(start = Margin, end = 16.dp, top = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SymbolIcon(Symbol.CheckCircle, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(16.dp))
+        Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+        Button(onClick = onFinish) { Text(stringResource(R.string.session_finish)) }
     }
 }
 
@@ -442,7 +545,7 @@ private fun RowScope.Last(last: LoggedSet?) {
 }
 
 @Composable
-private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet) {
+private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet, target: PlannedSet? = null) {
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     val color = MaterialTheme.colorScheme.onSurface
     Row(
@@ -450,6 +553,7 @@ private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SetNumber(n, active = false)
+        if (target != null) Target(target)
         Last(last)
         Text(formatKg(set.weightKg), Modifier.width(ColKg), color = color, textAlign = TextAlign.Center, style = value)
         val reps = set.repsText()
@@ -460,7 +564,7 @@ private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet) {
 }
 
 @Composable
-private fun ActiveRow(n: Int, last: LoggedSet?, entry: SetEntry, weightFlagged: Boolean, actions: SessionActions) {
+private fun ActiveRow(n: Int, last: LoggedSet?, entry: SetEntry, weightFlagged: Boolean, actions: SessionActions, target: PlannedSet? = null) {
     fun tap(field: Field) {
         actions.focus(field)
         actions.setPadVisible(true)
@@ -472,6 +576,7 @@ private fun ActiveRow(n: Int, last: LoggedSet?, entry: SetEntry, weightFlagged: 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SetNumber(n, active = true)
+        if (target != null) Target(target)
         Last(last)
         Cell(
             AnnotatedString(entry.weight),
@@ -595,9 +700,11 @@ private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: 
                             style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                             color = cs.onSurfaceVariant,
                         )
+                    } else {
+                        e.plan?.let { SetSummary(it) }
                     }
                 }
-                if (!now) FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
+                if (!now && !e.done) FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
             }
         }
         Row(
@@ -699,7 +806,13 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
  * the library knows: equipment and muscles, the technique note and the technique video.
  */
 @Composable
-internal fun ExerciseSheet(exercise: Exercise, machine: String?, onChangeMachine: (() -> Unit)?) {
+internal fun ExerciseSheet(
+    exercise: Exercise,
+    machine: String?,
+    onChangeMachine: (() -> Unit)?,
+    plan: List<PlannedSet>? = null,
+    slotNote: String? = null,
+) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     Column(Modifier.fillMaxWidth().padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding()) {
@@ -720,6 +833,16 @@ internal fun ExerciseSheet(exercise: Exercise, machine: String?, onChangeMachine
                 }
             }
         }
+        plan?.let { Prescription(it) }
+        slotNote?.let { note ->
+            Spacer(Modifier.height(24.dp))
+            val label = stringResource(R.string.sheet_program_note)
+            Row(Modifier.semantics { contentDescription = label }) {
+                SymbolIcon(Symbol.ViewTimeline, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                Spacer(Modifier.width(16.dp))
+                Text(note, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
         exercise.note?.let { note ->
             Spacer(Modifier.height(24.dp))
             Row {
@@ -736,6 +859,60 @@ internal fun ExerciseSheet(exercise: Exercise, machine: String?, onChangeMachine
                 Spacer(Modifier.width(8.dp))
                 Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
             }
+        }
+    }
+}
+
+/**
+ * Every planned set: number, target reps and RIR ring, and its technique or back-off rule. Rest
+ * is one line when every set shares it, else at the end of each row.
+ */
+@Composable
+private fun Prescription(plan: List<PlannedSet>) {
+    val cs = MaterialTheme.colorScheme
+    val sameRest = plan.map { it.rest }.distinct().size == 1
+    Spacer(Modifier.height(16.dp))
+    plan.forEachIndexed { i, set ->
+        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "${i + 1}",
+                Modifier.width(ColSet),
+                style = MaterialTheme.typography.titleMedium.merge(Tnum),
+                color = cs.onSurfaceVariant,
+            )
+            Text(set.reps.toString(), Modifier.width(56.dp), style = MaterialTheme.typography.bodyLarge.merge(Tnum), maxLines = 1)
+            Box(Modifier.width(32.dp)) { set.rir?.let { RirMark(it, filled = false) } }
+            val technique = set.technique
+            val backoff = set.backoff
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                when {
+                    technique != null -> {
+                        SymbolIcon(technique.symbol(), null, Modifier.size(18.dp), tint = cs.tertiary)
+                        Spacer(Modifier.width(8.dp))
+                        Text(techniqueText(technique), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    backoff != null -> {
+                        SymbolIcon(Symbol.SouthEast, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.technique_backoff, backoff.percent),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = cs.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+            if (!sameRest) Text(clock(set.rest * 1000L), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+        }
+    }
+    if (sameRest) {
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+            SymbolIcon(Symbol.Timer, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+            Spacer(Modifier.width(16.dp))
+            Text(stringResource(R.string.sheet_rest, clock(plan.first().rest * 1000L)), style = MaterialTheme.typography.bodyLarge.merge(Tnum))
         }
     }
 }
