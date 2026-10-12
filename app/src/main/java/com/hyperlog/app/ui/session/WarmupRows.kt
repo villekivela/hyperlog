@@ -57,7 +57,7 @@ internal fun LazyListScope.warmupRows(table: TableState) {
                 reps = w.reps,
                 plates = plates?.let { platesText(it, w.weightKg, current.exercise.equipment) },
                 done = i < current.warmupsDone,
-                onTick = { table.actions.tickWarmup(i) },
+                onTick = { table.onTickWarmup(i) },
             )
         }
     }

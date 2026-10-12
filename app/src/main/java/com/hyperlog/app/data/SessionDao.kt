@@ -132,4 +132,42 @@ interface SessionDao {
 
     @Query("UPDATE session_exercise SET position = :position WHERE id = :id")
     suspend fun setPosition(id: Long, position: Int)
+
+    /** Corrects a logged set's values. A corrected weight is typed on purpose, so it's no longer a kept one. */
+    @Query(
+        """
+        UPDATE logged_set SET weight_kg = :weightKg, full_reps = :fullReps, partial_reps = :partialReps,
+            rir = :rir, right_reps = :rightReps, kept = 0
+        WHERE id = :id
+        """,
+    )
+    suspend fun correctSet(id: Long, weightKg: Double, fullReps: Int, partialReps: Int, rir: Int, rightReps: Int?)
+
+    /** Mini-sets and a hold are done at their set's weight, so they follow a corrected one. */
+    @Query("UPDATE set_extension SET weight_kg = :weightKg WHERE logged_set_id = :loggedSetId AND kind IN ('MiniSet', 'Hold')")
+    suspend fun moveSetWeight(loggedSetId: Long, weightKg: Double)
+
+    @Query("UPDATE set_extension SET weight_kg = :weightKg, reps = :reps WHERE id = :id")
+    suspend fun correctExtension(id: Long, weightKg: Double, reps: Int)
+
+    /** Every finished session, newest first. */
+    @Query("SELECT * FROM session WHERE finished_at IS NOT NULL ORDER BY started_at DESC, id DESC")
+    suspend fun finishedSessions(): List<SessionEntity>
+
+    /**
+     * The sets of [exerciseId] from the latest session before [before] in which any were logged:
+     * last time, as a past session saw it. With [anyItem] false only those on equipment item [itemId].
+     */
+    @Query(
+        """
+        SELECT * FROM logged_set WHERE session_exercise_id = (
+            SELECT se.id FROM session_exercise se JOIN session s ON s.id = se.session_id
+            WHERE se.exercise_id = :exerciseId AND se.session_id != :sessionId AND s.started_at < :before
+              AND (:anyItem OR se.equipment_item_id IS :itemId)
+              AND EXISTS (SELECT 1 FROM logged_set x WHERE x.session_exercise_id = se.id)
+            ORDER BY s.started_at DESC, se.id DESC LIMIT 1
+        ) ORDER BY position
+        """,
+    )
+    suspend fun lastTimeBefore(exerciseId: String, sessionId: Long, before: Long, anyItem: Boolean, itemId: Long?): List<LoggedSetEntity>
 }

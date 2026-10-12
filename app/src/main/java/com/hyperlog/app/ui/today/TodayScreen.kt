@@ -78,6 +78,8 @@ fun TodayScreen(
     program: ActiveProgram? = null,
     exerciseNames: Map<String, String> = emptyMap(),
     onProgram: () -> Unit = {},
+    /** Opens the past sessions, to look at or correct (History hosts them later). */
+    onPastSessions: () -> Unit = {},
     /** The starter program, offered while no program runs; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
@@ -104,6 +106,9 @@ fun TodayScreen(
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.
                 title = { Text(stringResource(R.string.today_title), Modifier.padding(start = 8.dp)) },
                 actions = {
+                    IconButton(onClick = onPastSessions) {
+                        SymbolIcon(Symbol.History, stringResource(R.string.past_title))
+                    }
                     IconButton(onClick = onProgram) {
                         SymbolIcon(Symbol.ViewTimeline, stringResource(R.string.program_title))
                     }

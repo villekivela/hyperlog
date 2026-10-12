@@ -30,9 +30,12 @@ import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
 
-/** The end of a session: every exercise with its sets, `25 × 10 @ 2`. */
+/**
+ * The end of a session: every exercise with its sets, `25 × 10 @ 2`. With [onOpen] an exercise
+ * opens to look at or correct (by its place in [summary]).
+ */
 @Composable
-fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, onOpen: ((Int) -> Unit)? = null) {
     BackHandler(onBack = onClose)
     val cs = MaterialTheme.colorScheme
     Surface(modifier.fillMaxSize(), color = cs.surface) {
@@ -51,17 +54,7 @@ fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: ()
                     color = cs.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(16.dp))
-                summary.exercises.forEach { e ->
-                    Column(Modifier.fillMaxWidth().padding(horizontal = Margin, vertical = 8.dp)) {
-                        Text(e.name, style = MaterialTheme.typography.bodyLarge)
-                        // Spaces inside a set never break, so a set is never split across lines.
-                        Text(
-                            e.sets.joinToString("   ") { it.summary().replace(' ', ' ') },
-                            style = MaterialTheme.typography.bodyMedium.merge(Tnum),
-                            color = cs.onSurfaceVariant,
-                        )
-                    }
-                }
+                SummaryRows(summary.exercises, onOpen)
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = Margin, vertical = 16.dp), horizontalArrangement = Arrangement.End) {
                 // Finished by mistake: back into the session exactly as it was.

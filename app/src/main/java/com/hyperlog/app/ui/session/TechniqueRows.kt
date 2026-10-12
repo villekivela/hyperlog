@@ -1,6 +1,10 @@
 package com.hyperlog.app.ui.session
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,7 +94,12 @@ internal fun LazyListScope.techniqueRows(table: TableState, index: Int, techniqu
                 val last = lastDrops.getOrNull(j)?.let { "${formatKg(it.weightKg)} × ${it.reps}" }
                 item(key = "ext-$index-$j") {
                     when {
-                        j < logged.size -> DoneSubRow(showTarget, SubTarget.ToFailure, last, logged[j].weightKg, "${logged[j].reps}")
+                        table.corrects(index, j) -> ActiveSubRow(showTarget, SubTarget.ToFailure, last, table, weightLocked = false, correcting = table.correction!!.entry, hold = false)
+                        j < logged.size -> DoneSubRow(
+                            showTarget, SubTarget.ToFailure, last, logged[j].weightKg, "${logged[j].reps}",
+                            onCorrect = table.onCorrect?.let { { it(index, j) } },
+                            description = stringResource(R.string.correct_drop_description, j + 1, index + 1),
+                        )
                         open && j == logged.size -> ActiveSubRow(showTarget, SubTarget.ToFailure, last, table, weightLocked = false)
                         else -> PlannedSubRow(showTarget, SubTarget.ToFailure, last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}")
                     }
@@ -100,7 +109,14 @@ internal fun LazyListScope.techniqueRows(table: TableState, index: Int, techniqu
         is Technique.MyoReps -> {
             val target = SubTarget.Value("${technique.miniSetReps}")
             logged.forEachIndexed { j, mini ->
-                item(key = "ext-$index-$j") { DoneSubRow(showTarget, target, null, mini.weightKg, "${mini.reps}") }
+                item(key = "ext-$index-$j") {
+                    if (table.corrects(index, j)) ActiveSubRow(showTarget, target, null, table, weightLocked = true, correcting = table.correction!!.entry, hold = false)
+                    else DoneSubRow(
+                        showTarget, target, null, mini.weightKg, "${mini.reps}",
+                        onCorrect = table.onCorrect?.let { { it(index, j) } },
+                        description = stringResource(R.string.correct_mini_set_description, j + 1, index + 1),
+                    )
+                }
             }
             when {
                 open -> item(key = "ext-$index-${logged.size}") { ActiveSubRow(showTarget, target, null, table, weightLocked = true) }
@@ -112,7 +128,14 @@ internal fun LazyListScope.techniqueRows(table: TableState, index: Int, techniqu
             val target = SubTarget.Value(seconds(technique.seconds))
             val last = lastTime.firstOrNull { it.kind == Extension.Kind.Hold }?.let { seconds(it.reps) }
             when {
-                logged.isNotEmpty() -> item(key = "ext-$index-0") { DoneSubRow(showTarget, target, last, logged[0].weightKg, seconds(logged[0].reps)) }
+                logged.isNotEmpty() -> item(key = "ext-$index-0") {
+                    if (table.corrects(index, 0)) ActiveSubRow(showTarget, target, last, table, weightLocked = true, correcting = table.correction!!.entry, hold = true)
+                    else DoneSubRow(
+                        showTarget, target, last, logged[0].weightKg, seconds(logged[0].reps),
+                        onCorrect = table.onCorrect?.let { { it(index, 0) } },
+                        description = stringResource(R.string.correct_hold_description, index + 1),
+                    )
+                }
                 open -> item(key = "ext-$index-0") { ActiveSubRow(showTarget, target, last, table, weightLocked = true) }
                 set == null -> item(key = "ext-$index-0") { PlannedSubRow(showTarget, target, last, plannedKg, seconds(technique.seconds)) }
             }
@@ -130,6 +153,14 @@ private fun SubRow(modifier: Modifier = Modifier, content: @Composable RowScope.
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
+}
+
+/** The set column of a row being corrected: `edit` in primary. */
+@Composable
+internal fun RowScope.EditLead(description: String? = null) {
+    Box(Modifier.width(ColSet).then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier)) {
+        SymbolIcon(Symbol.Edit, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+    }
 }
 
 /** The set column of a sub-row: `subdirectory_arrow_right`, so it reads as part of the set above. */
@@ -183,12 +214,15 @@ private fun PlannedSubRow(showTarget: Boolean, target: SubTarget, last: String?,
     }
 }
 
-/** A drop or mini-set done: full contrast, ending in a check, since drops and mini-sets have no RIR. */
+/**
+ * A drop or mini-set done: full contrast, ending in a check, since drops and mini-sets have no
+ * RIR. A tap loads it into the pad to correct it.
+ */
 @Composable
-private fun DoneSubRow(showTarget: Boolean, target: SubTarget, last: String?, kg: Double, reps: String) {
+private fun DoneSubRow(showTarget: Boolean, target: SubTarget, last: String?, kg: Double, reps: String, onCorrect: (() -> Unit)? = null, description: String? = null) {
     val style = MaterialTheme.typography.titleLarge.merge(Tnum)
     val color = MaterialTheme.colorScheme.onSurface
-    SubRow {
+    SubRow(if (onCorrect != null) Modifier.clip(RowShape).clickable(onClickLabel = description, onClick = onCorrect).semantics { contentDescription = description.orEmpty() } else Modifier) {
         SubLead()
         SubTargetCell(showTarget, target)
         SubLast(last)
@@ -205,16 +239,25 @@ private fun DoneSubRow(showTarget: Boolean, target: SubTarget, last: String?, kg
  * are at the set's weight, so their weight is muted and can't be tapped.
  */
 @Composable
-private fun ActiveSubRow(showTarget: Boolean, target: SubTarget, last: String?, table: TableState, weightLocked: Boolean) {
-    val entry = table.entry ?: return
+private fun ActiveSubRow(
+    showTarget: Boolean,
+    target: SubTarget,
+    last: String?,
+    table: TableState,
+    weightLocked: Boolean,
+    /** A logged drop, mini-set or hold being corrected, with the hold's seconds in [hold]; null for the one being done. */
+    correcting: SetEntry? = null,
+    hold: Boolean = table.followUp is FollowUp.Hold,
+) {
+    val entry = correcting ?: table.entry ?: return
     val actions = table.actions
     fun tap(field: Field) {
         actions.focus(field)
         actions.setPadVisible(true)
     }
-    val hold = table.followUp is FollowUp.Hold
     SubRow(Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh, RowShape).testTag(ActiveSubRowTag)) {
-        SubLead()
+        // Being corrected: `edit` in place of the arrow, as a corrected set's number is.
+        if (correcting != null) EditLead() else SubLead()
         SubTargetCell(showTarget, target)
         SubLast(last)
         if (weightLocked) {
@@ -229,7 +272,7 @@ private fun ActiveSubRow(showTarget: Boolean, target: SubTarget, last: String?, 
             Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg)) { tap(Field.Weight) }
         }
         val reps = when {
-            table.holdSeconds != null -> AnnotatedString(seconds(table.holdSeconds))
+            correcting == null && table.holdSeconds != null -> AnnotatedString(seconds(table.holdSeconds))
             hold -> AnnotatedString(seconds(entry.full.toIntOrNull() ?: 0))
             else -> repsAnnotated(entry)
         }
@@ -245,7 +288,7 @@ internal const val ActiveSubRowTag = "active-sub-row"
  * and **Finish set** to close the set early.
  */
 @Composable
-internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, actions: SessionActions) {
+internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, actions: PadActions) {
     val cs = MaterialTheme.colorScheme
     val (symbol, text) = when (followUp) {
         is FollowUp.Drop -> Symbol.TrendingDown to stringResource(R.string.follow_drop, followUp.index + 1, followUp.count)

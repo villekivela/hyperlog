@@ -112,4 +112,8 @@ private object NoActions : com.hyperlog.app.ui.session.SessionActions {
     override fun removeExercise(sessionExerciseId: Long) = Unit
     override fun move(sessionExerciseId: Long, by: Int) = Unit
     override fun tickWarmup(index: Int) = Unit
+    override fun open(sessionExerciseId: Long) = Unit
+    override fun closeView() = Unit
+    override fun correct(sessionExerciseId: Long, set: Int, extension: Int?) = Unit
+    override fun cancelCorrection() = Unit
 }

@@ -41,6 +41,8 @@ import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.session.FollowUp
+import com.hyperlog.app.session.Correction
+import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
@@ -54,12 +56,14 @@ internal fun Pad(
     entry: SetEntry,
     ladder: WeightLadder,
     check: WeightCheck?,
-    actions: SessionActions,
+    actions: PadActions,
     modifier: Modifier = Modifier,
     /** The open set's drop, mini-set or hold being typed; its strip shows progress and Finish set. */
     followUp: FollowUp? = null,
     holdRunning: Boolean = false,
     canConfirm: Boolean = entry.canConfirm,
+    /** The logged row being corrected: the hide key cancels it, and ✓ saves it. */
+    correction: Correction? = null,
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
@@ -69,6 +73,8 @@ internal fun Pad(
                 val typed = entry.weightKg
                 if (check != null) {
                     WeightCheckStrip(check, actions)
+                } else if (correction?.kind != null && !onWeight) {
+                    CorrectionStrip(correction)
                 } else if (followUp != null && !onWeight) {
                     FollowUpStrip(followUp, holdRunning, actions)
                 } else if (onWeight && typed == null) {
@@ -99,10 +105,12 @@ internal fun Pad(
                 KeyRow { DigitKey(4, actions); DigitKey(5, actions); DigitKey(6, actions); SymbolKey(Symbol.Remove, R.string.pad_minus) { actions.press(PadKey.Minus) } }
                 KeyRow { DigitKey(7, actions); DigitKey(8, actions); DigitKey(9, actions); SymbolKey(Symbol.Add, R.string.pad_plus) { actions.press(PadKey.Plus) } }
                 KeyRow {
-                    SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
+                    // A correction can only be saved or cancelled, so the hide key cancels it.
+                    if (correction != null) SymbolKey(Symbol.Close, R.string.pad_cancel_correction) { actions.cancelCorrection() }
+                    else SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
                     DigitKey(0, actions)
                     if (onWeight) TextKey(".", stringResource(R.string.pad_dot)) { actions.press(PadKey.Dot) } else Spacer(Modifier.weight(1f))
-                    DoneKey(entry, actions, keeps = check != null, enabled = canConfirm)
+                    DoneKey(entry, actions, keeps = check != null, enabled = canConfirm, saves = correction != null)
                 }
             }
         }
@@ -114,7 +122,7 @@ internal fun Pad(
  * weights. ✓ turns error-coloured too, because the next ✓ keeps the weight as typed.
  */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: WeightCheck, actions: SessionActions) {
+private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: WeightCheck, actions: PadActions) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.weight(1.5f).padding(start = 8.dp).testTag(WeightCheckTag),
@@ -132,9 +140,27 @@ private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: 
     }
 }
 
+/**
+ * The strip while a drop, mini-set or hold is corrected: which one it is, after `edit`. It has no
+ * RIR to pick, since drops and mini-sets are taken to failure.
+ */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.CorrectionStrip(correction: Correction) {
+    val n = (correction.extension ?: 0) + 1
+    val text = when (correction.kind) {
+        Extension.Kind.Drop -> stringResource(R.string.correct_strip_drop, n, correction.set + 1)
+        Extension.Kind.MiniSet -> stringResource(R.string.correct_strip_mini_set, n, correction.set + 1)
+        else -> stringResource(R.string.correct_strip_hold, correction.set + 1)
+    }
+    Spacer(Modifier.width(8.dp))
+    SymbolIcon(Symbol.Edit, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+    Spacer(Modifier.width(8.dp))
+    Text(text, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+}
+
 /** The pad folded down to its bottom corners: show the pad, and ✓ to log the set as shown. */
 @Composable
-internal fun HiddenPad(entry: SetEntry, actions: SessionActions, modifier: Modifier = Modifier, canConfirm: Boolean = entry.canConfirm) {
+internal fun HiddenPad(entry: SetEntry, actions: PadActions, modifier: Modifier = Modifier, canConfirm: Boolean = entry.canConfirm) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp),
@@ -159,7 +185,7 @@ private fun KeyRow(content: @Composable androidx.compose.foundation.layout.RowSc
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.DigitKey(value: Int, actions: SessionActions) {
+private fun androidx.compose.foundation.layout.RowScope.DigitKey(value: Int, actions: PadActions) {
     TextKey("$value", "$value") { actions.press(PadKey.Digit(value)) }
 }
 
@@ -175,11 +201,11 @@ private fun androidx.compose.foundation.layout.RowScope.SymbolKey(symbol: Symbol
 
 /** ✓: one key, the same size as the others, filled primary. On the weight it reads →. */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: SessionActions, keeps: Boolean, enabled: Boolean) {
+private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: PadActions, keeps: Boolean, enabled: Boolean, saves: Boolean = false) {
     val cs = MaterialTheme.colorScheme
     val onWeight = entry.field == Field.Weight
     Key(
-        stringResource(if (onWeight) R.string.pad_next else R.string.pad_log),
+        stringResource(if (onWeight) R.string.pad_next else if (saves) R.string.pad_save_correction else R.string.pad_log),
         modifier = Modifier.testTag(DoneKeyTag),
         container = when { keeps -> cs.error; enabled -> cs.primary; else -> cs.surfaceContainerHigh },
         content = when { keeps -> cs.onError; enabled -> cs.onPrimary; else -> cs.outline },

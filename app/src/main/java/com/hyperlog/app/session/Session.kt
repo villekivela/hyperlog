@@ -98,8 +98,18 @@ data class ActiveSession(
     val holdStartedAt: Long? = null,
     /** The open set's row, to add its drops, mini-sets or hold to. */
     internal val openSetId: Long? = null,
+    /** A finished exercise opened from the session list, shown in place of [current]; null when none. */
+    val viewingId: Long? = null,
+    /** The logged row loaded into the pad to be corrected; null when none. [entry] stays the set to do. */
+    val correction: Correction? = null,
 ) {
     val current: SessionExercise? get() = exercises.firstOrNull { it.id == currentId }
+
+    /** The exercise on screen: a finished one being looked at, else [current]. */
+    val shown: SessionExercise? get() = exercises.firstOrNull { it.id == viewingId } ?: current
+
+    /** Logged rows can be tapped to correct them, except while a set is open for its drops, mini-sets or hold. */
+    val correctable: Boolean get() = followUp == null
 
     /**
      * The warm-ups before [current]'s first work set, ramped from the weight planned or typed

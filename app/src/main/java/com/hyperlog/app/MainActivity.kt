@@ -34,6 +34,10 @@ import com.hyperlog.app.ui.program.ProgramViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hyperlog.app.ui.session.SessionDoneScreen
+import com.hyperlog.app.ui.session.PastExerciseScreen
+import com.hyperlog.app.ui.session.PastSessionScreen
+import com.hyperlog.app.ui.session.PastSessionsScreen
+import com.hyperlog.app.ui.session.PastSessionsViewModel
 import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.session.SessionViewModel
 import com.hyperlog.app.ui.settings.SettingsScreen
@@ -47,12 +51,13 @@ class MainActivity : ComponentActivity() {
     private val gyms: GymsViewModel by viewModels()
     private val programs: ProgramViewModel by viewModels()
     private val startingWeights: StartingWeightsViewModel by viewModels()
+    private val past: PastSessionsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past) }
         }
     }
 
@@ -86,7 +91,7 @@ private fun AskForNotifications() {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program }
+private enum class Screen { Today, Settings, Library, Gyms, Program, Past }
 
 /** Marks a new exercise in the editor, which otherwise holds the id of the one being edited. */
 private const val NewExercise = ""
@@ -108,6 +113,7 @@ private fun App(
     gymsModel: GymsViewModel,
     programModel: ProgramViewModel,
     startingWeightsModel: StartingWeightsViewModel,
+    pastModel: PastSessionsViewModel,
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -133,16 +139,23 @@ private fun App(
     var gymId by rememberSaveable { mutableStateOf<Long?>(null) }
     /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
+    val pastSession by pastModel.session.collectAsStateWithLifecycle()
+    val pastSessions by pastModel.sessions.collectAsStateWithLifecycle()
     if (!loaded) return
 
     val running = session
     val finished = summary
     if (running != null) AskForNotifications()
+    // Session done reads the finished session back, so a correction made from it shows at once.
+    LaunchedEffect(finished?.sessionId) { finished?.let { pastModel.open(it.sessionId) } }
+    val done = pastSession?.takeIf { it.id == finished?.sessionId }
     when {
+        finished != null && done?.shown != null -> PastExerciseScreen(done, pastModel, onBack = { pastModel.show(null) })
         finished != null -> SessionDoneScreen(
-            finished,
-            onResume = { sessions.resumeFinished(); left = false },
-            onClose = { sessions.dismissSummary(); left = false },
+            done?.summary ?: finished,
+            onResume = { pastModel.close(); sessions.resumeFinished(); left = false },
+            onClose = { pastModel.close(); sessions.dismissSummary(); left = false },
+            onOpen = done?.let { d -> { i: Int -> pastModel.show(d.exercises[i].id) } },
         )
         running != null && !left -> SessionScreen(
             running,
@@ -229,6 +242,13 @@ private fun App(
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
         )
+        screen == Screen.Past && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
+        screen == Screen.Past && pastSession != null -> PastSessionScreen(
+            pastSession!!,
+            onOpen = pastModel::show,
+            onBack = { pastModel.close(); pastModel.refresh() },
+        )
+        screen == Screen.Past -> PastSessionsScreen(pastSessions, onOpen = pastModel::open, onBack = { screen = Screen.Today })
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
@@ -251,6 +271,7 @@ private fun App(
             program = program,
             exerciseNames = exercises.associate { it.id to it.name },
             onProgram = { screen = Screen.Program },
+            onPastSessions = { pastModel.refresh(); screen = Screen.Past },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
         )

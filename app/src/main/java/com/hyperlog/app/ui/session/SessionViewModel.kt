@@ -26,8 +26,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** What the session screen can ask for. Each call is saved as soon as it is made. */
-interface SessionActions {
+/** What the pad and the set table's active row ask for: the running session's, or a past session's corrections. */
+interface PadActions {
     fun press(key: PadKey)
     fun done()
     fun selectRir(value: Int)
@@ -35,6 +35,18 @@ interface SessionActions {
     fun partialMode(on: Boolean)
     fun pickWeight(kg: Double)
     fun setPadVisible(visible: Boolean)
+    /** Closes the open drop set, myo-reps or hold before its technique runs out. */
+    fun finishSet()
+    fun startHold()
+    fun stopHold()
+    /** Splits the active set of a unilateral exercise into left and right, or back. */
+    fun split(on: Boolean)
+    /** The pad's cancel key while correcting: the row keeps what it had. */
+    fun cancelCorrection()
+}
+
+/** What the session screen can ask for. Each call is saved as soon as it is made. */
+interface SessionActions : PadActions {
     fun addExercise(exerciseId: String)
     fun switchTo(sessionExerciseId: Long)
     fun adjustRest(deltaMs: Long)
@@ -46,14 +58,8 @@ interface SessionActions {
     fun addMachine(name: String, ladder: LadderSpec)
     /** Asks "Which machine?" again, before any set is logged on it. */
     fun changeMachine()
-    /** Closes the open drop set, myo-reps or hold before its technique runs out. */
-    fun finishSet()
-    fun startHold()
-    fun stopHold()
     /** Gives set [setIndex] of the exercise on screen a technique for this session, or none. */
     fun setTechnique(setIndex: Int, technique: Technique?)
-    /** Splits the active set of a unilateral exercise into left and right, or back. */
-    fun split(on: Boolean)
     /** Swaps a session exercise to another exercise, for this session only. */
     fun swap(sessionExerciseId: Long, exerciseId: String)
     fun addSet(sessionExerciseId: Long)
@@ -66,6 +72,12 @@ interface SessionActions {
     fun move(sessionExerciseId: Long, by: Int)
     /** Ticks warm-up [index] off (with the ones before it), or takes the last tick back. */
     fun tickWarmup(index: Int)
+    /** Opens an exercise from the session list: a finished one to look at or correct, any other to do. */
+    fun open(sessionExerciseId: Long)
+    /** Back from a finished exercise to the one the session is on. */
+    fun closeView()
+    /** Loads a logged set, or its drop, mini-set or hold [extension], into the pad to correct it. */
+    fun correct(sessionExerciseId: Long, set: Int, extension: Int?)
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -141,6 +153,10 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         run { logger.setTarget(sessionExerciseId, setIndex, reps, rir) }
     override fun removeExercise(sessionExerciseId: Long) = run { logger.removeExercise(sessionExerciseId) }
     override fun move(sessionExerciseId: Long, by: Int) = run { logger.move(sessionExerciseId, by) }
+    override fun open(sessionExerciseId: Long) = run { logger.open(sessionExerciseId) }
+    override fun closeView() = run { logger.closeView() }
+    override fun correct(sessionExerciseId: Long, set: Int, extension: Int?) = run { logger.correct(sessionExerciseId, set, extension) }
+    override fun cancelCorrection() = run { logger.cancelCorrection() }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

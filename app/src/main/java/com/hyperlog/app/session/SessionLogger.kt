@@ -68,6 +68,10 @@ class SessionLogger(
     private var lastLoggedAt: Long? = null
     /** The entry a weight check was raised for, and when: a second ✓ on it keeps the weight. */
     private var checked: Pair<SetEntry, Long>? = null
+    private val corrections = SetCorrections(db)
+    /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
+    private var correction: Correction? = null
+    private var viewingId: Long? = null
 
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
@@ -292,7 +296,12 @@ class SessionLogger(
     /** Puts another exercise of the session on screen. Rest keeps running. */
     suspend fun switchTo(sessionExerciseId: Long) = locked {
         val session = _state.value ?: return@locked
-        if (session.currentId == sessionExerciseId) return@locked
+        correction = null
+        viewingId = null
+        if (session.currentId == sessionExerciseId) {
+            reload()
+            return@locked
+        }
         val current = session.current
         var row = dao.session(session.id)!!
         // Leaving an open set closes it, so its rest runs while the other exercise comes up.
@@ -301,12 +310,98 @@ class SessionLogger(
         reload()
     }
 
+    /**
+     * Opens [sessionExerciseId] from the session list: a finished exercise is shown to look at or
+     * correct, while the session stays where it is; any other comes up as [switchTo] does.
+     */
+    suspend fun open(sessionExerciseId: Long) {
+        val session = _state.value ?: return
+        val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return
+        if (!exercise.done || sessionExerciseId == session.currentId) return switchTo(sessionExerciseId)
+        locked {
+            correction = null
+            viewingId = sessionExerciseId
+            reload()
+        }
+    }
+
+    /** Back from a finished exercise to the one the session is on. */
+    suspend fun closeView() = locked {
+        correction = null
+        viewingId = null
+        reload()
+    }
+
+    /**
+     * Loads set [set] of [sessionExerciseId], or its drop, mini-set or hold [extension], into the
+     * pad to correct it. Nothing else changes: rest runs on and the set to do keeps its entry.
+     * Not while a set is open for its drops, mini-sets or hold.
+     */
+    suspend fun correct(sessionExerciseId: Long, set: Int, extension: Int? = null) = locked {
+        val session = _state.value ?: return@locked
+        if (!session.correctable) return@locked
+        correction = corrections.load(sessionExerciseId, set, extension) ?: return@locked
+        checked = null
+        _state.value = session.copy(correction = correction, weightCheck = null)
+    }
+
+    /** The hide key while correcting: the row keeps what it had. */
+    suspend fun cancelCorrection() = locked {
+        val session = _state.value ?: return@locked
+        correction = null
+        _state.value = session.copy(correction = null)
+    }
+
+    /**
+     * Logged sets changed outside the session (a past session was corrected): the suggestion and
+     * last time are worked out again, and an untouched prefill with them.
+     */
+    suspend fun historyChanged() = locked {
+        val session = _state.value ?: return@locked
+        if (untouched(session, session.currentId)) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+        reload()
+    }
+
+    /** The set to do of [exerciseId] still has the prefill it started with: nothing has been typed into it. */
+    private suspend fun untouched(session: ActiveSession, exerciseId: Long?): Boolean {
+        val current = session.current ?: return false
+        if (current.id != exerciseId || session.followUp != null || current.done || current.needsMachine) return false
+        return session.entry != null && session.entry == prefill(current)
+    }
+
+    private suspend fun saveCorrection(session: ActiveSession, fixing: Correction) {
+        when (val step = fixing.done()) {
+            is Correction.Step.Moved -> {
+                correction = step.correction
+                _state.value = session.copy(correction = step.correction)
+            }
+            is Correction.Step.SaveSet -> finishCorrection(session, fixing) { corrections.saveSet(fixing, step.set) }
+            is Correction.Step.SaveExtension -> finishCorrection(session, fixing) { corrections.saveExtension(fixing, step.extension) }
+            Correction.Step.Nothing -> Unit
+        }
+    }
+
+    /**
+     * Saves a correction and reloads. Sets after it are prefilled from it, so an untouched prefill
+     * of the set to do is worked out again; rest is never touched.
+     */
+    private suspend fun finishCorrection(session: ActiveSession, fixing: Correction, save: suspend () -> Unit) {
+        val untouched = untouched(session, fixing.sessionExerciseId)
+        save()
+        if (untouched) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+        correction = null
+        // A second ✓ right after saving is a stutter, not the set to do.
+        lastLoggedAt = clock()
+        reload()
+    }
+
     suspend fun press(key: PadKey) = editEntry { entry, ladder -> entry.press(key, ladder) }
     suspend fun selectRir(value: Int) = editEntry { entry, _ -> entry.selectRir(value) }
 
     /** A myo mini-set and a hold are done at the set's weight, so their weight can't be focused. */
     suspend fun focus(field: Field) = editEntry { entry, _ ->
-        val locked = _state.value?.followUp.let { it is FollowUp.MiniSet || it is FollowUp.Hold }
+        val fixing = _state.value?.correction
+        val locked = if (fixing != null) fixing.weightLocked else _state.value?.followUp.let { it is FollowUp.MiniSet || it is FollowUp.Hold }
         if (field == Field.Weight && locked) entry else entry.focus(field)
     }
     suspend fun partialMode(on: Boolean) = editEntry { entry, _ -> entry.partialMode(on) }
@@ -314,7 +409,10 @@ class SessionLogger(
     /** Splits the active set of a unilateral exercise into left and right, or back to one number. */
     suspend fun split(on: Boolean) = editEntry { entry, _ ->
         val session = _state.value
-        if (session?.current?.exercise?.unilateral == true && session.followUp == null) entry.split(on) else entry
+        val fixing = session?.correction
+        val exercise = (if (fixing != null) session.exercises.firstOrNull { it.id == fixing.sessionExerciseId } else session?.current)?.exercise
+        val splittable = if (fixing != null) fixing.kind == null else session?.followUp == null
+        if (exercise?.unilateral == true && splittable) entry.split(on) else entry
     }
 
     /**
@@ -329,6 +427,10 @@ class SessionLogger(
      */
     suspend fun done() = locked {
         val session = _state.value ?: return@locked
+        session.correction?.let {
+            saveCorrection(session, it)
+            return@locked
+        }
         val current = session.current ?: return@locked
         var entry = session.entry ?: return@locked
         val followUp = session.followUp
@@ -521,6 +623,8 @@ class SessionLogger(
             _state.value = null
             return@locked null
         }
+        correction = null
+        viewingId = null
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         _state.value = null
@@ -540,6 +644,13 @@ class SessionLogger(
 
     private suspend fun editEntry(change: (SetEntry, WeightLadder) -> SetEntry) = locked {
         val session = _state.value ?: return@locked
+        session.correction?.let { fixing ->
+            val ladder = session.exercises.firstOrNull { it.id == fixing.sessionExerciseId }?.ladder ?: return@locked
+            val next = fixing.copy(entry = change(fixing.entry, ladder))
+            correction = next
+            _state.value = session.copy(correction = next)
+            return@locked
+        }
         val current = session.current ?: return@locked
         val entry = session.entry ?: return@locked
         val next = change(entry, current.ladder)
@@ -630,15 +741,12 @@ class SessionLogger(
             entry = null
         }
         if (entry == null && current != null && !current.needsMachine && !current.done) {
-            val plan = current.plan
-            entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
-            else current.suggestion?.let { s ->
-                SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
-            } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
-            // A split set is followed by a split set, starting from its right side's reps.
-            current.sets.lastOrNull()?.rightReps?.let { entry = entry!!.copy(right = it.toString()) }
-            dao.updateSession(row.copy(entry = entry!!.toColumns()))
+            val fresh = prefill(current)
+            entry = fresh
+            dao.updateSession(row.copy(entry = fresh.toColumns()))
         }
+        viewingId = exercises.firstOrNull { it.id == viewingId && it.id != current?.id }?.id
+        correction = correction?.takeIf { c -> followUp == null && exercises.any { it.id == c.sessionExerciseId } }
         _state.value = ActiveSession(
             id = row.id,
             startedAt = row.startedAt,
@@ -654,7 +762,20 @@ class SessionLogger(
             breathing = row.breathing,
             holdStartedAt = row.holdStartedAt,
             openSetId = row.openSetId.takeIf { followUp != null },
+            viewingId = viewingId,
+            correction = correction,
         )
+    }
+
+    /** The entry the next set of [current] starts with, before anything is typed. */
+    private suspend fun prefill(current: SessionExercise): SetEntry {
+        val plan = current.plan
+        val entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
+        else current.suggestion?.let { s ->
+            SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
+        } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
+        // A split set is followed by a split set, starting from its right side's reps.
+        return current.sets.lastOrNull()?.rightReps?.let { entry.copy(right = it.toString()) } ?: entry
     }
 
     private suspend fun loggedSet(row: LoggedSetEntity) = row.toLoggedSet(dao.extensions(row.id).map { it.toExtension() })
@@ -731,10 +852,10 @@ private fun LoggedSet.toEntity(sessionExerciseId: Long, position: Int, loggedAt:
         technique = technique?.let(TechniqueJson::encode), rightReps = rightReps,
     )
 
-private fun LoggedSetEntity.toLoggedSet(extensions: List<Extension>) =
+internal fun LoggedSetEntity.toLoggedSet(extensions: List<Extension>) =
     LoggedSet(weightKg, fullReps, partialReps, rir, kept, technique?.let(TechniqueJson::decode), extensions, rightReps)
 
-private fun SetExtensionEntity.toExtension() = Extension(Extension.Kind.valueOf(kind), weightKg, reps)
+internal fun SetExtensionEntity.toExtension() = Extension(Extension.Kind.valueOf(kind), weightKg, reps)
 
 private fun SetEntry.toColumns() = EntryColumns(weight, full, partial, rir, field.name, partialMode, fresh, right)
 

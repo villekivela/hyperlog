@@ -92,6 +92,7 @@ import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.session.SessionOrder
 import com.hyperlog.app.session.FollowUp
+import com.hyperlog.app.session.Correction
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
@@ -132,9 +133,18 @@ fun SessionScreen(
     val now = rememberNow()
     KeepScreenOn()
 
-    BackHandler { showLeave = true }
+    // Back steps out of a correction, then out of a finished exercise, and only then asks to leave.
+    BackHandler {
+        when {
+            session.correction != null -> actions.cancelCorrection()
+            session.viewingId != null -> actions.closeView()
+            else -> showLeave = true
+        }
+    }
 
     val current = session.current
+    /** A finished exercise opened from the list, looked at in place of the current one. */
+    val viewing = session.shown?.takeIf { session.viewingId != null }
     var addingMachine by rememberSaveable { mutableStateOf(false) }
     if (addingMachine && current != null && current.needsMachine) {
         // Machines get a name for what they are; a cable station serves many exercises.
@@ -160,9 +170,40 @@ fun SessionScreen(
                         onPick = actions::addExercise,
                         modifier = Modifier.weight(1f),
                     )
+                } else if (viewing != null) {
+                    Header(
+                        exercise = viewing,
+                        session = session,
+                        now = now,
+                        onName = { showDetails = true },
+                        onTimer = { showRest = true },
+                        onAddExercise = { showPicker = true },
+                        onFinish = { showFinish = true },
+                        activeSet = null,
+                        onSetOptions = {},
+                        onSwap = null,
+                        onRemove = null,
+                        swappedFrom = viewing.slot?.exercise?.takeIf { it != viewing.exercise.id }
+                            ?.let { id -> exercises.firstOrNull { it.id == id }?.name },
+                    )
+                    SetTable(
+                        TableState(
+                            viewing, entry = null, followUp = null, weightFlagged = false, holdSeconds = null,
+                            actions = actions, onSetOptions = {},
+                            correction = session.correction,
+                            onCorrect = { set, ext -> actions.correct(viewing.id, set, ext) },
+                        ),
+                        Modifier.weight(1f),
+                    )
+                    // The way back to the set the session is on.
+                    NextLine(
+                        label = stringResource(R.string.session_now),
+                        name = current.exercise.name,
+                        onClick = actions::closeView,
+                    )
                 } else {
                     Header(
-                        name = current.exercise.name,
+                        exercise = current,
                         session = session,
                         now = now,
                         onName = { showDetails = true },
@@ -197,6 +238,10 @@ fun SessionScreen(
                             actions = actions,
                             onSetOptions = { setOptions = it },
                             warmups = session.warmups,
+                            onTickWarmup = actions::tickWarmup,
+                            onAddSet = { actions.addSet(current.id) },
+                            correction = session.correction,
+                            onCorrect = if (session.correctable) { { set, ext -> actions.correct(current.id, set, ext) } } else null,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
@@ -209,7 +254,16 @@ fun SessionScreen(
                 }
             }
             val entry = session.entry
-            if (current != null && entry != null) {
+            val correction = session.correction
+            val corrected = correction?.let { c -> session.exercises.firstOrNull { it.id == c.sessionExerciseId } }
+            if (correction != null && corrected != null) {
+                // A drop or mini-set has no RIR: ✓ needs only its weight and reps.
+                val fixing = correction.entry
+                val canConfirm = if (correction.kind == null || fixing.field == Field.Weight) fixing.canConfirm else fixing.toExtension(correction.kind) != null
+                Pad(fixing, corrected.ladder, null, actions, canConfirm = canConfirm, correction = correction)
+            } else if (viewing != null) {
+                Spacer(Modifier.navigationBarsPadding())
+            } else if (current != null && entry != null) {
                 // A weight check always shows, even with the pad folded away.
                 val followUp = session.followUp
                 val holdRunning = session.holdStartedAt != null
@@ -257,6 +311,7 @@ fun SessionScreen(
             SessionList(
                 session,
                 onStart = { actions.switchTo(it); showList = false },
+                onOpen = { actions.open(it); showList = false },
                 onAdd = { showList = false; showPicker = true },
                 onFinish = { showList = false; showFinish = true },
                 edits = { e, blocks ->
@@ -281,7 +336,9 @@ fun SessionScreen(
             )
         }
     }
-    if (showDetails && current != null) {
+    val detailed = viewing ?: current
+    if (showDetails && detailed != null) {
+        val current = detailed
         Sheet(onDismiss = { showDetails = false }) {
             ExerciseSheet(
                 current.exercise,
@@ -331,7 +388,7 @@ fun SessionScreen(
 
 @Composable
 private fun Header(
-    name: String,
+    exercise: SessionExercise,
     session: ActiveSession,
     now: Long,
     onName: () -> Unit,
@@ -353,12 +410,11 @@ private fun Header(
     ) {
         val details = stringResource(R.string.session_exercise_details)
         Column(Modifier.weight(1f)) {
-            val current = session.current
-            val partner = session.partner
-            if (current?.slot != null && partner != null) SupersetLine(current.slot.label, partner)
+            val partner = SessionOrder.partner(session.exercises, exercise)
+            if (exercise.slot != null && partner != null) SupersetLine(exercise.slot.label, partner)
             else swappedFrom?.let { SwappedLine(it) }
             Text(
-                name,
+                exercise.exercise.name,
                 Modifier.clickable(onClickLabel = details, onClick = onName),
                 style = MaterialTheme.typography.headlineSmall,
                 maxLines = 1,
@@ -654,18 +710,35 @@ internal class TableState(
     val weightFlagged: Boolean,
     /** Seconds on the running hold timer; null with no hold running. */
     val holdSeconds: Int?,
-    val actions: SessionActions,
+    val actions: PadActions,
     /** Opens set [index]'s options (technique, left and right). */
     val onSetOptions: (Int) -> Unit,
     /** The warm-ups before the first work set; empty once it is logged. */
     val warmups: List<WarmupSet> = emptyList(),
+    val onTickWarmup: (Int) -> Unit = {},
+    /** Adds a set to a program exercise; null where sets can't be added (a past session). */
+    val onAddSet: (() -> Unit)? = null,
+    /** The logged row loaded into the pad, of any exercise; null when none. */
+    val correction: Correction? = null,
+    /** Loads logged set [set], or its drop, mini-set or hold [extension], into the pad; null while rows can't be corrected. */
+    val onCorrect: ((set: Int, extension: Int?) -> Unit)? = null,
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
     val activeKg: Double? get() = if (followUp == null) entry?.weightKg else null
+
+    /** While a row is corrected, the set to do steps back to its upcoming look. */
+    val correcting: Boolean get() = correction != null
+
+    /** Row [set] (its [extension], or the set itself with null) of this exercise is the one being corrected. */
+    fun corrects(set: Int, extension: Int?): Boolean =
+        correction?.let { it.sessionExerciseId == current.id && it.set == set && it.extension == extension } == true
+
+    /** Taps a logged set to correct it; null when it can't be. */
+    fun correctSet(set: Int): (() -> Unit)? = onCorrect?.let { { it(set, null) } }
 }
 
 @Composable
-private fun SetTable(table: TableState, modifier: Modifier) {
+internal fun SetTable(table: TableState, modifier: Modifier) {
     val current = table.current
     val entry = table.entry
     val listState = rememberLazyListState()
@@ -683,15 +756,20 @@ private fun SetTable(table: TableState, modifier: Modifier) {
             return@LazyColumn
         }
         for (i in current.sets.indices) {
-            item(key = "set-$i") { DoneRow(i + 1, current.lastTime.getOrNull(i), current.sets[i]) }
+            item(key = "set-$i") {
+                val c = table.correction
+                if (c != null && table.corrects(i, null)) ActiveRow(i + 1, current.lastTime.getOrNull(i), c.entry, false, table.actions, editing = true)
+                else DoneRow(i + 1, current.lastTime.getOrNull(i), current.sets[i], onClick = table.correctSet(i))
+            }
             techniqueRows(table, i, current.sets[i].technique, plannedKg = null)
         }
         if (entry != null && table.followUp == null) {
             val i = current.sets.size
             item(key = "set-$i") {
-                ActiveRow(i + 1, current.lastTime.getOrNull(i), entry, table.weightFlagged, table.actions, onNumber = { table.onSetOptions(i) })
+                if (table.correcting) UpcomingRow(i + 1, current.lastTime.getOrNull(i), entry.weight, entry.full)
+                else ActiveRow(i + 1, current.lastTime.getOrNull(i), entry, table.weightFlagged, table.actions, onNumber = { table.onSetOptions(i) })
             }
-            plateLine(table)
+            if (!table.correcting) plateLine(table)
             techniqueRows(table, i, current.techniqueAt(i), plannedKg = entry.weightKg)
             // An ad-hoc session has no plan, so last time's set count shows what is likely to come,
             // muted and prefilled the way the next set will be.
@@ -722,8 +800,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
         val last = current.lastTime.getOrNull(i)
         val kg = plannedWeight(i, plan, logged, current.lastTime, current.ladder, table.activeKg)
         item(key = "set-$i") {
+            val c = table.correction
             when {
-                i < logged.size -> DoneRow(i + 1, last, logged[i], target)
+                c != null && table.corrects(i, null) -> ActiveRow(i + 1, last, c.entry, false, table.actions, target, editing = true)
+                i < logged.size -> DoneRow(i + 1, last, logged[i], target, onClick = table.correctSet(i))
+                i == logged.size && entry != null && table.followUp == null && table.correcting ->
+                    UpcomingRow(i + 1, last, entry.weight, entry.full, target)
                 i == logged.size && entry != null && table.followUp == null ->
                     ActiveRow(i + 1, last, entry, table.weightFlagged, table.actions, target, onNumber = { table.onSetOptions(i) })
                 else -> {
@@ -733,10 +815,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
                 }
             }
         }
-        if (i == logged.size && entry != null && table.followUp == null) plateLine(table)
+        if (i == logged.size && entry != null && table.followUp == null && !table.correcting) plateLine(table)
         techniqueRows(table, i, current.techniqueAt(i), plannedKg = kg)
     }
-    addSetRow { table.actions.addSet(current.id) }
+    table.onAddSet?.let { addSetRow(it) }
 }
 
 /** A technique or back-off rule: one 32 dp line aligned with the Target column, muted once done. */
@@ -860,11 +942,15 @@ private fun RowScope.Last(last: LoggedSet?) {
 }
 
 @Composable
-private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet, target: PlannedSet? = null) {
+private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet, target: PlannedSet? = null, onClick: (() -> Unit)? = null) {
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     val color = MaterialTheme.colorScheme.onSurface
+    val description = stringResource(R.string.correct_set_description, n)
     Row(
-        Modifier.fillMaxWidth().height(RowHeight).padding(horizontal = RowPad),
+        Modifier.fillMaxWidth().height(RowHeight)
+            // Anything logged can be tapped and corrected.
+            .then(if (onClick != null) Modifier.clip(RowShape).clickable(onClickLabel = description, onClick = onClick).semantics { contentDescription = description } else Modifier)
+            .padding(horizontal = RowPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SetNumber(n, active = false)
@@ -884,9 +970,11 @@ private fun ActiveRow(
     last: LoggedSet?,
     entry: SetEntry,
     weightFlagged: Boolean,
-    actions: SessionActions,
+    actions: PadActions,
     target: PlannedSet? = null,
     onNumber: (() -> Unit)? = null,
+    /** A logged set loaded into the pad: `edit` stands in for its number. */
+    editing: Boolean = false,
 ) {
     fun tap(field: Field) {
         actions.focus(field)
@@ -898,7 +986,10 @@ private fun ActiveRow(
             .padding(horizontal = RowPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SetNumber(n, active = true, onClick = onNumber)
+        if (editing) {
+            val label = stringResource(R.string.correct_set_editing, n)
+            EditLead(label)
+        } else SetNumber(n, active = true, onClick = onNumber)
         if (target != null) Target(target)
         Last(last)
         Cell(
@@ -986,7 +1077,7 @@ internal fun Cell(
 // ---------------------------------------------------------------- next line and sheets
 
 @Composable
-private fun NextLine(label: String?, name: String, onClick: () -> Unit) {
+internal fun NextLine(label: String?, name: String, onClick: () -> Unit, symbol: Symbol = Symbol.ExpandLess, description: String? = null) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).height(56.dp).padding(start = Margin, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -996,7 +1087,7 @@ private fun NextLine(label: String?, name: String, onClick: () -> Unit) {
             Spacer(Modifier.width(16.dp))
         }
         Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        SymbolIcon(Symbol.ExpandLess, stringResource(R.string.session_list), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        SymbolIcon(symbol, description ?: stringResource(R.string.session_list), tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -1015,6 +1106,8 @@ private fun Sheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
 internal fun SessionList(
     session: ActiveSession,
     onStart: (Long) -> Unit,
+    /** Opens a finished exercise to look at or correct. */
+    onOpen: (Long) -> Unit = {},
     onAdd: () -> Unit,
     onFinish: () -> Unit,
     /** What each row's ⋮ offers, given the session's blocks ([SessionOrder.blocks]); null for no ⋮. */
@@ -1067,7 +1160,11 @@ internal fun SessionList(
                         e.plan?.let { SetSummary(it) }
                     }
                 }
-                if (!now && !e.done) FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
+                when {
+                    now -> Unit
+                    e.done -> FilledTonalButton(onClick = { onOpen(e.id) }) { Text(stringResource(R.string.session_open_exercise)) }
+                    else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
+                }
                 edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
             }
         }
