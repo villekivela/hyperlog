@@ -381,6 +381,21 @@ backup.
   coach detect time off. No reminders or notifications.
 - **Supersets** log alternately (A1 → A2 → A1…) with no timer between partners and full rest after
   the round. A superset started out of order keeps its partner until the round is done.
+  - Closing a partner's set (logged, its last drop or mini-set, or **Finish set**) brings up the other
+    partner's set of the same round at once, with no rest; closing the round starts the rest of the
+    set that closed it. With uneven set counts, the extra sets run as straight sets.
+  - "Until the round is done" means until all of the superset's planned sets are logged. The pair
+    stays on screen as one, then the session goes back to the first group with sets left.
+  - The superset line above the name reads `2a with Seated Leg Curl`, using the day's slot labels
+    (as Today numbers them), then the partner's last set this session with its RIR dot.
+- **Session order**: the Next line names what comes up after the exercise (or superset) on screen:
+  the first exercise with planned sets left, in the day's order, so a skipped one comes first. It
+  opens the session list, whose **Start** does another exercise now; when it is done the session
+  returns to the skipped exercise. Rest keeps running across a Start.
+  - The session list numbers a program's exercises with the day's labels (`1`, `2a`, `2b`) in their
+    own column, superset labels in tertiary. A superset on screen is marked current as a pair, with
+    no Start on the partner. An exercise shows as done only once every planned set is logged; one
+    started and left keeps the empty circle, with its logged sets as the summary.
 - **Unilateral exercises** log one number (reps per side) by default; a per-set toggle splits left and
   right.
   - An exercise is unilateral when its name says so (`1-Arm`, `1-Leg`, `Single-Arm`,

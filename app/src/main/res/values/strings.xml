@@ -30,6 +30,8 @@
     <string name="session_last_exercise">Last exercise</string>
     <string name="session_list">Session list</string>
     <string name="session_start_exercise">Start</string>
+    <!-- The superset line above the exercise name: its slot label and its partner, "2a with DB French Press". -->
+    <string name="session_superset_with">%1$s with %2$s</string>
     <string name="col_last">Last</string>
     <string name="col_kg">kg</string>
     <string name="col_reps">Reps</string>

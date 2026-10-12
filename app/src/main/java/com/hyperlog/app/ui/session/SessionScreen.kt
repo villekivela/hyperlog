@@ -90,6 +90,7 @@ import com.hyperlog.app.library.search
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.session.SessionExercise
+import com.hyperlog.app.session.SessionOrder
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.plannedWeight
@@ -190,8 +191,7 @@ fun SessionScreen(
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
-                    val index = session.exercises.indexOf(current)
-                    val next = session.exercises.drop(index + 1).firstOrNull { !it.done }
+                    val next = session.next
                     NextLine(
                         label = if (next != null) stringResource(R.string.session_next) else null,
                         name = next?.exercise?.name ?: stringResource(R.string.session_last_exercise),
@@ -318,13 +318,18 @@ private fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val details = stringResource(R.string.session_exercise_details)
-        Text(
-            name,
-            Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName),
-            style = MaterialTheme.typography.headlineSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(Modifier.weight(1f)) {
+            val current = session.current
+            val partner = session.partner
+            if (current?.slot != null && partner != null) SupersetLine(current.slot.label, partner)
+            Text(
+                name,
+                Modifier.clickable(onClickLabel = details, onClick = onName),
+                style = MaterialTheme.typography.headlineSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         val hold = session.followUp as? com.hyperlog.app.session.FollowUp.Hold
         val holdStarted = session.holdStartedAt
         val restEnds = session.restEndsAt
@@ -368,6 +373,35 @@ private fun Header(
                     onClick = { menu = false; onFinish() },
                 )
             }
+        }
+    }
+}
+
+/**
+ * Above the name in a superset: the slot's label and its partner, then the partner's last set this
+ * session with its RIR dot, so the place in the round reads without a second table.
+ */
+@Composable
+private fun SupersetLine(label: String, partner: SessionExercise) {
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    val style = MaterialTheme.typography.labelLarge
+    Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
+        // The label in tertiary, as the session list tags the pair.
+        val text = stringResource(R.string.session_superset_with, label, partner.exercise.name)
+        val tertiary = MaterialTheme.colorScheme.tertiary
+        Text(
+            buildAnnotatedString {
+                append(text)
+                text.indexOf(label).takeIf { it >= 0 }?.let { addStyle(SpanStyle(color = tertiary), it, it + label.length) }
+            },
+            Modifier.weight(1f, fill = false),
+            style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
+        partner.sets.lastOrNull()?.let { set ->
+            Spacer(Modifier.width(8.dp))
+            Text(set.short(), style = style.merge(Tnum), color = color, maxLines = 1)
+            Spacer(Modifier.width(4.dp))
+            RirMark(set.rir, filled = true)
         }
     }
 }
@@ -909,7 +943,7 @@ private fun Sheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
 
 /** The session's exercises with what has been logged, plus adding one and finishing. */
 @Composable
-private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: () -> Unit, onFinish: () -> Unit) {
+internal fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: () -> Unit, onFinish: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(bottom = 16.dp).navigationBarsPadding().verticalScroll(rememberScrollState())) {
         Text(stringResource(R.string.session_title), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.titleLarge)
@@ -917,8 +951,11 @@ private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: 
             Text(it.name, Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }
         Spacer(Modifier.height(8.dp))
+        val numbered = session.exercises.any { it.slot != null }
+        // A superset on screen is current as a pair: its partner comes up by itself.
+        val onScreen = session.current?.let { c -> SessionOrder.group(session.exercises, c).map { it.id } }.orEmpty()
         session.exercises.forEach { e ->
-            val now = e.id == session.currentId
+            val now = e.id in onScreen
             Row(
                 Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -926,8 +963,19 @@ private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: 
                 Box(Modifier.width(40.dp)) {
                     when {
                         now -> SymbolIcon(Symbol.RadioButtonChecked, null, tint = cs.primary)
-                        e.sets.isNotEmpty() -> SymbolIcon(Symbol.CheckCircle, null, tint = cs.onSurfaceVariant)
+                        // Done means every planned set; an ad-hoc exercise is done once it has a set.
+                        e.done || (e.plan == null && e.sets.isNotEmpty()) -> SymbolIcon(Symbol.CheckCircle, null, tint = cs.onSurfaceVariant)
                         else -> SymbolIcon(Symbol.RadioButtonUnchecked, null, tint = cs.outline)
+                    }
+                }
+                // A program's slots keep the day's numbering (1, 2a, 2b) in a column of their own,
+                // so names align; superset partners' labels are tertiary, so the pair reads as one group.
+                if (numbered) {
+                    Box(Modifier.width(40.dp)) {
+                        e.slot?.label?.let {
+                            val paired = SessionOrder.partner(session.exercises, e) != null
+                            Text(it, style = MaterialTheme.typography.labelLarge.merge(Tnum), color = if (paired) cs.tertiary else cs.onSurfaceVariant)
+                        }
                     }
                 }
                 Column(Modifier.weight(1f)) {

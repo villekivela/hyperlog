@@ -316,17 +316,18 @@ class SessionLogger(
     private fun heldSeconds(startedAt: Long) = ((clock() - startedAt) / 1000).toInt().coerceAtLeast(1)
 
     /**
-     * [row] with set [setIndex] of [current] closed: no set open, the set's rest running, and, with
-     * the exercise's planned sets done, the first exercise with sets left on screen.
+     * [row] with set [setIndex] of [current] closed: no set open and the next set in the session's
+     * order on screen ([SessionOrder]). The set's rest runs, except on the way to a superset
+     * partner's set of the same round, which comes straight away.
      */
     private fun closed(row: SessionEntity, session: ActiveSession, current: SessionExercise, setIndex: Int, now: Long): SessionEntity {
         val rest = current.plan?.getOrNull(setIndex)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
-        val finishesExercise = current.plan != null && setIndex + 1 >= current.plan.size
-        val next = if (finishesExercise) session.exercises.firstOrNull { it.id != current.id && it.plan != null && !it.done } else null
+        val step = SessionOrder.after(session.exercises, current.id, setIndex)
         return row.copy(
             openSetId = null, breathing = false, holdStartedAt = null,
-            restEndsAt = now + rest, restTotalMs = rest,
-            currentSessionExerciseId = next?.id ?: current.id,
+            restEndsAt = if (step.rest) now + rest else null,
+            restTotalMs = if (step.rest) rest else row.restTotalMs,
+            currentSessionExerciseId = step.exerciseId,
         )
     }
 

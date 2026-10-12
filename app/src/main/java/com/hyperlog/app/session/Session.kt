@@ -87,6 +87,23 @@ data class ActiveSession(
     internal val openSetId: Long? = null,
 ) {
     val current: SessionExercise? get() = exercises.firstOrNull { it.id == currentId }
+
+    /** [current]'s superset partner, or null for straight sets. */
+    val partner: SessionExercise? get() = current?.let { SessionOrder.partner(exercises, it) }
+
+    /**
+     * What comes up once the exercise on screen (with its superset partner) is done: the first
+     * exercise with planned sets left, in session order, so a skipped one comes back first. In an
+     * ad-hoc session, the one after it. Null when nothing follows.
+     */
+    val next: SessionExercise?
+        get() {
+            val current = current ?: return null
+            val group = SessionOrder.group(exercises, current).map { it.id }.toSet()
+            val others = exercises.filter { it.id !in group }
+            return others.firstOrNull { it.plan != null && !it.done }
+                ?: exercises.drop(exercises.indexOf(current) + 1).firstOrNull { it.id !in group && !it.done }
+        }
 }
 
 data class ExerciseSummary(val name: String, val sets: List<LoggedSet>)

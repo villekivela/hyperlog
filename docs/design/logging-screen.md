@@ -143,9 +143,12 @@ up (`+0:12`) in a muted container until the next set is logged. Before a myo min
 −15, the time, +15, End rest.
 
 **Superset line.** Above the name: `A1 with Seated Leg Curl`, then the partner's last logged set
-and its RIR dot, so the place in the round is clear without a second table.
+and its RIR dot, so the place in the round is clear without a second table. The app uses the
+day's slot labels (`2a with Seated Leg Curl`), the label in tertiary like the session list's tag;
+the rest is labelLarge in onSurfaceVariant, on a 24 dp line, so the header stays 72 dp.
 
-**Next line.** "Next" and the next exercise outside the current one (or superset); "Last
+**Next line.** "Next" and the next exercise outside the current one (or superset): the first with
+planned sets left in the day's order, so after a Start out of order it names the skipped one; "Last
 exercise" alone when nothing follows. Tap opens the session list. While looking at a finished
 exercise it reads "Now" and the current exercise, and tap goes back.
 
@@ -154,6 +157,12 @@ exercise it reads "Now" and the current exercise, and tap goes back.
   as `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0`, drops and mini-sets after it; never broken inside a set;
   or set count and rep range) with technique symbols. A tonal **Start** on exercises not yet
   done, **Open** on finished ones.
+  In a program session (ticket #11, screens `superset-04-session-list.png`,
+  `order-03-session-list.png`) the tag is a 40 dp column after the status symbol holding every
+  slot's label (`1`, `2a`, `2b`, `3`), so names align; superset labels are tertiary, straight ones
+  onSurfaceVariant. A superset on screen shows both partners as now, with no Start on either. The
+  done symbol means every planned set is logged: an exercise left halfway keeps the empty circle
+  and shows its logged sets.
 - *Prescription:* name, equipment, each set (reps, RIR ring, technique with its numbers, e.g.
   "2 drops of 25%"), rest, why the weight was suggested, the technique note, and
   **Technique video**.
@@ -246,7 +255,9 @@ Corrections never restart or reset the rest timer.
 
 **Order.** Sets follow the session order, supersets alternating A1 → A2. An exercise started from
 the session list stays current, with its superset partner, until all of their sets are logged;
-then the session goes back to the first unfinished set.
+then the session goes back to the first unfinished set. Any close of a partner's set (✓, the last
+drop or mini-set, Finish set) moves on to the partner's set of the same round with no rest (screens
+`superset-01..03`, `order-01..02`).
 
 **Rest.**
 - Logging a set starts the exercise's rest (per exercise, e.g. 2:30 bench, 1:30 laterals).
