@@ -217,8 +217,8 @@ backup.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
   train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets the
   coach detect time off. No reminders or notifications.
-- **Supersets** log alternately (A1 → A2 → A1…) with a short transition timer between exercises and
-  full rest after the last one.
+- **Supersets** log alternately (A1 → A2 → A1…) with no timer between partners and full rest after
+  the round. A superset started out of order keeps its partner until the round is done.
 - **Unilateral exercises** log one number (reps per side) by default; a per-set toggle splits left and
   right.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
