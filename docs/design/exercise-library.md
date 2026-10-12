@@ -91,8 +91,9 @@ Screenshots are in `screens/library-*.png`.
 - Save returns to the list, which still shows the search that led there.
 - The session's Add exercise list (screen and sheet) has the same search field and leaves hidden
   exercises out.
-- The Technique video button opens the YouTube app at the timestamp, or the browser if the app is
-  missing.
+- The Technique video button opens the video at the timestamp in a Custom Tab, inside Hyperlog's
+  task, so Back returns to the session (tester report 6, M2). Without a Custom Tabs browser it
+  opens the YouTube app, else any browser.
 
 ## Critique log
 

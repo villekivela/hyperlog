@@ -342,8 +342,10 @@ backup.
   - The shipped library updates with the app: exercises never edited on the phone take the new
     values; edited ones and hidden flags are kept. Exercises added on the phone get an id made from
     the name (`landmine_press`).
-- **Technique videos** open in the YouTube app, at the link's timestamp if it has one (in the
-  browser if YouTube isn't installed). They are reached from the exercise's prescription sheet (tap
+- **Technique videos** open in a Custom Tab of the browser, at the link's timestamp if it has
+  one, so Back returns straight to the session. The YouTube app is the fallback when no browser
+  shows Custom Tabs: Back from it goes home, and it keeps playing in a floating window over the
+  pad. They are reached from the exercise's prescription sheet (tap
   the exercise name in a session). In an ad-hoc session the sheet shows the equipment and primary
   muscles, the library note and **Technique video · 10:53** (the start time when the link has one).
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
