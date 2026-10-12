@@ -64,6 +64,8 @@ interface SessionActions {
     fun removeExercise(sessionExerciseId: Long)
     /** Moves an exercise (a superset as a pair) [by] places in the session's order. */
     fun move(sessionExerciseId: Long, by: Int)
+    /** Ticks warm-up [index] off (with the ones before it), or takes the last tick back. */
+    fun tickWarmup(index: Int)
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -122,6 +124,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun switchTo(sessionExerciseId: Long) = run { logger.switchTo(sessionExerciseId) }
     override fun adjustRest(deltaMs: Long) = run { logger.adjustRest(deltaMs) }
     override fun endRest() = run { logger.endRest() }
+    override fun tickWarmup(index: Int) = run { logger.tickWarmup(index) }
     override fun finish() = run { _summary.value = logger.finish() }
     override fun chooseMachine(itemId: Long) = run { logger.chooseMachine(itemId) }
     override fun addMachine(name: String, ladder: LadderSpec) = run { logger.addMachine(name, ladder) }

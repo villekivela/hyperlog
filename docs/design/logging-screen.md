@@ -254,6 +254,39 @@ stays readable (a swap names what it replaced).
 - **Remove dialog**: "Remove <name>?", "From this session only. The program keeps it." (Cancel /
   Remove), the shape of the Leave and Finish dialogs.
 
+**Warm-ups and plates** (screens `warmup-*.png`, built in ticket #14; Robolectric renders, so no
+status bar).
+
+Principles: warm-ups are guidance, not records, so they look like the rows around them but
+lighter, and ask for nothing; the plates for a weight sit next to that weight; nothing about a
+warm-up touches the clock.
+
+```
+       Target      Last       kg   Reps  RIR
+       ⟋ Warm-up · plates per side               ← 32 dp label, onSurfaceVariant (stairs)
+ W     10                     40     8     ✓     ← 48 dp warm-up row, ticked: full contrast + check
+ W     15 · 2.5               55     5     ✓
+ W     20 · 2.5               65     3           ← not ticked: values in outline, like a prefill
+ W     20 · 5 · 2.5           75     2
+┌────────────────────────────────────────────┐
+│1     4–6 (1)               [90]   6    ●1 │
+└────────────────────────────────────────────┘
+       ◎ 20 · 15 per side                        ← plate line under the active work set (album)
+       ↘ Back-off, top set − 10%
+```
+
+- **Warm-up row**: 48 dp like a sub-row. `W` in labelLarge onSurfaceVariant in the set column;
+  the plates per side span Target and Last in bodyMedium onSurfaceVariant (a warm-up has
+  neither); kg and reps in titleLarge, `outline` until ticked, onSurface after, with a `check`
+  in the RIR column. The whole row is one checkbox: a tap ticks it and those above, a tap on the
+  last ticked one takes it back. The pad stays on the work set.
+- **Warm-up label**: the technique label's shape in onSurfaceVariant, not tertiary (tertiary
+  means a technique): `stairs` and "Warm-up", "· plates per side" when the exercise has plates.
+- **Plate line**: a 32 dp line under the active work set, at the Target column: `album` and
+  `20 · 15 per side` in labelLarge onSurfaceVariant (`Empty bar`, or `No plates` on a machine).
+  It follows the weight being typed and is left out when the plates can't make it.
+- The warm-ups go once the first work set is logged; the plate line moves with the active set.
+
 ## Interaction rules
 
 **✓ does:**

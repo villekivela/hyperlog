@@ -41,6 +41,29 @@ sealed interface LadderSpec {
         }
 
         override fun encode() = "plates;${num(baseKg)};" + pairs.joinToString(",") { num(it) }
+
+        /**
+         * The plate calculator: the plates on each side for [totalKg], heaviest first and as few
+         * as the pairs allow. Empty for the bar (or sled) alone; null when these plates can't
+         * make the weight.
+         */
+        fun perSide(totalKg: Double): List<Double>? {
+            val side = round((totalKg - baseKg) / 2, 100)
+            if (side < 0) return null
+            val plates = pairs.filter { it > 0 }.sortedDescending()
+            var best: List<Double>? = null
+            // Heaviest first, so among loadings with as few plates the first found is the heaviest.
+            fun search(from: Int, left: Double, chosen: List<Double>) {
+                if (best != null && chosen.size >= best!!.size) return
+                if (left < 0.005) { best = chosen; return }
+                for (i in from until plates.size) {
+                    if (i > from && plates[i] == plates[i - 1]) continue
+                    if (plates[i] <= left + 0.005) search(i + 1, round(left - plates[i], 100), chosen + plates[i])
+                }
+            }
+            search(0, side, emptyList())
+            return best
+        }
     }
 
     companion object {

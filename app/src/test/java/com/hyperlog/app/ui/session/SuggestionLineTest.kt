@@ -111,4 +111,5 @@ private object NoActions : com.hyperlog.app.ui.session.SessionActions {
     override fun setTarget(sessionExerciseId: Long, setIndex: Int, reps: com.hyperlog.app.program.RepRange, rir: Int?) = Unit
     override fun removeExercise(sessionExerciseId: Long) = Unit
     override fun move(sessionExerciseId: Long, by: Int) = Unit
+    override fun tickWarmup(index: Int) = Unit
 }

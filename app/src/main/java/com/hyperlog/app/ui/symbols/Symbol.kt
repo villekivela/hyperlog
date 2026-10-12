@@ -16,6 +16,7 @@ import com.hyperlog.app.R
 enum class Symbol(@param:DrawableRes val drawable: Int) {
     Add(R.drawable.symbol_add),
     Air(R.drawable.symbol_air),
+    Album(R.drawable.symbol_album),
     ArrowBack(R.drawable.symbol_arrow_back),
     ArrowDownward(R.drawable.symbol_arrow_downward),
     ArrowDropDown(R.drawable.symbol_arrow_drop_down),
@@ -51,6 +52,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Settings(R.drawable.symbol_settings),
     SmartDisplay(R.drawable.symbol_smart_display),
     SouthEast(R.drawable.symbol_south_east),
+    Stairs(R.drawable.symbol_stairs),
     StickyNote2(R.drawable.symbol_sticky_note_2),
     Stop(R.drawable.symbol_stop),
     SubdirectoryArrowRight(R.drawable.symbol_subdirectory_arrow_right),

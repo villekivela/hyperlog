@@ -100,6 +100,7 @@ import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
 import androidx.compose.material3.Button
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlinx.coroutines.delay
 
@@ -195,6 +196,7 @@ fun SessionScreen(
                             holdSeconds = session.holdStartedAt?.let { ((now - it) / 1000).toInt().coerceAtLeast(0) },
                             actions = actions,
                             onSetOptions = { setOptions = it },
+                            warmups = session.warmups,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
@@ -655,6 +657,8 @@ internal class TableState(
     val actions: SessionActions,
     /** Opens set [index]'s options (technique, left and right). */
     val onSetOptions: (Int) -> Unit,
+    /** The warm-ups before the first work set; empty once it is logged. */
+    val warmups: List<WarmupSet> = emptyList(),
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
     val activeKg: Double? get() = if (followUp == null) entry?.weightKg else null
@@ -673,6 +677,7 @@ private fun SetTable(table: TableState, modifier: Modifier) {
     LazyColumn(modifier.fillMaxWidth().padding(horizontal = RowInset), state = listState) {
         // A split set's reps read left / right, so the head says which is which.
         item { ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null) }
+        warmupRows(table)
         if (plan != null) {
             plannedRows(table, plan)
             return@LazyColumn
@@ -686,6 +691,7 @@ private fun SetTable(table: TableState, modifier: Modifier) {
             item(key = "set-$i") {
                 ActiveRow(i + 1, current.lastTime.getOrNull(i), entry, table.weightFlagged, table.actions, onNumber = { table.onSetOptions(i) })
             }
+            plateLine(table)
             techniqueRows(table, i, current.techniqueAt(i), plannedKg = entry.weightKg)
             // An ad-hoc session has no plan, so last time's set count shows what is likely to come,
             // muted and prefilled the way the next set will be.
@@ -727,6 +733,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
                 }
             }
         }
+        if (i == logged.size && entry != null && table.followUp == null) plateLine(table)
         techniqueRows(table, i, current.techniqueAt(i), plannedKg = kg)
     }
     addSetRow { table.actions.addSet(current.id) }

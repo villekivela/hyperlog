@@ -83,6 +83,9 @@ One set as it was done: weight, full reps, partial reps and RIR, plus any drops 
 **Warm-up set**:
 A lighter set before the work sets, generated from the first work set's weight. It doesn't count toward volume or progression.
 
+**Plate calculator**:
+The plates to load on each side of a bar or plate-loaded machine for a weight, from the plates there are.
+
 **Work set**:
 A set that counts toward volume and progression.
 

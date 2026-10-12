@@ -68,6 +68,13 @@
     <string name="session_set_options">Edit set %1$d</string>
     <string name="set_options_description">Set %1$d options</string>
     <string name="sub_row_logged">Logged</string>
+    <string name="warmup_label">Warm-up</string>
+    <string name="warmup_label_plates">Warm-up · plates per side</string>
+    <string name="warmup_lead">W</string>
+    <string name="warmup_description">Warm-up %1$d, %2$s kg × %3$d</string>
+    <string name="plates_per_side">%1$s per side</string>
+    <string name="plates_empty_bar">Empty bar</string>
+    <string name="plates_none">No plates</string>
     <string name="technique_dropset_name">Drop set</string>
     <string name="technique_myo_name">Myo-reps</string>
     <string name="technique_partials_name">Lengthened partials</string>

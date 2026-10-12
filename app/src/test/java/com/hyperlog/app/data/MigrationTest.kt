@@ -245,4 +245,22 @@ class MigrationTest {
         assertEquals("legs", exercise.slotId)
         db.close()
     }
+
+    @Test
+    fun version9SessionExercisesStartWithNoWarmUpsTicked() = runTest {
+        val file = context.getDatabasePath("migration-test-9.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(9, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('barbell_bench_press', 'Barbell Bench Press', 'Barbell')")
+            db.execSQL("INSERT INTO session (id, started_at, rest_total_ms, pad_visible, breathing) VALUES (1, 1000, 0, 1, 0)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position, removed) VALUES (1, 1, 'barbell_bench_press', 0, 0)")
+        }
+
+        // Room checks the migrated tables against the v10 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(0, db.sessions().sessionExercises(1).single().warmupsDone)
+        db.close()
+    }
 }

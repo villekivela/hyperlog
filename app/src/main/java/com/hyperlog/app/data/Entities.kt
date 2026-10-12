@@ -106,6 +106,8 @@ data class SessionExerciseEntity(
     val sets: String? = null,
     /** Taken out of this session; kept so the edit can later become a Change. */
     @ColumnInfo(defaultValue = "0") val removed: Boolean = false,
+    /** How many of its warm-ups are ticked off. Warm-ups are never logged as sets. */
+    @ColumnInfo(name = "warmups_done", defaultValue = "0") val warmupsDone: Int = 0,
 )
 
 @Entity(

@@ -60,7 +60,8 @@ class TechniqueScreenTest {
         key("2"); key("5")
         // The drops follow the weight as it is typed: 25 − 25% = 18, then 12 on the dumbbells.
         waitFor("18")
-        compose.onNodeWithText("12").assertIsDisplayed()
+        // 12 is the second drop, and the first warm-up too.
+        compose.onAllNodesWithText("12").assertCountEquals(2)
 
         key("Next"); key("Log set")
         waitFor("Drop 1 of 2")

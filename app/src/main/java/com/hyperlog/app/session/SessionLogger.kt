@@ -32,6 +32,7 @@ import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.ladderFor
+import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.legacy.StartingWeights
 import com.hyperlog.app.legacy.text
@@ -473,6 +474,19 @@ class SessionLogger(
         reload()
     }
 
+    /**
+     * Ticks warm-up [index] of the exercise on screen off, with the ones before it; on the last
+     * one ticked, takes it back. Warm-ups aren't sets: rest, the pad and the work sets stay as they are.
+     */
+    suspend fun tickWarmup(index: Int) = locked {
+        val session = _state.value ?: return@locked
+        val current = session.current ?: return@locked
+        if (current.sets.isNotEmpty() || index !in session.warmups.indices) return@locked
+        val done = if (index == current.warmupsDone - 1) index else index + 1
+        dao.setWarmupsDone(current.id, done)
+        _state.value = session.copy(exercises = session.exercises.map { if (it.id == current.id) it.copy(warmupsDone = done) else it })
+    }
+
     suspend fun setPadVisible(visible: Boolean) = locked {
         val session = _state.value ?: return@locked
         _state.value = session.copy(padVisible = visible)
@@ -596,6 +610,11 @@ class SessionLogger(
                 suggestion = suggestion,
                 startingHint = starting?.takeIf { perMachine }?.text(),
                 techniques = dao.techniques(se.id).associate { it.setIndex to it.technique?.let(TechniqueJson::decode) },
+                plates = when {
+                    exercise.equipment == Equipment.Barbell -> shared.plates
+                    else -> machine?.ladder as? LadderSpec.Plates
+                },
+                warmupsDone = se.warmupsDone,
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }

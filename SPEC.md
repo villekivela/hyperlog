@@ -306,9 +306,28 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        exercises are open-ended like ad-hoc ones (no slot, no target), in a program session too.
    - **Warm-ups** generated from the first work set's weight (ramp by percentage, rounded to the
      equipment's available weights).
+     - The ramp follows the weight planned or typed for the first work set, live. Lifts with
+       several joints get 45% × 8, 60% × 5, 75% × 3, 85% × 2 when the first work set is 6 reps or
+       fewer, else 45% × 8, 65% × 5, 85% × 3; single-joint exercises (by movement pattern: curls,
+       raises, extensions, flyes, calf raises…) get one, 60% × 8. Each is the nearest rung; on a
+       bar or plate-loaded machine, the nearest 5 kg step, so the small plates are only for work
+       sets. A warm-up that doesn't climb, or reaches the work weight, is left out (a 20 kg top set
+       on the bar has none). Bodyweight and weighted bodyweight exercises have none.
+     - They show as `W` rows above the first work set, in ad-hoc sessions too, muted until a tap
+       ticks one off (with the ones above it; a tap on the last one ticked takes it back). Ticks
+       are saved. Warm-ups are never logged: they start no rest, leave the pad and the rest timer
+       alone, add no volume and never reach progression or history. They go once the first work
+       set is logged. Ticking is optional.
    - **Rest timer** that keeps running with the screen off: ongoing notification, vibration and
      sound when rest ends.
    - **Plate calculator** for barbell and plate-loaded exercises.
+     - Barbell exercises use the shared plates; machines whose ladder is plates use theirs. The
+       active work set shows `20 · 15 per side` under its row (`Empty bar` with no plates), for the
+       weight in the pad, live; each warm-up row shows its own plates. Plates are the fewest that
+       make the weight, heaviest first, from the pairs there are. A weight the plates can't make
+       shows no plates (the weight check says so on ✓).
+     - EZ, trap and safety bars have no plate calculator yet, since their ladders are the 2.5 kg
+       stand-in.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
      set rows (target, last time, kg, reps, RIR), techniques and their planned drops/mini-sets
      visible before the set, and a compact in-app pad drawn like the system number keyboard.
