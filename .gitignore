@@ -8,3 +8,4 @@ local.properties
 *.jks
 .idea/
 .DS_Store
+.kotlin/

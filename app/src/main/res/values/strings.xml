@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name is set per build type in app/build.gradle.kts. -->
+    <string name="today_title">Today</string>
+    <string name="today_empty_title">No program yet</string>
+    <string name="today_empty_body">Your next training day shows here once you start a program.</string>
+    <string name="settings">Settings</string>
+</resources>

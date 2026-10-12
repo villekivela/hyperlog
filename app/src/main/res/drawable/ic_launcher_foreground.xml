@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- From brand/hyperlog-foreground.svg: the 512 px canvas maps onto the 108 dp adaptive layer. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group
+        android:scaleX="27.992084"
+        android:scaleY="27.992084"
+        android:translateX="-2201.8735"
+        android:translateY="-3861.3598">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="m 82.804608,146.51354 0.0028,-2.31103 3.999997,-2.3094 5.1e-5,3.62037 2.002983,7e-5 -0.003,-3.62044 3.999997,2.3094 v 2.3094 l -1.000135,0.002 0.0011,-1.73309 -1.998006,-1.15358 -0.003,2.88667 h -3.999947 l 0.0011,-2.88779 -2.002044,1.1547 0.0011,1.73309 z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="m 82.804608,147.66676 0.0028,2.31103 3.999997,2.3094 5.1e-5,-3.62037 2.002983,-6e-5 -0.003,3.62043 3.999997,-2.30939 v -2.30941 l -1.000135,-0.002 0.0011,1.73309 -1.998006,1.15358 -0.003,-2.88666 -3.999947,-1e-5 0.0011,2.88779 -2.002044,-1.1547 0.0011,-1.73309 z" />
+    </group>
+</vector>
