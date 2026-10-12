@@ -153,7 +153,7 @@
     <string name="program_title">Program</string>
     <string name="program_import">Import program</string>
     <string name="program_import_short">Import a program</string>
-    <string name="program_none_body">Programs are JSON files; docs/program-format.md in the Hyperlog repository describes the format.</string>
+    <string name="program_none_body">A program is a JSON file. Claude can write one from a program you own.</string>
     <string name="program_next">Next</string>
     <!-- "Week 3 · Day A — Heavy bench" -->
     <string name="program_week_day">Week %1$d · %2$s</string>

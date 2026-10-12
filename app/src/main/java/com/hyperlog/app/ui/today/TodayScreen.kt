@@ -187,25 +187,24 @@ private fun NextDay(day: PlannedDay, names: Map<String, String>, modifier: Modif
             }
         }
         items(day.slots, key = { it.id }) { slot ->
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 24.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.Top,
-            ) {
-                Text(
-                    slot.label,
-                    Modifier.width(40.dp),
-                    style = MaterialTheme.typography.labelLarge.merge(Tnum),
-                    color = cs.onSurfaceVariant,
-                )
-                Column(Modifier.weight(1f)) {
+            Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 24.dp, vertical = 8.dp)) {
+                // The label sits on the name's baseline.
+                Row {
+                    Text(
+                        slot.label,
+                        Modifier.width(40.dp).alignByBaseline(),
+                        style = MaterialTheme.typography.labelLarge.merge(Tnum),
+                        color = cs.onSurfaceVariant,
+                    )
                     Text(
                         names[slot.exercise] ?: slot.exercise,
+                        Modifier.weight(1f).alignByBaseline(),
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    SetSummary(slot.sets)
                 }
+                SetSummary(slot.sets, Modifier.padding(start = 40.dp))
             }
         }
     }

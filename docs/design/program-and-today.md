@@ -3,8 +3,8 @@
 Ticket #6 brings a program to the app: the Program screen, Today showing the next day, and the
 logging screen's Target column, planned rows and prescription sheet. Everything extends
 `logging-screen.md`; its tokens, type and colours apply unchanged. Screenshots in `screens/`
-(`program-*.png`, `today-*.png`, `planned-*.png`) are rendered under Robolectric, since the phone
-wasn't available; the phone checks still due are in the ticket's notes.
+(`program-*.png`, `today-*.png`, `planned-*.png`) are from the owner's phone (monochrome theme),
+except `program-empty.png` and `today-no-program.png`, rendered under Robolectric.
 
 ## Principles
 
@@ -52,12 +52,13 @@ onPrimary letter; upcoming is a 1 dp outlineVariant ring with onSurfaceVariant l
 ```
  ←  Program                              ⋮      ← ⋮: Import program
  Hyperlog Full Body                             ← headlineSmall
- Next  Week 3 · Day A — Heavy bench             ← labelLarge + bodyLarge
+ Next  Week 3 · Day B — Hinge, close-grip      ← labelLarge + bodyLarge, wraps to 2 lines
+       bench, row
  Ramp-in · weeks 1–2                            ← block head
  1    (A) (B) (C)                               ← done tokens
  2    (A) (B) (C)
  Build · weeks 3–6                              ← primary: the current block
- 3    (A) [B] (C)   Day B — Hinge, close-g…     ← next token filled, its day named
+ 3    (A) [B] (C)                               ← next token filled
  4    (A) (B) (C)
 ```
 
@@ -81,8 +82,8 @@ Logging table with a plan (logging-screen.md's layout, Target column added):
 
 ## Components and states
 
-**Today, program day.** Week and block, the day's name, then one line per slot: label, exercise
-name, and the set summary with technique symbols. A slot's alternatives aren't listed (swapping is
+**Today, program day.** Week and block, the day's name, then one line per slot: label (on the
+name's baseline), exercise name, and the set summary with technique symbols. A slot's alternatives aren't listed (swapping is
 #12). The bottom bar has **Start session** (filled) and **Ad-hoc session** (text). While a session
 runs, the bottom bar is **Resume session** alone.
 
@@ -92,14 +93,16 @@ next one from Program, or train ad hoc."
 **Today, no program.** The empty-state layout as before, with **Import a program** (text) under
 Start session.
 
-**Program screen.** Title and author, the Next line, then each block's head and week rows. The
-current week's row names the next day after its tokens. With no program: `view_timeline`, "No
-program yet", "Programs are JSON files; docs/program-format.md describes the format.", **Import
+**Program screen.** Title and author, the Next line (the only place the next day is named; it
+wraps to two lines), then each block's head and week rows. With no program: `view_timeline`, "No
+program yet", "A program is a JSON file. Claude can write one from a program you own.", **Import
 program**. Importing over a program asks first: "Replace <title>?", "The new program starts at
-week 1, day 1. Past sessions are kept." (Cancel / Replace).
+week 1, day 1. Past sessions are kept." (Replace / Cancel, the change on the left as in the Leave
+and Finish dialogs).
 
-**Import errors.** Replace the screen's content until closed. Each problem: path in monospace
-bodySmall, message in bodyMedium, 8 dp between problems.
+**Import errors.** Replace the screen's content until closed (back closes them too). Each problem:
+path in monospace bodySmall, breaking only after its dots, message in bodyMedium, 8 dp between
+problems.
 
 **Planned rows.** Every planned set has a row from the start, so the session's shape is visible.
 Upcoming rows show the target, last time's set at that index, the planned weight (a back-off's is
@@ -108,6 +111,8 @@ muted. A technique's label sits under its set (`trending_down` Drop set, 2 drops
 Myo-reps, mini-sets of 4 · `unfold_less` Lengthened partials to failure · `pan_tool` Iso hold
 30 s, stretch · `local_fire_department` To failure). Sub-rows for drops and mini-sets come with
 #10.
+
+**Header.** A long exercise name ellipsizes 8 dp clear of the rest pill.
 
 **Day done.** When every planned set is logged the pad gives way to a bar with "Day done" and a
 filled **Finish session** (the usual Finish dialog follows).

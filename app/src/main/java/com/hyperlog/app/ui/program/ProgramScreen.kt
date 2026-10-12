@@ -41,6 +41,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -114,8 +117,8 @@ fun ProgramScreen(
             onDismissRequest = { confirmReplace = false },
             title = { Text(stringResource(R.string.program_replace_title, active.program.title)) },
             text = { Text(stringResource(R.string.program_replace_body)) },
-            confirmButton = { TextButton(onClick = { confirmReplace = false; onImport() }) { Text(stringResource(R.string.program_replace)) } },
-            dismissButton = { TextButton(onClick = { confirmReplace = false }) { Text(stringResource(R.string.program_cancel)) } },
+            confirmButton = { TextButton(onClick = { confirmReplace = false }) { Text(stringResource(R.string.program_cancel)) } },
+            dismissButton = { TextButton(onClick = { confirmReplace = false; onImport() }) { Text(stringResource(R.string.program_replace)) } },
         )
     }
 }
@@ -154,13 +157,19 @@ private fun ProgramWeeks(active: ActiveProgram) {
                 Text(program.title, style = MaterialTheme.typography.headlineSmall)
                 program.author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
                 Spacer(Modifier.height(16.dp))
-                Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.heightIn(min = 32.dp), verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
                     if (next != null) {
-                        Text(stringResource(R.string.program_next), Modifier.width(56.dp), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                        Text(
+                            stringResource(R.string.program_next),
+                            Modifier.width(56.dp).alignByBaseline(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = cs.onSurfaceVariant,
+                        )
                         Text(
                             stringResource(R.string.program_week_day, next.position.week, next.day.name),
+                            Modifier.alignByBaseline(),
                             style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     } else {
@@ -195,7 +204,7 @@ private fun BlockHead(block: Block, current: Boolean) {
     )
 }
 
-/** A week: its number and a token per day, done, next or to come. The next day is named after them. */
+/** A week: its number and a token per day, done, next or to come. The Next line names the next day. */
 @Composable
 private fun WeekRow(week: Int, block: Block, active: ActiveProgram) {
     val cs = MaterialTheme.colorScheme
@@ -225,12 +234,6 @@ private fun WeekRow(week: Int, block: Block, active: ActiveProgram) {
             }
             DayToken(letter, state, Modifier.semantics { contentDescription = description })
             Spacer(Modifier.width(8.dp))
-        }
-        if (week == position.week) {
-            block.days.getOrNull(position.day)?.let {
-                Spacer(Modifier.width(8.dp))
-                Text(it.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
         }
     }
 }
@@ -278,8 +281,11 @@ private fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: () 
                 val split = error.indexOf(": ")
                 Column(Modifier.fillMaxWidth().padding(horizontal = Margin, vertical = 8.dp)) {
                     if (split > 0 && !error.startsWith("not valid JSON")) {
+                        val path = error.substring(0, split)
                         Text(
-                            error.substring(0, split),
+                            // Zero-width spaces let the path break after its dots; it reads as written.
+                            path.replace(".", ".\u200B"),
+                            Modifier.clearAndSetSemantics { text = AnnotatedString(path) },
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                             color = cs.onSurfaceVariant,
                         )

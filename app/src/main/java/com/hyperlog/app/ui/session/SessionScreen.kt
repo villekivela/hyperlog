@@ -280,7 +280,11 @@ private fun Header(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        session.restEndsAt?.let { RestPill(it - now, session.restTotalMs, onTimer) }
+        session.restEndsAt?.let {
+            // A long name ellipsizes clear of the pill.
+            Spacer(Modifier.width(8.dp))
+            RestPill(it - now, session.restTotalMs, onTimer)
+        }
         Box {
             IconButton(onClick = { menu = true }) {
                 SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu), tint = cs.onSurfaceVariant)
