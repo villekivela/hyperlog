@@ -11,9 +11,10 @@ week across three commercial gyms. The goals are hypertrophy, getting back into 
 
 ## Bench goal
 
-The current estimate is about 85 kg (barbell bench 65 × 10, 10, 7 on 2026-09-19). 100 kg is
-+18%, too much for one 12-week cycle after time off. This cycle aims for an estimated 92–95 kg.
-A second, shorter strength block then peaks for a 100 kg test, around March–April 2027.
+The estimate is about 93 kg. The owner reports 70 kg × 10 for two comfortable sets (about 2 RIR),
+which Epley on reps + RIR puts at 93–98 kg. 10-rep sets overestimate, so the low end is used.
+The last logged session was 65 × 10, 10, 7 on 2026-09-19. 100 kg is +7%, realistic for this
+cycle, and the week-12 top single is the attempt.
 
 The bench is trained three times a week: heavy on Day A, volume on Day C, and close-grip for
 triceps and lockout on Day B. Week 12 ends with a top-single test that sets the estimate.
@@ -40,7 +41,7 @@ triceps and lockout on Day B. Week 12 ends with a top-single test that sets the 
 | 1–4 | Base | Rep ranges as written. No intensity techniques. |
 | 5–8 | Build | Intensity techniques on the last set of the marked exercises. Isolation exercises go to 0–1 RIR. |
 | 9–11 | Peak | Main lifts drop to 5–7 reps @ 1 RIR. Techniques stay. |
-| 12 | Deload + test | Override on Days B and C: one set fewer, target RIR 3, no techniques. Day A: work up to a top single on the barbell bench @ 1 RIR, then deload the rest of the day. Deload sets never lower the estimate; the top single updates it. |
+| 12 | Deload + test | Override on Days B and C: one set fewer, target RIR 3, no techniques. Day A: work up to a top single on the barbell bench, aiming for 100 kg if the week-11 estimate is 97 kg or more, otherwise a single @ 1 RIR. Then deload the rest of the day. Deload sets never lower the estimate; the top single updates it. |
 
 Week 1 is an override on the Base block, not a block of its own.
 
