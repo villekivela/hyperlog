@@ -33,7 +33,10 @@ class SessionScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun key(description: String): SemanticsNodeInteraction = compose.onNodeWithContentDescription(description)
+    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
+    private fun key(description: String): SemanticsNodeInteraction = compose.also { c ->
+        c.waitUntil(5_000) { c.onAllNodes(androidx.compose.ui.test.hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty() }
+    }.onNodeWithContentDescription(description)
 
     private fun tap(vararg descriptions: String) = descriptions.forEach {
         key(it).performClick()

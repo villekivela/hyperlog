@@ -33,8 +33,10 @@ class SupersetScreenTest {
     }
 
     /** A pad key: the last node with [description], below anything on the strip that shares it. */
-    private fun key(description: String) =
-        compose.onAllNodesWithContentDescription(description).let { it[it.fetchSemanticsNodes().size - 1] }.performClick().also { compose.waitForIdle() }
+    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
+    private fun key(description: String) = compose.also { c ->
+        c.waitUntil(5_000) { c.onAllNodesWithContentDescription(description).fetchSemanticsNodes().isNotEmpty() }
+    }.onAllNodesWithContentDescription(description).let { it[it.fetchSemanticsNodes().size - 1] }.performClick().also { compose.waitForIdle() }
 
     private fun startDay() {
         waitFor("Today")
