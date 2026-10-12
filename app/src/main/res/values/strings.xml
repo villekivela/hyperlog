@@ -84,6 +84,19 @@
 
     <string name="rest_title">Rest</string>
     <string name="rest_end">End rest</string>
+    <string name="rest_add">+15</string>
+    <string name="rest_over">Rest over</string>
+    <string name="rest_channel">Rest timer</string>
+    <string name="rest_channel_about">The countdown between sets, on the lock screen</string>
+    <string name="rest_over_channel">Rest over</string>
+    <string name="rest_over_channel_about">When rest runs out with the app out of sight</string>
+    <!-- The set after rest: "DB Bench Press · Set 3". -->
+    <string name="rest_next_set">%1$s · Set %2$d</string>
+    <string name="rest_next_mini_set">%1$s · Mini-set %2$d</string>
+    <!-- Its target: "25 kg × 8–10 @ 1" (RIR after @). -->
+    <string name="rest_target_kg">%1$s kg × %2$s</string>
+    <string name="rest_target_reps">%1$s reps</string>
+    <string name="rest_target_rir">%1$s @ %2$d</string>
 
     <string name="leave_title">Leave the session?</string>
     <string name="leave_body">It keeps running. Everything logged is saved.</string>

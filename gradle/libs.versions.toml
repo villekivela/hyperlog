@@ -13,8 +13,11 @@ room = "2.8.5"
 lifecycle = "2.11.0"
 coroutines = "1.11.0"
 serialization = "1.11.0"
+# NotificationCompat Live Update calls (setRequestPromotedOngoing) need core 1.17+.
+core = "1.18.0"
 
 [libraries]
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "core" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }

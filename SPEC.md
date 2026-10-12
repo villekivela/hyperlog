@@ -316,6 +316,24 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      instead) or between superset partners; full rest after the set or superset round.
    - **Rest on the lock screen**: an ongoing notification with time left, the next set's target and
      +15 s / skip; it vibrates when rest ends with the screen off.
+     - It reads `DB Bench Press · Set 3` over `25 kg × 8–10 @ 1` (the prefilled weight, the target
+       reps and RIR; `10–12 reps @ 2` with no weight yet), with `Rest` and the countdown in its
+       header, and the actions **+15** and **End rest**, as on the rest sheet. On Android 16 it is a
+       Live Update, so the countdown also sits in the status bar as a chip.
+     - When rest runs out the phone buzzes twice with alarm-class vibration (through vibrate and
+       silent mode), and the notification reads `Rest over` and counts up, with End rest, until the
+       next set is logged. Out of the app it also plays the notification sound and pops up; the
+       sound can be turned off in the system's settings for the "Rest over" channel. With the app on
+       screen it only buzzes.
+     - A myo-reps breathing pause shows as `Breathe` counting down to `Mini-set 2` (`25 kg × 4`),
+       with no actions, and ends with one short buzz. Drops, superset partners and iso holds show
+       nothing, and neither does rest after the day's last planned set (Day done).
+     - −15 that pulls rest past zero counts as rest running out and buzzes once.
+     - Rest survives the screen going off, the app being killed and a reboot: the countdown and
+       its exact alarm are put back when the phone starts. Notifications are asked for when a
+       session first shows (Android 13+); without them rest still buzzes.
+     - Leaving an open set for an exercise outside its superset (Start in the session list) closes
+       it and its rest runs; only the partner's set of the same round comes without rest.
    - **Every tap is saved immediately**; a session survives back gestures, app kills and reboots.
      Logged sets stay editable during and after the session; editing one never resets the timer.
    - **Prefills** follow what just happened (each set takes the previous set's weight and reps; drop

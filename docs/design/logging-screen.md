@@ -306,8 +306,12 @@ drop or mini-set, Finish set) moves on to the partner's set of the same round wi
 - Starting another exercise from the session list keeps the clock running, so it still counts
   from the last set.
 - Pulling rest past zero with −15 buzzes once.
-- Not in the prototype: the buzz with the screen off. The real app needs an ongoing notification
-  with the countdown and an alarm-class vibration.
+- With the screen off (ticket #13, screens `rest-01..03`): an ongoing notification in the
+  standard template, so it can be a Live Update. Title is the next set (`DB Bench Press · Set 3`),
+  text its target (`25 kg × 8–10 @ 1`), header `Rest` and the system chronometer; actions **+15**
+  and **End rest**, the rest sheet's words. When rest runs out: an alarm-class double buzz, header
+  `Rest over` counting up, End rest only. Breathing: `air` icon, `Breathe`, `Mini-set 2`, no
+  actions. The in-app buzz is the same alarm, so there is one buzz whether the app is open or not.
 
 **Pad.**
 - The pad is visible by default, for the active row.

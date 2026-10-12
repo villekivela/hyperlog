@@ -1,6 +1,13 @@
 package com.hyperlog.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.hyperlog.app.rest.AppVisibility
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,6 +53,35 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HyperlogTheme { App(sessions, library, gyms, programs, startingWeights) }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        AppVisibility.foreground = true
+    }
+
+    override fun onStop() {
+        AppVisibility.foreground = false
+        super.onStop()
+    }
+}
+
+/**
+ * Asks once for notifications (Android 13+), so rest shows on the lock screen. Without them rest
+ * still buzzes when it runs out.
+ */
+@Composable
+private fun AskForNotifications() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    val context = LocalContext.current
+    var asked by rememberSaveable { mutableStateOf(false) }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    LaunchedEffect(Unit) {
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        if (!asked && !granted) {
+            asked = true
+            ask.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }
@@ -101,6 +137,7 @@ private fun App(
 
     val running = session
     val finished = summary
+    if (running != null) AskForNotifications()
     when {
         finished != null -> SessionDoneScreen(
             finished,

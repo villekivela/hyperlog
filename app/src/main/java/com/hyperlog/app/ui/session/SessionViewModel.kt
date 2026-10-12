@@ -10,15 +10,13 @@ import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.ExerciseLibrary
-import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.SessionLogger
+import com.hyperlog.app.session.SessionRuntime
 import com.hyperlog.app.session.SessionSummary
 import com.hyperlog.app.ui.program.ProgramStore
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -27,7 +25,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** What the session screen can ask for. Each call is saved as soon as it is made. */
 interface SessionActions {
@@ -73,7 +70,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     private val db = HyperlogDatabase.get(application)
     private val library = ExerciseLibrary(db)
     private val programs = ProgramStore.get(application)
-    private val logger = SessionLogger(db, programs = programs)
+    private val runtime = SessionRuntime.get(application)
+    private val logger = runtime.logger
     private val gyms = Gyms(db)
     private val _loaded = MutableStateFlow(false)
     private val _summary = MutableStateFlow<SessionSummary?>(null)
@@ -89,9 +87,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         viewModelScope.launch {
-            // The shipped library comes first: sessions point at its exercises.
-            library.sync(withContext(Dispatchers.IO) { LibrarySeed.fromAssets(application) })
-            logger.load()
+            runtime.ready()
             _loaded.value = true
             // An edit to the shared dumbbells, plates or a gym's equipment reaches the running session at once.
             combine(gyms.dumbbells, gyms.plates, gyms.gyms) { d, p, g -> Triple(d, p, g) }.drop(1).collect { logger.load() }

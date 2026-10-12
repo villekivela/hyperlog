@@ -130,7 +130,6 @@ fun SessionScreen(
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
     KeepScreenOn()
-    RestEndBuzz(session.restEndsAt)
 
     BackHandler { showLeave = true }
 
@@ -1298,16 +1297,3 @@ private fun KeepScreenOn() {
     }
 }
 
-/** Buzzes once when rest runs out with the app open. The lock-screen timer is ticket #13. */
-@Composable
-private fun RestEndBuzz(restEndsAt: Long?) {
-    val context = LocalContext.current
-    LaunchedEffect(restEndsAt) {
-        val ends = restEndsAt ?: return@LaunchedEffect
-        val left = ends - System.currentTimeMillis()
-        if (left <= 0) return@LaunchedEffect
-        delay(left)
-        context.getSystemService(Vibrator::class.java)
-            ?.vibrate(VibrationEffect.createOneShot(350, VibrationEffect.DEFAULT_AMPLITUDE))
-    }
-}

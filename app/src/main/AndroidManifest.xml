@@ -3,6 +3,21 @@
 
     <!-- The buzz when rest ends. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The rest countdown on the lock screen (asked for when a session starts, Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Rest as a Live Update chip in the status bar (Android 16). -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!--
+      The buzz exactly when rest ends, through Doze. USE_EXACT_ALARM is granted at install
+      (Android 13+); Play limits it to alarm and timer apps, and Hyperlog ships outside Play.
+      Android 12 asks for SCHEDULE_EXACT_ALARM instead, granted by default there.
+    -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <!-- A running rest comes back after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Finding a browser that shows technique videos in a Custom Tab. -->
     <queries>
@@ -31,6 +46,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- The rest notification's actions, the rest alarm, and a reboot or update mid-rest. -->
+        <receiver
+            android:name=".rest.RestReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

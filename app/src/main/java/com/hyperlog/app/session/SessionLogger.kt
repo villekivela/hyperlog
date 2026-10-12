@@ -295,7 +295,7 @@ class SessionLogger(
         val current = session.current
         var row = dao.session(session.id)!!
         // Leaving an open set closes it, so its rest runs while the other exercise comes up.
-        if (session.openSetId != null && current != null) row = closed(row, session, current, current.sets.size - 1, clock())
+        if (session.openSetId != null && current != null) row = closed(row, session, current, current.sets.size - 1, clock(), to = sessionExerciseId)
         dao.updateSession(row.copy(currentSessionExerciseId = sessionExerciseId, entry = null))
         reload()
     }
@@ -439,16 +439,18 @@ class SessionLogger(
     /**
      * [row] with set [setIndex] of [current] closed: no set open and the next set in the session's
      * order on screen ([SessionOrder]). The set's rest runs, except on the way to a superset
-     * partner's set of the same round, which comes straight away.
+     * partner's set of the same round, which comes straight away. With [to], that exercise comes
+     * up instead, and rest runs unless it is the one that would have come straight away.
      */
-    private fun closed(row: SessionEntity, session: ActiveSession, current: SessionExercise, setIndex: Int, now: Long): SessionEntity {
+    private fun closed(row: SessionEntity, session: ActiveSession, current: SessionExercise, setIndex: Int, now: Long, to: Long? = null): SessionEntity {
         val rest = current.plan?.getOrNull(setIndex)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
         val step = SessionOrder.after(session.exercises, current.id, setIndex)
+        val rests = step.rest || (to != null && to != step.exerciseId)
         return row.copy(
             openSetId = null, breathing = false, holdStartedAt = null,
-            restEndsAt = if (step.rest) now + rest else null,
-            restTotalMs = if (step.rest) rest else row.restTotalMs,
-            currentSessionExerciseId = step.exerciseId,
+            restEndsAt = if (rests) now + rest else null,
+            restTotalMs = if (rests) rest else row.restTotalMs,
+            currentSessionExerciseId = to ?: step.exerciseId,
         )
     }
 

@@ -153,6 +153,22 @@ class SupersetSessionTest {
     }
 
     @Test
+    fun leavingAnOpenSupersetSetForAnotherExerciseKeepsItsRest() = runTest {
+        program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
+        val logger = logger()
+        logger.switchTo("db_bicep_curl")
+        logger.log("12")
+
+        now += 5_000
+        // Not the partner: the round is broken off, so the curl's 1:00 rest runs.
+        logger.switchTo("db_lateral_raise")
+        assertEquals("db_lateral_raise", logger.onScreen)
+        assertNull(logger.session.followUp)
+        assertEquals(now + 60_000, logger.session.restEndsAt)
+        assertEquals(false, logger.session.breathing)
+    }
+
+    @Test
     fun theNextLineNamesWhatComesAfterTheGroupOnScreen() = runTest {
         program()
         val logger = logger()
