@@ -98,7 +98,8 @@ Weeks are program weeks (`"7-11"` for a range) inside the block. A day or a bloc
 of its sets for given weeks too: a target RIR (`rir`) or a change to it (`rirAdd`), no techniques
 (`technique: null`), and `fewerSets` (sets removed from the end of every slot, one always stays).
 The line's own override applies first, then the block's, then the day's. This covers ramp-in
-weeks, techniques that start in week 3, and deload weeks without duplicating days.
+weeks, techniques that start in week 3, and deload weeks without duplicating days. A day or block
+override marks deload weeks with `deload: true`; progression reads the mark (below).
 
 Load is prescribed as **rep range + RIR**: weight is suggested from recent sessions on that
 exercise. Percentage-of-training-max programs (SBS-style AMRAP) are out of v1.
@@ -111,21 +112,47 @@ work. You can override the suggestion on the spot; the override is logged, not h
 - **One strength estimate per exercise** (per machine for machines): e1RM from Epley on
   reps + RIR, using sets of 12 reps or fewer, with a per-exercise correction learned from your logs.
   An exercise or machine with no history gets no suggestion until its first logged set.
+  - The estimate is the best set of the latest session; deload sets and sets at 4+ RIR only count
+    when they raise it. Progression reads the last 12 sessions.
+  - The correction is Epley's constant (30) fitted per exercise from sets at different weights and
+    reps in one session (a top set and its back-offs): the median of every such pair, kept within
+    20–40, once there are two pairs.
+- **What is judged**: the sets at the top weight (back-offs follow the top set) of the last session
+  with the same rep range, against the prescription they were done under. So a day that benches
+  4–6 and another that benches 6–8 each progress on their own; with no session in that range it's
+  a new rep range (below). A session done ad hoc is judged against today's prescription. Effort is
+  reps + RIR, so 11 @ 1 is as good as 10 @ 2. "Last time" in the why-line means that session.
 - **Rep range @ RIR** (e.g. 8–10 @ 2 RIR): progress is judged on reps + RIR. When every work set
   reaches top + target RIR (10 @ 2, 11 @ 1, 12 @ 0), the next session moves up one rung of the
   equipment's ladder; otherwise same weight, more reps.
 - **Fixed reps @ RIR**: a range with min = max. Beat it by one or more (5 @ 3, or 6 @ 2) → next rung.
 - **Last set to failure**: beat the previous reps at the same weight; at the top of the range →
   next rung.
+- **Moving up** targets the reps the estimate predicts at the new rung, kept inside the range.
+  Otherwise the weight stays and the target is one rep more than last time's fewest.
 - **Rung too big**: if the next rung would put you below the bottom of the range (a +2.3 kg cable
   jump on lateral raises), keep the weight and target +1 rep. If neither works, say so instead of
   guessing.
+  - "Below the range" is what last time's sets predict at the next rung, rounded to whole reps.
+  - +1 rep goes up to 2 reps past the top of the range. Past that, or at the heaviest rung, the
+    suggestion keeps the weight and says progress isn't possible on this equipment.
 - **Misses**: miss the target by one rep → same weight. Miss by two or more → one rung down (about
   5% where the ladder is fine-grained). Deload weeks and high-RIR sets never lower the estimate.
+  - A miss is counted in reps + RIR against the bottom of the range at the target RIR, so 8 @ 1
+    against 8–10 @ 2 is one short.
+  - "About 5%" is the rung nearest 95% of the weight, and always at least one rung down.
+  - After a deload session the weight never steps down.
+- **Deload weeks** are the weeks a program marks `deload: true`. Their suggestion is last time's
+  weight at the deload's easier target.
 - **New rep range** (block change): weight from the estimate, rounded down to the ladder, marked
   "estimated, check on the first set".
+  - The weight is for the bottom of the new range at its target RIR. The week-12 heavy single of
+    Hyperlog Full Body is one of these.
 - **Within a session**, the next set's weight follows the gap between target and logged RIR (about
   5% per RIR point, capped at ±10%).
+  - Reps outside the range count as points too (5 reps against 6–8 is one point short).
+  - The weight is the nearest rung, so on a coarse stack a small gap keeps the weight. A set with a
+    different range from the set before gets its weight from the estimate, today's sets included.
 - **Available weights** come from the equipment actually used: the next suggestion is the next
   weight on that equipment's weight ladder (see Gyms and equipment), never a computed number the
   machine can't be set to.
@@ -137,6 +164,9 @@ work. You can override the suggestion on the spot; the override is logged, not h
 
 Research behind these rules: `docs/research/progression-and-partials.md`.
 - **Every suggestion says why**, e.g. "last time 50 kg × 12, 12, 11 @ 2 RIR, top of 8–12 → 52.5 kg".
+  - The why-line sits under the exercise name for the active set, one muted line led by a
+    direction symbol (up, flat, down). An estimated weight, or progress that isn't possible, reads
+    in the tertiary colour. A set that just follows the one before has no line.
 - Coaching changes (e.g. `adjust_load -10%` after time off) apply on top of the suggestion for their
   scope; progression then continues from what you actually lift.
 
@@ -224,9 +254,10 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
    - **A program day's session** has a row for every planned set from the start, with a Target
-     column (reps and an RIR ring). The first set prefills from last time's first set at the top
-     of the range and the target RIR; later sets follow the set before (reps capped at the top of
-     the range, or the top of a new range). Rest after a set is the program's rest for it. After an
+     column (reps and an RIR ring). The first set prefills with the suggestion (Automatic
+     progressive overload): its weight and target reps, at the target RIR; with no history, an empty
+     weight at the top of the range. Later sets follow the set before (reps capped at the top of
+     the range, or the top of a new range), and its weight moves with the RIR gap. Rest after a set is the program's rest for it. After an
      exercise's last planned set the first exercise with sets left comes up. When every planned
      set is logged, the pad gives way to **Day done** and Finish session.
    - The **prescription sheet** (tap the exercise name) shows every set's target, technique or
@@ -265,6 +296,10 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        same stutter rule as logging.
      - Only real ladders are checked for "not on the ladder": a machine or cable without a known
        machine (a session with no gym) is checked for ratios only.
+     - **A kept weight is held back**: a set kept past the check is usually a typo (79 for 7.9), so
+       it isn't the next set's prefill or reference, and progression ignores it. The last set that
+       counts takes its place (else last time's first). Logging another set near it (within the
+       check's 1.5× band) shows the weight was real, and from then on it counts.
    - **Corrections**: tapping any logged set, drop or mini-set loads it into the pad; ✓ saves, the
      hide key cancels. Finished exercises reopen from the session list and from "Session done".
      Back cancels a correction, then asks before leaving the session.

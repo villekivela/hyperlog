@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
 
 /**
@@ -323,7 +324,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
     private fun adjustments(o: JsonObject, path: String, weeks: WeekRange?): List<WeekAdjustment>? {
         val result = mutableListOf<WeekAdjustment>()
         val ok = weekKeys(o, path, weeks) { e, p, range ->
-            unknownFields(e, p, setOf("rir", "rirAdd", "technique", "fewerSets"))
+            unknownFields(e, p, setOf("rir", "rirAdd", "technique", "fewerSets", "deload"))
             if (e.containsKey("technique") && e["technique"] !is JsonNull) {
                 error("$p.technique", "can only be null here (no techniques); set a technique on the set itself")
             }
@@ -334,6 +335,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
                 rirAdd = int(e, p, "rirAdd", min = -5, max = 5) ?: 0,
                 noTechniques = e.containsKey("technique"),
                 fewerSets = int(e, p, "fewerSets", min = 1, max = 10) ?: 0,
+                deload = bool(e, p, "deload") ?: false,
             )
         }
         return if (ok) result else null
@@ -378,6 +380,12 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             return null.also { error(join(path, key), "must be $range") }
         }
         return n
+    }
+
+    private fun bool(o: JsonObject, path: String, key: String): Boolean? {
+        val el = o[key] ?: return null
+        return (el as? JsonPrimitive)?.takeIf { !it.isString }?.booleanOrNull
+            ?: null.also { error(join(path, key), "must be true or false") }
     }
 
     /** Reads a required non-empty array, item by item, so every item's problems are reported. */

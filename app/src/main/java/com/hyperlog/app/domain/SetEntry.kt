@@ -3,7 +3,14 @@ package com.hyperlog.app.domain
 import java.util.Locale
 
 /** One set as it was done. Weight is in kg (per dumbbell for dumbbell exercises). */
-data class LoggedSet(val weightKg: Double, val fullReps: Int, val partialReps: Int, val rir: Int)
+data class LoggedSet(
+    val weightKg: Double,
+    val fullReps: Int,
+    val partialReps: Int,
+    val rir: Int,
+    /** Its weight was kept past a weight check with a second ✓. */
+    val kept: Boolean = false,
+)
 
 /** The value in the active row that the pad types into. */
 enum class Field { Weight, Reps }

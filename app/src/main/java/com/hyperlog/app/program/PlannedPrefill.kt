@@ -5,6 +5,7 @@ import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.progression.Suggestion
 
 /** A back-off set's weight: [topKg] minus [percent], rounded down to a rung (the lightest if none is below). */
 fun backoffWeight(topKg: Double, percent: Int, ladder: WeightLadder): Double {
@@ -13,23 +14,18 @@ fun backoffWeight(topKg: Double, percent: Int, ladder: WeightLadder): Double {
 }
 
 /**
- * The pad's entry for the next set of [plan] after the [logged] ones. Prefills follow what just
- * happened (docs/design/logging-screen.md):
- * - the weight is the set before's, a back-off's is worked out from its top set, and the first set
- *   starts from last time's first set (empty with no history);
- * - reps are the set before's when it had the same range, capped at its top, else the top of the
- *   range;
- * - the RIR is the target's, else the set before's.
+ * The pad's entry for the next set of [plan] after the [logged] ones: [suggestion]'s weight and
+ * reps (progression works them out from history and the sets before), and the target's RIR, else
+ * the set before's. With no suggestion (no history yet) the weight is empty, to type first, and
+ * the reps are the top of the range.
  */
-fun plannedEntry(plan: List<PlannedSet>, logged: List<LoggedSet>, lastTime: List<LoggedSet>, ladder: WeightLadder): SetEntry {
-    val i = logged.size
-    val set = plan.getOrNull(i) ?: plan.last()
+fun plannedEntry(plan: List<PlannedSet>, logged: List<LoggedSet>, suggestion: Suggestion?): SetEntry {
+    val set = plan.getOrNull(logged.size) ?: plan.last()
     val previous = logged.lastOrNull()
-    val kg = plannedWeight(i, plan, logged, lastTime, ladder, activeKg = null)
-    val reps = if (previous != null && plan.getOrNull(i - 1)?.reps == set.reps) previous.fullReps.coerceAtMost(set.reps.max) else set.reps.max
+    val kg = suggestion?.kg
     return SetEntry(
         weight = kg?.let(::formatKg).orEmpty(),
-        full = reps.toString(),
+        full = (suggestion?.reps ?: set.reps.max).toString(),
         partial = "",
         rir = set.rir ?: previous?.rir,
         field = if (kg == null) Field.Weight else Field.Reps,

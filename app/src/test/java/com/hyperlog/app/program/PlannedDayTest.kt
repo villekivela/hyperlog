@@ -17,7 +17,7 @@ class PlannedDayTest {
           { "id": "main", "name": "Main", "weekStart": 1, "weekEnd": 4,
             "weeks": { "1": { "rirAdd": 1, "technique": null } },
             "days": [
-              { "id": "a", "name": "Day A", "weeks": { "4": { "rir": 3, "technique": null, "fewerSets": 1 } }, "groups": [
+              { "id": "a", "name": "Day A", "weeks": { "4": { "rir": 3, "technique": null, "fewerSets": 1, "deload": true } }, "groups": [
                 { "slots": [ { "id": "bench", "exercise": "barbell_bench_press",
                     "alternatives": [ "smith_machine_bench_press", { "exercise": "db_bench_press", "sets": [ { "count": 2, "reps": "8-10", "rir": 1 } ] } ],
                     "sets": [
@@ -74,6 +74,13 @@ class PlannedDayTest {
         assertEquals(listOf(3, 3), bench.map { it.rir })
         assertEquals(1, day(4).slot("triceps")!!.sets.size)
         assertNull(day(4).slot("lateral")!!.sets.single().technique)
+    }
+
+    @Test
+    fun aWeekIsADeloadOnlyWhereTheProgramMarksIt() {
+        assertEquals(true, day(4).deload)
+        assertEquals(false, day(3).deload)
+        assertEquals(false, day(4, 1).deload)
     }
 
     @Test

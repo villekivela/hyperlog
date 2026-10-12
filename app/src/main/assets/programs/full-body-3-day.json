@@ -918,6 +918,7 @@
       "name": "Deload + test",
       "weekStart": 12,
       "weekEnd": 12,
+      "weeks": { "12": { "deload": true } },
       "days": [
         {
           "id": "a",

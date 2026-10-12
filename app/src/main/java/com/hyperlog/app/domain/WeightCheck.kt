@@ -3,6 +3,20 @@ package com.hyperlog.app.domain
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+/**
+ * Which of a session's sets of one exercise count: a weight kept past a weight check doesn't (it's
+ * most often a typo) until a later set is logged near it, inside the check's 1.5× band. Sets that
+ * don't count are neither the next set's prefill nor its reference, and don't move progression.
+ */
+fun List<LoggedSet>.counting(): List<Boolean> =
+    mapIndexed { i, set -> !set.kept || drop(i + 1).any { near(it.weightKg, set.weightKg) } }
+
+/** Within the weight check's band: more than half and less than 1.5× of [reference]. */
+fun near(kg: Double, reference: Double) = reference > 0 && kg / reference > 0.5 && kg / reference < 1.5
+
+/** The sets that count ([counting]), in order. */
+fun List<LoggedSet>.countingSets(): List<LoggedSet> = filterIndexed { i, _ -> counting()[i] }
+
 /** The weight a new set is compared with: the previous set, or last time's first set. */
 data class Reference(val kg: Double, val fromThisSession: Boolean)
 

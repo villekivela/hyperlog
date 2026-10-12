@@ -232,8 +232,52 @@ class SessionLoggerTest {
         assertEquals(1, logger.session.current!!.sets.size)
         now += 2_000
         logger.done()
-        assertEquals(LoggedSet(255.0, 10, 0, 2), logger.session.current!!.sets.last())
+        assertEquals(LoggedSet(255.0, 10, 0, 2, kept = true), logger.session.current!!.sets.last())
         assertNull(logger.session.weightCheck)
+    }
+
+    /** Types [weight] over the prefill and keeps it past the weight check with a second ✓. */
+    private suspend fun SessionLogger.keep(weight: String) {
+        focus(Field.Weight); type(weight); done(); done()
+        now += 2_000
+        done()
+        now += 120_000
+    }
+
+    @Test
+    fun aKeptTypoIsNeitherThePrefillNorTheReferenceForTheNextSet() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("cable_lateral_raise")
+        logger.logSet("7.5", "12", 2)
+        logger.finish()
+
+        now += 86_400_000
+        logger.start()
+        logger.addExercise("cable_lateral_raise")
+        logger.keep("75")
+        assertEquals(75.0, logger.session.current!!.sets.single().weightKg, 0.001)
+
+        // The next set prefills last time's weight, and logging it raises no check.
+        assertEquals("7.5", logger.session.entry!!.weight)
+        logger.done()
+        assertNull(logger.session.weightCheck)
+        assertEquals(listOf(75.0, 7.5), logger.session.current!!.sets.map { it.weightKg })
+        assertEquals("7.5", logger.session.entry!!.weight)
+    }
+
+    @Test
+    fun aWeightKeptTwiceInARowIsTakenAsReal() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("cable_lateral_raise")
+        logger.logSet("7.5", "12", 2)
+        logger.keep("20")
+        logger.keep("20")
+        assertEquals("20", logger.session.entry!!.weight)
+        logger.done()
+        assertNull(logger.session.weightCheck)
+        assertEquals(4, logger.session.current!!.sets.size)
     }
 
     @Test

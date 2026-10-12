@@ -99,9 +99,10 @@ block's weeks, and keys may not overlap.
   `reps`, `rir`, `rest`, `technique` (`null` removes it). A line that a back-off points at can't be
   removed.
 - **On a day or a block**, an override changes every set in it: `rir` (sets the target), `rirAdd`
-  (adds to the target, −5 to 5), `technique: null` (no techniques), and `fewerSets` (removes that
-  many sets from the end of every slot; one set always stays). `rir` and `rirAdd` can't both be
-  used in one entry.
+  (adds to the target, −5 to 5), `technique: null` (no techniques), `fewerSets` (removes that
+  many sets from the end of every slot; one set always stays), and `deload: true`, which marks
+  those weeks as a deload: their sets can raise an exercise's estimate but never lower it, and
+  progression doesn't step down after them. `rir` and `rirAdd` can't both be used in one entry.
 
 They apply in this order: the line's own override, then the block's, then the day's. So a day's
 `"rir": 3` in a deload week wins over everything.
@@ -176,7 +177,7 @@ deload week. A test parses this example against the shipped library, so it stays
         {
           "id": "a",
           "name": "Day A — Heavy bench, squat, pulldown",
-          "weeks": { "3": { "rir": 3, "technique": null, "fewerSets": 1 } },
+          "weeks": { "3": { "rir": 3, "technique": null, "fewerSets": 1, "deload": true } },
           "groups": [
             { "slots": [ {
               "id": "bench",
@@ -200,5 +201,6 @@ deload week. A test parses this example against the shipped library, so it stays
 
 - A load rule such as "a single at 100 kg if the estimate is 97 kg or more" (the Full Body week-12
   test). Write a plain `1` rep set and put the rule in the slot's note, as Full Body does
-  (`app/src/main/assets/programs/full-body-3-day.json`).
+  (`app/src/main/assets/programs/full-body-3-day.json`). The app suggests the single's weight from
+  the estimate, as for any new rep range.
 - Percentages of a training max, AMRAP sets for progression, and circuits: out of v1 (`SPEC.md`).

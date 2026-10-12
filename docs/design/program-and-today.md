@@ -141,6 +141,26 @@ reps and RIR ring, technique or back-off); rest as one line (`timer` Rest 3:00) 
 it, else per row at the right; the slot note with `view_timeline` (the program's cue); the
 technique note with `sticky_note_2`; **Technique video**.
 
+**Why-line (#8).** Under the exercise name, above the column heads: why the active set's weight
+is what progression suggests. One bodyMedium line in onSurfaceVariant, two at most, ellipsized;
+start at the 24 dp margin, 8 dp below it. It leads with an 18 dp symbol in a 20 dp box aligned to
+the first line: `trending_up` (primary) for a rung up or a heavier next set, `trending_flat` for
+same weight, `trending_down` for a step down. An estimated weight (`calculate`) and "progress isn't
+possible" (`block`) are tertiary, symbol and text, so the one weight to check stands out. A set
+that only follows the set before, or a back-off, has no line; the back-off label already says why.
+The pad prefills the suggested weight and reps, so accepting it is one ✓.
+
+```
+ Barbell Bench Press                       ⋮
+ ↗ Last time 80 kg × 6 @ 2, top of 4–6 → 82.5 kg     ← bodyMedium, onSurfaceVariant
+       Target   Last       kg   Reps  RIR
+ 1     4–6 (2)  80 × 7    82.5    5    ●2
+```
+
+Screens: `suggestion-up.png`, `suggestion-cable-jump.png` (5.7 kg held, 13 reps),
+`suggestion-hold.png`, `suggestion-down.png`, `suggestion-estimated.png` (Day C's 6–8 from the
+estimate), `kept-typo-prefill.png` (a kept 57 doesn't become the next set's 57).
+
 ## Interaction rules
 
 - Start session on a program day asks for the gym as before, then starts that day.

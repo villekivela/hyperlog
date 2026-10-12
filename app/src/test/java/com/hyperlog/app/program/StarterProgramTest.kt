@@ -161,6 +161,12 @@ class StarterProgramTest {
     }
 
     @Test
+    fun weekTwelveIsMarkedAsADeloadSoItsSetsNeverLowerTheEstimate() {
+        assertEquals(listOf(true, true, true), (0..2).map { day(12, it).deload })
+        assertTrue((1..11).all { w -> (0..2).none { day(w, it).deload } })
+    }
+
+    @Test
     fun theSlotNotesCarryTheProgramsCues() {
         val a = day(3, 0)
         val b = day(3, 1)

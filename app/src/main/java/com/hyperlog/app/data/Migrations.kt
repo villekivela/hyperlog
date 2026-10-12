@@ -4,7 +4,17 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6)
+
+/**
+ * v6: a logged set remembers whether it was kept past a weight check (#8), so a kept typo doesn't
+ * become the next set's prefill or reference. Earlier sets weren't.
+ */
+object Migration5To6 : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE logged_set ADD COLUMN kept INTEGER NOT NULL DEFAULT 0")
+    }
+}
 
 /**
  * v5: programs (#6). Imported programs with their position; sessions gain the program day they

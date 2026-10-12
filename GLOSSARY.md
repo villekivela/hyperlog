@@ -146,7 +146,7 @@ _Avoid_: Target (that's a set prescription's), PR goal
 A one-off suggestion for an exercise with no history yet, taken from the old app's data.
 
 **Deload**:
-A planned week of reduced volume or effort. It never lowers the estimate.
+A planned week of reduced volume or effort, marked as one in the program file. It never lowers the estimate.
 
 ## Gyms and equipment
 

@@ -13,6 +13,12 @@ import com.hyperlog.app.domain.Reference
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
+import com.hyperlog.app.domain.counting
+import com.hyperlog.app.domain.countingSets
+import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.progression.Performance
+import com.hyperlog.app.progression.Progression
+import com.hyperlog.app.progression.WorkSet
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.gym.EquipmentItem
@@ -196,12 +202,13 @@ class SessionLogger(
                 }
                 checked = null
                 lastLoggedAt = now
+                val set = result.set.copy(kept = check != null)
                 val rest = current.plan?.getOrNull(current.sets.size)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
                 // With the exercise's planned sets done, the first exercise with sets left comes up.
                 val finishesExercise = current.plan != null && current.sets.size + 1 >= current.plan.size
                 val next = if (finishesExercise) session.exercises.firstOrNull { it.id != current.id && it.plan != null && !it.done } else null
                 db.withTransaction {
-                    dao.insertSet(result.set.toEntity(current.id, current.sets.size, now))
+                    dao.insertSet(set.toEntity(current.id, current.sets.size, now))
                     // The next set's entry is worked out again from what was just logged.
                     dao.updateSession(
                         dao.session(session.id)!!.copy(
@@ -309,17 +316,27 @@ class SessionLogger(
                 else -> dao.lastTime(se.exerciseId, row.id)
             }
             val slot = day?.slot(se.slotId)
+            val plan = slot?.setsFor(se.exerciseId)
+            val sets = dao.sets(se.id).map { it.toLoggedSet() }
+            val suggestion = if (plan == null || needsMachine || se.id != row.currentSessionExerciseId) null
+            else Progression.suggest(
+                plan,
+                Performance(workSets(sets, plan), deload = day.deload),
+                history(se.exerciseId, row.id, perMachine, machine?.id),
+                ladder.ladder,
+            )
             SessionExercise(
                 id = se.id,
                 exercise = exercise,
-                sets = dao.sets(se.id).map { it.toLoggedSet() },
+                sets = sets,
                 lastTime = lastTime.map { it.toLoggedSet() },
                 ladder = ladder.ladder,
                 ladderKnown = ladder.known,
                 machine = machine,
                 needsMachine = needsMachine,
                 slot = slot,
-                plan = slot?.setsFor(se.exerciseId),
+                plan = plan,
+                suggestion = suggestion,
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
@@ -327,8 +344,8 @@ class SessionLogger(
         if (current?.needsMachine == true || current?.done == true) entry = null
         if (entry == null && current != null && !current.needsMachine && !current.done) {
             val plan = current.plan
-            entry = if (plan != null) plannedEntry(plan, current.sets, current.lastTime, current.ladder)
-            else SetEntry.prefill(current.sets.lastOrNull() ?: current.lastTime.firstOrNull())
+            entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
+            else SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
             dao.updateSession(row.copy(entry = entry.toColumns()))
         }
         _state.value = ActiveSession(
@@ -345,6 +362,18 @@ class SessionLogger(
         )
     }
 
+    /**
+     * The exercise's past sessions (on [itemId] for machines), oldest first, each with the
+     * prescription it was done under and whether its week was a deload.
+     */
+    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?): List<Performance> =
+        dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
+            val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
+            else programs.program(past.programId)?.plannedDay(Position(past.week, past.dayIndex))
+            val plan = day?.slot(past.slotId)?.setsFor(exerciseId)
+            Performance(workSets(dao.sets(past.id).map { it.toLoggedSet() }, plan), deload = day?.deload == true)
+        }
+
     private suspend fun <T> locked(block: suspend () -> T): T = mutex.withLock { block() }
 
     companion object {
@@ -353,21 +382,33 @@ class SessionLogger(
 
         /** No two sets are logged this close together on purpose; a second ✓ is a stutter. */
         const val DOUBLE_TAP_MS = 1_000L
+
+        /** How many past sessions of an exercise progression reads. */
+        const val HISTORY_SESSIONS = 12
     }
 }
 
-/** What a new set's weight is checked against: the set before it, or last time's first set. */
+/**
+ * What a new set's weight is checked against: the last set that counts, or last time's first. A
+ * weight kept past a check doesn't count until a set is logged near it.
+ */
 private fun SessionExercise.reference(): Reference? =
-    sets.lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
-        ?: lastTime.firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
+    sets.countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
+        ?: lastTime.countingSets().firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
+
+/** [sets] as progression reads them: with their prescriptions, and whether each counts. */
+private fun workSets(sets: List<LoggedSet>, plan: List<PlannedSet>?): List<WorkSet> {
+    val counting = sets.counting()
+    return sets.mapIndexed { i, set -> WorkSet(set, plan?.getOrNull(i), counting[i]) }
+}
 
 private fun LoggedSet.toEntity(sessionExerciseId: Long, position: Int, loggedAt: Long) =
     LoggedSetEntity(
         sessionExerciseId = sessionExerciseId, position = position, weightKg = weightKg,
-        fullReps = fullReps, partialReps = partialReps, rir = rir, loggedAt = loggedAt,
+        fullReps = fullReps, partialReps = partialReps, rir = rir, loggedAt = loggedAt, kept = kept,
     )
 
-private fun LoggedSetEntity.toLoggedSet() = LoggedSet(weightKg, fullReps, partialReps, rir)
+private fun LoggedSetEntity.toLoggedSet() = LoggedSet(weightKg, fullReps, partialReps, rir, kept)
 
 private fun SetEntry.toColumns() = EntryColumns(weight, full, partial, rir, field.name, partialMode, fresh)
 

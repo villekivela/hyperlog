@@ -42,7 +42,7 @@ data class Program(val title: String, val author: String?, val blocks: List<Bloc
                 )
             }
         }
-        return PlannedDay(position, block, day, slots)
+        return PlannedDay(position, block, day, slots, deload = adjustments.any { it.deload })
     }
 }
 
@@ -142,7 +142,7 @@ data class SetOverride(
 
 /**
  * A block's or day's override for some weeks, applied to every set of it after the sets' own
- * overrides: a target RIR or a change to it, no techniques, and fewer sets per slot.
+ * overrides: a target RIR or a change to it, no techniques, fewer sets per slot, and the deload mark.
  */
 data class WeekAdjustment(
     val weeks: WeekRange,
@@ -150,12 +150,21 @@ data class WeekAdjustment(
     val rirAdd: Int = 0,
     val noTechniques: Boolean = false,
     val fewerSets: Int = 0,
+    /** These weeks are a deload: their sets never lower the estimate. */
+    val deload: Boolean = false,
 )
 
 private fun List<WeekAdjustment>.forWeek(week: Int) = firstOrNull { week in it.weeks }
 
 /** A day as it is trained in one week: its slots in order with their resolved sets. */
-data class PlannedDay(val position: Position, val block: Block, val day: Day, val slots: List<PlannedSlot>) {
+data class PlannedDay(
+    val position: Position,
+    val block: Block,
+    val day: Day,
+    val slots: List<PlannedSlot>,
+    /** A deload week for this day, as the program marks it; its sets never lower the estimate. */
+    val deload: Boolean = false,
+) {
     fun slot(id: String?) = slots.firstOrNull { it.id == id }
 }
 

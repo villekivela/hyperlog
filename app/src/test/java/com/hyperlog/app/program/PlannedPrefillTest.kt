@@ -4,6 +4,7 @@ import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.progression.Suggestion
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -29,31 +30,15 @@ class PlannedPrefillTest {
     }
 
     @Test
-    fun theFirstSetStartsFromLastTimesFirstSetAtTheTopOfTheRangeAndTheTargetRir() {
-        val entry = plannedEntry(bench, logged = emptyList(), lastTime = listOf(LoggedSet(85.0, 5, 0, 1)), plates)
-        assertEquals(SetEntry("85", "6", "", 1, Field.Reps, partialMode = false, fresh = true), entry)
+    fun theEntryTakesTheSuggestionsWeightAndRepsAndTheTargetRir() {
+        val entry = plannedEntry(bench, logged = emptyList(), Suggestion(87.5, 5, Suggestion.Kind.Up, "why"))
+        assertEquals(SetEntry("87.5", "5", "", 1, Field.Reps, partialMode = false, fresh = true), entry)
     }
 
     @Test
-    fun withNoHistoryTheFirstSetStartsOnAnEmptyWeight() {
-        val entry = plannedEntry(bench, logged = emptyList(), lastTime = emptyList(), plates)
+    fun withNoSuggestionTheFirstSetStartsOnAnEmptyWeightAtTheTopOfTheRange() {
+        val entry = plannedEntry(bench, logged = emptyList(), suggestion = null)
         assertEquals(SetEntry("", "6", "", 1, Field.Weight, partialMode = false, fresh = true), entry)
-    }
-
-    @Test
-    fun theBackOffAfterALoggedTopSetIsPrefilledWithItsWeightAndItsOwnRange() {
-        val entry = plannedEntry(bench, logged = listOf(LoggedSet(92.5, 5, 0, 1)), lastTime = emptyList(), plates)
-        assertEquals(SetEntry("82.5", "8", "", 1, Field.Reps, partialMode = false, fresh = true), entry)
-    }
-
-    @Test
-    fun aSetLikeTheOneBeforeTakesItsWeightAndRepsCappedAtTheTopOfTheRange() {
-        val lateral = listOf(PlannedSet(RepRange(10, 12), 0, 90), PlannedSet(RepRange(10, 12), 0, 90))
-        assertEquals(
-            SetEntry("7.9", "11", "", 0, Field.Reps, partialMode = false, fresh = true),
-            plannedEntry(lateral, listOf(LoggedSet(7.9, 11, 0, 0)), emptyList(), stack),
-        )
-        assertEquals("12", plannedEntry(lateral, listOf(LoggedSet(7.9, 14, 0, 0)), emptyList(), stack).full)
     }
 
     @Test

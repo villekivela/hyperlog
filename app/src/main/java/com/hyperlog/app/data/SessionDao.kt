@@ -1,9 +1,19 @@
 package com.hyperlog.app.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+
+/** An exercise done in an earlier session, and the program day that session trained (if any). */
+data class PastExercise(
+    val id: Long,
+    @ColumnInfo(name = "slot_id") val slotId: String?,
+    @ColumnInfo(name = "program_id") val programId: Long?,
+    val week: Int?,
+    @ColumnInfo(name = "day_index") val dayIndex: Int?,
+)
 
 @Dao
 interface SessionDao {
@@ -63,6 +73,22 @@ interface SessionDao {
         """,
     )
     suspend fun lastTimeOn(exerciseId: String, sessionId: Long, itemId: Long?): List<LoggedSetEntity>
+
+    /**
+     * The latest [limit] other sessions with sets of [exerciseId], newest first, with the program
+     * day each trained. With [anyItem] false only those on equipment item [itemId] (ADR 0002).
+     */
+    @Query(
+        """
+        SELECT se.id, se.slot_id, s.program_id, s.week, s.day_index
+        FROM session_exercise se JOIN session s ON s.id = se.session_id
+        WHERE se.exercise_id = :exerciseId AND se.session_id != :sessionId
+          AND (:anyItem OR se.equipment_item_id IS :itemId)
+          AND EXISTS (SELECT 1 FROM logged_set x WHERE x.session_exercise_id = se.id)
+        ORDER BY s.started_at DESC, se.id DESC LIMIT :limit
+        """,
+    )
+    suspend fun history(exerciseId: String, sessionId: Long, anyItem: Boolean, itemId: Long?, limit: Int): List<PastExercise>
 
     @Query("UPDATE session_exercise SET equipment_item_id = :itemId WHERE id = :id")
     suspend fun setEquipmentItem(id: Long, itemId: Long?)

@@ -106,4 +106,6 @@ data class LoggedSetEntity(
     @ColumnInfo(name = "partial_reps") val partialReps: Int,
     val rir: Int,
     @ColumnInfo(name = "logged_at") val loggedAt: Long,
+    /** Logged with a second ✓ past a weight check. */
+    @ColumnInfo(defaultValue = "0") val kept: Boolean = false,
 )

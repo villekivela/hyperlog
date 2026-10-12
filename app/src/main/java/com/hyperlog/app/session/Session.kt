@@ -10,6 +10,7 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.PlannedSlot
+import com.hyperlog.app.progression.Suggestion
 
 /** One exercise in a session, with what has been logged and what was done last time. */
 data class SessionExercise(
@@ -32,6 +33,8 @@ data class SessionExercise(
     val slot: PlannedSlot? = null,
     /** This week's sets for it from the program; null for an ad-hoc exercise, whose sets are open-ended. */
     val plan: List<PlannedSet>? = null,
+    /** What progression suggests for the active row of a program exercise on screen, with why. */
+    val suggestion: Suggestion? = null,
 ) {
     /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = plan != null && sets.size >= plan.size

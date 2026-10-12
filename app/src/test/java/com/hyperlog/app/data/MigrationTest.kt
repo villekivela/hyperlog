@@ -154,4 +154,26 @@ class MigrationTest {
         assertEquals("After v4", programs.active.first()!!.program.title)
         db.close()
     }
+
+    @Test
+    fun version5SetsWereNotKeptPastAWeightCheck() = runTest {
+        val file = context.getDatabasePath("migration-test-5.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(5, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('leg_extension', 'Leg Extension', 'Machine')")
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'leg_extension', 0)")
+            db.execSQL(
+                "INSERT INTO logged_set (session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at) " +
+                    "VALUES (1, 0, 60, 12, 0, 1, 1500)",
+            )
+        }
+
+        // Room checks the migrated tables against the v6 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(false, db.sessions().sets(1).single().kept)
+        db.close()
+    }
 }

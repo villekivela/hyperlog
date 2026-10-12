@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -89,6 +90,7 @@ import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.plannedWeight
+import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
@@ -168,6 +170,9 @@ fun SessionScreen(
                             modifier = Modifier.weight(1f),
                         )
                     } else {
+                        current.suggestion?.takeIf { it.why != null && !current.done }?.let { s ->
+                            SuggestionLine(s, from = current.sets.lastOrNull()?.weightKg)
+                        }
                         SetTable(current, session.entry, session.weightCheck != null, actions, Modifier.weight(1f))
                     }
                     val index = session.exercises.indexOf(current)
@@ -364,6 +369,38 @@ private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) 
         }
         Spacer(Modifier.height(16.dp))
         TextButton(onClick = { actions.endRest(); onEnd() }) { Text(stringResource(R.string.rest_end)) }
+    }
+}
+
+// ---------------------------------------------------------------- suggestion
+
+internal const val SuggestionTag = "suggestion"
+
+/**
+ * Why the active set's weight is what it is (SPEC, Every suggestion says why): one muted line
+ * under the name, led by the direction. An estimated weight is tertiary, to be checked on the set.
+ */
+@Composable
+private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
+    val cs = MaterialTheme.colorScheme
+    val muted = cs.onSurfaceVariant
+    val up = from == null || suggestion.kg > from
+    val (symbol, tint) = when (suggestion.kind) {
+        Suggestion.Kind.Up -> Symbol.TrendingUp to cs.primary
+        Suggestion.Kind.Down -> Symbol.TrendingDown to muted
+        Suggestion.Kind.Adjust -> if (up) Symbol.TrendingUp to cs.primary else Symbol.TrendingDown to muted
+        Suggestion.Kind.Estimated -> Symbol.Calculate to cs.tertiary
+        Suggestion.Kind.Stuck -> Symbol.Block to cs.tertiary
+        else -> Symbol.TrendingFlat to muted
+    }
+    val text = if (suggestion.estimated || suggestion.kind == Suggestion.Kind.Stuck) cs.tertiary else muted
+    Row(
+        Modifier.fillMaxWidth().testTag(SuggestionTag).padding(start = Margin, end = Margin, bottom = 8.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(symbol, null, Modifier.size(18.dp), tint = tint) }
+        Spacer(Modifier.width(8.dp))
+        Text(suggestion.why.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = text, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

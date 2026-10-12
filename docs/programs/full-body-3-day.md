@@ -165,6 +165,8 @@ document and the format don't line up, the file does this:
   97 kg or more) is in the slot's note. The rest of Day A is written as its deload: Build's first
   sets @ 3 RIR, one set fewer, no techniques. A day override can't do this, because a day's
   `rir: 3` would also set the single to 3 RIR.
+- **Week 12 is marked a deload** with a block override, `"12": { "deload": true }`, so none of its
+  sets lower an estimate (the single included: it can only raise the bench estimate).
 - **Week 12, Days B and C.** Build's days with a day override: `rir: 3`, no techniques,
   `fewerSets: 1`. "One set fewer" takes the last set off each slot, and a slot with one set keeps it.
 - **Rest.** Main lifts (both benches, close-grip bench, hack squat, leg press, RDL, row) rest
@@ -172,4 +174,4 @@ document and the format don't line up, the file does this:
 - **Slot notes.** Close-grip bench gets the bench note. The shoulder press, DB incline press and
   both curls get the press and curl note.
 - **Not in the file**, because the app owns them: warm-ups, the "deload sets never lower the
-  estimate" rule, superset rest and the bench goal.
+  estimate" rule (the file only marks the week), superset rest and the bench goal.
