@@ -6,6 +6,8 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
+import com.hyperlog.app.library.ExerciseLibrary
+import com.hyperlog.app.library.LibrarySeed
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -30,7 +32,10 @@ class SessionLoggerTest {
     @After
     fun closeDatabase() = db.close()
 
-    private suspend fun logger() = SessionLogger(db, clock = { now }).also { it.load() }
+    private suspend fun logger(): SessionLogger {
+        ExerciseLibrary(db).sync(LibrarySeed.fromAssets(ApplicationProvider.getApplicationContext()))
+        return SessionLogger(db, clock = { now }).also { it.load() }
+    }
 
     private suspend fun SessionLogger.type(text: String) = text.forEach {
         press(if (it == '.') PadKey.Dot else PadKey.Digit(it.digitToInt()))

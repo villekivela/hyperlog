@@ -7,12 +7,24 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/** An exercise in the library. Muscle lists are stored one name per line. */
 @Entity(tableName = "exercise")
 data class ExerciseEntity(
     @PrimaryKey val id: String,
     val name: String,
-    /** An [com.hyperlog.app.session.Equipment] name. */
+    /** An [com.hyperlog.app.library.Equipment] name. */
     val equipment: String,
+    /** A [com.hyperlog.app.library.MovementPattern] name. */
+    @ColumnInfo(name = "movement_pattern", defaultValue = "''") val movementPattern: String,
+    /** A [com.hyperlog.app.library.GripDemand] name. */
+    @ColumnInfo(defaultValue = "''") val grip: String,
+    @ColumnInfo(defaultValue = "''") val muscles: String,
+    @ColumnInfo(name = "secondary_muscles", defaultValue = "''") val secondaryMuscles: String,
+    @ColumnInfo(name = "video_url") val videoUrl: String?,
+    val note: String?,
+    @ColumnInfo(defaultValue = "0") val hidden: Boolean = false,
+    /** Changed on the phone, so a newer seed no longer overwrites it. */
+    @ColumnInfo(defaultValue = "0") val edited: Boolean = false,
 )
 
 /** A session. One with no [finishedAt] is running; there is at most one. */

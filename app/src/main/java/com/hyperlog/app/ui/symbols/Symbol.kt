@@ -15,20 +15,30 @@ import com.hyperlog.app.R
  */
 enum class Symbol(@param:DrawableRes val drawable: Int) {
     Add(R.drawable.symbol_add),
+    ArrowBack(R.drawable.symbol_arrow_back),
+    ArrowDropDown(R.drawable.symbol_arrow_drop_down),
     ArrowForward(R.drawable.symbol_arrow_forward),
     Backspace(R.drawable.symbol_backspace),
     Check(R.drawable.symbol_check),
     CheckCircle(R.drawable.symbol_check_circle),
+    ChevronRight(R.drawable.symbol_chevron_right),
+    Close(R.drawable.symbol_close),
     ExpandLess(R.drawable.symbol_expand_less),
     FitnessCenter(R.drawable.symbol_fitness_center),
     Keyboard(R.drawable.symbol_keyboard),
     KeyboardHide(R.drawable.symbol_keyboard_hide),
+    List(R.drawable.symbol_list),
     MoreVert(R.drawable.symbol_more_vert),
     RadioButtonChecked(R.drawable.symbol_radio_button_checked),
     RadioButtonUnchecked(R.drawable.symbol_radio_button_unchecked),
     Remove(R.drawable.symbol_remove),
+    Search(R.drawable.symbol_search),
     Settings(R.drawable.symbol_settings),
+    SmartDisplay(R.drawable.symbol_smart_display),
+    StickyNote2(R.drawable.symbol_sticky_note_2),
     Timer(R.drawable.symbol_timer),
+    Visibility(R.drawable.symbol_visibility),
+    VisibilityOff(R.drawable.symbol_visibility_off),
 }
 
 @Composable

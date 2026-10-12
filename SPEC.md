@@ -208,7 +208,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - Drops and myo mini-sets record no RIR; they are taken to failure.
    - **Ad-hoc session** (no program): Today offers **Start session**, or **Resume session** while
      one runs. At most one session runs at a time, and the app opens on it. You add exercises from
-     the list (a small starter list until the exercise library exists) through ⋮ or the session
+     the exercise library (searchable; hidden exercises aren't offered) through ⋮ or the session
      list, which also has **Finish session**.
      - There is no prescription, so the Target column is left out and the sets are open-ended:
        there is always one active row after the logged ones. Last time's sets of the exercise show
@@ -242,10 +242,24 @@ backup.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
   can correct one; progression then reruns from the corrected data.
 - **English only.**
-- **Exercise library** is editable on the phone: add, edit (name, video link, note, equipment
-  type, muscles, movement pattern) and hide.
-- **Technique videos** open in the YouTube app, at the link's timestamp if it has one. They are
-  reached from the exercise's prescription sheet (tap the exercise name / info symbol in a session).
+- **Exercise library** is editable on the phone (Settings → Exercise library): browse and search,
+  add, edit (name, equipment type, movement pattern, grip demand, primary and secondary muscles,
+  video link, note) and hide. Design: `docs/design/exercise-library.md`.
+  - **Names carry the implement** ("DB Bench Press", "Smith Machine Squat"), so a name alone tells
+    exercises apart wherever it shows.
+  - An exercise needs a name, equipment, a movement pattern, a grip demand and at least one primary
+    muscle before it can be saved, because the coach's swaps rely on them. The video link must be a
+    YouTube link.
+  - **Hiding** keeps the exercise in past sessions and in the library (listed last, muted), but it
+    isn't offered when adding an exercise. It can be shown again. Exercises are never deleted.
+  - Search matches every word against the name, equipment and primary muscles.
+  - The shipped library updates with the app: exercises never edited on the phone take the new
+    values; edited ones and hidden flags are kept. Exercises added on the phone get an id made from
+    the name (`landmine_press`).
+- **Technique videos** open in the YouTube app, at the link's timestamp if it has one (in the
+  browser if YouTube isn't installed). They are reached from the exercise's prescription sheet (tap
+  the exercise name in a session). In an ad-hoc session the sheet shows the equipment and primary
+  muscles, the library note and **Technique video · 10:53** (the start time when the link has one).
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The
@@ -335,7 +349,28 @@ in the backup become a one-off starting point, used only until the exercise has 
 
 The **exercise library** is seeded from the legacy library (189 exercises, 150 with technique
 videos), cleaned up: duplicates merged (e.g. `db_incline_press` / `incline_db_press`), equipment types
-fixed, and a grip-demand tag (`high` / `low` / `none`) added for the coach's swap rules.
+fixed, and a grip-demand tag (`high` / `low` / `none`) added for the coach's swap rules. The result
+ships as `app/src/main/assets/exercises.json`: 173 exercises, 138 with videos (merged duplicates
+shared links), with a `merged` table of legacy id → kept id for anything that still carries an old
+id (the starting-weights import).
+
+- **Equipment**: barbell, dumbbell, machine, cable, smith_machine, ez_bar, trap_bar, safety_bar,
+  plate (a held plate), bodyweight, weighted_bodyweight (bodyweight plus a belt or held load).
+- **Movement patterns** replace the legacy seven, which lumped curls in with pulldowns and calf raises
+  in with squats: horizontal_push, vertical_push, horizontal_pull, vertical_pull, squat, lunge, hinge,
+  hip_thrust, knee_extension, knee_flexion, calf_raise, hip_abduction, hip_adduction, chest_fly,
+  lateral_raise, rear_delt_fly, shrug, elbow_flexion, elbow_extension, wrist, core_flexion, rotation,
+  neck, hang.
+- **Grip demand**: `high` when the hands hold or hang from a heavy load or are the target (deadlifts,
+  rows, pulldowns and pull-ups, free-weight curls, shrugs, hangs, wrist work); `low` when the hands
+  hold a bar or handle without pulling a heavy load (presses, cable and machine curls, triceps work,
+  raises, barbell squats); `none` when the hands do nothing (leg machines, calf raises, pad-driven
+  machines).
+- **Muscles** keep the legacy names, with synonyms merged (Trapezius / Upper Traps → Traps, a generic
+  Triceps → both heads, "Shoulders" → the delt heads) and wrong lists fixed.
+- **Notes** keep the technique cues and drop program advice ("Dropset: …", "Last set only…", "Focus on
+  strength here. Each week add weight…", AMRAP and substitution instructions). Cues copied onto the
+  wrong exercise were dropped or reworded for the right implement.
 
 ## Build order
 

@@ -2,7 +2,6 @@ package com.hyperlog.app.session
 
 import androidx.room.withTransaction
 import com.hyperlog.app.data.EntryColumns
-import com.hyperlog.app.data.ExerciseEntity
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
 import com.hyperlog.app.data.SessionEntity
@@ -11,6 +10,7 @@ import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.library.toExercise
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,12 +32,8 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
 
-    val starterExercises: List<Exercise> get() = StarterExercises
-
-    suspend fun load() = locked {
-        dao.insertExercises(StarterExercises.map { ExerciseEntity(it.id, it.name, it.equipment.name) })
-        reload()
-    }
+    /** Picks up the running session. The exercise library must be synced first. */
+    suspend fun load() = locked { reload() }
 
     /** Starts an ad-hoc session, or does nothing if one is running. */
     suspend fun start() = locked {
@@ -160,7 +156,7 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             _state.value = null
             return
         }
-        val library = dao.exercises().associate { it.id to Exercise(it.id, it.name, Equipment.valueOf(it.equipment)) }
+        val library = db.exercises().all().associate { it.id to it.toExercise() }
         val exercises = dao.sessionExercises(row.id).map { se ->
             SessionExercise(
                 id = se.id,

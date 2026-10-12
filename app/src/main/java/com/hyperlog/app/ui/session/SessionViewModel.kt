@@ -6,14 +6,20 @@ import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.PadKey
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.library.ExerciseLibrary
+import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.Exercise
 import com.hyperlog.app.session.SessionLogger
 import com.hyperlog.app.session.SessionSummary
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** What the session screen can ask for. Each call is saved as soon as it is made. */
 interface SessionActions {
@@ -32,7 +38,9 @@ interface SessionActions {
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
-    private val logger = SessionLogger(HyperlogDatabase.get(application))
+    private val db = HyperlogDatabase.get(application)
+    private val library = ExerciseLibrary(db)
+    private val logger = SessionLogger(db)
     private val _loaded = MutableStateFlow(false)
     private val _summary = MutableStateFlow<SessionSummary?>(null)
 
@@ -42,10 +50,13 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     /** The summary of the session just finished, until it is dismissed. */
     val summary: StateFlow<SessionSummary?> = _summary.asStateFlow()
 
-    val starterExercises: List<Exercise> get() = logger.starterExercises
+    /** The whole library, hidden exercises included. */
+    val exercises: StateFlow<List<Exercise>> = library.exercises.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     init {
         viewModelScope.launch {
+            // The shipped library comes first: sessions point at its exercises.
+            library.sync(withContext(Dispatchers.IO) { LibrarySeed.fromAssets(application) })
             logger.load()
             _loaded.value = true
         }

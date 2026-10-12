@@ -41,6 +41,25 @@ _Avoid_: Target set, planned set
 **Position**:
 Where you are in a program: which program, which week, and which day comes next.
 
+## Exercises
+
+**Exercise library**:
+Every exercise the app knows: the shipped library plus those added on the phone. Programs, sessions and swaps refer to its exercises by id.
+_Avoid_: Exercise database, catalogue
+
+**Movement pattern**:
+What an exercise's movement does, such as vertical pull or knee flexion. Swaps look for exercises with the same pattern.
+
+**Grip demand**:
+How hard an exercise works the hands: high, low or none. The coach's "no grip" constraint reads it.
+
+**Technique note**:
+An exercise's own cue on how to do it, kept in the library. A program's slot note is the program's cue for that slot.
+_Avoid_: Tip, instruction
+
+**Technique video**:
+A YouTube link for an exercise, opened in the YouTube app at its timestamp.
+
 ## Session
 
 **Session**:

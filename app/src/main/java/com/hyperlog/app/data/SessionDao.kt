@@ -2,18 +2,11 @@ package com.hyperlog.app.data
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
 @Dao
 interface SessionDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertExercises(exercises: List<ExerciseEntity>)
-
-    @Query("SELECT * FROM exercise ORDER BY name")
-    suspend fun exercises(): List<ExerciseEntity>
-
     @Query("SELECT * FROM session WHERE finished_at IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun runningSession(): SessionEntity?
 

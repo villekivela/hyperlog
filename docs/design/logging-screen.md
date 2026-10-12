@@ -175,6 +175,8 @@ offers **Resume session**. The app opens on a running session.
   weight is typed, so the pad keeps its height.
 - The empty session opens on the **Add exercise** list (headlineSmall title, 56 dp rows at the
   24 dp margin). The same list opens as a sheet from ⋮ or the session list.
+- The exercise name opens the exercise sheet: equipment and muscles, the library note and the
+  technique video (see `exercise-library.md`). The Add exercise list has a search field.
 - ⋮ holds Add exercise and Finish session. The session list ends with Add exercise and Finish
   session. Its other exercises have **Start**, because ad-hoc exercises are never "done".
 - **Session done** shows the start time and duration under the title, the summaries, and a

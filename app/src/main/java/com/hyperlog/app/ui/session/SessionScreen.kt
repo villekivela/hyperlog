@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -72,7 +74,11 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.Exercise
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.library.TechniqueVideo
+import com.hyperlog.app.library.search
+import com.hyperlog.app.ui.library.SearchField
+import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -86,7 +92,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SessionScreen(
     session: ActiveSession,
-    starterExercises: List<Exercise>,
+    exercises: List<Exercise>,
     actions: SessionActions,
     onLeave: () -> Unit,
     modifier: Modifier = Modifier,
@@ -95,6 +101,8 @@ fun SessionScreen(
     var showList by rememberSaveable { mutableStateOf(false) }
     var showPicker by rememberSaveable { mutableStateOf(false) }
     var showRest by rememberSaveable { mutableStateOf(false) }
+    var showDetails by rememberSaveable { mutableStateOf(false) }
+    val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
     KeepScreenOn()
     RestEndBuzz(session.restEndsAt)
@@ -107,7 +115,7 @@ fun SessionScreen(
             Column(Modifier.weight(1f).windowInsetsPadding(WindowInsets.statusBars)) {
                 if (current == null) {
                     ExercisePicker(
-                        starterExercises,
+                        offered,
                         title = stringResource(R.string.session_add_exercise),
                         onPick = actions::addExercise,
                         modifier = Modifier.weight(1f),
@@ -117,6 +125,7 @@ fun SessionScreen(
                         name = current.exercise.name,
                         session = session,
                         now = now,
+                        onName = { showDetails = true },
                         onTimer = { showRest = true },
                         onAddExercise = { showPicker = true },
                         onFinish = actions::finish,
@@ -164,11 +173,14 @@ fun SessionScreen(
     if (showPicker) {
         Sheet(onDismiss = { showPicker = false }) {
             ExercisePicker(
-                starterExercises,
+                offered,
                 title = stringResource(R.string.session_add_exercise),
                 onPick = { actions.addExercise(it); showPicker = false },
             )
         }
+    }
+    if (showDetails && current != null) {
+        Sheet(onDismiss = { showDetails = false }) { ExerciseSheet(current.exercise) }
     }
     if (showRest && session.restEndsAt != null) {
         Sheet(onDismiss = { showRest = false }) {
@@ -184,6 +196,7 @@ private fun Header(
     name: String,
     session: ActiveSession,
     now: Long,
+    onName: () -> Unit,
     onTimer: () -> Unit,
     onAddExercise: () -> Unit,
     onFinish: () -> Unit,
@@ -194,9 +207,10 @@ private fun Header(
         Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val details = stringResource(R.string.session_exercise_details)
         Text(
             name,
-            Modifier.weight(1f),
+            Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName),
             style = MaterialTheme.typography.headlineSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -538,25 +552,64 @@ private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: 
     }
 }
 
-/** The starter list (until the exercise library, #3). */
+/** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
 private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
-    LazyColumn(modifier.fillMaxWidth()) {
-        item {
-            Text(
-                title,
-                Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.headlineSmall,
-            )
+    var query by rememberSaveable { mutableStateOf("") }
+    Column(modifier.fillMaxWidth()) {
+        Text(
+            title,
+            Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 16.dp),
+            style = MaterialTheme.typography.headlineSmall,
+        )
+        SearchField(
+            query,
+            onChange = { query = it },
+            placeholder = stringResource(R.string.session_search),
+            modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+        )
+        LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).imePadding()) {
+            items(exercises.search(query), key = { it.id }) { e ->
+                Text(
+                    e.name,
+                    Modifier.fillMaxWidth().clickable { onPick(e.id) }.heightIn(min = 56.dp).padding(horizontal = Margin, vertical = 16.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            item { Spacer(Modifier.navigationBarsPadding().height(16.dp)) }
         }
-        items(exercises, key = { it.id }) { e ->
-            Text(
-                e.name,
-                Modifier.fillMaxWidth().clickable { onPick(e.id) }.heightIn(min = 56.dp).padding(horizontal = Margin, vertical = 16.dp),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+    }
+}
+
+/**
+ * The exercise's prescription sheet. An ad-hoc session has no prescription, so it shows what
+ * the library knows: equipment and muscles, the technique note and the technique video.
+ */
+@Composable
+private fun ExerciseSheet(exercise: Exercise) {
+    val cs = MaterialTheme.colorScheme
+    val context = LocalContext.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding()) {
+        Text(exercise.name, style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(4.dp))
+        Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        exercise.note?.let { note ->
+            Spacer(Modifier.height(24.dp))
+            Row {
+                SymbolIcon(Symbol.StickyNote2, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                Spacer(Modifier.width(16.dp))
+                Text(note, style = MaterialTheme.typography.bodyLarge)
+            }
         }
-        item { Spacer(Modifier.navigationBarsPadding().height(16.dp)) }
+        exercise.video?.let { link ->
+            Spacer(Modifier.height(24.dp))
+            val at = TechniqueVideo.parse(link)?.startLabel
+            FilledTonalButton(onClick = { context.openTechniqueVideo(link) }) {
+                SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
+            }
+        }
     }
 }
 

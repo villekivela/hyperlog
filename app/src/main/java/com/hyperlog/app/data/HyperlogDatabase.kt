@@ -10,16 +10,18 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [ExerciseEntity::class, SessionEntity::class, SessionExerciseEntity::class, LoggedSetEntity::class],
-    version = 1,
+    version = 2,
 )
 abstract class HyperlogDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao
+    abstract fun exercises(): ExerciseDao
 
     companion object {
         @Volatile private var instance: HyperlogDatabase? = null
 
         fun get(context: Context): HyperlogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, HyperlogDatabase::class.java, NAME)
+                .addMigrations(*Migrations)
                 .build()
                 .also { instance = it }
         }

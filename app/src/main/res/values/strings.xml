@@ -46,4 +46,47 @@
     <string name="done_title">Session done</string>
     <string name="done_when">Started %1$s, %2$d min</string>
     <string name="done_close">Done</string>
+    <string name="back">Back</string>
+    <string name="settings_library">Exercise library</string>
+    <string name="settings_library_count">%1$d exercises</string>
+
+    <string name="library_title">Exercises</string>
+    <string name="library_search">Search %1$d exercises</string>
+    <string name="library_search_clear">Clear search</string>
+    <string name="library_hidden">Hidden</string>
+    <string name="library_none_found">No exercise matches “%1$s”</string>
+    <string name="library_new">New exercise</string>
+    <string name="library_has_video">Has a technique video</string>
+
+    <string name="editor_new">New exercise</string>
+    <string name="editor_edit">Edit exercise</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_close">Close</string>
+    <string name="editor_name">Name</string>
+    <string name="editor_equipment">Equipment</string>
+    <string name="editor_pattern">Movement pattern</string>
+    <string name="editor_pattern_pick">Pick a pattern</string>
+    <string name="editor_grip">Grip demand</string>
+    <string name="editor_muscles">Primary muscles</string>
+    <string name="editor_secondary">Secondary muscles</string>
+    <string name="editor_add_muscle">Add</string>
+    <string name="editor_remove_muscle">Remove %1$s</string>
+    <string name="editor_video">Technique video</string>
+    <string name="editor_video_hint">YouTube link, with a timestamp if you like</string>
+    <string name="editor_video_opens_at">Opens at %1$s</string>
+    <string name="editor_video_opens">Opens in YouTube</string>
+    <string name="editor_video_invalid">Not a YouTube link</string>
+    <string name="editor_note">Note</string>
+    <string name="editor_note_hint">How to do it, whatever the program</string>
+    <string name="editor_hide">Hide exercise</string>
+    <string name="editor_unhide">Show exercise again</string>
+    <string name="editor_hidden_body">Hidden exercises stay in past sessions but aren’t offered when adding one.</string>
+    <string name="editor_discard_title">Discard changes?</string>
+    <string name="editor_discard">Discard</string>
+    <string name="editor_keep_editing">Keep editing</string>
+
+    <string name="sheet_video">Technique video</string>
+    <string name="sheet_video_at">Technique video · %1$s</string>
+    <string name="session_exercise_details">Exercise details</string>
+    <string name="session_search">Search exercises</string>
 </resources>
