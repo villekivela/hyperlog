@@ -118,8 +118,8 @@
     <string name="gym_keep">Keep</string>
     <string name="gym_add_item">Add equipment</string>
     <string name="gym_delete_item">Delete equipment</string>
+    <string name="ladder_delete_title">Delete %1$s?</string>
     <string name="ladder_new_item">New equipment</string>
-    <string name="ladder_dumbbells_hint">Per dumbbell</string>
     <string name="ladder_name">Name, e.g. Cable station</string>
     <string name="ladder_stack">Stack</string>
     <string name="ladder_list">List</string>

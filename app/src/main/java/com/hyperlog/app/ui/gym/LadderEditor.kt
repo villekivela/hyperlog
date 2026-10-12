@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -97,7 +98,16 @@ fun LadderEditor(
         }
     }
     val canSave = draft != null && (name == null || itemName.isNotBlank())
+    var deleting by rememberSaveable { mutableStateOf(false) }
     BackHandler(onBack = onClose)
+    if (deleting && onDelete != null) {
+        AlertDialog(
+            onDismissRequest = { deleting = false },
+            title = { Text(stringResource(R.string.ladder_delete_title, name.orEmpty())) },
+            confirmButton = { TextButton(onClick = { deleting = false; onDelete() }) { Text(stringResource(R.string.gym_delete_confirm)) } },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.gym_keep)) } },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -105,7 +115,7 @@ fun LadderEditor(
                 title = { Text(title) },
                 navigationIcon = { IconButton(onClick = onClose) { SymbolIcon(Symbol.Close, stringResource(R.string.editor_close)) } },
                 actions = {
-                    if (onDelete != null) IconButton(onClick = onDelete) { SymbolIcon(Symbol.Delete, stringResource(R.string.gym_delete_item)) }
+                    if (onDelete != null) IconButton(onClick = { deleting = true }) { SymbolIcon(Symbol.Delete, stringResource(R.string.gym_delete_item)) }
                     TextButton(onClick = { draft?.let { onSave(itemName.trim(), it) } }, enabled = canSave) { Text(stringResource(R.string.editor_save)) }
                     Spacer(Modifier.width(8.dp))
                 },
@@ -173,7 +183,7 @@ fun LadderEditor(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    draft?.ladder()?.preview(first = 8) ?: stringResource(R.string.ladder_incomplete),
+                    draft?.ladder()?.preview(first = 6) ?: stringResource(R.string.ladder_incomplete),
                     style = MaterialTheme.typography.titleMedium.merge(Tnum),
                     color = if (draft == null) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
                 )

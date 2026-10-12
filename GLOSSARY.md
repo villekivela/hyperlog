@@ -154,6 +154,10 @@ _Avoid_: Increments, stack
 **Rung**:
 One weight on a weight ladder. Progression moves between rungs, never to weights the equipment can't be set to.
 
+**Weight check**:
+The warning a set's weight gets before it is logged when it is far from the reference or off the ladder: the reason and three real weights. A second ✓ keeps the weight.
+_Avoid_: Sanity check, outlier warning
+
 ## Coaching
 
 **Change**:

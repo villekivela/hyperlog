@@ -169,7 +169,15 @@ available weights belong to a **machine at a gym**, not to an exercise.
   and RIR; progression runs from there. Machine exercise trends show one line per machine.
 - In a session, the weight field is a picker over that item's ladder; free typing stays possible.
 - Machine ladders are often lb stacks shown in kg (1.1 / 3.4 / 5.7 kg = start 2.5 lb, step 5 lb), so
-  setup offers "lb stack" as a one-tap preset.
+  setup offers "lb stack" as a one-tap preset (2.5 lb, then 5 lb steps, 40 weights). Lb rungs
+  show and log to 0.1 kg.
+- A stack is a start, a step and a number of weights. Plates are a base weight (bar or sled) plus
+  plate pairs, one of each pair per side; any combination of pairs is a rung. The shared barbell
+  plates default to a 20 kg bar with pairs of 20, 20, 20, 15, 10, 5, 2.5 and 1.25 kg.
+- Setup lives in Settings → Gyms and equipment: gyms and their equipment, then the shared dumbbells
+  and plates. Every ladder shows as the kg weights it gives (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`).
+  Setup uses the system keyboard, since it happens once and away from a set. Editing the shared
+  dumbbells or plates applies to a running session at once.
 
 The old app's machine weights were wrong in both directions: suggestions that didn't exist on the
 stack, and slow entry of odd values. The ladder picker fixes both.
@@ -202,6 +210,18 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Weight check**: a weight 1.5× or more (or half or less) of the reference, or not on the
      equipment's ladder, is shown with the reason ("10× last set") and three real weights to pick;
      the first ✓ doesn't log it, a second ✓ keeps it.
+     - The reference is the previous set of the exercise in this session, else last time's first
+       set ("10× last time"). Ratios read `1.6×`, `2.4×`, then whole numbers (`10×`); low ones
+       `1/2 of last set`. Off the ladder reads "Not on this equipment".
+     - It runs on the ✓ that would log the set. The reason and the three weights replace the pad's
+       strip (the pad opens if hidden), and the weight cell and ✓ turn the error colour. For a
+       ratio the weights are the rungs around the reference; off the ladder, the rungs around the
+       typed weight.
+     - Picking one of the three puts it in the weight and the next ✓ logs. Any edit clears the
+       check. The second ✓ keeps the weight only if it comes 1 s or more after the warning, the
+       same stutter rule as logging.
+     - Only real ladders are checked for "not on the ladder": until a session knows its machine
+       (#5), machines and cables are checked for ratios only.
    - **Corrections**: tapping any logged set, drop or mini-set loads it into the pad; ✓ saves, the
      hide key cancels. Finished exercises reopen from the session list and from "Session done".
      Back cancels a correction, then asks before leaving the session.
@@ -219,8 +239,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - Rest after each set is 2:00.
      - **One ✓, one set**: a ✓ within 1 s of logging a set logs nothing, so a stutter or double
        tap can't log a phantom set. No two sets are ever logged that close on purpose.
-     - Until gyms and equipment exist, −/+ and the weight strip use the global dumbbell ladder for
-       dumbbell exercises and 2.5 kg steps for everything else.
+     - Until a session knows its gym and machine (#5), −/+ and the weight strip use the shared
+       dumbbell ladder for dumbbell exercises, the shared plates on a 20 kg bar for barbell
+       exercises, and 2.5 kg steps for everything else.
      - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
        session with nothing logged is discarded.
      - **Finishing is deliberate and recoverable.** Finish session (⋮, below a divider, or the

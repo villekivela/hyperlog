@@ -36,7 +36,6 @@ import com.hyperlog.app.R
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gym
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
@@ -71,15 +70,15 @@ fun GymsScreen(
                 Row(
                     headline = gym.name,
                     supporting = pluralStringResource(R.plurals.gym_item_count, gym.items.size, gym.items.size),
-                    symbol = Symbol.FitnessCenter,
+                    symbol = null,
                     onClick = { onOpenGym(gym.id) },
                 )
             }
             AddRow(stringResource(R.string.gym_add)) { naming = true }
 
             SectionLabel(stringResource(R.string.gym_shared))
-            Row(stringResource(R.string.gym_dumbbells), dumbbells.ladder().preview(), Symbol.FitnessCenter, onClick = onDumbbells)
-            Row(stringResource(R.string.gym_plates), plates.summary(), Symbol.FitnessCenter, onClick = onPlates)
+            Row(stringResource(R.string.gym_dumbbells), dumbbells.ladder().preview(), symbol = null, onClick = onDumbbells)
+            Row(stringResource(R.string.gym_plates), plates.summary(), symbol = null, onClick = onPlates)
         }
     }
     if (naming) {
@@ -181,7 +180,8 @@ internal fun SectionLabel(text: String) {
             text,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = Margin, top = 16.dp, bottom = 8.dp),
+            // In the rows' text column: 8 + 16 inset, 24 symbol, 16 gap.
+            modifier = Modifier.padding(start = 64.dp, top = 16.dp, bottom = 8.dp),
         )
     }
 }

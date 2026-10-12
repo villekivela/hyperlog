@@ -4,6 +4,9 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.gym.EquipmentItem
+import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.LibrarySeed
@@ -22,9 +25,9 @@ import java.io.File
 class MigrationTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    /** A v1 database as ticket #2 left it, from the exported schema. */
-    private fun createVersion1(file: File) {
-        val schema = JSONObject(File("schemas/com.hyperlog.app.data.HyperlogDatabase/1.json").readText()).getJSONObject("database")
+    /** An empty database at [version], from its exported schema. */
+    private fun createVersion(version: Int, file: File, fill: (SQLiteDatabase) -> Unit) {
+        val schema = JSONObject(File("schemas/com.hyperlog.app.data.HyperlogDatabase/$version.json").readText()).getJSONObject("database")
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             val entities = schema.getJSONArray("entities")
             for (i in 0 until entities.length()) {
@@ -38,15 +41,20 @@ class MigrationTest {
             }
             val setup = schema.getJSONArray("setupQueries")
             for (i in 0 until setup.length()) db.execSQL(setup.getString(i))
-            db.version = 1
-            db.execSQL("INSERT INTO exercise VALUES ('db_bench_press', 'DB Bench Press', 'Dumbbell'), ('pull_up', 'Pull-up', 'Bodyweight')")
-            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
-            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'db_bench_press', 0), (2, 1, 'pull_up', 1)")
-            db.execSQL(
-                "INSERT INTO logged_set (session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at) " +
-                    "VALUES (2, 0, 0, 8, 0, 2, 1500)",
-            )
+            db.version = version
+            fill(db)
         }
+    }
+
+    /** A v1 database as ticket #2 left it. */
+    private fun createVersion1(file: File) = createVersion(1, file) { db ->
+        db.execSQL("INSERT INTO exercise VALUES ('db_bench_press', 'DB Bench Press', 'Dumbbell'), ('pull_up', 'Pull-up', 'Bodyweight')")
+        db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+        db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'db_bench_press', 0), (2, 1, 'pull_up', 1)")
+        db.execSQL(
+            "INSERT INTO logged_set (session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at) " +
+                "VALUES (2, 0, 0, 8, 0, 2, 1500)",
+        )
     }
 
     @Test
@@ -72,6 +80,27 @@ class MigrationTest {
         assertEquals("Wide-Grip Pull-Up", pullUp.name)
         assertEquals(MovementPattern.VerticalPull, pullUp.pattern)
         assertEquals(GripDemand.High, pullUp.grip)
+        db.close()
+    }
+
+    @Test
+    fun version2GainsGymsWithTheSpecDumbbellsAndPlates() = runTest {
+        val file = context.getDatabasePath("migration-test-2.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(2, file) { db ->
+            db.execSQL("INSERT INTO session (id, started_at, rest_total_ms, pad_visible) VALUES (1, 1000, 0, 1)")
+        }
+
+        // Room checks the migrated tables against the v3 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val gyms = Gyms(db)
+        assertEquals(LadderSpec.DefaultDumbbells, gyms.dumbbells.first())
+        val id = gyms.addGym("Kallio")
+        gyms.saveItem(EquipmentItem(gymId = id, name = "Cable station", ladder = LadderSpec.lbStack()))
+        assertEquals("Cable station", gyms.gyms.first().single().items.single().name)
+        assertEquals(1000L, db.sessions().session(1)!!.startedAt)
         db.close()
     }
 }
