@@ -5,7 +5,7 @@ package com.hyperlog.app.program
  * each with its days. It runs as a sequence: the next day is whatever comes after the last one
  * finished, whenever you train.
  */
-data class Program(val title: String, val author: String?, val blocks: List<Block>) {
+data class Program(val title: String, val author: String?, val blocks: List<Block>, val description: String? = null) {
     /** Weeks run from 1 without gaps, so the last block's end is the program's length. */
     val weeks: Int get() = blocks.last().weekEnd
 

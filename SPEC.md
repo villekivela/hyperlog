@@ -45,6 +45,10 @@ configuration, iOS, web, any server.
   phone. **No third-party programs are bundled**: Nippard's programs are paid and copyrighted, so
   each user imports program files they own. The app ships with the exercise library and one
   original starter program, Hyperlog Full Body (`docs/programs/full-body-3-day.md`).
+  - **Its week-12 bench test** ("100 kg if the week-11 estimate is 97 kg or more, else a single
+    @ 1 RIR") is a load rule, which the program format can't hold. It is written as a heavy single
+    (1 rep @ 1 RIR, its weight suggested from the estimate like any new rep range), and the 100 kg
+    condition is in that slot's note.
 - Starting weights from a legacy backup are a one-off "Import starting weights" action in settings,
   not built into the app.
 
@@ -294,6 +298,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      next (the one filled shape) or to come. The current week names its next day.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
      and imports nothing. Importing over a program asks first ("Replace <title>?").
+   - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog
+     Full Body with **Run this program**; Today keeps Start session (ad hoc) and Import a program
+     beside it. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
+     program running. The starter is an ordinary program file in the app's assets
+     (`programs/full-body-3-day.json`) and imports through the same validator.
    - **Position**: the program runs as a sequence. Finishing a session of the next day moves the
      position to the day after it (the next day of the block, then the next week's first day); a
      session with nothing logged is discarded and moves nothing; finishing a resumed session again

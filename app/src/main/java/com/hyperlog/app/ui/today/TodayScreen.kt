@@ -27,6 +27,8 @@ import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
+import com.hyperlog.app.program.Program
+import com.hyperlog.app.ui.program.StarterOffer
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.session.Tnum
 import androidx.compose.foundation.lazy.LazyColumn
@@ -76,6 +78,9 @@ fun TodayScreen(
     program: ActiveProgram? = null,
     exerciseNames: Map<String, String> = emptyMap(),
     onProgram: () -> Unit = {},
+    /** The starter program, offered while no program runs; null if unreadable. */
+    starter: Program? = null,
+    onRunStarter: () -> Unit = {},
 ) {
     /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
     var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -129,6 +134,11 @@ fun TodayScreen(
     ) { padding ->
         if (next != null) {
             NextDay(next, exerciseNames, Modifier.padding(padding))
+        } else if (program == null && starter != null && !sessionRunning) {
+            StarterOffer(starter, onRunStarter, Modifier.padding(padding)) {
+                TextButton(onClick = { start(true) }) { Text(stringResource(R.string.today_start_session)) }
+                TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
+            }
         } else {
             val finished = program?.finished == true
             Column(

@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Block
+import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -72,10 +73,14 @@ fun ProgramScreen(
     onCloseErrors: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The starter program, offered with no program and kept in the menu; null if unreadable. */
+    starter: Program? = null,
+    onRunStarter: () -> Unit = {},
 ) {
-    var confirmReplace by rememberSaveable { mutableStateOf(false) }
+    /** The replacement waiting for "Replace <title>?": a file, or the starter program. */
+    var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
     var menu by rememberSaveable { mutableStateOf(false) }
-    val import = { if (active != null) confirmReplace = true else onImport() }
+    val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
     BackHandler { if (errors != null) onCloseErrors() else onBack() }
     Scaffold(
         modifier = modifier,
@@ -97,6 +102,13 @@ fun ProgramScreen(
                                     leadingIcon = { SymbolIcon(Symbol.FileOpen, null) },
                                     onClick = { menu = false; import() },
                                 )
+                                if (starter != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.starter_run_named, starter.title)) },
+                                        leadingIcon = { SymbolIcon(Symbol.ViewTimeline, null) },
+                                        onClick = { menu = false; confirmReplace = Replacement.Starter },
+                                    )
+                                }
                             }
                         }
                     }
@@ -107,21 +119,32 @@ fun ProgramScreen(
         Box(Modifier.fillMaxSize().padding(padding)) {
             when {
                 errors != null -> ImportErrors(errors, onClose = onCloseErrors, onRetry = onImport)
+                active == null && starter != null -> StarterOffer(starter, onRunStarter) {
+                    TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
+                }
                 active == null -> NoProgram(onImport)
                 else -> ProgramWeeks(active)
             }
         }
     }
-    if (confirmReplace && active != null) {
+    val replacing = confirmReplace
+    if (replacing != null && active != null) {
         AlertDialog(
-            onDismissRequest = { confirmReplace = false },
+            onDismissRequest = { confirmReplace = null },
             title = { Text(stringResource(R.string.program_replace_title, active.program.title)) },
             text = { Text(stringResource(R.string.program_replace_body)) },
-            confirmButton = { TextButton(onClick = { confirmReplace = false }) { Text(stringResource(R.string.program_cancel)) } },
-            dismissButton = { TextButton(onClick = { confirmReplace = false; onImport() }) { Text(stringResource(R.string.program_replace)) } },
+            confirmButton = { TextButton(onClick = { confirmReplace = null }) { Text(stringResource(R.string.program_cancel)) } },
+            dismissButton = {
+                TextButton(onClick = {
+                    confirmReplace = null
+                    if (replacing == Replacement.Starter) onRunStarter() else onImport()
+                }) { Text(stringResource(R.string.program_replace)) }
+            },
         )
     }
 }
+
+private enum class Replacement { File, Starter }
 
 @Composable
 private fun NoProgram(onImport: () -> Unit) {

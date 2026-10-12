@@ -199,5 +199,6 @@ deload week. A test parses this example against the shipped library, so it stays
 ## What the format can't say yet
 
 - A load rule such as "a single at 100 kg if the estimate is 97 kg or more" (the Full Body week-12
-  test). Write a plain `1` rep set and leave the rule to the app or a note.
+  test). Write a plain `1` rep set and put the rule in the slot's note, as Full Body does
+  (`app/src/main/assets/programs/full-body-3-day.json`).
 - Percentages of a training max, AMRAP sets for progression, and circuits: out of v1 (`SPEC.md`).

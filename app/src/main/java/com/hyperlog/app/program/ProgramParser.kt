@@ -55,7 +55,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         if (format != null && format != ProgramParser.FORMAT) error("format", "must be ${ProgramParser.FORMAT}")
         val title = string(o, "", "title", required = true)
         val author = string(o, "", "author")
-        string(o, "", "description")
+        val description = string(o, "", "description")
         val blocks = list(o, "", "blocks", required = true) { el, path -> block(el, path) }
         if (blocks != null) {
             // Read the weeks and ids again from the file, so a block with problems inside still
@@ -76,7 +76,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             }
         }
         if (title == null || blocks == null || blocks.any { it == null }) return null
-        return Program(title, author, blocks.filterNotNull())
+        return Program(title, author, blocks.filterNotNull(), description)
     }
 
     private fun block(el: JsonElement, path: String): Block? {

@@ -1,0 +1,1220 @@
+{
+  "format": 1,
+  "title": "Hyperlog Full Body",
+  "author": "Hyperlog",
+  "description": "12 weeks, 3 days a week. Few sets taken hard, a heavy bench, machines and cables first.",
+  "blocks": [
+    {
+      "id": "ramp_in",
+      "name": "Ramp-in",
+      "weekStart": 1,
+      "weekEnd": 2,
+      "weeks": {
+        "1-2": {"rirAdd": 1, "technique": null}
+      },
+      "days": [
+        {
+          "id": "a",
+          "name": "Day A — Heavy bench, squat, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["smith_machine_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "4-6", "rir": 1, "rest": 180},
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "squat",
+                  "exercise": "hack_squat",
+                  "alternatives": ["leg_press", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "6-8", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lat_pulldown",
+                  "exercise": "2_grip_lat_pulldown",
+                  "alternatives": ["machine_pulldown", "1_arm_cable_pulldown"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120},
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "seated_leg_curl",
+                  "exercise": "seated_leg_curl",
+                  "alternatives": ["lying_leg_curl"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 90},
+                    {"reps": "8-10", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "lateral_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "overhead_triceps",
+                  "exercise": "overhead_cable_triceps_extension",
+                  "alternatives": ["overhead_db_triceps_extension"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "Day B — Hinge, close-grip bench, row",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "rdl",
+                  "exercise": "barbell_rdl",
+                  "alternatives": ["db_romanian_deadlift", "45_hyperextension"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "close_grip_bench",
+                  "exercise": "close_grip_bench_press",
+                  "alternatives": ["machine_chest_press", "db_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "row",
+                  "exercise": "chest_supported_machine_row",
+                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "note": "Chest on the pad, pull with the elbows.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_extension",
+                  "exercise": "leg_extension",
+                  "alternatives": ["reverse_nordic"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "shoulder_press",
+                  "exercise": "machine_shoulder_press",
+                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                },
+                {
+                  "id": "rear_delt",
+                  "exercise": "reverse_cable_crossover",
+                  "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "name": "Day C — Bench volume, leg press, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench_volume",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["db_bench_press", "machine_chest_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "6-8", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_press",
+                  "exercise": "leg_press",
+                  "alternatives": ["hack_squat", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "10-12", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pulldown",
+                  "exercise": "machine_pulldown",
+                  "alternatives": ["2_grip_lat_pulldown", "neutral_grip_pullup"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "incline_press",
+                  "exercise": "db_incline_press",
+                  "alternatives": ["incline_machine_press", "smith_machine_incline_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lying_leg_curl",
+                  "exercise": "lying_leg_curl",
+                  "alternatives": ["seated_leg_curl"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pec_deck",
+                  "exercise": "pec_deck",
+                  "alternatives": ["cable_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "preacher_curl",
+                  "exercise": "machine_preacher_curl",
+                  "alternatives": ["bayesian_cable_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "pressdown",
+                  "exercise": "triceps_pressdown",
+                  "alternatives": ["cable_triceps_kickback"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "name": "Build",
+      "weekStart": 3,
+      "weekEnd": 6,
+      "days": [
+        {
+          "id": "a",
+          "name": "Day A — Heavy bench, squat, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["smith_machine_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "4-6", "rir": 1, "rest": 180},
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "squat",
+                  "exercise": "hack_squat",
+                  "alternatives": ["leg_press", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "6-8", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lat_pulldown",
+                  "exercise": "2_grip_lat_pulldown",
+                  "alternatives": ["machine_pulldown", "1_arm_cable_pulldown"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120},
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "seated_leg_curl",
+                  "exercise": "seated_leg_curl",
+                  "alternatives": ["lying_leg_curl"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 90},
+                    {"reps": "8-10", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "lateral_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "overhead_triceps",
+                  "exercise": "overhead_cable_triceps_extension",
+                  "alternatives": ["overhead_db_triceps_extension"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "Day B — Hinge, close-grip bench, row",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "rdl",
+                  "exercise": "barbell_rdl",
+                  "alternatives": ["db_romanian_deadlift", "45_hyperextension"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "close_grip_bench",
+                  "exercise": "close_grip_bench_press",
+                  "alternatives": ["machine_chest_press", "db_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "row",
+                  "exercise": "chest_supported_machine_row",
+                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "note": "Chest on the pad, pull with the elbows.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_extension",
+                  "exercise": "leg_extension",
+                  "alternatives": ["reverse_nordic"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "shoulder_press",
+                  "exercise": "machine_shoulder_press",
+                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                },
+                {
+                  "id": "rear_delt",
+                  "exercise": "reverse_cable_crossover",
+                  "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "name": "Day C — Bench volume, leg press, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench_volume",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["db_bench_press", "machine_chest_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "6-8", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_press",
+                  "exercise": "leg_press",
+                  "alternatives": ["hack_squat", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "10-12", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pulldown",
+                  "exercise": "machine_pulldown",
+                  "alternatives": ["2_grip_lat_pulldown", "neutral_grip_pullup"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "incline_press",
+                  "exercise": "db_incline_press",
+                  "alternatives": ["incline_machine_press", "smith_machine_incline_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lying_leg_curl",
+                  "exercise": "lying_leg_curl",
+                  "alternatives": ["seated_leg_curl"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pec_deck",
+                  "exercise": "pec_deck",
+                  "alternatives": ["cable_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "preacher_curl",
+                  "exercise": "machine_preacher_curl",
+                  "alternatives": ["bayesian_cable_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "pressdown",
+                  "exercise": "triceps_pressdown",
+                  "alternatives": ["cable_triceps_kickback"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "intensify",
+      "name": "Intensify",
+      "weekStart": 7,
+      "weekEnd": 11,
+      "days": [
+        {
+          "id": "a",
+          "name": "Day A — Heavy bench, squat, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["smith_machine_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "3-5", "rir": 1, "rest": 180},
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "squat",
+                  "exercise": "hack_squat",
+                  "alternatives": ["leg_press", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "5-7", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lat_pulldown",
+                  "exercise": "2_grip_lat_pulldown",
+                  "alternatives": ["machine_pulldown", "1_arm_cable_pulldown"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120},
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "seated_leg_curl",
+                  "exercise": "seated_leg_curl",
+                  "alternatives": ["lying_leg_curl"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 90},
+                    {"reps": "8-10", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "lateral_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "overhead_triceps",
+                  "exercise": "overhead_cable_triceps_extension",
+                  "alternatives": ["overhead_db_triceps_extension"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "Day B — Hinge, close-grip bench, row",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "rdl",
+                  "exercise": "barbell_rdl",
+                  "alternatives": ["db_romanian_deadlift", "45_hyperextension"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "5-7", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "close_grip_bench",
+                  "exercise": "close_grip_bench_press",
+                  "alternatives": ["machine_chest_press", "db_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"count": 2, "reps": "5-7", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "row",
+                  "exercise": "chest_supported_machine_row",
+                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "note": "Chest on the pad, pull with the elbows.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_extension",
+                  "exercise": "leg_extension",
+                  "alternatives": ["reverse_nordic"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "shoulder_press",
+                  "exercise": "machine_shoulder_press",
+                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                },
+                {
+                  "id": "rear_delt",
+                  "exercise": "reverse_cable_crossover",
+                  "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "name": "Day C — Bench volume, leg press, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench_volume",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["db_bench_press", "machine_chest_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "5-7", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_press",
+                  "exercise": "leg_press",
+                  "alternatives": ["hack_squat", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "10-12", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pulldown",
+                  "exercise": "machine_pulldown",
+                  "alternatives": ["2_grip_lat_pulldown", "neutral_grip_pullup"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "incline_press",
+                  "exercise": "db_incline_press",
+                  "alternatives": ["incline_machine_press", "smith_machine_incline_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lying_leg_curl",
+                  "exercise": "lying_leg_curl",
+                  "alternatives": ["seated_leg_curl"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pec_deck",
+                  "exercise": "pec_deck",
+                  "alternatives": ["cable_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "preacher_curl",
+                  "exercise": "machine_preacher_curl",
+                  "alternatives": ["bayesian_cable_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "pressdown",
+                  "exercise": "triceps_pressdown",
+                  "alternatives": ["cable_triceps_kickback"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deload_test",
+      "name": "Deload + test",
+      "weekStart": 12,
+      "weekEnd": 12,
+      "days": [
+        {
+          "id": "a",
+          "name": "Day A — Heavy bench, squat, pulldown",
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["smith_machine_bench_press"],
+                  "note": "Week 12 test: work up to a top single. If your week-11 estimate is 97 kg or more, the single is 100 kg; otherwise take a single @ 1 RIR. The single updates the estimate.",
+                  "sets": [
+                    {"reps": 1, "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "squat",
+                  "exercise": "hack_squat",
+                  "alternatives": ["leg_press", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "6-8", "rir": 3, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lat_pulldown",
+                  "exercise": "2_grip_lat_pulldown",
+                  "alternatives": ["machine_pulldown", "1_arm_cable_pulldown"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 3, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "seated_leg_curl",
+                  "exercise": "seated_leg_curl",
+                  "alternatives": ["lying_leg_curl"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 3, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "lateral_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 3, "rest": 90}
+                  ]
+                },
+                {
+                  "id": "overhead_triceps",
+                  "exercise": "overhead_cable_triceps_extension",
+                  "alternatives": ["overhead_db_triceps_extension"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 3, "rest": 90}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "Day B — Hinge, close-grip bench, row",
+          "weeks": {
+            "12": {"rir": 3, "technique": null, "fewerSets": 1}
+          },
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "rdl",
+                  "exercise": "barbell_rdl",
+                  "alternatives": ["db_romanian_deadlift", "45_hyperextension"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "close_grip_bench",
+                  "exercise": "close_grip_bench_press",
+                  "alternatives": ["machine_chest_press", "db_bench_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "row",
+                  "exercise": "chest_supported_machine_row",
+                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "note": "Chest on the pad, pull with the elbows.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_extension",
+                  "exercise": "leg_extension",
+                  "alternatives": ["reverse_nordic"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90},
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "shoulder_press",
+                  "exercise": "machine_shoulder_press",
+                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                },
+                {
+                  "id": "rear_delt",
+                  "exercise": "reverse_cable_crossover",
+                  "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "name": "Day C — Bench volume, leg press, pulldown",
+          "weeks": {
+            "12": {"rir": 3, "technique": null, "fewerSets": 1}
+          },
+          "groups": [
+            {
+              "slots": [
+                {
+                  "id": "bench_volume",
+                  "exercise": "barbell_bench_press",
+                  "alternatives": ["db_bench_press", "machine_chest_press"],
+                  "note": "Same grip, setup and pause every rep.",
+                  "sets": [
+                    {"reps": "6-8", "rir": 1, "rest": 180},
+                    {"reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "leg_press",
+                  "exercise": "leg_press",
+                  "alternatives": ["hack_squat", "smith_machine_squat"],
+                  "sets": [
+                    {"reps": "8-10", "rir": 1, "rest": 180},
+                    {"reps": "10-12", "rir": 0, "rest": 180, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pulldown",
+                  "exercise": "machine_pulldown",
+                  "alternatives": ["2_grip_lat_pulldown", "neutral_grip_pullup"],
+                  "note": "Use straps.",
+                  "sets": [
+                    {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "incline_press",
+                  "exercise": "db_incline_press",
+                  "alternatives": ["incline_machine_press", "smith_machine_incline_press"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "8-10", "rir": 0, "rest": 120, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "lying_leg_curl",
+                  "exercise": "lying_leg_curl",
+                  "alternatives": ["seated_leg_curl"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "pec_deck",
+                  "exercise": "pec_deck",
+                  "alternatives": ["cable_flye"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "superset",
+              "slots": [
+                {
+                  "id": "preacher_curl",
+                  "exercise": "machine_preacher_curl",
+                  "alternatives": ["bayesian_cable_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
+                  ]
+                },
+                {
+                  "id": "pressdown",
+                  "exercise": "triceps_pressdown",
+                  "alternatives": ["cable_triceps_kickback"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

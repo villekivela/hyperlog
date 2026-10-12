@@ -90,13 +90,32 @@ runs, the bottom bar is **Resume session** alone.
 **Today, program finished.** The empty-state layout with `flag`: "Program finished", "Import the
 next one from Program, or train ad hoc."
 
-**Today, no program.** The empty-state layout as before, with **Import a program** (text) under
-Start session.
+**Today, no program (the first run).** The starter offer: `view_timeline` (48 dp, primary),
+"Starter program" (labelLarge, onSurfaceVariant), the program's title (titleLarge) and its
+`description` from the file (bodyMedium, onSurfaceVariant), then **Run this program** (filled) and
+a row of two text buttons, **Start session** (ad hoc) and **Import a program**. The program is the
+one filled shape, so a new user's first tap trains it; an ad-hoc session stays one tap away. Run
+imports it and Today turns into week 1, Day A. While a session runs, or if the starter file can't
+be read, the old empty state shows instead (`fitness_center`, "No program yet", Start or Resume
+session, Import a program).
+
+```
+              ▦                                ← view_timeline 48 dp
+        Starter program                        ← labelLarge, onSurfaceVariant
+      Hyperlog Full Body                       ← titleLarge
+  12 weeks, 3 days a week. Few sets taken      ← bodyMedium, onSurfaceVariant
+  hard, a heavy bench, machines and cables
+  first.
+                                               ← 32 dp
+       [Run this program]                      ← filled
+  Start session   Import a program             ← text buttons, 8 dp apart
+```
 
 **Program screen.** Title and author, the Next line (the only place the next day is named; it
-wraps to two lines), then each block's head and week rows. With no program: `view_timeline`, "No
-program yet", "A program is a JSON file. Claude can write one from a program you own.", **Import
-program**. Importing over a program asks first: "Replace <title>?", "The new program starts at
+wraps to two lines), then each block's head and week rows. With no program: the same starter
+offer, with **Import program** as its one text button (the old "No program yet" state is the
+fallback if the starter can't be read). ⋮ holds **Import program** and **Run Hyperlog Full Body**
+(`view_timeline`), both behind the replace question. Importing over a program asks first: "Replace <title>?", "The new program starts at
 week 1, day 1. Past sessions are kept." (Replace / Cancel, the change on the left as in the Leave
 and Finish dialogs).
 

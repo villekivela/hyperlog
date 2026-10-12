@@ -45,6 +45,10 @@ The heaviest work set of an exercise in a session, the one progression judges.
 A work set after the top set at a lighter weight: the top set's weight minus a percentage, rounded down to a rung.
 _Avoid_: Drop (that's part of a drop set)
 
+**Starter program**:
+The original program that ships with the app, Hyperlog Full Body, offered while no program runs.
+_Avoid_: Default program, bundled program
+
 **Position**:
 Where you are in a program: which program, which week, and which day comes next.
 

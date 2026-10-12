@@ -147,3 +147,29 @@ different equipment.
   - RDL and pulldowns: "use straps".
   - Row: "chest on the pad, pull with the elbows".
   - Presses and curls: "control the stretch, 1 s pause at the bottom".
+
+## The program file
+
+The app ships this program as `app/src/main/assets/programs/full-body-3-day.json`, in the program
+format (`docs/program-format.md`). `StarterProgramTest` checks it against this document. Where the
+document and the format don't line up, the file does this:
+
+- **Blocks.** Each block writes Days A, B and C in full. Ramp-in repeats Build's days with a block
+  override for weeks 1–2: `rirAdd: 1` (so 0 RIR becomes 1, and nothing goes to failure) and no
+  techniques. Intensify writes its lower reps into its own days.
+- **Techniques on the last set.** A slot with two sets and a technique is two lines, the second
+  carrying it. Myo-reps and drop sets use the format's defaults (mini-sets of 3, up to 5; drops of
+  25%, 2 of them). Lengthened partials go to failure.
+- **Week 12, Day A.** The bench test is one line, 1 rep @ 1 RIR. Its weight is suggested from the
+  estimate like any new rep range. The format prescribes no loads, so the 100 kg rule (estimate of
+  97 kg or more) is in the slot's note. The rest of Day A is written as its deload: Build's first
+  sets @ 3 RIR, one set fewer, no techniques. A day override can't do this, because a day's
+  `rir: 3` would also set the single to 3 RIR.
+- **Week 12, Days B and C.** Build's days with a day override: `rir: 3`, no techniques,
+  `fewerSets: 1`. "One set fewer" takes the last set off each slot, and a slot with one set keeps it.
+- **Rest.** Main lifts (both benches, close-grip bench, hack squat, leg press, RDL, row) rest
+  3:00. Pulldowns, the shoulder press and the DB incline press rest 2:00; everything else 1:30.
+- **Slot notes.** Close-grip bench gets the bench note. The shoulder press, DB incline press and
+  both curls get the press and curl note.
+- **Not in the file**, because the app owns them: warm-ups, the "deload sets never lower the
+  estimate" rule, superset rest and the bench goal.

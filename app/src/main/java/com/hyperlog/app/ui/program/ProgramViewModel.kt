@@ -6,8 +6,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.Program
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.Programs
+import com.hyperlog.app.program.StarterProgram
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,6 +51,21 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** The starter program, offered while no program runs; null if its file can't be read. */
+    val starter: Program? by lazy {
+        runCatching { StarterProgram.source(getApplication()) }.getOrNull()
+            ?.let { ProgramParser.parse(it, AnyExerciseId) as? ProgramParser.Result.Valid }
+            ?.program
+    }
+
+    /** Imports the starter program like any other file. */
+    fun runStarter() {
+        viewModelScope.launch {
+            val text = withContext(Dispatchers.IO) { runCatching { StarterProgram.source(getApplication()) }.getOrNull() }
+            if (text != null) importText(text)
+        }
+    }
+
     fun closeErrors() {
         _errors.value = null
     }
@@ -68,4 +85,9 @@ object ProgramStore {
 
     private fun mergedIds(application: Application) =
         runCatching { com.hyperlog.app.library.LibrarySeed.fromAssets(application).merged }.getOrDefault(emptyMap())
+}
+
+/** Accepts every exercise id: the starter is only read here to show it; importing checks it. */
+private object AnyExerciseId : Set<String> by emptySet() {
+    override fun contains(element: String) = true
 }

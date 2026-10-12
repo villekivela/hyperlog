@@ -177,6 +177,8 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
             onImport = { programModel.closeErrors(); pickProgram.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             onCloseErrors = programModel::closeErrors,
             onBack = { screen = Screen.Today },
+            starter = programModel.starter,
+            onRunStarter = programModel::runStarter,
         )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
@@ -198,6 +200,8 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
             program = program,
             exerciseNames = exercises.associate { it.id to it.name },
             onProgram = { screen = Screen.Program },
+            starter = programModel.starter,
+            onRunStarter = programModel::runStarter,
         )
     }
 }
