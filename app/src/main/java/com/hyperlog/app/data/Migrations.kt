@@ -4,7 +4,18 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9)
+
+/**
+ * v9: editing a session on the fly (#12). A session exercise gains its own sets, when they were
+ * edited in the session, and a mark for having been taken out of it.
+ */
+object Migration8To9 : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE session_exercise ADD COLUMN sets TEXT")
+        db.execSQL("ALTER TABLE session_exercise ADD COLUMN removed INTEGER NOT NULL DEFAULT 0")
+    }
+}
 
 /**
  * v8: intensity techniques (#10). Logged sets gain their technique, their drops, mini-sets and

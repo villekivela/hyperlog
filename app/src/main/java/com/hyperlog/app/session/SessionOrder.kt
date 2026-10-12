@@ -39,6 +39,17 @@ internal object SessionOrder {
     fun partner(exercises: List<SessionExercise>, exercise: SessionExercise): SessionExercise? =
         group(exercises, exercise).firstOrNull { it.id != exercise.id }
 
+    /**
+     * [exercises] as the places they move between in the session's order: a superset's partners
+     * together, every other exercise on its own.
+     */
+    fun blocks(exercises: List<SessionExercise>): List<List<SessionExercise>> =
+        exercises.fold(mutableListOf<MutableList<SessionExercise>>()) { blocks, e ->
+            val last = blocks.lastOrNull()
+            if (last != null && e.slot != null && last.first().slot?.group == e.slot.group) last.add(e) else blocks.add(mutableListOf(e))
+            blocks
+        }
+
     /** The group's first planned set not logged yet, taking the partners set for set. */
     private fun firstLeft(group: List<SessionExercise>, logged: Map<Long, Int>): Pair<SessionExercise, Int>? {
         val rounds = group.maxOf { it.plan?.size ?: 0 }

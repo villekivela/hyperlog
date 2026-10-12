@@ -224,4 +224,25 @@ class MigrationTest {
         assertEquals("60", session.entry!!.weight)
         db.close()
     }
+
+    @Test
+    fun version8SessionExercisesKeepTheProgramsSetsAndStayIn() = runTest {
+        val file = context.getDatabasePath("migration-test-8.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(8, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('leg_extension', 'Leg Extension', 'Machine')")
+            db.execSQL("INSERT INTO session (id, started_at, rest_total_ms, pad_visible, breathing) VALUES (1, 1000, 0, 1, 0)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position, slot_id) VALUES (1, 1, 'leg_extension', 0, 'legs')")
+        }
+
+        // Room checks the migrated tables against the v9 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val exercise = db.sessions().sessionExercises(1).single()
+        assertEquals(null, exercise.sets)
+        assertEquals(false, exercise.removed)
+        assertEquals("legs", exercise.slotId)
+        db.close()
+    }
 }

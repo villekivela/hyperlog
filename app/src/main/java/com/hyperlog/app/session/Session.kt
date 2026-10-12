@@ -48,6 +48,12 @@ data class SessionExercise(
     /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = plan != null && sets.size >= plan.size
 
+    /** Planned set [index] can still change in the session: it is planned and not logged yet. */
+    fun editable(index: Int): Boolean = plan != null && index >= sets.size && index < plan.size
+
+    /** Planned set [index] can be taken out: one set always stays, and so does one that others back off from. */
+    fun removable(index: Int): Boolean = editable(index) && plan!!.size > 1 && plan.none { it.backoff?.from == index }
+
     /**
      * Set [index]'s technique: what a logged set was done with, else the session's change to it,
      * else the program's.

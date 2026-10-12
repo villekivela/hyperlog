@@ -65,7 +65,7 @@
     <string name="set_sheet_none_body">A straight set</string>
     <string name="set_sheet_split">Left and right apart</string>
     <string name="set_sheet_split_body">Log each side\'s reps</string>
-    <string name="session_set_options">Technique for set %1$d</string>
+    <string name="session_set_options">Edit set %1$d</string>
     <string name="set_options_description">Set %1$d options</string>
     <string name="sub_row_logged">Logged</string>
     <string name="technique_dropset_name">Drop set</string>
@@ -241,4 +241,31 @@
     <string name="technique_iso_contraction">Iso hold %1$d s, contraction</string>
     <string name="technique_failure">To failure</string>
     <string name="technique_backoff">Back-off, top set − %1$d%%</string>
+    <!-- Editing the session on the fly (#12) -->
+    <string name="edit_swap">Swap exercise</string>
+    <string name="edit_swap_title">Swap %1$s</string>
+    <string name="edit_swap_alternatives">Alternatives</string>
+    <string name="edit_swap_same_movement">Same movement</string>
+    <string name="edit_add_set">Add set</string>
+    <string name="edit_remove_set">Remove set</string>
+    <string name="edit_move_up">Move up</string>
+    <string name="edit_move_down">Move down</string>
+    <string name="edit_remove_exercise">Remove from session</string>
+    <string name="edit_remove_title">Remove %1$s?</string>
+    <string name="edit_remove_body">From this session only. The program keeps it.</string>
+    <string name="edit_remove_confirm">Remove</string>
+    <string name="edit_cancel">Cancel</string>
+    <string name="edit_planned">Planned</string>
+    <string name="edit_swapped_from">In place of %1$s</string>
+    <string name="edit_exercise_description">Edit %1$s</string>
+    <string name="edit_target">Target</string>
+    <string name="edit_reps_from">Fewest reps</string>
+    <string name="edit_reps_to">Most reps</string>
+    <string name="edit_rir">RIR</string>
+    <string name="edit_min_down">Lower the bottom of the range</string>
+    <string name="edit_min_up">Raise the bottom of the range</string>
+    <string name="edit_max_down">Lower the top of the range</string>
+    <string name="edit_max_up">Raise the top of the range</string>
+    <string name="edit_rir_down">Less in reserve</string>
+    <string name="edit_rir_up">More in reserve</string>
 </resources>

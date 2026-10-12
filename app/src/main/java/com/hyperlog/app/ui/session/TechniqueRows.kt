@@ -33,12 +33,16 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.program.HoldPosition
+import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.session.DEFAULT_DROP_REPS
@@ -309,11 +313,29 @@ internal fun SetSheet(
     split: Boolean?,
     onTechnique: (Technique?) -> Unit,
     onSplit: (Boolean) -> Unit,
+    /** A planned set still to do: its target, to change for this session; null otherwise. */
+    target: PlannedSet? = null,
+    onTarget: (RepRange, Int?) -> Unit = { _, _ -> },
+    /** Takes the set out of this session; null when it can't go. */
+    onRemove: (() -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
-        Text(stringResource(R.string.set_sheet_title, number), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(16.dp))
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = Margin, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.set_sheet_title, number), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+            onRemove?.let { remove ->
+                TextButton(onClick = remove) {
+                    SymbolIcon(Symbol.Delete, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.edit_remove_set))
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        target?.let {
+            TargetEditor(it, onTarget)
+            Spacer(Modifier.height(16.dp))
+        }
         Text(
             stringResource(R.string.set_sheet_technique),
             Modifier.padding(horizontal = Margin),

@@ -22,6 +22,8 @@ import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.PlannedSetJson
+import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
 import com.hyperlog.app.progression.WorkSet
@@ -120,7 +122,11 @@ class SessionLogger(
         val session = _state.value ?: return@locked
         db.withTransaction {
             val id = dao.insertSessionExercise(
-                SessionExerciseEntity(sessionId = session.id, exerciseId = exerciseId, position = session.exercises.size),
+                // After every other, removed ones included, so positions never tie.
+                SessionExerciseEntity(
+                    sessionId = session.id, exerciseId = exerciseId,
+                    position = (dao.sessionExercises(session.id).maxOfOrNull { it.position } ?: -1) + 1,
+                ),
             )
             val row = dao.session(session.id)!!
             dao.updateSession(row.copy(currentSessionExerciseId = id, entry = null))
@@ -163,6 +169,121 @@ class SessionLogger(
             gyms.remember(gym.id, current.exercise.id, itemId)
             // The first set is prefilled again, from this machine's own history.
             dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+        }
+        reload()
+    }
+
+    /**
+     * Swaps session exercise [sessionExerciseId] to [exerciseId] (an alternative or any library
+     * exercise) for this session only. It keeps its slot, so a superset keeps its partner, and
+     * takes the sets the program gives the new exercise. Nothing changes once a set is logged on it.
+     */
+    suspend fun swap(sessionExerciseId: Long, exerciseId: String) = locked {
+        val session = _state.value ?: return@locked
+        val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
+        if (exercise.sets.isNotEmpty() || exercise.exercise.id == exerciseId) return@locked
+        db.withTransaction {
+            dao.setExercise(sessionExerciseId, exerciseId)
+            // The session's changes to the sets were for the exercise swapped out.
+            dao.clearTechniques(sessionExerciseId)
+            rememberMachine(sessionExerciseId, session.gym?.id, exerciseId)
+            if (session.currentId == sessionExerciseId) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+        }
+        reload()
+    }
+
+    /** Adds a set to [sessionExerciseId]'s planned sets for this session, like its last one but with no technique. */
+    suspend fun addSet(sessionExerciseId: Long) = editPlan(sessionExerciseId) { exercise, plan ->
+        // A back-off's copy backs off the same set.
+        dao.clearTechnique(exercise.id, plan.size)
+        plan + plan.last().copy(technique = null)
+    }
+
+    /**
+     * Takes planned set [setIndex] out of this session. A logged set stays, one set always
+     * stays, and a set that others back off from stays (as in a program file).
+     */
+    suspend fun removeSet(sessionExerciseId: Long, setIndex: Int) = editPlan(sessionExerciseId) { exercise, plan ->
+        if (!exercise.removable(setIndex)) return@editPlan null
+        dao.clearTechnique(exercise.id, setIndex)
+        dao.shiftTechniques(exercise.id, setIndex)
+        plan.filterIndexed { i, _ -> i != setIndex }.map { set ->
+            set.backoff?.takeIf { it.from > setIndex }?.let { set.copy(backoff = it.copy(from = it.from - 1)) } ?: set
+        }
+    }
+
+    /** Changes planned set [setIndex]'s target reps and RIR for this session, until it is logged. */
+    suspend fun setTarget(sessionExerciseId: Long, setIndex: Int, reps: RepRange, rir: Int?) = editPlan(sessionExerciseId) { exercise, plan ->
+        if (!exercise.editable(setIndex) || reps.min < 1 || reps.max < reps.min) return@editPlan null
+        plan.mapIndexed { i, set -> if (i == setIndex) set.copy(reps = reps, rir = rir) else set }
+    }
+
+    /**
+     * Writes [change]'s planned sets for [sessionExerciseId] as this session's own (null changes
+     * nothing). The active set is prefilled again from its new target, and once the exercise
+     * on screen has no sets left the session moves on, as after its last set.
+     */
+    private suspend fun editPlan(
+        sessionExerciseId: Long,
+        change: suspend (SessionExercise, List<PlannedSet>) -> List<PlannedSet>?,
+    ) = locked {
+        val session = _state.value ?: return@locked
+        val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
+        val plan = exercise.plan ?: return@locked
+        val onScreen = session.currentId == sessionExerciseId && session.openSetId == null
+        val edited = db.withTransaction {
+            val sets = change(exercise, plan) ?: return@withTransaction false
+            dao.setSets(sessionExerciseId, PlannedSetJson.encode(sets))
+            if (onScreen) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+            true
+        }
+        if (!edited) return@locked
+        reload()
+        val after = _state.value ?: return@locked
+        val current = after.current ?: return@locked
+        if (onScreen && current.done && current.sets.isNotEmpty()) {
+            val step = SessionOrder.after(after.exercises, current.id, current.sets.size - 1)
+            if (step.exerciseId != current.id) {
+                dao.updateSession(dao.session(session.id)!!.copy(currentSessionExerciseId = step.exerciseId, entry = null))
+                reload()
+            }
+        }
+    }
+
+    /**
+     * Takes [sessionExerciseId] out of this session, as long as nothing is logged on it. The
+     * program keeps it. If it was on screen, the next exercise with sets left comes up.
+     */
+    suspend fun removeExercise(sessionExerciseId: Long) = locked {
+        val session = _state.value ?: return@locked
+        val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
+        if (exercise.sets.isNotEmpty()) return@locked
+        val left = session.exercises.filter { it.id != sessionExerciseId }
+        db.withTransaction {
+            dao.remove(sessionExerciseId)
+            if (session.currentId == sessionExerciseId) {
+                val after = left.drop(session.exercises.indexOf(exercise))
+                val next = left.firstOrNull { it.plan != null && !it.done } ?: after.firstOrNull() ?: left.lastOrNull()
+                dao.updateSession(dao.session(session.id)!!.copy(currentSessionExerciseId = next?.id, entry = null))
+            }
+        }
+        reload()
+    }
+
+    /**
+     * Moves [sessionExerciseId] [by] places in the session's order (−1 up, +1 down). A superset
+     * moves as a pair, and moves past a pair as one place.
+     */
+    suspend fun move(sessionExerciseId: Long, by: Int) = locked {
+        val session = _state.value ?: return@locked
+        val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
+        val blocks = SessionOrder.blocks(session.exercises).toMutableList()
+        val from = blocks.indexOfFirst { block -> block.any { it.id == exercise.id } }
+        val to = from + by
+        if (to !in blocks.indices) return@locked
+        blocks.add(to, blocks.removeAt(from))
+        db.withTransaction {
+            blocks.flatten().forEachIndexed { i, e -> dao.setPosition(e.id, i) }
         }
         reload()
     }
@@ -430,7 +551,7 @@ class SessionLogger(
             if (row.week == null || row.dayIndex == null) null else programs.program(id)?.plannedDay(Position(row.week, row.dayIndex))
         }
         checked = null
-        val exercises = dao.sessionExercises(row.id).map { se ->
+        val exercises = dao.sessionExercises(row.id).filter { !it.removed }.map { se ->
             val exercise = library.getValue(se.exerciseId)
             val perMachine = exercise.equipment.perMachine
             val machine = if (perMachine) gym?.items?.firstOrNull { it.id == se.equipmentItemId } else null
@@ -443,7 +564,7 @@ class SessionLogger(
                 else -> dao.lastTime(se.exerciseId, row.id)
             }.map { loggedSet(it) }
             val slot = day?.slot(se.slotId)
-            val plan = slot?.setsFor(se.exerciseId)
+            val plan = se.sets?.let(PlannedSetJson::decode) ?: slot?.setsFor(se.exerciseId)
             val sets = dao.sets(se.id).map { loggedSet(it) }
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine
             // The old app's weight stands in until the exercise (on this machine) has its own history.
@@ -454,7 +575,7 @@ class SessionLogger(
                 plan == null -> start?.suggestion(null, ladder.ladder)
                 else -> Progression.suggest(
                     plan,
-                    Performance(workSets(sets, plan), deload = day.deload),
+                    Performance(workSets(sets, plan), deload = day?.deload == true),
                     history(se.exerciseId, row.id, perMachine, machine?.id),
                     ladder.ladder,
                 ) ?: start?.takeIf { sets.isEmpty() }?.suggestion(plan.first(), ladder.ladder)
@@ -545,7 +666,7 @@ class SessionLogger(
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
             else programs.program(past.programId)?.plannedDay(Position(past.week, past.dayIndex))
-            val plan = day?.slot(past.slotId)?.setsFor(exerciseId)
+            val plan = past.sets?.let(PlannedSetJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
             Performance(workSets(dao.sets(past.id).map { loggedSet(it) }, plan), deload = day?.deload == true)
         }
 

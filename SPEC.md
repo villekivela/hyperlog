@@ -200,7 +200,7 @@ logging, and computed loads where it needs them.
 - A drop set, myo-reps or iso hold stays open after its main set, with no rest, until its
   technique runs out or **Finish set** on the pad's strip closes it; then the set's rest starts.
   Switching to another exercise closes an open set.
-- **Changing a technique** during the session: tap a set's number (or ⋮ → Technique for set N)
+- **Changing a technique** during the session: tap a set's number (or ⋮ → Edit set N)
   on any set not logged yet. The sheet offers None and the five techniques; a newly picked one
   starts with the format's defaults (2 drops of 25%, mini-sets of 3 up to 5, partials to failure)
   and iso hold at 20 s in the stretch. The change is for this session only; a logged set keeps
@@ -288,7 +288,22 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      back-off rule, the rest, the slot note and the exercise's technique note.
    - **Edit on the fly:** add, remove, reorder or swap exercises; add or remove sets; change reps,
      RIR or technique. Edits apply to this session only, with an optional "keep for the rest of the
-     block" that saves them as a Change.
+     block" that saves them as a Change (the Changes ticket). The next session of the day has the
+     program as written.
+     - **Swap** (⋮ → Swap exercise, or the session list row's ⋮) offers the slot's planned exercise
+       and alternatives, then the library's exercises with the same movement pattern; a search
+       covers the whole library. The swapped exercise keeps the slot (and its superset partner and
+       label) and does the sets the program gives it (an alternative's own, else the slot's). Its
+       history, suggestion and machine are its own. Once a set is logged on an exercise it can't be
+       swapped or removed. A swapped slot reads "In place of <planned exercise>" above the name.
+     - **Sets:** **Add set** under a program exercise's sets adds one like its last planned set,
+       without its technique (on a finished exercise it brings the exercise back into the order).
+       A set's number opens its sheet: **Remove set**, and its target (fewest reps, most reps,
+       RIR, by steps), as long as the set isn't logged. One set always stays, and so does one that
+       others back off from. Removing the active exercise's last set to do moves the session on.
+     - **Exercises:** the session list row's ⋮ swaps, adds a set, moves the exercise up or down (a
+       superset moves as a pair) and removes it (asking first; only with nothing logged). Added
+       exercises are open-ended like ad-hoc ones (no slot, no target), in a program session too.
    - **Warm-ups** generated from the first work set's weight (ramp by percentage, rounded to the
      equipment's available weights).
    - **Rest timer** that keeps running with the screen off: ongoing notification, vibration and

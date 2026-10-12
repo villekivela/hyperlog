@@ -211,12 +211,48 @@ Robolectric, so they have no status bar).
   primary when it's reached.
 - **Breathing pill**: `air` and the 15 s countdown, drained like rest; it can't be tapped, and it
   goes away at zero.
-- **Set sheet** (tap a set number still to do, or ⋮ → Technique for set N): "Set 3", then
+- **Set sheet** (tap a set number still to do, or ⋮ → Edit set N): "Set 3", then
   "Intensity technique" with radio rows None and the five techniques (name, its numbers, its
   symbol in tertiary at the end). Picking one applies it and closes. For a unilateral exercise's
   active set, a "Left and right apart" switch follows.
 - **Split set**: the reps cell reads `10 / 9`, the side not being typed muted, and the Reps head
   reads `L / R`.
+
+**Edit on the fly** (screens `edit-*.png`, built in ticket #12; Robolectric renders, so no status
+bar, and menus and dialogs don't render there).
+
+Principles: edits sit where the thing edited is (a set's number, the exercise's ⋮, the list row's
+⋮), never in a mode; every edit applies at once and is for this session only; what was changed
+stays readable (a swap names what it replaced).
+
+```
+ ⇄ In place of Barbell Bench Press             ← swapped slot, labelLarge, symbol tertiary
+ DB Bench Press                          ⋮
+       Target      Last      kg  Reps  RIR
+ 1     4–6 (1)              [  ]   6    ●1
+ 2     6–8 (1)                     8
+ +     Add set                                 ← 48 dp sub-row, labelLarge onSurfaceVariant
+```
+
+- **Header ⋮**: Add exercise, Swap exercise, Edit set N, Remove from session, divider, Finish
+  session. Swap and Remove only while nothing is logged on the exercise.
+- **Swapped line**: the superset line's slot (24 dp above the name): `swap_horiz` in tertiary and
+  "In place of <planned>" in onSurfaceVariant. A superset's line wins when both apply.
+- **Add set**: the table's last row for a program exercise, `add` in the set column at 20 dp.
+- **Swap sheet** (`edit-01-swap-sheet`, `edit-03-swap-back`): "Swap <name>" headlineSmall, the
+  search field, then "Alternatives" (the slot's planned exercise, tagged "Planned" in tertiary
+  once swapped, and its alternatives) and "Same movement" (the library by movement pattern), as
+  labelLarge heads over 56 dp rows. A search lists the whole library instead.
+- **Set sheet** (`edit-05-set-sheet`): the title row ends in a text **Remove set** (`delete`)
+  when the set can go. "Target" then has three 56 dp rows, label at the margin and a − value +
+  stepper at the end, values in one column: Fewest reps, Most reps, RIR (the value as its ring).
+  Separate rows, because a dash between two steppers reads as a minus. Steps that can't go
+  further are dimmed (outlineVariant). Then the technique choices as before.
+- **Session list** (`edit-06-session-list`): each row ends in a 48 dp ⋮ (Swap exercise, Add set,
+  Move up, Move down, Remove from session, each only when it applies). The row's end padding
+  drops to 4 dp so the ⋮'s touch target meets the 16 dp edge.
+- **Remove dialog**: "Remove <name>?", "From this session only. The program keeps it." (Cancel /
+  Remove), the shape of the Leave and Finish dialogs.
 
 ## Interaction rules
 

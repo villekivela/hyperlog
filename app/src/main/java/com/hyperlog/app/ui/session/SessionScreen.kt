@@ -124,6 +124,9 @@ fun SessionScreen(
     var showFinish by rememberSaveable { mutableStateOf(false) }
     /** The set whose options sheet is open, by index; null when closed. */
     var setOptions by rememberSaveable { mutableStateOf<Int?>(null) }
+    /** The session exercise being swapped, and the one asked about before it's removed. */
+    var swapping by rememberSaveable { mutableStateOf<Long?>(null) }
+    var removing by rememberSaveable { mutableStateOf<Long?>(null) }
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
     KeepScreenOn()
@@ -169,6 +172,11 @@ fun SessionScreen(
                         // The ⋮ menu reaches the active set's options too, for when the set number isn't obvious.
                         activeSet = current.sets.size.takeIf { session.entry != null && session.followUp == null && !current.needsMachine },
                         onSetOptions = { setOptions = it },
+                        // Once a set is logged on it, the exercise is what was done.
+                        onSwap = if (current.sets.isEmpty()) { { swapping = current.id } } else null,
+                        onRemove = if (current.sets.isEmpty()) { { removing = current.id } } else null,
+                        swappedFrom = current.slot?.exercise?.takeIf { it != current.exercise.id }
+                            ?.let { id -> exercises.firstOrNull { it.id == id }?.name },
                     )
                     if (current.needsMachine) {
                         MachinePicker(
@@ -250,6 +258,16 @@ fun SessionScreen(
                 onStart = { actions.switchTo(it); showList = false },
                 onAdd = { showList = false; showPicker = true },
                 onFinish = { showList = false; showFinish = true },
+                edits = { e, blocks ->
+                    val block = blocks.indexOfFirst { b -> b.any { it.id == e.id } }
+                    ExerciseEdits(
+                        onSwap = if (e.sets.isEmpty()) { { showList = false; swapping = e.id } } else null,
+                        onAddSet = if (e.plan != null) { { actions.addSet(e.id) } } else null,
+                        onMoveUp = if (block > 0) { { actions.move(e.id, -1) } } else null,
+                        onMoveDown = if (block < blocks.size - 1) { { actions.move(e.id, 1) } } else null,
+                        onRemove = if (e.sets.isEmpty()) { { removing = e.id } } else null,
+                    )
+                },
             )
         }
     }
@@ -287,8 +305,19 @@ fun SessionScreen(
                 split = session.entry?.takeIf { active && current.exercise.unilateral && session.followUp == null }?.let { it.right != null },
                 onTechnique = { actions.setTechnique(optionsFor, it); setOptions = null },
                 onSplit = actions::split,
+                target = current.plan?.getOrNull(optionsFor)?.takeIf { current.editable(optionsFor) },
+                onTarget = { reps, rir -> actions.setTarget(current.id, optionsFor, reps, rir) },
+                onRemove = if (current.removable(optionsFor)) { { actions.removeSet(current.id, optionsFor); setOptions = null } } else null,
             )
         }
+    }
+    session.exercises.firstOrNull { it.id == swapping }?.let { swapped ->
+        Sheet(onDismiss = { swapping = null }) {
+            SwapPicker(swapped, exercises, onPick = { actions.swap(swapped.id, it); swapping = null })
+        }
+    }
+    session.exercises.firstOrNull { it.id == removing }?.let { removed ->
+        RemoveExerciseDialog(removed.exercise.name, onRemove = { actions.removeExercise(removed.id) }, onDismiss = { removing = null })
     }
     if (showRest && session.restEndsAt != null && !session.breathing) {
         Sheet(onDismiss = { showRest = false }) {
@@ -310,6 +339,10 @@ private fun Header(
     onFinish: () -> Unit,
     activeSet: Int?,
     onSetOptions: (Int) -> Unit,
+    onSwap: (() -> Unit)?,
+    onRemove: (() -> Unit)?,
+    /** The planned exercise's name when the slot was swapped in this session. */
+    swappedFrom: String?,
 ) {
     var menu by remember { mutableStateOf(false) }
     val cs = MaterialTheme.colorScheme
@@ -322,6 +355,7 @@ private fun Header(
             val current = session.current
             val partner = session.partner
             if (current?.slot != null && partner != null) SupersetLine(current.slot.label, partner)
+            else swappedFrom?.let { SwappedLine(it) }
             Text(
                 name,
                 Modifier.clickable(onClickLabel = details, onClick = onName),
@@ -359,11 +393,25 @@ private fun Header(
                     leadingIcon = { SymbolIcon(Symbol.Add, null) },
                     onClick = { menu = false; onAddExercise() },
                 )
+                onSwap?.let { swap ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.edit_swap)) },
+                        leadingIcon = { SymbolIcon(Symbol.SwapHoriz, null) },
+                        onClick = { menu = false; swap() },
+                    )
+                }
                 activeSet?.let { set ->
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.session_set_options, set + 1)) },
                         leadingIcon = { SymbolIcon(Symbol.Tune, null) },
                         onClick = { menu = false; onSetOptions(set) },
+                    )
+                }
+                onRemove?.let { remove ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.edit_remove_exercise)) },
+                        leadingIcon = { SymbolIcon(Symbol.Delete, null) },
+                        onClick = { menu = false; remove() },
                     )
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
@@ -403,6 +451,20 @@ private fun SupersetLine(label: String, partner: SessionExercise) {
             Spacer(Modifier.width(4.dp))
             RirMark(set.rir, filled = true)
         }
+    }
+}
+
+/** Above the name of a swapped slot: what the program planned there, so the swap is visible. */
+@Composable
+private fun SwappedLine(planned: String) {
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
+        SymbolIcon(Symbol.SwapHoriz, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.tertiary)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            stringResource(R.string.edit_swapped_from, planned),
+            style = MaterialTheme.typography.labelLarge, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -668,6 +730,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
         }
         techniqueRows(table, i, current.techniqueAt(i), plannedKg = kg)
     }
+    addSetRow { table.actions.addSet(current.id) }
 }
 
 /** A technique or back-off rule: one 32 dp line aligned with the Target column, muted once done. */
@@ -943,7 +1006,14 @@ private fun Sheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
 
 /** The session's exercises with what has been logged, plus adding one and finishing. */
 @Composable
-internal fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: () -> Unit, onFinish: () -> Unit) {
+internal fun SessionList(
+    session: ActiveSession,
+    onStart: (Long) -> Unit,
+    onAdd: () -> Unit,
+    onFinish: () -> Unit,
+    /** What each row's ⋮ offers, given the session's blocks ([SessionOrder.blocks]); null for no ⋮. */
+    edits: ((SessionExercise, List<List<SessionExercise>>) -> ExerciseEdits)? = null,
+) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(bottom = 16.dp).navigationBarsPadding().verticalScroll(rememberScrollState())) {
         Text(stringResource(R.string.session_title), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.titleLarge)
@@ -954,10 +1024,11 @@ internal fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd:
         val numbered = session.exercises.any { it.slot != null }
         // A superset on screen is current as a pair: its partner comes up by itself.
         val onScreen = session.current?.let { c -> SessionOrder.group(session.exercises, c).map { it.id } }.orEmpty()
+        val blocks = SessionOrder.blocks(session.exercises)
         session.exercises.forEach { e ->
             val now = e.id in onScreen
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = if (edits != null) 4.dp else 16.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.width(40.dp)) {
@@ -991,6 +1062,7 @@ internal fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd:
                     }
                 }
                 if (!now && !e.done) FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
+                edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
             }
         }
         Row(

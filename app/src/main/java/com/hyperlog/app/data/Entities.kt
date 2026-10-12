@@ -99,6 +99,13 @@ data class SessionExerciseEntity(
     @ColumnInfo(name = "equipment_item_id") val equipmentItemId: Long? = null,
     /** The program slot it fills, in a session of a program day; null when added ad hoc. */
     @ColumnInfo(name = "slot_id") val slotId: String? = null,
+    /**
+     * Its sets as edited in this session ([com.hyperlog.app.program.PlannedSetJson]); null while
+     * they are the program's. Edits apply to this session only.
+     */
+    val sets: String? = null,
+    /** Taken out of this session; kept so the edit can later become a Change. */
+    @ColumnInfo(defaultValue = "0") val removed: Boolean = false,
 )
 
 @Entity(

@@ -11,6 +11,7 @@ import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
+import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionLogger
@@ -56,6 +57,16 @@ interface SessionActions {
     fun setTechnique(setIndex: Int, technique: Technique?)
     /** Splits the active set of a unilateral exercise into left and right, or back. */
     fun split(on: Boolean)
+    /** Swaps a session exercise to another exercise, for this session only. */
+    fun swap(sessionExerciseId: Long, exerciseId: String)
+    fun addSet(sessionExerciseId: Long)
+    fun removeSet(sessionExerciseId: Long, setIndex: Int)
+    /** Changes a planned set's target reps and RIR for this session. */
+    fun setTarget(sessionExerciseId: Long, setIndex: Int, reps: RepRange, rir: Int?)
+    /** Takes an exercise with nothing logged out of this session. */
+    fun removeExercise(sessionExerciseId: Long)
+    /** Moves an exercise (a superset as a pair) [by] places in the session's order. */
+    fun move(sessionExerciseId: Long, by: Int)
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -124,6 +135,13 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun stopHold() = run { logger.stopHold() }
     override fun setTechnique(setIndex: Int, technique: Technique?) = run { logger.setTechnique(setIndex, technique) }
     override fun split(on: Boolean) = run { logger.split(on) }
+    override fun swap(sessionExerciseId: Long, exerciseId: String) = run { logger.swap(sessionExerciseId, exerciseId) }
+    override fun addSet(sessionExerciseId: Long) = run { logger.addSet(sessionExerciseId) }
+    override fun removeSet(sessionExerciseId: Long, setIndex: Int) = run { logger.removeSet(sessionExerciseId, setIndex) }
+    override fun setTarget(sessionExerciseId: Long, setIndex: Int, reps: RepRange, rir: Int?) =
+        run { logger.setTarget(sessionExerciseId, setIndex, reps, rir) }
+    override fun removeExercise(sessionExerciseId: Long) = run { logger.removeExercise(sessionExerciseId) }
+    override fun move(sessionExerciseId: Long, by: Int) = run { logger.move(sessionExerciseId, by) }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

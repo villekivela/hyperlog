@@ -14,6 +14,8 @@ data class PastExercise(
     @ColumnInfo(name = "program_id") val programId: Long?,
     val week: Int?,
     @ColumnInfo(name = "day_index") val dayIndex: Int?,
+    /** Its sets as edited in that session; null when they were the program's. */
+    val sets: String? = null,
 )
 
 @Dao
@@ -81,7 +83,7 @@ interface SessionDao {
      */
     @Query(
         """
-        SELECT se.id, se.slot_id, s.program_id, s.week, s.day_index
+        SELECT se.id, se.slot_id, s.program_id, s.week, s.day_index, se.sets
         FROM session_exercise se JOIN session s ON s.id = se.session_id
         WHERE se.exercise_id = :exerciseId AND se.session_id != :sessionId
           AND (:anyItem OR se.equipment_item_id IS :itemId)
@@ -105,4 +107,26 @@ interface SessionDao {
 
     @Query("UPDATE session_exercise SET equipment_item_id = :itemId WHERE id = :id")
     suspend fun setEquipmentItem(id: Long, itemId: Long?)
+
+    @Query("UPDATE session_exercise SET exercise_id = :exerciseId, equipment_item_id = NULL, sets = NULL WHERE id = :id")
+    suspend fun setExercise(id: Long, exerciseId: String)
+
+    @Query("DELETE FROM set_technique WHERE session_exercise_id = :sessionExerciseId")
+    suspend fun clearTechniques(sessionExerciseId: Long)
+
+    @Query("DELETE FROM set_technique WHERE session_exercise_id = :sessionExerciseId AND set_index = :setIndex")
+    suspend fun clearTechnique(sessionExerciseId: Long, setIndex: Int)
+
+    /** Set [setIndex] is gone: the session's techniques on the sets after it move up one. */
+    @Query("UPDATE set_technique SET set_index = set_index - 1 WHERE session_exercise_id = :sessionExerciseId AND set_index > :setIndex")
+    suspend fun shiftTechniques(sessionExerciseId: Long, setIndex: Int)
+
+    @Query("UPDATE session_exercise SET sets = :sets WHERE id = :id")
+    suspend fun setSets(id: Long, sets: String?)
+
+    @Query("UPDATE session_exercise SET removed = 1 WHERE id = :id")
+    suspend fun remove(id: Long)
+
+    @Query("UPDATE session_exercise SET position = :position WHERE id = :id")
+    suspend fun setPosition(id: Long, position: Int)
 }
