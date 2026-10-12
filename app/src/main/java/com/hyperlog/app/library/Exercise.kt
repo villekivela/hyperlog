@@ -1,7 +1,5 @@
 package com.hyperlog.app.library
 
-import com.hyperlog.app.domain.WeightLadder
-
 /** An exercise in the library. Names carry the implement ("DB Bench Press"), so a name alone is unambiguous. */
 data class Exercise(
     val id: String,
@@ -19,9 +17,6 @@ data class Exercise(
     /** Hidden exercises stay in past sessions but aren't offered when adding one. */
     val hidden: Boolean = false,
 ) {
-    /** Until gyms and equipment exist (#4): the global dumbbell ladder, else 2.5 kg steps. */
-    val ladder: WeightLadder
-        get() = if (equipment == Equipment.Dumbbell) WeightLadder.Dumbbells else WeightLadder.Default
 
     /** What the library list shows under the name: `Cable · Lats, Biceps`. */
     val summary: String get() = (listOf(equipment.label) + muscles).let { "${it.first()} · ${it.drop(1).joinToString(", ")}" }

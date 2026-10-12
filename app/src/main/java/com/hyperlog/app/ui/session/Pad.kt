@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.session
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +37,7 @@ import com.hyperlog.app.R
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.ui.symbols.Symbol
@@ -46,14 +49,16 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  * through the gesture area.
  */
 @Composable
-internal fun Pad(entry: SetEntry, ladder: WeightLadder, actions: SessionActions, modifier: Modifier = Modifier) {
+internal fun Pad(entry: SetEntry, ladder: WeightLadder, check: WeightCheck?, actions: SessionActions, modifier: Modifier = Modifier) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
             Row(Modifier.fillMaxWidth().height(KeyHeight), verticalAlignment = Alignment.CenterVertically) {
                 val typed = entry.weightKg
-                if (onWeight && typed == null) {
+                if (check != null) {
+                    WeightCheckStrip(check, actions)
+                } else if (onWeight && typed == null) {
                     // Nothing to place on the ladder yet: the strip stays empty until a weight is typed.
                     Spacer(Modifier.weight(1f))
                 } else if (onWeight && typed != null) {
@@ -84,9 +89,32 @@ internal fun Pad(entry: SetEntry, ladder: WeightLadder, actions: SessionActions,
                     SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
                     DigitKey(0, actions)
                     if (onWeight) TextKey(".", stringResource(R.string.pad_dot)) { actions.press(PadKey.Dot) } else Spacer(Modifier.weight(1f))
-                    DoneKey(entry, actions)
+                    DoneKey(entry, actions, keeps = check != null)
                 }
             }
+        }
+    }
+}
+
+/**
+ * The weight check in place of the strip: the reason in the error colour, then three real
+ * weights. ✓ turns error-coloured too, because the next ✓ keeps the weight as typed.
+ */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: WeightCheck, actions: SessionActions) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.weight(1.5f).padding(start = 8.dp).testTag(WeightCheckTag),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SymbolIcon(Symbol.Warning, contentDescription = null, tint = cs.error, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(check.reason, style = MaterialTheme.typography.labelLarge, color = cs.error, maxLines = 2)
+    }
+    check.options.forEach { kg ->
+        val label = formatKg(kg)
+        StripChip(false, Modifier.weight(1f), label, onClick = { actions.pickWeight(kg) }, outlined = true) {
+            Text(label, style = MaterialTheme.typography.titleSmall.merge(Tnum))
         }
     }
 }
@@ -102,13 +130,14 @@ internal fun HiddenPad(entry: SetEntry, actions: SessionActions, modifier: Modif
             SymbolKey(Symbol.Keyboard, R.string.pad_show) { actions.setPadVisible(true) }
             Spacer(Modifier.weight(1f))
             Spacer(Modifier.weight(1f))
-            DoneKey(entry, actions)
+            DoneKey(entry, actions, keeps = false)
         }
     }
 }
 
 internal const val PadTag = "pad"
 internal const val DoneKeyTag = "pad-done"
+internal const val WeightCheckTag = "weight-check"
 
 
 @Composable
@@ -133,15 +162,15 @@ private fun androidx.compose.foundation.layout.RowScope.SymbolKey(symbol: Symbol
 
 /** ✓: one key, the same size as the others, filled primary. On the weight it reads →. */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: SessionActions) {
+private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: SessionActions, keeps: Boolean) {
     val cs = MaterialTheme.colorScheme
     val onWeight = entry.field == Field.Weight
     val enabled = entry.canConfirm
     Key(
         stringResource(if (onWeight) R.string.pad_next else R.string.pad_log),
         modifier = Modifier.testTag(DoneKeyTag),
-        container = if (enabled) cs.primary else cs.surfaceContainerHigh,
-        content = if (enabled) cs.onPrimary else cs.outline,
+        container = when { keeps -> cs.error; enabled -> cs.primary; else -> cs.surfaceContainerHigh },
+        content = when { keeps -> cs.onError; enabled -> cs.onPrimary; else -> cs.outline },
         onClick = actions::done,
     ) {
         SymbolIcon(if (onWeight) Symbol.ArrowForward else Symbol.Check, contentDescription = null)
@@ -173,11 +202,19 @@ private fun androidx.compose.foundation.layout.RowScope.Key(
 }
 
 @Composable
-private fun StripChip(selected: Boolean, modifier: Modifier, description: String, onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun StripChip(
+    selected: Boolean,
+    modifier: Modifier,
+    description: String,
+    onClick: () -> Unit,
+    outlined: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     Surface(
         onClick = onClick,
         shape = CircleShape,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+        border = if (outlined) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         modifier = modifier.height(40.dp).padding(horizontal = 4.dp).semantics {
             contentDescription = description
             this.selected = selected

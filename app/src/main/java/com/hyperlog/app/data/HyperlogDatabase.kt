@@ -9,12 +9,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [ExerciseEntity::class, SessionEntity::class, SessionExerciseEntity::class, LoggedSetEntity::class],
-    version = 2,
+    entities = [
+        ExerciseEntity::class, SessionEntity::class, SessionExerciseEntity::class, LoggedSetEntity::class,
+        GymEntity::class, EquipmentItemEntity::class, SharedLadderEntity::class,
+    ],
+    version = 3,
 )
 abstract class HyperlogDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao
     abstract fun exercises(): ExerciseDao
+    abstract fun gyms(): GymDao
 
     companion object {
         @Volatile private var instance: HyperlogDatabase? = null

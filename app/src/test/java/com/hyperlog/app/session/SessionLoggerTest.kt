@@ -4,6 +4,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
+import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.library.ExerciseLibrary
@@ -204,5 +206,54 @@ class SessionLoggerTest {
 
         assertNull(logger.finish())
         assertNull(logger.state.value)
+    }
+
+    @Test
+    fun aWeightTenTimesTheLastSetNeedsASecondTick() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("db_bench_press")
+        logger.type("25"); logger.done(); logger.type("10"); logger.selectRir(2); logger.done()
+        now += 120_000
+
+        logger.focus(Field.Weight); logger.type("255"); logger.done(); logger.done()
+
+        assertEquals(1, logger.session.current!!.sets.size)
+        val check = logger.session.weightCheck!!
+        assertEquals("10× last set", check.reason)
+        assertEquals(listOf(22.5, 25.0, 30.0), check.options)
+
+        // A stutter right after the warning doesn't keep the weight; a deliberate ✓ does.
+        logger.done()
+        assertEquals(1, logger.session.current!!.sets.size)
+        now += 2_000
+        logger.done()
+        assertEquals(LoggedSet(255.0, 10, 0, 2), logger.session.current!!.sets.last())
+        assertNull(logger.session.weightCheck)
+    }
+
+    @Test
+    fun pickingAnOfferedWeightClearsTheCheck() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("db_bench_press")
+        logger.type("23"); logger.done(); logger.type("10"); logger.selectRir(2); logger.done()
+        assertEquals("Not on this equipment", logger.session.weightCheck!!.reason)
+
+        logger.pickWeight(22.5)
+        assertNull(logger.session.weightCheck)
+        logger.done()
+        assertEquals(listOf(LoggedSet(22.5, 10, 0, 2)), logger.session.current!!.sets)
+    }
+
+    @Test
+    fun dumbbellsStepOverTheSharedLadder() = runTest {
+        Gyms(db).setDumbbells(LadderSpec.Explicit(listOf(10.0, 12.5, 15.0)))
+        val logger = logger()
+        logger.start()
+        logger.addExercise("db_bench_press")
+        logger.type("10"); logger.press(PadKey.Plus)
+        assertEquals("12.5", logger.session.entry!!.weight)
+        assertEquals(listOf(10.0, 12.5, 15.0), logger.session.current!!.ladder.rungs)
     }
 }

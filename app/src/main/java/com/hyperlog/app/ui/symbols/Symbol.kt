@@ -23,6 +23,8 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     CheckCircle(R.drawable.symbol_check_circle),
     ChevronRight(R.drawable.symbol_chevron_right),
     Close(R.drawable.symbol_close),
+    Delete(R.drawable.symbol_delete),
+    Edit(R.drawable.symbol_edit),
     ExpandLess(R.drawable.symbol_expand_less),
     FitnessCenter(R.drawable.symbol_fitness_center),
     Keyboard(R.drawable.symbol_keyboard),
@@ -39,6 +41,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Timer(R.drawable.symbol_timer),
     Visibility(R.drawable.symbol_visibility),
     VisibilityOff(R.drawable.symbol_visibility_off),
+    Warning(R.drawable.symbol_warning),
 }
 
 @Composable

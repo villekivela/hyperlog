@@ -38,16 +38,8 @@ class WeightLadder(val rungs: List<Double>) {
             WeightLadder(List(count) { round1(start + it * step) })
 
         /**
-         * The global dumbbell ladder (SPEC, Gyms and equipment): 2 kg steps to 20 kg, then 22.5
-         * and 25, then 5 kg steps.
-         */
-        val Dumbbells = WeightLadder(
-            (2..20 step 2).map { it.toDouble() } + listOf(22.5, 25.0) + (30..60 step 5).map { it.toDouble() },
-        )
-
-        /**
-         * Until gyms and their equipment exist (ticket #4), everything that isn't a dumbbell uses
-         * 2.5 kg steps.
+         * 2.5 kg steps, for equipment the session doesn't know yet (machines and cables until #5
+         * picks the machine).
          */
         val Default = steps(start = 2.5, step = 2.5, count = 120)
 

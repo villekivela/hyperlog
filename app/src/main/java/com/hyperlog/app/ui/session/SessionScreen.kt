@@ -144,7 +144,8 @@ fun SessionScreen(
             }
             val entry = session.entry
             if (current != null && entry != null) {
-                if (session.padVisible) Pad(entry, current.exercise.ladder, actions) else HiddenPad(entry, actions)
+                // A weight check always shows, even with the pad folded away.
+                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions) else HiddenPad(entry, actions)
             } else {
                 Spacer(Modifier.navigationBarsPadding())
             }

@@ -9,7 +9,13 @@ import com.hyperlog.app.data.SessionExerciseEntity
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
+import com.hyperlog.app.domain.Reference
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.domain.WeightCheck
+import com.hyperlog.app.domain.WeightLadder
+import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.gym.ladderFor
 import com.hyperlog.app.library.toExercise
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,10 +32,13 @@ import kotlinx.coroutines.sync.withLock
  */
 class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> Long = System::currentTimeMillis) {
     private val dao = db.sessions()
+    private val gyms = Gyms(db)
     private val mutex = Mutex()
     private val _state = MutableStateFlow<ActiveSession?>(null)
     /** When ✓ last logged a set, to swallow a stutter tap right after it. */
     private var lastLoggedAt: Long? = null
+    /** The entry a weight check was raised for, and when: a second ✓ on it keeps the weight. */
+    private var checked: Pair<SetEntry, Long>? = null
 
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
@@ -71,10 +80,11 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
     suspend fun focus(field: Field) = editEntry { entry, _ -> entry.focus(field) }
     suspend fun partialMode(on: Boolean) = editEntry { entry, _ -> entry.partialMode(on) }
 
-    /** A rung picked from the pad's weight strip. */
-    suspend fun pickWeight(kg: Double) = editEntry { entry, _ ->
-        entry.copy(weight = com.hyperlog.app.domain.formatKg(kg), field = Field.Weight, fresh = true)
-    }
+    /**
+     * A rung picked from the pad's weight strip, or from a weight check's offers. The field stays,
+     * so after a check the next ✓ logs the set with the picked weight.
+     */
+    suspend fun pickWeight(kg: Double) = editEntry { entry, _ -> entry.copy(weight = formatKg(kg), fresh = true) }
 
     /**
      * ✓: moves from the weight to reps, or logs the set and starts rest. A ✓ within
@@ -89,6 +99,18 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             is SetEntry.Done.Log -> {
                 val now = clock()
                 if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
+                val check = WeightCheck.of(result.set.weightKg, current.reference(), current.ladder, current.ladderKnown)
+                val raised = checked
+                if (check != null) {
+                    if (raised == null || raised.first != entry) {
+                        checked = entry to now
+                        _state.value = session.copy(weightCheck = check)
+                        return@locked
+                    }
+                    // The same stutter rule as logging: a ✓ right after the warning isn't a decision.
+                    if (now - raised.second < DOUBLE_TAP_MS) return@locked
+                }
+                checked = null
                 lastLoggedAt = now
                 db.withTransaction {
                     dao.insertSet(result.set.toEntity(current.id, current.sets.size, now))
@@ -153,17 +175,18 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         reload()
     }
 
-    private suspend fun editEntry(change: (SetEntry, com.hyperlog.app.domain.WeightLadder) -> SetEntry) = locked {
+    private suspend fun editEntry(change: (SetEntry, WeightLadder) -> SetEntry) = locked {
         val session = _state.value ?: return@locked
         val current = session.current ?: return@locked
         val entry = session.entry ?: return@locked
-        val next = change(entry, current.exercise.ladder)
+        val next = change(entry, current.ladder)
         if (next != entry) saveEntry(session, next)
     }
 
     private suspend fun saveEntry(session: ActiveSession, entry: SetEntry) {
         // The screen shows the change at once; the write follows before the next call runs.
-        _state.value = session.copy(entry = entry)
+        checked = null
+        _state.value = session.copy(entry = entry, weightCheck = null)
         dao.updateSession(dao.session(session.id)!!.copy(entry = entry.toColumns()))
     }
 
@@ -175,12 +198,18 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             return
         }
         val library = db.exercises().all().associate { it.id to it.toExercise() }
+        val shared = gyms.shared()
+        checked = null
         val exercises = dao.sessionExercises(row.id).map { se ->
+            val exercise = library.getValue(se.exerciseId)
+            val ladder = shared.ladderFor(exercise.equipment)
             SessionExercise(
                 id = se.id,
-                exercise = library.getValue(se.exerciseId),
+                exercise = exercise,
                 sets = dao.sets(se.id).map { it.toLoggedSet() },
                 lastTime = dao.lastTime(se.exerciseId, row.id).map { it.toLoggedSet() },
+                ladder = ladder.ladder,
+                ladderKnown = ladder.known,
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
@@ -211,6 +240,11 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         const val DOUBLE_TAP_MS = 1_000L
     }
 }
+
+/** What a new set's weight is checked against: the set before it, or last time's first set. */
+private fun SessionExercise.reference(): Reference? =
+    sets.lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
+        ?: lastTime.firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
 
 private fun LoggedSet.toEntity(sessionExerciseId: Long, position: Int, loggedAt: Long) =
     LoggedSetEntity(
