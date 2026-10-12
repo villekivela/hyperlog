@@ -104,10 +104,6 @@ _Avoid_: RPE
 The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR. It drives suggestions.
 _Avoid_: 1RM, max
 
-**Training max**:
-A working max set for an exercise in programs that prescribe weight as a percentage, adjusted from AMRAP results.
-_Avoid_: TM when writing for users
-
 **Suggestion**:
 The weight and target reps the app proposes for an upcoming set, with the reason shown.
 _Avoid_: Recommendation, prescription (that is the program's, not the app's)

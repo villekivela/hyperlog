@@ -31,15 +31,20 @@ configuration, iOS, web, any server.
 
 ## Distribution
 
-- **Google Play internal testing** track: you and a few invited users install from the Play Store
-  and get updates automatically. Needs a Play Console developer account (one-time fee).
-- Signed with a new **upload key** kept outside the repo and backed up (Play App Signing holds the
-  app signing key). The legacy app was signed with the old machine's debug key, so the new app
-  can't install over it: uninstall the legacy app when switching; its data stays in the backup.
-- During development, debug builds install over USB with adb alongside the Play build.
+- **GitHub Releases + Obtainium**, no Play Store fee. Pushing a version tag makes GitHub Actions
+  build and sign a release APK and attach it to a release in a public `villekivela/hyperlog-releases`
+  repo (the source repo stays private). Phones install and update through Obtainium watching that
+  release page. Fallback: Firebase App Distribution (free, email invites).
+- Signed with a release key kept outside the repo, backed up, and stored as a GitHub Actions secret.
+  The legacy app was signed with the old machine's debug key, so the new app can't install over it:
+  uninstall the legacy app when switching; its data stays in the backup.
+- Check Google's developer-verification rules for apps installed outside the Play Store before the
+  first release; register if required.
+- During development, debug builds install over USB with adb alongside the release build.
 - **Other users** get the same app with no accounts and no server; each has their own data on their
-  phone. **No programs are bundled**: Nippard's programs are paid and copyrighted, so each user
-  imports program files they own. The app ships with the exercise library only.
+  phone. **No third-party programs are bundled**: Nippard's programs are paid and copyrighted, so
+  each user imports program files they own. The app ships with the exercise library and one
+  original starter program, Hyperlog Full Body (`docs/programs/full-body-3-day.md`).
 - Starting weights from a legacy backup are a one-off "Import starting weights" action in settings,
   not built into the app.
 
@@ -55,7 +60,6 @@ configuration, iOS, web, any server.
 | **Set prescription** | Type (`warmup`, `work`, `amrap`, `drop`, `myo`), reps, optional target RIR, rest, load rule. |
 | **Position** | Where you are: program, week, next day. |
 | **Session** | What was done on a date: sets with weight, reps, RIR. It's a record and is never recalculated. |
-| **Training max (TM)** | Per-exercise working max for %TM programs (SBS). Changes are events with a reason. |
 | **Change** | A proposed edit to the plan (see Coaching). Accepted changes are kept as history. |
 | **Gym** | A place you train, with its equipment. Picked at session start. |
 | **Equipment item** | One piece of equipment at a gym (a cable station, a leg press), with a weight ladder. Dumbbells and plates are global. |
@@ -75,11 +79,8 @@ and imported through a strict validator that names the exact path of every error
 weeks of the block, e.g. `"weeks": {"1": {"rir": 3}, "4": {"sets": 2, "technique": null}}`. This
 covers ramp-in weeks, techniques that start in week 2, and deload weeks without duplicating days.
 
-Load is prescribed in one of two ways:
-
-- **Rep range + RIR** (Nippard programs): weight is suggested from recent sessions on that exercise.
-- **%TM** (SBS): weight = TM × week percentage. The AMRAP result adjusts the TM. Port
-  `src/app/utils/sbs-auto-regulation.ts` and `src/app/data/sbs-hypertrophy-table.ts` from legacy.
+Load is prescribed as **rep range + RIR**: weight is suggested from recent sessions on that
+exercise. Percentage-of-training-max programs (SBS-style AMRAP) are out of v1.
 
 ### Automatic progressive overload
 
@@ -104,8 +105,6 @@ work. You can override the suggestion on the spot; the override is logged, not h
   "estimated, check on the first set".
 - **Within a session**, the next set's weight follows the gap between target and logged RIR (about
   5% per RIR point, capped at ±10%).
-- **AMRAP / %TM (SBS)**: the AMRAP result adjusts the TM and the week's percentage sets the weight.
-  Port legacy `src/app/utils/sbs-auto-regulation.ts` as is (the public SBS rules are paywalled).
 - **Available weights** come from the equipment actually used: the next suggestion is the next
   weight on that equipment's weight ladder (see Gyms and equipment), never a computed number the
   machine can't be set to.
@@ -321,7 +320,8 @@ fixed, and a grip-demand tag (`high` / `low` / `none`) added for the coach's swa
 1. Project skeleton, theme, launcher icon from `brand/`.
 2. Room schema, gyms and equipment ladders, exercise library.
 3. Today screen: set logging with full and partial reps, intensity techniques, automatic progression.
-4. Min-Max Essentials converted to the new format (from the legacy backup) as the first program.
+4. Hyperlog Full Body (`docs/programs/full-body-3-day.md`) as the first program and the bundled
+   starter.
 5. Program screen and its manual actions.
 6. Change model, diff view, apply/revert.
 7. Rule-based coach.
