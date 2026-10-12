@@ -185,6 +185,19 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Rest timer** that keeps running with the screen off: ongoing notification, vibration and
      sound when rest ends.
    - **Plate calculator** for barbell and plate-loaded exercises.
+   - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
+     set rows (target, last time, kg, reps, RIR), techniques and their planned drops/mini-sets
+     visible before the set, and a compact in-app pad drawn like the system number keyboard.
+   - **Rest rules**: no rest before drops, between myo mini-sets (a short breathing countdown
+     instead) or between superset partners; full rest after the set or superset round.
+   - **Rest on the lock screen**: an ongoing notification with time left, the next set's target and
+     +15 s / skip; it vibrates when rest ends with the screen off.
+   - **Every tap is saved immediately**; a session survives back gestures, app kills and reboots.
+     Logged sets stay editable during and after the session; editing one never resets the timer.
+   - **Prefills** follow what just happened (a changed weight carries to the next sets; drop reps
+     prefill from last time). Weights that don't exist on the equipment's ladder are flagged, not
+     silently accepted.
+   - Drops and myo mini-sets record no RIR; they are taken to failure.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
    repeat week, deload week, shift the remaining plan by N weeks.
 3. **Coach** — see below.
