@@ -223,6 +223,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        dumbbell exercises and 2.5 kg steps for everything else.
      - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
        session with nothing logged is discarded.
+     - **Finishing is deliberate and recoverable.** Finish session (⋮, below a divider, or the
+       session list) asks "Finish the session?" (Keep going / Finish). Session done offers
+       **Resume session**, which reopens the session exactly as it was.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
    repeat week, deload week, shift the remaining plan by N weeks.
 3. **Coach** — see below.

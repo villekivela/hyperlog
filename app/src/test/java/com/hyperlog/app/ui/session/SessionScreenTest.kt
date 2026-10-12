@@ -113,4 +113,26 @@ class SessionScreenTest {
         waitFor("Barbell Bench Press")
         compose.onAllNodesWithText("60").assertCountEquals(2)
     }
+
+    @Test
+    fun finishingAsksFirstAndSessionDoneCanResumeTheSession() {
+        startWithBenchPress()
+        tap("6", "0", "Next", "1", "2", "RIR 1", "Log set")
+        waitForLoggedSet()
+
+        tap("More")
+        compose.onNodeWithText("Finish session").performClick()
+        compose.onNodeWithText("Finish the session?").assertIsDisplayed()
+        compose.onNodeWithText("Keep going").performClick()
+        compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
+
+        tap("More")
+        compose.onNodeWithText("Finish session").performClick()
+        compose.onNodeWithText("Finish").performClick()
+        waitFor("Session done")
+
+        compose.onNodeWithText("Resume session").performClick()
+        waitFor("Barbell Bench Press")
+        compose.onAllNodesWithText("60").assertCountEquals(2)
+    }
 }

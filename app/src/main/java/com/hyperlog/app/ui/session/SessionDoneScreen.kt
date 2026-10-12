@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,7 +32,7 @@ import kotlin.math.roundToInt
 
 /** The end of a session: every exercise with its sets, `25 × 10 @ 2`. */
 @Composable
-fun SessionDoneScreen(summary: SessionSummary, onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
     BackHandler(onBack = onClose)
     val cs = MaterialTheme.colorScheme
     Surface(modifier.fillMaxSize(), color = cs.surface) {
@@ -62,6 +64,9 @@ fun SessionDoneScreen(summary: SessionSummary, onClose: () -> Unit, modifier: Mo
                 }
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = Margin, vertical = 16.dp), horizontalArrangement = Arrangement.End) {
+                // Finished by mistake: back into the session exactly as it was.
+                TextButton(onClick = onResume) { Text(stringResource(R.string.today_resume_session)) }
+                Spacer(Modifier.width(8.dp))
                 Button(onClick = onClose) { Text(stringResource(R.string.done_close)) }
             }
         }

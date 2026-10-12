@@ -30,4 +30,4 @@ data class ActiveSession(
 
 data class ExerciseSummary(val name: String, val sets: List<LoggedSet>)
 
-data class SessionSummary(val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)
+data class SessionSummary(val sessionId: Long, val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)

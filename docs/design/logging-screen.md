@@ -177,10 +177,13 @@ offers **Resume session**. The app opens on a running session.
   24 dp margin). The same list opens as a sheet from ⋮ or the session list.
 - The exercise name opens the exercise sheet: equipment and muscles, the library note and the
   technique video (see `exercise-library.md`). The Add exercise list has a search field.
-- ⋮ holds Add exercise and Finish session. The session list ends with Add exercise and Finish
+- ⋮ holds Add exercise and, below a divider, Finish session. Finish asks first: "Finish the
+  session?", "Exercises with nothing logged are left out. You can resume it from Session done."
+  (Keep going / Finish), the same dialog shape as Leave. The session list ends with Add exercise and Finish
   session. Its other exercises have **Start**, because ad-hoc exercises are never "done".
 - **Session done** shows the start time and duration under the title, the summaries, and a
-  filled **Done** at the bottom right that returns to Today (back does the same). Its rows don't
+  filled **Done** at the bottom right that returns to Today (back does the same), with a text
+  **Resume session** beside it that reopens the session as it was, for a finish by mistake. Its rows don't
   open yet: corrections are ticket #15.
 - Values cap at 5 characters for weight, 3 for full reps and 2 for partials. A reps value longer
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.

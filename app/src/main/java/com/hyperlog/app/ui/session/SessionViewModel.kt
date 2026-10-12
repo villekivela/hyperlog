@@ -65,6 +65,13 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     fun start() = run { logger.start() }
     fun dismissSummary() { _summary.value = null }
 
+    /** Runs the session just finished again. */
+    fun resumeFinished() {
+        val finished = _summary.value ?: return
+        _summary.value = null
+        run { logger.resume(finished.sessionId) }
+    }
+
     override fun press(key: PadKey) = run { logger.press(key) }
     override fun done() = run { logger.done() }
     override fun selectRir(value: Int) = run { logger.selectRir(value) }

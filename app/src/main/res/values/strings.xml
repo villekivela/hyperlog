@@ -46,6 +46,10 @@
     <string name="done_title">Session done</string>
     <string name="done_when">Started %1$s, %2$d min</string>
     <string name="done_close">Done</string>
+    <string name="finish_title">Finish the session?</string>
+    <string name="finish_body">Exercises with nothing logged are left out. You can resume it from Session done.</string>
+    <string name="finish_keep_going">Keep going</string>
+    <string name="finish_finish">Finish</string>
     <string name="back">Back</string>
     <string name="settings_library">Exercise library</string>
     <string name="settings_library_count">%1$d exercises</string>

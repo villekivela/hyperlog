@@ -35,6 +35,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -102,6 +103,7 @@ fun SessionScreen(
     var showPicker by rememberSaveable { mutableStateOf(false) }
     var showRest by rememberSaveable { mutableStateOf(false) }
     var showDetails by rememberSaveable { mutableStateOf(false) }
+    var showFinish by rememberSaveable { mutableStateOf(false) }
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
     KeepScreenOn()
@@ -128,7 +130,7 @@ fun SessionScreen(
                         onName = { showDetails = true },
                         onTimer = { showRest = true },
                         onAddExercise = { showPicker = true },
-                        onFinish = actions::finish,
+                        onFinish = { showFinish = true },
                     )
                     SetTable(current, session.entry, actions, Modifier.weight(1f))
                     val index = session.exercises.indexOf(current)
@@ -160,13 +162,25 @@ fun SessionScreen(
             },
         )
     }
+    if (showFinish) {
+        // Finishing is one menu row away from Add exercise, so it asks first, like leaving does.
+        AlertDialog(
+            onDismissRequest = { showFinish = false },
+            title = { Text(stringResource(R.string.finish_title)) },
+            text = { Text(stringResource(R.string.finish_body)) },
+            confirmButton = { TextButton(onClick = { showFinish = false }) { Text(stringResource(R.string.finish_keep_going)) } },
+            dismissButton = {
+                TextButton(onClick = { showFinish = false; actions.finish() }) { Text(stringResource(R.string.finish_finish)) }
+            },
+        )
+    }
     if (showList) {
         Sheet(onDismiss = { showList = false }) {
             SessionList(
                 session,
                 onStart = { actions.switchTo(it); showList = false },
                 onAdd = { showList = false; showPicker = true },
-                onFinish = { showList = false; actions.finish() },
+                onFinish = { showList = false; showFinish = true },
             )
         }
     }
@@ -226,6 +240,7 @@ private fun Header(
                     leadingIcon = { SymbolIcon(Symbol.Add, null) },
                     onClick = { menu = false; onAddExercise() },
                 )
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.session_finish)) },
                     leadingIcon = { SymbolIcon(Symbol.CheckCircle, null) },

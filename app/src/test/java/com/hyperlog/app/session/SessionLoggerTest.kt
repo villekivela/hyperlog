@@ -179,6 +179,24 @@ class SessionLoggerTest {
     }
 
     @Test
+    fun aFinishedSessionCanBeResumedAsItWas() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        val summary = logger.finish()!!
+
+        now += 60_000
+        logger.resume(summary.sessionId)
+
+        val session = logger.session
+        assertEquals(listOf(LoggedSet(60.0, 12, 0, 1)), session.current!!.sets)
+        assertEquals("60", session.entry!!.weight)
+        // It runs again, so finishing it later gives a new summary.
+        assertEquals(1, logger.finish()!!.exercises.single().sets.size)
+    }
+
+    @Test
     fun finishingWithNothingLoggedDiscardsTheSession() = runTest {
         val logger = logger()
         logger.start()

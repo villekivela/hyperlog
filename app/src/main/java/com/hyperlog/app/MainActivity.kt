@@ -59,7 +59,11 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel) {
     val running = session
     val finished = summary
     when {
-        finished != null -> SessionDoneScreen(finished, onClose = { sessions.dismissSummary(); left = false })
+        finished != null -> SessionDoneScreen(
+            finished,
+            onResume = { sessions.resumeFinished(); left = false },
+            onClose = { sessions.dismissSummary(); left = false },
+        )
         running != null && !left -> SessionScreen(
             running,
             exercises,

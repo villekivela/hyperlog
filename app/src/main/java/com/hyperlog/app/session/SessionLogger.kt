@@ -139,7 +139,18 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         }
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
         _state.value = null
-        SessionSummary(session.startedAt, now, logged.map { ExerciseSummary(it.exercise.name, it.sets) })
+        SessionSummary(session.id, session.startedAt, now, logged.map { ExerciseSummary(it.exercise.name, it.sets) })
+    }
+
+    /**
+     * Runs a finished session again, as it was when it finished, so finishing by mistake costs
+     * nothing. Does nothing while another session runs.
+     */
+    suspend fun resume(sessionId: Long) = locked {
+        if (_state.value != null) return@locked
+        val row = dao.session(sessionId) ?: return@locked
+        dao.updateSession(row.copy(finishedAt = null))
+        reload()
     }
 
     private suspend fun editEntry(change: (SetEntry, com.hyperlog.app.domain.WeightLadder) -> SetEntry) = locked {
