@@ -46,6 +46,8 @@ data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: St
         Follow,
         /** A back-off from its top set. */
         Backoff,
+        /** No history yet: the starting weight from the old app. */
+        Starting,
     }
 
     val estimated: Boolean get() = kind == Kind.Estimated

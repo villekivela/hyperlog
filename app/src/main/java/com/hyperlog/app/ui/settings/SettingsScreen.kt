@@ -21,7 +21,13 @@ import com.hyperlog.app.R
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
-/** Settings: gyms and their equipment, and the exercise library. Backups join in a later ticket. */
+/** Where the starting-weights import stands: how many exercises have one, and whether the last file was rejected. */
+data class StartingWeightsStatus(val count: Int, val invalid: Boolean)
+
+/**
+ * Settings: gyms and their equipment, the exercise library, and the one-off import of starting
+ * weights from the old app. Backups join in a later ticket.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -30,6 +36,8 @@ fun SettingsScreen(
     onGyms: () -> Unit,
     onLibrary: () -> Unit,
     onBack: () -> Unit,
+    startingWeights: StartingWeightsStatus,
+    onImportStartingWeights: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBack)
@@ -64,6 +72,18 @@ fun SettingsScreen(
                 trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 // ListItem's 16 dp inset plus this lines its text up with the 24 dp margin's symbol column.
                 modifier = Modifier.clickable(onClick = onLibrary).padding(horizontal = 8.dp),
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_starting_weights)) },
+                supportingContent = {
+                    when {
+                        startingWeights.invalid -> Text(stringResource(R.string.settings_starting_weights_invalid), color = MaterialTheme.colorScheme.error)
+                        startingWeights.count == 0 -> Text(stringResource(R.string.settings_starting_weights_none))
+                        else -> Text(pluralStringResource(R.plurals.settings_starting_weights_count, startingWeights.count, startingWeights.count))
+                    }
+                },
+                leadingContent = { SymbolIcon(Symbol.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                modifier = Modifier.clickable(onClick = onImportStartingWeights).padding(horizontal = 8.dp),
             )
         }
     }

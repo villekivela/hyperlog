@@ -176,4 +176,22 @@ class MigrationTest {
         assertEquals(false, db.sessions().sets(1).single().kept)
         db.close()
     }
+
+    @Test
+    fun version6GainsEmptyStartingWeights() = runTest {
+        val file = context.getDatabasePath("migration-test-6.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(6, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('leg_extension', 'Leg Extension', 'Machine')")
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+        }
+
+        // Room checks the migrated tables against the v7 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(0, db.startingWeights().observeCount().first())
+        assertEquals(2000L, db.sessions().session(1)!!.finishedAt)
+        db.close()
+    }
 }

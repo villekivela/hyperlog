@@ -161,6 +161,26 @@ Screens: `suggestion-up.png`, `suggestion-cable-jump.png` (5.7 kg held, 13 reps)
 `suggestion-hold.png`, `suggestion-down.png`, `suggestion-estimated.png` (Day C's 6–8 from the
 estimate), `kept-typo-prefill.png` (a kept 57 doesn't become the next set's 57).
 
+**Starting weights (#9).** A free weight with no history yet gets the why-line with `history`,
+tertiary like an estimate: "From old app: 20 kg × 10 @ 2 RIR, 3 Sep", with "→ 22.5 kg × 8" appended when
+the ladder or today's range changed the set. A machine or cable with no history on the machine
+picked gets the same row in onSurfaceVariant, two lines: "From old app, another machine" and the set
+(tabular figures, never broken inside "@ 2 RIR"). Its weight cell stays empty: the hint informs the
+pick on the ladder, it doesn't prefill it. No screenshots are kept: they would show the owner's old
+weights.
+
+```
+ Chest-Supported Machine Row               ⋮
+ ⟲ From old app, another machine
+   45 kg × 12 @ 1 RIR, 3 Sep
+       Target          kg   Reps  RIR
+ 1     8–10 (1)      [   ]   10    ●1
+```
+
+Settings has a row under the exercise library: `history` "Starting weights from the old app",
+supporting "From an old Hyperlog backup, no history", then "42 exercises · tap to import again", or
+"That file isn't a Hyperlog backup" in error colour.
+
 ## Interaction rules
 
 - Start session on a program day asks for the gym as before, then starts that day.

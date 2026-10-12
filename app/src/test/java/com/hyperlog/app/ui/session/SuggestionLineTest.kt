@@ -35,11 +35,12 @@ class SuggestionLineTest {
 
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"))
 
-    private fun show(suggestion: Suggestion?, sets: List<LoggedSet> = emptyList()) {
+    private fun show(suggestion: Suggestion?, sets: List<LoggedSet> = emptyList(), hint: String? = null) {
         val plan = List(2) { PlannedSet(RepRange(8, 10), 2, 120) }
         val exercise = SessionExercise(
             id = 1, exercise = bench, sets = sets, lastTime = listOf(LoggedSet(60.0, 10, 0, 2), LoggedSet(60.0, 10, 0, 2)),
             ladder = DefaultPlates.ladder(), ladderKnown = true, plan = plan, suggestion = suggestion,
+            startingHint = hint,
         )
         val session = ActiveSession(
             id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1,
@@ -60,6 +61,20 @@ class SuggestionLineTest {
     fun anEstimatedWeightSaysToCheckItOnTheFirstSet() {
         show(Suggestion(70.0, 6, Suggestion.Kind.Estimated, "Estimated from 60 kg × 9 @ 2, check on the first set"))
         compose.onNodeWithText("Estimated from 60 kg × 9 @ 2, check on the first set").assertIsDisplayed()
+    }
+
+    @Test
+    fun aStartingWeightSaysItComesFromTheOldApp() {
+        show(Suggestion(60.0, 8, Suggestion.Kind.Starting, "From old app: 60 kg × 8 @ 2 RIR, 12 Sep"))
+        compose.onNodeWithText("From old app: 60 kg × 8 @ 2 RIR, 12 Sep").assertIsDisplayed()
+    }
+
+    @Test
+    fun aMachineShowsTheOldWeightAsAHint() {
+        show(null, hint = "45 kg × 12 @ 1 RIR, 12 Sep")
+        compose.onNodeWithText("From old app, another machine").assertIsDisplayed()
+        compose.onNodeWithText("45 kg × 12 @ 1 RIR, 12 Sep").assertIsDisplayed()
+        compose.onNodeWithTag(StartingHintTag).assertIsDisplayed()
     }
 
     @Test

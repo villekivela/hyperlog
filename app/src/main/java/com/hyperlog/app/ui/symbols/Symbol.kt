@@ -31,6 +31,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     FileOpen(R.drawable.symbol_file_open),
     FitnessCenter(R.drawable.symbol_fitness_center),
     Flag(R.drawable.symbol_flag),
+    History(R.drawable.symbol_history),
     Keyboard(R.drawable.symbol_keyboard),
     KeyboardHide(R.drawable.symbol_keyboard_hide),
     List(R.drawable.symbol_list),

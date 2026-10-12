@@ -470,6 +470,26 @@ in the backup become a one-off starting point, used only until the exercise has 
   chest-supported DB rows (`chest_supported_db_row`, `incline_chest_supported_db_row`), DB Romanian
   deadlift. All other dumbbell weights are per dumbbell.
 
+How the import works:
+
+- **Settings → Starting weights from the old app** picks a backup file (format 7.0, `type:
+  full_backup`). Importing again replaces the earlier import; a file that isn't a backup says so and
+  leaves the earlier import in place. Nothing else is read: sessions, programs and settings stay
+  out.
+- The starting set is the **top work set** (work or AMRAP, heaviest weight, most reps at it) of the
+  latest old session of the exercise. Sets over 12 reps are passed over when the session had any
+  others, since their RIR is unreliable for the estimate. Old ids go through the library's
+  `merged` table first. RIR is 10 − RPE; a set with no RPE shows no RIR and counts as 0 in reserve.
+- Machine weights the old app logged as added to a base (`machineWeightMode: added`) include the
+  old app's base for that exercise.
+- In a program session the old set is **worked into today's prescription** through its e1RM: the
+  old reps kept inside the target range, the weight rounded down to a rung. When that changes the
+  set, the label shows both: "From old app: 60 kg × 12 @ 2 RIR, 12 Sep → 65 kg × 8". An ad-hoc
+  exercise is prefilled with the old set itself, on the ladder.
+- The label sits in the suggestion line, tertiary like an estimate (check it on the first set).
+  A machine's hint reads "From old app, another machine" with the set on its own line, and the
+  weight stays empty. Both go once the exercise (for machines, on that machine) has a logged set.
+
 The **exercise library** is seeded from the legacy library (189 exercises, 150 with technique
 videos), cleaned up: duplicates merged (e.g. `db_incline_press` / `incline_db_press`), equipment types
 fixed, and a grip-demand tag (`high` / `low` / `none`) added for the coach's swap rules. The result

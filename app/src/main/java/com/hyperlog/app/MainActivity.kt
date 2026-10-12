@@ -30,6 +30,7 @@ import com.hyperlog.app.ui.session.SessionDoneScreen
 import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.session.SessionViewModel
 import com.hyperlog.app.ui.settings.SettingsScreen
+import com.hyperlog.app.ui.settings.StartingWeightsViewModel
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.today.TodayScreen
 
@@ -38,12 +39,13 @@ class MainActivity : ComponentActivity() {
     private val library: LibraryViewModel by viewModels()
     private val gyms: GymsViewModel by viewModels()
     private val programs: ProgramViewModel by viewModels()
+    private val startingWeights: StartingWeightsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights) }
         }
     }
 }
@@ -64,7 +66,13 @@ private const val PlateLadder = -2L
  * and goes to Today.
  */
 @Composable
-private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel: GymsViewModel, programModel: ProgramViewModel) {
+private fun App(
+    sessions: SessionViewModel,
+    library: LibraryViewModel,
+    gymsModel: GymsViewModel,
+    programModel: ProgramViewModel,
+    startingWeightsModel: StartingWeightsViewModel,
+) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
     val summary by sessions.summary.collectAsStateWithLifecycle()
@@ -81,6 +89,10 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
     val importErrors by programModel.errors.collectAsStateWithLifecycle()
     val pickProgram = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(programModel::import)
+    }
+    val startingWeights by startingWeightsModel.status.collectAsStateWithLifecycle()
+    val pickBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(startingWeightsModel::import)
     }
     var gymId by rememberSaveable { mutableStateOf<Long?>(null) }
     /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
@@ -186,6 +198,8 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
             onGyms = { screen = Screen.Gyms; gymId = null; ladder = null },
             onLibrary = { screen = Screen.Library },
             onBack = { screen = Screen.Today },
+            startingWeights = startingWeights,
+            onImportStartingWeights = { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
         )
         else -> TodayScreen(
             onSettings = { screen = Screen.Settings },

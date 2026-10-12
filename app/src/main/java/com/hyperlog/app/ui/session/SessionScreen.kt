@@ -55,6 +55,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
@@ -173,6 +174,7 @@ fun SessionScreen(
                         current.suggestion?.takeIf { it.why != null && !current.done }?.let { s ->
                             SuggestionLine(s, from = current.sets.lastOrNull()?.weightKg)
                         }
+                        current.startingHint?.let { StartingHint(it) }
                         SetTable(current, session.entry, session.weightCheck != null, actions, Modifier.weight(1f))
                     }
                     val index = session.exercises.indexOf(current)
@@ -391,16 +393,47 @@ private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
         Suggestion.Kind.Adjust -> if (up) Symbol.TrendingUp to cs.primary else Symbol.TrendingDown to muted
         Suggestion.Kind.Estimated -> Symbol.Calculate to cs.tertiary
         Suggestion.Kind.Stuck -> Symbol.Block to cs.tertiary
+        // From another app's log, so checked on the first set like an estimate.
+        Suggestion.Kind.Starting -> Symbol.History to cs.tertiary
         else -> Symbol.TrendingFlat to muted
     }
-    val text = if (suggestion.estimated || suggestion.kind == Suggestion.Kind.Stuck) cs.tertiary else muted
+    val checkIt = suggestion.estimated || suggestion.kind == Suggestion.Kind.Stuck || suggestion.kind == Suggestion.Kind.Starting
+    WhyLine(symbol, tint, suggestion.why.orEmpty(), if (checkIt) cs.tertiary else muted, SuggestionTag)
+}
+
+internal const val StartingHintTag = "starting-hint"
+
+/**
+ * A machine's weight from the old app (SPEC, Fresh start): muted and not prefilled, since the old
+ * log doesn't say which machine it was. It sits where a suggestion would, above the sets.
+ */
+@Composable
+private fun StartingHint(set: String) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
-        Modifier.fillMaxWidth().testTag(SuggestionTag).padding(start = Margin, end = Margin, bottom = 8.dp),
+        Modifier.fillMaxWidth().testTag(StartingHintTag).padding(start = Margin, end = Margin, bottom = 8.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(Symbol.History, null, Modifier.size(18.dp), tint = muted) }
+        Spacer(Modifier.width(8.dp))
+        // The set on a line of its own, so it never breaks inside "@ 2 RIR".
+        Column {
+            Text(stringResource(R.string.starting_hint), style = MaterialTheme.typography.bodyMedium, color = muted)
+            Text(set, style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** One line under the name, led by a symbol in the 20 dp column the set numbers use. */
+@Composable
+private fun WhyLine(symbol: Symbol, tint: Color, text: String, color: Color, tag: String) {
+    Row(
+        Modifier.fillMaxWidth().testTag(tag).padding(start = Margin, end = Margin, bottom = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(symbol, null, Modifier.size(18.dp), tint = tint) }
         Spacer(Modifier.width(8.dp))
-        Text(suggestion.why.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = color, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

@@ -25,6 +25,9 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.ladderFor
 import com.hyperlog.app.library.toExercise
+import com.hyperlog.app.legacy.StartingWeights
+import com.hyperlog.app.legacy.text
+import com.hyperlog.app.legacy.suggestion
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
@@ -49,6 +52,7 @@ class SessionLogger(
 ) {
     private val dao = db.sessions()
     private val gyms = Gyms(db)
+    private val startingWeights = StartingWeights(db)
     private val mutex = Mutex()
     private val _state = MutableStateFlow<ActiveSession?>(null)
     /** When ✓ last logged a set, to swallow a stutter tap right after it. */
@@ -318,13 +322,20 @@ class SessionLogger(
             val slot = day?.slot(se.slotId)
             val plan = slot?.setsFor(se.exerciseId)
             val sets = dao.sets(se.id).map { it.toLoggedSet() }
-            val suggestion = if (plan == null || needsMachine || se.id != row.currentSessionExerciseId) null
-            else Progression.suggest(
-                plan,
-                Performance(workSets(sets, plan), deload = day.deload),
-                history(se.exerciseId, row.id, perMachine, machine?.id),
-                ladder.ladder,
-            )
+            val onScreen = se.id == row.currentSessionExerciseId && !needsMachine
+            // The old app's weight stands in until the exercise (on this machine) has its own history.
+            val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
+            val start = starting?.takeIf { !perMachine }
+            val suggestion = when {
+                !onScreen -> null
+                plan == null -> start?.suggestion(null, ladder.ladder)
+                else -> Progression.suggest(
+                    plan,
+                    Performance(workSets(sets, plan), deload = day.deload),
+                    history(se.exerciseId, row.id, perMachine, machine?.id),
+                    ladder.ladder,
+                ) ?: start?.takeIf { sets.isEmpty() }?.suggestion(plan.first(), ladder.ladder)
+            }
             SessionExercise(
                 id = se.id,
                 exercise = exercise,
@@ -337,6 +348,7 @@ class SessionLogger(
                 slot = slot,
                 plan = plan,
                 suggestion = suggestion,
+                startingHint = starting?.takeIf { perMachine }?.text(),
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
@@ -345,7 +357,9 @@ class SessionLogger(
         if (entry == null && current != null && !current.needsMachine && !current.done) {
             val plan = current.plan
             entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
-            else SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
+            else current.suggestion?.let { s ->
+                SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
+            } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
             dao.updateSession(row.copy(entry = entry.toColumns()))
         }
         _state.value = ActiveSession(

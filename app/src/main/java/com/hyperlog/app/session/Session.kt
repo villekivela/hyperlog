@@ -35,6 +35,12 @@ data class SessionExercise(
     val plan: List<PlannedSet>? = null,
     /** What progression suggests for the active row of a program exercise on screen, with why. */
     val suggestion: Suggestion? = null,
+    /**
+     * A machine or cable with no history on this machine yet, before its first set: the old
+     * app's weight (`45 kg × 12 @ 1 RIR, 12 Sep`), shown as a hint only while a weight is picked
+     * on the ladder.
+     */
+    val startingHint: String? = null,
 ) {
     /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = plan != null && sets.size >= plan.size

@@ -110,6 +110,14 @@
         <item quantity="one">%1$d gym · dumbbells and plates</item>
         <item quantity="other">%1$d gyms · dumbbells and plates</item>
     </plurals>
+    <string name="starting_hint">From old app, another machine</string>
+    <string name="settings_starting_weights">Starting weights from the old app</string>
+    <string name="settings_starting_weights_none">From an old Hyperlog backup, no history</string>
+    <plurals name="settings_starting_weights_count">
+        <item quantity="one">%1$d exercise · tap to import again</item>
+        <item quantity="other">%1$d exercises · tap to import again</item>
+    </plurals>
+    <string name="settings_starting_weights_invalid">That file isn\'t a Hyperlog backup</string>
     <string name="settings_gyms_none">No gyms yet · dumbbells and plates</string>
     <string name="gyms">Gyms and equipment</string>
     <string name="gym_add">Add gym</string>
