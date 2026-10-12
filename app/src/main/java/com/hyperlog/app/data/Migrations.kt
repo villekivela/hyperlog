@@ -4,7 +4,34 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8)
+
+/**
+ * v8: intensity techniques (#10). Logged sets gain their technique, their drops, mini-sets and
+ * holds, and a right side's reps; a session gains its open set, the myo breathing pause and the
+ * hold timer, and its exercises' sets can have their technique changed.
+ */
+object Migration7To8 : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE logged_set ADD COLUMN technique TEXT")
+        db.execSQL("ALTER TABLE logged_set ADD COLUMN right_reps INTEGER")
+        db.execSQL("ALTER TABLE session ADD COLUMN open_set_id INTEGER")
+        db.execSQL("ALTER TABLE session ADD COLUMN breathing INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE session ADD COLUMN hold_started_at INTEGER")
+        db.execSQL("ALTER TABLE session ADD COLUMN entry_right TEXT")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `set_extension` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `logged_set_id` INTEGER NOT NULL, " +
+                "`position` INTEGER NOT NULL, `kind` TEXT NOT NULL, `weight_kg` REAL NOT NULL, `reps` INTEGER NOT NULL, " +
+                "FOREIGN KEY(`logged_set_id`) REFERENCES `logged_set`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_set_extension_logged_set_id` ON `set_extension` (`logged_set_id`)")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `set_technique` (`session_exercise_id` INTEGER NOT NULL, `set_index` INTEGER NOT NULL, " +
+                "`technique` TEXT, PRIMARY KEY(`session_exercise_id`, `set_index`), " +
+                "FOREIGN KEY(`session_exercise_id`) REFERENCES `session_exercise`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+    }
+}
 
 /** v7: starting weights from the old app (#9), one per exercise. */
 object Migration6To7 : Migration(6, 7) {

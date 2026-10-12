@@ -6,6 +6,12 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
 import com.hyperlog.app.data.SessionEntity
 import com.hyperlog.app.data.SessionExerciseEntity
+import com.hyperlog.app.data.SetExtensionEntity
+import com.hyperlog.app.data.SetTechniqueEntity
+import com.hyperlog.app.domain.Extension
+import com.hyperlog.app.program.Technique
+import com.hyperlog.app.program.TechniqueJson
+import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
@@ -165,14 +171,29 @@ class SessionLogger(
     suspend fun switchTo(sessionExerciseId: Long) = locked {
         val session = _state.value ?: return@locked
         if (session.currentId == sessionExerciseId) return@locked
-        dao.updateSession(dao.session(session.id)!!.copy(currentSessionExerciseId = sessionExerciseId, entry = null))
+        val current = session.current
+        var row = dao.session(session.id)!!
+        // Leaving an open set closes it, so its rest runs while the other exercise comes up.
+        if (session.openSetId != null && current != null) row = closed(row, session, current, current.sets.size - 1, clock())
+        dao.updateSession(row.copy(currentSessionExerciseId = sessionExerciseId, entry = null))
         reload()
     }
 
     suspend fun press(key: PadKey) = editEntry { entry, ladder -> entry.press(key, ladder) }
     suspend fun selectRir(value: Int) = editEntry { entry, _ -> entry.selectRir(value) }
-    suspend fun focus(field: Field) = editEntry { entry, _ -> entry.focus(field) }
+
+    /** A myo mini-set and a hold are done at the set's weight, so their weight can't be focused. */
+    suspend fun focus(field: Field) = editEntry { entry, _ ->
+        val locked = _state.value?.followUp.let { it is FollowUp.MiniSet || it is FollowUp.Hold }
+        if (field == Field.Weight && locked) entry else entry.focus(field)
+    }
     suspend fun partialMode(on: Boolean) = editEntry { entry, _ -> entry.partialMode(on) }
+
+    /** Splits the active set of a unilateral exercise into left and right, or back to one number. */
+    suspend fun split(on: Boolean) = editEntry { entry, _ ->
+        val session = _state.value
+        if (session?.current?.exercise?.unilateral == true && session.followUp == null) entry.split(on) else entry
+    }
 
     /**
      * A rung picked from the pad's weight strip, or from a weight check's offers. The field stays,
@@ -187,12 +208,25 @@ class SessionLogger(
     suspend fun done() = locked {
         val session = _state.value ?: return@locked
         val current = session.current ?: return@locked
-        val entry = session.entry ?: return@locked
+        var entry = session.entry ?: return@locked
+        val followUp = session.followUp
+        // ✓ during a hold stops its timer and logs the seconds held.
+        session.holdStartedAt?.let { entry = entry.copy(full = heldSeconds(it).toString()) }
+        if (followUp != null && entry.field == Field.Reps) {
+            logFollowUp(session, current, followUp, entry)
+            return@locked
+        }
         when (val result = entry.done()) {
             is SetEntry.Done.Moved -> saveEntry(session, result.entry)
             is SetEntry.Done.Log -> {
                 val now = clock()
                 if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
+                val technique = current.techniqueAt(current.sets.size)
+                // Lengthened partials: the first ✓ moves to the partials, the second logs.
+                if (technique is Technique.LengthenedPartials && !entry.partialMode && entry.partial.isEmpty()) {
+                    saveEntry(session, entry.partialMode(true).copy(partial = technique.partials?.toString().orEmpty()))
+                    return@locked
+                }
                 val check = WeightCheck.of(result.set.weightKg, current.reference(), current.ladder, current.ladderKnown)
                 val raised = checked
                 if (check != null) {
@@ -206,25 +240,113 @@ class SessionLogger(
                 }
                 checked = null
                 lastLoggedAt = now
-                val set = result.set.copy(kept = check != null)
-                val rest = current.plan?.getOrNull(current.sets.size)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
-                // With the exercise's planned sets done, the first exercise with sets left comes up.
-                val finishesExercise = current.plan != null && current.sets.size + 1 >= current.plan.size
-                val next = if (finishesExercise) session.exercises.firstOrNull { it.id != current.id && it.plan != null && !it.done } else null
+                val set = result.set.copy(kept = check != null, technique = technique)
                 db.withTransaction {
-                    dao.insertSet(set.toEntity(current.id, current.sets.size, now))
-                    // The next set's entry is worked out again from what was just logged.
-                    dao.updateSession(
-                        dao.session(session.id)!!.copy(
-                            entry = null, restEndsAt = now + rest, restTotalMs = rest,
-                            currentSessionExerciseId = next?.id ?: current.id,
-                        ),
-                    )
+                    val id = dao.insertSet(set.toEntity(current.id, current.sets.size, now))
+                    val row = dao.session(session.id)!!.copy(entry = null)
+                    // A drop set, myo-reps or iso hold stays open for what follows it, with no rest
+                    // (a breathing pause before a mini-set); any other set closes at once.
+                    when (set.followUp()) {
+                        null -> dao.updateSession(closed(row, session, current, current.sets.size, now))
+                        is FollowUp.MiniSet -> dao.updateSession(
+                            row.copy(openSetId = id, restEndsAt = now + BREATHING_MS, restTotalMs = BREATHING_MS, breathing = true),
+                        )
+                        else -> dao.updateSession(row.copy(openSetId = id, restEndsAt = null, breathing = false))
+                    }
                 }
                 reload()
             }
             SetEntry.Done.Nothing -> Unit
         }
+    }
+
+    /** Logs the open set's next drop, mini-set or hold; the set closes once its technique has none left. */
+    private suspend fun logFollowUp(session: ActiveSession, current: SessionExercise, followUp: FollowUp, entry: SetEntry) {
+        val extension = entry.toExtension(followUp.kind) ?: return
+        val openId = session.openSetId ?: return
+        val now = clock()
+        if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return
+        lastLoggedAt = now
+        val set = current.sets.last()
+        val updated = set.copy(extensions = set.extensions + extension)
+        db.withTransaction {
+            dao.insertExtension(
+                SetExtensionEntity(loggedSetId = openId, position = set.extensions.size, kind = extension.kind.name, weightKg = extension.weightKg, reps = extension.reps),
+            )
+            val row = dao.session(session.id)!!.copy(entry = null, holdStartedAt = null)
+            dao.updateSession(
+                when (updated.followUp()) {
+                    null -> closed(row, session, current, current.sets.size - 1, now)
+                    is FollowUp.MiniSet -> row.copy(restEndsAt = now + BREATHING_MS, restTotalMs = BREATHING_MS, breathing = true)
+                    else -> row
+                },
+            )
+        }
+        reload()
+    }
+
+    /** **Finish set** on the pad: closes the open set before its technique runs out, and rest starts. */
+    suspend fun finishSet() = locked {
+        val session = _state.value ?: return@locked
+        val current = session.current ?: return@locked
+        if (session.openSetId == null) return@locked
+        dao.updateSession(closed(dao.session(session.id)!!.copy(entry = null, holdStartedAt = null), session, current, current.sets.size - 1, clock()))
+        reload()
+    }
+
+    /** Starts the iso hold's timer; ✓ or [stopHold] records the seconds held. */
+    suspend fun startHold() = locked {
+        val session = _state.value ?: return@locked
+        if (session.followUp !is FollowUp.Hold || session.holdStartedAt != null) return@locked
+        val now = clock()
+        _state.value = session.copy(holdStartedAt = now)
+        dao.updateSession(dao.session(session.id)!!.copy(holdStartedAt = now))
+    }
+
+    /** Stops the hold's timer and puts the seconds held in the entry, to log with ✓. */
+    suspend fun stopHold() = locked {
+        val session = _state.value ?: return@locked
+        val started = session.holdStartedAt ?: return@locked
+        val entry = session.entry ?: return@locked
+        val next = entry.copy(full = heldSeconds(started).toString(), fresh = true)
+        _state.value = session.copy(holdStartedAt = null, entry = next)
+        dao.updateSession(dao.session(session.id)!!.copy(holdStartedAt = null, entry = next.toColumns()))
+    }
+
+    private fun heldSeconds(startedAt: Long) = ((clock() - startedAt) / 1000).toInt().coerceAtLeast(1)
+
+    /**
+     * [row] with set [setIndex] of [current] closed: no set open, the set's rest running, and, with
+     * the exercise's planned sets done, the first exercise with sets left on screen.
+     */
+    private fun closed(row: SessionEntity, session: ActiveSession, current: SessionExercise, setIndex: Int, now: Long): SessionEntity {
+        val rest = current.plan?.getOrNull(setIndex)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
+        val finishesExercise = current.plan != null && setIndex + 1 >= current.plan.size
+        val next = if (finishesExercise) session.exercises.firstOrNull { it.id != current.id && it.plan != null && !it.done } else null
+        return row.copy(
+            openSetId = null, breathing = false, holdStartedAt = null,
+            restEndsAt = now + rest, restTotalMs = rest,
+            currentSessionExerciseId = next?.id ?: current.id,
+        )
+    }
+
+    /**
+     * Adds, changes or (with null) takes off the technique of set [setIndex] of the exercise on
+     * screen, for this session. Logged sets keep what they were done with.
+     */
+    suspend fun setTechnique(setIndex: Int, technique: Technique?) = locked {
+        val session = _state.value ?: return@locked
+        val current = session.current ?: return@locked
+        if (setIndex < current.sets.size) return@locked
+        db.withTransaction {
+            dao.setTechnique(SetTechniqueEntity(current.id, setIndex, technique?.let(TechniqueJson::encode)))
+            // A set taken to failure has nothing in reserve.
+            val entry = session.entry
+            if (setIndex == current.sets.size && technique == Technique.Failure && entry != null) {
+                dao.updateSession(dao.session(session.id)!!.copy(entry = entry.selectRir(0).toColumns()))
+            }
+        }
+        reload()
     }
 
     suspend fun setPadVisible(visible: Boolean) = locked {
@@ -318,10 +440,10 @@ class SessionLogger(
                 needsMachine -> emptyList()
                 perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
                 else -> dao.lastTime(se.exerciseId, row.id)
-            }
+            }.map { loggedSet(it) }
             val slot = day?.slot(se.slotId)
             val plan = slot?.setsFor(se.exerciseId)
-            val sets = dao.sets(se.id).map { it.toLoggedSet() }
+            val sets = dao.sets(se.id).map { loggedSet(it) }
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
@@ -340,7 +462,7 @@ class SessionLogger(
                 id = se.id,
                 exercise = exercise,
                 sets = sets,
-                lastTime = lastTime.map { it.toLoggedSet() },
+                lastTime = lastTime,
                 ladder = ladder.ladder,
                 ladderKnown = ladder.known,
                 machine = machine,
@@ -349,18 +471,30 @@ class SessionLogger(
                 plan = plan,
                 suggestion = suggestion,
                 startingHint = starting?.takeIf { perMachine }?.text(),
+                techniques = dao.techniques(se.id).associate { it.setIndex to it.technique?.let(TechniqueJson::decode) },
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
+        val openSet = if (row.openSetId != null) current?.sets?.lastOrNull() else null
+        val followUp = openSet?.followUp()
         var entry = row.entry?.toEntry()
-        if (current?.needsMachine == true || current?.done == true) entry = null
+        if (followUp != null && current != null) {
+            if (entry == null) {
+                entry = followUpEntry(followUp, openSet, current.lastTime.getOrNull(current.sets.size - 1), current.ladder)
+                dao.updateSession(row.copy(entry = entry.toColumns()))
+            }
+        } else if (current?.needsMachine == true || current?.done == true) {
+            entry = null
+        }
         if (entry == null && current != null && !current.needsMachine && !current.done) {
             val plan = current.plan
             entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
             else current.suggestion?.let { s ->
                 SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
             } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
-            dao.updateSession(row.copy(entry = entry.toColumns()))
+            // A split set is followed by a split set, starting from its right side's reps.
+            current.sets.lastOrNull()?.rightReps?.let { entry = entry!!.copy(right = it.toString()) }
+            dao.updateSession(row.copy(entry = entry!!.toColumns()))
         }
         _state.value = ActiveSession(
             id = row.id,
@@ -373,7 +507,33 @@ class SessionLogger(
             restTotalMs = row.restTotalMs,
             gym = gym,
             day = day,
+            followUp = followUp,
+            breathing = row.breathing,
+            holdStartedAt = row.holdStartedAt,
+            openSetId = row.openSetId.takeIf { followUp != null },
         )
+    }
+
+    private suspend fun loggedSet(row: LoggedSetEntity) = row.toLoggedSet(dao.extensions(row.id).map { it.toExtension() })
+
+    /**
+     * The entry for an open set's next drop, mini-set or hold. A drop is the weight before it
+     * minus the technique's percent, rounded down to a rung, with last time's reps for that drop
+     * (else [DEFAULT_DROP_REPS]); a mini-set and a hold are at the set's weight.
+     */
+    private fun followUpEntry(followUp: FollowUp, set: LoggedSet, lastTime: LoggedSet?, ladder: WeightLadder): SetEntry {
+        val (kg, reps) = when (followUp) {
+            is FollowUp.Drop -> {
+                val technique = set.technique as Technique.Dropset
+                val before = set.extensions.lastOrNull()?.weightKg ?: set.weightKg
+                val kg = backoffWeight(before, technique.percent, ladder)
+                val last = lastTime?.extensions?.filter { it.kind == Extension.Kind.Drop }?.getOrNull(followUp.index)?.reps
+                kg to (last ?: DEFAULT_DROP_REPS)
+            }
+            is FollowUp.MiniSet -> set.weightKg to followUp.target
+            is FollowUp.Hold -> set.weightKg to followUp.seconds
+        }
+        return SetEntry(formatKg(kg), reps.toString(), "", null, Field.Reps, partialMode = false, fresh = true)
     }
 
     /**
@@ -385,7 +545,7 @@ class SessionLogger(
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
             else programs.program(past.programId)?.plannedDay(Position(past.week, past.dayIndex))
             val plan = day?.slot(past.slotId)?.setsFor(exerciseId)
-            Performance(workSets(dao.sets(past.id).map { it.toLoggedSet() }, plan), deload = day?.deload == true)
+            Performance(workSets(dao.sets(past.id).map { loggedSet(it) }, plan), deload = day?.deload == true)
         }
 
     private suspend fun <T> locked(block: suspend () -> T): T = mutex.withLock { block() }
@@ -410,20 +570,29 @@ private fun SessionExercise.reference(): Reference? =
     sets.countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
         ?: lastTime.countingSets().firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
 
-/** [sets] as progression reads them: with their prescriptions, and whether each counts. */
+/**
+ * [sets] as progression reads them: the main set only (the weaker side of a split set, and no
+ * partials, drops or mini-sets), with its prescription and whether it counts.
+ */
 private fun workSets(sets: List<LoggedSet>, plan: List<PlannedSet>?): List<WorkSet> {
     val counting = sets.counting()
-    return sets.mapIndexed { i, set -> WorkSet(set, plan?.getOrNull(i), counting[i]) }
+    return sets.mapIndexed { i, set ->
+        WorkSet(LoggedSet(set.weightKg, set.progressionReps, 0, set.rir, set.kept), plan?.getOrNull(i), counting[i])
+    }
 }
 
 private fun LoggedSet.toEntity(sessionExerciseId: Long, position: Int, loggedAt: Long) =
     LoggedSetEntity(
         sessionExerciseId = sessionExerciseId, position = position, weightKg = weightKg,
         fullReps = fullReps, partialReps = partialReps, rir = rir, loggedAt = loggedAt, kept = kept,
+        technique = technique?.let(TechniqueJson::encode), rightReps = rightReps,
     )
 
-private fun LoggedSetEntity.toLoggedSet() = LoggedSet(weightKg, fullReps, partialReps, rir, kept)
+private fun LoggedSetEntity.toLoggedSet(extensions: List<Extension>) =
+    LoggedSet(weightKg, fullReps, partialReps, rir, kept, technique?.let(TechniqueJson::decode), extensions, rightReps)
 
-private fun SetEntry.toColumns() = EntryColumns(weight, full, partial, rir, field.name, partialMode, fresh)
+private fun SetExtensionEntity.toExtension() = Extension(Extension.Kind.valueOf(kind), weightKg, reps)
 
-private fun EntryColumns.toEntry() = SetEntry(weight, full, partial, rir, Field.valueOf(field), partialMode, fresh)
+private fun SetEntry.toColumns() = EntryColumns(weight, full, partial, rir, field.name, partialMode, fresh, right)
+
+private fun EntryColumns.toEntry() = SetEntry(weight, full, partial, rir, Field.valueOf(field), partialMode, fresh, right)

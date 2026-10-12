@@ -194,4 +194,34 @@ class MigrationTest {
         assertEquals(2000L, db.sessions().session(1)!!.finishedAt)
         db.close()
     }
+
+    @Test
+    fun version7SetsKeepNoTechniqueAndNothingOpen() = runTest {
+        val file = context.getDatabasePath("migration-test-7.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(7, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('leg_extension', 'Leg Extension', 'Machine')")
+            db.execSQL("INSERT INTO session (id, started_at, rest_total_ms, pad_visible, entry_weight, entry_full, entry_partial, entry_field, entry_partial_mode, entry_fresh) VALUES (1, 1000, 0, 1, '60', '12', '', 'Reps', 0, 1)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'leg_extension', 0)")
+            db.execSQL(
+                "INSERT INTO logged_set (id, session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at) " +
+                    "VALUES (1, 1, 0, 60, 12, 0, 1, 1500)",
+            )
+        }
+
+        // Room checks the migrated tables against the v8 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val set = db.sessions().sets(1).single()
+        assertEquals(null, set.technique)
+        assertEquals(null, set.rightReps)
+        assertEquals(emptyList<SetExtensionEntity>(), db.sessions().extensions(1))
+        val session = db.sessions().session(1)!!
+        assertEquals(null, session.openSetId)
+        assertEquals(false, session.breathing)
+        assertEquals(null, session.entry!!.right)
+        assertEquals("60", session.entry!!.weight)
+        db.close()
+    }
 }

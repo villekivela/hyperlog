@@ -27,6 +27,29 @@ class SetEntryTest {
     }
 
     @Test
+    fun aSplitSetTakesTheLeftRepsThenTheRightThenLogsBoth() {
+        var entry = SetEntry.prefill(LoggedSet(20.0, 10, 0, 1)).split(true)
+        // Splitting starts the right side on the same reps as the left.
+        assertEquals("10", entry.right)
+        entry = entry.type(PadKey.Digit(9))
+        val moved = entry.done() as SetEntry.Done.Moved
+        assertEquals(Field.Right, moved.entry.field)
+        entry = moved.entry.type(PadKey.Digit(8))
+        assertEquals("8", entry.right)
+        assertEquals("9 / 8", entry.repsText)
+        assertEquals(SetEntry.Done.Log(LoggedSet(20.0, 9, 0, 1, rightReps = 8)), entry.done())
+        // Back to one number for both sides.
+        assertNull(entry.split(false).right)
+        assertEquals(Field.Reps, entry.split(false).field)
+    }
+
+    @Test
+    fun theWeakerSideOfASplitSetIsWhatProgressionReads() {
+        assertEquals(8, LoggedSet(20.0, 9, 0, 1, rightReps = 8).progressionReps)
+        assertEquals(9, LoggedSet(20.0, 9, 3, 1).progressionReps)
+    }
+
+    @Test
     fun weightThenRepsThenRirLogsTheSet() {
         var entry = SetEntry.prefill(null)
         assertEquals(Field.Weight, entry.field)

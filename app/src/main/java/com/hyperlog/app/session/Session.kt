@@ -10,6 +10,7 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.PlannedSlot
+import com.hyperlog.app.program.Technique
 import com.hyperlog.app.progression.Suggestion
 
 /** One exercise in a session, with what has been logged and what was done last time. */
@@ -41,9 +42,21 @@ data class SessionExercise(
      * on the ladder.
      */
     val startingHint: String? = null,
+    /** Techniques added to or changed on sets in this session, by set index; null takes it off. */
+    val techniques: Map<Int, Technique?> = emptyMap(),
 ) {
     /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = plan != null && sets.size >= plan.size
+
+    /**
+     * Set [index]'s technique: what a logged set was done with, else the session's change to it,
+     * else the program's.
+     */
+    fun techniqueAt(index: Int): Technique? = when {
+        index < sets.size -> sets[index].technique
+        index in techniques -> techniques[index]
+        else -> plan?.getOrNull(index)?.technique
+    }
 }
 
 /** The running session, as it is on screen. */
@@ -64,6 +77,14 @@ data class ActiveSession(
     val gym: Gym? = null,
     /** The program day this session trains; null for an ad-hoc session. */
     val day: PlannedDay? = null,
+    /** What comes next in the open set (the current exercise's last one); null when no set is open. */
+    val followUp: FollowUp? = null,
+    /** [restEndsAt] is a myo-reps breathing pause, not rest. */
+    val breathing: Boolean = false,
+    /** When the running iso hold started; null with no hold timer running. */
+    val holdStartedAt: Long? = null,
+    /** The open set's row, to add its drops, mini-sets or hold to. */
+    internal val openSetId: Long? = null,
 ) {
     val current: SessionExercise? get() = exercises.firstOrNull { it.id == currentId }
 }

@@ -54,6 +54,15 @@ data class SessionEntity(
     /** The program day trained: its week and its index in that week's block. */
     val week: Int? = null,
     @ColumnInfo(name = "day_index") val dayIndex: Int? = null,
+    /**
+     * The logged set whose drops, mini-sets or hold are being logged; null when no set is open.
+     * Rest waits until it closes.
+     */
+    @ColumnInfo(name = "open_set_id") val openSetId: Long? = null,
+    /** [restEndsAt] is a myo-reps breathing pause before a mini-set, not rest. */
+    @ColumnInfo(defaultValue = "0") val breathing: Boolean = false,
+    /** When the running iso hold started; null with no hold timer running. */
+    @ColumnInfo(name = "hold_started_at") val holdStartedAt: Long? = null,
 )
 
 data class EntryColumns(
@@ -65,6 +74,8 @@ data class EntryColumns(
     val field: String,
     @ColumnInfo(name = "partial_mode") val partialMode: Boolean,
     val fresh: Boolean,
+    /** The right side's reps of a split unilateral set; null when not split. */
+    val right: String? = null,
 )
 
 @Entity(
@@ -108,4 +119,39 @@ data class LoggedSetEntity(
     @ColumnInfo(name = "logged_at") val loggedAt: Long,
     /** Logged with a second ✓ past a weight check. */
     @ColumnInfo(defaultValue = "0") val kept: Boolean = false,
+    /** The intensity technique it was done with, as [com.hyperlog.app.program.TechniqueJson]. */
+    val technique: String? = null,
+    /** The right side's reps of a split unilateral set ([fullReps] are the left's). */
+    @ColumnInfo(name = "right_reps") val rightReps: Int? = null,
+)
+
+/** A drop, myo mini-set or iso hold of a logged set, in order. A hold's [reps] are its seconds. */
+@Entity(
+    tableName = "set_extension",
+    foreignKeys = [ForeignKey(LoggedSetEntity::class, ["id"], ["logged_set_id"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("logged_set_id")],
+)
+data class SetExtensionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "logged_set_id") val loggedSetId: Long,
+    val position: Int,
+    /** An [com.hyperlog.app.domain.Extension.Kind] name. */
+    val kind: String,
+    @ColumnInfo(name = "weight_kg") val weightKg: Double,
+    val reps: Int,
+)
+
+/**
+ * A technique added to or changed on a set during the session (set [setIndex] of the exercise).
+ * A null [technique] takes the program's technique off the set.
+ */
+@Entity(
+    tableName = "set_technique",
+    primaryKeys = ["session_exercise_id", "set_index"],
+    foreignKeys = [ForeignKey(SessionExerciseEntity::class, ["id"], ["session_exercise_id"], onDelete = ForeignKey.CASCADE)],
+)
+data class SetTechniqueEntity(
+    @ColumnInfo(name = "session_exercise_id") val sessionExerciseId: Long,
+    @ColumnInfo(name = "set_index") val setIndex: Int,
+    val technique: String?,
 )

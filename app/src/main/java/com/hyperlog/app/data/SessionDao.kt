@@ -3,6 +3,7 @@ package com.hyperlog.app.data
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
@@ -89,6 +90,18 @@ interface SessionDao {
         """,
     )
     suspend fun history(exerciseId: String, sessionId: Long, anyItem: Boolean, itemId: Long?, limit: Int): List<PastExercise>
+
+    @Insert
+    suspend fun insertExtension(extension: SetExtensionEntity): Long
+
+    @Query("SELECT * FROM set_extension WHERE logged_set_id = :loggedSetId ORDER BY position")
+    suspend fun extensions(loggedSetId: Long): List<SetExtensionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun setTechnique(technique: SetTechniqueEntity)
+
+    @Query("SELECT * FROM set_technique WHERE session_exercise_id = :sessionExerciseId")
+    suspend fun techniques(sessionExerciseId: Long): List<SetTechniqueEntity>
 
     @Query("UPDATE session_exercise SET equipment_item_id = :itemId WHERE id = :id")
     suspend fun setEquipmentItem(id: Long, itemId: Long?)

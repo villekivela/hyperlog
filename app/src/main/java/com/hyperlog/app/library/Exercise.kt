@@ -18,9 +18,17 @@ data class Exercise(
     val hidden: Boolean = false,
 ) {
 
+    /**
+     * Done one side at a time (SPEC, Unilateral exercises), so a set can be split into left and
+     * right. Read from the name, which carries it: `1-Arm`, `Single-Leg`, lunges, split squats, step-ups.
+     */
+    val unilateral: Boolean get() = UnilateralName.containsMatchIn(name)
+
     /** What the library list shows under the name: `Cable · Lats, Biceps`. */
     val summary: String get() = (listOf(equipment.label) + muscles).let { "${it.first()} · ${it.drop(1).joinToString(", ")}" }
 }
+
+private val UnilateralName = Regex("""\b(1|one|single)[- ](arm|leg)\b|\blunge|\bsplit squat|\bstep[- ]up""", RegexOption.IGNORE_CASE)
 
 /** The kind of equipment an exercise uses. [key] is its name in the library and program files. */
 enum class Equipment(val key: String, val label: String) {

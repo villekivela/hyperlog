@@ -14,6 +14,15 @@ fun backoffWeight(topKg: Double, percent: Int, ladder: WeightLadder): Double {
 }
 
 /**
+ * A drop set's drop weights (SPEC, Intensity techniques): each drop is the weight before it minus
+ * the technique's percent, rounded down to a rung (the lightest if none is below).
+ */
+fun dropWeights(setKg: Double, technique: Technique.Dropset, ladder: WeightLadder): List<Double> {
+    var kg = setKg
+    return List(technique.drops) { backoffWeight(kg, technique.percent, ladder).also { kg = it } }
+}
+
+/**
  * The pad's entry for the next set of [plan] after the [logged] ones: [suggestion]'s weight and
  * reps (progression works them out from history and the sets before), and the target's RIR, else
  * the set before's. With no suggestion (no history yet) the weight is empty, to type first, and
