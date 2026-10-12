@@ -18,6 +18,15 @@ class SetEntryTest {
     }
 
     @Test
+    fun plusOrMinusOnAnEmptyWeightStartsAtTheLightestRung() {
+        // An lb stack: 1.1, 3.4, 5.7 … Found on the phone: + from empty went straight to 3.4.
+        val stack = LadderSpec.lbStack().ladder()
+        assertEquals("1.1", SetEntry.prefill(null).press(PadKey.Plus, stack).weight)
+        assertEquals("3.4", SetEntry.prefill(null).press(PadKey.Plus, stack).press(PadKey.Plus, stack).weight)
+        assertEquals("1.1", SetEntry.prefill(null).press(PadKey.Minus, stack).weight)
+    }
+
+    @Test
     fun weightThenRepsThenRirLogsTheSet() {
         var entry = SetEntry.prefill(null)
         assertEquals(Field.Weight, entry.field)

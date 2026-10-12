@@ -108,7 +108,8 @@ data class SetEntry(
 
     private fun step(by: Int, ladder: WeightLadder): SetEntry {
         val stepped = if (field == Field.Weight) {
-            formatKg(ladder.step(weightKg ?: ladder.rungs.first(), by))
+            // With no weight yet, either key starts on the lightest rung rather than stepping past it.
+            formatKg(weightKg?.let { ladder.step(it, by) } ?: ladder.rungs.first())
         } else {
             ((current.toIntOrNull() ?: 0) + by).coerceAtLeast(0).toString()
         }
