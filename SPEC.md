@@ -263,7 +263,7 @@ diff against the current plan; you accept or reject it.
 }
 ```
 
-Operations: `swap`, `remove`, `add`, `adjust_sets`, `adjust_load` (percent), `skip_day`,
+Operations: `swap`, `remove`, `add`, `adjust_sets`, `adjust_load` (percent), `adjust_rir`, `skip_day`,
 `deload_week`, `shift_program`. Scope is either a date range (temporary) or `rest_of_program`.
 
 ### Rules (offline, built in)
