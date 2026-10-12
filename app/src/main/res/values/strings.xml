@@ -67,6 +67,7 @@
     <string name="past_empty">Finished sessions show here, to look at or correct.</string>
     <string name="past_ad_hoc">Ad-hoc session</string>
     <string name="past_summary">Session summary</string>
+    <string name="past_minutes">%1$d min</string>
     <string name="past_open_description">Open %1$s</string>
     <string name="follow_drop">Drop %1$d of %2$d</string>
     <string name="follow_mini_set">Mini-set %1$d of %2$d</string>

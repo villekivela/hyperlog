@@ -200,6 +200,8 @@ fun SessionScreen(
                         label = stringResource(R.string.session_now),
                         name = current.exercise.name,
                         onClick = actions::closeView,
+                        symbol = Symbol.ChevronRight,
+                        description = stringResource(R.string.back),
                     )
                 } else {
                     Header(

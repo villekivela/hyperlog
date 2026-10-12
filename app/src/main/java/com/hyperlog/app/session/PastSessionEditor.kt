@@ -72,13 +72,17 @@ class PastSessionEditor(
     val state: StateFlow<PastSession?> = _state.asStateFlow()
 
     /** Every finished session, newest first. */
-    suspend fun sessions(): List<PastSessionItem> = dao.finishedSessions().map { row ->
+    suspend fun sessions(): List<PastSessionItem> {
         val library = db.exercises().all().associate { it.id to it.name }
+        return dao.finishedSessions().map { row -> item(row, library) }
+    }
+
+    private suspend fun item(row: SessionEntity, library: Map<String, String>): PastSessionItem {
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
             val sets = dao.sets(se.id).map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
             if (sets.isEmpty()) null else ExerciseSummary(library[se.exerciseId] ?: se.exerciseId, sets)
         }
-        PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises)
+        return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises)
     }
 
     /** Opens finished session [sessionId] on its summary. */

@@ -379,6 +379,17 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Corrections**: tapping any logged set, drop or mini-set loads it into the pad; ✓ saves, the
      hide key cancels. Finished exercises reopen from the session list and from "Session done".
      Back cancels a correction, then asks before leaving the session.
+     - A correction changes only the values (weight, reps, partials, RIR, left/right); the set keeps
+       its technique and its drops, mini-sets or hold. Mini-sets and a hold follow a corrected set
+       weight, since they are done at it; their own weight can't be typed. Drops keep theirs.
+     - It never touches rest or the rest notification, which keep showing the set to do. A
+       corrected weight has no weight check and no longer counts as kept: it was typed on purpose.
+     - The set to do is prefilled again from the correction if nothing was typed into it yet.
+     - Rows can't be corrected while a drop set, myo-reps or hold is still open; finish it first.
+     - A correction half typed isn't kept if the app is killed; the row keeps its logged values.
+     - **Open** on a finished exercise in the session list shows its table in place of the current
+       one, to look at or correct; the line at the bottom reads "Now <current exercise>" and goes
+       back, as does Back. The session stays on its set and rest keeps running.
    - Drops and myo mini-sets record no RIR; they are taken to failure.
    - **Ad-hoc session** (no program): Today offers **Start session**, or **Resume session** while
      one runs. At most one session runs at a time, and the app opens on it. You add exercises from
@@ -399,7 +410,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - Last time, for machines and cables, is the last session on the same machine; free weights
        take the last session at any gym.
      - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
-       session with nothing logged is discarded.
+       session with nothing logged is discarded. Each exercise opens its table to correct, as a
+       past session's does; back returns to the summary.
      - **Finishing is deliberate and recoverable.** Finish session (⋮, below a divider, or the
        session list) asks "Finish the session?" (Keep going / Finish). Session done offers
        **Resume session**, which reopens the session exactly as it was.
@@ -457,6 +469,14 @@ backup.
     The next set stays split. Progression reads the weaker side.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
   can correct one; progression then reruns from the corrected data.
+  - Today's top bar has **Past sessions** (`history`): finished sessions newest first, each with
+    the day trained (or "Ad-hoc session"), the date and its exercises. A session opens on its
+    summary (date, start time, duration, gym), and an exercise on its table, where logged rows are
+    corrected exactly as during a session. History (ticket #19) takes the list over.
+  - Corrections change values only: a past session's exercises and sets can't be added, removed or
+    swapped. Last time in a past session's table is the session before it.
+  - Suggestions read the corrected sets from then on, including a session running at the time:
+    its suggestion and last time are worked out again, with the set to do's prefill if untouched.
 - **English only.**
 - **Exercise library** is editable on the phone (Settings → Exercise library): browse and search,
   add, edit (name, equipment type, movement pattern, grip demand, primary and secondary muscles,

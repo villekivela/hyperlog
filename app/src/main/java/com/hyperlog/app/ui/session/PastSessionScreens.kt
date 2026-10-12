@@ -49,14 +49,6 @@ import kotlin.math.roundToInt
 private fun day(at: Long): String =
     DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault()).format(Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()))
 
-/** `18:02, 52 min`: when it started and how long it took. */
-@Composable
-internal fun sessionWhen(startedAt: Long, finishedAt: Long): String = stringResource(
-    R.string.done_when,
-    DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(startedAt)),
-    ((finishedAt - startedAt) / 60_000.0).roundToInt(),
-)
-
 /** Every finished session, newest first: the day trained and the date, then its exercises. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,7 +153,12 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
         LazyColumn(Modifier.fillMaxSize().padding(padding)) {
             item {
                 Text(
-                    listOfNotNull(day(session.startedAt), sessionWhen(session.startedAt, session.finishedAt), session.gym).joinToString(" · "),
+                    listOfNotNull(
+                        day(session.startedAt),
+                        DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(session.startedAt)),
+                        stringResource(R.string.past_minutes, ((session.finishedAt - session.startedAt) / 60_000.0).roundToInt()),
+                        session.gym,
+                    ).joinToString(" · "),
                     Modifier.padding(horizontal = Margin),
                     style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                     color = cs.onSurfaceVariant,

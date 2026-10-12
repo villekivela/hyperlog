@@ -193,7 +193,7 @@ offers **Resume session**. The app opens on a running session.
 - **Session done** shows the start time and duration under the title, the summaries, and a
   filled **Done** at the bottom right that returns to Today (back does the same), with a text
   **Resume session** beside it that reopens the session as it was, for a finish by mistake. Its
-  rows don't open yet: corrections are ticket #15.
+  rows open the exercise's table to correct (ticket #15, below).
 - Values cap at 5 characters for weight, 3 for full reps and 2 for partials. A reps value longer
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 
@@ -286,6 +286,45 @@ warm-up touches the clock.
   `20 · 15 per side` in labelLarge onSurfaceVariant (`Empty bar`, or `No plates` on a machine).
   It follows the weight being typed and is left out when the plates can't make it.
 - The warm-ups go once the first work set is logged; the plate line moves with the active set.
+
+**Corrections** (screens `correct-*.png`, built in ticket #15; Robolectric renders, so no status
+bar, and sheets don't render there).
+
+Principles: a correction is the same pad on the row it fixes, so there is nothing new to learn;
+the set to do steps back while it happens and the clock never notices; a finished exercise or past
+session reads like the logging screen with nothing to do, so tapping a number is the only action.
+
+```
+ DB Bench Press                    [⏱ 2:28]  ⋮
+       Target      Last       kg   Reps  RIR
+┌────────────────────────────────────────────┐
+│✎     8–10 (2)               25  [  9 ]   ●2 │  ← the logged set, loaded: edit symbol for its number
+└────────────────────────────────────────────┘
+ 2     8–10 (2)               25    10     ●2   ← logged rows stay tappable
+ 3     8–10 (1)               25    10          ← the set to do, back to its upcoming look
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+  ●0   ●1   (●2)  ●3   ●4+         [F| P ]      ← a drop or mini-set: ✎ Drop 1 of set 3
+ …
+ [ × ] [ 0 ] [   ] [ ✓ ]                        ← × cancels, ✓ saves ("Save correction")
+```
+
+- **Loaded row**: the active row's look (surfaceContainerHigh, focused cell outlined) with `edit`
+  in primary in the set column; a sub-row the same at 48 dp. It opens on reps; the weight cell
+  takes a tap. A mini-set's or hold's weight stays muted (it is the set's).
+- **Pad**: always shown while correcting; the hide key becomes `close` (Cancel correction) and ✓
+  saves. For a set the strip is RIR and F/P; for a drop, mini-set or hold it names the row
+  (`edit` + "Drop 1 of set 3"), since they have no RIR.
+- **Done rows** are one tap target each (16 dp radius ripple), "Correct set N", "Correct drop 1 of
+  set 3".
+- **Finished exercise** (`correct-03`, `correct-04`): the session list's **Open** shows its table
+  with no active row and no Add set; the Next line reads `Now  <current exercise>  ›` and goes
+  back. The timer keeps running in the header.
+- **Session done** (`correct-05`): every row ends in `chevron_right` and opens the exercise's table
+  (`correct-06`, `correct-07`), whose bottom line is `Session summary  ›`; back returns too.
+- **Past sessions** (`correct-08`, `correct-09`): Today's top bar `history` → a flat list (title
+  bodyLarge, date bodyMedium at the end, exercises on a second muted line, 72 dp rows) → the
+  session's summary under a top app bar (date · start · duration · gym) → the exercise table as
+  in Session done.
 
 ## Interaction rules
 
