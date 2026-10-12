@@ -108,6 +108,10 @@ _Avoid_: 1RM, max
 The weight and target reps the app proposes for an upcoming set, with the reason shown.
 _Avoid_: Recommendation, prescription (that is the program's, not the app's)
 
+**Lift goal**:
+A target value for one exercise's estimate, such as a 100 kg bench, optionally by a date.
+_Avoid_: Target (that's a set prescription's), PR goal
+
 **Starting weight**:
 A one-off suggestion for an exercise with no history yet, taken from the old app's data.
 

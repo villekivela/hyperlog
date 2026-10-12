@@ -232,6 +232,9 @@ backup.
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The
   prescription sheet shows both. Library notes stay editable on the phone.
 - **History** (v1): session list, per-exercise top set and e1RM trend, weekly sets per muscle.
+- **Lift goals**: a target for one exercise's estimate (e.g. barbell bench 100 kg, optional date).
+  The exercise's prescription sheet and History show the current estimate against the goal, with
+  its trend. A goal never changes the program or the suggestions.
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
   weighted bodyweight exercises.
 - **Dumbbells are logged per dumbbell** (the number printed on it). Volume and e1RM count both
