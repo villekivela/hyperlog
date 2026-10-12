@@ -183,8 +183,8 @@ offers **Resume session**. The app opens on a running session.
   session. Its other exercises have **Start**, because ad-hoc exercises are never "done".
 - **Session done** shows the start time and duration under the title, the summaries, and a
   filled **Done** at the bottom right that returns to Today (back does the same), with a text
-  **Resume session** beside it that reopens the session as it was, for a finish by mistake. Its rows don't
-  open yet: corrections are ticket #15.
+  **Resume session** beside it that reopens the session as it was, for a finish by mistake. Its
+  rows don't open yet: corrections are ticket #15.
 - Values cap at 5 characters for weight, 3 for full reps and 2 for partials. A reps value longer
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 

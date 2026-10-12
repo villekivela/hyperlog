@@ -102,8 +102,9 @@ val Muscles = listOf(
 )
 
 /**
- * The exercises whose words all appear in the name or muscles, names starting with the query
- * first. A blank query keeps everything.
+ * The exercises whose words all appear in the name, equipment or primary muscles. Names starting
+ * with the query come first, then names holding every word, then the rest ("lateral" finds the
+ * lateral raises before the triceps work for the lateral head). A blank query keeps everything.
  */
 fun List<Exercise>.search(query: String): List<Exercise> {
     val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
@@ -112,5 +113,12 @@ fun List<Exercise>.search(query: String): List<Exercise> {
     return filter { e ->
         val haystack = (listOf(e.name, e.equipment.label) + e.muscles).joinToString(" ").lowercase()
         words.all { haystack.contains(it) }
-    }.sortedBy { if (it.name.lowercase().startsWith(q)) 0 else 1 }
+    }.sortedBy { e ->
+        val name = e.name.lowercase()
+        when {
+            name.startsWith(q) -> 0
+            words.all { name.contains(it) } -> 1
+            else -> 2
+        }
+    }
 }

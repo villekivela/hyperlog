@@ -90,5 +90,11 @@ class ExerciseLibraryTest {
         val curls = listOf(curl.copy(name = "DB Spider Curl"), curl.copy(name = "Curl Machine"))
         assertEquals(listOf("Curl Machine", "DB Spider Curl"), curls.search("curl").map { it.name })
         assertEquals(list, list.search("  "))
+        // Exercises named for the query come before ones that only match a muscle.
+        val raises = listOf(
+            curl.copy(id = "dip", name = "Weighted Dip", muscles = listOf("Triceps Lateral Head")),
+            curl.copy(id = "raise", name = "Cable Lateral Raise", muscles = listOf("Side Delts")),
+        )
+        assertEquals(listOf("Cable Lateral Raise", "Weighted Dip"), raises.search("lateral").map { it.name })
     }
 }

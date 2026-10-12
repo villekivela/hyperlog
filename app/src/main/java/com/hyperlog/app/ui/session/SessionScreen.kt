@@ -583,7 +583,9 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
             placeholder = stringResource(R.string.session_search),
             modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
         )
-        LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).imePadding()) {
+        val listState = rememberLazyListState()
+        LaunchedEffect(query) { listState.scrollToItem(0) }
+        LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).imePadding(), state = listState) {
             items(exercises.search(query), key = { it.id }) { e ->
                 Text(
                     e.name,

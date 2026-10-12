@@ -54,7 +54,7 @@ class LibraryScreenTest {
         compose.onNodeWithContentDescription("Settings").performClick()
         waitFor("173 exercises")
         click("Exercise library")
-        waitFor("Exercises")
+        waitFor("Search 173 exercises")
     }
 
     private fun search(text: String) {
@@ -90,7 +90,7 @@ class LibraryScreenTest {
         click("Front Delts")
         compose.onNodeWithText("Save").assertIsEnabled().performClick()
 
-        waitFor("Exercises")
+        waitFor("Exercise library")
         search("landmine")
         waitFor("Landmine Press")
         compose.onNodeWithText("Barbell · Front Delts").assertIsDisplayed()
@@ -109,7 +109,7 @@ class LibraryScreenTest {
         compose.onNodeWithText("Opens at 3:20").assertIsDisplayed()
         click("Save")
 
-        waitFor("Exercises")
+        waitFor("Exercise library")
         click("Pec Deck")
         waitFor("Elbows high, squeeze for a second.")
     }

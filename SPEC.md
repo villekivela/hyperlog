@@ -257,7 +257,8 @@ backup.
     YouTube link.
   - **Hiding** keeps the exercise in past sessions and in the library (listed last, muted), but it
     isn't offered when adding an exercise. It can be shown again. Exercises are never deleted.
-  - Search matches every word against the name, equipment and primary muscles.
+  - Search matches every word against the name, equipment and primary muscles; exercises named
+    for the query come first.
   - The shipped library updates with the app: exercises never edited on the phone take the new
     values; edited ones and hidden flags are kept. Exercises added on the phone get an id made from
     the name (`landmine_press`).

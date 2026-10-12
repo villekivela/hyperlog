@@ -54,13 +54,11 @@
     <string name="settings_library">Exercise library</string>
     <string name="settings_library_count">%1$d exercises</string>
 
-    <string name="library_title">Exercises</string>
     <string name="library_search">Search %1$d exercises</string>
     <string name="library_search_clear">Clear search</string>
     <string name="library_hidden">Hidden</string>
     <string name="library_none_found">No exercise matches “%1$s”</string>
     <string name="library_new">New exercise</string>
-    <string name="library_has_video">Has a technique video</string>
 
     <string name="editor_new">New exercise</string>
     <string name="editor_edit">Edit exercise</string>

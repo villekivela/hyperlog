@@ -43,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -134,7 +136,16 @@ fun ExerciseEditor(
             Section(stringResource(R.string.editor_equipment)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Equipment.entries.forEach { e ->
-                        FilterChip(selected = equipment == e, onClick = { equipment = e }, label = { Text(e.label) })
+                        FilterChip(
+                            selected = equipment == e,
+                            onClick = { equipment = e },
+                            label = { Text(e.label) },
+                            leadingIcon = if (equipment == e) {
+                                { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) }
+                            } else {
+                                null
+                            },
+                        )
                     }
                 }
             }
@@ -236,8 +247,10 @@ private fun Section(label: String, content: @Composable () -> Unit) {
 @Composable
 private fun PatternField(pattern: MovementPattern?, onPick: (MovementPattern) -> Unit) {
     var open by remember { mutableStateOf(false) }
+    var width by remember { mutableStateOf(0) }
     val label = stringResource(R.string.editor_pattern)
-    Box {
+    val density = LocalDensity.current
+    Box(Modifier.onSizeChanged { width = it.width }) {
         OutlinedTextField(
             value = pattern?.label ?: "",
             onValueChange = {},
@@ -249,9 +262,17 @@ private fun PatternField(pattern: MovementPattern?, onPick: (MovementPattern) ->
         )
         // The text field takes taps itself; this layer opens the menu instead.
         Box(Modifier.matchParentSize().clickable(onClickLabel = label) { open = true }.semantics { contentDescription = label })
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }, modifier = Modifier.width(with(density) { width.toDp() })) {
             MovementPattern.entries.forEach { p ->
-                DropdownMenuItem(text = { Text(p.label) }, onClick = { onPick(p); open = false })
+                DropdownMenuItem(
+                    text = { Text(p.label) },
+                    onClick = { onPick(p); open = false },
+                    trailingIcon = if (p == pattern) {
+                        { SymbolIcon(Symbol.Check, null) }
+                    } else {
+                        null
+                    },
+                )
             }
         }
     }

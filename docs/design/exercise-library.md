@@ -24,7 +24,6 @@ Screenshots are in `screens/library-*.png`.
 | Margin | 24 dp | Left edge of names, labels and fields |
 | Search field | 56 dp, full radius, 16 dp side inset | surfaceContainerHigh, no indicator line; its text lines up with the 24 dp column inside the pill |
 | Library row | 72 dp min | Name bodyLarge onSurface; summary bodyMedium onSurfaceVariant |
-| Video symbol | 20 dp `smart_display`, onSurfaceVariant | Trailing, when the exercise has a technique video |
 | Hidden row | both lines in `outline` | Under a labelLarge "Hidden" label, 24 dp above it |
 | Editor section | labelLarge onSurfaceVariant label, 8 dp to its control, 24 dp between sections | |
 | Picker row (session) | 56 dp, bodyLarge | Name only: names carry the implement |
@@ -32,9 +31,9 @@ Screenshots are in `screens/library-*.png`.
 ## Layout
 
 ```
- ←  Exercises
+ ←  Exercise library
  ( 🔍  Search 173 exercises            )     ← pill, surfaceContainerHigh
- 1-Arm Cable Pulldown                  ▶     ← ▶ = smart_display: has a video
+ 1-Arm Cable Pulldown
  Cable · Lats
  Barbell Bench Press
  Barbell · Chest
@@ -47,9 +46,9 @@ Screenshots are in `screens/library-*.png`.
  ✕  Edit exercise                     Save
  [ Name: Pec Deck                    ]
  Equipment
- (Barbell)(Dumbbell)(Machine✓)(Cable)…       ← filter chips, one selected
+ (Barbell)(Dumbbell)(✓ Machine)(Cable)…       ← filter chips, the selected one checked
  Movement pattern
- [ Chest fly                       ▾ ]       ← opens a menu of the 24 patterns
+ [ Chest fly                       ▾ ]       ← a field-wide menu of the 24 patterns, current one checked
  Grip demand
  [  None  |  Low ✓  |  High  ]               ← segmented
  Primary muscles
@@ -73,6 +72,9 @@ Screenshots are in `screens/library-*.png`.
 - **Search, empty:** placeholder counts the shown exercises ("Search 173 exercises"). **Typing:**
   the list filters on every key; a close symbol clears it. **No match:** one muted line, "No
   exercise matches "…"". The query survives opening an exercise and coming back.
+- **Search order:** names starting with the query, then names holding every word, then exercises
+  that only match through equipment or a muscle ("lateral" lists the lateral raises before the
+  triceps work for the lateral head). A new query scrolls the list back to the top.
 - **Row:** tap opens the editor. Hidden rows look muted but open the same way.
 - **Editor, new:** title "New exercise", every field empty, Save disabled. **Complete:** Save
   enabled. **Edit, unchanged:** Save disabled until something changes. **Video field:** "Opens at
@@ -91,3 +93,15 @@ Screenshots are in `screens/library-*.png`.
   exercises out.
 - The Technique video button opens the YouTube app at the timestamp, or the browser if the app is
   missing.
+
+## Critique log
+
+- **Pass 1** (phone): a video symbol on 138 of 173 rows was noise, not state: removed. The title
+  "Exercises" didn't match the Settings row: now "Exercise library". Typing a query kept the old
+  scroll offset, hiding the best matches above the fold: the list now jumps to the top. "lateral"
+  buried the lateral raises under triceps exercises (the lateral head): name matches rank first.
+  Filter chips showed selection only by fill, weak on a monochrome theme: the selected one has a
+  check, like the grip segments. The pattern menu was narrower than its field: now field-wide.
+- **Pass 2**: the pattern menu didn't show the current pattern: it's checked now. The list, search,
+  sheet and video were otherwise right on the phone; the Technique video button opened YouTube at
+  10:53 as labelled.

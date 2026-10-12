@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -70,7 +72,7 @@ fun LibraryScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.library_title)) },
+                title = { Text(stringResource(R.string.settings_library)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
                 },
@@ -91,8 +93,12 @@ fun LibraryScreen(
                 placeholder = stringResource(R.string.library_search, exercises.count { !it.hidden }),
                 modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
             )
+            val listState = rememberLazyListState()
+            // Each new query starts from its best match.
+            LaunchedEffect(query) { listState.scrollToItem(0) }
             LazyColumn(
                 Modifier.fillMaxSize().testTag(LibraryListTag),
+                state = listState,
                 // Room for the button over the last rows.
                 contentPadding = PaddingValues(bottom = 96.dp),
             ) {
@@ -123,7 +129,7 @@ fun LibraryScreen(
     }
 }
 
-/** Name, then equipment and primary muscles; a video symbol when there is a technique video. */
+/** Name, then equipment and primary muscles. */
 @Composable
 private fun LibraryRow(exercise: Exercise, onOpen: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -147,15 +153,6 @@ private fun LibraryRow(exercise: Exercise, onOpen: (String) -> Unit) {
                 color = if (muted) cs.outline else cs.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (exercise.video != null) {
-            Spacer(Modifier.width(16.dp))
-            SymbolIcon(
-                Symbol.SmartDisplay,
-                stringResource(R.string.library_has_video),
-                Modifier.size(20.dp),
-                tint = if (muted) cs.outline else cs.onSurfaceVariant,
             )
         }
     }
