@@ -91,4 +91,47 @@
     <string name="sheet_video_at">Technique video · %1$s</string>
     <string name="session_exercise_details">Exercise details</string>
     <string name="session_search">Search exercises</string>
+    <string name="settings_gyms">Gyms and equipment</string>
+    <plurals name="settings_gyms_count">
+        <item quantity="one">%1$d gym · dumbbells and plates</item>
+        <item quantity="other">%1$d gyms · dumbbells and plates</item>
+    </plurals>
+    <string name="settings_gyms_none">No gyms yet · dumbbells and plates</string>
+    <string name="gyms">Gyms and equipment</string>
+    <string name="gym_add">Add gym</string>
+    <string name="gym_add_confirm">Add</string>
+    <string name="gym_name">Name</string>
+    <string name="gym_cancel">Cancel</string>
+    <plurals name="gym_item_count">
+        <item quantity="one">%1$d equipment item</item>
+        <item quantity="other">%1$d equipment items</item>
+    </plurals>
+    <string name="gym_shared">Shared by every gym</string>
+    <string name="gym_dumbbells">Dumbbells</string>
+    <string name="gym_plates">Barbell plates</string>
+    <string name="gym_rename">Rename gym</string>
+    <string name="gym_rename_confirm">Rename</string>
+    <string name="gym_delete">Delete gym</string>
+    <string name="gym_delete_title">Delete %1$s?</string>
+    <string name="gym_delete_text">Its equipment and their weights go with it.</string>
+    <string name="gym_delete_confirm">Delete</string>
+    <string name="gym_keep">Keep</string>
+    <string name="gym_add_item">Add equipment</string>
+    <string name="gym_delete_item">Delete equipment</string>
+    <string name="ladder_new_item">New equipment</string>
+    <string name="ladder_dumbbells_hint">Per dumbbell</string>
+    <string name="ladder_name">Name, e.g. Cable station</string>
+    <string name="ladder_stack">Stack</string>
+    <string name="ladder_list">List</string>
+    <string name="ladder_plates">Plates</string>
+    <string name="ladder_lb_preset">lb stack: 2.5, then 5 lb steps</string>
+    <string name="ladder_start">Start</string>
+    <string name="ladder_step">Step</string>
+    <string name="ladder_count">Weights</string>
+    <string name="ladder_list_field">Weights in kg, separated by spaces</string>
+    <string name="ladder_base">Bar or sled, kg</string>
+    <string name="ladder_pairs">Plate pairs in kg, separated by spaces</string>
+    <string name="ladder_preview">Real weights</string>
+    <string name="ladder_incomplete">Fill in the fields to see the weights</string>
+    <string name="ladder_rung_count">%1$d weights</string>
 </resources>

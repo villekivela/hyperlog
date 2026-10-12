@@ -33,6 +33,13 @@ class WeightLadder(val rungs: List<Double>) {
         return rungs.subList(first, (first + count).coerceAtMost(rungs.size))
     }
 
+    /** `1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`: the first rungs and the top, for lists and setup. */
+    fun preview(first: Int = 4): String {
+        val shown = if (rungs.size <= first + 1) rungs.joinToString(" · ") { formatKg(it) }
+        else rungs.take(first).joinToString(" · ") { formatKg(it) } + " … " + formatKg(rungs.last())
+        return "$shown kg"
+    }
+
     companion object {
         fun steps(start: Double, step: Double, count: Int) =
             WeightLadder(List(count) { round1(start + it * step) })

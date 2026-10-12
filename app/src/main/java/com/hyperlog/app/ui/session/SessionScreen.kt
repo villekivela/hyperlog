@@ -132,7 +132,7 @@ fun SessionScreen(
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
                     )
-                    SetTable(current, session.entry, actions, Modifier.weight(1f))
+                    SetTable(current, session.entry, session.weightCheck != null, actions, Modifier.weight(1f))
                     val index = session.exercises.indexOf(current)
                     val next = session.exercises.getOrNull(index + 1)
                     NextLine(
@@ -316,7 +316,7 @@ private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) 
 // ---------------------------------------------------------------- table
 
 @Composable
-private fun SetTable(current: SessionExercise, entry: SetEntry?, actions: SessionActions, modifier: Modifier) {
+private fun SetTable(current: SessionExercise, entry: SetEntry?, weightFlagged: Boolean, actions: SessionActions, modifier: Modifier) {
     val listState = rememberLazyListState()
     // Keep the active row in view as sets pile up.
     LaunchedEffect(current.id, current.sets.size) {
@@ -329,7 +329,7 @@ private fun SetTable(current: SessionExercise, entry: SetEntry?, actions: Sessio
         }
         if (entry != null) {
             item {
-                ActiveRow(current.sets.size + 1, current.lastTime.getOrNull(current.sets.size), entry, actions)
+                ActiveRow(current.sets.size + 1, current.lastTime.getOrNull(current.sets.size), entry, weightFlagged, actions)
             }
             // An ad-hoc session has no plan, so last time's set count shows what is likely to come,
             // muted and prefilled the way the next set will be.
@@ -420,7 +420,7 @@ private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet) {
 }
 
 @Composable
-private fun ActiveRow(n: Int, last: LoggedSet?, entry: SetEntry, actions: SessionActions) {
+private fun ActiveRow(n: Int, last: LoggedSet?, entry: SetEntry, weightFlagged: Boolean, actions: SessionActions) {
     fun tap(field: Field) {
         actions.focus(field)
         actions.setPadVisible(true)
@@ -437,6 +437,7 @@ private fun ActiveRow(n: Int, last: LoggedSet?, entry: SetEntry, actions: Sessio
             AnnotatedString(entry.weight),
             focused = entry.field == Field.Weight,
             description = stringResource(R.string.col_kg),
+            flagged = weightFlagged,
             modifier = Modifier.width(ColKg),
         ) { tap(Field.Weight) }
         Cell(
@@ -472,6 +473,8 @@ private fun Cell(
     focused: Boolean,
     description: String,
     modifier: Modifier,
+    /** The weight check is on this value: it reads in the error colour, like the check's reason. */
+    flagged: Boolean = false,
     onClick: () -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -487,8 +490,8 @@ private fun Cell(
             text,
             // Long values (`100 + 20`) step down a size so they stay inside the cell.
             style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum),
-            color = cs.onSurface,
-            fontWeight = if (focused) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (flagged) cs.error else cs.onSurface,
+            fontWeight = if (focused || flagged) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,
         )
     }

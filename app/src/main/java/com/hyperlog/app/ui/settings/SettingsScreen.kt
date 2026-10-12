@@ -14,16 +14,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
-/** Settings. Gyms and equipment, and backups, join the exercise library in later tickets. */
+/** Settings: gyms and their equipment, and the exercise library. Backups join in a later ticket. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(exerciseCount: Int, onLibrary: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    gymCount: Int,
+    exerciseCount: Int,
+    onGyms: () -> Unit,
+    onLibrary: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     BackHandler(onBack = onBack)
     Scaffold(
         modifier = modifier,
@@ -37,6 +45,18 @@ fun SettingsScreen(exerciseCount: Int, onLibrary: () -> Unit, onBack: () -> Unit
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_gyms)) },
+                supportingContent = {
+                    Text(
+                        if (gymCount == 0) stringResource(R.string.settings_gyms_none)
+                        else pluralStringResource(R.plurals.settings_gyms_count, gymCount, gymCount),
+                    )
+                },
+                leadingContent = { SymbolIcon(Symbol.FitnessCenter, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                modifier = Modifier.clickable(onClick = onGyms).padding(horizontal = 8.dp),
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_library)) },
                 supportingContent = { Text(stringResource(R.string.settings_library_count, exerciseCount)) },

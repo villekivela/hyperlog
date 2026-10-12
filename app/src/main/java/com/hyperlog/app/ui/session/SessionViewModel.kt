@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.PadKey
+import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
@@ -15,6 +16,8 @@ import com.hyperlog.app.session.SessionSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -41,6 +44,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     private val db = HyperlogDatabase.get(application)
     private val library = ExerciseLibrary(db)
     private val logger = SessionLogger(db)
+    private val gyms = Gyms(db)
     private val _loaded = MutableStateFlow(false)
     private val _summary = MutableStateFlow<SessionSummary?>(null)
 
@@ -59,6 +63,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             library.sync(withContext(Dispatchers.IO) { LibrarySeed.fromAssets(application) })
             logger.load()
             _loaded.value = true
+            // An edit to the shared dumbbells or plates reaches the running session at once.
+            combine(gyms.dumbbells, gyms.plates) { d, p -> d to p }.drop(1).collect { logger.load() }
         }
     }
 
