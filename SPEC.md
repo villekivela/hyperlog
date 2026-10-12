@@ -242,6 +242,15 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - **Missing equipment**: on picking the gym, the day is checked against that gym's kit; swaps are
   proposed from the slot's alternatives, then by movement pattern (same logic as the coach) and
   apply to this session only.
+  - A gym's kit is learned like its machines: **Not at <gym>** under "Which machine?" marks the
+    exercise as one the gym has no equipment for, and swaps it at once (left out of the session when
+    nothing fits). The gym screen lists them under **Not here**, each with × to undo. Everything else
+    is assumed to be there.
+  - The start sheet lists the swaps for the gym picked under `Not at Kamppi · for this session`, as
+    ticked checkbox rows reading `In place of Leg Extension` over `Reverse Nordic`; one with nothing
+    that fits reads `Lying Leg Curl: nothing here fits`. Start applies the ticked ones to this
+    session only; no Change is made. The candidates are the slot's alternatives, then library
+    exercises with the same movement pattern, none of them missing at the gym.
 - **"Which machine?"**: in a session with a gym, a machine, cable or Smith machine exercise the
   gym has no machine for yet shows "Which machine?" in place of its sets: the gym's equipment with
   the weights each gives, and **Add machine** (the ladder editor; a machine exercise's name is
@@ -274,7 +283,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    swap to an alternative, add or change an intensity technique on a set. Works without a program
    too (ad-hoc session).
    - **With a program**, Today shows the next day: week and block, the day's name, and each slot's
-     exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after). **Start
+     exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
    - **A program day's session** has a row for every planned set from the start, with a Target
@@ -441,7 +450,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
-3. **Coach** — see below.
+3. **Coach** — see below. Reached from Today's top bar (`sports`) while a day is next.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
 
 Settings sit behind an icon: gyms and their equipment, exercise library, import backup, export
@@ -493,6 +502,10 @@ backup.
   video link, note) and hide. Design: `docs/design/exercise-library.md`.
   - **Names carry the implement** ("DB Bench Press", "Smith Machine Squat"), so a name alone tells
     exercises apart wherever it shows.
+  - **Grip demand**: high when the hands hold the load (free-weight presses, curls, rows, pulls and
+    hinges with a bar or dumbbells), low for handles that guide it (Smith, machines, cables), none
+    when the hands do nothing. Free-weight presses are high because the hands hold and balance the
+    whole load, which is what sore hands notice.
   - An exercise needs a name, equipment, a movement pattern, a grip demand and at least one primary
     muscle before it can be saved, because the coach's swaps rely on them. The video link must be a
     YouTube link.
@@ -541,8 +554,8 @@ diff against the current plan; you accept or reject it.
 }
 ```
 
-Operations: `swap`, `remove`, `add`, `adjust_sets`, `adjust_load` (percent), `adjust_rir`, `skip_day`,
-`deload_week`, `shift_program`, `repeat_week`. Scope is a date range (temporary), `rest_of_program`
+Operations: `swap`, `remove`, `add`, `adjust_sets`, `adjust_load` (percent), `adjust_rir`,
+`remove_technique`, `skip_day`, `deload_week`, `shift_program`, `repeat_week`. Scope is a date range (temporary), `rest_of_program`
 or `rest_of_block`.
 
 **What each one does.** The program runs as a sequence, so a Change covers sessions by the date
@@ -557,6 +570,7 @@ position operations run once, when the Change is accepted.
 | `adjust_sets` | `slot`, `sets` (1–10) | The slot does that many sets: its first ones, or its last set repeated without its technique. |
 | `adjust_load` | `slot`?, `percent` (−50…50) | Suggested weights move by the percent, to the nearest rung, on top of progression; the why-line ends "· 10% lighter for a Change". No slot: every slot. |
 | `adjust_rir` | `slot`?, `by` (−5…5) | Target RIR moves by `by` (+1 = one more in reserve), 0–10. No slot: every slot. |
+| `remove_technique` | `slot`?, `technique`? (`dropset`, `myo_reps`, `lengthened_partials`, `iso_hold`, `failure`) | The slot's sets lose that intensity technique (any technique when left out). No slot: every slot. |
 | `skip_day` | — | The next day is passed over. |
 | `deload_week` | `week`? | That program week (the one you're in when left out) is a deload: half its sets per slot (rounded up), RIR + 2, no techniques, and it never lowers the estimate. |
 | `shift_program` | `weeks` (≠ 0) | The rest of the plan starts that many weeks later: the position goes back that many weeks (to week 1 at most), so they are trained again. Negative moves it earlier, skipping weeks. |
@@ -574,7 +588,7 @@ the end of the block the Change was accepted in. A date range covers its first a
   are left (before → after), then the first day of each kind in the block it edits (each day
   of each block once), slot by slot: swapped (`In place of …`), removed (struck through), added
   (`+`), sets before → after, and a moved load. A date range looks one week of days ahead per week
-  of dates; `rest_of_block` to the end of the block; `rest_of_program` to the end. Nothing changes
+  of dates, and never more program days than dates (a one-day range shows one day); `rest_of_block` to the end of the block; `rest_of_program` to the end. Nothing changes
   until **Accept**; **Reject**, × and Back drop it.
 - **History.** Accepted Changes are kept with the day they were accepted, the position they moved
   from and to, and the block. The Program screen lists them, newest first, each with **Revert**
@@ -598,6 +612,40 @@ exercises with the same `movementPattern` that meet the constraints (equipment, 
 per-exercise tag table such as `grip: high|low|none`). Time off maps to fixed steps: up to 7 days,
 resume as planned; 8–14 days, a reduced-volume re-entry session; more than 14 days, repeat the
 last week.
+
+**How the rules work** (`coach/RuleCoach.kt`; design: `docs/design/coach.md`):
+
+- **The screen.** Coach lists the five situations as a single choice; Pain opens its areas (Hands
+  first), Short on time a minutes stepper (45 by default, 20–120 in 5s). Each situation sets its
+  constraints, shown as chips under **Limits** and editable: Hands → no grip, Shoulder → no
+  overhead, Lower back → no axial load, No gym → home, Short on time → max N minutes. **Review
+  change** opens the Change's diff; with nothing to change one line says so ("3 days since your last
+  session. Resume as planned.", "Nothing in the plan breaks these limits."). Accept goes to Today.
+- **Scope.** Pain: two weeks from today (revert it once the pain is gone, the "hands OK"). Every
+  other situation: today only. Position moves (repeat week) run once on accept as always.
+- **Constraints.** No grip: no high-grip exercise, except pulls (vertical and horizontal), which
+  stay with straps and an open hand, a row only chest-supported. No axial load: no bar, Smith or
+  dumbbells carried through a squat, hinge, lunge, shrug or calf raise, and no standing or seated
+  bar press. No overhead: no vertical push and no overhead triceps extension. Home: dumbbells and
+  bodyweight only. An exercise breaking one is swapped for the first candidate meeting all of them
+  (the slot's alternatives in the program's order, then library exercises with the same movement
+  pattern, most shared primary muscles first, then the least grip, then by name; hidden ones never),
+  or removed when none does.
+- **Pain** (on top of the swaps): −10% load and no drop sets on every kept exercise that loads the
+  area, and +1 RIR on everything. Hands load every exercise with grip; shoulder the presses, flyes and
+  lateral raises; elbow curls and triceps work; knee squats, lunges and knee extensions; lower back
+  hinges, squats and lunges. The pain rule shows under the areas: pain in a set at 3/10 or less and
+  no worse the next morning.
+- **Time off** counts whole days since the last finished session. Up to 7: resume (no Change).
+  8–14: today's session does half its sets (rounded up) where it has more than one, and +1 RIR.
+  More than 14: `repeat_week`. Coach preselects Time off after a week, and Today shows `11 days since
+  your last session` with **Ease back in**, which opens that Change, until a Change is accepted that
+  day.
+- **Short on time** estimates the session: 2 minutes per exercise to set up and warm up, a minute per
+  set plus its rest (a superset rests once a round), no rest after the last set. Over the cap,
+  second and later sets go first, from the last exercise back, then exercises from the end; the
+  first exercise always stays.
+- **Poor recovery**: today, one set fewer where there is more than one, and +1 RIR.
 
 ### Ask Claude (uses your subscription, no API)
 

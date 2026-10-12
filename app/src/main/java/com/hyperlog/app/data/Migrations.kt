@@ -4,7 +4,20 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12)
+
+/** v12: missing equipment (#17). A gym keeps the exercises it has no equipment for. */
+object Migration11To12 : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `gym_missing_exercise` (`gym_id` INTEGER NOT NULL, `exercise_id` TEXT NOT NULL, " +
+                "PRIMARY KEY(`gym_id`, `exercise_id`), " +
+                "FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                "FOREIGN KEY(`exercise_id`) REFERENCES `exercise`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_gym_missing_exercise_exercise_id` ON `gym_missing_exercise` (`exercise_id`)")
+    }
+}
 
 /** v11: Changes (#16). Accepted Changes are kept per program, with the position they moved. */
 object Migration10To11 : Migration(10, 11) {

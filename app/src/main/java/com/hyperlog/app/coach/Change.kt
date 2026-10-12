@@ -88,6 +88,14 @@ sealed interface Operation {
     @Serializable @SerialName("adjust_rir")
     data class AdjustRir(val slot: String? = null, val by: Int, override val reason: String? = null) : Operation
 
+    /**
+     * The slot's sets (every slot's when [slot] is null) lose their intensity technique of kind
+     * [technique] (`dropset`, `myo_reps`, `lengthened_partials`, `iso_hold`, `failure`), or any
+     * technique when it is null.
+     */
+    @Serializable @SerialName("remove_technique")
+    data class RemoveTechnique(val slot: String? = null, val technique: String? = null, override val reason: String? = null) : Operation
+
     /** The next day is passed over. */
     @Serializable @SerialName("skip_day")
     data class SkipDay(override val reason: String? = null) : Operation

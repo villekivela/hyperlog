@@ -121,6 +121,10 @@ fun GymScreen(
     onOpenItem: (Long) -> Unit,
     onAddItem: () -> Unit,
     onBack: () -> Unit,
+    /** Exercise names, for the exercises the gym has no equipment for. */
+    exerciseNames: Map<String, String> = emptyMap(),
+    /** The gym has the equipment for this exercise after all. */
+    onRestore: (String) -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var renaming by rememberSaveable { mutableStateOf(false) }
@@ -151,6 +155,28 @@ fun GymScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 64.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
             )
+
+            if (gym.missing.isNotEmpty()) {
+                SectionLabel(stringResource(R.string.gym_missing))
+                gym.missing.map { it to (exerciseNames[it] ?: it) }.sortedBy { it.second }.forEach { (id, name) ->
+                    ListItem(
+                        headlineContent = { Text(name) },
+                        leadingContent = { SymbolIcon(Symbol.Block, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        trailingContent = {
+                            IconButton(onClick = { onRestore(id) }) {
+                                SymbolIcon(Symbol.Close, stringResource(R.string.gym_missing_restore, name))
+                            }
+                        },
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+                Text(
+                    stringResource(R.string.gym_missing_body, gym.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 64.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                )
+            }
         }
     }
     if (renaming) {

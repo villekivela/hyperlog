@@ -35,7 +35,9 @@ class LibrarySeedTest {
         assertEquals("Barbell Bench Press", bench.name)
         assertEquals(Equipment.Barbell, bench.equipment)
         assertEquals(MovementPattern.HorizontalPush, bench.pattern)
-        assertEquals(GripDemand.Low, bench.grip)
+        // Free-weight presses hold and balance the whole load in the hands (#17), so they are high.
+        assertEquals(GripDemand.High, bench.grip)
+        assertEquals(GripDemand.Low, byId.getValue("smith_machine_bench_press").grip)
         assertEquals(listOf("Chest"), bench.muscles)
         // Fixed from the legacy data: curls were "vertical pulls", the wide-grip pulldown a machine.
         assertEquals(MovementPattern.ElbowFlexion, byId.getValue("db_bicep_curl").pattern)

@@ -49,7 +49,10 @@ class GymAtSessionStartTest {
 
     private fun gymRow(name: String): SemanticsNodeInteraction = compose.onNode(isSelectable().and(hasText(name, substring = true)))
 
-    private fun key(description: String) = compose.onNodeWithContentDescription(description).performClick().also { compose.waitForIdle() }
+    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
+    private fun key(description: String) = compose.also { c ->
+        c.waitUntil(5_000) { c.onAllNodes(hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty() }
+    }.onNodeWithContentDescription(description).performClick().also { compose.waitForIdle() }
 
     private fun startAt(gym: String) {
         waitFor("Start session")

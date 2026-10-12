@@ -57,6 +57,15 @@ import java.util.Locale
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Checkbox
+import com.hyperlog.app.coach.Advice
+import com.hyperlog.app.coach.Change
+import com.hyperlog.app.coach.Constraints
+import com.hyperlog.app.coach.RuleCoach
+import com.hyperlog.app.coach.SessionSwap
+import com.hyperlog.app.coach.Situation
+import com.hyperlog.app.library.Exercise
 
 /**
  * Today: the next day of the program, with Start session, or with no program (or a finished one)
@@ -70,8 +79,11 @@ fun TodayScreen(
     onSettings: () -> Unit,
     sessionRunning: Boolean,
     onResume: () -> Unit,
-    /** Starts a session at the gym (null with no gyms): the program's next day, or ad hoc when [adHoc]. */
-    onStart: (gymId: Long?, adHoc: Boolean) -> Unit,
+    /**
+     * Starts a session at the gym (null with no gyms): the program's next day, or ad hoc when
+     * [adHoc]. The swaps (slot id -> exercise) are for equipment the gym doesn't have, this session only.
+     */
+    onStart: (gymId: Long?, adHoc: Boolean, swaps: Map<String, String>) -> Unit,
     modifier: Modifier = Modifier,
     gyms: List<Gym> = emptyList(),
     usualGymId: Long? = null,
@@ -83,21 +95,39 @@ fun TodayScreen(
     /** The starter program, offered while no program runs; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
+    /** The exercise library, for the swaps the coach proposes. */
+    library: List<Exercise> = emptyList(),
+    /** The day of the last session finished; null with none yet. */
+    lastTrained: LocalDate? = null,
+    onCoach: () -> Unit = {},
+    /** Shows a coach's Change for review. */
+    onPropose: (Change) -> Unit = {},
 ) {
     /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
     var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
     val start: (Boolean) -> Unit = { adHoc ->
         when {
             sessionRunning -> onResume()
-            gyms.isEmpty() -> onStart(null, adHoc)
+            gyms.isEmpty() -> onStart(null, adHoc, emptyMap())
             else -> picking = adHoc
         }
     }
     val kind = picking
-    if (kind != null && !sessionRunning) {
-        StartSheet(gyms, usualGymId, onStart = { picking = null; onStart(it, kind) }, onDismiss = { picking = null })
-    }
     val next = program?.next
+    if (kind != null && !sessionRunning) {
+        StartSheet(
+            gyms, usualGymId,
+            day = next.takeIf { !kind },
+            library = library,
+            onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
+            onDismiss = { picking = null },
+        )
+    }
+    // Time off: more than a week since the last session, with no Change made for today yet.
+    val daysOff = RuleCoach.daysOff(lastTrained, program?.today ?: LocalDate.now())
+    val easeBack = if (program != null && next != null && !sessionRunning && RuleCoach.timeOff(daysOff) && program.changes.none { it.acceptedOn == program.today }) {
+        (RuleCoach.advise(Situation.TimeOff, Constraints(), program, library, lastTrained) as? Advice.Propose)?.change
+    } else null
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -106,6 +136,11 @@ fun TodayScreen(
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.
                 title = { Text(stringResource(R.string.today_title), Modifier.padding(start = 8.dp)) },
                 actions = {
+                    if (next != null) {
+                        IconButton(onClick = onCoach) {
+                            SymbolIcon(Symbol.Sports, stringResource(R.string.coach_title))
+                        }
+                    }
                     IconButton(onClick = onPastSessions) {
                         SymbolIcon(Symbol.History, stringResource(R.string.past_title))
                     }
@@ -138,7 +173,10 @@ fun TodayScreen(
         },
     ) { padding ->
         if (next != null) {
-            NextDay(next, exerciseNames, Modifier.padding(padding))
+            NextDay(
+                next, exerciseNames, Modifier.padding(padding),
+                timeOff = easeBack?.let { change -> { TimeOffLine(daysOff!!, onEaseBack = { onPropose(change) }) } },
+            )
         } else if (program == null && starter != null && !sessionRunning) {
             StarterOffer(starter, onRunStarter, Modifier.padding(padding)) {
                 TextButton(onClick = { start(true) }) { Text(stringResource(R.string.today_start_session)) }
@@ -187,7 +225,7 @@ fun TodayScreen(
 
 /** The day to train: week and block, its name, and a line per slot with its sets. */
 @Composable
-private fun NextDay(day: PlannedDay, names: Map<String, String>, modifier: Modifier = Modifier) {
+private fun NextDay(day: PlannedDay, names: Map<String, String>, modifier: Modifier = Modifier, timeOff: (@Composable () -> Unit)? = null) {
     val cs = MaterialTheme.colorScheme
     LazyColumn(modifier.fillMaxSize()) {
         item {
@@ -200,9 +238,21 @@ private fun NextDay(day: PlannedDay, names: Map<String, String>, modifier: Modif
                 Spacer(Modifier.height(4.dp))
                 Text(day.day.name, style = MaterialTheme.typography.headlineSmall)
             }
+            timeOff?.invoke()
         }
         items(day.slots, key = { it.id }) { slot ->
             Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 24.dp, vertical = 8.dp)) {
+                // A Change's swap reads as the session will: "In place of …" over the name.
+                slot.inPlaceOf?.let { planned ->
+                    Text(
+                        stringResource(R.string.edit_swapped_from, names[planned] ?: planned),
+                        Modifier.padding(start = 40.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = cs.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 // The label sits on the name's baseline.
                 Row {
                     Text(
@@ -227,22 +277,63 @@ private fun NextDay(day: PlannedDay, names: Map<String, String>, modifier: Modif
 
 
 /**
+ * `11 days since your last session` with **Ease back in**, which opens the coach's re-entry
+ * Change (or Repeat week after more than two weeks) for review.
+ */
+@Composable
+private fun TimeOffLine(days: Int, onEaseBack: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp).padding(bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SymbolIcon(Symbol.History, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.tertiary)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            stringResource(R.string.coach_days_off, days),
+            Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(onClick = onEaseBack) { Text(stringResource(R.string.coach_ease_back)) }
+    }
+}
+
+/**
  * Where you train today: the gyms as a single choice, today's usual one picked and saying why,
  * and Start. Changing the gym is one tap on another row.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StartSheet(gyms: List<Gym>, usualGymId: Long?, onStart: (Long) -> Unit, onDismiss: () -> Unit) {
+private fun StartSheet(
+    gyms: List<Gym>,
+    usualGymId: Long?,
+    day: PlannedDay?,
+    library: List<Exercise>,
+    onStart: (Long, Map<String, String>) -> Unit,
+    onDismiss: () -> Unit,
+) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) { StartSheetContent(gyms, usualGymId, onStart) }
+    ) { StartSheetContent(gyms, usualGymId, onStart, day, library) }
 }
 
 @Composable
-internal fun StartSheetContent(gyms: List<Gym>, usualGymId: Long?, onStart: (Long) -> Unit) {
+internal fun StartSheetContent(
+    gyms: List<Gym>,
+    usualGymId: Long?,
+    onStart: (Long, Map<String, String>) -> Unit,
+    /** The program day to start, checked against the chosen gym's equipment; null ad hoc. */
+    day: PlannedDay? = null,
+    library: List<Exercise> = emptyList(),
+) {
     var chosen by rememberSaveable { mutableStateOf(usualGymId ?: gyms.first().id) }
+    val gym = gyms.firstOrNull { it.id == chosen } ?: gyms.first()
+    val missing = remember(day, gym.missing, library) { day?.let { RuleCoach.missingEquipment(it, library, gym.missing) }.orEmpty() }
+    /** Proposed swaps turned down, by slot id; another gym starts over. */
+    var declined by remember(chosen) { mutableStateOf(emptySet<String>()) }
+    val names = remember(library) { library.associate { it.id to it.name } }
     val today = remember { LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "s" }
     run {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp).selectableGroup()) {
@@ -274,9 +365,60 @@ internal fun StartSheetContent(gyms: List<Gym>, usualGymId: Long?, onStart: (Lon
                     }
                 }
             }
+            if (missing.isNotEmpty()) {
+                MissingSwaps(gym.name, missing, names, declined, onToggle = { slot -> declined = if (slot in declined) declined - slot else declined + slot })
+            }
             Spacer(Modifier.height(16.dp))
-            Button(onClick = { onStart(chosen) }, Modifier.align(Alignment.End).padding(end = 24.dp)) {
+            val swaps = missing.filter { it.replacement != null && it.slot !in declined }.associate { it.slot to it.replacement!! }
+            Button(onClick = { onStart(chosen, swaps) }, Modifier.align(Alignment.End).padding(end = 24.dp)) {
                 Text(stringResource(R.string.start_start))
+            }
+        }
+    }
+}
+
+/**
+ * What the gym hasn't got, under the gyms: each proposed swap a ticked checkbox row reading as
+ * the session will (the exercise, "In place of ..." over it); one with nothing that fits says so.
+ */
+@Composable
+private fun MissingSwaps(gym: String, swaps: List<SessionSwap>, names: Map<String, String>, declined: Set<String>, onToggle: (String) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Text(
+        stringResource(R.string.start_missing, gym),
+        Modifier.padding(horizontal = 24.dp).padding(top = 16.dp, bottom = 4.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = cs.onSurfaceVariant,
+    )
+    swaps.forEach { swap ->
+        val from = names[swap.exercise] ?: swap.exercise
+        val to = swap.replacement
+        if (to == null) {
+            Text(
+                stringResource(R.string.start_missing_none, from),
+                Modifier.padding(start = 64.dp, end = 24.dp).heightIn(min = 48.dp).padding(vertical = 12.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = cs.onSurfaceVariant,
+            )
+        } else {
+            val on = swap.slot !in declined
+            Row(
+                Modifier.fillMaxWidth()
+                    .toggleable(on, role = Role.Checkbox, onValueChange = { onToggle(swap.slot) })
+                    .heightIn(min = 56.dp)
+                    .padding(start = 12.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Checkbox(checked = on, onCheckedChange = null, Modifier.size(48.dp))
+                Spacer(Modifier.width(4.dp))
+                Column {
+                    Text(
+                        stringResource(R.string.edit_swapped_from, from),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = cs.onSurfaceVariant,
+                    )
+                    Text(names[to] ?: to, style = MaterialTheme.typography.bodyLarge)
+                }
             }
         }
     }
@@ -285,5 +427,5 @@ internal fun StartSheetContent(gyms: List<Gym>, usualGymId: Long?, onStart: (Lon
 @Preview
 @Composable
 private fun TodayScreenPreview() {
-    HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _ -> }) }
+    HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> }) }
 }

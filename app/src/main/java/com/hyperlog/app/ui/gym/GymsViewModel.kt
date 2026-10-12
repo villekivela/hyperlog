@@ -29,6 +29,7 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
     override fun renameGym(id: Long, name: String) = run { store.renameGym(id, name) }
     override fun deleteGym(id: Long) = run { store.deleteGym(id) }
     override fun setWeekdays(id: Long, days: Set<DayOfWeek>) = run { store.setWeekdays(id, days) }
+    override fun unmarkMissing(gymId: Long, exerciseId: String) = run { store.unmarkMissing(gymId, exerciseId) }
     override fun saveItem(item: EquipmentItem) = run { store.saveItem(item) }
     override fun deleteItem(id: Long) = run { store.deleteItem(id) }
     override fun setDumbbells(spec: LadderSpec) = run { store.setDumbbells(spec) }
@@ -44,6 +45,7 @@ interface GymActions {
     fun renameGym(id: Long, name: String)
     fun deleteGym(id: Long)
     fun setWeekdays(id: Long, days: Set<DayOfWeek>)
+    fun unmarkMissing(gymId: Long, exerciseId: String)
     fun saveItem(item: EquipmentItem)
     fun deleteItem(id: Long)
     fun setDumbbells(spec: LadderSpec)

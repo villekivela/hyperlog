@@ -233,6 +233,7 @@ fun SessionScreen(
                             session.gym?.items.orEmpty(),
                             onPick = actions::chooseMachine,
                             onAdd = { addingMachine = true },
+                            onNotHere = actions::notAtGym,
                             modifier = Modifier.weight(1f),
                         )
                     } else {
@@ -1209,6 +1210,8 @@ private fun MachinePicker(
     items: List<EquipmentItem>,
     onPick: (Long) -> Unit,
     onAdd: () -> Unit,
+    /** The gym has no equipment for it: remember that, and swap the exercise. */
+    onNotHere: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -1244,6 +1247,11 @@ private fun MachinePicker(
             SymbolIcon(Symbol.Add, null, Modifier.width(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.machine_add))
+        }
+        TextButton(onClick = onNotHere, Modifier.padding(start = Margin - 12.dp)) {
+            SymbolIcon(Symbol.Block, null, Modifier.width(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.machine_not_here, gym))
         }
     }
 }

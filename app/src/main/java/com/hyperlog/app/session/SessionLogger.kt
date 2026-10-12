@@ -1,5 +1,6 @@
 package com.hyperlog.app.session
 
+import com.hyperlog.app.coach.RuleCoach
 import androidx.room.withTransaction
 import com.hyperlog.app.data.EntryColumns
 import com.hyperlog.app.data.HyperlogDatabase
@@ -90,9 +91,10 @@ class SessionLogger(
     /**
      * Starts a session of [program]'s next day at [gymId]: its slots become the session's
      * exercises, in order, each with this week's sets. Does nothing if a session is running or the
-     * program is finished.
+     * program is finished. [swaps] (slot id -> exercise) swap slots for this session only, such
+     * as the missing-equipment swaps proposed when the gym was picked.
      */
-    suspend fun startDay(program: ActiveProgram, gymId: Long?) = locked {
+    suspend fun startDay(program: ActiveProgram, gymId: Long?, swaps: Map<String, String> = emptyMap()) = locked {
         if (program.finished || _state.value != null) return@locked
         // The day as trained today, with the Changes in force for today's date.
         val day = programs.plannedDay(program.id, program.position, programs.dateOf(clock())) ?: return@locked
@@ -104,10 +106,11 @@ class SessionLogger(
                 ),
             )
             val ids = day.slots.mapIndexed { i, slot ->
+                val exerciseId = swaps[slot.id] ?: slot.exercise
                 val id = dao.insertSessionExercise(
-                    SessionExerciseEntity(sessionId = sessionId, exerciseId = slot.exercise, position = i, slotId = slot.id),
+                    SessionExerciseEntity(sessionId = sessionId, exerciseId = exerciseId, position = i, slotId = slot.id),
                 )
-                rememberMachine(id, gymId, slot.exercise)
+                rememberMachine(id, gymId, exerciseId)
                 id
             }
             dao.updateSession(dao.session(sessionId)!!.copy(currentSessionExerciseId = ids.firstOrNull()))
@@ -151,6 +154,23 @@ class SessionLogger(
     suspend fun addMachine(name: String, ladder: LadderSpec) = locked {
         val gym = _state.value?.gym ?: return@locked
         setMachine(gyms.addItem(EquipmentItem(gymId = gym.id, name = name, ladder = ladder)))
+    }
+
+    /**
+     * Answers "Which machine?" with "Not at this gym": the gym remembers it has no equipment for
+     * the exercise on screen, and the exercise is swapped as the coach would (the slot's
+     * alternatives, then the movement pattern) or, with nothing that fits, left out of this session.
+     */
+    suspend fun notAtGym() {
+        val session = _state.value ?: return
+        val current = session.current ?: return
+        val gym = session.gym ?: return
+        if (current.sets.isNotEmpty()) return
+        gyms.markMissing(gym.id, current.exercise.id)
+        val missing = gyms.gym(gym.id)?.missing.orEmpty()
+        val library = db.exercises().all().map { it.toExercise() }
+        val replacement = RuleCoach.replacement(current.slot, current.exercise.id, library, missing)
+        if (replacement != null) swap(current.id, replacement) else removeExercise(current.id)
     }
 
     /** Asks "Which machine?" again for the exercise on screen, as long as nothing is logged on it. */

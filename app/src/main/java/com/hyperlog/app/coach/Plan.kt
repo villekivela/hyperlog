@@ -86,8 +86,11 @@ object Plan {
         val date = (proposed.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
         val window = when (val scope = proposed.scope) {
             is Scope.Dates -> {
-                val weeks = ((ChronoUnit.DAYS.between(scope.from, scope.to) + 7) / 7).toInt()
-                generateSequence(accepted.after) { program.next(it) }.take(weeks * (program.blockAt(accepted.after.week)?.days?.size ?: 0))
+                // One week of program days per week of dates, and never more days than dates.
+                val dates = ChronoUnit.DAYS.between(scope.from, scope.to).toInt() + 1
+                val weeks = (dates + 6) / 7
+                val perWeek = program.blockAt(accepted.after.week)?.days?.size ?: 0
+                generateSequence(accepted.after) { program.next(it) }.take(minOf(dates, weeks * perWeek))
             }
             Scope.RestOfBlock -> generateSequence(accepted.after) { program.next(it) }
                 .takeWhile { program.blockAt(it.week)?.id == accepted.blockId }
@@ -173,6 +176,10 @@ object Plan {
         is Operation.AdjustRir -> day.mapSlots(op.slot) { s ->
             fun List<PlannedSet>.eased() = map { set -> set.copy(rir = set.rir?.let { (it + op.by).coerceIn(0, 10) }) }
             s.copy(sets = s.sets.eased(), alternativeSets = s.alternativeSets.mapValues { it.value.eased() })
+        }
+        is Operation.RemoveTechnique -> day.mapSlots(op.slot) { s ->
+            fun List<PlannedSet>.plain() = map { set -> if (set.technique != null && (op.technique == null || set.technique.kind == op.technique)) set.copy(technique = null) else set }
+            s.copy(sets = s.sets.plain(), alternativeSets = s.alternativeSets.mapValues { it.value.plain() })
         }
         is Operation.DeloadWeek -> if (op.week != day.position.week) day else {
             fun List<PlannedSet>.deloaded() = withCount((size + 1) / 2).map { set ->

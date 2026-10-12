@@ -57,6 +57,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     SmartDisplay(R.drawable.symbol_smart_display),
     SouthEast(R.drawable.symbol_south_east),
     Spa(R.drawable.symbol_spa),
+    Sports(R.drawable.symbol_sports),
     Stairs(R.drawable.symbol_stairs),
     StickyNote2(R.drawable.symbol_sticky_note_2),
     Stop(R.drawable.symbol_stop),

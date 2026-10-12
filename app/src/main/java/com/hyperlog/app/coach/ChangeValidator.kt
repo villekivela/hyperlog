@@ -18,6 +18,9 @@ object ChangeValidator {
     const val MAX_LOAD_PERCENT = 50
     const val MAX_RIR_STEP = 5
 
+    /** The technique kinds `remove_technique` names, as in a program file. */
+    val TechniqueKinds = listOf("dropset", "myo_reps", "lengthened_partials", "iso_hold", "failure")
+
     fun validate(json: String, program: Program, exercises: Set<String>): Result {
         val change = try {
             ChangeJson.decode(json)
@@ -66,6 +69,10 @@ object ChangeValidator {
                 is Operation.AdjustSets -> { slot(op.slot); range("sets", op.sets, 1, MAX_SETS) }
                 is Operation.AdjustLoad -> { slot(op.slot); range("percent", op.percent, -MAX_LOAD_PERCENT, MAX_LOAD_PERCENT, zero = false) }
                 is Operation.AdjustRir -> { slot(op.slot); range("by", op.by, -MAX_RIR_STEP, MAX_RIR_STEP, zero = false) }
+                is Operation.RemoveTechnique -> {
+                    slot(op.slot)
+                    op.technique?.let { if (it !in TechniqueKinds) add("""$path.technique: unknown technique "$it": use ${TechniqueKinds.joinToString()}""") }
+                }
                 is Operation.DeloadWeek -> op.week?.let { range("week", it, 1, program.weeks) }
                 is Operation.ShiftProgram -> when {
                     op.weeks == 0 -> add("$path.weeks: must not be 0")

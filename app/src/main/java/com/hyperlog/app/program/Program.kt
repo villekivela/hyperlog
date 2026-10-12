@@ -117,6 +117,15 @@ sealed interface Technique {
     data class LengthenedPartials(val partials: Int? = null) : Technique
     data class IsoHold(val seconds: Int, val position: HoldPosition) : Technique
     data object Failure : Technique
+
+    /** The technique's kind as a program file names it: `dropset`, `myo_reps`… */
+    val kind: String get() = when (this) {
+        is Dropset -> "dropset"
+        is MyoReps -> "myo_reps"
+        is LengthenedPartials -> "lengthened_partials"
+        is IsoHold -> "iso_hold"
+        Failure -> "failure"
+    }
 }
 
 enum class HoldPosition(val key: String) { Stretch("stretch"), Contraction("contraction") }

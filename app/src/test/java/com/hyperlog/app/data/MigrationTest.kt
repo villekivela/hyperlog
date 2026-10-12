@@ -280,4 +280,22 @@ class MigrationTest {
         assertEquals(3, db.programs().program(1)!!.week)
         db.close()
     }
+
+    @Test
+    fun version11GymsStartWithNothingMissing() = runTest {
+        val file = context.getDatabasePath("migration-test-11.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(11, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Kamppi', 0)")
+        }
+
+        // Room checks the migrated tables against the v12 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val gym = com.hyperlog.app.gym.Gyms(db).gym(1)!!
+        assertEquals("Kamppi", gym.name)
+        assertEquals(emptySet<String>(), gym.missing)
+        db.close()
+    }
 }

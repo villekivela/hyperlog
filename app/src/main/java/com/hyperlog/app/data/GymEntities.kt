@@ -50,6 +50,21 @@ data class GymExerciseItemEntity(
     @ColumnInfo(name = "equipment_item_id") val equipmentItemId: Long,
 )
 
+/** An exercise a gym doesn't have the equipment for: picking the gym proposes a swap for it. */
+@Entity(
+    tableName = "gym_missing_exercise",
+    primaryKeys = ["gym_id", "exercise_id"],
+    foreignKeys = [
+        ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(ExerciseEntity::class, ["id"], ["exercise_id"]),
+    ],
+    indices = [Index("exercise_id")],
+)
+data class GymMissingExerciseEntity(
+    @ColumnInfo(name = "gym_id") val gymId: Long,
+    @ColumnInfo(name = "exercise_id") val exerciseId: String,
+)
+
 /** A session's gym and start, for working out the usual gym on a weekday. */
 data class Visit(
     @ColumnInfo(name = "gym_id") val gymId: Long,
@@ -97,6 +112,18 @@ interface GymDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun remember(choice: GymExerciseItemEntity)
+
+    @Query("SELECT * FROM gym_missing_exercise")
+    fun observeMissing(): Flow<List<GymMissingExerciseEntity>>
+
+    @Query("SELECT exercise_id FROM gym_missing_exercise WHERE gym_id = :gymId")
+    suspend fun missing(gymId: Long): List<String>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun markMissing(missing: GymMissingExerciseEntity)
+
+    @Query("DELETE FROM gym_missing_exercise WHERE gym_id = :gymId AND exercise_id = :exerciseId")
+    suspend fun unmarkMissing(gymId: Long, exerciseId: String)
 
     @Query("DELETE FROM gym WHERE id = :id")
     suspend fun deleteGym(id: Long)

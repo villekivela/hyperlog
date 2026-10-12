@@ -3,6 +3,7 @@ package com.hyperlog.app.gym
 import com.hyperlog.app.data.EquipmentItemEntity
 import com.hyperlog.app.data.GymEntity
 import com.hyperlog.app.data.GymExerciseItemEntity
+import com.hyperlog.app.data.GymMissingExerciseEntity
 import com.hyperlog.app.data.Visit
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.SharedLadderEntity
@@ -16,7 +17,14 @@ import java.time.Instant
 import java.time.ZoneId
 
 /** A gym, its equipment, and the weekdays it is planned for (empty: no plan). */
-data class Gym(val id: Long, val name: String, val items: List<EquipmentItem>, val weekdays: Set<DayOfWeek> = emptySet())
+data class Gym(
+    val id: Long,
+    val name: String,
+    val items: List<EquipmentItem>,
+    val weekdays: Set<DayOfWeek> = emptySet(),
+    /** Exercises the gym has no equipment for: picking it proposes swaps for them. */
+    val missing: Set<String> = emptySet(),
+)
 
 /** One piece of equipment at a gym, with its weight ladder. [id] 0 is a new one. */
 data class EquipmentItem(val id: Long = 0, val gymId: Long, val name: String, val ladder: LadderSpec)
@@ -29,9 +37,10 @@ data class EquipmentItem(val id: Long = 0, val gymId: Long, val name: String, va
 class Gyms(db: HyperlogDatabase) {
     private val dao = db.gyms()
 
-    val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems()) { gyms, items ->
+    val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems(), dao.observeMissing()) { gyms, items, missing ->
         val byGym = items.groupBy { it.gymId }
-        gyms.map { g -> g.toGym(byGym[g.id].orEmpty()) }
+        val missingBy = missing.groupBy({ it.gymId }, { it.exerciseId })
+        gyms.map { g -> g.toGym(byGym[g.id].orEmpty(), missingBy[g.id].orEmpty()) }
     }
 
     val dumbbells: Flow<LadderSpec> = dao.observeShared().map { it.dumbbells() }
@@ -43,7 +52,13 @@ class Gyms(db: HyperlogDatabase) {
     suspend fun setWeekdays(id: Long, days: Set<DayOfWeek>) = dao.setWeekdays(id, days.toBits())
 
     /** One gym with its equipment, as it is now. */
-    suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id)) }
+    suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id)) }
+
+    /** Marks [exerciseId] as one [gymId] has no equipment for. */
+    suspend fun markMissing(gymId: Long, exerciseId: String) = dao.markMissing(GymMissingExerciseEntity(gymId, exerciseId))
+
+    /** [gymId] has the equipment for [exerciseId] after all. */
+    suspend fun unmarkMissing(gymId: Long, exerciseId: String) = dao.unmarkMissing(gymId, exerciseId)
 
     /** The gym to preselect when a session starts on [day]; see [usualGym]. */
     suspend fun usualGym(day: DayOfWeek, zone: ZoneId = ZoneId.systemDefault()): Long? {
@@ -86,8 +101,8 @@ class Gyms(db: HyperlogDatabase) {
     private fun List<SharedLadderEntity>.plates() =
         firstOrNull { it.key == PLATES }?.let { LadderSpec.decode(it.ladder) as? LadderSpec.Plates } ?: LadderSpec.DefaultPlates
 
-    private fun GymEntity.toGym(items: List<EquipmentItemEntity>) =
-        Gym(id, name, items.mapNotNull { it.toItem() }, weekdays.toDays())
+    private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList()) =
+        Gym(id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet())
 
     private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it) }
 

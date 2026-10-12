@@ -152,6 +152,10 @@ interface SessionDao {
     @Query("UPDATE set_extension SET weight_kg = :weightKg, reps = :reps WHERE id = :id")
     suspend fun correctExtension(id: Long, weightKg: Double, reps: Int)
 
+    /** When the last finished session started; null with none. The coach counts time off from it. */
+    @Query("SELECT MAX(started_at) FROM session WHERE finished_at IS NOT NULL")
+    suspend fun lastTrained(): Long?
+
     /** Every finished session, newest first. */
     @Query("SELECT * FROM session WHERE finished_at IS NOT NULL ORDER BY started_at DESC, id DESC")
     suspend fun finishedSessions(): List<SessionEntity>

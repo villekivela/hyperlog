@@ -135,7 +135,7 @@
    "name": "Seated DB Arnold Press",
    "equipment": "dumbbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts",
     "Side Delts"
@@ -180,7 +180,7 @@
    "name": "Barbell Bench Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -228,7 +228,7 @@
    "name": "Barbell Incline Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -672,7 +672,7 @@
    "name": "Close-Grip Bench Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Triceps Long Head",
     "Triceps Lateral Head"
@@ -771,7 +771,7 @@
    "name": "DB Bench Press",
    "equipment": "dumbbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -883,7 +883,7 @@
    "name": "DB Incline Press",
    "equipment": "dumbbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -1075,7 +1075,7 @@
    "name": "Decline Bench Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -1140,7 +1140,7 @@
    "name": "Standing DB Shoulder Press",
    "equipment": "dumbbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts"
    ],
@@ -1185,7 +1185,7 @@
    "name": "Floor Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -1460,7 +1460,7 @@
    "name": "Larsen Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -1876,7 +1876,7 @@
    "name": "Barbell Overhead Press",
    "equipment": "barbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts"
    ],
@@ -2026,7 +2026,7 @@
    "name": "Push Press",
    "equipment": "barbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts"
    ],
@@ -2196,7 +2196,7 @@
    "name": "Seated DB Shoulder Press",
    "equipment": "dumbbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts"
    ],
@@ -2245,7 +2245,7 @@
    "name": "Seated Barbell Overhead Press",
    "equipment": "barbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts"
    ],
@@ -2483,7 +2483,7 @@
    "name": "Spoto Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Chest"
    ],
@@ -2512,7 +2512,7 @@
    "name": "Standing DB Arnold Press",
    "equipment": "dumbbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts",
     "Side Delts"
@@ -2723,7 +2723,7 @@
    "name": "Z-Press",
    "equipment": "barbell",
    "pattern": "vertical_push",
-   "grip": "low",
+   "grip": "high",
    "muscles": [
     "Front Delts"
    ],

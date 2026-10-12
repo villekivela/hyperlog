@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -54,6 +55,8 @@ interface SessionActions : PadActions {
     fun finish()
     /** Answers "Which machine?" with one of the gym's equipment items. */
     fun chooseMachine(itemId: Long)
+    /** Answers "Which machine?" with "Not at this gym": the gym remembers it, and the exercise is swapped. */
+    fun notAtGym()
     /** Answers "Which machine?" with a new machine at the gym. */
     fun addMachine(name: String, ladder: LadderSpec)
     /** Asks "Which machine?" again, before any set is logged on it. */
@@ -104,7 +107,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             runtime.ready()
             _loaded.value = true
             // An edit to the shared dumbbells, plates or a gym's equipment reaches the running session at once.
-            combine(gyms.dumbbells, gyms.plates, gyms.gyms) { d, p, g -> Triple(d, p, g) }.drop(1).collect { logger.load() }
+            combine(gyms.dumbbells, gyms.plates, gyms.gyms) { d, p, g -> Triple(d, p, g) }.distinctUntilChanged().drop(1).collect { logger.load() }
         }
     }
 
@@ -112,10 +115,21 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     val usualGym: StateFlow<Long?> = gyms.usualGymToday().stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Starts a session at [gymId]: the program's next day, or ad hoc when [adHoc] or with no day to train. */
-    fun start(gymId: Long?, adHoc: Boolean = false) = run {
+    fun start(gymId: Long?, adHoc: Boolean = false, swaps: Map<String, String> = emptyMap()) = run {
         val program = if (adHoc) null else programs.active.first()
-        if (program?.next != null) logger.startDay(program, gymId) else logger.start(gymId)
+        if (program?.next != null) logger.startDay(program, gymId, swaps) else logger.start(gymId)
     }
+
+    private val _lastTrained = MutableStateFlow<java.time.LocalDate?>(null)
+
+    /**
+     * The day the last finished session was trained on; null with none yet. Read again by
+     * [refreshLastTrained] rather than observed, since the session row is written on every tap.
+     */
+    val lastTrained: StateFlow<java.time.LocalDate?> = _lastTrained.asStateFlow()
+
+    /** Reads [lastTrained] again: when Today or the coach shows, and after a session finishes. */
+    fun refreshLastTrained() = run { _lastTrained.value = db.sessions().lastTrained()?.let(programs::dateOf) }
     fun dismissSummary() { _summary.value = null }
 
     /** Runs the session just finished again. */
@@ -137,10 +151,14 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun adjustRest(deltaMs: Long) = run { logger.adjustRest(deltaMs) }
     override fun endRest() = run { logger.endRest() }
     override fun tickWarmup(index: Int) = run { logger.tickWarmup(index) }
-    override fun finish() = run { _summary.value = logger.finish() }
+    override fun finish() = run {
+        _summary.value = logger.finish()
+        _lastTrained.value = db.sessions().lastTrained()?.let(programs::dateOf)
+    }
     override fun chooseMachine(itemId: Long) = run { logger.chooseMachine(itemId) }
     override fun addMachine(name: String, ladder: LadderSpec) = run { logger.addMachine(name, ladder) }
     override fun changeMachine() = run { logger.changeMachine() }
+    override fun notAtGym() = run { logger.notAtGym() }
     override fun finishSet() = run { logger.finishSet() }
     override fun startHold() = run { logger.startHold() }
     override fun stopHold() = run { logger.stopHold() }

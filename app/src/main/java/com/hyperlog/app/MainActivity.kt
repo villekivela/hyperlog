@@ -31,6 +31,7 @@ import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
 import com.hyperlog.app.ui.coach.ChangeReviewScreen
+import com.hyperlog.app.ui.coach.CoachScreen
 import com.hyperlog.app.ui.program.ProgramViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -92,7 +93,7 @@ private fun AskForNotifications() {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program, Past }
+private enum class Screen { Today, Settings, Library, Gyms, Program, Past, Coach }
 
 /** Marks a new exercise in the editor, which otherwise holds the id of the one being edited. */
 private const val NewExercise = ""
@@ -142,15 +143,23 @@ private fun App(
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
     val pastSession by pastModel.session.collectAsStateWithLifecycle()
     val pastSessions by pastModel.sessions.collectAsStateWithLifecycle()
+    val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
     if (!loaded) return
 
     val running = session
     val finished = summary
+    // Time off counts from the last session finished: read again whenever Today or the coach shows.
+    LaunchedEffect(screen, running == null) { if (running == null) sessions.refreshLastTrained() }
     val review by programModel.review.collectAsStateWithLifecycle()
     if (running != null) AskForNotifications()
     // A Change under review covers whatever proposed it: the Program screen or the session.
     review?.let { r ->
-        ChangeReviewScreen(r, exercises.associate { it.id to it.name }, onAccept = programModel::accept, onReject = programModel::reject)
+        ChangeReviewScreen(
+            r, exercises.associate { it.id to it.name },
+            // A coach's Change, once accepted, is the plan Today shows.
+            onAccept = { programModel.accept(); if (screen == Screen.Coach) screen = Screen.Today },
+            onReject = programModel::reject,
+        )
         return
     }
     // Session done reads the finished session back, so a correction made from it shows at once.
@@ -222,6 +231,8 @@ private fun App(
                     onOpenItem = { ladder = it },
                     onAddItem = { ladder = NewItem },
                     onBack = { gymId = null },
+                    exerciseNames = exercises.associate { it.id to it.name },
+                    onRestore = { gymsModel.unmarkMissing(gym.id, it) },
                 )
             }
         }
@@ -252,6 +263,13 @@ private fun App(
             onPropose = programModel::propose,
             onRevert = programModel::revert,
         )
+        screen == Screen.Coach && program?.next != null -> CoachScreen(
+            program!!,
+            exercises,
+            lastTrained,
+            onPropose = programModel::propose,
+            onBack = { screen = Screen.Today },
+        )
         screen == Screen.Past && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         screen == Screen.Past && pastSession != null -> PastSessionScreen(
             pastSession!!,
@@ -272,9 +290,9 @@ private fun App(
             onSettings = { screen = Screen.Settings },
             sessionRunning = running != null,
             onResume = { left = false },
-            onStart = { gym, adHoc ->
+            onStart = { gym, adHoc, swaps ->
                 left = false
-                sessions.start(gym, adHoc)
+                sessions.start(gym, adHoc, swaps)
             },
             gyms = gyms,
             usualGymId = usualGym,
@@ -284,6 +302,10 @@ private fun App(
             onPastSessions = { pastModel.refresh(); screen = Screen.Past },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
+            library = exercises,
+            lastTrained = lastTrained,
+            onCoach = { screen = Screen.Coach },
+            onPropose = programModel::propose,
         )
     }
 }
