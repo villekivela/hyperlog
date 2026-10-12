@@ -100,4 +100,9 @@ private object NoActions : com.hyperlog.app.ui.session.SessionActions {
     override fun chooseMachine(itemId: Long) = Unit
     override fun addMachine(name: String, ladder: LadderSpec) = Unit
     override fun changeMachine() = Unit
+    override fun finishSet() = Unit
+    override fun startHold() = Unit
+    override fun stopHold() = Unit
+    override fun setTechnique(setIndex: Int, technique: com.hyperlog.app.program.Technique?) = Unit
+    override fun split(on: Boolean) = Unit
 }

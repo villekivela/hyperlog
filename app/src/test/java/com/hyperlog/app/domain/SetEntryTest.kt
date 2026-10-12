@@ -44,6 +44,16 @@ class SetEntryTest {
     }
 
     @Test
+    fun aSummaryPutsDropsMiniSetsAndHoldsAfterTheSet() {
+        val drop = LoggedSet(25.0, 9, 0, 1, extensions = listOf(Extension(Extension.Kind.Drop, 18.0, 7), Extension(Extension.Kind.Drop, 12.0, 6)))
+        assertEquals("25 × 9 @ 1, 18 × 7, 12 × 6", drop.summary())
+        val myo = LoggedSet(60.0, 12, 0, 0, extensions = listOf(Extension(Extension.Kind.MiniSet, 60.0, 4), Extension(Extension.Kind.MiniSet, 60.0, 3)))
+        assertEquals("60 × 12 @ 0 + 4 + 3", myo.summary())
+        assertEquals("60 × 12 + 6p @ 0 + 20 s", LoggedSet(60.0, 12, 6, 0, extensions = listOf(Extension(Extension.Kind.Hold, 60.0, 20))).summary())
+        assertEquals("30 × 10/9 @ 1", LoggedSet(30.0, 10, 0, 1, rightReps = 9).summary())
+    }
+
+    @Test
     fun theWeakerSideOfASplitSetIsWhatProgressionReads() {
         assertEquals(8, LoggedSet(20.0, 9, 0, 1, rightReps = 8).progressionReps)
         assertEquals(9, LoggedSet(20.0, 9, 3, 1).progressionReps)

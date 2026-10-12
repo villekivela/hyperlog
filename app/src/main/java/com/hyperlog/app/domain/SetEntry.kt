@@ -200,9 +200,21 @@ fun formatKg(kg: Double): String =
     if (kg == Math.floor(kg)) kg.toLong().toString()
     else String.format(Locale.ROOT, "%.2f", kg).trimEnd('0').trimEnd('.')
 
-/** `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0` (SPEC, Full and partial reps). */
+/**
+ * `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0` (SPEC, Full and partial reps), with what extended the set
+ * after it: drops (`, 18 × 7, 12 × 6`), mini-sets (` + 4 + 3`) or a hold (` + 20 s`). A split set
+ * reads `10/9`.
+ */
 fun LoggedSet.summary(): String = buildString {
     append("${formatKg(weightKg)} × $fullReps")
+    rightReps?.let { append("/$it") }
     if (partialReps > 0) append(" + ${partialReps}p")
     append(" @ $rir")
+    extensions.forEach {
+        when (it.kind) {
+            Extension.Kind.Drop -> append(", ${formatKg(it.weightKg)} × ${it.reps}")
+            Extension.Kind.MiniSet -> append(" + ${it.reps}")
+            Extension.Kind.Hold -> append(" + ${it.reps} s")
+        }
+    }
 }

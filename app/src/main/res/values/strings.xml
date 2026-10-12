@@ -33,6 +33,7 @@
     <string name="col_last">Last</string>
     <string name="col_kg">kg</string>
     <string name="col_reps">Reps</string>
+    <string name="col_reps_split">L / R</string>
     <string name="col_rir">RIR</string>
 
     <string name="pad_rir">RIR</string>
@@ -48,6 +49,36 @@
     <string name="pad_show">Show keypad</string>
     <string name="pad_next">Next</string>
     <string name="pad_log">Log set</string>
+    <string name="follow_drop">Drop %1$d of %2$d</string>
+    <string name="follow_mini_set">Mini-set %1$d of %2$d</string>
+    <string name="follow_hold">Hold %1$d s</string>
+    <string name="follow_finish_set">Finish set</string>
+    <string name="hold_start">Start</string>
+    <string name="hold_stop">Stop</string>
+    <string name="hold_seconds">%1$d s</string>
+    <string name="breathing">Breathe</string>
+    <string name="set_sheet_title">Set %1$d</string>
+    <string name="set_sheet_technique">Intensity technique</string>
+    <string name="set_sheet_none">None</string>
+    <string name="set_sheet_none_body">A straight set</string>
+    <string name="set_sheet_split">Left and right apart</string>
+    <string name="set_sheet_split_body">Log each side\'s reps</string>
+    <string name="session_set_options">Technique for set %1$d</string>
+    <string name="set_options_description">Set %1$d options</string>
+    <string name="sub_row_logged">Logged</string>
+    <string name="technique_dropset_name">Drop set</string>
+    <string name="technique_myo_name">Myo-reps</string>
+    <string name="technique_partials_name">Lengthened partials</string>
+    <string name="technique_iso_name">Iso hold</string>
+    <string name="technique_failure_name">To failure</string>
+    <string name="technique_detail_drops">%1$d drops of %2$d%%</string>
+    <string name="technique_detail_drop_one">1 drop of %1$d%%</string>
+    <string name="technique_detail_myo">Mini-sets of %1$d, up to %2$d</string>
+    <string name="technique_detail_partials_failure">Partials to failure</string>
+    <string name="technique_detail_partials">%1$d partials</string>
+    <string name="technique_detail_iso_stretch">%1$d s in the stretch</string>
+    <string name="technique_detail_iso_contraction">%1$d s in the contraction</string>
+    <string name="technique_detail_failure">No reps in reserve</string>
 
     <string name="rest_title">Rest</string>
     <string name="rest_end">End rest</string>

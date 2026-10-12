@@ -11,6 +11,7 @@ import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
+import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionLogger
 import com.hyperlog.app.session.SessionSummary
@@ -47,6 +48,14 @@ interface SessionActions {
     fun addMachine(name: String, ladder: LadderSpec)
     /** Asks "Which machine?" again, before any set is logged on it. */
     fun changeMachine()
+    /** Closes the open drop set, myo-reps or hold before its technique runs out. */
+    fun finishSet()
+    fun startHold()
+    fun stopHold()
+    /** Gives set [setIndex] of the exercise on screen a technique for this session, or none. */
+    fun setTechnique(setIndex: Int, technique: Technique?)
+    /** Splits the active set of a unilateral exercise into left and right, or back. */
+    fun split(on: Boolean)
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -110,6 +119,11 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun chooseMachine(itemId: Long) = run { logger.chooseMachine(itemId) }
     override fun addMachine(name: String, ladder: LadderSpec) = run { logger.addMachine(name, ladder) }
     override fun changeMachine() = run { logger.changeMachine() }
+    override fun finishSet() = run { logger.finishSet() }
+    override fun startHold() = run { logger.startHold() }
+    override fun stopHold() = run { logger.stopHold() }
+    override fun setTechnique(setIndex: Int, technique: Technique?) = run { logger.setTechnique(setIndex, technique) }
+    override fun split(on: Boolean) = run { logger.split(on) }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

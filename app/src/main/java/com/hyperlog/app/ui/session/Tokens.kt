@@ -26,6 +26,10 @@ internal val RowInset = 16.dp
 internal val RowPad = Margin - RowInset
 internal val RowHeight = 64.dp
 internal val LabelHeight = 32.dp
+/** Drops, myo mini-sets and holds under their set. */
+internal val SubRowHeight = 48.dp
+/** A tappable value in a sub-row, inside its 48 dp. */
+internal val SubCellHeight = 40.dp
 internal val ColSet = 32.dp
 internal val ColTarget = 88.dp
 internal val ColKg = 64.dp

@@ -40,6 +40,7 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
@@ -49,7 +50,17 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  * through the gesture area.
  */
 @Composable
-internal fun Pad(entry: SetEntry, ladder: WeightLadder, check: WeightCheck?, actions: SessionActions, modifier: Modifier = Modifier) {
+internal fun Pad(
+    entry: SetEntry,
+    ladder: WeightLadder,
+    check: WeightCheck?,
+    actions: SessionActions,
+    modifier: Modifier = Modifier,
+    /** The open set's drop, mini-set or hold being typed; its strip shows progress and Finish set. */
+    followUp: FollowUp? = null,
+    holdRunning: Boolean = false,
+    canConfirm: Boolean = entry.canConfirm,
+) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
@@ -58,6 +69,8 @@ internal fun Pad(entry: SetEntry, ladder: WeightLadder, check: WeightCheck?, act
                 val typed = entry.weightKg
                 if (check != null) {
                     WeightCheckStrip(check, actions)
+                } else if (followUp != null && !onWeight) {
+                    FollowUpStrip(followUp, holdRunning, actions)
                 } else if (onWeight && typed == null) {
                     // Nothing to place on the ladder yet: the strip stays empty until a weight is typed.
                     Spacer(Modifier.weight(1f))
@@ -89,7 +102,7 @@ internal fun Pad(entry: SetEntry, ladder: WeightLadder, check: WeightCheck?, act
                     SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
                     DigitKey(0, actions)
                     if (onWeight) TextKey(".", stringResource(R.string.pad_dot)) { actions.press(PadKey.Dot) } else Spacer(Modifier.weight(1f))
-                    DoneKey(entry, actions, keeps = check != null)
+                    DoneKey(entry, actions, keeps = check != null, enabled = canConfirm)
                 }
             }
         }
@@ -121,7 +134,7 @@ private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: 
 
 /** The pad folded down to its bottom corners: show the pad, and ✓ to log the set as shown. */
 @Composable
-internal fun HiddenPad(entry: SetEntry, actions: SessionActions, modifier: Modifier = Modifier) {
+internal fun HiddenPad(entry: SetEntry, actions: SessionActions, modifier: Modifier = Modifier, canConfirm: Boolean = entry.canConfirm) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp),
@@ -130,7 +143,7 @@ internal fun HiddenPad(entry: SetEntry, actions: SessionActions, modifier: Modif
             SymbolKey(Symbol.Keyboard, R.string.pad_show) { actions.setPadVisible(true) }
             Spacer(Modifier.weight(1f))
             Spacer(Modifier.weight(1f))
-            DoneKey(entry, actions, keeps = false)
+            DoneKey(entry, actions, keeps = false, enabled = canConfirm)
         }
     }
 }
@@ -162,10 +175,9 @@ private fun androidx.compose.foundation.layout.RowScope.SymbolKey(symbol: Symbol
 
 /** ✓: one key, the same size as the others, filled primary. On the weight it reads →. */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: SessionActions, keeps: Boolean) {
+private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: SessionActions, keeps: Boolean, enabled: Boolean) {
     val cs = MaterialTheme.colorScheme
     val onWeight = entry.field == Field.Weight
-    val enabled = entry.canConfirm
     Key(
         stringResource(if (onWeight) R.string.pad_next else R.string.pad_log),
         modifier = Modifier.testTag(DoneKeyTag),

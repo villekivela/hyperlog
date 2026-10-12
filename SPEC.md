@@ -184,6 +184,30 @@ logging, and computed loads where it needs them.
 | `iso_hold` | seconds, position (stretch/contraction) | seconds held | hold timer |
 | `failure` | last set to failure | full reps (+ optional partials) | — |
 
+- **Drops**: each drop is the weight before it (the set's, then the drop actually done) minus the
+  reduction, rounded down to a rung (the lightest rung if none is below). Drop reps prefill from
+  the same drop last time, else 6.
+- **Myo-reps**: the set's reps are the activation set. Mini-sets are at its weight (locked) and
+  prefill with their target; a 15 s breathing countdown comes before each. The set closes when a
+  mini-set falls short of the target or the maximum is reached. Before the set, one planned
+  mini-set row shows what is coming.
+- **Iso hold**: the hold follows the set's full reps as its own sub-row. **Start** on the pad's
+  strip runs a hold timer in the header pill, filling toward the target and buzzing when it is
+  reached; ✓ (or Stop) records the whole seconds held. Seconds can be typed instead.
+- **Lengthened partials**: the first ✓ moves to partials entry, prefilled with the target count if
+  the program gives one; the second ✓ logs.
+- **Failure**: giving the active set "To failure" in the session sets its RIR to 0.
+- A drop set, myo-reps or iso hold stays open after its main set, with no rest, until its
+  technique runs out or **Finish set** on the pad's strip closes it; then the set's rest starts.
+  Switching to another exercise closes an open set.
+- **Changing a technique** during the session: tap a set's number (or ⋮ → Technique for set N)
+  on any set not logged yet. The sheet offers None and the five techniques; a newly picked one
+  starts with the format's defaults (2 drops of 25%, mini-sets of 3 up to 5, partials to failure)
+  and iso hold at 20 s in the stretch. The change is for this session only; a logged set keeps
+  the technique it was done with.
+- The session list and Session done read a set with its extensions after it:
+  `25 × 9 @ 1, 18 × 7, 12 × 6`, `60 × 12 @ 0 + 4 + 3`, `40 × 10 @ 0 + 20 s`.
+
 ### Full and partial reps
 
 Every set logs **full reps** and **partial reps** separately, on any set, whether or not partials
@@ -359,6 +383,11 @@ backup.
   the round. A superset started out of order keeps its partner until the round is done.
 - **Unilateral exercises** log one number (reps per side) by default; a per-set toggle splits left and
   right.
+  - An exercise is unilateral when its name says so (`1-Arm`, `1-Leg`, `Single-Arm`,
+    `Single-Leg`, lunges, split squats, step-ups); the names carry the implement and the side.
+  - The toggle is "Left and right apart" in the active set's sheet (tap its number). A split set
+    takes the left reps, ✓, then the right, under an `L / R` head, and logs as `30 × 10/9 @ 1`.
+    The next set stays split. Progression reads the weaker side.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
   can correct one; progression then reruns from the corrected data.
 - **English only.**

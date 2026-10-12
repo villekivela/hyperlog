@@ -188,6 +188,27 @@ offers **Resume session**. The app opens on a running session.
 - Values cap at 5 characters for weight, 3 for full reps and 2 for partials. A reps value longer
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 
+**Intensity techniques** (screens `technique-*.png`, built in ticket #10; rendered with
+Robolectric, so they have no status bar).
+- Every set's technique is named under it, and its drops, mini-sets or hold follow as 48 dp
+  sub-rows from the start, in the order they'll be done. Planned sub-rows are muted prefills
+  (drop weights computed from the set's planned or typed weight, live), done ones end in a check.
+- **Drop**: Target is a 0 ring, Last is last time's drop (`18 × 9`), reps prefill from it.
+- **Myo-reps**: Target is the mini-set's reps. Before the set one planned mini-set shows; during
+  it, the done ones and the active one. The weight is muted and can't be tapped.
+- **Iso hold**: one sub-row, Target and value in seconds (`20 s`); the weight is the set's, muted.
+  The strip reads `pan_tool` Hold 20 s, a tonal **Start** / **Stop**, and Finish set. While it
+  runs, the header pill shows `pan_tool` and the time held, filling toward the target, and turns
+  primary when it's reached.
+- **Breathing pill**: `air` and the 15 s countdown, drained like rest; it can't be tapped, and it
+  goes away at zero.
+- **Set sheet** (tap a set number still to do, or ⋮ → Technique for set N): "Set 3", then
+  "Intensity technique" with radio rows None and the five techniques (name, its numbers, its
+  symbol in tertiary at the end). Picking one applies it and closes. For a unilateral exercise's
+  active set, a "Left and right apart" switch follows.
+- **Split set**: the reps cell reads `10 / 9`, the side not being typed muted, and the Reps head
+  reads `L / R`.
+
 ## Interaction rules
 
 **✓ does:**
@@ -200,6 +221,8 @@ offers **Resume session**. The app opens on a running session.
 | Reps of a drop or myo set | Logs the main set; rest stops; the first drop or mini-set becomes active |
 | Drop sub-row | Logs the drop; after the last planned drop the set closes and rest starts |
 | Myo mini-set | Logs the mini-set; closes the set when it misses the target or hits the maximum, else starts the next breathing countdown |
+| Iso hold | Stops a running hold timer and logs the whole seconds held (or the seconds typed); the set closes and rest starts |
+| Left reps of a split set | (→ in effect) moves to the right side's reps; the next ✓ logs |
 | Correcting a logged row | Saves the correction; the set to do now becomes active again. Rest is not touched |
 | Weight looks wrong, first time | Does not log: buzzes, focuses the weight and shows why in the strip. The key turns into ✓ |
 | Weight looks wrong, second ✓ | Logs the weight as typed (odd plates happen) |
