@@ -585,8 +585,9 @@ class SessionLogger(
         val current = session.current ?: return@locked
         if (current.sets.isNotEmpty() || index !in session.warmups.indices) return@locked
         val done = if (index == current.warmupsDone - 1) index else index + 1
-        dao.setWarmupsDone(current.id, done)
+        // The screen shows the tick at once; the write follows before the next call runs.
         _state.value = session.copy(exercises = session.exercises.map { if (it.id == current.id) it.copy(warmupsDone = done) else it })
+        dao.setWarmupsDone(current.id, done)
     }
 
     suspend fun setPadVisible(visible: Boolean) = locked {
