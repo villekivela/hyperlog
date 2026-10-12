@@ -28,6 +28,8 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
     private val dao = db.sessions()
     private val mutex = Mutex()
     private val _state = MutableStateFlow<ActiveSession?>(null)
+    /** When ✓ last logged a set, to swallow a stutter tap right after it. */
+    private var lastLoggedAt: Long? = null
 
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
@@ -74,7 +76,10 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         entry.copy(weight = com.hyperlog.app.domain.formatKg(kg), field = Field.Weight, fresh = true)
     }
 
-    /** ✓: moves from the weight to reps, or logs the set and starts rest. */
+    /**
+     * ✓: moves from the weight to reps, or logs the set and starts rest. A ✓ within
+     * [DOUBLE_TAP_MS] of logging a set logs nothing: one press logs at most one set.
+     */
     suspend fun done() = locked {
         val session = _state.value ?: return@locked
         val current = session.current ?: return@locked
@@ -83,6 +88,8 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             is SetEntry.Done.Moved -> saveEntry(session, result.entry)
             is SetEntry.Done.Log -> {
                 val now = clock()
+                if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
+                lastLoggedAt = now
                 db.withTransaction {
                     dao.insertSet(result.set.toEntity(current.id, current.sets.size, now))
                     // The next set's entry is worked out again from what was just logged.
@@ -188,6 +195,9 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
     companion object {
         /** Rest after a set in an ad-hoc session, which has no prescription to take it from. */
         const val DEFAULT_REST_MS = 120_000L
+
+        /** No two sets are logged this close together on purpose; a second ✓ is a stutter. */
+        const val DOUBLE_TAP_MS = 1_000L
     }
 }
 

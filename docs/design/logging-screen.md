@@ -201,6 +201,7 @@ offers **Resume session**. The app opens on a running session.
 | Weight looks wrong, first time | Does not log: buzzes, focuses the weight and shows why in the strip. The key turns into ✓ |
 | Weight looks wrong, second ✓ | Logs the weight as typed (odd plates happen) |
 | Nothing typed | Disabled look, does nothing |
+| Within 1 s of logging a set | Does nothing, so a double tap logs one set |
 
 Prefilled values are real values: ✓ without typing logs the set as planned. The first key on a
 field replaces the prefill. − / + step from the current value.

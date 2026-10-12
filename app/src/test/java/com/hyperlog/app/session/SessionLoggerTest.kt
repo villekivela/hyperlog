@@ -51,8 +51,10 @@ class SessionLoggerTest {
 
         logger.type("25"); logger.done()
         logger.type("10"); logger.selectRir(2); logger.done()
-        // The next set comes prefilled from the last one: just ✓.
+        // The next set comes prefilled from the last one: just ✓, after resting.
+        now += 120_000
         logger.done()
+        now += 120_000
         logger.type("9"); logger.partialMode(true); logger.type("4"); logger.selectRir(0); logger.done()
 
         val exercise = logger.session.exercises.single()
@@ -113,6 +115,24 @@ class SessionLoggerTest {
         assertEquals(listOf(LoggedSet(60.0, 12, 0, 1)), exercise.lastTime)
         assertEquals(emptyList<LoggedSet>(), exercise.sets)
         assertEquals("60", logger.session.entry!!.weight)
+    }
+
+    @Test
+    fun aSecondTapOnTheDoneKeyRightAfterLoggingLogsNothing() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("cable_lateral_raise")
+        logger.type("7.5"); logger.done(); logger.type("12"); logger.selectRir(2); logger.done()
+
+        // A stutter on ✓, 150 ms after the set was logged.
+        now += 150
+        logger.done()
+        assertEquals(1, logger.session.current!!.sets.size)
+
+        // A deliberate ✓ a moment later logs the next set as usual.
+        now += 1_000
+        logger.done()
+        assertEquals(2, logger.session.current!!.sets.size)
     }
 
     @Test

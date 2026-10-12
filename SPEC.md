@@ -217,6 +217,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        empty weight. Later sets take the previous set's weight, reps and RIR. A set logs only
        with a weight, full reps and an RIR.
      - Rest after each set is 2:00.
+     - **One ✓, one set**: a ✓ within 1 s of logging a set logs nothing, so a stutter or double
+       tap can't log a phantom set. No two sets are ever logged that close on purpose.
      - Until gyms and equipment exist, −/+ and the weight strip use the global dumbbell ladder for
        dumbbell exercises and 2.5 kg steps for everything else.
      - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
