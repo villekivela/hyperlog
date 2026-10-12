@@ -75,6 +75,10 @@ techniques work (below).
 and imported through a strict validator that names the exact path of every error
 (`blocks[1].days[0].groups[2]…: unknown exercise "bb_row"`). No in-app program editor in v1.
 
+**Top set and back-off.** A set can be a back-off from an earlier set of the same exercise: its
+weight is that set's weight minus a percentage (default 10%), rounded down to a rung. Progression
+judges the top set.
+
 **Week overrides.** Days are defined once per block; any set field can be overridden for given
 weeks of the block, e.g. `"weeks": {"1": {"rir": 3}, "4": {"sets": 2, "technique": null}}`. This
 covers ramp-in weeks, techniques that start in week 2, and deload weeks without duplicating days.
