@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
+import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
@@ -38,6 +39,12 @@ interface SessionActions {
     fun adjustRest(deltaMs: Long)
     fun endRest()
     fun finish()
+    /** Answers "Which machine?" with one of the gym's equipment items. */
+    fun chooseMachine(itemId: Long)
+    /** Answers "Which machine?" with a new machine at the gym. */
+    fun addMachine(name: String, ladder: LadderSpec)
+    /** Asks "Which machine?" again, before any set is logged on it. */
+    fun changeMachine()
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -63,12 +70,15 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             library.sync(withContext(Dispatchers.IO) { LibrarySeed.fromAssets(application) })
             logger.load()
             _loaded.value = true
-            // An edit to the shared dumbbells or plates reaches the running session at once.
-            combine(gyms.dumbbells, gyms.plates) { d, p -> d to p }.drop(1).collect { logger.load() }
+            // An edit to the shared dumbbells, plates or a gym's equipment reaches the running session at once.
+            combine(gyms.dumbbells, gyms.plates, gyms.gyms) { d, p, g -> Triple(d, p, g) }.drop(1).collect { logger.load() }
         }
     }
 
-    fun start() = run { logger.start() }
+    /** The gym to preselect for a session started now; null with no gyms. */
+    val usualGym: StateFlow<Long?> = gyms.usualGymToday().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun start(gymId: Long?) = run { logger.start(gymId) }
     fun dismissSummary() { _summary.value = null }
 
     /** Runs the session just finished again. */
@@ -90,6 +100,9 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun adjustRest(deltaMs: Long) = run { logger.adjustRest(deltaMs) }
     override fun endRest() = run { logger.endRest() }
     override fun finish() = run { _summary.value = logger.finish() }
+    override fun chooseMachine(itemId: Long) = run { logger.chooseMachine(itemId) }
+    override fun addMachine(name: String, ladder: LadderSpec) = run { logger.addMachine(name, ladder) }
+    override fun changeMachine() = run { logger.changeMachine() }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

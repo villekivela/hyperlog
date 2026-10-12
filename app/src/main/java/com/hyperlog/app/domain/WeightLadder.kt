@@ -45,8 +45,8 @@ class WeightLadder(val rungs: List<Double>) {
             WeightLadder(List(count) { round1(start + it * step) })
 
         /**
-         * 2.5 kg steps, for equipment the session doesn't know yet (machines and cables until #5
-         * picks the machine).
+         * 2.5 kg steps, for equipment the session has no ladder for: EZ, trap and safety bars,
+         * plates, bodyweight, and machines in a session with no gym.
          */
         val Default = steps(start = 2.5, step = 2.5, count = 120)
 

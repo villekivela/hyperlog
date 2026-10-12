@@ -103,4 +103,32 @@ class MigrationTest {
         assertEquals(1000L, db.sessions().session(1)!!.startedAt)
         db.close()
     }
+
+    @Test
+    fun version3SessionsKeepNoGymAndGymsGainAnEmptyWeekdayPlan() = runTest {
+        val file = context.getDatabasePath("migration-test-3.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(3, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('leg_extension', 'Leg Extension', 'Machine')")
+            db.execSQL("INSERT INTO gym (id, name) VALUES (1, 'Kallio')")
+            db.execSQL("INSERT INTO equipment_item (id, gym_id, name, ladder) VALUES (1, 1, 'Leg extension', 'steps;Lb;2.5;5.0;40')")
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'leg_extension', 0)")
+        }
+
+        // Room checks the migrated tables against the v4 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(null, db.sessions().session(1)!!.gymId)
+        assertEquals(null, db.sessions().sessionExercises(1).single().equipmentItemId)
+        val gyms = Gyms(db)
+        assertEquals(emptySet<java.time.DayOfWeek>(), gyms.gyms.first().single().weekdays)
+        gyms.remember(1, "leg_extension", 1)
+        assertEquals(1L, gyms.remembered(1, "leg_extension"))
+        // Deleting the machine forgets it.
+        gyms.deleteItem(1)
+        assertEquals(null, gyms.remembered(1, "leg_extension"))
+        db.close()
+    }
 }

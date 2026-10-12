@@ -71,6 +71,7 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
     val dumbbells by gymsModel.dumbbells.collectAsStateWithLifecycle()
     val plates by gymsModel.plates.collectAsStateWithLifecycle()
+    val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
     var gymId by rememberSaveable { mutableStateOf<Long?>(null) }
     /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -136,6 +137,7 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
                 GymScreen(
                     gym,
                     onRename = { gymsModel.renameGym(gym.id, it) },
+                    onWeekdays = { gymsModel.setWeekdays(gym.id, it) },
                     onDelete = { gymsModel.deleteGym(gym.id); gymId = null },
                     onOpenItem = { ladder = it },
                     onAddItem = { ladder = NewItem },
@@ -169,10 +171,13 @@ private fun App(sessions: SessionViewModel, library: LibraryViewModel, gymsModel
         else -> TodayScreen(
             onSettings = { screen = Screen.Settings },
             sessionRunning = running != null,
-            onSession = {
+            onResume = { left = false },
+            onStart = { gym ->
                 left = false
-                if (running == null) sessions.start()
+                sessions.start(gym)
             },
+            gyms = gyms,
+            usualGymId = usualGym,
         )
     }
 }

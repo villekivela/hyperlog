@@ -5,6 +5,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.domain.WeightUnit
+import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
@@ -13,7 +15,9 @@ import com.hyperlog.app.library.LibrarySeed
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -255,5 +259,115 @@ class SessionLoggerTest {
         logger.type("10"); logger.press(PadKey.Plus)
         assertEquals("12.5", logger.session.entry!!.weight)
         assertEquals(listOf(10.0, 12.5, 15.0), logger.session.current!!.ladder.rungs)
+    }
+
+    private suspend fun SessionLogger.logSet(weight: String, reps: String, rir: Int) {
+        type(weight); done(); type(reps); selectRir(rir); done()
+        now += 120_000
+    }
+
+    @Test
+    fun theFirstLegExtensionAtANewGymAsksWhichMachineAndTheNextTimeItDoesNot() = runTest {
+        val kallio = Gyms(db).addGym("Kallio")
+        val logger = logger()
+        logger.start(kallio)
+        logger.addExercise("leg_extension")
+
+        assertTrue(logger.session.current!!.needsMachine)
+        assertNull(logger.session.entry)
+
+        logger.addMachine("Leg extension", LadderSpec.Steps(5.0, 5.0, WeightUnit.Kg, 20))
+        val current = logger.session.current!!
+        assertFalse(current.needsMachine)
+        assertEquals("Leg extension", current.machine!!.name)
+        assertEquals(listOf(5.0, 10.0, 15.0), current.ladder.rungs.take(3))
+        assertTrue(current.ladderKnown)
+        logger.logSet("60", "12", 1)
+        logger.finish()
+
+        now += 86_400_000
+        logger.start(kallio)
+        logger.addExercise("leg_extension")
+        val again = logger.session.current!!
+        assertFalse(again.needsMachine)
+        assertEquals("Leg extension", again.machine!!.name)
+        assertEquals(listOf(LoggedSet(60.0, 12, 0, 1)), again.lastTime)
+        assertEquals("60", logger.session.entry!!.weight)
+    }
+
+    @Test
+    fun aMachineCanBePickedFromTheGymsEquipment() = runTest {
+        val gyms = Gyms(db)
+        val kallio = gyms.addGym("Kallio")
+        gyms.saveItem(EquipmentItem(gymId = kallio, name = "Cable station", ladder = LadderSpec.lbStack()))
+        val logger = logger()
+        logger.start(kallio)
+        logger.addExercise("cable_lateral_raise")
+
+        logger.chooseMachine(logger.session.gym!!.items.single().id)
+
+        assertEquals("Cable station", logger.session.current!!.machine!!.name)
+        assertEquals(listOf(1.1, 3.4, 5.7), logger.session.current!!.ladder.rungs.take(3))
+    }
+
+    @Test
+    fun freeWeightHistoryFollowsYouAcrossGymsButACableStationHasItsOwn() = runTest {
+        val gyms = Gyms(db)
+        val kallio = gyms.addGym("Kallio")
+        val toolo = gyms.addGym("Töölö")
+        val logger = logger()
+        logger.start(kallio)
+        logger.addExercise("db_bench_press")
+        logger.logSet("25", "10", 2)
+        logger.addExercise("cable_lateral_raise")
+        logger.addMachine("Cable station", LadderSpec.lbStack())
+        logger.logSet("7.9", "12", 1)
+        logger.finish()
+
+        now += 86_400_000
+        logger.start(toolo)
+        logger.addExercise("db_bench_press")
+        assertEquals(listOf(LoggedSet(25.0, 10, 0, 2)), logger.session.current!!.lastTime)
+        logger.addExercise("cable_lateral_raise")
+        assertTrue(logger.session.current!!.needsMachine)
+        logger.addMachine("Cable tower", LadderSpec.Steps(2.5, 2.5, WeightUnit.Kg, 20))
+        assertEquals(emptyList<LoggedSet>(), logger.session.current!!.lastTime)
+        assertEquals("", logger.session.entry!!.weight)
+        logger.logSet("5", "12", 1)
+        logger.finish()
+
+        // Back at the first gym, the first station's history is still its own.
+        now += 86_400_000
+        logger.start(kallio)
+        logger.addExercise("cable_lateral_raise")
+        assertEquals(listOf(LoggedSet(7.9, 12, 0, 1)), logger.session.current!!.lastTime)
+    }
+
+    @Test
+    fun aSessionWithoutAGymDoesNotAsk() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        assertFalse(logger.session.current!!.needsMachine)
+        assertFalse(logger.session.current!!.ladderKnown)
+        assertNull(logger.session.gym)
+    }
+
+    @Test
+    fun theMachineCanBeChangedUntilASetIsLogged() = runTest {
+        val kallio = Gyms(db).addGym("Kallio")
+        val logger = logger()
+        logger.start(kallio)
+        logger.addExercise("leg_extension")
+        logger.addMachine("Leg extension", LadderSpec.lbStack())
+
+        logger.changeMachine()
+        assertTrue(logger.session.current!!.needsMachine)
+        logger.addMachine("Leg extension 2", LadderSpec.lbStack())
+        assertEquals("Leg extension 2", logger.session.current!!.machine!!.name)
+
+        logger.logSet("7.9", "12", 1)
+        logger.changeMachine()
+        assertEquals("Leg extension 2", logger.session.current!!.machine!!.name)
     }
 }

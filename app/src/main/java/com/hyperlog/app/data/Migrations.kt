@@ -4,7 +4,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4)
 
 /**
  * v2: the exercise library (#3). The exercise table gains the library's fields; the library sync
@@ -54,5 +54,32 @@ object Migration2To3 : Migration(2, 3) {
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_equipment_item_gym_id` ON `equipment_item` (`gym_id`)")
         db.execSQL("CREATE TABLE IF NOT EXISTS `shared_ladder` (`key` TEXT NOT NULL, `ladder` TEXT NOT NULL, PRIMARY KEY(`key`))")
+    }
+}
+
+/**
+ * v4: the gym at session start (#5). Sessions gain their gym, gyms a weekday plan, and session
+ * exercises the machine they were done on; each gym remembers which machine an exercise uses.
+ * Existing sessions keep no gym and no machine.
+ */
+object Migration3To4 : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE gym ADD COLUMN weekdays INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE session ADD COLUMN gym_id INTEGER REFERENCES gym(id) ON UPDATE NO ACTION ON DELETE SET NULL")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_session_gym_id` ON `session` (`gym_id`)")
+        db.execSQL(
+            "ALTER TABLE session_exercise ADD COLUMN equipment_item_id INTEGER " +
+                "REFERENCES equipment_item(id) ON UPDATE NO ACTION ON DELETE SET NULL",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_session_exercise_equipment_item_id` ON `session_exercise` (`equipment_item_id`)")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `gym_exercise_item` (`gym_id` INTEGER NOT NULL, `exercise_id` TEXT NOT NULL, " +
+                "`equipment_item_id` INTEGER NOT NULL, PRIMARY KEY(`gym_id`, `exercise_id`), " +
+                "FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                "FOREIGN KEY(`exercise_id`) REFERENCES `exercise`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , " +
+                "FOREIGN KEY(`equipment_item_id`) REFERENCES `equipment_item`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_gym_exercise_item_exercise_id` ON `gym_exercise_item` (`exercise_id`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_gym_exercise_item_equipment_item_id` ON `gym_exercise_item` (`equipment_item_id`)")
     }
 }

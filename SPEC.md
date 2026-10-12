@@ -160,11 +160,25 @@ available weights belong to a **machine at a gym**, not to an exercise.
   add) and its ladder, then remembers it.
 - **Gym is picked at session start**, defaulting to the gym you usually train at on that weekday
   (learned from history, editable per gym).
+  - Start session opens a sheet with the gyms as a single choice and **Start**. The preselected gym
+    says why ("Usual on Mondays"); one tap on another row changes it. With no gyms set up the
+    session starts at once, without a gym.
+  - The usual gym on a weekday: a gym whose weekday plan has that day (Gyms and equipment → the
+    gym → Usual days); else the gym with the most sessions on that weekday, the latest breaking a
+    tie; else the gym trained at last; else the first gym.
+  - The session list shows the session's gym under its title. Changing gyms mid-session isn't
+    offered.
 - **Missing equipment**: on picking the gym, the day is checked against that gym's kit; swaps are
   proposed from the slot's alternatives, then by movement pattern (same logic as the coach) and
   apply to this session only.
-- **History and progression are shared for free weights** (barbell, dumbbells, bodyweight) across
-  gyms. **Machines and cables keep a history per machine**, because stacks and pulley ratios don't
+- **"Which machine?"**: in a session with a gym, a machine, cable or Smith machine exercise the
+  gym has no machine for yet shows "Which machine?" in place of its sets: the gym's equipment with
+  the weights each gives, and **Add machine** (the ladder editor; a machine exercise's name is
+  filled in, a cable station's left for you). The answer is remembered per gym and exercise, so the
+  next time it goes straight to the sets. The exercise sheet shows the machine and gym, with
+  **Change** until a set is logged on it.
+- **History and progression are shared for free weights** (barbell, dumbbells, bodyweight, and the
+  EZ, trap and safety bars, plates and weighted bodyweight) across gyms. **Machines and cables keep a history per machine**, because stacks and pulley ratios don't
   compare. On a machine with no history, the first set asks you to pick a weight for the target reps
   and RIR; progression runs from there. Machine exercise trends show one line per machine.
 - In a session, the weight field is a picker over that item's ladder; free typing stays possible.
@@ -220,8 +234,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - Picking one of the three puts it in the weight and the next ✓ logs. Any edit clears the
        check. The second ✓ keeps the weight only if it comes 1 s or more after the warning, the
        same stutter rule as logging.
-     - Only real ladders are checked for "not on the ladder": until a session knows its machine
-       (#5), machines and cables are checked for ratios only.
+     - Only real ladders are checked for "not on the ladder": a machine or cable without a known
+       machine (a session with no gym) is checked for ratios only.
    - **Corrections**: tapping any logged set, drop or mini-set loads it into the pad; ✓ saves, the
      hide key cancels. Finished exercises reopen from the session list and from "Session done".
      Back cancels a correction, then asks before leaving the session.
@@ -239,9 +253,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - Rest after each set is 2:00.
      - **One ✓, one set**: a ✓ within 1 s of logging a set logs nothing, so a stutter or double
        tap can't log a phantom set. No two sets are ever logged that close on purpose.
-     - Until a session knows its gym and machine (#5), −/+ and the weight strip use the shared
-       dumbbell ladder for dumbbell exercises, the shared plates on a 20 kg bar for barbell
-       exercises, and 2.5 kg steps for everything else.
+     - −/+ and the weight strip use the shared dumbbell ladder for dumbbell exercises, the shared
+       plates on a 20 kg bar for barbell exercises, the machine's ladder for machines and cables,
+       and 2.5 kg steps for everything else (and for machines in a session with no gym).
+     - Last time, for machines and cables, is the last session on the same machine; free weights
+       take the last session at any gym.
      - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
        session with nothing logged is discarded.
      - **Finishing is deliberate and recoverable.** Finish session (⋮, below a divider, or the

@@ -28,7 +28,11 @@ data class ExerciseEntity(
 )
 
 /** A session. One with no [finishedAt] is running; there is at most one. */
-@Entity(tableName = "session")
+@Entity(
+    tableName = "session",
+    foreignKeys = [ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.SET_NULL)],
+    indices = [Index("gym_id")],
+)
 data class SessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "started_at") val startedAt: Long,
@@ -40,6 +44,8 @@ data class SessionEntity(
     @ColumnInfo(name = "pad_visible") val padVisible: Boolean = true,
     /** What the pad holds for the active row, saved on every tap. */
     @Embedded(prefix = "entry_") val entry: EntryColumns? = null,
+    /** Where the session is trained; null when no gym is set up. */
+    @ColumnInfo(name = "gym_id") val gymId: Long? = null,
 )
 
 data class EntryColumns(
@@ -58,14 +64,20 @@ data class EntryColumns(
     foreignKeys = [
         ForeignKey(SessionEntity::class, ["id"], ["session_id"], onDelete = ForeignKey.CASCADE),
         ForeignKey(ExerciseEntity::class, ["id"], ["exercise_id"]),
+        ForeignKey(EquipmentItemEntity::class, ["id"], ["equipment_item_id"], onDelete = ForeignKey.SET_NULL),
     ],
-    indices = [Index("session_id"), Index("exercise_id")],
+    indices = [Index("session_id"), Index("exercise_id"), Index("equipment_item_id")],
 )
 data class SessionExerciseEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "session_id") val sessionId: Long,
     @ColumnInfo(name = "exercise_id") val exerciseId: String,
     val position: Int,
+    /**
+     * The machine or cable station it was done on. Their history is kept per item (ADR 0002);
+     * null for free weights and while the session doesn't know the machine yet.
+     */
+    @ColumnInfo(name = "equipment_item_id") val equipmentItemId: Long? = null,
 )
 
 @Entity(

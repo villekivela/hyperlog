@@ -76,6 +76,12 @@ import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.library.Equipment
+import com.hyperlog.app.gym.EquipmentItem
+import com.hyperlog.app.ui.gym.LadderEditor
+import com.hyperlog.app.ui.gym.LadderKind
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.hyperlog.app.library.TechniqueVideo
 import com.hyperlog.app.library.search
 import com.hyperlog.app.ui.library.SearchField
@@ -112,6 +118,21 @@ fun SessionScreen(
     BackHandler { showLeave = true }
 
     val current = session.current
+    var addingMachine by rememberSaveable { mutableStateOf(false) }
+    if (addingMachine && current != null && current.needsMachine) {
+        // Machines get a name for what they are; a cable station serves many exercises.
+        val equipment = current.exercise.equipment
+        LadderEditor(
+            title = stringResource(R.string.machine_new),
+            name = if (equipment == Equipment.Machine) current.exercise.name else if (equipment == Equipment.SmithMachine) equipment.label else "",
+            spec = null,
+            kinds = LadderKind.entries,
+            onSave = { name, spec -> actions.addMachine(name, spec); addingMachine = false },
+            onDelete = null,
+            onClose = { addingMachine = false },
+        )
+        return
+    }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.weight(1f).windowInsetsPadding(WindowInsets.statusBars)) {
@@ -132,7 +153,17 @@ fun SessionScreen(
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
                     )
-                    SetTable(current, session.entry, session.weightCheck != null, actions, Modifier.weight(1f))
+                    if (current.needsMachine) {
+                        MachinePicker(
+                            session.gym?.name.orEmpty(),
+                            session.gym?.items.orEmpty(),
+                            onPick = actions::chooseMachine,
+                            onAdd = { addingMachine = true },
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        SetTable(current, session.entry, session.weightCheck != null, actions, Modifier.weight(1f))
+                    }
                     val index = session.exercises.indexOf(current)
                     val next = session.exercises.getOrNull(index + 1)
                     NextLine(
@@ -195,7 +226,16 @@ fun SessionScreen(
         }
     }
     if (showDetails && current != null) {
-        Sheet(onDismiss = { showDetails = false }) { ExerciseSheet(current.exercise) }
+        Sheet(onDismiss = { showDetails = false }) {
+            ExerciseSheet(
+                current.exercise,
+                machine = current.machine?.let { m -> stringResource(R.string.machine_at, m.name, session.gym?.name.orEmpty()) },
+                // The machine can change until a set is logged on it; after that the sets belong to it.
+                onChangeMachine = if (current.machine != null && current.sets.isEmpty()) {
+                    { showDetails = false; actions.changeMachine() }
+                } else null,
+            )
+        }
     }
     if (showRest && session.restEndsAt != null) {
         Sheet(onDismiss = { showRest = false }) {
@@ -530,6 +570,9 @@ private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: 
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(bottom = 16.dp).navigationBarsPadding().verticalScroll(rememberScrollState())) {
         Text(stringResource(R.string.session_title), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.titleLarge)
+        session.gym?.let {
+            Text(it.name, Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        }
         Spacer(Modifier.height(8.dp))
         session.exercises.forEach { e ->
             val now = e.id == session.currentId
@@ -571,6 +614,55 @@ private fun SessionList(session: ActiveSession, onStart: (Long) -> Unit, onAdd: 
     }
 }
 
+/**
+ * "Which machine?": the gym's equipment with the weights each gives, and Add machine. It stands
+ * in for the set table until answered, so no set can start on an unknown machine.
+ */
+@Composable
+private fun MachinePicker(
+    gym: String,
+    items: List<EquipmentItem>,
+    onPick: (Long) -> Unit,
+    onAdd: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val cs = MaterialTheme.colorScheme
+    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Text(
+            stringResource(R.string.machine_title),
+            Modifier.padding(start = Margin, end = Margin, top = 8.dp),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            stringResource(R.string.machine_body, gym),
+            Modifier.padding(start = Margin, end = Margin, top = 4.dp, bottom = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = cs.onSurfaceVariant,
+        )
+        items.forEach { item ->
+            Column(
+                Modifier.fillMaxWidth().clickable { onPick(item.id) }.heightIn(min = 72.dp)
+                    .padding(horizontal = Margin, vertical = 12.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    item.ladder.ladder().preview(),
+                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                    color = cs.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        TextButton(onClick = onAdd, Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
+            SymbolIcon(Symbol.Add, null, Modifier.width(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.machine_add))
+        }
+    }
+}
+
 /** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
 private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -607,13 +699,27 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
  * the library knows: equipment and muscles, the technique note and the technique video.
  */
 @Composable
-private fun ExerciseSheet(exercise: Exercise) {
+internal fun ExerciseSheet(exercise: Exercise, machine: String?, onChangeMachine: (() -> Unit)?) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     Column(Modifier.fillMaxWidth().padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding()) {
         Text(exercise.name, style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(4.dp))
         Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        machine?.let {
+            Spacer(Modifier.height(16.dp))
+            Row(Modifier.heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                SymbolIcon(Symbol.LocationOn, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                Spacer(Modifier.width(16.dp))
+                Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                onChangeMachine?.let { change ->
+                    val label = stringResource(R.string.machine_change_description)
+                    TextButton(onClick = change, Modifier.semantics { contentDescription = label }) {
+                        Text(stringResource(R.string.machine_change))
+                    }
+                }
+            }
+        }
         exercise.note?.let { note ->
             Spacer(Modifier.height(24.dp))
             Row {

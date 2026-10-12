@@ -37,6 +37,13 @@ enum class Equipment(val key: String, val label: String) {
     WeightedBodyweight("weighted_bodyweight", "Weighted bodyweight"),
     ;
 
+    /**
+     * Machines, cables and Smith machines differ between gyms, so their exercises are done on an
+     * equipment item at the gym and keep a history per item (ADR 0002). Everything else is a free
+     * weight, with one history across gyms.
+     */
+    val perMachine: Boolean get() = this == Machine || this == Cable || this == SmithMachine
+
     companion object {
         fun ofKey(key: String) = entries.first { it.key == key }
     }

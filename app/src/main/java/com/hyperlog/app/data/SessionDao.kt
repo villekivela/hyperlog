@@ -46,4 +46,24 @@ interface SessionDao {
         """,
     )
     suspend fun lastTime(exerciseId: String, sessionId: Long): List<LoggedSetEntity>
+
+    /**
+     * Like [lastTime], but only sessions where it was done on equipment item [itemId]: machines and
+     * cables keep a history per item (ADR 0002). A null [itemId] matches sets with no known item.
+     */
+    @Query(
+        """
+        SELECT * FROM logged_set WHERE session_exercise_id = (
+            SELECT se.id FROM session_exercise se JOIN session s ON s.id = se.session_id
+            WHERE se.exercise_id = :exerciseId AND se.session_id != :sessionId
+              AND se.equipment_item_id IS :itemId
+              AND EXISTS (SELECT 1 FROM logged_set x WHERE x.session_exercise_id = se.id)
+            ORDER BY s.started_at DESC, se.id DESC LIMIT 1
+        ) ORDER BY position
+        """,
+    )
+    suspend fun lastTimeOn(exerciseId: String, sessionId: Long, itemId: Long?): List<LoggedSetEntity>
+
+    @Query("UPDATE session_exercise SET equipment_item_id = :itemId WHERE id = :id")
+    suspend fun setEquipmentItem(id: Long, itemId: Long?)
 }

@@ -14,6 +14,8 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.ladderFor
 import com.hyperlog.app.library.toExercise
@@ -46,10 +48,10 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
     /** Picks up the running session. The exercise library must be synced first. */
     suspend fun load() = locked { reload() }
 
-    /** Starts an ad-hoc session, or does nothing if one is running. */
-    suspend fun start() = locked {
+    /** Starts an ad-hoc session at [gymId] (null with no gyms set up), or does nothing if one is running. */
+    suspend fun start(gymId: Long? = null) = locked {
         if (_state.value == null) {
-            dao.insertSession(SessionEntity(startedAt = clock()))
+            dao.insertSession(SessionEntity(startedAt = clock(), gymId = gymId))
             reload()
         }
     }
@@ -63,6 +65,50 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             )
             val row = dao.session(session.id)!!
             dao.updateSession(row.copy(currentSessionExerciseId = id, entry = null))
+            // A machine done here before is on the same machine again; otherwise the screen asks.
+            val gym = session.gym
+            val equipment = db.exercises().get(exerciseId)?.toExercise()?.equipment
+            if (gym != null && equipment?.perMachine == true) {
+                gyms.remembered(gym.id, exerciseId)?.let { dao.setEquipmentItem(id, it) }
+            }
+        }
+        reload()
+    }
+
+    /**
+     * Answers "Which machine?" for the exercise on screen with one of the gym's equipment items,
+     * and remembers it for the next time the exercise is done at this gym.
+     */
+    suspend fun chooseMachine(itemId: Long) = locked { setMachine(itemId) }
+
+    /** Adds a machine with its ladder to the session's gym and does the exercise on screen on it. */
+    suspend fun addMachine(name: String, ladder: LadderSpec) = locked {
+        val gym = _state.value?.gym ?: return@locked
+        setMachine(gyms.addItem(EquipmentItem(gymId = gym.id, name = name, ladder = ladder)))
+    }
+
+    /** Asks "Which machine?" again for the exercise on screen, as long as nothing is logged on it. */
+    suspend fun changeMachine() = locked {
+        val session = _state.value ?: return@locked
+        val current = session.current ?: return@locked
+        if (current.machine == null || current.sets.isNotEmpty()) return@locked
+        db.withTransaction {
+            dao.setEquipmentItem(current.id, null)
+            dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+        }
+        reload()
+    }
+
+    private suspend fun setMachine(itemId: Long) {
+        val session = _state.value ?: return
+        val current = session.current ?: return
+        val gym = session.gym ?: return
+        if (current.sets.isNotEmpty()) return
+        db.withTransaction {
+            dao.setEquipmentItem(current.id, itemId)
+            gyms.remember(gym.id, current.exercise.id, itemId)
+            // The first set is prefilled again, from this machine's own history.
+            dao.updateSession(dao.session(session.id)!!.copy(entry = null))
         }
         reload()
     }
@@ -199,22 +245,35 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
         }
         val library = db.exercises().all().associate { it.id to it.toExercise() }
         val shared = gyms.shared()
+        val gym = row.gymId?.let { gyms.gym(it) }
         checked = null
         val exercises = dao.sessionExercises(row.id).map { se ->
             val exercise = library.getValue(se.exerciseId)
-            val ladder = shared.ladderFor(exercise.equipment)
+            val perMachine = exercise.equipment.perMachine
+            val machine = if (perMachine) gym?.items?.firstOrNull { it.id == se.equipmentItemId } else null
+            val needsMachine = perMachine && gym != null && machine == null
+            val ladder = shared.ladderFor(exercise.equipment, machine)
+            // Machines and cables only compare with sets on the same machine (ADR 0002).
+            val lastTime = when {
+                needsMachine -> emptyList()
+                perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
+                else -> dao.lastTime(se.exerciseId, row.id)
+            }
             SessionExercise(
                 id = se.id,
                 exercise = exercise,
                 sets = dao.sets(se.id).map { it.toLoggedSet() },
-                lastTime = dao.lastTime(se.exerciseId, row.id).map { it.toLoggedSet() },
+                lastTime = lastTime.map { it.toLoggedSet() },
                 ladder = ladder.ladder,
                 ladderKnown = ladder.known,
+                machine = machine,
+                needsMachine = needsMachine,
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
         var entry = row.entry?.toEntry()
-        if (entry == null && current != null) {
+        if (current?.needsMachine == true) entry = null
+        if (entry == null && current != null && !current.needsMachine) {
             entry = SetEntry.prefill(current.sets.lastOrNull() ?: current.lastTime.firstOrNull())
             dao.updateSession(row.copy(entry = entry.toColumns()))
         }
@@ -227,6 +286,7 @@ class SessionLogger(private val db: HyperlogDatabase, private val clock: () -> L
             padVisible = row.padVisible,
             restEndsAt = row.restEndsAt,
             restTotalMs = row.restTotalMs,
+            gym = gym,
         )
     }
 

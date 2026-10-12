@@ -147,6 +147,10 @@ _Avoid_: Location, venue
 One piece of equipment at a gym, such as a particular cable station or leg press. Dumbbells and barbell plates are shared by all gyms.
 _Avoid_: Machine (when you mean any equipment)
 
+**Weekday plan**:
+The weekdays a gym is planned for. Starting a session on one of them picks that gym.
+_Avoid_: Schedule (the program runs as a sequence, not on dates)
+
 **Weight ladder**:
 The weights an equipment item can actually be set to, such as a cable stack in 5 lb steps.
 _Avoid_: Increments, stack

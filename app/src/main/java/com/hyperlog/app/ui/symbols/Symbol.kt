@@ -30,6 +30,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Keyboard(R.drawable.symbol_keyboard),
     KeyboardHide(R.drawable.symbol_keyboard_hide),
     List(R.drawable.symbol_list),
+    LocationOn(R.drawable.symbol_location_on),
     MoreVert(R.drawable.symbol_more_vert),
     RadioButtonChecked(R.drawable.symbol_radio_button_checked),
     RadioButtonUnchecked(R.drawable.symbol_radio_button_unchecked),

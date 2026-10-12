@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.Flow
 data class GymEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
+    /** The weekday plan: bit 0 is Monday. Starting a session on one of these days picks this gym. */
+    @ColumnInfo(defaultValue = "0") val weekdays: Int = 0,
 )
 
 /** One equipment item at a gym. [ladder] is an encoded [com.hyperlog.app.domain.LadderSpec]. */
@@ -29,6 +31,29 @@ data class EquipmentItemEntity(
     @ColumnInfo(name = "gym_id") val gymId: Long,
     val name: String,
     val ladder: String,
+)
+
+/** The machine or cable station an exercise is done on at a gym, remembered from the first time. */
+@Entity(
+    tableName = "gym_exercise_item",
+    primaryKeys = ["gym_id", "exercise_id"],
+    foreignKeys = [
+        ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(ExerciseEntity::class, ["id"], ["exercise_id"]),
+        ForeignKey(EquipmentItemEntity::class, ["id"], ["equipment_item_id"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("exercise_id"), Index("equipment_item_id")],
+)
+data class GymExerciseItemEntity(
+    @ColumnInfo(name = "gym_id") val gymId: Long,
+    @ColumnInfo(name = "exercise_id") val exerciseId: String,
+    @ColumnInfo(name = "equipment_item_id") val equipmentItemId: Long,
+)
+
+/** A session's gym and start, for working out the usual gym on a weekday. */
+data class Visit(
+    @ColumnInfo(name = "gym_id") val gymId: Long,
+    @ColumnInfo(name = "started_at") val startedAt: Long,
 )
 
 /** A ladder every gym shares: the dumbbells and the barbell plates. */
@@ -51,6 +76,27 @@ interface GymDao {
 
     @Query("UPDATE gym SET name = :name WHERE id = :id")
     suspend fun renameGym(id: Long, name: String)
+
+    @Query("UPDATE gym SET weekdays = :weekdays WHERE id = :id")
+    suspend fun setWeekdays(id: Long, weekdays: Int)
+
+    @Query("SELECT gym_id, started_at FROM session WHERE gym_id IS NOT NULL")
+    fun observeVisits(): Flow<List<Visit>>
+
+    @Query("SELECT gym_id, started_at FROM session WHERE gym_id IS NOT NULL")
+    suspend fun visits(): List<Visit>
+
+    @Query("SELECT * FROM gym WHERE id = :id")
+    suspend fun gym(id: Long): GymEntity?
+
+    @Query("SELECT * FROM equipment_item WHERE gym_id = :gymId ORDER BY name COLLATE NOCASE, id")
+    suspend fun items(gymId: Long): List<EquipmentItemEntity>
+
+    @Query("SELECT equipment_item_id FROM gym_exercise_item WHERE gym_id = :gymId AND exercise_id = :exerciseId")
+    suspend fun rememberedItem(gymId: Long, exerciseId: String): Long?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun remember(choice: GymExerciseItemEntity)
 
     @Query("DELETE FROM gym WHERE id = :id")
     suspend fun deleteGym(id: Long)
