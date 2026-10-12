@@ -36,7 +36,10 @@ class WarmupScreenTest {
         compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
     }
 
-    private fun key(description: String) = compose.onNodeWithContentDescription(description).performClick().also { compose.waitForIdle() }
+    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
+    private fun key(description: String) = compose.also { c ->
+        c.waitUntil(5_000) { c.onAllNodes(androidx.compose.ui.test.hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty() }
+    }.onNodeWithContentDescription(description).performClick().also { compose.waitForIdle() }
 
     private fun startDay(exercise: String) {
         waitFor("Today")

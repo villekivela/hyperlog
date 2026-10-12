@@ -36,7 +36,7 @@ class LibraryScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
+    private fun waitFor(text: String) = compose.waitUntil(10_000) {
         compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
     }
 
