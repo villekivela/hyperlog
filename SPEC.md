@@ -206,6 +206,21 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      hide key cancels. Finished exercises reopen from the session list and from "Session done".
      Back cancels a correction, then asks before leaving the session.
    - Drops and myo mini-sets record no RIR; they are taken to failure.
+   - **Ad-hoc session** (no program): Today offers **Start session**, or **Resume session** while
+     one runs. At most one session runs at a time, and the app opens on it. You add exercises from
+     the list (a small starter list until the exercise library exists) through ⋮ or the session
+     list, which also has **Finish session**.
+     - There is no prescription, so the Target column is left out and the sets are open-ended:
+       there is always one active row after the logged ones. Last time's sets of the exercise show
+       as muted upcoming rows, so you can see what is likely to come.
+     - The first set prefills from last time's first set. With no history the pad starts on an
+       empty weight. Later sets take the previous set's weight, reps and RIR. A set logs only
+       with a weight, full reps and an RIR.
+     - Rest after each set is 2:00.
+     - Until gyms and equipment exist, −/+ and the weight strip use the global dumbbell ladder for
+       dumbbell exercises and 2.5 kg steps for everything else.
+     - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
+       session with nothing logged is discarded.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
    repeat week, deload week, shift the remaining plan by N weeks.
 3. **Coach** — see below.

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -27,10 +28,18 @@ import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
 
-/** Today: the next day's prescription. Until there is a program, it says so. */
+/**
+ * Today: the next day's prescription. Until there is a program, it says so and offers an ad-hoc
+ * session, or the way back into the one running.
+ */
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TodayScreen(onSettings: () -> Unit, modifier: Modifier = Modifier) {
+fun TodayScreen(
+    onSettings: () -> Unit,
+    sessionRunning: Boolean,
+    onSession: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -70,6 +79,10 @@ fun TodayScreen(onSettings: () -> Unit, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+            Spacer(Modifier.height(32.dp))
+            Button(onClick = onSession) {
+                Text(stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session))
+            }
             // Optical centre: sit a little above the middle, clear of the large app bar.
             Spacer(Modifier.height(96.dp))
         }
@@ -79,5 +92,5 @@ fun TodayScreen(onSettings: () -> Unit, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun TodayScreenPreview() {
-    HyperlogTheme { TodayScreen(onSettings = {}) }
+    HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onSession = {}) }
 }

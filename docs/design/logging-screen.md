@@ -162,8 +162,26 @@ exercise it reads "Now" and the current exercise, and tap goes back.
 **Session done.** Every exercise with its summary. Tapping one opens its table to look at or
 correct; back returns to the summary.
 
-**Leave dialog.** Back on the session screen asks "Leave the session?" (Stay / Leave). In the
-real app the session is saved continuously and back simply leaves it running.
+**Leave dialog.** Back on the session screen asks "Leave the session?", with "It keeps running.
+Everything logged is saved." (Stay / Leave). Every tap is saved, so Leave goes to Today, which
+offers **Resume session**. The app opens on a running session.
+
+**Ad-hoc session** (screens `adhoc-*.png`, built in ticket #2). The same table, without a plan:
+- No Target column; Last takes its width. The "Last" head shows only once there is history.
+- The sets are open-ended: logged rows, the active row, then last time's remaining sets as
+  muted upcoming rows (prefilled the way the next set will be).
+- With no history the first set starts on an empty weight. Empty cells show nothing rather than a
+  dash, because a dash next to the − key reads as minus. The weight strip stays empty until a
+  weight is typed, so the pad keeps its height.
+- The empty session opens on the **Add exercise** list (headlineSmall title, 56 dp rows at the
+  24 dp margin). The same list opens as a sheet from ⋮ or the session list.
+- ⋮ holds Add exercise and Finish session. The session list ends with Add exercise and Finish
+  session. Its other exercises have **Start**, because ad-hoc exercises are never "done".
+- **Session done** shows the start time and duration under the title, the summaries, and a
+  filled **Done** at the bottom right that returns to Today (back does the same). Its rows don't
+  open yet: corrections are ticket #15.
+- Values cap at 5 characters for weight, 3 for full reps and 2 for partials. A reps value longer
+  than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 
 ## Interaction rules
 
