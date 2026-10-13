@@ -171,14 +171,18 @@ class RestTimer(
             lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             setShowBadge(false)
         }
-        // The buzz is the app's own alarm-class one; the channel adds the sound, which can be turned off here.
+        // The buzz is the app's own alarm-class one. The channel pops up with no sound; the sound
+        // can be turned on for it in the system's settings.
         val over = NotificationChannel(OVER_CHANNEL, res.getString(R.string.rest_over_channel), NotificationManager.IMPORTANCE_HIGH).apply {
             description = res.getString(R.string.rest_over_channel_about)
+            setSound(null, null)
             enableVibration(false)
             lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             setShowBadge(false)
         }
         manager.createNotificationChannels(listOf(rest, over))
+        // A channel's sound is fixed once it exists, so vibrate-only came with a new id.
+        manager.deleteNotificationChannel(OLD_OVER_CHANNEL)
     }
 
     private fun openApp(): PendingIntent = PendingIntent.getActivity(
@@ -202,7 +206,9 @@ class RestTimer(
 
     companion object {
         const val REST_CHANNEL = "rest"
-        const val OVER_CHANNEL = "rest_over"
+        /** Vibrate only by default; the old [OLD_OVER_CHANNEL] played the sound. */
+        const val OVER_CHANNEL = "rest_over_vibrate"
+        private const val OLD_OVER_CHANNEL = "rest_over"
         const val NOTIFICATION_ID = 1
         private const val ALARM_REQUEST = 1
     }

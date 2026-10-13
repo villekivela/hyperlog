@@ -90,7 +90,7 @@ class HistoryTest {
     }
 
     @Test
-    fun weeklySetsCountEachWorkSetOnceForItsPrimaryMuscles() = runTest {
+    fun weeklySetsCountEachWorkSetAsOneForPrimaryMusclesAndAHalfForSecondaries() = runTest {
         // This week (Mon 12 Oct): bench 3 sets, one with partials and one a drop set; laterals as myo-reps.
         session(
             LocalDate.of(2026, 10, 12),
@@ -110,8 +110,17 @@ class HistoryTest {
         val weeks = history().weeklySets(weeks = 2)
 
         assertEquals(listOf(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 5)), weeks.map { it.start })
-        assertEquals(mapOf("Chest" to 4, "Side Delts" to 1), weeks[0].sets)
-        assertEquals(mapOf("Quads" to 2), weeks[1].sets)
+        // Bench (4 work sets): Chest primary; Front Delts and both triceps heads secondary.
+        // Laterals (1): Side Delts primary; Front Delts and Traps secondary.
+        assertEquals(
+            mapOf(
+                "Chest" to 4.0, "Front Delts" to 2.5, "Side Delts" to 1.0, "Traps" to 0.5,
+                "Triceps Long Head" to 2.0, "Triceps Lateral Head" to 2.0,
+            ),
+            weeks[0].sets,
+        )
+        // Leg extensions have no secondary muscles.
+        assertEquals(mapOf("Quads" to 2.0), weeks[1].sets)
     }
 
     @Test

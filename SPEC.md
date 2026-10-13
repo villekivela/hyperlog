@@ -372,8 +372,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        are saved. Warm-ups are never logged: they start no rest, leave the pad and the rest timer
        alone, add no volume and never reach progression or history. They go once the first work
        set is logged. Ticking is optional.
-   - **Rest timer** that keeps running with the screen off: ongoing notification, vibration and
-     sound when rest ends.
+   - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
+     when rest ends (no sound unless it's turned on in the system's settings).
    - **Plate calculator** for barbell and plate-loaded exercises.
      - Barbell exercises use the shared plates; machines whose ladder is plates use theirs. While
        the weight is typed the pad draws one side of the bar with its plates (fixed competition
@@ -413,8 +413,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        Live Update, so the countdown also sits in the status bar as a chip.
      - When rest runs out the phone buzzes twice with alarm-class vibration (through vibrate and
        silent mode), and the notification reads `Rest over` and counts up, with End rest, until the
-       next set is logged. Out of the app it also plays the notification sound and pops up; the
-       sound can be turned off in the system's settings for the "Rest over" channel. With the app on
+       next set is logged. Out of the app it also pops up, vibrating only: no sound by default.
+       The sound can be turned on in the system's settings for the "Rest over" channel. With the app on
        screen it only buzzes, once.
      - A myo-reps breathing pause shows as `Breathe` counting down to `Mini-set 2` (`25 kg × 4`),
        with no actions, and ends with one short buzz. Drops, superset partners and iso holds show
@@ -545,8 +545,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - A weighted bodyweight exercise's estimate counts the bodyweight (below), and reads
        "Estimate with bodyweight"; its top sets read as logged and stay off the chart.
    - **Weekly sets per muscle**: weeks run Monday to Sunday; finished sessions count. Every
-     logged work set counts once for each primary muscle of its exercise (Volume, above);
-     secondary muscles don't count.
+     logged work set counts 1 for each primary muscle of its exercise and 0.5 for each secondary
+     muscle (Volume, above: drops, myo mini-sets and partials still add no sets). Halves read
+     `7.5`, whole sets `7`.
 
 **Navigation**: a Material 3 navigation bar at the bottom holds the four destinations, Today,
 Program, Coach and History, in that order. Back on Program, Coach or History goes to Today. The bar
