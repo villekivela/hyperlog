@@ -107,7 +107,8 @@ class SessionLoggerTest {
 
         val reopened = logger()
 
-        assertEquals(first.session, reopened.session)
+        // Everything but the one-tap Fix of the set just logged, which is for the moment after logging.
+        assertEquals(first.session.copy(lastLogged = null), reopened.session)
         val entry = reopened.session.entry!!
         assertEquals("1", entry.full)
         assertEquals("5", entry.partial)

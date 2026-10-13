@@ -455,7 +455,13 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        its technique and its drops, mini-sets or hold. Mini-sets and a hold follow a corrected set
        weight, since they are done at it; their own weight can't be typed. Drops keep theirs.
      - It never touches rest or the rest notification, which keep showing the set to do. A
-       corrected weight has no weight check and no longer counts as kept: it was typed on purpose.
+       changed weight gets the weight check a logged one does (against the set before it, else
+       last time's first): the first ✓ warns, a second keeps it, and it then counts as kept. A
+       corrected weight that passes the check no longer counts as kept.
+     - **Fix the set just logged**: after each set a snackbar reads `Barbell Bench Press 60 × 12 @ 1
+       logged` with **Fix** for about ten seconds. Fix puts that set's exercise on screen with the
+       set in the pad (on the weight if it was kept past a check), wherever the session moved; saving
+       or cancelling goes back to the set to do. It isn't kept across an app restart.
      - The set to do is prefilled again from the correction if nothing was typed into it yet.
      - Rows can't be corrected while a drop set, myo-reps or hold is still open; finish it first.
      - A correction half typed isn't kept if the app is killed; the row keeps its logged values.

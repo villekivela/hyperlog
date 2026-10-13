@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.zIndex
 import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.domain.LadderSpec
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -177,9 +178,25 @@ fun SessionScreen(
         )
         return
     }
+    // Right after a set is logged, a snackbar offers to fix it in one tap, wherever the session went.
+    val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+    val logged = session.lastLogged
+    val loggedText = logged?.let { (id, i) ->
+        session.exercises.firstOrNull { it.id == id }?.let { e -> e.sets.getOrNull(i)?.let { stringResource(R.string.fix_logged, e.exercise.name, it.summary()) } }
+    }
+    val fixLabel = stringResource(R.string.fix_action)
+    LaunchedEffect(logged) {
+        snackbar.currentSnackbarData?.dismiss()
+        if (logged != null && loggedText != null && session.correction == null) {
+            val result = snackbar.showSnackbar(loggedText, actionLabel = fixLabel, duration = androidx.compose.material3.SnackbarDuration.Long)
+            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) actions.fixLast()
+        }
+    }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).windowInsetsPadding(WindowInsets.statusBars)) {
+          Box(Modifier.weight(1f)) {
+            androidx.compose.material3.SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp).zIndex(1f))
+            Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
                 if (current == null) {
                     ExercisePicker(
                         offered,
@@ -274,6 +291,7 @@ fun SessionScreen(
                     )
                 }
             }
+          }
             val entry = session.entry
             val correction = session.correction
             val corrected = correction?.let { c -> session.exercises.firstOrNull { it.id == c.sessionExerciseId } }
@@ -281,7 +299,7 @@ fun SessionScreen(
                 // A drop or mini-set has no RIR: ✓ needs only its weight and reps.
                 val fixing = correction.entry
                 val canConfirm = if (correction.kind == null || fixing.field == Field.Weight) fixing.canConfirm else fixing.toExtension(correction.kind) != null
-                Pad(fixing, corrected.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates, platesOnMachine = corrected.platesOnMachine)
+                Pad(fixing, corrected.ladder, session.weightCheck, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates, platesOnMachine = corrected.platesOnMachine)
             } else if (viewing != null) {
                 Spacer(Modifier.navigationBarsPadding())
             } else if (current != null && entry != null) {

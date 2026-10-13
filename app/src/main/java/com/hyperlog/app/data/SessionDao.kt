@@ -175,6 +175,9 @@ interface SessionDao {
     )
     suspend fun correctSet(id: Long, weightKg: Double, fullReps: Int, partialReps: Int, rir: Int, rightReps: Int?)
 
+    @Query("UPDATE logged_set SET kept = 1 WHERE id = :id")
+    suspend fun setKept(id: Long)
+
     /** Mini-sets and a hold are done at their set's weight, so they follow a corrected one. */
     @Query("UPDATE set_extension SET weight_kg = :weightKg WHERE logged_set_id = :loggedSetId AND kind IN ('MiniSet', 'Hold')")
     suspend fun moveSetWeight(loggedSetId: Long, weightKg: Double)

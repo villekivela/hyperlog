@@ -82,6 +82,10 @@ class SessionLogger(
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
     private var viewingId: Long? = null
+    /** The set logged last, by session exercise and index, for the one-tap fix; null when none. */
+    private var lastLogged: Pair<Long, Int>? = null
+    /** The correction on screen came from [fixLast]: saving or cancelling it goes back to the set to do. */
+    private var fixingLast = false
 
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
@@ -395,7 +399,32 @@ class SessionLogger(
     suspend fun cancelCorrection() = locked {
         val session = _state.value ?: return@locked
         correction = null
-        _state.value = session.copy(correction = null)
+        checked = null
+        if (fixingLast) {
+            fixingLast = false
+            viewingId = null
+            reload()
+            return@locked
+        }
+        _state.value = session.copy(correction = null, weightCheck = null)
+    }
+
+    /**
+     * **Fix** on the last set logged, wherever the session has moved: its exercise comes on screen
+     * with the set loaded into the pad, on the weight if it was kept past a weight check. Saving
+     * or cancelling goes back to the set to do.
+     */
+    suspend fun fixLast() = locked {
+        val session = _state.value ?: return@locked
+        val (id, index) = lastLogged ?: return@locked
+        if (!session.correctable) return@locked
+        val exercise = session.exercises.firstOrNull { it.id == id } ?: return@locked
+        val loaded = corrections.load(id, index) ?: return@locked
+        correction = if (exercise.sets.getOrNull(index)?.kept == true) loaded.copy(entry = loaded.entry.focus(Field.Weight)) else loaded
+        checked = null
+        fixingLast = true
+        viewingId = id.takeIf { it != session.currentId }
+        reload()
     }
 
     /**
@@ -422,7 +451,29 @@ class SessionLogger(
                 correction = step.correction
                 _state.value = session.copy(correction = step.correction)
             }
-            is Correction.Step.SaveSet -> finishCorrection(session, fixing) { corrections.saveSet(fixing, step.set) }
+            is Correction.Step.SaveSet -> {
+                // A changed weight gets the check a logged one does: the first ✓ warns, a second keeps it.
+                val exercise = session.exercises.firstOrNull { it.id == fixing.sessionExerciseId }
+                val before = exercise?.sets?.getOrNull(fixing.set)
+                val check = if (exercise != null && before != null && step.set.weightKg != before.weightKg) {
+                    WeightCheck.of(step.set.weightKg, exercise.referenceBefore(fixing.set), exercise.ladder, exercise.ladderKnown)
+                } else null
+                if (check != null) {
+                    val now = clock()
+                    val raised = checked
+                    if (raised == null || raised.first != fixing.entry) {
+                        checked = fixing.entry to now
+                        _state.value = session.copy(weightCheck = check)
+                        return
+                    }
+                    if (now - raised.second < DOUBLE_TAP_MS) return
+                }
+                checked = null
+                finishCorrection(session, fixing) {
+                    corrections.saveSet(fixing, step.set)
+                    if (check != null) corrections.keep(fixing)
+                }
+            }
             is Correction.Step.SaveExtension -> finishCorrection(session, fixing) { corrections.saveExtension(fixing, step.extension) }
             Correction.Step.Nothing -> Unit
         }
@@ -437,6 +488,11 @@ class SessionLogger(
         save()
         if (untouched) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
         correction = null
+        if (fixingLast) {
+            fixingLast = false
+            viewingId = null
+            lastLogged = null
+        }
         // A second ✓ right after saving is a stutter, not the set to do.
         lastLoggedAt = clock()
         reload()
@@ -521,6 +577,7 @@ class SessionLogger(
                 val set = result.set.copy(kept = check != null, technique = technique)
                 db.withTransaction {
                     val id = dao.insertSet(set.toEntity(current.id, current.sets.size, now))
+                    lastLogged = current.id to current.sets.size
                     val row = dao.session(session.id)!!.copy(entry = null)
                     // A drop set, myo-reps or iso hold stays open for what follows it, with no rest
                     // (a breathing pause before a mini-set); any other set closes at once.
@@ -703,7 +760,8 @@ class SessionLogger(
             val ladder = session.exercises.firstOrNull { it.id == fixing.sessionExerciseId }?.ladder ?: return@locked
             val next = fixing.copy(entry = change(fixing.entry, ladder))
             correction = next
-            _state.value = session.copy(correction = next)
+            if (next != fixing) checked = null
+            _state.value = session.copy(correction = next, weightCheck = if (next != fixing) null else session.weightCheck)
             return@locked
         }
         val current = session.current ?: return@locked
@@ -823,6 +881,7 @@ class SessionLogger(
             openSetId = row.openSetId.takeIf { followUp != null },
             viewingId = viewingId,
             correction = correction,
+            lastLogged = lastLogged?.takeIf { (id, i) -> exercises.any { it.id == id && i < it.sets.size } },
         )
     }
 
@@ -902,6 +961,11 @@ class SessionLogger(
  */
 /** Weighted bodyweight: the body plus the load on the belt or held. */
 private val Exercise.weighted get() = equipment == Equipment.WeightedBodyweight
+
+/** What set [index]'s corrected weight is checked against: the last set before it that counts, or last time's first. */
+private fun SessionExercise.referenceBefore(index: Int): Reference? =
+    sets.take(index).countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
+        ?: lastTime.countingSets().firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
 
 private fun SessionExercise.reference(): Reference? =
     sets.countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }

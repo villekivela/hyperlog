@@ -21,6 +21,7 @@ import com.hyperlog.app.await
 import com.hyperlog.app.key
 import com.hyperlog.app.press
 import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitForDescription
 import com.hyperlog.app.waitForCount
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -59,6 +60,16 @@ class SessionScreenTest {
         waitForLoggedSet()
         compose.onAllNodesWithText("12").assertCountEquals(2)
         compose.onNodeWithContentDescription("RIR 1").assertIsSelected()
+    }
+
+    @Test
+    fun aLoggedSetIsOneTapFromItsFix() {
+        startWithBenchPress()
+        compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
+        waitForLoggedSet()
+        compose.waitFor("Barbell Bench Press 60 × 12 @ 1 logged")
+        compose.onNodeWithText("Fix").performClick()
+        compose.waitForDescription("Cancel correction")
     }
 
     @Test

@@ -345,6 +345,13 @@ show; nothing about a warm-up touches the clock. Screens: `light-session-plates.
 
 **Corrections** (built in ticket #15).
 
+**Fix the set just logged.** A Material snackbar over the Next card after each logged set:
+"<exercise> 60 × 12 @ 1 logged" with **Fix** (long duration). Fix loads that set into the pad on
+its own exercise's table, focused on the weight when it was kept past a weight check, and saving
+or cancelling returns to the set to do: a 255-for-25 typo is Fix, 2, 5, →, ✓ (5 taps, was 9). A
+corrected weight runs the same weight check as logging, its reason and three weights in the
+strip.
+
 Principles: a correction is the same pad on the row it fixes, so there is nothing new to learn;
 the set to do steps back while it happens and the clock never notices; a finished exercise or past
 session reads like the logging screen with nothing to do, so tapping a number is the only action.

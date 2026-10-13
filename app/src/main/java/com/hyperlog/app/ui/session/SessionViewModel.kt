@@ -87,6 +87,8 @@ interface SessionActions : PadActions {
     fun closeView()
     /** Loads a logged set, or its drop, mini-set or hold [extension], into the pad to correct it. */
     fun correct(sessionExerciseId: Long, set: Int, extension: Int?)
+    /** **Fix** on the set just logged: its exercise on screen and the set in the pad. */
+    fun fixLast() {}
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -189,6 +191,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun open(sessionExerciseId: Long) = run { logger.open(sessionExerciseId) }
     override fun closeView() = run { logger.closeView() }
     override fun correct(sessionExerciseId: Long, set: Int, extension: Int?) = run { logger.correct(sessionExerciseId, set, extension) }
+    override fun fixLast() = run { logger.fixLast() }
     override fun cancelCorrection() = run { logger.cancelCorrection() }
 
     private fun run(block: suspend () -> Unit) {

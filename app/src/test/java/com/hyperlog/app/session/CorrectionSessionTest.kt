@@ -75,6 +75,51 @@ class CorrectionSessionTest {
     private val SessionLogger.session get() = state.value!!
 
     @Test
+    fun aCorrectedWeightGetsTheSameCheckAsALoggedOne() = runTest {
+        program(threeSets)
+        val logger = logger()
+        logger.startNext()
+        logger.log("25", 10, 2)
+        logger.log("25", 10, 2)
+        val bench = logger.session.current!!
+        logger.correct(bench.id, set = 1)
+        logger.focus(Field.Weight); logger.type("250"); logger.tick()
+        // The first ✓ on the reps warns, as logging would: 10× the set before.
+        logger.tick()
+        assertEquals("10× last set", logger.session.weightCheck!!.reason)
+        assertEquals(25.0, logger.session.current!!.sets[1].weightKg, 0.0)
+        // A second ✓ keeps it, as a kept weight.
+        logger.tick()
+        assertNull(logger.session.correction)
+        assertEquals(250.0, logger.session.current!!.sets[1].weightKg, 0.0)
+        assertEquals(true, logger.session.current!!.sets[1].kept)
+    }
+
+    @Test
+    fun theLastSetLoggedIsOneFixAwayEvenAfterTheSessionMovedOn() = runTest {
+        program(threeSets, second = """[ { "count": 1, "reps": "10-12", "rir": 1 } ]""")
+        val logger = logger()
+        logger.startNext()
+        val bench = logger.session.current!!
+        logger.log("25", 10, 2); logger.log("25", 10, 2)
+        // A typo kept past the warning, on the last set: the session moves on to the lateral raise.
+        logger.log("255", 10, 2)
+        assertEquals("cable_lateral_raise", logger.session.current!!.exercise.id)
+        assertEquals(bench.id to 2, logger.session.lastLogged)
+
+        logger.fixLast()
+        // The bench is on screen with its last set loaded, on the weight it was warned about.
+        assertEquals(bench.id, logger.session.shown!!.id)
+        assertEquals(2, logger.session.correction!!.set)
+        assertEquals(Field.Weight, logger.session.correction!!.entry.field)
+        logger.type("25"); logger.tick(); logger.tick()
+        assertEquals(25.0, logger.session.exercises.first { it.id == bench.id }.sets[2].weightKg, 0.0)
+        // Saved, and back on the lateral raise.
+        assertNull(logger.session.correction)
+        assertEquals(logger.session.current!!.id, logger.session.shown!!.id)
+    }
+
+    @Test
     fun correctingA255KgTypoTo25UpdatesTheSetAndRestKeepsRunning() = runTest {
         program(threeSets)
         val logger = logger()
@@ -179,8 +224,9 @@ class CorrectionSessionTest {
         assertEquals(Field.Reps, logger.session.correction!!.entry.field)
         logger.cancelCorrection()
 
-        logger.correct(e, 0); logger.focus(Field.Weight); logger.type("22"); logger.tick(); logger.tick()
-        assertEquals(listOf(22.0, 22.0), logger.session.current!!.sets[0].extensions.map { it.weightKg })
+        // 22.5 is on the dumbbells, so the correction's weight check lets it through.
+        logger.correct(e, 0); logger.focus(Field.Weight); logger.type("22.5"); logger.tick(); logger.tick()
+        assertEquals(listOf(22.5, 22.5), logger.session.current!!.sets[0].extensions.map { it.weightKg })
     }
 
     @Test

@@ -84,6 +84,12 @@ internal class SetCorrections(private val db: HyperlogDatabase) {
         if (value.weightKg != row.weightKg) dao.moveSetWeight(row.id, value.weightKg)
     }
 
+    /** A corrected weight kept past the weight check: it counts as kept until a set confirms it. */
+    suspend fun keep(correction: Correction) {
+        val row = dao.sets(correction.sessionExerciseId).getOrNull(correction.set) ?: return
+        dao.setKept(row.id)
+    }
+
     suspend fun saveExtension(correction: Correction, value: Extension) = db.withTransaction {
         val row = dao.sets(correction.sessionExerciseId).getOrNull(correction.set) ?: return@withTransaction
         val ext = dao.extensions(row.id).getOrNull(correction.extension ?: return@withTransaction) ?: return@withTransaction

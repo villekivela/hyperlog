@@ -115,6 +115,8 @@ data class ActiveSession(
     val viewingId: Long? = null,
     /** The logged row loaded into the pad to be corrected; null when none. [entry] stays the set to do. */
     val correction: Correction? = null,
+    /** The set logged last (session exercise id and set index), which **Fix** loads; null when none. */
+    val lastLogged: Pair<Long, Int>? = null,
 ) {
     val current: SessionExercise? get() = exercises.firstOrNull { it.id == currentId }
 
