@@ -175,6 +175,21 @@ class RuleCoachTest {
     }
 
     @Test
+    fun renamingAnExerciseOnThePhoneDoesntChangeHowTheCoachSeesIt() {
+        val byId = library.exercises.associateBy { it.id }
+        // Renamed in the library editor: still an overhead extension and a chest-supported row.
+        assertTrue(byId.getValue("overhead_cable_triceps_extension").copy(name = "Rope Extension").overhead)
+        val row = byId.getValue("chest_supported_machine_row").copy(name = "Row Machine")
+        val noGrip = RuleCoach.advise(
+            Situation.Pain(Area.Hands), Constraints(noGrip = true), plan(Position(3, 1)),
+            library.exercises.map { if (it.id == row.id) row else it }, oct13.minusDays(2),
+        )
+        assertTrue(proposed(noGrip).operations.none { it is Operation.Swap && it.slot == "row" })
+        // A name alone doesn't make one: a pressdown called "Overhead-style Pressdown" pushes down.
+        assertTrue(!byId.getValue("triceps_pressdown").copy(name = "Overhead-style Pressdown").overhead)
+    }
+
+    @Test
     fun atHomeEveryExerciseIsDumbbellsOrBodyweightOrLeftOut() {
         val change = proposed(advise(Situation.NoGym))
         val day = trained(change)

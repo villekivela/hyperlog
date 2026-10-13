@@ -397,10 +397,22 @@ val Exercise.axial: Boolean
         else -> false
     }
 
+/**
+ * The coach's small per-exercise tag table (SPEC, Coaching → Rules), for what the movement pattern
+ * doesn't say: which triceps extensions go overhead and which rows hold the chest on a pad. Keyed
+ * by library id, so renaming an exercise on the phone leaves it as it was.
+ */
+private object CoachTags {
+    val Overhead = setOf("overhead_cable_triceps_extension", "overhead_db_triceps_extension")
+    val ChestSupported = setOf(
+        "chest_supported_db_row", "chest_supported_machine_row", "chest_supported_t_bar_row", "incline_chest_supported_db_row",
+    )
+}
+
 /** Arms overhead under load: presses and overhead triceps extensions. */
 val Exercise.overhead: Boolean
-    get() = pattern == MovementPattern.VerticalPush || (pattern == MovementPattern.ElbowExtension && name.contains("overhead", ignoreCase = true))
+    get() = pattern == MovementPattern.VerticalPush || (pattern == MovementPattern.ElbowExtension && id in CoachTags.Overhead)
 
 private val Exercise.pull: Boolean get() = pattern == MovementPattern.VerticalPull || pattern == MovementPattern.HorizontalPull
-private val Exercise.chestSupported: Boolean get() = name.contains("chest-supported", ignoreCase = true)
+private val Exercise.chestSupported: Boolean get() = pattern == MovementPattern.HorizontalPull && id in CoachTags.ChestSupported
 private val Exercise.unsupportedRow: Boolean get() = pattern == MovementPattern.HorizontalPull && !chestSupported
