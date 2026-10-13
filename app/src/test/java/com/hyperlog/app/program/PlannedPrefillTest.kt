@@ -14,8 +14,8 @@ class PlannedPrefillTest {
     /** An lb stack shown in kg: 1.1, 3.4, 5.7, 7.9, 10.2 … */
     private val stack = LadderSpec.lbStack().ladder()
 
-    private val top = PlannedSet(RepRange(4, 6), 1, 180)
-    private val backoff = PlannedSet(RepRange(6, 8), 1, 180, backoff = Backoff(0, 10))
+    private val top = SetPrescription(RepRange(4, 6), 1, 180)
+    private val backoff = SetPrescription(RepRange(6, 8), 1, 180, backoff = Backoff(0, 10))
     private val bench = listOf(top, backoff, backoff)
 
     @Test

@@ -10,7 +10,7 @@ import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.ladderFor
 import com.hyperlog.app.library.toExercise
-import com.hyperlog.app.program.PlannedSetJson
+import com.hyperlog.app.program.SetPrescriptionJson
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.TechniqueJson
@@ -202,7 +202,7 @@ class PastSessionEditor(
                 ladderKnown = ladder.known,
                 machine = machine,
                 slot = slot,
-                plan = se.sets?.let(PlannedSetJson::decode) ?: slot?.setsFor(se.exerciseId),
+                plan = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId),
                 techniques = dao.techniques(se.id).associate { it.setIndex to it.technique?.let(TechniqueJson::decode) },
             )
         }

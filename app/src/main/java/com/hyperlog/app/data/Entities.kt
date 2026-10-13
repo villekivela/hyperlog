@@ -102,7 +102,7 @@ data class SessionExerciseEntity(
     /** The program slot it fills, in a session of a program day; null when added ad hoc. */
     @ColumnInfo(name = "slot_id") val slotId: String? = null,
     /**
-     * Its sets as edited in this session ([com.hyperlog.app.program.PlannedSetJson]); null while
+     * Its sets as edited in this session ([com.hyperlog.app.program.SetPrescriptionJson]); null while
      * they are the program's. Edits apply to this session only.
      */
     val sets: String? = null,

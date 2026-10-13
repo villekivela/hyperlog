@@ -3,7 +3,7 @@ package com.hyperlog.app.progression
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.backoffWeight
 import kotlin.math.abs
@@ -15,7 +15,7 @@ import kotlin.math.roundToInt
  */
 data class WorkSet(
     val set: LoggedSet,
-    val target: PlannedSet?,
+    val target: SetPrescription?,
     /** False for a weight kept past a weight check that nothing logged since has confirmed. */
     val counts: Boolean = true,
 )
@@ -71,7 +71,7 @@ data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: St
     val estimated: Boolean get() = kind == Kind.Estimated
 
     /**
-     * This suggestion moved by an accepted Change's load adjustment of [percent], to the nearest
+     * This suggestion moved by an accepted Change's load change of [percent], to the nearest
      * rung, saying so after the reason.
      */
     fun adjusted(percent: Int, ladder: WeightLadder): Suggestion {
@@ -82,7 +82,7 @@ data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: St
     }
 }
 
-/** An e1RM and the set it comes from. */
+/** An estimate and the set it comes from. */
 data class Estimate(val kg: Double, val from: LoggedSet)
 
 /**
@@ -104,7 +104,7 @@ object Progression {
      * sessions (on this machine), oldest first; [today] holds the sets logged so far and whether
      * this is a deload week. Null when there's nothing to go on.
      */
-    fun suggest(plan: List<PlannedSet>, today: Performance, history: List<Performance>, ladder: WeightLadder): Suggestion? {
+    fun suggest(plan: List<SetPrescription>, today: Performance, history: List<Performance>, ladder: WeightLadder): Suggestion? {
         val index = today.sets.size
         val target = plan.getOrNull(index) ?: return null
         target.backoff?.let { b ->
@@ -121,7 +121,7 @@ object Progression {
      * "last time" names it: the last session whose top sets were done under the same rep range (or
      * ad hoc), in the same slot if there is one, else in any. Null when none was: a new rep range.
      */
-    fun judged(target: PlannedSet, history: List<Performance>, slot: String?): Int? {
+    fun judged(target: SetPrescription, history: List<Performance>, slot: String?): Int? {
         val sameRange = history.indices.filter { i ->
             topSets(history[i]).firstOrNull()?.let { (it.target?.reps ?: target.reps) == target.reps } == true
         }
@@ -141,7 +141,7 @@ object Progression {
     private fun estimate(history: List<Performance>, k: Double): Estimate? {
         var estimate: Estimate? = null
         for (p in history) {
-            fun best(sets: List<WorkSet>) = sets.maxByOrNull { e1rm(it.set, k, p) }?.let { Estimate(e1rm(it.set, k, p), it.set) }
+            fun best(sets: List<WorkSet>) = sets.maxByOrNull { estimateFrom(it.set, k, p) }?.let { Estimate(estimateFrom(it.set, k, p), it.set) }
             val sets = p.sets.filter { it.counts && it.set.fullReps in 1..MAX_ESTIMATE_REPS }
             val normal = if (p.deload) null else best(sets.filter { it.set.rir < HIGH_RIR })
             // Deload and high-RIR sets only ever raise it.
@@ -177,7 +177,7 @@ object Progression {
      * [today]'s bodyweight is for a weighted bodyweight exercise, else 0; the ladder is the load
      * on the belt.
      */
-    private fun nextSession(target: PlannedSet, today: Performance, history: List<Performance>, ladder: WeightLadder): Suggestion? {
+    private fun nextSession(target: SetPrescription, today: Performance, history: List<Performance>, ladder: WeightLadder): Suggestion? {
         val deload = today.deload
         val k = constant(history)
         val estimate = estimate(history, k)
@@ -240,7 +240,7 @@ object Progression {
     private fun withinSession(
         previousIndex: Int,
         previous: WorkSet,
-        target: PlannedSet,
+        target: SetPrescription,
         today: Performance,
         history: List<Performance>,
         ladder: WeightLadder,
@@ -270,7 +270,7 @@ object Progression {
     }
 
     /** [today] says what a logged weight stands for: the body and both dumbbells. */
-    private fun fromEstimate(estimate: Estimate, k: Double, target: PlannedSet, ladder: WeightLadder, why: String, today: Performance): Suggestion {
+    private fun fromEstimate(estimate: Estimate, k: Double, target: SetPrescription, ladder: WeightLadder, why: String, today: Performance): Suggestion {
         val t = target.rir ?: 0
         val ideal = today.weightFor(estimate.kg / (1 + (target.reps.min + t) / k))
         // Rounded down: RIR is usually under-reported, so the true capacity is a little higher.
@@ -282,18 +282,18 @@ object Progression {
     private fun predicted(estimate: Estimate?, k: Double, kg: Double, rir: Int?, range: RepRange): Int =
         (estimate?.let { predictedRaw(it.kg, k, kg, rir) } ?: range.min).coerceIn(range.min, range.max)
 
-    private fun predictedRaw(e1rm: Double, k: Double, kg: Double, rir: Int?): Int =
-        (k * (e1rm / kg - 1) - (rir ?: 0)).roundToInt()
+    private fun predictedRaw(estimate: Double, k: Double, kg: Double, rir: Int?): Int =
+        (k * (estimate / kg - 1) - (rir ?: 0)).roundToInt()
 
     /** The set before's reps when it had the same range, capped at its top; else the top of the range. */
-    private fun followReps(today: Performance, target: PlannedSet): Int {
+    private fun followReps(today: Performance, target: SetPrescription): Int {
         val previous = today.sets.lastOrNull() ?: return target.reps.max
         return if (previous.target?.reps == target.reps) previous.set.fullReps.coerceAtMost(target.reps.max) else target.reps.max
     }
 
     private fun effective(s: LoggedSet) = s.fullReps + s.rir
 
-    private fun e1rm(s: LoggedSet, k: Double, p: Performance) = p.load(s.weightKg) * (1 + effective(s) / k)
+    private fun estimateFrom(s: LoggedSet, k: Double, p: Performance) = p.load(s.weightKg) * (1 + effective(s) / k)
 
     /** `41.5 kg × 10 @ 2`. */
     private fun LoggedSet.text() = "${formatKg(weightKg)} kg × $fullReps @ $rir"

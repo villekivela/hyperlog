@@ -95,7 +95,7 @@ import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.session.SessionOrder
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.Correction
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.history.GoalProgress
@@ -812,7 +812,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
  * of back-offs is headed by its rule, and a technique is named under its set with its drops or
  * mini-sets.
  */
-private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: TableState, plan: List<PlannedSet>) {
+private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: TableState, plan: List<SetPrescription>) {
     val current = table.current
     val entry = table.entry
     val logged = current.sets
@@ -863,7 +863,7 @@ internal fun Label(symbol: Symbol, text: String, done: Boolean) {
 
 /** The set's target: reps and the target RIR as a ring. */
 @Composable
-private fun Target(target: PlannedSet?) {
+private fun Target(target: SetPrescription?) {
     Row(Modifier.width(ColTarget), verticalAlignment = Alignment.CenterVertically) {
         if (target != null) {
             Text(
@@ -881,7 +881,7 @@ private fun Target(target: PlannedSet?) {
 }
 
 @Composable
-private fun UpcomingRow(n: Int, last: LoggedSet?, weight: String, reps: String, target: PlannedSet? = null, onNumber: (() -> Unit)? = null) {
+private fun UpcomingRow(n: Int, last: LoggedSet?, weight: String, reps: String, target: SetPrescription? = null, onNumber: (() -> Unit)? = null) {
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     val color = MaterialTheme.colorScheme.outline
     Row(
@@ -968,7 +968,7 @@ private fun RowScope.Last(last: LoggedSet?) {
 }
 
 @Composable
-private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet, target: PlannedSet? = null, onClick: (() -> Unit)? = null) {
+private fun DoneRow(n: Int, last: LoggedSet?, set: LoggedSet, target: SetPrescription? = null, onClick: (() -> Unit)? = null) {
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     val color = MaterialTheme.colorScheme.onSurface
     val description = stringResource(R.string.correct_set_description, n)
@@ -997,7 +997,7 @@ private fun ActiveRow(
     entry: SetEntry,
     weightFlagged: Boolean,
     actions: PadActions,
-    target: PlannedSet? = null,
+    target: SetPrescription? = null,
     onNumber: (() -> Unit)? = null,
     /** A logged set loaded into the pad: `edit` stands in for its number. */
     editing: Boolean = false,
@@ -1304,7 +1304,7 @@ internal fun ExerciseSheet(
     exercise: Exercise,
     machine: String?,
     onChangeMachine: (() -> Unit)?,
-    plan: List<PlannedSet>? = null,
+    plan: List<SetPrescription>? = null,
     slotNote: String? = null,
     goal: GoalProgress? = null,
 ) {
@@ -1400,7 +1400,7 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
  * is one line when every set shares it, else at the end of each row.
  */
 @Composable
-private fun Prescription(plan: List<PlannedSet>) {
+private fun Prescription(plan: List<SetPrescription>) {
     val cs = MaterialTheme.colorScheme
     val sameRest = plan.map { it.rest }.distinct().size == 1
     Spacer(Modifier.height(16.dp))

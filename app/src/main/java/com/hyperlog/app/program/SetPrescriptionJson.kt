@@ -16,8 +16,8 @@ import kotlinx.serialization.json.put
  * resolved set lines: `[{"reps":"6-8","rir":1,"rest":180,"technique":{…},"backoff":{"from":0,"percent":10}}]`.
  * The shape is the program format's set line without `count` or `weeks`, so a Change can carry it.
  */
-object PlannedSetJson {
-    fun encode(sets: List<PlannedSet>): String = buildJsonArray {
+object SetPrescriptionJson {
+    fun encode(sets: List<SetPrescription>): String = buildJsonArray {
         sets.forEach { set ->
             add(
                 buildJsonObject {
@@ -31,10 +31,10 @@ object PlannedSetJson {
         }
     }.toString()
 
-    fun decode(text: String): List<PlannedSet> = Json.parseToJsonElement(text).jsonArray.map { element ->
+    fun decode(text: String): List<SetPrescription> = Json.parseToJsonElement(text).jsonArray.map { element ->
         val o = element.jsonObject
         val reps = o.getValue("reps").jsonPrimitive.content.split('-').map { it.trim().toInt() }
-        PlannedSet(
+        SetPrescription(
             reps = RepRange(reps.first(), reps.last()),
             rir = o["rir"]?.jsonPrimitive?.intOrNull,
             rest = o.getValue("rest").jsonPrimitive.int,

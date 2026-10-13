@@ -45,7 +45,7 @@ import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.program.HoldPosition
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.backoffWeight
@@ -357,7 +357,7 @@ internal fun SetSheet(
     onTechnique: (Technique?) -> Unit,
     onSplit: (Boolean) -> Unit,
     /** A planned set still to do: its target, to change for this session; null otherwise. */
-    target: PlannedSet? = null,
+    target: SetPrescription? = null,
     onTarget: (RepRange, Int?) -> Unit = { _, _ -> },
     /** Takes the set out of this session; null when it can't go. */
     onRemove: (() -> Unit)? = null,

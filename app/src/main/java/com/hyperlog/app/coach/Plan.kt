@@ -1,7 +1,7 @@
 package com.hyperlog.app.coach
 
 import com.hyperlog.app.program.PlannedDay
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
@@ -164,7 +164,7 @@ object Plan {
                 exercise = op.exercise,
                 alternatives = emptyList(),
                 note = null,
-                sets = op.sets.flatMap { line -> List(line.count) { PlannedSet(line.reps, line.rir, line.rest) } },
+                sets = op.sets.flatMap { line -> List(line.count) { SetPrescription(line.reps, line.rir, line.rest) } },
             )
             val at = day.slots.indexOfFirst { it.id == op.after }.let { if (it < 0) day.slots.size else it + 1 }
             day.copy(slots = day.slots.toMutableList().apply { add(at, slot) })
@@ -174,15 +174,15 @@ object Plan {
         }
         is Operation.AdjustLoad -> day.mapSlots(op.slot) { it.copy(loadPercent = it.loadPercent + op.percent) }
         is Operation.AdjustRir -> day.mapSlots(op.slot) { s ->
-            fun List<PlannedSet>.eased() = map { set -> set.copy(rir = set.rir?.let { (it + op.by).coerceIn(0, 10) }) }
+            fun List<SetPrescription>.eased() = map { set -> set.copy(rir = set.rir?.let { (it + op.by).coerceIn(0, 10) }) }
             s.copy(sets = s.sets.eased(), alternativeSets = s.alternativeSets.mapValues { it.value.eased() })
         }
         is Operation.RemoveTechnique -> day.mapSlots(op.slot) { s ->
-            fun List<PlannedSet>.plain() = map { set -> if (set.technique != null && (op.technique == null || set.technique.kind == op.technique)) set.copy(technique = null) else set }
+            fun List<SetPrescription>.plain() = map { set -> if (set.technique != null && (op.technique == null || set.technique.kind == op.technique)) set.copy(technique = null) else set }
             s.copy(sets = s.sets.plain(), alternativeSets = s.alternativeSets.mapValues { it.value.plain() })
         }
         is Operation.DeloadWeek -> if (op.week != day.position.week) day else {
-            fun List<PlannedSet>.deloaded() = withCount((size + 1) / 2).map { set ->
+            fun List<SetPrescription>.deloaded() = withCount((size + 1) / 2).map { set ->
                 set.copy(rir = set.rir?.let { (it + DELOAD_RIR).coerceAtMost(10) }, technique = null)
             }
             day.copy(deload = true, slots = day.slots.map { s -> s.copy(sets = s.sets.deloaded(), alternativeSets = s.alternativeSets.mapValues { it.value.deloaded() }) })
@@ -200,7 +200,7 @@ object Plan {
     private fun PlannedDay.mapSlots(id: String?, f: (PlannedSlot) -> PlannedSlot) = copy(slots = slots.map { if (id == null || it.id == id) f(it) else it })
 
     /** The first [count] sets, or the last one repeated without its technique (a back-off stays one). */
-    private fun List<PlannedSet>.withCount(count: Int): List<PlannedSet> {
+    private fun List<SetPrescription>.withCount(count: Int): List<SetPrescription> {
         if (isEmpty() || count < 1) return this
         if (count <= size) return take(count)
         val extra = last().copy(technique = null)

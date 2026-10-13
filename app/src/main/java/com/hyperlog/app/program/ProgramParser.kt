@@ -91,7 +91,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             null
         } else if (start != null && end != null) WeekRange(start, end) else null
         val days = list(o, path, "days", required = true) { e, p -> day(e, p, weeks) }
-        val adjustments = adjustments(o, path, weeks)
+        val overrides = weekOverrides(o, path, weeks)
         days?.let { ds ->
             duplicates(ds.map { it?.id }) { i, d -> error("$path.days[$i].id", "\"$d\" is used by another day in this block") }
             // Changes name a slot by id, so a slot id means one place in the block.
@@ -101,8 +101,8 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             }.flatten()
             duplicates(slots.map { it.second }) { i, s -> error(slots[i].first, "\"$s\" is used by another slot in this block") }
         }
-        if (id == null || name == null || weeks == null || days == null || days.any { it == null } || adjustments == null) return null
-        return Block(id, name, weeks.from, weeks.to, days.filterNotNull(), adjustments)
+        if (id == null || name == null || weeks == null || days == null || days.any { it == null } || overrides == null) return null
+        return Block(id, name, weeks.from, weeks.to, days.filterNotNull(), overrides)
     }
 
     private fun day(el: JsonElement, path: String, weeks: WeekRange?): Day? {
@@ -110,9 +110,9 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         val id = id(o, path)
         val name = string(o, path, "name", required = true)
         val groups = list(o, path, "groups", required = true) { e, p -> group(e, p, weeks) }
-        val adjustments = adjustments(o, path, weeks)
-        if (id == null || name == null || groups == null || groups.any { it == null } || adjustments == null) return null
-        return Day(id, name, groups.filterNotNull(), adjustments)
+        val overrides = weekOverrides(o, path, weeks)
+        if (id == null || name == null || groups == null || groups.any { it == null } || overrides == null) return null
+        return Day(id, name, groups.filterNotNull(), overrides)
     }
 
     private fun group(el: JsonElement, path: String, weeks: WeekRange?): Group? {
@@ -321,15 +321,15 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         return if (ok) result else null
     }
 
-    private fun adjustments(o: JsonObject, path: String, weeks: WeekRange?): List<WeekAdjustment>? {
-        val result = mutableListOf<WeekAdjustment>()
+    private fun weekOverrides(o: JsonObject, path: String, weeks: WeekRange?): List<WeekOverride>? {
+        val result = mutableListOf<WeekOverride>()
         val ok = weekKeys(o, path, weeks) { e, p, range ->
             unknownFields(e, p, setOf("rir", "rirAdd", "technique", "fewerSets", "deload"))
             if (e.containsKey("technique") && e["technique"] !is JsonNull) {
                 error("$p.technique", "can only be null here (no techniques); set a technique on the set itself")
             }
             if (e.containsKey("rir") && e.containsKey("rirAdd")) error(p, "use rir or rirAdd, not both")
-            result += WeekAdjustment(
+            result += WeekOverride(
                 weeks = range,
                 rir = int(e, p, "rir", min = 0, max = 10),
                 rirAdd = int(e, p, "rirAdd", min = -5, max = 5) ?: 0,

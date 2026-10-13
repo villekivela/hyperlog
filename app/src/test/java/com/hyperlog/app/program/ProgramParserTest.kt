@@ -139,7 +139,7 @@ class ProgramParserTest {
     @Test
     fun aBlockOrDayMarksDeloadWeeksWithTrueOnly() {
         val block = valid(program(bench, blockExtra = """, "weeks": { "4": { "rir": 3, "deload": true } }""")).blocks.single()
-        assertEquals(listOf(WeekAdjustment(WeekRange(4, 4), rir = 3, deload = true)), block.weeks)
+        assertEquals(listOf(WeekOverride(WeekRange(4, 4), rir = 3, deload = true)), block.weeks)
         assertEquals(
             listOf("""blocks[0].days[0].weeks."4".deload: must be true or false"""),
             errors(program(bench, dayExtra = """, "weeks": { "4": { "deload": 1 } }""")),

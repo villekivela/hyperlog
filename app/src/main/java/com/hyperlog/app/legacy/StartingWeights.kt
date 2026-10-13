@@ -5,7 +5,7 @@ import com.hyperlog.app.data.StartingWeightEntity
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.library.LibrarySeed
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.progression.Progression
 import com.hyperlog.app.progression.Suggestion
 import kotlinx.coroutines.flow.Flow
@@ -47,10 +47,10 @@ fun StartingWeight.text(zone: ZoneId = ZoneId.systemDefault()): String {
 
 /**
  * A free weight's first suggestion from its starting weight. With a [target], the old set is
- * worked into the target's range and RIR through its e1RM, rounded down to a rung; ad hoc it is
+ * worked into the target's range and RIR through its estimate, rounded down to a rung; ad hoc it is
  * the old set itself on the ladder.
  */
-fun StartingWeight.suggestion(target: PlannedSet?, ladder: WeightLadder): Suggestion {
+fun StartingWeight.suggestion(target: SetPrescription?, ladder: WeightLadder): Suggestion {
     val reps = target?.reps?.let { reps.coerceIn(it.min, it.max) } ?: reps
     val ideal = if (target == null || kg <= 0) kg
     else kg * (1 + (this.reps + (rir ?: 0)) / Progression.EPLEY) / (1 + (reps + (target.rir ?: 0)) / Progression.EPLEY)

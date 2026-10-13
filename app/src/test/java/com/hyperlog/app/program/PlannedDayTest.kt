@@ -43,9 +43,9 @@ class PlannedDayTest {
         assertEquals(listOf("1", "2a", "2b"), day.slots.map { it.label })
         assertEquals(
             listOf(
-                PlannedSet(RepRange(4, 6), 1, 180),
-                PlannedSet(RepRange(6, 8), 1, 180, backoff = Backoff(from = 0, percent = 10)),
-                PlannedSet(RepRange(6, 8), 1, 180, backoff = Backoff(from = 0, percent = 10)),
+                SetPrescription(RepRange(4, 6), 1, 180),
+                SetPrescription(RepRange(6, 8), 1, 180, backoff = Backoff(from = 0, percent = 10)),
+                SetPrescription(RepRange(6, 8), 1, 180, backoff = Backoff(from = 0, percent = 10)),
             ),
             day.slot("bench")!!.sets,
         )
@@ -87,7 +87,7 @@ class PlannedDayTest {
     fun anAlternativeDoesTheSlotsSetsUnlessItHasItsOwn() {
         val bench = day(2).slot("bench")!!
         assertEquals(bench.sets, bench.setsFor("smith_machine_bench_press"))
-        assertEquals(listOf(PlannedSet(RepRange(8, 10), 1, 120), PlannedSet(RepRange(8, 10), 1, 120)), bench.setsFor("db_bench_press"))
+        assertEquals(listOf(SetPrescription(RepRange(8, 10), 1, 120), SetPrescription(RepRange(8, 10), 1, 120)), bench.setsFor("db_bench_press"))
         // Week overrides apply to an alternative's own sets too.
         assertEquals(listOf(2, 2), day(1).slot("bench")!!.setsFor("db_bench_press").map { it.rir })
     }

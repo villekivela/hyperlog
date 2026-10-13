@@ -2,7 +2,7 @@ package com.hyperlog.app.progression
 
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.WeightLadder
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.program.Backoff
@@ -23,19 +23,19 @@ class ProgressionTest {
     /** A 20 kg bar with the shared plates: 2.5 kg steps. */
     private val plates = LadderSpec.DefaultPlates.ladder()
 
-    private fun planned(reps: String, rir: Int?, count: Int = 1): List<PlannedSet> {
+    private fun planned(reps: String, rir: Int?, count: Int = 1): List<SetPrescription> {
         val (min, max) = reps.split("-").map { it.toInt() }.let { it.first() to it.last() }
-        return List(count) { PlannedSet(RepRange(min, max), rir, rest = 120) }
+        return List(count) { SetPrescription(RepRange(min, max), rir, rest = 120) }
     }
 
     private fun set(kg: Double, reps: Int, rir: Int, partials: Int = 0) = LoggedSet(kg, reps, partials, rir)
 
     /** A past session of these sets, done under [plan]. */
-    private fun session(plan: List<PlannedSet>?, vararg sets: LoggedSet, deload: Boolean = false) =
+    private fun session(plan: List<SetPrescription>?, vararg sets: LoggedSet, deload: Boolean = false) =
         Performance(sets.mapIndexed { i, s -> WorkSet(s, plan?.getOrNull(i)) }, deload)
 
     private fun next(
-        plan: List<PlannedSet>,
+        plan: List<SetPrescription>,
         ladder: WeightLadder,
         vararg history: Performance,
         today: List<LoggedSet> = emptyList(),
@@ -210,8 +210,8 @@ class ProgressionTest {
 
     @Test
     fun aBackOffFollowsTheTopSetLoggedToday() {
-        val top = PlannedSet(RepRange(4, 6), 1, 180)
-        val backoff = PlannedSet(RepRange(6, 8), 1, 180, backoff = Backoff(from = 0, percent = 10))
+        val top = SetPrescription(RepRange(4, 6), 1, 180)
+        val backoff = SetPrescription(RepRange(6, 8), 1, 180, backoff = Backoff(from = 0, percent = 10))
         val s = next(listOf(top, backoff, backoff), plates, today = listOf(set(100.0, 5, 1)))!!
         assertEquals(Suggestion.Kind.Backoff, s.kind)
         assertEquals(90.0 to 8, s.kg to s.reps)
@@ -235,7 +235,7 @@ class ProgressionTest {
 
     @Test
     fun epleysConstantIsLearnedFromTopAndBackOffSetsAndChangesTheEstimatedWeight() {
-        val plan = listOf(PlannedSet(RepRange(4, 6), 1, 180), PlannedSet(RepRange(8, 10), 1, 180, backoff = Backoff(0, 15)))
+        val plan = listOf(SetPrescription(RepRange(4, 6), 1, 180), SetPrescription(RepRange(8, 10), 1, 180, backoff = Backoff(0, 15)))
         val history = listOf(session(plan, set(100.0, 5, 1), set(85.0, 10, 1)), session(plan, set(100.0, 5, 1), set(85.0, 10, 1)))
         assertEquals(22.33, Progression.constant(history), 0.01)
         assertEquals(30.0, Progression.constant(history.take(1)), 0.001)

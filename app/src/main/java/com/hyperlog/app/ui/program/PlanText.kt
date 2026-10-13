@@ -16,7 +16,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.hyperlog.app.R
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.planChunks
 import com.hyperlog.app.ui.symbols.Symbol
@@ -52,7 +52,7 @@ fun techniqueText(technique: Technique): String = when (technique) {
  */
 @Composable
 fun SetSummary(
-    sets: List<PlannedSet>,
+    sets: List<SetPrescription>,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,

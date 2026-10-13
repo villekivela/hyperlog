@@ -6,7 +6,7 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.RepRange
 import kotlinx.coroutines.flow.first
@@ -119,7 +119,7 @@ class SessionEditTest {
         val logger = logger()
         logger.addSet(logger.session.current!!.id)
         assertEquals(3, logger.session.current!!.plan!!.size)
-        assertEquals(PlannedSet(RepRange(6, 8), 1, 180), logger.session.current!!.plan!![2])
+        assertEquals(SetPrescription(RepRange(6, 8), 1, 180), logger.session.current!!.plan!![2])
         logger.log("60"); logger.log("60")
         assertEquals("barbell_bench_press", logger.onScreen)
         logger.log("60")
@@ -160,8 +160,8 @@ class SessionEditTest {
         val bench = logger.session.current!!.id
         logger.setTarget(bench, 0, RepRange(3, 5), rir = 2)
         val current = logger.session.current!!
-        assertEquals(PlannedSet(RepRange(3, 5), 2, 180), current.plan!![0])
-        assertEquals(PlannedSet(RepRange(6, 8), 1, 180), current.plan!![1])
+        assertEquals(SetPrescription(RepRange(3, 5), 2, 180), current.plan!![0])
+        assertEquals(SetPrescription(RepRange(6, 8), 1, 180), current.plan!![1])
         assertEquals("5", logger.session.entry!!.full)
         assertEquals(2, logger.session.entry!!.rir)
     }
@@ -175,7 +175,7 @@ class SessionEditTest {
         logger.swap(logger.exercise("db_lateral_raise").id, "cable_lateral_raise")
 
         val again = SessionLogger(db, clock = { now }, programs = programs).also { it.load() }
-        assertEquals(PlannedSet(RepRange(10, 12), 0, 180), again.session.current!!.plan!![2])
+        assertEquals(SetPrescription(RepRange(10, 12), 0, 180), again.session.current!!.plan!![2])
         assertEquals("cable_lateral_raise", again.session.exercises.last().exercise.id)
     }
 

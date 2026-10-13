@@ -76,9 +76,9 @@ class StarterProgramTest {
         // Bench: top set 1 × 4–6 @ 1, then back-off 2 × 6–8 @ 1 at 10% off the top set.
         assertEquals(
             listOf(
-                PlannedSet(RepRange(4, 6), 1, 180),
-                PlannedSet(RepRange(6, 8), 1, 180, backoff = Backoff(0, 10)),
-                PlannedSet(RepRange(6, 8), 1, 180, backoff = Backoff(0, 10)),
+                SetPrescription(RepRange(4, 6), 1, 180),
+                SetPrescription(RepRange(6, 8), 1, 180, backoff = Backoff(0, 10)),
+                SetPrescription(RepRange(6, 8), 1, 180, backoff = Backoff(0, 10)),
             ),
             a.sets("bench"),
         )
@@ -98,7 +98,7 @@ class StarterProgramTest {
         assertEquals(listOf("1", "2", "3", "4", "5", "6", "7a", "7b", "8"), c.slots.map { it.label })
         // Bench volume: 1 × 6–8 @ 1, then back-off 1 × 8–10 @ 1.
         assertEquals(
-            listOf(PlannedSet(RepRange(6, 8), 1, 180), PlannedSet(RepRange(8, 10), 1, 180, backoff = Backoff(0, 10))),
+            listOf(SetPrescription(RepRange(6, 8), 1, 180), SetPrescription(RepRange(8, 10), 1, 180, backoff = Backoff(0, 10))),
             c.sets("bench_volume"),
         )
         assertEquals(listOf(null, Technique.LengthenedPartials()), c.sets("calf_raise").map { it.technique })
@@ -141,7 +141,7 @@ class StarterProgramTest {
     @Test
     fun weekTwelveTestsTheBenchWithATopSingleAndDeloadsTheRest() {
         val a = day(12, 0)
-        assertEquals(listOf(PlannedSet(RepRange(1, 1), 1, 180)), a.sets("bench"))
+        assertEquals(listOf(SetPrescription(RepRange(1, 1), 1, 180)), a.sets("bench"))
         val note = a.slot("bench")!!.note!!
         assertTrue(note, "100 kg" in note && "97" in note)
         // Days B and C: one set fewer, @ 3 RIR, no techniques.

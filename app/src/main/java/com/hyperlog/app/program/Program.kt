@@ -25,7 +25,7 @@ data class Program(val title: String, val author: String?, val blocks: List<Bloc
     fun plannedDay(position: Position): PlannedDay? {
         val block = blockAt(position.week) ?: return null
         val day = block.days.getOrNull(position.day) ?: return null
-        val adjustments = listOfNotNull(block.weeks.forWeek(position.week), day.weeks.forWeek(position.week))
+        val overrides = listOfNotNull(block.weeks.forWeek(position.week), day.weeks.forWeek(position.week))
         val slots = day.groups.flatMapIndexed { g, group ->
             group.slots.mapIndexed { s, slot ->
                 val label = if (group.superset) "${g + 1}${'a' + s}" else "${g + 1}"
@@ -36,13 +36,13 @@ data class Program(val title: String, val author: String?, val blocks: List<Bloc
                     exercise = slot.exercise,
                     alternatives = slot.alternatives.map { it.exercise },
                     note = slot.note,
-                    sets = expand(slot.sets, position.week, adjustments),
+                    sets = expand(slot.sets, position.week, overrides),
                     alternativeSets = slot.alternatives.filter { it.sets != null }
-                        .associate { it.exercise to expand(it.sets!!, position.week, adjustments) },
+                        .associate { it.exercise to expand(it.sets!!, position.week, overrides) },
                 )
             }
         }
-        return PlannedDay(position, block, day, slots, deload = adjustments.any { it.deload })
+        return PlannedDay(position, block, day, slots, deload = overrides.any { it.deload })
     }
 }
 
@@ -55,10 +55,10 @@ data class Block(
     val weekStart: Int,
     val weekEnd: Int,
     val days: List<Day>,
-    val weeks: List<WeekAdjustment> = emptyList(),
+    val weeks: List<WeekOverride> = emptyList(),
 )
 
-data class Day(val id: String, val name: String, val groups: List<Group>, val weeks: List<WeekAdjustment> = emptyList())
+data class Day(val id: String, val name: String, val groups: List<Group>, val weeks: List<WeekOverride> = emptyList())
 
 /** One exercise on its own (straight sets), or a superset of two. */
 data class Group(val superset: Boolean, val slots: List<Slot>)
@@ -153,7 +153,7 @@ data class SetOverride(
  * A block's or day's override for some weeks, applied to every set of it after the sets' own
  * overrides: a target RIR or a change to it, no techniques, fewer sets per slot, and the deload mark.
  */
-data class WeekAdjustment(
+data class WeekOverride(
     val weeks: WeekRange,
     val rir: Int? = null,
     val rirAdd: Int = 0,
@@ -163,7 +163,7 @@ data class WeekAdjustment(
     val deload: Boolean = false,
 )
 
-private fun List<WeekAdjustment>.forWeek(week: Int) = firstOrNull { week in it.weeks }
+private fun List<WeekOverride>.forWeek(week: Int) = firstOrNull { week in it.weeks }
 
 /** A day as it is trained in one week: its slots in order with their resolved sets. */
 data class PlannedDay(
@@ -186,19 +186,19 @@ data class PlannedSlot(
     val exercise: String,
     val alternatives: List<String>,
     val note: String?,
-    val sets: List<PlannedSet>,
-    val alternativeSets: Map<String, List<PlannedSet>> = emptyMap(),
+    val sets: List<SetPrescription>,
+    val alternativeSets: Map<String, List<SetPrescription>> = emptyMap(),
     /** How far accepted Changes move this slot's suggested weights, in percent (−10 = 10% lighter). */
     val loadPercent: Int = 0,
     /** The program's exercise for the slot, when a Change swapped it for [exercise]. */
     val inPlaceOf: String? = null,
 ) {
     /** The sets for [exerciseId]: an alternative's own, else the slot's. */
-    fun setsFor(exerciseId: String): List<PlannedSet> = alternativeSets[exerciseId] ?: sets
+    fun setsFor(exerciseId: String): List<SetPrescription> = alternativeSets[exerciseId] ?: sets
 }
 
 /** One set to do, with this week's values. */
-data class PlannedSet(
+data class SetPrescription(
     val reps: RepRange,
     val rir: Int?,
     val rest: Int,
@@ -209,7 +209,7 @@ data class PlannedSet(
 /** This set's weight is set [from]'s (an index into the planned sets) minus [percent], rounded down to a rung. */
 data class Backoff(val from: Int, val percent: Int)
 
-private fun expand(specs: List<SetSpec>, week: Int, adjustments: List<WeekAdjustment>): List<PlannedSet> {
+private fun expand(specs: List<SetSpec>, week: Int, overrides: List<WeekOverride>): List<SetPrescription> {
     val firstOf = IntArray(specs.size) { -1 }
     var sets = buildList {
         specs.forEachIndexed { i, spec ->
@@ -219,7 +219,7 @@ private fun expand(specs: List<SetSpec>, week: Int, adjustments: List<WeekAdjust
             val backoff = spec.backoff?.let { b -> firstOf[b.from].takeIf { it >= 0 }?.let { Backoff(it, b.percent) } }
             repeat(count) {
                 add(
-                    PlannedSet(
+                    SetPrescription(
                         reps = o?.reps ?: spec.reps,
                         rir = o?.rir ?: spec.rir,
                         rest = o?.rest ?: spec.rest,
@@ -230,7 +230,7 @@ private fun expand(specs: List<SetSpec>, week: Int, adjustments: List<WeekAdjust
             }
         }
     }
-    adjustments.forEach { a ->
+    overrides.forEach { a ->
         sets = sets.map { set ->
             set.copy(
                 rir = (a.rir ?: set.rir)?.let { (it + a.rirAdd).coerceIn(0, 10) },

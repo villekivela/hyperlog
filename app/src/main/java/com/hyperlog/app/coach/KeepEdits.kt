@@ -2,7 +2,7 @@ package com.hyperlog.app.coach
 
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.program.PlannedDay
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
 
 /**
@@ -14,7 +14,7 @@ data class EditedExercise(
     val slotId: String?,
     val exerciseId: String,
     val removed: Boolean,
-    val sets: List<PlannedSet>?,
+    val sets: List<SetPrescription>?,
     val logged: List<LoggedSet>,
 )
 
@@ -61,7 +61,7 @@ object KeepEdits {
     }
 
     /** The RIR change every set shared, if one did. */
-    private fun sharedRirChange(planned: List<PlannedSet>, own: List<PlannedSet>): Int? {
+    private fun sharedRirChange(planned: List<SetPrescription>, own: List<SetPrescription>): Int? {
         val deltas = planned.zip(own).map { (p, o) -> if (p.rir == null || o.rir == null) null else o.rir - p.rir }
         val first = deltas.firstOrNull() ?: return null
         return first.takeIf { it != 0 && deltas.all { d -> d == first } }

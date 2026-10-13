@@ -11,7 +11,7 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.PlannedDay
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.progression.Suggestion
@@ -36,7 +36,7 @@ data class SessionExercise(
     /** The program slot it fills; null when added ad hoc. */
     val slot: PlannedSlot? = null,
     /** This week's sets for it from the program; null for an ad-hoc exercise, whose sets are open-ended. */
-    val plan: List<PlannedSet>? = null,
+    val plan: List<SetPrescription>? = null,
     /** What progression suggests for the active row of a program exercise on screen, with why. */
     val suggestion: Suggestion? = null,
     /**

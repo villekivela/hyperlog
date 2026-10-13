@@ -13,7 +13,7 @@ data class PlanChunk(
  * Sets as they are summed up on Today and in the session list: neighbours with the same reps, RIR
  * and back-off count together, keeping their techniques (`2 × 10–12 @ 0` with myo-reps on the last).
  */
-fun planChunks(sets: List<PlannedSet>): List<PlanChunk> = buildList {
+fun planChunks(sets: List<SetPrescription>): List<PlanChunk> = buildList {
     sets.forEach { set ->
         val last = lastOrNull()
         val backoff = set.backoff != null

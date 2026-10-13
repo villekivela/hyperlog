@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.search
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.library.SearchField
@@ -189,7 +189,7 @@ internal fun ExerciseEditMenu(name: String, edits: ExerciseEdits) {
  * fixed number is a range of one), and the target RIR. Each step applies at once.
  */
 @Composable
-internal fun TargetEditor(planned: PlannedSet, onChange: (RepRange, Int?) -> Unit) {
+internal fun TargetEditor(planned: SetPrescription, onChange: (RepRange, Int?) -> Unit) {
     val cs = MaterialTheme.colorScheme
     // Quick taps build on each other before the session catches up with the first.
     var target by remember(planned) { mutableStateOf(planned) }

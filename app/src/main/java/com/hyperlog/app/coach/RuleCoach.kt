@@ -6,7 +6,7 @@ import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Position
 import java.time.DayOfWeek
@@ -279,7 +279,7 @@ object RuleCoach {
      */
     fun minutes(day: PlannedDay): Int = minutes(day.slots.map { Trim(it.id, it.group, it.sets) })
 
-    private data class Trim(val id: String, val group: Int, val sets: List<PlannedSet>)
+    private data class Trim(val id: String, val group: Int, val sets: List<SetPrescription>)
 
     private fun minutes(slots: List<Trim>): Int {
         var seconds = 0

@@ -22,8 +22,8 @@ import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.domain.countingSets
-import com.hyperlog.app.program.PlannedSet
-import com.hyperlog.app.program.PlannedSetJson
+import com.hyperlog.app.program.SetPrescription
+import com.hyperlog.app.program.SetPrescriptionJson
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
@@ -66,7 +66,7 @@ class SessionLogger(
      * The progression engine. Everything a suggestion depends on goes in through its arguments,
      * which is how a test shows that a lift goal never reaches it.
      */
-    private val suggest: (plan: List<PlannedSet>, today: Performance, history: List<Performance>, ladder: WeightLadder) -> Suggestion? = Progression::suggest,
+    private val suggest: (plan: List<SetPrescription>, today: Performance, history: List<Performance>, ladder: WeightLadder) -> Suggestion? = Progression::suggest,
 ) {
     private val dao = db.sessions()
     private val gyms = Gyms(db)
@@ -272,7 +272,7 @@ class SessionLogger(
      */
     private suspend fun editPlan(
         sessionExerciseId: Long,
-        change: suspend (SessionExercise, List<PlannedSet>) -> List<PlannedSet>?,
+        change: suspend (SessionExercise, List<SetPrescription>) -> List<SetPrescription>?,
     ) = locked {
         val session = _state.value ?: return@locked
         val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
@@ -280,7 +280,7 @@ class SessionLogger(
         val onScreen = session.currentId == sessionExerciseId && session.openSetId == null
         val edited = db.withTransaction {
             val sets = change(exercise, plan) ?: return@withTransaction false
-            dao.setSets(sessionExerciseId, PlannedSetJson.encode(sets))
+            dao.setSets(sessionExerciseId, SetPrescriptionJson.encode(sets))
             if (onScreen) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
             true
         }
@@ -735,7 +735,7 @@ class SessionLogger(
             val needsMachine = perMachine && gym != null && machine == null
             val ladder = shared.ladderFor(exercise.equipment, machine)
             val slot = day?.slot(se.slotId)
-            val plan = se.sets?.let(PlannedSetJson::decode) ?: slot?.setsFor(se.exerciseId)
+            val plan = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId)
             // A planned exercise's last time is the session progression judges (same slot and rep
             // range), so the Last column, the prefill and the why-line name the same sets.
             val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted, exercise.implements)
@@ -872,7 +872,7 @@ class SessionLogger(
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
             else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
-            val plan = past.sets?.let(PlannedSetJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
+            val plan = past.sets?.let(SetPrescriptionJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
             past.id to Performance(
                 workSets(dao.sets(past.id).map { loggedSet(it) }, plan),
                 deload = day?.deload == true,
@@ -911,7 +911,7 @@ private fun SessionExercise.reference(): Reference? =
  * [sets] as progression reads them: the main set only (the weaker side of a split set, and no
  * partials, drops or mini-sets), with its prescription and whether it counts.
  */
-private fun workSets(sets: List<LoggedSet>, plan: List<PlannedSet>?): List<WorkSet> {
+private fun workSets(sets: List<LoggedSet>, plan: List<SetPrescription>?): List<WorkSet> {
     val counting = sets.counting()
     return sets.mapIndexed { i, set ->
         WorkSet(LoggedSet(set.weightKg, set.progressionReps, 0, set.rir, set.kept), plan?.getOrNull(i), counting[i])

@@ -28,7 +28,7 @@ fun dropWeights(setKg: Double, technique: Technique.Dropset, ladder: WeightLadde
  * the set before's. With no suggestion (no history yet) the weight is empty, to type first, and
  * the reps are the top of the range.
  */
-fun plannedEntry(plan: List<PlannedSet>, logged: List<LoggedSet>, suggestion: Suggestion?): SetEntry {
+fun plannedEntry(plan: List<SetPrescription>, logged: List<LoggedSet>, suggestion: Suggestion?): SetEntry {
     val set = plan.getOrNull(logged.size) ?: plan.last()
     val previous = logged.lastOrNull()
     val kg = suggestion?.kg
@@ -49,7 +49,7 @@ fun plannedEntry(plan: List<PlannedSet>, logged: List<LoggedSet>, suggestion: Su
  */
 fun plannedWeight(
     index: Int,
-    plan: List<PlannedSet>,
+    plan: List<SetPrescription>,
     logged: List<LoggedSet>,
     lastTime: List<LoggedSet>,
     ladder: WeightLadder,

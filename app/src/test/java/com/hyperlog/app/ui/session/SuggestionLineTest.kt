@@ -14,7 +14,7 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
-import com.hyperlog.app.program.PlannedSet
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
@@ -36,7 +36,7 @@ class SuggestionLineTest {
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"))
 
     private fun show(suggestion: Suggestion?, sets: List<LoggedSet> = emptyList(), hint: String? = null) {
-        val plan = List(2) { PlannedSet(RepRange(8, 10), 2, 120) }
+        val plan = List(2) { SetPrescription(RepRange(8, 10), 2, 120) }
         val exercise = SessionExercise(
             id = 1, exercise = bench, sets = sets, lastTime = listOf(LoggedSet(60.0, 10, 0, 2), LoggedSet(60.0, 10, 0, 2)),
             ladder = DefaultPlates.ladder(), ladderKnown = true, plan = plan, suggestion = suggestion,
