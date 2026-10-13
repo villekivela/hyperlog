@@ -561,7 +561,7 @@
     <string name="update_failed">Couldn\'t download it. Tap to try again.</string>
     <string name="update_dismiss">Dismiss</string>
     <string name="settings_check_updates">Check for updates</string>
-    <string name="settings_check_updates_about">Each time you come back to Hyperlog</string>
+    <string name="settings_check_updates_about">Whenever you open the app</string>
     <string name="settings_check_now">Check for updates now</string>
     <string name="settings_check_now_about">Ask GitHub for the latest version</string>
     <string name="settings_check_now_checking">Checking…</string>
