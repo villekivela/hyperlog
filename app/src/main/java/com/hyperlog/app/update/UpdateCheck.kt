@@ -19,7 +19,11 @@ class UpdatePreferences(private val db: HyperlogDatabase) {
 
     suspend fun checkForUpdates(): Boolean = db.settings().get(CHECK_FOR_UPDATES) != "false"
 
-    suspend fun setCheckForUpdates(on: Boolean) = db.settings().put(SettingEntity(CHECK_FOR_UPDATES, on.toString()))
+    /** Turning checks back on forgets the last answer, so the next check reads GitHub. */
+    suspend fun setCheckForUpdates(on: Boolean) {
+        db.settings().put(SettingEntity(CHECK_FOR_UPDATES, on.toString()))
+        if (on) forgetLastCheck()
+    }
 
     /** The version whose banner was dismissed. */
     suspend fun dismissed(): String? = db.settings().get(DISMISSED_UPDATE)
@@ -45,9 +49,10 @@ class UpdatePreferences(private val db: HyperlogDatabase) {
 }
 
 /**
- * The check when the app opens: the latest release if it's newer than the installed one
- * ([installed] is its versionCode) and not dismissed. GitHub is read at most once a day; a
- * failure or a read slower than [timeoutMs] is just no release, and the next start tries again.
+ * The check each time the app comes to the foreground: the latest release if it's newer than the
+ * installed one ([installed] is its versionCode) and not dismissed. GitHub is read at most once in
+ * [THROTTLE_MS], unless checked now; a failure or a read slower than [timeoutMs] is just no
+ * release, and the next check tries again.
  */
 class UpdateCheck(
     private val source: ReleaseSource,
@@ -56,12 +61,13 @@ class UpdateCheck(
     private val clock: () -> Long = System::currentTimeMillis,
     private val timeoutMs: Long = 10_000,
 ) {
-    suspend fun run(): Release? {
+    /** Checks, from the cache when it is fresh; [now] ("Check for updates now") always reads GitHub. */
+    suspend fun run(now: Boolean = false): Release? {
         if (!preferences.checkForUpdates()) return null
-        val now = clock()
-        val last = if (source is FakeRelease) null else preferences.lastCheck()
-        val release = if (last != null && now - last.first in 0 until DAY) last.second else read()?.let { found ->
-            preferences.rememberCheck(now, found.release)
+        val at = clock()
+        val last = if (source is FakeRelease || now) null else preferences.lastCheck()
+        val release = if (last != null && at - last.first in 0 until THROTTLE_MS) last.second else read()?.let { found ->
+            preferences.rememberCheck(at, found.release)
             found.release
         }
         return release?.takeIf { it.version.code > installed && it.version.name != preferences.dismissed() }
@@ -77,7 +83,8 @@ class UpdateCheck(
         null
     }
 
-    private companion object {
-        const val DAY = 24 * 3_600_000L
+    companion object {
+        /** How long a check's answer stands: coming back to the app within it doesn't ask GitHub again. */
+        const val THROTTLE_MS = 15 * 60_000L
     }
 }

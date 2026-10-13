@@ -18,7 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** When the app opens it offers a newer release, reading GitHub at most once a day (SPEC, Distribution). */
+/** Each time the app comes to the foreground it offers a newer release, reading GitHub at most every 15 minutes (SPEC, Distribution). */
 @RunWith(RobolectricTestRunner::class)
 class UpdateCheckTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -60,14 +60,35 @@ class UpdateCheckTest {
     }
 
     @Test
-    fun githubIsReadAtMostOnceADay() = runTest {
+    fun githubIsReadAtMostOnceInFifteenMinutes() = runTest {
         check().run()
-        now += 23 * 3_600_000L
-        // Later the same day the release found is offered again without asking GitHub.
+        now += 14 * 60_000L
+        // Back in the foreground soon after, the release found is offered again without asking GitHub.
         assertEquals(published, check().run())
         assertEquals(1, reads)
-        now += 2 * 3_600_000L
+        now += 2 * 60_000L
         published = Release(AppVersion(0, 3, 0), "https://example.com/hyperlog-0.3.0.apk")
+        assertEquals(published, check().run())
+        assertEquals(2, reads)
+    }
+
+    @Test
+    fun checkingNowReadsGitHubWhateverTheCache() = runTest {
+        check().run()
+        published = Release(AppVersion(0, 3, 0), "https://example.com/hyperlog-0.3.0.apk")
+        now += 60_000L
+        assertEquals(published, check().run(now = true))
+        assertEquals(2, reads)
+    }
+
+    @Test
+    fun turningChecksBackOnForgetsTheCachedAnswer() = runTest {
+        published = null
+        check().run()
+        preferences.setCheckForUpdates(false)
+        published = Release(AppVersion(0, 3, 0), "https://example.com/hyperlog-0.3.0.apk")
+        preferences.setCheckForUpdates(true)
+        now += 60_000L
         assertEquals(published, check().run())
         assertEquals(2, reads)
     }
@@ -77,7 +98,7 @@ class UpdateCheckTest {
         val offered = check().run()!!
         preferences.dismiss(offered.version)
         assertNull(check().run())
-        now += 25 * 3_600_000L
+        now += 16 * 60_000L
         published = Release(AppVersion(0, 3, 0), "https://example.com/hyperlog-0.3.0.apk")
         assertEquals(published, check().run())
     }

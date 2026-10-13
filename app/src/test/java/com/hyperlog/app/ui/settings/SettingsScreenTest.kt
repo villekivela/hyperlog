@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.hyperlog.app.backup.Backups
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import java.time.LocalDateTime
@@ -49,6 +50,25 @@ class SettingsScreenTest {
     }
 
     private fun at(text: String) = LocalDateTime.parse(text).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    @Test
+    fun checkForUpdatesNowAsksAndSaysWhatItFound() {
+        var asked = 0
+        var found by androidx.compose.runtime.mutableStateOf<com.hyperlog.app.update.UpdateViewModel.CheckedNow?>(null)
+        compose.setContent {
+            HyperlogTheme {
+                SettingsScreen(
+                    gymCount = 0, exerciseCount = 173, onGyms = {}, onLibrary = {}, onBack = {},
+                    startingWeights = StartingWeightsStatus(count = 0, invalid = false), onImportStartingWeights = {},
+                    onCheckNow = { asked++ }, checkedNow = found,
+                )
+            }
+        }
+        compose.onNodeWithText("Check for updates now").performScrollTo().performClick()
+        assertEquals(1, asked)
+        found = com.hyperlog.app.update.UpdateViewModel.CheckedNow.NoneNewer
+        compose.onNodeWithText("No newer version, or no connection").assertExists()
+    }
 
     @Test
     fun beforeAnImportItSaysWhereTheyComeFrom() {

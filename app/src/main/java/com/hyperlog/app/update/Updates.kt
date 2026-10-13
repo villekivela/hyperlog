@@ -47,15 +47,50 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
     private val _banner = MutableStateFlow<UpdateBanner?>(null)
     val banner: StateFlow<UpdateBanner?> = _banner.asStateFlow()
     val checkForUpdates: StateFlow<Boolean> = preferences.checkForUpdates.stateIn(viewModelScope, SharingStarted.Eagerly, true)
-    private var started = false
+    private var source: ReleaseSource? = null
+    private var checking = false
+    private val _checkedNow = MutableStateFlow<CheckedNow?>(null)
 
-    /** Checks once per process, off the main thread inside [UpdateCheck]; no source, no check. */
+    /** What "Check for updates now" found, until the screen is left. */
+    val checkedNow: StateFlow<CheckedNow?> = _checkedNow.asStateFlow()
+
+    enum class CheckedNow { Checking, Found, NoneNewer }
+
+    /**
+     * Checks each time the app comes to the foreground, off the main thread inside [UpdateCheck],
+     * which reads GitHub at most every 15 minutes; no source, no check.
+     */
     fun start(source: ReleaseSource?) {
-        if (started || source == null) return
-        started = true
+        this.source = source ?: this.source
+        check(now = false)
+    }
+
+    /** "Check for updates now": reads GitHub whatever the cache. */
+    fun checkNow() {
+        if (source == null) {
+            _checkedNow.value = CheckedNow.NoneNewer
+            return
+        }
+        _checkedNow.value = CheckedNow.Checking
+        check(now = true)
+    }
+
+    fun clearCheckedNow() {
+        _checkedNow.value = null
+    }
+
+    private fun check(now: Boolean) {
+        val source = source ?: return
+        if (checking) return
+        checking = true
         viewModelScope.launch {
-            val release = UpdateCheck(source, preferences, installed = BuildConfig.VERSION_CODE).run()
-            if (_banner.value == null) _banner.value = release?.let(UpdateBanner::Available)
+            try {
+                val release = UpdateCheck(source, preferences, installed = BuildConfig.VERSION_CODE).run(now)
+                if (release != null && (_banner.value == null || now)) _banner.value = UpdateBanner.Available(release)
+                if (now) _checkedNow.value = if (release != null) CheckedNow.Found else CheckedNow.NoneNewer
+            } finally {
+                checking = false
+            }
         }
     }
 

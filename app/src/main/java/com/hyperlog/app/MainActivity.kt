@@ -90,7 +90,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        updates.start(Updates.source(this))
         setContent {
             HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates) }
         }
@@ -98,6 +97,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        // Every return to the foreground checks for an update; the check reads GitHub at most every 15 minutes.
+        updates.start(Updates.source(this))
         AppVisibility.foreground = true
     }
 
@@ -248,6 +249,7 @@ private fun App(
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
     val update by updateModel.banner.collectAsStateWithLifecycle()
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
+    val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // A restored backup replaces everything the screens hold: start them again on its data.
@@ -476,6 +478,8 @@ private fun App(
             onDismissBackup = backupModel::dismiss,
             checkForUpdates = checkForUpdates,
             onCheckForUpdates = updateModel::setCheckForUpdates,
+            onCheckNow = updateModel::checkNow,
+            checkedNow = checkedNow,
         )
         else -> TodayScreen(
             onSettings = openSettings,

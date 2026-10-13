@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -80,6 +81,9 @@ fun SettingsScreen(
     onDismissBackup: () -> Unit = {},
     checkForUpdates: Boolean = true,
     onCheckForUpdates: (Boolean) -> Unit = {},
+    /** "Check for updates now", and what it found; null before it is tapped. */
+    onCheckNow: () -> Unit = {},
+    checkedNow: com.hyperlog.app.update.UpdateViewModel.CheckedNow? = null,
 ) {
     BackHandler(onBack = onBack)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -166,7 +170,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 68.dp, end = 24.dp, top = 8.dp, bottom = 16.dp),
             )
           Group {
-            // Updates come last, after the footnote's 24 dp: a switch, read once a day when the app opens.
+            // Updates come last, after the footnote's 24 dp: a switch, read when the app comes to the foreground.
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_check_updates)) },
                 supportingContent = { Text(stringResource(R.string.settings_check_updates_about)) },
@@ -174,6 +178,24 @@ fun SettingsScreen(
                 trailingContent = { Switch(checked = checkForUpdates, onCheckedChange = null) },
                 modifier = Modifier.toggleable(checkForUpdates, role = Role.Switch, onValueChange = onCheckForUpdates).then(row), colors = clear,
             )
+            if (checkForUpdates) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_check_now)) },
+                    supportingContent = {
+                        Text(
+                            when (checkedNow) {
+                                com.hyperlog.app.update.UpdateViewModel.CheckedNow.Checking -> stringResource(R.string.settings_check_now_checking)
+                                com.hyperlog.app.update.UpdateViewModel.CheckedNow.Found -> stringResource(R.string.settings_check_now_found)
+                                com.hyperlog.app.update.UpdateViewModel.CheckedNow.NoneNewer -> stringResource(R.string.settings_check_now_none)
+                                null -> stringResource(R.string.settings_check_now_about)
+                            },
+                        )
+                    },
+                    leadingContent = { Spacer(Modifier.size(24.dp)) },
+                    modifier = Modifier.clickable(enabled = checkedNow != com.hyperlog.app.update.UpdateViewModel.CheckedNow.Checking, onClick = onCheckNow).then(row),
+                    colors = clear,
+                )
+            }
           }
         }
     }

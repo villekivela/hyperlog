@@ -60,6 +60,6 @@ object BackupFormat {
      * restore leaves them as they are.
      */
     val Excluded: Map<String, String> = mapOf(
-        "update_check" to "A cache of GitHub's latest release, read again within a day.",
+        "update_check" to "A cache of GitHub's latest release, read again within 15 minutes.",
     )
 }

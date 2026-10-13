@@ -42,7 +42,8 @@ configuration, iOS, web, any server.
   is 0.1.0. A release's name is its tag; it is neither a draft nor a prerelease and holds exactly
   one asset, `hyperlog-MAJOR.MINOR.PATCH.apk`. Never reuse or lower a tag: Android refuses a lower
   versionCode.
-- **Update check.** When the app opens, at most once a day, it reads
+- **Update check.** Each time the app comes to the foreground, but at most once in 15 minutes
+  (coming back sooner reuses the last answer), it reads
   `https://api.github.com/repos/villekivela/hyperlog/releases/latest` (a plain GET with
   no token, `User-Agent: Hyperlog`, nothing about the user or their data), off the main thread
   (5 s to connect, 5 s to read, 10 s in all). A release whose tag gives a higher versionCode
@@ -50,9 +51,13 @@ configuration, iOS, web, any server.
   version for good. Tapping downloads the APK ("Downloading…") and hands it to Android's
   installer, which asks "Update this app?"; the first time, Android asks to allow Hyperlog to
   install apps (`REQUEST_INSTALL_PACKAGES`). A failed download says "Couldn't download it. Tap to
-  try again." Offline, no release, a slow answer or a missing APK: no banner, and the next start
+  try again." Offline, no release, a slow answer or a missing APK: no banner, and the next check
   tries again. Nothing waits on the check.
-  - **Settings → Check for updates**, a switch, on by default. Off, the app never asks GitHub.
+  - **Settings → Check for updates**, a switch, on by default. Off, the app never asks GitHub;
+    turned back on, it forgets the last answer, so the next check reads GitHub.
+  - **Settings → Check for updates now** (under the switch, while it is on) reads GitHub at once,
+    whatever the last answer, and says what it found: `A newer version is ready: see Today` (the
+    banner shows) or `No newer version, or no connection`.
   - "Check for updates" and the dismissed version are backed up; the last check is a cache and
     isn't.
   - **Debug builds (`.dev`) don't check.** A launch extra feeds them a fake release whose APK is
