@@ -1,7 +1,6 @@
 package com.hyperlog.app.history
 
 import com.hyperlog.app.data.HyperlogDatabase
-import com.hyperlog.app.data.SessionEntity
 import com.hyperlog.app.data.TrainedExercise
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.counting
@@ -18,12 +17,12 @@ import com.hyperlog.app.progression.WorkSet
 import com.hyperlog.app.session.SessionLogger
 import com.hyperlog.app.session.toExtension
 import com.hyperlog.app.session.toLoggedSet
-import kotlinx.coroutines.flow.first
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
+import kotlinx.coroutines.flow.first
 
 /** The work sets each muscle got in the week starting Monday [start], in body order. */
 data class WeekSets(val start: LocalDate, val sets: Map<String, Int>)

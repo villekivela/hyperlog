@@ -8,12 +8,8 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
-import com.hyperlog.app.gym.ladderFor
-import com.hyperlog.app.library.toExercise
-import com.hyperlog.app.program.SetPrescriptionJson
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
-import com.hyperlog.app.program.TechniqueJson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,6 +61,7 @@ class PastSessionEditor(
     private val dao = db.sessions()
     private val gyms = Gyms(db)
     private val corrections = SetCorrections(db)
+    private val stored = StoredSessions(db, gyms, programs)
     private val mutex = Mutex()
     private val _state = MutableStateFlow<PastSession?>(null)
 
@@ -79,7 +76,7 @@ class PastSessionEditor(
 
     private suspend fun item(row: SessionEntity, library: Map<String, String>): PastSessionItem {
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
-            val sets = dao.sets(se.id).map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
+            val sets = stored.sets(se.id)
             if (sets.isEmpty()) null else ExerciseSummary(library[se.exerciseId] ?: se.exerciseId, sets)
         }
         return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises)
@@ -177,22 +174,15 @@ class PastSessionEditor(
             _state.value = null
             return
         }
-        val library = db.exercises().all().associate { it.id to it.toExercise() }
-        val shared = gyms.shared()
-        val gym = row.gymId?.let { gyms.gym(it) }
-        val day = if (row.programId == null || row.week == null || row.dayIndex == null) null
-        else programs.plannedDay(row.programId, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))
+        val context = stored.context(row)
+        val gym = context.gym
+        val day = context.day
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
-            val sets = dao.sets(se.id).map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
+            val sets = stored.sets(se.id)
             if (sets.isEmpty()) return@mapNotNull null
-            val exercise = library.getValue(se.exerciseId)
-            val perMachine = exercise.equipment.perMachine
-            val machine = if (perMachine) gym?.items?.firstOrNull { it.id == se.equipmentItemId } else null
-            val ladder = shared.ladderFor(exercise.equipment, machine)
-            val slot = day?.slot(se.slotId)
+            val (exercise, machine, ladder, slot, plan) = context.exercise(se)
             // Last time as it was then: the session before this one (on the same machine for machines, ADR 0002).
-            val lastTime = dao.lastTimeBefore(se.exerciseId, row.id, row.startedAt, anyItem = !perMachine, itemId = se.equipmentItemId)
-                .map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
+            val lastTime = stored.sets(dao.lastTimeBefore(se.exerciseId, row.id, row.startedAt, anyItem = !exercise.equipment.perMachine, itemId = se.equipmentItemId))
             SessionExercise(
                 id = se.id,
                 exercise = exercise,
@@ -202,8 +192,8 @@ class PastSessionEditor(
                 ladderKnown = ladder.known,
                 machine = machine,
                 slot = slot,
-                plan = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId),
-                techniques = dao.techniques(se.id).associate { it.setIndex to it.technique?.let(TechniqueJson::decode) },
+                plan = plan,
+                techniques = stored.techniques(se.id),
             )
         }
         _state.value = PastSession(

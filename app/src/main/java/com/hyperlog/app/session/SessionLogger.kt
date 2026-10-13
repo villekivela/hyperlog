@@ -1,7 +1,7 @@
 package com.hyperlog.app.session
 
-import com.hyperlog.app.coach.RuleCoach
 import androidx.room.withTransaction
+import com.hyperlog.app.coach.RuleCoach
 import com.hyperlog.app.data.EntryColumns
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
@@ -10,10 +10,8 @@ import com.hyperlog.app.data.SessionExerciseEntity
 import com.hyperlog.app.data.SetExtensionEntity
 import com.hyperlog.app.data.SetTechniqueEntity
 import com.hyperlog.app.domain.Extension
-import com.hyperlog.app.program.Technique
-import com.hyperlog.app.program.TechniqueJson
-import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.domain.Field
+import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.Reference
@@ -22,29 +20,30 @@ import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.domain.countingSets
+import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.gym.EquipmentItem
+import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.history.Bodyweights
+import com.hyperlog.app.legacy.StartingWeights
+import com.hyperlog.app.legacy.suggestion
+import com.hyperlog.app.legacy.text
+import com.hyperlog.app.library.Equipment
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.library.toExercise
+import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.Position
+import com.hyperlog.app.program.Programs
+import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.SetPrescriptionJson
-import com.hyperlog.app.program.RepRange
+import com.hyperlog.app.program.Technique
+import com.hyperlog.app.program.TechniqueJson
+import com.hyperlog.app.program.backoffWeight
+import com.hyperlog.app.program.plannedEntry
 import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.progression.WorkSet
-import com.hyperlog.app.domain.formatKg
-import com.hyperlog.app.domain.LadderSpec
-import com.hyperlog.app.gym.EquipmentItem
-import com.hyperlog.app.gym.Gyms
-import com.hyperlog.app.gym.ladderFor
-import com.hyperlog.app.library.Equipment
-import com.hyperlog.app.library.Exercise
-import com.hyperlog.app.history.Bodyweights
-import com.hyperlog.app.library.toExercise
-import com.hyperlog.app.legacy.StartingWeights
-import com.hyperlog.app.legacy.text
-import com.hyperlog.app.legacy.suggestion
-import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.program.Position
-import com.hyperlog.app.program.Programs
-import com.hyperlog.app.program.plannedEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,6 +78,7 @@ class SessionLogger(
     /** The entry a weight check was raised for, and when: a second ✓ on it keeps the weight. */
     private var checked: Pair<SetEntry, Long>? = null
     private val corrections = SetCorrections(db)
+    private val stored = StoredSessions(db, gyms, programs)
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
     private var viewingId: Long? = null
@@ -720,22 +720,13 @@ class SessionLogger(
             _state.value = null
             return
         }
-        val library = db.exercises().all().associate { it.id to it.toExercise() }
-        val shared = gyms.shared()
-        val gym = row.gymId?.let { gyms.gym(it) }
-        val day = row.programId?.let { id ->
-            if (row.week == null || row.dayIndex == null) null
-            else programs.plannedDay(id, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))
-        }
+        val context = stored.context(row)
+        val (_, shared, gym, day) = context
         checked = null
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.map { se ->
-            val exercise = library.getValue(se.exerciseId)
+            val (exercise, machine, ladder, slot, plan) = context.exercise(se)
             val perMachine = exercise.equipment.perMachine
-            val machine = if (perMachine) gym?.items?.firstOrNull { it.id == se.equipmentItemId } else null
             val needsMachine = perMachine && gym != null && machine == null
-            val ladder = shared.ladderFor(exercise.equipment, machine)
-            val slot = day?.slot(se.slotId)
-            val plan = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId)
             // A planned exercise's last time is the session progression judges (same slot and rep
             // range), so the Last column, the prefill and the why-line name the same sets.
             val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted, exercise.implements)
@@ -746,8 +737,8 @@ class SessionLogger(
                 judged != null -> dao.sets(past[judged].first)
                 perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
                 else -> dao.lastTime(se.exerciseId, row.id)
-            }.map { loggedSet(it) }
-            val sets = dao.sets(se.id).map { loggedSet(it) }
+            }.let { stored.sets(it) }
+            val sets = stored.sets(se.id)
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
@@ -782,7 +773,7 @@ class SessionLogger(
                 plan = plan,
                 suggestion = suggestion,
                 startingHint = starting?.takeIf { perMachine }?.text(),
-                techniques = dao.techniques(se.id).associate { it.setIndex to it.technique?.let(TechniqueJson::decode) },
+                techniques = stored.techniques(se.id),
                 plates = when {
                     exercise.equipment == Equipment.Barbell -> shared.plates
                     else -> shared.barPlates(exercise.equipment) ?: machine?.ladder as? LadderSpec.Plates
@@ -840,7 +831,6 @@ class SessionLogger(
         return current.sets.lastOrNull()?.rightReps?.let { entry.copy(right = it.toString()) } ?: entry
     }
 
-    private suspend fun loggedSet(row: LoggedSetEntity) = row.toLoggedSet(dao.extensions(row.id).map { it.toExtension() })
 
     /**
      * The entry for an open set's next drop, mini-set or hold. A drop is the weight before it
@@ -874,7 +864,7 @@ class SessionLogger(
             else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
             val plan = past.sets?.let(SetPrescriptionJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
             past.id to Performance(
-                workSets(dao.sets(past.id).map { loggedSet(it) }, plan),
+                workSets(stored.sets(past.id), plan),
                 deload = day?.deload == true,
                 bodyweightKg = if (weighted) bodyweights.on(programs.dateOf(past.startedAt)) ?: 0.0 else 0.0,
                 slot = past.slotId,

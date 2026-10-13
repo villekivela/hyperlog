@@ -6,10 +6,9 @@ import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
+import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.TechniqueKind
-import com.hyperlog.app.program.PlannedSlot
-import com.hyperlog.app.program.Position
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
