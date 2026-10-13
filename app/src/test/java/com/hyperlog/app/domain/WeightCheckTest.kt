@@ -34,4 +34,12 @@ class WeightCheckTest {
         assertNull(WeightCheck.of(37.0, Reference(25.0, fromThisSession = true), dumbbells, ladderKnown = false))
         assertNull(WeightCheck.of(18.0, null, dumbbells, ladderKnown = true))
     }
+
+    @Test
+    fun nothingOnTheBeltAfterALoadedSetPasses() {
+        // A weighted pull-up at bodyweight alone after 10 kg on the belt (no known ladder).
+        assertNull(WeightCheck.of(0.0, Reference(10.0, fromThisSession = true), WeightLadder.Default, ladderKnown = false))
+        // On real equipment 0 kg is still off the ladder.
+        assertEquals("Not on this equipment", WeightCheck.of(0.0, Reference(20.0, fromThisSession = true), dumbbells, ladderKnown = true)!!.reason)
+    }
 }

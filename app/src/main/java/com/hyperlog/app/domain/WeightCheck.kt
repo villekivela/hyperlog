@@ -31,7 +31,8 @@ data class WeightCheck(val reason: String, val options: List<Double>) {
          * against [ladder]. A ladder that is only a stand-in for the real equipment isn't checked.
          */
         fun of(kg: Double, reference: Reference?, ladder: WeightLadder, ladderKnown: Boolean): WeightCheck? {
-            if (reference != null && reference.kg > 0) {
+            // 0 kg (bodyweight alone) isn't a fraction of anything; the ladder check below still applies.
+            if (reference != null && reference.kg > 0 && kg > 0) {
                 val ratio = kg / reference.kg
                 val what = if (reference.fromThisSession) "last set" else "last time"
                 val reason = when {

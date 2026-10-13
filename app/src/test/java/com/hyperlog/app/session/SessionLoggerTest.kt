@@ -72,6 +72,31 @@ class SessionLoggerTest {
     }
 
     @Test
+    fun aPlainBodyweightExerciseStartsOnRepsAtNoWeightAndLogs() = runTest {
+        // Found on the phone: Reverse Nordic's ✓ stayed disabled until a weight above 0 was typed.
+        val logger = logger()
+        logger.start()
+        logger.addExercise("reverse_nordic")
+        assertEquals(Field.Reps, logger.session.entry!!.field)
+        assertEquals("0", logger.session.entry!!.weight)
+
+        logger.type("8"); logger.selectRir(2); logger.done()
+
+        assertEquals(listOf(LoggedSet(0.0, 8, 0, 2)), logger.session.exercises.single().sets)
+    }
+
+    @Test
+    fun aWeightedBodyweightSetCanBeLoggedWithNothingOnTheBelt() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("weighted_pullup")
+        logger.type("0"); logger.done()
+        logger.type("6"); logger.selectRir(1); logger.done()
+
+        assertEquals(listOf(LoggedSet(0.0, 6, 0, 1)), logger.session.exercises.single().sets)
+    }
+
+    @Test
     fun aReopenedLoggerRestoresTheSessionExactly() = runTest {
         val first = logger()
         first.start()

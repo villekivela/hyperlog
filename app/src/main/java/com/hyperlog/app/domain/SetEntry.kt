@@ -88,7 +88,8 @@ data class SetEntry(
             return if (right != null) "$left / $right" else left
         }
 
-    val weightKg: Double? get() = weight.toDoubleOrNull()?.takeIf { it > 0 }
+    /** The typed weight. 0 is a weight: a bodyweight set, or nothing on the belt. */
+    val weightKg: Double? get() = weight.toDoubleOrNull()?.takeIf { it >= 0 }
 
     val canLog: Boolean get() = toLoggedSet() != null
 

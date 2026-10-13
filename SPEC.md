@@ -602,6 +602,10 @@ from a backup, starting weights from the old app.
     bodyweight plus that load: today's suggestion uses the latest value, and each past session the
     value logged on or before its date (else the first value logged). Suggestions stay in the
     load on the belt, on its ladder. With no bodyweight logged the load alone is used.
+  - A plain bodyweight exercise logs 0 kg: its pad starts on the reps with the weight at 0. A
+    weighted bodyweight set takes 0 kg on the belt (bodyweight alone). Loads are never negative:
+    an assisted exercise (a machine's counterweight) is logged as a machine exercise, with the
+    counterweight as its weight.
 - **Dumbbells are logged per dumbbell** (the number printed on it). Volume and e1RM count both
   dumbbells for two-dumbbell exercises.
   - The library marks a dumbbell exercise done with one in each hand as **two dumbbells** (the

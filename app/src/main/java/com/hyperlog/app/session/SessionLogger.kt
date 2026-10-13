@@ -822,8 +822,12 @@ class SessionLogger(
         else current.suggestion?.let { s ->
             SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
         } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
+        // A plain bodyweight exercise has no weight to type: it starts on the reps at 0 kg.
+        val bodyweight = if (current.exercise.equipment == Equipment.Bodyweight && entry.weightKg == null) {
+            entry.copy(weight = "0", field = if (entry.field == Field.Weight) Field.Reps else entry.field)
+        } else entry
         // A split set is followed by a split set, starting from its right side's reps.
-        return current.sets.lastOrNull()?.rightReps?.let { entry.copy(right = it.toString()) } ?: entry
+        return current.sets.lastOrNull()?.rightReps?.let { bodyweight.copy(right = it.toString()) } ?: bodyweight
     }
 
 
