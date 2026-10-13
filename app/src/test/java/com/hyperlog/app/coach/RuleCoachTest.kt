@@ -72,7 +72,7 @@ class RuleCoachTest {
     @Test
     fun handsWorseAfterAnExerciseMoveItToItsNoGripSwapForTheRestOfTheHandChange() {
         val hands = proposed(advise(Situation.Pain(Area.Hands), at = Position(3, 0)))
-        val accepted = Plan.accept(program, Position(3, 0), hands, oct13).copy(id = 7)
+        val accepted = Changes.accept(program, Position(3, 0), hands, oct13).copy(id = 7)
         val oct16 = oct13.plusDays(3)
         val active = ActiveProgram(1, program, Position(3, 1), today = oct16).copy(history = listOf(ChangeRecord(accepted, 0, null)))
 
@@ -98,8 +98,8 @@ class RuleCoachTest {
     @Test
     fun theHandChangeAsTrainedInBuild() {
         val change = proposed(advise(Situation.Pain(Area.Hands), at = Position(3, 0)))
-        val accepted = Plan.accept(program, Position(3, 0), change, oct13)
-        val dayC = Plan.day(program, Position(3, 2), oct13.plusDays(4), listOf(accepted))!!
+        val accepted = Changes.accept(program, Position(3, 0), change, oct13)
+        val dayC = Changes.day(program, Position(3, 2), oct13.plusDays(4), listOf(accepted))!!
         // The DB incline press goes to the incline machine press, which as a machine is untouched but for the extra RIR.
         val incline = dayC.slot("incline_press")!!
         assertEquals("incline_machine_press", incline.exercise)
@@ -118,7 +118,7 @@ class RuleCoachTest {
     }
 
     private fun trained(change: Change, at: Position = Position(1, 0)) =
-        Plan.day(program, at, oct13, listOf(Plan.accept(program, at, change, oct13)))!!
+        Changes.day(program, at, oct13, listOf(Changes.accept(program, at, change, oct13)))!!
 
     @Test
     fun elevenDaysOffIsAReducedVolumeReEntrySession() {
@@ -133,7 +133,7 @@ class RuleCoachTest {
         assertEquals(1, change.operations.filterIsInstance<Operation.AdjustRir>().single().by)
         assertEquals(2, trained(change).slot("bench")!!.sets.size)
         // The diff shows the one session it covers, not the rest of the week.
-        assertEquals(listOf("a"), Plan.diff(program, Position(1, 0), oct13, emptyList(), change).days.map { it.day.day.id })
+        assertEquals(listOf("a"), Changes.diff(program, Position(1, 0), oct13, emptyList(), change).days.map { it.day.day.id })
     }
 
     @Test
@@ -142,7 +142,7 @@ class RuleCoachTest {
         assertEquals(Advice.Resume(null), advise(Situation.TimeOff, lastTrained = null))
         val repeat = proposed(advise(Situation.TimeOff, at = Position(4, 1), lastTrained = oct13.minusDays(15)))
         assertEquals(listOf(Operation.RepeatWeek("back after 15 days")), repeat.operations)
-        assertEquals(Position(4, 0), Plan.accept(program, Position(4, 1), repeat, oct13).after)
+        assertEquals(Position(4, 0), Changes.accept(program, Position(4, 1), repeat, oct13).after)
     }
 
     @Test
@@ -223,8 +223,8 @@ class RuleCoachTest {
     fun aSoreShoulderLosesOverheadWorkAndLightensThePresses() {
         val change = proposed(advise(Situation.Pain(Area.Shoulder), at = Position(3, 0)))
         val byId = library.exercises.associateBy { it.id }
-        val dayA = Plan.day(program, Position(3, 0), oct13, listOf(Plan.accept(program, Position(3, 0), change, oct13)))!!
-        val dayB = Plan.day(program, Position(3, 1), oct13, listOf(Plan.accept(program, Position(3, 0), change, oct13)))!!
+        val dayA = Changes.day(program, Position(3, 0), oct13, listOf(Changes.accept(program, Position(3, 0), change, oct13)))!!
+        val dayB = Changes.day(program, Position(3, 1), oct13, listOf(Changes.accept(program, Position(3, 0), change, oct13)))!!
         (dayA.slots + dayB.slots).forEach { assertTrue(it.exercise, !byId.getValue(it.exercise).overhead) }
         val lighter = change.operations.filterIsInstance<Operation.AdjustLoad>().map { it.slot }
         assertTrue("bench" in lighter)

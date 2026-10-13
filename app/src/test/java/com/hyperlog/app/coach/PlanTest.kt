@@ -16,10 +16,10 @@ class PlanTest {
     private val oct13: LocalDate = LocalDate.of(2026, 10, 13)
 
     private fun accepted(json: String, at: Position = Position(1, 0), on: LocalDate = oct13, id: Long = 1) =
-        Plan.accept(program, at, ChangeJson.decode(json), on).copy(id = id)
+        Changes.accept(program, at, ChangeJson.decode(json), on).copy(id = id)
 
     private fun exercises(position: Position, date: LocalDate, changes: List<AcceptedChange>) =
-        Plan.day(program, position, date, changes)!!.slots.map { it.exercise }
+        Changes.day(program, position, date, changes)!!.slots.map { it.exercise }
 
     @Test
     fun aTemporarySwapAppliesInsideItsDatesAndStopsAfterThem() {
@@ -58,7 +58,7 @@ class PlanTest {
                 {"op":"adjust_load","slot":"bench","percent":-10},
                 {"op":"add","day":"a","exercise":"cable_lateral_raise","sets":[{"count":2,"reps":"12-15","rir":1}],"after":"bench"}]}""",
         )
-        val day = Plan.day(program, Position(2, 0), oct13, listOf(change))!!
+        val day = Changes.day(program, Position(2, 0), oct13, listOf(change))!!
         val (bench, added, row) = day.slots
         assertEquals(listOf(RepRange(4, 6), RepRange(6, 8)), bench.sets.map { it.reps })
         assertEquals(listOf(2, 2), bench.sets.map { it.rir })
@@ -74,11 +74,11 @@ class PlanTest {
     @Test
     fun aDeloadWeekHalvesTheSetsAndEasesTheEffortOfThatWeekOnly() {
         val deload = accepted("""{"summary":"Deload","scope":"rest_of_program","operations":[{"op":"deload_week"}]}""", at = Position(2, 1))
-        val week2 = Plan.day(program, Position(2, 0), oct13, listOf(deload))!!
+        val week2 = Changes.day(program, Position(2, 0), oct13, listOf(deload))!!
         assertTrue(week2.deload)
         assertEquals(2, week2.slots[0].sets.size)
         assertEquals(listOf(3, 3), week2.slots[0].sets.map { it.rir })
-        assertEquals(false, Plan.day(program, Position(3, 0), oct13, listOf(deload))!!.deload)
+        assertEquals(false, Changes.day(program, Position(3, 0), oct13, listOf(deload))!!.deload)
     }
 
     @Test
@@ -96,15 +96,15 @@ class PlanTest {
     @Test
     fun revertingAPositionChangeTakesItsMoveBack() {
         val shift = accepted("""{"summary":"x","scope":"rest_of_program","operations":[{"op":"shift_program","weeks":1}]}""", Position(2, 1))
-        assertEquals(Position(2, 1), Plan.revert(program, Position(1, 1), shift))
+        assertEquals(Position(2, 1), Changes.revert(program, Position(1, 1), shift))
         // Trained a day since: that day still counts.
-        assertEquals(Position(3, 0), Plan.revert(program, Position(2, 0), shift))
+        assertEquals(Position(3, 0), Changes.revert(program, Position(2, 0), shift))
     }
 
     @Test
     fun theDiffShowsTheMovedPositionAndTheChangedSlots() {
         val shift = ChangeJson.decode("""{"summary":"x","scope":"rest_of_program","operations":[{"op":"shift_program","weeks":1}]}""")
-        val diff = Plan.diff(program, Position(2, 0), oct13, emptyList(), shift)
+        val diff = Changes.diff(program, Position(2, 0), oct13, emptyList(), shift)
         assertEquals(Position(2, 0) to Position(1, 0), diff.next)
         assertEquals(4 to 6, diff.daysLeft)
         assertTrue(diff.days.isEmpty())
@@ -112,7 +112,7 @@ class PlanTest {
         val swap = ChangeJson.decode(
             """{"summary":"x","scope":{"from":"2026-10-13","to":"2026-10-19"},"operations":[{"op":"swap","slot":"row","exercise":"chest_supported_db_row"}]}""",
         )
-        val swapped = Plan.diff(program, Position(1, 0), oct13, emptyList(), swap)
+        val swapped = Changes.diff(program, Position(1, 0), oct13, emptyList(), swap)
         assertNull(swapped.next)
         assertEquals(listOf("Day A"), swapped.days.map { it.day.day.name })
         val slot = swapped.days.single().slots.single()

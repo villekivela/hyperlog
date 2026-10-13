@@ -305,8 +305,8 @@ object RuleCoach {
      * first, from the last exercise back; then exercises from the end, never the first.
      */
     private fun fit(plan: ActiveProgram, change: Change, max: Int): List<Operation> {
-        val accepted = Plan.accept(plan.program, plan.position, change, plan.today).copy(id = Long.MAX_VALUE)
-        val day = Plan.day(plan.program, accepted.after, plan.today, plan.changes + accepted) ?: return emptyList()
+        val accepted = Changes.accept(plan.program, plan.position, change, plan.today).copy(id = Long.MAX_VALUE)
+        val day = Changes.day(plan.program, accepted.after, plan.today, plan.changes + accepted) ?: return emptyList()
         val slots = day.slots.map { Trim(it.id, it.group, it.sets) }.toMutableList()
         val cut = mutableMapOf<String, Int>()
         val removed = mutableListOf<String>()
@@ -329,7 +329,7 @@ object RuleCoach {
         val perWeek = program.blockAt(plan.position.week)?.days?.size ?: 0
         val count = if (days <= 1) 1 else (((days + 6) / 7) * perWeek).toInt()
         return generateSequence(plan.position) { program.next(it) }.take(count)
-            .mapNotNull { Plan.day(program, it, plan.today, plan.changes) }
+            .mapNotNull { Changes.day(program, it, plan.today, plan.changes) }
             .toList()
     }
 

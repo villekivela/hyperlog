@@ -48,7 +48,7 @@ data class SlotDiff(val before: PlannedSlot?, val after: PlannedSlot?)
  * The plan: the program as written, with accepted Changes on top. Pure, so the session, Today,
  * the Program screen, the diff view and the coaches all resolve a day the same way.
  */
-object Plan {
+object Changes {
     /**
      * The day at [position] as trained on [date]: the program's day with the plan edits of every
      * Change in [changes] (accepted ones, oldest first) whose scope covers it.

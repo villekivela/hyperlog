@@ -15,7 +15,7 @@ import com.hyperlog.app.coach.AcceptedChange
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ChangeDiff
 import com.hyperlog.app.coach.ChangeJson
-import com.hyperlog.app.coach.Plan
+import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.data.PlanChangeEntity
 import java.time.Instant
 import java.time.LocalDate
@@ -39,7 +39,7 @@ data class ActiveProgram(
     val changes: List<AcceptedChange> get() = history.filter { it.revertedAt == null }.map { it.accepted }
 
     /** The day Today runs, with today's Changes; null once the program is finished. */
-    val next: PlannedDay? get() = if (finished) null else Plan.day(program, position, today, changes)
+    val next: PlannedDay? get() = if (finished) null else Changes.day(program, position, today, changes)
 }
 
 /** An accepted Change as kept: when it was accepted, and reverted if it was. */
@@ -75,7 +75,7 @@ class Programs(
     /** What accepting [change] would do to the running program's plan; null with no program running. */
     suspend fun preview(change: Change): ChangeDiff? {
         val active = active.first() ?: return null
-        return withContext(Dispatchers.Default) { Plan.diff(active.program, active.position, dateOf(clock()), active.changes, change) }
+        return withContext(Dispatchers.Default) { Changes.diff(active.program, active.position, dateOf(clock()), active.changes, change) }
     }
 
     /**
@@ -85,7 +85,7 @@ class Programs(
     suspend fun accept(change: Change) {
         val row = dao.active() ?: return
         val program = program(row.id) ?: return
-        val accepted = Plan.accept(program, Position(row.week, row.dayIndex), change, dateOf(clock()))
+        val accepted = Changes.accept(program, Position(row.week, row.dayIndex), change, dateOf(clock()))
         db.withTransaction {
             changeDao.insert(
                 PlanChangeEntity(
@@ -108,7 +108,7 @@ class Programs(
             val program = program(row.id) ?: return@withTransaction
             if (changeDao.revert(id, clock()) == 0) return@withTransaction
             val accepted = entity.toAccepted() ?: return@withTransaction
-            val back = Plan.revert(program, Position(row.week, row.dayIndex), accepted)
+            val back = Changes.revert(program, Position(row.week, row.dayIndex), accepted)
             dao.setPosition(row.id, back.week, back.day)
         }
     }
@@ -117,7 +117,7 @@ class Programs(
     suspend fun plannedDay(id: Long, position: Position, date: LocalDate): PlannedDay? {
         val program = program(id) ?: return null
         val changes = changeDao.changes(id).filter { it.revertedAt == null }.mapNotNull { it.toAccepted() }
-        return Plan.day(program, position, date, changes)
+        return Changes.day(program, position, date, changes)
     }
 
     /**
