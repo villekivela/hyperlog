@@ -483,6 +483,7 @@ private fun App(
             update = update,
             onUpdate = { updateModel.install(context) },
             onDismissUpdate = updateModel::dismiss,
+            runningDay = running?.day,
         )
     }
     }

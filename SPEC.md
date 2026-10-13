@@ -323,6 +323,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
+     While a program session runs, Today shows that session's day, the one **Resume session**
+     opens, even after a finish and Resume moved the program's position on.
    - **A program day's session** has a row for every planned set from the start, with a Target
      column (reps and an RIR ring). The first set prefills with the suggestion (Automatic
      progressive overload): its weight and target reps, at the target RIR; with no history, an empty

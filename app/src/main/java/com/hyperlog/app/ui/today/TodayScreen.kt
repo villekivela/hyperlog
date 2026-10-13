@@ -122,6 +122,8 @@ fun TodayScreen(
     update: UpdateBanner? = null,
     onUpdate: () -> Unit = {},
     onDismissUpdate: () -> Unit = {},
+    /** The program day of the session running, which Resume opens; it is the day Today shows. */
+    runningDay: PlannedDay? = null,
 ) {
     /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
     var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -133,7 +135,8 @@ fun TodayScreen(
         }
     }
     val kind = picking
-    val next = program?.next
+    // A running session keeps its day on Today, even resumed after finishing moved the program on.
+    val next = runningDay?.takeIf { sessionRunning } ?: program?.next
     if (kind != null && !sessionRunning) {
         StartSheet(
             gyms, usualGym,

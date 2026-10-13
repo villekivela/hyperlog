@@ -107,4 +107,25 @@ class ProgramDayTest {
         compose.onNode(hasContentDescription("Day 1A, next")).assertIsDisplayed()
         compose.onNode(hasContentDescription("Day 2B")).assertIsDisplayed()
     }
+
+    @Test
+    fun aSessionResumedAfterFinishingKeepsItsDayOnToday() {
+        importProgram()
+        compose.onNodeWithText("Start session").performClick()
+        compose.waitFor("Target")
+        compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("Log set")
+        compose.waitFor("70")
+        compose.press("More")
+        compose.onNodeWithText("Finish session").performClick()
+        compose.onNodeWithText("Finish").performClick()
+        compose.waitFor("Resume session")
+        compose.onNodeWithText("Resume session").performClick()
+        compose.waitFor("Target")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("Leave").performClick()
+        // Today shows the day Resume opens, not the one after it.
+        compose.waitFor("Resume session")
+        compose.onNodeWithText("Day A").assertIsDisplayed()
+        compose.onNodeWithText("Day B").assertDoesNotExist()
+    }
 }
