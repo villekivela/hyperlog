@@ -148,6 +148,14 @@ _Avoid_: Target (that's a set prescription's), PR goal
 **Starting weight**:
 A one-off suggestion for an exercise with no history yet, taken from the old app's data.
 
+**Bodyweight**:
+The body's weight on one day, logged on History, one value a day. A weighted bodyweight exercise's estimate adds it to the load on the belt or held.
+_Avoid_: Body mass, weigh-in
+
+**Weekly sets**:
+The work sets a muscle got in a week (Monday to Sunday), each counted once for every primary muscle of its exercise, whatever partials, drops or mini-sets extend it.
+_Avoid_: Volume load, tonnage
+
 **Deload**:
 A planned week of reduced volume or effort, marked as one in the program file. It never lowers the estimate.
 

@@ -20,8 +20,12 @@ data class WorkSet(
     val counts: Boolean = true,
 )
 
-/** One session of an exercise (on one machine, for machines): its main sets in order. */
-data class Performance(val sets: List<WorkSet>, val deload: Boolean = false)
+/**
+ * One session of an exercise (on one machine, for machines): its main sets in order. For a
+ * weighted bodyweight exercise [bodyweightKg] is the body's weight then, which the estimate adds to
+ * the weight logged on the belt (SPEC, Bodyweight); 0 for everything else.
+ */
+data class Performance(val sets: List<WorkSet>, val deload: Boolean = false, val bodyweightKg: Double = 0.0)
 
 /** The weight and target reps for the next set, and why ([why] is null when it just follows the set before). */
 data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: String?) {
@@ -95,7 +99,7 @@ object Progression {
         }
         val previous = today.sets.withIndex().lastOrNull { it.value.counts && it.value.target?.backoff == null }
         return if (previous != null) withinSession(previous.index, previous.value, target, today, history, ladder)
-        else nextSession(target, today.deload, history, ladder)
+        else nextSession(target, today.deload, history, ladder, today.bodyweightKg)
     }
 
     /** The exercise's current estimate from [history] (oldest first), or null with no usable set. */
@@ -103,8 +107,8 @@ object Progression {
 
     private fun estimate(history: List<Performance>, k: Double): Estimate? {
         var estimate: Estimate? = null
-        fun best(sets: List<WorkSet>) = sets.maxByOrNull { e1rm(it.set, k) }?.let { Estimate(e1rm(it.set, k), it.set) }
         for (p in history) {
+            fun best(sets: List<WorkSet>) = sets.maxByOrNull { e1rm(it.set, k, p.bodyweightKg) }?.let { Estimate(e1rm(it.set, k, p.bodyweightKg), it.set) }
             val sets = p.sets.filter { it.counts && it.set.fullReps in 1..MAX_ESTIMATE_REPS }
             val normal = if (p.deload) null else best(sets.filter { it.set.rir < HIGH_RIR })
             // Deload and high-RIR sets only ever raise it.
@@ -123,11 +127,12 @@ object Progression {
     fun constant(history: List<Performance>): Double {
         val ks = history.filter { !it.deload }.flatMap { p ->
             val sets = p.sets.filter { it.counts && it.set.fullReps in 1..MAX_ESTIMATE_REPS && it.set.rir < HIGH_RIR }.map { it.set }
+            val bw = p.bodyweightKg
             sets.flatMap { a ->
                 sets.mapNotNull { b ->
                     val ea = effective(a)
                     val eb = effective(b)
-                    if (a.weightKg > b.weightKg + 0.001 && eb - ea >= 3) (b.weightKg * eb - a.weightKg * ea) / (a.weightKg - b.weightKg) else null
+                    if (a.weightKg > b.weightKg + 0.001 && eb - ea >= 3) ((b.weightKg + bw) * eb - (a.weightKg + bw) * ea) / (a.weightKg - b.weightKg) else null
                 }
             }
         }.filter { it > 0 }.sorted()
@@ -136,7 +141,8 @@ object Progression {
         return median.coerceIn(20.0, 40.0)
     }
 
-    private fun nextSession(target: PlannedSet, deload: Boolean, history: List<Performance>, ladder: WeightLadder): Suggestion? {
+    /** [bw]: today's bodyweight for a weighted bodyweight exercise, else 0; the ladder is the load on the belt. */
+    private fun nextSession(target: PlannedSet, deload: Boolean, history: List<Performance>, ladder: WeightLadder, bw: Double): Suggestion? {
         val k = constant(history)
         val estimate = estimate(history, k)
         // Judged against the last session with this rep range (a day with its own range progresses
@@ -147,7 +153,7 @@ object Progression {
             return judged.filter { abs(it.set.weightKg - top) < 0.05 }
         }
         val last = history.lastOrNull { p -> topSets(p).firstOrNull()?.let { (it.target?.reps ?: target.reps) == target.reps } == true }
-            ?: return estimate?.let { fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check on the first set") }
+            ?: return estimate?.let { fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check on the first set", bw) }
         val atTop = topSets(last)
         val top = atTop.first().set.weightKg
         val was = atTop.first().target ?: target
@@ -155,7 +161,7 @@ object Progression {
         val sets = atTop.map { it.set }
         val lastly = "Last time ${sets.text()}"
         if (deload) {
-            return Suggestion(top, predicted(estimate, k, top, target.rir, range), Suggestion.Kind.Deload, "Deload week: last time's weight, ${target.rir ?: 0} in reserve")
+            return Suggestion(top, predicted(estimate, k, top + bw, target.rir, range), Suggestion.Kind.Deload, "Deload week: last time's weight, ${target.rir ?: 0} in reserve")
         }
         val t = was.rir
         fun eff(s: LoggedSet) = s.fullReps + (if (t != null) s.rir else 0)
@@ -171,7 +177,7 @@ object Progression {
                 return Suggestion(top, fewest, Suggestion.Kind.Stuck, "$lastly, $reached, and ${formatKg(top)} kg is the heaviest weight here: progress isn't possible")
             }
             // Judged on last time's sets themselves, however many reps they had.
-            val reps = predictedRaw(top * (1 + sets.minOf(::effective) / k), k, up, t)
+            val reps = predictedRaw((top + last.bodyweightKg) * (1 + sets.minOf(::effective) / k), k, up + bw, t)
             if (reps >= range.min) {
                 return Suggestion(up, reps.coerceIn(range.min, range.max), Suggestion.Kind.Up, "$lastly, $reached → ${formatKg(up)} kg")
             }
@@ -187,8 +193,8 @@ object Progression {
             val below = ladder.rungs.filter { it < top - 0.001 }
             if (below.isNotEmpty()) {
                 // One rung down, or about 5% where the ladder is fine-grained.
-                val down = below.minBy { abs(it - top * 0.95) }
-                return Suggestion(down, predicted(estimate, k, down, t, range), Suggestion.Kind.Down, "$lastly, $short short of $range → ${formatKg(down)} kg")
+                val down = below.minBy { abs(it + bw - (top + bw) * 0.95) }
+                return Suggestion(down, predicted(estimate, k, down + bw, t, range), Suggestion.Kind.Down, "$lastly, $short short of $range → ${formatKg(down)} kg")
             }
         }
         if (short >= 1) {
@@ -209,12 +215,13 @@ object Progression {
         ladder: WeightLadder,
     ): Suggestion {
         val set = previous.set
+        val bw = today.bodyweightKg
         val was = previous.target ?: target
         val n = previousIndex + 1
         if (was.reps != target.reps) {
             val all = history + today
             val k = constant(all)
-            estimate(all, k)?.let { return fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check this set") }
+            estimate(all, k)?.let { return fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check this set", bw) }
         }
         val follow = Suggestion(set.weightKg, followReps(today, target), Suggestion.Kind.Follow, null)
         val t = was.rir ?: return follow
@@ -222,7 +229,7 @@ object Progression {
         // About 5% per point of effective reps off the target, capped at ±10%.
         val gap = set.fullReps + set.rir - (set.fullReps.coerceIn(range.min, range.max) + t)
         if (gap == 0) return follow
-        val kg = ladder.rungs[ladder.nearestIndex(set.weightKg * (1 + (0.05 * gap).coerceIn(-0.10, 0.10)))]
+        val kg = ladder.rungs[ladder.nearestIndex((set.weightKg + bw) * (1 + (0.05 * gap).coerceIn(-0.10, 0.10)) - bw)]
         if (abs(kg - set.weightKg) < 0.05) return follow
         val reason = when {
             set.fullReps < range.min -> "below $range"
@@ -232,12 +239,12 @@ object Progression {
         return Suggestion(kg, followReps(today, target).coerceIn(range.min, range.max), Suggestion.Kind.Adjust, "Set $n was ${set.text()}, $reason → ${formatKg(kg)} kg")
     }
 
-    private fun fromEstimate(estimate: Estimate, k: Double, target: PlannedSet, ladder: WeightLadder, why: String): Suggestion {
+    private fun fromEstimate(estimate: Estimate, k: Double, target: PlannedSet, ladder: WeightLadder, why: String, bw: Double): Suggestion {
         val t = target.rir ?: 0
-        val ideal = estimate.kg / (1 + (target.reps.min + t) / k)
+        val ideal = estimate.kg / (1 + (target.reps.min + t) / k) - bw
         // Rounded down: RIR is usually under-reported, so the true capacity is a little higher.
         val kg = ladder.rungs.lastOrNull { it <= ideal + 0.001 } ?: ladder.rungs.first()
-        return Suggestion(kg, predicted(estimate, k, kg, target.rir, target.reps), Suggestion.Kind.Estimated, why)
+        return Suggestion(kg, predicted(estimate, k, kg + bw, target.rir, target.reps), Suggestion.Kind.Estimated, why)
     }
 
     /** Reps at [kg] for [rir] in reserve, as the estimate predicts, kept inside [range]. */
@@ -255,7 +262,7 @@ object Progression {
 
     private fun effective(s: LoggedSet) = s.fullReps + s.rir
 
-    private fun e1rm(s: LoggedSet, k: Double) = s.weightKg * (1 + effective(s) / k)
+    private fun e1rm(s: LoggedSet, k: Double, bw: Double) = (s.weightKg + bw) * (1 + effective(s) / k)
 
     /** `41.5 kg × 10 @ 2`. */
     private fun LoggedSet.text() = "${formatKg(weightKg)} kg × $fullReps @ $rir"

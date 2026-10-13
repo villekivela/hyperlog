@@ -452,6 +452,30 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see below. Reached from Today's top bar (`sports`) while a day is next.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
+   Reached from Today's top bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
+   Design: `docs/design/history.md`.
+   - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session") and
+     the date, then the gym and the exercises. A row opens the session (Past sessions are
+     editable, below).
+   - **Progress** shows the bodyweight (latest value, its date, a small line of the last 90 days;
+     a tap opens the log, + logs today's), sets per muscle for this week (chevrons step back up to
+     8 weeks), and every exercise trained, the one done last first, with a sparkline of its
+     estimate and the latest value (a machine exercise says "2 machines" instead).
+   - **An exercise's trend** shows the latest estimate, a chart of the estimate after each session
+     (a line) with each session's top set weight (dots), and the sessions as a table (date, top
+     set, estimate), newest first; a row opens that session. A tap or drag on the chart reads the
+     nearest session above it. Machines and cables get one chart per machine, headed
+     `Cable left · Kamppi`, the machine used last first, each on its own scale (ADR 0002).
+     - The top set is the session's heaviest work set that counts (a kept weight nothing confirmed
+       doesn't), with the most reps at that weight.
+     - The estimate after a session is the estimate as suggestions read it then: the last 12
+       sessions up to and including it (Automatic progressive overload).
+     - A plain bodyweight exercise has no estimate: its trend is the top set's reps.
+     - A weighted bodyweight exercise's estimate counts the bodyweight (below), and reads
+       "Estimate with bodyweight"; its top sets read as logged and stay off the chart.
+   - **Weekly sets per muscle**: weeks run Monday to Sunday; finished sessions count. Every
+     logged work set counts once for each primary muscle of its exercise (Volume, above);
+     secondary muscles don't count.
 
 Settings sit behind an icon: gyms and their equipment, exercise library, import backup, export
 backup.
@@ -488,10 +512,9 @@ backup.
     The next set stays split. Progression reads the weaker side.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
   can correct one; progression then reruns from the corrected data.
-  - Today's top bar has **Past sessions** (`history`): finished sessions newest first, each with
-    the day trained (or "Ad-hoc session"), the date and its exercises. A session opens on its
+  - History's Sessions tab lists finished sessions (Screens → History). A session opens on its
     summary (date, start time, duration, gym), and an exercise on its table, where logged rows are
-    corrected exactly as during a session. History (ticket #19) takes the list over.
+    corrected exactly as during a session. Back returns to History.
   - Corrections change values only: a past session's exercises and sets can't be added, removed or
     swapped. Last time in a past session's table is the session before it.
   - Suggestions read the corrected sets from then on, including a session running at the time:
@@ -532,6 +555,14 @@ backup.
   its trend. A goal never changes the program or the suggestions.
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
   weighted bodyweight exercises.
+  - One value a day: logging again the same day replaces it. It is typed on the system keyboard
+    in a field that opens in place (`Bodyweight today`, 20–400 kg), since it happens away from a
+    set. The log (History → Progress → Bodyweight) lists every day; a day picked on the chart or
+    in the list can be deleted.
+  - A weighted bodyweight exercise logs the load on the belt or held. Its estimate is Epley on
+    bodyweight plus that load: today's suggestion uses the latest value, and each past session the
+    value logged on or before its date (else the first value logged). Suggestions stay in the
+    load on the belt, on its ladder. With no bodyweight logged the load alone is used.
 - **Dumbbells are logged per dumbbell** (the number printed on it). Volume and e1RM count both
   dumbbells for two-dumbbell exercises.
 - **Backups**: manual JSON export/import, plus Android Auto Backup enabled.

@@ -63,7 +63,6 @@
     <string name="correct_strip_hold">Hold of set %1$d, seconds</string>
     <string name="session_now">Now</string>
     <string name="session_open_exercise">Open</string>
-    <string name="past_title">Past sessions</string>
     <string name="past_empty">Finished sessions show here, to look at or correct.</string>
     <string name="past_ad_hoc">Ad-hoc session</string>
     <string name="past_summary">Session summary</string>
@@ -401,4 +400,29 @@
     <string name="gym_missing">Not here</string>
     <string name="gym_missing_body">Picking %1$s offers a swap for these.</string>
     <string name="gym_missing_restore">%1$s is here after all</string>
+    <string name="history_title">History</string>
+    <string name="history_sessions">Sessions</string>
+    <string name="history_progress">Progress</string>
+    <string name="history_bodyweight">Bodyweight</string>
+    <string name="history_bodyweight_none">No bodyweight logged</string>
+    <string name="history_log_bodyweight">Log bodyweight</string>
+    <string name="history_bodyweight_today">Bodyweight today</string>
+    <string name="history_delete_bodyweight">Delete %1$s</string>
+    <string name="history_sets_week">Sets this week</string>
+    <string name="history_sets_none">No sets this week</string>
+    <string name="history_week_earlier">Earlier week</string>
+    <string name="history_week_later">Later week</string>
+    <string name="history_exercises">Exercises</string>
+    <string name="history_exercises_none">Exercises you train show here.</string>
+    <string name="history_machines">%1$d machines</string>
+    <string name="history_estimate">Estimate</string>
+    <string name="history_estimate_with_body">Estimate with bodyweight</string>
+    <string name="history_most_reps">Top set reps</string>
+    <string name="history_top_set">Top set</string>
+    <string name="history_reps">%1$d reps</string>
+    <string name="history_machine_unknown">Machine not known</string>
+    <string name="history_needs_bodyweight">Log bodyweight for a true estimate</string>
+    <string name="history_trend_chart">%1$s over time</string>
+    <string name="history_save">Save</string>
+    <string name="history_cancel">Cancel</string>
 </resources>

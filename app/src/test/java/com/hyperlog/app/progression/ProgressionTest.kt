@@ -236,4 +236,19 @@ class ProgressionTest {
         val s = next(planned("8-10", 2), machine, session(null, set(41.5, 10, 2)))!!
         assertEquals(44.0, s.kg, 0.001)
     }
+
+    @Test
+    fun aWeightedBodyweightEstimateCountsTheBodyAndSuggestsTheLoadOnTheBelt() {
+        // 10 kg on the belt at 80 kg bodyweight, 8 @ 1: 90 × (1 + 9/30) = 117 kg.
+        val past = Performance(listOf(WorkSet(set(10.0, 8, 1), planned("8-10", 1).single())), bodyweightKg = 80.0)
+        assertEquals(117.0, Progression.estimate(listOf(past))!!.kg, 0.01)
+
+        // A new range of 4–6 @ 1: 117 / (1 + 5/30) = 100.3 kg in all, so 20 kg on the belt, rounded down.
+        val plan = planned("4-6", 1)
+        val s = Progression.suggest(plan, Performance(emptyList(), bodyweightKg = 80.0), listOf(past), plates)!!
+        assertEquals(Suggestion.Kind.Estimated, s.kind)
+        assertEquals(20.0, s.kg, 0.001)
+        // At 100 kg in all the estimate predicts 30 × (117/100 − 1) − 1 = 4 reps.
+        assertEquals(4, s.reps)
+    }
 }

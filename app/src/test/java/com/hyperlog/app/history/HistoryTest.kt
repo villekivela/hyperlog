@@ -1,0 +1,182 @@
+package com.hyperlog.app.history
+
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.data.LoggedSetEntity
+import com.hyperlog.app.data.SessionEntity
+import com.hyperlog.app.data.SessionExerciseEntity
+import com.hyperlog.app.data.SetExtensionEntity
+import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.domain.summary
+import com.hyperlog.app.gym.EquipmentItem
+import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.library.ExerciseLibrary
+import com.hyperlog.app.library.LibrarySeed
+import com.hyperlog.app.program.Programs
+import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import kotlin.math.roundToInt
+
+/** History (SPEC, Screens → History): weekly sets per muscle and each exercise's trend. */
+@RunWith(RobolectricTestRunner::class)
+class HistoryTest {
+    private lateinit var db: HyperlogDatabase
+    private lateinit var programs: Programs
+    private val zone = ZoneId.of("Europe/Helsinki")
+
+    /** Tuesday 13 Oct 2026. */
+    private val today = LocalDate.of(2026, 10, 13)
+
+    @Before
+    fun open() = runTest {
+        db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), HyperlogDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
+        ExerciseLibrary(db).sync(LibrarySeed.fromAssets(ApplicationProvider.getApplicationContext()))
+        programs = Programs(db, clock = { 0L })
+    }
+
+    @After
+    fun close() = db.close()
+
+    private fun history() = History(db, programs, zone = zone, today = { today })
+
+    private fun at(date: LocalDate, hour: Int = 18) = LocalDateTime.of(date, LocalTime.of(hour, 0)).atZone(zone).toInstant().toEpochMilli()
+
+    private class Logged(
+        val kg: Double,
+        val reps: Int,
+        val rir: Int,
+        val partials: Int = 0,
+        val drops: List<Pair<Double, Int>> = emptyList(),
+        val miniSets: List<Int> = emptyList(),
+    )
+
+    /** A session on [date] with [exercises] (exercise id to its sets), done on equipment [items] where given. */
+    private suspend fun session(
+        date: LocalDate,
+        vararg exercises: Pair<String, List<Logged>>,
+        items: Map<String, Long> = emptyMap(),
+        finished: Boolean = true,
+        hour: Int = 18,
+    ): Long {
+        val dao = db.sessions()
+        val start = at(date, hour)
+        val id = dao.insertSession(SessionEntity(startedAt = start, finishedAt = if (finished) start + 3_600_000 else null))
+        exercises.forEachIndexed { i, (exerciseId, sets) ->
+            val se = dao.insertSessionExercise(SessionExerciseEntity(sessionId = id, exerciseId = exerciseId, position = i, equipmentItemId = items[exerciseId]))
+            sets.forEachIndexed { p, s ->
+                val set = dao.insertSet(
+                    LoggedSetEntity(sessionExerciseId = se, position = p, weightKg = s.kg, fullReps = s.reps, partialReps = s.partials, rir = s.rir, loggedAt = start),
+                )
+                s.drops.forEachIndexed { d, (kg, reps) -> dao.insertExtension(SetExtensionEntity(loggedSetId = set, position = d, kind = "Drop", weightKg = kg, reps = reps)) }
+                s.miniSets.forEachIndexed { m, reps -> dao.insertExtension(SetExtensionEntity(loggedSetId = set, position = m, kind = "MiniSet", weightKg = s.kg, reps = reps)) }
+            }
+        }
+        return id
+    }
+
+    @Test
+    fun weeklySetsCountEachWorkSetOnceForItsPrimaryMuscles() = runTest {
+        // This week (Mon 12 Oct): bench 3 sets, one with partials and one a drop set; laterals as myo-reps.
+        session(
+            LocalDate.of(2026, 10, 12),
+            "barbell_bench_press" to listOf(
+                Logged(80.0, 6, 1),
+                Logged(80.0, 6, 0, partials = 4),
+                Logged(70.0, 8, 0, drops = listOf(55.0 to 7, 40.0 to 6)),
+            ),
+            "db_lateral_raise" to listOf(Logged(10.0, 15, 1, miniSets = listOf(4, 4, 3))),
+        )
+        // A set done entirely as lengthened partials still counts as one.
+        session(today, "db_bench_press" to listOf(Logged(30.0, 0, 0, partials = 12)))
+        // Last week, late on Sunday; a session still running doesn't count yet.
+        session(LocalDate.of(2026, 10, 11), "leg_extension" to listOf(Logged(50.0, 12, 1), Logged(50.0, 11, 0)), hour = 23)
+        session(today, "leg_extension" to listOf(Logged(50.0, 12, 1)), finished = false)
+
+        val weeks = history().weeklySets(weeks = 2)
+
+        assertEquals(listOf(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 5)), weeks.map { it.start })
+        assertEquals(mapOf("Chest" to 4, "Side Delts" to 1), weeks[0].sets)
+        assertEquals(mapOf("Quads" to 2), weeks[1].sets)
+    }
+
+    @Test
+    fun aFreeWeightTrendShowsTheTopSetAndTheEstimateAfterEachSession() = runTest {
+        val gyms = Gyms(db)
+        val kamppi = gyms.addGym("Kamppi")
+        val toolo = gyms.addGym("Töölö")
+        session(LocalDate.of(2026, 9, 28), "barbell_bench_press" to listOf(Logged(80.0, 5, 1), Logged(80.0, 6, 1)))
+        session(LocalDate.of(2026, 10, 1), "barbell_bench_press" to listOf(Logged(82.5, 5, 1), Logged(75.0, 7, 2)))
+        // An easy session: its sets at 4 RIR can't lower the estimate.
+        session(LocalDate.of(2026, 10, 5), "barbell_bench_press" to listOf(Logged(60.0, 5, 4)))
+        db.sessions().finishedSessions().forEachIndexed { i, s -> db.sessions().updateSession(s.copy(gymId = if (i == 0) kamppi else toolo)) }
+
+        val trend = history().trend("barbell_bench_press")
+
+        // Free weights share one history across gyms.
+        val line = trend.lines.single()
+        assertEquals(null, line.machine)
+        assertEquals(listOf(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 5)), line.points.map { it.date })
+        assertEquals(listOf("80 × 6 @ 1", "82.5 × 5 @ 1", "60 × 5 @ 4"), line.points.map { it.top.summary() })
+        // Epley: 80 × (1 + 7/30) = 98.7, then 82.5 × (1 + 6/30) = 99, which the easy session keeps.
+        assertEquals(listOf(98.67, 99.0, 99.0), line.points.map { (it.estimateKg!! * 100).roundToInt() / 100.0 })
+    }
+
+    @Test
+    fun aWeightedBodyweightEstimateAddsTheBodyweightOfTheDay() = runTest {
+        Bodyweights(db).log(LocalDate.of(2026, 9, 30), 80.0)
+        Bodyweights(db).log(LocalDate.of(2026, 10, 4), 79.0)
+        session(LocalDate.of(2026, 9, 28), "weighted_pullup" to listOf(Logged(10.0, 8, 1)))
+        session(LocalDate.of(2026, 10, 5), "weighted_pullup" to listOf(Logged(12.0, 8, 1)))
+
+        val line = history().trend("weighted_pullup").lines.single()
+
+        // The top set stays as logged, the load on the belt.
+        assertEquals(listOf("10 × 8 @ 1", "12 × 8 @ 1"), line.points.map { it.top.summary() })
+        // Before the first value logged it takes that one: 90 × (1 + 9/30) = 117; then 91 × 1.3 = 118.3 at 79 kg.
+        assertEquals(listOf(117.0, 118.3), line.points.map { (it.estimateKg!! * 100).roundToInt() / 100.0 })
+    }
+
+    @Test
+    fun theExercisesTrainedComeLatestFirstWithTheirTrends() = runTest {
+        session(LocalDate.of(2026, 9, 28), "barbell_bench_press" to listOf(Logged(80.0, 6, 1)), "leg_extension" to listOf(Logged(50.0, 12, 1)))
+        session(LocalDate.of(2026, 10, 1), "barbell_bench_press" to listOf(Logged(82.5, 5, 1)))
+        // Nothing logged: not trained.
+        session(LocalDate.of(2026, 10, 2), "db_lateral_raise" to emptyList())
+
+        val trends = history().exercises()
+
+        assertEquals(listOf("Barbell Bench Press", "Leg Extension"), trends.map { it.exercise.name })
+        assertEquals(2, trends[0].lines.single().points.size)
+    }
+
+    @Test
+    fun aMachineTrendHasOneLinePerMachine() = runTest {
+        val gyms = Gyms(db)
+        val kamppi = gyms.addGym("Kamppi")
+        val toolo = gyms.addGym("Töölö")
+        val left = gyms.addItem(EquipmentItem(gymId = kamppi, name = "Cable left", ladder = LadderSpec.lbStack()))
+        val tall = gyms.addItem(EquipmentItem(gymId = toolo, name = "Tall cable", ladder = LadderSpec.lbStack()))
+        session(LocalDate.of(2026, 9, 28), "cable_lateral_raise" to listOf(Logged(5.7, 12, 1)), items = mapOf("cable_lateral_raise" to left))
+        session(LocalDate.of(2026, 10, 1), "cable_lateral_raise" to listOf(Logged(10.2, 10, 1)), items = mapOf("cable_lateral_raise" to tall))
+        session(LocalDate.of(2026, 10, 5), "cable_lateral_raise" to listOf(Logged(7.9, 10, 1)), items = mapOf("cable_lateral_raise" to left))
+
+        val trend = history().trend("cable_lateral_raise")
+
+        // Latest used first; stacks don't compare, so each machine is its own line (ADR 0002).
+        assertEquals(listOf("Cable left · Kamppi", "Tall cable · Töölö"), trend.lines.map { it.machine })
+        assertEquals(listOf("5.7 × 12 @ 1", "7.9 × 10 @ 1"), trend.lines[0].points.map { it.top.summary() })
+        assertEquals(listOf("10.2 × 10 @ 1"), trend.lines[1].points.map { it.top.summary() })
+    }
+}

@@ -43,63 +43,56 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 // Past sessions (SPEC, Past sessions are editable): the list, a session's summary, and an
-// exercise's table where any logged row can be corrected. History (#19) hosts the list later.
+// exercise's table where any logged row can be corrected. History (#19) hosts the list.
 
 /** `Tue 13 Oct`. */
-private fun day(at: Long): String =
+internal fun day(at: Long): String =
     DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault()).format(Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()))
 
-/** Every finished session, newest first: the day trained and the date, then its exercises. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Every finished session, newest first (History → Sessions): the day trained and the date, then
+ * the gym and its exercises. A row opens the session.
+ */
 @Composable
-fun PastSessionsScreen(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    BackHandler(onBack = onBack)
+fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.past_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
-            )
-        },
-    ) { padding ->
+    LazyColumn(modifier.fillMaxSize()) {
         if (sessions != null && sessions.isEmpty()) {
-            Text(
-                stringResource(R.string.past_empty),
-                Modifier.padding(padding).padding(horizontal = Margin, vertical = 16.dp),
-                style = MaterialTheme.typography.bodyLarge,
-                color = cs.onSurfaceVariant,
-            )
+            item {
+                Text(
+                    stringResource(R.string.past_empty),
+                    Modifier.padding(horizontal = Margin, vertical = 16.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = cs.onSurfaceVariant,
+                )
+            }
         }
-        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-            items(sessions.orEmpty(), key = { it.id }) { s ->
-                Column(
-                    Modifier.fillMaxWidth().clickable { onOpen(s.id) }.heightIn(min = 72.dp)
-                        .padding(horizontal = Margin, vertical = 12.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            s.title ?: stringResource(R.string.past_ad_hoc),
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Spacer(Modifier.width(16.dp))
-                        Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
-                    }
+        items(sessions.orEmpty(), key = { it.id }) { s ->
+            Column(
+                Modifier.fillMaxWidth().clickable { onOpen(s.id) }.heightIn(min = 72.dp)
+                    .padding(horizontal = Margin, vertical = 12.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        s.exercises.joinToString(" · ") { it.name },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = cs.onSurfaceVariant,
-                        maxLines = 2,
+                        s.title ?: stringResource(R.string.past_ad_hoc),
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    Spacer(Modifier.width(16.dp))
+                    Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
                 }
+                Text(
+                    (listOfNotNull(s.gym) + s.exercises.map { it.name }).joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cs.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }
         }
+        item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }
     }
 }
 

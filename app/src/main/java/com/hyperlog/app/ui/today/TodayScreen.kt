@@ -91,7 +91,7 @@ fun TodayScreen(
     exerciseNames: Map<String, String> = emptyMap(),
     onProgram: () -> Unit = {},
     /** Opens the past sessions, to look at or correct (History hosts them later). */
-    onPastSessions: () -> Unit = {},
+    onHistory: () -> Unit = {},
     /** The starter program, offered while no program runs; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
@@ -141,8 +141,8 @@ fun TodayScreen(
                             SymbolIcon(Symbol.Sports, stringResource(R.string.coach_title))
                         }
                     }
-                    IconButton(onClick = onPastSessions) {
-                        SymbolIcon(Symbol.History, stringResource(R.string.past_title))
+                    IconButton(onClick = onHistory) {
+                        SymbolIcon(Symbol.History, stringResource(R.string.history_title))
                     }
                     IconButton(onClick = onProgram) {
                         SymbolIcon(Symbol.ViewTimeline, stringResource(R.string.program_title))

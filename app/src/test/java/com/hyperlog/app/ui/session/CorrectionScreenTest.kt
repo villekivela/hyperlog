@@ -126,7 +126,7 @@ class CorrectionScreenTest {
     }
 
     @Test
-    fun pastSessionsOpenFromTodayToCorrect() {
+    fun pastSessionsOpenFromHistoryToCorrect() {
         startAndLog205()
         tap("More")
         compose.onNodeWithText("Finish session").performClick()
@@ -134,8 +134,8 @@ class CorrectionScreenTest {
         waitFor("Session done")
         compose.onNodeWithText("Done").performClick()
 
-        waitForDescription("Past sessions")
-        tap("Past sessions")
+        waitForDescription("History")
+        tap("History")
         waitFor("Ad-hoc session")
         compose.onNodeWithText("Ad-hoc session").performClick()
         waitForTappable("Barbell Bench Press")

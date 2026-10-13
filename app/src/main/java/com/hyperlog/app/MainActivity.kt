@@ -41,8 +41,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.hyperlog.app.ui.session.SessionDoneScreen
 import com.hyperlog.app.ui.session.PastExerciseScreen
 import com.hyperlog.app.ui.session.PastSessionScreen
-import com.hyperlog.app.ui.session.PastSessionsScreen
 import com.hyperlog.app.ui.session.PastSessionsViewModel
+import com.hyperlog.app.ui.history.BodyweightScreen
+import com.hyperlog.app.ui.history.ExerciseTrendScreen
+import com.hyperlog.app.ui.history.HistoryScreen
+import com.hyperlog.app.ui.history.HistoryViewModel
 import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.session.SessionViewModel
 import com.hyperlog.app.ui.settings.SettingsScreen
@@ -57,12 +60,13 @@ class MainActivity : ComponentActivity() {
     private val programs: ProgramViewModel by viewModels()
     private val startingWeights: StartingWeightsViewModel by viewModels()
     private val past: PastSessionsViewModel by viewModels()
+    private val history: HistoryViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history) }
         }
     }
 
@@ -96,7 +100,7 @@ private fun AskForNotifications() {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program, Past, Coach }
+private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach }
 
 /** Marks a new exercise in the editor, which otherwise holds the id of the one being edited. */
 private const val NewExercise = ""
@@ -119,6 +123,7 @@ private fun App(
     programModel: ProgramViewModel,
     startingWeightsModel: StartingWeightsViewModel,
     pastModel: PastSessionsViewModel,
+    historyModel: HistoryViewModel,
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -146,6 +151,12 @@ private fun App(
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
     val pastSession by pastModel.session.collectAsStateWithLifecycle()
     val pastSessions by pastModel.sessions.collectAsStateWithLifecycle()
+    val weeks by historyModel.weeks.collectAsStateWithLifecycle()
+    val trained by historyModel.exercises.collectAsStateWithLifecycle()
+    val trend by historyModel.trend.collectAsStateWithLifecycle()
+    val bodyweights by historyModel.bodyweights.collectAsStateWithLifecycle()
+    var historyTab by rememberSaveable { mutableStateOf(0) }
+    var bodyweightOpen by rememberSaveable { mutableStateOf(false) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -283,13 +294,35 @@ private fun App(
             onClosePasteErrors = programModel::closePasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
         )
-        screen == Screen.Past && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
-        screen == Screen.Past && pastSession != null -> PastSessionScreen(
+        screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
+        // A session opened from History or a trend goes back there, read again with any correction.
+        screen == Screen.History && pastSession != null -> PastSessionScreen(
             pastSession!!,
             onOpen = pastModel::show,
-            onBack = { pastModel.close(); pastModel.refresh() },
+            onBack = { pastModel.close(); pastModel.refresh(); historyModel.refresh() },
         )
-        screen == Screen.Past -> PastSessionsScreen(pastSessions, onOpen = pastModel::open, onBack = { screen = Screen.Today })
+        screen == Screen.History && bodyweightOpen -> BodyweightScreen(
+            bodyweights,
+            onLog = historyModel::logBodyweight,
+            onDelete = historyModel::deleteBodyweight,
+            onBack = { bodyweightOpen = false },
+        )
+        screen == Screen.History && trend != null -> ExerciseTrendScreen(
+            trend!!,
+            hasBodyweight = bodyweights.isNotEmpty(),
+            onOpenSession = pastModel::open,
+            onBack = historyModel::closeTrend,
+        )
+        screen == Screen.History -> HistoryScreen(
+            pastSessions, weeks, trained, bodyweights,
+            tab = historyTab,
+            onTab = { historyTab = it },
+            onOpenSession = pastModel::open,
+            onOpenExercise = historyModel::openTrend,
+            onBodyweight = { bodyweightOpen = true },
+            onLogBodyweight = historyModel::logBodyweight,
+            onBack = { screen = Screen.Today },
+        )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
@@ -312,7 +345,7 @@ private fun App(
             program = program,
             exerciseNames = exercises.associate { it.id to it.name },
             onProgram = { screen = Screen.Program },
-            onPastSessions = { pastModel.refresh(); screen = Screen.Past },
+            onHistory = { pastModel.refresh(); historyModel.refresh(); screen = Screen.History },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
             library = exercises,

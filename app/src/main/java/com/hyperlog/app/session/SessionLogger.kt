@@ -34,6 +34,8 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.ladderFor
 import com.hyperlog.app.library.Equipment
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.history.Bodyweights
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.legacy.StartingWeights
 import com.hyperlog.app.legacy.text
@@ -63,6 +65,7 @@ class SessionLogger(
     private val dao = db.sessions()
     private val gyms = Gyms(db)
     private val startingWeights = StartingWeights(db)
+    private val bodyweights = Bodyweights(db)
     private val mutex = Mutex()
     private val _state = MutableStateFlow<ActiveSession?>(null)
     /** When ✓ last logged a set, to swallow a stutter tap right after it. */
@@ -731,8 +734,13 @@ class SessionLogger(
                 plan == null -> start?.suggestion(null, ladder.ladder)
                 else -> Progression.suggest(
                     plan,
-                    Performance(workSets(sets, plan), deload = day?.deload == true),
-                    history(se.exerciseId, row.id, perMachine, machine?.id),
+                    // A weighted bodyweight exercise counts the latest bodyweight with the belt (SPEC, Bodyweight).
+                    Performance(
+                        workSets(sets, plan),
+                        deload = day?.deload == true,
+                        bodyweightKg = if (exercise.weighted) bodyweights.latest() ?: 0.0 else 0.0,
+                    ),
+                    history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted),
                     ladder.ladder,
                 ) ?: start?.takeIf { sets.isEmpty() }?.suggestion(plan.first(), ladder.ladder)
             }?.let { s -> slot?.loadPercent?.takeIf { it != 0 }?.let { s.adjusted(it, ladder.ladder) } ?: s }
@@ -831,14 +839,19 @@ class SessionLogger(
 
     /**
      * The exercise's past sessions (on [itemId] for machines), oldest first, each with the
-     * prescription it was done under and whether its week was a deload.
+     * prescription it was done under, whether its week was a deload and, for a [weighted]
+     * bodyweight exercise, the bodyweight of the day.
      */
-    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?): List<Performance> =
+    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean): List<Performance> =
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
             else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
             val plan = past.sets?.let(PlannedSetJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
-            Performance(workSets(dao.sets(past.id).map { loggedSet(it) }, plan), deload = day?.deload == true)
+            Performance(
+                workSets(dao.sets(past.id).map { loggedSet(it) }, plan),
+                deload = day?.deload == true,
+                bodyweightKg = if (weighted) bodyweights.on(programs.dateOf(past.startedAt)) ?: 0.0 else 0.0,
+            )
         }
 
     private suspend fun <T> locked(block: suspend () -> T): T = mutex.withLock { block() }
@@ -859,6 +872,9 @@ class SessionLogger(
  * What a new set's weight is checked against: the last set that counts, or last time's first. A
  * weight kept past a check doesn't count until a set is logged near it.
  */
+/** Weighted bodyweight: the body plus the load on the belt or held. */
+private val Exercise.weighted get() = equipment == Equipment.WeightedBodyweight
+
 private fun SessionExercise.reference(): Reference? =
     sets.countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
         ?: lastTime.countingSets().firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }

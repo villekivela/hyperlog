@@ -20,8 +20,36 @@ data class PastExercise(
     @ColumnInfo(name = "started_at") val startedAt: Long = 0,
 )
 
+/** An exercise as done in a finished session, for History. */
+data class TrainedExercise(
+    val id: Long,
+    @ColumnInfo(name = "session_id") val sessionId: Long,
+    @ColumnInfo(name = "exercise_id") val exerciseId: String,
+    @ColumnInfo(name = "equipment_item_id") val equipmentItemId: Long?,
+    @ColumnInfo(name = "slot_id") val slotId: String?,
+    @ColumnInfo(name = "program_id") val programId: Long?,
+    val week: Int?,
+    @ColumnInfo(name = "day_index") val dayIndex: Int?,
+    @ColumnInfo(name = "started_at") val startedAt: Long,
+)
+
 @Dao
 interface SessionDao {
+    /**
+     * Every exercise done in a finished session with sets logged, oldest first; only [exerciseId]
+     * when given.
+     */
+    @Query(
+        """
+        SELECT se.id, se.session_id, se.exercise_id, se.equipment_item_id, se.slot_id, s.program_id, s.week, s.day_index, s.started_at
+        FROM session_exercise se JOIN session s ON s.id = se.session_id
+        WHERE s.finished_at IS NOT NULL AND se.removed = 0 AND (:exerciseId IS NULL OR se.exercise_id = :exerciseId)
+          AND EXISTS (SELECT 1 FROM logged_set x WHERE x.session_exercise_id = se.id)
+        ORDER BY s.started_at, se.id
+        """,
+    )
+    suspend fun trained(exerciseId: String? = null): List<TrainedExercise>
+
     @Query("SELECT * FROM session WHERE finished_at IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun runningSession(): SessionEntity?
 
