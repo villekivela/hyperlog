@@ -2,6 +2,7 @@ package com.hyperlog.app.session
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.hyperlog.app.coach.ChangeJson
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.PadKey
@@ -92,6 +93,31 @@ class PastSessionEditorTest {
         val s = logger.state.value!!.current!!.suggestion!!
         assertEquals(Suggestion.Kind.More, s.kind)
         assertEquals("60", logger.state.value!!.entry!!.weight)
+    }
+
+    @Test
+    fun aPastSessionKeepsThePlanItWasDoneUnder() = runTest {
+        // Found on the phone: a Change accepted after a session rewrote that session's targets.
+        val week1 = logger().weekOne()
+        now += 60_000
+        programs.accept(ChangeJson.decode("""{"summary":"More bench","scope":"rest_of_program","operations":[{"op":"adjust_sets","slot":"bench","sets":3}]}"""))
+
+        val editor = PastSessionEditor(db, programs)
+        editor.open(week1)
+        assertEquals(2, editor.state.value!!.exercises[0].prescription!!.size)
+    }
+
+    @Test
+    fun aChangeRevertedAfterASessionStillHeldForIt() = runTest {
+        programs.accept(ChangeJson.decode("""{"summary":"More bench","scope":"rest_of_program","operations":[{"op":"adjust_sets","slot":"bench","sets":3}]}"""))
+        now += 60_000
+        val week1 = logger().weekOne()
+        now += 60_000
+        programs.revert(db.planChanges().changes(db.programs().active()!!.id).single().id)
+
+        val editor = PastSessionEditor(db, programs)
+        editor.open(week1)
+        assertEquals(3, editor.state.value!!.exercises[0].prescription!!.size)
     }
 
     @Test

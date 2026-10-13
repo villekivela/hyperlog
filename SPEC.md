@@ -536,6 +536,8 @@ from a backup, starting weights from the old app.
     The next set stays split. Progression reads the weaker side.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
   can correct one; progression then reruns from the corrected data.
+  - A past session keeps the plan it was done under: its targets are the Changes in force when it
+    finished, so a Change accepted or reverted later doesn't touch them.
   - History's Sessions tab lists finished sessions (Screens → History). A session opens on its
     summary (date, start time, duration, gym), and an exercise on its table, where logged rows are
     corrected exactly as during a session. Back returns to History.

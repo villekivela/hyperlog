@@ -8,7 +8,6 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
-import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -164,8 +163,7 @@ class PastSessionEditor(
     }
 
     private suspend fun title(row: SessionEntity): String? {
-        if (row.programId == null || row.week == null || row.dayIndex == null) return null
-        return programs.plannedDay(row.programId, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))?.day?.name
+        return programs.plannedDay(row)?.day?.name
     }
 
     /** Reads session [sessionId] as it is stored: each exercise with its sets, plan and last time before it. */

@@ -18,6 +18,8 @@ data class PastExercise(
     val sets: String? = null,
     /** When its session started: the plan is read for that date. */
     @ColumnInfo(name = "started_at") val startedAt: Long = 0,
+    /** When its session finished (null while it runs): the Changes in force then are its plan's. */
+    @ColumnInfo(name = "finished_at") val finishedAt: Long? = null,
 )
 
 /** An exercise as done in a finished session, for History. */
@@ -113,7 +115,7 @@ interface SessionDao {
      */
     @Query(
         """
-        SELECT se.id, se.slot_id, s.program_id, s.week, s.day_index, se.sets, s.started_at
+        SELECT se.id, se.slot_id, s.program_id, s.week, s.day_index, se.sets, s.started_at, s.finished_at
         FROM session_exercise se JOIN session s ON s.id = se.session_id
         WHERE se.exercise_id = :exerciseId AND se.session_id != :sessionId
           AND (:anyItem OR se.equipment_item_id IS :itemId)

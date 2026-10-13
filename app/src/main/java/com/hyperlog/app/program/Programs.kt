@@ -2,6 +2,7 @@ package com.hyperlog.app.program
 
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.ProgramEntity
+import com.hyperlog.app.data.SessionEntity
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -113,11 +114,23 @@ class Programs(
         }
     }
 
-    /** The day at [position] of program [id] as trained on [date], with the Changes in force. */
-    suspend fun plannedDay(id: Long, position: Position, date: LocalDate): PlannedDay? {
+    /**
+     * The day at [position] of program [id] as trained on [date], with the Changes in force: now,
+     * or, for a session finished at [asOf], those in force then (accepted by then and not yet
+     * reverted), so a later Change never rewrites a past session.
+     */
+    suspend fun plannedDay(id: Long, position: Position, date: LocalDate, asOf: Long? = null): PlannedDay? {
         val program = program(id) ?: return null
-        val changes = changeDao.changes(id).filter { it.revertedAt == null }.mapNotNull { it.toAccepted() }
+        val changes = changeDao.changes(id)
+            .filter { c -> if (asOf == null) c.revertedAt == null else c.acceptedAt <= asOf && (c.revertedAt == null || c.revertedAt > asOf) }
+            .mapNotNull { it.toAccepted() }
         return Changes.day(program, position, date, changes)
+    }
+
+    /** [plannedDay] for stored session [row]: as it was when it finished, or as now while it runs. */
+    suspend fun plannedDay(row: SessionEntity): PlannedDay? {
+        if (row.programId == null || row.week == null || row.dayIndex == null) return null
+        return plannedDay(row.programId, Position(row.week, row.dayIndex), dateOf(row.startedAt), asOf = row.finishedAt)
     }
 
     /**

@@ -15,7 +15,6 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
-import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.SetPrescriptionJson
@@ -49,8 +48,7 @@ internal class StoredSessions(private val db: HyperlogDatabase, private val gyms
         library = db.exercises().all().associate { it.id to it.toExercise() },
         shared = gyms.shared(),
         gym = row.gymId?.let { gyms.gym(it) },
-        day = if (row.programId == null || row.week == null || row.dayIndex == null) null
-        else programs.plannedDay(row.programId, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt)),
+        day = programs.plannedDay(row),
     )
 }
 

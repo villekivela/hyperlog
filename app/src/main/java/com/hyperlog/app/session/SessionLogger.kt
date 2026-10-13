@@ -860,7 +860,7 @@ class SessionLogger(
     private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean, dumbbells: Int): List<Pair<Long, Performance>> =
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
-            else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
+            else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt), asOf = past.finishedAt)
             val plan = past.sets?.let(SetPrescriptionJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
             past.id to Performance(
                 workSets(stored.sets(past.id), plan),
