@@ -184,10 +184,11 @@ sealed interface LadderSpec {
         val DefaultPlates = Plates(20.0, listOf(20.0, 20.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25))
 
         /** SPEC default for a selectorised machine: pin steps of 5 kg from 5 to 100, taking the gym's pin plates. */
-        val DefaultPinStack = PinStack.steps(WeightUnit.Kg, start = 5.0, step = 5.0, top = 100.0)
+        // Lazy: built through PinStack, whose own initialisation can be what started this one.
+        val DefaultPinStack: PinStack by lazy { PinStack.steps(WeightUnit.Kg, start = 5.0, step = 5.0, top = 100.0) }
 
         /** The lb choice for a gym's machines: 2.5 lb, then 5 lb steps, 40 plates. */
-        val LbPinStack = PinStack.steps(WeightUnit.Lb, start = 2.5, step = 5.0, top = 197.5)
+        val LbPinStack: PinStack by lazy { PinStack.steps(WeightUnit.Lb, start = 2.5, step = 5.0, top = 197.5) }
 
         /** A gym's small plates for the pin until set: 1.25 and 2.5 kg. */
         val DefaultPinPlates = listOf(1.25, 2.5)
