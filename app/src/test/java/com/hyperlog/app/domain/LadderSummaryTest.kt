@@ -24,8 +24,9 @@ class LadderSummaryTest {
     }
 
     @Test
-    fun platesNameTheBarAndTheTop() {
-        assertEquals("20 kg bar + plates, to 207.5 kg", LadderSpec.DefaultPlates.summary())
+    fun platesNameTheirBaseAndTheTop() {
+        assertEquals("20 kg + plates, to 207.5 kg", LadderSpec.DefaultPlates.summary())
+        assertEquals("Plates, to 40 kg", LadderSpec.Plates(0.0, listOf(20.0)).summary())
     }
 
     @Test

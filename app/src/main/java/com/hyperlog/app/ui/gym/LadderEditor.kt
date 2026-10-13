@@ -329,7 +329,9 @@ internal fun LadderCheck(draft: LadderSpec?, pinPlates: List<Double>, status: St
         status?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.primary) }
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val firstFew = rungs.take(3).joinToString(" · ") { formatKg(it) } + if (rungs.size > 3) " …" else " kg"
+            // A stack is checked by its pin weights, as printed; the add-ons fill in between them.
+            val checked = (draft as? LadderSpec.PinStack)?.pins ?: rungs
+            val firstFew = checked.take(3).joinToString(" · ") { formatKg(it) } + if (rungs.size > 3) " …" else " kg"
             Text(
                 if (open) rungs.joinToString(" · ") { formatKg(it) } + " kg" else stringResource(R.string.ladder_check, firstFew),
                 Modifier.weight(1f),

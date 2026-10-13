@@ -1,6 +1,9 @@
 package com.hyperlog.app.ui.settings
 
 import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.SegmentedList
+import com.hyperlog.app.ui.theme.SegmentedRow
+import com.hyperlog.app.ui.theme.GroupGap
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.ui.graphics.Color
@@ -10,6 +13,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -104,99 +108,75 @@ fun SettingsScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(top = 8.dp)) {
-          Group {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_gyms)) },
-                supportingContent = {
-                    Text(
-                        if (gymCount == 0) stringResource(R.string.settings_gyms_none)
-                        else pluralStringResource(R.plurals.settings_gyms_count, gymCount, gymCount),
-                    )
-                },
-                leadingContent = { SymbolIcon(Symbol.FitnessCenter, null, tint = muted) },
-                trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onGyms).then(row), colors = clear,
-            )
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_library)) },
-                supportingContent = { Text(stringResource(R.string.settings_library_count, exerciseCount)) },
-                leadingContent = { SymbolIcon(Symbol.List, null, tint = muted) },
-                trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onLibrary).then(row), colors = clear,
-            )
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_starting_weights)) },
-                supportingContent = {
-                    when {
-                        startingWeights.invalid -> Text(stringResource(R.string.settings_starting_weights_invalid), color = MaterialTheme.colorScheme.error)
-                        startingWeights.count == 0 -> Text(stringResource(R.string.settings_starting_weights_none))
-                        else -> Text(pluralStringResource(R.plurals.settings_starting_weights_count, startingWeights.count, startingWeights.count))
-                    }
-                },
-                leadingContent = { SymbolIcon(Symbol.History, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onImportStartingWeights).then(row), colors = clear,
-            )
-          }
+            val error = MaterialTheme.colorScheme.error
+            val chevron: @Composable () -> Unit = { SymbolIcon(Symbol.ChevronRight, null, tint = muted) }
+            val gyms = if (gymCount == 0) stringResource(R.string.settings_gyms_none) else pluralStringResource(R.plurals.settings_gyms_count, gymCount, gymCount)
+            val library = stringResource(R.string.settings_library_count, exerciseCount)
+            val weights = when {
+                startingWeights.invalid -> stringResource(R.string.settings_starting_weights_invalid)
+                startingWeights.count == 0 -> stringResource(R.string.settings_starting_weights_none)
+                else -> pluralStringResource(R.plurals.settings_starting_weights_count, startingWeights.count, startingWeights.count)
+            }
+            val gymsTitle = stringResource(R.string.settings_gyms)
+            val libraryTitle = stringResource(R.string.settings_library)
+            val weightsTitle = stringResource(R.string.settings_starting_weights)
+            SegmentedList {
+                row(gymsTitle, gyms, Symbol.FitnessCenter, onClick = onGyms, trailing = chevron)
+                row(libraryTitle, library, Symbol.List, onClick = onLibrary, trailing = chevron)
+                row(
+                    weightsTitle, weights, Symbol.History, onClick = onImportStartingWeights,
+                    supportingColor = if (startingWeights.invalid) error else null,
+                )
+            }
             // Backups are a group of their own, a card apart from the setup rows.
             GroupHead(stringResource(R.string.settings_backups))
-          Group {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.backup_export)) },
-                supportingContent = {
-                    when (backup) {
-                        is BackupState.Exported -> Text(stringResource(R.string.backup_exported, backupTime(backup.at)))
-                        BackupState.ExportFailed -> Text(stringResource(R.string.backup_export_failed), color = MaterialTheme.colorScheme.error)
-                        else -> Text(stringResource(R.string.backup_export_about))
-                    }
-                },
-                leadingContent = { SymbolIcon(Symbol.Download, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onExport).then(row), colors = clear,
-            )
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.backup_restore)) },
-                supportingContent = {
-                    if (backup is BackupState.Refused) Text(refusal(backup.reason), color = MaterialTheme.colorScheme.error)
-                    else Text(stringResource(R.string.backup_restore_about))
-                },
-                leadingContent = { SymbolIcon(Symbol.RestorePage, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onRestore).then(row), colors = clear,
-            )
-          }
-            // About the two rows above, lined up with their text: 12 dp card, 16 dp inset, 24 dp symbol, 16 dp gap.
+            val export = when (backup) {
+                is BackupState.Exported -> stringResource(R.string.backup_exported, backupTime(backup.at))
+                BackupState.ExportFailed -> stringResource(R.string.backup_export_failed)
+                else -> stringResource(R.string.backup_export_about)
+            }
+            val restore = if (backup is BackupState.Refused) refusal(backup.reason) else stringResource(R.string.backup_restore_about)
+            val exportTitle = stringResource(R.string.backup_export)
+            val restoreTitle = stringResource(R.string.backup_restore)
+            SegmentedList {
+                row(exportTitle, export, Symbol.Download, onClick = onExport, supportingColor = if (backup == BackupState.ExportFailed) error else null)
+                row(restoreTitle, restore, Symbol.RestorePage, onClick = onRestore, supportingColor = if (backup is BackupState.Refused) error else null)
+            }
+            // About the two rows above, lined up with their text: 12 dp tile, 16 dp inset, 40 dp circle, 16 dp gap.
             Text(
                 stringResource(R.string.backup_auto),
                 style = MaterialTheme.typography.bodySmall,
                 color = muted,
-                modifier = Modifier.padding(start = 68.dp, end = 24.dp, top = 8.dp, bottom = 16.dp),
+                modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp, bottom = GroupGap),
             )
-          Group {
-            // Updates come last, after the footnote's 24 dp: a switch, read when the app comes to the foreground.
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_check_updates)) },
-                supportingContent = { Text(stringResource(R.string.settings_check_updates_about)) },
-                leadingContent = { SymbolIcon(Symbol.SystemUpdate, null, tint = muted) },
-                trailingContent = { Switch(checked = checkForUpdates, onCheckedChange = null) },
-                modifier = Modifier.toggleable(checkForUpdates, role = Role.Switch, onValueChange = onCheckForUpdates).then(row), colors = clear,
-            )
-            if (checkForUpdates) {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.settings_check_now)) },
-                    supportingContent = {
-                        Text(
-                            when (checkedNow) {
-                                com.hyperlog.app.update.UpdateViewModel.CheckedNow.Checking -> stringResource(R.string.settings_check_now_checking)
-                                com.hyperlog.app.update.UpdateViewModel.CheckedNow.Found -> stringResource(R.string.settings_check_now_found)
-                                com.hyperlog.app.update.UpdateViewModel.CheckedNow.NoneNewer -> stringResource(R.string.settings_check_now_none)
-                                null -> stringResource(R.string.settings_check_now_about)
-                            },
-                        )
-                    },
-                    leadingContent = { Spacer(Modifier.size(24.dp)) },
-                    modifier = Modifier.clickable(enabled = checkedNow != com.hyperlog.app.update.UpdateViewModel.CheckedNow.Checking, onClick = onCheckNow).then(row),
-                    colors = clear,
-                )
+            // Updates come last: a switch, read when the app comes to the foreground, and a check now.
+            val checkNowTitle = stringResource(R.string.settings_check_now)
+            val checkNowLine = when (checkedNow) {
+                com.hyperlog.app.update.UpdateViewModel.CheckedNow.Checking -> stringResource(R.string.settings_check_now_checking)
+                com.hyperlog.app.update.UpdateViewModel.CheckedNow.Found -> stringResource(R.string.settings_check_now_found)
+                com.hyperlog.app.update.UpdateViewModel.CheckedNow.NoneNewer -> stringResource(R.string.settings_check_now_none)
+                null -> stringResource(R.string.settings_check_now_about)
             }
-          }
+            SegmentedList {
+                item {
+                    Box(Modifier.toggleable(checkForUpdates, role = Role.Switch, onValueChange = onCheckForUpdates)) {
+                        SegmentedRow(
+                            stringResource(R.string.settings_check_updates), stringResource(R.string.settings_check_updates_about), Symbol.SystemUpdate,
+                            trailing = { Switch(checked = checkForUpdates, onCheckedChange = null) },
+                        )
+                    }
+                }
+                if (checkForUpdates) {
+                    val checking = checkedNow == com.hyperlog.app.update.UpdateViewModel.CheckedNow.Checking
+                    row(
+                        checkNowTitle,
+                        checkNowLine,
+                        Symbol.Replay,
+                        onClick = if (checking) null else onCheckNow,
+                    )
+                }
+            }
+            Spacer(Modifier.height(GroupGap))
         }
     }
     if (backup is BackupState.Confirm) {

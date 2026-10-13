@@ -47,7 +47,7 @@ android {
             // Installs beside a release build.
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            resValue("string", "app_name", "Hyperlog DEV")
+            resValue("string", "app_name", "DEV Hyperlog")
         }
         release {
             resValue("string", "app_name", "Hyperlog")

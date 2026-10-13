@@ -28,7 +28,7 @@ class AppIdentityTest {
 
     @Test
     fun theDebugBuildWearsADevBadgeAndLabel() {
-        assertEquals("Hyperlog DEV", context.getString(context.applicationInfo.labelRes))
+        assertEquals("DEV Hyperlog", context.getString(context.applicationInfo.labelRes))
         // Its own launcher icon: the logo on amber with a DEV badge, themed icon included.
         val badge = context.resources.getIdentifier("ic_launcher_dev_badge", "drawable", context.packageName)
         assertTrue("no DEV badge in the debug build", badge != 0)

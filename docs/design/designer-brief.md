@@ -26,7 +26,11 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **Sections divide by tone.** Screens sit on `surfaceContainer`, as the system's Settings does.
   Sections and row groups are cards on it (`surfaceBright` in dark, `surfaceContainerLowest` in
   light): one card for a lone section, or a segmented group for a list (24 dp outer corners, 4 dp
-  joins, 2 dp apart, 12 dp from the screen edge). Inside sheets (`surfaceContainerLow`) groups are
+  joins, 2 dp apart, 12 dp from the screen edge, 16 dp between groups), Android 16 Settings'
+  grouped list. Every list draws it through one component, `SegmentedList` on `Segment`
+  (`ui/theme`), which Today's exercises use too. Its standard row (`SegmentedRow`, 72 dp at least)
+  is a Material Symbol in a 40 dp `secondaryContainer` circle, a title and one line of supporting
+  text, with a chevron or a control at the end; rows of their own layout sit on the same tiles. Inside sheets (`surfaceContainerLow`) groups are
   `surfaceContainerHighest`. The session screen alone keeps `surface`, with its table as a
   `surfaceContainer` card, so the pad stands off it. No dividers.
 - **Things to act on stand off the background.** Banners are filled container cards

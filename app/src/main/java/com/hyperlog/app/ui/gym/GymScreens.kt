@@ -4,6 +4,7 @@ import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.material3.ListItemDefaults
 import com.hyperlog.app.ui.theme.Group
+import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.GroupHead
 import androidx.compose.foundation.layout.height
 import androidx.activity.compose.BackHandler
@@ -105,26 +106,24 @@ fun GymsScreen(
             return@Scaffold
         }
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-          Group {
-            gyms.forEach { gym ->
-                Row(
-                    headline = gym.name,
-                    supporting = pluralStringResource(R.plurals.gym_item_count, gym.items.size, gym.items.size),
-                    symbol = null,
-                    onClick = { onOpenGym(gym.id) },
-                )
+            val chevron = chevron()
+            val add = stringResource(R.string.gym_add)
+            val import = stringResource(R.string.gym_import)
+            val counts = gyms.map { pluralStringResource(R.plurals.gym_item_count, it.items.size, it.items.size) }
+            Spacer(Modifier.height(8.dp))
+            SegmentedList {
+                gyms.forEachIndexed { i, gym -> row(gym.name, counts[i], Symbol.LocationOn, onClick = { onOpenGym(gym.id) }, trailing = chevron) }
+                addRow(add, Symbol.Add) { naming = true }
+                addRow(import, Symbol.FileOpen, onImport)
             }
-            AddRow(stringResource(R.string.gym_add)) { naming = true }
-            AddRow(stringResource(R.string.gym_import), symbol = Symbol.FileOpen, onClick = onImport)
-          }
 
             SectionLabel(stringResource(R.string.gym_shared))
-          Group {
-            Row(stringResource(R.string.gym_plates), plates.summary(), symbol = null, onClick = onPlates)
-            bars.forEach { (bar, kg) ->
-                Row(bar.label, stringResource(R.string.gym_bar_summary, formatKg(kg)), symbol = null, onClick = { weighing = bar })
+            val barLines = bars.values.map { stringResource(R.string.gym_bar_summary, formatKg(it)) }
+            val platesTitle = stringResource(R.string.gym_plates)
+            SegmentedList {
+                row(platesTitle, plates.platesLine(), Symbol.FitnessCenter, onClick = onPlates, trailing = chevron)
+                bars.entries.forEachIndexed { i, (bar, _) -> row(bar.label, barLines[i], Symbol.FitnessCenter, onClick = { weighing = bar }, trailing = chevron) }
             }
-          }
         }
     }
     weighing?.let { bar ->
@@ -192,77 +191,69 @@ fun GymScreen(
                 ProgramEquipmentCard(programSetup, programTitle, gym.defaultStack, onAddProgramEquipment)
                 Spacer(Modifier.height(16.dp))
             }
-          Group {
-            gym.items.forEach { item ->
+            val chevron = chevron()
+            val ladders = gym.items.map { item ->
                 val ladder = item.ladder.summary(gym.pinPlates)
-                Row(item.name, if (item.cableStation) stringResource(R.string.gym_cable_station, ladder) else ladder, symbol = null, onClick = { onOpenItem(item.id) })
+                if (item.cableStation) stringResource(R.string.gym_cable_station, ladder) else ladder
             }
-            AddRow(stringResource(R.string.gym_add_item), onClick = onAddItem)
-          }
+            val addItem = stringResource(R.string.gym_add_item)
+            if (programSetup == null || programSetup.isEmpty || programTitle == null) Spacer(Modifier.height(8.dp))
+            SegmentedList {
+                gym.items.forEachIndexed { i, item -> row(item.name, ladders[i], Symbol.FitnessCenter, onClick = { onOpenItem(item.id) }, trailing = chevron) }
+                addRow(addItem, Symbol.Add, onAddItem)
+            }
 
             SectionLabel(stringResource(R.string.gym_pin_plates))
-          Group {
-            Row(stringResource(R.string.gym_dumbbells), gym.dumbbells.summary(), symbol = null, onClick = onDumbbells)
-            Row(
-                stringResource(R.string.gym_pin_plates_row),
-                pinPlatesText(gym.pinPlates),
-                symbol = null,
-                onClick = { pinning = true },
-            )
-          }
+            val dumbbells = gym.dumbbells.summary()
+            val pins = pinPlatesText(gym.pinPlates)
+            val dumbbellsTitle = stringResource(R.string.gym_dumbbells)
+            val pinsTitle = stringResource(R.string.gym_pin_plates_row)
+            SegmentedList {
+                row(dumbbellsTitle, dumbbells, Symbol.FitnessCenter, onClick = onDumbbells, trailing = chevron)
+                row(pinsTitle, pins, Symbol.Album, onClick = { pinning = true }, trailing = chevron)
+            }
 
             if (gym.kit.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.gym_kit))
-              Group {
-                gym.kit.forEach { item ->
-                    val bar = item.bar
-                    ListItem(
-                        headlineContent = { Text(item.name) },
-                        supportingContent = {
-                            Text(if (bar != null) stringResource(R.string.gym_kit_bar, formatKg(bar.second)) else stringResource(R.string.gym_kit_rack))
-                        },
-                        leadingContent = { Spacer(Modifier.width(24.dp)) },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    )
+                val kit = gym.kit.map { item -> item.bar?.let { stringResource(R.string.gym_kit_bar, formatKg(it.second)) } ?: stringResource(R.string.gym_kit_rack) }
+                SegmentedList {
+                    gym.kit.forEachIndexed { i, item -> row(item.name, kit[i], if (item.bar != null) Symbol.FitnessCenter else Symbol.Stairs) }
                 }
-              }
             }
 
             SectionLabel(stringResource(R.string.gym_days))
-          Group {
-            Spacer(Modifier.height(16.dp))
-            WeekdayPicker(gym.weekdays, onWeekdays)
-            Text(
-                stringResource(R.string.gym_days_body, gym.name),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 56.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-            )
-          }
+            SegmentedList {
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    WeekdayPicker(gym.weekdays, onWeekdays)
+                    Text(
+                        stringResource(R.string.gym_days_body, gym.name),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 72.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
+                    )
+                }
+            }
 
             if (gym.missing.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.gym_missing))
-              Group {
-                gym.missing.map { it to (exerciseNames[it] ?: it) }.sortedBy { it.second }.forEach { (id, name) ->
-                    ListItem(
-                        headlineContent = { Text(name) },
-                        leadingContent = { SymbolIcon(Symbol.Block, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                        trailingContent = {
-                            IconButton(onClick = { onRestore(id) }) {
-                                SymbolIcon(Symbol.Close, stringResource(R.string.gym_missing_restore, name))
-                            }
-                        },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    )
+                val missing = gym.missing.map { it to (exerciseNames[it] ?: it) }.sortedBy { it.second }
+                val restore = missing.map { (_, name) -> stringResource(R.string.gym_missing_restore, name) }
+                SegmentedList {
+                    missing.forEachIndexed { i, (id, name) ->
+                        row(name, null, Symbol.Block, trailing = {
+                            IconButton(onClick = { onRestore(id) }) { SymbolIcon(Symbol.Close, restore[i]) }
+                        })
+                    }
                 }
-              }
                 Text(
                     stringResource(R.string.gym_missing_body, gym.name),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 68.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                    modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
                 )
             }
+            Spacer(Modifier.height(16.dp))
         }
     }
     if (pinning) {
@@ -297,7 +288,7 @@ fun GymScreen(
 private fun WeekdayPicker(days: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Unit) {
     val cs = MaterialTheme.colorScheme
     androidx.compose.foundation.layout.Row(
-        Modifier.fillMaxWidth().padding(start = 56.dp, end = 16.dp),
+        Modifier.fillMaxWidth().padding(start = 72.dp, end = 16.dp),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
     ) {
         DayOfWeek.entries.forEach { day ->
@@ -401,8 +392,19 @@ private fun PinPlatesDialog(plates: List<Double>, onDone: (List<Double>) -> Unit
     )
 }
 
+/** The rows' trailing chevron. */
+@Composable
+private fun chevron(): @Composable () -> Unit {
+    val tint = MaterialTheme.colorScheme.onSurfaceVariant
+    return { SymbolIcon(Symbol.ChevronRight, null, tint = tint) }
+}
+
+/** An add row: its symbol in the tonal circle and its title in `primary`. */
+private fun com.hyperlog.app.ui.theme.SegmentedListScope.addRow(title: String, symbol: Symbol, onClick: () -> Unit) =
+    item(onClick) { com.hyperlog.app.ui.theme.SegmentedRow(title, symbol = symbol, titleColor = MaterialTheme.colorScheme.primary) }
+
 /** `20 kg bar · 20 20 20 15 10 5 2.5 1.25`: the base, then one number per pair. */
-internal fun LadderSpec.Plates.summary(): String =
+internal fun LadderSpec.Plates.platesLine(): String =
     "${formatKg(baseKg)} kg bar · " + pairs.sortedDescending().joinToString(" ") { formatKg(it) }
 
 @Composable

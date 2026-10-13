@@ -54,7 +54,7 @@ class LadderEditorTest {
             }
         }
         compose.onNodeWithText("Pairs of plates in kg: one number a pair, or 3×20").performTextInput("10 2,5")
-        compose.onNodeWithText("20 kg bar + plates, to 45 kg · 4 weights").assertExists()
+        compose.onNodeWithText("20 kg + plates, to 45 kg · 4 weights").assertExists()
         compose.onNodeWithText("Check: 20 · 25 · 40 …, looks right?").assertExists()
         compose.onNodeWithText("Save").performClick()
         assertEquals(LadderSpec.Plates(20.0, listOf(10.0, 2.5)), saved)
