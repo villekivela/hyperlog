@@ -697,10 +697,11 @@ last week.
   pattern, most shared primary muscles first, then the least grip, then by name; hidden ones never),
   or removed when none does.
 - **Pain** (on top of the swaps): −10% load and no drop sets on every kept exercise that loads the
-  area, and +1 RIR on everything. Hands load every exercise with grip; shoulder the presses, flyes and
-  lateral raises; elbow curls and triceps work; knee squats, lunges and knee extensions; lower back
-  hinges, squats and lunges. The pain rule shows under the areas: pain in a set at 3/10 or less and
-  no worse the next morning.
+  area, and +1 RIR on everything. Hands load every exercise that keeps a grip, except lower body and
+  machines (the Smith included), which stay untouched (`docs/programs/full-body-3-day.md`); shoulder
+  the presses, flyes and lateral raises; elbow curls and triceps work; knee squats, lunges and knee
+  extensions; lower back hinges, squats and lunges. The pain rule shows under the areas: pain in a
+  set at 3/10 or less and no worse the next morning.
 - **Time off** counts whole days since the last finished session. Up to 7: resume (no Change).
   8–14: today's session does half its sets (rounded up) where it has more than one, and +1 RIR.
   More than 14: `repeat_week`. Coach preselects Time off after a week, and Today shows `11 days since

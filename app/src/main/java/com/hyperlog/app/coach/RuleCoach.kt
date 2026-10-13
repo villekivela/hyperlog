@@ -300,14 +300,26 @@ object RuleCoach {
     }.toSet()
 }
 
-/** Whether pain in this area is loaded by [exercise]: those get lighter and lose their drop sets. */
+/**
+ * Whether pain in this area is loaded by [exercise]: those get lighter and lose their drop sets.
+ * Hands: whatever keeps a grip, but lower body and machines (the Smith included) are untouched
+ * (docs/programs/full-body-3-day.md, First coaching case), so training stays near full intensity.
+ */
 fun Area.loads(exercise: Exercise): Boolean = when (this) {
-    Area.Hands -> exercise.grip != GripDemand.None
+    Area.Hands -> exercise.grip != GripDemand.None && !exercise.lowerBody &&
+        exercise.equipment != Equipment.Machine && exercise.equipment != Equipment.SmithMachine
     Area.Shoulder -> exercise.pattern in setOf(MovementPattern.HorizontalPush, MovementPattern.VerticalPush, MovementPattern.ChestFly, MovementPattern.LateralRaise)
     Area.Elbow -> exercise.pattern in setOf(MovementPattern.ElbowFlexion, MovementPattern.ElbowExtension)
     Area.Knee -> exercise.pattern in setOf(MovementPattern.Squat, MovementPattern.Lunge, MovementPattern.KneeExtension)
     Area.LowerBack -> exercise.pattern in setOf(MovementPattern.Hinge, MovementPattern.Squat, MovementPattern.Lunge)
 }
+
+/** Legs and hips do the work. */
+val Exercise.lowerBody: Boolean
+    get() = pattern in setOf(
+        MovementPattern.Squat, MovementPattern.Lunge, MovementPattern.Hinge, MovementPattern.HipThrust, MovementPattern.KneeExtension,
+        MovementPattern.KneeFlexion, MovementPattern.CalfRaise, MovementPattern.HipAbduction, MovementPattern.HipAdduction,
+    )
 
 /** The load sits on the spine: a bar or dumbbells carried through a squat, hinge, lunge, shrug, calf raise or standing press. */
 val Exercise.axial: Boolean

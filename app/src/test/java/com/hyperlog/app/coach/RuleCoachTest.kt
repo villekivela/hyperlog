@@ -53,21 +53,18 @@ class RuleCoachTest {
             swaps,
         )
         // Pulls keep their exercise, with straps; the curls are already the cable and machine ones.
+        // Only what kept a grip gets lighter: lower body and machines (the Smith included) are untouched.
         val lighter = change.operations.filterIsInstance<Operation.AdjustLoad>().associate { it.slot to it.percent }
         assertEquals(
-            setOf(
-                "bench", "lat_pulldown", "lateral_raise", "overhead_triceps",
-                "close_grip_bench", "row", "shoulder_press", "curl", "rear_delt",
-                "bench_volume", "pulldown", "incline_press", "pec_deck", "preacher_curl", "pressdown",
-            ),
+            setOf("lat_pulldown", "lateral_raise", "overhead_triceps", "curl", "rear_delt", "pressdown"),
             lighter.keys,
         )
         assertTrue(lighter.values.all { it == -10 })
         // Every target +1 RIR.
         assertEquals(listOf(Operation.AdjustRir(null, 1)), change.operations.filterIsInstance<Operation.AdjustRir>().map { it.copy(reason = null) })
-        // No drop sets on grip exercises.
+        // No drop sets on grip exercises; the incline machine press keeps its own.
         assertEquals(
-            setOf("overhead_triceps", "curl", "incline_press"),
+            setOf("overhead_triceps", "curl"),
             change.operations.filterIsInstance<Operation.RemoveTechnique>().onEach { assertEquals("dropset", it.technique) }.map { it.slot }.toSet(),
         )
     }
@@ -77,11 +74,15 @@ class RuleCoachTest {
         val change = proposed(advise(Situation.Pain(Area.Hands), at = Position(3, 0)))
         val accepted = Plan.accept(program, Position(3, 0), change, oct13)
         val dayC = Plan.day(program, Position(3, 2), oct13.plusDays(4), listOf(accepted))!!
+        // The DB incline press goes to the incline machine press, which as a machine is untouched but for the extra RIR.
         val incline = dayC.slot("incline_press")!!
         assertEquals("incline_machine_press", incline.exercise)
-        assertEquals(listOf<Technique?>(null), incline.sets.map { it.technique })
+        assertEquals(listOf<Technique?>(Technique.Dropset()), incline.sets.map { it.technique })
         assertEquals(listOf(1), incline.sets.map { it.rir })
-        assertEquals(-10, incline.loadPercent)
+        assertEquals(0, incline.loadPercent)
+        // A cable exercise keeps a grip: lighter, and no drop set.
+        val pressdown = dayC.slot("pressdown")!!
+        assertEquals(-10, pressdown.loadPercent)
         // Lower body and machines are untouched but for the extra RIR.
         val legPress = dayC.slot("leg_press")!!
         assertEquals(0, legPress.loadPercent)
