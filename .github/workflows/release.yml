@@ -7,6 +7,8 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - ticket/22-release
   workflow_dispatch:
     inputs:
       version:
@@ -26,7 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
+      # Only a tag run publishes; any other run is a dry run.
+      TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version || 'v0.0.1' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -66,8 +69,8 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/hyperlog.p12"
 
-      - name: Upload the APK (manual run)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Upload the APK (dry run)
+        if: github.ref_type != 'tag'
         uses: actions/upload-artifact@v4
         with:
           name: hyperlog-apk
@@ -75,7 +78,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish the release
-        if: github.event_name == 'push'
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$TAG" "$APK" --title "$TAG" --verify-tag --notes "Hyperlog ${TAG#v}"
