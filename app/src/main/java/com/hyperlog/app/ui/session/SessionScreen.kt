@@ -86,6 +86,7 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
+import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.history.GoalProgress
 import com.hyperlog.app.library.Equipment
@@ -133,7 +134,6 @@ fun SessionScreen(
     /** The lift goals, each with its exercise's estimates, for the prescription sheet. */
     goals: List<GoalProgress> = emptyList(),
     /** The gym's shared plates, which a new plate-loaded machine starts with. */
-    sharedPlates: LadderSpec.Plates = LadderSpec.DefaultPlates,
 ) {
     var showLeave by rememberSaveable { mutableStateOf(false) }
     var showList by rememberSaveable { mutableStateOf(false) }
@@ -176,7 +176,7 @@ fun SessionScreen(
             readable = true,
             // A leg press or sled opens on plates (the gym's, from a zero start), a stack machine on a stack.
             defaultKind = if (current.exercise.plateLoaded) LadderKind.Plates else null,
-            defaultPlates = sharedPlates,
+            gymPlates = session.gym?.plates ?: LadderSpec.DefaultGymPlates,
             onSave = { name, spec -> actions.addMachine(name, spec); addingMachine = false },
             onDelete = null,
             onClose = { addingMachine = false },
@@ -195,7 +195,7 @@ fun SessionScreen(
             readable = true,
             machine = true,
             defaultKind = if (current.exercise.plateLoaded) LadderKind.Plates else null,
-            defaultPlates = sharedPlates,
+            gymPlates = session.gym?.plates ?: LadderSpec.DefaultGymPlates,
             onSave = { _, spec -> actions.setUpLadder(spec) },
             onDelete = null,
             onClose = actions::skipLadderSetup,
@@ -290,6 +290,7 @@ fun SessionScreen(
                             onNotHere = actions::notAtGym,
                             modifier = Modifier.weight(1f),
                             pinPlates = session.gym?.pinPlates.orEmpty(),
+                            gymPlates = session.gym?.plates ?: LadderSpec.DefaultGymPlates,
                         )
                     } else {
                         current.suggestion?.takeIf { it.why != null && !current.done }?.let { s ->
@@ -1305,6 +1306,8 @@ private fun MachinePicker(
     modifier: Modifier = Modifier,
     /** The gym's plates for the pin, for the weights a pin stack gives. */
     pinPlates: List<Double> = emptyList(),
+    /** The gym's plates, which a plate-loaded machine with no pairs of its own loads. */
+    gymPlates: List<Double> = LadderSpec.DefaultGymPlates,
 ) {
     val cs = MaterialTheme.colorScheme
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
@@ -1322,10 +1325,10 @@ private fun MachinePicker(
         // The machines that fit as one group of rows, the gym's others under their own head, then the ways out.
         Spacer(Modifier.height(8.dp))
         val (fit, others) = choices
-        fit.forEachIndexed { i, item -> MachineRow(item, i, fit.size, muted = false, onPick, pinPlates) }
+        fit.forEachIndexed { i, item -> MachineRow(item, i, fit.size, muted = false, onPick, pinPlates, gymPlates) }
         if (others.isNotEmpty()) {
             com.hyperlog.app.ui.theme.GroupHead(stringResource(R.string.machine_others, gym), color = cs.onSurfaceVariant)
-            others.forEachIndexed { i, item -> MachineRow(item, i, others.size, muted = true, onPick, pinPlates) }
+            others.forEachIndexed { i, item -> MachineRow(item, i, others.size, muted = true, onPick, pinPlates, gymPlates) }
         }
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = onAdd, Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
@@ -1347,7 +1350,7 @@ private fun com.hyperlog.app.session.SessionExercise.pinLoader(): ((Double) -> c
 
 /** One of the gym's machines with the weights it gives; another kind's in a muted name. */
 @Composable
-private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, onPick: (Long) -> Unit, pinPlates: List<Double> = emptyList()) {
+private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, onPick: (Long) -> Unit, pinPlates: List<Double> = emptyList(), gymPlates: List<Double> = LadderSpec.DefaultGymPlates) {
     val cs = MaterialTheme.colorScheme
             com.hyperlog.app.ui.theme.Segment(i, count, onClick = { onPick(item.id) }) {
             Column(
@@ -1357,7 +1360,7 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    item.ladder.summary(pinPlates),
+                    item.ladder.withPlates(gymPlates).summary(pinPlates),
                     style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                     color = cs.onSurfaceVariant,
                     maxLines = 1,

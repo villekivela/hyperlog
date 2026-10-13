@@ -19,8 +19,10 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
    Racks and benches), then **Dumbbells and plates** (the rack, plates for the pin), usual days
    and **Not here**. Each kind has its own symbol (`stacks`, `cable`, `album`, `fitness_center`,
    `airline_seat_flat`; dumbbells `exercise`, pin plates `push_pin`).
-3. **Shared is visibly shared.** Dumbbells and barbell plates sit on their own card under "Shared by
-   every gym", in the same Gyms screen, so there is one place to edit them.
+3. **Shared is visibly shared.** The bars' weights sit on their own card under "Shared by every
+   gym", in the same Gyms screen. A gym's plates are its own: pairs per size, under **Dumbbells and
+   plates**, set in a dialog of − and + per size (a plate swatch in its colour, the size, the
+   count), with no typing.
 4. **The editor shows its result live.** A card under the fields, "You can pick these weights",
    sums the ladder up in one line, says how labels were read, and asks `Check: 36 · 43 · 49 …,
    looks right?`; a tap opens every weight. Save stays disabled until the fields make a ladder.
@@ -52,10 +54,10 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
       Shared by every gym                                       [Start] [Step] [Weights]
       Dumbbells              >                                  Real weights
       2 · 4 · 6 · 8 … 60 kg                                     1.1 · 3.4 · 5.7 · 7.9 · 10.2 · 12.5 … 89.6 kg
-      Barbell plates         >                                  40 weights
-      20 kg bar · 20 20 20 15 10 5 2.5 1.25
+      Barbell                >                                  40 weights
+      20 kg bar, the gym’s plates
       EZ bar                          (also Trap bar, Safety bar; a tap opens a
-      10 kg bar, the shared plates     "Bar weight (kg)" dialog, system keyboard)
+      10 kg bar, the gym’s plates      "Bar weight (kg)" dialog, system keyboard)
 
  Pad strip during a weight check:
  ⚠ 10× last set   ( 22.5 ) ( 25 ) ( 30 )
@@ -148,11 +150,12 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 - Deleting a machine in settings forgets it: the next time it is asked again.
 
 Plate-loaded machines: the Plates kind's first field is the machine's **starting weight (empty
-machine or sled), kg**, 0 for a new item and editable; the shared plates' field reads **Bar, kg**.
+machine or sled), kg**, 0 for a new item and editable.
 The plate calculator counts the starting weight toward the total (`logging-screen.md`, Plates).
 A new machine added for a plate-loaded exercise (a Smith machine, or a machine named leg press,
-hack or pendulum squat, sled, belt squat, t-bar or "plate-loaded") opens on Plates with the gym's
-shared plates and a 0 kg start; others open on Stack. Pairs are one number a pair, or a count:
+hack or pendulum squat, sled, belt squat, t-bar or "plate-loaded") opens on Plates with an empty pairs
+field (`Empty: the gym’s plates`, which the check counts) and a 0 kg start; others open on Stack.
+Pairs of its own are one number a pair, or a count:
 `3×20 15 10 5 2.5 1.25` (`x` and `*` work too), and existing pairs are written back that way, so
 the field says how many of each plate there are.
 

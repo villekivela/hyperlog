@@ -4,7 +4,47 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19)
+
+/**
+ * v19: each gym's own plates, as pairs per size, in place of one shared set (SPEC, Gyms and
+ * equipment).
+ */
+object Migration18To19 : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE gym ADD COLUMN plates TEXT")
+        moveSharedPlates(db)
+    }
+
+    /**
+     * The shared plates go to every gym. A set edited by hand is kept for each gym; the old
+     * default (three pairs of 20, then 15, 10, 5, 2.5, 1.25) gives way to the typical gym's, which
+     * every gym without plates of its own has. Plate-loaded machines holding a copy of the shared
+     * pairs (or of the old default) load their gym's plates from now on. The shared entry keeps
+     * only the barbell's weight. Also run on a restored backup from before v19.
+     */
+    fun moveSharedPlates(db: SupportSQLiteDatabase) {
+        val shared = db.query("SELECT ladder FROM shared_ladder WHERE `key` = 'plates'").use { if (it.moveToFirst()) it.getString(0) else null }
+        val spec = shared?.let { com.hyperlog.app.domain.LadderSpec.decode(it) } as? com.hyperlog.app.domain.LadderSpec.Plates
+        val old = com.hyperlog.app.domain.LadderSpec.OldDefaultPairs.sorted()
+        val pairs = spec?.pairs?.filter { it > 0 }?.sorted().orEmpty()
+        if (pairs.isNotEmpty() && pairs != old) {
+            db.execSQL("UPDATE gym SET plates = ? WHERE plates IS NULL", arrayOf<Any?>(pairs.sortedDescending().joinToString(",") { it.toString() }))
+        }
+        val copies = setOf(old, pairs).filter { it.isNotEmpty() }
+        db.query("SELECT id, ladder FROM equipment_item").use { c ->
+            buildList { while (c.moveToNext()) add(c.getLong(0) to c.getString(1)) }
+        }.forEach { (id, ladder) ->
+            val machine = com.hyperlog.app.domain.LadderSpec.decode(ladder) as? com.hyperlog.app.domain.LadderSpec.Plates ?: return@forEach
+            if (machine.pairs.filter { it > 0 }.sorted() in copies) {
+                db.execSQL("UPDATE equipment_item SET ladder = ? WHERE id = ?", arrayOf<Any?>(machine.copy(pairs = emptyList()).encode(), id))
+            }
+        }
+        if (spec != null) {
+            db.execSQL("UPDATE shared_ladder SET ladder = ? WHERE `key` = 'plates'", arrayOf<Any?>(spec.copy(pairs = emptyList()).encode()))
+        }
+    }
+}
 
 /**
  * v18 (easier equipment): a gym's small plates for the pin of its stacks, a dumbbell rack per gym

@@ -21,6 +21,7 @@ import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.LadderState
@@ -883,7 +884,7 @@ class SessionLogger(
                 techniques = stored.techniques(se.id),
                 plates = when {
                     exercise.equipment == Equipment.Barbell -> shared.plates
-                    else -> shared.barPlates(exercise.equipment) ?: machine?.ladder as? LadderSpec.Plates
+                    else -> shared.barPlates(exercise.equipment) ?: machine?.ladder?.withPlates(shared.plates.pairs) as? LadderSpec.Plates
                 },
                 warmupsDone = se.warmupsDone,
                 pinPlates = gym?.pinPlates.orEmpty(),

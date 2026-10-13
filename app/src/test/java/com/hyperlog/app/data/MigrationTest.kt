@@ -404,7 +404,8 @@ class MigrationTest {
         val gyms = Gyms(db).gyms.first()
         assertEquals(listOf(LadderSpec.Steps(2.0, 2.0, com.hyperlog.app.domain.WeightUnit.Kg, 20)), gyms.map { it.dumbbells }.distinct())
         assertEquals(2, gyms.size)
-        assertEquals(LadderSpec.Plates(20.0, listOf(20.0, 10.0)), Gyms(db).plates.first())
+        // Later, v19 moves the edited plates to every gym too.
+        assertEquals(listOf(listOf(20.0, 10.0)), gyms.map { it.plates }.distinct())
         db.close()
     }
 
@@ -439,6 +440,48 @@ class MigrationTest {
         val gym = Gyms(db).gyms.first().single()
         assertEquals(LadderSpec.DefaultPinPlates, gym.pinPlates)
         assertEquals(listOf("Cable left"), gym.items.map { it.name })
+        db.close()
+    }
+
+    @Test
+    fun version18PlatesEditedByHandGoToEveryGymAndCopiesLoadTheGyms() = runTest {
+        val file = context.getDatabasePath("migration-test-18a.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(18, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays, archived) VALUES (1, 'Harbour', 0, 0), (2, 'Home', 0, 0)")
+            db.execSQL("INSERT INTO shared_ladder (`key`, ladder) VALUES ('plates', 'plates;15.0;20.0,20.0,10.0')")
+            db.execSQL(
+                "INSERT INTO equipment_item (id, gym_id, name, ladder) VALUES " +
+                    "(1, 1, 'Leg press', 'plates;0.0;20.0,20.0,10.0'), (2, 1, 'Hack squat', 'plates;0.0;20.0,20.0,20.0,15.0,10.0,5.0,2.5,1.25'), " +
+                    "(3, 1, 'Sled', 'plates;30.0;25.0,25.0')",
+            )
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val gyms = Gyms(db).gyms.first()
+        assertEquals(listOf(listOf(20.0, 20.0, 10.0)), gyms.map { it.plates }.distinct())
+        assertEquals(15.0, Gyms(db).barbell.first(), 0.0)
+        val items = gyms.first { it.name == "Harbour" }.items.associate { it.name to it.ladder }
+        // Copies of the shared or old default plates load the gym's; a machine's own plates stay.
+        assertEquals(LadderSpec.Plates(0.0, emptyList()), items["Leg press"])
+        assertEquals(LadderSpec.Plates(0.0, emptyList()), items["Hack squat"])
+        assertEquals(LadderSpec.Plates(30.0, listOf(25.0, 25.0)), items["Sled"])
+        db.close()
+    }
+
+    @Test
+    fun version18UntouchedPlatesBecomeTheTypicalGyms() = runTest {
+        val file = context.getDatabasePath("migration-test-18b.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(18, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays, archived) VALUES (1, 'Harbour', 0, 0)")
+            db.execSQL("INSERT INTO shared_ladder (`key`, ladder) VALUES ('plates', 'plates;20.0;20.0,20.0,20.0,15.0,10.0,5.0,2.5,1.25')")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(LadderSpec.DefaultGymPlates, Gyms(db).gyms.first().single().plates)
         db.close()
     }
 }

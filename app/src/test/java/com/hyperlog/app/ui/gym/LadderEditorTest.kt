@@ -68,17 +68,17 @@ class LadderEditorTest {
                 LadderEditor(
                     title = "New equipment", name = "", spec = null, kinds = LadderKind.entries,
                     onSave = { _, s -> saved = s }, onDelete = null, onClose = {},
-                    defaultKind = LadderKind.Plates, defaultPlates = LadderSpec.DefaultPlates,
+                    defaultKind = LadderKind.Plates, gymPlates = LadderSpec.DefaultGymPlates,
                 )
             }
         }
         compose.onNodeWithText("Name, e.g. Cable station").performTextInput("Leg press")
         compose.onNodeWithText("Starting weight (empty machine or sled), kg").assertExists()
-        // The shared plates, three pairs of 20 written as such, so all of them load.
-        compose.onNodeWithText("3×20 15 10 5 2.5 1.25").assertExists()
-        compose.onNodeWithText("to 187.5 kg", substring = true).assertExists()
+        // No pairs of its own: it loads the gym's plates, so the check counts all of them.
+        compose.onNodeWithText("Empty: the gym’s plates", substring = true).assertExists()
+        compose.onNodeWithText("to 455 kg", substring = true).assertExists()
         compose.onNodeWithText("Save").performClick()
-        assertEquals(LadderSpec.Plates(0.0, LadderSpec.DefaultPlates.pairs.sortedDescending()), saved)
+        assertEquals(LadderSpec.Plates(0.0, emptyList()), saved)
     }
 
     @Test

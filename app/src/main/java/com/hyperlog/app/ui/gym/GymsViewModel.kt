@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
-/** Gyms with their equipment and dumbbells, and the shared plates and bars, for the settings screens. */
+/** Gyms with their equipment, dumbbells and plates, and the shared bars' weights, for the settings screens. */
 class GymsViewModel(application: Application) : AndroidViewModel(application), GymActions {
     private val db = HyperlogDatabase.get(application)
     private val store = Gyms(db)
@@ -26,8 +26,9 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
     private val library = com.hyperlog.app.library.ExerciseLibrary(db)
 
     val gyms: StateFlow<List<Gym>> = store.gyms.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    val plates: StateFlow<LadderSpec.Plates> = store.plates.stateIn(viewModelScope, SharingStarted.Eagerly, LadderSpec.DefaultPlates)
-    val bars: StateFlow<Map<Equipment, Double>> = store.bars.stateIn(viewModelScope, SharingStarted.Eagerly, SharedLadders.DefaultBars)
+    /** The barbell's weight, then the EZ, trap and safety bars'. */
+    val bars: StateFlow<Map<Equipment, Double>> = kotlinx.coroutines.flow.combine(store.barbell, store.bars) { barbell, bars -> mapOf(Equipment.Barbell to barbell) + bars }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, mapOf(Equipment.Barbell to LadderSpec.DefaultPlates.baseKg) + SharedLadders.DefaultBars)
 
     /** The active program's title and what it still needs at each gym, by gym id; null without a program. */
     val programSetups: StateFlow<Pair<String, Map<Long, ProgramSetup>>?> =
@@ -81,8 +82,8 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
     override fun saveItem(item: EquipmentItem) = run { store.saveItem(item) }
     override fun deleteItem(id: Long) = run { store.deleteItem(id) }
     override fun setDumbbells(gymId: Long, spec: LadderSpec) = run { store.setDumbbells(gymId, spec) }
-    override fun setPlates(spec: LadderSpec.Plates) = run { store.setPlates(spec) }
-    override fun setBar(bar: Equipment, kg: Double) = run { store.setBar(bar, kg) }
+    override fun setPlates(gymId: Long, pairs: List<Double>) = run { store.setPlates(gymId, pairs) }
+    override fun setBar(bar: Equipment, kg: Double) = run { if (bar == Equipment.Barbell) store.setBarbell(kg) else store.setBar(bar, kg) }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
@@ -100,6 +101,6 @@ interface GymActions {
     fun saveItem(item: EquipmentItem)
     fun deleteItem(id: Long)
     fun setDumbbells(gymId: Long, spec: LadderSpec)
-    fun setPlates(spec: LadderSpec.Plates)
+    fun setPlates(gymId: Long, pairs: List<Double>)
     fun setBar(bar: Equipment, kg: Double)
 }

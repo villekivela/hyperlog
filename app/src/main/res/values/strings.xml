@@ -244,9 +244,14 @@
     </plurals>
     <string name="gym_shared">Shared by every gym</string>
     <string name="gym_dumbbells">Dumbbells</string>
-    <string name="gym_plates">Barbell plates</string>
+    <string name="gym_plates">Plates</string>
+    <string name="gym_plates_body">Pairs of each size, one plate a side. The gym’s bars and plate-loaded machines load these.</string>
+    <string name="gym_plates_more">One more pair of %1$s kg</string>
+    <string name="gym_plates_fewer">One pair fewer of %1$s kg</string>
+    <string name="gym_plates_size">%1$s kg</string>
+    <string name="gym_plates_none">None</string>
     <!-- Under a specialty bar in the shared section, e.g. "10 kg bar, the shared plates". -->
-    <string name="gym_bar_summary">%1$s kg bar, the shared plates</string>
+    <string name="gym_bar_summary">%1$s kg bar, the gym’s plates</string>
     <string name="gym_bar_weight">Bar weight (kg)</string>
     <string name="gym_bar_save">Save</string>
     <string name="gym_rename">Rename gym</string>
@@ -272,6 +277,7 @@
     <string name="ladder_base">Bar, kg</string>
     <string name="ladder_base_machine">Starting weight (empty machine or sled), kg</string>
     <string name="ladder_pairs">Pairs of plates in kg: one number a pair, or 3×20</string>
+    <string name="ladder_pairs_gym">Empty: the gym’s plates</string>
     <string name="ladder_preview">You can pick these weights</string>
     <string name="ladder_incomplete">Fill in the fields above to see them here</string>
     <string name="ladder_summary_count">%1$s · %2$s</string>

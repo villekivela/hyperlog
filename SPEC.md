@@ -273,8 +273,22 @@ available weights belong to a **machine at a gym**, not to an exercise.
   for every free weight. Updating moved the one global ladder of earlier versions into every gym,
   keeping one edited by hand and replacing the untouched old default (2 kg steps to 20, then 22.5,
   25 and 5 kg steps) with the new one; a restored backup from before gets the same step.
-- **Barbell plates are shared**: one global set, which the EZ, trap and safety bars load too: each has its own bar weight (10, 25 and 30 kg until set)
-  and loads the shared plates.
+- **Each gym has its own plates**, counted as pairs per size (Gyms and equipment → the gym →
+  Dumbbells and plates → Plates, `8×20 · 2×15 · 2×10 · 2×5 · 2×2.5 · 2×1.25`), set a pair at a
+  time with − and + per size (25, 20, 15, 10, 5, 2.5, 1.25 and 0.5 kg, plus any other size the
+  gym has). The gym's barbell, its EZ, trap and safety bars (each its own bar weight: 20, 10, 25
+  and 30 kg until set, shared by every gym unless a gym file names its own) and its plate-loaded
+  machines all load them. A session with no gym loads the default.
+  - **Default: 8 pairs of 20, then 2 pairs each of 15, 10, 5, 2.5 and 1.25 kg** (455 kg on an
+    empty sled, 475 kg on a 20 kg bar). Decided because a commercial gym keeps most of its iron in
+    20s, enough to load a leg press or hack squat with several plates a side, so the 20s must
+    never be what caps a machine; two pairs of each smaller size make every 2.5 kg step from the
+    bar and a heavy top-up (15 + 10) without counting on plates that are in use elsewhere. The
+    one set of 0.1.3 (three pairs of 20) capped every plate-loaded machine at 187.5 kg.
+  - Updating gave every gym the shared set edited by hand, or the new default in place of the old
+    one; plate-loaded machines holding a copy of the shared set load their gym's plates from then
+    on. A restored backup from before gets the same step. A gym file without plates gets the
+    default.
 - **A gym's screen groups its equipment by kind**, each section under its header and sorted by
   name: **Stack machines** (the cable station among them), **Plate-loaded machines**, **Bars**,
   **Racks and benches**, then **Dumbbells and plates** (the dumbbell rack and the plates for the
@@ -325,7 +339,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
   serves, which fills in "Which machine?" for them. An item marked `unconfirmed` (the default
   without a ladder) is a guess: its first use opens its setup from the labels instead of asking
   which machine. The gym's barbell, EZ, trap and safety bars set what sessions there load the
-  shared plates on; its racks, benches and other bars are listed on the gym screen under **Bars**
+  gym's plates on; its racks, benches and other bars are listed on the gym screen under **Bars**
   and **Racks and benches**.
 - **Set up the gym from the program.** With a program active, a gym's screen (so also right after
   adding a gym) opens on a `primaryContainer` card, **Add the equipment your program uses**, while
@@ -338,7 +352,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
   - The machines use the gym's **default stack**, chosen once on the card the first time (**Stacks
     here**: **kg, with small plates** (default: pin steps of 5 kg from 5 to 100 with the gym's pin
     plates) or **lb stacks** (2.5 lb, then 5 lb steps, 40 plates)) and kept for later runs.
-    Plate-loaded machines get the shared plates from a zero start.
+    Plate-loaded machines load the gym's plates from a zero start.
   - Everything it makes is a guess: each machine is unconfirmed until its first use asks for its
     stack's labels (Learning a stack).
 - **One shared cable station per gym.** Every cable exercise at a gym defaults to the gym's cable
@@ -358,8 +372,9 @@ available weights belong to a **machine at a gym**, not to an exercise.
   setup offers "lb stack" as a one-tap preset (2.5 lb, then 5 lb steps, 40 weights). Lb rungs
   show and log to 0.1 kg.
 - A stack is a start, a step and a number of weights. Plates are a base weight (bar or sled) plus
-  plate pairs, one of each pair per side; any combination of pairs is a rung. The shared barbell
-  plates default to a 20 kg bar with pairs of 20, 20, 20, 15, 10, 5, 2.5 and 1.25 kg.
+  plate pairs, one of each pair per side; any combination of pairs is a rung. A plate-loaded
+  machine with no pairs of its own (the default) loads its gym's plates; one given its own pairs
+  loads those.
 - **Setting up a stack from its labels** is the primary way to add or edit a stack machine (and a
   dumbbell rack): type two or three weights as printed on the stack, the lightest first and next to
   each other, and the app fills in the rest. **Edit exactly** keeps the start-and-step, list,
@@ -416,11 +431,11 @@ available weights belong to a **machine at a gym**, not to an exercise.
     `Load pin 40 + 2 add-ons + 2.5 on the pin for 47.5 kg`. A weight off the stack reads `Not on
     this stack`.
 - Setup lives in Settings → Gyms and equipment: gyms (each with its equipment, dumbbell rack and pin
-  plates), then the shared plates and the three specialty bars (`10 kg bar, the shared plates`; a tap asks for the bar's
+  plates), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
   weight). Every ladder shows in one line as its runs of steps and its count (`1–10 kg by 1 ·
   12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing a gym's
-  dumbbells or the shared plates applies to a running session at once.
+  dumbbells or plates applies to a running session at once.
 - **Deleting** a gym or an equipment item asks first. One with history (sessions at the gym, sets
   on the machine) is archived instead of deleted: it leaves setup, the start sheet and "Which
   machine?", and exercises forget it as their machine, but its past sessions keep it, so a
@@ -492,7 +507,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
    - **Plate calculator** for barbell and plate-loaded exercises.
-     - Barbell exercises use the shared plates; machines whose ladder is plates use theirs. While
+     - Barbell exercises use the gym's plates; machines whose ladder is plates use the gym's too,
+       or their own pairs if they have them. While
        the weight is typed the pad draws one side of the bar with its plates (fixed competition
        colours, sized by weight) and a legend (`1 × 20`, `1 × 15`, the bar's 20), live; each
        warm-up row draws its own, compact. Plates are the fewest that make the weight, heaviest
@@ -507,15 +523,16 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        per machine in its equipment (0 kg by default, editable). It counts toward the total, as a
        bar's weight does, and the legend shows it with its own symbol (a sled) where a bar's
        weight has a slash.
-     - A machine added for a plate-loaded exercise starts on plates: the gym's shared plates from
-       a 0 kg start. Pairs are typed one number a pair or as a count (`3×20`).
+     - A machine added for a plate-loaded exercise starts on plates: the gym's plates (its pairs
+       field left empty) from a 0 kg start. Its own pairs, if typed, are one number a pair or a
+       count (`3×20`).
      - "Which machine?" is skipped when the gym has a machine named for the exercise: it is taken
        and remembered. Otherwise it offers the machines of the exercise's kind first (plate-loaded
        or not), those sharing a word with its name at the top, then the others.
      - A tap on the pad's plates opens the **whole bar**: the total, both sides with every plate,
        and each plate with how many go on each side, then the bar or the machine's starting
        weight.
-     - EZ, trap and safety bar exercises use the shared plates on their own bar, so they get the
+     - EZ, trap and safety bar exercises use the gym's plates on their own bar, so they get the
        same line, warm-ups on 5 kg steps and a weight check against the real weights.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
      set rows (target, last time, kg, reps, RIR), techniques and their planned drops/mini-sets
@@ -599,8 +616,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - Rest after each set is 2:00.
      - **One ✓, one set**: a ✓ within 1 s of logging a set logs nothing, so a stutter or double
        tap can't log a phantom set. No two sets are ever logged that close on purpose.
-     - −/+ and the weight strip use the shared dumbbell ladder for dumbbell exercises, the shared
-       plates on a 20 kg bar for barbell exercises, the shared plates on the bar's own weight for
+     - −/+ and the weight strip use the shared dumbbell ladder for dumbbell exercises, the gym's
+       plates on a 20 kg bar for barbell exercises, the gym's plates on the bar's own weight for
        EZ, trap and safety bar exercises, the machine's ladder for machines and cables, and 2.5 kg
        steps for everything else (and for machines in a session with no gym).
      - Last time, for machines and cables, is the last session on the same machine; free weights

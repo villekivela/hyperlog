@@ -40,7 +40,10 @@ sealed interface LadderSpec {
         override fun encode() = "list;" + kgs.joinToString(",") { num(it) }
     }
 
-    /** A bar or plate-loaded machine: [baseKg] plus any of the [pairs], each loaded one per side. */
+    /**
+     * A bar or plate-loaded machine: [baseKg] plus any of the [pairs], each loaded one per side.
+     * A machine with no pairs of its own loads its gym's plates ([withPlates]).
+     */
     data class Plates(val baseKg: Double, val pairs: List<Double>) : LadderSpec {
         override fun ladder(): WeightLadder {
             var sums = setOf(0.0)
@@ -180,8 +183,18 @@ sealed interface LadderSpec {
             (2..20 step 2).map { it.toDouble() } + listOf(22.5, 25.0) + (30..60 step 5).map { it.toDouble() },
         )
 
-        /** One shared set of barbell plates, as pairs on a 20 kg bar. */
-        val DefaultPlates = Plates(20.0, listOf(20.0, 20.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25))
+        /**
+         * A typical commercial gym's plates, as pairs (one entry per pair): 8 pairs of 20, then 2
+         * pairs each of 15, 10, 5, 2.5 and 1.25 kg (SPEC, Gyms and equipment). A gym has these until
+         * set; a session with no gym loads them too.
+         */
+        val DefaultGymPlates: List<Double> = List(8) { 20.0 } + listOf(15.0, 10.0, 5.0, 2.5, 1.25).flatMap { listOf(it, it) }
+
+        /** The one shared set of plates every install had until 0.1.4: 20, 20, 20, 15, 10, 5, 2.5, 1.25. */
+        val OldDefaultPairs = listOf(20.0, 20.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25)
+
+        /** A 20 kg barbell with the typical plates. */
+        val DefaultPlates = Plates(20.0, DefaultGymPlates)
 
         /** SPEC default for a selectorised machine: pin steps of 5 kg from 5 to 100, taking the gym's pin plates. */
         // Lazy: built through PinStack, whose own initialisation can be what started this one.
@@ -268,3 +281,7 @@ data class PinLoad(val pin: Double, val builtIn: List<Double>, val onPin: List<D
         if (onPin.isNotEmpty()) append(" + ").append(onPin.sortedDescending().joinToString(" + ") { formatKg(it) }).append(" on the pin")
     }
 }
+
+/** This ladder at a gym with [plates]: a plate-loaded machine with no pairs of its own loads them; anything else is as it is. */
+fun LadderSpec.withPlates(plates: List<Double>): LadderSpec =
+    if (this is LadderSpec.Plates && pairs.isEmpty()) copy(pairs = plates) else this

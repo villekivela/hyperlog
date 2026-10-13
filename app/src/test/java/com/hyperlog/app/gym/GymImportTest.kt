@@ -80,8 +80,8 @@ class GymImportTest {
         assertEquals(LadderState.Unconfirmed, extension.state)
         assertEquals(LadderState.Confirmed, gym.items.single { it.name == "Crossover" }.state)
         assertEquals(extension.id, gyms.remembered(id, "leg_extension"))
-        // The leg press loads the shared plates.
-        assertEquals(LadderSpec.DefaultPlates.pairs, (gym.items.single { it.name == "Leg press" }.ladder as LadderSpec.Plates).pairs)
+        // The leg press has no plates of its own: it loads the gym's.
+        assertEquals(LadderSpec.Plates(0.0, emptyList()), gym.items.single { it.name == "Leg press" }.ladder)
 
         val logger = SessionLogger(db).also { it.load() }
         logger.start(id)

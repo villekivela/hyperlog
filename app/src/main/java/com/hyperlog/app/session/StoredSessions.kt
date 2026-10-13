@@ -61,14 +61,14 @@ internal data class StoredSession(
     val day: PlannedDay?,
 ) {
     /**
-     * The ladders at the session's gym: its dumbbell rack (the usual one with no gym), and its own
-     * barbell and EZ, trap and safety bars' weights where an imported gym names them.
+     * The ladders at the session's gym: its dumbbell rack and plates (the usual ones with no gym),
+     * and its own barbell and EZ, trap and safety bars' weights where an imported gym names them.
      */
     val here: SharedLadders by lazy {
         val bars = gym?.kit.orEmpty().mapNotNull { it.bar }.toMap()
         shared.copy(
             dumbbells = gym?.dumbbells ?: LadderSpec.DefaultDumbbells,
-            plates = bars["barbell"]?.let { shared.plates.copy(baseKg = it) } ?: shared.plates,
+            plates = LadderSpec.Plates(bars["barbell"] ?: shared.plates.baseKg, gym?.plates ?: LadderSpec.DefaultGymPlates),
             bars = shared.bars + SharedLadders.DefaultBars.keys.mapNotNull { e -> bars[e.key]?.let { e to it } },
         )
     }

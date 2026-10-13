@@ -27,7 +27,7 @@ class PlateLoadTest {
     fun aWeightThePlatesCantMakeHasNoLoading() {
         assertNull(plates.perSide(21.0))
         assertNull(plates.perSide(15.0))
-        assertNull(plates.perSide(400.0))
+        assertNull(plates.perSide(500.0))
     }
 
     @Test

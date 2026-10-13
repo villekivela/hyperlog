@@ -40,6 +40,21 @@ class GymFileTest {
     }
 
     @Test
+    fun aGymsPlatesArePairsPerSizeAndDefaultToNone() {
+        assertEquals(null, valid(gym()).plates)
+        val gym = valid(gym(extra = """, "plates": [ { "kg": 20, "pairs": 3 }, { "kg": 10, "pairs": 1 }, { "kg": 5, "pairs": 0 } ]"""))
+        assertEquals(listOf(20.0, 20.0, 20.0, 10.0), gym.plates)
+    }
+
+    @Test
+    fun aPlateSizeIsListedOnceWithAWholeCount() {
+        assertEquals(
+            listOf("plates[1].kg: 20 kg is already listed", "plates[2].pairs: must be a whole number from 0 to 50", "plates[3]: unknown field \"count\"", "plates[3].pairs: is required"),
+            errors(gym(extra = """, "plates": [ { "kg": 20, "pairs": 3 }, { "kg": 20, "pairs": 1 }, { "kg": 5, "pairs": 1.5 }, { "kg": 2.5, "count": 2 } ]""")),
+        )
+    }
+
+    @Test
     fun aStackWithoutALadderIsAnUnconfirmedDefaultStack() {
         val item = valid(gym("""[ { "name": "Leg extension", "kind": "stack", "serves": ["leg_extension"] } ]""")).equipment.single()
         assertEquals(LadderSpec.DefaultPinStack, item.ladder)
@@ -77,10 +92,9 @@ class GymFileTest {
     }
 
     @Test
-    fun aPlateLoadedMachineDefaultsToTheSharedPlatesFromZero() {
+    fun aPlateLoadedMachineDefaultsToTheGymsPlatesFromZero() {
         val item = valid(gym("""[ { "name": "Leg press", "kind": "plate_loaded", "serves": ["leg_press"] } ]""")).equipment.single()
         assertEquals(LadderSpec.Plates(0.0, emptyList()), item.ladder)
-        assertEquals(true, item.sharedPlates)
     }
 
     @Test

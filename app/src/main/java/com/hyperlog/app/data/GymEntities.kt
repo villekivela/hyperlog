@@ -26,6 +26,8 @@ data class GymEntity(
     val dumbbells: String? = null,
     /** The stack its machines are set up with from the program, chosen once; null until then. */
     @ColumnInfo(name = "default_stack") val defaultStack: String? = null,
+    /** The gym's plates as pairs, one entry per pair (`20.0,20.0,15.0`); null for the SPEC default. */
+    val plates: String? = null,
 )
 
 /** One equipment item at a gym. [ladder] is an encoded [com.hyperlog.app.domain.LadderSpec]. */
@@ -93,7 +95,7 @@ data class Visit(
 /** A machine's name and its gym's, as a history line is headed. */
 data class MachineName(val id: Long, val name: String, val gym: String)
 
-/** A ladder every gym shares: the barbell plates and the specialty bars' weights. */
+/** A ladder every gym shares: the barbell's weight (as plates with no pairs) and the specialty bars' weights. */
 @Entity(tableName = "shared_ladder")
 data class SharedLadderEntity(
     @PrimaryKey val key: String,
@@ -132,6 +134,9 @@ interface GymDao {
 
     @Query("UPDATE gym SET pin_plates = :plates WHERE id = :id")
     suspend fun setPinPlates(id: Long, plates: String)
+
+    @Query("UPDATE gym SET plates = :plates WHERE id = :id")
+    suspend fun setPlates(id: Long, plates: String)
 
     @Query("UPDATE gym SET weekdays = :weekdays WHERE id = :id")
     suspend fun setWeekdays(id: Long, weekdays: Int)

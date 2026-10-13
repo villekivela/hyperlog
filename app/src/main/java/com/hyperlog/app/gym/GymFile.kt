@@ -29,14 +29,16 @@ data class GymFile(
     val dumbbells: LadderSpec? = null,
     val bars: List<Bar> = emptyList(),
     val equipment: List<Item> = emptyList(),
+    /** The gym's plates as pairs, one entry per pair; null for the typical gym's. */
+    val plates: List<Double>? = null,
 ) {
     /** A bar at the gym: its [kind] (`barbell`, `ez_bar`, `trap_bar`, `safety_bar`, `swiss_bar`, `axle_bar`) and weight. */
     data class Bar(val name: String, val kind: String, val kg: Double)
 
     /**
-     * An equipment item. [ladder] is a guess when [unconfirmed]; a plate-loaded one with
-     * [sharedPlates] loads the shared barbell plates. [serves] fills in "Which machine?" for those
-     * exercises; [cableStation] makes it the gym's cable station.
+     * An equipment item. [ladder] is a guess when [unconfirmed]; a plate-loaded one with no pairs
+     * of its own loads the gym's plates. [serves] fills in "Which machine?" for those exercises;
+     * [cableStation] makes it the gym's cable station.
      */
     data class Item(
         val name: String,
@@ -45,7 +47,6 @@ data class GymFile(
         val unconfirmed: Boolean,
         val serves: List<String>,
         val cableStation: Boolean = false,
-        val sharedPlates: Boolean = false,
     )
 
     enum class Kind(val key: String) { Stack("stack"), PlateLoaded("plate_loaded"), RackBench("rack_bench") }
@@ -86,7 +87,7 @@ private class GymReader(private val library: Map<String, Exercise>) {
     }
 
     fun gym(o: JsonObject): GymFile? {
-        unknown(o, "", setOf("format", "version", "name", "usualDays", "pinPlates", "dumbbells", "bars", "equipment"))
+        unknown(o, "", setOf("format", "version", "name", "usualDays", "pinPlates", "plates", "dumbbells", "bars", "equipment"))
         val version = (o["version"] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull
         if (version != GymFile.VERSION) error("version", "must be ${GymFile.VERSION}")
         val name = text(o, "", "name", required = true)
@@ -96,6 +97,14 @@ private class GymReader(private val library: Map<String, Exercise>) {
                 ?: null.also { error("usualDays[$i]", if (day != null) "\"$day\" is not a weekday" else "must be a weekday") }
         }?.toSet().orEmpty()
         val pinPlates = array(o, "", "pinPlates")?.mapIndexedNotNull { i, el -> weight(el, "pinPlates[$i]") }
+        val plates = array(o, "", "plates")?.let { sizes ->
+            val seen = mutableSetOf<Double>()
+            sizes.flatMapIndexed { i, el ->
+                plateSize(el, "plates[$i]")?.let { (kg, pairs) ->
+                    if (!seen.add(kg)) emptyList<Double>().also { error("plates[$i].kg", "${formatKgText(kg)} kg is already listed") } else List(pairs) { kg }
+                }.orEmpty()
+            }
+        }
         val dumbbells = o["dumbbells"]?.let { ladder(it, "dumbbells", allowed = setOf("pin", "steps", "list"))?.let { spec -> (spec as? LadderSpec.PinStack)?.let { LadderSpec.Explicit(it.pins) } ?: spec } }
         val bars = array(o, "", "bars")?.mapIndexedNotNull { i, el -> bar(el, "bars[$i]") }.orEmpty()
         val served = mutableMapOf<String, Int>()
@@ -113,8 +122,23 @@ private class GymReader(private val library: Map<String, Exercise>) {
             item
         }.orEmpty()
         if (name == null) return null
-        return GymFile(name, days, pinPlates, dumbbells, bars, items)
+        return GymFile(name, days, pinPlates, dumbbells, bars, items, plates)
     }
+
+    /** One size of the gym's plates: `{ "kg": 20, "pairs": 8 }`. */
+    private fun plateSize(el: JsonElement, path: String): Pair<Double, Int>? {
+        val o = el as? JsonObject ?: return null.also { error(path, "must be an object") }
+        unknown(o, path, setOf("kg", "pairs"))
+        val kg = o["kg"]?.let { weight(it, "$path.kg") } ?: null.also { if (o["kg"] == null) error("$path.kg", "is required") }
+        val pairs = when (val p = o["pairs"]) {
+            null -> null.also { error("$path.pairs", "is required") }
+            else -> (p as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull?.takeIf { it in 0..50 }
+                ?: null.also { error("$path.pairs", "must be a whole number from 0 to 50") }
+        }
+        return if (kg != null && pairs != null) kg to pairs else null
+    }
+
+    private fun formatKgText(kg: Double) = com.hyperlog.app.domain.formatKg(kg)
 
     private fun bar(el: JsonElement, path: String): GymFile.Bar? {
         val o = el as? JsonObject ?: return null.also { error(path, "must be an object") }
@@ -132,21 +156,19 @@ private class GymReader(private val library: Map<String, Exercise>) {
         val name = text(o, path, "name", required = true)
         val kindText = text(o, path, "kind", required = true)
         val kind = kindText?.let { k -> GymFile.Kind.entries.firstOrNull { it.key == k } ?: null.also { error("$path.kind", "must be stack, plate_loaded or rack_bench") } }
-        var sharedPlates = false
         val ladder = when (kind) {
             GymFile.Kind.Stack -> o["ladder"]?.let { ladder(it, "$path.ladder", setOf("pin", "steps", "list")) } ?: LadderSpec.DefaultPinStack.takeIf { o["ladder"] == null }
             GymFile.Kind.PlateLoaded -> o["ladder"]?.let { ladder(it, "$path.ladder", setOf("plates")) }
-                ?: LadderSpec.Plates(0.0, emptyList()).takeIf { o["ladder"] == null }?.also { sharedPlates = true }
+                ?: LadderSpec.Plates(0.0, emptyList()).takeIf { o["ladder"] == null }
             GymFile.Kind.RackBench -> null.also { if (o["ladder"] != null) error("$path.ladder", "a rack or bench has no weights") }
             null -> null
         }
-        if (ladder is LadderSpec.Plates && (o["ladder"] as? JsonObject)?.get("pairs") == null) sharedPlates = true
         val unconfirmed = bool(o, path, "unconfirmed") ?: (o["ladder"] == null && kind != GymFile.Kind.RackBench)
         val station = bool(o, path, "cableStation") ?: false
         if (station && kind != GymFile.Kind.Stack) error("$path.cableStation", "only a stack can be the cable station")
         val serves = array(o, path, "serves")?.mapIndexedNotNull { i, s -> served(s, "$path.serves[$i]", kind) }.orEmpty()
         if (name == null || kind == null || (kind != GymFile.Kind.RackBench && ladder == null)) return null
-        return GymFile.Item(name, kind, ladder, unconfirmed && kind != GymFile.Kind.RackBench, serves, station, sharedPlates)
+        return GymFile.Item(name, kind, ladder, unconfirmed && kind != GymFile.Kind.RackBench, serves, station)
     }
 
     private fun served(el: JsonElement, path: String, kind: GymFile.Kind?): String? {

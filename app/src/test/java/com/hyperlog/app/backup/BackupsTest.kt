@@ -102,6 +102,9 @@ class BackupsTest {
         gyms.addItem(EquipmentItem(gymId = gym, name = "Crossover", ladder = LadderSpec.DefaultPinStack, state = com.hyperlog.app.gym.LadderState.Guess, cableStation = true))
         gyms.addItem(EquipmentItem(gymId = gym, name = "Squat rack", ladder = LadderSpec.Explicit(emptyList()), kind = EquipmentItem.RACK))
         db.openHelper.writableDatabase.execSQL("UPDATE gym SET default_stack = '${LadderSpec.LbPinStack.encode()}'")
+        // v19: the gym's own plates, which its sled loads.
+        gyms.setPlates(gym, List(10) { 20.0 } + listOf(10.0, 5.0, 2.5, 1.25, 1.25))
+        gyms.addItem(EquipmentItem(gymId = gym, name = "Sled", ladder = LadderSpec.Plates(0.0, emptyList())))
 
         val programs = Programs(db, clock = { now })
         programs.import(program)
@@ -186,7 +189,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(18), file["database"])
+        assertEquals(JsonPrimitive(19), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -342,5 +345,29 @@ class BackupsTest {
         assertEquals(listOf("Squat rack"), gym.kit.map { it.name })
         val station = gym.items.single { it.cableStation }
         assertEquals(com.hyperlog.app.gym.LadderState.Guess, station.state)
+        // From before each gym had its own plates: the gym gets the typical ones.
+        assertEquals(LadderSpec.DefaultGymPlates, gym.plates)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase19StillRestores() = runTest {
+        // DB v19: the gym's own plates, which its sled loads.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db19.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val gym = Gyms(phone).gyms.first().single()
+        assertEquals(List(10) { 20.0 } + listOf(10.0, 5.0, 2.5, 1.25, 1.25), gym.plates)
+        assertEquals(LadderSpec.Plates(0.0, emptyList()), gym.items.single { it.name == "Sled" }.ladder)
+    }
+
+    @Test
+    fun aBackupFromBeforeGymPlatesGivesEveryGymTheSharedPlatesEditedByHand() = runTest {
+        val file = javaClass.getResource("/backup/hyperlog-backup-db18.json")!!.readText()
+            .replace("""{"key":"bar_ez_bar","ladder":"list;8.0"}""", """{"key":"bar_ez_bar","ladder":"list;8.0"},{"key":"plates","ladder":"plates;20.0;20.0,20.0,20.0,20.0,10.0"}""")
+        assertTrue("plates;20.0;20.0,20.0,20.0,20.0,10.0" in file)
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        assertEquals(listOf(20.0, 20.0, 20.0, 20.0, 10.0), Gyms(phone).gyms.first().single().plates)
+        assertEquals(20.0, Gyms(phone).barbell.first(), 0.0)
     }
 }

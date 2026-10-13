@@ -17,6 +17,10 @@ A made-up gym:
   "name": "Harbour Fitness",
   "usualDays": ["monday", "thursday"],
   "pinPlates": [1.25, 2.5],
+  "plates": [
+    { "kg": 20, "pairs": 10 }, { "kg": 15, "pairs": 2 }, { "kg": 10, "pairs": 2 },
+    { "kg": 5, "pairs": 2 }, { "kg": 2.5, "pairs": 2 }, { "kg": 1.25, "pairs": 2 }
+  ],
   "dumbbells": "1 2 3 … 10 12.5 15 … 50",
   "bars": [
     { "name": "Olympic bar", "kind": "barbell", "kg": 20 },
@@ -49,8 +53,9 @@ A made-up gym:
 | `name` | yes | The gym's name. A gym of the same name already there stays; the import is a second one. |
 | `usualDays` | no | The weekday plan: `"monday"` … `"sunday"`. Starting a session on one picks this gym. |
 | `pinPlates` | no | The small loose plates that hang on any stack's pin, kg, one entry per plate. Default `[1.25, 2.5]`. |
+| `plates` | no | The gym's plates, each size once as `{ "kg", "pairs" }`: how many pairs (0 to 50) of that size. Its bars and plate-loaded machines load them. Default: 8 pairs of 20, then 2 pairs each of 15, 10, 5, 2.5 and 1.25. |
 | `dumbbells` | no | The dumbbell rack, as a weights shorthand (below) or a `steps` or `list` ladder. Default: 1 to 10 kg by 1, then 12.5 to 50 by 2.5. |
-| `bars` | no | The gym's bars, each `{ "name", "kind", "kg" }`. `kind` is `barbell`, `ez_bar`, `trap_bar`, `safety_bar`, `swiss_bar` or `axle_bar`; a barbell, EZ, trap or safety bar's weight is what sessions at this gym load the shared plates on. |
+| `bars` | no | The gym's bars, each `{ "name", "kind", "kg" }`. `kind` is `barbell`, `ez_bar`, `trap_bar`, `safety_bar`, `swiss_bar` or `axle_bar`; a barbell, EZ, trap or safety bar's weight is what sessions at this gym load the gym's plates on. |
 | `equipment` | no | The equipment items, below. |
 
 ### Equipment items
@@ -59,7 +64,7 @@ A made-up gym:
 | --- | --- | --- |
 | `name` | yes | What the item is called at the gym. |
 | `kind` | yes | `stack` (a selectorised machine or cable station), `plate_loaded` (a leg press, sled, Smith machine) or `rack_bench` (racks, benches and stands, listed with the gym; no weights). |
-| `ladder` | no | Its weights (below). A `stack` without one gets the default pin stack (pin steps of 5 kg from 5 to 100); a `plate_loaded` one the shared barbell plates from a zero start. A `rack_bench` has none. |
+| `ladder` | no | Its weights (below). A `stack` without one gets the default pin stack (pin steps of 5 kg from 5 to 100); a `plate_loaded` one the gym's plates from a zero start. A `rack_bench` has none. |
 | `unconfirmed` | no | The ladder is a guess: the first time an exercise is done on it, the session asks for the weights printed on the stack. Default `true` without a `ladder`, `false` with one. |
 | `serves` | no | Library exercise ids done on it, so "Which machine?" never asks for them here. Each id once per file; only machine, cable and Smith machine exercises for a `stack` or `plate_loaded` item. |
 | `cableStation` | no | `true` makes this `stack` the gym's one shared cable station: every cable exercise at the gym defaults to it. At most one per file. |
@@ -77,8 +82,8 @@ A made-up gym:
 - `{ "kind": "steps", "unit": "kg" | "lb", "start": 5, "step": 2.5, "count": 20 }`: an even stack.
 - `{ "kind": "list", "kg": [4.5, 9, 13.5] }`: an explicit list.
 - `{ "kind": "plates", "base": 15, "pairs": [20, 20, 10, 5] }`: a plate-loaded machine's empty
-  weight and the plate pairs it takes, one of each pair per side; without `pairs`, the shared
-  barbell plates.
+  weight and, only if it has plates of its own, the pairs it takes, one of each pair per side;
+  without `pairs` (the usual case), the gym's `plates`.
 
 A `stack` takes `pin`, `steps` or `list`; a `plate_loaded` item takes `plates`; `dumbbells` takes a
 shorthand, `steps` or `list`.

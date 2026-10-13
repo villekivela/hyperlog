@@ -37,6 +37,8 @@ data class Gym(
     val machines: Map<String, Long> = emptyMap(),
     /** The stack chosen for setting the gym up from the program; null until chosen. */
     val defaultStack: LadderSpec? = null,
+    /** The gym's plates as pairs, one entry per pair, which its bars and plate-loaded machines load. */
+    val plates: List<Double> = LadderSpec.DefaultGymPlates,
 )
 
 /**
@@ -117,9 +119,10 @@ class Gyms(private val db: HyperlogDatabase) {
         gyms.map { g -> g.toGym(byGym[g.id].orEmpty(), missingBy[g.id].orEmpty(), rememberedBy[g.id].orEmpty()) }
     }
 
-    val plates: Flow<LadderSpec.Plates> = dao.observeShared().map { it.plates() }
+    /** What the barbell weighs, at every gym that doesn't name its own; the gym's plates go on it. */
+    val barbell: Flow<Double> = dao.observeShared().map { it.plates().baseKg }
 
-    /** The EZ, trap and safety bars' own weights; the shared plates go on them. */
+    /** The EZ, trap and safety bars' own weights; the gym's plates go on them. */
     val bars: Flow<Map<Equipment, Double>> = dao.observeShared().map { it.bars() }
 
     suspend fun addGym(name: String): Long = dao.insertGym(GymEntity(name = name.trim()))
@@ -139,6 +142,10 @@ class Gyms(private val db: HyperlogDatabase) {
     /** Sets the small plates [id] has for the pin of its stacks, one entry per plate. */
     suspend fun setPinPlates(id: Long, plates: List<Double>) =
         dao.setPinPlates(id, plates.filter { it > 0 }.joinToString(",") { it.toString() })
+
+    /** Sets [id]'s plates, as pairs: one entry per pair, so 8 pairs of 20 are eight 20s. */
+    suspend fun setPlates(id: Long, pairs: List<Double>) =
+        dao.setPlates(id, pairs.filter { it > 0 }.sortedDescending().joinToString(",") { it.toString() })
 
     /** One gym with its equipment, as it is now; archived items come too, for the sessions that used them. */
     suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id), dao.remembered(id)) }
@@ -160,11 +167,11 @@ class Gyms(private val db: HyperlogDatabase) {
             is GymFile.Result.Invalid -> return Import.Invalid(result.errors)
             is GymFile.Result.Valid -> result.gym
         }
-        val plates = shared().plates
         val id = db.withTransaction {
             val id = addGym(file.name)
             setWeekdays(id, file.usualDays)
             file.pinPlates?.let { setPinPlates(id, it) }
+            file.plates?.let { setPlates(id, it) }
             file.dumbbells?.let { setDumbbells(id, it) }
             file.bars.forEach { addItem(EquipmentItem(gymId = id, name = it.name, ladder = LadderSpec.Explicit(listOf(it.kg)), kind = EquipmentItem.BAR + it.kind)) }
             file.equipment.forEach { item ->
@@ -172,7 +179,8 @@ class Gyms(private val db: HyperlogDatabase) {
                     addItem(EquipmentItem(gymId = id, name = item.name, ladder = LadderSpec.Explicit(emptyList()), kind = EquipmentItem.RACK))
                     return@forEach
                 }
-                val ladder = (item.ladder as? LadderSpec.Plates)?.takeIf { item.sharedPlates }?.copy(pairs = plates.pairs) ?: item.ladder!!
+                // A plate-loaded machine without pairs of its own loads the gym's plates.
+                val ladder = item.ladder!!
                 val machine = addItem(
                     EquipmentItem(
                         gymId = id, name = item.name, ladder = ladder, cableStation = item.cableStation,
@@ -188,19 +196,18 @@ class Gyms(private val db: HyperlogDatabase) {
 
     /**
      * Adds what [setup] needs at [gymId] in one go: a machine for each machine exercise (one
-     * already there by name is used; a plate-loaded one gets the shared plates from a zero start,
+     * already there by name is used; a plate-loaded one loads the gym's plates from a zero start,
      * the rest [stack]), and the gym's cable station for every cable exercise, made on [stack] if
      * there is none. The new ones are guesses until their first use. [stack] becomes the gym's
      * default stack.
      */
     suspend fun addProgramEquipment(gymId: Long, setup: ProgramSetup, stack: LadderSpec) {
         val gym = gym(gymId) ?: return
-        val plates = shared().plates
         setup.machines.forEach { exercise ->
             val id = gym.machineFor(exercise)?.id ?: addItem(
                 EquipmentItem(
                     gymId = gymId, name = exercise.name,
-                    ladder = if (exercise.plateLoaded) LadderSpec.Plates(0.0, plates.pairs) else stack,
+                    ladder = if (exercise.plateLoaded) LadderSpec.Plates(0.0, emptyList()) else stack,
                     state = LadderState.Unconfirmed,
                 ),
             )
@@ -273,7 +280,9 @@ class Gyms(private val db: HyperlogDatabase) {
 
     /** Sets [gymId]'s dumbbell rack. */
     suspend fun setDumbbells(gymId: Long, spec: LadderSpec) = dao.setDumbbells(gymId, spec.encode())
-    suspend fun setPlates(spec: LadderSpec.Plates) = dao.setShared(SharedLadderEntity(PLATES, spec.encode()))
+
+    /** Sets what the barbell weighs where a gym doesn't name its own. */
+    suspend fun setBarbell(kg: Double) = dao.setShared(SharedLadderEntity(PLATES, LadderSpec.Plates(kg, emptyList()).encode()))
 
     /** Sets what the [bar] (an EZ, trap or safety bar) weighs. */
     suspend fun setBar(bar: Equipment, kg: Double) {
@@ -281,9 +290,10 @@ class Gyms(private val db: HyperlogDatabase) {
         dao.setShared(SharedLadderEntity(barKey(bar), LadderSpec.Explicit(listOf(kg)).encode()))
     }
 
-    /** The shared ladders as they are now, for the session. */
-    suspend fun shared(): SharedLadders = dao.shared().let { SharedLadders(LadderSpec.DefaultDumbbells, it.plates(), it.bars()) }
+    /** The shared ladders as they are now, for a session: the barbell with the typical plates, until a gym's replace them. */
+    suspend fun shared(): SharedLadders = dao.shared().let { SharedLadders(LadderSpec.DefaultDumbbells, LadderSpec.Plates(it.plates().baseKg, LadderSpec.DefaultGymPlates), it.bars()) }
 
+    /** The barbell, stored as plates with no pairs (the gym's go on it); a 20 kg bar until set. */
     private fun List<SharedLadderEntity>.plates() =
         firstOrNull { it.key == PLATES }?.let { LadderSpec.decode(it.ladder) as? LadderSpec.Plates } ?: LadderSpec.DefaultPlates
 
@@ -301,6 +311,7 @@ class Gyms(private val db: HyperlogDatabase) {
             items.filter { it.kind != EquipmentItem.MACHINE && !it.archived }.mapNotNull { it.toItem() },
             remembered.associate { it.exerciseId to it.equipmentItemId },
             defaultStack?.let { LadderSpec.decode(it) },
+            plates?.split(",")?.mapNotNull { it.trim().toDoubleOrNull() }?.filter { it > 0 } ?: LadderSpec.DefaultGymPlates,
         )
 
     private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState), cableStation, kind) }
@@ -315,15 +326,16 @@ class Gyms(private val db: HyperlogDatabase) {
 
 /**
  * The ladders a session uses besides its machines': the [dumbbells] (the session gym's rack, else
- * the SPEC default), the barbell plates every gym shares, and the weights of the EZ, trap and
- * safety [bars], which load the same plates.
+ * the SPEC default), the barbell with the gym's [plates] (the typical ones with no gym), and the
+ * weights of the EZ, trap and safety [bars], which load the same plates. A plate-loaded machine
+ * without pairs of its own loads them too.
  */
 data class SharedLadders(
     val dumbbells: LadderSpec,
     val plates: LadderSpec.Plates,
     val bars: Map<Equipment, Double> = DefaultBars,
 ) {
-    /** The plates on a specialty [bar]: its own weight, then the shared pairs. Null for anything else. */
+    /** The plates on a specialty [bar]: its own weight, then the gym's pairs. Null for anything else. */
     fun barPlates(bar: Equipment): LadderSpec.Plates? = bars[bar]?.let { LadderSpec.Plates(it, plates.pairs) }
 
     companion object {

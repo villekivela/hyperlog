@@ -29,22 +29,24 @@ class GymScreenTest {
     val compose = createComposeRule()
 
     @Test
-    fun theSpecialtyBarsShowTheirWeightUnderTheSharedPlates() {
+    fun theBarbellAndSpecialtyBarsShowTheirWeightOnTheGymsPlates() {
         // Their weight dialog holds a text field, which Robolectric can't idle in a dialog window: checked on the phone.
         compose.setContent {
             HyperlogTheme {
                 GymsScreen(
-                    emptyList(), LadderSpec.DefaultPlates,
-                    bars = mapOf(Equipment.EzBar to 10.0, Equipment.TrapBar to 25.0, Equipment.SafetyBar to 30.0),
-                    onAddGym = {}, onOpenGym = {}, onPlates = {},
+                    emptyList(),
+                    bars = mapOf(Equipment.Barbell to 20.0, Equipment.EzBar to 10.0, Equipment.TrapBar to 25.0, Equipment.SafetyBar to 30.0),
+                    onAddGym = {}, onOpenGym = {},
                     onBar = { _, _ -> }, onBack = {},
                 )
             }
         }
         compose.onNodeWithText("EZ bar").assertHasClickAction()
         compose.onNodeWithText("Trap bar").assertExists()
-        compose.onNodeWithText("25 kg bar, the shared plates").assertExists()
-        compose.onNodeWithText("30 kg bar, the shared plates").assertExists()
+        compose.onNodeWithText("Barbell").assertHasClickAction()
+        compose.onNodeWithText("20 kg bar, the gym’s plates").assertExists()
+        compose.onNodeWithText("25 kg bar, the gym’s plates").assertExists()
+        compose.onNodeWithText("30 kg bar, the gym’s plates").assertExists()
     }
 
     @Test
@@ -83,20 +85,17 @@ class GymScreenTest {
     }
 
     @Test
-    fun theGymsListKeepsItsAddImportAndSharedPlatesActions() {
-        var plates = 0
+    fun theGymsListKeepsItsAddAndImportActions() {
         compose.setContent {
             HyperlogTheme {
                 GymsScreen(
-                    listOf(Gym(1, "Central", emptyList())), LadderSpec.DefaultPlates, bars = emptyMap(),
-                    onAddGym = {}, onOpenGym = {}, onPlates = { plates++ }, onBar = { _, _ -> }, onBack = {},
+                    listOf(Gym(1, "Central", emptyList())), bars = emptyMap(),
+                    onAddGym = {}, onOpenGym = {}, onBar = { _, _ -> }, onBack = {},
                 )
             }
         }
         compose.onNodeWithText("Add gym").assertHasClickAction()
         compose.onNodeWithText("Import gym").assertHasClickAction()
-        compose.onNodeWithText("Barbell plates").performClick()
-        assertEquals(1, plates)
     }
 
     @Test
@@ -136,6 +135,29 @@ class GymScreenTest {
         val order = listOf("Stack machines", "Pec deck", "Plate-loaded machines", "Leg press", "Bars", "EZ bar", "Racks and benches", "Flat bench", "Dumbbells and plates", "Dumbbells")
         val tops = order.map { compose.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y }
         assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun aGymsPlatesShowAsPairsPerSizeAndChangeACountAtATime() {
+        var saved: List<Double>? = null
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(
+                    Gym(1, "Central", emptyList()),
+                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onPlates = { saved = it },
+                )
+            }
+        }
+        compose.onNodeWithText("8×20 · 2×15 · 2×10 · 2×5 · 2×2.5 · 2×1.25").performClick()
+        compose.onNodeWithContentDescription("One more pair of 25 kg").performClick()
+        compose.onNodeWithContentDescription("One more pair of 25 kg").performClick()
+        compose.onNodeWithContentDescription("One pair fewer of 1.25 kg").performClick()
+        compose.onNodeWithText("Save").performClick()
+        assertEquals(
+            mapOf(25.0 to 2, 20.0 to 8, 15.0 to 2, 10.0 to 2, 5.0 to 2, 2.5 to 2, 1.25 to 1),
+            saved!!.groupingBy { it }.eachCount(),
+        )
     }
 
     private val legExtension = com.hyperlog.app.library.Exercise(
@@ -207,8 +229,8 @@ class GymScreenTest {
         compose.setContent {
             HyperlogTheme {
                 GymsScreen(
-                    emptyList(), LadderSpec.DefaultPlates, bars = emptyMap(),
-                    onAddGym = {}, onOpenGym = {}, onPlates = {}, onBar = { _, _ -> }, onBack = {},
+                    emptyList(), bars = emptyMap(),
+                    onAddGym = {}, onOpenGym = {}, onBar = { _, _ -> }, onBack = {},
                     onImport = { picked++ }, importErrors = errors, onCloseImportErrors = { errors = null },
                 )
             }

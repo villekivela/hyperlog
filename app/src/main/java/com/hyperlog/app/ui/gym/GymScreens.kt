@@ -57,6 +57,7 @@ import com.hyperlog.app.R
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
+import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.equipmentKind
 import com.hyperlog.app.gym.sections
@@ -68,18 +69,17 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 /**
- * Every gym, then the plates and specialty bars all gyms share. A gym opens its
- * equipment; the shared ladders open the ladder editor, a bar a field for its weight.
+ * Every gym, then the bars all gyms share: the barbell and the EZ, trap and safety bars, each
+ * loading the gym's plates. A gym opens its equipment; a bar opens a field for its weight.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GymsScreen(
     gyms: List<Gym>,
-    plates: LadderSpec.Plates,
+    /** The barbell's and the specialty bars' weights. */
     bars: Map<Equipment, Double>,
     onAddGym: (String) -> Unit,
     onOpenGym: (Long) -> Unit,
-    onPlates: () -> Unit,
     onBar: (Equipment, Double) -> Unit,
     onBack: () -> Unit,
     /** Picks a gym file to import (docs/gym-format.md). */
@@ -121,9 +121,7 @@ fun GymsScreen(
 
             SectionLabel(stringResource(R.string.gym_shared))
             val barLines = bars.values.map { stringResource(R.string.gym_bar_summary, formatKg(it)) }
-            val platesTitle = stringResource(R.string.gym_plates)
             SegmentedList {
-                row(platesTitle, plates.platesLine(), Symbol.FitnessCenter, onClick = onPlates, trailing = chevron)
                 bars.entries.forEachIndexed { i, (bar, _) -> row(bar.label, barLines[i], Symbol.FitnessCenter, onClick = { weighing = bar }, trailing = chevron) }
             }
         }
@@ -164,6 +162,8 @@ fun GymScreen(
     onPinPlates: (List<Double>) -> Unit = {},
     /** Opens the gym's dumbbell rack. */
     onDumbbells: () -> Unit = {},
+    /** Sets the gym's plates, as pairs: one entry per pair. */
+    onPlates: (List<Double>) -> Unit = {},
     /** What the active program still needs here; null without a program. */
     programSetup: com.hyperlog.app.gym.ProgramSetup? = null,
     programTitle: String? = null,
@@ -173,6 +173,7 @@ fun GymScreen(
     BackHandler(onBack = onBack)
     var renaming by rememberSaveable { mutableStateOf(false) }
     var pinning by rememberSaveable { mutableStateOf(false) }
+    var plating by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         containerColor = Tones.screen,
@@ -205,7 +206,7 @@ fun GymScreen(
             // One section per kind, each in name order; a kind the gym has none of is left out.
             gym.sections().forEach { (kind, items) ->
                 SectionLabel(stringResource(kind.title))
-                val lines = items.map { item -> itemLine(item, gym.pinPlates) }
+                val lines = items.map { item -> itemLine(item, gym) }
                 SegmentedList {
                     items.forEachIndexed { i, item ->
                         // Machines open their setup; bars, racks and benches only say what they are.
@@ -220,8 +221,11 @@ fun GymScreen(
             val pins = pinPlatesText(gym.pinPlates)
             val dumbbellsTitle = stringResource(R.string.gym_dumbbells)
             val pinsTitle = stringResource(R.string.gym_pin_plates_row)
+            val platesTitle = stringResource(R.string.gym_plates)
+            val plates = gym.plates.ifEmpty { null }?.let(::platesLine) ?: stringResource(R.string.gym_plates_none)
             SegmentedList {
                 row(dumbbellsTitle, dumbbells, Symbol.Exercise, onClick = onDumbbells, trailing = chevron)
+                row(platesTitle, plates, Symbol.Toll, onClick = { plating = true }, trailing = chevron)
                 row(pinsTitle, pins, Symbol.PushPin, onClick = { pinning = true }, trailing = chevron)
             }
 
@@ -260,6 +264,9 @@ fun GymScreen(
             // Clears the extended FAB, so the last row can scroll out from under it.
             Spacer(Modifier.height(96.dp))
         }
+    }
+    if (plating) {
+        PlatesDialog(gym.plates, onDone = { plating = false; onPlates(it) }, onDismiss = { plating = false })
     }
     if (pinning) {
         PinPlatesDialog(gym.pinPlates, onDone = { pinning = false; onPinPlates(it) }, onDismiss = { pinning = false })
@@ -417,10 +424,11 @@ internal val com.hyperlog.app.gym.EquipmentItem.symbol: Symbol
 
 /** An item's line: a machine's ladder (`Every cable exercise · …` for the station), a bar's weight, or that it is a rack or bench. */
 @Composable
-private fun itemLine(item: com.hyperlog.app.gym.EquipmentItem, pinPlates: List<Double>): String = when (item.equipmentKind) {
+private fun itemLine(item: com.hyperlog.app.gym.EquipmentItem, gym: Gym): String = when (item.equipmentKind) {
     com.hyperlog.app.gym.EquipmentKind.Bar -> stringResource(R.string.gym_kit_bar, formatKg(item.bar!!.second))
     com.hyperlog.app.gym.EquipmentKind.RackBench -> stringResource(R.string.gym_kit_rack)
-    else -> item.ladder.summary(pinPlates).let { if (item.cableStation) stringResource(R.string.gym_cable_station, it) else it }
+    // A plate-loaded machine with no pairs of its own reads with the gym's plates.
+    else -> item.ladder.withPlates(gym.plates).summary(gym.pinPlates).let { if (item.cableStation) stringResource(R.string.gym_cable_station, it) else it }
 }
 
 /** The rows' trailing chevron. */
@@ -434,9 +442,61 @@ private fun chevron(): @Composable () -> Unit {
 private fun com.hyperlog.app.ui.theme.SegmentedListScope.addRow(title: String, symbol: Symbol, onClick: () -> Unit) =
     item(onClick) { com.hyperlog.app.ui.theme.SegmentedRow(title, symbol = symbol, titleColor = MaterialTheme.colorScheme.primary) }
 
-/** `20 kg bar · 20 20 20 15 10 5 2.5 1.25`: the base, then one number per pair. */
-internal fun LadderSpec.Plates.platesLine(): String =
-    "${formatKg(baseKg)} kg bar · " + pairs.sortedDescending().joinToString(" ") { formatKg(it) }
+/** `8×20 · 2×15 · 2×10`: the gym's plates as pairs per size, heaviest first. */
+internal fun platesLine(pairs: List<Double>): String =
+    pairs.groupingBy { it }.eachCount().toList().sortedByDescending { it.first }.joinToString(" · ") { (kg, n) -> "$n×${formatKg(kg)}" }
+
+/** The sizes the plates dialog always offers, besides any other size the gym has. */
+private val PlateSizes = listOf(25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25, 0.5)
+
+/**
+ * The gym's plates as a count of pairs per size, each a plate in its competition colour with −
+ * and +: no typing, since a gym's plates change a pair at a time.
+ */
+@Composable
+private fun PlatesDialog(pairs: List<Double>, onDone: (List<Double>) -> Unit, onDismiss: () -> Unit) {
+    val start = pairs.groupingBy { it }.eachCount()
+    val sizes = (PlateSizes + start.keys).distinct().sortedDescending()
+    var counts by rememberSaveable { mutableStateOf(sizes.map { start[it] ?: 0 }) }
+    val cs = MaterialTheme.colorScheme
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.gym_plates)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(stringResource(R.string.gym_plates_body), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                sizes.forEachIndexed { i, kg ->
+                    val size = formatKg(kg)
+                    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier.size(16.dp).clip(CircleShape).background(com.hyperlog.app.ui.session.plateColor(kg))
+                                .border(1.dp, cs.outlineVariant, CircleShape),
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Text(stringResource(R.string.gym_plates_size, size), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                        IconButton(onClick = { counts = counts.toMutableList().also { it[i] = (it[i] - 1).coerceAtLeast(0) } }, enabled = counts[i] > 0) {
+                            SymbolIcon(Symbol.Remove, stringResource(R.string.gym_plates_fewer, size))
+                        }
+                        Text(
+                            counts[i].toString(),
+                            style = MaterialTheme.typography.titleMedium.merge(com.hyperlog.app.ui.session.Tnum),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.width(32.dp),
+                        )
+                        IconButton(onClick = { counts = counts.toMutableList().also { it[i] = (it[i] + 1).coerceAtMost(50) } }, enabled = counts[i] < 50) {
+                            SymbolIcon(Symbol.Add, stringResource(R.string.gym_plates_more, size))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onDone(sizes.flatMapIndexed { i, kg -> List(counts[i]) { kg } }) }) { Text(stringResource(R.string.gym_bar_save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.gym_cancel)) } },
+    )
+}
 
 @Composable
 internal fun Row(headline: String, supporting: String, symbol: Symbol?, onClick: () -> Unit) {

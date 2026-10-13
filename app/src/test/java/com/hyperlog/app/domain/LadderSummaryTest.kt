@@ -25,7 +25,7 @@ class LadderSummaryTest {
 
     @Test
     fun platesNameTheirBaseAndTheTop() {
-        assertEquals("20 kg + plates, to 207.5 kg", LadderSpec.DefaultPlates.summary())
+        assertEquals("20 kg + plates, to 475 kg", LadderSpec.DefaultPlates.summary())
         assertEquals("Plates, to 40 kg", LadderSpec.Plates(0.0, listOf(20.0)).summary())
     }
 

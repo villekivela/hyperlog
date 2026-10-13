@@ -96,6 +96,7 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
                 if (sql.query("PRAGMA foreign_key_check").use { it.moveToFirst() }) throw Mismatch()
                 // Upgrade steps for files from older databases, as their migrations did.
                 if (database < 18) com.hyperlog.app.data.Migration17To18.moveSharedDumbbells(sql)
+                if (database < 19) com.hyperlog.app.data.Migration18To19.moveSharedPlates(sql)
             }
             Result.Restored
         } catch (_: android.database.SQLException) {

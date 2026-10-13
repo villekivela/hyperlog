@@ -46,6 +46,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.domain.StackReading
 import com.hyperlog.app.domain.WeightUnit
 import com.hyperlog.app.domain.formatKg
@@ -88,8 +89,8 @@ fun LadderEditor(
     onClose: () -> Unit,
     /** The kind a new ladder opens on; null for the first of [kinds]. */
     defaultKind: LadderKind? = null,
-    /** A new plate ladder's plates (the gym's shared ones), loaded from a zero start. */
-    defaultPlates: LadderSpec.Plates? = null,
+    /** The gym's plates, which a plate-loaded machine with no pairs of its own loads. */
+    gymPlates: List<Double> = LadderSpec.DefaultGymPlates,
     /** The gym's plates for the pin, which a pin stack's ladder includes. */
     pinPlates: List<Double> = emptyList(),
     /** Opens on reading the stack from its labels (a stack machine, a dumbbell rack). */
@@ -137,9 +138,9 @@ fun LadderEditor(
     var step by rememberSaveable { mutableStateOf(steps?.step?.let(::formatKg).orEmpty()) }
     var count by rememberSaveable { mutableStateOf(steps?.count?.toString() ?: "20") }
     var list by rememberSaveable { mutableStateOf((spec as? LadderSpec.Explicit)?.kgs?.joinToString(" ") { formatKg(it) }.orEmpty()) }
-    val plates = spec as? LadderSpec.Plates ?: defaultPlates?.takeIf { spec == null }?.copy(baseKg = if (name != null) 0.0 else defaultPlates.baseKg)
-    // A machine starts at 0 kg (its starting weight, editable); the shared plates name their bar.
-    var base by rememberSaveable { mutableStateOf(plates?.baseKg?.let(::formatKg) ?: if (name != null) "0" else "") }
+    val plates = spec as? LadderSpec.Plates
+    // A machine starts at 0 kg (its starting weight, editable) and, with no pairs typed, loads the gym's plates.
+    var base by rememberSaveable { mutableStateOf(plates?.baseKg?.let(::formatKg) ?: if (machine) "0" else "") }
     var pairs by rememberSaveable { mutableStateOf(plates?.pairs?.let(::pairsText).orEmpty()) }
     var pinUnit by rememberSaveable { mutableStateOf(pin?.unit ?: WeightUnit.Kg) }
     var pinExact by rememberSaveable { mutableStateOf((pin ?: LadderSpec.DefaultPinStack).let { shorthand(it, asLabels = false) }) }
@@ -259,10 +260,13 @@ fun LadderEditor(
                     LadderKind.List -> NumberField(list, { list = it }, stringResource(R.string.ladder_list_field), Modifier.fillMaxWidth(), many = true)
                     LadderKind.Plates -> {
                         NumberField(base, { base = it }, stringResource(if (name != null) R.string.ladder_base_machine else R.string.ladder_base), Modifier.fillMaxWidth())
-                        NumberField(pairs, { pairs = it }, stringResource(R.string.ladder_pairs), Modifier.fillMaxWidth(), many = true)
+                        NumberField(
+                            pairs, { pairs = it }, stringResource(R.string.ladder_pairs), Modifier.fillMaxWidth(), many = true,
+                            supporting = if (machine) stringResource(R.string.ladder_pairs_gym) else null,
+                        )
                     }
                 }
-                LadderCheck(draft, pinPlates, status = null)
+                LadderCheck(draft?.withPlates(gymPlates), pinPlates, status = null)
                 if (readable) TextButton(onClick = { reading = true }) { Text(stringResource(R.string.reading_from_labels)) }
             }
             Spacer(Modifier.height(24.dp))
@@ -359,11 +363,12 @@ internal fun shorthand(spec: LadderSpec.PinStack, asLabels: Boolean): String {
 }
 
 @Composable
-private fun NumberField(value: String, onChange: (String) -> Unit, label: String, modifier: Modifier, whole: Boolean = false, many: Boolean = false) {
+private fun NumberField(value: String, onChange: (String) -> Unit, label: String, modifier: Modifier, whole: Boolean = false, many: Boolean = false, supporting: String? = null) {
     OutlinedTextField(
         value,
         onValueChange = onChange,
         label = { Text(label) },
+        supportingText = supporting?.let { { Text(it) } },
         singleLine = !many,
         textStyle = MaterialTheme.typography.bodyLarge.merge(Tnum),
         keyboardOptions = KeyboardOptions(keyboardType = if (whole) KeyboardType.Number else if (many) KeyboardType.Text else KeyboardType.Decimal),

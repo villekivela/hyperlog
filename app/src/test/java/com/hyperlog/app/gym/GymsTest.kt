@@ -70,10 +70,11 @@ class GymsTest {
     }
 
     @Test
-    fun platesAreSharedDefaultsUntilEdited() = runTest {
-        assertEquals(LadderSpec.DefaultPlates, gyms.plates.first())
-        gyms.setPlates(LadderSpec.Plates(15.0, listOf(10.0)))
-        assertEquals(listOf(15.0, 35.0), gyms.plates.first().ladder().rungs)
+    fun theBarbellIsTwentyKgUntilSetAndLoadsTheTypicalPlates() = runTest {
+        assertEquals(20.0, gyms.barbell.first(), 0.0)
+        gyms.setBarbell(15.0)
+        assertEquals(15.0, gyms.barbell.first(), 0.0)
+        assertEquals(LadderSpec.Plates(15.0, LadderSpec.DefaultGymPlates), gyms.shared().plates)
     }
 
     /** 12 Oct 2026 is a Monday. */

@@ -178,7 +178,6 @@ private const val NewExercise = ""
 /** Ladder editor targets besides an equipment item's id. Room ids start at 1. */
 private const val NewItem = 0L
 private const val DumbbellLadder = -1L
-private const val PlateLadder = -2L
 
 /**
  * Today, the running session, or the summary of the one just finished; settings and the
@@ -210,7 +209,6 @@ private fun App(
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
     var libraryQuery by rememberSaveable { mutableStateOf("") }
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
-    val plates by gymsModel.plates.collectAsStateWithLifecycle()
     val bars by gymsModel.bars.collectAsStateWithLifecycle()
     val programSetups by gymsModel.programSetups.collectAsStateWithLifecycle()
     val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
@@ -235,7 +233,7 @@ private fun App(
     val pickGym = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { gymsModel.importGym(it) { id -> gymId = id } }
     }
-    /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
+    /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder]. */
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
     val pastSession by pastModel.session.collectAsStateWithLifecycle()
     val pastSessions by pastModel.sessions.collectAsStateWithLifecycle()
@@ -317,7 +315,6 @@ private fun App(
             onLeave = { left = true },
             onKeepEdits = programModel::propose,
             goals = goals,
-            sharedPlates = plates,
         )
         editing != null -> {
             val id = editing
@@ -329,15 +326,6 @@ private fun App(
                 onClose = { editing = null },
             )
         }
-        screen == Screen.Gyms && ladder == PlateLadder -> LadderEditor(
-            title = stringResource(R.string.gym_plates),
-            name = null,
-            spec = plates,
-            kinds = listOf(LadderKind.Plates),
-            onSave = { _, spec -> (spec as? LadderSpec.Plates)?.let(gymsModel::setPlates); ladder = null },
-            onDelete = null,
-            onClose = { ladder = null },
-        )
         screen == Screen.Gyms && gymId != null && gyms.any { it.id == gymId } -> {
             val gym = gyms.first { it.id == gymId }
             val itemId = ladder
@@ -360,6 +348,7 @@ private fun App(
                     spec = item?.ladder,
                     kinds = LadderKind.Items,
                     pinPlates = gym.pinPlates,
+                    gymPlates = gym.plates,
                     readable = true,
                     onSave = { name, spec -> gymsModel.saveItem(EquipmentItem(item?.id ?: 0, gym.id, name, spec)); ladder = null },
                     onDelete = item?.let { { gymsModel.deleteItem(it.id); ladder = null } },
@@ -378,6 +367,7 @@ private fun App(
                     onRestore = { gymsModel.unmarkMissing(gym.id, it) },
                     onPinPlates = { gymsModel.setPinPlates(gym.id, it) },
                     onDumbbells = { ladder = DumbbellLadder },
+                    onPlates = { gymsModel.setPlates(gym.id, it) },
                     programSetup = programSetups?.second?.get(gym.id),
                     programTitle = programSetups?.first,
                     onAddProgramEquipment = { gymsModel.addProgramEquipment(gym.id, it) },
@@ -385,10 +375,9 @@ private fun App(
             }
         }
         screen == Screen.Gyms -> GymsScreen(
-            gyms, plates, bars,
+            gyms, bars,
             onAddGym = { name -> gymsModel.addGym(name) { gymId = it } },
             onOpenGym = { gymId = it },
-            onPlates = { ladder = PlateLadder },
             onBar = gymsModel::setBar,
             onBack = { screen = Screen.Settings },
             onImport = { gymsModel.closeImportErrors(); pickGym.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
