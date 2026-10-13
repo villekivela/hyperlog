@@ -191,3 +191,7 @@ A limit on what an exercise may demand, such as no grip, no axial load or home e
 **Swap**:
 Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a change.
 _Avoid_: Substitution
+
+**Ask Claude**:
+The hand-off of a situation in your own words to the Claude app: a prompt shared through the share sheet, and the Change Claude replies with pasted back for review. Hyperlog makes no model calls.
+_Avoid_: AI coach, chat

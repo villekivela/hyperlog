@@ -429,6 +429,30 @@ private fun DayToken(letter: String, state: DayState, modifier: Modifier = Modif
     }
 }
 
+/**
+ * One problem of a rejected program file or pasted Change: the path in small monospace over the
+ * message (`operations[0].slot` / `unknown slot "rows"`), or the message alone when it has no path.
+ */
+@Composable
+fun Problem(error: String, modifier: Modifier = Modifier) {
+    val split = error.indexOf(": ")
+    val path = error.substring(0, split.coerceAtLeast(0))
+    Column(modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        if (split > 0 && !path.contains(' ')) {
+            Text(
+                // Zero-width spaces let the path break after its dots; it reads as written.
+                path.replace(".", ".​"),
+                Modifier.clearAndSetSemantics { text = AnnotatedString(path) },
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(error.substring(split + 2), style = MaterialTheme.typography.bodyMedium)
+        } else {
+            Text(error, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
 /** A rejected file's problems, path then message, so it can be fixed in one pass. */
 @Composable
 private fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: () -> Unit) {
@@ -446,24 +470,7 @@ private fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: () 
                     )
                 }
             }
-            items(errors) { error ->
-                val split = error.indexOf(": ")
-                Column(Modifier.fillMaxWidth().padding(horizontal = Margin, vertical = 8.dp)) {
-                    if (split > 0 && !error.startsWith("not valid JSON")) {
-                        val path = error.substring(0, split)
-                        Text(
-                            // Zero-width spaces let the path break after its dots; it reads as written.
-                            path.replace(".", ".\u200B"),
-                            Modifier.clearAndSetSemantics { text = AnnotatedString(path) },
-                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                            color = cs.onSurfaceVariant,
-                        )
-                        Text(error.substring(split + 2), style = MaterialTheme.typography.bodyMedium)
-                    } else {
-                        Text(error, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
+            items(errors) { error -> Problem(error, Modifier.padding(horizontal = Margin)) }
         }
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 16.dp),

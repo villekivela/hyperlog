@@ -29,6 +29,8 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     CheckCircle(R.drawable.symbol_check_circle),
     ChevronRight(R.drawable.symbol_chevron_right),
     Close(R.drawable.symbol_close),
+    ContentCopy(R.drawable.symbol_content_copy),
+    ContentPaste(R.drawable.symbol_content_paste),
     Delete(R.drawable.symbol_delete),
     Edit(R.drawable.symbol_edit),
     ExpandLess(R.drawable.symbol_expand_less),

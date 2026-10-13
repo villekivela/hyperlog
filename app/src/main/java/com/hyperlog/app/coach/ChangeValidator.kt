@@ -17,6 +17,8 @@ object ChangeValidator {
     const val MAX_SETS = 10
     const val MAX_LOAD_PERCENT = 50
     const val MAX_RIR_STEP = 5
+    const val MAX_RIR = 10
+    const val MAX_REST = 900
 
     /** The technique kinds `remove_technique` names, as in a program file. */
     val TechniqueKinds = listOf("dropset", "myo_reps", "lengthened_partials", "iso_hold", "failure")
@@ -46,7 +48,7 @@ object ChangeValidator {
             fun exercise(id: String) { if (id !in exercises) add("""$path.exercise: unknown exercise "$id"""") }
             fun range(key: String, value: Int, min: Int, max: Int, zero: Boolean = true) {
                 if (value !in min..max || (!zero && value == 0)) {
-                    add("$path.$key: must be ${dash(min)} to $max" + if (!zero && value == 0) ", not 0" else "")
+                    add("$path.$key: must be ${signed(min)} to $max" + if (!zero && value == 0) ", not 0" else "")
                 }
             }
             when (op) {
@@ -62,8 +64,8 @@ object ChangeValidator {
                     if (op.sets.isEmpty()) add("$path.sets: at least one set is required")
                     op.sets.forEachIndexed { j, s ->
                         if (s.count !in 1..MAX_SETS) add("$path.sets[$j].count: must be 1 to $MAX_SETS")
-                        s.rir?.let { if (it !in 0..10) add("$path.sets[$j].rir: must be 0 to 10") }
-                        if (s.rest !in 0..900) add("$path.sets[$j].rest: must be 0 to 900 seconds")
+                        s.rir?.let { if (it !in 0..MAX_RIR) add("$path.sets[$j].rir: must be 0 to $MAX_RIR") }
+                        if (s.rest !in 0..MAX_REST) add("$path.sets[$j].rest: must be 0 to $MAX_REST seconds")
                     }
                 }
                 is Operation.AdjustSets -> { slot(op.slot); range("sets", op.sets, 1, MAX_SETS) }
@@ -84,5 +86,5 @@ object ChangeValidator {
     }
 
     /** A real minus sign, as the app writes numbers. */
-    private fun dash(n: Int) = if (n < 0) "−${-n}" else "$n"
+    fun signed(n: Int) = if (n < 0) "−${-n}" else "$n"
 }

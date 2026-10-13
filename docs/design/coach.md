@@ -92,3 +92,59 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
   applies the ticked ones to this session only; the plan is untouched.
 - Not at Kamppi marks the exercise missing at the gym and swaps it straight away (or leaves it out of
   the session with nothing that fits).
+
+## Ask Claude
+
+Ticket #18 adds **Something else** to the Coach screen: free text for the Claude app, and the
+Change pasted back (ADR 0001). Screens `screens/ask-*.png` are Robolectric renders (dark, and
+`ask-04-problems-light`).
+
+### Principles
+
+1. **One more situation, not another screen.** Something else is the sixth row; its details open
+   in place like Pain's areas, and Limits give way to one line on what is shared.
+2. **The filled button is the next step.** Ask Claude until you've asked, then Paste change. The
+   other stays a text button in the same bar.
+3. **Problems read like import's.** Path in small monospace over the message, the same component,
+   with one way back to Claude: copy them.
+4. **Nothing changes without the review.** A good paste opens the same diff as every Change.
+
+### Tokens
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Text field | OutlinedTextField, 3 lines min, label "In your words", 8 dp top, at the 64 dp indent | the words |
+| Shared line | bodyMedium onSurfaceVariant, 8 dp top | what Ask Claude shares |
+| Problems head | titleMedium in `error`, 24 dp top; `content_copy` IconButton at the end | "Not a Change Hyperlog can use" |
+| Problems | the count line (bodyMedium muted), then `Problem` rows (8 dp vertical) | as program import |
+| Bottom bar | `TextButton` (label at the 24 dp margin) left, `Button` right | Paste change has `content_paste` 18 dp |
+
+### Wireframe
+
+```
+ (•) Something else
+     Talk it through with Claude
+     ┌ In your words ───────────────────┐
+     │ Left elbow aches on curls…       │
+     └──────────────────────────────────┘
+     Shares this, your program, the last 4 weeks of sessions and the Change format with the
+     Claude app. Copy its reply, then Paste change.
+     Not a Change Hyperlog can use        ⧉     ← only after a bad paste, scrolled into view
+     3 problems. Nothing changed; ask Claude to fix them, then paste again.
+     operations[0].slot
+     unknown slot "rows"
+ ───────────────────────────────────────────
+ [⎘ Paste change]                [Ask Claude]   ← before asking
+ Ask Claude                  [⎘ Paste change]   ← after
+```
+
+### States
+
+Something else picked, empty (`ask-01`, Ask Claude disabled); words typed (`ask-02`); asked
+(`ask-03`, Paste change filled); a bad paste (`ask-04-problems`); a good paste's review (`ask-05`).
+
+### Interaction rules
+
+- The words and the asked state survive the trip to the Claude app (saved state).
+- Editing the words or picking another situation clears the problems; Back clears them too.
+- Paste reads the whole clipboard; Claude's full reply works, so does the JSON alone.

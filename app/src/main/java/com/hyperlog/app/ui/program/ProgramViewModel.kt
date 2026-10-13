@@ -5,7 +5,11 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
+import com.hyperlog.app.coach.ChangeValidator
+import com.hyperlog.app.library.toExercise
+import com.hyperlog.app.session.PastSessionEditor
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.ui.coach.ChangeReview
 import kotlinx.coroutines.flow.first
@@ -98,6 +102,36 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** Drops the Change under review; nothing changes. */
     fun reject() {
         _review.value = null
+    }
+
+    private val _pasteErrors = MutableStateFlow<List<String>?>(null)
+
+    /** The problems of the Change last pasted, until it's pasted again or the words change. */
+    val pasteErrors: StateFlow<List<String>?> = _pasteErrors.asStateFlow()
+
+    /** The prompt Ask Claude shares for [words]; null with no program running. */
+    suspend fun askClaudePrompt(words: String): String? {
+        val active = programs.active.first() ?: return null
+        val db = HyperlogDatabase.get(getApplication())
+        val library = db.exercises().all().map { it.toExercise() }
+        val sessions = PastSessionEditor(db, programs).sessions()
+        return withContext(Dispatchers.Default) { AskClaude.prompt(words, active, sessions, library) }
+    }
+
+    /** Reads a Change pasted back from Claude: its diff opens for review, or its problems show. */
+    fun paste(text: String) {
+        viewModelScope.launch {
+            val active = programs.active.first() ?: return@launch
+            val ids = HyperlogDatabase.get(getApplication()).exercises().all().map { it.id }.toSet()
+            when (val result = withContext(Dispatchers.Default) { AskClaude.read(text, active.program, ids) }) {
+                is ChangeValidator.Result.Valid -> { _pasteErrors.value = null; propose(result.change) }
+                is ChangeValidator.Result.Invalid -> _pasteErrors.value = result.errors
+            }
+        }
+    }
+
+    fun closePasteErrors() {
+        _pasteErrors.value = null
     }
 
     fun revert(changeId: Long) {

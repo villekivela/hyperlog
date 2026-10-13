@@ -381,6 +381,20 @@
     <string name="coach_resume">Resume as planned.</string>
     <string name="coach_nothing">Nothing in the plan breaks these limits.</string>
     <string name="coach_ease_back">Ease back in</string>
+    <string name="coach_something_else">Something else</string>
+    <string name="coach_something_else_body">Talk it through with Claude</string>
+    <string name="coach_words_label">In your words</string>
+    <string name="coach_words_hint">Elbow aches on curls; the gym closes early on Fridays…</string>
+    <string name="coach_ask_body">Shares this, your program, the last 4 weeks of sessions and the Change format with the Claude app. Copy its reply, then Paste change.</string>
+    <string name="coach_ask">Ask Claude</string>
+    <string name="coach_ask_chooser">Ask Claude</string>
+    <string name="coach_paste">Paste change</string>
+    <string name="coach_copy_problems">Copy problems</string>
+    <string name="coach_paste_failed">Not a Change Hyperlog can use</string>
+    <plurals name="coach_paste_problems">
+        <item quantity="one">1 problem. Nothing changed; ask Claude to fix it, then paste again.</item>
+        <item quantity="other">%1$d problems. Nothing changed; ask Claude to fix them, then paste again.</item>
+    </plurals>
     <string name="start_missing">Not at %1$s · for this session</string>
     <string name="start_missing_none">%1$s: nothing here fits</string>
     <string name="machine_not_here">Not at %1$s</string>

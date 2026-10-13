@@ -32,6 +32,9 @@ import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
 import com.hyperlog.app.ui.coach.ChangeReviewScreen
 import com.hyperlog.app.ui.coach.CoachScreen
+import com.hyperlog.app.ui.coach.AskClaudeShare
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.hyperlog.app.ui.program.ProgramViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -144,6 +147,9 @@ private fun App(
     val pastSession by pastModel.session.collectAsStateWithLifecycle()
     val pastSessions by pastModel.sessions.collectAsStateWithLifecycle()
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
+    val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     if (!loaded) return
 
     val running = session
@@ -268,7 +274,14 @@ private fun App(
             exercises,
             lastTrained,
             onPropose = programModel::propose,
-            onBack = { screen = Screen.Today },
+            onBack = { programModel.closePasteErrors(); screen = Screen.Today },
+            onAskClaude = { words ->
+                scope.launch { programModel.askClaudePrompt(words)?.let { context.startActivity(AskClaudeShare.intent(context, it)) } }
+            },
+            onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
+            pasteErrors = pasteErrors,
+            onClosePasteErrors = programModel::closePasteErrors,
+            onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
         )
         screen == Screen.Past && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         screen == Screen.Past && pastSession != null -> PastSessionScreen(

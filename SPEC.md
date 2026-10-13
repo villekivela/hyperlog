@@ -661,6 +661,35 @@ own apps, so Hyperlog hands off to the Claude app instead:
 4. Copy the final JSON and press **Paste change** in Hyperlog. Hyperlog validates it (known slots
    and exercises, valid ops) and shows the diff. Accept or reject.
 
+**How it works** (`coach/AskClaude.kt`; design: `docs/design/coach.md`, Ask Claude):
+
+- **Where.** **Something else** ("Talk it through with Claude") is the sixth choice on the Coach
+  screen. Picking it opens a text field in place (kept while you're away in the Claude app) and
+  swaps Limits for one line on what is shared. The bottom bar holds **Paste change** and **Ask
+  Claude**; the filled one is the next step: Ask Claude (enabled once there are words), then Paste
+  change once you've asked.
+- **The prompt** is plain English text shared with `ACTION_SEND` through the system share sheet
+  (the user picks the Claude app). It holds, in order: your words quoted; the instruction to talk
+  it through and then reply with exactly one fenced ```` ```json ```` block holding a Change, using
+  only the listed ids; today's date; the program's title, the next day (week, day id, block) and
+  days left; the Changes in force; every block with its days and slots (slot id, exercise id and
+  name, sets as planned in the block's first week or the current one, alternatives, note); the
+  finished sessions of the last 28 days (date, day, gym, each exercise's sets as `80 × 5 @ 1`); the
+  library entries a swap could use (the program's exercises and every visible exercise sharing a
+  movement pattern with one: id, name, equipment, grip, primary muscles); and the Change format.
+- **The format in the prompt is generated** from the code that reads a Change: operation names
+  and fields from the serializer, scopes from the scope serializer, ranges from the validator, and
+  an example Change built for the running program (a swap to the next day's first alternative,
+  +1 RIR, for a week) that the paste accepts. A new operation can't ship without its description.
+- **Paste change** reads the clipboard. It takes the first fenced block holding JSON, else the
+  text from the first `{` to the last `}`, so Claude's whole reply can be copied. A valid Change
+  opens the review screen; Accept goes to Today. Otherwise the problems show under the text field
+  as program import shows them (path over message, "Not a Change Hyperlog can use", "N problems.
+  Nothing changed; ask Claude to fix them, then paste again.") with a copy button to hand them
+  back to Claude, and nothing is applied. A reply with no JSON says "no Change found".
+- **No network.** The manifest removes `INTERNET` and `ACCESS_NETWORK_STATE` (so no library can
+  add them), and a test fails if either is requested or a source opens a connection.
+
 Later, if the paste step gets annoying: a custom MCP connector would let the Claude app read the
 plan and write a pending Change directly. That needs a public HTTPS server holding the data, so it
 waits until syncing is wanted for its own sake.
