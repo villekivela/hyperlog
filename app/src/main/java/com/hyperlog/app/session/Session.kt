@@ -115,15 +115,16 @@ data class ActiveSession(
     val correctable: Boolean get() = followUp == null
 
     /**
-     * The warm-ups before [current]'s first work set, ramped from the weight planned or typed
-     * for it. They go once the first work set is logged.
+     * The warm-ups before [current]'s first work set, ramped from the weight and reps planned or
+     * typed for it (the plan's top reps while none are typed). They go once the first work set is logged.
      */
     val warmups: List<WarmupSet>
         get() {
             val current = current ?: return emptyList()
             if (current.sets.isNotEmpty() || current.needsMachine || followUp != null) return emptyList()
             val kg = entry?.weightKg ?: return emptyList()
-            return Warmups.ramp(kg, current.exercise, current.plan?.firstOrNull()?.reps, current.ladder, plateLoaded = current.plates != null)
+            val reps = entry?.full?.toIntOrNull()?.takeIf { it > 0 } ?: current.plan?.firstOrNull()?.reps?.max
+            return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
         }
 
     /** [current]'s superset partner, or null for straight sets. */

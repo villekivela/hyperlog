@@ -322,7 +322,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      equipment's available weights).
      - The ramp follows the weight planned or typed for the first work set, live. Lifts with
        several joints get 45% × 8, 60% × 5, 75% × 3, 85% × 2 when the first work set is 6 reps or
-       fewer, else 45% × 8, 65% × 5, 85% × 3; single-joint exercises (by movement pattern: curls,
+       fewer (the reps typed for it, else its planned top reps), else 45% × 8, 65% × 5, 85% × 3;
+       single-joint exercises (by movement pattern: curls,
        raises, extensions, flyes, calf raises…) get one, 60% × 8. Each is the nearest rung; on a
        bar or plate-loaded machine, the nearest 5 kg step, so the small plates are only for work
        sets. A warm-up that doesn't climb, or reaches the work weight, is left out (a 20 kg top set

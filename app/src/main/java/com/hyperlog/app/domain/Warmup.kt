@@ -3,7 +3,6 @@ package com.hyperlog.app.domain
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.MovementPattern
-import com.hyperlog.app.program.RepRange
 
 /** A lighter set before the work sets. It is never logged, and counts toward neither volume nor progression. */
 data class WarmupSet(val weightKg: Double, val reps: Int)
@@ -30,15 +29,15 @@ object Warmups {
     )
 
     /**
-     * The warm-ups before a first work set of [workKg] on [ladder]. [reps] is that set's
-     * prescription, null in an ad-hoc session. Bodyweight exercises have none. [plateLoaded]: the
-     * weight is loaded with plates.
+     * The warm-ups before a first work set of [workKg] for [reps] (planned or typed; null while
+     * not known) on [ladder]. Bodyweight exercises have none. [plateLoaded]: the weight is loaded
+     * with plates.
      */
-    fun ramp(workKg: Double, exercise: Exercise, reps: RepRange?, ladder: WeightLadder, plateLoaded: Boolean = false): List<WarmupSet> {
+    fun ramp(workKg: Double, exercise: Exercise, reps: Int?, ladder: WeightLadder, plateLoaded: Boolean = false): List<WarmupSet> {
         if (exercise.equipment == Equipment.Bodyweight || exercise.equipment == Equipment.WeightedBodyweight) return emptyList()
         val scheme = when {
             exercise.pattern in SingleJoint -> Isolation
-            reps != null && reps.min <= 6 -> Heavy
+            reps != null && reps <= 6 -> Heavy
             else -> Medium
         }
         val rungs = if (!plateLoaded) ladder else ladder.rungs.filter { isFiveKgStep(it) && it < workKg }

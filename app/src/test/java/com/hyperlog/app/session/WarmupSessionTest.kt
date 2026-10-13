@@ -108,6 +108,22 @@ class WarmupSessionTest {
     }
 
     @Test
+    fun anAdHocBenchForFiveRepsGetsTheHeavyRamp() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("barbell_bench_press")
+        logger.type("90")
+        assertEquals(3, logger.session.warmups.size)
+        logger.done(); logger.type("5")
+        assertEquals(
+            listOf(WarmupSet(40.0, 8), WarmupSet(55.0, 5), WarmupSet(65.0, 3), WarmupSet(75.0, 2)),
+            logger.session.warmups,
+        )
+        logger.press(PadKey.Backspace); logger.type("8")
+        assertEquals(3, logger.session.warmups.size)
+    }
+
+    @Test
     fun dumbbellsHaveNoPlateCalculator() = runTest {
         val logger = logger()
         logger.startDay(programs.active.first()!!, gymId = null)
