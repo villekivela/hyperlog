@@ -105,7 +105,9 @@ installs and launches it as "Hyperlog prototype". Its decisions live in `SPEC.md
 - **The key** is a PKCS12 keystore (alias `hyperlog`, one password for store and key). It lives
   outside the repo, backed up by the owner, and in the repo's Actions secrets as
   `HYPERLOG_KEYSTORE_BASE64` (`base64 -w0 hyperlog.p12`) and `HYPERLOG_KEYSTORE_PASSWORD`. Losing
-  it means no more updates over the installed app.
+  it means no more updates over the installed app. Its certificate (`CN=Hyperlog`) has SHA-256
+  `e4a80af631f1a0b9df8a3b12d845e9b735805d0ca1f701d0c1becd873cb6652b`; every release APK must
+  print that in `apksigner verify --print-certs`.
 - **Signing a local release build:** set `HYPERLOG_KEYSTORE_FILE` and `HYPERLOG_KEYSTORE_PASSWORD`
   as env vars or Gradle properties (`HYPERLOG_KEY_ALIAS` defaults to `hyperlog`). Without them,
   `assembleRelease` gives `app-release-unsigned.apk`.
