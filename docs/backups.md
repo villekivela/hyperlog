@@ -113,8 +113,12 @@ adb shell bmgr list transports                  # the Google transport is marked
 adb shell bmgr backupnow com.hyperlog.app.dev   # "Package com.hyperlog.app.dev with result: Success"
 adb shell dumpsys backup | grep -A3 hyperlog    # shows the package with a recent backup
 # Restore: clear the data (or uninstall and reinstall), then restore the current set.
+adb shell dumpsys backup | grep Current:        # the current restore set's token, e.g. 3c07c604f1d31717
 adb shell pm clear com.hyperlog.app.dev
-adb shell bmgr restore com.hyperlog.app.dev
+adb shell bmgr restore <token> com.hyperlog.app.dev
 ```
+
+Android 17 needs the token: `bmgr restore <package>` answers "no longer supported". Always name
+the package after it, since a token on its own restores every app on the phone.
 
 Export a manual backup first: `pm clear` deletes the data on the phone.
