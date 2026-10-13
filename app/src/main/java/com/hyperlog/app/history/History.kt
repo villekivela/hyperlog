@@ -24,8 +24,11 @@ import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import kotlinx.coroutines.flow.first
 
-/** The work sets each muscle got in the week starting Monday [start], in body order. */
-data class WeekSets(val start: LocalDate, val sets: Map<String, Int>)
+/**
+ * The work sets each muscle got in the week starting Monday [start], in body order: 1 a set for a
+ * primary muscle, 0.5 for a secondary one.
+ */
+data class WeekSets(val start: LocalDate, val sets: Map<String, Double>)
 
 /** One session on a trend: its top set and the estimate after it. */
 data class TrendPoint(
@@ -70,22 +73,25 @@ class History(
     private val liftGoals = LiftGoals(db)
 
     /**
-     * Sets per primary muscle for the last [weeks] weeks (Monday to Sunday), newest first, this
-     * week included. Every logged work set counts once for each of its exercise's primary muscles,
-     * whatever partials, drops or mini-sets extend it (SPEC, Volume). Warm-ups are never logged.
+     * Sets per muscle for the last [weeks] weeks (Monday to Sunday), newest first, this week
+     * included. Every logged work set counts 1 for each of its exercise's primary muscles and 0.5
+     * for each secondary one, whatever partials, drops or mini-sets extend it (SPEC, Volume).
+     * Warm-ups are never logged.
      */
     suspend fun weeklySets(weeks: Int = 8): List<WeekSets> {
         val thisWeek = monday(today())
         val starts = (0 until weeks).map { thisWeek.minusWeeks(it.toLong()) }
-        val muscles = db.exercises().all().associate { it.id to it.toExercise().muscles }
-        val counts = starts.associateWith { mutableMapOf<String, Int>() }
+        val exercises = db.exercises().all().associate { it.id to it.toExercise() }
+        val counts = starts.associateWith { mutableMapOf<String, Double>() }
         for (session in dao.finishedSessions()) {
             val week = counts[monday(dateOf(session.startedAt))] ?: continue
             for (se in dao.sessionExercises(session.id)) {
                 if (se.removed) continue
                 val sets = dao.sets(se.id).size
                 if (sets == 0) continue
-                for (m in muscles[se.exerciseId].orEmpty()) week[m] = (week[m] ?: 0) + sets
+                val exercise = exercises[se.exerciseId] ?: continue
+                for (m in exercise.muscles) week[m] = (week[m] ?: 0.0) + sets
+                for (m in exercise.secondary - exercise.muscles.toSet()) week[m] = (week[m] ?: 0.0) + sets * 0.5
             }
         }
         return starts.map { start -> WeekSets(start, counts.getValue(start).inBodyOrder()) }
@@ -150,6 +156,6 @@ class History(
 
     private fun monday(date: LocalDate) = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
-    private fun Map<String, Int>.inBodyOrder(): Map<String, Int> =
+    private fun Map<String, Double>.inBodyOrder(): Map<String, Double> =
         entries.sortedBy { (m, _) -> Muscles.indexOf(m).let { if (it < 0) Int.MAX_VALUE else it } }.associate { it.key to it.value }
 }

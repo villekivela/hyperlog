@@ -158,8 +158,27 @@ class RestTimerTest {
         assertEquals("DB Bench Press · Set 2", n.title)
         assertFalse(n.extras.getBoolean(Notification.EXTRA_CHRONOMETER_COUNT_DOWN))
         assertEquals(listOf("End rest"), n.actionTitles)
-        // Out of the app it alerts (sound, heads-up) on its own channel.
+        // Out of the app it alerts (heads-up) on its own channel.
         assertEquals(RestTimer.OVER_CHANNEL, n.channelId)
+    }
+
+    @Test
+    fun restRunningOutOutOfSightVibratesWithNoSoundByDefault() = runTest {
+        // An install from before vibrate-only kept its channel with the sound on.
+        notifications.createNotificationChannel(
+            android.app.NotificationChannel("rest_over", "Rest over", NotificationManager.IMPORTANCE_HIGH),
+        )
+        val logger = logger()
+        logger.log("20")
+        ring(logger)
+
+        val channel = notifications.getNotificationChannel(notification!!.channelId)
+        assertEquals(NotificationManager.IMPORTANCE_HIGH, channel.importance)
+        // No sound until it is turned on for the channel in the system's settings.
+        assertNull(channel.sound)
+        assertTrue(vibrator.isVibrating)
+        // The old channel, which Android won't let the app change, is gone.
+        assertNull(notifications.getNotificationChannel("rest_over"))
     }
 
     @Test

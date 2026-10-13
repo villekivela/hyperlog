@@ -153,7 +153,7 @@ The body's weight on one day, logged on History, one value a day. A weighted bod
 _Avoid_: Body mass, weigh-in
 
 **Weekly sets**:
-The work sets a muscle got in a week (Monday to Sunday), each counted once for every primary muscle of its exercise, whatever partials, drops or mini-sets extend it.
+The work sets a muscle got in a week (Monday to Sunday), each counted as 1 for every primary muscle of its exercise and 0.5 for every secondary muscle, whatever partials, drops or mini-sets extend it.
 _Avoid_: Volume load, tonnage
 
 **Deload**:
