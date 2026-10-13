@@ -303,6 +303,18 @@ available weights belong to a **machine at a gym**, not to an exercise.
   filled in, a cable station's left for you). The answer is remembered per gym and exercise, so the
   next time it goes straight to the sets. The exercise sheet shows the machine and gym, with
   **Change** until a set is logged on it.
+- **Importing a gym.** Settings → Gyms and equipment → **Import gym** reads a gym file
+  (`docs/gym-format.md`) through the system file picker and adds it as a new gym; it never
+  replaces or changes data already there. The file is validated strictly like a program file,
+  every problem listed with its path, and nothing is added until it is clean. A file holds the
+  gym's name, its usual days (`usualDays`), its pin plates, its dumbbell rack, its bars with their
+  weights, and its equipment: stacks, plate-loaded machines, and racks and benches, each stack or
+  plate-loaded item with a ladder of any kind (or the default guess) and the library exercises it
+  serves, which fills in "Which machine?" for them. An item marked `unconfirmed` (the default
+  without a ladder) is a guess: its first use opens its setup from the labels instead of asking
+  which machine. The gym's barbell, EZ, trap and safety bars set what sessions there load the
+  shared plates on; its racks, benches and other bars are listed on the gym screen under **Bars,
+  racks and benches**.
 - **Set up the gym from the program.** With a program active, a gym's screen (so also right after
   adding a gym) opens on a `primaryContainer` card, **Add the equipment your program uses**, while
   the program has machine or cable exercises the gym has no machine for: `6 machines and a cable

@@ -60,6 +60,19 @@ internal data class StoredSession(
     val gym: Gym?,
     val day: PlannedDay?,
 ) {
+    /**
+     * The ladders at the session's gym: its dumbbell rack (the usual one with no gym), and its own
+     * barbell and EZ, trap and safety bars' weights where an imported gym names them.
+     */
+    val here: SharedLadders by lazy {
+        val bars = gym?.kit.orEmpty().mapNotNull { it.bar }.toMap()
+        shared.copy(
+            dumbbells = gym?.dumbbells ?: LadderSpec.DefaultDumbbells,
+            plates = bars["barbell"]?.let { shared.plates.copy(baseKg = it) } ?: shared.plates,
+            bars = shared.bars + SharedLadders.DefaultBars.keys.mapNotNull { e -> bars[e.key]?.let { e to it } },
+        )
+    }
+
     /** [se] as stored: its exercise, its machine (machines and cables only, ADR 0002), ladder, slot and prescription. */
     fun exercise(se: SessionExerciseEntity): StoredExercise {
         val exercise = library.getValue(se.exerciseId)
@@ -68,7 +81,7 @@ internal data class StoredSession(
         return StoredExercise(
             exercise = exercise,
             machine = machine,
-            ladder = shared.copy(dumbbells = gym?.dumbbells ?: LadderSpec.DefaultDumbbells).ladderFor(exercise.equipment, machine, gym?.pinPlates.orEmpty()),
+            ladder = here.ladderFor(exercise.equipment, machine, gym?.pinPlates.orEmpty()),
             slot = slot,
             prescription = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId),
         )

@@ -79,8 +79,13 @@ fun GymsScreen(
     onPlates: () -> Unit,
     onBar: (Equipment, Double) -> Unit,
     onBack: () -> Unit,
+    /** Picks a gym file to import (docs/gym-format.md). */
+    onImport: () -> Unit = {},
+    /** The last gym file's problems, shown in place of the list until closed. */
+    importErrors: List<String>? = null,
+    onCloseImportErrors: () -> Unit = {},
 ) {
-    BackHandler(onBack = onBack)
+    BackHandler(onBack = { if (importErrors != null) onCloseImportErrors() else onBack() })
     var naming by rememberSaveable { mutableStateOf(false) }
     var weighing by rememberSaveable { mutableStateOf<Equipment?>(null) }
     Scaffold(
@@ -93,6 +98,12 @@ fun GymsScreen(
             )
         },
     ) { padding ->
+        if (importErrors != null) {
+            Box(Modifier.fillMaxSize().padding(padding)) {
+                com.hyperlog.app.ui.program.ImportErrors(importErrors, onClose = onCloseImportErrors, onRetry = onImport)
+            }
+            return@Scaffold
+        }
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
           Group {
             gyms.forEach { gym ->
@@ -104,6 +115,7 @@ fun GymsScreen(
                 )
             }
             AddRow(stringResource(R.string.gym_add)) { naming = true }
+            AddRow(stringResource(R.string.gym_import), symbol = Symbol.FileOpen, onClick = onImport)
           }
 
             SectionLabel(stringResource(R.string.gym_shared))
@@ -198,6 +210,23 @@ fun GymScreen(
                 onClick = { pinning = true },
             )
           }
+
+            if (gym.kit.isNotEmpty()) {
+                SectionLabel(stringResource(R.string.gym_kit))
+              Group {
+                gym.kit.forEach { item ->
+                    val bar = item.bar
+                    ListItem(
+                        headlineContent = { Text(item.name) },
+                        supportingContent = {
+                            Text(if (bar != null) stringResource(R.string.gym_kit_bar, formatKg(bar.second)) else stringResource(R.string.gym_kit_rack))
+                        },
+                        leadingContent = { Spacer(Modifier.width(24.dp)) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    )
+                }
+              }
+            }
 
             SectionLabel(stringResource(R.string.gym_days))
           Group {
@@ -392,10 +421,10 @@ internal fun Row(headline: String, supporting: String, symbol: Symbol?, onClick:
 }
 
 @Composable
-private fun AddRow(label: String, onClick: () -> Unit) {
+private fun AddRow(label: String, symbol: Symbol = Symbol.Add, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(label, color = MaterialTheme.colorScheme.primary) },
-        leadingContent = { SymbolIcon(Symbol.Add, null, tint = MaterialTheme.colorScheme.primary) },
+        leadingContent = { SymbolIcon(symbol, null, tint = MaterialTheme.colorScheme.primary) },
         modifier = Modifier.clickable(onClick = onClick),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     )

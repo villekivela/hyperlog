@@ -477,6 +477,10 @@
     <string name="machine_not_here">Not at %1$s</string>
     <string name="gym_missing">Not here</string>
     <string name="gym_cable_station">Every cable exercise · %1$s</string>
+    <string name="gym_import">Import gym</string>
+    <string name="gym_kit">Bars, racks and benches</string>
+    <string name="gym_kit_bar">%1$s kg bar</string>
+    <string name="gym_kit_rack">Rack or bench</string>
     <string name="gym_program_title">Add the equipment your program uses</string>
     <string name="gym_program_station">A cable station for %1$s</string>
     <string name="gym_program_cables">The cable station for %1$d cable exercises in %2$s</string>

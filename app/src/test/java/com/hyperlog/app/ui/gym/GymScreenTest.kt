@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.gym
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -123,5 +125,26 @@ class GymScreenTest {
             }
         }
         compose.onNodeWithText("Add the equipment your program uses").assertDoesNotExist()
+    }
+
+    @Test
+    fun importGymPicksAFileAndShowsItsProblems() {
+        var picked = 0
+        var errors by androidx.compose.runtime.mutableStateOf<List<String>?>(null)
+        compose.setContent {
+            HyperlogTheme {
+                GymsScreen(
+                    emptyList(), LadderSpec.DefaultPlates, bars = emptyMap(),
+                    onAddGym = {}, onOpenGym = {}, onPlates = {}, onBar = { _, _ -> }, onBack = {},
+                    onImport = { picked++ }, importErrors = errors, onCloseImportErrors = { errors = null },
+                )
+            }
+        }
+        compose.onNodeWithText("Import gym").performClick()
+        assertEquals(1, picked)
+        errors = listOf("equipment[0].serves[0]: unknown exercise \"nope\"")
+        compose.onNodeWithText("Not imported").assertExists()
+        compose.onNodeWithText("Choose file").performClick()
+        assertEquals(2, picked)
     }
 }

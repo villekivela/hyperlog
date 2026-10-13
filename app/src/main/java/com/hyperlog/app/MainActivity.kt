@@ -230,6 +230,10 @@ private fun App(
         uri?.let(backupModel::pick)
     }
     var gymId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val gymImportErrors by gymsModel.importErrors.collectAsStateWithLifecycle()
+    val pickGym = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { gymsModel.importGym(it) { id -> gymId = id } }
+    }
     /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
     val pastSession by pastModel.session.collectAsStateWithLifecycle()
@@ -385,6 +389,9 @@ private fun App(
             onPlates = { ladder = PlateLadder },
             onBar = gymsModel::setBar,
             onBack = { screen = Screen.Settings },
+            onImport = { gymsModel.closeImportErrors(); pickGym.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+            importErrors = gymImportErrors,
+            onCloseImportErrors = gymsModel::closeImportErrors,
         )
         screen == Screen.Library -> LibraryScreen(
             exercises,

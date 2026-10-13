@@ -38,6 +38,33 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
             }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    private val _importErrors = kotlinx.coroutines.flow.MutableStateFlow<List<String>?>(null)
+
+    /** The problems of the last gym file rejected, until closed. */
+    val importErrors: StateFlow<List<String>?> = _importErrors
+
+    /** Reads the gym file at [uri] and adds its gym if the file is valid; [then] gets the new gym's id. */
+    fun importGym(uri: android.net.Uri, then: (Long) -> Unit) {
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            val text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { app.contentResolver.openInputStream(uri)?.use { it.bufferedReader().readText() } }.getOrNull()
+            }
+            if (text == null) {
+                _importErrors.value = listOf(app.getString(com.hyperlog.app.R.string.program_unreadable))
+                return@launch
+            }
+            when (val result = store.import(text)) {
+                is Gyms.Import.Added -> { _importErrors.value = null; then(result.gymId) }
+                is Gyms.Import.Invalid -> _importErrors.value = result.errors
+            }
+        }
+    }
+
+    fun closeImportErrors() {
+        _importErrors.value = null
+    }
+
     override fun addProgramEquipment(gymId: Long, stack: LadderSpec) = run {
         programSetups.value?.second?.get(gymId)?.let { store.addProgramEquipment(gymId, it, stack) }
     }

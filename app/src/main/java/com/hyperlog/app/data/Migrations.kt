@@ -9,7 +9,7 @@ val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migrati
 /**
  * v18 (easier equipment): a gym's small plates for the pin of its stacks, a dumbbell rack per gym
  * in place of the one shared ladder, how sure each machine's ladder is, the gym's cable station,
- * and the stack chosen for setting a gym up from the program.
+ * the stack chosen for setting a gym up from the program, and racks and bars from an imported gym.
  */
 object Migration17To18 : Migration(17, 18) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -18,6 +18,7 @@ object Migration17To18 : Migration(17, 18) {
         db.execSQL("ALTER TABLE gym ADD COLUMN default_stack TEXT")
         db.execSQL("ALTER TABLE equipment_item ADD COLUMN ladder_state TEXT NOT NULL DEFAULT 'confirmed'")
         db.execSQL("ALTER TABLE equipment_item ADD COLUMN cable_station INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE equipment_item ADD COLUMN kind TEXT NOT NULL DEFAULT 'machine'")
         moveSharedDumbbells(db)
     }
 

@@ -48,6 +48,8 @@ data class EquipmentItemEntity(
     @ColumnInfo(name = "ladder_state", defaultValue = "confirmed") val ladderState: String = "confirmed",
     /** The gym's one shared cable station, which every cable exercise there defaults to. */
     @ColumnInfo(name = "cable_station", defaultValue = "0") val cableStation: Boolean = false,
+    /** `machine` (a machine or cable station), `rack` (a rack or bench), or `bar:<kind>` (a bar, its weight the ladder). */
+    @ColumnInfo(defaultValue = "machine") val kind: String = "machine",
 )
 
 /** The machine or cable station an exercise is done on at a gym, remembered from the first time. */

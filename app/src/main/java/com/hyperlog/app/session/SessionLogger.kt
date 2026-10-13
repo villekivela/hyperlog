@@ -822,7 +822,8 @@ class SessionLogger(
             return
         }
         val context = stored.context(row)
-        val (_, shared, gym, day) = context
+        val (_, _, gym, day) = context
+        val shared = context.here
         checked = null
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.map { se ->
             val (exercise, machine, ladder, slot, plan) = context.exercise(se)

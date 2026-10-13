@@ -9,6 +9,8 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.SharedLadderEntity
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.library.Equipment
+import androidx.room.withTransaction
+import com.hyperlog.app.library.toExercise
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -29,6 +31,8 @@ data class Gym(
     val pinPlates: List<Double> = LadderSpec.DefaultPinPlates,
     /** The gym's dumbbell rack. */
     val dumbbells: LadderSpec = LadderSpec.DefaultDumbbells,
+    /** Its racks, benches and bars, from an imported gym file: listed, but no exercise is done "on" them. */
+    val kit: List<EquipmentItem> = emptyList(),
     /** The machine each exercise is done on here, remembered from "Which machine?" or the setup. */
     val machines: Map<String, Long> = emptyMap(),
     /** The stack chosen for setting the gym up from the program; null until chosen. */
@@ -49,7 +53,18 @@ data class EquipmentItem(
     val state: LadderState = LadderState.Confirmed,
     /** The gym's shared cable station: every cable exercise there defaults to it. */
     val cableStation: Boolean = false,
-)
+    /** [MACHINE], [RACK], or a bar (`bar:ez_bar`, see [bar]). Only machines are in [Gym.items]. */
+    val kind: String = MACHINE,
+) {
+    /** A bar's kind (`ez_bar`) and weight; null for anything else. */
+    val bar: Pair<String, Double>? get() = kind.takeIf { it.startsWith(BAR) }?.let { it.removePrefix(BAR) to ladder.ladder().rungs.first() }
+
+    companion object {
+        const val MACHINE = "machine"
+        const val RACK = "rack"
+        const val BAR = "bar:"
+    }
+}
 
 /**
  * How sure a machine's ladder is (SPEC, Learning a stack). Set up or edited by hand, it is
@@ -70,7 +85,7 @@ enum class LadderState(val key: String) {
  * every gym shares (SPEC, Gyms and equipment). Shared ladders read as the SPEC defaults until
  * edited.
  */
-class Gyms(db: HyperlogDatabase) {
+class Gyms(private val db: HyperlogDatabase) {
     private val dao = db.gyms()
 
     val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems(), dao.observeMissing(), dao.observeRemembered()) { gyms, items, missing, remembered ->
@@ -105,6 +120,49 @@ class Gyms(db: HyperlogDatabase) {
 
     /** One gym with its equipment, as it is now; archived items come too, for the sessions that used them. */
     suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id), dao.remembered(id)) }
+
+    /** What importing a gym file did: added the gym, or nothing, with the file's problems. */
+    sealed interface Import {
+        data class Added(val gymId: Long) : Import
+        data class Invalid(val errors: List<String>) : Import
+    }
+
+    /**
+     * Imports the gym in [text] (docs/gym-format.md) as a new gym, all in one transaction: its
+     * usual days, pin plates, dumbbell rack, bars, racks and machines, each machine remembered for
+     * the exercises it serves. Gyms already here are never changed.
+     */
+    suspend fun import(text: String): Import {
+        val library = db.exercises().all().associate { it.id to it.toExercise() }
+        val file = when (val result = GymFile.parse(text, library)) {
+            is GymFile.Result.Invalid -> return Import.Invalid(result.errors)
+            is GymFile.Result.Valid -> result.gym
+        }
+        val plates = shared().plates
+        val id = db.withTransaction {
+            val id = addGym(file.name)
+            setWeekdays(id, file.usualDays)
+            file.pinPlates?.let { setPinPlates(id, it) }
+            file.dumbbells?.let { setDumbbells(id, it) }
+            file.bars.forEach { addItem(EquipmentItem(gymId = id, name = it.name, ladder = LadderSpec.Explicit(listOf(it.kg)), kind = EquipmentItem.BAR + it.kind)) }
+            file.equipment.forEach { item ->
+                if (item.kind == GymFile.Kind.RackBench) {
+                    addItem(EquipmentItem(gymId = id, name = item.name, ladder = LadderSpec.Explicit(emptyList()), kind = EquipmentItem.RACK))
+                    return@forEach
+                }
+                val ladder = (item.ladder as? LadderSpec.Plates)?.takeIf { item.sharedPlates }?.copy(pairs = plates.pairs) ?: item.ladder!!
+                val machine = addItem(
+                    EquipmentItem(
+                        gymId = id, name = item.name, ladder = ladder, cableStation = item.cableStation,
+                        state = if (item.unconfirmed) LadderState.Unconfirmed else LadderState.Confirmed,
+                    ),
+                )
+                item.serves.forEach { remember(id, it, machine) }
+            }
+            id
+        }
+        return Import.Added(id)
+    }
 
     /**
      * Adds what [setup] needs at [gymId] in one go: a machine for each machine exercise (one
@@ -162,10 +220,10 @@ class Gyms(db: HyperlogDatabase) {
 
     /** Adds an equipment item and returns its id. */
     suspend fun addItem(item: EquipmentItem): Long =
-        dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode(), ladderState = item.state.key, cableStation = item.cableStation))
+        dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode(), ladderState = item.state.key, cableStation = item.cableStation, kind = item.kind))
 
     suspend fun saveItem(item: EquipmentItem) {
-        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived, item.state.key, item.cableStation))
+        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived, item.state.key, item.cableStation, item.kind))
     }
 
     /** Machine [id]'s ladder as set up or taken from an offer: confirmed from now on. */
@@ -216,13 +274,14 @@ class Gyms(db: HyperlogDatabase) {
 
     private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList(), remembered: List<GymExerciseItemEntity> = emptyList()) =
         Gym(
-            id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet(), pinPlates.toPinPlates(),
+            id, name, items.filter { it.kind == EquipmentItem.MACHINE }.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet(), pinPlates.toPinPlates(),
             dumbbells?.let { LadderSpec.decode(it) } ?: LadderSpec.DefaultDumbbells,
+            items.filter { it.kind != EquipmentItem.MACHINE && !it.archived }.mapNotNull { it.toItem() },
             remembered.associate { it.exerciseId to it.equipmentItemId },
             defaultStack?.let { LadderSpec.decode(it) },
         )
 
-    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState), cableStation) }
+    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState), cableStation, kind) }
 
     companion object {
         /** The name of a cable station the app makes. */

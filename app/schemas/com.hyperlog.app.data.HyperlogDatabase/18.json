@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 18,
-    "identityHash": "d1886e31dc50ef698beac69524520169",
+    "identityHash": "cdb6702592351c06d2fa8ba9d87585a6",
     "entities": [
       {
         "tableName": "exercise",
@@ -550,7 +550,7 @@
       },
       {
         "tableName": "equipment_item",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gym_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ladder` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, `ladder_state` TEXT NOT NULL DEFAULT 'confirmed', `cable_station` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gym_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ladder` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, `ladder_state` TEXT NOT NULL DEFAULT 'confirmed', `cable_station` INTEGER NOT NULL DEFAULT 0, `kind` TEXT NOT NULL DEFAULT 'machine', FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -596,6 +596,13 @@
             "affinity": "INTEGER",
             "notNull": true,
             "defaultValue": "0"
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'machine'"
           }
         ],
         "primaryKey": {
@@ -1223,7 +1230,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd1886e31dc50ef698beac69524520169')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cdb6702592351c06d2fa8ba9d87585a6')"
     ]
   }
 }

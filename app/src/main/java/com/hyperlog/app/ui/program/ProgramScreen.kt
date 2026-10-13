@@ -451,7 +451,7 @@ fun Problem(error: String, modifier: Modifier = Modifier) {
 
 /** A rejected file's problems, path then message, so it can be fixed in one pass. */
 @Composable
-private fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: () -> Unit) {
+internal fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
