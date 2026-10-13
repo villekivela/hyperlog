@@ -345,7 +345,7 @@
     <string name="program_action_skip">Skip day</string>
     <string name="program_action_repeat">Repeat week</string>
     <string name="program_action_deload">Deload week</string>
-    <string name="program_action_shift">Shift plan</string>
+    <string name="program_action_shift">Shift program</string>
     <string name="program_skip_summary">Skip week %1$d · %2$s</string>
     <string name="program_repeat_summary">Repeat week %1$d</string>
     <string name="program_deload_summary">Week %1$d as a deload</string>

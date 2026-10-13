@@ -19,6 +19,6 @@ object ProgramActions {
     /** The week Repeat week runs again from [position]: the one of the last day trained. */
     fun repeatedWeek(position: Position): Int = (if (position.day > 0) position.week else position.week - 1).coerceAtLeast(1)
 
-    /** Shift plan offers 1 to this many weeks later. */
+    /** Shift program offers 1 to this many weeks later. */
     const val MAX_SHIFT_WEEKS = 8
 }

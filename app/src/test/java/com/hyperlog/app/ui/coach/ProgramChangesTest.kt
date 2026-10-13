@@ -42,7 +42,7 @@ class ProgramChangesTest {
     @Test
     fun shiftingTheProgramByOneWeekShowsADiffAndAppliesOnlyAfterAccept() {
         programAtWeek(3)
-        compose.onNodeWithText("Shift plan").performClick()
+        compose.onNodeWithText("Shift program").performClick()
         compose.onNodeWithText("1 week later").assertIsDisplayed()
         compose.onNodeWithText("Review").performClick()
 
@@ -57,7 +57,7 @@ class ProgramChangesTest {
         compose.waitGone("Review change")
         compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
 
-        compose.onNodeWithText("Shift plan").performClick()
+        compose.onNodeWithText("Shift program").performClick()
         compose.onNodeWithText("Review").performClick()
         compose.waitFor("Accept")
         compose.onNodeWithText("Accept").performClick()

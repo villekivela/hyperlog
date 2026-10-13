@@ -27,7 +27,7 @@ against the current plan with Accept and Reject. It extends `program-and-today.m
 | Slot row | 72 dp min, 8 dp vertical padding | One slot of the diff |
 | Day head | 48 dp, labelLarge, 20 dp top | `Week 4 · Day A — Heavy bench…`, `Deload` at the right in tertiary |
 | Arrow | `arrow_forward` 18 dp, primary, 8 dp each side | between before and after |
-| Action chips | AssistChip, 8 dp gaps, flow to two rows | Skip day `skip_next`, Repeat week `replay`, Deload week `spa`, Shift plan `more_time` |
+| Action chips | AssistChip, 8 dp gaps, flow to two rows | Skip day `skip_next`, Repeat week `replay`, Deload week `spa`, Shift program `more_time` |
 | Change row | 72 dp min; summary bodyLarge (2 lines), scope · date bodyMedium; `undo` IconButton | Program → Changes |
 
 ## Wireframes
@@ -58,7 +58,7 @@ against the current plan with Accept and Reject. It extends `program-and-today.m
 ```
  Next  Week 3 · Day B — Hinge, close-grip…
  [⏭ Skip day] [⟲ Repeat week]
- [✿ Deload week] [⏱ Shift plan]
+ [✿ Deload week] [⏱ Shift program]
  Changes                                         ← section head, as block heads
  Hands need a week off grip work…           ↶
  13 Oct – 19 Oct · accepted 13 Oct
@@ -75,7 +75,7 @@ against the current plan with Accept and Reject. It extends `program-and-today.m
 - **Nothing changes** (e.g. a swap for a slot outside the window): "Nothing in the plan changes."
 - **Program**: actions under Next while the program runs, none when finished
   (`change-01-program-actions`); Changes list once one is accepted (`change-03`, `change-06`).
-- **Shift plan** dialog: body text, − `1 week later` + (1–8), Cancel / Review. **Revert** dialog:
+- **Shift program** dialog: body text, − `1 week later` + (1–8), Cancel / Review. **Revert** dialog:
   "Revert “<summary>”?", Revert / Cancel. Dialogs don't render in Robolectric captures.
 
 ## Interaction rules

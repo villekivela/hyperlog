@@ -452,7 +452,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    repeat week, deload week, shift the remaining plan by N weeks. Reached from Today's top bar.
    - **The actions are Changes**, chips under the Next line while the program runs: **Skip day**
      (`skip_day`), **Repeat week** (`repeat_week`), **Deload week** (`deload_week` for the week
-     you're in) and **Shift plan** (`shift_program`, 1–8 weeks later, picked by steps first). Each
+     you're in) and **Shift program** (`shift_program`, 1–8 weeks later, picked by steps first). Each
      opens its diff, and applies only on Accept. Accepted Changes are listed under **Changes**
      with Revert (Coaching).
    - Each block is a heading (`Build · weeks 3–6`), each week a row of day tokens (A, B, C…): done,
