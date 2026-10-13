@@ -98,6 +98,10 @@ class BackupsTest {
         gyms.markMissing(gym, "leg_extension")
         gyms.setPinPlates(gym, listOf(2.5, 1.25, 1.25))
         gyms.addItem(EquipmentItem(gymId = gym, name = "Chest press", ladder = LadderSpec.DefaultPinStack.copy(builtIn = listOf(2.5, 2.5))))
+        // v18: a guessed cable station, a rack from an imported gym, and the gym's default stack.
+        gyms.addItem(EquipmentItem(gymId = gym, name = "Crossover", ladder = LadderSpec.DefaultPinStack, state = com.hyperlog.app.gym.LadderState.Guess, cableStation = true))
+        gyms.addItem(EquipmentItem(gymId = gym, name = "Squat rack", ladder = LadderSpec.Explicit(emptyList()), kind = EquipmentItem.RACK))
+        db.openHelper.writableDatabase.execSQL("UPDATE gym SET default_stack = '${LadderSpec.LbPinStack.encode()}'")
 
         val programs = Programs(db, clock = { now })
         programs.import(program)
@@ -324,5 +328,19 @@ class BackupsTest {
         assertEquals(Backups.Contents.Readable(exportedAt = now), Backups(phone).read(file))
         assertEquals(Backups.Contents.Unreadable(Backups.Reason.NotABackup), Backups(phone).read("{}"))
         assertEquals(before, dump(phone))
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase18StillRestores() = runTest {
+        // DB v18: pin plates, a gym's own dumbbells and default stack, a guessed cable station and a rack.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db18.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val gym = Gyms(phone).gyms.first().single()
+        assertEquals(listOf(2.5, 1.25, 1.25), gym.pinPlates)
+        assertEquals(LadderSpec.LbPinStack, gym.defaultStack)
+        assertEquals(listOf("Squat rack"), gym.kit.map { it.name })
+        val station = gym.items.single { it.cableStation }
+        assertEquals(com.hyperlog.app.gym.LadderState.Guess, station.state)
     }
 }
