@@ -1,7 +1,5 @@
 package com.hyperlog.app.ui.session
 
-import android.os.VibrationEffect
-import android.os.Vibrator
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,10 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -30,9 +27,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,13 +53,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -73,42 +71,39 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
-import com.hyperlog.app.session.keptEdits
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
-import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.library.Exercise
-import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.gym.EquipmentItem
-import com.hyperlog.app.ui.gym.LadderEditor
-import com.hyperlog.app.ui.gym.LadderKind
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import com.hyperlog.app.history.GoalProgress
+import com.hyperlog.app.library.Equipment
+import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.TechniqueVideo
 import com.hyperlog.app.library.search
-import com.hyperlog.app.ui.library.SearchField
-import com.hyperlog.app.ui.library.openTechniqueVideo
-import com.hyperlog.app.session.SessionExercise
-import com.hyperlog.app.session.SessionOrder
-import com.hyperlog.app.session.FollowUp
-import com.hyperlog.app.session.Correction
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
-import com.hyperlog.app.history.GoalProgress
+import com.hyperlog.app.session.ActiveSession
+import com.hyperlog.app.session.Correction
+import com.hyperlog.app.session.FollowUp
+import com.hyperlog.app.session.SessionExercise
+import com.hyperlog.app.session.SessionOrder
+import com.hyperlog.app.session.keptEdits
+import com.hyperlog.app.ui.gym.LadderEditor
+import com.hyperlog.app.ui.gym.LadderKind
 import com.hyperlog.app.ui.history.GoalFigure
 import com.hyperlog.app.ui.history.TrendChart
 import com.hyperlog.app.ui.history.goalLabel
 import com.hyperlog.app.ui.history.goalStatus
+import com.hyperlog.app.ui.library.SearchField
+import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
-import androidx.compose.material3.Button
 import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlinx.coroutines.delay
 
@@ -549,93 +544,6 @@ private fun SwappedLine(planned: String) {
             style = MaterialTheme.typography.labelLarge, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
     }
-}
-
-/**
- * The one clock. During rest it drains left to right; after rest it counts up in a muted
- * container until the next set is logged.
- */
-@Composable
-private fun RestPill(leftMs: Long, totalMs: Long, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    val over = leftMs <= 0
-    TimerPill(
-        Symbol.Timer, stringResource(R.string.rest_title), clock(leftMs),
-        fraction = if (over || totalMs <= 0) 0f else leftMs.toFloat() / totalMs,
-        container = if (over) cs.surfaceContainerHigh else cs.secondaryContainer,
-        content = if (over) cs.onSurfaceVariant else cs.onSecondaryContainer,
-        onClick = onClick,
-    )
-}
-
-/** The 15 s breathing pause before a myo mini-set, drained like rest, with `air`. */
-@Composable
-private fun BreathPill(leftMs: Long, totalMs: Long) {
-    TimerPill(
-        Symbol.Air, stringResource(R.string.breathing), clock(leftMs),
-        fraction = if (totalMs <= 0) 0f else leftMs.toFloat() / totalMs,
-    )
-}
-
-/** The iso hold's timer: it counts up and fills toward the target; past it, it reads in primary. */
-@Composable
-private fun HoldPill(heldMs: Long, targetMs: Long) {
-    val cs = MaterialTheme.colorScheme
-    val reached = heldMs >= targetMs
-    HoldReachedBuzz(reached)
-    TimerPill(
-        Symbol.PanTool, stringResource(R.string.technique_iso_name), clock(-heldMs).removePrefix("+"),
-        fraction = if (reached) 0f else if (targetMs <= 0) 1f else heldMs.toFloat() / targetMs,
-        container = if (reached) cs.primary else cs.secondaryContainer,
-        content = if (reached) cs.onPrimary else cs.onSecondaryContainer,
-    )
-}
-
-/**
- * The header's timer pill, for rest, a breathing pause and a hold: [symbol] and [time] on a
- * 40 dp pill, filled from the left to [fraction] of its width. [onClick] null: it can't be tapped.
- */
-@Composable
-private fun TimerPill(
-    symbol: Symbol,
-    description: String,
-    time: String,
-    fraction: Float,
-    container: Color = MaterialTheme.colorScheme.secondaryContainer,
-    content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    onClick: (() -> Unit)? = null,
-) {
-    val fill = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
-    val filled = fraction.coerceIn(0f, 1f)
-    val inside = @Composable {
-        Row(
-            Modifier.drawBehind { drawRect(fill, size = Size(size.width * filled, size.height)) }.height(40.dp).padding(start = 12.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SymbolIcon(symbol, description, Modifier.width(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(time, style = MaterialTheme.typography.titleMedium.merge(Tnum))
-        }
-    }
-    if (onClick != null) Surface(onClick = onClick, shape = CircleShape, color = container, contentColor = content) { inside() }
-    else Surface(shape = CircleShape, color = container, contentColor = content) { inside() }
-}
-
-/** Buzzes once when the hold reaches its target. */
-@Composable
-private fun HoldReachedBuzz(reached: Boolean) {
-    val context = LocalContext.current
-    LaunchedEffect(reached) {
-        if (reached) context.getSystemService(Vibrator::class.java)?.vibrate(VibrationEffect.createOneShot(350, VibrationEffect.DEFAULT_AMPLITUDE))
-    }
-}
-
-/** `1:42` while counting down, `+0:12` after. */
-private fun clock(leftMs: Long): String {
-    val over = leftMs <= 0
-    val ms = if (over) -leftMs else leftMs
-    val secs = if (over) ms / 1000 else (ms + 999) / 1000
-    return (if (over) "+" else "") + "%d:%02d".format(secs / 60, secs % 60)
 }
 
 @Composable
