@@ -26,6 +26,14 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.session.SessionSummary
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
@@ -38,10 +46,12 @@ import kotlin.math.roundToInt
 fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, onOpen: ((Int) -> Unit)? = null) {
     BackHandler(onBack = onClose)
     val cs = MaterialTheme.colorScheme
-    Surface(modifier.fillMaxSize(), color = cs.surface) {
-        Column(Modifier.statusBarsPadding().navigationBarsPadding()) {
+    Surface(modifier.fillMaxSize(), color = Tones.screen) {
+        Column(Modifier.statusBarsPadding()) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) {
-                Text(stringResource(R.string.done_title), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineSmall)
+                // The end of a session is the one moment worth a flourish: the shaped check.
+                ShapedSymbol(Symbol.CheckCircle, Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 16.dp), size = 64.dp)
+                Text(stringResource(R.string.done_title), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineMedium)
                 val minutes = ((summary.finishedAt - summary.startedAt) / 60_000.0).roundToInt()
                 Text(
                     stringResource(
@@ -56,7 +66,8 @@ fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: ()
                 Spacer(Modifier.height(16.dp))
                 SummaryRows(summary.exercises, onOpen)
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = Margin, vertical = 16.dp), horizontalArrangement = Arrangement.End) {
+            BottomActions(padding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
+                Spacer(Modifier.weight(1f))
                 // Finished by mistake: back into the session exactly as it was.
                 TextButton(onClick = onResume) { Text(stringResource(R.string.today_resume_session)) }
                 Spacer(Modifier.width(8.dp))

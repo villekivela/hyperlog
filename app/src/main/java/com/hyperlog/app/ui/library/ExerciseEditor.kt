@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.library
 
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -114,9 +116,12 @@ fun ExerciseEditor(
     BackHandler(onBack = close)
 
     Scaffold(
+
+        containerColor = Tones.screen,
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(if (exercise == null) R.string.editor_new else R.string.editor_edit)) },
                 navigationIcon = {
                     IconButton(onClick = close) { SymbolIcon(Symbol.Close, stringResource(R.string.editor_close)) }

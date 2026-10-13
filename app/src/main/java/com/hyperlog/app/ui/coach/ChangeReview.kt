@@ -48,6 +48,18 @@ import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.CardShape
+import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.SectionCard
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.lazy.itemsIndexed
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -86,8 +98,10 @@ fun ChangeReviewScreen(
     val name = { id: String -> exerciseNames[id] ?: id }
     Scaffold(
         modifier = modifier,
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.change_review_title)) },
                 navigationIcon = {
                     IconButton(onClick = onReject) { SymbolIcon(Symbol.Close, stringResource(R.string.change_reject)) }
@@ -95,30 +109,26 @@ fun ChangeReviewScreen(
             )
         },
         bottomBar = {
-            Column {
-                HorizontalDivider(color = cs.outlineVariant)
-                Row(
-                    Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = onReject) { Text(stringResource(R.string.change_reject)) }
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = onAccept) { Text(stringResource(R.string.change_accept)) }
-                }
+            BottomActions(padding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = onReject) { Text(stringResource(R.string.change_reject)) }
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = onAccept) { Text(stringResource(R.string.change_accept)) }
             }
         },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag(ChangeDiffTag)) {
+            // What the Change is, and where it moves the program, in one card at the top.
             item {
-                Column(Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 16.dp)) {
+                SectionCard(Modifier.padding(top = 8.dp, bottom = 8.dp)) {
                     Text(review.change.summary, style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(scopeText(review.change.scope, review.blockName), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    review.diff.next?.let { (from, to) ->
+                        Spacer(Modifier.height(8.dp))
+                        PositionRows(review.program, from, to, review.diff.daysLeft)
+                    }
                 }
-            }
-            review.diff.next?.let { (from, to) ->
-                item { PositionRows(review.program, from, to, review.diff.daysLeft) }
             }
             if (review.diff.next == null && review.diff.days.isEmpty()) {
                 item {
@@ -132,8 +142,8 @@ fun ChangeReviewScreen(
             }
             review.diff.days.forEach { day ->
                 item(key = "day-${day.day.position.week}-${day.day.position.day}") { DayHead(day) }
-                items(day.slots, key = { "slot-${day.day.position.week}-${day.day.position.day}-${(it.after ?: it.before)!!.id}" }) { slot ->
-                    SlotRow(slot, name)
+                itemsIndexed(day.slots, key = { _, it -> "slot-${day.day.position.week}-${day.day.position.day}-${(it.after ?: it.before)!!.id}" }) { i, slot ->
+                    Segment(i, day.slots.size) { SlotRow(slot, name) }
                 }
             }
             item { Spacer(Modifier.height(24.dp)) }
@@ -157,7 +167,7 @@ fun shortDate(date: LocalDate): String = DayMonth.format(date)
 /** Where the next day moves, and how many days are left, before → after. */
 @Composable
 private fun PositionRows(program: Program, from: Position, to: Position, left: Pair<Int, Int>?) {
-    Column(Modifier.padding(horizontal = Margin).padding(bottom = 8.dp)) {
+    Column {
         HeadRow(stringResource(R.string.change_next), dayName(program, from), dayName(program, to))
         left?.let { (a, b) ->
             HeadRow(
@@ -204,14 +214,14 @@ private fun DayHead(day: DayDiff) {
     val cs = MaterialTheme.colorScheme
     val head = stringResource(R.string.change_day_head, day.day.position.week, day.day.day.name)
     Row(
-        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = Margin).padding(top = 20.dp),
+        Modifier.fillMaxWidth().padding(horizontal = Margin).padding(top = 24.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Text(
             head,
             Modifier.weight(1f),
             style = MaterialTheme.typography.labelLarge,
-            color = cs.onSurfaceVariant,
+            color = cs.primary,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -234,7 +244,7 @@ private fun SlotRow(slot: SlotDiff, name: (String) -> String) {
     val before = slot.before
     val after = slot.after
     val shown = after ?: before!!
-    Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = Margin, vertical = 8.dp)) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp)) {
         Text(
             shown.label,
             Modifier.width(LabelColumn).alignByBaseline(),

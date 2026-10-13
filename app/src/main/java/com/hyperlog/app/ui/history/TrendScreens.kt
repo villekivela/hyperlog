@@ -1,5 +1,10 @@
 package com.hyperlog.app.ui.history
 
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.CardPadding
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -73,9 +78,11 @@ fun ExerciseTrendScreen(
     BackHandler(onBack = onBack)
     var editingGoal by rememberSaveable { mutableStateOf(false) }
     Scaffold(
+        containerColor = Tones.screen,
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(trend.exercise.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
                 actions = {
@@ -120,7 +127,11 @@ fun ExerciseTrendScreen(
                         onGoal = { editingGoal = true },
                     )
                 }
-                items(line.points.reversed(), key = { "row-$n-${it.sessionId}" }) { p -> PointRow(trend, p) { onOpenSession(p.sessionId) } }
+                val rows = line.points.reversed()
+                item(key = "rows-gap-$n") { Spacer(Modifier.height(8.dp)) }
+                itemsIndexed(rows, key = { _, it -> "row-$n-${it.sessionId}" }) { i, p ->
+                    Segment(i, rows.size, onClick = { onOpenSession(p.sessionId) }) { PointRow(trend, p) }
+                }
             }
             item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }
         }
@@ -208,10 +219,10 @@ private fun Legend() {
 
 /** A session on the trend, as a table row: date, top set, estimate. */
 @Composable
-private fun PointRow(trend: ExerciseTrend, p: TrendPoint, onClick: () -> Unit) {
+private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 48.dp).padding(horizontal = Margin),
+        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = CardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
@@ -249,9 +260,11 @@ fun BodyweightScreen(
     val index = days.indexOfFirst { it.date.toEpochDay() == selected }.takeIf { it >= 0 } ?: (days.size - 1)
     val cs = MaterialTheme.colorScheme
     Scaffold(
+        containerColor = Tones.screen,
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.history_bodyweight)) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
                 actions = { IconButton(onClick = { logging = true }) { SymbolIcon(Symbol.Add, stringResource(R.string.history_log_bodyweight)) } },
@@ -263,14 +276,17 @@ fun BodyweightScreen(
                 item { LogBodyweight(bodyweights.firstOrNull()?.kg, onSave = { logging = false; onLog(it) }, onDismiss = { logging = false }) }
             }
             item { BodyweightChart(days, index, onSelect = { selected = days[it].date.toEpochDay() }, onDelete = { onDelete(it); selected = null }) }
-            items(bodyweights, key = { it.date.toEpochDay() }) { b ->
+            item { Spacer(Modifier.height(8.dp)) }
+            itemsIndexed(bodyweights, key = { _, it -> it.date.toEpochDay() }) { i, b ->
                 val picked = days.getOrNull(index)?.date == b.date
+                Segment(i, bodyweights.size, color = if (picked) cs.secondaryContainer else Tones.card, onClick = { selected = b.date.toEpochDay() }) {
                 Row(
-                    Modifier.fillMaxWidth().clickable { selected = b.date.toEpochDay() }.heightIn(min = 48.dp).padding(horizontal = Margin),
+                    Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = CardPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(long(b.date), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = if (picked) cs.primary else cs.onSurfaceVariant)
                     Text(stringResource(R.string.weight_kg, formatKg(b.kg)), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = if (picked) cs.primary else cs.onSurface)
+                }
                 }
             }
             item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }

@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -110,8 +112,11 @@ fun LadderEditor(
     }
 
     Scaffold(
+
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(title) },
                 navigationIcon = { IconButton(onClick = onClose) { SymbolIcon(Symbol.Close, stringResource(R.string.editor_close)) } },
                 actions = {

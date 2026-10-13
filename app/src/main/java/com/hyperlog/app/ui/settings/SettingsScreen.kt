@@ -1,5 +1,11 @@
 package com.hyperlog.app.ui.settings
 
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
+import com.hyperlog.app.ui.theme.Group
+import com.hyperlog.app.ui.theme.GroupHead
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
@@ -77,12 +83,15 @@ fun SettingsScreen(
 ) {
     BackHandler(onBack = onBack)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    // ListItem's 16 dp inset plus this lines its text up with the 24 dp margin's symbol column.
-    val row = Modifier.padding(horizontal = 8.dp)
+    // Rows sit in card groups; ListItem's own container steps aside for the card's.
+    val row = Modifier
+    val clear = ListItemDefaults.colors(containerColor = Color.Transparent)
     Scaffold(
+        containerColor = Tones.screen,
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
@@ -90,7 +99,8 @@ fun SettingsScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(top = 8.dp)) {
+          Group {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_gyms)) },
                 supportingContent = {
@@ -101,14 +111,14 @@ fun SettingsScreen(
                 },
                 leadingContent = { SymbolIcon(Symbol.FitnessCenter, null, tint = muted) },
                 trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onGyms).then(row),
+                modifier = Modifier.clickable(onClick = onGyms).then(row), colors = clear,
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_library)) },
                 supportingContent = { Text(stringResource(R.string.settings_library_count, exerciseCount)) },
                 leadingContent = { SymbolIcon(Symbol.List, null, tint = muted) },
                 trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onLibrary).then(row),
+                modifier = Modifier.clickable(onClick = onLibrary).then(row), colors = clear,
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_starting_weights)) },
@@ -120,10 +130,12 @@ fun SettingsScreen(
                     }
                 },
                 leadingContent = { SymbolIcon(Symbol.History, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onImportStartingWeights).then(row),
+                modifier = Modifier.clickable(onClick = onImportStartingWeights).then(row), colors = clear,
             )
-            // Backups are a group of their own, set apart by spacing rather than a divider.
-            Spacer(Modifier.height(16.dp))
+          }
+            // Backups are a group of their own, a card apart from the setup rows.
+            GroupHead(stringResource(R.string.settings_backups))
+          Group {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.backup_export)) },
                 supportingContent = {
@@ -134,7 +146,7 @@ fun SettingsScreen(
                     }
                 },
                 leadingContent = { SymbolIcon(Symbol.Download, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onExport).then(row),
+                modifier = Modifier.clickable(onClick = onExport).then(row), colors = clear,
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.backup_restore)) },
@@ -143,23 +155,26 @@ fun SettingsScreen(
                     else Text(stringResource(R.string.backup_restore_about))
                 },
                 leadingContent = { SymbolIcon(Symbol.RestorePage, null, tint = muted) },
-                modifier = Modifier.clickable(onClick = onRestore).then(row),
+                modifier = Modifier.clickable(onClick = onRestore).then(row), colors = clear,
             )
-            // About the two rows above, lined up with their text: 24 dp margin, 24 dp symbol, 16 dp gap.
+          }
+            // About the two rows above, lined up with their text: 12 dp card, 16 dp inset, 24 dp symbol, 16 dp gap.
             Text(
                 stringResource(R.string.backup_auto),
                 style = MaterialTheme.typography.bodySmall,
                 color = muted,
-                modifier = Modifier.padding(start = 64.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                modifier = Modifier.padding(start = 68.dp, end = 24.dp, top = 8.dp, bottom = 16.dp),
             )
+          Group {
             // Updates come last, after the footnote's 24 dp: a switch, read once a day when the app opens.
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_check_updates)) },
                 supportingContent = { Text(stringResource(R.string.settings_check_updates_about)) },
                 leadingContent = { SymbolIcon(Symbol.SystemUpdate, null, tint = muted) },
                 trailingContent = { Switch(checked = checkForUpdates, onCheckedChange = null) },
-                modifier = Modifier.toggleable(checkForUpdates, role = Role.Switch, onValueChange = onCheckForUpdates).then(row),
+                modifier = Modifier.toggleable(checkForUpdates, role = Role.Switch, onValueChange = onCheckForUpdates).then(row), colors = clear,
             )
+          }
         }
     }
     if (backup is BackupState.Confirm) {

@@ -257,7 +257,7 @@ private fun ActiveSubRow(
         actions.focus(field)
         actions.setPadVisible(true)
     }
-    SubRow(Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh, RowShape).testTag(ActiveSubRowTag)) {
+    SubRow(Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RowShape).testTag(ActiveSubRowTag)) {
         // Being corrected: `edit` in place of the arrow, as a corrected set's number is.
         if (correcting != null) EditLead() else SubLead()
         SubTargetCell(showTarget, target)

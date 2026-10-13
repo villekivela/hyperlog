@@ -21,25 +21,35 @@ import androidx.compose.ui.unit.sp
 
 /** Left edge of all text: exercise name, set numbers, Next line, sheets. */
 internal val Margin = 24.dp
+/** The set table's card: [TableMargin] from the screen edge, [TablePad] inside, so rows highlight [RowInset] in. */
+internal val TableMargin = 12.dp
+internal val TablePad = 4.dp
+internal val TableShape = RoundedCornerShape(28.dp)
 /** Edge of the active row's highlight; its content keeps the [Margin]. */
-internal val RowInset = 16.dp
+internal val RowInset = TableMargin + TablePad
 internal val RowPad = Margin - RowInset
 internal val RowHeight = 64.dp
 internal val LabelHeight = 32.dp
+/** A technique, back-off or warm-up tag line under its set, roomier than a column head. */
+internal val TagHeight = 40.dp
 /** Drops, myo mini-sets and holds under their set. */
 internal val SubRowHeight = 48.dp
 /** A tappable value in a sub-row, inside its 48 dp. */
 internal val SubCellHeight = 40.dp
 internal val ColSet = 32.dp
-internal val ColTarget = 88.dp
-internal val ColKg = 64.dp
-internal val ColReps = 80.dp
-internal val ColRir = 24.dp
+internal val ColTarget = 80.dp
+// kg and Reps cells sit [CellInset] inside their columns, so a focused cell keeps 8 dp from its
+// neighbour and 12 dp from the RIR dot.
+internal val ColKg = 72.dp
+internal val ColReps = 88.dp
+internal val ColRir = 36.dp
+internal val CellInset = 4.dp
 internal val CellHeight = 48.dp
 internal val KeyHeight = 56.dp
 internal val KeyGap = 4.dp
 internal val KeyShape = RoundedCornerShape(12.dp)
-internal val RowShape = RoundedCornerShape(16.dp)
+/** The active row inside the table card: its radius less the card's padding, so the corners nest. */
+internal val RowShape = RoundedCornerShape(24.dp)
 internal val CellShape = RoundedCornerShape(12.dp)
 
 /** Tabular figures, so columns of numbers line up. */

@@ -38,8 +38,9 @@ internal fun RestPill(leftMs: Long, totalMs: Long, onClick: () -> Unit) {
     TimerPill(
         Symbol.Timer, stringResource(R.string.rest_title), clock(leftMs),
         fraction = if (over || totalMs <= 0) 0f else leftMs.toFloat() / totalMs,
-        container = if (over) cs.surfaceContainerHigh else cs.secondaryContainer,
-        content = if (over) cs.onSurfaceVariant else cs.onSecondaryContainer,
+        // Rest is the one clock that matters between sets: primary container, so it reads from across the gym.
+        container = if (over) cs.surfaceContainerHighest else cs.primaryContainer,
+        content = if (over) cs.onSurfaceVariant else cs.onPrimaryContainer,
         onClick = onClick,
     )
 }
@@ -47,9 +48,12 @@ internal fun RestPill(leftMs: Long, totalMs: Long, onClick: () -> Unit) {
 /** The 15 s breathing pause before a myo mini-set, drained like rest, with `air`. */
 @Composable
 internal fun BreathPill(leftMs: Long, totalMs: Long) {
+    val cs = MaterialTheme.colorScheme
     TimerPill(
         Symbol.Air, stringResource(R.string.breathing), clock(leftMs),
         fraction = if (totalMs <= 0) 0f else leftMs.toFloat() / totalMs,
+        container = cs.tertiaryContainer,
+        content = cs.onTertiaryContainer,
     )
 }
 
@@ -81,11 +85,12 @@ private fun TimerPill(
     content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
     onClick: (() -> Unit)? = null,
 ) {
-    val fill = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+    // The time left is the pill's content colour laid over it, so it shows on any container.
+    val fill = content.copy(alpha = 0.16f)
     val filled = fraction.coerceIn(0f, 1f)
     val inside = @Composable {
         Row(
-            Modifier.drawBehind { drawRect(fill, size = Size(size.width * filled, size.height)) }.height(40.dp).padding(start = 12.dp, end = 16.dp),
+            Modifier.drawBehind { drawRect(fill, size = Size(size.width * filled, size.height)) }.height(48.dp).padding(start = 16.dp, end = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SymbolIcon(symbol, description, Modifier.width(20.dp))

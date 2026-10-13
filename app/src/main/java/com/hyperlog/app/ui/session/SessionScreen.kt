@@ -680,7 +680,14 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         if (current.sets.isNotEmpty()) listState.animateScrollToItem(current.sets.size)
     }
     val plan = current.prescription
-    LazyColumn(modifier.fillMaxWidth().padding(horizontal = RowInset), state = listState) {
+    val cs = MaterialTheme.colorScheme
+    // The table is a card a tone off the screen, as tall as its rows and scrolling inside the space it has.
+    Box(modifier.fillMaxWidth()) {
+    LazyColumn(
+        Modifier.fillMaxWidth().padding(horizontal = TableMargin).clip(TableShape).background(cs.surfaceContainer),
+        state = listState,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(TablePad),
+    ) {
         // A split set's reps read left / right, so the head says which is which.
         item { ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null) }
         warmupRows(table)
@@ -711,6 +718,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
                 techniqueRows(table, k, current.techniqueAt(k), plannedKg = entry.weightKg)
             }
         }
+    }
     }
 }
 
@@ -754,17 +762,28 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
     table.onAddSet?.let { addSetRow(it) }
 }
 
-/** A technique or back-off rule: one 32 dp line aligned with the Target column, muted once done. */
+/**
+ * A technique, back-off rule or the warm-ups: a 28 dp tag on a 40 dp line, its symbol on the
+ * Target column. A technique still to do is tertiary container; once done, or for warm-ups
+ * ([done]), it steps back to a neutral container.
+ */
 @Composable
 internal fun Label(symbol: Symbol, text: String, done: Boolean) {
-    val color = if (done) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.tertiary
+    val cs = MaterialTheme.colorScheme
+    val container = if (done) cs.surfaceContainerHighest else cs.tertiaryContainer
+    val color = if (done) cs.onSurfaceVariant else cs.onTertiaryContainer
     Row(
-        Modifier.fillMaxWidth().height(LabelHeight).padding(start = RowPad + ColSet, end = RowPad),
+        Modifier.fillMaxWidth().height(TagHeight).padding(start = RowPad + ColSet - 8.dp, end = RowPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SymbolIcon(symbol, null, Modifier.size(20.dp), tint = color)
-        Spacer(Modifier.width(8.dp))
-        Text(text, style = MaterialTheme.typography.labelLarge, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(
+            Modifier.height(28.dp).clip(androidx.compose.foundation.shape.CircleShape).background(container).padding(start = 8.dp, end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SymbolIcon(symbol, null, Modifier.size(18.dp), tint = color)
+            Spacer(Modifier.width(8.dp))
+            Text(text, style = MaterialTheme.typography.labelLarge, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
 
@@ -823,13 +842,16 @@ private fun ColumnHeads(showLast: Boolean, showTarget: Boolean = false, split: B
 @Composable
 private fun DayDoneBar(onFinish: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).navigationBarsPadding()
-            .padding(start = Margin, end = 16.dp, top = 16.dp, bottom = 16.dp),
+        // Where the pad was: a primary-container strip, rounded at the top like a sheet.
+        Modifier.fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer).navigationBarsPadding()
+            .padding(start = Margin, end = 16.dp, top = 20.dp, bottom = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SymbolIcon(Symbol.CheckCircle, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
         Spacer(Modifier.width(16.dp))
-        Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
         Button(onClick = onFinish) { Text(stringResource(R.string.session_finish)) }
     }
 }
@@ -915,7 +937,7 @@ private fun ActiveRow(
     }
     Row(
         Modifier.fillMaxWidth().height(RowHeight)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh, RowShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer, RowShape)
             .padding(horizontal = RowPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -990,9 +1012,11 @@ internal fun Cell(
     val cs = MaterialTheme.colorScheme
     Box(
         modifier
+            .padding(horizontal = CellInset)
             .height(height)
             .clip(CellShape)
-            .then(if (focused) Modifier.background(cs.surfaceContainerHighest).border(2.dp, cs.primary, CellShape) else Modifier)
+            // The focused cell is a well in the highlighted row: the lowest surface, outlined in primary.
+            .then(if (focused) Modifier.background(cs.surfaceContainerLowest).border(2.dp, cs.primary, CellShape) else Modifier)
             .clickable(onClickLabel = description, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -1011,12 +1035,16 @@ internal fun Cell(
 
 @Composable
 internal fun NextLine(label: String?, name: String, onClick: () -> Unit, symbol: Symbol = Symbol.ExpandLess, description: String? = null) {
+    // A card of its own between the table and the pad, two tones off the screen, so it reads as a control.
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).height(56.dp).padding(start = Margin, end = 16.dp),
+        Modifier.fillMaxWidth().padding(horizontal = TableMargin, vertical = 8.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(onClick = onClick).height(56.dp).padding(start = Margin - TableMargin, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         label?.let {
-            Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(16.dp))
         }
         Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -1057,10 +1085,12 @@ internal fun SessionList(
         // A superset on screen is current as a pair: its partner comes up by itself.
         val onScreen = session.current?.let { c -> SessionOrder.group(session.exercises, c).map { it.id } }.orEmpty()
         val blocks = SessionOrder.blocks(session.exercises)
-        session.exercises.forEach { e ->
+        session.exercises.forEachIndexed { index, e ->
             val now = e.id in onScreen
+            // One group of rows on the sheet; the exercise on screen is lifted into secondary container.
+            com.hyperlog.app.ui.theme.Segment(index, session.exercises.size, color = if (now) cs.secondaryContainer else com.hyperlog.app.ui.theme.Tones.sheetCard) {
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = if (edits != null) 4.dp else 16.dp, top = 8.dp, bottom = 8.dp),
+                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin - com.hyperlog.app.ui.theme.CardMargin, end = if (edits != null) 4.dp else 16.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.width(40.dp)) {
@@ -1099,6 +1129,7 @@ internal fun SessionList(
                     else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
                 }
                 edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
+            }
             }
         }
         Row(

@@ -1,5 +1,10 @@
 package com.hyperlog.app.ui.library
 
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.CardPadding
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -69,9 +74,11 @@ fun LibraryScreen(
     val found = exercises.search(query)
     val (hidden, shown) = found.partition { it.hidden }
     Scaffold(
+        containerColor = Tones.screen,
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.settings_library)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
@@ -111,7 +118,7 @@ fun LibraryScreen(
                         )
                     }
                 }
-                items(shown, key = { it.id }) { LibraryRow(it, onOpen) }
+                itemsIndexed(shown, key = { _, it -> it.id }) { i, e -> Segment(i, shown.size, onClick = { onOpen(e.id) }) { LibraryRow(e) } }
                 if (hidden.isNotEmpty()) {
                     item(key = "hidden-label") {
                         Text(
@@ -121,7 +128,7 @@ fun LibraryScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    items(hidden, key = { it.id }) { LibraryRow(it, onOpen) }
+                    itemsIndexed(hidden, key = { _, it -> it.id }) { i, e -> Segment(i, hidden.size, onClick = { onOpen(e.id) }) { LibraryRow(e) } }
                 }
                 item { Spacer(Modifier.navigationBarsPadding()) }
             }
@@ -131,12 +138,12 @@ fun LibraryScreen(
 
 /** Name, then equipment and primary muscles. */
 @Composable
-private fun LibraryRow(exercise: Exercise, onOpen: (String) -> Unit) {
+private fun LibraryRow(exercise: Exercise) {
     val cs = MaterialTheme.colorScheme
     val muted = exercise.hidden
     Row(
-        Modifier.fillMaxWidth().clickable { onOpen(exercise.id) }.heightIn(min = 72.dp)
-            .padding(start = Margin, end = Margin, top = 8.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().heightIn(min = 72.dp)
+            .padding(start = CardPadding, end = CardPadding, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -178,8 +185,9 @@ fun SearchField(query: String, onChange: (String) -> Unit, placeholder: String, 
         singleLine = true,
         shape = CircleShape,
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = cs.surfaceContainerHigh,
-            unfocusedContainerColor = cs.surfaceContainerHigh,
+            // A well in the screen's tone, as the system's own search fields are.
+            focusedContainerColor = cs.surfaceContainerLowest,
+            unfocusedContainerColor = cs.surfaceContainerLowest,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
         ),

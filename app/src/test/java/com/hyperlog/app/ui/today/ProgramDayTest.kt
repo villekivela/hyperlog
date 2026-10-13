@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.today
 
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.openTab
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -61,7 +63,10 @@ class ProgramDayTest {
         compose.waitFor("Target")
         compose.onNodeWithText("Back-off, top set − 10%").assertIsDisplayed()
         compose.press("1"); compose.press("0"); compose.press("0")
-        // The back-off rows follow the top set's weight as it is typed: 100 − 10% = 90.
+        // The back-off rows follow the top set's weight as it is typed: 100 − 10% = 90. The second
+        // sits below the pad's fold, at the table's end.
+        compose.waitForCount("90", 1)
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Add set"))
         compose.waitForCount("90", 2)
     }
 

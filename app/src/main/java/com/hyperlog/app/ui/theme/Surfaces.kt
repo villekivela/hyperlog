@@ -9,11 +9,21 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
@@ -26,6 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -102,6 +117,26 @@ fun Segment(
     )
 }
 
+/**
+ * Draws a card behind full-width content, [inset] in from each side: for sections whose rows
+ * already keep the 24 dp text edge themselves (History's Progress, a trend's head).
+ */
+fun Modifier.cardBehind(color: Color, shape: Shape = CardShape, inset: Dp = CardMargin): Modifier = drawBehind {
+    val i = inset.toPx()
+    translate(left = i) {
+        drawOutline(shape.createOutline(Size(size.width - 2 * i, size.height), layoutDirection, this), color)
+    }
+}
+
+/**
+ * Rows of a settings-like list on one card, [CardMargin] in, no padding: list items keep their
+ * own insets (and set a transparent container).
+ */
+@Composable
+fun Group(modifier: Modifier = Modifier, color: Color = Tones.card, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(color), content = content)
+}
+
 /** A lone card, [CardMargin] in from the edges, with [CardPadding] inside. */
 @Composable
 fun SectionCard(
@@ -164,6 +199,70 @@ fun Banner(
             end?.invoke(this)
         }
     }
+}
+
+/**
+ * A symbol in an expressive shape (the 9-sided cookie) filled with primary container: the one
+ * memorable element of an empty or first-run screen.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ShapedSymbol(symbol: Symbol, modifier: Modifier = Modifier, size: Dp = 72.dp) {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        modifier.size(size).clip(MaterialShapes.Cookie9Sided.toShape()).background(cs.primaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        SymbolIcon(symbol, null, Modifier.size(size / 2.25f), tint = cs.onPrimaryContainer)
+    }
+}
+
+/** An empty screen: the shaped symbol, a title and a line, and its ways forward, a little above the middle. */
+@Composable
+fun EmptyState(
+    symbol: Symbol,
+    title: String,
+    body: String,
+    modifier: Modifier = Modifier,
+    actions: @Composable ColumnScope.() -> Unit = {},
+) {
+    Column(
+        modifier.fillMaxSize().padding(horizontal = 32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ShapedSymbol(symbol)
+        Spacer(Modifier.height(24.dp))
+        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(8.dp))
+        Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(32.dp))
+        actions()
+        // Optical centre: sit a little above the middle.
+        Spacer(Modifier.height(96.dp))
+    }
+}
+
+/**
+ * A screen's bottom actions (Accept, Review, Ask Claude…): a strip in [Tones.bar], rounded at the
+ * top like a sheet, so it stands off the screen rather than sitting on it. It runs through the
+ * gesture area.
+ */
+@Composable
+fun BottomActions(
+    modifier: Modifier = Modifier,
+    padding: PaddingValues = PaddingValues(start = 24.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(Tones.bar)
+            .navigationBarsPadding()
+            .padding(padding),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
 }
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */

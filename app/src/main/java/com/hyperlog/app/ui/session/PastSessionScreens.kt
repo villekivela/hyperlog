@@ -34,6 +34,15 @@ import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.height
 import java.text.DateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -67,10 +76,13 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
                 )
             }
         }
-        items(sessions.orEmpty(), key = { it.id }) { s ->
+        val list = sessions.orEmpty()
+        item { Spacer(Modifier.height(8.dp)) }
+        itemsIndexed(list, key = { _, it -> it.id }) { i, s ->
+            Segment(i, list.size, onClick = { onOpen(s.id) }) {
             Column(
-                Modifier.fillMaxWidth().clickable { onOpen(s.id) }.heightIn(min = 72.dp)
-                    .padding(horizontal = Margin, vertical = 12.dp),
+                Modifier.fillMaxWidth().heightIn(min = 72.dp)
+                    .padding(horizontal = CardPadding, vertical = 12.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -91,6 +103,7 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            }
         }
         item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }
     }
@@ -104,11 +117,11 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
 internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Unit)?) {
     val cs = MaterialTheme.colorScheme
     exercises.forEachIndexed { i, e ->
+        Segment(i, exercises.size, onClick = onOpen?.let { { it(i) } }) {
         Row(
             Modifier.fillMaxWidth()
-                .then(if (onOpen != null) Modifier.clickable { onOpen(i) } else Modifier)
-                .heightIn(min = 56.dp)
-                .padding(start = Margin, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                .heightIn(min = 64.dp)
+                .padding(start = CardPadding, end = 12.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -125,6 +138,7 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
                 SymbolIcon(Symbol.ChevronRight, null, tint = cs.onSurfaceVariant)
             }
         }
+        }
     }
 }
 
@@ -136,8 +150,10 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
     val cs = MaterialTheme.colorScheme
     Scaffold(
         modifier = modifier,
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(session.title ?: stringResource(R.string.past_ad_hoc), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
             )

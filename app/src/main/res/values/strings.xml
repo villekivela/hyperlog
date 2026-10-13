@@ -454,6 +454,7 @@
     <string name="goal_remove_date">No date</string>
     <string name="goal_remove">Remove goal</string>
     <string name="goal_chart">%1$s estimate against the goal</string>
+    <string name="settings_backups">Backups</string>
     <string name="backup_export">Export backup</string>
     <string name="backup_export_about">Everything on this phone, in one file</string>
     <string name="backup_exported">Saved %1$s</string>

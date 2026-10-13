@@ -18,18 +18,47 @@ product decisions.
 
 ## The owner's taste (binding)
 
+The owner's verdict on the first passes ("very dark, everything on one surface, bland; the banners,
+the Start strip and the Next footer blend into the background") is the brief now. Hyperlog should
+look like the phone's own apps: Material 3 Expressive, with sections you can see.
+
 - **Calm.** Focus on the task at hand, with what's coming visible on demand, and minimal text.
-- **Flat layouts**, structured by alignment and spacing rather than cards; at most one surface
-  level.
+- **Sections divide by tone.** Screens sit on `surfaceContainer`, as the system's Settings does.
+  Sections and row groups are cards on it (`surfaceBright` in dark, `surfaceContainerLowest` in
+  light): one card for a lone section, or a segmented group for a list (24 dp outer corners, 4 dp
+  joins, 2 dp apart, 12 dp from the screen edge). Inside sheets (`surfaceContainerLow`) groups are
+  `surfaceContainerHighest`. The session screen alone keeps `surface`, with its table as a
+  `surfaceContainer` card, so the pad stands off it. No dividers.
+- **Things to act on stand off the background.** Banners are filled container cards
+  (`primaryContainer` for an update, `tertiaryContainer` for advice). Bottom action strips (Accept,
+  Review change, Session done) are `surfaceContainerHighest` strips rounded at the top like a sheet.
+  A screen's one primary action is a FAB or extended FAB in `primaryContainer` (Start session). The
+  Next footer is a `surfaceContainerHigh` card of its own.
+- **Real Material 3 Expressive.** `MaterialExpressiveTheme` with `MotionScheme.expressive()`;
+  expressive components where they fit: `ShortNavigationBar`, extended FABs, connected button groups
+  for two- or three-way choices, expressive shapes (`MaterialShapes`) for the one memorable element
+  of an empty or first-run screen, flexible top app bars. Selection is a filled container
+  (`secondaryContainer` rows, a `primaryContainer` navigation pill), not just a radio dot.
+- **Navigation:** a navigation bar for Today, Program, Coach and History; Settings is an icon at
+  the end of each destination's top bar. The bar is hidden during a session.
+- **A roomy set table.** Columns `32 · 80 · flex · 72 · 88 · 36` with the kg and reps cells 4 dp
+  inside their columns, so a focused cell keeps 8 dp from its neighbour and 12 dp from the RIR dot.
 - **Input looks native.** Numbers go through the compact in-app pad drawn like the system number
-  keyboard. The pad continues into the gesture area and can be hidden.
-- **Material Symbols (Rounded)** for every symbol.
-- **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Columns, baselines and
-  left edges align.
-- **The Android theme:** dynamic colour, light and dark, Material 3 Expressive where it helps. RIR
-  uses its own fixed three-colour scale (ring = target, dot = logged).
+  keyboard. The pad continues into the gesture area and can be hidden. The owner likes it as it is:
+  don't change it.
+- **Material Symbols (Rounded)** for every symbol; the filled style only for a selected navigation
+  item.
+- **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
+  (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
+- **The Android theme:** dynamic colour, light and dark, through the whole tree; nothing hard-codes
+  a colour but the RIR scale. RIR uses its own fixed three-colour scale (ring = target, dot =
+  logged).
 - **Visible state.** The active row and cell, the intensity technique on a set, and the weights
   involved can all be read from the screen at a glance.
+
+A monochrome system style (Wallpaper and style, the owner's current choice) makes every dynamic
+colour grey, and Hyperlog follows it: in grey the hierarchy has to come from tone and shape, which
+is why the rules above lean on them rather than on hue.
 
 ## Process
 

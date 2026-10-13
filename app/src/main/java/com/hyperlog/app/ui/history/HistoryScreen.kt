@@ -49,6 +49,22 @@ import com.hyperlog.app.ui.session.SessionList
 import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -95,16 +111,30 @@ fun HistoryScreen(
     BackHandler(onBack = onBack)
     Scaffold(
         modifier = modifier,
+        containerColor = Tones.screen,
         topBar = {
             Column {
                 TopAppBar(
+                    colors = hyperlogTopBarColors(),
                     title = { Text(stringResource(R.string.history_title)) },
                     // A destination of the navigation bar: no back arrow (back goes to Today), Settings at the end.
                     actions = { IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) } },
                 )
-                PrimaryTabRow(selectedTabIndex = tab) {
-                    Tab(selected = tab == 0, onClick = { onTab(0) }, text = { Text(stringResource(R.string.history_sessions)) })
-                    Tab(selected = tab == 1, onClick = { onTab(1) }, text = { Text(stringResource(R.string.history_progress)) })
+                // Sessions | Progress as a connected button group, the expressive segmented control.
+                Row(
+                    Modifier.fillMaxWidth().background(Tones.screen).padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                ) {
+                    val labels = listOf(R.string.history_sessions, R.string.history_progress)
+                    labels.forEachIndexed { i, label ->
+                        ToggleButton(
+                            checked = tab == i,
+                            onCheckedChange = { onTab(i) },
+                            modifier = Modifier.weight(1f).semantics { role = Role.Tab },
+                            shapes = if (i == 0) ButtonGroupDefaults.connectedLeadingButtonShapes() else ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                            colors = ToggleButtonDefaults.colors(containerColor = Tones.card),
+                        ) { Text(stringResource(label)) }
+                    }
                 }
             }
         },
@@ -131,7 +161,7 @@ private fun Progress(
     var logging by rememberSaveable { mutableStateOf(false) }
     var week by rememberSaveable { mutableIntStateOf(0) }
     LazyColumn(modifier.fillMaxSize()) {
-        item {
+        item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) {
             SectionHead(stringResource(R.string.history_bodyweight)) {
                 IconButton(onClick = { logging = true }) { SymbolIcon(Symbol.Add, stringResource(R.string.history_log_bodyweight)) }
             }
@@ -139,8 +169,8 @@ private fun Progress(
                 LogBodyweight(bodyweights.firstOrNull()?.kg, onSave = { logging = false; onLogBodyweight(it) }, onDismiss = { logging = false })
             }
             BodyweightSummary(bodyweights, onBodyweight, chartHeight = 64.dp)
-        }
-        item {
+        }; Spacer(Modifier.height(8.dp)) }
+        item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) {
             val shown = weeks?.getOrNull(week)
             SectionHead(if (week == 0 || shown == null) stringResource(R.string.history_sets_week) else weekRange(shown.start)) {
                 if (weeks != null) {
@@ -160,10 +190,15 @@ private fun Progress(
                 }
             }
             Spacer(Modifier.height(8.dp))
+        } }
+        item {
             SectionHead(stringResource(R.string.history_exercises))
             if (exercises != null && exercises.isEmpty()) Muted(stringResource(R.string.history_exercises_none))
         }
-        items(exercises.orEmpty(), key = { it.exercise.id }) { trend -> ExerciseRow(trend) { onOpenExercise(trend.exercise.id) } }
+        val trained = exercises.orEmpty()
+        itemsIndexed(trained, key = { _, it -> it.exercise.id }) { i, trend ->
+            Segment(i, trained.size, onClick = { onOpenExercise(trend.exercise.id) }) { ExerciseRow(trend) }
+        }
         item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }
     }
 }
@@ -205,10 +240,10 @@ internal fun BodyweightSummary(bodyweights: List<Bodyweight>, onClick: (() -> Un
 
 /** An exercise on Progress: its name, a sparkline of its estimate and the latest value. */
 @Composable
-private fun ExerciseRow(trend: ExerciseTrend, onClick: () -> Unit) {
+private fun ExerciseRow(trend: ExerciseTrend) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 56.dp).padding(start = Margin, end = 16.dp),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(trend.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -236,7 +271,7 @@ private fun ExerciseRow(trend: ExerciseTrend, onClick: () -> Unit) {
 @Composable
 internal fun SectionHead(text: String, actions: @Composable () -> Unit = {}) {
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = Margin, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
         actions()
     }
 }

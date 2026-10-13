@@ -64,6 +64,17 @@ import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.CardShape
+import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.SectionCard
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -162,16 +173,18 @@ fun CoachScreen(
     Scaffold(
         // The keyboard shrinks the screen, so the words field scrolls into view above it, with Ask Claude.
         modifier = modifier.imePadding(),
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.coach_title)) },
                 // A destination of the navigation bar: no back arrow (back goes to Today), Settings at the end.
                 actions = { IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) } },
             )
         },
         bottomBar = {
-            Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-                HorizontalDivider()
+            // The next step sits on a strip a tone off the screen, so it doesn't blend into it.
+            Column(Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).background(Tones.bar).navigationBarsPadding()) {
                 Row(
                     // Paste change is a text button: its label, not its edge, lines up with the 24 dp margin.
                     Modifier.fillMaxWidth().padding(start = if (asking) Margin - 12.dp else Margin, end = 16.dp, top = 16.dp, bottom = 16.dp),
@@ -235,12 +248,13 @@ fun CoachScreen(
                 Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 8.dp),
                 style = MaterialTheme.typography.headlineSmall,
             )
-            Column(Modifier.selectableGroup()) {
+            // The situations are one card; the one picked is lifted into secondary container.
+            Column(Modifier.padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).selectableGroup()) {
                 SituationRow(stringResource(R.string.coach_time_off), daysText, kind == SituationKind.TimeOff) { pick(SituationKind.TimeOff) }
                 SituationRow(stringResource(R.string.coach_pain), null, kind == SituationKind.Pain) { pick(SituationKind.Pain) }
                 if (kind == SituationKind.Pain) {
                     FlowRow(
-                        Modifier.padding(start = TextIndent, end = Margin),
+                        Modifier.padding(start = TextIndent - CardMargin, end = CardPadding),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Area.entries.forEach { a ->
@@ -253,7 +267,7 @@ fun CoachScreen(
                     }
                     Text(
                         stringResource(R.string.coach_pain_body),
-                        Modifier.padding(start = TextIndent, end = Margin, top = 4.dp, bottom = 8.dp),
+                        Modifier.padding(start = TextIndent - CardMargin, end = CardPadding, top = 4.dp, bottom = 8.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -261,12 +275,12 @@ fun CoachScreen(
                     if (area == Area.Hands && keptGrip.isNotEmpty()) {
                         Text(
                             stringResource(R.string.coach_worse_after),
-                            Modifier.padding(start = TextIndent, end = Margin, top = 8.dp, bottom = 8.dp),
+                            Modifier.padding(start = TextIndent - CardMargin, end = CardPadding, top = 8.dp, bottom = 8.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         FlowRow(
-                            Modifier.padding(start = TextIndent, end = Margin),
+                            Modifier.padding(start = TextIndent - CardMargin, end = CardPadding),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             keptGrip.forEach { slot ->
@@ -282,7 +296,7 @@ fun CoachScreen(
                 SituationRow(stringResource(R.string.coach_no_gym), stringResource(R.string.coach_no_gym_body), kind == SituationKind.NoGym) { pick(SituationKind.NoGym) }
                 SituationRow(stringResource(R.string.coach_short), null, kind == SituationKind.ShortOnTime) { pick(SituationKind.ShortOnTime) }
                 if (kind == SituationKind.ShortOnTime || (capped && !asking)) {
-                    MinutesStepper(minutes, onChange = { minutes = it; said = null }, Modifier.padding(start = TextIndent - 12.dp))
+                    MinutesStepper(minutes, onChange = { minutes = it; said = null }, Modifier.padding(start = TextIndent - 12.dp - CardMargin))
                 }
                 SituationRow(stringResource(R.string.coach_recovery), stringResource(R.string.coach_recovery_body), kind == SituationKind.PoorRecovery) { pick(SituationKind.PoorRecovery) }
                 SituationRow(stringResource(R.string.coach_something_else), stringResource(R.string.coach_something_else_body), asking) { pick(SituationKind.SomethingElse) }
@@ -297,12 +311,7 @@ fun CoachScreen(
                 )
                 return@Column
             }
-            Text(
-                stringResource(R.string.coach_limits),
-                Modifier.padding(horizontal = Margin).padding(top = 24.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            GroupHead(stringResource(R.string.coach_limits))
             FlowRow(Modifier.padding(horizontal = Margin), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Limit(stringResource(R.string.coach_no_grip), noGrip) { noGrip = it; said = null }
                 Limit(stringResource(R.string.coach_no_axial), noAxial) { noAxial = it; said = null }
@@ -381,9 +390,10 @@ private fun daysText(days: Int?): String = when (days) {
 private fun SituationRow(name: String, body: String?, selected: Boolean, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth()
+            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
             .selectable(selected, role = Role.RadioButton, onClick = onClick)
-            .heightIn(min = 56.dp)
-            .padding(start = 12.dp, end = Margin, top = 4.dp, bottom = 4.dp),
+            .heightIn(min = 64.dp)
+            .padding(end = CardPadding, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null, Modifier.size(48.dp))

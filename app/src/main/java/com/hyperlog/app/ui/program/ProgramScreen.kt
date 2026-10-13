@@ -66,6 +66,16 @@ import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.EmptyState
+import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.SectionCard
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
 
 private val Margin = 24.dp
 
@@ -99,8 +109,10 @@ fun ProgramScreen(
     BackHandler { if (errors != null) onCloseErrors() else onBack() }
     Scaffold(
         modifier = modifier,
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.program_title)) },
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
@@ -161,24 +173,8 @@ private enum class Replacement { File, Starter }
 
 @Composable
 private fun NoProgram(onImport: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        SymbolIcon(Symbol.ViewTimeline, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-        Spacer(Modifier.height(16.dp))
-        Text(stringResource(R.string.today_empty_title), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(R.string.program_none_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(32.dp))
+    EmptyState(Symbol.ViewTimeline, stringResource(R.string.today_empty_title), stringResource(R.string.program_none_body)) {
         Button(onClick = onImport) { Text(stringResource(R.string.program_import)) }
-        Spacer(Modifier.height(96.dp))
     }
 }
 
@@ -191,7 +187,9 @@ private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onR
     var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
     LazyColumn(Modifier.fillMaxSize()) {
         item {
-            Column(Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 8.dp)) {
+            // Where you are, and what can be done about it, in one card at the top.
+            SectionCard(Modifier.padding(top = 8.dp)) {
+            Column(Modifier.padding(vertical = 4.dp)) {
                 Text(program.title, style = MaterialTheme.typography.headlineSmall)
                 program.author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
                 Spacer(Modifier.height(16.dp))
@@ -221,19 +219,21 @@ private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onR
                     ProgramActionRow(active, onPropose, onShift = { shifting = true })
                 }
             }
+            }
         }
         val history = active.history.asReversed()
         if (history.isNotEmpty()) {
             item(key = "changes") { SectionHead(stringResource(R.string.program_changes)) }
-            items(history, key = { "change-${it.id}" }) { record ->
-                ChangeRow(record, program, onRevert = { reverting = record.id })
+            itemsIndexed(history, key = { _, it -> "change-${it.id}" }) { i, record ->
+                Segment(i, history.size) { ChangeRow(record, program, onRevert = { reverting = record.id }) }
             }
         }
         program.blocks.forEach { block ->
             val current = active.position.week in block.weekStart..block.weekEnd
             item(key = "block-${block.id}") { BlockHead(block, current) }
-            items((block.weekStart..block.weekEnd).toList(), key = { "week-$it" }) { week ->
-                WeekRow(week, block, active)
+            val weeks = (block.weekStart..block.weekEnd).toList()
+            itemsIndexed(weeks, key = { _, it -> "week-$it" }) { i, week ->
+                Segment(i, weeks.size) { WeekRow(week, block, active) }
             }
         }
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
@@ -288,13 +288,7 @@ private fun ActionChip(label: String, symbol: Symbol, onClick: () -> Unit) {
 
 @Composable
 private fun SectionHead(text: String) {
-    Text(
-        text,
-        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = Margin).padding(top = 20.dp),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        fontWeight = FontWeight.Medium,
-    )
+    GroupHead(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** An accepted Change: its summary, period and day, with Revert while it is in force. */
@@ -304,7 +298,7 @@ private fun ChangeRow(record: ChangeRecord, program: Program, onRevert: () -> Un
     val reverted = record.revertedAt != null
     val block = program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = 8.dp, top = 8.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = CardPadding, end = 4.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -363,13 +357,8 @@ private fun ShiftDialog(onReview: (Int, String) -> Unit, onDismiss: () -> Unit) 
 private fun BlockHead(block: Block, current: Boolean) {
     val text = if (block.weekStart == block.weekEnd) stringResource(R.string.program_block_week, block.name, block.weekStart)
     else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd)
-    Text(
-        text,
-        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = Margin).padding(top = 20.dp),
-        style = MaterialTheme.typography.labelLarge,
-        color = if (current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        fontWeight = if (current) FontWeight.SemiBold else FontWeight.Medium,
-    )
+    // The block you're in is headed in primary; the others step back.
+    GroupHead(text, color = if (current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** A week: its number and a token per day, done, next or to come. The Next line names the next day. */
@@ -378,7 +367,7 @@ private fun WeekRow(week: Int, block: Block, active: ActiveProgram) {
     val cs = MaterialTheme.colorScheme
     val position = active.position
     Row(
-        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = Margin),
+        Modifier.fillMaxWidth().height(56.dp).padding(horizontal = CardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -408,13 +397,15 @@ private fun WeekRow(week: Int, block: Block, active: ActiveProgram) {
 
 private enum class DayState { Done, Next, Upcoming }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DayToken(letter: String, state: DayState, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val shape = Modifier.size(32.dp).then(
         when (state) {
-            DayState.Done -> Modifier.background(cs.surfaceContainerHighest, CircleShape)
-            DayState.Next -> Modifier.background(cs.primary, CircleShape)
+            DayState.Done -> Modifier.background(cs.secondaryContainer, CircleShape)
+            // The one filled shape: the expressive cookie in primary.
+            DayState.Next -> Modifier.size(36.dp).background(cs.primary, MaterialShapes.Cookie9Sided.toShape())
             DayState.Upcoming -> Modifier.border(1.dp, cs.outlineVariant, CircleShape)
         },
     )
@@ -422,7 +413,11 @@ private fun DayToken(letter: String, state: DayState, modifier: Modifier = Modif
         Text(
             letter,
             style = MaterialTheme.typography.labelLarge,
-            color = if (state == DayState.Next) cs.onPrimary else cs.onSurfaceVariant,
+            color = when (state) {
+                DayState.Next -> cs.onPrimary
+                DayState.Done -> cs.onSecondaryContainer
+                DayState.Upcoming -> cs.onSurfaceVariant
+            },
             fontWeight = if (state == DayState.Next) FontWeight.Bold else FontWeight.Medium,
         )
     }

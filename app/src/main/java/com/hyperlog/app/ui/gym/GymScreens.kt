@@ -1,5 +1,11 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import androidx.compose.material3.ListItemDefaults
+import com.hyperlog.app.ui.theme.Group
+import com.hyperlog.app.ui.theme.GroupHead
+import androidx.compose.foundation.layout.height
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -78,14 +84,17 @@ fun GymsScreen(
     var naming by rememberSaveable { mutableStateOf(false) }
     var weighing by rememberSaveable { mutableStateOf<Equipment?>(null) }
     Scaffold(
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.gyms)) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+          Group {
             gyms.forEach { gym ->
                 Row(
                     headline = gym.name,
@@ -95,13 +104,16 @@ fun GymsScreen(
                 )
             }
             AddRow(stringResource(R.string.gym_add)) { naming = true }
+          }
 
             SectionLabel(stringResource(R.string.gym_shared))
+          Group {
             Row(stringResource(R.string.gym_dumbbells), dumbbells.ladder().preview(), symbol = null, onClick = onDumbbells)
             Row(stringResource(R.string.gym_plates), plates.summary(), symbol = null, onClick = onPlates)
             bars.forEach { (bar, kg) ->
                 Row(bar.label, stringResource(R.string.gym_bar_summary, formatKg(kg)), symbol = null, onClick = { weighing = bar })
             }
+          }
         }
     }
     weighing?.let { bar ->
@@ -141,8 +153,10 @@ fun GymScreen(
     var renaming by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     Scaffold(
+        containerColor = Tones.screen,
         topBar = {
             TopAppBar(
+                colors = hyperlogTopBarColors(),
                 title = { Text(gym.name) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
                 actions = {
@@ -153,22 +167,28 @@ fun GymScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+          Group {
             gym.items.forEach { item ->
                 Row(item.name, item.ladder.ladder().preview(), symbol = null, onClick = { onOpenItem(item.id) })
             }
             AddRow(stringResource(R.string.gym_add_item), onClick = onAddItem)
+          }
 
             SectionLabel(stringResource(R.string.gym_days))
+          Group {
+            Spacer(Modifier.height(16.dp))
             WeekdayPicker(gym.weekdays, onWeekdays)
             Text(
                 stringResource(R.string.gym_days_body, gym.name),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 64.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                modifier = Modifier.padding(start = 56.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
             )
+          }
 
             if (gym.missing.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.gym_missing))
+              Group {
                 gym.missing.map { it to (exerciseNames[it] ?: it) }.sortedBy { it.second }.forEach { (id, name) ->
                     ListItem(
                         headlineContent = { Text(name) },
@@ -178,14 +198,15 @@ fun GymScreen(
                                 SymbolIcon(Symbol.Close, stringResource(R.string.gym_missing_restore, name))
                             }
                         },
-                        modifier = Modifier.padding(start = 8.dp),
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     )
                 }
+              }
                 Text(
                     stringResource(R.string.gym_missing_body, gym.name),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 64.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                    modifier = Modifier.padding(start = 68.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
                 )
             }
         }
@@ -219,7 +240,7 @@ fun GymScreen(
 private fun WeekdayPicker(days: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Unit) {
     val cs = MaterialTheme.colorScheme
     androidx.compose.foundation.layout.Row(
-        Modifier.fillMaxWidth().padding(start = 64.dp, end = 16.dp),
+        Modifier.fillMaxWidth().padding(start = 56.dp, end = 16.dp),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
     ) {
         DayOfWeek.entries.forEach { day ->
@@ -260,7 +281,8 @@ internal fun Row(headline: String, supporting: String, symbol: Symbol?, onClick:
             if (symbol != null) SymbolIcon(symbol, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) else Spacer(Modifier.width(24.dp))
         },
         trailingContent = { SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-        modifier = Modifier.clickable(onClick = onClick).padding(horizontal = 8.dp),
+        modifier = Modifier.clickable(onClick = onClick),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     )
 }
 
@@ -269,22 +291,15 @@ private fun AddRow(label: String, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(label, color = MaterialTheme.colorScheme.primary) },
         leadingContent = { SymbolIcon(Symbol.Add, null, tint = MaterialTheme.colorScheme.primary) },
-        modifier = Modifier.clickable(onClick = onClick).padding(horizontal = 8.dp),
+        modifier = Modifier.clickable(onClick = onClick),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     )
 }
 
 @Composable
 internal fun SectionLabel(text: String) {
-    Column {
-        HorizontalDivider(Modifier.padding(top = 8.dp))
-        Text(
-            text,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            // In the rows' text column: 8 + 16 inset, 24 symbol, 16 gap.
-            modifier = Modifier.padding(start = 64.dp, top = 16.dp, bottom = 8.dp),
-        )
-    }
+    // A group's head over its card, at the 24 dp edge, in primary.
+    GroupHead(text)
 }
 
 /** A specialty bar's own weight, typed on the system keyboard like the rest of setup. */
