@@ -13,9 +13,9 @@ import androidx.room.RoomDatabase
         ExerciseEntity::class, SessionEntity::class, SessionExerciseEntity::class, LoggedSetEntity::class,
         GymEntity::class, EquipmentItemEntity::class, SharedLadderEntity::class, GymExerciseItemEntity::class,
         ProgramEntity::class, StartingWeightEntity::class, SetExtensionEntity::class, SetTechniqueEntity::class,
-        PlanChangeEntity::class, GymMissingExerciseEntity::class, BodyweightEntity::class,
+        PlanChangeEntity::class, GymMissingExerciseEntity::class, BodyweightEntity::class, LiftGoalEntity::class,
     ],
-    version = 13,
+    version = 14,
 )
 abstract class HyperlogDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao
@@ -25,6 +25,7 @@ abstract class HyperlogDatabase : RoomDatabase() {
     abstract fun planChanges(): PlanChangeDao
     abstract fun startingWeights(): StartingWeightDao
     abstract fun bodyweights(): BodyweightDao
+    abstract fun liftGoals(): LiftGoalDao
 
     companion object {
         @Volatile private var instance: HyperlogDatabase? = null

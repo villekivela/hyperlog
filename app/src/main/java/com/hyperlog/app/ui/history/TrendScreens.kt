@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +45,8 @@ import com.hyperlog.app.history.Bodyweight
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
 import com.hyperlog.app.history.TrendPoint
+import com.hyperlog.app.history.takesGoal
+import java.time.LocalDate
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.session.Tnum
@@ -62,20 +66,43 @@ fun ExerciseTrendScreen(
     onOpenSession: (Long) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Sets the exercise's lift goal: kg, by a date or not. */
+    onSetGoal: (Double, LocalDate?) -> Unit = { _, _ -> },
+    onClearGoal: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
+    var editingGoal by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text(trend.exercise.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
+                actions = {
+                    if (trend.exercise.takesGoal) {
+                        IconButton(onClick = { editingGoal = !editingGoal }) { SymbolIcon(Symbol.Flag, stringResource(R.string.goal_action)) }
+                    }
+                },
             )
         },
     ) { padding ->
         val perMachine = trend.exercise.equipment.perMachine
         val weighted = trend.exercise.equipment == Equipment.WeightedBodyweight
-        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
+        val list = rememberLazyListState()
+        // The editor opens at the top, above the figure it changes.
+        LaunchedEffect(editingGoal) { if (editingGoal) list.scrollToItem(0) }
+        LazyColumn(Modifier.fillMaxSize().padding(padding), state = list) {
+            if (editingGoal) {
+                item(key = "goal-editor") {
+                    GoalEditor(
+                        trend.goal,
+                        estimateKg = trend.lines.firstOrNull()?.points?.lastOrNull { it.estimateKg != null }?.estimateKg,
+                        onSave = { kg, by -> editingGoal = false; onSetGoal(kg, by) },
+                        onRemove = { editingGoal = false; onClearGoal() },
+                        onDismiss = { editingGoal = false },
+                    )
+                }
+            }
             trend.lines.forEachIndexed { n, line ->
                 item(key = "chart-$n") {
                     if (perMachine) {
@@ -86,7 +113,12 @@ fun ExerciseTrendScreen(
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
-                    LineChart(trend, line, note = if (weighted && !hasBodyweight) stringResource(R.string.history_needs_bodyweight) else null)
+                    LineChart(
+                        trend,
+                        line,
+                        note = if (weighted && !hasBodyweight) stringResource(R.string.history_needs_bodyweight) else null,
+                        onGoal = { editingGoal = true },
+                    )
                 }
                 items(line.points.reversed(), key = { "row-$n-${it.sessionId}" }) { p -> PointRow(trend, p) { onOpenSession(p.sessionId) } }
             }
@@ -97,7 +129,7 @@ fun ExerciseTrendScreen(
 
 /** One line's figure, readout, chart and legend. */
 @Composable
-private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?) {
+private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGoal: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val points = line.points
     if (points.isEmpty()) return
@@ -119,11 +151,18 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?) {
         style = MaterialTheme.typography.labelLarge,
         color = cs.onSurfaceVariant,
     )
-    Text(
-        points.last().let(value)?.let { figure(it, byReps) } ?: "–",
-        Modifier.padding(horizontal = Margin),
-        style = MaterialTheme.typography.headlineMedium,
-    )
+    val goal = trend.goal
+    if (goal == null) {
+        Text(
+            points.last().let(value)?.let { figure(it, byReps) } ?: "–",
+            Modifier.padding(horizontal = Margin),
+            style = MaterialTheme.typography.headlineMedium,
+        )
+    } else {
+        val estimate = points.lastOrNull { it.estimateKg != null }?.estimateKg
+        GoalFigure(estimate, goal, MaterialTheme.typography.headlineMedium, Modifier.padding(horizontal = Margin))
+        GoalStatusRow(estimate, goal, Modifier.clickable(onClick = onGoal).padding(horizontal = Margin))
+    }
     val p = points[index]
     Text(
         listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.summary()}", value(p)?.takeIf { !byReps }?.let { "${estimateText(it)} kg" })
@@ -141,6 +180,8 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?) {
         selected = index,
         onSelect = { selected = it },
         modifier = Modifier.padding(start = Margin, end = 8.dp),
+        goal = trend.goal?.kg,
+        goalLabel = trend.goal?.let { goalLabel(it) },
         description = stringResource(R.string.history_trend_chart, trend.exercise.name),
     )
     if (dotsShown) Legend()

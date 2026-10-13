@@ -27,6 +27,7 @@ import com.hyperlog.app.program.PlannedSetJson
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
+import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.progression.WorkSet
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.LadderSpec
@@ -61,6 +62,11 @@ class SessionLogger(
     private val db: HyperlogDatabase,
     private val clock: () -> Long = System::currentTimeMillis,
     private val programs: Programs = Programs(db, clock),
+    /**
+     * The progression engine. Everything a suggestion depends on goes in through its arguments,
+     * which is how a test shows that a lift goal never reaches it.
+     */
+    private val suggest: (plan: List<PlannedSet>, today: Performance, history: List<Performance>, ladder: WeightLadder) -> Suggestion? = Progression::suggest,
 ) {
     private val dao = db.sessions()
     private val gyms = Gyms(db)
@@ -732,7 +738,7 @@ class SessionLogger(
             val suggestion = when {
                 !onScreen -> null
                 plan == null -> start?.suggestion(null, ladder.ladder)
-                else -> Progression.suggest(
+                else -> suggest(
                     plan,
                     // A weighted bodyweight exercise counts the latest bodyweight with the belt (SPEC, Bodyweight).
                     Performance(

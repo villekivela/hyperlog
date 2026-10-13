@@ -108,3 +108,27 @@ estimate: its figure, line and table show the top set's reps instead (`12 reps`)
 - Progress → an exercise opens its trend; a table row opens that session's summary.
 - Charts take tap and horizontal drag; the nearest session (by date) is selected. The selection
   stays until the screen closes.
+
+## Lift goals (#20)
+
+A goal is read against the estimate, never instead of it. Renders: `screens/goal-*.png`
+(Robolectric; phone check pending).
+
+- **The figure carries it.** With a goal the figure reads `95 kg  of 100 kg`: the estimate in
+  headlineMedium, the goal after it on the same baseline in titleMedium, muted. Under it one 32 dp
+  row: the flag (16 dp, muted) and `5 kg to go · by Thu 31 Dec`; once reached, check_circle in
+  primary and `Goal reached`. The row opens the editor.
+- **The goal line is a reference, not data.** 1 dp, solid, `onSurfaceVariant` (apart from the
+  `outlineVariant` grid, quieter than the 2 dp primary estimate), across the plot, included in the
+  scale. Its direct label `Goal 100` (labelSmall, muted) sits at the start of the line, above it
+  (under it when the line runs along the top): early sessions are below a goal, and the right end
+  keeps the latest accent dot clear. No legend entry: the label names it.
+- **Editor in place** (the flag in the top bar, or the goal row): an outlined `Goal` field in kg
+  (placeholder: the estimate rounded up to 5), the filled Save and ×; under it `Add a date` (a
+  text button opening the system date picker) or an input chip `By Thu 31 Dec` whose × drops the
+  date, and `Remove goal` in error colour at the right when a goal exists. The list scrolls to the
+  top when the editor opens.
+- **Prescription sheet**: under the prescription, a block on the sheet's 16 dp icon column: the
+  flag, `95 kg  of 100 kg` (titleLarge), the status line, then a 64 dp estimate line without grid,
+  ticks or axis, the goal line and its label, the latest point as the accent dot.
+- **No flag** on machine, cable and plain bodyweight exercises (SPEC, Lift goals).

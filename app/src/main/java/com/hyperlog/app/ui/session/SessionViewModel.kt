@@ -26,6 +26,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import com.hyperlog.app.history.GoalProgress
+import com.hyperlog.app.history.History
+import com.hyperlog.app.history.LiftGoals
 
 /** What the pad and the set table's active row ask for: the running session's, or a past session's corrections. */
 interface PadActions {
@@ -98,6 +103,15 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     /** The summary of the session just finished, until it is dismissed. */
     val summary: StateFlow<SessionSummary?> = _summary.asStateFlow()
+
+    /**
+     * Every lift goal with its estimates, for the prescription sheet. Read again when a goal
+     * changes and when a session starts or ends; the session logger never sees them.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val goals: StateFlow<List<GoalProgress>> = combine(LiftGoals(db).all, logger.state.map { it?.id }.distinctUntilChanged()) { _, _ -> }
+        .mapLatest { History(db, programs).goals() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** The whole library, hidden exercises included. */
     val exercises: StateFlow<List<Exercise>> = library.exercises.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

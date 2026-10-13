@@ -48,7 +48,13 @@ data class TrendLine(val machine: String?, val itemId: Long?, val points: List<T
  * An exercise's top sets and estimate over time: one line, or one per machine for machines
  * (ADR 0002), the one used last first.
  */
-data class ExerciseTrend(val exercise: Exercise, val lines: List<TrendLine>)
+data class ExerciseTrend(val exercise: Exercise, val lines: List<TrendLine>, val goal: LiftGoal? = null)
+
+/** A lift goal and the estimate on its way there: [points] oldest first, as on the exercise's trend. */
+data class GoalProgress(val goal: LiftGoal, val points: List<TrendPoint>) {
+    /** The current estimate; null before a session gives one. */
+    val estimateKg: Double? get() = points.lastOrNull { it.estimateKg != null }?.estimateKg
+}
 
 /**
  * What was done and whether it's working (SPEC, Screens → History), read from finished sessions:
@@ -62,6 +68,7 @@ class History(
 ) {
     private val dao = db.sessions()
     private val bodyweights = Bodyweights(db)
+    private val liftGoals = LiftGoals(db)
 
     /**
      * Sets per primary muscle for the last [weeks] weeks (Monday to Sunday), newest first, this
@@ -89,6 +96,13 @@ class History(
     suspend fun exercises(): List<ExerciseTrend> =
         dao.trained().reversed().map { it.exerciseId }.distinct().map { trend(it) }
 
+    /** Every lift goal with its exercise's estimates, for exercises that take one. */
+    suspend fun goals(): List<GoalProgress> = liftGoals.all.first().mapNotNull { goal ->
+        db.exercises().get(goal.exerciseId) ?: return@mapNotNull null
+        val trend = trend(goal.exerciseId).takeIf { it.goal != null } ?: return@mapNotNull null
+        GoalProgress(goal, trend.lines.firstOrNull()?.points.orEmpty())
+    }
+
     /** [exerciseId]'s trend from every finished session with it. */
     suspend fun trend(exerciseId: String): ExerciseTrend {
         val exercise = db.exercises().get(exerciseId)!!.toExercise()
@@ -99,7 +113,7 @@ class History(
         val lines = groups.entries
             .sortedByDescending { (_, rows) -> rows.last().startedAt }
             .map { (itemId, rows) -> TrendLine(itemId?.let { machines[it] }, itemId, points(rows, weighted = exercise.equipment == Equipment.WeightedBodyweight)) }
-        return ExerciseTrend(exercise, lines)
+        return ExerciseTrend(exercise, lines, goal = liftGoals.of(exerciseId)?.takeIf { exercise.takesGoal })
     }
 
     /**

@@ -425,4 +425,19 @@
     <string name="history_trend_chart">%1$s over time</string>
     <string name="history_save">Save</string>
     <string name="history_cancel">Cancel</string>
+    <string name="goal_action">Lift goal</string>
+    <string name="goal_field">Goal</string>
+    <string name="goal_of">of %1$s kg</string>
+    <string name="goal_to_go">%1$s kg to go</string>
+    <string name="goal_reached">Goal reached</string>
+    <string name="goal_nearly">Under 1 kg to go</string>
+    <string name="goal_no_estimate">No estimate yet</string>
+    <string name="goal_by">by %1$s</string>
+    <string name="goal_line">Goal %1$s</string>
+    <string name="goal_add_date">Add a date</string>
+    <string name="goal_by_chip">By %1$s</string>
+    <string name="goal_pick_date">OK</string>
+    <string name="goal_remove_date">No date</string>
+    <string name="goal_remove">Remove goal</string>
+    <string name="goal_chart">%1$s estimate against the goal</string>
 </resources>

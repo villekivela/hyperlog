@@ -8,6 +8,7 @@ import com.hyperlog.app.history.Bodyweight
 import com.hyperlog.app.history.Bodyweights
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.History
+import com.hyperlog.app.history.LiftGoals
 import com.hyperlog.app.history.WeekSets
 import com.hyperlog.app.session.SessionRuntime
 import com.hyperlog.app.ui.program.ProgramStore
@@ -27,6 +28,7 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     private val db = HyperlogDatabase.get(application)
     private val history = History(db, ProgramStore.get(application))
     private val log = Bodyweights(db)
+    private val goals = LiftGoals(db)
     private val runtime = SessionRuntime.get(application)
     private val _weeks = MutableStateFlow<List<WeekSets>?>(null)
     private val _exercises = MutableStateFlow<List<ExerciseTrend>?>(null)
@@ -61,6 +63,19 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     fun logBodyweight(kg: Double) = run {
         log.log(LocalDate.now(), kg)
         changed()
+    }
+
+    /** Sets the open exercise's lift goal. Only History and the prescription sheet read it, never progression. */
+    fun setGoal(kg: Double, by: LocalDate?) = run {
+        val trend = _trend.value ?: return@run
+        goals.set(trend.exercise.id, kg, by)
+        _trend.value = history.trend(trend.exercise.id)
+    }
+
+    fun clearGoal() = run {
+        val trend = _trend.value ?: return@run
+        goals.clear(trend.exercise.id)
+        _trend.value = history.trend(trend.exercise.id)
     }
 
     fun deleteBodyweight(date: LocalDate) = run {

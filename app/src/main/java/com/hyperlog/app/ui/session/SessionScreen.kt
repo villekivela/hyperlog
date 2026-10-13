@@ -98,6 +98,11 @@ import com.hyperlog.app.session.Correction
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
+import com.hyperlog.app.history.GoalProgress
+import com.hyperlog.app.ui.history.GoalFigure
+import com.hyperlog.app.ui.history.TrendChart
+import com.hyperlog.app.ui.history.goalLabel
+import com.hyperlog.app.ui.history.goalStatus
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
@@ -121,6 +126,8 @@ fun SessionScreen(
     modifier: Modifier = Modifier,
     /** "Keep edits for the block": shows the session's edits as a Change for review. */
     onKeepEdits: (Change) -> Unit = {},
+    /** The lift goals, each with its exercise's estimates, for the prescription sheet. */
+    goals: List<GoalProgress> = emptyList(),
 ) {
     var showLeave by rememberSaveable { mutableStateOf(false) }
     var showList by rememberSaveable { mutableStateOf(false) }
@@ -354,6 +361,7 @@ fun SessionScreen(
                 // With the session's changes to the sets' techniques.
                 plan = current.plan?.mapIndexed { i, set -> set.copy(technique = current.techniqueAt(i)) },
                 slotNote = current.slot?.note,
+                goal = goals.firstOrNull { it.goal.exerciseId == current.exercise.id },
                 machine = current.machine?.let { m -> stringResource(R.string.machine_at, m.name, session.gym?.name.orEmpty()) },
                 // The machine can change until a set is logged on it; after that the sets belong to it.
                 onChangeMachine = if (current.machine != null && current.sets.isEmpty()) {
@@ -1298,6 +1306,7 @@ internal fun ExerciseSheet(
     onChangeMachine: (() -> Unit)?,
     plan: List<PlannedSet>? = null,
     slotNote: String? = null,
+    goal: GoalProgress? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -1320,6 +1329,7 @@ internal fun ExerciseSheet(
             }
         }
         plan?.let { Prescription(it) }
+        goal?.let { GoalBlock(exercise.name, it) }
         slotNote?.let { note ->
             Spacer(Modifier.height(24.dp))
             val label = stringResource(R.string.sheet_program_note)
@@ -1344,6 +1354,42 @@ internal fun ExerciseSheet(
                 SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
+            }
+        }
+    }
+}
+
+/**
+ * The lift goal under the prescription: the flag, the estimate against the goal and how far is
+ * left, then the estimate's trend with the goal line, small and without a grid.
+ */
+@Composable
+private fun GoalBlock(name: String, progress: GoalProgress) {
+    val cs = MaterialTheme.colorScheme
+    val estimate = progress.estimateKg
+    Spacer(Modifier.height(24.dp))
+    Row {
+        SymbolIcon(Symbol.Flag, null, Modifier.padding(top = 4.dp).size(20.dp), tint = cs.onSurfaceVariant)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            GoalFigure(estimate, progress.goal, MaterialTheme.typography.titleLarge)
+            Text(goalStatus(estimate, progress.goal), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+            val points = progress.points.filter { it.estimateKg != null }
+            if (points.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                TrendChart(
+                    dates = points.map { it.date },
+                    line = points.map { it.estimateKg },
+                    dots = points.map { null },
+                    selected = points.size - 1,
+                    onSelect = {},
+                    height = 64.dp,
+                    axis = false,
+                    ticks = false,
+                    goal = progress.goal.kg,
+                    goalLabel = goalLabel(progress.goal),
+                    description = stringResource(R.string.goal_chart, name),
+                )
             }
         }
     }

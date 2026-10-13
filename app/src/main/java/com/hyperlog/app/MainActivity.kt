@@ -129,6 +129,7 @@ private fun App(
     val session by sessions.session.collectAsStateWithLifecycle()
     val summary by sessions.summary.collectAsStateWithLifecycle()
     val exercises by sessions.exercises.collectAsStateWithLifecycle()
+    val goals by sessions.goals.collectAsStateWithLifecycle()
     var left by rememberSaveable { mutableStateOf(false) }
     var screen by rememberSaveable { mutableStateOf(Screen.Today) }
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
@@ -196,6 +197,7 @@ private fun App(
             actions = sessions,
             onLeave = { left = true },
             onKeepEdits = programModel::propose,
+            goals = goals,
         )
         editing != null -> {
             val id = editing
@@ -312,6 +314,8 @@ private fun App(
             hasBodyweight = bodyweights.isNotEmpty(),
             onOpenSession = pastModel::open,
             onBack = historyModel::closeTrend,
+            onSetGoal = historyModel::setGoal,
+            onClearGoal = historyModel::clearGoal,
         )
         screen == Screen.History -> HistoryScreen(
             pastSessions, weeks, trained, bodyweights,

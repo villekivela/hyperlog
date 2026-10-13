@@ -25,6 +25,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Backspace(R.drawable.symbol_backspace),
     Block(R.drawable.symbol_block),
     Calculate(R.drawable.symbol_calculate),
+    CalendarToday(R.drawable.symbol_calendar_today),
     Check(R.drawable.symbol_check),
     CheckCircle(R.drawable.symbol_check_circle),
     ChevronLeft(R.drawable.symbol_chevron_left),

@@ -553,6 +553,21 @@ backup.
 - **Lift goals**: a target for one exercise's estimate (e.g. barbell bench 100 kg, optional date).
   The exercise's prescription sheet and History show the current estimate against the goal, with
   its trend. A goal never changes the program or the suggestions.
+  - One goal an exercise: a target in kg (the estimate's unit, so a weighted bodyweight goal
+    counts the body too) and an optional date. It is set, changed or removed from the flag on
+    the exercise's trend in History (History → Progress → the exercise), in a field that opens in
+    place, with the date from the system date picker.
+  - Only exercises with one estimate in kg take a goal: free weights and weighted bodyweight.
+    Machines and cables have an estimate per machine (ADR 0002) and plain bodyweight exercises
+    track reps, so they have no flag.
+  - The estimate is the one after the latest finished session, as History shows it. It reads
+    `95 kg of 100 kg`, then `5 kg to go · by Thu 31 Dec` (worked out from the figure as shown),
+    `Goal reached` once the estimate is at or past the goal, or `No estimate yet`. The trend chart
+    draws the goal as a 1 dp line labelled `Goal 100`, kept on the chart's scale; the prescription
+    sheet shows the same lines and a small estimate trend with the goal line under the
+    prescription. Reaching a goal changes nothing else.
+  - Nothing in progression reads goals: the suggestions are the same with or without one (tested
+    over the progression engine's inputs).
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
   weighted bodyweight exercises.
   - One value a day: logging again the same day replaces it. It is typed on the system keyboard

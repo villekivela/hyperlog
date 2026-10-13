@@ -74,7 +74,8 @@ private val DateAxis = 24.dp
 /**
  * A trend over [dates] (oldest first): [line] values joined by a 2 dp line in primary, [dots]
  * values as 8 dp ink dots, either null where a session has none. Tap or drag selects the nearest
- * date; [selected] gets a crosshair and the accent dot.
+ * date; [selected] gets a crosshair and the accent dot. A [goal] is a solid 1 dp reference line in
+ * ink across the plot, kept on the scale, with [goalLabel] direct at its start.
  */
 @Composable
 fun TrendChart(
@@ -88,15 +89,21 @@ fun TrendChart(
     axis: Boolean = true,
     /** False for a small trend line: no grid, ticks or crosshair. */
     ticks: Boolean = true,
+    goal: Double? = null,
+    goalLabel: String? = null,
     description: String,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = contextInk()
     val measurer = rememberTextMeasurer()
     val tick = MaterialTheme.typography.labelSmall.merge(Tnum).copy(color = cs.onSurfaceVariant)
+    // Muted ink: apart from the hairline grid, quieter than the estimate it is read against.
+    val goalInk = cs.onSurfaceVariant
+    val goalStyle = MaterialTheme.typography.labelSmall.merge(Tnum).copy(color = cs.onSurfaceVariant)
     val values = (line + dots).filterNotNull()
     if (dates.isEmpty() || values.isEmpty()) return
-    val scale = remember(values) { Scale.of(values.min(), values.max()) }
+    val scaled = values + listOfNotNull(goal)
+    val scale = remember(scaled) { Scale.of(scaled.min(), scaled.max()) }
     Canvas(
         modifier.fillMaxWidth().height(if (axis) height + DateAxis else height)
             .semantics { contentDescription = description }
@@ -117,6 +124,18 @@ fun TrendChart(
             val ty = y(t)
             drawLine(cs.outlineVariant, Offset(0f, ty), Offset(plotW, ty), strokeWidth = 1.dp.toPx())
             label(measurer, scale.format(t), tick, Offset(plotW + 8.dp.toPx(), ty), centerY = true)
+        }
+        // The goal: a reference, so thinner than the data and in ink, labelled where the line ends.
+        goal?.let { g ->
+            val gy = y(g)
+            drawLine(goalInk, Offset(0f, gy), Offset(plotW, gy), strokeWidth = 1.dp.toPx())
+            goalLabel?.let { text ->
+                val layout = measurer.measure(text, goalStyle)
+                // At the start, above the line (or under it along the top): the early sessions sit
+                // below the goal, and the latest point, at the right, keeps its accent dot clear.
+                val ly = if (gy - layout.size.height - 2.dp.toPx() < 0f) gy + 2.dp.toPx() else gy - layout.size.height - 2.dp.toPx()
+                drawText(layout, topLeft = Offset(0f, ly))
+            }
         }
         // The crosshair finds the date.
         if (ticks) drawLine(cs.outline, Offset(x(selected), 0f), Offset(x(selected), plotH), strokeWidth = 1.dp.toPx())

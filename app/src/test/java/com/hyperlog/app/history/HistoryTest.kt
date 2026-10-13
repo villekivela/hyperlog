@@ -11,7 +11,9 @@ import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.ExerciseLibrary
+import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.Programs
 import kotlinx.coroutines.test.runTest
@@ -159,6 +161,43 @@ class HistoryTest {
 
         assertEquals(listOf("Barbell Bench Press", "Leg Extension"), trends.map { it.exercise.name })
         assertEquals(2, trends[0].lines.single().points.size)
+    }
+
+    @Test
+    fun aTrendCarriesItsExercisesLiftGoal() = runTest {
+        session(LocalDate.of(2026, 10, 1), "barbell_bench_press" to listOf(Logged(82.5, 5, 1)))
+        session(LocalDate.of(2026, 10, 1), "pendlay_row" to listOf(Logged(70.0, 8, 1)))
+        LiftGoals(db).set("barbell_bench_press", 100.0, by = LocalDate.of(2026, 12, 31))
+
+        assertEquals(LiftGoal("barbell_bench_press", 100.0, LocalDate.of(2026, 12, 31)), history().trend("barbell_bench_press").goal)
+        assertEquals(null, history().trend("pendlay_row").goal)
+        assertEquals(listOf(true, false), history().exercises().sortedBy { it.exercise.id }.map { it.goal != null })
+    }
+
+    @Test
+    fun eachGoalComesWithTheEstimateAfterEverySession() = runTest {
+        session(LocalDate.of(2026, 9, 28), "barbell_bench_press" to listOf(Logged(80.0, 5, 1)))
+        session(LocalDate.of(2026, 10, 1), "barbell_bench_press" to listOf(Logged(82.5, 5, 1)))
+        LiftGoals(db).set("barbell_bench_press", 100.0, by = null)
+        // Not trained yet: the goal stands with no estimate.
+        LiftGoals(db).set("barbell_squat", 140.0, by = null)
+
+        val goals = history().goals().associateBy { it.goal.exerciseId }
+
+        // Epley on reps + RIR: 80 × (1 + 6/30) = 96, then 82.5 × 1.2 = 99.
+        assertEquals(listOf(96.0, 99.0), goals.getValue("barbell_bench_press").points.map { it.estimateKg })
+        assertEquals(99.0, goals.getValue("barbell_bench_press").estimateKg!!, 0.001)
+        assertEquals(null, goals.getValue("barbell_squat").estimateKg)
+    }
+
+    @Test
+    fun machineAndPlainBodyweightExercisesTakeNoGoal() = runTest {
+        val library = db.exercises()
+        assertEquals(true, library.get("barbell_bench_press")!!.toExercise().takesGoal)
+        assertEquals(true, library.get("weighted_pullup")!!.toExercise().takesGoal)
+        // A machine's estimate is per machine (ADR 0002), and a plain bodyweight exercise has reps, not an estimate.
+        assertEquals(false, library.get("cable_lateral_raise")!!.toExercise().takesGoal)
+        assertEquals(false, library.all().map { it.toExercise() }.first { it.equipment == Equipment.Bodyweight }.takesGoal)
     }
 
     @Test

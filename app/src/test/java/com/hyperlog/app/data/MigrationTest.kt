@@ -315,4 +315,21 @@ class MigrationTest {
         assertEquals("Kamppi", com.hyperlog.app.gym.Gyms(db).gym(1)!!.name)
         db.close()
     }
+
+    @Test
+    fun version13StartsWithNoLiftGoals() = runTest {
+        val file = context.getDatabasePath("migration-test-13.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(13, file) { db ->
+            db.execSQL("INSERT INTO bodyweight (day, kg) VALUES (20000, 82.4)")
+        }
+
+        // Room checks the migrated tables against the v14 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(null, com.hyperlog.app.history.LiftGoals(db).of("barbell_bench_press"))
+        assertEquals(82.4, com.hyperlog.app.history.Bodyweights(db).latest()!!, 0.001)
+        db.close()
+    }
 }
