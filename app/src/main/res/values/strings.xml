@@ -226,6 +226,14 @@
     <string name="gym_add_confirm">Add</string>
     <string name="gym_name">Name</string>
     <string name="gym_cancel">Cancel</string>
+    <plurals name="gym_program_machines">
+        <item quantity="one">%1$d machine for %2$s</item>
+        <item quantity="other">%1$d machines for %2$s</item>
+    </plurals>
+    <plurals name="gym_program_machines_station">
+        <item quantity="one">%1$d machine and a cable station for %2$s</item>
+        <item quantity="other">%1$d machines and a cable station for %2$s</item>
+    </plurals>
     <plurals name="stack_add_ons">
         <item quantity="one">Add-on</item>
         <item quantity="other">%1$d add-ons</item>
@@ -469,6 +477,14 @@
     <string name="machine_not_here">Not at %1$s</string>
     <string name="gym_missing">Not here</string>
     <string name="gym_cable_station">Every cable exercise · %1$s</string>
+    <string name="gym_program_title">Add the equipment your program uses</string>
+    <string name="gym_program_station">A cable station for %1$s</string>
+    <string name="gym_program_cables">The cable station for %1$d cable exercises in %2$s</string>
+    <string name="gym_program_stack">Stacks here</string>
+    <string name="gym_program_kg">kg, with small plates</string>
+    <string name="gym_program_lb">lb stacks</string>
+    <string name="gym_program_guess">A guess for every machine; each asks for its real weights the first time you use it.</string>
+    <string name="gym_program_add">Add</string>
     <string name="gym_pin_plates">Free weights here</string>
     <string name="gym_pin_plates_row">Plates for the pin</string>
     <string name="gym_pin_plates_list">%1$s kg</string>

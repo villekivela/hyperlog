@@ -303,6 +303,20 @@ available weights belong to a **machine at a gym**, not to an exercise.
   filled in, a cable station's left for you). The answer is remembered per gym and exercise, so the
   next time it goes straight to the sets. The exercise sheet shows the machine and gym, with
   **Change** until a set is logged on it.
+- **Set up the gym from the program.** With a program active, a gym's screen (so also right after
+  adding a gym) opens on a `primaryContainer` card, **Add the equipment your program uses**, while
+  the program has machine or cable exercises the gym has no machine for: `6 machines and a cable
+  station for Full Body 3-Day`, then **Add**. In one go it makes a machine for each machine and
+  Smith machine exercise in the program's slots (not their alternatives), named for it, and one
+  shared cable station for every cable exercise, and remembers each, so "Which machine?" doesn't
+  ask for them. A machine already there by name is used instead; exercises marked **Not at** the
+  gym are left out; running it again adds only what's new.
+  - The machines use the gym's **default stack**, chosen once on the card the first time (**Stacks
+    here**: **kg, with small plates** (default: pin steps of 5 kg from 5 to 100 with the gym's pin
+    plates) or **lb stacks** (2.5 lb, then 5 lb steps, 40 plates)) and kept for later runs.
+    Plate-loaded machines get the shared plates from a zero start.
+  - Everything it makes is a guess: each machine is unconfirmed until its first use asks for its
+    stack's labels (Learning a stack).
 - **One shared cable station per gym.** Every cable exercise at a gym defaults to the gym's cable
   station, so it is set up once, not per exercise: "Which machine?" doesn't ask, and the exercise
   remembers the station. A machine remembered for the exercise (a lat pulldown on its own station)

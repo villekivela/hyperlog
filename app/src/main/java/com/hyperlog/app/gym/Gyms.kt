@@ -29,6 +29,10 @@ data class Gym(
     val pinPlates: List<Double> = LadderSpec.DefaultPinPlates,
     /** The gym's dumbbell rack. */
     val dumbbells: LadderSpec = LadderSpec.DefaultDumbbells,
+    /** The machine each exercise is done on here, remembered from "Which machine?" or the setup. */
+    val machines: Map<String, Long> = emptyMap(),
+    /** The stack chosen for setting the gym up from the program; null until chosen. */
+    val defaultStack: LadderSpec? = null,
 )
 
 /**
@@ -69,10 +73,11 @@ enum class LadderState(val key: String) {
 class Gyms(db: HyperlogDatabase) {
     private val dao = db.gyms()
 
-    val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems(), dao.observeMissing()) { gyms, items, missing ->
+    val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems(), dao.observeMissing(), dao.observeRemembered()) { gyms, items, missing, remembered ->
         val byGym = items.groupBy { it.gymId }
         val missingBy = missing.groupBy({ it.gymId }, { it.exerciseId })
-        gyms.map { g -> g.toGym(byGym[g.id].orEmpty(), missingBy[g.id].orEmpty()) }
+        val rememberedBy = remembered.groupBy { it.gymId }
+        gyms.map { g -> g.toGym(byGym[g.id].orEmpty(), missingBy[g.id].orEmpty(), rememberedBy[g.id].orEmpty()) }
     }
 
     val plates: Flow<LadderSpec.Plates> = dao.observeShared().map { it.plates() }
@@ -99,7 +104,36 @@ class Gyms(db: HyperlogDatabase) {
         dao.setPinPlates(id, plates.filter { it > 0 }.joinToString(",") { it.toString() })
 
     /** One gym with its equipment, as it is now; archived items come too, for the sessions that used them. */
-    suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id)) }
+    suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id), dao.remembered(id)) }
+
+    /**
+     * Adds what [setup] needs at [gymId] in one go: a machine for each machine exercise (one
+     * already there by name is used; a plate-loaded one gets the shared plates from a zero start,
+     * the rest [stack]), and the gym's cable station for every cable exercise, made on [stack] if
+     * there is none. The new ones are guesses until their first use. [stack] becomes the gym's
+     * default stack.
+     */
+    suspend fun addProgramEquipment(gymId: Long, setup: ProgramSetup, stack: LadderSpec) {
+        val gym = gym(gymId) ?: return
+        val plates = shared().plates
+        setup.machines.forEach { exercise ->
+            val id = gym.machineFor(exercise)?.id ?: addItem(
+                EquipmentItem(
+                    gymId = gymId, name = exercise.name,
+                    ladder = if (exercise.plateLoaded) LadderSpec.Plates(0.0, plates.pairs) else stack,
+                    state = LadderState.Unconfirmed,
+                ),
+            )
+            remember(gymId, exercise.id, id)
+        }
+        if (setup.cables.isNotEmpty()) {
+            val station = setup.station?.id ?: gym.items.firstOrNull { it.cableStation && !it.archived }?.id ?: addItem(
+                EquipmentItem(gymId = gymId, name = CABLE_STATION, ladder = stack, state = LadderState.Unconfirmed, cableStation = true),
+            )
+            setup.cables.forEach { remember(gymId, it.id, station) }
+        }
+        dao.setDefaultStack(gymId, stack.encode())
+    }
 
     /** Marks [exerciseId] as one [gymId] has no equipment for. */
     suspend fun markMissing(gymId: Long, exerciseId: String) = dao.markMissing(GymMissingExerciseEntity(gymId, exerciseId))
@@ -180,15 +214,20 @@ class Gyms(db: HyperlogDatabase) {
 
     private fun barKey(bar: Equipment) = "bar_${bar.key}"
 
-    private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList()) =
+    private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList(), remembered: List<GymExerciseItemEntity> = emptyList()) =
         Gym(
             id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet(), pinPlates.toPinPlates(),
             dumbbells?.let { LadderSpec.decode(it) } ?: LadderSpec.DefaultDumbbells,
+            remembered.associate { it.exerciseId to it.equipmentItemId },
+            defaultStack?.let { LadderSpec.decode(it) },
         )
 
     private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState), cableStation) }
 
-    private companion object {
+    companion object {
+        /** The name of a cable station the app makes. */
+        const val CABLE_STATION = "Cable station"
+
         const val PLATES = "plates"
     }
 }

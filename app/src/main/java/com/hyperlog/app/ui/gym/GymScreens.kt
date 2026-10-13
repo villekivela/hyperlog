@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -150,6 +151,11 @@ fun GymScreen(
     onPinPlates: (List<Double>) -> Unit = {},
     /** Opens the gym's dumbbell rack. */
     onDumbbells: () -> Unit = {},
+    /** What the active program still needs here; null without a program. */
+    programSetup: com.hyperlog.app.gym.ProgramSetup? = null,
+    programTitle: String? = null,
+    /** Adds [programSetup] on the gym's stack, chosen here the first time. */
+    onAddProgramEquipment: (LadderSpec) -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var renaming by rememberSaveable { mutableStateOf(false) }
@@ -170,6 +176,10 @@ fun GymScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+            if (programSetup != null && !programSetup.isEmpty && programTitle != null) {
+                ProgramEquipmentCard(programSetup, programTitle, gym.defaultStack, onAddProgramEquipment)
+                Spacer(Modifier.height(16.dp))
+            }
           Group {
             gym.items.forEach { item ->
                 val ladder = item.ladder.summary(gym.pinPlates)
@@ -284,6 +294,49 @@ private fun WeekdayPicker(days: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Un
         }
     }
 }
+
+/**
+ * "Add the equipment your program uses": what it adds (`6 machines and a cable station for Full
+ * Body`) and, the first time, which stack the gym's machines are, then **Add**. A filled
+ * `primaryContainer` card, the screen's one thing to act on.
+ */
+@Composable
+private fun ProgramEquipmentCard(setup: com.hyperlog.app.gym.ProgramSetup, program: String, chosen: LadderSpec?, onAdd: (LadderSpec) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    var lb by rememberSaveable { mutableStateOf(false) }
+    com.hyperlog.app.ui.theme.SectionCard(color = cs.primaryContainer, padding = 16.dp, modifier = Modifier.testTag(ProgramEquipmentTag)) {
+        Text(stringResource(R.string.gym_program_title), style = MaterialTheme.typography.titleMedium, color = cs.onPrimaryContainer)
+        val machines = setup.machines.size
+        val what = when {
+            machines > 0 && setup.newStation -> pluralStringResource(R.plurals.gym_program_machines_station, machines, machines, program)
+            machines > 0 -> pluralStringResource(R.plurals.gym_program_machines, machines, machines, program)
+            setup.newStation -> stringResource(R.string.gym_program_station, program)
+            else -> stringResource(R.string.gym_program_cables, setup.cables.size, program)
+        }
+        Text(what, style = MaterialTheme.typography.bodyMedium, color = cs.onPrimaryContainer, modifier = Modifier.padding(top = 4.dp))
+        if (chosen == null) {
+            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.gym_program_stack), style = MaterialTheme.typography.labelLarge, color = cs.onPrimaryContainer)
+            Spacer(Modifier.height(8.dp))
+            com.hyperlog.app.ui.theme.ConnectedChoice(
+                listOf(stringResource(R.string.gym_program_kg), stringResource(R.string.gym_program_lb)),
+                if (lb) 1 else 0,
+                onSelect = { lb = it == 1 },
+            )
+            Text(
+                stringResource(R.string.gym_program_guess),
+                style = MaterialTheme.typography.bodySmall, color = cs.onPrimaryContainer, modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
+            androidx.compose.material3.Button(onClick = { onAdd(chosen ?: if (lb) LadderSpec.LbPinStack else LadderSpec.DefaultPinStack) }) {
+                Text(stringResource(R.string.gym_program_add))
+            }
+        }
+    }
+}
+
+internal const val ProgramEquipmentTag = "program-equipment"
 
 /** `2.5 + 1.25 kg`, the gym's plates for the pin, or that it has none. */
 @Composable

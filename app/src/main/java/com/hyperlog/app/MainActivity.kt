@@ -211,6 +211,7 @@ private fun App(
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
     val plates by gymsModel.plates.collectAsStateWithLifecycle()
     val bars by gymsModel.bars.collectAsStateWithLifecycle()
+    val programSetups by gymsModel.programSetups.collectAsStateWithLifecycle()
     val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
     val program by programModel.active.collectAsStateWithLifecycle()
     val importErrors by programModel.errors.collectAsStateWithLifecycle()
@@ -371,6 +372,9 @@ private fun App(
                     onRestore = { gymsModel.unmarkMissing(gym.id, it) },
                     onPinPlates = { gymsModel.setPinPlates(gym.id, it) },
                     onDumbbells = { ladder = DumbbellLadder },
+                    programSetup = programSetups?.second?.get(gym.id),
+                    programTitle = programSetups?.first,
+                    onAddProgramEquipment = { gymsModel.addProgramEquipment(gym.id, it) },
                 )
             }
         }

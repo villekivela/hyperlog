@@ -24,6 +24,8 @@ data class GymEntity(
     @ColumnInfo(name = "pin_plates") val pinPlates: String? = null,
     /** The gym's dumbbell rack, an encoded ladder; null for the SPEC default. */
     val dumbbells: String? = null,
+    /** The stack its machines are set up with from the program, chosen once; null until then. */
+    @ColumnInfo(name = "default_stack") val defaultStack: String? = null,
 )
 
 /** One equipment item at a gym. [ladder] is an encoded [com.hyperlog.app.domain.LadderSpec]. */
@@ -113,6 +115,15 @@ interface GymDao {
 
     @Query("UPDATE gym SET name = :name WHERE id = :id")
     suspend fun renameGym(id: Long, name: String)
+
+    @Query("UPDATE gym SET default_stack = :ladder WHERE id = :id")
+    suspend fun setDefaultStack(id: Long, ladder: String)
+
+    @Query("SELECT * FROM gym_exercise_item")
+    fun observeRemembered(): Flow<List<GymExerciseItemEntity>>
+
+    @Query("SELECT * FROM gym_exercise_item WHERE gym_id = :gymId")
+    suspend fun remembered(gymId: Long): List<GymExerciseItemEntity>
 
     @Query("UPDATE gym SET dumbbells = :ladder WHERE id = :id")
     suspend fun setDumbbells(id: Long, ladder: String)

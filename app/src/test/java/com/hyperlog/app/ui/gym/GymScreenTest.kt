@@ -62,4 +62,66 @@ class GymScreenTest {
         compose.onNodeWithContentDescription("Monday").performClick()
         assertEquals(emptySet<DayOfWeek>(), days)
     }
+
+    private val legExtension = com.hyperlog.app.library.Exercise(
+        "leg_extension", "Leg Extension", Equipment.Machine, com.hyperlog.app.library.MovementPattern.KneeExtension,
+        com.hyperlog.app.library.GripDemand.None, listOf("Quads"),
+    )
+    private val lateralRaise = legExtension.copy(id = "cable_lateral_raise", name = "Cable Lateral Raise", equipment = Equipment.Cable)
+
+    @Test
+    fun aGymOffersTheProgramsEquipmentAndAsksOnceWhichStack() {
+        var added: LadderSpec? = null
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(
+                    Gym(1, "Central", emptyList()),
+                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    programSetup = com.hyperlog.app.gym.ProgramSetup(listOf(legExtension), listOf(lateralRaise), station = null),
+                    programTitle = "Full Body",
+                    onAddProgramEquipment = { added = it },
+                )
+            }
+        }
+        compose.onNodeWithText("Add the equipment your program uses").assertExists()
+        compose.onNodeWithText("1 machine and a cable station for Full Body").assertExists()
+        compose.onNodeWithText("lb stacks").performClick()
+        compose.onNodeWithText("Add").performClick()
+        assertEquals(LadderSpec.LbPinStack, added)
+    }
+
+    @Test
+    fun aGymWithItsStackChosenAddsOnItWithoutAsking() {
+        var added: LadderSpec? = null
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(
+                    Gym(1, "Central", emptyList(), defaultStack = LadderSpec.DefaultPinStack),
+                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    programSetup = com.hyperlog.app.gym.ProgramSetup(listOf(legExtension, legExtension.copy(id = "pec_deck", name = "Pec Deck")), emptyList(), station = null),
+                    programTitle = "Full Body",
+                    onAddProgramEquipment = { added = it },
+                )
+            }
+        }
+        compose.onNodeWithText("2 machines for Full Body").assertExists()
+        compose.onNodeWithText("lb stacks").assertDoesNotExist()
+        compose.onNodeWithText("Add").performClick()
+        assertEquals(LadderSpec.DefaultPinStack, added)
+    }
+
+    @Test
+    fun nothingToAddOffersNothing() {
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(
+                    Gym(1, "Central", emptyList()),
+                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    programSetup = com.hyperlog.app.gym.ProgramSetup(emptyList(), emptyList(), station = null),
+                    programTitle = "Full Body",
+                )
+            }
+        }
+        compose.onNodeWithText("Add the equipment your program uses").assertDoesNotExist()
+    }
 }
