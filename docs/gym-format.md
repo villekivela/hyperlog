@@ -52,10 +52,10 @@ A made-up gym:
 | `version` | yes | Always `1`. |
 | `name` | yes | The gym's name. A gym of the same name already there stays; the import is a second one. |
 | `usualDays` | no | The weekday plan: `"monday"` … `"sunday"`. Starting a session on one picks this gym. |
-| `pinPlates` | no | The small loose plates that hang on any stack's pin, kg, one entry per plate. Default `[1.25, 2.5]`. |
+| `pinPlates` | no | The small loose plates that hang on any stack's pin, kg, one entry per plate: up to six, each up to 25 kg. Default `[1.25, 2.5]`. |
 | `plates` | no | The gym's plates, each size once as `{ "kg", "pairs" }`: how many pairs (0 to 50) of that size. Its bars and plate-loaded machines load them. Default: 8 pairs of 20, then 2 pairs each of 15, 10, 5, 2.5 and 1.25. |
 | `dumbbells` | no | The dumbbell rack, as a weights shorthand (below) or a `steps` or `list` ladder. Default: 1 to 10 kg by 1, then 12.5 to 50 by 2.5. |
-| `bars` | no | The gym's bars, each `{ "name", "kind", "kg" }`. `kind` is `barbell`, `ez_bar`, `trap_bar`, `safety_bar`, `swiss_bar` or `axle_bar`; a barbell, EZ, trap or safety bar's weight is what sessions at this gym load the gym's plates on. |
+| `bars` | no | The gym's bars, each `{ "name", "kind", "kg" }`, `kg` up to 100. `kind` is `barbell`, `ez_bar`, `trap_bar`, `safety_bar`, `swiss_bar` or `axle_bar`; a barbell, EZ, trap or safety bar's weight is what sessions at this gym load the gym's plates on. |
 | `equipment` | no | The equipment items, below. |
 
 ### Equipment items

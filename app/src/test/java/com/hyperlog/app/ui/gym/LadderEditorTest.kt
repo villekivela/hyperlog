@@ -73,7 +73,7 @@ class LadderEditorTest {
             }
         }
         compose.onNodeWithText("Name, e.g. Cable station").performTextInput("Leg press")
-        compose.onNodeWithText("Starting weight (empty machine or sled), kg").assertExists()
+        compose.onNodeWithText("Starting weight (kg)").assertExists()
         // No pairs of its own: it loads the gym's plates, so the check counts all of them.
         compose.onNodeWithText("Empty: the gym’s plates", substring = true).assertExists()
         compose.onNodeWithText("to 455 kg", substring = true).assertExists()

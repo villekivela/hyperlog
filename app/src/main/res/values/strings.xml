@@ -280,7 +280,9 @@
     <string name="ladder_count">Weights</string>
     <string name="ladder_list_field">Weights in kg, separated by spaces</string>
     <string name="ladder_base">Bar, kg</string>
-    <string name="ladder_base_machine">Starting weight (empty machine or sled), kg</string>
+    <string name="ladder_base_machine">Starting weight (kg)</string>
+    <string name="ladder_base_machine_help">The empty machine or sled</string>
+    <string name="ladder_base_bar_help">The empty bar; the gym’s plates go on it</string>
     <string name="ladder_pairs">Pairs of plates in kg: one number a pair, or 3×20</string>
     <string name="ladder_pairs_gym">Empty: the gym’s plates</string>
     <string name="ladder_preview">You can pick these weights</string>

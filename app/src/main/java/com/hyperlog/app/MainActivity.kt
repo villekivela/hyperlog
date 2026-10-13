@@ -25,6 +25,7 @@ import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.gym.GymsScreen
 import com.hyperlog.app.ui.gym.GymsViewModel
 import com.hyperlog.app.ui.gym.LadderEditor
+import com.hyperlog.app.ui.gym.ItemEditor
 import com.hyperlog.app.ui.gym.LadderKind
 import com.hyperlog.app.ui.library.ExerciseEditor
 import com.hyperlog.app.ui.library.LibraryScreen
@@ -341,20 +342,11 @@ private fun App(
                     onClose = { ladder = null },
                 )
             } else if (itemId != null) {
-                val item = gym.items.firstOrNull { it.id == itemId }
-                LadderEditor(
-                    title = item?.name ?: stringResource(R.string.ladder_new_item),
-                    name = item?.name.orEmpty(),
-                    spec = item?.ladder,
-                    kinds = LadderKind.Items,
-                    pinPlates = gym.pinPlates,
-                    gymPlates = gym.plates,
-                    readable = true,
-                    // An edit keeps what the item is (its kind, the cable station); its ladder is now set up by hand.
-                    onSave = { name, spec ->
-                        gymsModel.saveItem(item?.copy(name = name, ladder = spec, state = com.hyperlog.app.gym.LadderState.Confirmed) ?: EquipmentItem(0, gym.id, name, spec))
-                        ladder = null
-                    },
+                // A machine, or a bar from an imported gym file.
+                val item = (gym.items + gym.kit).firstOrNull { it.id == itemId }
+                ItemEditor(
+                    gym, item,
+                    onSave = { gymsModel.saveItem(it); ladder = null },
                     onDelete = item?.let { { gymsModel.deleteItem(it.id); ladder = null } },
                     onClose = { ladder = null },
                 )

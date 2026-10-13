@@ -216,8 +216,8 @@ fun GymScreen(
                 val more = items.map { stringResource(R.string.gym_item_more, it.name) }
                 SegmentedList {
                     items.forEachIndexed { i, item ->
-                        // Machines open their setup; every item's ⋮ renames or deletes it.
-                        val open = if (item.kind == com.hyperlog.app.gym.EquipmentItem.MACHINE) ({ onOpenItem(item.id) }) else null
+                        // Machines open their setup and bars their weight; every item's ⋮ renames or deletes it.
+                        val open = if (item.equipmentKind != com.hyperlog.app.gym.EquipmentKind.RackBench) ({ onOpenItem(item.id) }) else null
                         row(item.name, lines[i], item.symbol, onClick = open, trailing = {
                             ItemMenu(more[i], onRename = { renamingItem = item.id }, onDelete = { deletingItem = item.id })
                         })
@@ -408,8 +408,8 @@ private fun pinPlatesText(plates: List<Double>): String =
 @Composable
 private fun PinPlatesDialog(plates: List<Double>, onDone: (List<Double>) -> Unit, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf(plates.sortedDescending().joinToString(" ") { formatKg(it) }) }
-    val value = text.trim().split(Regex("[\\s;]+")).filter { it.isNotEmpty() }.map { it.replace(',', '.').toDoubleOrNull()?.takeIf { kg -> kg > 0 && kg <= 25 } }
-        .takeIf { it.none { kg -> kg == null } && it.size <= 6 }?.filterNotNull()
+    val value = text.trim().split(Regex("[\\s;]+")).filter { it.isNotEmpty() }.map { it.replace(',', '.').toDoubleOrNull()?.takeIf { kg -> kg > 0 && kg <= com.hyperlog.app.gym.MAX_PIN_PLATE_KG } }
+        .takeIf { it.none { kg -> kg == null } && it.size <= com.hyperlog.app.gym.MAX_PIN_PLATES }?.filterNotNull()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.gym_pin_plates_row)) },
@@ -582,7 +582,7 @@ internal fun SectionLabel(text: String) {
 @Composable
 private fun BarDialog(title: String, kg: Double, onDone: (Double) -> Unit, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf(formatKg(kg)) }
-    val value = text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it <= 100 }
+    val value = text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it <= com.hyperlog.app.gym.MAX_BAR_KG }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },

@@ -137,6 +137,25 @@ class GymFileTest {
     }
 
     @Test
+    fun aFileSetsOnlyWhatTheGymsSetupCanEdit() {
+        // The pin plates dialog takes up to six, each up to 25 kg; a bar's weight field up to 100 kg.
+        val errors = errors(
+            gym(
+                extra = """, "pinPlates": [0.5, 1, 1.25, 2.5, 2.5, 5, 30],
+                    "bars": [{ "name": "Log", "kind": "axle_bar", "kg": 120 }]""",
+            ),
+        )
+        assertEquals(
+            listOf(
+                "pinPlates[6]: must be a weight up to 25",
+                "pinPlates: at most 6 plates",
+                "bars[0].kg: must be a weight up to 100",
+            ),
+            errors,
+        )
+    }
+
+    @Test
     fun aFileThatIsntAGymSaysSo() {
         assertEquals(listOf("not a Hyperlog gym file"), errors("""{ "format": "hyperlog-backup" }"""))
         assertTrue(errors("not json").single().startsWith("not valid JSON"))

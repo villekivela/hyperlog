@@ -440,6 +440,16 @@ available weights belong to a **machine at a gym**, not to an exercise.
   benches alike, has a ⋮ with **Rename** (a name dialog) and **Delete**. A machine's setup renames
   it through its name field and deletes it from its top bar; saving it keeps what it is (the cable
   station stays the cable station).
+- **Editing a gym's bars and plate-loaded machines.** A bar on a gym's screen (the EZ, trap or
+  safety bar a gym file brought in, say) opens its setup: its name and **Bar weight (kg)** (above
+  0, up to 100), and the check under it shows what it loads with the gym's plates (`10 kg +
+  plates, to 465 kg`); the bar has no plates of its own. A plate-loaded machine's setup has
+  **Starting weight (kg)** (the empty machine or sled) the same way, over its own pairs, empty for
+  the gym's. Racks and benches have no weights, so they only rename and delete.
+- **Everything a gym file sets can be edited in the app**: the usual days, the pin plates (up to
+  six, each up to 25 kg), the plates, the dumbbell rack, each bar's weight, and each machine's
+  ladder with its add-ons and pin plates. The file's limits are the setup's, so an import never
+  holds a value setup can't save.
 - **Deleting** a gym or an equipment item asks first (`Delete Leg press?`, `Sessions done on it
   keep it in their history.`). One with history (sessions at the gym, sets
   on the machine) is archived instead of deleted: it leaves setup, the start sheet and "Which

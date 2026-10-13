@@ -99,10 +99,12 @@ fun LadderEditor(
     machine: Boolean = name != null,
     /** A line over the fields saying why the editor opened, when it opened by itself. */
     intro: String? = null,
+    /** A gym's bar: only its weight, a [LadderSpec.Plates] with no pairs of its own (the gym's go on it). */
+    bar: Boolean = false,
 ) {
     var itemName by rememberSaveable { mutableStateOf(name.orEmpty()) }
     // A plate-loaded machine, or a ladder of a kind that isn't a stack, opens on its exact fields.
-    val startsReading = readable && defaultKind != LadderKind.Plates &&
+    val startsReading = readable && !bar && defaultKind != LadderKind.Plates &&
         (spec == null || spec is LadderSpec.PinStack || (spec is LadderSpec.Explicit && !machine))
     var reading by rememberSaveable { mutableStateOf(startsReading) }
     var kind by rememberSaveable {
@@ -170,7 +172,11 @@ fun LadderEditor(
         LadderKind.List -> list.toNumbers()?.filter { it > 0 }?.takeIf { it.isNotEmpty() }?.let { LadderSpec.Explicit(it) }
         LadderKind.Plates -> {
             val b = base.toNumber(); val p = pairs.toPairs()
-            if (b != null && b >= 0 && p != null) LadderSpec.Plates(b, p.filter { it > 0 }) else null
+            when {
+                bar -> b?.takeIf { it > 0 && it <= com.hyperlog.app.gym.MAX_BAR_KG }?.let { LadderSpec.Plates(it, emptyList()) }
+                b != null && b >= 0 && p != null -> LadderSpec.Plates(b, p.filter { it > 0 })
+                else -> null
+            }
         }
     }
     val canSave = draft != null && (name == null || itemName.isNotBlank())
@@ -211,7 +217,7 @@ fun LadderEditor(
                 OutlinedTextField(
                     itemName,
                     onValueChange = { itemName = it },
-                    label = { Text(stringResource(R.string.ladder_name)) },
+                    label = { Text(stringResource(if (bar) R.string.gym_name else R.string.ladder_name)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     modifier = Modifier.fillMaxWidth(),
@@ -237,7 +243,7 @@ fun LadderEditor(
                 LadderCheck(draft, pinPlates, status = if (labels.isBlank()) stringResource(R.string.reading_empty) else readingStatus(read, builtIn == null))
                 TextButton(onClick = { reading = false }, Modifier.padding(start = 0.dp)) { Text(stringResource(R.string.reading_exactly)) }
             } else {
-                if (kinds.size > 1) {
+                if (kinds.size > 1 && !bar) {
                     ConnectedChoice(kinds.map { stringResource(it.label) }, kinds.indexOf(kind), onSelect = { kind = kinds[it] })
                 }
                 when (kind) {
@@ -260,19 +266,70 @@ fun LadderEditor(
                     }
                     LadderKind.List -> NumberField(list, { list = it }, stringResource(R.string.ladder_list_field), Modifier.fillMaxWidth(), many = true)
                     LadderKind.Plates -> {
-                        NumberField(base, { base = it }, stringResource(if (name != null) R.string.ladder_base_machine else R.string.ladder_base), Modifier.fillMaxWidth())
                         NumberField(
+                            base, { base = it },
+                            stringResource(if (bar) R.string.gym_bar_weight else if (name != null) R.string.ladder_base_machine else R.string.ladder_base),
+                            Modifier.fillMaxWidth(),
+                            supporting = stringResource(if (bar) R.string.ladder_base_bar_help else R.string.ladder_base_machine_help).takeIf { name != null },
+                        )
+                        // A bar loads the gym's plates; it has none of its own.
+                        if (!bar) NumberField(
                             pairs, { pairs = it }, stringResource(R.string.ladder_pairs), Modifier.fillMaxWidth(), many = true,
                             supporting = if (machine) stringResource(R.string.ladder_pairs_gym) else null,
                         )
                     }
                 }
                 LadderCheck(draft?.withPlates(gymPlates), pinPlates, status = null)
-                if (readable) TextButton(onClick = { reading = true }) { Text(stringResource(R.string.reading_from_labels)) }
+                if (readable && !bar) TextButton(onClick = { reading = true }) { Text(stringResource(R.string.reading_from_labels)) }
             }
             Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+/**
+ * One of [gym]'s items (null: a new machine) in the ladder editor: a machine's whole ladder, or a
+ * bar's weight on the gym's plates. Saving keeps what the item is
+ * (its kind, the cable station) and confirms its ladder, now set up by hand.
+ */
+@Composable
+fun ItemEditor(
+    gym: com.hyperlog.app.gym.Gym,
+    item: com.hyperlog.app.gym.EquipmentItem?,
+    onSave: (com.hyperlog.app.gym.EquipmentItem) -> Unit,
+    onDelete: (() -> Unit)?,
+    onClose: () -> Unit,
+) {
+    val bar = item?.bar
+    if (item != null && bar != null) {
+        // A bar is stored as its one weight; it is edited as the plates it takes, the gym's.
+        LadderEditor(
+            title = item.name,
+            name = item.name,
+            spec = LadderSpec.Plates(bar.second, emptyList()),
+            kinds = listOf(LadderKind.Plates),
+            gymPlates = gym.plates,
+            bar = true,
+            onSave = { name, spec -> onSave(item.copy(name = name, ladder = LadderSpec.Explicit(listOf((spec as LadderSpec.Plates).baseKg)))) },
+            onDelete = onDelete,
+            onClose = onClose,
+        )
+        return
+    }
+    LadderEditor(
+        title = item?.name ?: stringResource(R.string.ladder_new_item),
+        name = item?.name.orEmpty(),
+        spec = item?.ladder,
+        kinds = LadderKind.Items,
+        pinPlates = gym.pinPlates,
+        gymPlates = gym.plates,
+        readable = true,
+        onSave = { name, spec ->
+            onSave(item?.copy(name = name, ladder = spec, state = com.hyperlog.app.gym.LadderState.Confirmed) ?: com.hyperlog.app.gym.EquipmentItem(0, gym.id, name, spec))
+        },
+        onDelete = onDelete,
+        onClose = onClose,
+    )
 }
 
 internal const val LadderPreviewTag = "ladder-preview"

@@ -79,6 +79,11 @@ data class GymFile(
     }
 }
 
+/** What the gym's setup takes, so everything a file sets can be edited there. */
+internal const val MAX_PIN_PLATES = 6
+internal const val MAX_PIN_PLATE_KG = 25.0
+internal const val MAX_BAR_KG = 100.0
+
 private class GymReader(private val library: Map<String, Exercise>) {
     val errors = mutableListOf<String>()
 
@@ -96,7 +101,9 @@ private class GymReader(private val library: Map<String, Exercise>) {
             DayOfWeek.entries.firstOrNull { it.name.equals(day, ignoreCase = true) }
                 ?: null.also { error("usualDays[$i]", if (day != null) "\"$day\" is not a weekday" else "must be a weekday") }
         }?.toSet().orEmpty()
-        val pinPlates = array(o, "", "pinPlates")?.mapIndexedNotNull { i, el -> weight(el, "pinPlates[$i]") }
+        // No more than the gym's setup takes: up to six plates for the pin, each up to 25 kg.
+        val pinPlates = array(o, "", "pinPlates")?.mapIndexedNotNull { i, el -> weight(el, "pinPlates[$i]", max = MAX_PIN_PLATE_KG) }
+            .also { if ((o["pinPlates"] as? JsonArray)?.size ?: 0 > MAX_PIN_PLATES) error("pinPlates", "at most $MAX_PIN_PLATES plates") }
         val plates = array(o, "", "plates")?.let { sizes ->
             val seen = mutableSetOf<Double>()
             sizes.flatMapIndexed { i, el ->
@@ -146,7 +153,7 @@ private class GymReader(private val library: Map<String, Exercise>) {
         val name = text(o, path, "name", required = true)
         val kind = text(o, path, "kind", required = true)?.takeIf { it in GymFile.BarKinds }
             ?: null.also { if (o["kind"] != null) error("$path.kind", "must be one of ${GymFile.BarKinds.joinToString(", ")}") }
-        val kg = o["kg"]?.let { weight(it, "$path.kg") } ?: null.also { if (o["kg"] == null) error("$path.kg", "is required") }
+        val kg = o["kg"]?.let { weight(it, "$path.kg", max = MAX_BAR_KG) } ?: null.also { if (o["kg"] == null) error("$path.kg", "is required") }
         return if (name != null && kind != null && kg != null) GymFile.Bar(name, kind, kg) else null
     }
 
@@ -241,9 +248,10 @@ private class GymReader(private val library: Map<String, Exercise>) {
         }
     }
 
-    private fun weight(el: JsonElement, path: String, zero: Boolean = false): Double? {
+    private fun weight(el: JsonElement, path: String, zero: Boolean = false, max: Double = 1000.0): Double? {
         val v = (el as? JsonPrimitive)?.takeIf { !it.isString }?.doubleOrNull
-        if (v == null || v < 0 || (!zero && v == 0.0) || v > 1000) return null.also { error(path, if (zero) "must be a weight of 0 or more" else "must be a weight above 0") }
+        if (v == null || v < 0 || (!zero && v == 0.0)) return null.also { error(path, if (zero) "must be a weight of 0 or more" else "must be a weight above 0") }
+        if (v > max) return null.also { error(path, "must be a weight up to ${formatKgText(max)}") }
         return v
     }
 

@@ -138,6 +138,27 @@ class GymScreenTest {
     }
 
     @Test
+    fun aGymsBarsOpenTheirSetupButItsRacksDoNot() {
+        var opened: Long? = null
+        val gym = Gym(
+            1, "Central", emptyList(),
+            kit = listOf(
+                com.hyperlog.app.gym.EquipmentItem(3, 1, "EZ bar", LadderSpec.Explicit(listOf(10.0)), kind = "bar:ez_bar"),
+                com.hyperlog.app.gym.EquipmentItem(4, 1, "Flat bench", LadderSpec.Explicit(emptyList()), kind = "rack"),
+            ),
+        )
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(gym, onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = { opened = it }, onAddItem = {}, onBack = {})
+            }
+        }
+        compose.onNodeWithText("Flat bench").performClick()
+        assertEquals(null, opened)
+        compose.onNodeWithText("EZ bar").performClick()
+        assertEquals(3L, opened)
+    }
+
+    @Test
     fun aGymsPlatesShowAsPairsPerSizeAndChangeACountAtATime() {
         var saved: List<Double>? = null
         compose.setContent {
