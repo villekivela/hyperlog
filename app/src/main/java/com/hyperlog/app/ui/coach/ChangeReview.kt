@@ -194,7 +194,7 @@ private fun HeadRow(label: String, before: String, after: String) {
 private fun Arrow() {
     SymbolIcon(
         Symbol.ArrowForward, null,
-        Modifier.padding(horizontal = 8.dp).size(18.dp).padding(top = 2.dp),
+        Modifier.padding(horizontal = 8.dp).size(20.dp),
         tint = MaterialTheme.colorScheme.primary,
     )
 }
@@ -273,7 +273,7 @@ private fun SlotRow(slot: SlotDiff, name: (String) -> String) {
                 Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     SymbolIcon(
                         if (after.loadPercent < 0) Symbol.TrendingDown else Symbol.TrendingUp, null,
-                        Modifier.size(18.dp), tint = cs.tertiary,
+                        Modifier.size(20.dp), tint = cs.tertiary,
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(

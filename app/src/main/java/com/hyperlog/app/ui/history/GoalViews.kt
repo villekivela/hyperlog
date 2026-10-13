@@ -50,7 +50,7 @@ import java.time.ZoneOffset
 internal fun GoalFigure(estimateKg: Double?, goal: LiftGoal, figure: TextStyle, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     Row(modifier) {
-        Text(estimateKg?.let { "${estimateText(it)} kg" } ?: "–", Modifier.alignByBaseline(), style = figure)
+        Text(estimateKg?.let { stringResource(R.string.weight_kg, estimateText(it)) } ?: "–", Modifier.alignByBaseline(), style = figure)
         Spacer(Modifier.width(8.dp))
         Text(
             stringResource(R.string.goal_of, formatKg(goal.kg)),
@@ -118,7 +118,7 @@ internal fun GoalEditor(
                 modifier = Modifier.weight(1f),
                 label = { Text(stringResource(R.string.goal_field)) },
                 placeholder = { Text(estimateKg?.let { formatKg(Math.ceil(it / 5) * 5) }.orEmpty()) },
-                suffix = { Text("kg") },
+                suffix = { Text(stringResource(R.string.col_kg)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             )
@@ -130,7 +130,7 @@ internal fun GoalEditor(
             val day = by
             if (day == null) {
                 TextButton(onClick = { picking = true }) {
-                    SymbolIcon(Symbol.CalendarToday, null, Modifier.size(18.dp))
+                    SymbolIcon(Symbol.CalendarToday, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.goal_add_date))
                 }
@@ -141,7 +141,7 @@ internal fun GoalEditor(
                     label = { Text(stringResource(R.string.goal_by_chip, long(LocalDate.ofEpochDay(day)))) },
                     trailingIcon = {
                         IconButton(onClick = { by = null }, Modifier.size(24.dp)) {
-                            SymbolIcon(Symbol.Close, stringResource(R.string.goal_remove_date), Modifier.size(18.dp))
+                            SymbolIcon(Symbol.Close, stringResource(R.string.goal_remove_date), Modifier.size(20.dp))
                         }
                     },
                 )

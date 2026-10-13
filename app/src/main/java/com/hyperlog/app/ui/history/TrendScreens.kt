@@ -165,7 +165,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
     }
     val p = points[index]
     Text(
-        listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.summary()}", value(p)?.takeIf { !byReps }?.let { "${estimateText(it)} kg" })
+        listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.summary()}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
             .joinToString(" · "),
         Modifier.padding(horizontal = Margin),
         style = MaterialTheme.typography.bodyMedium.merge(Tnum),
@@ -229,7 +229,7 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint, onClick: () -> Unit) {
 
 @Composable
 private fun figure(v: Double, byReps: Boolean) =
-    if (byReps) stringResource(R.string.history_reps, v.roundToInt()) else "${estimateText(v)} kg"
+    if (byReps) stringResource(R.string.history_reps, v.roundToInt()) else stringResource(R.string.weight_kg, estimateText(v))
 
 /** The bodyweight log: the figure and its line, then every day logged, newest first, each deletable. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -270,7 +270,7 @@ fun BodyweightScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(long(b.date), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = if (picked) cs.primary else cs.onSurfaceVariant)
-                    Text("${formatKg(b.kg)} kg", style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = if (picked) cs.primary else cs.onSurface)
+                    Text(stringResource(R.string.weight_kg, formatKg(b.kg)), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = if (picked) cs.primary else cs.onSurface)
                 }
             }
             item { Spacer(Modifier.navigationBarsPadding().heightIn(min = 16.dp)) }
@@ -290,10 +290,10 @@ private fun BodyweightChart(days: List<Bodyweight>, index: Int, onSelect: (Int) 
         return
     }
     Column(Modifier.fillMaxWidth()) {
-        Text("${formatKg(days.last().kg)} kg", Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.weight_kg, formatKg(days.last().kg)), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineMedium)
         Row(Modifier.fillMaxWidth().padding(start = Margin, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "${long(days[index].date)} · ${formatKg(days[index].kg)} kg",
+                "${long(days[index].date)} · ${stringResource(R.string.weight_kg, formatKg(days[index].kg))}",
                 Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                 color = cs.onSurfaceVariant,

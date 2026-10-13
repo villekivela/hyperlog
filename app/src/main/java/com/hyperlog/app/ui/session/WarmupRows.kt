@@ -119,7 +119,7 @@ private fun PlateLine(text: String, perSide: Boolean) {
         Modifier.fillMaxWidth().height(LabelHeight).padding(start = RowPad + ColSet, end = RowPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SymbolIcon(Symbol.Album, null, Modifier.size(18.dp), tint = color)
+        SymbolIcon(Symbol.Album, null, Modifier.size(20.dp), tint = color)
         Spacer(Modifier.width(8.dp))
         Text(
             if (perSide) stringResource(R.string.plates_per_side, text) else text,

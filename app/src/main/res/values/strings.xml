@@ -36,6 +36,8 @@
     <string name="session_superset_with">%1$s with %2$s</string>
     <string name="col_last">Last</string>
     <string name="col_kg">kg</string>
+    <!-- A weight with its unit, e.g. "82.4 kg". -->
+    <string name="weight_kg">%1$s kg</string>
     <string name="col_reps">Reps</string>
     <string name="col_reps_split">L / R</string>
     <string name="col_rir">RIR</string>

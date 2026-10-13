@@ -292,7 +292,7 @@ private fun TimeOffLine(days: Int, onEaseBack: () -> Unit) {
         Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp).padding(bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SymbolIcon(Symbol.History, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.tertiary)
+        SymbolIcon(Symbol.History, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.tertiary)
         Spacer(Modifier.width(8.dp))
         Text(
             stringResource(R.string.coach_days_off, days),

@@ -178,7 +178,7 @@ internal fun BodyweightSummary(bodyweights: List<Bodyweight>, onClick: (() -> Un
     }
     Column(Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
         Row(Modifier.padding(horizontal = Margin), verticalAlignment = Alignment.Bottom) {
-            Text("${formatKg(latest.kg)} kg", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.weight_kg, formatKg(latest.kg)), style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.weight(1f))
             Text(short(latest.date), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
         }
@@ -220,7 +220,7 @@ private fun ExerciseRow(trend: ExerciseTrend, onClick: () -> Unit) {
             Sparkline(values.takeLast(12))
             Spacer(Modifier.width(16.dp))
             Text(
-                values.lastOrNull()?.let { if (trend.byReps) "${it.roundToInt()}" else "${estimateText(it)} kg" } ?: "",
+                values.lastOrNull()?.let { if (trend.byReps) "${it.roundToInt()}" else stringResource(R.string.weight_kg, estimateText(it)) } ?: "",
                 Modifier.width(64.dp),
                 style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                 color = cs.onSurfaceVariant,
@@ -265,7 +265,7 @@ internal fun LogBodyweight(latest: Double?, onSave: (Double) -> Unit, onDismiss:
             modifier = Modifier.weight(1f),
             label = { Text(stringResource(R.string.history_bodyweight_today)) },
             placeholder = { Text(latest?.let(::formatKg).orEmpty()) },
-            suffix = { Text("kg") },
+            suffix = { Text(stringResource(R.string.col_kg)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         )

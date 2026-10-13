@@ -151,7 +151,7 @@ fun ExerciseEditor(
                             onClick = { equipment = e },
                             label = { Text(e.label) },
                             leadingIcon = if (equipment == e) {
-                                { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) }
+                                { SymbolIcon(Symbol.Check, null, Modifier.size(20.dp)) }
                             } else {
                                 null
                             },
@@ -248,7 +248,7 @@ fun ExerciseEditor(
                 }
                 // The text button's own padding would push its label off the 24 dp edge.
                 TextButton(onClick = { onSetHidden(!exercise.hidden) }, Modifier.offset(x = (-12).dp)) {
-                    SymbolIcon(if (exercise.hidden) Symbol.Visibility else Symbol.VisibilityOff, null, Modifier.size(18.dp))
+                    SymbolIcon(if (exercise.hidden) Symbol.Visibility else Symbol.VisibilityOff, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (exercise.hidden) R.string.editor_unhide else R.string.editor_hide))
                 }
@@ -321,14 +321,14 @@ private fun MuscleChips(chosen: List<String>, available: List<String>, onChange:
                 selected = true,
                 onClick = { onChange(chosen - m) },
                 label = { Text(m) },
-                trailingIcon = { SymbolIcon(Symbol.Close, remove, Modifier.size(18.dp)) },
+                trailingIcon = { SymbolIcon(Symbol.Close, remove, Modifier.size(20.dp)) },
             )
         }
         Box {
             AssistChip(
                 onClick = { adding = true },
                 label = { Text(stringResource(R.string.editor_add_muscle)) },
-                leadingIcon = { SymbolIcon(Symbol.Add, null, Modifier.size(18.dp)) },
+                leadingIcon = { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp)) },
             )
             DropdownMenu(expanded = adding, onDismissRequest = { adding = false }) {
                 available.forEach { m ->

@@ -179,7 +179,7 @@ fun CoachScreen(
                         // The next step is the filled button: Ask Claude first, then Paste change once asked.
                         val ask = @Composable { Text(stringResource(R.string.coach_ask)) }
                         val paste = @Composable {
-                            SymbolIcon(Symbol.ContentPaste, null, Modifier.size(18.dp))
+                            SymbolIcon(Symbol.ContentPaste, null, Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.coach_paste))
                         }
@@ -401,7 +401,7 @@ private fun Limit(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
         selected = on,
         onClick = { onChange(!on) },
         label = { Text(label) },
-        leadingIcon = if (on) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
+        leadingIcon = if (on) { { SymbolIcon(Symbol.Check, null, Modifier.size(20.dp)) } } else null,
     )
 }
 

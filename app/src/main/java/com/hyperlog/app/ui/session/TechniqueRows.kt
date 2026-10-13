@@ -301,7 +301,7 @@ internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, ac
     Text(text, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     if (followUp is FollowUp.Hold) {
         FilledTonalButton(onClick = { if (holdRunning) actions.stopHold() else actions.startHold() }) {
-            SymbolIcon(if (holdRunning) Symbol.Stop else Symbol.PlayArrow, null, Modifier.size(18.dp))
+            SymbolIcon(if (holdRunning) Symbol.Stop else Symbol.PlayArrow, null, Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(if (holdRunning) R.string.hold_stop else R.string.hold_start))
         }
@@ -368,7 +368,7 @@ internal fun SetSheet(
             Text(stringResource(R.string.set_sheet_title, number), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
             onRemove?.let { remove ->
                 TextButton(onClick = remove) {
-                    SymbolIcon(Symbol.Delete, null, Modifier.size(18.dp))
+                    SymbolIcon(Symbol.Delete, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.edit_remove_set))
                 }

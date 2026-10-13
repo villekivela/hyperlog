@@ -133,7 +133,7 @@ fun TrendChart(
                 val layout = measurer.measure(text, goalStyle)
                 // At the start, above the line (or under it along the top): the early sessions sit
                 // below the goal, and the latest point, at the right, keeps its accent dot clear.
-                val ly = if (gy - layout.size.height - 2.dp.toPx() < 0f) gy + 2.dp.toPx() else gy - layout.size.height - 2.dp.toPx()
+                val ly = if (gy - layout.size.height - 4.dp.toPx() < 0f) gy + 4.dp.toPx() else gy - layout.size.height - 4.dp.toPx()
                 drawText(layout, topLeft = Offset(0f, ly))
             }
         }
@@ -153,8 +153,8 @@ fun TrendChart(
         }
         // The selected session: the accent dot on the line (or on the dot when it has no line value).
         (line.getOrNull(selected) ?: dots.getOrNull(selected))?.let { v ->
-            drawCircle(cs.surface, radius = 5.dp.toPx() + ring, center = Offset(x(selected), y(v)))
-            drawCircle(cs.primary, radius = 5.dp.toPx(), center = Offset(x(selected), y(v)))
+            drawCircle(cs.surface, radius = 6.dp.toPx() + ring, center = Offset(x(selected), y(v)))
+            drawCircle(cs.primary, radius = 6.dp.toPx(), center = Offset(x(selected), y(v)))
         }
         if (axis) {
             val ay = plotH + 4.dp.toPx()
@@ -180,8 +180,8 @@ fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
             values.forEachIndexed { i, v -> if (i == 0) path.moveTo(x(i), y(v)) else path.lineTo(x(i), y(v)) }
             drawPath(path, cs.onSurfaceVariant, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
-        drawCircle(cs.surface, radius = 3.dp.toPx() + 2.dp.toPx(), center = Offset(x(values.size - 1), y(values.last())))
-        drawCircle(cs.primary, radius = 3.dp.toPx(), center = Offset(x(values.size - 1), y(values.last())))
+        drawCircle(cs.surface, radius = 4.dp.toPx() + 2.dp.toPx(), center = Offset(x(values.size - 1), y(values.last())))
+        drawCircle(cs.primary, radius = 4.dp.toPx(), center = Offset(x(values.size - 1), y(values.last())))
     }
 }
 

@@ -542,7 +542,7 @@ private fun SupersetLine(label: String, partner: SessionExercise) {
 private fun SwappedLine(planned: String) {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
-        SymbolIcon(Symbol.SwapHoriz, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.tertiary)
+        SymbolIcon(Symbol.SwapHoriz, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.tertiary)
         Spacer(Modifier.width(8.dp))
         Text(
             stringResource(R.string.edit_swapped_from, planned),
@@ -703,7 +703,7 @@ private fun StartingHint(set: String) {
         Modifier.fillMaxWidth().testTag(StartingHintTag).padding(start = Margin, end = Margin, bottom = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(Symbol.History, null, Modifier.size(18.dp), tint = muted) }
+        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(Symbol.History, null, Modifier.size(20.dp), tint = muted) }
         Spacer(Modifier.width(8.dp))
         // The set on a line of its own, so it never breaks inside "@ 2 RIR".
         Column {
@@ -720,7 +720,7 @@ private fun WhyLine(symbol: Symbol, tint: Color, text: String, color: Color, tag
         Modifier.fillMaxWidth().testTag(tag).padding(start = Margin, end = Margin, bottom = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(symbol, null, Modifier.size(18.dp), tint = tint) }
+        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { SymbolIcon(symbol, null, Modifier.size(20.dp), tint = tint) }
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, color = color, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
@@ -855,7 +855,7 @@ internal fun Label(symbol: Symbol, text: String, done: Boolean) {
         Modifier.fillMaxWidth().height(LabelHeight).padding(start = RowPad + ColSet, end = RowPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SymbolIcon(symbol, null, Modifier.size(18.dp), tint = color)
+        SymbolIcon(symbol, null, Modifier.size(20.dp), tint = color)
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.typography.labelLarge, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -1199,7 +1199,7 @@ internal fun SessionList(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             TextButton(onClick = onAdd) {
-                SymbolIcon(Symbol.Add, null, Modifier.width(18.dp))
+                SymbolIcon(Symbol.Add, null, Modifier.width(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.session_add_exercise))
             }
@@ -1252,12 +1252,12 @@ private fun MachinePicker(
             }
         }
         TextButton(onClick = onAdd, Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
-            SymbolIcon(Symbol.Add, null, Modifier.width(18.dp))
+            SymbolIcon(Symbol.Add, null, Modifier.width(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.machine_add))
         }
         TextButton(onClick = onNotHere, Modifier.padding(start = Margin - 12.dp)) {
-            SymbolIcon(Symbol.Block, null, Modifier.width(18.dp))
+            SymbolIcon(Symbol.Block, null, Modifier.width(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.machine_not_here, gym))
         }
@@ -1351,7 +1351,7 @@ internal fun ExerciseSheet(
             Spacer(Modifier.height(24.dp))
             val at = TechniqueVideo.parse(link)?.startLabel
             FilledTonalButton(onClick = { context.openTechniqueVideo(link) }) {
-                SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(18.dp))
+                SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
             }
@@ -1419,12 +1419,12 @@ private fun Prescription(plan: List<SetPrescription>) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 when {
                     technique != null -> {
-                        SymbolIcon(technique.symbol(), null, Modifier.size(18.dp), tint = cs.tertiary)
+                        SymbolIcon(technique.symbol(), null, Modifier.size(20.dp), tint = cs.tertiary)
                         Spacer(Modifier.width(8.dp))
                         Text(techniqueText(technique), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     backoff != null -> {
-                        SymbolIcon(Symbol.SouthEast, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
+                        SymbolIcon(Symbol.SouthEast, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
                         Spacer(Modifier.width(8.dp))
                         Text(
                             stringResource(R.string.technique_backoff, backoff.percent),
