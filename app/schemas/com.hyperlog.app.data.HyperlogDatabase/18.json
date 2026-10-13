@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 18,
-    "identityHash": "deb7d948e8449474bf6db52a2c0b0870",
+    "identityHash": "53def98fa3db1e1717c426dbf799e34c",
     "entities": [
       {
         "tableName": "exercise",
@@ -497,7 +497,7 @@
       },
       {
         "tableName": "gym",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `weekdays` INTEGER NOT NULL DEFAULT 0, `archived` INTEGER NOT NULL DEFAULT 0, `pin_plates` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `weekdays` INTEGER NOT NULL DEFAULT 0, `archived` INTEGER NOT NULL DEFAULT 0, `pin_plates` TEXT, `dumbbells` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -528,6 +528,11 @@
           {
             "fieldPath": "pinPlates",
             "columnName": "pin_plates",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dumbbells",
+            "columnName": "dumbbells",
             "affinity": "TEXT"
           }
         ],
@@ -1199,7 +1204,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'deb7d948e8449474bf6db52a2c0b0870')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '53def98fa3db1e1717c426dbf799e34c')"
     ]
   }
 }

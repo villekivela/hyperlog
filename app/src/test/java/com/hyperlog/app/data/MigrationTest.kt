@@ -96,8 +96,8 @@ class MigrationTest {
             .allowMainThreadQueries()
             .build()
         val gyms = Gyms(db)
-        assertEquals(LadderSpec.DefaultDumbbells, gyms.dumbbells.first())
         val id = gyms.addGym("Central")
+        assertEquals(LadderSpec.DefaultDumbbells, gyms.gym(id)!!.dumbbells)
         gyms.saveItem(EquipmentItem(gymId = id, name = "Cable station", ladder = LadderSpec.lbStack()))
         assertEquals("Cable station", gyms.gyms.first().single().items.single().name)
         assertEquals(1000L, db.sessions().session(1)!!.startedAt)
@@ -387,6 +387,39 @@ class MigrationTest {
         assertEquals(true, preferences.checkForUpdates())
         preferences.setCheckForUpdates(false)
         assertEquals(false, preferences.checkForUpdates())
+        db.close()
+    }
+
+    @Test
+    fun version17DumbbellsEditedByHandGoToEveryGym() = runTest {
+        val file = context.getDatabasePath("migration-test-17b.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(17, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays, archived) VALUES (1, 'Harbour', 0, 0), (2, 'Home', 0, 0)")
+            db.execSQL("INSERT INTO shared_ladder (`key`, ladder) VALUES ('dumbbells', 'steps;Kg;2.0;2.0;20'), ('plates', 'plates;20.0;20.0,10.0')")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val gyms = Gyms(db).gyms.first()
+        assertEquals(listOf(LadderSpec.Steps(2.0, 2.0, com.hyperlog.app.domain.WeightUnit.Kg, 20)), gyms.map { it.dumbbells }.distinct())
+        assertEquals(2, gyms.size)
+        assertEquals(LadderSpec.Plates(20.0, listOf(20.0, 10.0)), Gyms(db).plates.first())
+        db.close()
+    }
+
+    @Test
+    fun version17UntouchedDumbbellsBecomeTheNewRack() = runTest {
+        val file = context.getDatabasePath("migration-test-17c.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(17, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays, archived) VALUES (1, 'Harbour', 0, 0)")
+            db.execSQL("INSERT INTO shared_ladder (`key`, ladder) VALUES ('dumbbells', '${LadderSpec.OldDefaultDumbbells.encode()}')")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(LadderSpec.DefaultDumbbells, Gyms(db).gyms.first().single().dumbbells)
         db.close()
     }
 

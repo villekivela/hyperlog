@@ -64,19 +64,17 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 /**
- * Every gym, then the dumbbells, plates and specialty bars all gyms share. A gym opens its
+ * Every gym, then the plates and specialty bars all gyms share. A gym opens its
  * equipment; the shared ladders open the ladder editor, a bar a field for its weight.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GymsScreen(
     gyms: List<Gym>,
-    dumbbells: LadderSpec,
     plates: LadderSpec.Plates,
     bars: Map<Equipment, Double>,
     onAddGym: (String) -> Unit,
     onOpenGym: (Long) -> Unit,
-    onDumbbells: () -> Unit,
     onPlates: () -> Unit,
     onBar: (Equipment, Double) -> Unit,
     onBack: () -> Unit,
@@ -109,7 +107,6 @@ fun GymsScreen(
 
             SectionLabel(stringResource(R.string.gym_shared))
           Group {
-            Row(stringResource(R.string.gym_dumbbells), dumbbells.summary(), symbol = null, onClick = onDumbbells)
             Row(stringResource(R.string.gym_plates), plates.summary(), symbol = null, onClick = onPlates)
             bars.forEach { (bar, kg) ->
                 Row(bar.label, stringResource(R.string.gym_bar_summary, formatKg(kg)), symbol = null, onClick = { weighing = bar })
@@ -151,6 +148,8 @@ fun GymScreen(
     onRestore: (String) -> Unit = {},
     /** Sets the gym's small plates for the pin of its stacks. */
     onPinPlates: (List<Double>) -> Unit = {},
+    /** Opens the gym's dumbbell rack. */
+    onDumbbells: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var renaming by rememberSaveable { mutableStateOf(false) }
@@ -180,6 +179,7 @@ fun GymScreen(
 
             SectionLabel(stringResource(R.string.gym_pin_plates))
           Group {
+            Row(stringResource(R.string.gym_dumbbells), gym.dumbbells.summary(), symbol = null, onClick = onDumbbells)
             Row(
                 stringResource(R.string.gym_pin_plates_row),
                 pinPlatesText(gym.pinPlates),

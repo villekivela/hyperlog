@@ -31,9 +31,9 @@ class GymScreenTest {
         compose.setContent {
             HyperlogTheme {
                 GymsScreen(
-                    emptyList(), LadderSpec.DefaultDumbbells, LadderSpec.DefaultPlates,
+                    emptyList(), LadderSpec.DefaultPlates,
                     bars = mapOf(Equipment.EzBar to 10.0, Equipment.TrapBar to 25.0, Equipment.SafetyBar to 30.0),
-                    onAddGym = {}, onOpenGym = {}, onDumbbells = {}, onPlates = {},
+                    onAddGym = {}, onOpenGym = {}, onPlates = {},
                     onBar = { _, _ -> }, onBack = {},
                 )
             }

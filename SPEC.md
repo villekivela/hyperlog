@@ -261,9 +261,14 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - **Equipment item**: one piece of equipment at a gym (a cable station, a leg extension, the
   dumbbell rack, a barbell with plates) with its **weight ladder**: a start and step in kg or lb
   (shown in kg), an explicit list, or for plate-loaded machines a base weight plus plates.
-- **Dumbbells are universal**: one global dumbbell ladder (default 1 to 10 kg by 1, then 12.5 to
-  50 kg by 2.5, the usual rack; editable), not set per gym. Barbell plates likewise use one global set,
-  and so do the EZ, trap and safety bars: each has its own bar weight (10, 25 and 30 kg until set)
+- **Each gym has its own dumbbell rack** (Gyms and equipment → the gym → Free weights here →
+  Dumbbells), set up from its labels like a stack (`1 2 3 … 10 12.5 15 … 45`). A new gym, and a
+  session with no gym, have the usual rack: 1 to 10 kg by 1, then 12.5 to 50 kg by 2.5. Only the
+  weights on offer depend on the gym: dumbbell history and estimates stay shared across gyms, as
+  for every free weight. Updating moved the one global ladder of earlier versions into every gym,
+  keeping one edited by hand and replacing the untouched old default (2 kg steps to 20, then 22.5,
+  25 and 5 kg steps) with the new one; a restored backup from before gets the same step.
+- **Barbell plates are shared**: one global set, which the EZ, trap and safety bars load too: each has its own bar weight (10, 25 and 30 kg until set)
   and loads the shared plates.
 - **Setup both ways**: a gym screen to list equipment up front, and adding on the go. The first
   time an exercise is done at a gym without a known machine, the app asks "which machine?" (pick or
@@ -352,12 +357,12 @@ available weights belong to a **machine at a gym**, not to an exercise.
     competition colours, and a legend (`Pin 40`, `2 add-ons`, `1 × 2.5`). Its description reads
     `Load pin 40 + 2 add-ons + 2.5 on the pin for 47.5 kg`. A weight off the stack reads `Not on
     this stack`.
-- Setup lives in Settings → Gyms and equipment: gyms and their equipment, then the shared dumbbells,
-  plates and the three specialty bars (`10 kg bar, the shared plates`; a tap asks for the bar's
+- Setup lives in Settings → Gyms and equipment: gyms (each with its equipment, dumbbell rack and pin
+  plates), then the shared plates and the three specialty bars (`10 kg bar, the shared plates`; a tap asks for the bar's
   weight). Every ladder shows in one line as its runs of steps and its count (`1–10 kg by 1 ·
   12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
-  Setup uses the system keyboard, since it happens once and away from a set. Editing the shared
-  dumbbells or plates applies to a running session at once.
+  Setup uses the system keyboard, since it happens once and away from a set. Editing a gym's
+  dumbbells or the shared plates applies to a running session at once.
 - **Deleting** a gym or an equipment item asks first. One with history (sessions at the gym, sets
   on the machine) is archived instead of deleted: it leaves setup, the start sheet and "Which
   machine?", and exercises forget it as their machine, but its past sessions keep it, so a

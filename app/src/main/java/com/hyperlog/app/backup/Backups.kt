@@ -76,10 +76,12 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
      * unless every row fits and every reference between them holds.
      */
     suspend fun restore(file: String): Result = withContext(Dispatchers.IO) {
-        val rows = when (val parsed = parse(file)) {
-            is Parsed.Refused -> return@withContext Result.Invalid(parsed.reason)
-            is Parsed.Rows -> parsed.rows
+        val parsed = when (val p = parse(file)) {
+            is Parsed.Refused -> return@withContext Result.Invalid(p.reason)
+            is Parsed.Rows -> p
         }
+        val rows = parsed.rows
+        val database = parsed.database
         try {
             db.runInTransaction {
                 val sql = db.openHelper.writableDatabase
@@ -92,6 +94,8 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
                     rows[table].orEmpty().forEach { sql.insert(table, SQLiteDatabase.CONFLICT_ABORT, it) }
                 }
                 if (sql.query("PRAGMA foreign_key_check").use { it.moveToFirst() }) throw Mismatch()
+                // Upgrade steps for files from older databases, as their migrations did.
+                if (database < 18) com.hyperlog.app.data.Migration17To18.moveSharedDumbbells(sql)
             }
             Result.Restored
         } catch (_: android.database.SQLException) {
@@ -102,7 +106,7 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
     }
 
     private sealed interface Parsed {
-        data class Rows(val exportedAt: Long, val rows: Map<String, List<ContentValues>>) : Parsed
+        data class Rows(val exportedAt: Long, val rows: Map<String, List<ContentValues>>, val database: Int) : Parsed
         data class Refused(val reason: Reason) : Parsed
     }
 
@@ -125,7 +129,7 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
         val missing = BackupFormat.Tables - tables.keys
         if (missing.any { BackupFormat.addedSince(database, it)?.isEmpty() != true }) return Parsed.Refused(Reason.Damaged)
         return try {
-            Parsed.Rows(exportedAt, tables.mapValues { (table, rows) -> (rows as JsonArray).map { contentValues(table, it as JsonObject, database) } })
+            Parsed.Rows(exportedAt, tables.mapValues { (table, rows) -> (rows as JsonArray).map { contentValues(table, it as JsonObject, database) } }, database)
         } catch (_: RuntimeException) {
             Parsed.Refused(Reason.Damaged)
         }

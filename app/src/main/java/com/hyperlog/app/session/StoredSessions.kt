@@ -4,6 +4,7 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
 import com.hyperlog.app.data.SessionEntity
 import com.hyperlog.app.data.SessionExerciseEntity
+import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gym
@@ -67,7 +68,7 @@ internal data class StoredSession(
         return StoredExercise(
             exercise = exercise,
             machine = machine,
-            ladder = shared.ladderFor(exercise.equipment, machine, gym?.pinPlates.orEmpty()),
+            ladder = shared.copy(dumbbells = gym?.dumbbells ?: LadderSpec.DefaultDumbbells).ladderFor(exercise.equipment, machine, gym?.pinPlates.orEmpty()),
             slot = slot,
             prescription = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId),
         )

@@ -321,10 +321,11 @@ class SessionLoggerTest {
     }
 
     @Test
-    fun dumbbellsStepOverTheSharedLadder() = runTest {
-        Gyms(db).setDumbbells(LadderSpec.Explicit(listOf(10.0, 12.5, 15.0)))
+    fun dumbbellsStepOverTheGymsRack() = runTest {
+        val gym = Gyms(db).addGym("Home")
+        Gyms(db).setDumbbells(gym, LadderSpec.Explicit(listOf(10.0, 12.5, 15.0)))
         val logger = logger()
-        logger.start()
+        logger.start(gym)
         logger.addExercise("db_bench_press")
         logger.type("10"); logger.press(PadKey.Plus)
         assertEquals("12.5", logger.session.entry!!.weight)

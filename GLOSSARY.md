@@ -166,7 +166,7 @@ A place you train, with the equipment it has.
 _Avoid_: Location, venue
 
 **Equipment item**:
-One piece of equipment at a gym, such as a particular cable station or leg press. Dumbbells and barbell plates are shared by all gyms.
+One piece of equipment at a gym, such as a particular cable station or leg press. Each gym has its own dumbbell rack; barbell plates are shared by all gyms.
 _Avoid_: Machine (when you mean any equipment)
 
 **Weekday plan**:

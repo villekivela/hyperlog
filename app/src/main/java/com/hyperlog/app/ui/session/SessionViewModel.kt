@@ -123,8 +123,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             runtime.ready()
             _loaded.value = true
-            // An edit to the shared dumbbells, plates or a gym's equipment reaches the running session at once.
-            combine(gyms.dumbbells, gyms.plates, gyms.gyms) { d, p, g -> Triple(d, p, g) }.distinctUntilChanged().drop(1).collect { logger.load() }
+            // An edit to the shared plates or a gym's equipment and dumbbells reaches the running session at once.
+            combine(gyms.plates, gyms.gyms) { p, g -> p to g }.distinctUntilChanged().drop(1).collect { logger.load() }
         }
     }
 

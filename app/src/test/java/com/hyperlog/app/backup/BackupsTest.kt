@@ -92,7 +92,8 @@ class BackupsTest {
         val gym = gyms.addGym("Central")
         gyms.setWeekdays(gym, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
         val cable = gyms.addItem(EquipmentItem(gymId = gym, name = "Cable station", ladder = LadderSpec.lbStack()))
-        gyms.setDumbbells(LadderSpec.Steps(2.0, 2.0, WeightUnit.Kg, 20))
+        gyms.setDumbbells(gym, LadderSpec.Steps(2.0, 2.0, WeightUnit.Kg, 20))
+        gyms.setBar(com.hyperlog.app.library.Equipment.EzBar, 8.0)
         gyms.remember(gym, "cable_lateral_raise", cable)
         gyms.markMissing(gym, "leg_extension")
         gyms.setPinPlates(gym, listOf(2.5, 1.25, 1.25))
@@ -286,6 +287,8 @@ class BackupsTest {
         val preferences = UpdatePreferences(phone)
         assertEquals(false, preferences.checkForUpdates())
         assertEquals("0.2.0", preferences.dismissed())
+        // Its shared dumbbells, edited by hand, became the gym's rack, as the v18 migration does.
+        assertEquals(LadderSpec.Steps(2.0, 2.0, WeightUnit.Kg, 20), Gyms(phone).gyms.first().single().dumbbells)
     }
 
     @Test

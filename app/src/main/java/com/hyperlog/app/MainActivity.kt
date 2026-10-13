@@ -209,7 +209,6 @@ private fun App(
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
     var libraryQuery by rememberSaveable { mutableStateOf("") }
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
-    val dumbbells by gymsModel.dumbbells.collectAsStateWithLifecycle()
     val plates by gymsModel.plates.collectAsStateWithLifecycle()
     val bars by gymsModel.bars.collectAsStateWithLifecycle()
     val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
@@ -323,16 +322,6 @@ private fun App(
                 onClose = { editing = null },
             )
         }
-        screen == Screen.Gyms && ladder == DumbbellLadder -> LadderEditor(
-            title = stringResource(R.string.gym_dumbbells),
-            name = null,
-            spec = dumbbells,
-            kinds = listOf(LadderKind.List, LadderKind.Stack),
-            readable = true,
-            onSave = { _, spec -> gymsModel.setDumbbells(spec); ladder = null },
-            onDelete = null,
-            onClose = { ladder = null },
-        )
         screen == Screen.Gyms && ladder == PlateLadder -> LadderEditor(
             title = stringResource(R.string.gym_plates),
             name = null,
@@ -345,7 +334,18 @@ private fun App(
         screen == Screen.Gyms && gymId != null && gyms.any { it.id == gymId } -> {
             val gym = gyms.first { it.id == gymId }
             val itemId = ladder
-            if (itemId != null) {
+            if (itemId == DumbbellLadder) {
+                LadderEditor(
+                    title = stringResource(R.string.gym_dumbbells),
+                    name = null,
+                    spec = gym.dumbbells,
+                    kinds = listOf(LadderKind.List, LadderKind.Stack),
+                    readable = true,
+                    onSave = { _, spec -> gymsModel.setDumbbells(gym.id, spec); ladder = null },
+                    onDelete = null,
+                    onClose = { ladder = null },
+                )
+            } else if (itemId != null) {
                 val item = gym.items.firstOrNull { it.id == itemId }
                 LadderEditor(
                     title = item?.name ?: stringResource(R.string.ladder_new_item),
@@ -370,14 +370,14 @@ private fun App(
                     exerciseNames = exercises.associate { it.id to it.name },
                     onRestore = { gymsModel.unmarkMissing(gym.id, it) },
                     onPinPlates = { gymsModel.setPinPlates(gym.id, it) },
+                    onDumbbells = { ladder = DumbbellLadder },
                 )
             }
         }
         screen == Screen.Gyms -> GymsScreen(
-            gyms, dumbbells, plates, bars,
+            gyms, plates, bars,
             onAddGym = { name -> gymsModel.addGym(name) { gymId = it } },
             onOpenGym = { gymId = it },
-            onDumbbells = { ladder = DumbbellLadder },
             onPlates = { ladder = PlateLadder },
             onBar = gymsModel::setBar,
             onBack = { screen = Screen.Settings },

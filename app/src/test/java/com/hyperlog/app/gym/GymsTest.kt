@@ -70,12 +70,9 @@ class GymsTest {
     }
 
     @Test
-    fun dumbbellsAndPlatesAreSharedDefaultsUntilEdited() = runTest {
-        assertEquals(LadderSpec.DefaultDumbbells, gyms.dumbbells.first())
+    fun platesAreSharedDefaultsUntilEdited() = runTest {
         assertEquals(LadderSpec.DefaultPlates, gyms.plates.first())
-        gyms.setDumbbells(LadderSpec.Explicit(listOf(5.0, 7.5)))
         gyms.setPlates(LadderSpec.Plates(15.0, listOf(10.0)))
-        assertEquals(LadderSpec.Explicit(listOf(5.0, 7.5)), gyms.dumbbells.first())
         assertEquals(listOf(15.0, 35.0), gyms.plates.first().ladder().rungs)
     }
 

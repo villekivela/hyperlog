@@ -16,12 +16,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
-/** Gyms, their equipment, and the shared dumbbells, plates and bars, for the settings screens. */
+/** Gyms with their equipment and dumbbells, and the shared plates and bars, for the settings screens. */
 class GymsViewModel(application: Application) : AndroidViewModel(application), GymActions {
     private val store = Gyms(HyperlogDatabase.get(application))
 
     val gyms: StateFlow<List<Gym>> = store.gyms.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    val dumbbells: StateFlow<LadderSpec> = store.dumbbells.stateIn(viewModelScope, SharingStarted.Eagerly, LadderSpec.DefaultDumbbells)
     val plates: StateFlow<LadderSpec.Plates> = store.plates.stateIn(viewModelScope, SharingStarted.Eagerly, LadderSpec.DefaultPlates)
     val bars: StateFlow<Map<Equipment, Double>> = store.bars.stateIn(viewModelScope, SharingStarted.Eagerly, SharedLadders.DefaultBars)
 
@@ -36,7 +35,7 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
     override fun unmarkMissing(gymId: Long, exerciseId: String) = run { store.unmarkMissing(gymId, exerciseId) }
     override fun saveItem(item: EquipmentItem) = run { store.saveItem(item) }
     override fun deleteItem(id: Long) = run { store.deleteItem(id) }
-    override fun setDumbbells(spec: LadderSpec) = run { store.setDumbbells(spec) }
+    override fun setDumbbells(gymId: Long, spec: LadderSpec) = run { store.setDumbbells(gymId, spec) }
     override fun setPlates(spec: LadderSpec.Plates) = run { store.setPlates(spec) }
     override fun setBar(bar: Equipment, kg: Double) = run { store.setBar(bar, kg) }
 
@@ -54,7 +53,7 @@ interface GymActions {
     fun unmarkMissing(gymId: Long, exerciseId: String)
     fun saveItem(item: EquipmentItem)
     fun deleteItem(id: Long)
-    fun setDumbbells(spec: LadderSpec)
+    fun setDumbbells(gymId: Long, spec: LadderSpec)
     fun setPlates(spec: LadderSpec.Plates)
     fun setBar(bar: Equipment, kg: Double)
 }
