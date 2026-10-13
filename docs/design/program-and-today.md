@@ -202,8 +202,8 @@ tertiary like an estimate: "From old app: 20 kg × 10 @ 2 RIR, 3 Sep", with "→
 the ladder or today's range changed the set. A machine or cable with no history on the machine
 picked gets the same row in onSurfaceVariant, two lines: "From old app, another machine" and the set
 (tabular figures, never broken inside "@ 2 RIR"). Its weight cell stays empty: the hint informs the
-pick on the ladder, it doesn't prefill it. No screenshots are kept: they would show the owner's old
-weights.
+pick on the ladder, it doesn't prefill it. No screenshots are kept: they would show real data from a
+legacy backup.
 
 ```
  Chest-Supported Machine Row               ⋮

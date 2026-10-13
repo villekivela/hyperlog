@@ -211,7 +211,7 @@ private fun NumberField(value: String, onChange: (String) -> Unit, label: String
     )
 }
 
-/** A decimal comma works too: phones in Finnish type one. */
+/** A decimal comma works too: phones in many European locales type one. */
 private fun String.toNumber() = trim().replace(',', '.').toDoubleOrNull()
 
 /** Pairs as typed: one number a pair, or a count of the same plate, `3×20 15 10 2,5`. */

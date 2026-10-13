@@ -64,20 +64,20 @@ class GymAtSessionStartTest {
 
     @Test
     fun startingASessionPreselectsTodaysUsualGymAndTheGymCanBeChanged() {
-        val toolo = runBlocking {
-            gyms.addGym("Kallio")
-            gyms.addGym("Töölö").also { gyms.setWeekdays(it, setOf(LocalDate.now().dayOfWeek)) }
+        val riverside = runBlocking {
+            gyms.addGym("Central")
+            gyms.addGym("Riverside").also { gyms.setWeekdays(it, setOf(LocalDate.now().dayOfWeek)) }
         }
         compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Kallio")
+        compose.waitFor("Central")
 
-        gymRow("Töölö").assertIsSelected()
-        gymRow("Kallio").assertIsNotSelected()
+        gymRow("Riverside").assertIsSelected()
+        gymRow("Central").assertIsNotSelected()
         compose.onNode(hasText("Usual on ", substring = true)).assertIsDisplayed()
 
-        gymRow("Kallio").performClick()
-        gymRow("Kallio").assertIsSelected()
+        gymRow("Central").performClick()
+        gymRow("Central").assertIsSelected()
         compose.onNodeWithText("Start").performClick()
         compose.waitFor("Add exercise")
         compose.onNodeWithText("Barbell Bench Press").performClick()
@@ -85,28 +85,28 @@ class GymAtSessionStartTest {
 
         compose.onNodeWithText("Last exercise").performClick()
         compose.waitFor("Session")
-        compose.onNodeWithText("Kallio").assertIsDisplayed()
-        check(toolo > 0)
+        compose.onNodeWithText("Central").assertIsDisplayed()
+        check(riverside > 0)
     }
 
     @Test
     fun aGymWithNoPlanOrHistoryIsPickedWithoutCallingItUsual() {
-        runBlocking { gyms.addGym("Kallio"); gyms.addGym("Töölö") }
+        runBlocking { gyms.addGym("Central"); gyms.addGym("Riverside") }
         compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Kallio")
-        gymRow("Kallio").assertIsSelected()
+        compose.waitFor("Central")
+        gymRow("Central").assertIsSelected()
         assertEquals(0, compose.onAllNodes(hasText("Usual on ", substring = true)).fetchSemanticsNodes().size)
     }
 
     @Test
     fun theFirstLegExtensionAtAGymAsksForTheMachineAndItsLadderThenRemembersIt() {
-        runBlocking { gyms.addGym("Kallio") }
-        startAt("Kallio")
+        runBlocking { gyms.addGym("Central") }
+        startAt("Central")
         addExercise("Leg Extension")
 
         compose.waitFor("Which machine?")
-        compose.onNodeWithText("Kallio remembers it for next time.").assertIsDisplayed()
+        compose.onNodeWithText("Central remembers it for next time.").assertIsDisplayed()
         compose.onAllNodes(hasContentDescription("Log set").or(hasContentDescription("Next"))).fetchSemanticsNodes().let { check(it.isEmpty()) }
         compose.onNodeWithText("Add machine").performClick()
 
@@ -126,20 +126,20 @@ class GymAtSessionStartTest {
         compose.waitFor("Done")
         compose.onNodeWithText("Done").performClick()
 
-        startAt("Kallio")
+        startAt("Central")
         addExercise("Leg Extension")
         waitForPad()
         compose.onNodeWithText("Leg Extension").performClick()
-        compose.waitFor("Leg Extension · Kallio")
+        compose.waitFor("Leg Extension · Central")
     }
 
     @Test
     fun aMachineIsPickedFromTheGymsEquipment() {
         runBlocking {
-            val kallio = gyms.addGym("Kallio")
-            gyms.saveItem(EquipmentItem(gymId = kallio, name = "Cable station", ladder = LadderSpec.lbStack()))
+            val central = gyms.addGym("Central")
+            gyms.saveItem(EquipmentItem(gymId = central, name = "Cable station", ladder = LadderSpec.lbStack()))
         }
-        startAt("Kallio")
+        startAt("Central")
         addExercise("Cable Lateral Raise")
         compose.waitFor("Which machine?")
 

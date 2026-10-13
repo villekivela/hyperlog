@@ -41,7 +41,7 @@ data class TrendPoint(
 )
 
 /**
- * An exercise's trend on one machine ([machine] reads `Cable left · Kamppi`), or across gyms for a
+ * An exercise's trend on one machine ([machine] reads `Cable left · Harbour`), or across gyms for a
  * free weight ([machine] null).
  */
 data class TrendLine(val machine: String?, val itemId: Long?, val points: List<TrendPoint>)

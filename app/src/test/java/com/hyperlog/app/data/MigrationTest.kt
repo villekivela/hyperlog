@@ -97,7 +97,7 @@ class MigrationTest {
             .build()
         val gyms = Gyms(db)
         assertEquals(LadderSpec.DefaultDumbbells, gyms.dumbbells.first())
-        val id = gyms.addGym("Kallio")
+        val id = gyms.addGym("Central")
         gyms.saveItem(EquipmentItem(gymId = id, name = "Cable station", ladder = LadderSpec.lbStack()))
         assertEquals("Cable station", gyms.gyms.first().single().items.single().name)
         assertEquals(1000L, db.sessions().session(1)!!.startedAt)
@@ -109,7 +109,7 @@ class MigrationTest {
         val file = context.getDatabasePath("migration-test-3.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(3, file) { db ->
             db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('leg_extension', 'Leg Extension', 'Machine')")
-            db.execSQL("INSERT INTO gym (id, name) VALUES (1, 'Kallio')")
+            db.execSQL("INSERT INTO gym (id, name) VALUES (1, 'Central')")
             db.execSQL("INSERT INTO equipment_item (id, gym_id, name, ladder) VALUES (1, 1, 'Leg extension', 'steps;Lb;2.5;5.0;40')")
             db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
             db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'leg_extension', 0)")
@@ -285,7 +285,7 @@ class MigrationTest {
     fun version11GymsStartWithNothingMissing() = runTest {
         val file = context.getDatabasePath("migration-test-11.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(11, file) { db ->
-            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Kamppi', 0)")
+            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Harbour', 0)")
         }
 
         // Room checks the migrated tables against the v12 schema when it opens.
@@ -294,7 +294,7 @@ class MigrationTest {
             .allowMainThreadQueries()
             .build()
         val gym = com.hyperlog.app.gym.Gyms(db).gym(1)!!
-        assertEquals("Kamppi", gym.name)
+        assertEquals("Harbour", gym.name)
         assertEquals(emptySet<String>(), gym.missing)
         db.close()
     }
@@ -303,7 +303,7 @@ class MigrationTest {
     fun version12StartsWithNoBodyweight() = runTest {
         val file = context.getDatabasePath("migration-test-12.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(12, file) { db ->
-            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Kamppi', 0)")
+            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Harbour', 0)")
         }
 
         // Room checks the migrated tables against the v13 schema when it opens.
@@ -312,7 +312,7 @@ class MigrationTest {
             .allowMainThreadQueries()
             .build()
         assertEquals(null, com.hyperlog.app.history.Bodyweights(db).latest())
-        assertEquals("Kamppi", com.hyperlog.app.gym.Gyms(db).gym(1)!!.name)
+        assertEquals("Harbour", com.hyperlog.app.gym.Gyms(db).gym(1)!!.name)
         db.close()
     }
 
@@ -337,7 +337,7 @@ class MigrationTest {
     fun version14KeepsEveryGymAndMachineInUse() = runTest {
         val file = context.getDatabasePath("migration-test-14.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(14, file) { db ->
-            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Kamppi', 0)")
+            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Harbour', 0)")
             db.execSQL("INSERT INTO equipment_item (id, gym_id, name, ladder) VALUES (1, 1, 'Cable left', 'list;5,10')")
         }
 
@@ -347,7 +347,7 @@ class MigrationTest {
             .allowMainThreadQueries()
             .build()
         assertEquals(listOf("Cable left"), Gyms(db).gyms.first().single().items.map { it.name })
-        assertEquals(mapOf(1L to "Cable left · Kamppi"), Gyms(db).machineNames())
+        assertEquals(mapOf(1L to "Cable left · Harbour"), Gyms(db).machineNames())
         db.close()
     }
 

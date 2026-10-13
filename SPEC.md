@@ -76,10 +76,10 @@ configuration, iOS, web, any server.
   phone. **No third-party programs are bundled**: Nippard's programs are paid and copyrighted, so
   each user imports program files they own. The app ships with the exercise library and one
   original starter program, Hyperlog Full Body (`docs/programs/full-body-3-day.md`).
-  - **Its week-12 bench test** ("100 kg if the week-11 estimate is 97 kg or more, else a single
-    @ 1 RIR") is a load rule, which the program format can't hold. It is written as a heavy single
-    (1 rep @ 1 RIR, its weight suggested from the estimate like any new rep range), and the 100 kg
-    condition is in that slot's note.
+  - **Its week-12 bench test** ("the bench goal if the week-11 estimate is within 3% of it, e.g.
+    97 kg for a 100 kg goal, else a single @ 1 RIR") is a load rule, which the program format
+    can't hold. It is written as a heavy single (1 rep @ 1 RIR, its weight suggested from the
+    estimate like any new rep range), and the goal condition is in that slot's note.
 - Starting weights from a legacy backup are a one-off "Import starting weights" action in settings,
   not built into the app.
 
@@ -254,7 +254,7 @@ also works. History shows `50 kg × 12 + 5p`. Partials never count towards e1RM 
 
 ### Gyms and equipment
 
-You train at three gyms with different equipment, and cable stacks differ between machines, so
+You may train at several gyms with different equipment, and cable stacks differ between machines, so
 available weights belong to a **machine at a gym**, not to an exercise.
 
 - **Gym**: a named place with its equipment. Picked at session start.
@@ -287,7 +287,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
     exercise as one the gym has no equipment for, and swaps it at once (left out of the session when
     nothing fits). The gym screen lists them under **Not here**, each with × to undo. Everything else
     is assumed to be there.
-  - The start sheet lists the swaps for the gym picked under `Not at Kamppi · for this session`, as
+  - The start sheet lists the swaps for the gym picked under `Not at Harbour · for this session`, as
     ticked checkbox rows reading `In place of Leg Extension` over `Reverse Nordic`; one with nothing
     that fits reads `Lying Leg Curl: nothing here fits`. Start applies the ticked ones to this
     session only; no Change is made. The candidates are the slot's alternatives, then library
@@ -318,7 +318,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
   on the machine) is archived instead of deleted: it leaves setup, the start sheet and "Which
   machine?", and exercises forget it as their machine, but its past sessions keep it, so a
   machine's history never joins another machine's or the no-gym pool (ADR 0002). History still
-  heads its line `Cable left · Kamppi`.
+  heads its line `Cable left · Harbour`.
 
 The old app's machine weights were wrong in both directions: suggestions that didn't exist on the
 stack, and slow entry of odd values. The ladder picker fixes both.
@@ -546,7 +546,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      (a line) with each session's top set weight (dots), and the sessions as a table (date, top
      set, estimate), newest first; a row opens that session. A tap or drag on the chart reads the
      nearest session above it. Machines and cables get one chart per machine, headed
-     `Cable left · Kamppi`, the machine used last first, each on its own scale (ADR 0002).
+     `Cable left · Harbour`, the machine used last first, each on its own scale (ADR 0002).
      - The top set is the session's heaviest work set that counts (a kept weight nothing confirmed
        doesn't), with the most reps at that weight.
      - The estimate after a session is the estimate as suggestions read it then: the last 12
@@ -874,8 +874,8 @@ waits until syncing is wanted for its own sake.
 ## Fresh start, with starting weights from the old app
 
 No history is imported from the legacy app: no sessions, programs, TM history or bodyweight.
-History and trends start empty. The legacy backup (`~/Downloads/hyperlog-full-backup-2026-10-12.json`)
-stays as an archive.
+History and trends start empty. The legacy backup (the old app's full-backup JSON export) stays as
+an archive.
 
 The one thing taken from it is **starting weights**. For each exercise, the most recent work sets
 in the backup become a one-off starting point, used only until the exercise has its own history:

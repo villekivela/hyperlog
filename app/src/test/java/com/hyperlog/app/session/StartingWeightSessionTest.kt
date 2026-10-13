@@ -66,7 +66,7 @@ class StartingWeightSessionTest {
         programs = Programs(db, clock = { now })
         programs.import(program)
         val gyms = Gyms(db)
-        gym = gyms.addGym("Kallio")
+        gym = gyms.addGym("Central")
         gyms.saveItem(EquipmentItem(gymId = gym, name = "Leg extension", ladder = LadderSpec.Steps(5.0, 5.0, com.hyperlog.app.domain.WeightUnit.Kg, 20)))
     }
 

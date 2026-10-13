@@ -3,7 +3,7 @@
 Free-text coaching runs in the user's Claude app on their own subscription. Hyperlog sends the
 situation and the plan through the Android share sheet, and the user pastes back a Change for
 review. Hyperlog makes no model calls. Anthropic's terms keep subscription credentials inside
-Anthropic's own apps, and the owner doesn't want pay-per-token API usage. Offline rules cover the
+Anthropic's own apps, and pay-per-token API usage is unwanted. Offline rules cover the
 common situations without any model.
 
 ## Considered options

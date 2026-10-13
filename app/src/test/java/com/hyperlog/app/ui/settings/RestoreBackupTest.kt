@@ -53,7 +53,7 @@ class RestoreBackupTest {
         val started = generateSequence { shadowOf(compose.activity).nextStartedActivity }.map { it.component?.className }.toList()
         assertTrue(started.toString(), MainActivity::class.java.name in started)
         val db = HyperlogDatabase.get(compose.activity)
-        assertEquals(listOf("Kallio"), runBlocking { Gyms(db).gyms.first() }.map { it.name })
+        assertEquals(listOf("Central"), runBlocking { Gyms(db).gyms.first() }.map { it.name })
         val session = SessionRuntime.get(compose.activity).logger.state.value
         assertTrue(session != null)
         assertEquals("82.5", session!!.entry?.weight)

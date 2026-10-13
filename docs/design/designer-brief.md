@@ -60,7 +60,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **Visible state.** The active row and cell, the intensity technique on a set, and the weights
   involved can all be read from the screen at a glance.
 
-A monochrome system style (Wallpaper and style, the owner's current choice) makes every dynamic
+A monochrome system style (Wallpaper and style, as set on the test phone) makes every dynamic
 colour grey, and Hyperlog follows it. **Decided: follow the phone.** Dynamic colour stays as it is,
 with no special palette for a monochrome system; in grey the hierarchy comes from tone and shape,
 which is why the rules above lean on them rather than on hue.

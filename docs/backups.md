@@ -54,7 +54,7 @@ again from the restored rest timer.
   "database": 17,
   "exportedAt": 1791889500000,
   "tables": {
-    "gym": [ { "id": 1, "name": "Kallio", "weekdays": 9 } ],
+    "gym": [ { "id": 1, "name": "Central", "weekdays": 9 } ],
     "logged_set": [ { "id": 1, "session_exercise_id": 1, "position": 0, "weight_kg": 80.0, "full_reps": 8, … } ],
     …
   }

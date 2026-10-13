@@ -38,11 +38,11 @@ class GymsTest {
 
     @Test
     fun aGymKeepsItsEquipmentAndLadders() = runTest {
-        val id = gyms.addGym("Kallio")
+        val id = gyms.addGym("Central")
         gyms.saveItem(EquipmentItem(gymId = id, name = "Cable station", ladder = LadderSpec.lbStack()))
 
         val gym = gyms.gyms.first().single()
-        assertEquals("Kallio", gym.name)
+        assertEquals("Central", gym.name)
         val item = gym.items.single()
         assertEquals("Cable station", item.name)
         assertEquals(listOf(1.1, 3.4, 5.7), item.ladder.ladder().rungs.take(3))
@@ -50,7 +50,7 @@ class GymsTest {
 
     @Test
     fun editingAnItemReplacesIt() = runTest {
-        val id = gyms.addGym("Kallio")
+        val id = gyms.addGym("Central")
         gyms.saveItem(EquipmentItem(gymId = id, name = "Leg press", ladder = LadderSpec.lbStack()))
         val saved = gyms.gyms.first().single().items.single()
         gyms.saveItem(saved.copy(ladder = LadderSpec.Plates(50.0, listOf(20.0))))
@@ -61,7 +61,7 @@ class GymsTest {
 
     @Test
     fun anUnusedMachineOrGymIsDeletedOutright() = runTest {
-        val id = gyms.addGym("Kallio")
+        val id = gyms.addGym("Central")
         val item = gyms.addItem(EquipmentItem(gymId = id, name = "Leg press", ladder = LadderSpec.lbStack()))
         gyms.deleteItem(item)
         gyms.deleteGym(id)
@@ -84,8 +84,8 @@ class GymsTest {
 
     @Test
     fun aSessionStartsAtTheGymYouUsuallyTrainAtOnThatWeekday() = runTest {
-        val kallio = gyms.addGym("Kallio")
-        val toolo = gyms.addGym("Töölö")
+        val central = gyms.addGym("Central")
+        val riverside = gyms.addGym("Riverside")
         var now = 0L
         ExerciseLibrary(db).sync(LibrarySeed.fromAssets(ApplicationProvider.getApplicationContext()))
         val logger = SessionLogger(db, clock = { now }).also { it.load() }
@@ -97,26 +97,26 @@ class GymsTest {
             logger.done(); logger.press(PadKey.Digit(8)); logger.selectRir(2); logger.done()
             logger.finish()
         }
-        // Mondays at Kallio, Wednesdays at Töölö, and one Monday at Töölö.
-        train(kallio, 0); train(toolo, 2); train(kallio, 7); train(toolo, 9); train(toolo, 14)
+        // Mondays at Central, Wednesdays at Riverside, and one Monday at Riverside.
+        train(central, 0); train(riverside, 2); train(central, 7); train(riverside, 9); train(riverside, 14)
 
-        assertEquals(UsualGym(kallio, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
-        assertEquals(UsualGym(toolo, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.WEDNESDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(central, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(riverside, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.WEDNESDAY, ZoneOffset.UTC))
         // A weekday with no history takes the gym trained at last, and doesn't call it usual on Fridays.
-        assertEquals(UsualGym(toolo, UsualGym.Why.Last), gyms.usualGym(DayOfWeek.FRIDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(riverside, UsualGym.Why.Last), gyms.usualGym(DayOfWeek.FRIDAY, ZoneOffset.UTC))
 
         // A weekday plan beats history.
-        gyms.setWeekdays(toolo, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
-        assertEquals(UsualGym(toolo, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
-        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), gyms.gyms.first().first { it.id == toolo }.weekdays)
+        gyms.setWeekdays(riverside, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
+        assertEquals(UsualGym(riverside, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), gyms.gyms.first().first { it.id == riverside }.weekdays)
     }
 
     @Test
     fun withNoHistoryTheFirstGymIsTheUsualOne() = runTest {
         assertEquals(null, gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
-        gyms.addGym("Töölö")
-        val kallio = gyms.addGym("Kallio")
+        gyms.addGym("Riverside")
+        val central = gyms.addGym("Central")
         // A new gym with no history is only the first one, not the usual one.
-        assertEquals(UsualGym(kallio, UsualGym.Why.First), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(central, UsualGym.Why.First), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
     }
 }

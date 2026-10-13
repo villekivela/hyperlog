@@ -3,8 +3,7 @@
 Ticket #19 brings History: the session list (taking over #15's Past sessions), each exercise's top
 sets and estimate over time, weekly sets per muscle, and the bodyweight log. It extends
 `logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Screens:
-`history-sessions.png`, `history-progress.png`, `history-progress-exercises.png`,
-`history-trend.png`, `past-session.png`, `past-exercise.png` (phone).
+`history-progress.png`, `history-progress-exercises.png`, `past-exercise.png` (phone).
 
 ## Principles
 
@@ -51,7 +50,7 @@ surface. Material's light `outline` itself failed (ΔE 11.2), hence the lift tow
    Sessions        Progress                ← PrimaryTabRow, 48 dp
  ──────────────────────────────
  Day A                        Mon 12 Oct   ← bodyLarge · bodyMedium tnum
- Kamppi · Barbell Bench Press · Hack …    ← the gym, then the exercises; 2 lines max
+ Harbour · Barbell Bench Press · Hack …    ← the gym, then the exercises; 2 lines max
 ```
 
 ```
@@ -82,7 +81,7 @@ surface. Material's light `outline` itself failed (ΔE 11.2), hence the lift tow
 ```
 
 For a machine exercise the block from the figure down repeats per machine, headed
-`Cable left · Kamppi` (titleSmall), the machine used last first. A plain bodyweight exercise has no
+`Cable left · Harbour` (titleSmall), the machine used last first. A plain bodyweight exercise has no
 estimate: its figure, line and table show the top set's reps instead (`12 reps`).
 
 ## States

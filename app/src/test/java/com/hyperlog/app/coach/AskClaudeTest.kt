@@ -68,7 +68,7 @@ class AskClaudeTest {
         val now = oct13.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() + 17 * 3_600_000
         fun session(daysAgo: Int, title: String) = PastSessionItem(
             id = daysAgo.toLong(), startedAt = now - daysAgo * day, finishedAt = now - daysAgo * day + 3_600_000,
-            title = title, gym = "Kamppi",
+            title = title, gym = "Harbour",
             exercises = listOf(ExerciseSummary("Barbell Bench Press", listOf(LoggedSet(80.0, 5, 0, 1), LoggedSet(70.0, 8, 2, 1)))),
         )
         val text = AskClaude.prompt(
@@ -82,7 +82,7 @@ class AskClaudeTest {
         assertTrue(text.contains("Today is 2026-10-13 (Tuesday)."))
         assertTrue(text, text.contains("Next: week 1 of 12, "))
         assertTrue(text, text.contains("slot \"close_grip_bench\": close_grip_bench_press"))
-        assertTrue(text, text.contains("2026-10-11 Sun: Day A — recent at Kamppi"))
+        assertTrue(text, text.contains("2026-10-11 Sun: Day A — recent at Harbour"))
         assertTrue(text.contains("  Barbell Bench Press: 80 × 5 @ 1, 70 × 8 + 2p @ 1"))
         assertTrue(text.contains("Day C — four weeks ago"))
         assertFalse(text.contains("too old"))
