@@ -559,44 +559,22 @@ private fun SwappedLine(planned: String) {
 private fun RestPill(leftMs: Long, totalMs: Long, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val over = leftMs <= 0
-    val fraction = if (over || totalMs <= 0) 0f else (leftMs.toFloat() / totalMs).coerceIn(0f, 1f)
-    val fill = cs.primary.copy(alpha = 0.24f)
-    Surface(
+    TimerPill(
+        Symbol.Timer, stringResource(R.string.rest_title), clock(leftMs),
+        fraction = if (over || totalMs <= 0) 0f else leftMs.toFloat() / totalMs,
+        container = if (over) cs.surfaceContainerHigh else cs.secondaryContainer,
+        content = if (over) cs.onSurfaceVariant else cs.onSecondaryContainer,
         onClick = onClick,
-        shape = CircleShape,
-        color = if (over) cs.surfaceContainerHigh else cs.secondaryContainer,
-        contentColor = if (over) cs.onSurfaceVariant else cs.onSecondaryContainer,
-    ) {
-        Row(
-            Modifier
-                .drawBehind { drawRect(fill, size = Size(size.width * fraction, size.height)) }
-                .height(40.dp)
-                .padding(start = 12.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SymbolIcon(Symbol.Timer, stringResource(R.string.rest_title), Modifier.width(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(clock(leftMs), style = MaterialTheme.typography.titleMedium.merge(Tnum))
-        }
-    }
+    )
 }
 
 /** The 15 s breathing pause before a myo mini-set, drained like rest, with `air`. */
 @Composable
 private fun BreathPill(leftMs: Long, totalMs: Long) {
-    val cs = MaterialTheme.colorScheme
-    val fraction = if (totalMs <= 0) 0f else (leftMs.toFloat() / totalMs).coerceIn(0f, 1f)
-    val fill = cs.primary.copy(alpha = 0.24f)
-    Surface(shape = CircleShape, color = cs.secondaryContainer, contentColor = cs.onSecondaryContainer) {
-        Row(
-            Modifier.drawBehind { drawRect(fill, size = Size(size.width * fraction, size.height)) }.height(40.dp).padding(start = 12.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SymbolIcon(Symbol.Air, stringResource(R.string.breathing), Modifier.width(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(clock(leftMs), style = MaterialTheme.typography.titleMedium.merge(Tnum))
-        }
-    }
+    TimerPill(
+        Symbol.Air, stringResource(R.string.breathing), clock(leftMs),
+        fraction = if (totalMs <= 0) 0f else leftMs.toFloat() / totalMs,
+    )
 }
 
 /** The iso hold's timer: it counts up and fills toward the target; past it, it reads in primary. */
@@ -604,23 +582,43 @@ private fun BreathPill(leftMs: Long, totalMs: Long) {
 private fun HoldPill(heldMs: Long, targetMs: Long) {
     val cs = MaterialTheme.colorScheme
     val reached = heldMs >= targetMs
-    val fraction = if (targetMs <= 0) 1f else (heldMs.toFloat() / targetMs).coerceIn(0f, 1f)
-    val fill = cs.primary.copy(alpha = 0.24f)
     HoldReachedBuzz(reached)
-    Surface(
-        shape = CircleShape,
-        color = if (reached) cs.primary else cs.secondaryContainer,
-        contentColor = if (reached) cs.onPrimary else cs.onSecondaryContainer,
-    ) {
+    TimerPill(
+        Symbol.PanTool, stringResource(R.string.technique_iso_name), clock(-heldMs).removePrefix("+"),
+        fraction = if (reached) 0f else if (targetMs <= 0) 1f else heldMs.toFloat() / targetMs,
+        container = if (reached) cs.primary else cs.secondaryContainer,
+        content = if (reached) cs.onPrimary else cs.onSecondaryContainer,
+    )
+}
+
+/**
+ * The header's timer pill, for rest, a breathing pause and a hold: [symbol] and [time] on a
+ * 40 dp pill, filled from the left to [fraction] of its width. [onClick] null: it can't be tapped.
+ */
+@Composable
+private fun TimerPill(
+    symbol: Symbol,
+    description: String,
+    time: String,
+    fraction: Float,
+    container: Color = MaterialTheme.colorScheme.secondaryContainer,
+    content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    onClick: (() -> Unit)? = null,
+) {
+    val fill = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+    val filled = fraction.coerceIn(0f, 1f)
+    val inside = @Composable {
         Row(
-            Modifier.drawBehind { if (!reached) drawRect(fill, size = Size(size.width * fraction, size.height)) }.height(40.dp).padding(start = 12.dp, end = 16.dp),
+            Modifier.drawBehind { drawRect(fill, size = Size(size.width * filled, size.height)) }.height(40.dp).padding(start = 12.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SymbolIcon(Symbol.PanTool, stringResource(R.string.technique_iso_name), Modifier.width(20.dp))
+            SymbolIcon(symbol, description, Modifier.width(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text(clock(-heldMs).removePrefix("+"), style = MaterialTheme.typography.titleMedium.merge(Tnum))
+            Text(time, style = MaterialTheme.typography.titleMedium.merge(Tnum))
         }
     }
+    if (onClick != null) Surface(onClick = onClick, shape = CircleShape, color = container, contentColor = content) { inside() }
+    else Surface(shape = CircleShape, color = container, contentColor = content) { inside() }
 }
 
 /** Buzzes once when the hold reaches its target. */
