@@ -260,6 +260,19 @@ class BackupsTest {
     }
 
     @Test
+    fun aBackupKeptFromDatabase16StillRestores() = runTest {
+        // DB v16: an archived machine with its history, an EZ bar's weight and the two-dumbbell marks.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db16.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val gyms = Gyms(phone)
+        assertEquals(listOf("Cable station"), gyms.gyms.first().single().items.map { it.name })
+        assertTrue("Old cable · Kallio" in gyms.machineNames().values)
+        assertEquals(8.0, gyms.bars.first().getValue(com.hyperlog.app.library.Equipment.EzBar), 0.0)
+        assertTrue(phone.exercises().all().first { it.id == "db_bench_press" }.twoDumbbells)
+    }
+
+    @Test
     fun aRunningAppPicksUpTheRestoredSession() = runTest {
         val file = Backups(usedPhone(), clock = { now }).export()
         val phone = freshInstall()

@@ -49,7 +49,7 @@ again from the restored rest timer.
 {
   "format": "hyperlog-backup",
   "version": 1,
-  "database": 14,
+  "database": 16,
   "exportedAt": 1791889500000,
   "tables": {
     "gym": [ { "id": 1, "name": "Kallio", "weekdays": 9 } ],
@@ -76,7 +76,7 @@ The backup follows the database. When a ticket bumps the Room version:
 1. Bump `BackupFormat.DATABASE`; `BackupTablesTest` checks it matches.
 2. A new table goes into `BackupFormat.Tables` or `Excluded` with a reason.
 3. Backups from older versions must still restore: `BackupsTest` restores the kept file
-   `app/src/test/resources/backup/hyperlog-backup-db14.json`. Add an upgrade step for older files
+   `app/src/test/resources/backup/hyperlog-backup-db14.json` and `-db16.json`. Add an upgrade step for older files
    in `Backups` (new tables and new columns with defaults need none: list them in
    `BackupFormat.Added` under the version that added them, so an older file may lack them; a
    renamed or reshaped column needs a step), and keep a fixture for each version.

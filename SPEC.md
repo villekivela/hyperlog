@@ -620,7 +620,7 @@ from a backup, starting weights from the old app.
   - **Settings → Export backup** saves one JSON file through the system's save dialog
     (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`. The file names its
     format, its own version and the database version (`"format": "hyperlog-backup", "version": 1,
-    "database": 14`).
+    "database": 16`).
   - **Settings → Restore from a backup** picks a file, then asks "Replace everything on this
     phone?" with the backup's date. Restoring replaces all the data on the phone, a running session
     included, all or nothing, and the app starts again on Today or the restored session. There is
