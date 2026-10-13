@@ -44,6 +44,8 @@ object LegacyBackup {
     fun startingWeights(json: String, library: Set<String>, merged: Map<String, String>): Result {
         val root = runCatching { Json.parseToJsonElement(json).jsonObject }.getOrNull() ?: return Result.Invalid
         if (root["type"].text() != "full_backup") return Result.Invalid
+        // Format 7.0 is the layout read here; other versions keep their data elsewhere.
+        if (root["version"].text()?.substringBefore(".") != "7") return Result.Invalid
         val logs = root["workoutLogs"] as? JsonArray ?: return Result.Invalid
         val bases = (root["settings"] as? JsonArray).orEmpty().mapNotNull { s ->
             val o = s as? JsonObject ?: return@mapNotNull null

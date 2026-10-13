@@ -124,4 +124,18 @@ class LegacyBackupTest {
         assertTrue(LegacyBackup.startingWeights("""{ "format": 1, "title": "A program" }""", library, merged) is LegacyBackup.Result.Invalid)
         assertTrue(LegacyBackup.startingWeights("not json", library, merged) is LegacyBackup.Result.Invalid)
     }
+
+    @Test
+    fun onlyTheFormat7BackupIsRead() {
+        val logs = """[ { "date": "2026-09-12T10:00:00.000Z", "exercises": [ { "exerciseId": "barbell_bench_press",
+            "sets": [ { "setType": "work", "weight": 60, "reps": 8, "completed": true, "rpe": 8 } ] } ] } ]"""
+        assertTrue(LegacyBackup.startingWeights(backup(logs), library, merged) is LegacyBackup.Result.Read)
+        // Another format version lays its data out differently: refused rather than misread.
+        listOf("\"6.2\"", "\"8.0\"", "7", "null").forEach { version ->
+            val other = backup(logs).replace("\"version\": \"7.0\"", "\"version\": $version")
+            assertTrue(version, LegacyBackup.startingWeights(other, library, merged) is LegacyBackup.Result.Invalid)
+        }
+        val none = backup(logs).replace("\"version\": \"7.0\", ", "")
+        assertTrue(LegacyBackup.startingWeights(none, library, merged) is LegacyBackup.Result.Invalid)
+    }
 }

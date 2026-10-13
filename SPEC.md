@@ -796,7 +796,8 @@ in the backup become a one-off starting point, used only until the exercise has 
 How the import works:
 
 - **Settings → Starting weights from the old app** picks a backup file (format 7.0, `type:
-  full_backup`). Importing again replaces the earlier import; a file that isn't a backup says so and
+  full_backup`, `version: "7.x"`; another version is refused as not a backup, since its data sits
+  elsewhere). Importing again replaces the earlier import; a file that isn't a backup says so and
   leaves the earlier import in place. Nothing else is read: sessions, programs and settings stay
   out.
 - The starting set is the **top work set** (work or AMRAP, heaviest weight, most reps at it) of the
