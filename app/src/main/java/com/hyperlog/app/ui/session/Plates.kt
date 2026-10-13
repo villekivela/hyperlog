@@ -70,14 +70,19 @@ private fun plateWidth(kg: Double): Dp = when {
 
 /** `Plates per side: 1 × 20, 1 × 15, on a 20 kg bar`, the component's one description. */
 @Composable
-private fun platesDescription(plates: LadderSpec.Plates, side: List<Double>?, totalKg: Double?): String {
-    val bar = formatKg(plates.baseKg)
+private fun platesDescription(plates: LadderSpec.Plates, side: List<Double>?, totalKg: Double?, machine: Boolean): String {
+    val base = formatKg(plates.baseKg)
+    val alone = stringResource(if (machine) R.string.plates_machine_alone else R.string.plates_bar_alone, base)
     return when {
-        side == null -> totalKg?.let { stringResource(R.string.plates_cannot, formatKg(it)) } ?: stringResource(R.string.plates_bar_alone, bar)
-        side.isEmpty() -> stringResource(R.string.plates_bar_alone, bar)
+        side == null -> totalKg?.let { stringResource(R.string.plates_cannot, formatKg(it)) } ?: alone
+        side.isEmpty() -> alone
         else -> {
             val list = legend(side).joinToString(", ") { (kg, n) -> "$n × ${formatKg(kg)}" }
-            if (plates.baseKg > 0) stringResource(R.string.plates_description, list, bar) else stringResource(R.string.plates_description_no_bar, list)
+            when {
+                plates.baseKg <= 0 -> stringResource(R.string.plates_description_no_bar, list)
+                machine -> stringResource(R.string.plates_description_machine, list, base)
+                else -> stringResource(R.string.plates_description, list, base)
+            }
         }
     }
 }
@@ -88,14 +93,16 @@ private fun legend(side: List<Double>): List<Pair<Double, Int>> =
 
 /**
  * The plates on one side of the bar for [totalKg] (null: nothing typed yet, so the bar alone),
- * drawn and listed. [compact] is the warm-up rows' size of the same design.
+ * drawn and listed. [compact] is the warm-up rows' size of the same design. On a plate-loaded
+ * [machine] the base is its starting weight (the empty machine or sled), marked with its own
+ * symbol where a bar's weight has the slash; it counts toward the total either way.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Modifier = Modifier, compact: Boolean = false) {
+internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Modifier = Modifier, compact: Boolean = false, machine: Boolean = false) {
     val cs = MaterialTheme.colorScheme
     val side = totalKg?.let { plates.perSide(it) }
-    val description = platesDescription(plates, side, totalKg)
+    val description = platesDescription(plates, side, totalKg, machine)
     val text = (if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall).merge(Tnum)
     Row(modifier.clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         BarSide(side.orEmpty(), height = if (compact) 24.dp else 40.dp, muted = side == null && totalKg != null, scale = if (compact) 1f else 1.5f)
@@ -118,7 +125,7 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
             // The bar's own weight is the pad's; a warm-up row has no room to repeat it.
             if (plates.baseKg > 0 && !compact) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    BarSwatch(12.dp)
+                    if (machine) MachineSwatch(12.dp) else BarSwatch(12.dp)
                     Spacer(Modifier.width(if (compact) 4.dp else 6.dp))
                     Text(formatKg(plates.baseKg), style = text, color = cs.onSurfaceVariant)
                 }
@@ -144,6 +151,19 @@ private fun BarSwatch(size: Dp) {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(Modifier.size(size)) {
         drawLine(color, Offset(size.toPx() * 0.15f, size.toPx() * 0.85f), Offset(size.toPx() * 0.85f, size.toPx() * 0.15f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+    }
+}
+
+/** A plate-loaded machine's legend mark: a small sled, a runner on two feet. */
+@Composable
+private fun MachineSwatch(size: Dp) {
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    Canvas(Modifier.size(size)) {
+        val s = size.toPx()
+        val w = 2.dp.toPx()
+        drawLine(color, Offset(s * 0.1f, s * 0.45f), Offset(s * 0.9f, s * 0.45f), strokeWidth = w, cap = StrokeCap.Round)
+        drawLine(color, Offset(s * 0.25f, s * 0.45f), Offset(s * 0.25f, s * 0.85f), strokeWidth = w, cap = StrokeCap.Round)
+        drawLine(color, Offset(s * 0.75f, s * 0.45f), Offset(s * 0.75f, s * 0.85f), strokeWidth = w, cap = StrokeCap.Round)
     }
 }
 

@@ -56,4 +56,23 @@ class LadderEditorTest {
         compose.onNodeWithText("Save").performClick()
         assertEquals(LadderSpec.Plates(20.0, listOf(10.0, 2.5)), saved)
     }
+
+    @Test
+    fun aPlateLoadedMachineStartsAtZeroWithItsStartingWeightEditable() {
+        var saved: LadderSpec? = null
+        compose.setContent {
+            HyperlogTheme {
+                LadderEditor(
+                    title = "New equipment", name = "", spec = null, kinds = LadderKind.entries,
+                    onSave = { _, s -> saved = s }, onDelete = null, onClose = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Name, e.g. Cable station").performTextInput("Leg press")
+        compose.onNodeWithText("Plates").performClick()
+        compose.onNodeWithText("Starting weight (empty machine or sled), kg").assertExists()
+        compose.onNodeWithText("Plate pairs in kg, separated by spaces").performTextInput("20 10")
+        compose.onNodeWithText("Save").performClick()
+        assertEquals(LadderSpec.Plates(0.0, listOf(20.0, 10.0)), saved)
+    }
 }

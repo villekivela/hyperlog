@@ -216,7 +216,7 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                 val fixing = correction.entry
                 val canConfirm = if (correction.kind == null || fixing.field == com.hyperlog.app.domain.Field.Weight) fixing.canConfirm
                 else fixing.toExtension(correction.kind) != null
-                Pad(fixing, shown.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = shown.plates)
+                Pad(fixing, shown.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = shown.plates, platesOnMachine = shown.platesOnMachine)
             } else {
                 Spacer(Modifier.navigationBarsPadding())
             }

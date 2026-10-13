@@ -310,6 +310,12 @@ show; nothing about a warm-up touches the clock. Screens: `light-session-plates.
   `1 × 25` per plate, heaviest first, then a slash and the bar's own weight. White plates get a
   1 dp outline. Its content description reads the whole load: "Plates per side: 1 × 20, 1 × 15,
   on a 20 kg bar" ("The bar alone, 20 kg"; "61 kg isn't on these plates").
+- **Scope**: plate-loaded bars (barbell, EZ, trap, safety bar) and plate-loaded machines (leg
+  press, plate-loaded hack squat, Smith machine, sled), the equipment whose ladder is a base plus
+  plate pairs. Never dumbbells, stack or cable machines, or bodyweight. On a machine the base is
+  its starting weight (the empty machine or sled, 0 kg unless set), marked in the legend with a
+  small sled where a bar has the slash; the description reads "on a 30 kg machine" and "The
+  machine alone, 30 kg".
 - **Plate colours** are fixed, the kg competition scale, like the RIR scale: 25 and 2.5 red
   `#D9453B`, 20 and 2 blue `#2F6FDB`, 15 and 1.5 yellow `#E5B12E`, 10 and 1 green `#3B9C55`, 5
   and 0.5 white `#F2F2F2` (outlined), 1.25 and any other plate silver `#A7ADB4`. Mid tones, so

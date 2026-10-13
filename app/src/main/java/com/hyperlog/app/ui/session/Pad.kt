@@ -71,6 +71,8 @@ internal fun Pad(
     correction: Correction? = null,
     /** The bar or machine's plates: drawn at the top while the weight is typed; null for none. */
     plates: LadderSpec.Plates? = null,
+    /** The plates load a machine (its starting weight is the base), not a bar. */
+    platesOnMachine: Boolean = false,
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
@@ -78,7 +80,7 @@ internal fun Pad(
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
             // The plate calculator, at the top of the pad while a weight is typed, live.
             if (onWeight && plates != null && check == null) {
-                PlateLoad(plates, entry.weightKg, Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp).testTag(PlateStripTag))
+                PlateLoad(plates, entry.weightKg, machine = platesOnMachine, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp).testTag(PlateStripTag))
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = cs.outlineVariant)
             }
             Row(Modifier.fillMaxWidth().height(KeyHeight), verticalAlignment = Alignment.CenterVertically) {

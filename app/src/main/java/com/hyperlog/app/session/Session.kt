@@ -1,5 +1,6 @@
 package com.hyperlog.app.session
 
+import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.WarmupSet
@@ -55,7 +56,13 @@ data class SessionExercise(
     /** The program's exercise for its slot, when it was swapped in the session or by a Change. */
     val inPlaceOf: String? get() = slot?.let { s -> (s.inPlaceOf ?: s.exercise).takeIf { it != exercise.id } }
 
-    /** Every planned set is logged. An ad-hoc exercise is never done. */
+    /**
+     * The [plates] load a plate-loaded machine (a leg press, a sled, a Smith machine), whose
+     * starting weight is their base, rather than a bar.
+     */
+    val platesOnMachine: Boolean get() = plates != null && exercise.equipment !in BarEquipment
+
+        /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = prescription != null && sets.size >= prescription.size
 
     /** Planned set [index] can still change in the session: it is planned and not logged yet. */
@@ -74,6 +81,9 @@ data class SessionExercise(
         else -> prescription?.getOrNull(index)?.technique
     }
 }
+
+/** The equipment loaded with plates on a bar: the barbell and the specialty bars. */
+private val BarEquipment = setOf(Equipment.Barbell, Equipment.EzBar, Equipment.TrapBar, Equipment.SafetyBar)
 
 /** The running session, as it is on screen. */
 data class ActiveSession(

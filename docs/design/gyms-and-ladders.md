@@ -138,6 +138,10 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 - A session without a gym never asks; machines then step in 2.5 kg, as before #5.
 - Deleting a machine in settings forgets it: the next time it is asked again.
 
+Plate-loaded machines: the Plates kind's first field is the machine's **starting weight (empty
+machine or sled), kg**, 0 for a new item and editable; the shared plates' field reads **Bar, kg**.
+The plate calculator counts the starting weight toward the total (`logging-screen.md`, Plates).
+
 Expressive pass: every group (a gym's equipment, the shared ladders, the usual days, what the gym
 hasn't got) is a card on surfaceContainer; the ladder editor's kind and unit are connected button
 groups.

@@ -274,7 +274,7 @@ fun SessionScreen(
                 // A drop or mini-set has no RIR: ✓ needs only its weight and reps.
                 val fixing = correction.entry
                 val canConfirm = if (correction.kind == null || fixing.field == Field.Weight) fixing.canConfirm else fixing.toExtension(correction.kind) != null
-                Pad(fixing, corrected.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates)
+                Pad(fixing, corrected.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates, platesOnMachine = corrected.platesOnMachine)
             } else if (viewing != null) {
                 Spacer(Modifier.navigationBarsPadding())
             } else if (current != null && entry != null) {
@@ -287,7 +287,7 @@ fun SessionScreen(
                     holdRunning -> true
                     else -> entry.toExtension(com.hyperlog.app.domain.Extension.Kind.Drop) != null
                 }
-                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates)
+                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates, platesOnMachine = current.platesOnMachine)
                 else HiddenPad(entry, actions, canConfirm = canConfirm)
             } else if (current != null && current.done && session.exercises.all { it.prescription == null || it.done }) {
                 DayDoneBar(onFinish = { showFinish = true })

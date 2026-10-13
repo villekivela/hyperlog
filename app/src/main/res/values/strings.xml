@@ -94,6 +94,8 @@
     <string name="warmup_description">Warm-up %1$d, %2$s kg × %3$d</string>
     <string name="plates_description">Plates per side: %1$s, on a %2$s kg bar</string>
     <string name="plates_description_no_bar">Plates per side: %1$s</string>
+    <string name="plates_description_machine">Plates per side: %1$s, on a %2$s kg machine</string>
+    <string name="plates_machine_alone">The machine alone, %1$s kg</string>
     <string name="plates_bar_alone">The bar alone, %1$s kg</string>
     <string name="plates_cannot">%1$s kg isn’t on these plates</string>
     <string name="plates_not_on">Not on these plates</string>
@@ -232,7 +234,8 @@
     <string name="ladder_step">Step</string>
     <string name="ladder_count">Weights</string>
     <string name="ladder_list_field">Weights in kg, separated by spaces</string>
-    <string name="ladder_base">Bar or sled, kg</string>
+    <string name="ladder_base">Bar, kg</string>
+    <string name="ladder_base_machine">Starting weight (empty machine or sled), kg</string>
     <string name="ladder_pairs">Plate pairs in kg, separated by spaces</string>
     <string name="ladder_preview">Real weights</string>
     <string name="ladder_incomplete">Fill in the fields to see the weights</string>

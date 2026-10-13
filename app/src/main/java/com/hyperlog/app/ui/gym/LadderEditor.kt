@@ -86,7 +86,8 @@ fun LadderEditor(
     var count by rememberSaveable { mutableStateOf(steps?.count?.toString() ?: "20") }
     var list by rememberSaveable { mutableStateOf((spec as? LadderSpec.Explicit)?.kgs?.joinToString(" ") { formatKg(it) }.orEmpty()) }
     val plates = spec as? LadderSpec.Plates
-    var base by rememberSaveable { mutableStateOf(plates?.baseKg?.let(::formatKg).orEmpty()) }
+    // A machine starts at 0 kg (its starting weight, editable); the shared plates name their bar.
+    var base by rememberSaveable { mutableStateOf(plates?.baseKg?.let(::formatKg) ?: if (name != null) "0" else "") }
     var pairs by rememberSaveable { mutableStateOf(plates?.pairs?.sortedDescending()?.joinToString(" ") { formatKg(it) }.orEmpty()) }
 
     val draft: LadderSpec? = when (kind) {
@@ -161,7 +162,7 @@ fun LadderEditor(
                 }
                 LadderKind.List -> NumberField(list, { list = it }, stringResource(R.string.ladder_list_field), Modifier.fillMaxWidth(), many = true)
                 LadderKind.Plates -> {
-                    NumberField(base, { base = it }, stringResource(R.string.ladder_base), Modifier.fillMaxWidth())
+                    NumberField(base, { base = it }, stringResource(if (name != null) R.string.ladder_base_machine else R.string.ladder_base), Modifier.fillMaxWidth())
                     NumberField(pairs, { pairs = it }, stringResource(R.string.ladder_pairs), Modifier.fillMaxWidth(), many = true)
                 }
             }

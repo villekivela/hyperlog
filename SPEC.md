@@ -380,6 +380,14 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        first, from the pairs there are. A weight the plates can't make draws the bar alone with
        "Not on these plates" (the weight check says so on ✓). Design:
        `docs/design/logging-screen.md`, Plates.
+     - **Which exercises get it**: plate-loaded bars (barbell, EZ, trap and safety bars) and
+       plate-loaded machines (a leg press, a plate-loaded hack squat, a Smith machine, a sled):
+       equipment whose ladder is a base plus plate pairs. Never dumbbells, stack or cable
+       machines, or bodyweight exercises.
+     - A plate-loaded machine's base is its **starting weight**, the empty machine or sled, set
+       per machine in its equipment (0 kg by default, editable). It counts toward the total, as a
+       bar's weight does, and the legend shows it with its own symbol (a sled) where a bar's
+       weight has a slash.
      - EZ, trap and safety bar exercises use the shared plates on their own bar, so they get the
        same line, warm-ups on 5 kg steps and a weight check against the real weights.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as

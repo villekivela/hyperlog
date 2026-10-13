@@ -57,6 +57,7 @@ internal fun LazyListScope.warmupRows(table: TableState) {
                 kg = w.weightKg,
                 reps = w.reps,
                 plates = plates,
+                onMachine = current.platesOnMachine,
                 done = i < current.warmupsDone,
                 onTick = { table.onTickWarmup(i) },
             )
@@ -65,7 +66,7 @@ internal fun LazyListScope.warmupRows(table: TableState) {
 }
 
 @Composable
-private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: LadderSpec.Plates?, done: Boolean, onTick: () -> Unit) {
+private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: LadderSpec.Plates?, onMachine: Boolean, done: Boolean, onTick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     // Planned looks planned, done looks done: muted like a prefill until ticked.
@@ -85,7 +86,7 @@ private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: LadderSpec.Plates?,
             color = cs.onSurfaceVariant,
         )
         // The plates span Target and Last (a warm-up has neither), drawn as the pad draws them.
-        Box(Modifier.weight(1f).padding(vertical = 4.dp)) { plates?.let { PlateLoad(it, kg, compact = true) } }
+        Box(Modifier.weight(1f).padding(vertical = 4.dp)) { plates?.let { PlateLoad(it, kg, compact = true, machine = onMachine) } }
         Text(formatKg(kg), Modifier.width(ColKg), color = color, textAlign = TextAlign.Center, style = value)
         Text("$reps", Modifier.width(ColReps), color = color, textAlign = TextAlign.Center, style = value)
         Box(Modifier.width(ColRir), contentAlignment = Alignment.Center) {
