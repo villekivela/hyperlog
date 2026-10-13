@@ -579,11 +579,11 @@ from a backup, starting weights from the old app.
   - Only exercises with one estimate in kg take a goal: free weights and weighted bodyweight.
     Machines and cables have an estimate per machine (ADR 0002) and plain bodyweight exercises
     track reps, so they have no flag.
-  - The estimate is the one after the latest finished session, as History shows it. It reads
-    `95 kg of 100 kg`, then `5 kg to go · by Thu 31 Dec` (worked out from the figure as shown),
-    `Goal reached` once the estimate is at or past the goal, or `No estimate yet`. The trend chart
-    draws the goal as a 1 dp line labelled `Goal 100`, kept on the chart's scale; the prescription
-    sheet shows the same lines and a small estimate trend with the goal line under the
+  - The estimate is the one after the latest finished session, as History shows it. It reads `95 kg
+    of 100 kg`, then `5 kg to go · by Thu 31 Dec` (worked out from the figure as shown), `Goal
+    reached` (without the date) once the estimate is at or past the goal, or `No estimate yet`. The
+    trend chart draws the goal as a 1 dp line labelled `Goal 100`, kept on the chart's scale; the
+    prescription sheet shows the same lines and a small estimate trend with the goal line under the
     prescription. Reaching a goal changes nothing else.
   - Nothing in progression reads goals: the suggestions are the same with or without one (tested
     over the progression engine's inputs).

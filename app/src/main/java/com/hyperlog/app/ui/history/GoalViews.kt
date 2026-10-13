@@ -61,13 +61,13 @@ internal fun GoalFigure(estimateKg: Double?, goal: LiftGoal, figure: TextStyle, 
     }
 }
 
-/** `10 kg to go · by Thu 31 Dec`, `Goal reached`, or `No estimate yet` before one. */
+/** `10 kg to go · by Thu 31 Dec`, `Goal reached` (its date no longer matters), or `No estimate yet` before one. */
 @Composable
 internal fun goalStatus(estimateKg: Double?, goal: LiftGoal): String {
     val by = goal.by?.let { stringResource(R.string.goal_by, long(it)) }
     val status = when {
         estimateKg == null -> stringResource(R.string.goal_no_estimate)
-        estimateKg >= goal.kg -> stringResource(R.string.goal_reached)
+        estimateKg >= goal.kg -> return stringResource(R.string.goal_reached)
         // Worked out from the figure as shown, so the two add up.
         else -> (goal.kg - estimateText(estimateKg).toDouble()).let { left ->
             if (left <= 0) stringResource(R.string.goal_nearly) else stringResource(R.string.goal_to_go, formatKg(left))
