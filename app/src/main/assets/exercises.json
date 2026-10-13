@@ -359,6 +359,23 @@
    "video": "https://youtu.be/qfc70k40318?t=311"
   },
   {
+   "id": "cable_chest_press",
+   "name": "Cable Chest Press",
+   "equipment": "cable",
+   "pattern": "horizontal_push",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "video": "https://youtu.be/fOHouR0t9Cw",
+   "note": "Neutral handles at chest height, standing in a split stance or on a bench. Press forward until the hands nearly meet, shoulder blades kept back."
+  },
+  {
    "id": "cable_crunch",
    "name": "Cable Crunch",
    "equipment": "cable",
@@ -475,6 +492,23 @@
     "Lower Back",
     "Adductors"
    ]
+  },
+  {
+   "id": "cable_rope_hammer_curl",
+   "name": "Cable Rope Hammer Curl",
+   "equipment": "cable",
+   "pattern": "elbow_flexion",
+   "grip": "low",
+   "muscles": [
+    "Brachialis",
+    "Biceps"
+   ],
+   "secondary": [
+    "Forearm Flexors",
+    "Forearm Extensors"
+   ],
+   "video": "https://youtu.be/cNEzPVC8n7A",
+   "note": "Thumbs up on the rope from a low pulley. Keep the elbows at your sides and curl without letting them drift forward."
   },
   {
    "id": "cable_shoulder_press",
@@ -1571,6 +1605,22 @@
    "secondary": [],
    "video": "https://youtu.be/-mcxziH_KdM",
    "note": "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet."
+  },
+  {
+   "id": "low_to_high_cable_press",
+   "name": "Low-to-High Cable Press",
+   "equipment": "cable",
+   "pattern": "horizontal_push",
+   "grip": "low",
+   "muscles": [
+    "Chest",
+    "Front Delts"
+   ],
+   "secondary": [
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "note": "One arm at a time from a low pulley. Press up and across to about eye level, finishing in front of the opposite shoulder."
   },
   {
    "id": "lying_leg_curl",

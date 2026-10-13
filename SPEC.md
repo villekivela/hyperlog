@@ -635,6 +635,11 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   pad. They are reached from the exercise's prescription sheet (tap
   the exercise name in a session). In an ad-hoc session the sheet shows the equipment and primary
   muscles, the library note and **Technique video · 10:53** (the start time when the link has one).
+  - **No video:** when the exercise has no video link, the sheet shows **Search technique videos**
+    in its place, styled the same (a tonal button with the Material Symbols `search` icon). It opens
+    `https://www.youtube.com/results?search_query=<exercise name> technique` (URL-encoded) in the
+    same Custom Tab as the videos. The app calls no API and stores nothing; adding a link in the
+    library editor brings back the video button.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The
@@ -913,9 +918,11 @@ How the import works:
 The **exercise library** is seeded from the legacy library (189 exercises, 150 with technique
 videos), cleaned up: duplicates merged (e.g. `db_incline_press` / `incline_db_press`), equipment types
 fixed, and a grip-demand tag (`high` / `low` / `none`) added for the coach's swap rules. The result
-ships as `app/src/main/assets/exercises.json`: 173 exercises, 138 with videos (merged duplicates
+ships as `app/src/main/assets/exercises.json`: 176 exercises, 140 with videos (merged duplicates
 shared links), with a `merged` table of legacy id → kept id for anything that still carries an old
-id (the starting-weights import).
+id (the starting-weights import). Three cable exercises were added after the legacy library (v0.1.1):
+`cable_chest_press`, `low_to_high_cable_press` and `cable_rope_hammer_curl`. Every launch syncs the
+seed, so an update brings new exercises to an install already in use.
 
 - **Equipment**: barbell, dumbbell, machine, cable, smith_machine, ez_bar, trap_bar, safety_bar,
   plate (a held plate), bodyweight, weighted_bodyweight (bodyweight plus a belt or held load).

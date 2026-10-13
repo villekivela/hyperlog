@@ -192,6 +192,7 @@
 
     <string name="sheet_video">Technique video</string>
     <string name="sheet_video_at">Technique video · %1$s</string>
+    <string name="sheet_video_search">Search technique videos</string>
     <string name="session_exercise_details">Exercise details</string>
     <string name="session_search">Search exercises</string>
     <string name="settings_gyms">Gyms and equipment</string>

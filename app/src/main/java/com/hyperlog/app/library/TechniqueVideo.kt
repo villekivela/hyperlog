@@ -1,6 +1,7 @@
 package com.hyperlog.app.library
 
 import java.net.URI
+import java.net.URLEncoder
 
 /** A YouTube video, and where in it the technique part starts. */
 data class TechniqueVideo(val id: String, val startSeconds: Int?) {
@@ -14,6 +15,13 @@ data class TechniqueVideo(val id: String, val startSeconds: Int?) {
 
     companion object {
         private val Id = Regex("[A-Za-z0-9_-]{6,}")
+
+        /**
+         * YouTube's search for "[exerciseName] technique", the sheet's stand-in for an exercise
+         * without a video. Nothing is looked up or stored; the browser runs the search.
+         */
+        fun searchUrl(exerciseName: String): String =
+            "https://www.youtube.com/results?search_query=" + URLEncoder.encode("${exerciseName.trim()} technique", Charsets.UTF_8)
 
         /** Reads youtu.be, youtube.com/watch and /shorts links; null for anything else. */
         fun parse(link: String): TechniqueVideo? {

@@ -47,6 +47,24 @@ class ExerciseLibraryTest {
     }
 
     @Test
+    fun anUpdateAddsTheSeedsNewExercisesToALibraryAlreadyInUse() = runTest {
+        library.sync(seed)
+        library.update(bench.copy(note = "My own cue."))
+        library.setHidden("db_bicep_curl", true)
+        val press = Exercise(
+            "cable_chest_press", "Cable Chest Press", Equipment.Cable, MovementPattern.HorizontalPush,
+            GripDemand.Low, listOf("Chest"),
+        )
+
+        library.sync(LibrarySeed(listOf(bench, curl, press), emptyMap()))
+
+        assertEquals(listOf("Barbell Bench Press", "Cable Chest Press", "DB Curl"), all().map { it.name })
+        assertEquals(press, all()[1])
+        assertEquals("My own cue.", all()[0].note)
+        assertTrue(all()[2].hidden)
+    }
+
+    @Test
     fun addsAnExerciseWithAnIdMadeFromItsName() = runTest {
         library.sync(seed)
         val id = library.add(curl.copy(id = "", name = "Cable Curl (rope)", equipment = Equipment.Cable))

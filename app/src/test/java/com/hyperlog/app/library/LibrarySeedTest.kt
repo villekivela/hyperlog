@@ -15,8 +15,8 @@ class LibrarySeedTest {
 
     @Test
     fun holdsTheLegacyLibraryWithDuplicatesMerged() {
-        // 189 legacy exercises, 16 of them merged into others.
-        assertEquals(173, seed.exercises.size)
+        // 189 legacy exercises, 16 of them merged into others, and 3 added since.
+        assertEquals(176, seed.exercises.size)
         assertEquals(16, seed.merged.size)
         assertEquals("db_incline_press", seed.merged["incline_db_press"])
         assertEquals("triceps_pressdown", seed.merged["tricep_pushdown"])
@@ -44,6 +44,34 @@ class LibrarySeedTest {
         assertEquals(Equipment.Cable, byId.getValue("lat_pulldown_wide_grip").equipment)
         assertEquals(GripDemand.None, byId.getValue("leg_extension").grip)
         assertEquals(GripDemand.High, byId.getValue("barbell_rdl").grip)
+    }
+
+    @Test
+    fun holdsTheCablePressesAndRopeHammerCurlAddedAfterTheLegacyLibrary() {
+        val press = byId.getValue("cable_chest_press")
+        assertEquals("Cable Chest Press", press.name)
+        assertEquals(Equipment.Cable, press.equipment)
+        assertEquals(MovementPattern.HorizontalPush, press.pattern)
+        assertEquals(GripDemand.Low, press.grip)
+        assertEquals(listOf("Chest"), press.muscles)
+        assertEquals(listOf("Front Delts", "Triceps Long Head", "Triceps Lateral Head"), press.secondary)
+
+        val lowToHigh = byId.getValue("low_to_high_cable_press")
+        assertEquals("Low-to-High Cable Press", lowToHigh.name)
+        assertEquals(Equipment.Cable, lowToHigh.equipment)
+        assertEquals(MovementPattern.HorizontalPush, lowToHigh.pattern)
+        assertEquals(GripDemand.Low, lowToHigh.grip)
+        assertEquals(listOf("Chest", "Front Delts"), lowToHigh.muscles)
+
+        val curl = byId.getValue("cable_rope_hammer_curl")
+        assertEquals("Cable Rope Hammer Curl", curl.name)
+        assertEquals(Equipment.Cable, curl.equipment)
+        assertEquals(MovementPattern.ElbowFlexion, curl.pattern)
+        assertEquals(GripDemand.Low, curl.grip)
+        assertEquals(listOf("Brachialis", "Biceps"), curl.muscles)
+        assertEquals(listOf("Forearm Flexors", "Forearm Extensors"), curl.secondary)
+
+        listOf(press, lowToHigh, curl).forEach { assertNotNull("${it.id} has a technique note", it.note) }
     }
 
     @Test
@@ -89,7 +117,7 @@ class LibrarySeedTest {
     @Test
     fun everyVideoIsAYouTubeLink() {
         val videos = seed.exercises.mapNotNull { it.video }
-        assertEquals(138, videos.size)
+        assertEquals(140, videos.size)
         videos.forEach { assertNotNull(it, TechniqueVideo.parse(it)) }
         assertEquals(653, TechniqueVideo.parse(byId.getValue("cable_lateral_raise").video!!)!!.startSeconds)
     }

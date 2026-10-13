@@ -1336,7 +1336,8 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
 
 /**
  * The exercise's prescription sheet. An ad-hoc session has no prescription, so it shows what
- * the library knows: equipment and muscles, the technique note and the technique video.
+ * the library knows: equipment and muscles, the technique note and the technique video, or a
+ * YouTube search for the technique when the exercise has none.
  */
 @Composable
 internal fun ExerciseSheet(
@@ -1386,13 +1387,21 @@ internal fun ExerciseSheet(
                 Text(note, style = MaterialTheme.typography.bodyLarge)
             }
         }
-        exercise.video?.let { link ->
-            Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
+        val link = exercise.video
+        if (link != null) {
             val at = TechniqueVideo.parse(link)?.startLabel
             FilledTonalButton(onClick = { context.openTechniqueVideo(link) }) {
                 SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
+            }
+        } else {
+            // No video in the library: a YouTube search for the technique, in the same Custom Tab.
+            FilledTonalButton(onClick = { context.openTechniqueVideo(TechniqueVideo.searchUrl(exercise.name)) }) {
+                SymbolIcon(Symbol.Search, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.sheet_video_search))
             }
         }
     }

@@ -42,9 +42,9 @@ class LibraryScreenTest {
     private fun openLibrary() {
         compose.waitFor("Today")
         compose.onNodeWithContentDescription("Settings").performClick()
-        compose.waitFor("173 exercises")
+        compose.waitFor("176 exercises")
         compose.click("Exercise library")
-        compose.waitFor("Search 173 exercises")
+        compose.waitFor("Search 176 exercises")
     }
 
     private fun search(text: String) {
@@ -148,6 +148,28 @@ class LibraryScreenTest {
         assertEquals(Intent.ACTION_VIEW, started.action)
         assertEquals(YouTubePackage, started.`package`)
         assertEquals("https://www.youtube.com/watch?v=SJqInYJcg5k&t=653s", started.dataString)
+    }
+
+    @Test
+    fun withoutAVideoTheSheetSearchesYouTubeForTheExercisesTechnique() {
+        compose.waitFor("Start session")
+        compose.click("Start session")
+        compose.waitFor("Add exercise")
+        search("low to high cable")
+        compose.click("Low-to-High Cable Press")
+        compose.waitForDescription("Next")
+
+        compose.onNodeWithText("Low-to-High Cable Press").performClick()
+        compose.waitFor("Search technique videos")
+        compose.onAllNodesWithText("Technique video", substring = true).assertCountIs(0)
+        compose.click("Search technique videos")
+
+        val started = shadowOf(ApplicationProvider.getApplicationContext<android.app.Application>()).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, started.action)
+        assertEquals(
+            "https://www.youtube.com/results?search_query=Low-to-High+Cable+Press+technique",
+            started.dataString,
+        )
     }
 
     private fun androidx.compose.ui.test.SemanticsNodeInteractionCollection.assertCountIs(n: Int) =
