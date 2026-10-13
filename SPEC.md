@@ -374,7 +374,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        silent mode), and the notification reads `Rest over` and counts up, with End rest, until the
        next set is logged. Out of the app it also plays the notification sound and pops up; the
        sound can be turned off in the system's settings for the "Rest over" channel. With the app on
-       screen it only buzzes.
+       screen it only buzzes, once.
      - A myo-reps breathing pause shows as `Breathe` counting down to `Mini-set 2` (`25 kg × 4`),
        with no actions, and ends with one short buzz. Drops, superset partners and iso holds show
        nothing, and neither does rest after the day's last planned set (Day done).

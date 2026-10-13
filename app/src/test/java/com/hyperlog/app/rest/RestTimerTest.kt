@@ -169,7 +169,9 @@ class RestTimerTest {
         visible = true
         ring(logger)
 
+        // One buzz, not the pocket's two (found on the phone: it buzzed twice in the app).
         assertTrue(vibrator.isVibrating)
+        assertEquals(400L, vibrator.milliseconds)
         assertEquals(RestTimer.REST_CHANNEL, notification!!.channelId)
         assertEquals("Rest over", notification!!.sub)
     }
@@ -211,6 +213,7 @@ class RestTimerTest {
         timer.show(logger.state.value!!.restNotice())
 
         assertTrue(vibrator.isVibrating)
+        assertEquals(400L, vibrator.milliseconds)
         assertEquals("Rest over", notification!!.sub)
         assertNull(alarm)
     }

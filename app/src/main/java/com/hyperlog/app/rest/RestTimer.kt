@@ -58,7 +58,8 @@ class RestTimer(
             alarms.cancel(alarmIntent(0))
             // −15 pulled a running countdown past zero: that is rest running out.
             val pulled = before != null && before.kind == notice.kind && before.endsAt > now
-            if (pulled) buzz(notice.kind)
+            // −15 is on the rest sheet, so the app is in hand: one buzz.
+            if (pulled) buzz(notice.kind, inHand = true)
             if (notice.kind == RestNotice.Kind.Breathing) notifications.cancel(NOTIFICATION_ID)
             else post(notice, over = true, alert = false)
         }
@@ -72,10 +73,11 @@ class RestTimer(
         if (notice == null || notice.endsAt != endsAt) return
         shown = notice
         hasShown = true
-        buzz(notice.kind)
+        val onScreen = visible()
+        buzz(notice.kind, inHand = onScreen)
         // A breathing pause leads straight into the mini-set, which is in hand.
         if (notice.kind == RestNotice.Kind.Breathing) notifications.cancel(NOTIFICATION_ID)
-        else post(notice, over = true, alert = !visible())
+        else post(notice, over = true, alert = !onScreen)
     }
 
     private fun schedule(at: Long) {
@@ -139,10 +141,14 @@ class RestTimer(
         return next.rir?.let { res.getString(R.string.rest_target_rir, reps, it) } ?: reps
     }
 
-    /** Alarm-class, so it comes through on vibrate and silent and in a pocket. */
-    private fun buzz(kind: RestNotice.Kind) {
+    /**
+     * Alarm-class, so it comes through on vibrate and silent and in a pocket. Rest ending buzzes
+     * twice, or once with the app [inHand] (on screen).
+     */
+    private fun buzz(kind: RestNotice.Kind, inHand: Boolean) {
         val vibrator = context.getSystemService(Vibrator::class.java) ?: return
         val effect = when (kind) {
+            RestNotice.Kind.Rest if inHand -> VibrationEffect.createOneShot(400, VibrationEffect.DEFAULT_AMPLITUDE)
             RestNotice.Kind.Rest -> VibrationEffect.createWaveform(longArrayOf(0, 400, 200, 400), -1)
             RestNotice.Kind.Breathing -> VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE)
         }
