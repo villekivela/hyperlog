@@ -8,6 +8,7 @@ import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.program.RepRange
@@ -126,7 +127,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** The gym to preselect for a session started now; null with no gyms. */
-    val usualGym: StateFlow<Long?> = gyms.usualGymToday().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val usualGym: StateFlow<UsualGym?> = gyms.usualGymToday().stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Starts a session at [gymId]: the program's next day, or ad hoc when [adHoc] or with no day to train. */
     fun start(gymId: Long?, adHoc: Boolean = false, swaps: Map<String, String> = emptyMap()) = run {

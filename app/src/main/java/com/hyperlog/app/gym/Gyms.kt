@@ -73,13 +73,13 @@ class Gyms(db: HyperlogDatabase) {
     suspend fun unmarkMissing(gymId: Long, exerciseId: String) = dao.unmarkMissing(gymId, exerciseId)
 
     /** The gym to preselect when a session starts on [day]; see [usualGym]. */
-    suspend fun usualGym(day: DayOfWeek, zone: ZoneId = ZoneId.systemDefault()): Long? {
+    suspend fun usualGym(day: DayOfWeek, zone: ZoneId = ZoneId.systemDefault()): UsualGym? {
         val gyms = dao.observeGyms().first().map { it.toGym(emptyList()) }
         return usualGym(gyms, dao.visits(), day, zone)
     }
 
     /** The usual gym for a session started today, kept up to date as gyms and sessions change. */
-    fun usualGymToday(zone: ZoneId = ZoneId.systemDefault()): Flow<Long?> =
+    fun usualGymToday(zone: ZoneId = ZoneId.systemDefault()): Flow<UsualGym?> =
         combine(gyms, dao.observeVisits()) { gyms, visits ->
             usualGym(gyms, visits, java.time.LocalDate.now(zone).dayOfWeek, zone)
         }
@@ -143,21 +143,34 @@ data class SharedLadders(val dumbbells: LadderSpec, val plates: LadderSpec.Plate
     }
 }
 
+/** The gym a session preselects, and [why]: only a weekday plan or habit makes it "Usual on Mondays". */
+data class UsualGym(val id: Long, val why: Why) {
+    enum class Why {
+        /** Its weekday plan has the day, or most sessions on that weekday were there. */
+        Weekday,
+        /** Trained at last, with nothing known about the weekday. */
+        Last,
+        /** The first gym, with no plan or history at all. */
+        First,
+    }
+}
+
 /**
  * The gym a session starting on [day] defaults to. A gym whose weekday plan has [day] comes first;
  * otherwise the gym trained at most often on that weekday, the latest visit breaking a tie; then
  * the gym trained at last; then the first gym. Null with no gyms.
  */
-fun usualGym(gyms: List<Gym>, visits: List<Visit>, day: DayOfWeek, zone: ZoneId): Long? {
+fun usualGym(gyms: List<Gym>, visits: List<Visit>, day: DayOfWeek, zone: ZoneId): UsualGym? {
     if (gyms.isEmpty()) return null
     val ids = gyms.map { it.id }.toSet()
-    gyms.firstOrNull { day in it.weekdays }?.let { return it.id }
+    gyms.firstOrNull { day in it.weekdays }?.let { return UsualGym(it.id, UsualGym.Why.Weekday) }
     val known = visits.filter { it.gymId in ids }
     val onDay = known.filter { Instant.ofEpochMilli(it.startedAt).atZone(zone).dayOfWeek == day }
     onDay.groupBy { it.gymId }
         .maxWithOrNull(compareBy<Map.Entry<Long, List<Visit>>> { it.value.size }.thenBy { e -> e.value.maxOf { it.startedAt } })
-        ?.let { return it.key }
-    return known.maxByOrNull { it.startedAt }?.gymId ?: gyms.first().id
+        ?.let { return UsualGym(it.key, UsualGym.Why.Weekday) }
+    known.maxByOrNull { it.startedAt }?.let { return UsualGym(it.gymId, UsualGym.Why.Last) }
+    return UsualGym(gyms.first().id, UsualGym.Why.First)
 }
 
 private fun Set<DayOfWeek>.toBits() = fold(0) { bits, d -> bits or (1 shl (d.value - 1)) }

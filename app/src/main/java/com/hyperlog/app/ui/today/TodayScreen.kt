@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Program
@@ -86,7 +87,7 @@ fun TodayScreen(
     onStart: (gymId: Long?, adHoc: Boolean, swaps: Map<String, String>) -> Unit,
     modifier: Modifier = Modifier,
     gyms: List<Gym> = emptyList(),
-    usualGymId: Long? = null,
+    usualGym: UsualGym? = null,
     program: ActiveProgram? = null,
     exerciseNames: Map<String, String> = emptyMap(),
     onProgram: () -> Unit = {},
@@ -116,7 +117,7 @@ fun TodayScreen(
     val next = program?.next
     if (kind != null && !sessionRunning) {
         StartSheet(
-            gyms, usualGymId,
+            gyms, usualGym,
             day = next.takeIf { !kind },
             library = library,
             onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
@@ -306,7 +307,7 @@ private fun TimeOffLine(days: Int, onEaseBack: () -> Unit) {
 @Composable
 private fun StartSheet(
     gyms: List<Gym>,
-    usualGymId: Long?,
+    usualGym: UsualGym?,
     day: PlannedDay?,
     library: List<Exercise>,
     onStart: (Long, Map<String, String>) -> Unit,
@@ -316,19 +317,19 @@ private fun StartSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) { StartSheetContent(gyms, usualGymId, onStart, day, library) }
+    ) { StartSheetContent(gyms, usualGym, onStart, day, library) }
 }
 
 @Composable
 internal fun StartSheetContent(
     gyms: List<Gym>,
-    usualGymId: Long?,
+    usualGym: UsualGym?,
     onStart: (Long, Map<String, String>) -> Unit,
     /** The program day to start, checked against the chosen gym's equipment; null ad hoc. */
     day: PlannedDay? = null,
     library: List<Exercise> = emptyList(),
 ) {
-    var chosen by rememberSaveable { mutableStateOf(usualGymId ?: gyms.first().id) }
+    var chosen by rememberSaveable { mutableStateOf(usualGym?.id ?: gyms.first().id) }
     val gym = gyms.firstOrNull { it.id == chosen } ?: gyms.first()
     val missing = remember(day, gym.missing, library) { day?.let { RuleCoach.missingEquipment(it, library, gym.missing) }.orEmpty() }
     /** Proposed swaps turned down, by slot id; another gym starts over. */
@@ -355,9 +356,15 @@ internal fun StartSheetContent(
                     Spacer(Modifier.width(4.dp))
                     Column {
                         Text(gym.name, style = MaterialTheme.typography.bodyLarge)
-                        if (gym.id == usualGymId) {
+                        // Only a weekday plan or habit makes it usual; the gym trained at last says so.
+                        val why = when (usualGym?.takeIf { it.id == gym.id }?.why) {
+                            UsualGym.Why.Weekday -> stringResource(R.string.start_usual, today)
+                            UsualGym.Why.Last -> stringResource(R.string.start_last)
+                            UsualGym.Why.First, null -> null
+                        }
+                        if (why != null) {
                             Text(
-                                stringResource(R.string.start_usual, today),
+                                why,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

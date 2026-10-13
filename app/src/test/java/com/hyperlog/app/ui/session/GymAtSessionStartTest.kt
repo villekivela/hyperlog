@@ -25,6 +25,7 @@ import com.hyperlog.app.press
 import com.hyperlog.app.waitFor
 import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -86,6 +87,16 @@ class GymAtSessionStartTest {
         compose.waitFor("Session")
         compose.onNodeWithText("Kallio").assertIsDisplayed()
         check(toolo > 0)
+    }
+
+    @Test
+    fun aGymWithNoPlanOrHistoryIsPickedWithoutCallingItUsual() {
+        runBlocking { gyms.addGym("Kallio"); gyms.addGym("Töölö") }
+        compose.waitFor("Start session")
+        compose.onNodeWithText("Start session").performClick()
+        compose.waitFor("Kallio")
+        gymRow("Kallio").assertIsSelected()
+        assertEquals(0, compose.onAllNodes(hasText("Usual on ", substring = true)).fetchSemanticsNodes().size)
     }
 
     @Test

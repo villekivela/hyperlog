@@ -78,7 +78,8 @@ Screenshots `screens/gym-start-*.png`.
 ### Principles
 
 1. **The usual answer is already picked.** Start session preselects today's usual gym and says
-   why under it ("Usual on Mondays"), so the common case is one tap on Start.
+   why under it ("Usual on Mondays", or "Trained here last" when only the last session picked
+   it; nothing for a first gym with no history), so the common case is one tap on Start.
 2. **Ask once, in place.** "Which machine?" stands where the set table would be, with no pad, so
    no set can start on an unknown machine and nothing pops over the screen. The answer is kept
    per gym and exercise and never asked again.

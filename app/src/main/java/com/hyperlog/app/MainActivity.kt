@@ -370,7 +370,7 @@ private fun App(
                 sessions.start(gym, adHoc, swaps)
             },
             gyms = gyms,
-            usualGymId = usualGym,
+            usualGym = usualGym,
             program = program,
             exerciseNames = exercises.associate { it.id to it.name },
             onProgram = { screen = Screen.Program },

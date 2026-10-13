@@ -100,14 +100,14 @@ class GymsTest {
         // Mondays at Kallio, Wednesdays at Töölö, and one Monday at Töölö.
         train(kallio, 0); train(toolo, 2); train(kallio, 7); train(toolo, 9); train(toolo, 14)
 
-        assertEquals(kallio, gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
-        assertEquals(toolo, gyms.usualGym(DayOfWeek.WEDNESDAY, ZoneOffset.UTC))
-        // A weekday with no history takes the gym trained at last.
-        assertEquals(toolo, gyms.usualGym(DayOfWeek.FRIDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(kallio, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(toolo, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.WEDNESDAY, ZoneOffset.UTC))
+        // A weekday with no history takes the gym trained at last, and doesn't call it usual on Fridays.
+        assertEquals(UsualGym(toolo, UsualGym.Why.Last), gyms.usualGym(DayOfWeek.FRIDAY, ZoneOffset.UTC))
 
         // A weekday plan beats history.
         gyms.setWeekdays(toolo, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
-        assertEquals(toolo, gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+        assertEquals(UsualGym(toolo, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
         assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), gyms.gyms.first().first { it.id == toolo }.weekdays)
     }
 
@@ -116,6 +116,7 @@ class GymsTest {
         assertEquals(null, gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
         gyms.addGym("Töölö")
         val kallio = gyms.addGym("Kallio")
-        assertEquals(kallio, gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+        // A new gym with no history is only the first one, not the usual one.
+        assertEquals(UsualGym(kallio, UsualGym.Why.First), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
     }
 }

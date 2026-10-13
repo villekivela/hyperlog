@@ -11,6 +11,8 @@
     <string name="start_start">Start</string>
     <!-- Under the gym preselected for today, e.g. "Usual on Mondays". -->
     <string name="start_usual">Usual on %1$s</string>
+    <!-- Under the gym preselected because it was trained at last, with nothing known about the weekday. -->
+    <string name="start_last">Trained here last</string>
     <string name="machine_title">Which machine?</string>
     <string name="machine_body">%1$s remembers it for next time.</string>
     <string name="machine_add">Add machine</string>

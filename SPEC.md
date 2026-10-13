@@ -232,8 +232,10 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - **Gym is picked at session start**, defaulting to the gym you usually train at on that weekday
   (learned from history, editable per gym).
   - Start session opens a sheet with the gyms as a single choice and **Start**. The preselected gym
-    says why ("Usual on Mondays"); one tap on another row changes it. With no gyms set up the
-    session starts at once, without a gym.
+    says why: "Usual on Mondays" when the weekday plan or that weekday's sessions picked it,
+    "Trained here last" when the last session did; the first gym, picked with nothing to go on,
+    says nothing. One tap on another row changes it. With no gyms set up the session starts at
+    once, without a gym.
   - The usual gym on a weekday: a gym whose weekday plan has that day (Gyms and equipment → the
     gym → Usual days); else the gym with the most sessions on that weekday, the latest breaking a
     tie; else the gym trained at last; else the first gym.
