@@ -39,7 +39,7 @@ class SuggestionLineTest {
         val plan = List(2) { SetPrescription(RepRange(8, 10), 2, 120) }
         val exercise = SessionExercise(
             id = 1, exercise = bench, sets = sets, lastTime = listOf(LoggedSet(60.0, 10, 0, 2), LoggedSet(60.0, 10, 0, 2)),
-            ladder = DefaultPlates.ladder(), ladderKnown = true, plan = plan, suggestion = suggestion,
+            ladder = DefaultPlates.ladder(), ladderKnown = true, prescription = plan, suggestion = suggestion,
             startingHint = hint,
         )
         val session = ActiveSession(

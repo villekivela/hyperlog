@@ -80,21 +80,21 @@ class SessionEditTest {
         val swapped = logger.session.current!!
         assertEquals("db_bench_press", swapped.exercise.id)
         assertEquals("bench", swapped.slot!!.id)
-        assertEquals(listOf(RepRange(6, 8), RepRange(6, 8)), swapped.plan!!.map { it.reps })
+        assertEquals(listOf(RepRange(6, 8), RepRange(6, 8)), swapped.prescription!!.map { it.reps })
         logger.log("30"); logger.log("30")
         assertEquals(listOf(30.0, 30.0), logger.exercise("db_bench_press").sets.map { it.weightKg })
         logger.finish()
 
         val next = logger()
         assertEquals("barbell_bench_press", next.onScreen)
-        assertEquals(2, next.session.current!!.plan!!.size)
+        assertEquals(2, next.session.current!!.prescription!!.size)
     }
 
     @Test
     fun anAlternativeWithItsOwnSetsBringsThem() = runTest {
         val logger = logger()
         logger.swap(logger.session.current!!.id, "floor_press")
-        assertEquals(listOf(RepRange(5, 5), RepRange(5, 5), RepRange(5, 5)), logger.session.current!!.plan!!.map { it.reps })
+        assertEquals(listOf(RepRange(5, 5), RepRange(5, 5), RepRange(5, 5)), logger.session.current!!.prescription!!.map { it.reps })
     }
 
     @Test
@@ -118,8 +118,8 @@ class SessionEditTest {
     fun anAddedSetIsLikeTheLastPlannedOneAndTheExerciseIsDoneAfterIt() = runTest {
         val logger = logger()
         logger.addSet(logger.session.current!!.id)
-        assertEquals(3, logger.session.current!!.plan!!.size)
-        assertEquals(SetPrescription(RepRange(6, 8), 1, 180), logger.session.current!!.plan!![2])
+        assertEquals(3, logger.session.current!!.prescription!!.size)
+        assertEquals(SetPrescription(RepRange(6, 8), 1, 180), logger.session.current!!.prescription!![2])
         logger.log("60"); logger.log("60")
         assertEquals("barbell_bench_press", logger.onScreen)
         logger.log("60")
@@ -141,16 +141,16 @@ class SessionEditTest {
         val logger = logger()
         val bench = logger.session.current!!.id
         logger.removeSet(bench, 1)
-        assertEquals(1, logger.session.current!!.plan!!.size)
+        assertEquals(1, logger.session.current!!.prescription!!.size)
         logger.removeSet(bench, 0)
-        assertEquals(1, logger.session.current!!.plan!!.size)
+        assertEquals(1, logger.session.current!!.prescription!!.size)
         logger.addSet(bench)
         logger.log("60")
         logger.removeSet(bench, 0)
-        assertEquals(2, logger.session.current!!.plan!!.size)
+        assertEquals(2, logger.session.current!!.prescription!!.size)
         logger.removeSet(bench, 1)
         // Its last planned set is gone, so the session moves on.
-        assertEquals(1, logger.exercise("barbell_bench_press").plan!!.size)
+        assertEquals(1, logger.exercise("barbell_bench_press").prescription!!.size)
         assertEquals("db_bicep_curl", logger.onScreen)
     }
 
@@ -160,8 +160,8 @@ class SessionEditTest {
         val bench = logger.session.current!!.id
         logger.setTarget(bench, 0, RepRange(3, 5), rir = 2)
         val current = logger.session.current!!
-        assertEquals(SetPrescription(RepRange(3, 5), 2, 180), current.plan!![0])
-        assertEquals(SetPrescription(RepRange(6, 8), 1, 180), current.plan!![1])
+        assertEquals(SetPrescription(RepRange(3, 5), 2, 180), current.prescription!![0])
+        assertEquals(SetPrescription(RepRange(6, 8), 1, 180), current.prescription!![1])
         assertEquals("5", logger.session.entry!!.full)
         assertEquals(2, logger.session.entry!!.rir)
     }
@@ -175,7 +175,7 @@ class SessionEditTest {
         logger.swap(logger.exercise("db_lateral_raise").id, "cable_lateral_raise")
 
         val again = SessionLogger(db, clock = { now }, programs = programs).also { it.load() }
-        assertEquals(SetPrescription(RepRange(10, 12), 0, 180), again.session.current!!.plan!![2])
+        assertEquals(SetPrescription(RepRange(10, 12), 0, 180), again.session.current!!.prescription!![2])
         assertEquals("cable_lateral_raise", again.session.exercises.last().exercise.id)
     }
 

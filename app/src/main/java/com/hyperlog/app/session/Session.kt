@@ -36,7 +36,7 @@ data class SessionExercise(
     /** The program slot it fills; null when added ad hoc. */
     val slot: PlannedSlot? = null,
     /** This week's sets for it from the program; null for an ad-hoc exercise, whose sets are open-ended. */
-    val plan: List<SetPrescription>? = null,
+    val prescription: List<SetPrescription>? = null,
     /** What progression suggests for the active row of a program exercise on screen, with why. */
     val suggestion: Suggestion? = null,
     /**
@@ -56,13 +56,13 @@ data class SessionExercise(
     val inPlaceOf: String? get() = slot?.let { s -> (s.inPlaceOf ?: s.exercise).takeIf { it != exercise.id } }
 
     /** Every planned set is logged. An ad-hoc exercise is never done. */
-    val done: Boolean get() = plan != null && sets.size >= plan.size
+    val done: Boolean get() = prescription != null && sets.size >= prescription.size
 
     /** Planned set [index] can still change in the session: it is planned and not logged yet. */
-    fun editable(index: Int): Boolean = plan != null && index >= sets.size && index < plan.size
+    fun editable(index: Int): Boolean = prescription != null && index >= sets.size && index < prescription.size
 
     /** Planned set [index] can be taken out: one set always stays, and so does one that others back off from. */
-    fun removable(index: Int): Boolean = editable(index) && plan!!.size > 1 && plan.none { it.backoff?.from == index }
+    fun removable(index: Int): Boolean = editable(index) && prescription!!.size > 1 && prescription.none { it.backoff?.from == index }
 
     /**
      * Set [index]'s technique: what a logged set was done with, else the session's change to it,
@@ -71,7 +71,7 @@ data class SessionExercise(
     fun techniqueAt(index: Int): Technique? = when {
         index < sets.size -> sets[index].technique
         index in techniques -> techniques[index]
-        else -> plan?.getOrNull(index)?.technique
+        else -> prescription?.getOrNull(index)?.technique
     }
 }
 
@@ -123,7 +123,7 @@ data class ActiveSession(
             val current = current ?: return emptyList()
             if (current.sets.isNotEmpty() || current.needsMachine || followUp != null) return emptyList()
             val kg = entry?.weightKg ?: return emptyList()
-            val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: current.plan?.firstOrNull()?.reps?.max
+            val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: current.prescription?.firstOrNull()?.reps?.max
             return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
         }
 
@@ -140,7 +140,7 @@ data class ActiveSession(
             val current = current ?: return null
             val group = SessionOrder.group(exercises, current).map { it.id }.toSet()
             val others = exercises.filter { it.id !in group }
-            return others.firstOrNull { it.plan != null && !it.done }
+            return others.firstOrNull { it.prescription != null && !it.done }
                 ?: exercises.drop(exercises.indexOf(current) + 1).firstOrNull { it.id !in group && !it.done }
         }
 }

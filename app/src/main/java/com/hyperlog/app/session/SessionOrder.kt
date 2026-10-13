@@ -17,7 +17,7 @@ internal object SessionOrder {
     fun after(exercises: List<SessionExercise>, closedId: Long, setIndex: Int): Step {
         val closed = exercises.first { it.id == closedId }
         // An ad-hoc exercise's sets are open-ended: it stays until another is picked.
-        if (closed.plan == null) return Step(closedId, rest = true)
+        if (closed.prescription == null) return Step(closedId, rest = true)
         val logged = exercises.associate { it.id to if (it.id == closedId) maxOf(it.sets.size, setIndex + 1) else it.sets.size }
         fun next(group: List<SessionExercise>) = firstLeft(group, logged)
         val group = group(exercises, closed)
@@ -52,9 +52,9 @@ internal object SessionOrder {
 
     /** The group's first planned set not logged yet, taking the partners set for set. */
     private fun firstLeft(group: List<SessionExercise>, logged: Map<Long, Int>): Pair<SessionExercise, Int>? {
-        val rounds = group.maxOf { it.plan?.size ?: 0 }
+        val rounds = group.maxOf { it.prescription?.size ?: 0 }
         for (i in 0 until rounds) {
-            group.firstOrNull { it.plan != null && i < it.plan.size && i >= logged.getValue(it.id) }?.let { return it to i }
+            group.firstOrNull { it.prescription != null && i < it.prescription.size && i >= logged.getValue(it.id) }?.let { return it to i }
         }
         return null
     }

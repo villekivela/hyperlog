@@ -276,7 +276,7 @@ class SessionLogger(
     ) = locked {
         val session = _state.value ?: return@locked
         val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
-        val plan = exercise.plan ?: return@locked
+        val plan = exercise.prescription ?: return@locked
         val onScreen = session.currentId == sessionExerciseId && session.openSetId == null
         val edited = db.withTransaction {
             val sets = change(exercise, plan) ?: return@withTransaction false
@@ -310,7 +310,7 @@ class SessionLogger(
             dao.remove(sessionExerciseId)
             if (session.currentId == sessionExerciseId) {
                 val after = left.drop(session.exercises.indexOf(exercise))
-                val next = left.firstOrNull { it.plan != null && !it.done } ?: after.firstOrNull() ?: left.lastOrNull()
+                val next = left.firstOrNull { it.prescription != null && !it.done } ?: after.firstOrNull() ?: left.lastOrNull()
                 dao.updateSession(dao.session(session.id)!!.copy(currentSessionExerciseId = next?.id, entry = null))
             }
         }
@@ -589,7 +589,7 @@ class SessionLogger(
      * up instead, and rest runs unless it is the one that would have come straight away.
      */
     private fun closed(row: SessionEntity, session: ActiveSession, current: SessionExercise, setIndex: Int, now: Long, to: Long? = null): SessionEntity {
-        val rest = current.plan?.getOrNull(setIndex)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
+        val rest = current.prescription?.getOrNull(setIndex)?.rest?.let { it * 1000L } ?: DEFAULT_REST_MS
         val step = SessionOrder.after(session.exercises, current.id, setIndex)
         val rests = step.rest || (to != null && to != step.exerciseId)
         return row.copy(
@@ -765,7 +765,7 @@ class SessionLogger(
                 machine = machine,
                 needsMachine = needsMachine,
                 slot = slot,
-                plan = plan,
+                prescription = plan,
                 suggestion = suggestion,
                 startingHint = starting?.takeIf { perMachine }?.text(),
                 techniques = stored.techniques(se.id),
@@ -817,7 +817,7 @@ class SessionLogger(
 
     /** The entry the next set of [current] starts with, before anything is typed. */
     private suspend fun prefill(current: SessionExercise): SetEntry {
-        val plan = current.plan
+        val plan = current.prescription
         val entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
         else current.suggestion?.let { s ->
             SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)

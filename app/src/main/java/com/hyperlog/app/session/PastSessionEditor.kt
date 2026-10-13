@@ -192,7 +192,7 @@ class PastSessionEditor(
                 ladderKnown = ladder.known,
                 machine = machine,
                 slot = slot,
-                plan = plan,
+                prescription = plan,
                 techniques = stored.techniques(se.id),
             )
         }

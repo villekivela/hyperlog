@@ -67,9 +67,9 @@ class ProgramSessionTest {
         val bench = session.current!!
         assertEquals("bench", bench.slot!!.id)
         // Week 1 is the ramp-in: one RIR easier and no techniques.
-        assertEquals(listOf(RepRange(4, 6), RepRange(6, 8), RepRange(6, 8)), bench.plan!!.map { it.reps })
-        assertEquals(listOf(2, 2, 2), bench.plan!!.map { it.rir })
-        assertNull(session.exercises[1].plan!!.single().technique)
+        assertEquals(listOf(RepRange(4, 6), RepRange(6, 8), RepRange(6, 8)), bench.prescription!!.map { it.reps })
+        assertEquals(listOf(2, 2, 2), bench.prescription!!.map { it.rir })
+        assertNull(session.exercises[1].prescription!!.single().technique)
         // No history: an empty weight, the top of the range and the target RIR.
         assertEquals("", session.entry!!.weight)
         assertEquals("6", session.entry!!.full)

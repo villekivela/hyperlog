@@ -53,10 +53,10 @@ fun ActiveSession.restNotice(): RestNotice? {
         }
         return RestNotice(RestNotice.Kind.Breathing, ends, restTotalMs, next)
     }
-    if (current != null && current.done && exercises.all { it.plan == null || it.done }) return null
+    if (current != null && current.done && exercises.all { it.prescription == null || it.done }) return null
     val next = if (current == null || current.done || entry == null) null else {
         val index = current.sets.size
-        val planned = current.plan?.getOrNull(index)
+        val planned = current.prescription?.getOrNull(index)
         NextSet(
             current.exercise.name, set = index + 1, weightKg = entry.weight.toDoubleOrNull(),
             reps = planned?.reps?.toString() ?: entry.full, rir = planned?.rir,

@@ -291,7 +291,7 @@ fun SessionScreen(
                 }
                 if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm)
                 else HiddenPad(entry, actions, canConfirm = canConfirm)
-            } else if (current != null && current.done && session.exercises.all { it.plan == null || it.done }) {
+            } else if (current != null && current.done && session.exercises.all { it.prescription == null || it.done }) {
                 DayDoneBar(onFinish = { showFinish = true })
             } else {
                 Spacer(Modifier.navigationBarsPadding())
@@ -334,7 +334,7 @@ fun SessionScreen(
                     val block = blocks.indexOfFirst { b -> b.any { it.id == e.id } }
                     ExerciseEdits(
                         onSwap = if (e.sets.isEmpty()) { { showList = false; swapping = e.id } } else null,
-                        onAddSet = if (e.plan != null) { { actions.addSet(e.id) } } else null,
+                        onAddSet = if (e.prescription != null) { { actions.addSet(e.id) } } else null,
                         onMoveUp = if (block > 0) { { actions.move(e.id, -1) } } else null,
                         onMoveDown = if (block < blocks.size - 1) { { actions.move(e.id, 1) } } else null,
                         onRemove = if (e.sets.isEmpty()) { { removing = e.id } } else null,
@@ -359,7 +359,7 @@ fun SessionScreen(
             ExerciseSheet(
                 current.exercise,
                 // With the session's changes to the sets' techniques.
-                plan = current.plan?.mapIndexed { i, set -> set.copy(technique = current.techniqueAt(i)) },
+                plan = current.prescription?.mapIndexed { i, set -> set.copy(technique = current.techniqueAt(i)) },
                 slotNote = current.slot?.note,
                 goal = goals.firstOrNull { it.goal.exerciseId == current.exercise.id },
                 machine = current.machine?.let { m -> stringResource(R.string.machine_at, m.name, session.gym?.name.orEmpty()) },
@@ -380,7 +380,7 @@ fun SessionScreen(
                 split = session.entry?.takeIf { active && current.exercise.unilateral && session.followUp == null }?.let { it.right != null },
                 onTechnique = { actions.setTechnique(optionsFor, it); setOptions = null },
                 onSplit = actions::split,
-                target = current.plan?.getOrNull(optionsFor)?.takeIf { current.editable(optionsFor) },
+                target = current.prescription?.getOrNull(optionsFor)?.takeIf { current.editable(optionsFor) },
                 onTarget = { reps, rir -> actions.setTarget(current.id, optionsFor, reps, rir) },
                 onRemove = if (current.removable(optionsFor)) { { actions.removeSet(current.id, optionsFor); setOptions = null } } else null,
             )
@@ -770,7 +770,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
     LaunchedEffect(current.id, current.sets.size) {
         if (current.sets.isNotEmpty()) listState.animateScrollToItem(current.sets.size)
     }
-    val plan = current.plan
+    val plan = current.prescription
     LazyColumn(modifier.fillMaxWidth().padding(horizontal = RowInset), state = listState) {
         // A split set's reps read left / right, so the head says which is which.
         item { ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null) }
@@ -1158,7 +1158,7 @@ internal fun SessionList(
                     when {
                         now -> SymbolIcon(Symbol.RadioButtonChecked, null, tint = cs.primary)
                         // Done means every planned set; an ad-hoc exercise is done once it has a set.
-                        e.done || (e.plan == null && e.sets.isNotEmpty()) -> SymbolIcon(Symbol.CheckCircle, null, tint = cs.onSurfaceVariant)
+                        e.done || (e.prescription == null && e.sets.isNotEmpty()) -> SymbolIcon(Symbol.CheckCircle, null, tint = cs.onSurfaceVariant)
                         else -> SymbolIcon(Symbol.RadioButtonUnchecked, null, tint = cs.outline)
                     }
                 }
@@ -1181,7 +1181,7 @@ internal fun SessionList(
                             color = cs.onSurfaceVariant,
                         )
                     } else {
-                        e.plan?.let { SetSummary(it) }
+                        e.prescription?.let { SetSummary(it) }
                     }
                 }
                 when {

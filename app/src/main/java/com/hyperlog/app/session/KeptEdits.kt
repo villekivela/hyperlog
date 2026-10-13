@@ -12,7 +12,7 @@ import com.hyperlog.app.coach.KeepEdits
 fun ActiveSession.keptEdits(summary: String): Change? {
     val day = day ?: return null
     val present = exercises.mapNotNull { it.slot?.id }.toSet()
-    val rows = exercises.map { EditedExercise(it.slot?.id, it.exercise.id, removed = false, sets = it.plan, logged = it.sets) } +
+    val rows = exercises.map { EditedExercise(it.slot?.id, it.exercise.id, removed = false, sets = it.prescription, logged = it.sets) } +
         day.slots.filter { it.id !in present }.map { EditedExercise(it.id, it.exercise, removed = true, sets = null, logged = emptyList()) }
     return KeepEdits.change(day, rows, summary)
 }

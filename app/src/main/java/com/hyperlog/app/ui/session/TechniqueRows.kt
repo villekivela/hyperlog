@@ -77,7 +77,7 @@ internal fun LazyListScope.techniqueRows(table: TableState, index: Int, techniqu
     val set = current.sets.getOrNull(index)
     val open = set != null && table.followUp != null && index == current.sets.size - 1
     item(key = "technique-$index") { Label(technique.symbol(), techniqueText(technique), done = set != null && !open) }
-    val showTarget = current.plan != null
+    val showTarget = current.prescription != null
     val logged = set?.extensions.orEmpty()
     val lastTime = current.lastTime.getOrNull(index)?.extensions.orEmpty()
     when (technique) {

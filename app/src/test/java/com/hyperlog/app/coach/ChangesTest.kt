@@ -170,7 +170,7 @@ class ChangesTest {
         logger.startDay(active(), null)
         val next = logger.state.value!!.exercises
         assertEquals("chest_supported_db_row", next[1].exercise.id)
-        assertEquals(1, next[0].plan!!.size)
+        assertEquals(1, next[0].prescription!!.size)
     }
 
     companion object {
