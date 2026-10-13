@@ -390,6 +390,7 @@ session reads like the logging screen with nothing to do, so tapping a number is
 | Weight field | (→) moves to reps |
 | Reps of a straight set | Logs weight, reps, partials and RIR; starts rest; the next set becomes active |
 | Reps of a lengthened-partials set, partials not entered | Switches to P so partials can be typed; second ✓ logs |
+| The same with the pad hidden | Logs the set as shown: the target partials if the set has them, else none |
 | Reps of a drop or myo set | Logs the main set; rest stops; the first drop or mini-set becomes active |
 | Drop sub-row | Logs the drop; after the last planned drop the set closes and rest starts |
 | Myo mini-set | Logs the mini-set; closes the set when it misses the target or hits the maximum, else starts the next breathing countdown |

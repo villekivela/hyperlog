@@ -489,10 +489,17 @@ class SessionLogger(
                 val now = clock()
                 if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
                 val technique = current.techniqueAt(current.sets.size)
-                // Lengthened partials: the first ✓ moves to the partials, the second logs.
+                var result: SetEntry.Done.Log = result
                 if (technique is Technique.LengthenedPartials && !entry.partialMode && entry.partial.isEmpty()) {
-                    saveEntry(session, entry.partialMode(true).copy(partial = technique.partials?.toString().orEmpty()))
-                    return@locked
+                    val partials = technique.partials?.toString().orEmpty()
+                    if (session.padVisible) {
+                        // Lengthened partials: the first ✓ moves to the partials, the second logs.
+                        saveEntry(session, entry.partialMode(true).copy(partial = partials))
+                        return@locked
+                    }
+                    // The hidden pad's ✓ logs the set as shown: the target partials, or none to failure.
+                    entry = entry.copy(partial = partials)
+                    result = entry.done() as? SetEntry.Done.Log ?: result
                 }
                 val check = WeightCheck.of(result.set.weightKg, current.reference(), current.ladder, current.ladderKnown)
                 val raised = checked

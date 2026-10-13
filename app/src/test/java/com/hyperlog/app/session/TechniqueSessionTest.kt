@@ -190,6 +190,31 @@ class TechniqueSessionTest {
     }
 
     @Test
+    fun withThePadHiddenTickLogsALengthenedPartialsSetAsShown() = runTest {
+        // The hidden pad's ✓ logs the set as shown: there is no pad to type the partials into.
+        program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "lengthened_partials", "partials": 6 } } ]""")
+        logger().apply {
+            startNext()
+            type("60"); done()
+            setPadVisible(false)
+            tick()
+            assertEquals(listOf(12 to 6), session.current!!.sets.map { it.fullReps to it.partialReps })
+        }
+    }
+
+    @Test
+    fun withThePadHiddenTickLogsPartialsToFailureWithNone() = runTest {
+        program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "lengthened_partials" } } ]""")
+        logger().apply {
+            startNext()
+            type("60"); done()
+            setPadVisible(false)
+            tick()
+            assertEquals(listOf(12 to 0), session.current!!.sets.map { it.fullReps to it.partialReps })
+        }
+    }
+
+    @Test
     fun anIsoHoldFollowsTheSetAndItsTimerRecordsTheSecondsHeld() = runTest {
         program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "iso_hold", "seconds": 20, "position": "stretch" } } ]""")
         val logger = logger()
