@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,13 +32,13 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.domain.formatKg
@@ -185,15 +186,35 @@ fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * A week's sets per muscle, one [SetsBar] each. The names' column fits the longest name and a gap (at least
+ * 128 dp, on the 8 dp grid), so every bar starts from the same baseline; past half the width a
+ * name wraps rather than being cut off.
+ */
+@Composable
+fun WeekSets(sets: Map<String, Int>) {
+    val most = sets.values.maxOrNull() ?: return
+    val style = MaterialTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val longest = sets.keys.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
+        // 8 dp between the longest name and its bar.
+        val fit = with(density) { longest.toDp() } + 8.dp
+        val column = (ceil(fit.value / 8f) * 8f).dp.coerceIn(128.dp, (maxWidth - Margin * 2) / 2)
+        Column { sets.forEach { (muscle, count) -> SetsBar(muscle, count, most, labelWidth = column) } }
+    }
+}
+
 /** One muscle's sets as an 8 dp bar from a shared baseline, its value after the tip. */
 @Composable
-fun SetsBar(muscle: String, sets: Int, most: Int, modifier: Modifier = Modifier) {
+fun SetsBar(muscle: String, sets: Int, most: Int, modifier: Modifier = Modifier, labelWidth: Dp = 128.dp) {
     val cs = MaterialTheme.colorScheme
     Row(
         modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = Margin),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(muscle, Modifier.width(128.dp), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(muscle, Modifier.width(labelWidth), style = MaterialTheme.typography.bodyMedium)
         BoxWithConstraints(Modifier.weight(1f)) {
             // Leave room after the longest bar for its value.
             val full = maxWidth - 32.dp

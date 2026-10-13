@@ -154,8 +154,7 @@ private fun Progress(
                 if (shown.sets.isEmpty()) {
                     Muted(stringResource(R.string.history_sets_none))
                 } else {
-                    val most = shown.sets.values.max()
-                    shown.sets.forEach { (muscle, sets) -> SetsBar(muscle, sets, most) }
+                    WeekSets(shown.sets)
                 }
             }
             Spacer(Modifier.height(8.dp))

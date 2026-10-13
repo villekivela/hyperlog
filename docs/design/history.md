@@ -34,7 +34,7 @@ phone check is pending.
 | Context ink | `outline` in dark; `outline` 20% toward `surface` in light | top-set dots and their legend key |
 | Grid | 1 dp hairline, `outlineVariant`, solid; 3 ticks at the right edge | charts |
 | Bar | 8 dp tall, 4 dp rounded data end, square at the baseline, `primary` | sets per muscle |
-| Muscle column | 128 dp | labels before the bars; value after the tip in tabular figures |
+| Muscle column | the longest name plus 8 dp, 128 dp at least (8 dp grid), half the width at most (names wrap past it) | labels before the bars; value after the tip in tabular figures |
 
 The palette is Material 3 dynamic colour, so it can't be validated once. The chart needs one hue
 (`primary`) and a neutral context ink for the second mark, which also differs in shape (dot
