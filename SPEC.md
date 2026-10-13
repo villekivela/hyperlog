@@ -27,7 +27,7 @@ configuration, iOS, web, any server.
 - Room for storage. Everything lives on the device.
 - kotlinx.serialization for program files, backup import and coach changes.
 - The network is for the update check only (Distribution); no model calls (ADR 0001).
-- Application ID `com.hyperlog.app`, debug builds `.dev`.
+- Application ID `com.hyperlog.app`, debug builds `.dev`. A debug build is labelled **Hyperlog DEV** and has its own launcher icon, the logo on amber with a DEV badge (themed icon too), so it can never be mistaken for the real app.
 
 ## Distribution
 

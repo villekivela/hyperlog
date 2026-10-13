@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Amber, not the release build's near-black, so the two icons never look alike. -->
+    <color name="ic_launcher_background_dev">#8A5A00</color>
+</resources>

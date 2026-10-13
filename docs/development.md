@@ -32,7 +32,7 @@ what the files don't explain.
   `androidx.compose.ui.test.junit4.v2`). The default SDK is 36 (`app/src/test/resources/robolectric.properties`);
   use `@Config(sdk = [30])` for the pre-dynamic-colour path. SDK 36 needs the
   `--add-exports=java.base/jdk.internal.access` JVM argument, already set in `app/build.gradle.kts`.
-- Debug builds are `com.hyperlog.app.dev`, labelled "Hyperlog dev". Launch with
+- Debug builds are `com.hyperlog.app.dev`, labelled "Hyperlog DEV" with an amber DEV-badged icon (`app/src/debug/res`). Launch with
   `adb shell am start -n com.hyperlog.app.dev/com.hyperlog.app.MainActivity`.
 - **Icons**: every icon is a Material Symbol (Rounded) vector drawable, added with
   `scripts/add-symbol.sh <name>` and listed in `ui/symbols/Symbol.kt`. Draw them with `SymbolIcon`.
