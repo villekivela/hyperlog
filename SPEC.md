@@ -303,6 +303,14 @@ available weights belong to a **machine at a gym**, not to an exercise.
   filled in, a cable station's left for you). The answer is remembered per gym and exercise, so the
   next time it goes straight to the sets. The exercise sheet shows the machine and gym, with
   **Change** until a set is logged on it.
+- **One shared cable station per gym.** Every cable exercise at a gym defaults to the gym's cable
+  station, so it is set up once, not per exercise: "Which machine?" doesn't ask, and the exercise
+  remembers the station. A machine remembered for the exercise (a lat pulldown on its own station)
+  still wins. The station is the one made by **Add the equipment your program uses**, or the first
+  machine added for a cable exercise at a gym without one; the gym screen marks it `Every cable
+  exercise`. Machine exercises still ask.
+  - History stays per exercise and machine (ADR 0002): sharing a station never merges two
+    exercises' histories, since each history is the exercise's sets on that machine.
 - **History and progression are shared for free weights** (barbell, dumbbells, bodyweight, and the
   EZ, trap and safety bars, plates and weighted bodyweight) across gyms. **Machines and cables keep a history per machine**, because stacks and pulley ratios don't
   compare. On a machine with no history, the first set asks you to pick a weight for the target reps

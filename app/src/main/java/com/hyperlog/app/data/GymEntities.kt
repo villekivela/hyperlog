@@ -44,6 +44,8 @@ data class EquipmentItemEntity(
     @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
     /** How sure its ladder is: `confirmed`, `unconfirmed` (a guess, set up on first use), `guess`, or `offered` (learning declined). */
     @ColumnInfo(name = "ladder_state", defaultValue = "confirmed") val ladderState: String = "confirmed",
+    /** The gym's one shared cable station, which every cable exercise there defaults to. */
+    @ColumnInfo(name = "cable_station", defaultValue = "0") val cableStation: Boolean = false,
 )
 
 /** The machine or cable station an exercise is done on at a gym, remembered from the first time. */

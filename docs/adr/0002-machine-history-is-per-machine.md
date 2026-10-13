@@ -5,3 +5,6 @@ cables they are kept separately for each equipment item. Stacks, pulley ratios a
 differ between gyms, so "20 kg" on one cable station isn't the same load as on
 another. Merging them would make progression suggest wrong weights. The cost is that a new machine
 starts without a suggestion until its first logged set.
+
+A machine's history is still one exercise's: a gym's shared cable station serves every cable
+exercise there, and each keeps its own history on it.

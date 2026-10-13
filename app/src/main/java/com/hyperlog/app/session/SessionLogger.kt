@@ -146,14 +146,17 @@ class SessionLogger(
     }
 
     /**
-     * A machine done at [gymId] before is on the same machine again; one named for the exercise
-     * is taken (and remembered) without asking; otherwise the screen asks.
+     * A machine done at [gymId] before is on the same machine again; one named for the exercise,
+     * or for a cable exercise the gym's cable station, is taken (and remembered) without asking;
+     * otherwise the screen asks.
      */
     private suspend fun rememberMachine(sessionExerciseId: Long, gymId: Long?, exerciseId: String) {
         val exercise = db.exercises().get(exerciseId)?.toExercise() ?: return
         if (gymId == null || !exercise.equipment.perMachine) return
         val remembered = gyms.remembered(gymId, exerciseId)
-            ?: gyms.gym(gymId)?.items?.let { namedFor(exercise, it) }?.id?.also { gyms.remember(gymId, exerciseId, it) }
+            ?: gyms.gym(gymId)?.items?.let { items ->
+                namedFor(exercise, items) ?: items.takeIf { exercise.equipment == Equipment.Cable }?.firstOrNull { it.cableStation && !it.archived }
+            }?.id?.also { gyms.remember(gymId, exerciseId, it) }
         remembered?.let { dao.setEquipmentItem(sessionExerciseId, it) }
     }
 
@@ -184,7 +187,9 @@ class SessionLogger(
     /** Adds a machine with its ladder to the session's gym and does the exercise on screen on it. */
     suspend fun addMachine(name: String, ladder: LadderSpec) = locked {
         val gym = _state.value?.gym ?: return@locked
-        setMachine(gyms.addItem(EquipmentItem(gymId = gym.id, name = name, ladder = ladder)))
+        // The first machine added for a cable exercise is the gym's cable station.
+        val station = _state.value?.current?.exercise?.equipment == Equipment.Cable && gym.items.none { it.cableStation && !it.archived }
+        setMachine(gyms.addItem(EquipmentItem(gymId = gym.id, name = name, ladder = ladder, cableStation = station)))
     }
 
     /**

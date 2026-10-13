@@ -43,6 +43,8 @@ data class EquipmentItem(
     val archived: Boolean = false,
     /** How sure [ladder] is: only a confirmed one checks weights against it. */
     val state: LadderState = LadderState.Confirmed,
+    /** The gym's shared cable station: every cable exercise there defaults to it. */
+    val cableStation: Boolean = false,
 )
 
 /**
@@ -126,10 +128,10 @@ class Gyms(db: HyperlogDatabase) {
 
     /** Adds an equipment item and returns its id. */
     suspend fun addItem(item: EquipmentItem): Long =
-        dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode(), ladderState = item.state.key))
+        dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode(), ladderState = item.state.key, cableStation = item.cableStation))
 
     suspend fun saveItem(item: EquipmentItem) {
-        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived, item.state.key))
+        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived, item.state.key, item.cableStation))
     }
 
     /** Machine [id]'s ladder as set up or taken from an offer: confirmed from now on. */
@@ -184,7 +186,7 @@ class Gyms(db: HyperlogDatabase) {
             dumbbells?.let { LadderSpec.decode(it) } ?: LadderSpec.DefaultDumbbells,
         )
 
-    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState)) }
+    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState), cableStation) }
 
     private companion object {
         const val PLATES = "plates"

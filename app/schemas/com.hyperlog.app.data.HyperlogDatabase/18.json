@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 18,
-    "identityHash": "bf2de1419247a0dce7bba92bd3f23c27",
+    "identityHash": "37eecfa51bb3d397e19dc4488b786dad",
     "entities": [
       {
         "tableName": "exercise",
@@ -545,7 +545,7 @@
       },
       {
         "tableName": "equipment_item",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gym_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ladder` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, `ladder_state` TEXT NOT NULL DEFAULT 'confirmed', FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gym_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ladder` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, `ladder_state` TEXT NOT NULL DEFAULT 'confirmed', `cable_station` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -584,6 +584,13 @@
             "affinity": "TEXT",
             "notNull": true,
             "defaultValue": "'confirmed'"
+          },
+          {
+            "fieldPath": "cableStation",
+            "columnName": "cable_station",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -1211,7 +1218,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bf2de1419247a0dce7bba92bd3f23c27')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '37eecfa51bb3d397e19dc4488b786dad')"
     ]
   }
 }

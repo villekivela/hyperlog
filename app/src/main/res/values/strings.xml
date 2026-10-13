@@ -468,6 +468,7 @@
     <string name="start_missing_none">%1$s: nothing here fits</string>
     <string name="machine_not_here">Not at %1$s</string>
     <string name="gym_missing">Not here</string>
+    <string name="gym_cable_station">Every cable exercise · %1$s</string>
     <string name="gym_pin_plates">Free weights here</string>
     <string name="gym_pin_plates_row">Plates for the pin</string>
     <string name="gym_pin_plates_list">%1$s kg</string>

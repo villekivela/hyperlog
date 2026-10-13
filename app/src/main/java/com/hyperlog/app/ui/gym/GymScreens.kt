@@ -172,7 +172,8 @@ fun GymScreen(
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
           Group {
             gym.items.forEach { item ->
-                Row(item.name, item.ladder.summary(gym.pinPlates), symbol = null, onClick = { onOpenItem(item.id) })
+                val ladder = item.ladder.summary(gym.pinPlates)
+                Row(item.name, if (item.cableStation) stringResource(R.string.gym_cable_station, ladder) else ladder, symbol = null, onClick = { onOpenItem(item.id) })
             }
             AddRow(stringResource(R.string.gym_add_item), onClick = onAddItem)
           }
