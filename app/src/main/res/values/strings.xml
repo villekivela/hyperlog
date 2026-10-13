@@ -90,12 +90,13 @@
     <string name="set_options_description">Set %1$d options</string>
     <string name="sub_row_logged">Logged</string>
     <string name="warmup_label">Warm-up</string>
-    <string name="warmup_label_plates">Warm-up · plates per side</string>
     <string name="warmup_lead">W</string>
     <string name="warmup_description">Warm-up %1$d, %2$s kg × %3$d</string>
-    <string name="plates_per_side">%1$s per side</string>
-    <string name="plates_empty_bar">Empty bar</string>
-    <string name="plates_none">No plates</string>
+    <string name="plates_description">Plates per side: %1$s, on a %2$s kg bar</string>
+    <string name="plates_description_no_bar">Plates per side: %1$s</string>
+    <string name="plates_bar_alone">The bar alone, %1$s kg</string>
+    <string name="plates_cannot">%1$s kg isn’t on these plates</string>
+    <string name="plates_not_on">Not on these plates</string>
     <string name="technique_dropset_name">Drop set</string>
     <string name="technique_myo_name">Myo-reps</string>
     <string name="technique_partials_name">Lengthened partials</string>

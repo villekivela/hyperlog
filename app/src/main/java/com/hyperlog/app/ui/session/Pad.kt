@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.HorizontalDivider
+import com.hyperlog.app.domain.LadderSpec
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -51,6 +54,8 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  * (weight rungs, or RIR and full/partial), then four rows of four equal keys. Its surface runs
  * through the gesture area.
  */
+internal const val PlateStripTag = "plate-strip"
+
 @Composable
 internal fun Pad(
     entry: SetEntry,
@@ -64,11 +69,18 @@ internal fun Pad(
     canConfirm: Boolean = entry.canConfirm,
     /** The logged row being corrected: the hide key cancels it, and ✓ saves it. */
     correction: Correction? = null,
+    /** The bar or machine's plates: drawn at the top while the weight is typed; null for none. */
+    plates: LadderSpec.Plates? = null,
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
+            // The plate calculator, at the top of the pad while a weight is typed, live.
+            if (onWeight && plates != null && check == null) {
+                PlateLoad(plates, entry.weightKg, Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp).testTag(PlateStripTag))
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = cs.outlineVariant)
+            }
             Row(Modifier.fillMaxWidth().height(KeyHeight), verticalAlignment = Alignment.CenterVertically) {
                 val typed = entry.weightKg
                 if (check != null) {

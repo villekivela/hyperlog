@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,7 +46,7 @@ internal fun LazyListScope.warmupRows(table: TableState) {
     item(key = "warmup-label") {
         Label(
             Symbol.Stairs,
-            stringResource(if (plates != null) R.string.warmup_label_plates else R.string.warmup_label),
+            stringResource(R.string.warmup_label),
             done = true,
         )
     }
@@ -55,7 +56,7 @@ internal fun LazyListScope.warmupRows(table: TableState) {
                 n = i + 1,
                 kg = w.weightKg,
                 reps = w.reps,
-                plates = plates?.let { platesText(it, w.weightKg, current.exercise.equipment) },
+                plates = plates,
                 done = i < current.warmupsDone,
                 onTick = { table.onTickWarmup(i) },
             )
@@ -64,14 +65,14 @@ internal fun LazyListScope.warmupRows(table: TableState) {
 }
 
 @Composable
-private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: String?, done: Boolean, onTick: () -> Unit) {
+private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: LadderSpec.Plates?, done: Boolean, onTick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val value = MaterialTheme.typography.titleLarge.merge(Tnum)
     // Planned looks planned, done looks done: muted like a prefill until ticked.
     val color = if (done) cs.onSurface else cs.outline
     val description = stringResource(R.string.warmup_description, n, formatKg(kg), reps)
     Row(
-        Modifier.fillMaxWidth().height(SubRowHeight)
+        Modifier.fillMaxWidth().heightIn(min = SubRowHeight)
             .toggleable(value = done, role = Role.Checkbox, onValueChange = { onTick() })
             .semantics { contentDescription = description }
             .padding(horizontal = RowPad),
@@ -83,61 +84,12 @@ private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: String?, done: Bool
             style = MaterialTheme.typography.labelLarge,
             color = cs.onSurfaceVariant,
         )
-        // The plates span Target and Last: a warm-up has neither.
-        Text(
-            plates.orEmpty(),
-            Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium.merge(Tnum),
-            color = cs.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        // The plates span Target and Last (a warm-up has neither), drawn as the pad draws them.
+        Box(Modifier.weight(1f).padding(vertical = 4.dp)) { plates?.let { PlateLoad(it, kg, compact = true) } }
         Text(formatKg(kg), Modifier.width(ColKg), color = color, textAlign = TextAlign.Center, style = value)
         Text("$reps", Modifier.width(ColReps), color = color, textAlign = TextAlign.Center, style = value)
         Box(Modifier.width(ColRir), contentAlignment = Alignment.Center) {
             if (done) SymbolIcon(Symbol.Check, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
         }
-    }
-}
-
-/**
- * The plate calculator under the active work set: the plates on each side for the weight in the
- * pad. Nothing when the plates can't make it (the weight check says so on ✓).
- */
-internal fun LazyListScope.plateLine(table: TableState) {
-    val plates = table.current.plates ?: return
-    val kg = table.activeKg ?: return
-    val side = plates.perSide(kg) ?: return
-    val equipment = table.current.exercise.equipment
-    item(key = "plates") { PlateLine(platesText(plates, kg, equipment)!!, perSide = side.isNotEmpty()) }
-}
-
-@Composable
-private fun PlateLine(text: String, perSide: Boolean) {
-    val color = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        Modifier.fillMaxWidth().height(LabelHeight).padding(start = RowPad + ColSet, end = RowPad),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        SymbolIcon(Symbol.Album, null, Modifier.size(20.dp), tint = color)
-        Spacer(Modifier.width(8.dp))
-        Text(
-            if (perSide) stringResource(R.string.plates_per_side, text) else text,
-            style = MaterialTheme.typography.labelLarge.merge(Tnum),
-            color = color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-/** `20 · 15`, `Empty bar`, `No plates` (a sled or machine alone); null when the plates can't make [kg]. */
-@Composable
-private fun platesText(plates: LadderSpec.Plates, kg: Double, equipment: Equipment): String? {
-    val side = plates.perSide(kg) ?: return null
-    return when {
-        side.isNotEmpty() -> side.joinToString(" · ") { formatKg(it) }
-        equipment == Equipment.Barbell -> stringResource(R.string.plates_empty_bar)
-        else -> stringResource(R.string.plates_none)
     }
 }

@@ -5,6 +5,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -26,7 +30,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Warm-ups show above the first work set, each with its plates, and the work set shows its plates per side. */
+/**
+ * Warm-ups show above the first work set, each with its plates drawn, and the pad draws the plates
+ * per side for the weight being typed.
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w410dp-h914dp")
 class WarmupScreenTest {
@@ -51,23 +58,30 @@ class WarmupScreenTest {
         compose.waitFor("Target")
     }
 
+    private fun clickLabel(label: String) = SemanticsMatcher("click label $label") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
+    }
+
     @Test
     fun aNinetyKgBenchShowsItsRampAndThePlatesPerSide() {
         startDay("barbell_bench_press")
         compose.press("9"); compose.press("0")
-        compose.waitFor("Warm-up · plates per side")
+        compose.waitFor("Warm-up")
         // 40, 55, 65 and 75 kg, each with its plates.
         compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8").assertIsDisplayed()
         compose.onNodeWithContentDescription("Warm-up 4, 75 kg × 2").assertIsDisplayed()
-        compose.onNodeWithText("20 · 5 · 2.5").assertIsDisplayed()
-        compose.onNodeWithText("20 · 15 per side").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Plates per side: 1 × 20, 1 × 5, 1 × 2.5, on a 20 kg bar").assertIsDisplayed()
+        // The pad draws the 90 being typed, live.
+        compose.onNodeWithContentDescription("Plates per side: 1 × 20, 1 × 15, on a 20 kg bar").assertIsDisplayed()
+        // No line of plates as text any more.
+        assertEquals(0, compose.onAllNodes(hasText("per side", substring = true)).fetchSemanticsNodes().size)
     }
 
     @Test
     fun aWarmUpTicksOffWithATapAndTheWorkSetStaysActive() {
         startDay("barbell_bench_press")
         compose.press("9"); compose.press("0"); compose.press("Next")
-        compose.waitFor("Warm-up · plates per side")
+        compose.waitFor("Warm-up")
         val first = compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8")
         first.assertIsOff()
         first.performClick()
@@ -80,7 +94,10 @@ class WarmupScreenTest {
         // The work set still logs, and the warm-ups go.
         compose.press("5"); compose.press("Log set")
         compose.waitGone("Warm-up", substring = true)
-        compose.onNodeWithText("20 · 10 per side").assertIsDisplayed()
+        // The pad's plates come with the weight field: 80 kg for the first back-off.
+        compose.onNode(clickLabel("kg"), useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Plates per side: 1 × 20, 1 × 10, on a 20 kg bar").assertIsDisplayed()
     }
 
     @Test
@@ -88,6 +105,6 @@ class WarmupScreenTest {
         startDay("db_bench_press")
         compose.press("3"); compose.press("0")
         compose.waitFor("Warm-up")
-        assertEquals(0, compose.onAllNodes(hasText("per side", substring = true)).fetchSemanticsNodes().size)
+        assertEquals(0, compose.onAllNodes(hasContentDescription("Plates per side", substring = true)).fetchSemanticsNodes().size)
     }
 }

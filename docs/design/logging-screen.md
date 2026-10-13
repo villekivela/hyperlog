@@ -284,34 +284,51 @@ stays readable (a swap names what it replaced).
 **Warm-ups and plates** (built in ticket #14).
 
 Principles: warm-ups are guidance, not records, so they look like the rows around them but
-lighter, and ask for nothing; the plates for a weight sit next to that weight; nothing about a
-warm-up touches the clock.
+lighter, and ask for nothing; the plates for a weight are drawn, one component wherever plates
+show; nothing about a warm-up touches the clock. Screens: `light-session-plates.png`,
+`dark-session-plates.png` (renders).
 
 ```
-       Target      Last       kg   Reps  RIR
-       ⟋ Warm-up · plates per side               ← 32 dp label, onSurfaceVariant (stairs)
- W     10                     40     8     ✓     ← 48 dp warm-up row, ticked: full contrast + check
- W     15 · 2.5               55     5     ✓
- W     20 · 2.5               65     3           ← not ticked: values in outline, like a prefill
- W     20 · 5 · 2.5           75     2
-┌────────────────────────────────────────────┐
-│1     4–6 (1)               [90]   6    ●1 │
-└────────────────────────────────────────────┘
-       ◎ 20 · 15 per side                        ← plate line under the active work set (album)
-       ↘ Back-off, top set − 10%
+╭──────────────────────────────────────────────╮
+│      Target     Last       kg    Reps   RIR  │
+│     (⟋ Warm-up)                              │ ← neutral tag
+│ W    ─┤▌▌├─ ■1 × 10 ■1 × 2.5   45     8   ✓  │ ← compact plates over Target and Last
+│ W    ─┤▌├─  ■1 × 20            60     5      │
+│╭────────────────────────────────────────────╮│
+││1    4–6 (1)              [100]   6    ●1  ││
+│╰────────────────────────────────────────────╯│
+╰──────────────────────────────────────────────╯
+ ▓ pad ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+   ─┤▐█▐█├──   ■ 2 × 20   ⟋ 20                  ← plate strip, while the weight is typed
+   ────────────────────────────────────────────   ← outlineVariant divider
+   95   97.5  (100)  102.5  105                   ← the strip and keys, unchanged
 ```
 
-- **Warm-up row**: 48 dp like a sub-row. `W` in labelLarge onSurfaceVariant in the set column;
-  the plates per side span Target and Last in bodyMedium onSurfaceVariant (a warm-up has
-  neither); kg and reps in titleLarge, `outline` until ticked, onSurface after, with a `check`
-  in the RIR column. The whole row is one checkbox: a tap ticks it and those above, a tap on the
-  last ticked one takes it back. The pad stays on the work set.
-- **Warm-up label**: the technique label's shape in onSurfaceVariant, not tertiary (tertiary
-  means a technique): `stairs` and "Warm-up", "· plates per side" when the exercise has plates.
-- **Plate line**: a 32 dp line under the active work set, at the Target column: `album` and
-  `20 · 15 per side` in labelLarge onSurfaceVariant (`Empty bar`, or `No plates` on a machine).
-  It follows the weight being typed and is left out when the plates can't make it.
-- The warm-ups go once the first work set is logged; the plate line moves with the active set.
+- **Plates** (the plate calculator, one component): a drawing of one side of the bar, sleeve to
+  the right (the end of the grip, the collar, then the plates heaviest first, then the sleeve),
+  the plates as rounded blocks taller and thicker by weight; and a legend, a colour square and
+  `1 × 25` per plate, heaviest first, then a slash and the bar's own weight. White plates get a
+  1 dp outline. Its content description reads the whole load: "Plates per side: 1 × 20, 1 × 15,
+  on a 20 kg bar" ("The bar alone, 20 kg"; "61 kg isn't on these plates").
+- **Plate colours** are fixed, the kg competition scale, like the RIR scale: 25 and 2.5 red
+  `#D9453B`, 20 and 2 blue `#2F6FDB`, 15 and 1.5 yellow `#E5B12E`, 10 and 1 green `#3B9C55`, 5
+  and 0.5 white `#F2F2F2` (outlined), 1.25 and any other plate silver `#A7ADB4`. Mid tones, so
+  each reads on light and dark containers.
+- **In the pad**: a 48 dp strip at the top of the pad while the weight field of a barbell or
+  plate-loaded exercise is focused, then a thin outlineVariant divider, then the pad as it was.
+  It updates as the weight is typed; with nothing typed it draws the bar alone, and a weight the
+  plates can't make draws the bar muted with "Not on these plates". The weight check's strip
+  replaces it. A correction shows it too. Regular size: a 40 dp drawing, titleSmall legend.
+- **On a warm-up row**: the compact size over Target and Last (a warm-up has neither): a 24 dp
+  drawing and a labelMedium legend without the bar's weight, which the pad already gives. The
+  row grows past 48 dp when the legend wraps.
+- **Warm-up row**: `W` in labelLarge onSurfaceVariant in the set column, the compact plates, kg
+  and reps in titleLarge, `outline` until ticked, onSurface after, with a `check` in the RIR
+  column. The whole row is one checkbox: a tap ticks it and those above, a tap on the last
+  ticked one takes it back. The pad stays on the work set.
+- **Warm-up label**: the neutral tag, `stairs` and "Warm-up".
+- The warm-ups go once the first work set is logged. There is no plates line under the active set
+  any more: the pad's strip is where the plates are read, mid-set.
 
 **Corrections** (built in ticket #15).
 

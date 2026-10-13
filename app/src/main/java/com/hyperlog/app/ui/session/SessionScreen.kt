@@ -274,7 +274,7 @@ fun SessionScreen(
                 // A drop or mini-set has no RIR: ✓ needs only its weight and reps.
                 val fixing = correction.entry
                 val canConfirm = if (correction.kind == null || fixing.field == Field.Weight) fixing.canConfirm else fixing.toExtension(correction.kind) != null
-                Pad(fixing, corrected.ladder, null, actions, canConfirm = canConfirm, correction = correction)
+                Pad(fixing, corrected.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates)
             } else if (viewing != null) {
                 Spacer(Modifier.navigationBarsPadding())
             } else if (current != null && entry != null) {
@@ -287,7 +287,7 @@ fun SessionScreen(
                     holdRunning -> true
                     else -> entry.toExtension(com.hyperlog.app.domain.Extension.Kind.Drop) != null
                 }
-                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm)
+                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates)
                 else HiddenPad(entry, actions, canConfirm = canConfirm)
             } else if (current != null && current.done && session.exercises.all { it.prescription == null || it.done }) {
                 DayDoneBar(onFinish = { showFinish = true })
@@ -712,7 +712,6 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
                 if (table.correcting) UpcomingRow(i + 1, current.lastTime.getOrNull(i), entry.weight, entry.full)
                 else ActiveRow(i + 1, current.lastTime.getOrNull(i), entry, table.weightFlagged, table.actions, onNumber = { table.onSetOptions(i) })
             }
-            if (!table.correcting) plateLine(table)
             techniqueRows(table, i, current.techniqueAt(i), plannedKg = entry.weightKg)
             // An ad-hoc session has no plan, so last time's set count shows what is likely to come,
             // muted and prefilled the way the next set will be.
@@ -759,7 +758,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
                 }
             }
         }
-        if (i == logged.size && entry != null && table.followUp == null && !table.correcting) plateLine(table)
         techniqueRows(table, i, current.techniqueAt(i), plannedKg = kg)
     }
     table.onAddSet?.let { addSetRow(it) }

@@ -373,11 +373,13 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Rest timer** that keeps running with the screen off: ongoing notification, vibration and
      sound when rest ends.
    - **Plate calculator** for barbell and plate-loaded exercises.
-     - Barbell exercises use the shared plates; machines whose ladder is plates use theirs. The
-       active work set shows `20 · 15 per side` under its row (`Empty bar` with no plates), for the
-       weight in the pad, live; each warm-up row shows its own plates. Plates are the fewest that
-       make the weight, heaviest first, from the pairs there are. A weight the plates can't make
-       shows no plates (the weight check says so on ✓).
+     - Barbell exercises use the shared plates; machines whose ladder is plates use theirs. While
+       the weight is typed the pad draws one side of the bar with its plates (fixed competition
+       colours, sized by weight) and a legend (`1 × 20`, `1 × 15`, the bar's 20), live; each
+       warm-up row draws its own, compact. Plates are the fewest that make the weight, heaviest
+       first, from the pairs there are. A weight the plates can't make draws the bar alone with
+       "Not on these plates" (the weight check says so on ✓). Design:
+       `docs/design/logging-screen.md`, Plates.
      - EZ, trap and safety bar exercises use the shared plates on their own bar, so they get the
        same line, warm-ups on 5 kg steps and a weight check against the real weights.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
