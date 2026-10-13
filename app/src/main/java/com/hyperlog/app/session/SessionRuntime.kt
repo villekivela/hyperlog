@@ -41,7 +41,7 @@ class SessionRuntime private constructor(application: Application, private val d
         scope.launch {
             ProgramStore.get(application).active.map { it?.history }.distinctUntilChanged().drop(1).collect {
                 loaded.await()
-                logger.planChanged()
+                logger.readAgain()
             }
         }
     }

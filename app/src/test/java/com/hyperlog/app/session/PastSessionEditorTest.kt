@@ -103,7 +103,7 @@ class PastSessionEditorTest {
         assertEquals(Suggestion.Kind.Up, logger.state.value!!.current!!.suggestion!!.kind)
         assertEquals("62.5", logger.state.value!!.entry!!.weight)
 
-        val editor = PastSessionEditor(db, programs, onChanged = logger::historyChanged)
+        val editor = PastSessionEditor(db, programs, onChanged = logger::readAgain)
         editor.open(week1)
         val bench = editor.state.value!!.exercises[0].id
         editor.correct(bench, 0); type("8", editor::press); editor.tick()

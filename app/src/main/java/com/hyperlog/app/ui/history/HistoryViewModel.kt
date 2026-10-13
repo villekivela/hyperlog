@@ -84,7 +84,7 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun changed() {
-        runtime.logger.historyChanged()
+        runtime.logger.readAgain()
         _exercises.value = history.exercises()
         _trend.value?.let { _trend.value = history.trend(it.exercise.id) }
     }

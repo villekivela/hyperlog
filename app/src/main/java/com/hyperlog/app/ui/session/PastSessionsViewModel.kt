@@ -30,7 +30,7 @@ class PastSessionsViewModel(application: Application) : AndroidViewModel(applica
     private val editor = PastSessionEditor(
         HyperlogDatabase.get(application),
         ProgramStore.get(application),
-        onChanged = { runtime.logger.historyChanged() },
+        onChanged = { runtime.logger.readAgain() },
     )
     private val _sessions = MutableStateFlow<List<PastSessionItem>?>(null)
 

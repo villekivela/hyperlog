@@ -395,20 +395,15 @@ class SessionLogger(
     }
 
     /**
-     * Logged sets changed outside the session (a past session was corrected): the suggestion and
-     * last time are worked out again, and an untouched prefill with them.
+     * Something the session reads changed outside it: a past session was corrected, or a Change
+     * was accepted or reverted. The day, the suggestion and last time are worked out again, and an
+     * untouched prefill with them.
      */
-    suspend fun historyChanged() = locked {
+    suspend fun readAgain() = locked {
         val session = _state.value ?: return@locked
         if (untouched(session, session.currentId)) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
         reload()
     }
-
-    /**
-     * A Change was accepted or reverted: the session's day is read again with the Changes in
-     * force, and an untouched prefill follows its suggestion.
-     */
-    suspend fun planChanged() = historyChanged()
 
     /** The set to do of [exerciseId] still has the prefill it started with: nothing has been typed into it. */
     private suspend fun untouched(session: ActiveSession, exerciseId: Long?): Boolean {

@@ -160,7 +160,7 @@ class ChangesTest {
             change.operations,
         )
         programs.accept(change)
-        logger.planChanged()
+        logger.readAgain()
         // Accepted, the session's edits are the plan: nothing more to keep.
         assertNull(logger.state.value!!.keptEdits("Keep my edits"))
         logger.logAndFinish("60")
