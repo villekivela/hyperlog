@@ -141,6 +141,14 @@ class RuleCoachTest {
     }
 
     @Test
+    fun aFinishedProgramHasNoDayLeftForTheRules() {
+        val done = ActiveProgram(1, program, Position(program.weeks + 1, 0), today = oct13)
+        listOf(Situation.Pain(Area.Hands), Situation.TimeOff, Situation.NoGym, Situation.ShortOnTime(30), Situation.PoorRecovery).forEach {
+            assertEquals(Advice.Finished, RuleCoach.advise(it, it.constraints(), done, library.exercises, oct13.minusDays(20)))
+        }
+    }
+
+    @Test
     fun atHomeEveryExerciseIsDumbbellsOrBodyweightOrLeftOut() {
         val change = proposed(advise(Situation.NoGym))
         val day = trained(change)

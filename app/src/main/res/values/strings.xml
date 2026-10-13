@@ -387,6 +387,9 @@
     <string name="coach_review">Review change</string>
     <string name="coach_resume">Resume as planned.</string>
     <string name="coach_nothing">Nothing in the plan breaks these limits.</string>
+    <string name="coach_finished">The program is finished: no day is left to change. Something else plans what comes next with Claude.</string>
+    <string name="coach_no_program">The rules change a program’s plan: run one to use them.</string>
+    <string name="coach_ask_body_no_program">Shares this and the last 4 weeks of sessions with the Claude app, to talk it through there. With no program running there is no Change to paste back.</string>
     <string name="coach_ease_back">Ease back in</string>
     <string name="coach_something_else">Something else</string>
     <string name="coach_something_else_body">Talk it through with Claude</string>

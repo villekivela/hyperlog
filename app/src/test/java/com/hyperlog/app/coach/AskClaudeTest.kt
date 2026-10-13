@@ -28,6 +28,16 @@ class AskClaudeTest {
         AskClaude.prompt(words, plan, sessions = emptyList(), library = library.exercises)
 
     @Test
+    fun withNoProgramThePromptAsksForAdviceNotAChange() {
+        val text = AskClaude.prompt("My knee hurts on lunges.", plan = null, sessions = emptyList(), library = library.exercises, today = oct13)
+        assertTrue(text.contains("> My knee hurts on lunges."))
+        assertTrue(text, text.contains("No program is running in Hyperlog"))
+        assertTrue(text.contains("Today is 2026-10-13 (Tuesday)."))
+        assertFalse(text.contains("## Change format"))
+        assertFalse(text.contains("```json"))
+    }
+
+    @Test
     fun theFormatListsEveryOperationAndScopeTheValidatorReads() {
         val text = prompt()
         // SPEC, Coaching: the eleven operations and three scopes.

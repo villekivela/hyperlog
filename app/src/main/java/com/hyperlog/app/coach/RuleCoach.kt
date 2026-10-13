@@ -82,6 +82,9 @@ sealed interface Advice {
 
     /** Nothing in the plan breaks the constraints. */
     data object NothingToChange : Advice
+
+    /** The program is finished: no day is left for a rule to change. */
+    data object Finished : Advice
 }
 
 /** A swap for one session: the slot's [exercise] isn't at the gym; [replacement] null when nothing fits. */
@@ -111,7 +114,7 @@ object RuleCoach {
         lastTrained: LocalDate?,
         weekdays: Set<DayOfWeek> = emptySet(),
     ): Advice {
-        if (plan.finished) return Advice.NothingToChange
+        if (plan.finished) return Advice.Finished
         val today = plan.today
         val byId = library.associateBy { it.id }
         val days = daysSince(lastTrained, today)

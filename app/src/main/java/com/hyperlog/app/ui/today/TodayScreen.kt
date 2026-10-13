@@ -143,10 +143,9 @@ fun TodayScreen(
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.
                 title = { Text(stringResource(R.string.today_title), Modifier.padding(start = 8.dp)) },
                 actions = {
-                    if (next != null) {
-                        IconButton(onClick = onCoach) {
-                            SymbolIcon(Symbol.Sports, stringResource(R.string.coach_title))
-                        }
+                    // The coach is there with or without a program: Ask Claude needs none.
+                    IconButton(onClick = onCoach) {
+                        SymbolIcon(Symbol.Sports, stringResource(R.string.coach_title))
                     }
                     IconButton(onClick = onHistory) {
                         SymbolIcon(Symbol.History, stringResource(R.string.history_title))

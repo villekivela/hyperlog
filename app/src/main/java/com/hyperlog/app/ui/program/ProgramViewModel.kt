@@ -109,9 +109,9 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** The problems of the Change last pasted, until it's pasted again or the words change. */
     val pasteErrors: StateFlow<List<String>?> = _pasteErrors.asStateFlow()
 
-    /** The prompt Ask Claude shares for [words]; null with no program running. */
+    /** The prompt Ask Claude shares for [words]; with no program running it asks for advice in words. */
     suspend fun askClaudePrompt(words: String): String? {
-        val active = programs.active.first() ?: return null
+        val active = programs.active.first()
         val db = HyperlogDatabase.get(getApplication())
         val library = db.exercises().all().map { it.toExercise() }
         val sessions = PastSessionEditor(db, programs).sessions()

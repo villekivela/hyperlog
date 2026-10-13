@@ -304,8 +304,8 @@ private fun App(
             onPropose = programModel::propose,
             onRevert = programModel::revert,
         )
-        screen == Screen.Coach && program?.next != null -> CoachScreen(
-            program!!,
+        screen == Screen.Coach -> CoachScreen(
+            program,
             exercises,
             lastTrained,
             onPropose = programModel::propose,

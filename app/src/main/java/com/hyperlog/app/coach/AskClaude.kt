@@ -29,15 +29,17 @@ object AskClaude {
     /**
      * The prompt for the Claude app: [words], the program and where you are in it, the sessions of
      * the last [HISTORY_DAYS] days, the library entries a swap could use, and the Change format
-     * with the instruction to reply with one fenced JSON block.
+     * with the instruction to reply with one fenced JSON block. With no program running ([plan]
+     * null) there is no plan to change: the prompt asks for advice in words, with the sessions.
      */
     fun prompt(
         words: String,
-        plan: ActiveProgram,
+        plan: ActiveProgram?,
         sessions: List<PastSessionItem>,
         library: List<Exercise>,
         zone: ZoneId = ZoneId.systemDefault(),
-    ): String = buildString {
+        today: LocalDate = plan?.today ?: LocalDate.now(zone),
+    ): String = if (plan == null) withoutProgram(words, sessions, today, zone) else buildString {
         val program = plan.program
         val names = library.associate { it.id to it.name }
         appendLine("I train with Hyperlog, an app that runs my strength program and logs my sessions. Help me adjust the plan around this:")
@@ -60,6 +62,22 @@ object AskClaude {
         library(program, library)
         appendLine()
         append(ChangeFormat.text(plan))
+    }
+
+    /** No program runs: Claude advises in words, from the sessions; nothing comes back to paste. */
+    private fun withoutProgram(words: String, sessions: List<PastSessionItem>, today: LocalDate, zone: ZoneId) = buildString {
+        appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
+        appendLine()
+        words.trim().lines().forEach { appendLine("> $it") }
+        appendLine()
+        appendLine(
+            "No program is running in Hyperlog: I train ad hoc, so there is no plan to change and nothing to paste back. " +
+                "Talk it through with me and tell me in words what to do in my next sessions.",
+        )
+        appendLine()
+        appendLine("Today is $today (${today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)}).")
+        appendLine()
+        sessions(sessions, today, zone)
     }
 
     /**

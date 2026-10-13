@@ -3,6 +3,7 @@ package com.hyperlog.app.ui.coach
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -110,6 +111,21 @@ class CoachScreenTest {
         val session = runBlocking { db.sessions().runningSession()!! }
         val legs = runBlocking { db.sessions().sessionExercises(session.id) }.single { it.slotId == "leg_extension" }
         assertEquals("reverse_nordic", legs.exerciseId)
+    }
+
+    @Test
+    fun withNoProgramTheCoachTalksItThroughWithClaudeAndSaysWhatTheRulesNeed() {
+        compose.waitFor("Run this program")
+        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.waitFor("What’s in the way?")
+        compose.onNodeWithText("Pain").performClick()
+        compose.onNodeWithText("Review change").performClick()
+        compose.waitFor("The rules change a program’s plan: run one to use them.")
+
+        // Something else still asks Claude; with no plan to change there is nothing to paste back.
+        compose.onNodeWithText("Something else").performClick()
+        compose.onNodeWithText("Ask Claude").assertIsDisplayed()
+        assertEquals(0, compose.onAllNodesWithText("Paste change").fetchSemanticsNodes().size)
     }
 
     private companion object {

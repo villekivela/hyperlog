@@ -469,7 +469,12 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
-3. **Coach** — see below. Reached from Today's top bar (`sports`) while a day is next.
+3. **Coach** — see below. Reached from Today's top bar (`sports`) at any time. With a program
+   running the rules and Ask Claude both work; once it is finished the rules say "The program is
+   finished: no day is left to change" and Ask Claude can still propose a Change (a repeated week,
+   a shift). With no program (ad-hoc training) the rules say they need one, and Ask Claude shares
+   your words and the last 4 weeks of sessions for advice in words: no Change comes back, so
+   **Paste change** isn't offered.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
    Reached from Today's top bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
    Design: `docs/design/history.md`.
@@ -763,7 +768,7 @@ own apps, so Hyperlog hands off to the Claude app instead:
   screen. Picking it opens a text field in place (kept while you're away in the Claude app) and
   swaps Limits for one line on what is shared. The bottom bar holds **Paste change** and **Ask
   Claude**; the filled one is the next step: Ask Claude (enabled once there are words), then Paste
-  change once you've asked.
+  change once you've asked. With no program running only Ask Claude shows (Screens → Coach).
 - **The prompt** is plain English text shared with `ACTION_SEND` through the system share sheet
   (the user picks the Claude app). It holds, in order: your words quoted; the instruction to talk
   it through and then reply with exactly one fenced ```` ```json ```` block holding a Change, using

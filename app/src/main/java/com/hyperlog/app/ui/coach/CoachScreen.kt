@@ -85,7 +85,8 @@ private val MinutesRange = 20..120
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CoachScreen(
-    program: ActiveProgram,
+    /** The program running, null with none: then only Ask Claude has something to work with. */
+    program: ActiveProgram?,
     library: List<Exercise>,
     /** The day of the last session finished; null with none yet. */
     lastTrained: LocalDate?,
@@ -105,8 +106,9 @@ fun CoachScreen(
     /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
     weekdays: Set<DayOfWeek> = emptySet(),
 ) {
-    val daysOff = RuleCoach.daysSince(lastTrained, program.today)
-    var kind by rememberSaveable { mutableStateOf(if (RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, program.today, weekdays))) SituationKind.TimeOff else null) }
+    val today = program?.today ?: LocalDate.now()
+    val daysOff = RuleCoach.daysSince(lastTrained, today)
+    var kind by rememberSaveable { mutableStateOf(if (RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, today, weekdays))) SituationKind.TimeOff else null) }
     var area by rememberSaveable { mutableStateOf(Area.Hands) }
     var minutes by rememberSaveable { mutableIntStateOf(DEFAULT_MINUTES) }
     var noGrip by rememberSaveable { mutableStateOf(false) }
@@ -146,6 +148,8 @@ fun CoachScreen(
 
     val resume = stringResource(R.string.coach_resume)
     val nothing = stringResource(R.string.coach_nothing)
+    val finished = stringResource(R.string.coach_finished)
+    val noProgram = stringResource(R.string.coach_no_program)
     val daysText = daysText(daysOff)
     BackHandler(onBack = onBack)
     Scaffold(
@@ -175,7 +179,11 @@ fun CoachScreen(
                             Text(stringResource(R.string.coach_paste))
                         }
                         val askClaude = { asked = true; onAskClaude(words.trim()) }
-                        if (asked) {
+                        // With no program there is no plan for a Change: Claude's advice stays in the Claude app.
+                        if (program == null) {
+                            Spacer(Modifier.weight(1f))
+                            Button(enabled = words.isNotBlank(), onClick = askClaude) { ask() }
+                        } else if (asked) {
                             TextButton(enabled = words.isNotBlank(), onClick = askClaude) { ask() }
                             Spacer(Modifier.weight(1f))
                             Button(onClick = onPaste) { paste() }
@@ -198,10 +206,15 @@ fun CoachScreen(
                             val k = kind ?: return@Button
                             val situation = situation(k) ?: return@Button
                             val constraints = Constraints(noGrip, noAxial, noOverhead, home, minutes.takeIf { capped })
+                            if (program == null) {
+                                said = noProgram
+                                return@Button
+                            }
                             when (val advice = RuleCoach.advise(situation, constraints, program, library, lastTrained, weekdays)) {
                                 is Advice.Propose -> { said = null; onPropose(advice.change) }
                                 is Advice.Resume -> said = listOfNotNull(daysText.takeIf { advice.daysOff != null }, resume).joinToString(". ")
                                 Advice.NothingToChange -> said = nothing
+                                Advice.Finished -> said = finished
                             }
                         },
                     ) { Text(stringResource(R.string.coach_review)) }
@@ -252,6 +265,7 @@ fun CoachScreen(
                     onWords = { words = it; onClosePasteErrors() },
                     pasteErrors,
                     onCopyProblems,
+                    withProgram = program != null,
                 )
                 return@Column
             }
@@ -282,6 +296,8 @@ private fun AskClaudeDetails(
     onWords: (String) -> Unit,
     pasteErrors: List<String>?,
     onCopyProblems: (List<String>) -> Unit,
+    /** A program runs, so Claude can send back a Change to paste. */
+    withProgram: Boolean,
 ) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(start = TextIndent, end = Margin)) {
@@ -295,7 +311,7 @@ private fun AskClaudeDetails(
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         )
         Text(
-            stringResource(R.string.coach_ask_body),
+            stringResource(if (withProgram) R.string.coach_ask_body else R.string.coach_ask_body_no_program),
             Modifier.padding(top = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,

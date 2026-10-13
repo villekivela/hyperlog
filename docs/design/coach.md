@@ -32,7 +32,7 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 | Bottom bar | divider, then the message (bodyMedium, muted) left of **Review change** | the message holds "Resume as planned." |
 | Time-off line | `history` 18 dp tertiary, bodyMedium muted, TextButton **Ease back in** | under Today's day name |
 | Missing swaps | labelLarge head `Not at Kamppi · for this session`; checkbox rows 56 dp, text at 64 dp | in the start sheet under the gyms |
-| Coach entry | `sports` icon, first in Today's top bar, only while a day is next | |
+| Coach entry | `sports` icon, first in Today's top bar, always (no program: Ask Claude only; finished: rules say so) | |
 
 ## Wireframes
 
