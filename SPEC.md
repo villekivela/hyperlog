@@ -545,8 +545,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - A weighted bodyweight exercise's estimate counts the bodyweight (below), and reads
        "Estimate with bodyweight"; its top sets read as logged and stay off the chart.
    - **Weekly sets per muscle**: weeks run Monday to Sunday; finished sessions count. Every
-     logged work set counts once for each primary muscle of its exercise (Volume, above);
-     secondary muscles don't count.
+     logged work set counts 1 for each primary muscle of its exercise and 0.5 for each secondary
+     muscle (Volume, above: drops, myo mini-sets and partials still add no sets). Halves read
+     `7.5`, whole sets `7`.
 
 **Navigation**: a Material 3 navigation bar at the bottom holds the four destinations, Today,
 Program, Coach and History, in that order. Back on Program, Coach or History goes to Today. The bar

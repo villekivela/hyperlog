@@ -189,12 +189,14 @@ fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
 /**
  * A week's sets per muscle, one [SetsBar] each. The names' column fits the longest name and a gap (at least
  * 128 dp, on the 8 dp grid), so every bar starts from the same baseline; past half the width a
- * name wraps rather than being cut off.
+ * name wraps rather than being cut off. The values' column fits the widest value ("12.5"), so the
+ * longest bar ends at the same place whatever its value.
  */
 @Composable
-fun WeekSets(sets: Map<String, Int>) {
+fun WeekSets(sets: Map<String, Double>) {
     val most = sets.values.maxOrNull() ?: return
     val style = MaterialTheme.typography.bodyMedium
+    val valueStyle = MaterialTheme.typography.labelLarge.merge(Tnum)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -202,13 +204,28 @@ fun WeekSets(sets: Map<String, Int>) {
         // 8 dp between the longest name and its bar.
         val fit = with(density) { longest.toDp() } + 8.dp
         val column = (ceil(fit.value / 8f) * 8f).dp.coerceIn(128.dp, (maxWidth - Margin * 2) / 2)
-        Column { sets.forEach { (muscle, count) -> SetsBar(muscle, count, most, labelWidth = column) } }
+        val widest = sets.values.maxOf { measurer.measure(formatSets(it), valueStyle, maxLines = 1).size.width }
+        val values = with(density) { widest.toDp() }
+        Column { sets.forEach { (muscle, count) -> SetsBar(muscle, count, most, labelWidth = column, valueWidth = values) } }
     }
+}
+
+/** Sets as counted: whole sets plain ("7"), a half with its decimal ("7.5"). */
+fun formatSets(sets: Double): String {
+    val halves = Math.round(sets * 2)
+    return if (halves % 2 == 0L) "${halves / 2}" else "${halves / 2}.5"
 }
 
 /** One muscle's sets as an 8 dp bar from a shared baseline, its value after the tip. */
 @Composable
-fun SetsBar(muscle: String, sets: Int, most: Int, modifier: Modifier = Modifier, labelWidth: Dp = 128.dp) {
+fun SetsBar(
+    muscle: String,
+    sets: Double,
+    most: Double,
+    modifier: Modifier = Modifier,
+    labelWidth: Dp = 128.dp,
+    valueWidth: Dp = 24.dp,
+) {
     val cs = MaterialTheme.colorScheme
     Row(
         modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = Margin),
@@ -216,15 +233,21 @@ fun SetsBar(muscle: String, sets: Int, most: Int, modifier: Modifier = Modifier,
     ) {
         Text(muscle, Modifier.width(labelWidth), style = MaterialTheme.typography.bodyMedium)
         BoxWithConstraints(Modifier.weight(1f)) {
-            // Leave room after the longest bar for its value.
-            val full = maxWidth - 32.dp
+            // Leave room after the longest bar for the gap and the widest value.
+            val full = (maxWidth - 8.dp - valueWidth).coerceAtLeast(0.dp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    Modifier.width(full * (sets.toFloat() / most.coerceAtLeast(1))).height(8.dp)
+                    Modifier.width(full * (sets / most.coerceAtLeast(1.0)).toFloat()).height(8.dp)
                         .background(cs.primary, RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)),
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("$sets", style = MaterialTheme.typography.labelLarge.merge(Tnum), color = cs.onSurfaceVariant)
+                Text(
+                    formatSets(sets),
+                    style = MaterialTheme.typography.labelLarge.merge(Tnum),
+                    color = cs.onSurfaceVariant,
+                    maxLines = 1,
+                    softWrap = false,
+                )
             }
         }
     }
