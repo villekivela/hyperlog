@@ -1,14 +1,12 @@
 name: Release
 
 # Pushing a tag vX.Y.Z builds the signed release APK and publishes it as a GitHub release on that
-# tag, which the in-app update check reads (SPEC, Distribution). A manual run does everything but
-# publish, and uploads the signed APK as a workflow artifact instead.
+# tag, which the in-app update check reads (SPEC, Distribution). A manual run (any ref that isn't a
+# tag) does everything but publish, and uploads the signed APK as a workflow artifact instead.
 on:
   push:
     tags:
       - "v*"
-    branches:
-      - ticket/22-release
   workflow_dispatch:
     inputs:
       version:
