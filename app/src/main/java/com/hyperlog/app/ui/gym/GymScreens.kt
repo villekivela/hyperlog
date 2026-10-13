@@ -185,6 +185,15 @@ fun GymScreen(
                 },
             )
         },
+        // The screen's one primary action, reachable however long the list (SPEC, Gyms and equipment).
+        floatingActionButton = {
+            // The content-slot form: always expanded, so its label is there from the first frame.
+            androidx.compose.material3.ExtendedFloatingActionButton(onClick = onAddItem) {
+                SymbolIcon(Symbol.Add, null)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(R.string.gym_add_item))
+            }
+        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             if (programSetup != null && !programSetup.isEmpty && programTitle != null) {
@@ -196,11 +205,9 @@ fun GymScreen(
                 val ladder = item.ladder.summary(gym.pinPlates)
                 if (item.cableStation) stringResource(R.string.gym_cable_station, ladder) else ladder
             }
-            val addItem = stringResource(R.string.gym_add_item)
             if (programSetup == null || programSetup.isEmpty || programTitle == null) Spacer(Modifier.height(8.dp))
             SegmentedList {
                 gym.items.forEachIndexed { i, item -> row(item.name, ladders[i], Symbol.FitnessCenter, onClick = { onOpenItem(item.id) }, trailing = chevron) }
-                addRow(addItem, Symbol.Add, onAddItem)
             }
 
             SectionLabel(stringResource(R.string.gym_pin_plates))
@@ -253,7 +260,8 @@ fun GymScreen(
                     modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            // Clears the extended FAB, so the last row can scroll out from under it.
+            Spacer(Modifier.height(96.dp))
         }
     }
     if (pinning) {

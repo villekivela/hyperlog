@@ -275,7 +275,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
   25 and 5 kg steps) with the new one; a restored backup from before gets the same step.
 - **Barbell plates are shared**: one global set, which the EZ, trap and safety bars load too: each has its own bar weight (10, 25 and 30 kg until set)
   and loads the shared plates.
-- **Setup both ways**: a gym screen to list equipment up front, and adding on the go. The first
+- **Setup both ways**: a gym screen to list equipment up front (its **Add equipment** an extended
+  FAB, in reach however long the list), and adding on the go. The first
   time an exercise is done at a gym without a known machine, the app asks "which machine?" (pick or
   add) and its ladder, then remembers it.
 - **Gym is picked at session start**, defaulting to the gym you usually train at on that weekday

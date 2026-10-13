@@ -12,7 +12,8 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
    reads in kg everywhere.
 2. **A grouped list.** Gyms, then their equipment, one tile each (`SegmentedList`): a symbol in a
    tonal circle, the name, then the ladder in one line in tabular figures. Add rows sit at the
-   end of their group in `primary`. A gym opens on **Add the equipment your program uses** (a
+   end of their group in `primary`, except a gym's **Add equipment**: an extended FAB, so it is
+   in reach however long the gym's list grows. A gym opens on **Add the equipment your program uses** (a
    `primaryContainer` card) while the program needs machines there, then its equipment, **Free
    weights here** (dumbbells, plates for the pin), bars and racks, usual days and **Not here**.
 3. **Shared is visibly shared.** Dumbbells and barbell plates sit on their own card under "Shared by
@@ -43,7 +44,7 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
  ←  Gyms and equipment          ←  Central            ✎ 🗑      ✕  Cable station       🗑  Save
       Central                 >        Cable station        >    [ Name                        ]
       1 equipment item                1.1 · 3.4 … 89.6 kg       [ Stack | List | Plates ]
-  +   Add gym                     +   Add equipment             ( lb stack: 2.5, then 5 lb steps )
+  +   Add gym                   (+ Add equipment) FAB         ( lb stack: 2.5, then 5 lb steps )
  ─────────────────────────                                      [  kg  |  lb  ]
       Shared by every gym                                       [Start] [Step] [Weights]
       Dumbbells              >                                  Real weights
@@ -60,7 +61,7 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 ## States
 
 - Gyms: no gyms (only Add gym and the shared ladders); gyms with item counts.
-- Gym: empty (Add equipment only); items with previews. Rename and delete in the top bar; delete
+- Gym: empty (the Add equipment FAB only); items with previews. Rename and delete in the top bar; delete
   asks first and says the equipment goes with it.
 - Ladder editor: new (Save disabled, preview "Fill in the fields…"), stack in kg or lb, list,
   plates, existing item (delete asks first). Dumbbells offer List and Stack; plates offer Plates

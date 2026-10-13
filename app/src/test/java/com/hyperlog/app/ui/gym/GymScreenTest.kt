@@ -5,6 +5,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -63,6 +64,55 @@ class GymScreenTest {
         assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), days)
         compose.onNodeWithContentDescription("Monday").performClick()
         assertEquals(emptySet<DayOfWeek>(), days)
+    }
+
+    @Test
+    fun addEquipmentIsReachableWithoutScrollingOnAGymWithManyItems() {
+        var added = 0
+        val items = (1..30).map { com.hyperlog.app.gym.EquipmentItem(it.toLong(), 1, "Machine $it", LadderSpec.DefaultPinStack) }
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(
+                    Gym(1, "Central", items),
+                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = { added++ }, onBack = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Add equipment").assertIsDisplayed().performClick()
+        assertEquals(1, added)
+    }
+
+    @Test
+    fun theGymsListKeepsItsAddImportAndSharedPlatesActions() {
+        var plates = 0
+        compose.setContent {
+            HyperlogTheme {
+                GymsScreen(
+                    listOf(Gym(1, "Central", emptyList())), LadderSpec.DefaultPlates, bars = emptyMap(),
+                    onAddGym = {}, onOpenGym = {}, onPlates = { plates++ }, onBar = { _, _ -> }, onBack = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Add gym").assertHasClickAction()
+        compose.onNodeWithText("Import gym").assertHasClickAction()
+        compose.onNodeWithText("Barbell plates").performClick()
+        assertEquals(1, plates)
+    }
+
+    @Test
+    fun aGymKeepsItsDumbbellRow() {
+        var dumbbells = 0
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(
+                    Gym(1, "Central", emptyList()),
+                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onDumbbells = { dumbbells++ },
+                )
+            }
+        }
+        compose.onNodeWithText("Dumbbells").performClick()
+        assertEquals(1, dumbbells)
     }
 
     private val legExtension = com.hyperlog.app.library.Exercise(
