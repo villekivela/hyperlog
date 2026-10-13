@@ -336,6 +336,22 @@ class SessionLoggerTest {
     }
 
     @Test
+    fun aMachineNamedForTheExerciseIsTakenWithoutAsking() = runTest {
+        val gyms = Gyms(db)
+        val kallio = gyms.addGym("Kallio")
+        gyms.addItem(EquipmentItem(gymId = kallio, name = "Leg press", ladder = LadderSpec.Plates(40.0, listOf(20.0, 20.0))))
+        gyms.addItem(EquipmentItem(gymId = kallio, name = "Leg extension", ladder = LadderSpec.Steps(5.0, 5.0, WeightUnit.Kg, 20)))
+        val logger = logger()
+        logger.start(kallio)
+        logger.addExercise("leg_extension")
+        val current = logger.session.current!!
+        assertFalse(current.needsMachine)
+        assertEquals("Leg extension", current.machine!!.name)
+        // And it is remembered, as a picked one is.
+        assertEquals(current.machine!!.id, gyms.remembered(kallio, "leg_extension"))
+    }
+
+    @Test
     fun theFirstLegExtensionAtANewGymAsksWhichMachineAndTheNextTimeItDoesNot() = runTest {
         val kallio = Gyms(db).addGym("Kallio")
         val logger = logger()

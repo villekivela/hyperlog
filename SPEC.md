@@ -392,6 +392,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        weight has a slash.
      - A machine added for a plate-loaded exercise starts on plates: the gym's shared plates from
        a 0 kg start. Pairs are typed one number a pair or as a count (`3×20`).
+     - "Which machine?" is skipped when the gym has a machine named for the exercise: it is taken
+       and remembered. Otherwise it offers the machines of the exercise's kind first (plate-loaded
+       or not), those sharing a word with its name at the top, then the others.
      - A tap on the pad's plates opens the **whole bar**: the total, both sides with every plate,
        and each plate with how many go on each side, then the bar or the machine's starting
        weight.

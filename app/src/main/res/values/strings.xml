@@ -493,4 +493,5 @@
     <string name="update_dismiss">Dismiss</string>
     <string name="settings_check_updates">Check for updates</string>
     <string name="settings_check_updates_about">Once a day when Hyperlog opens</string>
+    <string name="machine_others">Other equipment at %1$s</string>
 </resources>

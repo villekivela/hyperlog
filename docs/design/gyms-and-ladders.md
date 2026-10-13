@@ -150,3 +150,10 @@ the field says how many of each plate there are.
 Expressive pass: every group (a gym's equipment, the shared ladders, the usual days, what the gym
 hasn't got) is a card on surfaceContainer; the ladder editor's kind and unit are connected button
 groups.
+
+"Which machine?" is asked once per exercise and gym, and less: a machine named for the exercise
+("Leg extension" for Leg Extension) is taken and remembered without asking. When it does ask, the
+machines of the exercise's kind come first (plate-loaded for a leg press, stacks otherwise), those
+sharing a word with its name at the top; the gym's others follow, muted, under "Other equipment at
+<gym>".
+

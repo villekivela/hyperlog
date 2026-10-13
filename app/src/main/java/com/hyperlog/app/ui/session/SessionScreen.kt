@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.domain.LadderSpec
 import androidx.compose.foundation.lazy.itemsIndexed
 import com.hyperlog.app.ui.theme.Tones
@@ -241,7 +242,7 @@ fun SessionScreen(
                     if (current.needsMachine) {
                         MachinePicker(
                             session.gym?.name.orEmpty(),
-                            session.gym?.items.orEmpty().filter { !it.archived },
+                            machineChoices(current.exercise, session.gym?.items.orEmpty()),
                             onPick = actions::chooseMachine,
                             onAdd = { addingMachine = true },
                             onNotHere = actions::notAtGym,
@@ -1160,7 +1161,8 @@ internal fun SessionList(
 @Composable
 private fun MachinePicker(
     gym: String,
-    items: List<EquipmentItem>,
+    /** The machines of the exercise's kind first, then the gym's others ([machineChoices]). */
+    choices: Pair<List<EquipmentItem>, List<EquipmentItem>>,
     onPick: (Long) -> Unit,
     onAdd: () -> Unit,
     /** The gym has no equipment for it: remember that, and swap the exercise. */
@@ -1180,25 +1182,13 @@ private fun MachinePicker(
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,
         )
-        // The gym's machines as one group of rows, the ways out under it.
+        // The machines that fit as one group of rows, the gym's others under their own head, then the ways out.
         Spacer(Modifier.height(8.dp))
-        items.forEachIndexed { i, item ->
-            com.hyperlog.app.ui.theme.Segment(i, items.size, onClick = { onPick(item.id) }) {
-            Column(
-                Modifier.fillMaxWidth().heightIn(min = 72.dp)
-                    .padding(horizontal = Margin - com.hyperlog.app.ui.theme.CardMargin, vertical = 12.dp),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
-                    item.ladder.ladder().preview(),
-                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
-                    color = cs.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            }
+        val (fit, others) = choices
+        fit.forEachIndexed { i, item -> MachineRow(item, i, fit.size, muted = false, onPick) }
+        if (others.isNotEmpty()) {
+            com.hyperlog.app.ui.theme.GroupHead(stringResource(R.string.machine_others, gym), color = cs.onSurfaceVariant)
+            others.forEachIndexed { i, item -> MachineRow(item, i, others.size, muted = true, onPick) }
         }
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = onAdd, Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
@@ -1212,6 +1202,28 @@ private fun MachinePicker(
             Text(stringResource(R.string.machine_not_here, gym))
         }
     }
+}
+
+/** One of the gym's machines with the weights it gives; another kind's in a muted name. */
+@Composable
+private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, onPick: (Long) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+            com.hyperlog.app.ui.theme.Segment(i, count, onClick = { onPick(item.id) }) {
+            Column(
+                Modifier.fillMaxWidth().heightIn(min = 72.dp)
+                    .padding(horizontal = Margin - com.hyperlog.app.ui.theme.CardMargin, vertical = 12.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    item.ladder.ladder().preview(),
+                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                    color = cs.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            }
 }
 
 /** The library's exercises, hidden ones left out, with a search field on top. */

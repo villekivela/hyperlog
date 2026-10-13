@@ -139,12 +139,16 @@ class SessionLogger(
         reload()
     }
 
-    /** A machine done at [gymId] before is on the same machine again; otherwise the screen asks. */
+    /**
+     * A machine done at [gymId] before is on the same machine again; one named for the exercise
+     * is taken (and remembered) without asking; otherwise the screen asks.
+     */
     private suspend fun rememberMachine(sessionExerciseId: Long, gymId: Long?, exerciseId: String) {
-        val equipment = db.exercises().get(exerciseId)?.toExercise()?.equipment
-        if (gymId != null && equipment?.perMachine == true) {
-            gyms.remembered(gymId, exerciseId)?.let { dao.setEquipmentItem(sessionExerciseId, it) }
-        }
+        val exercise = db.exercises().get(exerciseId)?.toExercise() ?: return
+        if (gymId == null || !exercise.equipment.perMachine) return
+        val remembered = gyms.remembered(gymId, exerciseId)
+            ?: gyms.gym(gymId)?.items?.let { namedFor(exercise, it) }?.id?.also { gyms.remember(gymId, exerciseId, it) }
+        remembered?.let { dao.setEquipmentItem(sessionExerciseId, it) }
     }
 
     /** Adds [exerciseId] after the others and makes it the one on screen. */
