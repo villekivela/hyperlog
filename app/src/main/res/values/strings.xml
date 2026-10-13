@@ -155,6 +155,8 @@
     <string name="editor_pattern">Movement pattern</string>
     <string name="editor_pattern_pick">Pick a pattern</string>
     <string name="editor_grip">Grip demand</string>
+    <string name="editor_two_dumbbells">Two dumbbells</string>
+    <string name="editor_two_dumbbells_body">One in each hand: the estimate counts both, as logged per dumbbell</string>
     <string name="editor_muscles">Primary muscles</string>
     <string name="editor_secondary">Secondary muscles</string>
     <string name="editor_add_muscle">Add</string>

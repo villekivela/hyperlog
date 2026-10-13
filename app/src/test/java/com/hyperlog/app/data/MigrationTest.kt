@@ -350,4 +350,26 @@ class MigrationTest {
         assertEquals(mapOf(1L to "Cable left · Kamppi"), Gyms(db).machineNames())
         db.close()
     }
+
+    @Test
+    fun version15MarksTheShippedTwoDumbbellExercisesEditedOrNot() = runTest {
+        val file = context.getDatabasePath("migration-test-15.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(15, file) { db ->
+            db.execSQL(
+                "INSERT INTO exercise (id, name, equipment, movement_pattern, grip, muscles, secondary_muscles, hidden, edited) VALUES " +
+                    "('db_bench_press', 'DB Bench Press', 'Dumbbell', 'HorizontalPush', 'High', 'Chest', '', 0, 1), " +
+                    "('goblet_squat', 'Goblet Squat', 'Dumbbell', 'Squat', 'Low', 'Quads', '', 0, 0)",
+            )
+        }
+
+        // Room checks the migrated tables against the v16 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val byId = db.exercises().all().associateBy { it.id }
+        assertEquals(true, byId.getValue("db_bench_press").twoDumbbells)
+        assertEquals(false, byId.getValue("goblet_squat").twoDumbbells)
+        db.close()
+    }
 }

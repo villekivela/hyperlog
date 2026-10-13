@@ -47,6 +47,18 @@ class LibrarySeedTest {
     }
 
     @Test
+    fun dumbbellExercisesSayWhetherTheyUseTwo() {
+        val two = seed.exercises.filter { it.twoDumbbells }.map { it.id }.toSet()
+        assertTrue("db_bench_press" in two)
+        assertTrue("db_lateral_raise" in two)
+        assertTrue("seated_db_shoulder_press" in two)
+        // One dumbbell: held in both hands, or one arm at a time.
+        listOf("goblet_squat", "single_arm_db_row", "overhead_db_triceps_extension").forEach { assertTrue(it, it !in two) }
+        // Only dumbbell exercises use two.
+        seed.exercises.filter { it.twoDumbbells }.forEach { assertEquals(it.id, com.hyperlog.app.library.Equipment.Dumbbell, it.equipment) }
+    }
+
+    @Test
     fun holdsEveryExerciseTheStarterProgramNames() {
         val program = listOf(
             "barbell_bench_press", "close_grip_bench_press", "smith_machine_bench_press", "hack_squat", "leg_press",

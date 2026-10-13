@@ -136,6 +136,7 @@
    "equipment": "dumbbell",
    "pattern": "vertical_push",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Front Delts",
     "Side Delts"
@@ -347,6 +348,7 @@
    "equipment": "dumbbell",
    "pattern": "rear_delt_fly",
    "grip": "low",
+   "twoDumbbells": true,
    "muscles": [
     "Rear Delts"
    ],
@@ -583,6 +585,7 @@
    "equipment": "dumbbell",
    "pattern": "horizontal_pull",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Lats",
     "Traps",
@@ -772,6 +775,7 @@
    "equipment": "dumbbell",
    "pattern": "horizontal_push",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Chest"
    ],
@@ -789,6 +793,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps"
    ],
@@ -805,6 +810,7 @@
    "equipment": "dumbbell",
    "pattern": "lunge",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Quads",
     "Glutes"
@@ -822,6 +828,7 @@
    "equipment": "dumbbell",
    "pattern": "chest_fly",
    "grip": "low",
+   "twoDumbbells": true,
    "muscles": [
     "Chest"
    ],
@@ -855,6 +862,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps",
     "Brachialis"
@@ -871,6 +879,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps"
    ],
@@ -884,6 +893,7 @@
    "equipment": "dumbbell",
    "pattern": "horizontal_push",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Chest"
    ],
@@ -901,6 +911,7 @@
    "equipment": "dumbbell",
    "pattern": "lateral_raise",
    "grip": "low",
+   "twoDumbbells": true,
    "muscles": [
     "Side Delts"
    ],
@@ -917,6 +928,7 @@
    "equipment": "dumbbell",
    "pattern": "lunge",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Quads",
     "Glutes"
@@ -949,6 +961,7 @@
    "equipment": "dumbbell",
    "pattern": "hinge",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Hamstrings"
    ],
@@ -967,6 +980,7 @@
    "equipment": "dumbbell",
    "pattern": "lunge",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Quads",
     "Glutes"
@@ -998,6 +1012,7 @@
    "equipment": "dumbbell",
    "pattern": "lunge",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Quads",
     "Glutes"
@@ -1015,6 +1030,7 @@
    "equipment": "dumbbell",
    "pattern": "wrist",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Forearm Flexors",
     "Forearm Extensors"
@@ -1029,6 +1045,7 @@
    "equipment": "dumbbell",
    "pattern": "wrist",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Forearm Flexors",
     "Forearm Extensors"
@@ -1141,6 +1158,7 @@
    "equipment": "dumbbell",
    "pattern": "vertical_push",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Front Delts"
    ],
@@ -1300,6 +1318,7 @@
    "equipment": "dumbbell",
    "pattern": "horizontal_pull",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Lats"
    ],
@@ -1330,6 +1349,7 @@
    "equipment": "dumbbell",
    "pattern": "horizontal_pull",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Lats",
     "Traps",
@@ -1365,6 +1385,7 @@
    "equipment": "dumbbell",
    "pattern": "shrug",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Traps"
    ],
@@ -1380,6 +1401,7 @@
    "equipment": "dumbbell",
    "pattern": "lateral_raise",
    "grip": "low",
+   "twoDumbbells": true,
    "muscles": [
     "Side Delts",
     "Rhomboids"
@@ -1413,6 +1435,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps"
    ],
@@ -1585,6 +1608,7 @@
    "equipment": "dumbbell",
    "pattern": "rear_delt_fly",
    "grip": "low",
+   "twoDumbbells": true,
    "muscles": [
     "Rear Delts"
    ],
@@ -1806,6 +1830,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps"
    ],
@@ -1994,6 +2019,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps",
     "Brachialis"
@@ -2197,6 +2223,7 @@
    "equipment": "dumbbell",
    "pattern": "vertical_push",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Front Delts"
    ],
@@ -2441,6 +2468,7 @@
    "equipment": "dumbbell",
    "pattern": "elbow_flexion",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Biceps"
    ],
@@ -2513,6 +2541,7 @@
    "equipment": "dumbbell",
    "pattern": "vertical_push",
    "grip": "high",
+   "twoDumbbells": true,
    "muscles": [
     "Front Delts",
     "Side Delts"

@@ -738,7 +738,7 @@ class SessionLogger(
             val plan = se.sets?.let(PlannedSetJson::decode) ?: slot?.setsFor(se.exerciseId)
             // A planned exercise's last time is the session progression judges (same slot and rep
             // range), so the Last column, the prefill and the why-line name the same sets.
-            val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted)
+            val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted, exercise.implements)
             val judged = plan?.firstOrNull()?.let { Progression.judged(it, past.map { p -> p.second }, se.slotId) }
             // Machines and cables only compare with sets on the same machine (ADR 0002).
             val lastTime = when {
@@ -763,6 +763,7 @@ class SessionLogger(
                         deload = day?.deload == true,
                         bodyweightKg = if (exercise.weighted) bodyweights.latest() ?: 0.0 else 0.0,
                         slot = se.slotId,
+                        dumbbells = exercise.implements,
                     ),
                     past.map { it.second },
                     ladder.ladder,
@@ -867,7 +868,7 @@ class SessionLogger(
      * prescription it was done under, whether its week was a deload and, for a [weighted]
      * bodyweight exercise, the bodyweight of the day.
      */
-    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean): List<Pair<Long, Performance>> =
+    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean, dumbbells: Int): List<Pair<Long, Performance>> =
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
             else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
@@ -877,6 +878,7 @@ class SessionLogger(
                 deload = day?.deload == true,
                 bodyweightKg = if (weighted) bodyweights.on(programs.dateOf(past.startedAt)) ?: 0.0 else 0.0,
                 slot = past.slotId,
+                dumbbells = dumbbells,
             )
         }
 

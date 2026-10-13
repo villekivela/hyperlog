@@ -47,6 +47,8 @@ Screenshots are in `screens/library-*.png`.
  [ Name: Pec Deck                    ]
  Equipment
  (Barbell)(Dumbbell)(✓ Machine)(Cable)…       ← filter chips, the selected one checked
+ Two dumbbells                          (●)   ← a switch row, dumbbell exercises only
+ One in each hand: the estimate counts both…
  Movement pattern
  [ Chest fly                       ▾ ]       ← a field-wide menu of the 24 patterns, current one checked
  Grip demand

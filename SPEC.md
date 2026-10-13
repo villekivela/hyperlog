@@ -536,8 +536,8 @@ from a backup, starting weights from the old app.
     its suggestion and last time are worked out again, with the set to do's prefill if untouched.
 - **English only.**
 - **Exercise library** is editable on the phone (Settings → Exercise library): browse and search,
-  add, edit (name, equipment type, movement pattern, grip demand, primary and secondary muscles,
-  video link, note) and hide. Design: `docs/design/exercise-library.md`.
+  add, edit (name, equipment type, two dumbbells, movement pattern, grip demand, primary and
+  secondary muscles, video link, note) and hide. Design: `docs/design/exercise-library.md`.
   - **Names carry the implement** ("DB Bench Press", "Smith Machine Squat"), so a name alone tells
     exercises apart wherever it shows.
   - **Grip demand**: high when the hands hold the load (free-weight presses, curls, rows, pulls and
@@ -595,6 +595,13 @@ from a backup, starting weights from the old app.
     load on the belt, on its ladder. With no bodyweight logged the load alone is used.
 - **Dumbbells are logged per dumbbell** (the number printed on it). Volume and e1RM count both
   dumbbells for two-dumbbell exercises.
+  - The library marks a dumbbell exercise done with one in each hand as **two dumbbells** (the
+    shipped ones: presses, rows, curls, raises, flyes, lunges, RDLs and shrugs with two; a goblet
+    squat, a 1-arm row, an overhead triceps extension, a French press, a preacher curl and a
+    kickback hold one). The editor shows it as a switch for dumbbell exercises.
+  - The estimate (History, goals) counts both: 30 kg dumbbells × 8 @ 1 is 60 kg × 8 @ 1. Weights,
+    suggestions and why-lines stay per dumbbell, as logged, and come out the same since the
+    estimate scales with the load. Volume is counted in sets, so it doesn't change.
 - **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
   - A backup holds everything the app stores: programs and their Changes, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines

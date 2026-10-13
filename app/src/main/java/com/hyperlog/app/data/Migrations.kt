@@ -4,7 +4,30 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16)
+
+/**
+ * v16: two-dumbbell exercises (code review), whose estimate counts both dumbbells. The shipped ones
+ * are marked here too, so an exercise edited on the phone (which the seed no longer updates) gets
+ * the mark it never had a say in.
+ */
+object Migration15To16 : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE exercise ADD COLUMN two_dumbbells INTEGER NOT NULL DEFAULT 0")
+        val ids = TwoDumbbells.joinToString(",") { "'$it'" }
+        db.execSQL("UPDATE exercise SET two_dumbbells = 1 WHERE equipment = 'Dumbbell' AND id IN ($ids)")
+    }
+
+    /** The shipped library's two-dumbbell exercises when v16 came. */
+    private val TwoDumbbells = listOf(
+        "arnold_press_seated", "bent_over_reverse_db_flye", "chest_supported_db_row", "db_bench_press", "db_bicep_curl",
+        "db_bulgarian_split_squat", "db_flye", "db_hammer_curl", "db_incline_curl", "db_incline_press", "db_lateral_raise",
+        "db_lunge", "db_romanian_deadlift", "db_step_up", "db_walking_lunge", "db_wrist_curl", "db_wrist_extension",
+        "dumbbell_shoulder_press_standing", "helms_db_row", "incline_chest_supported_db_row", "incline_db_kelso_shrug",
+        "incline_db_y_raise", "inverse_zottman_curl", "lying_reverse_db_flye", "modified_zottman_curl",
+        "preacher_hammer_curl", "seated_db_shoulder_press", "spider_curl", "standing_db_arnold_press",
+    )
+}
 
 /**
  * v15: deleting a gym or machine that has history archives it (code review), so its sessions keep

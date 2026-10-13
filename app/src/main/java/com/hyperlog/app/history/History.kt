@@ -112,15 +112,16 @@ class History(
         val groups = if (perMachine) done.groupBy { it.equipmentItemId } else mapOf(null to done)
         val lines = groups.entries
             .sortedByDescending { (_, rows) -> rows.last().startedAt }
-            .map { (itemId, rows) -> TrendLine(itemId?.let { machines[it] }, itemId, points(rows, weighted = exercise.equipment == Equipment.WeightedBodyweight)) }
+            .map { (itemId, rows) -> TrendLine(itemId?.let { machines[it] }, itemId, points(rows, weighted = exercise.equipment == Equipment.WeightedBodyweight, dumbbells = exercise.implements)) }
         return ExerciseTrend(exercise, lines, goal = liftGoals.of(exerciseId)?.takeIf { exercise.takesGoal })
     }
 
     /**
      * Each session's top set and the estimate after it, from [rows] oldest first. A [weighted]
-     * bodyweight exercise adds the bodyweight of the day to the weight logged.
+     * bodyweight exercise adds the bodyweight of the day to the weight logged; a two-dumbbell one
+     * counts both [dumbbells].
      */
-    private suspend fun points(rows: List<TrainedExercise>, weighted: Boolean): List<TrendPoint> {
+    private suspend fun points(rows: List<TrainedExercise>, weighted: Boolean, dumbbells: Int): List<TrendPoint> {
         val performances = mutableListOf<Performance>()
         return rows.mapNotNull { row ->
             val sets = dao.sets(row.id).map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
@@ -130,6 +131,7 @@ class History(
                 sets.mapIndexed { i, s -> WorkSet(LoggedSet(s.weightKg, s.progressionReps, 0, s.rir, s.kept), null, counting[i]) },
                 deload = deload(row),
                 bodyweightKg = if (weighted) bodyweights.on(dateOf(row.startedAt)) ?: 0.0 else 0.0,
+                dumbbells = dumbbells,
             )
             val top = sets.filterIndexed { i, _ -> counting[i] }
                 .maxWithOrNull(compareBy<LoggedSet> { it.weightKg }.thenBy { it.progressionReps })

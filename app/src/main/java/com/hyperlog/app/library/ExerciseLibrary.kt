@@ -64,6 +64,7 @@ fun ExerciseEntity.toExercise() = Exercise(
     video = videoUrl,
     note = note,
     hidden = hidden,
+    twoDumbbells = twoDumbbells,
 )
 
 private fun Exercise.toEntity(hidden: Boolean = this.hidden, edited: Boolean = false) = ExerciseEntity(
@@ -78,4 +79,5 @@ private fun Exercise.toEntity(hidden: Boolean = this.hidden, edited: Boolean = f
     note = note?.trim()?.ifEmpty { null },
     hidden = hidden,
     edited = edited,
+    twoDumbbells = twoDumbbells && equipment == Equipment.Dumbbell,
 )

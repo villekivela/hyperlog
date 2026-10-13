@@ -25,6 +25,8 @@ data class ExerciseEntity(
     @ColumnInfo(defaultValue = "0") val hidden: Boolean = false,
     /** Changed on the phone, so a newer seed no longer overwrites it. */
     @ColumnInfo(defaultValue = "0") val edited: Boolean = false,
+    /** Done with a dumbbell in each hand, so its estimate counts both. */
+    @ColumnInfo(name = "two_dumbbells", defaultValue = "0") val twoDumbbells: Boolean = false,
 )
 
 /** A session. One with no [finishedAt] is running; there is at most one. */

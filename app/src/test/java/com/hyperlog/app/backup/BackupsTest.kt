@@ -176,7 +176,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(15), file["database"])
+        assertEquals(JsonPrimitive(16), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -211,7 +211,7 @@ class BackupsTest {
     @Test
     fun aBackupFromANewerHyperlogChangesNothing() = runTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
-        assertRefused(Backups.Reason.Newer, JsonObject(file + ("database" to JsonPrimitive(16))).toString())
+        assertRefused(Backups.Reason.Newer, JsonObject(file + ("database" to JsonPrimitive(BackupFormat.DATABASE + 1))).toString())
         assertRefused(Backups.Reason.Newer, JsonObject(file + ("version" to JsonPrimitive(2))).toString())
     }
 

@@ -137,6 +137,16 @@ class HistoryTest {
     }
 
     @Test
+    fun aTwoDumbbellEstimateCountsBothDumbbells() = runTest {
+        // Logged per dumbbell: 30 kg each is 60 kg lifted, so 60 × (1 + 9/30) = 78.
+        session(LocalDate.of(2026, 10, 5), "db_bench_press" to listOf(Logged(30.0, 8, 1)), "goblet_squat" to listOf(Logged(30.0, 8, 1)))
+        assertEquals(78.0, history().trend("db_bench_press").lines.single().points.single().estimateKg!!, 0.001)
+        assertEquals("30 × 8 @ 1", history().trend("db_bench_press").lines.single().points.single().top.summary())
+        // A goblet squat holds one.
+        assertEquals(39.0, history().trend("goblet_squat").lines.single().points.single().estimateKg!!, 0.001)
+    }
+
+    @Test
     fun aWeightedBodyweightEstimateAddsTheBodyweightOfTheDay() = runTest {
         Bodyweights(db).log(LocalDate.of(2026, 9, 30), 80.0)
         Bodyweights(db).log(LocalDate.of(2026, 10, 4), 79.0)

@@ -16,7 +16,15 @@ data class Exercise(
     val note: String? = null,
     /** Hidden exercises stay in past sessions but aren't offered when adding one. */
     val hidden: Boolean = false,
+    /**
+     * Done with a dumbbell in each hand. Dumbbells are logged per dumbbell, so the estimate counts
+     * the weight twice (SPEC, Dumbbells); false for anything held as one.
+     */
+    val twoDumbbells: Boolean = false,
 ) {
+    /** How many of the logged weight are lifted: 2 for [twoDumbbells], else 1. */
+    val implements: Int get() = if (twoDumbbells && equipment == Equipment.Dumbbell) 2 else 1
+
 
     /**
      * Done one side at a time (SPEC, Unilateral exercises), so a set can be split into left and

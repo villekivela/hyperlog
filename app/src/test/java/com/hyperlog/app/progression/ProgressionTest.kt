@@ -43,6 +43,23 @@ class ProgressionTest {
     ) = Progression.suggest(plan, Performance(today.mapIndexed { i, s -> WorkSet(s, plan.getOrNull(i)) }, deload), history.toList(), ladder)
 
     @Test
+    fun twoDumbbellsDoubleTheEstimateButNotTheSuggestion() {
+        val dumbbells = LadderSpec.DefaultDumbbells.ladder()
+        val plan = planned("8-10", 2, count = 2)
+        val one = Performance(listOf(WorkSet(set(20.0, 9, 2), plan[0]), WorkSet(set(20.0, 8, 2), plan[1])))
+        val two = one.copy(dumbbells = 2)
+        // 20 kg each × (1 + 11/30) is 27.3 kg for one; both count, 54.7 kg.
+        assertEquals(2 * Progression.estimate(listOf(one))!!.kg, Progression.estimate(listOf(two))!!.kg, 0.001)
+        // Suggestions stay in the weight of one dumbbell, as logged.
+        assertEquals(next(plan, dumbbells, one), next(plan, dumbbells, two))
+        val newRange = planned("4-6", 1)
+        assertEquals(
+            Progression.suggest(newRange, Performance(emptyList()), listOf(one), dumbbells),
+            Progression.suggest(newRange, Performance(emptyList(), dumbbells = 2), listOf(two), dumbbells),
+        )
+    }
+
+    @Test
     fun everySetAtTheTopOfTheRangeAtTheTargetRirMovesUpOneRungAndSaysWhy() {
         val plan = planned("8-10", 2, count = 2)
         val s = next(plan, machine, session(plan, set(41.5, 10, 2), set(41.5, 10, 2)))!!
