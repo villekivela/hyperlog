@@ -274,7 +274,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
   keeping one edited by hand and replacing the untouched old default (2 kg steps to 20, then 22.5,
   25 and 5 kg steps) with the new one; a restored backup from before gets the same step.
 - **Each gym has its own plates**, counted as pairs per size (Gyms and equipment → the gym →
-  Dumbbells and plates → Plates, `8×20 · 2×15 · 2×10 · 2×5 · 2×2.5 · 2×1.25`), set a pair at a
+  Dumbbells and plates → Plates, `8×20 2×15 2×10 2×5 2×2.5 2×1.25`), set a pair at a
   time with − and + per size (25, 20, 15, 10, 5, 2.5, 1.25 and 0.5 kg, plus any other size the
   gym has). The gym's barbell, its EZ, trap and safety bars (each its own bar weight: 20, 10, 25
   and 30 kg until set, shared by every gym unless a gym file names its own) and its plate-loaded

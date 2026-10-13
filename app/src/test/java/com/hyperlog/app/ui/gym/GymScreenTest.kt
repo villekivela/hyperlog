@@ -149,7 +149,7 @@ class GymScreenTest {
                 )
             }
         }
-        compose.onNodeWithText("8×20 · 2×15 · 2×10 · 2×5 · 2×2.5 · 2×1.25").performClick()
+        compose.onNodeWithText("8×20 2×15 2×10 2×5 2×2.5 2×1.25").performClick()
         compose.onNodeWithContentDescription("One more pair of 25 kg").performClick()
         compose.onNodeWithContentDescription("One more pair of 25 kg").performClick()
         compose.onNodeWithContentDescription("One pair fewer of 1.25 kg").performClick()

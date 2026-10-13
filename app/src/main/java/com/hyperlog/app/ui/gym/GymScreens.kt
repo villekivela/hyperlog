@@ -491,9 +491,9 @@ private fun chevron(): @Composable () -> Unit {
 private fun com.hyperlog.app.ui.theme.SegmentedListScope.addRow(title: String, symbol: Symbol, onClick: () -> Unit) =
     item(onClick) { com.hyperlog.app.ui.theme.SegmentedRow(title, symbol = symbol, titleColor = MaterialTheme.colorScheme.primary) }
 
-/** `8×20 · 2×15 · 2×10`: the gym's plates as pairs per size, heaviest first. */
+/** `8×20 2×15 2×10`: the gym's plates as pairs per size, heaviest first. */
 internal fun platesLine(pairs: List<Double>): String =
-    pairs.groupingBy { it }.eachCount().toList().sortedByDescending { it.first }.joinToString(" · ") { (kg, n) -> "$n×${formatKg(kg)}" }
+    pairs.groupingBy { it }.eachCount().toList().sortedByDescending { it.first }.joinToString(" ") { (kg, n) -> "$n×${formatKg(kg)}" }
 
 /** The sizes the plates dialog always offers, besides any other size the gym has. */
 private val PlateSizes = listOf(25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25, 0.5)
