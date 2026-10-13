@@ -163,7 +163,8 @@ work. You can override the suggestion on the spot; the override is logged, not h
   the set and don't add sets.
 
 Research behind these rules: `docs/research/progression-and-partials.md`.
-- **Every suggestion says why**, e.g. "last time 50 kg × 12, 12, 11 @ 2 RIR, top of 8–12 → 52.5 kg".
+- **Every suggestion says why**, e.g. "Last time 50 kg × 12, 12, 12 @ 2, top of 8–12 → 52.5 kg"
+  (every set reached the top at the target RIR; 12, 12, 11 @ 2 would keep 50 kg for 12 reps).
   - The why-line sits under the exercise name for the active set, one muted line led by a
     direction symbol (up, flat, down). An estimated weight, or progress that isn't possible, reads
     in the tertiary colour. A set that just follows the one before has no line.
@@ -355,8 +356,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      visible before the set, and a compact in-app pad drawn like the system number keyboard.
    - **Rest rules**: no rest before drops, between myo mini-sets (a short breathing countdown
      instead) or between superset partners; full rest after the set or superset round.
-   - **Rest on the lock screen**: an ongoing notification with time left, the next set's target and
-     +15 s / skip; it vibrates when rest ends with the screen off.
+   - **Rest on the lock screen**: an ongoing notification with time left, the next set's target,
+     **+15** and **End rest**; it vibrates when rest ends with the screen off.
      - It reads `DB Bench Press · Set 3` over `25 kg × 8–10 @ 1` (the prefilled weight, the target
        reps and RIR; `10–12 reps @ 2` with no weight yet), with `Rest` and the countdown in its
        header, and the actions **+15** and **End rest**, as on the rest sheet. On Android 16 it is a
