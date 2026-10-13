@@ -470,7 +470,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        session list) asks "Finish the session?" (Keep going / Finish). Session done offers
        **Resume session**, which reopens the session exactly as it was.
 2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
-   repeat week, deload week, shift the remaining plan by N weeks. Reached from Today's top bar.
+   repeat week, deload week, shift the remaining plan by N weeks. A destination of the navigation bar.
    - **The actions are Changes**, chips under the Next line while the program runs: **Skip day**
      (`skip_day`), **Repeat week** (`repeat_week`), **Deload week** (`deload_week` for the week
      you're in) and **Shift program** (`shift_program`, 1–8 weeks later, picked by steps first). Each
@@ -490,14 +490,14 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
-3. **Coach** — see below. Reached from Today's top bar (`sports`) at any time. With a program
+3. **Coach** — see below. A destination of the navigation bar (`sports`), there at any time. With a program
    running the rules and Ask Claude both work; once it is finished the rules say "The program is
    finished: no day is left to change" and Ask Claude can still propose a Change (a repeated week,
    a shift). With no program (ad-hoc training) the rules say they need one, and Ask Claude shares
    your words and the last 4 weeks of sessions for advice in words: no Change comes back, so
    **Paste change** isn't offered.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
-   Reached from Today's top bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
+   A destination of the navigation bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
    Design: `docs/design/history.md`.
    - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session") and
      the date, then the gym and the exercises. A row opens the session (Past sessions are
@@ -522,7 +522,13 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      logged work set counts once for each primary muscle of its exercise (Volume, above);
      secondary muscles don't count.
 
-Settings sit behind an icon: gyms and their equipment, exercise library, export backup, restore
+**Navigation**: a Material 3 navigation bar at the bottom holds the four destinations, Today,
+Program, Coach and History, in that order. Back on Program, Coach or History goes to Today. The bar
+is hidden while the session screen is up (a running session left with Back shows it again) and on
+screens opened from a destination (a trend, a past session, a Change under review, Settings).
+
+Settings sit behind an icon at the end of every destination's top bar, and back returns to the
+destination it was opened from: gyms and their equipment, exercise library, export backup, restore
 from a backup, starting weights from the old app, and "Check for updates" (Distribution).
 
 - **Effort is RIR everywhere**, both targets and logging.

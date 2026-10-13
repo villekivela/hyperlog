@@ -2,7 +2,9 @@ package com.hyperlog.app
 
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -71,4 +73,13 @@ fun ComposeTestRule.click(text: String, substring: Boolean = false) {
     waitFor(text, substring)
     onNode(hasText(text, substring = substring)).performClick()
     waitForIdle()
+}
+
+/** The navigation bar's item labelled [label] (Today, Program, Coach, History). */
+fun navItem(label: String): SemanticsMatcher = hasText(label) and hasAnyAncestor(hasTestTag(NavigationBarTag))
+
+/** Opens the navigation bar's destination labelled [label]. */
+fun ComposeTestRule.openTab(label: String) {
+    waitForIdle()
+    onNode(navItem(label)).performClick()
 }

@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.history
 
+import com.hyperlog.app.await
+import com.hyperlog.app.navItem
+import com.hyperlog.app.openTab
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
@@ -60,8 +63,8 @@ class HistoryScreenTest {
     }
 
     private fun openHistory() {
-        compose.waitForDescription("History")
-        compose.onNodeWithContentDescription("History").performClick()
+        compose.await(navItem("History"))
+        compose.openTab("History")
     }
 
     @Test

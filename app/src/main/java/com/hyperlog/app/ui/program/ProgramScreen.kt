@@ -90,6 +90,7 @@ fun ProgramScreen(
     onPropose: (Change) -> Unit = {},
     /** Reverts the accepted Change with this id. */
     onRevert: (Long) -> Unit = {},
+    onSettings: () -> Unit = {},
 ) {
     /** The replacement waiting for "Replace <title>?": a file, or the starter program. */
     var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
@@ -101,12 +102,10 @@ fun ProgramScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.program_title)) },
-                navigationIcon = {
-                    IconButton(onClick = { if (errors != null) onCloseErrors() else onBack() }) {
-                        SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back))
-                    }
-                },
+                // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
+                // file's problems close with their own button.
                 actions = {
+                    IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) }
                     if (active != null && errors == null) {
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }

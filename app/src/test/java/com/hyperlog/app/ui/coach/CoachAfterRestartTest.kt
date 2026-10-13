@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.openTab
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -50,7 +51,7 @@ class CoachAfterRestartTest {
         compose.onNodeWithText("Leave").performClick()
         compose.waitFor("Resume session")
 
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("What’s in the way?")
         compose.waitFor("3 days since your last session")
     }

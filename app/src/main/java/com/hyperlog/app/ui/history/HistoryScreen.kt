@@ -90,6 +90,7 @@ fun HistoryScreen(
     onLogBodyweight: (Double) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onSettings: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     Scaffold(
@@ -98,7 +99,8 @@ fun HistoryScreen(
             Column {
                 TopAppBar(
                     title = { Text(stringResource(R.string.history_title)) },
-                    navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
+                    // A destination of the navigation bar: no back arrow (back goes to Today), Settings at the end.
+                    actions = { IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) } },
                 )
                 PrimaryTabRow(selectedTabIndex = tab) {
                     Tab(selected = tab == 0, onClick = { onTab(0) }, text = { Text(stringResource(R.string.history_sessions)) })

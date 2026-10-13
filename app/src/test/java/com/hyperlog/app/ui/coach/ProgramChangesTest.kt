@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.openTab
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -36,7 +37,7 @@ class ProgramChangesTest {
         compose.waitFor("Week 1 · Ramp-in")
         val db = HyperlogDatabase.get(ApplicationProvider.getApplicationContext())
         runBlocking { db.programs().setPosition(db.programs().active()!!.id, week, 0) }
-        compose.onNodeWithContentDescription("Program").performClick()
+        compose.openTab("Program")
         compose.waitFor("Week $week · Day A", substring = true)
     }
 

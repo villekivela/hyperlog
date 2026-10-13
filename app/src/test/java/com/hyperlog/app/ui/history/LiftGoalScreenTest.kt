@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.history
 
+import com.hyperlog.app.await
+import com.hyperlog.app.navItem
+import com.hyperlog.app.openTab
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
@@ -61,8 +64,8 @@ class LiftGoalScreenTest {
     fun aGoalSetInHistoryShowsTheEstimateAgainstIt() {
         compose.waitFor("Today")
         benchHistory()
-        compose.waitForDescription("History")
-        compose.onNodeWithContentDescription("History").performClick()
+        compose.await(navItem("History"))
+        compose.openTab("History")
         compose.waitFor("Progress")
         compose.onNodeWithText("Progress").performClick()
         compose.waitForTappable("Barbell Bench Press")

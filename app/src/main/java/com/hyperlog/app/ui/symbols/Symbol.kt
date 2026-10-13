@@ -12,6 +12,7 @@ import com.hyperlog.app.R
 /**
  * The Material Symbols (Rounded) the app ships, one vector drawable each. Add new ones with
  * `scripts/add-symbol.sh <name>`, then list them here.
+ * A `Fill` entry is the filled style (`_fill1` in Material Symbols), for a selected navigation item.
  */
 enum class Symbol(@param:DrawableRes val drawable: Int) {
     Add(R.drawable.symbol_add),
@@ -64,6 +65,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     SouthEast(R.drawable.symbol_south_east),
     Spa(R.drawable.symbol_spa),
     Sports(R.drawable.symbol_sports),
+    SportsFill(R.drawable.symbol_sports_fill),
     Stairs(R.drawable.symbol_stairs),
     StickyNote2(R.drawable.symbol_sticky_note_2),
     Stop(R.drawable.symbol_stop),
@@ -71,6 +73,8 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     SwapHoriz(R.drawable.symbol_swap_horiz),
     SystemUpdate(R.drawable.symbol_system_update),
     Timer(R.drawable.symbol_timer),
+    Today(R.drawable.symbol_today),
+    TodayFill(R.drawable.symbol_today_fill),
     TrendingDown(R.drawable.symbol_trending_down),
     TrendingFlat(R.drawable.symbol_trending_flat),
     TrendingUp(R.drawable.symbol_trending_up),
@@ -78,6 +82,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Undo(R.drawable.symbol_undo),
     UnfoldLess(R.drawable.symbol_unfold_less),
     ViewTimeline(R.drawable.symbol_view_timeline),
+    ViewTimelineFill(R.drawable.symbol_view_timeline_fill),
     Visibility(R.drawable.symbol_visibility),
     VisibilityOff(R.drawable.symbol_visibility_off),
     Warning(R.drawable.symbol_warning),

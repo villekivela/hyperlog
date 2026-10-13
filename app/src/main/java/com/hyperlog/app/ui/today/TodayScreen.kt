@@ -94,8 +94,6 @@ fun TodayScreen(
     program: ActiveProgram? = null,
     exerciseNames: Map<String, String> = emptyMap(),
     onProgram: () -> Unit = {},
-    /** Opens the past sessions, to look at or correct (History hosts them later). */
-    onHistory: () -> Unit = {},
     /** The starter program, offered while no program runs; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
@@ -103,7 +101,6 @@ fun TodayScreen(
     library: List<Exercise> = emptyList(),
     /** The day of the last session finished; null with none yet. */
     lastTrained: LocalDate? = null,
-    onCoach: () -> Unit = {},
     /** Shows a coach's Change for review. */
     onPropose: (Change) -> Unit = {},
     /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
@@ -149,16 +146,6 @@ fun TodayScreen(
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.
                 title = { Text(stringResource(R.string.today_title), Modifier.padding(start = 8.dp)) },
                 actions = {
-                    // The coach is there with or without a program: Ask Claude needs none.
-                    IconButton(onClick = onCoach) {
-                        SymbolIcon(Symbol.Sports, stringResource(R.string.coach_title))
-                    }
-                    IconButton(onClick = onHistory) {
-                        SymbolIcon(Symbol.History, stringResource(R.string.history_title))
-                    }
-                    IconButton(onClick = onProgram) {
-                        SymbolIcon(Symbol.ViewTimeline, stringResource(R.string.program_title))
-                    }
                     IconButton(onClick = onSettings) {
                         SymbolIcon(Symbol.Settings, stringResource(R.string.settings))
                     }

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.openTab
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -49,7 +50,7 @@ class AskClaudeScreenTest {
         compose.waitFor("Run this program")
         compose.onNodeWithText("Run this program").performClick()
         compose.waitFor("Week 1 · Ramp-in")
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("What’s in the way?")
         compose.onNodeWithText("Something else").performScrollTo().performClick()
     }

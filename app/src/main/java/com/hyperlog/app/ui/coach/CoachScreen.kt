@@ -106,6 +106,7 @@ fun CoachScreen(
     onCopyProblems: (List<String>) -> Unit = {},
     /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
     weekdays: Set<DayOfWeek> = emptySet(),
+    onSettings: () -> Unit = {},
 ) {
     val today = program?.today ?: LocalDate.now()
     val daysOff = RuleCoach.daysSince(lastTrained, today)
@@ -164,9 +165,8 @@ fun CoachScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.coach_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
-                },
+                // A destination of the navigation bar: no back arrow (back goes to Today), Settings at the end.
+                actions = { IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) } },
             )
         },
         bottomBar = {

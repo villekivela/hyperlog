@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.await
+import com.hyperlog.app.openTab
+import com.hyperlog.app.navItem
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -118,8 +121,8 @@ class CorrectionScreenTest {
         compose.waitFor("Session done")
         compose.onNodeWithText("Done").performClick()
 
-        compose.waitForDescription("History")
-        tap("History")
+        compose.await(navItem("History"))
+        compose.openTab("History")
         compose.waitFor("Ad-hoc session")
         compose.onNodeWithText("Ad-hoc session").performClick()
         compose.waitForTappable("Barbell Bench Press")

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.openTab
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -45,7 +46,7 @@ class CoachScreenTest {
     @Test
     fun handPainProposesTheProgramDocumentsChange() {
         runStarter()
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("What’s in the way?")
         compose.onNodeWithText("Pain").performClick()
         compose.onNodeWithText("Hands").assertIsDisplayed()
@@ -66,7 +67,7 @@ class CoachScreenTest {
     @Test
     fun handsWorseAfterAnExerciseProposeItsNoGripSwap() {
         runStarter()
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("What’s in the way?")
         compose.onNodeWithText("Pain").performClick()
         // Before a hand Change there is nothing to be worse after.
@@ -76,7 +77,7 @@ class CoachScreenTest {
         compose.onNodeWithText("Accept").performClick()
 
         compose.waitFor("Smith Machine Bench Press")
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("What’s in the way?")
         compose.onNodeWithText("Pain").performClick()
         compose.onNodeWithText("Worse the next morning after").performScrollTo().assertIsDisplayed()
@@ -90,7 +91,7 @@ class CoachScreenTest {
     fun aShortBreakResumesAsPlanned() {
         runStarter()
         runBlocking { db.sessions().insertSession(SessionEntity(startedAt = System.currentTimeMillis() - 3 * DAY, finishedAt = System.currentTimeMillis() - 3 * DAY + 3_600_000)) }
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("3 days since your last session")
         compose.onNodeWithText("Time off").performClick()
         compose.onNodeWithText("Review change").performClick()
@@ -102,9 +103,9 @@ class CoachScreenTest {
         runStarter()
         runBlocking { db.sessions().insertSession(SessionEntity(startedAt = System.currentTimeMillis() - 11 * DAY, finishedAt = System.currentTimeMillis() - 11 * DAY + 3_600_000)) }
         // Today reads the last session again when it shows.
-        compose.onNodeWithContentDescription("Program").performClick()
+        compose.openTab("Program")
         compose.waitFor("Ramp-in · weeks 1–2", substring = true)
-        compose.onNodeWithContentDescription("Back").performClick()
+        compose.openTab("Today")
         compose.waitFor("11 days since your last session")
         compose.onNodeWithText("Ease back in").performClick()
 
@@ -140,7 +141,7 @@ class CoachScreenTest {
     @Test
     fun withNoProgramTheCoachTalksItThroughWithClaudeAndSaysWhatTheRulesNeed() {
         compose.waitFor("Run this program")
-        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.openTab("Coach")
         compose.waitFor("What’s in the way?")
         compose.onNodeWithText("Pain").performClick()
         compose.onNodeWithText("Review change").performClick()

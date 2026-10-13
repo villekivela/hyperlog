@@ -55,6 +55,23 @@ import com.hyperlog.app.ui.settings.BackupViewModel
 import android.app.Activity
 import android.content.Intent
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarItemDefaults
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
 import com.hyperlog.app.update.Updates
@@ -111,6 +128,49 @@ private fun AskForNotifications() {
 
 private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach }
 
+internal const val NavigationBarTag = "navigation-bar"
+
+/** The four destinations, in the bar's order, with their symbols (outlined, filled when selected). */
+private val Tabs = listOf(
+    Triple(Screen.Today, Symbol.Today, Symbol.TodayFill),
+    Triple(Screen.Program, Symbol.ViewTimeline, Symbol.ViewTimelineFill),
+    Triple(Screen.Coach, Symbol.Sports, Symbol.SportsFill),
+    Triple(Screen.History, Symbol.History, Symbol.History),
+)
+
+/**
+ * Today, Program, Coach and History as a Material 3 Expressive short navigation bar, a tone above
+ * the screens, with the selected item in a primary-container pill (docs/design/designer-brief.md).
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    ShortNavigationBar(Modifier.testTag(NavigationBarTag), containerColor = Tones.bar) {
+        Tabs.forEach { (tab, symbol, filled) ->
+            val label = stringResource(
+                when (tab) {
+                    Screen.Program -> R.string.program_title
+                    Screen.Coach -> R.string.coach_title
+                    Screen.History -> R.string.history_title
+                    else -> R.string.today_title
+                },
+            )
+            ShortNavigationBarItem(
+                selected = tab == selected,
+                onClick = { onSelect(tab) },
+                icon = { SymbolIcon(if (tab == selected) filled else symbol, null) },
+                label = { Text(label) },
+                colors = ShortNavigationBarItemDefaults.colors(
+                    selectedIndicatorColor = cs.primaryContainer,
+                    selectedIconColor = cs.onPrimaryContainer,
+                    selectedTextColorTopIconPosition = cs.onSurface,
+                ),
+            )
+        }
+    }
+}
+
 /** Marks a new exercise in the editor, which otherwise holds the id of the one being edited. */
 private const val NewExercise = ""
 
@@ -143,6 +203,9 @@ private fun App(
     val goals by sessions.goals.collectAsStateWithLifecycle()
     var left by rememberSaveable { mutableStateOf(false) }
     var screen by rememberSaveable { mutableStateOf(Screen.Today) }
+    /** The destination Settings was opened from, which back returns to. */
+    var settingsFrom by rememberSaveable { mutableStateOf(Screen.Today) }
+    val openSettings = { settingsFrom = screen; screen = Screen.Settings }
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
     var libraryQuery by rememberSaveable { mutableStateOf("") }
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
@@ -212,6 +275,27 @@ private fun App(
     // Session done reads the finished session back, so a correction made from it shows at once.
     LaunchedEffect(finished?.sessionId) { finished?.let { pastModel.open(it.sessionId) } }
     val done = pastSession?.takeIf { it.id == finished?.sessionId }
+    val sessionShown = finished == null && running != null && !left
+    // The navigation bar is for the four destinations themselves; a session, a sub-screen or Settings hides it.
+    val tabShown = finished == null && !sessionShown && editing == null && when (screen) {
+        Screen.Today, Screen.Program, Screen.Coach -> true
+        Screen.History -> pastSession == null && !bodyweightOpen && trend == null
+        else -> false
+    }
+    Scaffold(
+        bottomBar = {
+            if (tabShown) AppNavigationBar(screen) { tab ->
+                when (tab) {
+                    Screen.History -> { pastModel.refresh(); historyModel.refresh() }
+                    Screen.Coach -> programModel.closePasteErrors()
+                    else -> Unit
+                }
+                screen = tab
+            }
+        },
+        contentWindowInsets = WindowInsets(0),
+    ) { bar ->
+    Box(Modifier.fillMaxSize().padding(bar).consumeWindowInsets(bar)) {
     when {
         finished != null && done?.shown != null -> PastExerciseScreen(done, pastModel, onBack = { pastModel.show(null) })
         finished != null -> SessionDoneScreen(
@@ -311,6 +395,7 @@ private fun App(
             onRunStarter = programModel::runStarter,
             onPropose = programModel::propose,
             onRevert = programModel::revert,
+            onSettings = openSettings,
         )
         screen == Screen.Coach -> CoachScreen(
             program,
@@ -326,6 +411,7 @@ private fun App(
             onClosePasteErrors = programModel::closePasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
             weekdays = gyms.flatMap { it.weekdays }.toSet(),
+            onSettings = openSettings,
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         // A session opened from History or a trend goes back there, read again with any correction.
@@ -357,13 +443,14 @@ private fun App(
             onBodyweight = { bodyweightOpen = true },
             onLogBodyweight = historyModel::logBodyweight,
             onBack = { screen = Screen.Today },
+            onSettings = openSettings,
         )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
             onGyms = { screen = Screen.Gyms; gymId = null; ladder = null },
             onLibrary = { screen = Screen.Library },
-            onBack = { screen = Screen.Today },
+            onBack = { screen = settingsFrom },
             startingWeights = startingWeights,
             onImportStartingWeights = { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             backup = backup,
@@ -375,7 +462,7 @@ private fun App(
             onCheckForUpdates = updateModel::setCheckForUpdates,
         )
         else -> TodayScreen(
-            onSettings = { screen = Screen.Settings },
+            onSettings = openSettings,
             sessionRunning = running != null,
             onResume = { left = false },
             onStart = { gym, adHoc, swaps ->
@@ -387,17 +474,17 @@ private fun App(
             program = program,
             exerciseNames = exercises.associate { it.id to it.name },
             onProgram = { screen = Screen.Program },
-            onHistory = { pastModel.refresh(); historyModel.refresh(); screen = Screen.History },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
             library = exercises,
             lastTrained = lastTrained,
-            onCoach = { screen = Screen.Coach },
             onPropose = programModel::propose,
             weekdays = gyms.flatMap { it.weekdays }.toSet(),
             update = update,
             onUpdate = { updateModel.install(context) },
             onDismissUpdate = updateModel::dismiss,
         )
+    }
+    }
     }
 }

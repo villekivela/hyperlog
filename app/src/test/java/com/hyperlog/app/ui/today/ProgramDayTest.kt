@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.today
 
+import com.hyperlog.app.openTab
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
@@ -96,7 +97,7 @@ class ProgramDayTest {
     @Test
     fun theProgramScreenShowsTheWeeksAndWhereYouAre() {
         importProgram()
-        compose.press("Program")
+        compose.openTab("Program")
         compose.waitFor("Main · weeks 1–2")
         compose.onNode(hasContentDescription("Day 1A, next")).assertIsDisplayed()
         compose.onNode(hasContentDescription("Day 2B")).assertIsDisplayed()
