@@ -700,15 +700,17 @@ internal class TableState(
     fun correctSet(set: Int): (() -> Unit)? = onCorrect?.let { { it(set, null) } }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun SetTable(table: TableState, modifier: Modifier) {
     val current = table.current
     val entry = table.entry
     val listState = rememberLazyListState()
+    val headsPx = with(androidx.compose.ui.platform.LocalDensity.current) { LabelHeight.roundToPx() }
     // Keep the active row and the set after it in view, warm-ups and tags scrolling away first.
     LaunchedEffect(current.id, current.sets.size, table.warmups.size, table.correction) {
         androidx.compose.runtime.withFrameNanos { }
-        listState.keepInView("set-${current.sets.size}", "set-${current.sets.size + 1}")
+        listState.keepInView("set-${current.sets.size}", "set-${current.sets.size + 1}", headsPx)
     }
     val plan = current.prescription
     val cs = MaterialTheme.colorScheme
@@ -720,7 +722,12 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         contentPadding = androidx.compose.foundation.layout.PaddingValues(TablePad),
     ) {
         // A split set's reps read left / right, so the head says which is which.
-        item { ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null) }
+        // The heads stay at the top while warm-ups scroll away under them.
+        stickyHeader(key = "heads") {
+            Box(Modifier.background(cs.surfaceContainer)) {
+                ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null)
+            }
+        }
         warmupRows(table)
         if (plan != null) {
             plannedRows(table, plan)
@@ -757,14 +764,15 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
  * a tag or the plates) are both in view, as little as it takes; if they can't both fit, [active]
  * goes to the top.
  */
-private suspend fun androidx.compose.foundation.lazy.LazyListState.keepInView(active: String, next: String) {
+private suspend fun androidx.compose.foundation.lazy.LazyListState.keepInView(active: String, next: String, headsPx: Int) {
     // Below the fold (warm-ups above it): step down until it is laid out.
     repeat(8) {
         if (layoutInfo.visibleItemsInfo.any { it.key == active } || !canScrollForward) return@repeat
         scrollBy((layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f)
     }
     val info = layoutInfo
-    val start = info.viewportStartOffset
+    // Below the sticky column heads.
+    val start = info.viewportStartOffset + headsPx
     val end = info.viewportEndOffset - info.afterContentPadding
     val a = info.visibleItemsInfo.firstOrNull { it.key == active } ?: return
     val n = info.visibleItemsInfo.firstOrNull { it.key == next }
