@@ -16,10 +16,15 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.await
+import com.hyperlog.app.key
+import com.hyperlog.app.press
+import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitForCount
 import org.junit.Assert.assertEquals
 import org.junit.Rule
-import org.junit.rules.RuleChain
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -33,38 +38,22 @@ class SessionScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
-    private fun key(description: String): SemanticsNodeInteraction = compose.also { c ->
-        c.waitUntil(5_000) { c.onAllNodes(androidx.compose.ui.test.hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty() }
-    }.onNodeWithContentDescription(description)
-
-    private fun tap(vararg descriptions: String) = descriptions.forEach {
-        key(it).performClick()
-        compose.waitForIdle()
-    }
-
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
-    }
-
     /** The logged row and the next set's prefill both read 60. */
-    private fun waitForLoggedSet() = compose.waitUntil(5_000) {
-        compose.onAllNodesWithText("60").fetchSemanticsNodes().size == 2
-    }
+    private fun waitForLoggedSet() = compose.waitForCount("60", 2)
 
     private fun startWithBenchPress() {
-        waitFor("Start session")
+        compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
-        waitFor("Add exercise")
+        compose.waitFor("Add exercise")
         compose.onNodeWithText("Barbell Bench Press").performClick()
-        compose.waitUntil(5_000) { compose.onAllNodes(hasContentDescription("Log set").or(hasContentDescription("Next"))).fetchSemanticsNodes().isNotEmpty() }
+        compose.await(hasContentDescription("Log set").or(hasContentDescription("Next")))
     }
 
     @Test
     fun logsASetFromThePad() {
         startWithBenchPress()
 
-        tap("6", "0", "Next", "1", "2", "RIR 1", "Log set")
+        compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
 
         waitForLoggedSet()
         compose.onAllNodesWithText("12").assertCountEquals(2)
@@ -76,31 +65,31 @@ class SessionScreenTest {
         startWithBenchPress()
 
         val done = compose.onNodeWithTag(DoneKeyTag).getBoundsInRoot()
-        val digit = key("0").getBoundsInRoot()
+        val digit = compose.key("0").getBoundsInRoot()
         assertEquals(digit.width.value, done.width.value, 1f)
         assertEquals(digit.height.value, done.height.value, 0.5f)
         // ✓ sits in the bottom row, beside 0 and the hide key.
         assertEquals(digit.top, done.top)
-        assertEquals(digit.top, key("Hide keypad").getBoundsInRoot().top)
+        assertEquals(digit.top, compose.key("Hide keypad").getBoundsInRoot().top)
     }
 
     @Test
     fun theHideKeyFoldsThePadToShowAndLog() {
         startWithBenchPress()
 
-        tap("Hide keypad")
+        compose.press("Hide keypad")
 
-        key("Show keypad").assertIsDisplayed()
+        compose.key("Show keypad").assertIsDisplayed()
         compose.onNodeWithTag(DoneKeyTag).assertIsDisplayed()
         compose.onAllNodes(hasContentDescription("1")).assertCountEquals(0)
-        tap("Show keypad")
-        key("1").assertIsDisplayed()
+        compose.press("Show keypad")
+        compose.key("1").assertIsDisplayed()
     }
 
     @Test
     fun backAsksBeforeLeavingAndLeavingKeepsTheSessionRunning() {
         startWithBenchPress()
-        tap("6", "0", "Next", "1", "2", "RIR 1", "Log set")
+        compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
         waitForLoggedSet()
 
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
@@ -110,32 +99,32 @@ class SessionScreenTest {
 
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("Leave").performClick()
-        waitFor("Resume session")
+        compose.waitFor("Resume session")
         compose.onNodeWithText("Resume session").performClick()
 
-        waitFor("Barbell Bench Press")
+        compose.waitFor("Barbell Bench Press")
         compose.onAllNodesWithText("60").assertCountEquals(2)
     }
 
     @Test
     fun finishingAsksFirstAndSessionDoneCanResumeTheSession() {
         startWithBenchPress()
-        tap("6", "0", "Next", "1", "2", "RIR 1", "Log set")
+        compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
         waitForLoggedSet()
 
-        tap("More")
+        compose.press("More")
         compose.onNodeWithText("Finish session").performClick()
         compose.onNodeWithText("Finish the session?").assertIsDisplayed()
         compose.onNodeWithText("Keep going").performClick()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
 
-        tap("More")
+        compose.press("More")
         compose.onNodeWithText("Finish session").performClick()
         compose.onNodeWithText("Finish").performClick()
-        waitFor("Session done")
+        compose.waitFor("Session done")
 
         compose.onNodeWithText("Resume session").performClick()
-        waitFor("Barbell Bench Press")
+        compose.waitFor("Barbell Bench Press")
         compose.onAllNodesWithText("60").assertCountEquals(2)
     }
 }

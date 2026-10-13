@@ -18,6 +18,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.waitFor
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -41,16 +42,12 @@ class AskClaudeScreenTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     private val db get() = HyperlogDatabase.get(context)
 
-    private fun waitFor(text: String, substring: Boolean = false) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text, substring = substring)).fetchSemanticsNodes().isNotEmpty()
-    }
-
     private fun openSomethingElse() {
-        waitFor("Run this program")
+        compose.waitFor("Run this program")
         compose.onNodeWithText("Run this program").performClick()
-        waitFor("Week 1 · Ramp-in")
+        compose.waitFor("Week 1 · Ramp-in")
         compose.onNodeWithContentDescription("Coach").performClick()
-        waitFor("What’s in the way?")
+        compose.waitFor("What’s in the way?")
         compose.onNodeWithText("Something else").performScrollTo().performClick()
     }
 
@@ -89,11 +86,11 @@ class AskClaudeScreenTest {
         )
         compose.onNodeWithText("Paste change").performClick()
 
-        waitFor("Accept")
+        compose.waitFor("Accept")
         compose.onNodeWithText("Elbow: no drop set on curls").assertIsDisplayed()
         compose.onNodeWithText("In place of Bayesian Cable Curl").assertIsDisplayed()
         compose.onNodeWithText("Accept").performClick()
-        waitFor("Week 1 · Ramp-in")
+        compose.waitFor("Week 1 · Ramp-in")
         assertEquals(1, runBlocking { db.planChanges().changes(db.programs().active()!!.id).size })
     }
 
@@ -103,7 +100,7 @@ class AskClaudeScreenTest {
         copy("""{"summary": "Rows", "scope": "rest_of_program", "operations": [{"op": "remove", "slot": "rows"}, {"op": "adjust_load", "percent": 80}]}""")
         compose.onNodeWithText("Paste change").performClick()
 
-        waitFor("2 problems", substring = true)
+        compose.waitFor("2 problems", substring = true)
         compose.onNodeWithText("unknown slot \"rows\"").assertIsDisplayed()
         compose.onNodeWithText("must be −50 to 50").assertIsDisplayed()
         assertTrue(compose.onAllNodes(hasText("Accept")).fetchSemanticsNodes().isEmpty())
@@ -112,6 +109,6 @@ class AskClaudeScreenTest {
         // A reply with no JSON says so too.
         copy("Sounds good, rest up!")
         compose.onNodeWithText("Paste change").performClick()
-        waitFor("no Change found", substring = true)
+        compose.waitFor("no Change found", substring = true)
     }
 }

@@ -2,15 +2,15 @@ package com.hyperlog.app.ui.program
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.hyperlog.app.ui.theme.HyperlogTheme
-import org.junit.Assert.assertEquals
-import androidx.compose.ui.test.onNodeWithContentDescription
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TestPrograms
+import com.hyperlog.app.ui.theme.HyperlogTheme
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

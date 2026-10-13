@@ -77,14 +77,17 @@ fun ExerciseEditor(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var name by rememberSaveable { mutableStateOf(exercise?.name.orEmpty()) }
-    var equipment by rememberSaveable { mutableStateOf(exercise?.equipment) }
-    var pattern by rememberSaveable { mutableStateOf(exercise?.pattern) }
-    var grip by rememberSaveable { mutableStateOf(exercise?.grip) }
-    var muscles by rememberSaveable { mutableStateOf(exercise?.muscles.orEmpty()) }
-    var secondary by rememberSaveable { mutableStateOf(exercise?.secondary.orEmpty()) }
-    var video by rememberSaveable { mutableStateOf(exercise?.video.orEmpty()) }
-    var note by rememberSaveable { mutableStateOf(exercise?.note.orEmpty()) }
+    // The drafts start from the exercise as stored, and start again if the library catches up with a
+    // save after the editor opened. Hiding applies at once, so it doesn't reset them.
+    val stored = exercise?.copy(hidden = false)
+    var name by rememberSaveable(stored) { mutableStateOf(exercise?.name.orEmpty()) }
+    var equipment by rememberSaveable(stored) { mutableStateOf(exercise?.equipment) }
+    var pattern by rememberSaveable(stored) { mutableStateOf(exercise?.pattern) }
+    var grip by rememberSaveable(stored) { mutableStateOf(exercise?.grip) }
+    var muscles by rememberSaveable(stored) { mutableStateOf(exercise?.muscles.orEmpty()) }
+    var secondary by rememberSaveable(stored) { mutableStateOf(exercise?.secondary.orEmpty()) }
+    var video by rememberSaveable(stored) { mutableStateOf(exercise?.video.orEmpty()) }
+    var note by rememberSaveable(stored) { mutableStateOf(exercise?.note.orEmpty()) }
     var askDiscard by remember { mutableStateOf(false) }
 
     val videoOk = video.isBlank() || TechniqueVideo.parse(video) != null

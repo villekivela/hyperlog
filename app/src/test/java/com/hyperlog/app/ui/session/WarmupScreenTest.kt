@@ -13,7 +13,10 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.press
 import com.hyperlog.app.ui.program.ProgramStore
+import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitGone
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -32,17 +35,8 @@ class WarmupScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
-    private fun key(description: String) = compose.also { c ->
-        c.waitUntil(5_000) { c.onAllNodes(androidx.compose.ui.test.hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty() }
-    }.onNodeWithContentDescription(description).performClick().also { compose.waitForIdle() }
-
     private fun startDay(exercise: String) {
-        waitFor("Today")
+        compose.waitFor("Today")
         runBlocking {
             ProgramStore.get(ApplicationProvider.getApplicationContext<Application>()).import(
                 """
@@ -52,16 +46,16 @@ class WarmupScreenTest {
                 """,
             )
         }
-        waitFor("Day A")
+        compose.waitFor("Day A")
         compose.onNodeWithText("Start session").performClick()
-        waitFor("Target")
+        compose.waitFor("Target")
     }
 
     @Test
     fun aNinetyKgBenchShowsItsRampAndThePlatesPerSide() {
         startDay("barbell_bench_press")
-        key("9"); key("0")
-        waitFor("Warm-up · plates per side")
+        compose.press("9"); compose.press("0")
+        compose.waitFor("Warm-up · plates per side")
         // 40, 55, 65 and 75 kg, each with its plates.
         compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8").assertIsDisplayed()
         compose.onNodeWithContentDescription("Warm-up 4, 75 kg × 2").assertIsDisplayed()
@@ -72,8 +66,8 @@ class WarmupScreenTest {
     @Test
     fun aWarmUpTicksOffWithATapAndTheWorkSetStaysActive() {
         startDay("barbell_bench_press")
-        key("9"); key("0"); key("Next")
-        waitFor("Warm-up · plates per side")
+        compose.press("9"); compose.press("0"); compose.press("Next")
+        compose.waitFor("Warm-up · plates per side")
         val first = compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8")
         first.assertIsOff()
         first.performClick()
@@ -84,16 +78,16 @@ class WarmupScreenTest {
         assertEquals(0, compose.onAllNodesWithContentDescription("Rest").fetchSemanticsNodes().size)
 
         // The work set still logs, and the warm-ups go.
-        key("5"); key("Log set")
-        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Warm-up", substring = true)).fetchSemanticsNodes().isEmpty() }
+        compose.press("5"); compose.press("Log set")
+        compose.waitGone("Warm-up", substring = true)
         compose.onNodeWithText("20 · 10 per side").assertIsDisplayed()
     }
 
     @Test
     fun dumbbellsHaveWarmUpsButNoPlates() {
         startDay("db_bench_press")
-        key("3"); key("0")
-        waitFor("Warm-up")
+        compose.press("3"); compose.press("0")
+        compose.waitFor("Warm-up")
         assertEquals(0, compose.onAllNodes(hasText("per side", substring = true)).fetchSemanticsNodes().size)
     }
 }

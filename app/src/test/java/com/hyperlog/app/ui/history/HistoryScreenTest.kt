@@ -21,6 +21,11 @@ import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.history.Bodyweights
+import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitForDescription
+import com.hyperlog.app.waitForTappable
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -30,8 +35,6 @@ import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.time.LocalDate
-import java.time.ZoneId
 
 /** History on screen (SPEC, Screens → History; docs/design/history.md). */
 @RunWith(RobolectricTestRunner::class)
@@ -43,18 +46,6 @@ class HistoryScreenTest {
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
     private val db get() = HyperlogDatabase.get(ApplicationProvider.getApplicationContext<Context>())
-
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    private fun waitForTappable(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text).and(hasClickAction())).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    private fun waitForDescription(description: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty()
-    }
 
     private fun at(date: LocalDate) = date.atTime(18, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
@@ -69,29 +60,29 @@ class HistoryScreenTest {
     }
 
     private fun openHistory() {
-        waitForDescription("History")
+        compose.waitForDescription("History")
         compose.onNodeWithContentDescription("History").performClick()
     }
 
     @Test
     fun theSessionListOpensAnyPastSession() {
-        waitFor("Today")
+        compose.waitFor("Today")
         session(LocalDate.of(2026, 9, 28), "barbell_bench_press", 80.0 to 6)
         session(LocalDate.of(2026, 10, 1), "leg_extension", 50.0 to 12)
 
         openHistory()
         // The older one, second in the list.
-        waitForTappable("Mon 28 Sep")
+        compose.waitForTappable("Mon 28 Sep")
         compose.onNodeWithText("Mon 28 Sep").performClick()
         // Its summary, then an exercise's table to correct.
-        waitFor("80 × 6 @ 1")
+        compose.waitFor("80 × 6 @ 1")
         compose.onNodeWithText("Barbell Bench Press").performClick()
-        waitForDescription("Correct set 1")
+        compose.waitForDescription("Correct set 1")
     }
 
     @Test
     fun aMachineExercisesTrendShowsOneChartPerMachine() {
-        waitFor("Today")
+        compose.waitFor("Today")
         val (left, tall) = runBlocking {
             val gyms = Gyms(db)
             val kamppi = gyms.addGym("Kamppi")
@@ -102,12 +93,12 @@ class HistoryScreenTest {
         session(LocalDate.of(2026, 10, 1), "cable_lateral_raise", 10.2 to 10, itemId = tall)
 
         openHistory()
-        waitFor("Progress")
+        compose.waitFor("Progress")
         compose.onNodeWithText("Progress").performClick()
-        waitForTappable("Cable Lateral Raise")
+        compose.waitForTappable("Cable Lateral Raise")
         compose.onNodeWithText("Cable Lateral Raise").performClick()
 
-        waitFor("Tall cable · Kamppi")
+        compose.waitFor("Tall cable · Kamppi")
         compose.onNodeWithText("Cable left · Kamppi").assertIsDisplayed()
         compose.onNodeWithText("10.2 × 10 @ 1").assertIsDisplayed()
     }
@@ -115,15 +106,15 @@ class HistoryScreenTest {
     @Test
     fun bodyweightIsLoggedForToday() {
         openHistory()
-        waitFor("Progress")
+        compose.waitFor("Progress")
         compose.onNodeWithText("Progress").performClick()
-        waitForDescription("Log bodyweight")
+        compose.waitForDescription("Log bodyweight")
         compose.onNodeWithContentDescription("Log bodyweight").performClick()
-        waitFor("Save")
+        compose.waitFor("Save")
         compose.onNode(androidx.compose.ui.test.hasSetTextAction()).performTextInput("82.4")
         compose.onNodeWithText("Save").performClick()
 
-        waitFor("82.4 kg")
+        compose.waitFor("82.4 kg")
         val logged = runBlocking { Bodyweights(db).entries.first() }
         assertEquals(LocalDate.now(), logged.single().date)
         assertEquals(82.4, logged.single().kg, 0.001)

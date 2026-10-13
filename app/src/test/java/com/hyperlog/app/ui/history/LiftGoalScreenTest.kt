@@ -20,6 +20,11 @@ import com.hyperlog.app.data.SessionEntity
 import com.hyperlog.app.data.SessionExerciseEntity
 import com.hyperlog.app.history.LiftGoal
 import com.hyperlog.app.history.LiftGoals
+import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitForDescription
+import com.hyperlog.app.waitForTappable
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -28,8 +33,6 @@ import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.time.LocalDate
-import java.time.ZoneId
 
 /** Lift goals on screen (SPEC, Lift goals): the bench's estimate against 100 kg, in History and on its prescription sheet. */
 @RunWith(RobolectricTestRunner::class)
@@ -41,18 +44,6 @@ class LiftGoalScreenTest {
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
     private val db get() = HyperlogDatabase.get(ApplicationProvider.getApplicationContext<Context>())
-
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    private fun waitForTappable(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text).and(hasClickAction())).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    private fun waitForDescription(description: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty()
-    }
 
     private fun at(date: LocalDate) = date.atTime(18, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
@@ -68,40 +59,40 @@ class LiftGoalScreenTest {
 
     @Test
     fun aGoalSetInHistoryShowsTheEstimateAgainstIt() {
-        waitFor("Today")
+        compose.waitFor("Today")
         benchHistory()
-        waitForDescription("History")
+        compose.waitForDescription("History")
         compose.onNodeWithContentDescription("History").performClick()
-        waitFor("Progress")
+        compose.waitFor("Progress")
         compose.onNodeWithText("Progress").performClick()
-        waitForTappable("Barbell Bench Press")
+        compose.waitForTappable("Barbell Bench Press")
         compose.onNodeWithText("Barbell Bench Press").performClick()
 
-        waitForDescription("Lift goal")
+        compose.waitForDescription("Lift goal")
         compose.onNodeWithContentDescription("Lift goal").performClick()
-        waitFor("Save")
+        compose.waitFor("Save")
         compose.onNode(hasSetTextAction()).performTextInput("100")
         compose.onNodeWithText("Save").performClick()
 
-        waitFor("of 100 kg")
+        compose.waitFor("of 100 kg")
         compose.onNodeWithText("10 kg to go").assertIsDisplayed()
         assertEquals(LiftGoal("barbell_bench_press", 100.0, null), runBlocking { LiftGoals(db).of("barbell_bench_press") })
     }
 
     @Test
     fun theBenchsPrescriptionSheetShowsTheEstimateAgainstTheGoal() {
-        waitFor("Today")
+        compose.waitFor("Today")
         benchHistory()
         runBlocking { LiftGoals(db).set("barbell_bench_press", 100.0, by = LocalDate.of(2026, 12, 31)) }
-        waitFor("Start session")
+        compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
-        waitFor("Add exercise")
+        compose.waitFor("Add exercise")
         compose.onNodeWithText("Barbell Bench Press").performClick()
-        waitForDescription("Hide keypad")
+        compose.waitForDescription("Hide keypad")
 
         compose.onNodeWithText("Barbell Bench Press").performClick()
 
-        waitFor("of 100 kg")
+        compose.waitFor("of 100 kg")
         compose.onNodeWithText("90 kg").assertIsDisplayed()
         compose.onNodeWithText("10 kg to go · by Thu 31 Dec").assertIsDisplayed()
         compose.onNodeWithContentDescription("Barbell Bench Press estimate against the goal").assertIsDisplayed()

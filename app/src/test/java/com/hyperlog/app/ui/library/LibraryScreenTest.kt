@@ -19,6 +19,9 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.click
+import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitForDescription
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -36,25 +39,12 @@ class LibraryScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun waitFor(text: String) = compose.waitUntil(10_000) {
-        compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    private fun waitGone(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()
-    }
-
-    private fun click(text: String) {
-        compose.onNodeWithText(text).performClick()
-        compose.waitForIdle()
-    }
-
     private fun openLibrary() {
-        waitFor("Today")
+        compose.waitFor("Today")
         compose.onNodeWithContentDescription("Settings").performClick()
-        waitFor("173 exercises")
-        click("Exercise library")
-        waitFor("Search 173 exercises")
+        compose.waitFor("173 exercises")
+        compose.click("Exercise library")
+        compose.waitFor("Search 173 exercises")
     }
 
     private fun search(text: String) {
@@ -78,21 +68,21 @@ class LibraryScreenTest {
     fun addsAnExercise() {
         openLibrary()
         compose.onNodeWithText("New exercise", useUnmergedTree = true).performClick()
-        waitFor("Save")
+        compose.waitFor("Save")
         compose.onNodeWithText("Save").assertIsNotEnabled()
 
         compose.onNode(hasText("Name").and(hasSetTextAction())).performTextInput("Landmine Press")
-        click("Barbell")
+        compose.click("Barbell")
         compose.onNodeWithContentDescription("Movement pattern").performClick()
-        click("Vertical push")
-        click("Low")
+        compose.click("Vertical push")
+        compose.click("Low")
         compose.onAllNodesWithText("Add")[0].performClick()
-        click("Front Delts")
+        compose.click("Front Delts")
         compose.onNodeWithText("Save").assertIsEnabled().performClick()
 
-        waitFor("Exercise library")
+        compose.waitFor("Exercise library")
         search("landmine")
-        waitFor("Landmine Press")
+        compose.waitFor("Landmine Press")
         compose.onNodeWithText("Barbell · Front Delts").assertIsDisplayed()
     }
 
@@ -100,40 +90,40 @@ class LibraryScreenTest {
     fun editsAnExercise() {
         openLibrary()
         search("pec deck")
-        click("Pec Deck")
-        waitFor("Edit exercise")
+        compose.click("Pec Deck")
+        compose.waitFor("Edit exercise")
 
         compose.onNode(hasText("Focus on bringing your inner elbows together - not your hands."))
             .performTextReplacement("Elbows high, squeeze for a second.")
         compose.onNode(hasText("https://youtu.be/-EIhKMDSjBY?t=151")).performTextReplacement("https://youtu.be/-EIhKMDSjBY?t=200")
         compose.onNodeWithText("Opens at 3:20").assertIsDisplayed()
-        click("Save")
+        compose.click("Save")
 
-        waitFor("Exercise library")
-        click("Pec Deck")
-        waitFor("Elbows high, squeeze for a second.")
+        compose.waitFor("Exercise library")
+        compose.click("Pec Deck")
+        compose.waitFor("Elbows high, squeeze for a second.")
     }
 
     @Test
     fun aHiddenExerciseIsNoLongerOfferedInASession() {
         openLibrary()
         search("pec deck")
-        click("Pec Deck")
-        waitFor("Hide exercise")
+        compose.click("Pec Deck")
+        compose.waitFor("Hide exercise")
         compose.onNodeWithText("Hide exercise").performScrollTo().performClick()
-        waitFor("Show exercise again")
+        compose.waitFor("Show exercise again")
         compose.onNodeWithContentDescription("Close").performClick()
 
         // It stays in the library, under Hidden.
-        waitFor("Hidden")
+        compose.waitFor("Hidden")
         compose.onNodeWithText("Pec Deck").assertIsDisplayed()
 
         compose.onNodeWithContentDescription("Back").performClick()
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Back").performClick()
-        waitFor("Start session")
-        click("Start session")
-        waitFor("Add exercise")
+        compose.waitFor("Start session")
+        compose.click("Start session")
+        compose.waitFor("Add exercise")
         search("pec deck")
         compose.onNodeWithText("1-Arm Reverse Pec Deck").assertIsDisplayed()
         compose.onAllNodesWithText("Pec Deck").assertCountIs(0)
@@ -141,18 +131,18 @@ class LibraryScreenTest {
 
     @Test
     fun theExerciseSheetShowsTheNoteAndOpensTheVideoInYouTubeAtItsTimestamp() {
-        waitFor("Start session")
-        click("Start session")
-        waitFor("Add exercise")
+        compose.waitFor("Start session")
+        compose.click("Start session")
+        compose.waitFor("Add exercise")
         search("cable lateral")
-        click("Cable Lateral Raise")
-        compose.waitUntil(5_000) { compose.onAllNodes(hasContentDescription("Next")).fetchSemanticsNodes().isNotEmpty() }
+        compose.click("Cable Lateral Raise")
+        compose.waitForDescription("Next")
 
         compose.onNodeWithText("Cable Lateral Raise").performClick()
-        waitFor("Technique video · 10:53")
+        compose.waitFor("Technique video · 10:53")
         compose.onNodeWithText("Raise your arm \"out\", not \"up\". Mind-muscle connection with the middle fibers.").assertIsDisplayed()
         compose.onNodeWithText("Cable · Side Delts").assertIsDisplayed()
-        click("Technique video · 10:53")
+        compose.click("Technique video · 10:53")
 
         val started = shadowOf(ApplicationProvider.getApplicationContext<android.app.Application>()).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, started.action)

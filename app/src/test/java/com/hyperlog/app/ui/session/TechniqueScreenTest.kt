@@ -14,7 +14,9 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.press
 import com.hyperlog.app.ui.program.ProgramStore
+import com.hyperlog.app.waitFor
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -32,17 +34,8 @@ class TechniqueScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
-    }
-
-    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
-    private fun key(description: String) = compose.also { c ->
-        c.waitUntil(5_000) { c.onAllNodes(androidx.compose.ui.test.hasContentDescription(description)).fetchSemanticsNodes().isNotEmpty() }
-    }.onNodeWithContentDescription(description).performClick().also { compose.waitForIdle() }
-
     private fun startDay(exercise: String, sets: String) {
-        waitFor("Today")
+        compose.waitFor("Today")
         runBlocking {
             ProgramStore.get(ApplicationProvider.getApplicationContext<Application>()).import(
                 """
@@ -51,23 +44,23 @@ class TechniqueScreenTest {
                 """,
             )
         }
-        waitFor("Day A")
+        compose.waitFor("Day A")
         compose.onNodeWithText("Start session").performClick()
-        waitFor("Target")
+        compose.waitFor("Target")
     }
 
     @Test
     fun aDropSetShowsItsPlannedDropsBeforeTheSetAndRunsThemOnThePad() {
         startDay("db_bench_press", """[ { "reps": "8-10", "rir": 1, "technique": { "kind": "dropset", "drops": 2 } } ]""")
         compose.onNodeWithText("Drop set, 2 drops of 25%").assertIsDisplayed()
-        key("2"); key("5")
+        compose.press("2"); compose.press("5")
         // The drops follow the weight as it is typed: 25 − 25% = 18, then 12 on the dumbbells.
-        waitFor("18")
+        compose.waitFor("18")
         // 12 is the second drop, and the first warm-up too.
         compose.onAllNodesWithText("12").assertCountEquals(2)
 
-        key("Next"); key("Log set")
-        waitFor("Drop 1 of 2")
+        compose.press("Next"); compose.press("Log set")
+        compose.waitFor("Drop 1 of 2")
         compose.onNodeWithText("Finish set").assertIsDisplayed()
         // No rest before a drop.
         compose.onAllNodesWithContentDescription("Rest").assertCountEquals(0)
@@ -77,18 +70,18 @@ class TechniqueScreenTest {
     fun myoRepsBreatheBeforeEachMiniSet() {
         startDay("db_bench_press", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 4 } } ]""")
         compose.onNodeWithText("Myo-reps, mini-sets of 4").assertIsDisplayed()
-        key("2"); key("0"); key("Next"); key("Log set")
-        waitFor("Mini-set 1 of 5")
+        compose.press("2"); compose.press("0"); compose.press("Next"); compose.press("Log set")
+        compose.waitFor("Mini-set 1 of 5")
         compose.onNodeWithContentDescription("Breathe").assertIsDisplayed()
     }
 
     @Test
     fun aSetCanBeSwitchedToADropSetFromItsOptions() {
         startDay("db_bench_press", """[ { "count": 2, "reps": "8-10", "rir": 1 } ]""")
-        key("Set 2 options")
-        waitFor("Intensity technique")
+        compose.press("Set 2 options")
+        compose.waitFor("Intensity technique")
         compose.onNodeWithText("Drop set").performClick()
         compose.waitForIdle()
-        waitFor("Drop set, 2 drops of 25%")
+        compose.waitFor("Drop set, 2 drops of 25%")
     }
 }

@@ -10,7 +10,9 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.press
 import com.hyperlog.app.ui.program.ProgramStore
+import com.hyperlog.app.waitFor
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -28,18 +30,9 @@ class SupersetScreenTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
-    }
-
     /** A pad key: the last node with [description], below anything on the strip that shares it. */
-    // The pad follows the logger's saved state, which lands off the main thread: wait for the key to show.
-    private fun key(description: String) = compose.also { c ->
-        c.waitUntil(5_000) { c.onAllNodesWithContentDescription(description).fetchSemanticsNodes().isNotEmpty() }
-    }.onAllNodesWithContentDescription(description).let { it[it.fetchSemanticsNodes().size - 1] }.performClick().also { compose.waitForIdle() }
-
     private fun startDay() {
-        waitFor("Today")
+        compose.waitFor("Today")
         val sets = """[ { "count": 2, "reps": "8-10", "rir": 1 } ]"""
         runBlocking {
             ProgramStore.get(ApplicationProvider.getApplicationContext<Application>()).import(
@@ -53,9 +46,9 @@ class SupersetScreenTest {
                 """,
             )
         }
-        waitFor("Day A")
+        compose.waitFor("Day A")
         compose.onNodeWithText("Start session").performClick()
-        waitFor("Target")
+        compose.waitFor("Target")
     }
 
     @Test
@@ -65,8 +58,8 @@ class SupersetScreenTest {
         // The Next line skips the partner: it names what follows the superset.
         compose.onNodeWithText("DB Lateral Raise").assertIsDisplayed()
 
-        key("1"); key("4"); key("Next"); key("8"); key("Log set")
-        waitFor("1b with DB Curl")
+        compose.press("1"); compose.press("4"); compose.press("Next"); compose.press("8"); compose.press("Log set")
+        compose.waitFor("1b with DB Curl")
         compose.onNodeWithText("14 × 8").assertIsDisplayed()
         compose.onNodeWithText("DB French Press").assertIsDisplayed()
     }
@@ -75,7 +68,7 @@ class SupersetScreenTest {
     fun theSessionListTagsSupersetPartners() {
         startDay()
         compose.onNodeWithText("DB Lateral Raise").performClick()
-        waitFor("Session")
+        compose.waitFor("Session")
         compose.onNodeWithText("1a").assertIsDisplayed()
         compose.onNodeWithText("1b").assertIsDisplayed()
     }

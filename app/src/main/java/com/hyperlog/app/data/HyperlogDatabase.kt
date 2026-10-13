@@ -33,9 +33,17 @@ abstract class HyperlogDatabase : RoomDatabase() {
         fun get(context: Context): HyperlogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, HyperlogDatabase::class.java, NAME)
                 .addMigrations(*Migrations)
+                .let(forTests)
                 .build()
                 .also { instance = it }
         }
+
+        /**
+         * Lets tests change how the shared database is built, e.g. to run Room on the main thread so
+         * the Compose test clock waits for every query and write.
+         */
+        @VisibleForTesting
+        @Volatile var forTests: (RoomDatabase.Builder<HyperlogDatabase>) -> RoomDatabase.Builder<HyperlogDatabase> = { it }
 
         /**
          * Deletes the shared database, so the next [get] starts from an empty one. It deletes the

@@ -6,9 +6,10 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.hyperlog.app.waitFor
 import org.junit.Rule
-import org.junit.rules.RuleChain
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -21,13 +22,9 @@ class MainActivityTest {
     @get:Rule
     val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
 
-    private fun waitFor(text: String) = compose.waitUntil(5_000) {
-        compose.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
-    }
-
     @Test
     fun theFirstRunOffersTheStarterProgramBesideAnAdHocSession() {
-        waitFor("Today")
+        compose.waitFor("Today")
         compose.onNodeWithText("Starter program").assertIsDisplayed()
         compose.onNodeWithText("Hyperlog Full Body").assertIsDisplayed()
         compose.onNodeWithContentDescription("Settings").assertIsDisplayed()
@@ -37,9 +34,9 @@ class MainActivityTest {
 
     @Test
     fun runningTheStarterProgramPutsItsFirstDayOnToday() {
-        waitFor("Run this program")
+        compose.waitFor("Run this program")
         compose.onNodeWithText("Run this program").performClick()
-        waitFor("Week 1 · Ramp-in")
+        compose.waitFor("Week 1 · Ramp-in")
         compose.onNodeWithText("Day A — Heavy bench, squat, pulldown").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
         compose.onNodeWithText("1 × 4–6 @ 2", substring = true).assertIsDisplayed()
@@ -48,12 +45,12 @@ class MainActivityTest {
 
     @Test
     fun theProgramScreenOffersItTooWithNoProgram() {
-        waitFor("Today")
+        compose.waitFor("Today")
         compose.onNodeWithContentDescription("Program").performClick()
-        waitFor("Run this program")
+        compose.waitFor("Run this program")
         compose.onNodeWithText("Import program").assertIsDisplayed()
         compose.onNodeWithText("Run this program").performClick()
-        waitFor("Ramp-in · weeks 1–2")
+        compose.waitFor("Ramp-in · weeks 1–2")
         compose.onNodeWithText("Hyperlog Full Body").assertIsDisplayed()
         compose.onNodeWithText("Run this program").assertDoesNotExist()
     }
