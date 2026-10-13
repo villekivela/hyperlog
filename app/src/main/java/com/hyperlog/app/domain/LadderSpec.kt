@@ -75,33 +75,37 @@ sealed interface LadderSpec {
     }
 
     /**
-     * A selectorised stack (SPEC, Stacks with add-ons): the pin picks a plate, from an optional
-     * lighter [first] plate, then [start] to [top] in [step]s, all in [unit]. On top of the pin
-     * go any number of the machine's own [builtIn] add-ons (kg, one entry per plate, so two
-     * 2.5 kg plates are `[2.5, 2.5]`) and, when it takes them ([pinPlates]), any of the gym's
-     * small plates hung on the pin.
+     * A selectorised stack (SPEC, Stacks with add-ons): the pin picks one of the stack's [plates]
+     * (cumulative weights in [unit], lightest first, such as 1 to 10 by 1, then 12.5 to 45 by
+     * 2.5). On top of the pin go any number of the machine's own [builtIn] add-ons (kg, one entry
+     * per plate, so two 2.5 kg plates are `[2.5, 2.5]`) and, when it takes them ([pinPlates]), any
+     * of the gym's small plates hung on the pin.
      *
      * The pin weights are the stack's printed labels: true weights rounded (or, [labelsCut], cut)
      * to [labelKg], so an lb stack labelled in whole kg reads `36 · 43 · 50`.
      */
     data class PinStack(
         val unit: WeightUnit,
-        val start: Double,
-        val step: Double,
-        val top: Double,
-        val first: Double? = null,
+        val plates: List<Double>,
         val labelKg: Double = if (unit == WeightUnit.Lb) 0.1 else 0.01,
         val labelsCut: Boolean = false,
         val builtIn: List<Double> = emptyList(),
         val pinPlates: Boolean = true,
     ) : LadderSpec {
+        /** The stack as runs of even steps, for setup and its summary. */
+        val segments: List<Segment> get() = segmentsOf(plates)
+
+        /** A lighter first plate before the steps (2.5, then 5, 10, 15); null when the steps start at once. */
+        val first: Double? get() = segments.takeIf { it.size > 1 && it.first().single }?.first()?.from
+
+        /** Where the (first run of) even steps starts, and its step. */
+        val start: Double get() = segments.firstOrNull { !it.single }?.from ?: plates.first()
+        val step: Double get() = segments.firstOrNull { !it.single }?.step ?: 0.0
+        val top: Double get() = plates.last()
+
         /** The pin's weights, lightest first, as their labels read in kg. */
         val pins: List<Double>
-            get() {
-                val count = if (step > 0) (((top - start) / step) + 1e-6).toInt().coerceIn(0, MAX_PINS - 1) + 1 else 1
-                val inUnit = listOfNotNull(first?.takeIf { it < start }) + List(count) { start + it * step }
-                return inUnit.map { label(if (unit == WeightUnit.Lb) it * KG_PER_LB else it) }.distinct()
-            }
+            get() = plates.map { label(if (unit == WeightUnit.Lb) it * KG_PER_LB else it) }.distinct()
 
         private fun label(kg: Double): Double {
             val n = kg / labelKg
@@ -111,7 +115,7 @@ sealed interface LadderSpec {
 
         override fun ladder(): WeightLadder = ladder(emptyList())
 
-        override fun ladder(pinPlates: List<Double>): WeightLadder = WeightLadder(loads(pinPlates).map { it.kg })
+        override fun ladder(pinPlates: List<Double>): WeightLadder = WeightLadder(loads(pinPlates).map { it.kg }.ifEmpty { listOf(0.0) })
 
         /** How to load [kg] on this stack at a gym with [pinPlates]; null when it isn't a rung. */
         fun load(kg: Double, pinPlates: List<Double>): PinLoad? =
@@ -138,9 +142,28 @@ sealed interface LadderSpec {
         }
 
         override fun encode() = listOf(
-            "pin", unit.name, num(start), num(step), num(top), first?.let(::num).orEmpty(), num(labelKg),
+            "pin", unit.name, plates.joinToString(",") { num(it) }, num(labelKg),
             if (labelsCut) "cut" else "round", builtIn.joinToString(",") { num(it) }, if (pinPlates) "1" else "0",
         ).joinToString(";")
+
+        companion object {
+            /** A stack of even steps from [start] to [top] (the plate at or below it), after an optional lighter [first] plate. */
+            fun steps(
+                unit: WeightUnit, start: Double, step: Double, top: Double, first: Double? = null,
+                labelKg: Double = if (unit == WeightUnit.Lb) 0.1 else 0.01, labelsCut: Boolean = false,
+                builtIn: List<Double> = emptyList(), pinPlates: Boolean = true,
+            ): PinStack {
+                val count = if (step > 0) (((top - start) / step) + 1e-6).toInt().coerceIn(0, MAX_PINS - 1) + 1 else 1
+                val plates = listOfNotNull(first?.takeIf { it < start }) + List(count) { Math.round((start + it * step) * 1000) / 1000.0 }
+                return PinStack(unit, plates, labelKg, labelsCut, builtIn, pinPlates)
+            }
+        }
+    }
+
+    /** A run of a stack: [from] to [to] in [step]s; a [single] plate has no step. */
+    data class Segment(val from: Double, val to: Double, val step: Double) {
+        val single: Boolean get() = step <= 0.0
+        val count: Int get() = if (single) 1 else ((to - from) / step + 1e-6).toInt() + 1
     }
 
     companion object {
@@ -149,8 +172,11 @@ sealed interface LadderSpec {
         /** The one-tap preset for the usual lb cable stack: 2.5 lb, then 5 lb steps. */
         fun lbStack(count: Int = 40) = Steps(start = 2.5, step = 5.0, unit = WeightUnit.Lb, count = count)
 
-        /** SPEC default: 2 kg steps to 20 kg, then 22.5 and 25, then 5 kg steps (to 60). */
-        val DefaultDumbbells = Explicit(
+        /** SPEC default dumbbell rack: 1 to 10 kg by 1, then 12.5 to 50 kg by 2.5. */
+        val DefaultDumbbells = Explicit((1..10).map { it.toDouble() } + (0..15).map { 12.5 + it * 2.5 })
+
+        /** The dumbbells every install had until 0.1.2: 2 kg steps to 20 kg, then 22.5 and 25, then 5 kg steps to 60. */
+        val OldDefaultDumbbells = Explicit(
             (2..20 step 2).map { it.toDouble() } + listOf(22.5, 25.0) + (30..60 step 5).map { it.toDouble() },
         )
 
@@ -158,7 +184,7 @@ sealed interface LadderSpec {
         val DefaultPlates = Plates(20.0, listOf(20.0, 20.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25))
 
         /** SPEC default for a selectorised machine: pin steps of 5 kg from 5 to 100, taking the gym's pin plates. */
-        val DefaultPinStack = PinStack(WeightUnit.Kg, start = 5.0, step = 5.0, top = 100.0)
+        val DefaultPinStack = PinStack.steps(WeightUnit.Kg, start = 5.0, step = 5.0, top = 100.0)
 
         /** A gym's small plates for the pin until set: 1.25 and 2.5 kg. */
         val DefaultPinPlates = listOf(1.25, 2.5)
@@ -177,13 +203,36 @@ sealed interface LadderSpec {
                 "list" -> Explicit(list(parts[1]))
                 "plates" -> Plates(parts[1].toDouble(), list(parts[2]))
                 "pin" -> PinStack(
-                    unit = WeightUnit.valueOf(parts[1]), start = parts[2].toDouble(), step = parts[3].toDouble(),
-                    top = parts[4].toDouble(), first = parts[5].takeIf { it.isNotBlank() }?.toDouble(),
-                    labelKg = parts[6].toDouble(), labelsCut = parts[7] == "cut", builtIn = list(parts[8]), pinPlates = parts[9] == "1",
+                    unit = WeightUnit.valueOf(parts[1]), plates = list(parts[2]).sorted().ifEmpty { return null },
+                    labelKg = parts[3].toDouble(), labelsCut = parts[4] == "cut", builtIn = list(parts[5]), pinPlates = parts[6] == "1",
                 )
                 else -> null
             }
         }.getOrNull()
+
+        /**
+         * [plates] as runs of even steps. A plate where the step changes ends its run, except
+         * that a run would be only two plates and the second starts the next run's step: then the
+         * first stands alone (2.5, then 5, 10, 15 is a lighter first plate and steps of 5).
+         */
+        fun segmentsOf(plates: List<Double>): List<Segment> {
+            val p = plates.sorted()
+            val out = mutableListOf<Segment>()
+            var i = 0
+            fun near(a: Double, b: Double) = abs(a - b) < 1e-6
+            while (i < p.size) {
+                if (i == p.lastIndex) { out += Segment(p[i], p[i], 0.0); break }
+                val step = p[i + 1] - p[i]
+                var j = i + 1
+                while (j + 1 < p.size && near(p[j + 1] - p[j], step)) j++
+                if (j == i + 1 && i + 2 < p.size) {
+                    out += Segment(p[i], p[i], 0.0); i += 1; continue
+                }
+                out += Segment(p[i], p[j], step)
+                i = j + 1
+            }
+            return out
+        }
 
         /** Every multiset drawn from [plates], each plate used at most once, the empty one first. */
         internal fun combinations(plates: List<Double>): List<List<Double>> {

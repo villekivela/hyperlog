@@ -54,10 +54,9 @@ class TechniqueScreenTest {
         startDay("db_bench_press", """[ { "reps": "8-10", "rir": 1, "technique": { "kind": "dropset", "drops": 2 } } ]""")
         compose.onNodeWithText("Drop set, 2 drops of 25%").assertIsDisplayed()
         compose.press("2"); compose.press("5")
-        // The drops follow the weight as it is typed: 25 − 25% = 18, then 12 on the dumbbells.
-        compose.waitFor("18")
-        // 12 is the second drop, and the first warm-up too.
-        compose.onAllNodesWithText("12").assertCountEquals(2)
+        // The drops follow the weight as it is typed: 25 − 25% = 17.5, then 12.5 on the dumbbells.
+        compose.waitFor("17.5")
+        compose.waitFor("12.5")
 
         compose.press("Next"); compose.press("Log set")
         compose.waitFor("Drop 1 of 2")

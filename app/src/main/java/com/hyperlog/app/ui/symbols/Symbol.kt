@@ -38,6 +38,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Download(R.drawable.symbol_download),
     Edit(R.drawable.symbol_edit),
     ExpandLess(R.drawable.symbol_expand_less),
+    ExpandMore(R.drawable.symbol_expand_more),
     FileOpen(R.drawable.symbol_file_open),
     FitnessCenter(R.drawable.symbol_fitness_center),
     Flag(R.drawable.symbol_flag),

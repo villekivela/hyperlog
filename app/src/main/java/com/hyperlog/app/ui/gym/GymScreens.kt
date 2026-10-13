@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.domain.summary
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
@@ -108,7 +109,7 @@ fun GymsScreen(
 
             SectionLabel(stringResource(R.string.gym_shared))
           Group {
-            Row(stringResource(R.string.gym_dumbbells), dumbbells.ladder().preview(), symbol = null, onClick = onDumbbells)
+            Row(stringResource(R.string.gym_dumbbells), dumbbells.summary(), symbol = null, onClick = onDumbbells)
             Row(stringResource(R.string.gym_plates), plates.summary(), symbol = null, onClick = onPlates)
             bars.forEach { (bar, kg) ->
                 Row(bar.label, stringResource(R.string.gym_bar_summary, formatKg(kg)), symbol = null, onClick = { weighing = bar })
@@ -172,7 +173,7 @@ fun GymScreen(
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
           Group {
             gym.items.forEach { item ->
-                Row(item.name, item.ladder.ladder(gym.pinPlates).preview(), symbol = null, onClick = { onOpenItem(item.id) })
+                Row(item.name, item.ladder.summary(gym.pinPlates), symbol = null, onClick = { onOpenItem(item.id) })
             }
             AddRow(stringResource(R.string.gym_add_item), onClick = onAddItem)
           }

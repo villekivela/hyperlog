@@ -78,21 +78,21 @@ class TechniqueSessionTest {
         // The set is logged, rest doesn't start, and the first drop comes up: 25 − 25% on the dumbbells.
         assertNull(logger.session.restEndsAt)
         assertEquals(FollowUp.Drop(index = 0, count = 2), logger.session.followUp)
-        assertEquals("18", logger.session.entry!!.weight)
+        assertEquals("17.5", logger.session.entry!!.weight)
         assertEquals("6", logger.session.entry!!.full)
         assertNull(logger.session.entry!!.rir)
 
         logger.type("7"); logger.tick()
         assertNull(logger.session.restEndsAt)
         assertEquals(FollowUp.Drop(index = 1, count = 2), logger.session.followUp)
-        assertEquals("12", logger.session.entry!!.weight)
+        assertEquals("12.5", logger.session.entry!!.weight)
         logger.tick()
 
         // After the last drop the set closes and the set's rest starts.
         assertNull(logger.session.followUp)
         assertEquals(now + 120_000, logger.session.restEndsAt)
         val set = logger.session.current!!.sets.single()
-        assertEquals(listOf(Extension(Extension.Kind.Drop, 18.0, 7), Extension(Extension.Kind.Drop, 12.0, 6)), set.extensions)
+        assertEquals(listOf(Extension(Extension.Kind.Drop, 17.5, 7), Extension(Extension.Kind.Drop, 12.5, 6)), set.extensions)
         assertEquals(Technique.Dropset(drops = 2), set.technique)
     }
 
@@ -110,7 +110,7 @@ class TechniqueSessionTest {
         assertEquals("8", logger.session.entry!!.full)
         logger.tick()
         assertEquals("5", logger.session.entry!!.full)
-        assertEquals(listOf(Extension(Extension.Kind.Drop, 18.0, 8), Extension(Extension.Kind.Drop, 12.0, 5)), logger.session.current!!.lastTime.single().extensions)
+        assertEquals(listOf(Extension(Extension.Kind.Drop, 17.5, 8), Extension(Extension.Kind.Drop, 12.5, 5)), logger.session.current!!.lastTime.single().extensions)
     }
 
     private val myo = """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 } } ]"""
@@ -250,7 +250,7 @@ class TechniqueSessionTest {
         now += 120_000
         logger.done()
         assertEquals(FollowUp.Drop(0, 2), logger.session.followUp)
-        assertEquals("18", logger.session.entry!!.weight)
+        assertEquals("17.5", logger.session.entry!!.weight)
         // A logged set keeps what it was done with.
         logger.setTechnique(0, Technique.Failure)
         assertNull(logger.session.current!!.techniqueAt(0))

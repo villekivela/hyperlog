@@ -20,7 +20,9 @@ class LadderSpecTest {
     @Test
     fun theDefaultDumbbellsFollowTheSpec() {
         val rungs = LadderSpec.DefaultDumbbells.ladder().rungs
-        assertEquals(listOf(2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.5, 25.0, 30.0, 35.0), rungs.take(14))
+        // 1 to 10 kg by 1, then 12.5 to 50 by 2.5.
+        assertEquals(listOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.5, 15.0, 17.5), rungs.take(13))
+        assertEquals(50.0, rungs.last(), 0.0)
     }
 
     @Test

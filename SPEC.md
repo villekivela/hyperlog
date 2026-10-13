@@ -261,8 +261,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - **Equipment item**: one piece of equipment at a gym (a cable station, a leg extension, the
   dumbbell rack, a barbell with plates) with its **weight ladder**: a start and step in kg or lb
   (shown in kg), an explicit list, or for plate-loaded machines a base weight plus plates.
-- **Dumbbells are universal**: one global dumbbell ladder (default 2 kg steps to 20 kg, then
-  22.5, 25, then 5 kg steps; editable), not set per gym. Barbell plates likewise use one global set,
+- **Dumbbells are universal**: one global dumbbell ladder (default 1 to 10 kg by 1, then 12.5 to
+  50 kg by 2.5, the usual rack; editable), not set per gym. Barbell plates likewise use one global set,
   and so do the EZ, trap and safety bars: each has its own bar weight (10, 25 and 30 kg until set)
   and loads the shared plates.
 - **Setup both ways**: a gym screen to list equipment up front, and adding on the go. The first
@@ -309,6 +309,30 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - A stack is a start, a step and a number of weights. Plates are a base weight (bar or sled) plus
   plate pairs, one of each pair per side; any combination of pairs is a rung. The shared barbell
   plates default to a 20 kg bar with pairs of 20, 20, 20, 15, 10, 5, 2.5 and 1.25 kg.
+- **Setting up a stack from its labels** is the primary way to add or edit a stack machine (and a
+  dumbbell rack): type two or three weights as printed on the stack, the lightest first and next to
+  each other, and the app fills in the rest. **Edit exactly** keeps the start-and-step, list,
+  plates and exact pin-stack fields as a fallback.
+  - One field takes the weights, separated by spaces or commas, with a decimal comma allowed
+    (`12,5`). `…` (or `..`) fills in the step before it up to the next weight, so `5 10 … 100`
+    sets the top, and a step that changes partway is written out: `1 2 3 … 10 12.5 15 … 45`. With
+    no top, a stack has 20 plates. Plates typed in kg or lb (**Printed in kg | Printed in lb**).
+  - Kg steps that fit cleanly win (0.5, 1, 1.25, 2, 2.5, 3, 4, 5, 6, 7.5, 8, 10, 12.5, 15, 20 or
+    25 kg). Otherwise labels in kg are read as an **lb stack**: the one lb step (2.5 to 25 lb) and
+    2.5 lb start that explain every label to its printed precision, so `4.5 9.1 13.6` is 10 lb and
+    `36 43 49` (labels in whole kg, cut from 36.3, 43.1, 49.9) is 15 lb. Three plates with a
+    smaller first step are a lighter first plate (`2.5 5 10`: 2.5, then 5 kg steps).
+  - Ambiguous input asks rather than guesses: one weight, or plates that fit more than one stack,
+    read `Type one more weight to tell the steps apart`; plates that skip some (`36 49`) read `Type
+    plates next to each other, from the lightest`. Save waits for a reading.
+  - **Printed labels are what the pad shows and logs.** A stack read from kg labels keeps the
+    labels' precision and rounding (or cutting), so the weight logged is the one read on the
+    machine. Decided over keeping the true weights: per-machine history (ADR 0002) never compares
+    one machine's weights with another's, so a label's error under a kilogram is the same on every
+    set and never reaches progression, while a logged weight that differs from the plate would.
+  - Under the fields a card checks the result, live: `You can pick these weights`, the ladder in
+    one line with its count (`36–121 kg by 15 lb · 20 weights`), how it was read (`Reads as 15 lb
+    steps`) and `Check: 36 · 43 · 49 …, looks right?`, which opens to every weight on a tap.
 - **Stacks with add-ons** (a fourth ladder kind, **pin stack**, for selectorised machines). The pin
   picks a plate: a start, a step and a top in kg or lb (shown in kg), with an optional lighter first
   plate (2.5, then steps of 5 from 5). On top of the pin go two kinds of add-on, both at once if
@@ -330,7 +354,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
     this stack`.
 - Setup lives in Settings → Gyms and equipment: gyms and their equipment, then the shared dumbbells,
   plates and the three specialty bars (`10 kg bar, the shared plates`; a tap asks for the bar's
-  weight). Every ladder shows as the kg weights it gives (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`).
+  weight). Every ladder shows in one line as its runs of steps and its count (`1–10 kg by 1 ·
+  12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing the shared
   dumbbells or plates applies to a running session at once.
 - **Deleting** a gym or an equipment item asks first. One with history (sessions at the gym, sets

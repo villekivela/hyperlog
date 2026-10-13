@@ -102,7 +102,7 @@ class SessionEditTest {
         val logger = logger()
         logger.swap(logger.exercise("db_french_press").id, "overhead_db_triceps_extension")
         logger.switchTo(logger.exercise("db_bicep_curl").id)
-        logger.log("12")
+        logger.log("15")
         assertEquals("overhead_db_triceps_extension", logger.onScreen)
     }
 
@@ -185,7 +185,7 @@ class SessionEditTest {
         logger.removeExercise(logger.exercise("db_lateral_raise").id)
         assertEquals(listOf("barbell_bench_press", "db_bicep_curl", "db_french_press"), logger.session.exercises.map { it.exercise.id })
         logger.log("60"); logger.log("60")
-        logger.log("12"); logger.log("10"); logger.log("12"); logger.log("10")
+        logger.log("15"); logger.log("10"); logger.log("15"); logger.log("10")
         assertEquals(true, logger.session.exercises.all { it.done })
         logger.finish()
         assertEquals("db_lateral_raise", logger().session.exercises.last().exercise.id)

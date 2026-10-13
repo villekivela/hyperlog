@@ -7,15 +7,17 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 
 ## Principles
 
-1. **Weights are always real.** Every ladder is shown as the kg values it yields
-   (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`), never as the start/step that produced them. An lb stack
+1. **Weights are always real.** Every ladder is shown in kg as its runs of steps and count
+   (`1–10 kg by 1 · 12.5–50 by 2.5 · 26 weights`; an lb stack `1.1–89.6 kg by 5 lb`). An lb stack
    reads in kg everywhere.
 2. **A list on cards.** Gyms, then their equipment, one row each: name, then the ladder preview
    in tabular figures. Add rows sit at the end of their list in `primary`.
 3. **Shared is visibly shared.** Dumbbells and barbell plates sit on their own card under "Shared by
    every gym", in the same Gyms screen, so there is one place to edit them.
-4. **The editor shows its result live.** "Real weights" under the fields updates on every
-   keystroke; Save stays disabled until the fields make a ladder.
+4. **The editor shows its result live.** A card under the fields, "You can pick these weights",
+   sums the ladder up in one line, says how labels were read, and asks `Check: 36 · 43 · 49 …,
+   looks right?`; a tap opens every weight. Save stays disabled until the fields make a ladder.
+   Stacks and racks open on typing 2–3 printed weights; "Edit exactly" gives the fields.
 5. **The check speaks in the strip.** The weight check replaces the pad's strip with the reason
    and three real weights, and colours the weight cell and ✓ in `error`. Nothing pops up.
 

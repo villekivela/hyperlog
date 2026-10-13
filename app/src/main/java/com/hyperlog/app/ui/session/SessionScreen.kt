@@ -173,6 +173,7 @@ fun SessionScreen(
             spec = null,
             kinds = LadderKind.Items,
             pinPlates = session.gym?.pinPlates.orEmpty(),
+            readable = true,
             // A leg press or sled opens on plates (the gym's, from a zero start), a stack machine on a stack.
             defaultKind = if (current.exercise.plateLoaded) LadderKind.Plates else null,
             defaultPlates = sharedPlates,
@@ -1298,7 +1299,7 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    item.ladder.ladder(pinPlates).preview(),
+                    item.ladder.summary(pinPlates),
                     style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                     color = cs.onSurfaceVariant,
                     maxLines = 1,

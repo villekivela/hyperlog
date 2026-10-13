@@ -5,7 +5,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class WeightCheckTest {
-    private val dumbbells = LadderSpec.DefaultDumbbells.ladder()
+    private val dumbbells = LadderSpec.OldDefaultDumbbells.ladder()
 
     @Test
     fun tenTimesTheLastSetOffersWeightsNearTheLastSet() {

@@ -86,7 +86,7 @@ class SupersetSessionTest {
         logger.log("20"); logger.log("20")
         assertEquals("db_bicep_curl", logger.onScreen)
 
-        logger.log("12")
+        logger.log("15")
         assertEquals("db_french_press", logger.onScreen)
         assertNull(logger.session.restEndsAt)
 
@@ -96,7 +96,7 @@ class SupersetSessionTest {
         assertEquals(now + 90_000, logger.session.restEndsAt)
         assertEquals(1, logger.session.current!!.sets.size)
 
-        logger.log("12")
+        logger.log("15")
         assertEquals("db_french_press", logger.onScreen)
         assertNull(logger.session.restEndsAt)
         logger.log("10")
@@ -125,11 +125,11 @@ class SupersetSessionTest {
         program()
         val logger = logger()
         logger.switchTo("db_bicep_curl")
-        logger.log("12")
+        logger.log("15")
         assertEquals("db_french_press", logger.onScreen)
         logger.log("10")
         assertEquals("db_bicep_curl", logger.onScreen)
-        logger.log("12"); logger.log("10")
+        logger.log("15"); logger.log("10")
         // Round done: back to the bench, which was skipped.
         assertEquals("db_bench_press", logger.onScreen)
         logger.log("20"); logger.log("20")
@@ -141,7 +141,7 @@ class SupersetSessionTest {
         program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
         val logger = logger()
         logger.switchTo("db_bicep_curl")
-        logger.log("12")
+        logger.log("15")
         assertEquals(FollowUp.MiniSet(index = 0, target = 4, max = 3), logger.session.followUp)
 
         now += 5_000
@@ -157,7 +157,7 @@ class SupersetSessionTest {
         program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
         val logger = logger()
         logger.switchTo("db_bicep_curl")
-        logger.log("12")
+        logger.log("15")
 
         now += 5_000
         // Not the partner: the round is broken off, so the curl's 1:00 rest runs.

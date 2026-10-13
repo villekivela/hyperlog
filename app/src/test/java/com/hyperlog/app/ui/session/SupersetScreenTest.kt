@@ -58,9 +58,9 @@ class SupersetScreenTest {
         // The Next line skips the partner: it names what follows the superset.
         compose.onNodeWithText("DB Lateral Raise").assertIsDisplayed()
 
-        compose.press("1"); compose.press("4"); compose.press("Next"); compose.press("8"); compose.press("Log set")
+        compose.press("1"); compose.press("5"); compose.press("Next"); compose.press("8"); compose.press("Log set")
         compose.waitFor("1b with DB Curl")
-        compose.onNodeWithText("14 × 8").assertIsDisplayed()
+        compose.onNodeWithText("15 × 8").assertIsDisplayed()
         compose.onNodeWithText("DB French Press").assertIsDisplayed()
     }
 

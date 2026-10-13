@@ -195,7 +195,7 @@ class CorrectionSessionTest {
         logger.type("7"); logger.tick(); logger.tick()
         val bench = logger.session.current!!.id
         logger.correct(bench, 0, extension = 1)
-        assertEquals("12", logger.session.correction!!.entry.weight)
+        assertEquals("12.5", logger.session.correction!!.entry.weight)
         assertNull(logger.session.correction!!.entry.rir)
         logger.focus(Field.Weight); logger.type("14"); logger.tick(); logger.type("5"); logger.tick()
 
@@ -203,7 +203,7 @@ class CorrectionSessionTest {
         assertEquals(com.hyperlog.app.program.Technique.Dropset(drops = 2), set.technique)
         assertEquals(
             listOf(
-                com.hyperlog.app.domain.Extension(com.hyperlog.app.domain.Extension.Kind.Drop, 18.0, 7),
+                com.hyperlog.app.domain.Extension(com.hyperlog.app.domain.Extension.Kind.Drop, 17.5, 7),
                 com.hyperlog.app.domain.Extension(com.hyperlog.app.domain.Extension.Kind.Drop, 14.0, 5),
             ),
             set.extensions,

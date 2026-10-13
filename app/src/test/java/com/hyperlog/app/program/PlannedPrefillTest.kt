@@ -33,7 +33,7 @@ class PlannedPrefillTest {
     fun eachDropIsThePreviousWeightMinusThePercentRoundedDownToARung() {
         val dumbbells = LadderSpec.DefaultDumbbells.ladder()
         // 25 − 25% = 18.75 → 18; 18 − 25% = 13.5 → 12 (screens/03-drop-set-in-progress.png).
-        assertEquals(listOf(18.0, 12.0), dropWeights(25.0, Technique.Dropset(drops = 2, percent = 25), dumbbells))
+        assertEquals(listOf(17.5, 12.5), dropWeights(25.0, Technique.Dropset(drops = 2, percent = 25), dumbbells))
         // 100 − 20% = 80, 80 − 20% = 64 → 62.5, 62.5 − 20% = 50 on the plates.
         assertEquals(listOf(80.0, 62.5, 50.0), dropWeights(100.0, Technique.Dropset(drops = 3, percent = 20), plates))
         // At the lightest rung the drops stay there.

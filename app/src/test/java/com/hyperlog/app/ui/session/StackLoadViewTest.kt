@@ -17,7 +17,7 @@ class StackLoadViewTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private val stack = LadderSpec.PinStack(WeightUnit.Kg, start = 5.0, step = 5.0, top = 100.0, builtIn = listOf(2.5, 2.5))
+    private val stack = LadderSpec.PinStack.steps(WeightUnit.Kg, start = 5.0, step = 5.0, top = 100.0, builtIn = listOf(2.5, 2.5))
 
     @Test
     fun aPlateOnThePinIsPartOfTheLoading() {
@@ -27,7 +27,7 @@ class StackLoadViewTest {
 
     @Test
     fun builtInAddOnsAreCounted() {
-        compose.setContent { HyperlogTheme { StackLoad(LadderSpec.PinStack(WeightUnit.Kg, 10.0, 10.0, 100.0, builtIn = listOf(2.5, 2.5)).load(45.0, emptyList()), 45.0) } }
+        compose.setContent { HyperlogTheme { StackLoad(LadderSpec.PinStack.steps(WeightUnit.Kg, 10.0, 10.0, 100.0, builtIn = listOf(2.5, 2.5)).load(45.0, emptyList()), 45.0) } }
         compose.onNodeWithContentDescription("Load pin 40 + 2 add-ons for 45 kg").assertIsDisplayed()
     }
 

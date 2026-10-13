@@ -34,14 +34,14 @@ class PinStackTest {
     @Test
     fun builtInAddOnsCountFromNoneToAllOfEach() {
         // Two identical 2.5 kg plates on top of the stack add 0, 2.5 or 5.
-        val stack = LadderSpec.PinStack(WeightUnit.Kg, start = 10.0, step = 10.0, top = 30.0, builtIn = listOf(2.5, 2.5), pinPlates = false)
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Kg, start = 10.0, step = 10.0, top = 30.0, builtIn = listOf(2.5, 2.5), pinPlates = false)
         assertEquals(listOf(10.0, 12.5, 15.0, 20.0, 22.5, 25.0, 30.0, 32.5, 35.0), stack.ladder().rungs)
     }
 
     @Test
     fun nearDuplicateRungsAreKeptOnce() {
         // An lb stack (4.5 kg labels) with a 4.5 kg add-on: pin 4.5 + add-on lands on pin 9.1.
-        val stack = LadderSpec.PinStack(WeightUnit.Lb, start = 10.0, step = 10.0, top = 30.0, builtIn = listOf(4.5), pinPlates = false)
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Lb, start = 10.0, step = 10.0, top = 30.0, builtIn = listOf(4.5), pinPlates = false)
         val rungs = stack.ladder().rungs
         rungs.zipWithNext().forEach { (a, b) -> assertTrue("$a and $b are within 0.1 kg", b - a >= 0.1) }
         assertEquals(listOf(4.5, 9.1, 13.6, 18.1), rungs)
@@ -50,25 +50,25 @@ class PinStackTest {
     @Test
     fun anLbStackShowsItsPrintedLabels() {
         // 15 lb plates labelled in whole kg: 80, 95, 110 lb read 36, 43 and 50.
-        val stack = LadderSpec.PinStack(WeightUnit.Lb, start = 80.0, step = 15.0, top = 110.0, labelKg = 1.0, pinPlates = false)
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Lb, start = 80.0, step = 15.0, top = 110.0, labelKg = 1.0, pinPlates = false)
         assertEquals(listOf(36.0, 43.0, 50.0), stack.ladder().rungs)
     }
 
     @Test
     fun labelsCanBeCutRatherThanRounded() {
-        val stack = LadderSpec.PinStack(WeightUnit.Lb, start = 80.0, step = 15.0, top = 110.0, labelKg = 1.0, labelsCut = true, pinPlates = false)
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Lb, start = 80.0, step = 15.0, top = 110.0, labelKg = 1.0, labelsCut = true, pinPlates = false)
         assertEquals(listOf(36.0, 43.0, 49.0), stack.ladder().rungs)
     }
 
     @Test
     fun aDifferentFirstPlateComesBeforeTheSteps() {
-        val stack = LadderSpec.PinStack(WeightUnit.Kg, first = 2.5, start = 5.0, step = 5.0, top = 20.0, pinPlates = false)
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Kg, first = 2.5, start = 5.0, step = 5.0, top = 20.0, pinPlates = false)
         assertEquals(listOf(2.5, 5.0, 10.0, 15.0, 20.0), stack.ladder().rungs)
     }
 
     @Test
     fun theLoadingSaysWhichPinAndWhatGoesOnIt() {
-        val stack = LadderSpec.PinStack(WeightUnit.Kg, start = 10.0, step = 10.0, top = 100.0, builtIn = listOf(2.5, 2.5))
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Kg, start = 10.0, step = 10.0, top = 100.0, builtIn = listOf(2.5, 2.5))
         assertEquals(PinLoad(pin = 40.0, builtIn = emptyList(), onPin = emptyList()), stack.load(40.0, gymPlates))
         // A built-in add-on is handier than a loose plate, so it is used first.
         assertEquals(PinLoad(pin = 40.0, builtIn = listOf(2.5), onPin = emptyList()), stack.load(42.5, gymPlates))
@@ -91,7 +91,7 @@ class PinStackTest {
     fun itSurvivesStorage() {
         listOf(
             LadderSpec.DefaultPinStack,
-            LadderSpec.PinStack(WeightUnit.Lb, first = 5.0, start = 10.0, step = 15.0, top = 200.0, labelKg = 1.0, labelsCut = true, builtIn = listOf(2.5, 2.5), pinPlates = false),
+            LadderSpec.PinStack.steps(WeightUnit.Lb, first = 5.0, start = 10.0, step = 15.0, top = 200.0, labelKg = 1.0, labelsCut = true, builtIn = listOf(2.5, 2.5), pinPlates = false),
         ).forEach { assertEquals(it, LadderSpec.decode(it.encode())) }
     }
 }

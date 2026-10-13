@@ -264,8 +264,28 @@
     <string name="ladder_base">Bar, kg</string>
     <string name="ladder_base_machine">Starting weight (empty machine or sled), kg</string>
     <string name="ladder_pairs">Pairs of plates in kg: one number a pair, or 3×20</string>
-    <string name="ladder_preview">Real weights</string>
-    <string name="ladder_incomplete">Fill in the fields to see the weights</string>
+    <string name="ladder_preview">You can pick these weights</string>
+    <string name="ladder_incomplete">Fill in the fields above to see them here</string>
+    <string name="ladder_summary_count">%1$s · %2$s</string>
+    <string name="ladder_check">Check: %1$s, looks right?</string>
+    <string name="ladder_check_show">Show every weight</string>
+    <string name="ladder_check_hide">Show fewer</string>
+    <string name="ladder_pin_plates_exact">Plates in the unit above, e.g. 5, 10 … 100</string>
+    <string name="reading_field">Weights printed on the stack</string>
+    <string name="reading_field_rack">Weights on the rack</string>
+    <string name="reading_placeholder">5 10 15</string>
+    <string name="reading_placeholder_rack">1 2 3 … 10 12.5 15 … 50</string>
+    <string name="reading_help">The lightest 2–3 as printed. Add … and the heaviest for the top. A step that changes: 1 2 … 10 12.5 15 … 45</string>
+    <string name="reading_in_kg">Printed in kg</string>
+    <string name="reading_in_lb">Printed in lb</string>
+    <string name="reading_exactly">Edit exactly</string>
+    <string name="reading_from_labels">Type from the stack instead</string>
+    <string name="reading_bad_add_ons">Add-ons: weights in kg, or a count like 2×2.5</string>
+    <string name="reading_reads_as">Reads as %1$s</string>
+    <string name="reading_next_to_each_other">Type plates next to each other, from the lightest</string>
+    <string name="reading_one_more">Type one more weight to tell the steps apart</string>
+    <string name="reading_no_stack">These weights don’t make a stack</string>
+    <string name="reading_empty">Type 2–3 weights from the stack</string>
 
     <!-- Program (#6) -->
     <string name="program_title">Program</string>

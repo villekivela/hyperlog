@@ -113,6 +113,7 @@ class GymAtSessionStartTest {
         compose.waitFor("New machine")
         // A machine is named for what it is; the name comes filled in.
         compose.onNodeWithText("Leg Extension").assertIsDisplayed()
+        compose.onNodeWithText("Edit exactly").performClick()
         compose.onNodeWithText("Stack").performClick()
         compose.onNodeWithText("lb stack: 2.5, then 5 lb steps").performClick()
         compose.onNodeWithText("Save").performClick()
@@ -144,7 +145,7 @@ class GymAtSessionStartTest {
         addExercise("Cable Lateral Raise")
         compose.waitFor("Which machine?")
 
-        compose.onNodeWithText("1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg").assertIsDisplayed()
+        compose.onNodeWithText("1.1–89.6 kg by 5 lb").assertIsDisplayed()
         compose.onNodeWithText("Cable station").performClick()
         waitForPad()
     }

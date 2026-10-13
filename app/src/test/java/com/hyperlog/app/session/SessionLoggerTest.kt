@@ -251,7 +251,7 @@ class SessionLoggerTest {
         assertEquals(1, logger.session.current!!.sets.size)
         val check = logger.session.weightCheck!!
         assertEquals("10× last set", check.reason)
-        assertEquals(listOf(22.5, 25.0, 30.0), check.options)
+        assertEquals(listOf(22.5, 25.0, 27.5), check.options)
 
         // A stutter right after the warning doesn't keep the weight; a deliberate ✓ does.
         logger.done()

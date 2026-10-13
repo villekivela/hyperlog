@@ -87,7 +87,7 @@ class PinStackSessionTest {
     @Test
     fun builtInAddOnsShowInTheLoading() = runTest {
         val gym = gyms.addGym("Harbour")
-        val stack = LadderSpec.PinStack(WeightUnit.Kg, start = 10.0, step = 10.0, top = 100.0, builtIn = listOf(2.5, 2.5), pinPlates = false)
+        val stack = LadderSpec.PinStack.steps(WeightUnit.Kg, start = 10.0, step = 10.0, top = 100.0, builtIn = listOf(2.5, 2.5), pinPlates = false)
         gyms.addItem(EquipmentItem(gymId = gym, name = "Leg extension", ladder = stack))
         val logger = logger()
         logger.start(gym)
