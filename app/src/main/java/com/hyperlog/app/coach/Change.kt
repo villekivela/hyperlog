@@ -94,7 +94,10 @@ sealed interface Operation {
      * technique when it is null.
      */
     @Serializable @SerialName("remove_technique")
-    data class RemoveTechnique(val slot: String? = null, val technique: String? = null, override val reason: String? = null) : Operation
+    data class RemoveTechnique(val slot: String? = null, val technique: String? = null, override val reason: String? = null) : Operation {
+        /** The kind [technique] names; null for any (or a name the validator turns down). */
+        val kind: com.hyperlog.app.program.TechniqueKind? get() = com.hyperlog.app.program.TechniqueKind.ofKey(technique)
+    }
 
     /** The next day is passed over. */
     @Serializable @SerialName("skip_day")

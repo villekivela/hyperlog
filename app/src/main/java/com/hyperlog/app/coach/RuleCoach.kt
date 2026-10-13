@@ -7,6 +7,7 @@ import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.SetPrescription
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Position
 import java.time.DayOfWeek
@@ -165,7 +166,7 @@ object RuleCoach {
                 loads.forEach { (slot, e) -> ops += Operation.AdjustLoad(slot.id, LOAD_PERCENT, if (e.pull && situation.area == Area.Hands) "straps, open hand" else situation.area.label.lowercase()) }
                 ops += Operation.AdjustRir(null, 1, "pain")
                 loads.filter { (slot, _) -> slot.id in plan.dropsetSlots() }
-                    .forEach { (slot, _) -> ops += Operation.RemoveTechnique(slot.id, "dropset", "no drop sets on ${situation.area.label.lowercase()}") }
+                    .forEach { (slot, _) -> ops += Operation.RemoveTechnique(slot.id, TechniqueKind.Dropset.key, "no drop sets on ${situation.area.label.lowercase()}") }
                 summary = painSummary(situation.area)
             }
             Situation.TimeOff -> when {
@@ -359,7 +360,7 @@ object RuleCoach {
         b.days.flatMap { d ->
             d.groups.flatMap { g -> g.slots }.filter { s ->
                 (s.sets + s.alternatives.flatMap { it.sets.orEmpty() }).any { spec ->
-                    spec.technique?.kind == "dropset" || spec.weeks.any { it.setsTechnique && it.technique?.kind == "dropset" }
+                    spec.technique?.kind == TechniqueKind.Dropset || spec.weeks.any { it.setsTechnique && it.technique?.kind == TechniqueKind.Dropset }
                 }
             }.map { it.id }
         }

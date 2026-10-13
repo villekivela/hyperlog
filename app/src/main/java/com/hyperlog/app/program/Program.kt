@@ -118,13 +118,34 @@ sealed interface Technique {
     data class IsoHold(val seconds: Int, val position: HoldPosition) : Technique
     data object Failure : Technique
 
-    /** The technique's kind as a program file names it: `dropset`, `myo_reps`… */
-    val kind: String get() = when (this) {
-        is Dropset -> "dropset"
-        is MyoReps -> "myo_reps"
-        is LengthenedPartials -> "lengthened_partials"
-        is IsoHold -> "iso_hold"
-        Failure -> "failure"
+    /** Which of the five techniques this is. */
+    val kind: TechniqueKind get() = when (this) {
+        is Dropset -> TechniqueKind.Dropset
+        is MyoReps -> TechniqueKind.MyoReps
+        is LengthenedPartials -> TechniqueKind.LengthenedPartials
+        is IsoHold -> TechniqueKind.IsoHold
+        Failure -> TechniqueKind.Failure
+    }
+}
+
+/**
+ * The five intensity techniques by kind. [key] is the name program files, Changes and stored
+ * sets use (`dropset`, `myo_reps`…); the UI's one map gives each its label and symbol.
+ */
+enum class TechniqueKind(val key: String) {
+    Dropset("dropset"),
+    MyoReps("myo_reps"),
+    LengthenedPartials("lengthened_partials"),
+    IsoHold("iso_hold"),
+    Failure("failure"),
+    ;
+
+    companion object {
+        /** The kind a file names [key]; null for anything else. */
+        fun ofKey(key: String?): TechniqueKind? = entries.firstOrNull { it.key == key }
+
+        /** Every kind's key, `dropset, myo_reps, …`, for messages and the Change format. */
+        val keys: List<String> get() = entries.map { it.key }
     }
 }
 

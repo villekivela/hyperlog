@@ -140,7 +140,7 @@ object AskClaude {
                     if (c.backoff) append("back-off ")
                     append("${c.count} × ${c.reps}")
                     c.rir?.let { append(" @ $it RIR") }
-                    c.techniques.map { it.kind }.distinct().takeIf { it.isNotEmpty() }?.let { append(" (${it.joinToString()} on the last)") }
+                    c.techniques.map { it.kind.key }.distinct().takeIf { it.isNotEmpty() }?.let { append(" (${it.joinToString()} on the last)") }
                 }
             }
             append("  ${slot.label}. slot \"${slot.id}\": ${slot.exercise} (${names[slot.exercise] ?: slot.exercise}), $sets")

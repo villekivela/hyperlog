@@ -239,33 +239,30 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
     private fun technique(el: JsonElement?, path: String): Read {
         if (el == null || el is JsonNull) return Ok(null)
         val o = el as? JsonObject ?: return Bad.also { error(path, "must be an object with a \"kind\"") }
-        val kind = (o["kind"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        val name = (o["kind"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+            ?: return Bad.also { error("$path.kind", if (o["kind"] == null) "is required" else "must be a technique name") }
+        val kind = TechniqueKind.ofKey(name)
+            ?: return Bad.also { error("$path.kind", "unknown technique \"$name\" (${TechniqueKind.keys.joinToString()})") }
         val fields = when (kind) {
-            "dropset" -> setOf("kind", "drops", "percent")
-            "myo_reps" -> setOf("kind", "miniSetReps", "maxMiniSets")
-            "lengthened_partials" -> setOf("kind", "partials")
-            "iso_hold" -> setOf("kind", "seconds", "position")
-            "failure" -> setOf("kind")
-            null -> return Bad.also {
-                error("$path.kind", if (o["kind"] == null) "is required" else "must be a technique name")
-            }
-            else -> return Bad.also {
-                error("$path.kind", "unknown technique \"$kind\" (dropset, myo_reps, lengthened_partials, iso_hold, failure)")
-            }
+            TechniqueKind.Dropset -> setOf("kind", "drops", "percent")
+            TechniqueKind.MyoReps -> setOf("kind", "miniSetReps", "maxMiniSets")
+            TechniqueKind.LengthenedPartials -> setOf("kind", "partials")
+            TechniqueKind.IsoHold -> setOf("kind", "seconds", "position")
+            TechniqueKind.Failure -> setOf("kind")
         }
         val saved = errors.size
         unknownFields(o, path, fields)
         val technique = when (kind) {
-            "dropset" -> Technique.Dropset(
+            TechniqueKind.Dropset -> Technique.Dropset(
                 drops = int(o, path, "drops", min = 1, max = 3) ?: 2,
                 percent = int(o, path, "percent", min = 5, max = 50) ?: 25,
             )
-            "myo_reps" -> Technique.MyoReps(
+            TechniqueKind.MyoReps -> Technique.MyoReps(
                 miniSetReps = int(o, path, "miniSetReps", min = 1, max = 10) ?: 3,
                 maxMiniSets = int(o, path, "maxMiniSets", min = 1, max = 10) ?: 5,
             )
-            "lengthened_partials" -> Technique.LengthenedPartials(int(o, path, "partials", min = 1, max = 30))
-            "iso_hold" -> {
+            TechniqueKind.LengthenedPartials -> Technique.LengthenedPartials(int(o, path, "partials", min = 1, max = 30))
+            TechniqueKind.IsoHold -> {
                 val seconds = int(o, path, "seconds", required = true, min = 1, max = 300)
                 val position = string(o, path, "position", required = true)?.let { p ->
                     HoldPosition.entries.firstOrNull { it.key == p }
@@ -273,7 +270,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
                 }
                 if (seconds != null && position != null) Technique.IsoHold(seconds, position) else null
             }
-            else -> Technique.Failure
+            TechniqueKind.Failure -> Technique.Failure
         }
         return if (errors.size > saved || technique == null) Bad else Ok(technique)
     }

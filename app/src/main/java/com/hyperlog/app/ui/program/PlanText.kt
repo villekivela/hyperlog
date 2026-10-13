@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.program
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -18,18 +19,34 @@ import androidx.compose.ui.unit.em
 import com.hyperlog.app.R
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.program.planChunks
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
-/** The symbol a technique is shown with (docs/design/logging-screen.md, Technique label). */
-fun Technique.symbol(): Symbol = when (this) {
-    is Technique.Dropset -> Symbol.TrendingDown
-    is Technique.MyoReps -> Symbol.Repeat
-    is Technique.LengthenedPartials -> Symbol.UnfoldLess
-    is Technique.IsoHold -> Symbol.PanTool
-    Technique.Failure -> Symbol.LocalFireDepartment
+/**
+ * Each technique kind's symbol and name (docs/design/logging-screen.md, Technique label): the one
+ * place the UI maps a kind to how it looks.
+ */
+enum class TechniqueLook(val kind: TechniqueKind, val symbol: Symbol, @StringRes val label: Int) {
+    Dropset(TechniqueKind.Dropset, Symbol.TrendingDown, R.string.technique_dropset_name),
+    MyoReps(TechniqueKind.MyoReps, Symbol.Repeat, R.string.technique_myo_name),
+    LengthenedPartials(TechniqueKind.LengthenedPartials, Symbol.UnfoldLess, R.string.technique_partials_name),
+    IsoHold(TechniqueKind.IsoHold, Symbol.PanTool, R.string.technique_iso_name),
+    Failure(TechniqueKind.Failure, Symbol.LocalFireDepartment, R.string.technique_failure_name),
+    ;
+
+    companion object {
+        fun of(kind: TechniqueKind): TechniqueLook = entries.first { it.kind == kind }
+    }
 }
+
+/** The symbol a technique is shown with. */
+fun Technique.symbol(): Symbol = TechniqueLook.of(kind).symbol
+
+/** The technique's name in the set sheet: `Drop set`, `Myo-reps`… */
+@Composable
+fun techniqueName(technique: Technique): String = stringResource(TechniqueLook.of(technique.kind).label)
 
 /** `Drop set, 2 drops of 25%`, `Myo-reps, mini-sets of 4`, `To failure`… */
 @Composable

@@ -21,7 +21,7 @@ object ChangeValidator {
     const val MAX_REST = 900
 
     /** The technique kinds `remove_technique` names, as in a program file. */
-    val TechniqueKinds = listOf("dropset", "myo_reps", "lengthened_partials", "iso_hold", "failure")
+    val TechniqueKinds = com.hyperlog.app.program.TechniqueKind.keys
 
     fun validate(json: String, program: Program, exercises: Set<String>): Result {
         val change = try {

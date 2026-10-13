@@ -123,7 +123,7 @@ data class ActiveSession(
             val current = current ?: return emptyList()
             if (current.sets.isNotEmpty() || current.needsMachine || followUp != null) return emptyList()
             val kg = entry?.weightKg ?: return emptyList()
-            val reps = entry?.full?.toIntOrNull()?.takeIf { it > 0 } ?: current.plan?.firstOrNull()?.reps?.max
+            val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: current.plan?.firstOrNull()?.reps?.max
             return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
         }
 

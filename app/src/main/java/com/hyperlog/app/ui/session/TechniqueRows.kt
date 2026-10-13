@@ -2,9 +2,6 @@ package com.hyperlog.app.ui.session
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,9 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -30,28 +29,31 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.program.HoldPosition
-import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.session.DEFAULT_DROP_REPS
 import com.hyperlog.app.session.FollowUp
+import com.hyperlog.app.ui.program.TechniqueLook
 import com.hyperlog.app.ui.program.symbol
+import com.hyperlog.app.ui.program.techniqueName
 import com.hyperlog.app.ui.program.techniqueText
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -291,9 +293,9 @@ internal const val ActiveSubRowTag = "active-sub-row"
 internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, actions: PadActions) {
     val cs = MaterialTheme.colorScheme
     val (symbol, text) = when (followUp) {
-        is FollowUp.Drop -> Symbol.TrendingDown to stringResource(R.string.follow_drop, followUp.index + 1, followUp.count)
-        is FollowUp.MiniSet -> Symbol.Repeat to stringResource(R.string.follow_mini_set, followUp.index + 1, followUp.max)
-        is FollowUp.Hold -> Symbol.PanTool to stringResource(R.string.follow_hold, followUp.seconds)
+        is FollowUp.Drop -> TechniqueLook.Dropset.symbol to stringResource(R.string.follow_drop, followUp.index + 1, followUp.count)
+        is FollowUp.MiniSet -> TechniqueLook.MyoReps.symbol to stringResource(R.string.follow_mini_set, followUp.index + 1, followUp.max)
+        is FollowUp.Hold -> TechniqueLook.IsoHold.symbol to stringResource(R.string.follow_hold, followUp.seconds)
     }
     Spacer(Modifier.width(8.dp))
     SymbolIcon(symbol, null, Modifier.size(20.dp), tint = cs.tertiary)
@@ -316,17 +318,6 @@ private val Offered: List<Technique> = listOf(
     Technique.LengthenedPartials(),
     Technique.IsoHold(seconds = 20, position = HoldPosition.Stretch),
     Technique.Failure,
-)
-
-@Composable
-private fun techniqueName(technique: Technique): String = stringResource(
-    when (technique) {
-        is Technique.Dropset -> R.string.technique_dropset_name
-        is Technique.MyoReps -> R.string.technique_myo_name
-        is Technique.LengthenedPartials -> R.string.technique_partials_name
-        is Technique.IsoHold -> R.string.technique_iso_name
-        Technique.Failure -> R.string.technique_failure_name
-    },
 )
 
 /** A technique's numbers, for the set sheet under its name: `2 drops of 25%`, `20 s in the stretch`. */

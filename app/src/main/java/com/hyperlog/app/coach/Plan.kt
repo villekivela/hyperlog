@@ -178,7 +178,7 @@ object Plan {
             s.copy(sets = s.sets.eased(), alternativeSets = s.alternativeSets.mapValues { it.value.eased() })
         }
         is Operation.RemoveTechnique -> day.mapSlots(op.slot) { s ->
-            fun List<SetPrescription>.plain() = map { set -> if (set.technique != null && (op.technique == null || set.technique.kind == op.technique)) set.copy(technique = null) else set }
+            fun List<SetPrescription>.plain() = map { set -> if (set.technique != null && (op.technique == null || set.technique.kind == op.kind)) set.copy(technique = null) else set }
             s.copy(sets = s.sets.plain(), alternativeSets = s.alternativeSets.mapValues { it.value.plain() })
         }
         is Operation.DeloadWeek -> if (op.week != day.position.week) day else {
