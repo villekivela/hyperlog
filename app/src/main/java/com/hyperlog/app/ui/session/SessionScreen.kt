@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.ui.zIndex
 import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.domain.LadderSpec
@@ -703,9 +705,10 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
     val current = table.current
     val entry = table.entry
     val listState = rememberLazyListState()
-    // Keep the active row in view as sets pile up.
-    LaunchedEffect(current.id, current.sets.size) {
-        if (current.sets.isNotEmpty()) listState.animateScrollToItem(current.sets.size)
+    // Keep the active row and the set after it in view, warm-ups and tags scrolling away first.
+    LaunchedEffect(current.id, current.sets.size, table.warmups.size, table.correction) {
+        androidx.compose.runtime.withFrameNanos { }
+        listState.keepInView("set-${current.sets.size}", "set-${current.sets.size + 1}")
     }
     val plan = current.prescription
     val cs = MaterialTheme.colorScheme
@@ -747,6 +750,33 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         }
     }
     }
+}
+
+/**
+ * Scrolls so the item keyed [active] and the one keyed [next] (with whatever sits between them,
+ * a tag or the plates) are both in view, as little as it takes; if they can't both fit, [active]
+ * goes to the top.
+ */
+private suspend fun androidx.compose.foundation.lazy.LazyListState.keepInView(active: String, next: String) {
+    // Below the fold (warm-ups above it): step down until it is laid out.
+    repeat(8) {
+        if (layoutInfo.visibleItemsInfo.any { it.key == active } || !canScrollForward) return@repeat
+        scrollBy((layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f)
+    }
+    val info = layoutInfo
+    val start = info.viewportStartOffset
+    val end = info.viewportEndOffset - info.afterContentPadding
+    val a = info.visibleItemsInfo.firstOrNull { it.key == active } ?: return
+    val n = info.visibleItemsInfo.firstOrNull { it.key == next }
+    val more = info.visibleItemsInfo.last().index < info.totalItemsCount - 1
+    val needed = when {
+        n != null -> n.offset + n.size - end
+        // The next set is still below the fold.
+        more -> Int.MAX_VALUE
+        else -> a.offset + a.size - end
+    }
+    val delta = minOf(needed, a.offset - start)
+    if (delta > 0) animateScrollBy(delta.toFloat())
 }
 
 /**

@@ -108,19 +108,22 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
     Row(modifier.clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         BarSide(side.orEmpty(), height = if (compact) 24.dp else 40.dp, muted = side == null && totalKg != null, scale = if (compact) 1f else 1.5f)
         Spacer(Modifier.width(if (compact) 8.dp else 16.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
+        // A warm-up row's legend is one line, so the row keeps its 48 dp.
+        val legendRow: @Composable (@Composable () -> Unit) -> Unit = { items ->
+            if (compact) Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) { items() }
+            else FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) { items() }
+        }
+        legendRow {
             if (side == null && totalKg != null) {
                 Text(stringResource(R.string.plates_not_on), style = text, color = cs.onSurfaceVariant)
-                return@FlowRow
+                return@legendRow
             }
             legend(side.orEmpty()).forEach { (kg, n) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     PlateSwatch(kg, if (compact) 8.dp else 12.dp)
-                    Spacer(Modifier.width(if (compact) 4.dp else 6.dp))
-                    Text("$n × ${formatKg(kg)}", style = text, color = cs.onSurface)
+                    Spacer(Modifier.width(if (compact) 3.dp else 6.dp))
+                    // Compact, a single plate is its weight alone: `20`, `2×20`.
+                    Text(if (compact && n == 1) formatKg(kg) else if (compact) "$n×${formatKg(kg)}" else "$n × ${formatKg(kg)}", style = text, color = cs.onSurface, maxLines = 1, softWrap = false)
                 }
             }
             // The bar's own weight is the pad's; a warm-up row has no room to repeat it.

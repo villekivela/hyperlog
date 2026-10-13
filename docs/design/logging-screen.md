@@ -320,8 +320,8 @@ show; nothing about a warm-up touches the clock. Screens: `light-session-plates.
   `#D9453B`, 20 and 2 blue `#2F6FDB`, 15 and 1.5 yellow `#E5B12E`, 10 and 1 green `#3B9C55`, 5
   and 0.5 white `#F2F2F2` (outlined), 1.25 and any other plate silver `#A7ADB4`. Mid tones, so
   each reads on light and dark containers.
-- **In the pad**: a 48 dp strip at the top of the pad while the weight field of a barbell or
-  plate-loaded exercise is focused, then a thin outlineVariant divider, then the pad as it was.
+- **In the pad**: a 48 dp strip at the top of the pad for a barbell or plate-loaded exercise, on
+  the weight and the reps alike, so the pad keeps its height between them, then a thin outlineVariant divider, then the pad as it was.
   It updates as the weight is typed; with nothing typed it draws the bar alone, and a weight the
   plates can't make draws the bar muted with "Not on these plates". The weight check's strip
   replaces it. A correction shows it too. Regular size: a 40 dp drawing, titleSmall legend.
@@ -333,8 +333,11 @@ show; nothing about a warm-up touches the clock. Screens: `light-session-plates.
   bar with 2 × 25, 1 × 10, 1 × 2.5, 1 × 1.25 on each side". Screens: `light-whole-bar.png`,
   `dark-whole-bar.png`, `dark-whole-machine.png` (renders).
 - **On a warm-up row**: the compact size over Target and Last (a warm-up has neither): a 24 dp
-  drawing and a labelMedium legend without the bar's weight, which the pad already gives. The
-  row grows past 48 dp when the legend wraps.
+  drawing and a one-line labelMedium legend without the bar's weight, which the pad already
+  gives, a single plate as its weight alone (`■20 ■10 ■2.5`, `■2×20`). The row stays 48 dp.
+- **Keeping the next set in view**: when the table's rows change (a set logged, warm-ups appearing,
+  a correction), it scrolls as little as it takes to show the active row and the set after it,
+  with any tag or plates between them; warm-ups above scroll away first.
 - **Warm-up row**: `W` in labelLarge onSurfaceVariant in the set column, the compact plates, kg
   and reps in titleLarge, `outline` until ticked, onSurface after, with a `check` in the RIR
   column. The whole row is one checkbox: a tap ticks it and those above, a tap on the last

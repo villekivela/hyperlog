@@ -73,7 +73,7 @@ private fun WarmupRow(n: Int, kg: Double, reps: Int, plates: LadderSpec.Plates?,
     val color = if (done) cs.onSurface else cs.outline
     val description = stringResource(R.string.warmup_description, n, formatKg(kg), reps)
     Row(
-        Modifier.fillMaxWidth().heightIn(min = SubRowHeight)
+        Modifier.fillMaxWidth().height(SubRowHeight)
             .toggleable(value = done, role = Role.Checkbox, onValueChange = { onTick() })
             .semantics { contentDescription = description }
             .padding(horizontal = RowPad),

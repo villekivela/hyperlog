@@ -95,7 +95,8 @@ internal fun Pad(
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
             // The plate calculator, at the top of the pad while a weight is typed, live.
-            if (onWeight && plates != null && check == null) {
+            // Shown on the reps too, so the pad keeps its height from the weight to the reps.
+            if (plates != null && check == null) {
                 // A tap opens the whole bar, both sides with every plate.
                 PlateLoad(plates, entry.weightKg, machine = platesOnMachine, modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))

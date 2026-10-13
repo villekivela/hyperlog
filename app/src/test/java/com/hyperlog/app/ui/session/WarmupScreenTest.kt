@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.waitForDescription
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
@@ -115,5 +118,28 @@ class WarmupScreenTest {
         compose.onNode(clickLabel("Show the whole bar"), useUnmergedTree = true).performClick()
         compose.waitForIdle()
         compose.onNodeWithContentDescription("100 kg: a 20 kg bar with 2 × 20 on each side").assertIsDisplayed()
+    }
+
+    @Test
+    // A shorter screen stands in for the why-line a suggestion adds above the table on the phone.
+    @Config(qualifiers = "w410dp-h780dp")
+    fun withItsWarmUpsTheActiveSetAndTheNextStayInView() {
+        startDay("barbell_bench_press")
+        compose.press("1"); compose.press("0"); compose.press("0")
+        compose.waitForDescription("Warm-up 4, 85 kg × 2")
+        // The set after the active one is in view, with what heads it.
+        compose.onNodeWithText("Back-off, top set − 10%").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Set 2 options").assertIsDisplayed()
+    }
+
+    @Test
+    fun thePadKeepsItsHeightBetweenTheWeightAndTheReps() {
+        startDay("barbell_bench_press")
+        compose.press("1"); compose.press("0"); compose.press("0")
+        val onWeight = compose.onNodeWithTag(PadTag).getBoundsInRoot()
+        compose.press("Next")
+        compose.waitForIdle()
+        val onReps = compose.onNodeWithTag(PadTag).getBoundsInRoot()
+        assertEquals(onWeight.top.value, onReps.top.value, 0.5f)
     }
 }
