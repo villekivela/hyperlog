@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -158,7 +159,8 @@ fun CoachScreen(
     val daysText = daysText(daysOff)
     BackHandler(onBack = onBack)
     Scaffold(
-        modifier = modifier,
+        // The keyboard shrinks the screen, so the words field scrolls into view above it, with Ask Claude.
+        modifier = modifier.imePadding(),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.coach_title)) },

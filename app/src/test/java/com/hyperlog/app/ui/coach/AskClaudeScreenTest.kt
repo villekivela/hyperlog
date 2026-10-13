@@ -14,6 +14,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
@@ -74,6 +77,25 @@ class AskClaudeScreenTest {
         assertTrue(prompt.contains("## Sessions of the last 4 weeks"))
         assertTrue(prompt.contains("## Exercise library"))
         assertTrue(prompt.contains("\"op\": \"repeat_week\""))
+    }
+
+    @Test
+    fun theKeyboardDoesNotCoverTheWordsField() {
+        // Found on the phone: the field stayed under the keyboard, so the words were typed blind.
+        openSomethingElse()
+        val field = compose.onNode(hasSetTextAction())
+        field.performClick()
+        val root = compose.activity.window.decorView
+        val keyboardPx = root.height / 2
+        val keyboard = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, keyboardPx))
+            .setVisible(WindowInsetsCompat.Type.ime(), true)
+            .build()
+        compose.runOnUiThread { ViewCompat.dispatchApplyWindowInsets(root, keyboard) }
+        compose.waitForIdle()
+
+        val bottom = field.fetchSemanticsNode().boundsInWindow.bottom
+        assertTrue("field bottom $bottom under the keyboard at ${root.height - keyboardPx}", bottom <= root.height - keyboardPx)
     }
 
     @Test
