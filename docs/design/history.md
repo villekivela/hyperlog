@@ -3,8 +3,7 @@
 Ticket #19 brings History: the session list (taking over #15's Past sessions), each exercise's top
 sets and estimate over time, weekly sets per muscle, and the bodyweight log. It extends
 `logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Screens:
-`history-sessions.png`, `history-progress.png`, `history-progress-exercises.png`,
-`history-trend.png`, `past-session.png`, `past-exercise.png` (phone).
+`history-progress.png`, `history-progress-exercises.png`, `past-exercise.png` (phone).
 
 ## Principles
 

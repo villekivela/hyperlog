@@ -2,8 +2,8 @@
 
 Settings → Gyms and equipment, a gym's equipment, the ladder editor, and the two places a ladder
 shows in a session: the pad's weight strip and the weight check. It extends `logging-screen.md`
-and `exercise-library.md`: same margins, type scale, symbols and theme roles. Screenshots are in
-`screens/gyms.png`, `gym.png`, `ladder-dumbbells.png` (phone).
+and `exercise-library.md`: same margins, type scale, symbols and theme roles. Screenshot:
+`screens/ladder-dumbbells.png` (phone).
 
 ## Principles
 
