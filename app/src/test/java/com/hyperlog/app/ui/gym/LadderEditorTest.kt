@@ -33,6 +33,7 @@ class LadderEditorTest {
         }
         compose.onNodeWithText("Save").assertIsNotEnabled()
         compose.onNodeWithText("Name, e.g. Cable station").performTextInput("Cable station")
+        compose.onNodeWithText("Stack").performClick()
         compose.onNodeWithText("lb stack: 2.5, then 5 lb steps").performClick()
 
         compose.onNodeWithText("1.1 · 3.4 · 5.7 · 7.9 · 10.2 · 12.5 … 89.6 kg").assertExists()
@@ -92,5 +93,24 @@ class LadderEditorTest {
         compose.onNodeWithText("Pairs of plates in kg: one number a pair, or 3×20").performTextInput("4x25 2,5")
         compose.onNodeWithText("Save").performClick()
         assertEquals(LadderSpec.Plates(40.0, listOf(25.0, 25.0, 25.0, 25.0, 2.5)), saved)
+    }
+
+    @Test
+    fun aPinStackTakesItsAddOnsAsACountAndTheGymsPinPlates() {
+        var saved: LadderSpec? = null
+        compose.setContent {
+            HyperlogTheme {
+                LadderEditor(
+                    title = "New equipment", name = "", spec = null, kinds = LadderKind.Items,
+                    onSave = { _, s -> saved = s }, onDelete = null, onClose = {}, pinPlates = listOf(1.25),
+                )
+            }
+        }
+        compose.onNodeWithText("Name, e.g. Cable station").performTextInput("Chest press")
+        compose.onNodeWithText("Add-ons on the machine, kg (2×2.5)").performTextInput("2x2.5")
+        // Pins 5 to 100 in 5s, two 2.5 kg add-ons, the gym's 1.25 on the pin.
+        compose.onNodeWithText("5 · 6.25 · 7.5 · 8.75 · 10 · 11.25 … 106.25 kg").assertExists()
+        compose.onNodeWithText("Save").performClick()
+        assertEquals(LadderSpec.DefaultPinStack.copy(builtIn = listOf(2.5, 2.5)), saved)
     }
 }

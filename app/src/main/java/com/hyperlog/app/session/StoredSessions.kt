@@ -67,7 +67,7 @@ internal data class StoredSession(
         return StoredExercise(
             exercise = exercise,
             machine = machine,
-            ladder = shared.ladderFor(exercise.equipment, machine),
+            ladder = shared.ladderFor(exercise.equipment, machine, gym?.pinPlates.orEmpty()),
             slot = slot,
             prescription = se.sets?.let(SetPrescriptionJson::decode) ?: slot?.setsFor(se.exerciseId),
         )

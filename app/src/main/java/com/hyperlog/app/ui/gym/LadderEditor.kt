@@ -52,7 +52,14 @@ import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
 /** The three ways to describe a weight ladder (SPEC, Gyms and equipment). */
-enum class LadderKind(val label: Int) { Stack(R.string.ladder_stack), List(R.string.ladder_list), Plates(R.string.ladder_plates) }
+enum class LadderKind(val label: Int) {
+    PinStack(R.string.ladder_pin_stack), Stack(R.string.ladder_stack), List(R.string.ladder_list), Plates(R.string.ladder_plates);
+
+    companion object {
+        /** What an equipment item can be: a pin stack (with add-ons) first. */
+        val Items = listOf(PinStack, Stack, List, Plates)
+    }
+}
 
 /**
  * Edits one weight ladder: an equipment item's (with its [name]), or a shared one (no name). The
@@ -73,6 +80,8 @@ fun LadderEditor(
     defaultKind: LadderKind? = null,
     /** A new plate ladder's plates (the gym's shared ones), loaded from a zero start. */
     defaultPlates: LadderSpec.Plates? = null,
+    /** The gym's plates for the pin, which a pin stack's ladder includes. */
+    pinPlates: List<Double> = emptyList(),
 ) {
     var itemName by rememberSaveable { mutableStateOf(name.orEmpty()) }
     var kind by rememberSaveable {
@@ -80,6 +89,8 @@ fun LadderEditor(
             when (spec) {
                 is LadderSpec.Explicit -> LadderKind.List
                 is LadderSpec.Plates -> LadderKind.Plates
+                is LadderSpec.PinStack -> LadderKind.PinStack
+                is LadderSpec.Steps -> LadderKind.Stack
                 else -> defaultKind?.takeIf { spec == null && it in kinds } ?: kinds.first()
             },
         )
@@ -94,11 +105,31 @@ fun LadderEditor(
     // A machine starts at 0 kg (its starting weight, editable); the shared plates name their bar.
     var base by rememberSaveable { mutableStateOf(plates?.baseKg?.let(::formatKg) ?: if (name != null) "0" else "") }
     var pairs by rememberSaveable { mutableStateOf(plates?.pairs?.let(::pairsText).orEmpty()) }
+    val pin = spec as? LadderSpec.PinStack ?: LadderSpec.DefaultPinStack
+    var pinUnit by rememberSaveable { mutableStateOf(pin.unit) }
+    var pinStart by rememberSaveable { mutableStateOf(formatKg(pin.start)) }
+    var pinStep by rememberSaveable { mutableStateOf(formatKg(pin.step)) }
+    var pinTop by rememberSaveable { mutableStateOf(formatKg(pin.top)) }
+    var pinFirst by rememberSaveable { mutableStateOf(pin.first?.let(::formatKg).orEmpty()) }
+    var addOns by rememberSaveable { mutableStateOf(pin.builtIn.takeIf { it.isNotEmpty() }?.let(::pairsText).orEmpty()) }
+    var takesPinPlates by rememberSaveable { mutableStateOf(pin.pinPlates) }
 
     val draft: LadderSpec? = when (kind) {
         LadderKind.Stack -> {
             val s = start.toNumber(); val d = step.toNumber(); val n = count.toIntOrNull()
             if (s != null && s >= 0 && d != null && d > 0 && n != null && n in 1..200) LadderSpec.Steps(s, d, unit, n) else null
+        }
+        LadderKind.PinStack -> {
+            val s = pinStart.toNumber(); val d = pinStep.toNumber(); val t = pinTop.toNumber()
+            val f = pinFirst.takeIf { it.isNotBlank() }?.let { it.toNumber() ?: -1.0 }
+            val a = addOns.toPairs()
+            if (s != null && s > 0 && d != null && d > 0 && t != null && t >= s && (t - s) / d < LadderSpec.MAX_PINS && a != null && (f == null || f in 0.0..s)) {
+                pin.copy(
+                    unit = pinUnit, start = s, step = d, top = t, first = f?.takeIf { it > 0 && it < s }, builtIn = a.filter { it > 0 }, pinPlates = takesPinPlates,
+                    // Labels stay as they were read; a kg stack's are its weights.
+                    labelKg = if (pinUnit == pin.unit && spec is LadderSpec.PinStack) pin.labelKg else if (pinUnit == WeightUnit.Lb) 0.1 else 0.01,
+                )
+            } else null
         }
         LadderKind.List -> list.toNumbers()?.filter { it > 0 }?.takeIf { it.isNotEmpty() }?.let { LadderSpec.Explicit(it) }
         LadderKind.Plates -> {
@@ -153,6 +184,27 @@ fun LadderEditor(
                 ConnectedChoice(kinds.map { stringResource(it.label) }, kinds.indexOf(kind), onSelect = { kind = kinds[it] })
             }
             when (kind) {
+                LadderKind.PinStack -> {
+                    ConnectedChoice(WeightUnit.entries.map { it.name.lowercase() }, WeightUnit.entries.indexOf(pinUnit), onSelect = { pinUnit = WeightUnit.entries[it] })
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NumberField(pinStart, { pinStart = it }, stringResource(R.string.ladder_start), Modifier.weight(1f))
+                        NumberField(pinStep, { pinStep = it }, stringResource(R.string.ladder_step), Modifier.weight(1f))
+                        NumberField(pinTop, { pinTop = it }, stringResource(R.string.ladder_top), Modifier.weight(1f))
+                    }
+                    NumberField(pinFirst, { pinFirst = it }, stringResource(R.string.ladder_first), Modifier.fillMaxWidth())
+                    NumberField(addOns, { addOns = it }, stringResource(R.string.ladder_add_ons), Modifier.fillMaxWidth(), many = true)
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.ladder_takes_pin_plates), style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                pinPlates.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.ladder_pin_plates_list, it.sortedDescending().joinToString(" + ") { kg -> formatKg(kg) }) }
+                                    ?: stringResource(R.string.ladder_pin_plates_gym),
+                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        androidx.compose.material3.Switch(takesPinPlates, onCheckedChange = { takesPinPlates = it })
+                    }
+                }
                 LadderKind.Stack -> {
                     AssistChip(
                         onClick = { unit = WeightUnit.Lb; start = "2.5"; step = "5"; count = "40" },
@@ -179,11 +231,11 @@ fun LadderEditor(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    draft?.ladder()?.preview(first = 6) ?: stringResource(R.string.ladder_incomplete),
+                    draft?.ladder(pinPlates)?.preview(first = 6) ?: stringResource(R.string.ladder_incomplete),
                     style = MaterialTheme.typography.titleMedium.merge(Tnum),
                     color = if (draft == null) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
                 )
-                draft?.ladder()?.rungs?.size?.let {
+                draft?.ladder(pinPlates)?.rungs?.size?.let {
                     Text(
                         pluralStringResource(R.plurals.ladder_rung_count, it, it),
                         style = MaterialTheme.typography.bodySmall,

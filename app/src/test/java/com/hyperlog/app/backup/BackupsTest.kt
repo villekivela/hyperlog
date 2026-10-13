@@ -95,6 +95,8 @@ class BackupsTest {
         gyms.setDumbbells(LadderSpec.Steps(2.0, 2.0, WeightUnit.Kg, 20))
         gyms.remember(gym, "cable_lateral_raise", cable)
         gyms.markMissing(gym, "leg_extension")
+        gyms.setPinPlates(gym, listOf(2.5, 1.25, 1.25))
+        gyms.addItem(EquipmentItem(gymId = gym, name = "Chest press", ladder = LadderSpec.DefaultPinStack.copy(builtIn = listOf(2.5, 2.5))))
 
         val programs = Programs(db, clock = { now })
         programs.import(program)
@@ -179,7 +181,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(17), file["database"])
+        assertEquals(JsonPrimitive(18), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }

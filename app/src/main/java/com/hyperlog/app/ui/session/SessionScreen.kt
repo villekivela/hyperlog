@@ -171,7 +171,8 @@ fun SessionScreen(
             title = stringResource(R.string.machine_new),
             name = if (equipment == Equipment.Machine) current.exercise.name else if (equipment == Equipment.SmithMachine) equipment.label else "",
             spec = null,
-            kinds = LadderKind.entries,
+            kinds = LadderKind.Items,
+            pinPlates = session.gym?.pinPlates.orEmpty(),
             // A leg press or sled opens on plates (the gym's, from a zero start), a stack machine on a stack.
             defaultKind = if (current.exercise.plateLoaded) LadderKind.Plates else null,
             defaultPlates = sharedPlates,
@@ -267,6 +268,7 @@ fun SessionScreen(
                             onAdd = { addingMachine = true },
                             onNotHere = actions::notAtGym,
                             modifier = Modifier.weight(1f),
+                            pinPlates = session.gym?.pinPlates.orEmpty(),
                         )
                     } else {
                         current.suggestion?.takeIf { it.why != null && !current.done }?.let { s ->
@@ -302,7 +304,7 @@ fun SessionScreen(
                 // A drop or mini-set has no RIR: ✓ needs only its weight and reps.
                 val fixing = correction.entry
                 val canConfirm = if (correction.kind == null || fixing.field == Field.Weight) fixing.canConfirm else fixing.toExtension(correction.kind) != null
-                Pad(fixing, corrected.ladder, session.weightCheck, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates, platesOnMachine = corrected.platesOnMachine)
+                Pad(fixing, corrected.ladder, session.weightCheck, actions, canConfirm = canConfirm, correction = correction, plates = corrected.plates, platesOnMachine = corrected.platesOnMachine, pinLoad = corrected.pinLoader())
             } else if (viewing != null) {
                 Spacer(Modifier.navigationBarsPadding())
             } else if (current != null && entry != null) {
@@ -315,7 +317,7 @@ fun SessionScreen(
                     holdRunning -> true
                     else -> entry.toExtension(com.hyperlog.app.domain.Extension.Kind.Drop) != null
                 }
-                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates, platesOnMachine = current.platesOnMachine)
+                if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates, platesOnMachine = current.platesOnMachine, pinLoad = current.pinLoader())
                 else HiddenPad(entry, actions, canConfirm = canConfirm)
             } else if (current != null && current.done && session.exercises.all { it.prescription == null || it.done }) {
                 DayDoneBar(onFinish = { showFinish = true })
@@ -1242,6 +1244,8 @@ private fun MachinePicker(
     /** The gym has no equipment for it: remember that, and swap the exercise. */
     onNotHere: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The gym's plates for the pin, for the weights a pin stack gives. */
+    pinPlates: List<Double> = emptyList(),
 ) {
     val cs = MaterialTheme.colorScheme
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
@@ -1259,10 +1263,10 @@ private fun MachinePicker(
         // The machines that fit as one group of rows, the gym's others under their own head, then the ways out.
         Spacer(Modifier.height(8.dp))
         val (fit, others) = choices
-        fit.forEachIndexed { i, item -> MachineRow(item, i, fit.size, muted = false, onPick) }
+        fit.forEachIndexed { i, item -> MachineRow(item, i, fit.size, muted = false, onPick, pinPlates) }
         if (others.isNotEmpty()) {
             com.hyperlog.app.ui.theme.GroupHead(stringResource(R.string.machine_others, gym), color = cs.onSurfaceVariant)
-            others.forEachIndexed { i, item -> MachineRow(item, i, others.size, muted = true, onPick) }
+            others.forEachIndexed { i, item -> MachineRow(item, i, others.size, muted = true, onPick, pinPlates) }
         }
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = onAdd, Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
@@ -1278,9 +1282,13 @@ private fun MachinePicker(
     }
 }
 
+/** The pad's pin-stack loading for this exercise's machine; null unless it is a pin stack. */
+private fun com.hyperlog.app.session.SessionExercise.pinLoader(): ((Double) -> com.hyperlog.app.domain.PinLoad?)? =
+    if (machine?.ladder is com.hyperlog.app.domain.LadderSpec.PinStack) { kg -> pinLoad(kg) } else null
+
 /** One of the gym's machines with the weights it gives; another kind's in a muted name. */
 @Composable
-private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, onPick: (Long) -> Unit) {
+private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, onPick: (Long) -> Unit, pinPlates: List<Double> = emptyList()) {
     val cs = MaterialTheme.colorScheme
             com.hyperlog.app.ui.theme.Segment(i, count, onClick = { onPick(item.id) }) {
             Column(
@@ -1290,7 +1298,7 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    item.ladder.ladder().preview(),
+                    item.ladder.ladder(pinPlates).preview(),
                     style = MaterialTheme.typography.bodyMedium.merge(Tnum),
                     color = cs.onSurfaceVariant,
                     maxLines = 1,

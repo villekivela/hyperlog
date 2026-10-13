@@ -389,4 +389,23 @@ class MigrationTest {
         assertEquals(false, preferences.checkForUpdates())
         db.close()
     }
+
+    @Test
+    fun version17GymsGetTheDefaultPinPlates() = runTest {
+        val file = context.getDatabasePath("migration-test-17.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(17, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays, archived) VALUES (1, 'Harbour', 0, 0)")
+            db.execSQL("INSERT INTO equipment_item (id, gym_id, name, ladder, archived) VALUES (1, 1, 'Cable left', 'list;5,10', 0)")
+        }
+
+        // Room checks the migrated tables against the v18 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val gym = Gyms(db).gyms.first().single()
+        assertEquals(LadderSpec.DefaultPinPlates, gym.pinPlates)
+        assertEquals(listOf("Cable left"), gym.items.map { it.name })
+        db.close()
+    }
 }

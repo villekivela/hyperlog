@@ -25,6 +25,8 @@ data class Gym(
     val weekdays: Set<DayOfWeek> = emptySet(),
     /** Exercises the gym has no equipment for: picking it proposes swaps for them. */
     val missing: Set<String> = emptySet(),
+    /** The gym's small plates for hanging on a stack's pin, one entry per plate (SPEC, Stacks with add-ons). */
+    val pinPlates: List<Double> = LadderSpec.DefaultPinPlates,
 )
 
 /**
@@ -66,6 +68,10 @@ class Gyms(db: HyperlogDatabase) {
         if (dao.gymUsed(id) || items.any { dao.itemUsed(it.id) }) dao.archiveGym(id) else dao.deleteGym(id)
     }
     suspend fun setWeekdays(id: Long, days: Set<DayOfWeek>) = dao.setWeekdays(id, days.toBits())
+
+    /** Sets the small plates [id] has for the pin of its stacks, one entry per plate. */
+    suspend fun setPinPlates(id: Long, plates: List<Double>) =
+        dao.setPinPlates(id, plates.filter { it > 0 }.joinToString(",") { it.toString() })
 
     /** One gym with its equipment, as it is now; archived items come too, for the sessions that used them. */
     suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id)) }
@@ -144,7 +150,7 @@ class Gyms(db: HyperlogDatabase) {
     private fun barKey(bar: Equipment) = "bar_${bar.key}"
 
     private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList()) =
-        Gym(id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet())
+        Gym(id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet(), pinPlates.toPinPlates())
 
     private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived) }
 
@@ -203,6 +209,9 @@ fun usualGym(gyms: List<Gym>, visits: List<Visit>, day: DayOfWeek, zone: ZoneId)
     known.maxByOrNull { it.startedAt }?.let { return UsualGym(it.gymId, UsualGym.Why.Last) }
     return UsualGym(gyms.first().id, UsualGym.Why.First)
 }
+
+private fun String?.toPinPlates(): List<Double> =
+    this?.split(",")?.mapNotNull { it.trim().toDoubleOrNull() } ?: LadderSpec.DefaultPinPlates
 
 private fun Set<DayOfWeek>.toBits() = fold(0) { bits, d -> bits or (1 shl (d.value - 1)) }
 

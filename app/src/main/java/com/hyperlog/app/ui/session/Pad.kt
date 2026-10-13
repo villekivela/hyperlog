@@ -83,6 +83,8 @@ internal fun Pad(
     plates: LadderSpec.Plates? = null,
     /** The plates load a machine (its starting weight is the base), not a bar. */
     platesOnMachine: Boolean = false,
+    /** A pin stack's loading for a weight, drawn at the top like the plates; null for any other equipment. */
+    pinLoad: ((Double) -> com.hyperlog.app.domain.PinLoad?)? = null,
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
@@ -101,6 +103,10 @@ internal fun Pad(
                 PlateLoad(plates, entry.weightKg, machine = platesOnMachine, modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable(onClickLabel = stringResource(R.string.plates_show_whole)) { wholeBar = true }.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp).testTag(PlateStripTag))
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = cs.outlineVariant)
+            }
+            if (pinLoad != null && plates == null && check == null) {
+                StackLoad(entry.weightKg?.let(pinLoad), entry.weightKg, Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp))
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = cs.outlineVariant)
             }
             Row(Modifier.fillMaxWidth().height(KeyHeight), verticalAlignment = Alignment.CenterVertically) {

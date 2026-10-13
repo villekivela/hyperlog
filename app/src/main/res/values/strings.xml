@@ -109,6 +109,18 @@
     <string name="plates_bar_row">Bar</string>
     <string name="plates_machine_row">Machine, empty</string>
     <string name="plates_show_whole">Show the whole bar</string>
+    <string name="ladder_pin_stack">Pin stack</string>
+    <string name="ladder_top">Top</string>
+    <string name="ladder_first">First plate, if lighter than the steps</string>
+    <string name="ladder_add_ons">Add-ons on the machine, kg (2×2.5)</string>
+    <string name="ladder_takes_pin_plates">Plates on the pin</string>
+    <string name="ladder_pin_plates_list">The gym’s %1$s kg</string>
+    <string name="ladder_pin_plates_gym">The gym’s small plates</string>
+    <string name="stack_load_description">Load %1$s for %2$s kg</string>
+    <string name="stack_load_off">%1$s kg isn’t on this stack</string>
+    <string name="stack_load_none">The stack, once a weight is typed</string>
+    <string name="stack_not_on">Not on this stack</string>
+    <string name="stack_pin">Pin %1$s</string>
     <string name="technique_dropset_name">Drop set</string>
     <string name="technique_myo_name">Myo-reps</string>
     <string name="technique_partials_name">Lengthened partials</string>
@@ -214,6 +226,10 @@
     <string name="gym_add_confirm">Add</string>
     <string name="gym_name">Name</string>
     <string name="gym_cancel">Cancel</string>
+    <plurals name="stack_add_ons">
+        <item quantity="one">Add-on</item>
+        <item quantity="other">%1$d add-ons</item>
+    </plurals>
     <plurals name="gym_item_count">
         <item quantity="one">%1$d equipment item</item>
         <item quantity="other">%1$d equipment items</item>
@@ -426,6 +442,12 @@
     <string name="start_missing_none">%1$s: nothing here fits</string>
     <string name="machine_not_here">Not at %1$s</string>
     <string name="gym_missing">Not here</string>
+    <string name="gym_pin_plates">Small plates</string>
+    <string name="gym_pin_plates_row">Plates for the pin</string>
+    <string name="gym_pin_plates_list">%1$s kg</string>
+    <string name="gym_pin_plates_none">None</string>
+    <string name="gym_pin_plates_body">The small plates you can hang on any stack’s pin here. Each one counts once; type a plate twice if there are two.</string>
+    <string name="gym_pin_plates_field">Plates in kg, e.g. 2.5 1.25</string>
     <string name="gym_missing_body">Picking %1$s offers a swap for these.</string>
     <string name="gym_missing_restore">%1$s is here after all</string>
     <string name="history_title">History</string>

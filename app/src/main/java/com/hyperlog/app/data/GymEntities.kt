@@ -20,6 +20,8 @@ data class GymEntity(
     @ColumnInfo(defaultValue = "0") val weekdays: Int = 0,
     /** Deleted after sessions were trained at it: hidden everywhere but in the history it keeps. */
     @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
+    /** The small plates that hang on a stack's pin, as a list ladder; null for the SPEC default (1.25 and 2.5 kg). */
+    @ColumnInfo(name = "pin_plates") val pinPlates: String? = null,
 )
 
 /** One equipment item at a gym. [ladder] is an encoded [com.hyperlog.app.domain.LadderSpec]. */
@@ -105,6 +107,9 @@ interface GymDao {
 
     @Query("UPDATE gym SET name = :name WHERE id = :id")
     suspend fun renameGym(id: Long, name: String)
+
+    @Query("UPDATE gym SET pin_plates = :plates WHERE id = :id")
+    suspend fun setPinPlates(id: Long, plates: String)
 
     @Query("UPDATE gym SET weekdays = :weekdays WHERE id = :id")
     suspend fun setWeekdays(id: Long, weekdays: Int)

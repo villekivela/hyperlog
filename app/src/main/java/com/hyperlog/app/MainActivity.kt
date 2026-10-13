@@ -350,7 +350,8 @@ private fun App(
                     title = item?.name ?: stringResource(R.string.ladder_new_item),
                     name = item?.name.orEmpty(),
                     spec = item?.ladder,
-                    kinds = LadderKind.entries,
+                    kinds = LadderKind.Items,
+                    pinPlates = gym.pinPlates,
                     onSave = { name, spec -> gymsModel.saveItem(EquipmentItem(item?.id ?: 0, gym.id, name, spec)); ladder = null },
                     onDelete = item?.let { { gymsModel.deleteItem(it.id); ladder = null } },
                     onClose = { ladder = null },
@@ -366,6 +367,7 @@ private fun App(
                     onBack = { gymId = null },
                     exerciseNames = exercises.associate { it.id to it.name },
                     onRestore = { gymsModel.unmarkMissing(gym.id, it) },
+                    onPinPlates = { gymsModel.setPinPlates(gym.id, it) },
                 )
             }
         }

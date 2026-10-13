@@ -148,9 +148,12 @@ fun GymScreen(
     exerciseNames: Map<String, String> = emptyMap(),
     /** The gym has the equipment for this exercise after all. */
     onRestore: (String) -> Unit = {},
+    /** Sets the gym's small plates for the pin of its stacks. */
+    onPinPlates: (List<Double>) -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var renaming by rememberSaveable { mutableStateOf(false) }
+    var pinning by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         containerColor = Tones.screen,
@@ -169,9 +172,19 @@ fun GymScreen(
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
           Group {
             gym.items.forEach { item ->
-                Row(item.name, item.ladder.ladder().preview(), symbol = null, onClick = { onOpenItem(item.id) })
+                Row(item.name, item.ladder.ladder(gym.pinPlates).preview(), symbol = null, onClick = { onOpenItem(item.id) })
             }
             AddRow(stringResource(R.string.gym_add_item), onClick = onAddItem)
+          }
+
+            SectionLabel(stringResource(R.string.gym_pin_plates))
+          Group {
+            Row(
+                stringResource(R.string.gym_pin_plates_row),
+                pinPlatesText(gym.pinPlates),
+                symbol = null,
+                onClick = { pinning = true },
+            )
           }
 
             SectionLabel(stringResource(R.string.gym_days))
@@ -210,6 +223,9 @@ fun GymScreen(
                 )
             }
         }
+    }
+    if (pinning) {
+        PinPlatesDialog(gym.pinPlates, onDone = { pinning = false; onPinPlates(it) }, onDismiss = { pinning = false })
     }
     if (renaming) {
         NameDialog(
@@ -265,6 +281,40 @@ private fun WeekdayPicker(days: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Un
             }
         }
     }
+}
+
+/** `2.5 + 1.25 kg`, the gym's plates for the pin, or that it has none. */
+@Composable
+private fun pinPlatesText(plates: List<Double>): String =
+    if (plates.isEmpty()) stringResource(R.string.gym_pin_plates_none)
+    else stringResource(R.string.gym_pin_plates_list, plates.sortedDescending().joinToString(" + ") { formatKg(it) })
+
+/** The gym's plates for the pin, typed as weights separated by spaces, `2.5 1.25` (or `2,5`). */
+@Composable
+private fun PinPlatesDialog(plates: List<Double>, onDone: (List<Double>) -> Unit, onDismiss: () -> Unit) {
+    var text by rememberSaveable { mutableStateOf(plates.sortedDescending().joinToString(" ") { formatKg(it) }) }
+    val value = text.trim().split(Regex("[\\s;]+")).filter { it.isNotEmpty() }.map { it.replace(',', '.').toDoubleOrNull()?.takeIf { kg -> kg > 0 && kg <= 25 } }
+        .takeIf { it.none { kg -> kg == null } && it.size <= 6 }?.filterNotNull()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.gym_pin_plates_row)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.gym_pin_plates_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    text,
+                    onValueChange = { text = it },
+                    label = { Text(stringResource(R.string.gym_pin_plates_field)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = { value?.let(onDone) }, enabled = value != null) { Text(stringResource(R.string.gym_bar_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.gym_cancel)) } },
+    )
 }
 
 /** `20 kg bar · 20 20 20 15 10 5 2.5 1.25`: the base, then one number per pair. */

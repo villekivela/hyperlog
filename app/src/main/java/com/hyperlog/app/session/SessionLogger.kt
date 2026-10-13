@@ -843,6 +843,7 @@ class SessionLogger(
                     else -> shared.barPlates(exercise.equipment) ?: machine?.ladder as? LadderSpec.Plates
                 },
                 warmupsDone = se.warmupsDone,
+                pinPlates = gym?.pinPlates.orEmpty(),
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }

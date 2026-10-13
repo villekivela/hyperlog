@@ -173,6 +173,16 @@ _Avoid_: Machine (when you mean any equipment)
 The weekdays a gym is planned for. Starting a session on one of them picks that gym.
 _Avoid_: Schedule (the program runs as a sequence, not on dates)
 
+**Pin stack**:
+A selectorised machine's weight stack: the pin picks a plate, and add-ons go on top. Its ladder is every pin weight plus every combination of the add-ons.
+
+**Built-in add-on**:
+A machine's own small weight on top of its stack, or a lever or knob adding a half step. Set per machine.
+
+**Pin plates**:
+A gym's small loose plates that hang on any stack's pin, such as 1.25 and 2.5 kg. Set once per gym.
+_Avoid_: Add-on (for these)
+
 **Weight ladder**:
 The weights an equipment item can actually be set to, such as a cable stack in 5 lb steps.
 _Avoid_: Increments, stack

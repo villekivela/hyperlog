@@ -3,6 +3,7 @@ package com.hyperlog.app.session
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
+import com.hyperlog.app.domain.PinLoad
 import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.domain.Warmups
 import com.hyperlog.app.domain.SetEntry
@@ -52,7 +53,12 @@ data class SessionExercise(
     val plates: LadderSpec.Plates? = null,
     /** How many of its warm-ups are ticked off. */
     val warmupsDone: Int = 0,
+    /** The session's gym's plates for the pin, for a [machine] that is a pin stack. */
+    val pinPlates: List<Double> = emptyList(),
 ) {
+    /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
+    fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
+
     /** The program's exercise for its slot, when it was swapped in the session or by a Change. */
     val inPlaceOf: String? get() = slot?.let { s -> (s.inPlaceOf ?: s.exercise).takeIf { it != exercise.id } }
 

@@ -309,6 +309,25 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - A stack is a start, a step and a number of weights. Plates are a base weight (bar or sled) plus
   plate pairs, one of each pair per side; any combination of pairs is a rung. The shared barbell
   plates default to a 20 kg bar with pairs of 20, 20, 20, 15, 10, 5, 2.5 and 1.25 kg.
+- **Stacks with add-ons** (a fourth ladder kind, **pin stack**, for selectorised machines). The pin
+  picks a plate: a start, a step and a top in kg or lb (shown in kg), with an optional lighter first
+  plate (2.5, then steps of 5 from 5). On top of the pin go two kinds of add-on, both at once if
+  there are both:
+  - **Built-in add-ons**, the machine's own: a small weight on top of the stack, or a lever or knob
+    that adds a half step. Their weights are set per machine, one entry per plate, so two identical
+    plates are `2×2.5` and give 0, 2.5 or 5.
+  - **Plates on the pin**: the gym's small loose plates (default 1.25 and 2.5 kg), set once per gym
+    under the gym's **Small plates → Plates for the pin** and usable on every pin stack there that
+    takes them (on by default).
+  - The rungs are every pin weight plus any count from none to all of each built-in add-on plus any
+    combination of the pin plates, sorted, with near-duplicates (under 0.15 kg apart) kept once, by
+    the handiest loading: the fewest extras, then built-in add-ons before loose plates.
+  - Default: pin steps of 5 kg from 5 to 100, no built-in add-ons, the gym's pin plates.
+  - In a session, the pad shows how to load the typed weight in the plate strip's place and
+    language: a drawing of the stack with the pin, the add-on block and the hung plates in their
+    competition colours, and a legend (`Pin 40`, `2 add-ons`, `1 × 2.5`). Its description reads
+    `Load pin 40 + 2 add-ons + 2.5 on the pin for 47.5 kg`. A weight off the stack reads `Not on
+    this stack`.
 - Setup lives in Settings → Gyms and equipment: gyms and their equipment, then the shared dumbbells,
   plates and the three specialty bars (`10 kg bar, the shared plates`; a tap asks for the bar's
   weight). Every ladder shows as the kg weights it gives (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`).

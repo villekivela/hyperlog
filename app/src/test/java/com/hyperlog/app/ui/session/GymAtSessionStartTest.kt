@@ -113,6 +113,7 @@ class GymAtSessionStartTest {
         compose.waitFor("New machine")
         // A machine is named for what it is; the name comes filled in.
         compose.onNodeWithText("Leg Extension").assertIsDisplayed()
+        compose.onNodeWithText("Stack").performClick()
         compose.onNodeWithText("lb stack: 2.5, then 5 lb steps").performClick()
         compose.onNodeWithText("Save").performClick()
         waitForPad()
