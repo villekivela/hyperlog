@@ -90,6 +90,26 @@ installs and launches it as "Hyperlog prototype". Its decisions live in `SPEC.md
 - This repo's `user.email` is set locally to the owner's GitHub no-reply address. GitHub rejects
   pushes that would publish their private address, so new clones need
   `git config user.email 5814559+villekivela@users.noreply.github.com`.
-- Releases go through GitHub Releases in the public `villekivela/hyperlog-releases` repo; the app
-  checks for them itself. The tag sets the version (`-PhyperlogVersion=v0.2.0`). See `SPEC.md`,
-  Distribution, and ticket #22.
+- Releases are GitHub Releases in this repo (`villekivela/hyperlog`, public); the app checks for
+  them itself. See `SPEC.md`, Distribution, and "Releases" below.
+
+## Releases
+
+- **Cut a release** from the commit to ship: `git tag v0.2.0 && git push origin v0.2.0`. The
+  `Release` workflow (`.github/workflows/release.yml`) builds with `-PhyperlogVersion=<tag>`,
+  signs, checks the signature with `apksigner verify --print-certs`, and publishes a normal release
+  on the tag with one asset, `hyperlog-0.2.0.apk`. The tag must be `vX.Y.Z` (minor and patch
+  below 100) and higher than every earlier one; never move or reuse a tag.
+- **Dry run:** `gh workflow run release.yml --ref <branch> -f version=v0.0.1` does everything but
+  publish and uploads the signed APK as the `hyperlog-apk` workflow artifact.
+- **The key** is a PKCS12 keystore (alias `hyperlog`, one password for store and key). It lives
+  outside the repo, backed up by the owner, and in the repo's Actions secrets as
+  `HYPERLOG_KEYSTORE_BASE64` (`base64 -w0 hyperlog.p12`) and `HYPERLOG_KEYSTORE_PASSWORD`. Losing
+  it means no more updates over the installed app.
+- **Signing a local release build:** set `HYPERLOG_KEYSTORE_FILE` and `HYPERLOG_KEYSTORE_PASSWORD`
+  as env vars or Gradle properties (`HYPERLOG_KEY_ALIAS` defaults to `hyperlog`). Without them,
+  `assembleRelease` gives `app-release-unsigned.apk`.
+- **First install on a phone:** open `https://github.com/villekivela/hyperlog/releases/latest` in
+  the phone's browser, download the APK and open it; Android asks once to allow installs from the
+  browser. Uninstall the legacy app first when switching (its signature differs). Later versions
+  arrive through the in-app banner.

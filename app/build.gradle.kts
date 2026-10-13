@@ -24,6 +24,24 @@ android {
         versionName = version
     }
 
+    // The release key never enters the repo (SPEC, Distribution). The release workflow decodes it
+    // into the runner's temp dir and passes its path and password as env vars; locally the same
+    // names work as Gradle properties. Without them a release build comes out unsigned.
+    fun signingValue(name: String): String? =
+        (findProperty(name) as String?)?.takeIf { it.isNotBlank() } ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+    val keystore = signingValue("HYPERLOG_KEYSTORE_FILE")
+    val releaseSigning = keystore?.let {
+        signingConfigs.create("release") {
+            storeFile = file(it)
+            storeType = "PKCS12"
+            storePassword = signingValue("HYPERLOG_KEYSTORE_PASSWORD")
+                ?: error("HYPERLOG_KEYSTORE_FILE is set but HYPERLOG_KEYSTORE_PASSWORD isn't")
+            // PKCS12 keeps one password for the store and the key.
+            keyPassword = storePassword
+            keyAlias = signingValue("HYPERLOG_KEY_ALIAS") ?: "hyperlog"
+        }
+    }
+
     buildTypes {
         debug {
             // Installs beside a release build.
@@ -34,6 +52,7 @@ android {
         release {
             resValue("string", "app_name", "Hyperlog")
             isMinifyEnabled = false
+            signingConfig = releaseSigning
         }
     }
 

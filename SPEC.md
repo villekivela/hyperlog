@@ -31,17 +31,19 @@ configuration, iOS, web, any server.
 
 ## Distribution
 
-- **GitHub Releases**, no Play Store fee. Pushing a version tag makes GitHub Actions build and
-  sign a release APK and attach it to a release in a public `villekivela/hyperlog-releases` repo
-  (the source repo stays private). The first install comes from that release page in the phone's
-  browser; after that the app updates itself (below). Fallback: Firebase App Distribution (free,
+- **GitHub Releases**, no Play Store fee. Pushing a version tag makes GitHub Actions
+  (`.github/workflows/release.yml`) build and sign a release APK and publish it as a release on
+  that tag in the public `villekivela/hyperlog` repo itself. The first install comes from that
+  release page in the phone's browser; after that the app updates itself (below). Fallback: Firebase App Distribution (free,
   email invites).
 - **Versions come from the tag.** Tag `vMAJOR.MINOR.PATCH` (minor and patch 0–99) builds with
   `-PhyperlogVersion=vMAJOR.MINOR.PATCH`: versionName `MAJOR.MINOR.PATCH`, versionCode
   `MAJOR·10000 + MINOR·100 + PATCH` (v0.2.0 is 200, v1.0.0 is 10000). Without the property a build
-  is 0.1.0. A release's name is its tag; it holds one `.apk` asset.
+  is 0.1.0. A release's name is its tag; it is neither a draft nor a prerelease and holds exactly
+  one asset, `hyperlog-MAJOR.MINOR.PATCH.apk`. Never reuse or lower a tag: Android refuses a lower
+  versionCode.
 - **Update check.** When the app opens, at most once a day, it reads
-  `https://api.github.com/repos/villekivela/hyperlog-releases/releases/latest` (a plain GET with
+  `https://api.github.com/repos/villekivela/hyperlog/releases/latest` (a plain GET with
   no token, `User-Agent: Hyperlog`, nothing about the user or their data), off the main thread
   (5 s to connect, 5 s to read, 10 s in all). A release whose tag gives a higher versionCode
   than the installed one shows a banner on Today: "Hyperlog 0.2.0 is available · Tap to update", with a cross that hides that
@@ -56,11 +58,19 @@ configuration, iOS, web, any server.
   - **Debug builds (`.dev`) don't check.** A launch extra feeds them a fake release whose APK is
     the installed build, to try the banner and installer on a phone:
     `adb shell am start -n com.hyperlog.app.dev/com.hyperlog.app.MainActivity --es fake_release 9.9.9`.
-- Signed with a release key kept outside the repo, backed up, and stored as a GitHub Actions secret.
+- Signed with a release key (PKCS12, alias `hyperlog`) kept outside the repo, backed up by the
+  owner, and stored as the GitHub Actions secrets `HYPERLOG_KEYSTORE_BASE64` and
+  `HYPERLOG_KEYSTORE_PASSWORD`. Every release is signed with that key forever: updates and Auto
+  Backup restores need the same key. Local release builds without the key come out unsigned.
   The legacy app was signed with the old machine's debug key, so the new app can't install over it:
   uninstall the legacy app when switching; its data stays in the backup.
-- Check Google's developer-verification rules for apps installed outside the Play Store before the
-  first release; register if required.
+- **Google's developer verification** (checked 2026-10-13): since 30 Sep 2026 it is enforced only
+  in Brazil, Indonesia, Singapore and Thailand; all other regions follow "in 2027 and beyond".
+  Installing unregistered apps over adb stays allowed. A free hobbyist account exists (no fee, no
+  ID, up to 20 devices). **To do:** register a hobbyist account for Hyperlog before the 2027
+  rollout. Sources:
+  <https://android-developers.googleblog.com/2026/06/android-developer-verification.html>,
+  <https://android-developers.googleblog.com/2026/03/android-developer-verification-rolling-out-to-all-developers.html>.
 - During development, debug builds install over USB with adb alongside the release build.
 - **Other users** get the same app with no accounts and no server; each has their own data on their
   phone. **No third-party programs are bundled**: Nippard's programs are paid and copyrighted, so

@@ -25,13 +25,13 @@ class FakeRelease(private val release: Release) : ReleaseSource {
 }
 
 /**
- * The latest release of the public releases repo, from GitHub's REST API with no token. The
+ * The latest release of the public `villekivela/hyperlog` repo, from GitHub's REST API with no token. The
  * request carries nothing about the user: a GET of a fixed URL with the app's name as User-Agent,
  * which GitHub requires.
  */
 class GitHubReleases(
     private val api: String = "https://api.github.com",
-    private val repo: String = "villekivela/hyperlog-releases",
+    private val repo: String = "villekivela/hyperlog",
     private val timeoutMs: Int = 5_000,
 ) : ReleaseSource {
     override suspend fun latest(): Release? = withContext(Dispatchers.IO) {

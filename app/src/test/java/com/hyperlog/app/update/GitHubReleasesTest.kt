@@ -35,10 +35,10 @@ class GitHubReleasesTest {
         if (body.isNotEmpty()) exchange.responseBody.use { it.write(body) } else exchange.close()
     }
 
-    private fun latest(status: Int, body: String) = serve("/repos/villekivela/hyperlog-releases/releases/latest", status, body.toByteArray())
+    private fun latest(status: Int, body: String) = serve("/repos/villekivela/hyperlog/releases/latest", status, body.toByteArray())
 
     private val release = """
-        { "tag_name": "v0.2.0", "name": "Hyperlog 0.2.0", "html_url": "https://github.com/villekivela/hyperlog-releases/releases/tag/v0.2.0",
+        { "tag_name": "v0.2.0", "name": "Hyperlog 0.2.0", "html_url": "https://github.com/villekivela/hyperlog/releases/tag/v0.2.0",
           "assets": [
             { "name": "checksums.txt", "browser_download_url": "https://example.com/checksums.txt" },
             { "name": "hyperlog-0.2.0.apk", "browser_download_url": "https://example.com/hyperlog-0.2.0.apk" } ] }
@@ -69,7 +69,7 @@ class GitHubReleasesTest {
         stop()
         val other = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).also { it.start() }
         try {
-            other.createContext("/repos/villekivela/hyperlog-releases/releases/latest") { e ->
+            other.createContext("/repos/villekivela/hyperlog/releases/latest") { e ->
                 val body = release.replace("v0.2.0\"", "nightly\"").toByteArray()
                 e.sendResponseHeaders(200, body.size.toLong()); e.responseBody.use { it.write(body) }
             }
@@ -91,7 +91,7 @@ class GitHubReleasesTest {
 
     @Test
     fun aServerThatNeverAnswersTimesOut() = runTest {
-        server.createContext("/repos/villekivela/hyperlog-releases/releases/latest") { hang.await() }
+        server.createContext("/repos/villekivela/hyperlog/releases/latest") { hang.await() }
         val started = System.nanoTime()
         try {
             GitHubReleases(api = base, timeoutMs = 300).latest()

@@ -96,7 +96,7 @@ which holds all of the above. The app stores nothing else.
 - **When:** about once every 24 hours, when the phone is idle, charging and on Wi-Fi. A backup made
   before yesterday's session won't have it: export a manual backup before a planned switch.
 - **Restoring on a new phone:** sign in to the same Google account during setup and restore from
-  its backup, then install Hyperlog (Obtainium, from `villekivela/hyperlog-releases`). Android
+  its backup, then install Hyperlog from the latest release of `villekivela/hyperlog` in the phone's browser. Android
   restores the data when the app is installed, before it first opens.
 - **It only restores into the same app:** the same package (`com.hyperlog.app`; the debug build
   `com.hyperlog.app.dev` has its own backup) signed with the same release key. Keep the release
