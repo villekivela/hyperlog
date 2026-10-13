@@ -70,6 +70,32 @@ class RuleCoachTest {
     }
 
     @Test
+    fun handsWorseAfterAnExerciseMoveItToItsNoGripSwapForTheRestOfTheHandChange() {
+        val hands = proposed(advise(Situation.Pain(Area.Hands), at = Position(3, 0)))
+        val accepted = Plan.accept(program, Position(3, 0), hands, oct13).copy(id = 7)
+        val oct16 = oct13.plusDays(3)
+        val active = ActiveProgram(1, program, Position(3, 1), today = oct16).copy(history = listOf(ChangeRecord(accepted, 0, null)))
+
+        // The exercises that kept a grip are the ones it can be worse after.
+        val kept = RuleCoach.keptGrip(active, library.exercises).map { it.id }
+        assertTrue("lateral_raise" in kept)
+        assertTrue("squat" !in kept)
+
+        // The cable lateral raise moves to the machine one (no grip at all), until the hand Change ends.
+        val raise = proposed(RuleCoach.advise(Situation.Pain(Area.Hands, worseAfter = "lateral_raise"), Constraints(noGrip = true), active, library.exercises, oct13))
+        assertEquals(Scope.Dates(oct16, oct13.plusDays(13)), raise.scope)
+        assertEquals(listOf(Operation.Swap("lateral_raise", "machine_lateral_raise", "hands worse")), raise.operations)
+        assertEquals(emptyList<String>(), ChangeValidator.validate(raise, program, ids))
+        // A pulldown has no grip-free swap: it is left out.
+        val pull = proposed(RuleCoach.advise(Situation.Pain(Area.Hands, worseAfter = "lat_pulldown"), Constraints(noGrip = true), active, library.exercises, oct13))
+        assertEquals(listOf(Operation.Remove("lat_pulldown", "hands worse")), pull.operations)
+
+        // With no hand Change in force it lasts the two weeks a pain Change does.
+        val fresh = proposed(RuleCoach.advise(Situation.Pain(Area.Hands, worseAfter = "lateral_raise"), Constraints(noGrip = true), plan(Position(3, 0)), library.exercises, oct13))
+        assertEquals(Scope.Dates(oct13, oct13.plusDays(13)), fresh.scope)
+    }
+
+    @Test
     fun theHandChangeAsTrainedInBuild() {
         val change = proposed(advise(Situation.Pain(Area.Hands), at = Position(3, 0)))
         val accepted = Plan.accept(program, Position(3, 0), change, oct13)

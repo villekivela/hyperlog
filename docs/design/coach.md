@@ -45,6 +45,8 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
      [Hands] [Shoulder] [Elbow]
      [Knee] [Lower back]
      Keep pain at 3/10 or less, no worse the next morning. Revert the Change when it’s gone.
+     Worse the next morning after             ← labelLarge, only while a hand Change is in force
+     [Cable Lateral Raise] [Triceps Pressdown] …   ← filter chips, one at most
  ( ) No gym
      Dumbbells and bodyweight at home
  ( ) Short on time                          ← picked: −  45 min  +

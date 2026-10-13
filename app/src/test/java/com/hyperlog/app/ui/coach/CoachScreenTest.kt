@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
@@ -60,6 +61,29 @@ class CoachScreenTest {
         // Back on Today, the day is the Change's.
         compose.waitFor("Smith Machine Bench Press")
         compose.onNodeWithText("Heavy bench", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun handsWorseAfterAnExerciseProposeItsNoGripSwap() {
+        runStarter()
+        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.waitFor("What’s in the way?")
+        compose.onNodeWithText("Pain").performClick()
+        // Before a hand Change there is nothing to be worse after.
+        assertEquals(0, compose.onAllNodesWithText("Worse the next morning after").fetchSemanticsNodes().size)
+        compose.onNodeWithText("Review change").performClick()
+        compose.waitFor("Accept")
+        compose.onNodeWithText("Accept").performClick()
+
+        compose.waitFor("Smith Machine Bench Press")
+        compose.onNodeWithContentDescription("Coach").performClick()
+        compose.waitFor("What’s in the way?")
+        compose.onNodeWithText("Pain").performClick()
+        compose.onNodeWithText("Worse the next morning after").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Cable Lateral Raise").performScrollTo().performClick()
+        compose.onNodeWithText("Review change").performClick()
+        compose.waitFor("Hands worse after Cable Lateral Raise: no grip on it")
+        compose.onNodeWithText("Machine Lateral Raise").assertExists()
     }
 
     @Test

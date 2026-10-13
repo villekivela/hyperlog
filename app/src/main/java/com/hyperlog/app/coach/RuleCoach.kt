@@ -27,7 +27,11 @@ sealed interface Situation {
     /** Missed days or a week; how many comes from the sessions. */
     data object TimeOff : Situation
 
-    data class Pain(val area: Area) : Situation
+    /**
+     * Pain in [area]. [worseAfter] names the slot whose exercise left the hands worse the next
+     * morning, which then moves to its no-grip swap (the pain rule); null for the pain itself.
+     */
+    data class Pain(val area: Area, val worseAfter: String? = null) : Situation
 
     /** Training at home: dumbbells and bodyweight. */
     data object NoGym : Situation
@@ -115,6 +119,9 @@ object RuleCoach {
         weekdays: Set<DayOfWeek> = emptySet(),
     ): Advice {
         if (plan.finished) return Advice.Finished
+        if (situation is Situation.Pain && situation.area == Area.Hands && situation.worseAfter != null) {
+            return worseAfter(situation.worseAfter, plan, library)
+        }
         val today = plan.today
         val byId = library.associateBy { it.id }
         val days = daysSince(lastTrained, today)
@@ -159,7 +166,7 @@ object RuleCoach {
                 ops += Operation.AdjustRir(null, 1, "pain")
                 loads.filter { (slot, _) -> slot.id in plan.dropsetSlots() }
                     .forEach { (slot, _) -> ops += Operation.RemoveTechnique(slot.id, "dropset", "no drop sets on ${situation.area.label.lowercase()}") }
-                summary = if (situation.area == Area.Hands) "Hands: less grip for two weeks" else "${situation.area.label}: train around it for two weeks"
+                summary = painSummary(situation.area)
             }
             Situation.TimeOff -> when {
                 days == null || off == null || off <= RESUME_DAYS -> {
@@ -192,6 +199,41 @@ object RuleCoach {
         if (ops.isEmpty()) return Advice.NothingToChange
         return Advice.Propose(Change(summary, scope, ops))
     }
+
+    /** What a pain Change for [area] is called; [worseAfter] finds the hands' one by it. */
+    fun painSummary(area: Area) = if (area == Area.Hands) "Hands: less grip for two weeks" else "${area.label}: train around it for two weeks"
+
+    /**
+     * The slots of the next two weeks whose exercise keeps a grip (as the plan is now, the hand
+     * Change included): the ones the hands can be worse after.
+     */
+    fun keptGrip(plan: ActiveProgram, library: List<Exercise>): List<PlannedSlot> {
+        if (plan.finished) return emptyList()
+        val byId = library.associateBy { it.id }
+        return window(plan, PAIN_DAYS).flatMap { it.slots }.distinctBy { it.id }
+            .filter { slot -> byId[slot.exercise]?.let(Area.Hands::loads) == true }
+    }
+
+    /**
+     * The pain rule (docs/programs/full-body-3-day.md): hands worse the next morning after [slotId]'s
+     * exercise move it to its no-grip swap (grip demand none: the slot's alternatives, then the
+     * movement pattern), or leave it out when there is none, for the rest of the hand Change in
+     * force (two weeks with none).
+     */
+    private fun worseAfter(slotId: String, plan: ActiveProgram, library: List<Exercise>): Advice {
+        val byId = library.associateBy { it.id }
+        val slot = window(plan, PAIN_DAYS).flatMap { it.slots }.firstOrNull { it.id == slotId } ?: return Advice.NothingToChange
+        val exercise = byId[slot.exercise] ?: return Advice.NothingToChange
+        val today = plan.today
+        val until = plan.changes.filter { it.change.summary == painSummary(Area.Hands) }
+            .mapNotNull { (it.change.scope as? Scope.Dates)?.to }.filter { it >= today }.maxOrNull()
+            ?: today.plusDays(PAIN_DAYS - 1)
+        val swap = candidates(slot, byId, library) { it.grip == GripDemand.None }.firstOrNull()
+        val op = if (swap != null) Operation.Swap(slot.id, swap.id, WORSE) else Operation.Remove(slot.id, WORSE)
+        return Advice.Propose(Change("Hands worse after ${exercise.name}: no grip on it", Scope.Dates(today, until), listOf(op)))
+    }
+
+    private const val WORSE = "hands worse"
 
     /** Whole days since [lastTrained]; null with no session yet. */
     fun daysSince(lastTrained: LocalDate?, today: LocalDate): Int? = lastTrained?.let { ChronoUnit.DAYS.between(it, today).toInt().coerceAtLeast(0) }

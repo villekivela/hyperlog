@@ -733,6 +733,11 @@ last week.
   the presses, flyes and lateral raises; elbow curls and triceps work; knee squats, lunges and knee
   extensions; lower back hinges, squats and lunges. The pain rule shows under the areas: pain in a
   set at 3/10 or less and no worse the next morning.
+  - **Worse the next morning**: while a hand Change is in force, Pain → Hands lists the exercises
+    that kept a grip under `Worse the next morning after`. Picking one makes Review change propose
+    a Change that moves it to its no-grip swap (grip demand none: the slot's alternatives, then the
+    movement pattern), or leaves it out when there is none (`Hands worse after Cable Lateral
+    Raise: no grip on it`), dated to the end of the hand Change.
 - **Time off** is detected from the weekday plan (every gym's usual days): it counts whole days
   from the first planned day after the last finished session that went untrained (today isn't
   missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since

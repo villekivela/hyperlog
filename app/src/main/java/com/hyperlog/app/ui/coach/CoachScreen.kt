@@ -110,6 +110,11 @@ fun CoachScreen(
     val daysOff = RuleCoach.daysSince(lastTrained, today)
     var kind by rememberSaveable { mutableStateOf(if (RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, today, weekdays))) SituationKind.TimeOff else null) }
     var area by rememberSaveable { mutableStateOf(Area.Hands) }
+    /** The slot the hands were worse after, under a hand Change in force; null for the pain itself. */
+    var worseAfter by rememberSaveable { mutableStateOf<String?>(null) }
+    val handsInForce = program?.changes?.any { it.change.summary == RuleCoach.painSummary(Area.Hands) } == true
+    val keptGrip = remember(program, library) { if (program != null && handsInForce) RuleCoach.keptGrip(program, library) else emptyList() }
+    val names = remember(library) { library.associate { it.id to it.name } }
     var minutes by rememberSaveable { mutableIntStateOf(DEFAULT_MINUTES) }
     var noGrip by rememberSaveable { mutableStateOf(false) }
     var noAxial by rememberSaveable { mutableStateOf(false) }
@@ -127,7 +132,7 @@ fun CoachScreen(
     /** The rule situation picked; null for Something else, which goes to Claude instead. */
     fun situation(k: SituationKind): Situation? = when (k) {
         SituationKind.TimeOff -> Situation.TimeOff
-        SituationKind.Pain -> Situation.Pain(area)
+        SituationKind.Pain -> Situation.Pain(area, worseAfter.takeIf { area == Area.Hands })
         SituationKind.NoGym -> Situation.NoGym
         SituationKind.ShortOnTime -> Situation.ShortOnTime(minutes)
         SituationKind.PoorRecovery -> Situation.PoorRecovery
@@ -239,7 +244,7 @@ fun CoachScreen(
                         Area.entries.forEach { a ->
                             FilterChip(
                                 selected = a == area,
-                                onClick = { area = a; limitsFor(Situation.Pain(a)) },
+                                onClick = { area = a; worseAfter = null; limitsFor(Situation.Pain(a)) },
                                 label = { Text(a.label) },
                             )
                         }
@@ -250,6 +255,27 @@ fun CoachScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    // The pain rule: worse the next morning after an exercise moves it to its no-grip swap.
+                    if (area == Area.Hands && keptGrip.isNotEmpty()) {
+                        Text(
+                            stringResource(R.string.coach_worse_after),
+                            Modifier.padding(start = TextIndent, end = Margin, top = 8.dp, bottom = 8.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        FlowRow(
+                            Modifier.padding(start = TextIndent, end = Margin),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            keptGrip.forEach { slot ->
+                                FilterChip(
+                                    selected = worseAfter == slot.id,
+                                    onClick = { worseAfter = slot.id.takeIf { it != worseAfter }; said = null },
+                                    label = { Text(names[slot.exercise] ?: slot.exercise) },
+                                )
+                            }
+                        }
+                    }
                 }
                 SituationRow(stringResource(R.string.coach_no_gym), stringResource(R.string.coach_no_gym_body), kind == SituationKind.NoGym) { pick(SituationKind.NoGym) }
                 SituationRow(stringResource(R.string.coach_short), null, kind == SituationKind.ShortOnTime) { pick(SituationKind.ShortOnTime) }

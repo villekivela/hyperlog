@@ -369,6 +369,7 @@
     <string name="coach_day_off">1 day since your last session</string>
     <string name="coach_no_sessions">No sessions yet</string>
     <string name="coach_pain">Pain</string>
+    <string name="coach_worse_after">Worse the next morning after</string>
     <string name="coach_pain_body">Keep pain at 3/10 or less, no worse the next morning. Revert the Change when it’s gone.</string>
     <string name="coach_no_gym">No gym</string>
     <string name="coach_no_gym_body">Dumbbells and bodyweight at home</string>
