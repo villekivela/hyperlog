@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.activity.compose.BackHandler
@@ -143,15 +144,7 @@ fun LadderEditor(
                 )
             }
             if (kinds.size > 1) {
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    kinds.forEachIndexed { i, k ->
-                        SegmentedButton(
-                            selected = kind == k,
-                            onClick = { kind = k },
-                            shape = SegmentedButtonDefaults.itemShape(i, kinds.size),
-                        ) { Text(stringResource(k.label)) }
-                    }
-                }
+                ConnectedChoice(kinds.map { stringResource(it.label) }, kinds.indexOf(kind), onSelect = { kind = kinds[it] })
             }
             when (kind) {
                 LadderKind.Stack -> {
@@ -159,15 +152,7 @@ fun LadderEditor(
                         onClick = { unit = WeightUnit.Lb; start = "2.5"; step = "5"; count = "40" },
                         label = { Text(stringResource(R.string.ladder_lb_preset)) },
                     )
-                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                        WeightUnit.entries.forEachIndexed { i, u ->
-                            SegmentedButton(
-                                selected = unit == u,
-                                onClick = { unit = u },
-                                shape = SegmentedButtonDefaults.itemShape(i, WeightUnit.entries.size),
-                            ) { Text(u.name.lowercase()) }
-                        }
-                    }
+                    ConnectedChoice(WeightUnit.entries.map { it.name.lowercase() }, WeightUnit.entries.indexOf(unit), onSelect = { unit = WeightUnit.entries[it] })
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         NumberField(start, { start = it }, stringResource(R.string.ladder_start), Modifier.weight(1f))
                         NumberField(step, { step = it }, stringResource(R.string.ladder_step), Modifier.weight(1f))

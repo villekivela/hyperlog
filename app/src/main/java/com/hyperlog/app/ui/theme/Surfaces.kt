@@ -1,5 +1,12 @@
 package com.hyperlog.app.ui.theme
 
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -265,10 +272,45 @@ fun BottomActions(
     )
 }
 
+/**
+ * A choice of two to four options as a connected button group (Material 3 Expressive): the picked
+ * one fills and rounds fully, the rest sit on [Tones.card]. [labels] are the options' texts.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ConnectedChoice(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, color: Color = Tones.card) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+        labels.forEachIndexed { i, label ->
+            ToggleButton(
+                checked = i == selected,
+                onCheckedChange = { onSelect(i) },
+                modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                shapes = when (i) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
+                colors = ToggleButtonDefaults.colors(containerColor = color),
+            ) { Text(label, maxLines = 1) }
+        }
+    }
+}
+
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun hyperlogTopBarColors(): TopAppBarColors = TopAppBarDefaults.topAppBarColors(
     containerColor = Tones.screen,
     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+)
+
+/**
+ * Filter chips pick in primary container: secondary container is too close to a card's tone in a
+ * grey (monochrome) palette for a choice to read.
+ */
+@Composable
+fun selectedChipColors() = FilterChipDefaults.filterChipColors(
+    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
 )

@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.today
 
+import com.hyperlog.app.ui.theme.Group
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -271,8 +273,10 @@ private fun NextDay(
                 Text(day.day.name, style = MaterialTheme.typography.headlineSmall)
             }
         }
-        itemsIndexed(day.slots, key = { _, slot -> slot.id }) { i, slot ->
-            Segment(i, day.slots.size) {
+        // One row per slot, one segment per group: a superset's partners share theirs.
+        val groups = day.slots.groupBy { it.group }.values.toList()
+        itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
+            Segment(i, groups.size) { group.forEach { slot ->
                 Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp)) {
                     // A Change's swap reads as the session will: "In place of …" over the name.
                     slot.inPlaceOf?.let { planned ->
@@ -303,7 +307,7 @@ private fun NextDay(
                     }
                     SetSummary(slot.sets, Modifier.padding(start = 40.dp))
                 }
-            }
+            } }
         }
         adHoc?.let { onAdHoc ->
             item {
@@ -389,13 +393,14 @@ internal fun StartSheetContent(
                 Modifier.padding(horizontal = 24.dp).padding(bottom = 8.dp),
                 style = MaterialTheme.typography.headlineSmall,
             )
-            gyms.forEach { gym ->
+            Group(color = Tones.sheetCard) { gyms.forEach { gym ->
                 val selected = gym.id == chosen
                 Row(
                     Modifier.fillMaxWidth()
+                        .then(if (selected) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
                         .selectable(selected, role = Role.RadioButton, onClick = { chosen = gym.id })
-                        .heightIn(min = 56.dp)
-                        .padding(start = 12.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
+                        .heightIn(min = 64.dp)
+                        .padding(start = 0.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(selected = selected, onClick = null, Modifier.size(48.dp))
@@ -417,13 +422,13 @@ internal fun StartSheetContent(
                         }
                     }
                 }
-            }
+            } }
             if (missing.isNotEmpty()) {
                 MissingSwaps(gym.name, missing, names, declined, onToggle = { slot -> declined = if (slot in declined) declined - slot else declined + slot })
             }
             Spacer(Modifier.height(16.dp))
             val swaps = missing.filter { it.replacement != null && it.slot !in declined }.associate { it.slot to it.replacement!! }
-            Button(onClick = { onStart(chosen, swaps) }, Modifier.align(Alignment.End).padding(end = 24.dp)) {
+            Button(onClick = { onStart(chosen, swaps) }, Modifier.align(Alignment.End).padding(end = 16.dp).heightIn(min = ButtonDefaults.MediumContainerHeight), contentPadding = ButtonDefaults.MediumContentPadding) {
                 Text(stringResource(R.string.start_start))
             }
         }

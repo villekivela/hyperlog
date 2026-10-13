@@ -403,7 +403,8 @@ private fun DayToken(letter: String, state: DayState, modifier: Modifier = Modif
     val cs = MaterialTheme.colorScheme
     val shape = Modifier.size(32.dp).then(
         when (state) {
-            DayState.Done -> Modifier.background(cs.secondaryContainer, CircleShape)
+            // Done days are a tint of primary, so they read on a card in any palette, grey included.
+            DayState.Done -> Modifier.background(cs.primary.copy(alpha = 0.2f), CircleShape)
             // The one filled shape: the expressive cookie in primary.
             DayState.Next -> Modifier.size(36.dp).background(cs.primary, MaterialShapes.Cookie9Sided.toShape())
             DayState.Upcoming -> Modifier.border(1.dp, cs.outlineVariant, CircleShape)
@@ -415,7 +416,7 @@ private fun DayToken(letter: String, state: DayState, modifier: Modifier = Modif
             style = MaterialTheme.typography.labelLarge,
             color = when (state) {
                 DayState.Next -> cs.onPrimary
-                DayState.Done -> cs.onSecondaryContainer
+                DayState.Done -> cs.onSurface
                 DayState.Upcoming -> cs.onSurfaceVariant
             },
             fontWeight = if (state == DayState.Next) FontWeight.Bold else FontWeight.Medium,

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.ui.theme.selectedChipColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -259,6 +260,7 @@ fun CoachScreen(
                     ) {
                         Area.entries.forEach { a ->
                             FilterChip(
+                                colors = selectedChipColors(),
                                 selected = a == area,
                                 onClick = { area = a; worseAfter = null; limitsFor(Situation.Pain(a)) },
                                 label = { Text(a.label) },
@@ -285,6 +287,7 @@ fun CoachScreen(
                         ) {
                             keptGrip.forEach { slot ->
                                 FilterChip(
+                                    colors = selectedChipColors(),
                                     selected = worseAfter == slot.id,
                                     onClick = { worseAfter = slot.id.takeIf { it != worseAfter }; said = null },
                                     label = { Text(names[slot.exercise] ?: slot.exercise) },
@@ -410,6 +413,7 @@ private fun SituationRow(name: String, body: String?, selected: Boolean, onClick
 @Composable
 private fun Limit(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
     FilterChip(
+        colors = selectedChipColors(),
         selected = on,
         onClick = { onChange(!on) },
         label = { Text(label) },

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.history
 
+import com.hyperlog.app.ui.theme.cardBehind
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -111,7 +112,7 @@ fun ExerciseTrendScreen(
                 }
             }
             trend.lines.forEachIndexed { n, line ->
-                item(key = "chart-$n") {
+                item(key = "chart-$n") { Column(Modifier.cardBehind(Tones.card).padding(vertical = 12.dp)) {
                     if (perMachine) {
                         if (n > 0) Spacer(Modifier.height(16.dp))
                         Text(
@@ -126,7 +127,7 @@ fun ExerciseTrendScreen(
                         note = if (weighted && !hasBodyweight) stringResource(R.string.history_needs_bodyweight) else null,
                         onGoal = { editingGoal = true },
                     )
-                }
+                } }
                 val rows = line.points.reversed()
                 item(key = "rows-gap-$n") { Spacer(Modifier.height(8.dp)) }
                 itemsIndexed(rows, key = { _, it -> "row-$n-${it.sessionId}" }) { i, p ->

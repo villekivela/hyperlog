@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -736,7 +739,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.plannedRows(table: Ta
         val target = plan.getOrNull(i)
         val backoff = target?.backoff
         if (backoff != null && plan.getOrNull(i - 1)?.backoff == null) {
-            item(key = "backoff-$i") { Label(Symbol.SouthEast, stringResource(R.string.technique_backoff, backoff.percent), done = i < logged.size) }
+            item(key = "backoff-$i") { Label(Symbol.SouthEast, stringResource(R.string.technique_backoff, backoff.percent), done = true) }
         }
         val last = current.lastTime.getOrNull(i)
         val kg = plannedWeight(i, plan, logged, current.lastTime, current.ladder, table.activeKg)
@@ -1173,10 +1176,13 @@ private fun MachinePicker(
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,
         )
-        items.forEach { item ->
+        // The gym's machines as one group of rows, the ways out under it.
+        Spacer(Modifier.height(8.dp))
+        items.forEachIndexed { i, item ->
+            com.hyperlog.app.ui.theme.Segment(i, items.size, onClick = { onPick(item.id) }) {
             Column(
-                Modifier.fillMaxWidth().clickable { onPick(item.id) }.heightIn(min = 72.dp)
-                    .padding(horizontal = Margin, vertical = 12.dp),
+                Modifier.fillMaxWidth().heightIn(min = 72.dp)
+                    .padding(horizontal = Margin - com.hyperlog.app.ui.theme.CardMargin, vertical = 12.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -1188,7 +1194,9 @@ private fun MachinePicker(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            }
         }
+        Spacer(Modifier.height(8.dp))
         TextButton(onClick = onAdd, Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
             SymbolIcon(Symbol.Add, null, Modifier.width(20.dp))
             Spacer(Modifier.width(8.dp))
@@ -1221,12 +1229,15 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
         val listState = rememberLazyListState()
         LaunchedEffect(query) { listState.scrollToItem(0) }
         LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).imePadding(), state = listState) {
-            items(exercises.search(query), key = { it.id }) { e ->
-                Text(
-                    e.name,
-                    Modifier.fillMaxWidth().clickable { onPick(e.id) }.heightIn(min = 56.dp).padding(horizontal = Margin, vertical = 16.dp),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+            val found = exercises.search(query)
+            itemsIndexed(found, key = { _, it -> it.id }) { i, e ->
+                com.hyperlog.app.ui.theme.Segment(i, found.size, color = MaterialTheme.colorScheme.surfaceContainerHigh, onClick = { onPick(e.id) }) {
+                    Text(
+                        e.name,
+                        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = com.hyperlog.app.ui.theme.CardPadding, vertical = 16.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
             }
             item { Spacer(Modifier.navigationBarsPadding().height(16.dp)) }
         }
@@ -1254,7 +1265,7 @@ internal fun ExerciseSheet(
         Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         machine?.let {
             Spacer(Modifier.height(16.dp))
-            Row(Modifier.heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                 SymbolIcon(Symbol.LocationOn, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
                 Spacer(Modifier.width(16.dp))
                 Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -1341,7 +1352,9 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
 private fun Prescription(plan: List<SetPrescription>) {
     val cs = MaterialTheme.colorScheme
     val sameRest = plan.map { it.rest }.distinct().size == 1
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(24.dp))
+    // The plan is one card on the sheet, its edge 12 dp out from the text.
+    Column(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).padding(vertical = 4.dp)) {
     plan.forEachIndexed { i, set ->
         Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -1385,6 +1398,8 @@ private fun Prescription(plan: List<SetPrescription>) {
             Text(stringResource(R.string.sheet_rest, clock(plan.first().rest * 1000L)), style = MaterialTheme.typography.bodyLarge.merge(Tnum))
         }
     }
+    }
+    Spacer(Modifier.height(8.dp))
 }
 
 // ---------------------------------------------------------------- effects

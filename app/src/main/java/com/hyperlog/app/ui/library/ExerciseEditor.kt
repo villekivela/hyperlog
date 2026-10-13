@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.library
 
+import com.hyperlog.app.ui.theme.selectedChipColors
+import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.activity.compose.BackHandler
@@ -152,6 +154,7 @@ fun ExerciseEditor(
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Equipment.entries.forEach { e ->
                         FilterChip(
+                            colors = selectedChipColors(),
                             selected = equipment == e,
                             onClick = { equipment = e },
                             label = { Text(e.label) },
@@ -190,15 +193,7 @@ fun ExerciseEditor(
             Section(stringResource(R.string.editor_pattern)) { PatternField(pattern) { pattern = it } }
 
             Section(stringResource(R.string.editor_grip)) {
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    GripDemand.entries.forEachIndexed { i, g ->
-                        SegmentedButton(
-                            selected = grip == g,
-                            onClick = { grip = g },
-                            shape = SegmentedButtonDefaults.itemShape(i, GripDemand.entries.size),
-                        ) { Text(g.label) }
-                    }
-                }
+                ConnectedChoice(GripDemand.entries.map { it.label }, GripDemand.entries.indexOf(grip), onSelect = { grip = GripDemand.entries[it] })
             }
 
             Section(stringResource(R.string.editor_muscles)) {

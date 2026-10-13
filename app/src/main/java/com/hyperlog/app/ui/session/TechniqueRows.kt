@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.Group
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.CardMargin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -377,7 +380,7 @@ internal fun SetSheet(
             color = cs.onSurfaceVariant,
         )
         Spacer(Modifier.height(8.dp))
-        Column(Modifier.selectableGroup()) {
+        Group(Modifier.selectableGroup(), color = Tones.sheetCard) {
             TechniqueOption(null, technique == null, stringResource(R.string.set_sheet_none), stringResource(R.string.set_sheet_none_body)) { onTechnique(null) }
             Offered.forEach { offered ->
                 // The set's own technique keeps its numbers; the others come with the defaults.
@@ -386,12 +389,13 @@ internal fun SetSheet(
             }
         }
         if (split != null) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
+            Group(color = Tones.sheetCard) {
             Row(
                 Modifier.fillMaxWidth()
                     .toggleable(split, role = Role.Switch, onValueChange = onSplit)
                     .heightIn(min = 72.dp)
-                    .padding(horizontal = Margin, vertical = 8.dp),
+                    .padding(horizontal = Margin - CardMargin, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
@@ -400,6 +404,7 @@ internal fun SetSheet(
                 }
                 Switch(checked = split, onCheckedChange = null)
             }
+            }
         }
     }
 }
@@ -407,11 +412,13 @@ internal fun SetSheet(
 @Composable
 private fun TechniqueOption(technique: Technique?, selected: Boolean, name: String, detail: String, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    // The picked technique is lifted into secondary container, as a picked situation is.
     Row(
         Modifier.fillMaxWidth()
+            .then(if (selected) Modifier.background(cs.secondaryContainer) else Modifier)
             .selectable(selected, role = Role.RadioButton, onClick = onClick)
             .heightIn(min = 64.dp)
-            .padding(start = 12.dp, end = Margin, top = 4.dp, bottom = 4.dp),
+            .padding(start = 0.dp, end = Margin - CardMargin, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null, Modifier.size(48.dp))

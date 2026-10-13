@@ -1,5 +1,10 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,16 +100,17 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
         LaunchedEffect(query) { listState.scrollToItem(0) }
         LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).imePadding(), state = listState) {
             if (query.isNotBlank()) {
-                items(library.filter { !it.hidden && it.id != current }.search(query), key = { it.id }) { PickRow(it, null, onPick) }
+                val found = library.filter { !it.hidden && it.id != current }.search(query)
+                itemsIndexed(found, key = { _, it -> it.id }) { i, e -> Segment(i, found.size, color = Tones.sheetCard, onClick = { onPick(e.id) }) { PickRow(e, null) } }
             } else {
                 if (program.isNotEmpty()) {
                     item(key = "head-alternatives") { SectionHead(stringResource(R.string.edit_swap_alternatives)) }
                     // Swapped already: the planned exercise is the way back, so it says which it is.
-                    items(program, key = { it.id }) { PickRow(it, if (it.id == slot?.exercise) stringResource(R.string.edit_planned) else null, onPick) }
+                    itemsIndexed(program, key = { _, it -> it.id }) { i, e -> Segment(i, program.size, color = Tones.sheetCard, onClick = { onPick(e.id) }) { PickRow(e, if (e.id == slot?.exercise) stringResource(R.string.edit_planned) else null) } }
                 }
                 if (same.isNotEmpty()) {
                     item(key = "head-same") { SectionHead(stringResource(R.string.edit_swap_same_movement)) }
-                    items(same, key = { it.id }) { PickRow(it, null, onPick) }
+                    itemsIndexed(same, key = { _, it -> it.id }) { i, e -> Segment(i, same.size, color = Tones.sheetCard, onClick = { onPick(e.id) }) { PickRow(e, null) } }
                 }
             }
             item { Spacer(Modifier.navigationBarsPadding().height(16.dp)) }
@@ -123,9 +129,9 @@ private fun SectionHead(text: String) {
 }
 
 @Composable
-private fun PickRow(exercise: Exercise, tag: String?, onPick: (String) -> Unit) {
+private fun PickRow(exercise: Exercise, tag: String?) {
     Row(
-        Modifier.fillMaxWidth().clickable { onPick(exercise.id) }.heightIn(min = 56.dp).padding(horizontal = Margin, vertical = 16.dp),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = CardPadding, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -205,6 +211,8 @@ internal fun TargetEditor(planned: SetPrescription, onChange: (RepRange, Int?) -
         color = cs.onSurfaceVariant,
     )
     Spacer(Modifier.height(8.dp))
+    // The three rows are one card on the sheet.
+    Column(Modifier.cardBehind(Tones.sheetCard)) {
     // The two ends on rows of their own: a dash between two steppers would read as another minus.
     EditRow(stringResource(R.string.edit_reps_from)) {
         Stepper(
@@ -236,6 +244,7 @@ internal fun TargetEditor(planned: SetPrescription, onChange: (RepRange, Int?) -
             mark = rir?.let { { RirMark(it, filled = false) } },
         )
     }
+    }
 }
 
 /** The highest target RIR the sheet offers; past it a set is a warm-up. */
@@ -244,7 +253,7 @@ private const val MaxRir = 5
 @Composable
 private fun EditRow(label: String, content: @Composable () -> Unit) {
     // Steppers end at the margin less their touch padding, so their values line up in one column.
-    Row(Modifier.fillMaxWidth().height(56.dp).padding(start = Margin, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().height(56.dp).padding(start = Margin, end = 24.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         content()
     }
