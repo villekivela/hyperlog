@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.ui.zIndex
@@ -709,25 +710,28 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
     val headsPx = with(androidx.compose.ui.platform.LocalDensity.current) { LabelHeight.roundToPx() }
     // Keep the active row and the set after it in view, warm-ups and tags scrolling away first.
     LaunchedEffect(current.id, current.sets.size, table.warmups.size, table.correction) {
+        // Rows added above (warm-ups appearing) would keep the list anchored below them: start
+        // from the top, then scroll only as far as the active and next sets need.
+        if (current.sets.isEmpty()) listState.scrollToItem(0)
         androidx.compose.runtime.withFrameNanos { }
-        listState.keepInView("set-${current.sets.size}", "set-${current.sets.size + 1}", headsPx)
+        listState.keepInView("set-${current.sets.size}", "set-${current.sets.size + 1}", 0)
     }
     val plan = current.prescription
     val cs = MaterialTheme.colorScheme
     // The table is a card a tone off the screen, as tall as its rows and scrolling inside the space it has.
     Box(modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = TableMargin).clip(TableShape).background(cs.surfaceContainer)) {
+    // The heads sit above the rows, so they stay while warm-ups scroll away under them. A split
+    // set's reps read left / right, so the head says which is which.
+    Box(Modifier.padding(start = TablePad, end = TablePad, top = TablePad)) {
+        ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null)
+    }
     LazyColumn(
-        Modifier.fillMaxWidth().padding(horizontal = TableMargin).clip(TableShape).background(cs.surfaceContainer),
+        // Rows scrolled up stop at the heads rather than drawing over them.
+        Modifier.fillMaxWidth().clipToBounds(),
         state = listState,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(TablePad),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(start = TablePad, end = TablePad, bottom = TablePad),
     ) {
-        // A split set's reps read left / right, so the head says which is which.
-        // The heads stay at the top while warm-ups scroll away under them.
-        stickyHeader(key = "heads") {
-            Box(Modifier.background(cs.surfaceContainer)) {
-                ColumnHeads(showLast = current.lastTime.isNotEmpty(), showTarget = plan != null, split = entry?.right != null && table.followUp == null)
-            }
-        }
         warmupRows(table)
         if (plan != null) {
             plannedRows(table, plan)
@@ -757,6 +761,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         }
     }
     }
+    }
 }
 
 /**
@@ -783,8 +788,21 @@ private suspend fun androidx.compose.foundation.lazy.LazyListState.keepInView(ac
         more -> Int.MAX_VALUE
         else -> a.offset + a.size - end
     }
-    val delta = minOf(needed, a.offset - start)
-    if (delta > 0) animateScrollBy(delta.toFloat())
+    var delta = minOf(needed, a.offset - start)
+    if (delta <= 0) return
+    // No sliver of a row left under the heads: finish scrolling the row cut at the top.
+    info.visibleItemsInfo.firstOrNull { it.offset < start + delta && it.offset + it.size > start + delta }?.let {
+        delta = minOf(it.offset + it.size - start, a.offset - start)
+    }
+    animateScrollBy(delta.toFloat())
+    // No row left cut under the heads: snap to the start of the next row, or (at the end of
+    // the list, where that can't scroll) back to the start of the cut one.
+    if (firstVisibleItemScrollOffset > 0) {
+        val first = firstVisibleItemIndex
+        val activeIndex = layoutInfo.visibleItemsInfo.firstOrNull { it.key == active }?.index ?: return
+        if (first + 1 <= activeIndex && canScrollForward) animateScrollToItem(first + 1)
+        if (firstVisibleItemScrollOffset > 0) animateScrollToItem(first)
+    }
 }
 
 /**

@@ -3,7 +3,8 @@
 The in-workout screen where sets are logged. The expressive pass (tonal cards, roomier grid,
 Next card, rest pill in primary container) is described here; the pad is unchanged. Screens:
 `screens/session-*.png` from the owner's phone (dark, monochrome system style) and
-`screens/light-session-*.png`, `light-adhoc-add-exercise.png`, Robolectric renders in light.
+`screens/light-session-*.png`, `dark-session-*.png`, `light-adhoc-add-exercise.png`, Robolectric
+renders. The column heads sit above the table's rows, so they stay when rows scroll.
 
 ## Principles
 

@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasScrollToIndexAction
 import com.hyperlog.app.waitForDescription
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
@@ -84,7 +86,9 @@ class WarmupScreenTest {
     fun aWarmUpTicksOffWithATapAndTheWorkSetStaysActive() {
         startDay("barbell_bench_press")
         compose.press("9"); compose.press("0"); compose.press("Next")
-        compose.waitFor("Warm-up")
+        // The table keeps the work sets in view; the warm-ups are a scroll up.
+        compose.waitForIdle()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasContentDescription("Warm-up 1, 40 kg × 8"))
         val first = compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8")
         first.assertIsOff()
         first.performClick()
