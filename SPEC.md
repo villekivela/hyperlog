@@ -266,7 +266,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - **Equipment item**: one piece of equipment at a gym (a cable station, a leg extension, the
   dumbbell rack, a barbell with plates) with its **weight ladder**: a start and step in kg or lb
   (shown in kg), an explicit list, or for plate-loaded machines a base weight plus plates.
-- **Each gym has its own dumbbell rack** (Gyms and equipment → the gym → Free weights here →
+- **Each gym has its own dumbbell rack** (Gyms and equipment → the gym → Dumbbells and plates →
   Dumbbells), set up from its labels like a stack (`1 2 3 … 10 12.5 15 … 45`). A new gym, and a
   session with no gym, have the usual rack: 1 to 10 kg by 1, then 12.5 to 50 kg by 2.5. Only the
   weights on offer depend on the gym: dumbbell history and estimates stay shared across gyms, as
@@ -275,6 +275,12 @@ available weights belong to a **machine at a gym**, not to an exercise.
   25 and 5 kg steps) with the new one; a restored backup from before gets the same step.
 - **Barbell plates are shared**: one global set, which the EZ, trap and safety bars load too: each has its own bar weight (10, 25 and 30 kg until set)
   and loads the shared plates.
+- **A gym's screen groups its equipment by kind**, each section under its header and sorted by
+  name: **Stack machines** (the cable station among them), **Plate-loaded machines**, **Bars**,
+  **Racks and benches**, then **Dumbbells and plates** (the dumbbell rack and the plates for the
+  pin). A kind the gym has none of has no section. Each kind has its own symbol: a stack, a cable
+  for the cable station, a plate, a barbell, a bench; the dumbbells a dumbbell and the pin plates
+  a pin.
 - **Setup both ways**: a gym screen to list equipment up front (its **Add equipment** an extended
   FAB, in reach however long the list), and adding on the go. The first
   time an exercise is done at a gym without a known machine, the app asks "which machine?" (pick or
@@ -319,8 +325,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
   serves, which fills in "Which machine?" for them. An item marked `unconfirmed` (the default
   without a ladder) is a guess: its first use opens its setup from the labels instead of asking
   which machine. The gym's barbell, EZ, trap and safety bars set what sessions there load the
-  shared plates on; its racks, benches and other bars are listed on the gym screen under **Bars,
-  racks and benches**.
+  shared plates on; its racks, benches and other bars are listed on the gym screen under **Bars**
+  and **Racks and benches**.
 - **Set up the gym from the program.** With a program active, a gym's screen (so also right after
   adding a gym) opens on a `primaryContainer` card, **Add the equipment your program uses**, while
   the program has machine or cable exercises the gym has no machine for: `6 machines and a cable
@@ -398,7 +404,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
     that adds a half step. Their weights are set per machine, one entry per plate, so two identical
     plates are `2×2.5` and give 0, 2.5 or 5.
   - **Plates on the pin**: the gym's small loose plates (default 1.25 and 2.5 kg), set once per gym
-    under the gym's **Small plates → Plates for the pin** and usable on every pin stack there that
+    under the gym's **Dumbbells and plates → Plates for the pin** and usable on every pin stack there that
     takes them (on by default).
   - The rungs are every pin weight plus any count from none to all of each built-in add-on plus any
     combination of the pin plates, sorted, with near-duplicates (under 0.15 kg apart) kept once, by

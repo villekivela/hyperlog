@@ -66,6 +66,28 @@ data class EquipmentItem(
     }
 }
 
+/** The sections a gym's screen lists its equipment in, in this order (SPEC, Gyms and equipment). */
+enum class EquipmentKind { Stack, PlateLoaded, Bar, RackBench }
+
+/** What kind of equipment this is: a bar or a rack by its [EquipmentItem.kind], a machine by its ladder. */
+val EquipmentItem.equipmentKind: EquipmentKind
+    get() = when {
+        kind == EquipmentItem.RACK -> EquipmentKind.RackBench
+        kind.startsWith(EquipmentItem.BAR) -> EquipmentKind.Bar
+        ladder is LadderSpec.Plates -> EquipmentKind.PlateLoaded
+        else -> EquipmentKind.Stack
+    }
+
+/**
+ * The gym's equipment and kit by kind, in [EquipmentKind] order, each sorted by name the way a
+ * person reads a list (case and accents aside). Kinds it has none of are left out.
+ */
+fun Gym.sections(): Map<EquipmentKind, List<EquipmentItem>> {
+    val collator = java.text.Collator.getInstance(java.util.Locale.ROOT).apply { strength = java.text.Collator.SECONDARY }
+    val byKind = (items + kit).filter { !it.archived }.groupBy { it.equipmentKind }
+    return EquipmentKind.entries.mapNotNull { k -> byKind[k]?.let { k to it.sortedWith(compareBy(collator) { item -> item.name }) } }.toMap()
+}
+
 /**
  * How sure a machine's ladder is (SPEC, Learning a stack). Set up or edited by hand, it is
  * [Confirmed]. A guess (from the program's setup or an import) is [Unconfirmed] until its first use

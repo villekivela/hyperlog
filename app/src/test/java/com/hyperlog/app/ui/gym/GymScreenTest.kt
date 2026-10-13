@@ -115,6 +115,29 @@ class GymScreenTest {
         assertEquals(1, dumbbells)
     }
 
+    @Test
+    fun aGymListsItsEquipmentUnderAHeaderForEachKind() {
+        val gym = Gym(
+            1, "Central",
+            items = listOf(
+                com.hyperlog.app.gym.EquipmentItem(1, 1, "Pec deck", LadderSpec.DefaultPinStack),
+                com.hyperlog.app.gym.EquipmentItem(2, 1, "Leg press", LadderSpec.Plates(0.0, listOf(20.0))),
+            ),
+            kit = listOf(
+                com.hyperlog.app.gym.EquipmentItem(3, 1, "EZ bar", LadderSpec.Explicit(listOf(10.0)), kind = "bar:ez_bar"),
+                com.hyperlog.app.gym.EquipmentItem(4, 1, "Flat bench", LadderSpec.Explicit(emptyList()), kind = "rack"),
+            ),
+        )
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(gym, onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {})
+            }
+        }
+        val order = listOf("Stack machines", "Pec deck", "Plate-loaded machines", "Leg press", "Bars", "EZ bar", "Racks and benches", "Flat bench", "Dumbbells and plates", "Dumbbells")
+        val tops = order.map { compose.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y }
+        assertEquals(tops.sorted(), tops)
+    }
+
     private val legExtension = com.hyperlog.app.library.Exercise(
         "leg_extension", "Leg Extension", Equipment.Machine, com.hyperlog.app.library.MovementPattern.KneeExtension,
         com.hyperlog.app.library.GripDemand.None, listOf("Quads"),

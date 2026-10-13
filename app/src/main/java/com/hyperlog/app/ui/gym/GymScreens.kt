@@ -58,6 +58,8 @@ import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.gym.equipmentKind
+import com.hyperlog.app.gym.sections
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -198,34 +200,29 @@ fun GymScreen(
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             if (programSetup != null && !programSetup.isEmpty && programTitle != null) {
                 ProgramEquipmentCard(programSetup, programTitle, gym.defaultStack, onAddProgramEquipment)
-                Spacer(Modifier.height(16.dp))
             }
             val chevron = chevron()
-            val ladders = gym.items.map { item ->
-                val ladder = item.ladder.summary(gym.pinPlates)
-                if (item.cableStation) stringResource(R.string.gym_cable_station, ladder) else ladder
-            }
-            if (programSetup == null || programSetup.isEmpty || programTitle == null) Spacer(Modifier.height(8.dp))
-            SegmentedList {
-                gym.items.forEachIndexed { i, item -> row(item.name, ladders[i], Symbol.FitnessCenter, onClick = { onOpenItem(item.id) }, trailing = chevron) }
+            // One section per kind, each in name order; a kind the gym has none of is left out.
+            gym.sections().forEach { (kind, items) ->
+                SectionLabel(stringResource(kind.title))
+                val lines = items.map { item -> itemLine(item, gym.pinPlates) }
+                SegmentedList {
+                    items.forEachIndexed { i, item ->
+                        // Machines open their setup; bars, racks and benches only say what they are.
+                        val open = if (item.kind == com.hyperlog.app.gym.EquipmentItem.MACHINE) ({ onOpenItem(item.id) }) else null
+                        row(item.name, lines[i], item.symbol, onClick = open, trailing = if (open != null) chevron else null)
+                    }
+                }
             }
 
-            SectionLabel(stringResource(R.string.gym_pin_plates))
+            SectionLabel(stringResource(R.string.gym_free_weights))
             val dumbbells = gym.dumbbells.summary()
             val pins = pinPlatesText(gym.pinPlates)
             val dumbbellsTitle = stringResource(R.string.gym_dumbbells)
             val pinsTitle = stringResource(R.string.gym_pin_plates_row)
             SegmentedList {
-                row(dumbbellsTitle, dumbbells, Symbol.FitnessCenter, onClick = onDumbbells, trailing = chevron)
-                row(pinsTitle, pins, Symbol.Album, onClick = { pinning = true }, trailing = chevron)
-            }
-
-            if (gym.kit.isNotEmpty()) {
-                SectionLabel(stringResource(R.string.gym_kit))
-                val kit = gym.kit.map { item -> item.bar?.let { stringResource(R.string.gym_kit_bar, formatKg(it.second)) } ?: stringResource(R.string.gym_kit_rack) }
-                SegmentedList {
-                    gym.kit.forEachIndexed { i, item -> row(item.name, kit[i], if (item.bar != null) Symbol.FitnessCenter else Symbol.Stairs) }
-                }
+                row(dumbbellsTitle, dumbbells, Symbol.Exercise, onClick = onDumbbells, trailing = chevron)
+                row(pinsTitle, pins, Symbol.PushPin, onClick = { pinning = true }, trailing = chevron)
             }
 
             SectionLabel(stringResource(R.string.gym_days))
@@ -398,6 +395,32 @@ private fun PinPlatesDialog(plates: List<Double>, onDone: (List<Double>) -> Unit
         confirmButton = { TextButton(onClick = { value?.let(onDone) }, enabled = value != null) { Text(stringResource(R.string.gym_bar_save)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.gym_cancel)) } },
     )
+}
+
+/** A section's header on the gym screen. */
+private val com.hyperlog.app.gym.EquipmentKind.title: Int
+    get() = when (this) {
+        com.hyperlog.app.gym.EquipmentKind.Stack -> R.string.gym_section_stacks
+        com.hyperlog.app.gym.EquipmentKind.PlateLoaded -> R.string.gym_section_plate_loaded
+        com.hyperlog.app.gym.EquipmentKind.Bar -> R.string.gym_section_bars
+        com.hyperlog.app.gym.EquipmentKind.RackBench -> R.string.gym_section_racks
+    }
+
+/** Each kind's own symbol: a stack, a cable, a plate, a barbell, a bench. */
+internal val com.hyperlog.app.gym.EquipmentItem.symbol: Symbol
+    get() = when (equipmentKind) {
+        com.hyperlog.app.gym.EquipmentKind.Stack -> if (cableStation) Symbol.Cable else Symbol.Stacks
+        com.hyperlog.app.gym.EquipmentKind.PlateLoaded -> Symbol.Album
+        com.hyperlog.app.gym.EquipmentKind.Bar -> Symbol.FitnessCenter
+        com.hyperlog.app.gym.EquipmentKind.RackBench -> Symbol.AirlineSeatFlat
+    }
+
+/** An item's line: a machine's ladder (`Every cable exercise · …` for the station), a bar's weight, or that it is a rack or bench. */
+@Composable
+private fun itemLine(item: com.hyperlog.app.gym.EquipmentItem, pinPlates: List<Double>): String = when (item.equipmentKind) {
+    com.hyperlog.app.gym.EquipmentKind.Bar -> stringResource(R.string.gym_kit_bar, formatKg(item.bar!!.second))
+    com.hyperlog.app.gym.EquipmentKind.RackBench -> stringResource(R.string.gym_kit_rack)
+    else -> item.ladder.summary(pinPlates).let { if (item.cableStation) stringResource(R.string.gym_cable_station, it) else it }
 }
 
 /** The rows' trailing chevron. */

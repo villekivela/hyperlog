@@ -14,8 +14,11 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
    tonal circle, the name, then the ladder in one line in tabular figures. Add rows sit at the
    end of their group in `primary`, except a gym's **Add equipment**: an extended FAB, so it is
    in reach however long the gym's list grows. A gym opens on **Add the equipment your program uses** (a
-   `primaryContainer` card) while the program needs machines there, then its equipment, **Free
-   weights here** (dumbbells, plates for the pin), bars and racks, usual days and **Not here**.
+   `primaryContainer` card) while the program needs machines there, then its equipment by
+   kind, each under its header and in name order (Stack machines, Plate-loaded machines, Bars,
+   Racks and benches), then **Dumbbells and plates** (the rack, plates for the pin), usual days
+   and **Not here**. Each kind has its own symbol (`stacks`, `cable`, `album`, `fitness_center`,
+   `airline_seat_flat`; dumbbells `exercise`, pin plates `push_pin`).
 3. **Shared is visibly shared.** Dumbbells and barbell plates sit on their own card under "Shared by
    every gym", in the same Gyms screen, so there is one place to edit them.
 4. **The editor shows its result live.** A card under the fields, "You can pick these weights",

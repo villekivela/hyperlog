@@ -478,7 +478,10 @@
     <string name="gym_missing">Not here</string>
     <string name="gym_cable_station">Every cable exercise · %1$s</string>
     <string name="gym_import">Import gym</string>
-    <string name="gym_kit">Bars, racks and benches</string>
+    <string name="gym_section_stacks">Stack machines</string>
+    <string name="gym_section_plate_loaded">Plate-loaded machines</string>
+    <string name="gym_section_bars">Bars</string>
+    <string name="gym_section_racks">Racks and benches</string>
     <string name="gym_kit_bar">%1$s kg bar</string>
     <string name="gym_kit_rack">Rack or bench</string>
     <string name="gym_program_title">Add the equipment your program uses</string>
@@ -489,7 +492,7 @@
     <string name="gym_program_lb">lb stacks</string>
     <string name="gym_program_guess">A guess for every machine; each asks for its real weights the first time you use it.</string>
     <string name="gym_program_add">Add</string>
-    <string name="gym_pin_plates">Free weights here</string>
+    <string name="gym_free_weights">Dumbbells and plates</string>
     <string name="gym_pin_plates_row">Plates for the pin</string>
     <string name="gym_pin_plates_list">%1$s kg</string>
     <string name="gym_pin_plates_none">None</string>
