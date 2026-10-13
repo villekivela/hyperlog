@@ -477,8 +477,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      logged work set counts once for each primary muscle of its exercise (Volume, above);
      secondary muscles don't count.
 
-Settings sit behind an icon: gyms and their equipment, exercise library, import backup, export
-backup.
+Settings sit behind an icon: gyms and their equipment, exercise library, export backup, restore
+from a backup, starting weights from the old app.
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that does not follow the dynamic
@@ -580,7 +580,26 @@ backup.
     load on the belt, on its ladder. With no bodyweight logged the load alone is used.
 - **Dumbbells are logged per dumbbell** (the number printed on it). Volume and e1RM count both
   dumbbells for two-dumbbell exercises.
-- **Backups**: manual JSON export/import, plus Android Auto Backup enabled.
+- **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
+  - A backup holds everything the app stores: programs and their Changes, every session (the
+    running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
+    and missing equipment, the library with its edits, starting weights, goals and bodyweight.
+    Every table goes in row for row; none is left out (a test fails on a table that is neither in
+    the backup nor excluded with a reason).
+  - **Settings → Export backup** saves one JSON file through the system's save dialog
+    (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`. The file names its
+    format, its own version and the database version (`"format": "hyperlog-backup", "version": 1,
+    "database": 14`).
+  - **Settings → Restore from a backup** picks a file, then asks "Replace everything on this
+    phone?" with the backup's date. Restoring replaces all the data on the phone, a running session
+    included, all or nothing, and the app starts again on Today or the restored session. There is
+    no merging: a restore is for a new phone or going back.
+  - A file that can't be restored says why under the row (not a Hyperlog backup, made by a newer
+    Hyperlog, too old, damaged) and changes nothing. Backups from older database versions keep
+    restoring: a schema change brings an upgrade step for them.
+  - **Auto Backup** takes the database to the Google account about daily and restores it when
+    Hyperlog is installed on a phone signed in to the account. A muted line under the settings
+    rows says so. The manual file is the dependable route between phones.
 
 ## Coaching
 

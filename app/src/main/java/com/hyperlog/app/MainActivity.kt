@@ -50,6 +50,10 @@ import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.session.SessionViewModel
 import com.hyperlog.app.ui.settings.SettingsScreen
 import com.hyperlog.app.ui.settings.StartingWeightsViewModel
+import com.hyperlog.app.ui.settings.BackupState
+import com.hyperlog.app.ui.settings.BackupViewModel
+import android.app.Activity
+import android.content.Intent
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.today.TodayScreen
 
@@ -61,12 +65,13 @@ class MainActivity : ComponentActivity() {
     private val startingWeights: StartingWeightsViewModel by viewModels()
     private val past: PastSessionsViewModel by viewModels()
     private val history: HistoryViewModel by viewModels()
+    private val backups: BackupViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups) }
         }
     }
 
@@ -124,6 +129,7 @@ private fun App(
     startingWeightsModel: StartingWeightsViewModel,
     pastModel: PastSessionsViewModel,
     historyModel: HistoryViewModel,
+    backupModel: BackupViewModel,
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -147,6 +153,13 @@ private fun App(
     val pickBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(startingWeightsModel::import)
     }
+    val backup by backupModel.state.collectAsStateWithLifecycle()
+    val exportBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let(backupModel::export)
+    }
+    val pickRestore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(backupModel::pick)
+    }
     var gymId by rememberSaveable { mutableStateOf<Long?>(null) }
     /** The ladder being edited: an item id (0 = new item), or [DumbbellLadder] / [PlateLadder]. */
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -162,6 +175,13 @@ private fun App(
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    // A restored backup replaces everything the screens hold: start them again on its data.
+    LaunchedEffect(backup) {
+        if (backup == BackupState.Restored) (context as? Activity)?.let {
+            it.startActivity(Intent(it, MainActivity::class.java))
+            it.finish()
+        }
+    }
     if (!loaded) return
 
     val running = session
@@ -335,6 +355,11 @@ private fun App(
             onBack = { screen = Screen.Today },
             startingWeights = startingWeights,
             onImportStartingWeights = { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+            backup = backup,
+            onExport = { exportBackup.launch(backupModel.fileName()) },
+            onRestore = { pickRestore.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+            onConfirmRestore = backupModel::restore,
+            onDismissBackup = backupModel::dismiss,
         )
         else -> TodayScreen(
             onSettings = { screen = Screen.Settings },

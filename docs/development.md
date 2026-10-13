@@ -48,6 +48,8 @@ what the files don't explain.
 - **The phone stays awake while plugged in** (`stay_on_while_plugged_in` = 7, the owner's own
   setting). Leave that setting and the lock state to the owner. A locked phone needs the owner to
   unlock it, so check `adb shell dumpsys window | grep isKeyguardShowing` before driving the UI.
+- **Backups:** what's in them, where Auto Backup restores from and the `adb shell bmgr` checks are
+  in `docs/backups.md`. Export a manual backup of the dev data before any `pm clear`.
 - Debug builds install beside other builds through the `.dev` suffix. The legacy app
   (`com.hyperlog.app.alpha`) may still be installed and holds the owner's old data, so leave it in
   place.

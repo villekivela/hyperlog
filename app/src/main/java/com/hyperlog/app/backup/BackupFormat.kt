@@ -1,0 +1,45 @@
+package com.hyperlog.app.backup
+
+/**
+ * The backup file (SPEC, Backups; `docs/backups.md`): every table in [Tables], row for row, as
+ * JSON objects of column to value.
+ *
+ * ```json
+ * { "format": "hyperlog-backup", "version": 1, "database": 14, "exportedAt": 1760000000000,
+ *   "tables": { "gym": [ { "id": 1, "name": "Kallio", "weekdays": 1 } ], … } }
+ * ```
+ */
+object BackupFormat {
+    const val FORMAT = "hyperlog-backup"
+
+    /** The file's own layout. Bump it when the envelope changes, not when a table does. */
+    const val VERSION = 1
+
+    /**
+     * The Room schema version the tables follow. A backup from an older database needs an upgrade
+     * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
+     */
+    const val DATABASE = 14
+
+    /** The oldest database version a backup can be restored from. */
+    const val OLDEST_DATABASE = 14
+
+    /** Every table a backup holds: everything the user made, the running session included. */
+    val Tables = listOf(
+        // The library: the shipped exercises plus edits, hidden flags and exercises added on the phone.
+        "exercise",
+        // Gyms, their equipment and ladders, the remembered machine and missing equipment per gym.
+        "gym", "equipment_item", "shared_ladder", "gym_exercise_item", "gym_missing_exercise",
+        // Programs with their position, and the Changes accepted (and reverted) on them.
+        "program", "plan_change",
+        // Sessions, the running one with its pad draft and rest timer, their sets and session edits.
+        "session", "session_exercise", "logged_set", "set_extension", "set_technique",
+        "starting_weight", "bodyweight", "lift_goal",
+    )
+
+    /**
+     * Tables left out of the backup, each with the reason. Empty: everything in the database is
+     * the user's. A table that is only a cache of something else would go here.
+     */
+    val Excluded: Map<String, String> = emptyMap()
+}

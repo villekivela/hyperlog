@@ -89,6 +89,18 @@ class SessionLogger(
     /** Picks up the running session. The exercise library must be synced first. */
     suspend fun load() = locked { reload() }
 
+    /**
+     * Picks up the session of a restored backup: what was in memory (a correction, a weight check,
+     * the exercise looked at) belonged to the data that was replaced.
+     */
+    suspend fun restored() = locked {
+        lastLoggedAt = null
+        checked = null
+        correction = null
+        viewingId = null
+        reload()
+    }
+
     /** Starts an ad-hoc session at [gymId] (null with no gyms set up), or does nothing if one is running. */
     suspend fun start(gymId: Long? = null) = locked {
         if (_state.value == null) {

@@ -182,12 +182,12 @@
     </plurals>
     <string name="starting_hint">From old app, another machine</string>
     <string name="settings_starting_weights">Starting weights from the old app</string>
-    <string name="settings_starting_weights_none">From an old Hyperlog backup, no history</string>
+    <string name="settings_starting_weights_none">From the old app\'s backup, no history</string>
     <plurals name="settings_starting_weights_count">
         <item quantity="one">%1$d exercise · tap to import again</item>
         <item quantity="other">%1$d exercises · tap to import again</item>
     </plurals>
-    <string name="settings_starting_weights_invalid">That file isn\'t a Hyperlog backup</string>
+    <string name="settings_starting_weights_invalid">That file isn\'t a backup from the old app</string>
     <string name="settings_gyms_none">No gyms yet · dumbbells and plates</string>
     <string name="gyms">Gyms and equipment</string>
     <string name="gym_add">Add gym</string>
@@ -440,4 +440,19 @@
     <string name="goal_remove_date">No date</string>
     <string name="goal_remove">Remove goal</string>
     <string name="goal_chart">%1$s estimate against the goal</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_export_about">Everything on this phone, in one file</string>
+    <string name="backup_exported">Saved %1$s</string>
+    <string name="backup_export_failed">Couldn\'t save the file</string>
+    <string name="backup_restore">Restore from a backup</string>
+    <string name="backup_restore_about">Replaces everything on this phone</string>
+    <string name="backup_restore_title">Replace everything on this phone?</string>
+    <string name="backup_restore_text">The backup from %1$s takes the place of your programs, sessions, gyms, goals and everything else here, a running session too. This can\'t be undone.</string>
+    <string name="backup_restore_confirm">Restore</string>
+    <string name="backup_cancel">Cancel</string>
+    <string name="backup_refused_not_a_backup">That file isn\'t a Hyperlog backup · nothing changed</string>
+    <string name="backup_refused_newer">Made by a newer Hyperlog · update the app first</string>
+    <string name="backup_refused_older">Made by a Hyperlog too old to read · nothing changed</string>
+    <string name="backup_refused_damaged">The backup is damaged · nothing changed</string>
+    <string name="backup_auto">Android also keeps a copy in your Google account, and a new phone gets it back when Hyperlog is installed there.</string>
 </resources>

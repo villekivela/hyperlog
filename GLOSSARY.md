@@ -203,3 +203,12 @@ _Avoid_: Substitution
 **Ask Claude**:
 The hand-off of a situation in your own words to the Claude app: a prompt shared through the share sheet, and the Change Claude replies with pasted back for review. Hyperlog makes no model calls.
 _Avoid_: AI coach, chat
+
+## Data
+
+**Backup**:
+One JSON file holding everything the app stores, made by Export backup. Restoring one replaces all the data on the phone with it.
+_Avoid_: Import (that is for program files and the old app's starting weights), sync
+
+**Auto Backup**:
+Android's own copy of the app's database in the Google account, restored when the app is installed again.
