@@ -63,6 +63,7 @@ import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 private val Margin = 24.dp
@@ -101,9 +102,11 @@ fun CoachScreen(
     onClosePasteErrors: () -> Unit = {},
     /** Copies the paste problems, to give them back to Claude. */
     onCopyProblems: (List<String>) -> Unit = {},
+    /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
+    weekdays: Set<DayOfWeek> = emptySet(),
 ) {
-    val daysOff = RuleCoach.daysOff(lastTrained, program.today)
-    var kind by rememberSaveable { mutableStateOf(if (RuleCoach.timeOff(daysOff)) SituationKind.TimeOff else null) }
+    val daysOff = RuleCoach.daysSince(lastTrained, program.today)
+    var kind by rememberSaveable { mutableStateOf(if (RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, program.today, weekdays))) SituationKind.TimeOff else null) }
     var area by rememberSaveable { mutableStateOf(Area.Hands) }
     var minutes by rememberSaveable { mutableIntStateOf(DEFAULT_MINUTES) }
     var noGrip by rememberSaveable { mutableStateOf(false) }
@@ -195,7 +198,7 @@ fun CoachScreen(
                             val k = kind ?: return@Button
                             val situation = situation(k) ?: return@Button
                             val constraints = Constraints(noGrip, noAxial, noOverhead, home, minutes.takeIf { capped })
-                            when (val advice = RuleCoach.advise(situation, constraints, program, library, lastTrained)) {
+                            when (val advice = RuleCoach.advise(situation, constraints, program, library, lastTrained, weekdays)) {
                                 is Advice.Propose -> { said = null; onPropose(advice.change) }
                                 is Advice.Resume -> said = listOfNotNull(daysText.takeIf { advice.daysOff != null }, resume).joinToString(". ")
                                 Advice.NothingToChange -> said = nothing

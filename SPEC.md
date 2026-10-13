@@ -728,11 +728,15 @@ last week.
   the presses, flyes and lateral raises; elbow curls and triceps work; knee squats, lunges and knee
   extensions; lower back hinges, squats and lunges. The pain rule shows under the areas: pain in a
   set at 3/10 or less and no worse the next morning.
-- **Time off** counts whole days since the last finished session. Up to 7: resume (no Change).
-  8–14: today's session does half its sets (rounded up) where it has more than one, and +1 RIR.
-  More than 14: `repeat_week`. Coach preselects Time off after a week, and Today shows `11 days since
-  your last session` with **Ease back in**, which opens that Change, until a Change is accepted that
-  day.
+- **Time off** is detected from the weekday plan (every gym's usual days): it counts whole days
+  from the first planned day after the last finished session that went untrained (today isn't
+  missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since
+  the last session is 7 days off. With no weekday plan it counts the days since the last finished
+  session. Up to 7: resume (no Change). 8–14: today's session does half its sets (rounded up)
+  where it has more than one, and +1 RIR. More than 14: `repeat_week`. Coach preselects Time off
+  after a week off, and Today shows `11 days since your last session` (the words always count from
+  the last session) with **Ease back in**, which opens that Change, until a Change is accepted
+  that day.
 - **Short on time** estimates the session: 2 minutes per exercise to set up and warm up, a minute per
   set plus its rest (a superset rests once a round), no rest after the last set. Over the cap,
   second and later sets go first, from the last exercise back, then exercises from the end; the

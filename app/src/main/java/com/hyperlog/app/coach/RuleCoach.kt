@@ -9,6 +9,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSet
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Position
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -98,17 +99,23 @@ object RuleCoach {
     const val RESUME_DAYS = 7
     const val REENTRY_DAYS = 14
 
+    /**
+     * [weekdays] is the weekday plan (every gym's usual days); with one, time off counts from the
+     * first planned day missed rather than from the last session ([daysOff]).
+     */
     fun advise(
         situation: Situation,
         constraints: Constraints,
         plan: ActiveProgram,
         library: List<Exercise>,
         lastTrained: LocalDate?,
+        weekdays: Set<DayOfWeek> = emptySet(),
     ): Advice {
         if (plan.finished) return Advice.NothingToChange
         val today = plan.today
         val byId = library.associateBy { it.id }
-        val days = daysOff(lastTrained, today)
+        val days = daysSince(lastTrained, today)
+        val off = daysOff(lastTrained, today, weekdays)
         val scopeDays = if (situation is Situation.Pain) PAIN_DAYS else 1L
         val scope = Scope.Dates(today, today.plusDays(scopeDays - 1))
         val window = window(plan, scopeDays)
@@ -152,11 +159,11 @@ object RuleCoach {
                 summary = if (situation.area == Area.Hands) "Hands: less grip for two weeks" else "${situation.area.label}: train around it for two weeks"
             }
             Situation.TimeOff -> when {
-                days == null || days <= RESUME_DAYS -> {
+                days == null || off == null || off <= RESUME_DAYS -> {
                     if (ops.isEmpty() && constraints.maxMinutes == null) return Advice.Resume(days)
                     summary = "Today's limits"
                 }
-                days <= REENTRY_DAYS -> {
+                off <= REENTRY_DAYS -> {
                     next?.slots?.filter { it.sets.size > 1 }?.forEach { ops += Operation.AdjustSets(it.id, (it.sets.size + 1) / 2, "back after $days days") }
                     ops += Operation.AdjustRir(null, 1, "back after $days days")
                     summary = "Back after $days days: an easier first session"
@@ -184,7 +191,21 @@ object RuleCoach {
     }
 
     /** Whole days since [lastTrained]; null with no session yet. */
-    fun daysOff(lastTrained: LocalDate?, today: LocalDate): Int? = lastTrained?.let { ChronoUnit.DAYS.between(it, today).toInt().coerceAtLeast(0) }
+    fun daysSince(lastTrained: LocalDate?, today: LocalDate): Int? = lastTrained?.let { ChronoUnit.DAYS.between(it, today).toInt().coerceAtLeast(0) }
+
+    /**
+     * The days of time off the 7- and 14-day steps read. With a weekday plan ([weekdays]), from
+     * the first planned day after [lastTrained] that went untrained (today isn't missed yet), so
+     * the plan's own rest days don't count; 0 when none was missed. Without one, the days since
+     * the last session. Null with no session yet.
+     */
+    fun daysOff(lastTrained: LocalDate?, today: LocalDate, weekdays: Set<DayOfWeek> = emptySet()): Int? {
+        val since = daysSince(lastTrained, today) ?: return null
+        if (weekdays.isEmpty()) return since
+        val missed = generateSequence(lastTrained!!.plusDays(1)) { it.plusDays(1) }.takeWhile { it < today }
+            .firstOrNull { it.dayOfWeek in weekdays } ?: return 0
+        return ChronoUnit.DAYS.between(missed, today).toInt()
+    }
 
     /** Whether [days] off asks for a Change (more than a week). */
     fun timeOff(days: Int?): Boolean = days != null && days > RESUME_DAYS

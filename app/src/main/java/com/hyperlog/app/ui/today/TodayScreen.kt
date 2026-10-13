@@ -2,71 +2,72 @@ package com.hyperlog.app.ui.today
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.hyperlog.app.R
-import com.hyperlog.app.gym.Gym
-import com.hyperlog.app.gym.UsualGym
-import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.program.PlannedDay
-import com.hyperlog.app.program.Program
-import com.hyperlog.app.ui.program.StarterOffer
-import com.hyperlog.app.ui.program.SetSummary
-import com.hyperlog.app.ui.session.Tnum
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
-import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.HyperlogTheme
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Checkbox
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.hyperlog.app.R
 import com.hyperlog.app.coach.Advice
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.Constraints
 import com.hyperlog.app.coach.RuleCoach
 import com.hyperlog.app.coach.SessionSwap
 import com.hyperlog.app.coach.Situation
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.PlannedDay
+import com.hyperlog.app.program.Program
+import com.hyperlog.app.ui.program.SetSummary
+import com.hyperlog.app.ui.program.StarterOffer
+import com.hyperlog.app.ui.session.Tnum
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.HyperlogTheme
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 /**
  * Today: the next day of the program, with Start session, or with no program (or a finished one)
@@ -103,6 +104,8 @@ fun TodayScreen(
     onCoach: () -> Unit = {},
     /** Shows a coach's Change for review. */
     onPropose: (Change) -> Unit = {},
+    /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
+    weekdays: Set<DayOfWeek> = emptySet(),
 ) {
     /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
     var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -124,10 +127,13 @@ fun TodayScreen(
             onDismiss = { picking = null },
         )
     }
-    // Time off: more than a week since the last session, with no Change made for today yet.
-    val daysOff = RuleCoach.daysOff(lastTrained, program?.today ?: LocalDate.now())
-    val easeBack = if (program != null && next != null && !sessionRunning && RuleCoach.timeOff(daysOff) && program.changes.none { it.acceptedOn == program.today }) {
-        (RuleCoach.advise(Situation.TimeOff, Constraints(), program, library, lastTrained) as? Advice.Propose)?.change
+    // Time off: more than a week off (by the weekday plan if there is one), with no Change made for today yet.
+    val today = program?.today ?: LocalDate.now()
+    val daysOff = RuleCoach.daysSince(lastTrained, today)
+    val easeBack = if (program != null && next != null && !sessionRunning && RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, today, weekdays)) &&
+        program.changes.none { it.acceptedOn == program.today }
+    ) {
+        (RuleCoach.advise(Situation.TimeOff, Constraints(), program, library, lastTrained, weekdays) as? Advice.Propose)?.change
     } else null
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(

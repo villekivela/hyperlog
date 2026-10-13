@@ -317,6 +317,7 @@ private fun App(
             pasteErrors = pasteErrors,
             onClosePasteErrors = programModel::closePasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
+            weekdays = gyms.flatMap { it.weekdays }.toSet(),
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         // A session opened from History or a trend goes back there, read again with any correction.
@@ -383,6 +384,7 @@ private fun App(
             lastTrained = lastTrained,
             onCoach = { screen = Screen.Coach },
             onPropose = programModel::propose,
+            weekdays = gyms.flatMap { it.weekdays }.toSet(),
         )
     }
 }

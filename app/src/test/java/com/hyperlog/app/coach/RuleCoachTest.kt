@@ -120,6 +120,27 @@ class RuleCoachTest {
     }
 
     @Test
+    fun withAWeekdayPlanTimeOffCountsFromTheFirstPlannedDayMissed() {
+        // 13 Oct 2026 is a Tuesday. Training Tuesdays only, two weeks since the last session is
+        // one planned day missed a week ago: resume.
+        val tuesdays = setOf(java.time.DayOfWeek.TUESDAY)
+        assertEquals(7, RuleCoach.daysOff(oct13.minusDays(14), oct13, tuesdays))
+        assertEquals(Advice.Resume(14), RuleCoach.advise(Situation.TimeOff, Constraints(), plan(), library.exercises, oct13.minusDays(14), weekdays = tuesdays))
+        // The same gap with no plan is two weeks off.
+        assertEquals(14, RuleCoach.daysOff(oct13.minusDays(14), oct13))
+        // Today itself isn't missed yet.
+        assertEquals(0, RuleCoach.daysOff(oct13.minusDays(7), oct13, tuesdays))
+
+        // Monday, Wednesday and Friday, last trained on Friday 2 Oct: Monday 5 Oct was missed 8 days ago.
+        val mwf = setOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.FRIDAY)
+        assertEquals(8, RuleCoach.daysOff(LocalDate.of(2026, 10, 2), oct13, mwf))
+        val change = proposed(RuleCoach.advise(Situation.TimeOff, Constraints(), plan(), library.exercises, LocalDate.of(2026, 10, 2), weekdays = mwf))
+        // Its words count the days since the last session.
+        assertEquals("Back after 11 days: an easier first session", change.summary)
+        assertTrue(RuleCoach.timeOff(RuleCoach.daysOff(LocalDate.of(2026, 10, 2), oct13, mwf)))
+    }
+
+    @Test
     fun atHomeEveryExerciseIsDumbbellsOrBodyweightOrLeftOut() {
         val change = proposed(advise(Situation.NoGym))
         val day = trained(change)
