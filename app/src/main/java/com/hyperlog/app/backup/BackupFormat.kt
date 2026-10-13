@@ -48,7 +48,7 @@ object BackupFormat {
         15 to mapOf("gym" to setOf("archived"), "equipment_item" to setOf("archived")),
         16 to mapOf("exercise" to setOf("two_dumbbells")),
         17 to mapOf("setting" to emptySet()),
-        18 to mapOf("gym" to setOf("pin_plates", "dumbbells")),
+        18 to mapOf("gym" to setOf("pin_plates", "dumbbells"), "equipment_item" to setOf("ladder_state")),
     )
 
     /** The columns of [table] a file made at database version [database] may lack. */

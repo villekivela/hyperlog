@@ -286,6 +286,12 @@
     <string name="reading_one_more">Type one more weight to tell the steps apart</string>
     <string name="reading_no_stack">These weights don’t make a stack</string>
     <string name="reading_empty">Type 2–3 weights from the stack</string>
+    <string name="ladder_set_up">Set up %1$s</string>
+    <string name="ladder_set_up_intro">Its weights are a guess. Type the first 2–3 weights printed on %1$s’s stack, or close to keep the guess and type weights as you go.</string>
+    <string name="ladder_offer">Looks like %1$s: use that?</string>
+    <string name="ladder_offer_body">The weights typed on %1$s fit %2$s.</string>
+    <string name="ladder_offer_use">Use</string>
+    <string name="ladder_offer_keep">Keep as typed</string>
 
     <!-- Program (#6) -->
     <string name="program_title">Program</string>

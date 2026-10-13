@@ -100,6 +100,10 @@ private object NoActions : com.hyperlog.app.ui.session.SessionActions {
     override fun chooseMachine(itemId: Long) = Unit
     override fun addMachine(name: String, ladder: LadderSpec) = Unit
     override fun changeMachine() = Unit
+    override fun setUpLadder(spec: LadderSpec) = Unit
+    override fun skipLadderSetup() = Unit
+    override fun takeLadderOffer() = Unit
+    override fun declineLadderOffer() = Unit
     override fun notAtGym() = Unit
     override fun finishSet() = Unit
     override fun startHold() = Unit

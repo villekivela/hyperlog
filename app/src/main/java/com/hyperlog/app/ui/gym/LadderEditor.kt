@@ -96,6 +96,8 @@ fun LadderEditor(
     readable: Boolean = false,
     /** The reading is a machine's, with add-ons and pin plates; a rack's is just its weights. */
     machine: Boolean = name != null,
+    /** A line over the fields saying why the editor opened, when it opened by itself. */
+    intro: String? = null,
 ) {
     var itemName by rememberSaveable { mutableStateOf(name.orEmpty()) }
     // A plate-loaded machine, or a ladder of a kind that isn't a stack, opens on its exact fields.
@@ -202,6 +204,7 @@ fun LadderEditor(
                 .verticalScroll(rememberScrollState()).padding(horizontal = Margin),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            intro?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             if (name != null) {
                 OutlinedTextField(
                     itemName,

@@ -338,6 +338,18 @@ available weights belong to a **machine at a gym**, not to an exercise.
   - Under the fields a card checks the result, live: `You can pick these weights`, the ladder in
     one line with its count (`36–121 kg by 15 lb · 20 weights`), how it was read (`Reads as 15 lb
     steps`) and `Check: 36 · 43 · 49 …, looks right?`, which opens to every weight on a tap.
+- **Learning a stack.** A machine whose ladder is a guess (one the app set up for you, from the
+  program or an imported gym, never one you set up) is **unconfirmed**. The first time an exercise
+  is done on it, the session opens its setup from the labels (`Set up Leg extension`: "Its weights
+  are a guess…") in place of the sets; closing it keeps the guess. On a guessed ladder −/+ still
+  step over it, but typed weights are kept as typed, with no weight check.
+  - Once three different weights are logged on the machine (any exercise) and some are off the
+    guess, the same reading as setup infers the stack (kg steps, an lb stack, or the default with
+    its add-ons) and offers it once, as a `tertiaryContainer` card over the sets: `Looks like 10 lb
+    steps: use that?`, `The weights typed on Leg extension fit 4.5–90.7 kg by 10 lb.`, **Keep as
+    typed** and **Use**. Weights that fit more than one stack wait for more.
+  - **Use** makes it the machine's ladder, confirmed. **Keep as typed** leaves the guess and is
+    never offered again. The ladder never changes without an answer.
 - **Stacks with add-ons** (a fourth ladder kind, **pin stack**, for selectorised machines). The pin
   picks a plate: a start, a step and a top in kg or lb (shown in kg), with an optional lighter first
   plate (2.5, then steps of 5 from 5). On top of the pin go two kinds of add-on, both at once if

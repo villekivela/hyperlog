@@ -35,6 +35,10 @@ data class SessionExercise(
      * "Which machine?" before any set, and the pad has no entry until it is answered.
      */
     val needsMachine: Boolean = false,
+    /** Its machine's ladder is an unconfirmed guess and nothing is logged yet: the screen asks for the stack's labels first. */
+    val needsLadder: Boolean = false,
+    /** The stack the weights typed on a guessed machine show, offered once (`Looks like 10 lb steps`); null when none. */
+    val ladderOffer: LadderSpec.PinStack? = null,
     /** The program slot it fills; null when added ad hoc. */
     val slot: PlannedSlot? = null,
     /** This week's sets for it from the program; null for an ad-hoc exercise, whose sets are open-ended. */
@@ -139,7 +143,7 @@ data class ActiveSession(
     val warmups: List<WarmupSet>
         get() {
             val current = current ?: return emptyList()
-            if (current.sets.isNotEmpty() || current.needsMachine || followUp != null) return emptyList()
+            if (current.sets.isNotEmpty() || current.needsMachine || current.needsLadder || followUp != null) return emptyList()
             val kg = entry?.weightKg ?: return emptyList()
             val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: current.prescription?.firstOrNull()?.reps?.max
             return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)

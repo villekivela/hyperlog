@@ -183,6 +183,26 @@ fun SessionScreen(
         )
         return
     }
+    // A machine set up as a guess asks for its stack's labels the first time it is used.
+    val unsure = current?.machine?.takeIf { current.needsLadder }
+    if (unsure != null) {
+        LadderEditor(
+            title = stringResource(R.string.ladder_set_up, unsure.name),
+            name = null,
+            spec = null,
+            kinds = LadderKind.Items,
+            pinPlates = session.gym?.pinPlates.orEmpty(),
+            readable = true,
+            machine = true,
+            defaultKind = if (current.exercise.plateLoaded) LadderKind.Plates else null,
+            defaultPlates = sharedPlates,
+            onSave = { _, spec -> actions.setUpLadder(spec) },
+            onDelete = null,
+            onClose = actions::skipLadderSetup,
+            intro = stringResource(R.string.ladder_set_up_intro, unsure.name),
+        )
+        return
+    }
     // Right after a set is logged, a snackbar offers to fix it in one tap, wherever the session went.
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
     val logged = session.lastLogged
@@ -276,6 +296,9 @@ fun SessionScreen(
                             SuggestionLine(s, from = current.sets.lastOrNull()?.weightKg)
                         }
                         current.startingHint?.let { StartingHint(it) }
+                        current.ladderOffer?.let { offer ->
+                            LadderOffer(offer, current.machine?.name.orEmpty(), session.gym?.pinPlates.orEmpty(), onTake = actions::takeLadderOffer, onDecline = actions::declineLadderOffer)
+                        }
                         val table = TableState(
                             current, session.entry, session.followUp, session.weightCheck != null,
                             holdSeconds = session.holdStartedAt?.let { ((now - it) / 1000).toInt().coerceAtLeast(0) },
@@ -638,7 +661,42 @@ internal const val StartingHintTag = "starting-hint"
  * log doesn't say which machine it was. It sits where a suggestion would, above the sets.
  */
 @Composable
-private fun StartingHint(set: String) {
+private fun StartingHint(set: String) = StartingHintRow(set)
+
+/**
+ * The stack the weights typed on a guessed machine show, offered once as advice: a
+ * `tertiaryContainer` card with the steps, the ladder in one line, and Use or Keep as typed.
+ */
+@Composable
+internal fun LadderOffer(offer: com.hyperlog.app.domain.LadderSpec.PinStack, machine: String, pinPlates: List<Double>, onTake: () -> Unit, onDecline: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    androidx.compose.material3.Surface(
+        color = cs.tertiaryContainer,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = com.hyperlog.app.ui.theme.CardMargin).padding(bottom = 8.dp).testTag(LadderOfferTag),
+    ) {
+        Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
+            Text(
+                stringResource(R.string.ladder_offer, com.hyperlog.app.domain.StackReading.steps(offer)),
+                style = MaterialTheme.typography.titleSmall, color = cs.onTertiaryContainer,
+            )
+            Text(
+                stringResource(R.string.ladder_offer_body, machine, offer.summary(pinPlates)),
+                style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onTertiaryContainer,
+                modifier = Modifier.padding(top = 4.dp, end = 8.dp),
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDecline) { Text(stringResource(R.string.ladder_offer_keep), color = cs.onTertiaryContainer) }
+                TextButton(onClick = onTake) { Text(stringResource(R.string.ladder_offer_use), color = cs.onTertiaryContainer) }
+            }
+        }
+    }
+}
+
+internal const val LadderOfferTag = "ladder-offer"
+
+@Composable
+private fun StartingHintRow(set: String) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         Modifier.fillMaxWidth().testTag(StartingHintTag).padding(start = Margin, end = Margin, bottom = 8.dp),

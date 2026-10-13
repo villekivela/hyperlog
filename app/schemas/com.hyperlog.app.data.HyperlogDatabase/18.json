@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 18,
-    "identityHash": "53def98fa3db1e1717c426dbf799e34c",
+    "identityHash": "bf2de1419247a0dce7bba92bd3f23c27",
     "entities": [
       {
         "tableName": "exercise",
@@ -545,7 +545,7 @@
       },
       {
         "tableName": "equipment_item",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gym_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ladder` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gym_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ladder` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, `ladder_state` TEXT NOT NULL DEFAULT 'confirmed', FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -577,6 +577,13 @@
             "affinity": "INTEGER",
             "notNull": true,
             "defaultValue": "0"
+          },
+          {
+            "fieldPath": "ladderState",
+            "columnName": "ladder_state",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'confirmed'"
           }
         ],
         "primaryKey": {
@@ -1204,7 +1211,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '53def98fa3db1e1717c426dbf799e34c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bf2de1419247a0dce7bba92bd3f23c27')"
     ]
   }
 }

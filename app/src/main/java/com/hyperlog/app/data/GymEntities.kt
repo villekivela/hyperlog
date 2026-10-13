@@ -42,6 +42,8 @@ data class EquipmentItemEntity(
      * its sessions stay its own history (ADR 0002) instead of joining another pool.
      */
     @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
+    /** How sure its ladder is: `confirmed`, `unconfirmed` (a guess, set up on first use), `guess`, or `offered` (learning declined). */
+    @ColumnInfo(name = "ladder_state", defaultValue = "confirmed") val ladderState: String = "confirmed",
 )
 
 /** The machine or cable station an exercise is done on at a gym, remembered from the first time. */
@@ -169,6 +171,19 @@ interface GymDao {
 
     @Upsert
     suspend fun upsertItem(item: EquipmentItemEntity): Long
+
+    @Query("UPDATE equipment_item SET ladder = :ladder, ladder_state = :state WHERE id = :id")
+    suspend fun setLadder(id: Long, ladder: String, state: String)
+
+    @Query("UPDATE equipment_item SET ladder_state = :state WHERE id = :id")
+    suspend fun setLadderState(id: Long, state: String)
+
+    /** Every weight logged on machine [itemId], any exercise, oldest first. */
+    @Query(
+        "SELECT ls.weight_kg FROM logged_set ls JOIN session_exercise se ON se.id = ls.session_exercise_id " +
+            "WHERE se.equipment_item_id = :itemId ORDER BY ls.logged_at",
+    )
+    suspend fun weightsOn(itemId: Long): List<Double>
 
     @Query("DELETE FROM equipment_item WHERE id = :id")
     suspend fun deleteItem(id: Long)

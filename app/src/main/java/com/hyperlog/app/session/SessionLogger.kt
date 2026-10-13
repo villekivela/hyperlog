@@ -23,6 +23,8 @@ import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.gym.LadderState
+import com.hyperlog.app.domain.StackReading
 import com.hyperlog.app.history.Bodyweights
 import com.hyperlog.app.legacy.StartingWeights
 import com.hyperlog.app.legacy.suggestion
@@ -200,6 +202,36 @@ class SessionLogger(
         val library = db.exercises().all().map { it.toExercise() }
         val replacement = RuleCoach.replacement(current.slot, current.exercise.id, library, missing)
         if (replacement != null) swap(current.id, replacement) else removeExercise(current.id)
+    }
+
+    /** Sets up the ladder of the machine on screen from its stack's labels: confirmed from now on. */
+    suspend fun setUpLadder(spec: LadderSpec) = locked {
+        val machine = _state.value?.current?.machine ?: return@locked
+        gyms.setLadder(machine.id, spec)
+        reload()
+    }
+
+    /** Leaves the machine on screen's guessed ladder for now: weights are typed, and taught by them. */
+    suspend fun skipLadderSetup() = locked {
+        val machine = _state.value?.current?.machine ?: return@locked
+        if (machine.state == LadderState.Unconfirmed) gyms.setLadderState(machine.id, LadderState.Guess)
+        reload()
+    }
+
+    /** Takes the stack offered for the machine on screen as its ladder. */
+    suspend fun takeLadderOffer() = locked {
+        val current = _state.value?.current ?: return@locked
+        val offer = current.ladderOffer ?: return@locked
+        gyms.setLadder(current.machine!!.id, offer)
+        reload()
+    }
+
+    /** Declines the offer for the machine on screen: its weights stay as typed, and it isn't offered again. */
+    suspend fun declineLadderOffer() = locked {
+        val current = _state.value?.current ?: return@locked
+        if (current.ladderOffer == null) return@locked
+        gyms.setLadderState(current.machine!!.id, LadderState.Offered)
+        reload()
     }
 
     /** Asks "Which machine?" again for the exercise on screen, as long as nothing is logged on it. */
@@ -441,7 +473,7 @@ class SessionLogger(
     /** The set to do of [exerciseId] still has the prefill it started with: nothing has been typed into it. */
     private suspend fun untouched(session: ActiveSession, exerciseId: Long?): Boolean {
         val current = session.current ?: return false
-        if (current.id != exerciseId || session.followUp != null || current.done || current.needsMachine) return false
+        if (current.id != exerciseId || session.followUp != null || current.done || current.needsMachine || current.needsLadder) return false
         return session.entry != null && session.entry == prefill(current)
     }
 
@@ -791,6 +823,7 @@ class SessionLogger(
             val (exercise, machine, ladder, slot, plan) = context.exercise(se)
             val perMachine = exercise.equipment.perMachine
             val needsMachine = perMachine && gym != null && machine == null
+            val needsLadder = perMachine && machine?.state == LadderState.Unconfirmed && dao.sets(se.id).isEmpty()
             // A planned exercise's last time is the session progression judges (same slot and rep
             // range), so the Last column, the prefill and the why-line name the same sets.
             val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted, exercise.implements)
@@ -803,7 +836,7 @@ class SessionLogger(
                 else -> dao.lastTime(se.exerciseId, row.id)
             }.let { stored.sets(it) }
             val sets = stored.sets(se.id)
-            val onScreen = se.id == row.currentSessionExerciseId && !needsMachine
+            val onScreen = se.id == row.currentSessionExerciseId && !needsMachine && !needsLadder
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
             val start = starting?.takeIf { !perMachine }
@@ -833,6 +866,10 @@ class SessionLogger(
                 ladderKnown = ladder.known,
                 machine = machine,
                 needsMachine = needsMachine,
+                needsLadder = needsLadder,
+                ladderOffer = machine?.takeIf { onScreen && it.state in Learning }?.let { m ->
+                    StackReading.learn(gyms.weightsOn(m.id), m.ladder, gym?.pinPlates.orEmpty())
+                },
                 slot = slot,
                 prescription = plan,
                 suggestion = suggestion,
@@ -855,10 +892,10 @@ class SessionLogger(
                 entry = followUpEntry(followUp, openSet, current.lastTime.getOrNull(current.sets.size - 1), current.ladder)
                 dao.updateSession(row.copy(entry = entry.toColumns()))
             }
-        } else if (current?.needsMachine == true || current?.done == true) {
+        } else if (current?.needsMachine == true || current?.needsLadder == true || current?.done == true) {
             entry = null
         }
-        if (entry == null && current != null && !current.needsMachine && !current.done) {
+        if (entry == null && current != null && !current.needsMachine && !current.needsLadder && !current.done) {
             val fresh = prefill(current)
             entry = fresh
             dao.updateSession(row.copy(entry = fresh.toColumns()))
@@ -950,6 +987,9 @@ class SessionLogger(
 
         /** No two sets are logged this close together on purpose; a second ✓ is a stutter. */
         const val DOUBLE_TAP_MS = 1_000L
+
+        /** The ladder states typed weights teach. */
+        private val Learning = setOf(LadderState.Guess, LadderState.Unconfirmed)
 
         /** How many past sessions of an exercise progression reads. */
         const val HISTORY_SESSIONS = 12

@@ -35,7 +35,29 @@ data class Gym(
  * One piece of equipment at a gym, with its weight ladder. [id] 0 is a new one. An [archived] item
  * was deleted after sets were logged on it: only a session that used it still sees it.
  */
-data class EquipmentItem(val id: Long = 0, val gymId: Long, val name: String, val ladder: LadderSpec, val archived: Boolean = false)
+data class EquipmentItem(
+    val id: Long = 0,
+    val gymId: Long,
+    val name: String,
+    val ladder: LadderSpec,
+    val archived: Boolean = false,
+    /** How sure [ladder] is: only a confirmed one checks weights against it. */
+    val state: LadderState = LadderState.Confirmed,
+)
+
+/**
+ * How sure a machine's ladder is (SPEC, Learning a stack). Set up or edited by hand, it is
+ * [Confirmed]. A guess (from the program's setup or an import) is [Unconfirmed] until its first use
+ * asks for the stack's labels; skipped, it stays a [Guess] and typed weights teach it; a declined
+ * offer leaves it [Offered], kept as typed and never offered again.
+ */
+enum class LadderState(val key: String) {
+    Confirmed("confirmed"), Unconfirmed("unconfirmed"), Guess("guess"), Offered("offered");
+
+    companion object {
+        fun ofKey(key: String) = entries.firstOrNull { it.key == key } ?: Confirmed
+    }
+}
 
 /**
  * The gyms you train at and their equipment, plus the dumbbell ladder and barbell plates that
@@ -104,11 +126,19 @@ class Gyms(db: HyperlogDatabase) {
 
     /** Adds an equipment item and returns its id. */
     suspend fun addItem(item: EquipmentItem): Long =
-        dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode()))
+        dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode(), ladderState = item.state.key))
 
     suspend fun saveItem(item: EquipmentItem) {
-        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived))
+        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived, item.state.key))
     }
+
+    /** Machine [id]'s ladder as set up or taken from an offer: confirmed from now on. */
+    suspend fun setLadder(id: Long, spec: LadderSpec) = dao.setLadder(id, spec.encode(), LadderState.Confirmed.key)
+
+    suspend fun setLadderState(id: Long, state: LadderState) = dao.setLadderState(id, state.key)
+
+    /** Every weight logged on machine [itemId], any exercise. */
+    suspend fun weightsOn(itemId: Long): List<Double> = dao.weightsOn(itemId)
 
     /**
      * Deletes an equipment item. One with sets logged on it is archived instead: hidden and
@@ -154,7 +184,7 @@ class Gyms(db: HyperlogDatabase) {
             dumbbells?.let { LadderSpec.decode(it) } ?: LadderSpec.DefaultDumbbells,
         )
 
-    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived) }
+    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived, LadderState.ofKey(ladderState)) }
 
     private companion object {
         const val PLATES = "plates"

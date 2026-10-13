@@ -16,6 +16,7 @@ fun SharedLadders.ladderFor(equipment: Equipment, machine: EquipmentItem? = null
     equipment == Equipment.Dumbbell -> SessionLadder(dumbbells.ladder(), known = true)
     equipment == Equipment.Barbell -> SessionLadder(plates.ladder(), known = true)
     equipment in bars -> SessionLadder(barPlates(equipment)!!.ladder(), known = true)
-    equipment.perMachine && machine != null -> SessionLadder(machine.ladder.ladder(pinPlates), known = true)
+    // A guessed ladder steps −/+ but isn't checked: typed weights are kept as typed.
+    equipment.perMachine && machine != null -> SessionLadder(machine.ladder.ladder(pinPlates), known = machine.state == LadderState.Confirmed)
     else -> SessionLadder(WeightLadder.Default, known = false)
 }

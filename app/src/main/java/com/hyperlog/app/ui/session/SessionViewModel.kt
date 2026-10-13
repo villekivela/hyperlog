@@ -67,6 +67,13 @@ interface SessionActions : PadActions {
     fun addMachine(name: String, ladder: LadderSpec)
     /** Asks "Which machine?" again, before any set is logged on it. */
     fun changeMachine()
+    /** Sets up the machine on screen's ladder from its stack's labels. */
+    fun setUpLadder(spec: LadderSpec)
+    /** Leaves the machine on screen's guessed ladder for now. */
+    fun skipLadderSetup()
+    /** Takes, or declines, the stack the typed weights show. */
+    fun takeLadderOffer()
+    fun declineLadderOffer()
     /** Gives set [setIndex] of the exercise on screen a technique for this session, or none. */
     fun setTechnique(setIndex: Int, technique: Technique?)
     /** Swaps a session exercise to another exercise, for this session only. */
@@ -175,6 +182,10 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun chooseMachine(itemId: Long) = run { logger.chooseMachine(itemId) }
     override fun addMachine(name: String, ladder: LadderSpec) = run { logger.addMachine(name, ladder) }
     override fun changeMachine() = run { logger.changeMachine() }
+    override fun setUpLadder(spec: LadderSpec) = run { logger.setUpLadder(spec) }
+    override fun skipLadderSetup() = run { logger.skipLadderSetup() }
+    override fun takeLadderOffer() = run { logger.takeLadderOffer() }
+    override fun declineLadderOffer() = run { logger.declineLadderOffer() }
     override fun notAtGym() = run { logger.notAtGym() }
     override fun finishSet() = run { logger.finishSet() }
     override fun startHold() = run { logger.startHold() }
