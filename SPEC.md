@@ -272,6 +272,11 @@ available weights belong to a **machine at a gym**, not to an exercise.
   and plates. Every ladder shows as the kg weights it gives (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing the shared
   dumbbells or plates applies to a running session at once.
+- **Deleting** a gym or an equipment item asks first. One with history (sessions at the gym, sets
+  on the machine) is archived instead of deleted: it leaves setup, the start sheet and "Which
+  machine?", and exercises forget it as their machine, but its past sessions keep it, so a
+  machine's history never joins another machine's or the no-gym pool (ADR 0002). History still
+  heads its line `Cable left · Kamppi`.
 
 The old app's machine weights were wrong in both directions: suggestions that didn't exist on the
 stack, and slow entry of odd values. The ladder picker fixes both.

@@ -60,6 +60,16 @@ class GymsTest {
     }
 
     @Test
+    fun anUnusedMachineOrGymIsDeletedOutright() = runTest {
+        val id = gyms.addGym("Kallio")
+        val item = gyms.addItem(EquipmentItem(gymId = id, name = "Leg press", ladder = LadderSpec.lbStack()))
+        gyms.deleteItem(item)
+        gyms.deleteGym(id)
+        assertEquals(0, db.openHelper.readableDatabase.query("SELECT * FROM equipment_item").use { it.count })
+        assertEquals(0, db.openHelper.readableDatabase.query("SELECT * FROM gym").use { it.count })
+    }
+
+    @Test
     fun dumbbellsAndPlatesAreSharedDefaultsUntilEdited() = runTest {
         assertEquals(LadderSpec.DefaultDumbbells, gyms.dumbbells.first())
         assertEquals(LadderSpec.DefaultPlates, gyms.plates.first())

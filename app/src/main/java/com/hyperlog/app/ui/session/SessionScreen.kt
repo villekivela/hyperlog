@@ -237,7 +237,7 @@ fun SessionScreen(
                     if (current.needsMachine) {
                         MachinePicker(
                             session.gym?.name.orEmpty(),
-                            session.gym?.items.orEmpty(),
+                            session.gym?.items.orEmpty().filter { !it.archived },
                             onPick = actions::chooseMachine,
                             onAdd = { addingMachine = true },
                             onNotHere = actions::notAtGym,

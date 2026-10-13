@@ -18,6 +18,8 @@ data class GymEntity(
     val name: String,
     /** The weekday plan: bit 0 is Monday. Starting a session on one of these days picks this gym. */
     @ColumnInfo(defaultValue = "0") val weekdays: Int = 0,
+    /** Deleted after sessions were trained at it: hidden everywhere but in the history it keeps. */
+    @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
 )
 
 /** One equipment item at a gym. [ladder] is an encoded [com.hyperlog.app.domain.LadderSpec]. */
@@ -31,6 +33,11 @@ data class EquipmentItemEntity(
     @ColumnInfo(name = "gym_id") val gymId: Long,
     val name: String,
     val ladder: String,
+    /**
+     * Deleted after sets were logged on it: hidden from setup and "Which machine?", but kept so
+     * its sessions stay its own history (ADR 0002) instead of joining another pool.
+     */
+    @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
 )
 
 /** The machine or cable station an exercise is done on at a gym, remembered from the first time. */
@@ -71,6 +78,9 @@ data class Visit(
     @ColumnInfo(name = "started_at") val startedAt: Long,
 )
 
+/** A machine's name and its gym's, as a history line is headed. */
+data class MachineName(val id: Long, val name: String, val gym: String)
+
 /** A ladder every gym shares: the dumbbells and the barbell plates. */
 @Entity(tableName = "shared_ladder")
 data class SharedLadderEntity(
@@ -80,11 +90,15 @@ data class SharedLadderEntity(
 
 @Dao
 interface GymDao {
-    @Query("SELECT * FROM gym ORDER BY name COLLATE NOCASE, id")
+    @Query("SELECT * FROM gym WHERE archived = 0 ORDER BY name COLLATE NOCASE, id")
     fun observeGyms(): Flow<List<GymEntity>>
 
-    @Query("SELECT * FROM equipment_item ORDER BY name COLLATE NOCASE, id")
+    @Query("SELECT * FROM equipment_item WHERE archived = 0 ORDER BY name COLLATE NOCASE, id")
     fun observeItems(): Flow<List<EquipmentItemEntity>>
+
+    /** Every machine with its gym's name, deleted ones included, for the history they keep. */
+    @Query("SELECT i.id, i.name, g.name AS gym FROM equipment_item i JOIN gym g ON g.id = i.gym_id")
+    suspend fun machineNames(): List<MachineName>
 
     @Insert
     suspend fun insertGym(gym: GymEntity): Long
@@ -127,6 +141,21 @@ interface GymDao {
 
     @Query("DELETE FROM gym WHERE id = :id")
     suspend fun deleteGym(id: Long)
+
+    @Query("UPDATE gym SET archived = 1 WHERE id = :id")
+    suspend fun archiveGym(id: Long)
+
+    @Query("SELECT EXISTS (SELECT 1 FROM session WHERE gym_id = :id)")
+    suspend fun gymUsed(id: Long): Boolean
+
+    @Query("SELECT EXISTS (SELECT 1 FROM session_exercise WHERE equipment_item_id = :id)")
+    suspend fun itemUsed(id: Long): Boolean
+
+    @Query("UPDATE equipment_item SET archived = 1 WHERE id = :id")
+    suspend fun archiveItem(id: Long)
+
+    @Query("DELETE FROM gym_exercise_item WHERE equipment_item_id = :id")
+    suspend fun forgetItem(id: Long)
 
     @Upsert
     suspend fun upsertItem(item: EquipmentItemEntity): Long

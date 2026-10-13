@@ -332,4 +332,22 @@ class MigrationTest {
         assertEquals(82.4, com.hyperlog.app.history.Bodyweights(db).latest()!!, 0.001)
         db.close()
     }
+
+    @Test
+    fun version14KeepsEveryGymAndMachineInUse() = runTest {
+        val file = context.getDatabasePath("migration-test-14.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(14, file) { db ->
+            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Kamppi', 0)")
+            db.execSQL("INSERT INTO equipment_item (id, gym_id, name, ladder) VALUES (1, 1, 'Cable left', 'list;5,10')")
+        }
+
+        // Room checks the migrated tables against the v15 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(listOf("Cable left"), Gyms(db).gyms.first().single().items.map { it.name })
+        assertEquals(mapOf(1L to "Cable left · Kamppi"), Gyms(db).machineNames())
+        db.close()
+    }
 }

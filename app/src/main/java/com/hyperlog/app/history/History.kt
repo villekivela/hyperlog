@@ -107,7 +107,7 @@ class History(
     suspend fun trend(exerciseId: String): ExerciseTrend {
         val exercise = db.exercises().get(exerciseId)!!.toExercise()
         val perMachine = exercise.equipment.perMachine
-        val machines = Gyms(db).gyms.first().flatMap { g -> g.items.map { it.id to "${it.name} · ${g.name}" } }.toMap()
+        val machines = Gyms(db).machineNames()
         val done = dao.trained(exerciseId)
         val groups = if (perMachine) done.groupBy { it.equipmentItemId } else mapOf(null to done)
         val lines = groups.entries

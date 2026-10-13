@@ -4,7 +4,18 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15)
+
+/**
+ * v15: deleting a gym or machine that has history archives it (code review), so its sessions keep
+ * their machine instead of falling into the no-gym pool.
+ */
+object Migration14To15 : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE gym ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE equipment_item ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    }
+}
 
 /** v14: lift goals (#20). One target for an exercise's estimate, optionally by a date. */
 object Migration13To14 : Migration(13, 14) {

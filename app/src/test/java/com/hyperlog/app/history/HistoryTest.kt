@@ -16,6 +16,7 @@ import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.Programs
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -217,5 +218,28 @@ class HistoryTest {
         assertEquals(listOf("Cable left · Kamppi", "Tall cable · Töölö"), trend.lines.map { it.machine })
         assertEquals(listOf("5.7 × 12 @ 1", "7.9 × 10 @ 1"), trend.lines[0].points.map { it.top.summary() })
         assertEquals(listOf("10.2 × 10 @ 1"), trend.lines[1].points.map { it.top.summary() })
+    }
+
+    @Test
+    fun deletingAMachineOrItsGymKeepsItsHistoryApart() = runTest {
+        val gyms = Gyms(db)
+        val kamppi = gyms.addGym("Kamppi")
+        val toolo = gyms.addGym("Töölö")
+        val left = gyms.addItem(EquipmentItem(gymId = kamppi, name = "Cable left", ladder = LadderSpec.lbStack()))
+        val tall = gyms.addItem(EquipmentItem(gymId = toolo, name = "Tall cable", ladder = LadderSpec.lbStack()))
+        session(LocalDate.of(2026, 9, 28), "cable_lateral_raise" to listOf(Logged(5.7, 12, 1)), items = mapOf("cable_lateral_raise" to left))
+        session(LocalDate.of(2026, 10, 1), "cable_lateral_raise" to listOf(Logged(10.2, 10, 1)), items = mapOf("cable_lateral_raise" to tall))
+        // A session with no gym: its machine isn't known.
+        session(LocalDate.of(2026, 10, 3), "cable_lateral_raise" to listOf(Logged(20.0, 10, 1)))
+
+        gyms.deleteItem(left)
+        gyms.deleteGym(toolo)
+
+        // Gone from setup, but each machine's sessions stay its own line (ADR 0002), never the no-gym pool.
+        assertEquals(listOf("Kamppi"), gyms.gyms.first().map { it.name })
+        assertEquals(emptyList<EquipmentItem>(), gyms.gyms.first().single().items)
+        val lines = history().trend("cable_lateral_raise").lines
+        assertEquals(listOf(null, "Tall cable · Töölö", "Cable left · Kamppi"), lines.map { it.machine })
+        assertEquals(listOf(1, 1, 1), lines.map { it.points.size })
     }
 }

@@ -5,7 +5,7 @@ package com.hyperlog.app.backup
  * JSON objects of column to value.
  *
  * ```json
- * { "format": "hyperlog-backup", "version": 1, "database": 14, "exportedAt": 1760000000000,
+ * { "format": "hyperlog-backup", "version": 1, "database": 15, "exportedAt": 1760000000000,
  *   "tables": { "gym": [ { "id": 1, "name": "Kallio", "weekdays": 1 } ], … } }
  * ```
  */
@@ -19,7 +19,7 @@ object BackupFormat {
      * The Room schema version the tables follow. A backup from an older database needs an upgrade
      * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
      */
-    const val DATABASE = 14
+    const val DATABASE = 15
 
     /** The oldest database version a backup can be restored from. */
     const val OLDEST_DATABASE = 14
@@ -42,7 +42,9 @@ object BackupFormat {
      * a whole new table). A file from before a version may lack them: the table restores empty and
      * the columns take their defaults. Anything else missing from a file makes it damaged.
      */
-    val Added: Map<Int, Map<String, Set<String>>> = emptyMap()
+    val Added: Map<Int, Map<String, Set<String>>> = mapOf(
+        15 to mapOf("gym" to setOf("archived"), "equipment_item" to setOf("archived")),
+    )
 
     /** The columns of [table] a file made at database version [database] may lack. */
     fun addedSince(database: Int, table: String): Set<String>? =

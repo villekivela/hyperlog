@@ -26,8 +26,11 @@ data class Gym(
     val missing: Set<String> = emptySet(),
 )
 
-/** One piece of equipment at a gym, with its weight ladder. [id] 0 is a new one. */
-data class EquipmentItem(val id: Long = 0, val gymId: Long, val name: String, val ladder: LadderSpec)
+/**
+ * One piece of equipment at a gym, with its weight ladder. [id] 0 is a new one. An [archived] item
+ * was deleted after sets were logged on it: only a session that used it still sees it.
+ */
+data class EquipmentItem(val id: Long = 0, val gymId: Long, val name: String, val ladder: LadderSpec, val archived: Boolean = false)
 
 /**
  * The gyms you train at and their equipment, plus the dumbbell ladder and barbell plates that
@@ -48,10 +51,19 @@ class Gyms(db: HyperlogDatabase) {
 
     suspend fun addGym(name: String): Long = dao.insertGym(GymEntity(name = name.trim()))
     suspend fun renameGym(id: Long, name: String) = dao.renameGym(id, name.trim())
-    suspend fun deleteGym(id: Long) = dao.deleteGym(id)
+
+    /**
+     * Deletes a gym. One trained at, or with a machine sets were logged on, is archived instead,
+     * so its sessions and each machine's history stay apart (ADR 0002); its unused equipment goes.
+     */
+    suspend fun deleteGym(id: Long) {
+        val items = dao.items(id)
+        items.forEach { deleteItem(it.id) }
+        if (dao.gymUsed(id) || items.any { dao.itemUsed(it.id) }) dao.archiveGym(id) else dao.deleteGym(id)
+    }
     suspend fun setWeekdays(id: Long, days: Set<DayOfWeek>) = dao.setWeekdays(id, days.toBits())
 
-    /** One gym with its equipment, as it is now. */
+    /** One gym with its equipment, as it is now; archived items come too, for the sessions that used them. */
     suspend fun gym(id: Long): Gym? = dao.gym(id)?.let { it.toGym(dao.items(id), dao.missing(id)) }
 
     /** Marks [exerciseId] as one [gymId] has no equipment for. */
@@ -84,10 +96,23 @@ class Gyms(db: HyperlogDatabase) {
         dao.upsertItem(EquipmentItemEntity(0, item.gymId, item.name.trim(), item.ladder.encode()))
 
     suspend fun saveItem(item: EquipmentItem) {
-        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode()))
+        dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived))
     }
 
-    suspend fun deleteItem(id: Long) = dao.deleteItem(id)
+    /**
+     * Deletes an equipment item. One with sets logged on it is archived instead: hidden and
+     * forgotten as any exercise's machine, but its sessions keep pointing at it, so its history
+     * never merges into another machine's or the no-gym pool (ADR 0002).
+     */
+    suspend fun deleteItem(id: Long) {
+        if (dao.itemUsed(id)) {
+            dao.forgetItem(id)
+            dao.archiveItem(id)
+        } else dao.deleteItem(id)
+    }
+
+    /** Each machine's history heading, `Cable left · Kamppi`, by id, deleted ones included. */
+    suspend fun machineNames(): Map<Long, String> = dao.machineNames().associate { it.id to "${it.name} · ${it.gym}" }
 
     suspend fun setDumbbells(spec: LadderSpec) = dao.setShared(SharedLadderEntity(DUMBBELLS, spec.encode()))
     suspend fun setPlates(spec: LadderSpec.Plates) = dao.setShared(SharedLadderEntity(PLATES, spec.encode()))
@@ -104,7 +129,7 @@ class Gyms(db: HyperlogDatabase) {
     private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList()) =
         Gym(id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet())
 
-    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it) }
+    private fun EquipmentItemEntity.toItem() = LadderSpec.decode(ladder)?.let { EquipmentItem(id, gymId, name, it, archived) }
 
     private companion object {
         const val DUMBBELLS = "dumbbells"
