@@ -17,5 +17,5 @@ periodized program, log sessions, coach around real life.
   `docs/design/tester-brief.md`). The owner judges whole passes, so bring them taste questions only.
 - **The starter program and the owner's goals** (100 kg bench, hand pain, low-volume high-intensity
   training) are in `docs/programs/full-body-3-day.md`.
-- **Coaching runs offline or through the user's Claude app.** The app makes no network or model
-  calls (ADR 0001).
+- **Coaching runs offline or through the user's Claude app.** The app makes no model calls (ADR
+  0001). The network is only for the in-app update check (`SPEC.md`, Distribution).

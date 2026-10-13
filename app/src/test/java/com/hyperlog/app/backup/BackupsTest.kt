@@ -21,6 +21,8 @@ import com.hyperlog.app.domain.WeightUnit
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.SessionLogger
+import com.hyperlog.app.update.AppVersion
+import com.hyperlog.app.update.UpdatePreferences
 import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
@@ -121,6 +123,7 @@ class BackupsTest {
         Bodyweights(db).log(LocalDate.of(2026, 10, 1), 82.4)
         Bodyweights(db).log(LocalDate.of(2026, 10, 8), 81.9)
         LiftGoals(db).set("barbell_bench_press", 100.0, LocalDate.of(2026, 12, 31))
+        UpdatePreferences(db).run { setCheckForUpdates(false); dismiss(AppVersion(0, 2, 0)) }
         return db
     }
 
@@ -176,7 +179,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(16), file["database"])
+        assertEquals(JsonPrimitive(17), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -270,6 +273,25 @@ class BackupsTest {
         assertTrue("Old cable · Kallio" in gyms.machineNames().values)
         assertEquals(8.0, gyms.bars.first().getValue(com.hyperlog.app.library.Equipment.EzBar), 0.0)
         assertTrue(phone.exercises().all().first { it.id == "db_bench_press" }.twoDumbbells)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase17StillRestores() = runTest {
+        // DB v17: "Check for updates" turned off and 0.2.0's banner dismissed.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db17.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val preferences = UpdatePreferences(phone)
+        assertEquals(false, preferences.checkForUpdates())
+        assertEquals("0.2.0", preferences.dismissed())
+    }
+
+    @Test
+    fun aBackupFromBeforeSettingsKeepsUpdatesOn() = runTest {
+        val file = javaClass.getResource("/backup/hyperlog-backup-db16.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        assertEquals(true, UpdatePreferences(phone).checkForUpdates())
     }
 
     @Test

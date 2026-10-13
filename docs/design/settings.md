@@ -26,6 +26,9 @@ A flat list behind Today's settings icon. Backups (#21) join it as a group of tw
 [restore]   Restore from a backup
             Replaces everything on this phone | <why it was refused> · nothing changed
             Android also keeps a copy in your Google account, …   (bodySmall, onSurfaceVariant)
+                                                  24 dp (the footnote's bottom padding)
+[system_update] Check for updates             (●)  ← Switch; the whole row toggles it
+            Once a day when Hyperlog opens
 ```
 
 ## States and rules
@@ -36,6 +39,8 @@ A flat list behind Today's settings icon. Backups (#21) join it as a group of tw
   Restore → the app starts again on the backup's data (Today, or the restored session).
 - A refused file shows its reason in the restore row: not a Hyperlog backup, made by a newer
   Hyperlog (update first), too old, damaged. Nothing on the phone changes.
+- **Check for updates** is the last row, a switch on by default. Turning it off hides any update
+  banner on Today at once and stops the check (SPEC, Distribution).
 - The starting-weights row now says "the old app's backup" so it can't be mistaken for a Hyperlog
   backup.
 

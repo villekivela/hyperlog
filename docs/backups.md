@@ -25,9 +25,11 @@ Everything you made, as stored on the phone:
   missing.
 - **Exercise library**: the shipped exercises, your edits, hidden exercises and the ones you added.
 - **Starting weights** from the old app, **lift goals** and **bodyweight**.
+- **Settings**: "Check for updates" and the update banner you dismissed.
 
-Nothing is left out. A test (`BackupTablesTest`) fails if a table is added to the database without
-being listed in the backup or excluded with a reason (`app/src/main/java/com/hyperlog/app/backup/BackupFormat.kt`).
+Left out: the last update check (`update_check`), only a cache of GitHub's answer; a restore leaves
+it as it is. A test (`BackupTablesTest`) fails if a table is added to the database without being
+listed in the backup or excluded with a reason (`app/src/main/java/com/hyperlog/app/backup/BackupFormat.kt`).
 
 Not in a backup: things that aren't stored. That means words typed for Claude but not sent, a
 correction you started but didn't save, notification permission, and the rest alarm, which is set
@@ -49,7 +51,7 @@ again from the restored rest timer.
 {
   "format": "hyperlog-backup",
   "version": 1,
-  "database": 16,
+  "database": 17,
   "exportedAt": 1791889500000,
   "tables": {
     "gym": [ { "id": 1, "name": "Kallio", "weekdays": 9 } ],

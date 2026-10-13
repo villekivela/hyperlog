@@ -69,6 +69,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Stop(R.drawable.symbol_stop),
     SubdirectoryArrowRight(R.drawable.symbol_subdirectory_arrow_right),
     SwapHoriz(R.drawable.symbol_swap_horiz),
+    SystemUpdate(R.drawable.symbol_system_update),
     Timer(R.drawable.symbol_timer),
     TrendingDown(R.drawable.symbol_trending_down),
     TrendingFlat(R.drawable.symbol_trending_flat),

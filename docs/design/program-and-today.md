@@ -70,6 +70,22 @@ onPrimary letter; upcoming is a 1 dp outlineVariant ring with onSurfaceVariant l
                       Close   [Choose file]
 ```
 
+An update (SPEC, Distribution) sits under the title, above whatever Today shows, flat like the
+time-off line:
+
+```
+ Today                               ▦  ⚙
+ [system_update]  Hyperlog 0.2.0 is available   ✕   ← symbol in primary at the 24 dp margin;
+                  Tap to update                       bodyLarge over bodyMedium (onSurfaceVariant)
+ Week 3 · Build
+```
+
+- Tap anywhere on the row: "Downloading…", then Android's installer opens ("Update this app?").
+  The row stays, so a cancelled install can be tapped again.
+- A failed download reads "Couldn't download it. Tap to try again." in `error`.
+- ✕ (content description "Dismiss") hides that version for good; a later release shows again.
+- No card, no colour block: one symbol in primary is the only accent.
+
 Logging table with a plan (logging-screen.md's layout, Target column added):
 
 ```

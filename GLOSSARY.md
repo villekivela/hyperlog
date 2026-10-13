@@ -212,3 +212,11 @@ _Avoid_: Import (that is for program files and the old app's starting weights), 
 
 **Auto Backup**:
 Android's own copy of the app's database in the Google account, restored when the app is installed again.
+
+**Release**:
+A published version of Hyperlog: a `vMAJOR.MINOR.PATCH` tag in the public releases repo with its signed APK.
+_Avoid_: Build (that is any APK, debug ones included)
+
+**Update check**:
+The once-a-day read of the latest release when the app opens; a newer one shows the update banner on Today.
+_Avoid_: Sync, auto-update (Android always asks before installing)

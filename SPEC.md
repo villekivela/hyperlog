@@ -26,15 +26,36 @@ configuration, iOS, web, any server.
   the app ships only the icons it uses (vector drawables or a subset font).
 - Room for storage. Everything lives on the device.
 - kotlinx.serialization for program files, backup import and coach changes.
-- No network code in v1.
+- The network is for the update check only (Distribution); no model calls (ADR 0001).
 - Application ID `com.hyperlog.app`, debug builds `.dev`.
 
 ## Distribution
 
-- **GitHub Releases + Obtainium**, no Play Store fee. Pushing a version tag makes GitHub Actions
-  build and sign a release APK and attach it to a release in a public `villekivela/hyperlog-releases`
-  repo (the source repo stays private). Phones install and update through Obtainium watching that
-  release page. Fallback: Firebase App Distribution (free, email invites).
+- **GitHub Releases**, no Play Store fee. Pushing a version tag makes GitHub Actions build and
+  sign a release APK and attach it to a release in a public `villekivela/hyperlog-releases` repo
+  (the source repo stays private). The first install comes from that release page in the phone's
+  browser; after that the app updates itself (below). Fallback: Firebase App Distribution (free,
+  email invites).
+- **Versions come from the tag.** Tag `vMAJOR.MINOR.PATCH` (minor and patch 0–99) builds with
+  `-PhyperlogVersion=vMAJOR.MINOR.PATCH`: versionName `MAJOR.MINOR.PATCH`, versionCode
+  `MAJOR·10000 + MINOR·100 + PATCH` (v0.2.0 is 200, v1.0.0 is 10000). Without the property a build
+  is 0.1.0. A release's name is its tag; it holds one `.apk` asset.
+- **Update check.** When the app opens, at most once a day, it reads
+  `https://api.github.com/repos/villekivela/hyperlog-releases/releases/latest` (a plain GET with
+  no token, `User-Agent: Hyperlog`, nothing about the user or their data), off the main thread
+  (5 s to connect, 5 s to read, 10 s in all). A release whose tag gives a higher versionCode
+  than the installed one shows a banner on Today: "Hyperlog 0.2.0 is available · Tap to update", with a cross that hides that
+  version for good. Tapping downloads the APK ("Downloading…") and hands it to Android's
+  installer, which asks "Update this app?"; the first time, Android asks to allow Hyperlog to
+  install apps (`REQUEST_INSTALL_PACKAGES`). A failed download says "Couldn't download it. Tap to
+  try again." Offline, no release, a slow answer or a missing APK: no banner, and the next start
+  tries again. Nothing waits on the check.
+  - **Settings → Check for updates**, a switch, on by default. Off, the app never asks GitHub.
+  - "Check for updates" and the dismissed version are backed up; the last check is a cache and
+    isn't.
+  - **Debug builds (`.dev`) don't check.** A launch extra feeds them a fake release whose APK is
+    the installed build, to try the banner and installer on a phone:
+    `adb shell am start -n com.hyperlog.app.dev/com.hyperlog.app.MainActivity --es fake_release 9.9.9`.
 - Signed with a release key kept outside the repo, backed up, and stored as a GitHub Actions secret.
   The legacy app was signed with the old machine's debug key, so the new app can't install over it:
   uninstall the legacy app when switching; its data stays in the backup.
@@ -502,7 +523,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      secondary muscles don't count.
 
 Settings sit behind an icon: gyms and their equipment, exercise library, export backup, restore
-from a backup, starting weights from the old app.
+from a backup, starting weights from the old app, and "Check for updates" (Distribution).
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that does not follow the dynamic
@@ -620,13 +641,14 @@ from a backup, starting weights from the old app.
 - **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
   - A backup holds everything the app stores: programs and their Changes, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
-    and missing equipment, the library with its edits, starting weights, goals and bodyweight.
-    Every table goes in row for row; none is left out (a test fails on a table that is neither in
+    and missing equipment, the library with its edits, starting weights, goals, bodyweight and
+    settings ("Check for updates", the dismissed update). Every table goes in row for row except
+    the last update check, a cache of GitHub's answer (a test fails on a table that is neither in
     the backup nor excluded with a reason).
   - **Settings → Export backup** saves one JSON file through the system's save dialog
     (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`. The file names its
     format, its own version and the database version (`"format": "hyperlog-backup", "version": 1,
-    "database": 16`).
+    "database": 17`).
   - **Settings → Restore from a backup** picks a file, then asks "Replace everything on this
     phone?" with the backup's date. Restoring replaces all the data on the phone, a running session
     included, all or nothing, and the app starts again on Today or the restored session. There is
@@ -799,8 +821,8 @@ own apps, so Hyperlog hands off to the Claude app instead:
   as program import shows them (path over message, "Not a Change Hyperlog can use", "N problems.
   Nothing changed; ask Claude to fix them, then paste again.") with a copy button to hand them
   back to Claude, and nothing is applied. A reply with no JSON says "no Change found".
-- **No network.** The manifest removes `INTERNET` and `ACCESS_NETWORK_STATE` (so no library can
-  add them), and a test fails if either is requested or a source opens a connection.
+- **No model calls.** A test fails if any source or dependency names a model SDK or host
+  (Anthropic, OpenAI, Gemini and the like), or if code outside the update check opens a connection.
 
 Later, if the paste step gets annoying: a custom MCP connector would let the Claude app read the
 plan and write a pending Change directly. That needs a public HTTPS server holding the data, so it

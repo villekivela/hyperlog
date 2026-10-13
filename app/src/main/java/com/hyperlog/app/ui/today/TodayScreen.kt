@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.today
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -64,6 +65,7 @@ import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.update.UpdateBanner
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -106,6 +108,10 @@ fun TodayScreen(
     onPropose: (Change) -> Unit = {},
     /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
     weekdays: Set<DayOfWeek> = emptySet(),
+    /** A newer release to offer, above the day; null for none. */
+    update: UpdateBanner? = null,
+    onUpdate: () -> Unit = {},
+    onDismissUpdate: () -> Unit = {},
 ) {
     /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
     var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -178,20 +184,22 @@ fun TodayScreen(
             }
         },
     ) { padding ->
+      Column(Modifier.fillMaxSize().padding(padding)) {
+        update?.let { UpdateLine(it, onUpdate, onDismissUpdate) }
         if (next != null) {
             NextDay(
-                next, exerciseNames, Modifier.padding(padding),
+                next, exerciseNames, Modifier.weight(1f),
                 timeOff = easeBack?.let { change -> { TimeOffLine(daysOff!!, onEaseBack = { onPropose(change) }) } },
             )
         } else if (program == null && starter != null && !sessionRunning) {
-            StarterOffer(starter, onRunStarter, Modifier.padding(padding)) {
+            StarterOffer(starter, onRunStarter, Modifier.weight(1f)) {
                 TextButton(onClick = { start(true) }) { Text(stringResource(R.string.today_start_session)) }
                 TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
             }
         } else {
             val finished = program?.finished == true
             Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 32.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -225,6 +233,43 @@ fun TodayScreen(
                 // Optical centre: sit a little above the middle, clear of the large app bar.
                 Spacer(Modifier.height(96.dp))
             }
+        }
+      }
+    }
+}
+
+/**
+ * `Hyperlog 0.2.0 is available` over `Tap to update`, flat under the title like the time-off line:
+ * the symbol in the 24 dp margin's column, tapping anywhere updates, the cross dismisses that version.
+ */
+@Composable
+private fun UpdateLine(banner: UpdateBanner, onUpdate: () -> Unit, onDismiss: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth()
+            .clickable(enabled = banner !is UpdateBanner.Downloading, onClick = onUpdate)
+            .heightIn(min = 64.dp)
+            .padding(start = 24.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SymbolIcon(Symbol.SystemUpdate, null, tint = cs.primary)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.update_available, banner.release.version.name), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(
+                    when (banner) {
+                        is UpdateBanner.Available -> R.string.update_tap
+                        is UpdateBanner.Downloading -> R.string.update_downloading
+                        is UpdateBanner.Failed -> R.string.update_failed
+                    },
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (banner is UpdateBanner.Failed) cs.error else cs.onSurfaceVariant,
+            )
+        }
+        IconButton(onClick = onDismiss) {
+            SymbolIcon(Symbol.Close, stringResource(R.string.update_dismiss), tint = cs.onSurfaceVariant)
         }
     }
 }

@@ -372,4 +372,21 @@ class MigrationTest {
         assertEquals(false, byId.getValue("goblet_squat").twoDumbbells)
         db.close()
     }
+
+    @Test
+    fun version16GetsSettingsWithUpdatesOn() = runTest {
+        val file = context.getDatabasePath("migration-test-16.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(16, file) {}
+
+        // Room checks the migrated tables against the v17 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val preferences = com.hyperlog.app.update.UpdatePreferences(db)
+        assertEquals(true, preferences.checkForUpdates())
+        preferences.setCheckForUpdates(false)
+        assertEquals(false, preferences.checkForUpdates())
+        db.close()
+    }
 }

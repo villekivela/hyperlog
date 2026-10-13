@@ -3,11 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-      No network: Hyperlog makes no network or model calls (ADR 0001). Coaching beyond the rules
-      goes to the Claude app through the share sheet. These stop a library from adding them.
+      The update check reads the latest release from GitHub and downloads its APK (SPEC,
+      Distribution). Nothing else uses the network, and the app makes no model calls (ADR 0001).
     -->
-    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Handing the downloaded update to Android's installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- The buzz when rest ends. -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -66,6 +67,16 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+        <!-- The downloaded update, readable by the installer it is handed to. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_paths" />
+        </provider>
     </application>
 
 </manifest>

@@ -2,6 +2,8 @@ package com.hyperlog.app.ui.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -16,6 +18,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -50,8 +53,8 @@ sealed interface BackupState {
 }
 
 /**
- * Settings: gyms and their equipment, the exercise library, backups, and the one-off import of
- * starting weights from the old app.
+ * Settings: gyms and their equipment, the exercise library, backups, the one-off import of
+ * starting weights from the old app, and "Check for updates".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +72,8 @@ fun SettingsScreen(
     onRestore: () -> Unit = {},
     onConfirmRestore: () -> Unit = {},
     onDismissBackup: () -> Unit = {},
+    checkForUpdates: Boolean = true,
+    onCheckForUpdates: (Boolean) -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -146,6 +151,14 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = muted,
                 modifier = Modifier.padding(start = 64.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+            )
+            // Updates come last, after the footnote's 24 dp: a switch, read once a day when the app opens.
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_check_updates)) },
+                supportingContent = { Text(stringResource(R.string.settings_check_updates_about)) },
+                leadingContent = { SymbolIcon(Symbol.SystemUpdate, null, tint = muted) },
+                trailingContent = { Switch(checked = checkForUpdates, onCheckedChange = null) },
+                modifier = Modifier.toggleable(checkForUpdates, role = Role.Switch, onValueChange = onCheckForUpdates).then(row),
             )
         }
     }

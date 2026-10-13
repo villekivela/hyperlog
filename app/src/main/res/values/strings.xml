@@ -469,4 +469,13 @@
     <string name="backup_refused_older">Made by a Hyperlog too old to read · nothing changed</string>
     <string name="backup_refused_damaged">The backup is damaged · nothing changed</string>
     <string name="backup_auto">Android also keeps a copy in your Google account, and a new phone gets it back when Hyperlog is installed there.</string>
+
+    <!-- Updates (SPEC, Distribution) -->
+    <string name="update_available">Hyperlog %1$s is available</string>
+    <string name="update_tap">Tap to update</string>
+    <string name="update_downloading">Downloading…</string>
+    <string name="update_failed">Couldn\'t download it. Tap to try again.</string>
+    <string name="update_dismiss">Dismiss</string>
+    <string name="settings_check_updates">Check for updates</string>
+    <string name="settings_check_updates_about">Once a day when Hyperlog opens</string>
 </resources>

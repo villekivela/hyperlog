@@ -50,6 +50,9 @@ what the files don't explain.
   unlock it, so check `adb shell dumpsys window | grep isKeyguardShowing` before driving the UI.
 - **Backups:** what's in them, where Auto Backup restores from and the `adb shell bmgr` checks are
   in `docs/backups.md`. Export a manual backup of the dev data before any `pm clear`.
+- **Update banner on a debug build:** `.dev` never checks GitHub; launch it with a fake release
+  (`--es fake_release 9.9.9` on the `am start` above) to see the banner, and tap it for the
+  installer prompt on the build's own APK.
 - Debug builds install beside other builds through the `.dev` suffix. The legacy app
   (`com.hyperlog.app.alpha`) may still be installed and holds the owner's old data, so leave it in
   place.
@@ -87,5 +90,6 @@ installs and launches it as "Hyperlog prototype". Its decisions live in `SPEC.md
 - This repo's `user.email` is set locally to the owner's GitHub no-reply address. GitHub rejects
   pushes that would publish their private address, so new clones need
   `git config user.email 5814559+villekivela@users.noreply.github.com`.
-- Releases go through GitHub Releases in the public `villekivela/hyperlog-releases` repo, installed
-  with Obtainium. See `SPEC.md`, Distribution, and ticket #22.
+- Releases go through GitHub Releases in the public `villekivela/hyperlog-releases` repo; the app
+  checks for them itself. The tag sets the version (`-PhyperlogVersion=v0.2.0`). See `SPEC.md`,
+  Distribution, and ticket #22.

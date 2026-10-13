@@ -15,8 +15,13 @@ android {
         applicationId = "com.hyperlog.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        // The release tag sets the version (SPEC, Distribution): `-PhyperlogVersion=v0.2.0` gives
+        // versionName 0.2.0 and versionCode 200 (major·10000 + minor·100 + patch), as AppVersion reads it.
+        val version = (findProperty("hyperlogVersion") as String? ?: "0.1.0").removePrefix("v")
+        val parts = Regex("""(\d+)\.(\d{1,2})\.(\d{1,2})""").matchEntire(version)?.groupValues?.drop(1)?.map(String::toInt)
+            ?: error("hyperlogVersion must be MAJOR.MINOR.PATCH (minor and patch below 100), was $version")
+        versionCode = parts[0] * 10_000 + parts[1] * 100 + parts[2]
+        versionName = version
     }
 
     buildTypes {
@@ -35,6 +40,8 @@ android {
     buildFeatures {
         compose = true
         resValues = true
+        // The version the update check compares against, and DEBUG, which turns it off in .dev builds.
+        buildConfig = true
     }
 
     compileOptions {

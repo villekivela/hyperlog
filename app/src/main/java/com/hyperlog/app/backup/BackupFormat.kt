@@ -5,7 +5,7 @@ package com.hyperlog.app.backup
  * JSON objects of column to value.
  *
  * ```json
- * { "format": "hyperlog-backup", "version": 1, "database": 16, "exportedAt": 1760000000000,
+ * { "format": "hyperlog-backup", "version": 1, "database": 17, "exportedAt": 1760000000000,
  *   "tables": { "gym": [ { "id": 1, "name": "Kallio", "weekdays": 1 } ], … } }
  * ```
  */
@@ -19,7 +19,7 @@ object BackupFormat {
      * The Room schema version the tables follow. A backup from an older database needs an upgrade
      * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
      */
-    const val DATABASE = 16
+    const val DATABASE = 17
 
     /** The oldest database version a backup can be restored from. */
     const val OLDEST_DATABASE = 14
@@ -35,6 +35,8 @@ object BackupFormat {
         // Sessions, the running one with its pad draft and rest timer, their sets and session edits.
         "session", "session_exercise", "logged_set", "set_extension", "set_technique",
         "starting_weight", "bodyweight", "lift_goal",
+        // Preferences: "Check for updates" and the update banner dismissed.
+        "setting",
     )
 
     /**
@@ -45,6 +47,7 @@ object BackupFormat {
     val Added: Map<Int, Map<String, Set<String>>> = mapOf(
         15 to mapOf("gym" to setOf("archived"), "equipment_item" to setOf("archived")),
         16 to mapOf("exercise" to setOf("two_dumbbells")),
+        17 to mapOf("setting" to emptySet()),
     )
 
     /** The columns of [table] a file made at database version [database] may lack. */
@@ -52,8 +55,10 @@ object BackupFormat {
         Added.filterKeys { it > database }.values.mapNotNull { it[table] }.takeIf { it.isNotEmpty() }?.flatten()?.toSet()
 
     /**
-     * Tables left out of the backup, each with the reason. Empty: everything in the database is
-     * the user's. A table that is only a cache of something else would go here.
+     * Tables left out of the backup, each with the reason: only caches of something else. A
+     * restore leaves them as they are.
      */
-    val Excluded: Map<String, String> = emptyMap()
+    val Excluded: Map<String, String> = mapOf(
+        "update_check" to "A cache of GitHub's latest release, read again within a day.",
+    )
 }
