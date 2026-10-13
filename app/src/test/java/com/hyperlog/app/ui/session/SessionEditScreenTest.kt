@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.assertButtonOrder
 import com.hyperlog.app.click
 import com.hyperlog.app.ui.program.ProgramStore
 import com.hyperlog.app.waitFor
@@ -95,6 +96,7 @@ class SessionEditScreenTest {
         compose.onAllNodesWithContentDescription("Edit DB Lateral Raise")[0].performClick()
         compose.click("Remove from session")
         compose.waitFor("Remove DB Lateral Raise?")
+        compose.assertButtonOrder("Cancel", "Remove")
         compose.click("Remove")
         compose.waitGone("DB Lateral Raise")
         compose.onAllNodesWithText("Barbell Bench Press")[0].assertIsDisplayed()

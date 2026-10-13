@@ -299,10 +299,11 @@ fun SessionScreen(
             onDismissRequest = { showLeave = false },
             title = { Text(stringResource(R.string.leave_title)) },
             text = { Text(stringResource(R.string.leave_body)) },
-            confirmButton = { TextButton(onClick = { showLeave = false }) { Text(stringResource(R.string.leave_stay)) } },
-            dismissButton = {
+            // Every dialog puts its way out first and its action last, at the right.
+            confirmButton = {
                 TextButton(onClick = { showLeave = false; onLeave() }) { Text(stringResource(R.string.leave_leave)) }
             },
+            dismissButton = { TextButton(onClick = { showLeave = false }) { Text(stringResource(R.string.leave_stay)) } },
         )
     }
     if (showFinish) {
@@ -311,10 +312,10 @@ fun SessionScreen(
             onDismissRequest = { showFinish = false },
             title = { Text(stringResource(R.string.finish_title)) },
             text = { Text(stringResource(R.string.finish_body)) },
-            confirmButton = { TextButton(onClick = { showFinish = false }) { Text(stringResource(R.string.finish_keep_going)) } },
-            dismissButton = {
+            confirmButton = {
                 TextButton(onClick = { showFinish = false; actions.finish() }) { Text(stringResource(R.string.finish_finish)) }
             },
+            dismissButton = { TextButton(onClick = { showFinish = false }) { Text(stringResource(R.string.finish_keep_going)) } },
         )
     }
     if (showList) {

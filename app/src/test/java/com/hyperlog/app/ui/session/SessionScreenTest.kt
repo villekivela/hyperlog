@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.assertButtonOrder
 import com.hyperlog.app.await
 import com.hyperlog.app.key
 import com.hyperlog.app.press
@@ -94,6 +95,7 @@ class SessionScreenTest {
 
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("Leave the session?").assertIsDisplayed()
+        compose.assertButtonOrder("Stay", "Leave")
         compose.onNodeWithText("Stay").performClick()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
 
@@ -115,6 +117,7 @@ class SessionScreenTest {
         compose.press("More")
         compose.onNodeWithText("Finish session").performClick()
         compose.onNodeWithText("Finish the session?").assertIsDisplayed()
+        compose.assertButtonOrder("Keep going", "Finish")
         compose.onNodeWithText("Keep going").performClick()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
 

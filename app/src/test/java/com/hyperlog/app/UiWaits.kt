@@ -56,6 +56,16 @@ fun ComposeTestRule.press(vararg descriptions: String) = descriptions.forEach {
     waitForIdle()
 }
 
+/**
+ * A dialog's buttons in the platform's order: the way out ([cancel]) first, the [action] last, at
+ * the right.
+ */
+fun ComposeTestRule.assertButtonOrder(cancel: String, action: String) {
+    val left = onNode(hasText(cancel).and(hasClickAction())).fetchSemanticsNode().boundsInRoot.left
+    val right = onNode(hasText(action).and(hasClickAction())).fetchSemanticsNode().boundsInRoot.left
+    assert(left < right) { "$cancel should sit left of $action" }
+}
+
 /** Taps [text] once it shows, and lets the tap land. */
 fun ComposeTestRule.click(text: String, substring: Boolean = false) {
     waitFor(text, substring)

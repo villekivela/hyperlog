@@ -175,7 +175,8 @@ correct; back returns to the summary.
 
 **Leave dialog.** Back on the session screen asks "Leave the session?", with "It keeps running.
 Everything logged is saved." (Stay / Leave). Every tap is saved, so Leave goes to Today, which
-offers **Resume session**. The app opens on a running session.
+offers **Resume session**. The app opens on a running session. Every dialog in the app orders its
+buttons this way: the way out first, the action last, at the right.
 
 **Ad-hoc session** (screens `adhoc-*.png`, built in ticket #2). The same table, without a plan:
 - No Target column; Last takes its width. The "Last" head shows only once there is history.

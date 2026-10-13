@@ -143,8 +143,8 @@ internal fun RemoveExerciseDialog(name: String, onRemove: () -> Unit, onDismiss:
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.edit_remove_title, name)) },
         text = { Text(stringResource(R.string.edit_remove_body)) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.edit_cancel)) } },
-        dismissButton = { TextButton(onClick = { onDismiss(); onRemove() }) { Text(stringResource(R.string.edit_remove_confirm)) } },
+        confirmButton = { TextButton(onClick = { onDismiss(); onRemove() }) { Text(stringResource(R.string.edit_remove_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.edit_cancel)) } },
     )
 }
 

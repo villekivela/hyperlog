@@ -261,8 +261,8 @@ fun ExerciseEditor(
         AlertDialog(
             onDismissRequest = { askDiscard = false },
             title = { Text(stringResource(R.string.editor_discard_title)) },
-            confirmButton = { TextButton(onClick = { askDiscard = false }) { Text(stringResource(R.string.editor_keep_editing)) } },
-            dismissButton = { TextButton(onClick = { askDiscard = false; onClose() }) { Text(stringResource(R.string.editor_discard)) } },
+            confirmButton = { TextButton(onClick = { askDiscard = false; onClose() }) { Text(stringResource(R.string.editor_discard)) } },
+            dismissButton = { TextButton(onClick = { askDiscard = false }) { Text(stringResource(R.string.editor_keep_editing)) } },
         )
     }
 }

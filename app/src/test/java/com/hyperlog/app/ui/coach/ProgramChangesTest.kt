@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.assertButtonOrder
 import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitGone
 import kotlinx.coroutines.runBlocking
@@ -77,6 +78,7 @@ class ProgramChangesTest {
 
         compose.onNodeWithContentDescription("Revert").performClick()
         compose.onNodeWithText("Revert “Skip week 3 · Day A", substring = true).assertIsDisplayed()
+        compose.assertButtonOrder("Cancel", "Revert")
         compose.onNodeWithText("Revert").performClick()
         compose.waitFor("Reverted")
         compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.hyperlog.app.assertButtonOrder
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.ProgramParser
@@ -79,6 +80,7 @@ class ProgramScreenTest {
         compose.onNodeWithContentDescription("More").performClick()
         compose.onNodeWithText("Run Hyperlog Full Body").performClick()
         compose.onNodeWithText("Replace Mine?").assertIsDisplayed()
+        compose.assertButtonOrder("Cancel", "Replace")
         assertEquals(0, ran)
         compose.onNodeWithText("Replace").performClick()
         assertEquals(1, ran)

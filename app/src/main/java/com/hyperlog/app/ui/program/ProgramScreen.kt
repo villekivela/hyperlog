@@ -147,13 +147,13 @@ fun ProgramScreen(
             onDismissRequest = { confirmReplace = null },
             title = { Text(stringResource(R.string.program_replace_title, active.program.title)) },
             text = { Text(stringResource(R.string.program_replace_body)) },
-            confirmButton = { TextButton(onClick = { confirmReplace = null }) { Text(stringResource(R.string.program_cancel)) } },
-            dismissButton = {
+            confirmButton = {
                 TextButton(onClick = {
                     confirmReplace = null
                     if (replacing == Replacement.Starter) onRunStarter() else onImport()
                 }) { Text(stringResource(R.string.program_replace)) }
             },
+            dismissButton = { TextButton(onClick = { confirmReplace = null }) { Text(stringResource(R.string.program_cancel)) } },
         )
     }
 }
@@ -250,10 +250,10 @@ private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onR
             onDismissRequest = { reverting = null },
             title = { Text(stringResource(R.string.program_revert_title, record.change.summary)) },
             text = { Text(stringResource(R.string.program_revert_body)) },
-            confirmButton = { TextButton(onClick = { reverting = null }) { Text(stringResource(R.string.program_cancel)) } },
-            dismissButton = {
+            confirmButton = {
                 TextButton(onClick = { reverting = null; onRevert(record.id) }) { Text(stringResource(R.string.program_change_revert)) }
             },
+            dismissButton = { TextButton(onClick = { reverting = null }) { Text(stringResource(R.string.program_cancel)) } },
         )
     }
 }
