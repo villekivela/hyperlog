@@ -51,28 +51,46 @@ class LadderEditorTest {
                 )
             }
         }
-        compose.onNodeWithText("Plate pairs in kg, separated by spaces").performTextInput("10 2,5")
+        compose.onNodeWithText("Pairs of plates in kg: one number a pair, or 3×20").performTextInput("10 2,5")
         compose.onNodeWithText("20 · 25 · 40 · 45 kg").assertExists()
         compose.onNodeWithText("Save").performClick()
         assertEquals(LadderSpec.Plates(20.0, listOf(10.0, 2.5)), saved)
     }
 
     @Test
-    fun aPlateLoadedMachineStartsAtZeroWithItsStartingWeightEditable() {
+    fun aPlateLoadedMachineOpensOnPlatesWithTheGymsPlatesAndAZeroStart() {
         var saved: LadderSpec? = null
         compose.setContent {
             HyperlogTheme {
                 LadderEditor(
                     title = "New equipment", name = "", spec = null, kinds = LadderKind.entries,
                     onSave = { _, s -> saved = s }, onDelete = null, onClose = {},
+                    defaultKind = LadderKind.Plates, defaultPlates = LadderSpec.DefaultPlates,
                 )
             }
         }
         compose.onNodeWithText("Name, e.g. Cable station").performTextInput("Leg press")
-        compose.onNodeWithText("Plates").performClick()
         compose.onNodeWithText("Starting weight (empty machine or sled), kg").assertExists()
-        compose.onNodeWithText("Plate pairs in kg, separated by spaces").performTextInput("20 10")
+        // The shared plates, three pairs of 20 written as such, so all of them load.
+        compose.onNodeWithText("3×20 15 10 5 2.5 1.25").assertExists()
+        compose.onNodeWithText("… 187.5 kg", substring = true).assertExists()
         compose.onNodeWithText("Save").performClick()
-        assertEquals(LadderSpec.Plates(0.0, listOf(20.0, 10.0)), saved)
+        assertEquals(LadderSpec.Plates(0.0, LadderSpec.DefaultPlates.pairs.sortedDescending()), saved)
+    }
+
+    @Test
+    fun pairsOfTheSamePlateCanBeWrittenAsACount() {
+        var saved: LadderSpec? = null
+        compose.setContent {
+            HyperlogTheme {
+                LadderEditor(
+                    title = "Leg press", name = "Leg press", spec = LadderSpec.Plates(40.0, emptyList()), kinds = LadderKind.entries,
+                    onSave = { _, s -> saved = s }, onDelete = null, onClose = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Pairs of plates in kg: one number a pair, or 3×20").performTextInput("4x25 2,5")
+        compose.onNodeWithText("Save").performClick()
+        assertEquals(LadderSpec.Plates(40.0, listOf(25.0, 25.0, 25.0, 25.0, 2.5)), saved)
     }
 }

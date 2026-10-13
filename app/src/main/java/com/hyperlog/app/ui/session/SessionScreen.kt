@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.domain.LadderSpec
 import androidx.compose.foundation.lazy.itemsIndexed
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.cardBehind
@@ -126,6 +127,8 @@ fun SessionScreen(
     onKeepEdits: (Change) -> Unit = {},
     /** The lift goals, each with its exercise's estimates, for the prescription sheet. */
     goals: List<GoalProgress> = emptyList(),
+    /** The gym's shared plates, which a new plate-loaded machine starts with. */
+    sharedPlates: LadderSpec.Plates = LadderSpec.DefaultPlates,
 ) {
     var showLeave by rememberSaveable { mutableStateOf(false) }
     var showList by rememberSaveable { mutableStateOf(false) }
@@ -164,6 +167,9 @@ fun SessionScreen(
             name = if (equipment == Equipment.Machine) current.exercise.name else if (equipment == Equipment.SmithMachine) equipment.label else "",
             spec = null,
             kinds = LadderKind.entries,
+            // A leg press or sled opens on plates (the gym's, from a zero start), a stack machine on a stack.
+            defaultKind = if (current.exercise.plateLoaded) LadderKind.Plates else null,
+            defaultPlates = sharedPlates,
             onSave = { name, spec -> actions.addMachine(name, spec); addingMachine = false },
             onDelete = null,
             onClose = { addingMachine = false },

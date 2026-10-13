@@ -390,6 +390,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        per machine in its equipment (0 kg by default, editable). It counts toward the total, as a
        bar's weight does, and the legend shows it with its own symbol (a sled) where a bar's
        weight has a slash.
+     - A machine added for a plate-loaded exercise starts on plates: the gym's shared plates from
+       a 0 kg start. Pairs are typed one number a pair or as a count (`3×20`).
      - A tap on the pad's plates opens the **whole bar**: the total, both sides with every plate,
        and each plate with how many go on each side, then the bar or the machine's starting
        weight.

@@ -68,6 +68,10 @@ fun LadderEditor(
     onSave: (name: String, spec: LadderSpec) -> Unit,
     onDelete: (() -> Unit)?,
     onClose: () -> Unit,
+    /** The kind a new ladder opens on; null for the first of [kinds]. */
+    defaultKind: LadderKind? = null,
+    /** A new plate ladder's plates (the gym's shared ones), loaded from a zero start. */
+    defaultPlates: LadderSpec.Plates? = null,
 ) {
     var itemName by rememberSaveable { mutableStateOf(name.orEmpty()) }
     var kind by rememberSaveable {
@@ -75,7 +79,7 @@ fun LadderEditor(
             when (spec) {
                 is LadderSpec.Explicit -> LadderKind.List
                 is LadderSpec.Plates -> LadderKind.Plates
-                else -> kinds.first()
+                else -> defaultKind?.takeIf { spec == null && it in kinds } ?: kinds.first()
             },
         )
     }
@@ -85,10 +89,10 @@ fun LadderEditor(
     var step by rememberSaveable { mutableStateOf(steps?.step?.let(::formatKg).orEmpty()) }
     var count by rememberSaveable { mutableStateOf(steps?.count?.toString() ?: "20") }
     var list by rememberSaveable { mutableStateOf((spec as? LadderSpec.Explicit)?.kgs?.joinToString(" ") { formatKg(it) }.orEmpty()) }
-    val plates = spec as? LadderSpec.Plates
+    val plates = spec as? LadderSpec.Plates ?: defaultPlates?.takeIf { spec == null }?.copy(baseKg = if (name != null) 0.0 else defaultPlates.baseKg)
     // A machine starts at 0 kg (its starting weight, editable); the shared plates name their bar.
     var base by rememberSaveable { mutableStateOf(plates?.baseKg?.let(::formatKg) ?: if (name != null) "0" else "") }
-    var pairs by rememberSaveable { mutableStateOf(plates?.pairs?.sortedDescending()?.joinToString(" ") { formatKg(it) }.orEmpty()) }
+    var pairs by rememberSaveable { mutableStateOf(plates?.pairs?.let(::pairsText).orEmpty()) }
 
     val draft: LadderSpec? = when (kind) {
         LadderKind.Stack -> {
@@ -97,7 +101,7 @@ fun LadderEditor(
         }
         LadderKind.List -> list.toNumbers()?.filter { it > 0 }?.takeIf { it.isNotEmpty() }?.let { LadderSpec.Explicit(it) }
         LadderKind.Plates -> {
-            val b = base.toNumber(); val p = pairs.toNumbers()
+            val b = base.toNumber(); val p = pairs.toPairs()
             if (b != null && b >= 0 && p != null) LadderSpec.Plates(b, p.filter { it > 0 }) else null
         }
     }
@@ -208,6 +212,26 @@ private fun NumberField(value: String, onChange: (String) -> Unit, label: String
 
 /** A decimal comma works too: phones in Finnish type one. */
 private fun String.toNumber() = trim().replace(',', '.').toDoubleOrNull()
+
+/** Pairs as typed: one number a pair, or a count of the same plate, `3×20 15 10 2,5`. */
+private fun String.toPairs(): List<Double>? =
+    trim().split(Regex("[\\s;]+")).filter { it.isNotEmpty() }.flatMap { token ->
+        val parts = token.split(Regex("[×xX*]"))
+        when (parts.size) {
+            1 -> listOf(parts[0].toNumber() ?: return null)
+            2 -> {
+                val n = parts[0].toIntOrNull()?.takeIf { it in 1..20 } ?: return null
+                val kg = parts[1].toNumber() ?: return null
+                List(n) { kg }
+            }
+            else -> return null
+        }
+    }
+
+/** Pairs written back with counts, heaviest first: `3×20 15 10 5 2.5 1.25`. */
+internal fun pairsText(pairs: List<Double>): String =
+    pairs.groupingBy { it }.eachCount().toList().sortedByDescending { it.first }
+        .joinToString(" ") { (kg, n) -> if (n > 1) "$n×${formatKg(kg)}" else formatKg(kg) }
 
 /** Weights separated by spaces: `20 20 15 10 2.5` (or `2,5`). */
 private fun String.toNumbers(): List<Double>? =

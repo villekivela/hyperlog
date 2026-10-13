@@ -246,7 +246,7 @@
     <string name="ladder_list_field">Weights in kg, separated by spaces</string>
     <string name="ladder_base">Bar, kg</string>
     <string name="ladder_base_machine">Starting weight (empty machine or sled), kg</string>
-    <string name="ladder_pairs">Plate pairs in kg, separated by spaces</string>
+    <string name="ladder_pairs">Pairs of plates in kg: one number a pair, or 3×20</string>
     <string name="ladder_preview">Real weights</string>
     <string name="ladder_incomplete">Fill in the fields to see the weights</string>
     <string name="ladder_rung_count">%1$d weights</string>

@@ -141,6 +141,11 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 Plate-loaded machines: the Plates kind's first field is the machine's **starting weight (empty
 machine or sled), kg**, 0 for a new item and editable; the shared plates' field reads **Bar, kg**.
 The plate calculator counts the starting weight toward the total (`logging-screen.md`, Plates).
+A new machine added for a plate-loaded exercise (a Smith machine, or a machine named leg press,
+hack or pendulum squat, sled, belt squat, t-bar or "plate-loaded") opens on Plates with the gym's
+shared plates and a 0 kg start; others open on Stack. Pairs are one number a pair, or a count:
+`3×20 15 10 5 2.5 1.25` (`x` and `*` work too), and existing pairs are written back that way, so
+the field says how many of each plate there are.
 
 Expressive pass: every group (a gym's equipment, the shared ladders, the usual days, what the gym
 hasn't got) is a card on surfaceContainer; the ladder editor's kind and unit are connected button

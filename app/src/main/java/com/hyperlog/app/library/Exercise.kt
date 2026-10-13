@@ -1,6 +1,9 @@
 package com.hyperlog.app.library
 
 /** An exercise in the library. Names carry the implement ("DB Bench Press"), so a name alone is unambiguous. */
+/** Machine names that take plates. */
+private val PlateLoadedNames = Regex("(?i)leg press|hack squat|pendulum|sled|plate|belt squat|v-squat|t-bar")
+
 data class Exercise(
     val id: String,
     val name: String,
@@ -22,6 +25,15 @@ data class Exercise(
      */
     val twoDumbbells: Boolean = false,
 ) {
+    /**
+     * Loaded with plates rather than a stack: a Smith machine, or a machine named for one that
+     * takes plates (a leg press, hack or pendulum squat, a sled, anything "plate-loaded"). A new
+     * machine for it opens on plates.
+     */
+    val plateLoaded: Boolean
+        get() = equipment == Equipment.SmithMachine ||
+            (equipment == Equipment.Machine && PlateLoadedNames.containsMatchIn(name))
+
     /** How many of the logged weight are lifted: 2 for [twoDumbbells], else 1. */
     val implements: Int get() = if (twoDumbbells && equipment == Equipment.Dumbbell) 2 else 1
 

@@ -311,6 +311,7 @@ private fun App(
             onLeave = { left = true },
             onKeepEdits = programModel::propose,
             goals = goals,
+            sharedPlates = plates,
         )
         editing != null -> {
             val id = editing
