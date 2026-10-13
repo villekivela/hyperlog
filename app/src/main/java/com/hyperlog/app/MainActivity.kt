@@ -187,8 +187,9 @@ private fun App(
 
     val running = session
     val finished = summary
-    // Time off counts from the last session finished: read again whenever Today or the coach shows.
-    LaunchedEffect(screen, running == null) { if (running == null) sessions.refreshLastTrained() }
+    // Time off counts from the last session finished: read again whenever Today or the coach shows,
+    // and on start, when a session may already be running (a restart or a restore).
+    LaunchedEffect(screen, running == null) { sessions.refreshLastTrained() }
     val review by programModel.review.collectAsStateWithLifecycle()
     if (running != null) AskForNotifications()
     // A Change under review covers whatever proposed it: the Program screen or the session.
