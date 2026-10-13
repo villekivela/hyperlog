@@ -34,4 +34,16 @@ class PlateLoadViewTest {
         compose.setContent { HyperlogTheme { PlateLoad(LadderSpec.Plates(30.0, listOf(20.0)), 30.0, machine = true) } }
         compose.onNodeWithContentDescription("The machine alone, 30 kg").assertIsDisplayed()
     }
+
+    @Test
+    fun theWholeBarShowsBothSidesAndTheTotal() {
+        compose.setContent { HyperlogTheme { WholeBar(LadderSpec.DefaultPlates, 100.0) } }
+        compose.onNodeWithContentDescription("100 kg: a 20 kg bar with 2 × 20 on each side").assertIsDisplayed()
+    }
+
+    @Test
+    fun theWholeMachineCountsItsStartingWeight() {
+        compose.setContent { HyperlogTheme { WholeBar(LadderSpec.Plates(30.0, listOf(20.0, 10.0)), 90.0, machine = true) } }
+        compose.onNodeWithContentDescription("90 kg: a 30 kg machine with 1 × 20, 1 × 10 on each side").assertIsDisplayed()
+    }
 }

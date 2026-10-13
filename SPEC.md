@@ -388,6 +388,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        per machine in its equipment (0 kg by default, editable). It counts toward the total, as a
        bar's weight does, and the legend shows it with its own symbol (a sled) where a bar's
        weight has a slash.
+     - A tap on the pad's plates opens the **whole bar**: the total, both sides with every plate,
+       and each plate with how many go on each side, then the bar or the machine's starting
+       weight.
      - EZ, trap and safety bar exercises use the shared plates on their own bar, so they get the
        same line, warm-ups on 5 kg steps and a weight check against the real weights.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as

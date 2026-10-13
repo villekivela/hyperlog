@@ -325,6 +325,13 @@ show; nothing about a warm-up touches the clock. Screens: `light-session-plates.
   It updates as the weight is typed; with nothing typed it draws the bar alone, and a weight the
   plates can't make draws the bar muted with "Not on these plates". The weight check's strip
   replaces it. A correction shows it too. Regular size: a 40 dp drawing, titleSmall legend.
+- **The whole bar**: a tap on the pad's strip ("Show the whole bar") opens a sheet: the total in
+  headlineMedium over "On a 20 kg bar" ("On a 30 kg machine, empty"); both sides drawn 96 dp tall,
+  mirrored about the grip (on a machine, the machine as a block in the middle), every plate
+  heaviest inside; then a 40 dp row per plate (its colour, `25 kg`, `2 each side`) and a last row
+  for the bar or the machine's starting weight with its symbol. Description: "147.5 kg: a 20 kg
+  bar with 2 × 25, 1 × 10, 1 × 2.5, 1 × 1.25 on each side". Screens: `light-whole-bar.png`,
+  `dark-whole-bar.png`, `dark-whole-machine.png` (renders).
 - **On a warm-up row**: the compact size over Target and Last (a warm-up has neither): a 24 dp
   drawing and a labelMedium legend without the bar's weight, which the pad already gives. The
   row grows past 48 dp when the legend wraps.

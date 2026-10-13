@@ -1,5 +1,14 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.HorizontalDivider
 import com.hyperlog.app.domain.LadderSpec
@@ -56,6 +65,7 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  */
 internal const val PlateStripTag = "plate-strip"
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 internal fun Pad(
     entry: SetEntry,
@@ -76,11 +86,20 @@ internal fun Pad(
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
+    var wholeBar by remember { mutableStateOf(false) }
+    if (wholeBar && plates != null) {
+        ModalBottomSheet(onDismissRequest = { wholeBar = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+            WholeBar(plates, entry.weightKg, Modifier.padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding(), machine = platesOnMachine)
+        }
+    }
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
             // The plate calculator, at the top of the pad while a weight is typed, live.
             if (onWeight && plates != null && check == null) {
-                PlateLoad(plates, entry.weightKg, machine = platesOnMachine, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp).testTag(PlateStripTag))
+                // A tap opens the whole bar, both sides with every plate.
+                PlateLoad(plates, entry.weightKg, machine = platesOnMachine, modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClickLabel = stringResource(R.string.plates_show_whole)) { wholeBar = true }.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp).testTag(PlateStripTag))
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = cs.outlineVariant)
             }
             Row(Modifier.fillMaxWidth().height(KeyHeight), verticalAlignment = Alignment.CenterVertically) {

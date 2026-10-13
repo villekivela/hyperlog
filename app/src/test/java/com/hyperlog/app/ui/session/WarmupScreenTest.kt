@@ -107,4 +107,13 @@ class WarmupScreenTest {
         compose.waitFor("Warm-up")
         assertEquals(0, compose.onAllNodes(hasContentDescription("Plates per side", substring = true)).fetchSemanticsNodes().size)
     }
+
+    @Test
+    fun tappingThePadsPlatesOpensTheWholeBar() {
+        startDay("barbell_bench_press")
+        compose.press("1"); compose.press("0"); compose.press("0")
+        compose.onNode(clickLabel("Show the whole bar"), useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("100 kg: a 20 kg bar with 2 × 20 on each side").assertIsDisplayed()
+    }
 }

@@ -14,8 +14,8 @@ rendered in light.
   last icon of each destination's top bar. Hidden while the session screen is up.
 - **Today** sits on surfaceContainer. Week and block in primary over the day's name; the slots are
   one segmented group (cards 24 dp outside, 4 dp at the joins, 2 dp apart), a superset's partners
-  sharing one segment. **Start session** (or **Resume session**) is an extended FAB in
-  primaryContainer; **Ad-hoc session** is a card row after the day. The update banner is a
+  sharing one segment. **Start session** (or **Resume session**) is the expressive medium extended FAB
+  (80 dp) in primaryContainer; **Ad-hoc session** is a card row after the day. The update banner is a
   primaryContainer card (tap to update, × to dismiss) and the time-off line a tertiaryContainer
   card with a filled **Ease back in**.
 - **Starter offer** is one hero card: a primary-container cookie (`MaterialShapes.Cookie9Sided`)

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -198,6 +199,94 @@ private fun BarSide(side: List<Double>, height: Dp, muted: Boolean, scale: Float
             drawRoundRect(color, topLeft, Size(w, h), CornerRadius(1.5.dp.toPx()))
             if (color.luminance() > 0.7f) drawRoundRect(outline, topLeft, Size(w, h), CornerRadius(1.5.dp.toPx()), style = Stroke(1.dp.toPx()))
             x += w + gap.toPx()
+        }
+    }
+}
+
+/** `100 kg: a 20 kg bar with 2 × 20 on each side`, the whole bar's one description. */
+@Composable
+private fun wholeDescription(plates: LadderSpec.Plates, side: List<Double>?, totalKg: Double?, machine: Boolean): String {
+    if (side == null || totalKg == null) return platesDescription(plates, side, totalKg, machine)
+    val base = stringResource(if (machine) R.string.plates_whole_machine else R.string.plates_whole_bar, formatKg(plates.baseKg))
+    if (side.isEmpty()) return stringResource(R.string.plates_whole_alone, formatKg(totalKg), base)
+    val list = legend(side).joinToString(", ") { (kg, n) -> "$n × ${formatKg(kg)}" }
+    return stringResource(R.string.plates_whole, formatKg(totalKg), base, list)
+}
+
+/**
+ * The whole bar, from the pad's plate strip: the total, both sides drawn with every plate (the
+ * heaviest inside), and a row per plate with how many go on each side, then the bar's or the
+ * machine's starting weight.
+ */
+@Composable
+internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Modifier = Modifier, machine: Boolean = false) {
+    val cs = MaterialTheme.colorScheme
+    val side = totalKg?.let { plates.perSide(it) }
+    val description = wholeDescription(plates, side, totalKg, machine)
+    androidx.compose.foundation.layout.Column(modifier.clearAndSetSemantics { contentDescription = description }) {
+        Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.headlineMedium.merge(Tnum))
+        Text(
+            stringResource(if (machine) R.string.plates_whole_machine_line else R.string.plates_whole_bar_line, formatKg(plates.baseKg)),
+            style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(24.dp))
+        BothSides(side.orEmpty(), machine, muted = side == null && totalKg != null)
+        Spacer(Modifier.height(24.dp))
+        if (side == null && totalKg != null) {
+            Text(stringResource(R.string.plates_not_on), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+        }
+        legend(side.orEmpty()).forEach { (kg, n) ->
+            Row(Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                PlateSwatch(kg, 16.dp)
+                Spacer(Modifier.width(16.dp))
+                Text(stringResource(R.string.weight_kg, formatKg(kg)), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge.merge(Tnum))
+                Text(stringResource(R.string.plates_each_side, n), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = cs.onSurfaceVariant)
+            }
+        }
+        if (plates.baseKg > 0) {
+            Row(Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (machine) MachineSwatch(16.dp) else BarSwatch(16.dp)
+                Spacer(Modifier.width(16.dp))
+                Text(stringResource(if (machine) R.string.plates_machine_row else R.string.plates_bar_row), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.weight_kg, formatKg(plates.baseKg)), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = cs.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/**
+ * Both sides, mirrored about the middle: the bar's grip (or, on a machine, the machine as a
+ * block), the collars, the plates heaviest inside, and the sleeves.
+ */
+@Composable
+private fun BothSides(side: List<Double>, machine: Boolean, muted: Boolean) {
+    val cs = MaterialTheme.colorScheme
+    val bar = if (muted) cs.outlineVariant else cs.onSurfaceVariant
+    val outline = cs.outline
+    Canvas(Modifier.fillMaxWidth().height(96.dp)) {
+        val mid = size.height / 2
+        val cx = size.width / 2
+        val stroke = 6.dp.toPx()
+        drawLine(bar, Offset(0f, mid), Offset(size.width, mid), strokeWidth = stroke, cap = StrokeCap.Round)
+        if (machine) {
+            val w = size.width * 0.22f
+            drawRoundRect(bar, Offset(cx - w / 2, mid - size.height * 0.3f), Size(w, size.height * 0.6f), CornerRadius(6.dp.toPx()))
+        }
+        val inner = if (machine) size.width * 0.11f + 6.dp.toPx() else size.width * 0.2f
+        listOf(-1f, 1f).forEach { dir ->
+            var x = cx + dir * inner
+            val collarW = 5.dp.toPx(); val collarH = size.height * 0.36f
+            drawRoundRect(bar, Offset(if (dir > 0) x else x - collarW, mid - collarH / 2), Size(collarW, collarH), CornerRadius(2.dp.toPx()))
+            x += dir * (collarW + 2.dp.toPx())
+            side.forEach { kg ->
+                val w = (plateWidth(kg) * 2.2f).toPx()
+                val h = size.height * plateHeight(kg)
+                val color = plateColor(kg)
+                val topLeft = Offset(if (dir > 0) x else x - w, mid - h / 2)
+                drawRoundRect(color, topLeft, Size(w, h), CornerRadius(3.dp.toPx()))
+                if (color.luminance() > 0.7f) drawRoundRect(outline, topLeft, Size(w, h), CornerRadius(3.dp.toPx()), style = Stroke(1.dp.toPx()))
+                x += dir * (w + 2.dp.toPx())
+            }
         }
     }
 }

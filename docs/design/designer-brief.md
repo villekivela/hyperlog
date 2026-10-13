@@ -56,13 +56,14 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
 - **Plates are drawn, never written out**: one component, a drawing of one side of the bar with a
   legend (`1 × 20`, the bar's weight), at the top of the pad while a weight is typed and, compact,
-  on warm-up rows.
+  on warm-up rows. A tap on the pad's strip opens the whole bar (or plate-loaded machine).
 - **Visible state.** The active row and cell, the intensity technique on a set, and the weights
   involved can all be read from the screen at a glance.
 
 A monochrome system style (Wallpaper and style, the owner's current choice) makes every dynamic
-colour grey, and Hyperlog follows it: in grey the hierarchy has to come from tone and shape, which
-is why the rules above lean on them rather than on hue.
+colour grey, and Hyperlog follows it. **Decided: follow the phone.** Dynamic colour stays as it is,
+with no special palette for a monochrome system; in grey the hierarchy comes from tone and shape,
+which is why the rules above lean on them rather than on hue.
 
 ## Process
 

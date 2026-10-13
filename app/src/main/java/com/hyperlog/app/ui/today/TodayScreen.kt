@@ -22,7 +22,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -172,10 +172,11 @@ fun TodayScreen(
         // The day's one action floats over the list in primary container, clear of the background.
         floatingActionButton = {
             if (next != null) {
-                ExtendedFloatingActionButton(onClick = { start(false) }) {
-                    SymbolIcon(Symbol.PlayArrow, null)
+                // The expressive medium size: the day's one action, unmistakable.
+                MediumExtendedFloatingActionButton(onClick = { start(false) }) {
+                    SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text(startLabel)
+                    Text(startLabel, style = MaterialTheme.typography.titleMedium)
                 }
             }
         },
