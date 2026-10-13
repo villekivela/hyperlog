@@ -23,9 +23,10 @@ data class WorkSet(
 /**
  * One session of an exercise (on one machine, for machines): its main sets in order. For a
  * weighted bodyweight exercise [bodyweightKg] is the body's weight then, which the estimate adds to
- * the weight logged on the belt (SPEC, Bodyweight); 0 for everything else.
+ * the weight logged on the belt (SPEC, Bodyweight); 0 for everything else. [slot] is the program
+ * slot it was done in, null ad hoc.
  */
-data class Performance(val sets: List<WorkSet>, val deload: Boolean = false, val bodyweightKg: Double = 0.0)
+data class Performance(val sets: List<WorkSet>, val deload: Boolean = false, val bodyweightKg: Double = 0.0, val slot: String? = null)
 
 /** The weight and target reps for the next set, and why ([why] is null when it just follows the set before). */
 data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: String?) {
@@ -99,7 +100,26 @@ object Progression {
         }
         val previous = today.sets.withIndex().lastOrNull { it.value.counts && it.value.target?.backoff == null }
         return if (previous != null) withinSession(previous.index, previous.value, target, today, history, ladder)
-        else nextSession(target, today.deload, history, ladder, today.bodyweightKg)
+        else nextSession(target, today, history, ladder)
+    }
+
+    /**
+     * Which of [history] (oldest first) a first set of [target] in [slot] is judged against, so
+     * "last time" names it: the last session whose top sets were done under the same rep range (or
+     * ad hoc), in the same slot if there is one, else in any. Null when none was: a new rep range.
+     */
+    fun judged(target: PlannedSet, history: List<Performance>, slot: String?): Int? {
+        val sameRange = history.indices.filter { i ->
+            topSets(history[i]).firstOrNull()?.let { (it.target?.reps ?: target.reps) == target.reps } == true
+        }
+        return sameRange.lastOrNull { history[it].slot == null || history[it].slot == slot } ?: sameRange.lastOrNull()
+    }
+
+    /** A session's sets at its top weight that counted; back-offs follow the top set. */
+    private fun topSets(p: Performance): List<WorkSet> {
+        val judged = p.sets.filter { it.counts && it.target?.backoff == null }.ifEmpty { return emptyList() }
+        val top = judged.maxOf { it.set.weightKg }
+        return judged.filter { abs(it.set.weightKg - top) < 0.05 }
     }
 
     /** The exercise's current estimate from [history] (oldest first), or null with no usable set. */
@@ -141,18 +161,18 @@ object Progression {
         return median.coerceIn(20.0, 40.0)
     }
 
-    /** [bw]: today's bodyweight for a weighted bodyweight exercise, else 0; the ladder is the load on the belt. */
-    private fun nextSession(target: PlannedSet, deload: Boolean, history: List<Performance>, ladder: WeightLadder, bw: Double): Suggestion? {
+    /**
+     * [today]'s bodyweight is for a weighted bodyweight exercise, else 0; the ladder is the load
+     * on the belt.
+     */
+    private fun nextSession(target: PlannedSet, today: Performance, history: List<Performance>, ladder: WeightLadder): Suggestion? {
+        val deload = today.deload
+        val bw = today.bodyweightKg
         val k = constant(history)
         val estimate = estimate(history, k)
         // Judged against the last session with this rep range (a day with its own range progresses
         // on its own); one done ad hoc is judged against today's prescription.
-        fun topSets(p: Performance): List<WorkSet> {
-            val judged = p.sets.filter { it.counts && it.target?.backoff == null }.ifEmpty { return emptyList() }
-            val top = judged.maxOf { it.set.weightKg }
-            return judged.filter { abs(it.set.weightKg - top) < 0.05 }
-        }
-        val last = history.lastOrNull { p -> topSets(p).firstOrNull()?.let { (it.target?.reps ?: target.reps) == target.reps } == true }
+        val last = judged(target, history, today.slot)?.let { history[it] }
             ?: return estimate?.let { fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check on the first set", bw) }
         val atTop = topSets(last)
         val top = atTop.first().set.weightKg

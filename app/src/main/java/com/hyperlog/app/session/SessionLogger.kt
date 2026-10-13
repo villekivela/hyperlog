@@ -734,14 +734,19 @@ class SessionLogger(
             val machine = if (perMachine) gym?.items?.firstOrNull { it.id == se.equipmentItemId } else null
             val needsMachine = perMachine && gym != null && machine == null
             val ladder = shared.ladderFor(exercise.equipment, machine)
+            val slot = day?.slot(se.slotId)
+            val plan = se.sets?.let(PlannedSetJson::decode) ?: slot?.setsFor(se.exerciseId)
+            // A planned exercise's last time is the session progression judges (same slot and rep
+            // range), so the Last column, the prefill and the why-line name the same sets.
+            val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted)
+            val judged = plan?.firstOrNull()?.let { Progression.judged(it, past.map { p -> p.second }, se.slotId) }
             // Machines and cables only compare with sets on the same machine (ADR 0002).
             val lastTime = when {
                 needsMachine -> emptyList()
+                judged != null -> dao.sets(past[judged].first)
                 perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
                 else -> dao.lastTime(se.exerciseId, row.id)
             }.map { loggedSet(it) }
-            val slot = day?.slot(se.slotId)
-            val plan = se.sets?.let(PlannedSetJson::decode) ?: slot?.setsFor(se.exerciseId)
             val sets = dao.sets(se.id).map { loggedSet(it) }
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine
             // The old app's weight stands in until the exercise (on this machine) has its own history.
@@ -757,8 +762,9 @@ class SessionLogger(
                         workSets(sets, plan),
                         deload = day?.deload == true,
                         bodyweightKg = if (exercise.weighted) bodyweights.latest() ?: 0.0 else 0.0,
+                        slot = se.slotId,
                     ),
-                    history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted),
+                    past.map { it.second },
                     ladder.ladder,
                 ) ?: start?.takeIf { sets.isEmpty() }?.suggestion(plan.first(), ladder.ladder)
             }?.let { s -> slot?.loadPercent?.takeIf { it != 0 }?.let { s.adjusted(it, ladder.ladder) } ?: s }
@@ -856,19 +862,21 @@ class SessionLogger(
     }
 
     /**
-     * The exercise's past sessions (on [itemId] for machines), oldest first, each with the
+     * The exercise's past sessions (on [itemId] for machines), oldest first: each one's session
+     * exercise id, and its performance with the slot it filled, the
      * prescription it was done under, whether its week was a deload and, for a [weighted]
      * bodyweight exercise, the bodyweight of the day.
      */
-    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean): List<Performance> =
+    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean): List<Pair<Long, Performance>> =
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
             val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
             else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt))
             val plan = past.sets?.let(PlannedSetJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
-            Performance(
+            past.id to Performance(
                 workSets(dao.sets(past.id).map { loggedSet(it) }, plan),
                 deload = day?.deload == true,
                 bodyweightKg = if (weighted) bodyweights.on(programs.dateOf(past.startedAt)) ?: 0.0 else 0.0,
+                slot = past.slotId,
             )
         }
 

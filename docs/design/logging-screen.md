@@ -96,6 +96,8 @@ RIR is the one fixed scale and does not follow the theme: 0 `#D9645B`, 1–2 `#E
 ## Components
 
 **Set row, upcoming.** Set number in onSurfaceVariant. Target reps, target RIR ring, last time.
+In a program session "last time" is the session progression judges (same slot and rep range, else
+the latest), the one the why-line names, matched to the rows by position; ad hoc it's the latest.
 kg and reps are the prefilled values in `outline`. The RIR column is empty.
 
 **Set row, active.** Highlighted surfaceContainerHigh with a 16 dp radius, inset 16 dp so its

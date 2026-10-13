@@ -118,10 +118,15 @@ work. You can override the suggestion on the spot; the override is logged, not h
     reps in one session (a top set and its back-offs): the median of every such pair, kept within
     20–40, once there are two pairs.
 - **What is judged**: the sets at the top weight (back-offs follow the top set) of the last session
-  with the same rep range, against the prescription they were done under. So a day that benches
-  4–6 and another that benches 6–8 each progress on their own; with no session in that range it's
-  a new rep range (below). A session done ad hoc is judged against today's prescription. Effort is
-  reps + RIR, so 11 @ 1 is as good as 10 @ 2. "Last time" in the why-line means that session.
+  with the same rep range (in the same slot when there is one, else in any), against the
+  prescription they were done under. So a day that benches 4–6 and another that benches 6–8 each
+  progress on their own; with no session in that range it's a new rep range (below). A session
+  done ad hoc is judged against today's prescription. Effort is reps + RIR, so 11 @ 1 is as good as
+  10 @ 2.
+- **"Last time" in a program session is that session**: the Last column, the first set's prefill
+  and the why-line all show it, so Day A's bench reads Day A's sets even when Day C benched since.
+  With no session in the range (a new rep range), the Last column shows the latest session. In an
+  ad-hoc session, and for exercises added to a program day, last time is the latest session.
 - **Rep range @ RIR** (e.g. 8–10 @ 2 RIR): progress is judged on reps + RIR. When every work set
   reaches top + target RIR (10 @ 2, 11 @ 1, 12 @ 0), the next session moves up one rung of the
   equipment's ladder; otherwise same weight, more reps.
@@ -431,7 +436,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        plates on a 20 kg bar for barbell exercises, the machine's ladder for machines and cables,
        and 2.5 kg steps for everything else (and for machines in a session with no gym).
      - Last time, for machines and cables, is the last session on the same machine; free weights
-       take the last session at any gym.
+       take the last session at any gym. (A program day's exercise shows the session progression
+       judges instead: Automatic progressive overload.)
      - Finishing shows **Session done**. Exercises with nothing logged are left out of it, and a
        session with nothing logged is discarded. Each exercise opens its table to correct, as a
        past session's does; back returns to the summary.
