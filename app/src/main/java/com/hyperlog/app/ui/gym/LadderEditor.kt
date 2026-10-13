@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.gym
 
+import androidx.compose.ui.res.pluralStringResource
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -184,7 +185,7 @@ fun LadderEditor(
                 )
                 draft?.ladder()?.rungs?.size?.let {
                     Text(
-                        stringResource(R.string.ladder_rung_count, it),
+                        pluralStringResource(R.plurals.ladder_rung_count, it, it),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

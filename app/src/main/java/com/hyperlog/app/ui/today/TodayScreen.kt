@@ -266,7 +266,7 @@ private fun NextDay(
     // The bottom padding keeps the last row clear of the floating Start session.
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
+            Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
             Column(Modifier.padding(horizontal = 24.dp).padding(top = 8.dp, bottom = 16.dp)) {
                 Text(
                     stringResource(R.string.today_week_block, day.position.week, day.block.name),

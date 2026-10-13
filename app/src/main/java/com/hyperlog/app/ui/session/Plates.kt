@@ -158,16 +158,14 @@ private fun BarSwatch(size: Dp) {
     }
 }
 
-/** A plate-loaded machine's legend mark: a small sled, a runner on two feet. */
+/** A plate-loaded machine's legend mark: the machine as a block on the bar, as the whole view draws it. */
 @Composable
 private fun MachineSwatch(size: Dp) {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(Modifier.size(size)) {
         val s = size.toPx()
-        val w = 2.dp.toPx()
-        drawLine(color, Offset(s * 0.1f, s * 0.45f), Offset(s * 0.9f, s * 0.45f), strokeWidth = w, cap = StrokeCap.Round)
-        drawLine(color, Offset(s * 0.25f, s * 0.45f), Offset(s * 0.25f, s * 0.85f), strokeWidth = w, cap = StrokeCap.Round)
-        drawLine(color, Offset(s * 0.75f, s * 0.45f), Offset(s * 0.75f, s * 0.85f), strokeWidth = w, cap = StrokeCap.Round)
+        drawLine(color, Offset(0f, s / 2), Offset(s, s / 2), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+        drawRoundRect(color, Offset(s * 0.25f, s * 0.2f), Size(s * 0.5f, s * 0.6f), CornerRadius(2.dp.toPx()))
     }
 }
 

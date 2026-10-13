@@ -249,7 +249,6 @@
     <string name="ladder_pairs">Pairs of plates in kg: one number a pair, or 3×20</string>
     <string name="ladder_preview">Real weights</string>
     <string name="ladder_incomplete">Fill in the fields to see the weights</string>
-    <string name="ladder_rung_count">%1$d weights</string>
 
     <!-- Program (#6) -->
     <string name="program_title">Program</string>
@@ -496,4 +495,8 @@
     <string name="machine_others">Other equipment at %1$s</string>
     <string name="fix_logged">%1$s %2$s logged</string>
     <string name="fix_action">Fix</string>
+    <plurals name="ladder_rung_count">
+        <item quantity="one">%1$d weight</item>
+        <item quantity="other">%1$d weights</item>
+    </plurals>
 </resources>

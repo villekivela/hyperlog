@@ -1427,7 +1427,7 @@ private fun Prescription(plan: List<SetPrescription>) {
                 style = MaterialTheme.typography.titleMedium.merge(Tnum),
                 color = cs.onSurfaceVariant,
             )
-            Text(set.reps.toString(), Modifier.width(56.dp), style = MaterialTheme.typography.bodyLarge.merge(Tnum), maxLines = 1)
+            Text(set.reps.toString(), Modifier.width(64.dp), style = MaterialTheme.typography.bodyLarge.merge(Tnum), maxLines = 1)
             Box(Modifier.width(32.dp)) { set.rir?.let { RirMark(it, filled = false) } }
             val technique = set.technique
             val backoff = set.backoff
