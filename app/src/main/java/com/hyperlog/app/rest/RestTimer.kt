@@ -117,9 +117,9 @@ class RestTimer(
             .setPriority(if (alert) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(openApp())
-            // A Live Update (Android 16): the countdown also shows as a chip in the status bar.
+            // A Live Update (Android 16): the countdown also shows as a chip in the status bar. A
+            // short critical text would take the chronometer's place there, so there is none.
             .setRequestPromotedOngoing(true)
-            .setShortCriticalText(label)
         if (!breathing) {
             if (!over) builder.addAction(0, res.getString(R.string.rest_add), actionIntent(RestReceiver.ACTION_ADD))
             builder.addAction(0, res.getString(R.string.rest_end), actionIntent(RestReceiver.ACTION_END))

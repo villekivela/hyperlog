@@ -116,6 +116,10 @@ class RestTimerTest {
         assertEquals(now + 180_000, n.`when`)
         assertTrue(n.extras.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER))
         assertTrue(n.extras.getBoolean(Notification.EXTRA_CHRONOMETER_COUNT_DOWN))
+        // A Live Update whose status-bar chip is the countdown: a short critical text would replace
+        // it (found on the phone: the chip read "Rest").
+        assertTrue(n.extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
+        assertNull(n.shortCriticalText)
         // The alarm that buzzes when rest runs out, exact and through Doze.
         assertEquals(now + 180_000, alarm!!.triggerAtTime)
         assertEquals(AlarmManager.RTC_WAKEUP, alarm!!.type)
@@ -147,6 +151,8 @@ class RestTimerTest {
 
         assertTrue(vibrator.isVibrating)
         assertEquals(VibrationAttributes.USAGE_ALARM, (vibrator.vibrationAttributesFromLastVibration as VibrationAttributes).usage)
+        // Two pulses.
+        assertEquals(listOf(0L, 400L, 200L, 400L), vibrator.pattern.toList())
         val n = notification!!
         assertEquals("Rest over", n.sub)
         assertEquals("DB Bench Press · Set 2", n.title)
