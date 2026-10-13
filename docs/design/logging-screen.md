@@ -1,12 +1,14 @@
 # Logging screen: design note
 
-The in-workout screen where sets are logged. The prototype in `prototype/` implements this note
-(round 4 with the fixes from `test-report.md`). Screenshots from the phone are in `screens/`.
+The in-workout screen where sets are logged. The expressive pass (tonal cards, roomier grid,
+Next card, rest pill in primary container) is described here; the pad is unchanged. Screens:
+`screens/session-*.png` from the owner's phone (dark, monochrome system style) and
+`screens/light-session-*.png`, `light-adhoc-add-exercise.png`, Robolectric renders in light.
 
 ## Principles
 
-1. **One exercise, one table.** Its sets are rows. The row being done is the only highlighted
-   surface. No cards, no nested containers.
+1. **One exercise, one table.** Its sets are rows on one card, a tone off the screen. The row being
+   done is the only filled row (secondary container); the focused value is a well in it.
 2. **Every decision for a set is on the pad.** Digits, one-rung/one-rep steps, RIR, full/partial,
    ✓. The thumb never has to reach up the screen to log.
 3. **Planned things look planned, done things look done.** Prefilled values are muted, logged
@@ -26,14 +28,17 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Token | Value | Use |
 | --- | --- | --- |
 | Margin | 24 dp | Left edge of all text: exercise name, set numbers, Next line, sheets |
-| Row inset | 16 dp | Edge of the active row's highlight (content stays at 24 dp) |
+| Table card | 12 dp from the edge, 4 dp padding, 28 dp radius | The set table; as tall as its rows |
+| Row inset | 16 dp | Edge of the active row's highlight (card 12 + 4; content stays at 24 dp) |
 | Set row | 64 dp | Main set rows |
 | Sub-row | 48 dp | Drops and myo mini-sets |
-| Label row | 32 dp | Column heads, technique label |
-| Columns | 32 · 88 · flex · 64 · 80 · 24 dp | Set, Target, Last, kg, Reps, RIR |
-| Cell | 48 dp tall, 12 dp radius | Tappable value in the active row |
+| Label row | 32 dp | Column heads |
+| Tag line | 40 dp, 28 dp pill | Technique, back-off and warm-up tags under a set |
+| Columns | 32 · 80 · flex · 72 · 88 · 36 dp | Set, Target, Last, kg, Reps, RIR |
+| Cell | 48 dp tall, 12 dp radius, 4 dp inside its column | Tappable value in the active row: 8 dp between kg and reps, 12 dp from the RIR dot |
+| Next card | 56 dp, 20 dp radius, 12 dp from the edges, 8 dp above the pad | The Next / Now / Session summary line |
 | Key | 56 dp tall, 4 dp gaps, 12 dp radius | Pad keys, 4 equal columns |
-| Row highlight | 16 dp radius | Active row |
+| Row highlight | 24 dp radius | Active row (the card's 28 less its 4 dp padding) |
 | RIR mark | 20 dp circle, 2 dp ring | Target (ring) and result (filled) |
 
 Type (Material 3 scale, system font, tabular figures for every number):
@@ -52,17 +57,23 @@ Colour comes from the dynamic theme, light and dark:
 
 | Role | Colour |
 | --- | --- |
-| Screen | surface |
-| Active row | surfaceContainerHigh |
-| Focused cell | surfaceContainerHighest fill, 2 dp primary outline |
+| Screen | surface (the one screen that keeps it, so the pad and the cards stand off it) |
+| Table card | surfaceContainer |
+| Active row, active sub-row | secondaryContainer |
+| Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
+| Next card | surfaceContainerHigh; "Next" in primary |
 | Pad | surfaceContainer, drawn through the gesture area |
 | Keys | surfaceContainerHighest |
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Prefilled values | outline |
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
 | Last time | onSurfaceVariant |
-| Technique label and symbols | tertiary; onSurfaceVariant once done |
-| Timer pill | secondaryContainer, drained with primary at 24% |
+| Technique tag | tertiaryContainer pill, onTertiaryContainer; surfaceContainerHighest once done |
+| Back-off and warm-up tags | surfaceContainerHighest pill, onSurfaceVariant |
+| Rest pill | primaryContainer, time left laid over it in onPrimaryContainer at 16%; surfaceContainerHighest after rest |
+| Breathing pill | tertiaryContainer |
+| Day done strip | primaryContainer, rounded 28 dp at the top |
+| Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
 RIR is the one fixed scale and does not follow the theme: 0 `#D9645B`, 1–2 `#E0A84E`, 3+
 `#6BAFA9`, with dark numerals on filled dots.
@@ -72,16 +83,20 @@ RIR is the one fixed scale and does not follow the theme: 0 `#D9645B`, 1–2 `#E
 ```
  status bar
  A1 with Seated Leg Curl  40.5 × 12 ●1        (only in a superset: partner and its last set)
- Leg Extension                    [⏱ 1:42]  ⋮   ← name opens prescription; timer opens rest sheet
-       Target      Last       kg   Reps  RIR
-┌────────────────────────────────────────────┐
-│1     10–12 (1)  55 × 12     60  [ 12 ]   ●1 │  ← active row, focused cell outlined
-└────────────────────────────────────────────┘
- 2     10–12 (0)  55 × 12     60    12         ← upcoming: muted prefill
-       ⟲ Myo-reps, mini-sets of 4              ← technique label (tertiary)
- ↳     4                      60     4         ← planned mini-set
-                     (scrolls)
- Next  Seated Leg Curl                     ⌃   ← opens session list
+ Leg Extension                  (⏱ 1:42)  ⋮     ← name opens prescription; pill opens rest sheet
+╭──────────────────────────────────────────────╮ ← table card, surfaceContainer
+│      Target     Last       kg    Reps   RIR  │
+│╭────────────────────────────────────────────╮│
+││1    10–12 (1) 55 × 12    60  [ 12 ]    ●1  ││ ← active row, secondaryContainer; focused well
+│╰────────────────────────────────────────────╯│
+│ 2    10–12 (0) 55 × 12    60    12           │ ← upcoming: muted prefill
+│     (⟲ Myo-reps, mini-sets of 4)             │ ← technique tag, tertiaryContainer pill
+│ ↳    4                    60     4           │ ← planned mini-set
+╰──────────────────────────────────────────────╯
+                     (space)
+╭──────────────────────────────────────────────╮
+│ Next  Seated Leg Curl                     ⌃  │ ← Next card, surfaceContainerHigh
+╰──────────────────────────────────────────────╯
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
   ●0   ●1   (●2)  ●3   ●4+         [F| P ]      ← strip: RIR + full/partial
  [ 1 ] [ 2 ] [ 3 ] [ ⌫ ]                        (weight field: ladder rungs instead)
@@ -100,9 +115,10 @@ In a program session "last time" is the session progression judges (same slot an
 the latest), the one the why-line names, matched to the rows by position; ad hoc it's the latest.
 kg and reps are the prefilled values in `outline`. The RIR column is empty.
 
-**Set row, active.** Highlighted surfaceContainerHigh with a 16 dp radius, inset 16 dp so its
-content keeps the 24 dp edge. The set number is bold primary. kg and reps are tappable cells,
-and the focused one has a fill and a primary outline. The RIR column shows the selected RIR as a
+**Set row, active.** Filled secondaryContainer with a 24 dp radius, 4 dp inside the table card so
+its content keeps the 24 dp edge. The set number is bold primary. kg and reps are tappable cells,
+and the focused one is a well (surfaceContainerLowest) with a primary outline, 4 dp inside its
+column, so it never touches the RIR dot. The RIR column shows the selected RIR as a
 filled dot. A locked cell (myo mini-set weight) stays muted and can't be tapped.
 
 **Set row, done.** Values at full contrast and a filled RIR dot with the logged RIR. Partials
@@ -119,10 +135,11 @@ rounded down to the equipment's ladder. It updates live while the main set's wei
 typed. Drop reps are prefilled from last time's drops (else 6), muted like every prefill. A done
 sub-row ends in a check (no RIR is logged for drops or mini-sets) and can be tapped to correct.
 
-**Technique label.** One 32 dp line under its set, aligned with the Target column: symbol and
-name in tertiary (`trending_down` Drop set, `repeat` Myo-reps, mini-sets of 4, `unfold_less`
-Lengthened partials to failure). It stays, muted, once the set is done, so the record shows what
-was done.
+**Technique label.** A 28 dp pill on a 40 dp line under its set, its symbol on the Target column:
+symbol and name in a tertiaryContainer tag (`trending_down` Drop set, `repeat` Myo-reps, mini-sets of 4, `unfold_less`
+Lengthened partials to failure). It stays, neutral (surfaceContainerHighest), once the set is done, so the record shows what
+was done. A back-off rule and the warm-ups take the neutral tag throughout: tertiary means a
+technique.
 
 **Pad.** Drawn like the system number keyboard. The strip above the keys changes with the
 field:
@@ -139,7 +156,8 @@ Keys: digits, backspace, − and + (one ladder rung for weight, one rep for reps
 `.` (weight only) and ✓. ✓ is one key, the same size as the others, filled primary. On the weight
 field it shows → instead.
 
-**Timer.** A 40 dp pill in the header. It drains left to right during rest. After rest it counts
+**Timer.** A 48 dp pill in the header, primaryContainer, so rest reads from across the gym. It
+drains left to right during rest. After rest it counts
 up (`+0:12`) in a muted container until the next set is logged. Before a myo mini-set it is a
 15 s breathing countdown with an `air` symbol. Tapping it during rest opens the rest sheet:
 −15, the time, +15, End rest.
@@ -149,18 +167,21 @@ and its RIR dot, so the place in the round is clear without a second table. The 
 day's slot labels (`2a with Seated Leg Curl`), the label in tertiary like the session list's tag;
 the rest is labelLarge in onSurfaceVariant, on a 24 dp line, so the header stays 72 dp.
 
-**Next line.** "Next" and the next exercise outside the current one (or superset): the first with
+**Next line.** A card of its own between the table and the pad (surfaceContainerHigh, 20 dp
+radius), "Next" in primary: "Next" and the next exercise outside the current one (or superset): the first with
 planned sets left in the day's order, so after a Start out of order it names the skipped one; "Last
 exercise" alone when nothing follows. Tap opens the session list. While looking at a finished
 exercise it reads "Now" and the current exercise, and tap goes back.
 
-**Sheets** (modal bottom sheets, surfaceContainerLow, 24 dp margins):
+**Sheets** (modal bottom sheets, surfaceContainerLow, 24 dp text edge). Their rows sit in
+surfaceContainerHighest groups 12 dp in, with the picked or current row in secondaryContainer
+(the session list's exercise on screen, the set sheet's technique, the start sheet's gym); the
+prescription's plan, the machine row and the set sheet's target steppers are cards too.
 - *Session list:* status symbol (done, now, upcoming), superset tag, name, a summary (logged sets
   as `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0`, drops and mini-sets after it; never broken inside a set;
   or set count and rep range) with technique symbols. A tonal **Start** on exercises not yet
   done, **Open** on finished ones.
-  In a program session (ticket #11, screens `superset-04-session-list.png`,
-  `order-03-session-list.png`) the tag is a 40 dp column after the status symbol holding every
+  In a program session (ticket #11) the tag is a 40 dp column after the status symbol holding every
   slot's label (`1`, `2a`, `2b`, `3`), so names align; superset labels are tertiary, straight ones
   onSurfaceVariant. A superset on screen shows both partners as now, with no Start on either. The
   done symbol means every planned set is logged: an exercise left halfway keeps the empty circle
@@ -170,15 +191,20 @@ exercise it reads "Now" and the current exercise, and tap goes back.
   **Technique video**.
 - *Rest:* see Timer.
 
-**Session done.** Every exercise with its summary. Tapping one opens its table to look at or
-correct; back returns to the summary.
+**Session done.** On the screen's surfaceContainer: the shaped check (a primary-container
+cookie), "Session done" in headlineMedium, every exercise as a segment with its summary, and
+Resume session / **Done** on a bottom strip. Tapping one opens its table to look at or correct;
+back returns to the summary.
+
+**Day done.** When every planned set is logged, the pad gives way to a primaryContainer strip
+rounded at the top: `check_circle`, "Day done", **Finish session**.
 
 **Leave dialog.** Back on the session screen asks "Leave the session?", with "It keeps running.
 Everything logged is saved." (Stay / Leave). Every tap is saved, so Leave goes to Today, which
 offers **Resume session**. The app opens on a running session. Every dialog in the app orders its
 buttons this way: the way out first, the action last, at the right.
 
-**Ad-hoc session** (screens `adhoc-*.png`, built in ticket #2). The same table, without a plan:
+**Ad-hoc session** (built in ticket #2). The same table, without a plan:
 - No Target column; Last takes its width. The "Last" head shows only once there is history.
 - The sets are open-ended: logged rows, the active row, then last time's remaining sets as
   muted upcoming rows (prefilled the way the next set will be).
@@ -200,8 +226,7 @@ buttons this way: the way out first, the action last, at the right.
 - Values cap at 5 characters for weight, 3 for full reps and 2 for partials. A reps value longer
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 
-**Intensity techniques** (screens `technique-*.png`, built in ticket #10; rendered with
-Robolectric, so they have no status bar).
+**Intensity techniques** (built in ticket #10).
 - Every set's technique is named under it, and its drops, mini-sets or hold follow as 48 dp
   sub-rows from the start, in the order they'll be done. Planned sub-rows are muted prefills
   (drop weights computed from the set's planned or typed weight, live), done ones end in a check.
@@ -221,8 +246,7 @@ Robolectric, so they have no status bar).
 - **Split set**: the reps cell reads `10 / 9`, the side not being typed muted, and the Reps head
   reads `L / R`.
 
-**Edit on the fly** (screens `edit-*.png`, built in ticket #12; Robolectric renders, so no status
-bar, and menus and dialogs don't render there).
+**Edit on the fly** (built in ticket #12).
 
 Principles: edits sit where the thing edited is (a set's number, the exercise's ⋮, the list row's
 ⋮), never in a mode; every edit applies at once and is for this session only; what was changed
@@ -242,23 +266,22 @@ stays readable (a swap names what it replaced).
 - **Swapped line**: the superset line's slot (24 dp above the name): `swap_horiz` in tertiary and
   "In place of <planned>" in onSurfaceVariant. A superset's line wins when both apply.
 - **Add set**: the table's last row for a program exercise, `add` in the set column at 20 dp.
-- **Swap sheet** (`edit-01-swap-sheet`, `edit-03-swap-back`): "Swap <name>" headlineSmall, the
+- **Swap sheet**: "Swap <name>" headlineSmall, the
   search field, then "Alternatives" (the slot's planned exercise, tagged "Planned" in tertiary
   once swapped, and its alternatives) and "Same movement" (the library by movement pattern), as
   labelLarge heads over 56 dp rows. A search lists the whole library instead.
-- **Set sheet** (`edit-05-set-sheet`): the title row ends in a text **Remove set** (`delete`)
+- **Set sheet**: the title row ends in a text **Remove set** (`delete`)
   when the set can go. "Target" then has three 56 dp rows, label at the margin and a − value +
   stepper at the end, values in one column: Fewest reps, Most reps, RIR (the value as its ring).
   Separate rows, because a dash between two steppers reads as a minus. Steps that can't go
   further are dimmed (outlineVariant). Then the technique choices as before.
-- **Session list** (`edit-06-session-list`): each row ends in a 48 dp ⋮ (Swap exercise, Add set,
+- **Session list**: each row ends in a 48 dp ⋮ (Swap exercise, Add set,
   Move up, Move down, Remove from session, each only when it applies). The row's end padding
   drops to 4 dp so the ⋮'s touch target meets the 16 dp edge.
 - **Remove dialog**: "Remove <name>?", "From this session only. The program keeps it." (Cancel /
   Remove), the shape of the Leave and Finish dialogs.
 
-**Warm-ups and plates** (screens `warmup-*.png`, built in ticket #14; Robolectric renders, so no
-status bar).
+**Warm-ups and plates** (built in ticket #14).
 
 Principles: warm-ups are guidance, not records, so they look like the rows around them but
 lighter, and ask for nothing; the plates for a weight sit next to that weight; nothing about a
@@ -290,8 +313,7 @@ warm-up touches the clock.
   It follows the weight being typed and is left out when the plates can't make it.
 - The warm-ups go once the first work set is logged; the plate line moves with the active set.
 
-**Corrections** (screens `correct-*.png`, built in ticket #15; Robolectric renders, so no status
-bar, and sheets don't render there).
+**Corrections** (built in ticket #15).
 
 Principles: a correction is the same pad on the row it fixes, so there is nothing new to learn;
 the set to do steps back while it happens and the clock never notices; a finished exercise or past
@@ -319,12 +341,12 @@ session reads like the logging screen with nothing to do, so tapping a number is
   (`edit` + "Drop 1 of set 3"), since they have no RIR.
 - **Done rows** are one tap target each (16 dp radius ripple), "Correct set N", "Correct drop 1 of
   set 3".
-- **Finished exercise** (`correct-03`, `correct-04`): the session list's **Open** shows its table
+- **Finished exercise**: the session list's **Open** shows its table
   with no active row and no Add set; the Next line reads `Now  <current exercise>  ›` and goes
   back. The timer keeps running in the header.
-- **Session done** (`correct-05`): every row ends in `chevron_right` and opens the exercise's table
-  (`correct-06`, `correct-07`), whose bottom line is `Session summary  ›`; back returns too.
-- **Past sessions** (`correct-08`, `correct-09`): Today's top bar `history` → a flat list (title
+- **Session done**: every row ends in `chevron_right` and opens the exercise's table
+ , whose bottom line is `Session summary  ›`; back returns too.
+- **Past sessions**: the navigation bar's History → a segmented list (title
   bodyLarge, date bodyMedium at the end, exercises on a second muted line, 72 dp rows) → the
   session's summary under a top app bar (date · start · duration · gym) → the exercise table as
   in Session done.
@@ -367,8 +389,7 @@ Corrections never restart or reset the rest timer.
 **Order.** Sets follow the session order, supersets alternating A1 → A2. An exercise started from
 the session list stays current, with its superset partner, until all of their sets are logged;
 then the session goes back to the first unfinished set. Any close of a partner's set (✓, the last
-drop or mini-set, Finish set) moves on to the partner's set of the same round with no rest (screens
-`superset-01..03`, `order-01..02`).
+drop or mini-set, Finish set) moves on to the partner's set of the same round with no rest.
 
 **Rest.**
 - Logging a set starts the exercise's rest (per exercise, e.g. 2:30 bench, 1:30 laterals).
@@ -381,7 +402,7 @@ drop or mini-set, Finish set) moves on to the partner's set of the same round wi
 - Starting another exercise from the session list keeps the clock running, so it still counts
   from the last set.
 - Pulling rest past zero with −15 buzzes once.
-- With the screen off (ticket #13, screens `rest-01..03`): an ongoing notification in the
+- With the screen off (ticket #13): an ongoing notification in the
   standard template, so it can be a Live Update. Title is the next set (`DB Bench Press · Set 3`),
   text its target (`25 kg × 8–10 @ 1`), header `Rest` and the system chronometer; actions **+15**
   and **End rest**, the rest sheet's words. When rest runs out: an alarm-class double buzz, header

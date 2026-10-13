@@ -1,10 +1,11 @@
 # Settings
 
-A flat list behind Today's settings icon. Backups (#21) join it as a group of two rows.
+Behind the settings icon at the end of every destination's top bar; back returns there. Backups (#21) join it as a group of two rows.
 
 ## Principles
 
-- One list, no cards or dividers: rows are Material list items, groups are set apart by 16 dp.
+- Groups are cards on surfaceContainer (setup; Backups, headed in primary; Check for updates);
+  rows are Material list items on them, no dividers.
 - Each row says what it holds or what it last did in its supporting line; errors replace that
   line in `error`, never a snackbar or toast.
 - Anything that replaces data asks first, in a dialog naming what will be replaced.
@@ -44,5 +45,5 @@ A flat list behind Today's settings icon. Backups (#21) join it as a group of tw
 - The starting-weights row now says "the old app's backup" so it can't be mistaken for a Hyperlog
   backup.
 
-Screens: `screens/settings-01-backup.png`, `settings-02-exported.png`, `settings-03-refused.png`
-(Robolectric renders, dark, w410dp). The dialog doesn't render in Robolectric; check it on the phone.
+Screens: `screens/settings.png` (phone), `light-settings.png` (render). The restore dialog
+doesn't render in Robolectric; check it on the phone.

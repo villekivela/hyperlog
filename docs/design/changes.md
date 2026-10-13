@@ -3,8 +3,11 @@
 Ticket #16 makes plan edits Changes: the Program screen's actions, "Keep edits for the block" in
 a session, and (later) the rule coach and pasted Changes all end in one review screen, a diff
 against the current plan with Accept and Reject. It extends `program-and-today.md` and
-`logging-screen.md`; their tokens apply. Screens in `screens/change-*.png` are Robolectric renders
-(dark theme), not phone shots.
+`logging-screen.md`; their tokens apply. Screen: `screens/change-review.png` (phone).
+
+Expressive pass: the review sits on surfaceContainer. Its summary, scope and the Next / Left rows
+(before → after) are one card at the top; each day is a group headed in primary, its slots
+segments; **Reject** and **Accept** sit on a surfaceContainerHighest strip rounded at the top.
 
 ## Principles
 

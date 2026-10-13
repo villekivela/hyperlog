@@ -2,9 +2,9 @@
 
 Ticket #19 brings History: the session list (taking over #15's Past sessions), each exercise's top
 sets and estimate over time, weekly sets per muscle, and the bodyweight log. It extends
-`logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Renders in
-`screens/history-*.png` are from Robolectric (Material baseline colours, light and dark); the
-phone check is pending.
+`logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Screens:
+`history-sessions.png`, `history-progress.png`, `history-progress-exercises.png`,
+`history-trend.png`, `past-session.png`, `past-exercise.png` (phone).
 
 ## Principles
 
@@ -16,7 +16,8 @@ phone check is pending.
    grid and axes are ink (`onSurfaceVariant`, `outlineVariant`). No categorical palette.
 4. **Machines don't compare (ADR 0002).** A machine exercise shows one small chart per machine,
    each on its own scale, headed by the machine and gym. No shared axis, no colour per machine.
-5. **Flat.** Sections are labelled bands on the one surface; no cards.
+5. **Sections are cards.** Bodyweight and the week's sets are cards on surfaceContainer; lists
+   (sessions, exercises, a trend's sessions, the bodyweight log) are segmented groups.
 6. **Touch reads a point.** A tap or drag on a chart snaps to the nearest session and the readout
    above the chart shows it; with no touch the readout shows the latest session.
 
@@ -111,8 +112,7 @@ estimate: its figure, line and table show the top set's reps instead (`12 reps`)
 
 ## Lift goals (#20)
 
-A goal is read against the estimate, never instead of it. Renders: `screens/goal-*.png`
-(Robolectric; phone check pending).
+A goal is read against the estimate, never instead of it. 
 
 - **The figure carries it.** With a goal the figure reads `95 kg  of 100 kg`: the estimate in
   headlineMedium, the goal after it on the same baseline in titleMedium, muted. Under it one 32 dp
@@ -132,3 +132,11 @@ A goal is read against the estimate, never instead of it. Renders: `screens/goal
   flag, `95 kg  of 100 kg` (titleLarge), the status line, then a 64 dp estimate line without grid,
   ticks or axis, the goal line and its label, the latest point as the accent dot.
 - **No flag** on machine, cable and plain bodyweight exercises (SPEC, Lift goals).
+
+## Expressive pass
+
+Sessions | Progress is a connected button group (toggle buttons, the picked one filled) under the
+top bar, in place of tabs. Section heads are titleSmall in primary. A trend's head (figure,
+status, chart, legend) is a card; its sessions follow as 52 dp segments. A past session's
+summary rows are segments; its exercise table is the logging screen's card with the Session
+summary card under it. The bodyweight log's picked day is its secondaryContainer segment.

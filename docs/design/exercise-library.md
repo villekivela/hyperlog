@@ -2,11 +2,11 @@
 
 Settings → Exercise library, the exercise editor, and the exercise sheet a session opens from the
 exercise name. It extends `logging-screen.md`: same margins, type scale, symbols and theme roles.
-Screenshots are in `screens/library-*.png`.
+Screens: `screens/library.png`, `exercise-editor.png` (phone).
 
 ## Principles
 
-1. **A list, not cards.** One row per exercise: the name, then one muted line (equipment and
+1. **A segmented list.** One segment per exercise: the name, then one muted line (equipment and
    primary muscles). Rows sit on the 24 dp margin with no containers.
 2. **Search comes first.** A pill-shaped search field sits under the title, before the list. Text
    uses the system keyboard; the in-app pad is for numbers only.
@@ -22,7 +22,7 @@ Screenshots are in `screens/library-*.png`.
 | Token | Value | Use |
 | --- | --- | --- |
 | Margin | 24 dp | Left edge of names, labels and fields |
-| Search field | 56 dp, full radius, 16 dp side inset | surfaceContainerHigh, no indicator line; its text lines up with the 24 dp column inside the pill |
+| Search field | 56 dp, full radius, 16 dp side inset | surfaceContainerLowest (a well, as the system's search fields), no indicator line; its text lines up with the 24 dp column inside the pill |
 | Library row | 72 dp min | Name bodyLarge onSurface; summary bodyMedium onSurfaceVariant |
 | Hidden row | both lines in `outline` | Under a labelLarge "Hidden" label, 24 dp above it |
 | Editor section | labelLarge onSurfaceVariant label, 8 dp to its control, 24 dp between sections | |
@@ -32,7 +32,7 @@ Screenshots are in `screens/library-*.png`.
 
 ```
  ←  Exercise library
- ( 🔍  Search 173 exercises            )     ← pill, surfaceContainerHigh
+ ( 🔍  Search 173 exercises            )     ← pill, surfaceContainerLowest
  1-Arm Cable Pulldown
  Cable · Lats
  Barbell Bench Press
@@ -108,3 +108,6 @@ Screenshots are in `screens/library-*.png`.
 - **Pass 2**: the pattern menu didn't show the current pattern: it's checked now. The list, search,
   sheet and video were otherwise right on the phone; the Technique video button opened YouTube at
   10:53 as labelled.
+
+Expressive pass: the screen sits on surfaceContainer, each exercise a segment; the editor's grip
+demand is a connected button group and its chips pick in primaryContainer.

@@ -3,9 +3,8 @@
 Ticket #17 adds the offline rule coach: the Coach screen, the time-off line on Today, and the
 missing-equipment swaps when a gym is picked. Every proposal ends in the review screen of
 `changes.md`, except missing equipment, which is for one session and never a Change. The tokens of
-`program-and-today.md` and `logging-screen.md` apply. Screens in `screens/coach-*.png`,
-`start-01-missing.png`, `machine-01-not-here.png` and `gym-01-not-here.png` are Robolectric renders
-(dark theme), not phone shots.
+`program-and-today.md` and `logging-screen.md` apply. Screens: `screens/coach.png`,
+`coach-pain.png` (phone).
 
 ## Principles
 
@@ -29,10 +28,10 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 | Area / limit chips | FilterChip, 8 dp gaps, FlowRow | a limit that's on shows `check` |
 | Minutes | titleMedium tabular, 64 dp wide, 5-min steps, 20–120 | `−  45 min  +` |
 | Limits head | labelLarge onSurfaceVariant, 24 dp top | as Changes' section heads |
-| Bottom bar | divider, then the message (bodyMedium, muted) left of **Review change** | the message holds "Resume as planned." |
+| Bottom bar | a surfaceContainerHighest strip rounded at the top, over the navigation bar: the message (bodyMedium, muted) left of **Review change** | the message holds "Resume as planned." |
 | Time-off line | `history` 18 dp tertiary, bodyMedium muted, TextButton **Ease back in** | under Today's day name |
 | Missing swaps | labelLarge head `Not at Kamppi · for this session`; checkbox rows 56 dp, text at 64 dp | in the start sheet under the gyms |
-| Coach entry | `sports` icon, first in Today's top bar, always (no program: Ask Claude only; finished: rules say so) | |
+| Coach entry | the navigation bar's Coach (`sports`), always (no program: Ask Claude only; finished: rules say so) | |
 
 ## Wireframes
 
@@ -98,7 +97,7 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 ## Ask Claude
 
 Ticket #18 adds **Something else** to the Coach screen: free text for the Claude app, and the
-Change pasted back (ADR 0001). Screens `screens/ask-*.png` are Robolectric renders (dark, and
+Change pasted back (ADR 0001). Earlier renders (dark, and
 `ask-04-problems-light`).
 
 ### Principles
@@ -150,3 +149,11 @@ Something else picked, empty (`ask-01`, Ask Claude disabled); words typed (`ask-
 - The words and the asked state survive the trip to the Claude app (saved state).
 - Editing the words or picking another situation clears the problems; Back clears them too.
 - Paste reads the whole clipboard; Claude's full reply works, so does the JSON alone.
+
+## Expressive pass
+
+The coach is a destination of the navigation bar, on surfaceContainer. The situations are one
+card; the picked one is lifted into secondaryContainer under its radio. Its details (areas, the
+pain rule, the exercises worse after) open inside the card. Filter chips pick in
+primaryContainer, since secondary container is too close to a card in a grey palette. Limits are a
+group headed in primary.

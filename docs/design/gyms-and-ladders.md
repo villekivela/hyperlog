@@ -3,16 +3,16 @@
 Settings → Gyms and equipment, a gym's equipment, the ladder editor, and the two places a ladder
 shows in a session: the pad's weight strip and the weight check. It extends `logging-screen.md`
 and `exercise-library.md`: same margins, type scale, symbols and theme roles. Screenshots are in
-`screens/gyms-*.png`.
+`screens/gyms.png`, `gym.png`, `ladder-dumbbells.png` (phone).
 
 ## Principles
 
 1. **Weights are always real.** Every ladder is shown as the kg values it yields
    (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`), never as the start/step that produced them. An lb stack
    reads in kg everywhere.
-2. **A list, not cards.** Gyms, then their equipment, one row each: name, then the ladder preview
+2. **A list on cards.** Gyms, then their equipment, one row each: name, then the ladder preview
    in tabular figures. Add rows sit at the end of their list in `primary`.
-3. **Shared is visibly shared.** Dumbbells and barbell plates sit below a divider under "Shared by
+3. **Shared is visibly shared.** Dumbbells and barbell plates sit on their own card under "Shared by
    every gym", in the same Gyms screen, so there is one place to edit them.
 4. **The editor shows its result live.** "Real weights" under the fields updates on every
    keystroke; Save stays disabled until the fields make a ladder.
@@ -25,7 +25,7 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 | --- | --- | --- |
 | List row | ListItem, 8 dp extra inset | Name bodyLarge; preview bodyMedium + tnum, onSurfaceVariant |
 | Text column | 64 dp | Names, add-row labels and the "Shared by every gym" label line up |
-| Section label | labelLarge onSurfaceVariant, 16 dp above, 8 dp below, divider above | "Shared by every gym" |
+| Section label | labelLarge primary at 24 dp, 24 dp above, 8 dp below, over its card | "Shared by every gym" |
 | Editor fields | OutlinedTextField, 24 dp margin, 16 dp between | Start / Step / Weights share a row, 8 dp gaps |
 | Preview | titleMedium + tnum, then bodySmall count | `outline` "Fill in the fields…" while incomplete |
 | Check reason | labelLarge `error`, warning symbol 20 dp | Left 1.5 parts of the strip |
@@ -75,7 +75,7 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 
 ## Gym at session start and "Which machine?" (#5)
 
-Screenshots `screens/gym-start-*.png`.
+
 
 ### Principles
 
@@ -137,3 +137,7 @@ Screenshots `screens/gym-start-*.png`.
 - Change (before any set) asks "Which machine?" again. After a set, the sets belong to the machine.
 - A session without a gym never asks; machines then step in 2.5 kg, as before #5.
 - Deleting a machine in settings forgets it: the next time it is asked again.
+
+Expressive pass: every group (a gym's equipment, the shared ladders, the usual days, what the gym
+hasn't got) is a card on surfaceContainer; the ladder editor's kind and unit are connected button
+groups.

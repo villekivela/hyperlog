@@ -2,9 +2,30 @@
 
 Ticket #6 brings a program to the app: the Program screen, Today showing the next day, and the
 logging screen's Target column, planned rows and prescription sheet. Everything extends
-`logging-screen.md`; its tokens, type and colours apply unchanged. Screenshots in `screens/`
-(`program-*.png`, `today-*.png`, `planned-*.png`) are from the owner's phone (monochrome theme),
-except `program-empty.png` and `today-no-program.png`, rendered under Robolectric.
+`logging-screen.md`. The expressive pass (below, first) replaces the earlier flat look. Screens:
+`today-session-running.png`, `today-superset-group.png`, `program.png`, `program-weeks.png` from
+the phone; `light-today-starter.png`, `light-today-update-banner.png`, `light-today-day.png`
+rendered in light.
+
+## Expressive pass
+
+- **Navigation bar** (ShortNavigationBar, surfaceContainerHighest): Today, Program, Coach,
+  History; the selected item is a primaryContainer pill with the filled symbol. Settings is the
+  last icon of each destination's top bar. Hidden while the session screen is up.
+- **Today** sits on surfaceContainer. Week and block in primary over the day's name; the slots are
+  one segmented group (cards 24 dp outside, 4 dp at the joins, 2 dp apart), a superset's partners
+  sharing one segment. **Start session** (or **Resume session**) is an extended FAB in
+  primaryContainer; **Ad-hoc session** is a card row after the day. The update banner is a
+  primaryContainer card (tap to update, × to dismiss) and the time-off line a tertiaryContainer
+  card with a filled **Ease back in**.
+- **Starter offer** is one hero card: a primary-container cookie (`MaterialShapes.Cookie9Sided`)
+  with the program symbol, "Starter program" in primary, the title, the description and a
+  medium **Run this program**, with Start session and Import a program under the card. Empty
+  states (no program, finished) take the same shaped symbol.
+- **Program**: the header (title, author, Next, the action chips) is one card; Changes and each
+  block are groups headed in labelLarge (the current block in primary); weeks are 56 dp
+  segments. Done days are primary at 20%, the next day the primary cookie, days to come an
+  outline ring.
 
 ## Principles
 
@@ -12,8 +33,8 @@ except `program-empty.png` and `today-no-program.png`, rendered under Robolectri
    away on Program. The program runs as a sequence, so there is no calendar.
 2. **The plan reads like the table it becomes.** Today's slot lines, the session list and the
    prescription sheet all write sets the same way: `1 × 4–6 @ 1 · 2 × 6–8 @ 1`.
-3. **Structure is the hierarchy.** Blocks are headed labels, weeks are rows, days are tokens. No
-   cards; one surface level.
+3. **Structure is the hierarchy.** Blocks are headed groups, weeks are rows, days are tokens; the
+   groups are tonal cards on the screen.
 4. **Where you are is the one accent.** The next day's token is the only filled primary shape on
    the Program screen.
 5. **Errors are a to-do list.** A rejected file shows every problem as path, then message, so it can
@@ -30,7 +51,7 @@ except `program-empty.png` and `today-no-program.png`, rendered under Robolectri
 | Block head | 48 dp, labelLarge | `Build · weeks 3–6`; primary for the current block |
 | Target column | 88 dp | Logging table, between Set and Last |
 
-Day tokens: done is surfaceContainerHighest with onSurfaceVariant letter; next is primary with
+Day tokens (before the expressive pass, see above): done was surfaceContainerHighest with onSurfaceVariant letter; next is primary with
 onPrimary letter; upcoming is a 1 dp outlineVariant ring with onSurfaceVariant letter.
 
 ## Wireframes
@@ -70,7 +91,8 @@ onPrimary letter; upcoming is a 1 dp outlineVariant ring with onSurfaceVariant l
                       Close   [Choose file]
 ```
 
-An update (SPEC, Distribution) sits under the title, above whatever Today shows, flat like the
+An update (SPEC, Distribution) sits under the title, above whatever Today shows (now a
+primaryContainer banner card, see Expressive pass), flat like the
 time-off line:
 
 ```
@@ -84,7 +106,7 @@ time-off line:
   The row stays, so a cancelled install can be tapped again.
 - A failed download reads "Couldn't download it. Tap to try again." in `error`.
 - ✕ (content description "Dismiss") hides that version for good; a later release shows again.
-- No card, no colour block: one symbol in primary is the only accent.
+- One hero card (Expressive pass): the shaped symbol is the only accent.
 
 Logging table with a plan (logging-screen.md's layout, Target column added):
 
@@ -173,9 +195,7 @@ The pad prefills the suggested weight and reps, so accepting it is one ✓.
  1     4–6 (2)  80 × 7    82.5    5    ●2
 ```
 
-Screens: `suggestion-up.png`, `suggestion-cable-jump.png` (5.7 kg held, 13 reps),
-`suggestion-hold.png`, `suggestion-down.png`, `suggestion-estimated.png` (Day C's 6–8 from the
-estimate), `kept-typo-prefill.png` (a kept 57 doesn't become the next set's 57).
+The suggestion screens of this ticket were replaced with the expressive pass's.
 
 **Starting weights (#9).** A free weight with no history yet gets the why-line with `history`,
 tertiary like an estimate: "From old app: 20 kg × 10 @ 2 RIR, 3 Sep", with "→ 22.5 kg × 8" appended when
