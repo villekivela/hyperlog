@@ -121,8 +121,11 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
         val exportedAt = (backup["exportedAt"] as? JsonPrimitive)?.longOrNull ?: return Parsed.Refused(Reason.Damaged)
         val tables = backup["tables"] as? JsonObject ?: return Parsed.Refused(Reason.Damaged)
         if (!BackupFormat.Tables.containsAll(tables.keys)) return Parsed.Refused(Reason.Damaged)
+        // A table left out of the file would be wiped, so every one must be there unless it is newer than the file.
+        val missing = BackupFormat.Tables - tables.keys
+        if (missing.any { BackupFormat.addedSince(database, it)?.isEmpty() != true }) return Parsed.Refused(Reason.Damaged)
         return try {
-            Parsed.Rows(exportedAt, tables.mapValues { (table, rows) -> (rows as JsonArray).map { contentValues(table, it as JsonObject) } })
+            Parsed.Rows(exportedAt, tables.mapValues { (table, rows) -> (rows as JsonArray).map { contentValues(table, it as JsonObject, database) } })
         } catch (_: RuntimeException) {
             Parsed.Refused(Reason.Damaged)
         }
@@ -139,9 +142,14 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
         }
     }
 
-    /** One row as the database takes it; throws on a column the table doesn't have or a value it can't hold. */
-    private fun contentValues(table: String, row: JsonObject): ContentValues {
+    /**
+     * One row as the database takes it. Throws on a column the table doesn't have, a value it can't
+     * hold, or a column missing that a file from [database] should have.
+     */
+    private fun contentValues(table: String, row: JsonObject, database: Int): ContentValues {
         val known = columnsOf(table)
+        val required = known - BackupFormat.addedSince(database, table).orEmpty()
+        require(row.keys.containsAll(required)) { "$table lacks ${required - row.keys}" }
         return ContentValues().apply {
             row.forEach { (column, value) ->
                 require(column in known) { "$table has no column $column" }

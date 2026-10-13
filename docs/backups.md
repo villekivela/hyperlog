@@ -63,7 +63,9 @@ again from the restored rest timer.
   schema version its tables follow; `exportedAt` is when it was made (epoch ms).
 - `tables` holds every table row for row, with column names and values exactly as stored (ids
   included), so a restore puts back the same rows.
-- A restore checks the file first (format, versions, known tables and columns), then deletes every
+- A restore checks the file first (format, versions, known tables and columns), and refuses it as
+  damaged when a table or a column is missing that its database version has: a missing table
+  would otherwise be wiped. Then it deletes every
   row and inserts the backup's in one transaction. References between rows are checked before it
   commits; any problem rolls it back.
 
@@ -75,8 +77,9 @@ The backup follows the database. When a ticket bumps the Room version:
 2. A new table goes into `BackupFormat.Tables` or `Excluded` with a reason.
 3. Backups from older versions must still restore: `BackupsTest` restores the kept file
    `app/src/test/resources/backup/hyperlog-backup-db14.json`. Add an upgrade step for older files
-   in `Backups` (new columns with defaults need none, since missing columns take their defaults; a
-   renamed or reshaped column does), and keep a fixture for each version.
+   in `Backups` (new tables and new columns with defaults need none: list them in
+   `BackupFormat.Added` under the version that added them, so an older file may lack them; a
+   renamed or reshaped column needs a step), and keep a fixture for each version.
 
 ## Android Auto Backup
 

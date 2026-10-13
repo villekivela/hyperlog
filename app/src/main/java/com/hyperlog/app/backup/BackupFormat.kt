@@ -38,6 +38,17 @@ object BackupFormat {
     )
 
     /**
+     * What each database version after [OLDEST_DATABASE] added, table to columns (an empty set for
+     * a whole new table). A file from before a version may lack them: the table restores empty and
+     * the columns take their defaults. Anything else missing from a file makes it damaged.
+     */
+    val Added: Map<Int, Map<String, Set<String>>> = emptyMap()
+
+    /** The columns of [table] a file made at database version [database] may lack. */
+    fun addedSince(database: Int, table: String): Set<String>? =
+        Added.filterKeys { it > database }.values.mapNotNull { it[table] }.takeIf { it.isNotEmpty() }?.flatten()?.toSet()
+
+    /**
      * Tables left out of the backup, each with the reason. Empty: everything in the database is
      * the user's. A table that is only a cache of something else would go here.
      */

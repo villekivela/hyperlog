@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -229,6 +230,22 @@ class BackupsTest {
         val file = Backups(usedPhone(), clock = { now }).export()
         val damaged = file.replaceFirst("\"weekdays\":", "\"colour\":\"red\",\"weekdays\":")
         assertRefused(Backups.Reason.Damaged, damaged)
+    }
+
+    @Test
+    fun aFileMissingATableChangesNothing() = runTest {
+        val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
+        val tables = file["tables"]!!.jsonObject
+        val cut = JsonObject(file + ("tables" to JsonObject(tables - "lift_goal")))
+        assertRefused(Backups.Reason.Damaged, cut.toString())
+    }
+
+    @Test
+    fun aRowMissingAColumnChangesNothing() = runTest {
+        val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
+        val tables = file["tables"]!!.jsonObject
+        val gyms = kotlinx.serialization.json.JsonArray(tables["gym"]!!.jsonArray.map { JsonObject(it.jsonObject - "weekdays") })
+        assertRefused(Backups.Reason.Damaged, JsonObject(file + ("tables" to JsonObject(tables + ("gym" to gyms)))).toString())
     }
 
     @Test
