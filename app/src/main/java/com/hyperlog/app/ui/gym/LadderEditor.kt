@@ -180,6 +180,7 @@ fun LadderEditor(
         AlertDialog(
             onDismissRequest = { deleting = false },
             title = { Text(stringResource(R.string.ladder_delete_title, name.orEmpty())) },
+            text = { Text(stringResource(R.string.ladder_delete_text)) },
             confirmButton = { TextButton(onClick = { deleting = false; onDelete() }) { Text(stringResource(R.string.gym_delete_confirm)) } },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.gym_keep)) } },
         )

@@ -120,6 +120,9 @@ interface GymDao {
     @Query("UPDATE gym SET name = :name WHERE id = :id")
     suspend fun renameGym(id: Long, name: String)
 
+    @Query("UPDATE equipment_item SET name = :name WHERE id = :id")
+    suspend fun renameItem(id: Long, name: String)
+
     @Query("UPDATE gym SET default_stack = :ladder WHERE id = :id")
     suspend fun setDefaultStack(id: Long, ladder: String)
 

@@ -350,7 +350,11 @@ private fun App(
                     pinPlates = gym.pinPlates,
                     gymPlates = gym.plates,
                     readable = true,
-                    onSave = { name, spec -> gymsModel.saveItem(EquipmentItem(item?.id ?: 0, gym.id, name, spec)); ladder = null },
+                    // An edit keeps what the item is (its kind, the cable station); its ladder is now set up by hand.
+                    onSave = { name, spec ->
+                        gymsModel.saveItem(item?.copy(name = name, ladder = spec, state = com.hyperlog.app.gym.LadderState.Confirmed) ?: EquipmentItem(0, gym.id, name, spec))
+                        ladder = null
+                    },
                     onDelete = item?.let { { gymsModel.deleteItem(it.id); ladder = null } },
                     onClose = { ladder = null },
                 )
@@ -368,6 +372,8 @@ private fun App(
                     onPinPlates = { gymsModel.setPinPlates(gym.id, it) },
                     onDumbbells = { ladder = DumbbellLadder },
                     onPlates = { gymsModel.setPlates(gym.id, it) },
+                    onRenameItem = gymsModel::renameItem,
+                    onDeleteItem = { gymsModel.deleteItem(it.id) },
                     programSetup = programSetups?.second?.get(gym.id),
                     programTitle = programSetups?.first,
                     onAddProgramEquipment = { gymsModel.addProgramEquipment(gym.id, it) },

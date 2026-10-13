@@ -66,8 +66,9 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 ## States
 
 - Gyms: no gyms (only Add gym and the shared ladders); gyms with item counts.
-- Gym: empty (the Add equipment FAB only); items with previews. Rename and delete in the top bar; delete
-  asks first and says the equipment goes with it.
+- Gym: empty (the Add equipment FAB only); items with previews, each with a ⋮ (Rename, Delete;
+  delete asks first and says its sessions keep it). The gym's rename and delete are in the top
+  bar; delete asks first and says the equipment goes with it.
 - Ladder editor: new (Save disabled, preview "Fill in the fields…"), stack in kg or lb, list,
   plates, existing item (delete asks first). Dumbbells offer List and Stack; plates offer Plates
   only.

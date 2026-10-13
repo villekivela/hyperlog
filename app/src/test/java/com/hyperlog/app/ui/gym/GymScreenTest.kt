@@ -160,6 +160,27 @@ class GymScreenTest {
         )
     }
 
+    @Test
+    fun everyItemOffersRenameAndDeleteAndDeleteAsksFirst() {
+        var deleted: com.hyperlog.app.gym.EquipmentItem? = null
+        val bench = com.hyperlog.app.gym.EquipmentItem(4, 1, "Flat bench", LadderSpec.Explicit(emptyList()), kind = "rack")
+        val gym = Gym(1, "Central", items = listOf(com.hyperlog.app.gym.EquipmentItem(1, 1, "Pec deck", LadderSpec.DefaultPinStack)), kit = listOf(bench))
+        compose.setContent {
+            HyperlogTheme {
+                GymScreen(gym, onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {}, onDeleteItem = { deleted = it })
+            }
+        }
+        compose.onNodeWithContentDescription("More for Pec deck").assertHasClickAction()
+        compose.onNodeWithContentDescription("More for Flat bench").performClick()
+        compose.onNodeWithText("Rename").assertHasClickAction()
+        compose.onNodeWithText("Delete").performClick()
+        compose.onNodeWithText("Delete Flat bench?").assertExists()
+        compose.onNodeWithText("Sessions done on it keep it in their history.").assertExists()
+        assertEquals(null, deleted)
+        compose.onNodeWithText("Delete").performClick()
+        assertEquals(bench, deleted)
+    }
+
     private val legExtension = com.hyperlog.app.library.Exercise(
         "leg_extension", "Leg Extension", Equipment.Machine, com.hyperlog.app.library.MovementPattern.KneeExtension,
         com.hyperlog.app.library.GripDemand.None, listOf("Quads"),

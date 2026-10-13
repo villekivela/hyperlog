@@ -264,6 +264,11 @@
     <string name="gym_add_item">Add equipment</string>
     <string name="gym_delete_item">Delete equipment</string>
     <string name="ladder_delete_title">Delete %1$s?</string>
+    <string name="ladder_delete_text">Sessions done on it keep it in their history.</string>
+    <string name="gym_item_more">More for %1$s</string>
+    <string name="gym_item_rename">Rename</string>
+    <string name="gym_item_delete">Delete</string>
+    <string name="gym_rename_item">Rename equipment</string>
     <string name="ladder_new_item">New equipment</string>
     <string name="ladder_name">Name, e.g. Cable station</string>
     <string name="ladder_stack">Stack</string>

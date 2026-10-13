@@ -255,6 +255,9 @@ class Gyms(private val db: HyperlogDatabase) {
         dao.upsertItem(EquipmentItemEntity(item.id, item.gymId, item.name.trim(), item.ladder.encode(), item.archived, item.state.key, item.cableStation, item.kind))
     }
 
+    /** Renames equipment item [id], whatever it is; its ladder, kind and history stay. */
+    suspend fun renameItem(id: Long, name: String) = dao.renameItem(id, name.trim())
+
     /** Machine [id]'s ladder as set up or taken from an offer: confirmed from now on. */
     suspend fun setLadder(id: Long, spec: LadderSpec) = dao.setLadder(id, spec.encode(), LadderState.Confirmed.key)
 

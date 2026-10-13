@@ -164,6 +164,10 @@ fun GymScreen(
     onDumbbells: () -> Unit = {},
     /** Sets the gym's plates, as pairs: one entry per pair. */
     onPlates: (List<Double>) -> Unit = {},
+    /** Renames an item, whatever kind it is. */
+    onRenameItem: (Long, String) -> Unit = { _, _ -> },
+    /** Deletes an item (archived instead when sessions were done on it), once confirmed. */
+    onDeleteItem: (com.hyperlog.app.gym.EquipmentItem) -> Unit = {},
     /** What the active program still needs here; null without a program. */
     programSetup: com.hyperlog.app.gym.ProgramSetup? = null,
     programTitle: String? = null,
@@ -174,6 +178,8 @@ fun GymScreen(
     var renaming by rememberSaveable { mutableStateOf(false) }
     var pinning by rememberSaveable { mutableStateOf(false) }
     var plating by rememberSaveable { mutableStateOf(false) }
+    var renamingItem by rememberSaveable { mutableStateOf<Long?>(null) }
+    var deletingItem by rememberSaveable { mutableStateOf<Long?>(null) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         containerColor = Tones.screen,
@@ -207,11 +213,14 @@ fun GymScreen(
             gym.sections().forEach { (kind, items) ->
                 SectionLabel(stringResource(kind.title))
                 val lines = items.map { item -> itemLine(item, gym) }
+                val more = items.map { stringResource(R.string.gym_item_more, it.name) }
                 SegmentedList {
                     items.forEachIndexed { i, item ->
-                        // Machines open their setup; bars, racks and benches only say what they are.
+                        // Machines open their setup; every item's ⋮ renames or deletes it.
                         val open = if (item.kind == com.hyperlog.app.gym.EquipmentItem.MACHINE) ({ onOpenItem(item.id) }) else null
-                        row(item.name, lines[i], item.symbol, onClick = open, trailing = if (open != null) chevron else null)
+                        row(item.name, lines[i], item.symbol, onClick = open, trailing = {
+                            ItemMenu(more[i], onRename = { renamingItem = item.id }, onDelete = { deletingItem = item.id })
+                        })
                     }
                 }
             }
@@ -264,6 +273,25 @@ fun GymScreen(
             // Clears the extended FAB, so the last row can scroll out from under it.
             Spacer(Modifier.height(96.dp))
         }
+    }
+    val allItems = gym.items + gym.kit
+    allItems.firstOrNull { it.id == renamingItem }?.let { item ->
+        NameDialog(
+            title = stringResource(R.string.gym_rename_item),
+            initial = item.name,
+            confirm = stringResource(R.string.gym_rename_confirm),
+            onDone = { renamingItem = null; onRenameItem(item.id, it) },
+            onDismiss = { renamingItem = null },
+        )
+    }
+    allItems.firstOrNull { it.id == deletingItem }?.let { item ->
+        AlertDialog(
+            onDismissRequest = { deletingItem = null },
+            title = { Text(stringResource(R.string.ladder_delete_title, item.name)) },
+            text = { Text(stringResource(R.string.ladder_delete_text)) },
+            confirmButton = { TextButton(onClick = { deletingItem = null; onDeleteItem(item) }) { Text(stringResource(R.string.gym_delete_confirm)) } },
+            dismissButton = { TextButton(onClick = { deletingItem = null }) { Text(stringResource(R.string.gym_keep)) } },
+        )
     }
     if (plating) {
         PlatesDialog(gym.plates, onDone = { plating = false; onPlates(it) }, onDismiss = { plating = false })
@@ -429,6 +457,27 @@ private fun itemLine(item: com.hyperlog.app.gym.EquipmentItem, gym: Gym): String
     com.hyperlog.app.gym.EquipmentKind.RackBench -> stringResource(R.string.gym_kit_rack)
     // A plate-loaded machine with no pairs of its own reads with the gym's plates.
     else -> item.ladder.withPlates(gym.plates).summary(gym.pinPlates).let { if (item.cableStation) stringResource(R.string.gym_cable_station, it) else it }
+}
+
+/** An item's ⋮: Rename and Delete, for every kind of item. */
+@Composable
+private fun ItemMenu(description: String, onRename: () -> Unit, onDelete: () -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) { SymbolIcon(Symbol.MoreVert, description, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+        androidx.compose.material3.DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(stringResource(R.string.gym_item_rename)) },
+                leadingIcon = { SymbolIcon(Symbol.Edit, null) },
+                onClick = { open = false; onRename() },
+            )
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(stringResource(R.string.gym_item_delete)) },
+                leadingIcon = { SymbolIcon(Symbol.Delete, null) },
+                onClick = { open = false; onDelete() },
+            )
+        }
+    }
 }
 
 /** The rows' trailing chevron. */

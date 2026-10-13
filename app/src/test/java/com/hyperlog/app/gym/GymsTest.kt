@@ -49,6 +49,21 @@ class GymsTest {
     }
 
     @Test
+    fun renamingAnItemKeepsWhatItIs() = runTest {
+        val id = gyms.addGym("Central")
+        val rack = gyms.addItem(EquipmentItem(gymId = id, name = "Kyykkytelineet", ladder = LadderSpec.Explicit(emptyList()), kind = EquipmentItem.RACK))
+        val station = gyms.addItem(EquipmentItem(gymId = id, name = "Talja", ladder = LadderSpec.DefaultPinStack, state = LadderState.Unconfirmed, cableStation = true))
+        gyms.renameItem(rack, "Squat rack")
+        gyms.renameItem(station, " Cable station ")
+        val gym = gyms.gym(id)!!
+        assertEquals(listOf("Squat rack" to EquipmentItem.RACK), gym.kit.map { it.name to it.kind })
+        val cable = gym.items.single()
+        assertEquals("Cable station", cable.name)
+        assertEquals(true, cable.cableStation)
+        assertEquals(LadderState.Unconfirmed, cable.state)
+    }
+
+    @Test
     fun editingAnItemReplacesIt() = runTest {
         val id = gyms.addGym("Central")
         gyms.saveItem(EquipmentItem(gymId = id, name = "Leg press", ladder = LadderSpec.lbStack()))

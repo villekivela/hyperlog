@@ -81,6 +81,7 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
     override fun unmarkMissing(gymId: Long, exerciseId: String) = run { store.unmarkMissing(gymId, exerciseId) }
     override fun saveItem(item: EquipmentItem) = run { store.saveItem(item) }
     override fun deleteItem(id: Long) = run { store.deleteItem(id) }
+    override fun renameItem(id: Long, name: String) = run { store.renameItem(id, name) }
     override fun setDumbbells(gymId: Long, spec: LadderSpec) = run { store.setDumbbells(gymId, spec) }
     override fun setPlates(gymId: Long, pairs: List<Double>) = run { store.setPlates(gymId, pairs) }
     override fun setBar(bar: Equipment, kg: Double) = run { if (bar == Equipment.Barbell) store.setBarbell(kg) else store.setBar(bar, kg) }
@@ -100,6 +101,7 @@ interface GymActions {
     fun unmarkMissing(gymId: Long, exerciseId: String)
     fun saveItem(item: EquipmentItem)
     fun deleteItem(id: Long)
+    fun renameItem(id: Long, name: String)
     fun setDumbbells(gymId: Long, spec: LadderSpec)
     fun setPlates(gymId: Long, pairs: List<Double>)
     fun setBar(bar: Equipment, kg: Double)

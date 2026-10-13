@@ -436,7 +436,12 @@ available weights belong to a **machine at a gym**, not to an exercise.
   12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing a gym's
   dumbbells or plates applies to a running session at once.
-- **Deleting** a gym or an equipment item asks first. One with history (sessions at the gym, sets
+- **Renaming and deleting equipment.** Every item on a gym's screen, machines, bars, racks and
+  benches alike, has a ⋮ with **Rename** (a name dialog) and **Delete**. A machine's setup renames
+  it through its name field and deletes it from its top bar; saving it keeps what it is (the cable
+  station stays the cable station).
+- **Deleting** a gym or an equipment item asks first (`Delete Leg press?`, `Sessions done on it
+  keep it in their history.`). One with history (sessions at the gym, sets
   on the machine) is archived instead of deleted: it leaves setup, the start sheet and "Which
   machine?", and exercises forget it as their machine, but its past sessions keep it, so a
   machine's history never joins another machine's or the no-gym pool (ADR 0002). History still
