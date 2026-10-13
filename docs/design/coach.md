@@ -16,7 +16,7 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
    picked, so the list stays five lines.
 4. **Swaps read as the session will.** "In place of …" over the new name, on Today, in the start
    sheet and in the session, as in the review.
-5. **The gym learns what it lacks** the way it learns machines: on the go ("Not at Kamppi"), undone
+5. **The gym learns what it lacks** the way it learns machines: on the go ("Not at Harbour"), undone
    on the gym screen.
 
 ## Tokens
@@ -30,7 +30,7 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 | Limits head | labelLarge onSurfaceVariant, 24 dp top | as Changes' section heads |
 | Bottom bar | a surfaceContainerHighest strip rounded at the top, over the navigation bar: the message (bodyMedium, muted) left of **Review change** | the message holds "Resume as planned." |
 | Time-off line | `history` 18 dp tertiary, bodyMedium muted, TextButton **Ease back in** | under Today's day name |
-| Missing swaps | labelLarge head `Not at Kamppi · for this session`; checkbox rows 56 dp, text at 64 dp | in the start sheet under the gyms |
+| Missing swaps | labelLarge head `Not at Harbour · for this session`; checkbox rows 56 dp, text at 64 dp | in the start sheet under the gyms |
 | Coach entry | the navigation bar's Coach (`sports`), always (no program: Ask Claude only; finished: rules say so) | |
 
 ## Wireframes
@@ -61,9 +61,9 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 ```
  Start session
  ( ) Itis
- (•) Kamppi
+ (•) Harbour
      Usual on Tuesdays
- Not at Kamppi · for this session
+ Not at Harbour · for this session
  [✓] In place of Leg Extension
      Reverse Nordic
      Lying Leg Curl: nothing here fits       ← no replacement: muted, no checkbox
@@ -79,7 +79,7 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
   (`coach-07`), whose Ease back in opens the re-entry review (`coach-08`). After two weeks the same
   button opens Repeat week.
 - Start sheet: missing swaps for the gym picked (`start-01-missing`); another gym recomputes them.
-- Which machine?: **Not at Kamppi** under Add machine (`machine-01-not-here`).
+- Which machine?: **Not at Harbour** under Add machine (`machine-01-not-here`).
 - Gym screen: **Not here** list with × to undo (`gym-01-not-here`).
 
 ## Interaction rules
@@ -91,7 +91,7 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 - Coach preselects Time off when more than a week has passed.
 - Missing swaps start ticked; unticking one keeps the planned exercise for that session. Start
   applies the ticked ones to this session only; the plan is untouched.
-- Not at Kamppi marks the exercise missing at the gym and swaps it straight away (or leaves it out of
+- Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
   the session with nothing that fits).
 
 ## Ask Claude

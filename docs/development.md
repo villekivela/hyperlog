@@ -10,7 +10,7 @@ what the files don't explain.
 - **Android SDK** at `~/Android/Sdk`, managed by the `android-sdk` mise tool's `sdkmanager`
   (`~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk`). Installed:
   `platforms;android-36`, `platforms;android-37.0`, `build-tools;36.0.0`, `build-tools;37.0.0`,
-  `platform-tools`. Each project needs a `local.properties` with `sdk.dir=/home/villekivela/Android/Sdk`
+  `platform-tools`. Each project needs a `local.properties` with `sdk.dir=/home/<you>/Android/Sdk`
   (git-ignored).
 - **compileSdk 37 is required.** Current Compose (BOM 2026.09) and Material 3 1.5 refuse to build
   against 36. targetSdk stays 36.
@@ -40,21 +40,20 @@ what the files don't explain.
 
 ## Phone
 
-- The owner's phone connects over USB with debugging authorised. adb is at
+- Your phone connects over USB with debugging authorised. adb is at
   `~/Android/Sdk/platform-tools/adb`, which isn't on PATH by default.
 - **Screenshots:** `adb exec-out screencap -p > shot.png`, then `magick shot.png -resize 35% small.png`
   to view it. The screen is 1280 × 2856 px; multiply a 35% screenshot's coordinates by 2.857 for
   `adb shell input tap`.
-- **The phone stays awake while plugged in** (`stay_on_while_plugged_in` = 7, the owner's own
-  setting). Leave that setting and the lock state to the owner. A locked phone needs the owner to
-  unlock it, so check `adb shell dumpsys window | grep isKeyguardShowing` before driving the UI.
+- **Leave the phone's settings and lock state alone**, including any `stay_on_while_plugged_in`
+  setting that keeps it awake on USB. A locked phone needs its user to unlock it, so check `adb shell dumpsys window | grep isKeyguardShowing` before driving the UI.
 - **Backups:** what's in them, where Auto Backup restores from and the `adb shell bmgr` checks are
   in `docs/backups.md`. Export a manual backup of the dev data before any `pm clear`.
 - **Update banner on a debug build:** `.dev` never checks GitHub; launch it with a fake release
   (`--es fake_release 9.9.9` on the `am start` above) to see the banner, and tap it for the
   installer prompt on the build's own APK.
 - Debug builds install beside other builds through the `.dev` suffix. The legacy app
-  (`com.hyperlog.app.alpha`) may still be installed and holds the owner's old data, so leave it in
+  (`com.hyperlog.app.alpha`) may still be installed and holds your old data, so leave it in
   place.
 
 ## UI work: designer and tester
@@ -81,15 +80,14 @@ installs and launches it as "Hyperlog prototype". Its decisions live in `SPEC.md
 - The old app is `villekivela/hyperlog-legacy`, cloned read-only at `~/Work/hyperlog-legacy`. Code
   worth porting: the progression logic in `src/app/utils/progression.ts` and the plate/rounding
   helpers.
-- The owner's last full backup is `~/Downloads/hyperlog-full-backup-2026-10-12.json` (format 7.0).
-  It's the input for the "Starting weights from the old app" ticket and the source of the exercise
+- Your legacy backup (the old app's full-backup JSON export, format 7.0) is the input for the "Starting weights from the old app" ticket and the source of the exercise
   library seed. It holds personal data, so it stays out of the repo.
 
 ## Git
 
-- This repo's `user.email` is set locally to the owner's GitHub no-reply address. GitHub rejects
-  pushes that would publish their private address, so new clones need
-  `git config user.email 5814559+villekivela@users.noreply.github.com`.
+- Set this repo's `user.email` locally to your GitHub no-reply address. GitHub rejects pushes
+  that would publish a private address, so new clones need
+  `git config user.email <id>+<username>@users.noreply.github.com`.
 - Releases go through GitHub Releases in the public `villekivela/hyperlog-releases` repo; the app
   checks for them itself. The tag sets the version (`-PhyperlogVersion=v0.2.0`). See `SPEC.md`,
   Distribution, and ticket #22.

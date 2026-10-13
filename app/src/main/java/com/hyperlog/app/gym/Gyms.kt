@@ -115,7 +115,7 @@ class Gyms(db: HyperlogDatabase) {
         } else dao.deleteItem(id)
     }
 
-    /** Each machine's history heading, `Cable left · Kamppi`, by id, deleted ones included. */
+    /** Each machine's history heading, `Cable left · Harbour`, by id, deleted ones included. */
     suspend fun machineNames(): Map<Long, String> = dao.machineNames().associate { it.id to "${it.name} · ${it.gym}" }
 
     suspend fun setDumbbells(spec: LadderSpec) = dao.setShared(SharedLadderEntity(DUMBBELLS, spec.encode()))

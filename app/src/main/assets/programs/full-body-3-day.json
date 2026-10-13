@@ -930,7 +930,7 @@
                   "id": "bench",
                   "exercise": "barbell_bench_press",
                   "alternatives": ["smith_machine_bench_press"],
-                  "note": "Week 12 test: work up to a top single. If your week-11 estimate is 97 kg or more, the single is 100 kg; otherwise take a single @ 1 RIR. The single updates the estimate.",
+                  "note": "Week 12 test: work up to a top single. If your week-11 estimate is within 3% of your bench goal (97 kg for a 100 kg goal), the single is the goal weight; otherwise take a single @ 1 RIR. The single updates the estimate.",
                   "sets": [
                     {"reps": 1, "rir": 1, "rest": 180}
                   ]

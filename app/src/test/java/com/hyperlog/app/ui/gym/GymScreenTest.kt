@@ -50,12 +50,12 @@ class GymScreenTest {
         compose.setContent {
             HyperlogTheme {
                 GymScreen(
-                    Gym(1, "Kallio", emptyList(), setOf(DayOfWeek.MONDAY)),
+                    Gym(1, "Central", emptyList(), setOf(DayOfWeek.MONDAY)),
                     onRename = {}, onDelete = {}, onWeekdays = { days = it }, onOpenItem = {}, onAddItem = {}, onBack = {},
                 )
             }
         }
-        compose.onNodeWithText("Starting a session on these days picks Kallio.").assertExists()
+        compose.onNodeWithText("Starting a session on these days picks Central.").assertExists()
         compose.onNodeWithContentDescription("Monday").assertIsOn()
         compose.onNodeWithContentDescription("Wednesday").assertIsOff().performClick()
         assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), days)

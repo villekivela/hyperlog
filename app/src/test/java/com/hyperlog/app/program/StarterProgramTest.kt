@@ -143,7 +143,7 @@ class StarterProgramTest {
         val a = day(12, 0)
         assertEquals(listOf(SetPrescription(RepRange(1, 1), 1, 180)), a.sets("bench"))
         val note = a.slot("bench")!!.note!!
-        assertTrue(note, "100 kg" in note && "97" in note)
+        assertTrue(note, "bench goal" in note && "3%" in note)
         // Days B and C: one set fewer, @ 3 RIR, no techniques.
         for (d in 1..2) {
             val deload = day(12, d)

@@ -50,7 +50,7 @@ class ProgressionSessionTest {
         programs = Programs(db, clock = { now })
         programs.import(program)
         val gyms = Gyms(db)
-        gym = gyms.addGym("Kallio")
+        gym = gyms.addGym("Central")
         gyms.saveItem(EquipmentItem(gymId = gym, name = "Cable station", ladder = LadderSpec.lbStack()))
     }
 

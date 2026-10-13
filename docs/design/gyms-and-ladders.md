@@ -35,8 +35,8 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 ## Layout
 
 ```
- ←  Gyms and equipment          ←  Kallio            ✎ 🗑      ✕  Cable station       🗑  Save
-      Kallio                 >        Cable station        >    [ Name                        ]
+ ←  Gyms and equipment          ←  Central            ✎ 🗑      ✕  Cable station       🗑  Save
+      Central                 >        Cable station        >    [ Name                        ]
       1 equipment item                1.1 · 3.4 … 89.6 kg       [ Stack | List | Plates ]
   +   Add gym                     +   Add equipment             ( lb stack: 2.5, then 5 lb steps )
  ─────────────────────────                                      [  kg  |  lb  ]
@@ -94,18 +94,18 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
 
 ```
  Start session                        Cable Lateral Raise         ⋮
- ◉  Kallio                            Which machine?
-    Usual on Mondays                  Kallio remembers it for next time.
- ○  Töölö                             Cable station
+ ◉  Central                            Which machine?
+    Usual on Mondays                  Central remembers it for next time.
+ ○  Riverside                             Cable station
  ○  Home                              1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg
                          [ Start ]    Leg extension
                                       5 · 10 · 15 · 20 … 100 kg
- Kallio's gym screen, below the       + Add machine
+ Central's gym screen, below the       + Add machine
  equipment:
  ───────────────────────────          Next  Seated Leg Curl       ⌃
       Usual days                      (no pad)
       (M) (T) (W) (T) (F) (S) (S)
-      Starting a session on these days picks Kallio.
+      Starting a session on these days picks Central.
 ```
 
 ### Tokens

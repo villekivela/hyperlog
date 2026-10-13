@@ -117,13 +117,13 @@ class HistoryTest {
     @Test
     fun aFreeWeightTrendShowsTheTopSetAndTheEstimateAfterEachSession() = runTest {
         val gyms = Gyms(db)
-        val kamppi = gyms.addGym("Kamppi")
-        val toolo = gyms.addGym("Töölö")
+        val harbour = gyms.addGym("Harbour")
+        val riverside = gyms.addGym("Riverside")
         session(LocalDate.of(2026, 9, 28), "barbell_bench_press" to listOf(Logged(80.0, 5, 1), Logged(80.0, 6, 1)))
         session(LocalDate.of(2026, 10, 1), "barbell_bench_press" to listOf(Logged(82.5, 5, 1), Logged(75.0, 7, 2)))
         // An easy session: its sets at 4 RIR can't lower the estimate.
         session(LocalDate.of(2026, 10, 5), "barbell_bench_press" to listOf(Logged(60.0, 5, 4)))
-        db.sessions().finishedSessions().forEachIndexed { i, s -> db.sessions().updateSession(s.copy(gymId = if (i == 0) kamppi else toolo)) }
+        db.sessions().finishedSessions().forEachIndexed { i, s -> db.sessions().updateSession(s.copy(gymId = if (i == 0) harbour else riverside)) }
 
         val trend = history().trend("barbell_bench_press")
 
@@ -214,10 +214,10 @@ class HistoryTest {
     @Test
     fun aMachineTrendHasOneLinePerMachine() = runTest {
         val gyms = Gyms(db)
-        val kamppi = gyms.addGym("Kamppi")
-        val toolo = gyms.addGym("Töölö")
-        val left = gyms.addItem(EquipmentItem(gymId = kamppi, name = "Cable left", ladder = LadderSpec.lbStack()))
-        val tall = gyms.addItem(EquipmentItem(gymId = toolo, name = "Tall cable", ladder = LadderSpec.lbStack()))
+        val harbour = gyms.addGym("Harbour")
+        val riverside = gyms.addGym("Riverside")
+        val left = gyms.addItem(EquipmentItem(gymId = harbour, name = "Cable left", ladder = LadderSpec.lbStack()))
+        val tall = gyms.addItem(EquipmentItem(gymId = riverside, name = "Tall cable", ladder = LadderSpec.lbStack()))
         session(LocalDate.of(2026, 9, 28), "cable_lateral_raise" to listOf(Logged(5.7, 12, 1)), items = mapOf("cable_lateral_raise" to left))
         session(LocalDate.of(2026, 10, 1), "cable_lateral_raise" to listOf(Logged(10.2, 10, 1)), items = mapOf("cable_lateral_raise" to tall))
         session(LocalDate.of(2026, 10, 5), "cable_lateral_raise" to listOf(Logged(7.9, 10, 1)), items = mapOf("cable_lateral_raise" to left))
@@ -225,7 +225,7 @@ class HistoryTest {
         val trend = history().trend("cable_lateral_raise")
 
         // Latest used first; stacks don't compare, so each machine is its own line (ADR 0002).
-        assertEquals(listOf("Cable left · Kamppi", "Tall cable · Töölö"), trend.lines.map { it.machine })
+        assertEquals(listOf("Cable left · Harbour", "Tall cable · Riverside"), trend.lines.map { it.machine })
         assertEquals(listOf("5.7 × 12 @ 1", "7.9 × 10 @ 1"), trend.lines[0].points.map { it.top.summary() })
         assertEquals(listOf("10.2 × 10 @ 1"), trend.lines[1].points.map { it.top.summary() })
     }
@@ -233,23 +233,23 @@ class HistoryTest {
     @Test
     fun deletingAMachineOrItsGymKeepsItsHistoryApart() = runTest {
         val gyms = Gyms(db)
-        val kamppi = gyms.addGym("Kamppi")
-        val toolo = gyms.addGym("Töölö")
-        val left = gyms.addItem(EquipmentItem(gymId = kamppi, name = "Cable left", ladder = LadderSpec.lbStack()))
-        val tall = gyms.addItem(EquipmentItem(gymId = toolo, name = "Tall cable", ladder = LadderSpec.lbStack()))
+        val harbour = gyms.addGym("Harbour")
+        val riverside = gyms.addGym("Riverside")
+        val left = gyms.addItem(EquipmentItem(gymId = harbour, name = "Cable left", ladder = LadderSpec.lbStack()))
+        val tall = gyms.addItem(EquipmentItem(gymId = riverside, name = "Tall cable", ladder = LadderSpec.lbStack()))
         session(LocalDate.of(2026, 9, 28), "cable_lateral_raise" to listOf(Logged(5.7, 12, 1)), items = mapOf("cable_lateral_raise" to left))
         session(LocalDate.of(2026, 10, 1), "cable_lateral_raise" to listOf(Logged(10.2, 10, 1)), items = mapOf("cable_lateral_raise" to tall))
         // A session with no gym: its machine isn't known.
         session(LocalDate.of(2026, 10, 3), "cable_lateral_raise" to listOf(Logged(20.0, 10, 1)))
 
         gyms.deleteItem(left)
-        gyms.deleteGym(toolo)
+        gyms.deleteGym(riverside)
 
         // Gone from setup, but each machine's sessions stay its own line (ADR 0002), never the no-gym pool.
-        assertEquals(listOf("Kamppi"), gyms.gyms.first().map { it.name })
+        assertEquals(listOf("Harbour"), gyms.gyms.first().map { it.name })
         assertEquals(emptyList<EquipmentItem>(), gyms.gyms.first().single().items)
         val lines = history().trend("cable_lateral_raise").lines
-        assertEquals(listOf(null, "Tall cable · Töölö", "Cable left · Kamppi"), lines.map { it.machine })
+        assertEquals(listOf(null, "Tall cable · Riverside", "Cable left · Harbour"), lines.map { it.machine })
         assertEquals(listOf(1, 1, 1), lines.map { it.points.size })
     }
 }

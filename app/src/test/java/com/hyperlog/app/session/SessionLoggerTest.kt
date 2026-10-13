@@ -339,24 +339,24 @@ class SessionLoggerTest {
     @Test
     fun aMachineNamedForTheExerciseIsTakenWithoutAsking() = runTest {
         val gyms = Gyms(db)
-        val kallio = gyms.addGym("Kallio")
-        gyms.addItem(EquipmentItem(gymId = kallio, name = "Leg press", ladder = LadderSpec.Plates(40.0, listOf(20.0, 20.0))))
-        gyms.addItem(EquipmentItem(gymId = kallio, name = "Leg extension", ladder = LadderSpec.Steps(5.0, 5.0, WeightUnit.Kg, 20)))
+        val central = gyms.addGym("Central")
+        gyms.addItem(EquipmentItem(gymId = central, name = "Leg press", ladder = LadderSpec.Plates(40.0, listOf(20.0, 20.0))))
+        gyms.addItem(EquipmentItem(gymId = central, name = "Leg extension", ladder = LadderSpec.Steps(5.0, 5.0, WeightUnit.Kg, 20)))
         val logger = logger()
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("leg_extension")
         val current = logger.session.current!!
         assertFalse(current.needsMachine)
         assertEquals("Leg extension", current.machine!!.name)
         // And it is remembered, as a picked one is.
-        assertEquals(current.machine!!.id, gyms.remembered(kallio, "leg_extension"))
+        assertEquals(current.machine!!.id, gyms.remembered(central, "leg_extension"))
     }
 
     @Test
     fun theFirstLegExtensionAtANewGymAsksWhichMachineAndTheNextTimeItDoesNot() = runTest {
-        val kallio = Gyms(db).addGym("Kallio")
+        val central = Gyms(db).addGym("Central")
         val logger = logger()
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("leg_extension")
 
         assertTrue(logger.session.current!!.needsMachine)
@@ -372,7 +372,7 @@ class SessionLoggerTest {
         logger.finish()
 
         now += 86_400_000
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("leg_extension")
         val again = logger.session.current!!
         assertFalse(again.needsMachine)
@@ -384,10 +384,10 @@ class SessionLoggerTest {
     @Test
     fun aMachineCanBePickedFromTheGymsEquipment() = runTest {
         val gyms = Gyms(db)
-        val kallio = gyms.addGym("Kallio")
-        gyms.saveItem(EquipmentItem(gymId = kallio, name = "Cable station", ladder = LadderSpec.lbStack()))
+        val central = gyms.addGym("Central")
+        gyms.saveItem(EquipmentItem(gymId = central, name = "Cable station", ladder = LadderSpec.lbStack()))
         val logger = logger()
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("cable_lateral_raise")
 
         logger.chooseMachine(logger.session.gym!!.items.single().id)
@@ -399,10 +399,10 @@ class SessionLoggerTest {
     @Test
     fun freeWeightHistoryFollowsYouAcrossGymsButACableStationHasItsOwn() = runTest {
         val gyms = Gyms(db)
-        val kallio = gyms.addGym("Kallio")
-        val toolo = gyms.addGym("Töölö")
+        val central = gyms.addGym("Central")
+        val riverside = gyms.addGym("Riverside")
         val logger = logger()
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("db_bench_press")
         logger.logSet("25", "10", 2)
         logger.addExercise("cable_lateral_raise")
@@ -411,7 +411,7 @@ class SessionLoggerTest {
         logger.finish()
 
         now += 86_400_000
-        logger.start(toolo)
+        logger.start(riverside)
         logger.addExercise("db_bench_press")
         assertEquals(listOf(LoggedSet(25.0, 10, 0, 2)), logger.session.current!!.lastTime)
         logger.addExercise("cable_lateral_raise")
@@ -424,7 +424,7 @@ class SessionLoggerTest {
 
         // Back at the first gym, the first station's history is still its own.
         now += 86_400_000
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("cable_lateral_raise")
         assertEquals(listOf(LoggedSet(7.9, 12, 0, 1)), logger.session.current!!.lastTime)
     }
@@ -441,9 +441,9 @@ class SessionLoggerTest {
 
     @Test
     fun theMachineCanBeChangedUntilASetIsLogged() = runTest {
-        val kallio = Gyms(db).addGym("Kallio")
+        val central = Gyms(db).addGym("Central")
         val logger = logger()
-        logger.start(kallio)
+        logger.start(central)
         logger.addExercise("leg_extension")
         logger.addMachine("Leg extension", LadderSpec.lbStack())
 

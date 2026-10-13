@@ -88,9 +88,9 @@ class HistoryScreenTest {
         compose.waitFor("Today")
         val (left, tall) = runBlocking {
             val gyms = Gyms(db)
-            val kamppi = gyms.addGym("Kamppi")
-            gyms.addItem(EquipmentItem(gymId = kamppi, name = "Cable left", ladder = LadderSpec.lbStack())) to
-                gyms.addItem(EquipmentItem(gymId = kamppi, name = "Tall cable", ladder = LadderSpec.lbStack()))
+            val harbour = gyms.addGym("Harbour")
+            gyms.addItem(EquipmentItem(gymId = harbour, name = "Cable left", ladder = LadderSpec.lbStack())) to
+                gyms.addItem(EquipmentItem(gymId = harbour, name = "Tall cable", ladder = LadderSpec.lbStack()))
         }
         session(LocalDate.of(2026, 9, 28), "cable_lateral_raise", 5.7 to 12, itemId = left)
         session(LocalDate.of(2026, 10, 1), "cable_lateral_raise", 10.2 to 10, itemId = tall)
@@ -101,8 +101,8 @@ class HistoryScreenTest {
         compose.waitForTappable("Cable Lateral Raise")
         compose.onNodeWithText("Cable Lateral Raise").performClick()
 
-        compose.waitFor("Tall cable · Kamppi")
-        compose.onNodeWithText("Cable left · Kamppi").assertIsDisplayed()
+        compose.waitFor("Tall cable · Harbour")
+        compose.onNodeWithText("Cable left · Harbour").assertIsDisplayed()
         compose.onNodeWithText("10.2 × 10 @ 1").assertIsDisplayed()
     }
 

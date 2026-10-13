@@ -121,13 +121,13 @@ class CoachScreenTest {
         runStarter()
         runBlocking {
             val gyms = Gyms(db)
-            val id = gyms.addGym("Kamppi")
+            val id = gyms.addGym("Harbour")
             gyms.markMissing(id, "leg_extension")
             db.programs().setPosition(db.programs().active()!!.id, 1, 1)
         }
         compose.waitFor("Leg Extension")
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Not at Kamppi · for this session")
+        compose.waitFor("Not at Harbour · for this session")
         compose.onNodeWithText("In place of Leg Extension").assertIsDisplayed()
         compose.onNodeWithText("Reverse Nordic").assertIsDisplayed()
         compose.onNodeWithText("Start").performClick()

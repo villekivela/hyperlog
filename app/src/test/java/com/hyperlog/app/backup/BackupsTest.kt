@@ -89,7 +89,7 @@ class BackupsTest {
         library.setHidden("pec_deck", true)
 
         val gyms = Gyms(db)
-        val gym = gyms.addGym("Kallio")
+        val gym = gyms.addGym("Central")
         gyms.setWeekdays(gym, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
         val cable = gyms.addItem(EquipmentItem(gymId = gym, name = "Cable station", ladder = LadderSpec.lbStack()))
         gyms.setDumbbells(LadderSpec.Steps(2.0, 2.0, WeightUnit.Kg, 20))
@@ -193,7 +193,7 @@ class BackupsTest {
 
         assertEquals(Backups.Result.Restored, Backups(other, clock = { now }).restore(file))
 
-        assertEquals(listOf("Kallio"), Gyms(other).gyms.first().map { it.name })
+        assertEquals(listOf("Central"), Gyms(other).gyms.first().map { it.name })
         assertEquals(listOf(81.9, 82.4), Bodyweights(other).entries.first().map { it.kg })
     }
 
@@ -257,7 +257,7 @@ class BackupsTest {
         val file = javaClass.getResource("/backup/hyperlog-backup-db14.json")!!.readText()
         val phone = freshInstall()
         assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
-        assertEquals(listOf("Kallio"), Gyms(phone).gyms.first().map { it.name })
+        assertEquals(listOf("Central"), Gyms(phone).gyms.first().map { it.name })
         assertEquals(100.0, LiftGoals(phone).of("barbell_bench_press")!!.kg, 0.0)
         assertTrue(SessionLogger(phone, clock = { now }, programs = Programs(phone, clock = { now })).also { it.load() }.state.value != null)
     }
@@ -270,7 +270,7 @@ class BackupsTest {
         assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
         val gyms = Gyms(phone)
         assertEquals(listOf("Cable station"), gyms.gyms.first().single().items.map { it.name })
-        assertTrue("Old cable · Kallio" in gyms.machineNames().values)
+        assertTrue("Old cable · Central" in gyms.machineNames().values)
         assertEquals(8.0, gyms.bars.first().getValue(com.hyperlog.app.library.Equipment.EzBar), 0.0)
         assertTrue(phone.exercises().all().first { it.id == "db_bench_press" }.twoDumbbells)
     }

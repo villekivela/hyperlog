@@ -32,7 +32,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-// The owner's phone: 1280 × 2856 px at 3.125 density.
+// The reference phone: 1280 × 2856 px at 3.125 density.
 @Config(qualifiers = "w410dp-h914dp")
 class SessionScreenTest {
     val compose = createAndroidComposeRule<MainActivity>()

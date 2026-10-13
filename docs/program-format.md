@@ -199,7 +199,7 @@ deload week. A test parses this example against the shipped library, so it stays
 
 ## What the format can't say yet
 
-- A load rule such as "a single at 100 kg if the estimate is 97 kg or more" (the Full Body week-12
+- A load rule such as "a single at the bench goal if the estimate is within 3% of it" (the Full Body week-12
   test). Write a plain `1` rep set and put the rule in the slot's note, as Full Body does
   (`app/src/main/assets/programs/full-body-3-day.json`). The app suggests the single's weight from
   the estimate, as for any new rep range.

@@ -6,7 +6,7 @@ package com.hyperlog.app.backup
  *
  * ```json
  * { "format": "hyperlog-backup", "version": 1, "database": 17, "exportedAt": 1760000000000,
- *   "tables": { "gym": [ { "id": 1, "name": "Kallio", "weekdays": 1 } ], … } }
+ *   "tables": { "gym": [ { "id": 1, "name": "Central", "weekdays": 1 } ], … } }
  * ```
  */
 object BackupFormat {

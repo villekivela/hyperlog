@@ -9,3 +9,7 @@ local.properties
 .idea/
 .DS_Store
 .kotlin/
+
+# Backups hold personal data; only test fixtures are committed
+*backup*.json
+!app/src/test/resources/**/*.json

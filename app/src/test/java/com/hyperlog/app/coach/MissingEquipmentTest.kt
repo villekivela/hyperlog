@@ -41,7 +41,7 @@ class MissingEquipmentTest {
         programs.import(File("src/main/assets/${StarterProgram.ASSET}").readText())
         db.programs().setPosition(active().id, 1, 1) // Day B, with the leg extension
         gyms = Gyms(db)
-        gymId = gyms.addGym("Kamppi")
+        gymId = gyms.addGym("Harbour")
     }
 
     @After
