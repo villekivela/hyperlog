@@ -8,6 +8,7 @@ import com.hyperlog.app.data.Visit
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.SharedLadderEntity
 import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.library.Equipment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -48,6 +49,9 @@ class Gyms(db: HyperlogDatabase) {
 
     val dumbbells: Flow<LadderSpec> = dao.observeShared().map { it.dumbbells() }
     val plates: Flow<LadderSpec.Plates> = dao.observeShared().map { it.plates() }
+
+    /** The EZ, trap and safety bars' own weights; the shared plates go on them. */
+    val bars: Flow<Map<Equipment, Double>> = dao.observeShared().map { it.bars() }
 
     suspend fun addGym(name: String): Long = dao.insertGym(GymEntity(name = name.trim()))
     suspend fun renameGym(id: Long, name: String) = dao.renameGym(id, name.trim())
@@ -117,14 +121,27 @@ class Gyms(db: HyperlogDatabase) {
     suspend fun setDumbbells(spec: LadderSpec) = dao.setShared(SharedLadderEntity(DUMBBELLS, spec.encode()))
     suspend fun setPlates(spec: LadderSpec.Plates) = dao.setShared(SharedLadderEntity(PLATES, spec.encode()))
 
+    /** Sets what the [bar] (an EZ, trap or safety bar) weighs. */
+    suspend fun setBar(bar: Equipment, kg: Double) {
+        require(bar in SharedLadders.DefaultBars) { "$bar is not a specialty bar" }
+        dao.setShared(SharedLadderEntity(barKey(bar), LadderSpec.Explicit(listOf(kg)).encode()))
+    }
+
     /** The shared ladders as they are now, for the session. */
-    suspend fun shared(): SharedLadders = dao.shared().let { SharedLadders(it.dumbbells(), it.plates()) }
+    suspend fun shared(): SharedLadders = dao.shared().let { SharedLadders(it.dumbbells(), it.plates(), it.bars()) }
 
     private fun List<SharedLadderEntity>.dumbbells() =
         firstOrNull { it.key == DUMBBELLS }?.let { LadderSpec.decode(it.ladder) } ?: LadderSpec.DefaultDumbbells
 
     private fun List<SharedLadderEntity>.plates() =
         firstOrNull { it.key == PLATES }?.let { LadderSpec.decode(it.ladder) as? LadderSpec.Plates } ?: LadderSpec.DefaultPlates
+
+    /** Each bar's weight, stored as a one-weight list; the default until set. */
+    private fun List<SharedLadderEntity>.bars() = SharedLadders.DefaultBars.mapValues { (bar, default) ->
+        firstOrNull { it.key == barKey(bar) }?.let { (LadderSpec.decode(it.ladder) as? LadderSpec.Explicit)?.kgs?.firstOrNull() } ?: default
+    }
+
+    private fun barKey(bar: Equipment) = "bar_${bar.key}"
 
     private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList()) =
         Gym(id, name, items.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet())
@@ -137,8 +154,22 @@ class Gyms(db: HyperlogDatabase) {
     }
 }
 
-data class SharedLadders(val dumbbells: LadderSpec, val plates: LadderSpec.Plates) {
+/**
+ * The ladders every gym shares: the dumbbells, the barbell plates, and the weights of the EZ, trap
+ * and safety [bars], which load the same plates.
+ */
+data class SharedLadders(
+    val dumbbells: LadderSpec,
+    val plates: LadderSpec.Plates,
+    val bars: Map<Equipment, Double> = DefaultBars,
+) {
+    /** The plates on a specialty [bar]: its own weight, then the shared pairs. Null for anything else. */
+    fun barPlates(bar: Equipment): LadderSpec.Plates? = bars[bar]?.let { LadderSpec.Plates(it, plates.pairs) }
+
     companion object {
+        /** What the specialty bars weigh until set: a 10 kg EZ bar, a 25 kg trap bar, a 30 kg safety bar. */
+        val DefaultBars = mapOf(Equipment.EzBar to 10.0, Equipment.TrapBar to 25.0, Equipment.SafetyBar to 30.0)
+
         val Defaults = SharedLadders(LadderSpec.DefaultDumbbells, LadderSpec.DefaultPlates)
     }
 }

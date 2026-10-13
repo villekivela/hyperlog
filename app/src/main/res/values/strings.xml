@@ -205,6 +205,10 @@
     <string name="gym_shared">Shared by every gym</string>
     <string name="gym_dumbbells">Dumbbells</string>
     <string name="gym_plates">Barbell plates</string>
+    <!-- Under a specialty bar in the shared section, e.g. "10 kg bar, the shared plates". -->
+    <string name="gym_bar_summary">%1$s kg bar, the shared plates</string>
+    <string name="gym_bar_weight">Bar weight (kg)</string>
+    <string name="gym_bar_save">Save</string>
     <string name="gym_rename">Rename gym</string>
     <string name="gym_rename_confirm">Rename</string>
     <string name="gym_delete">Delete gym</string>

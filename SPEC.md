@@ -231,7 +231,9 @@ available weights belong to a **machine at a gym**, not to an exercise.
   dumbbell rack, a barbell with plates) with its **weight ladder**: a start and step in kg or lb
   (shown in kg), an explicit list, or for plate-loaded machines a base weight plus plates.
 - **Dumbbells are universal**: one global dumbbell ladder (default 2 kg steps to 20 kg, then
-  22.5, 25, then 5 kg steps; editable), not set per gym. Barbell plates likewise use one global set.
+  22.5, 25, then 5 kg steps; editable), not set per gym. Barbell plates likewise use one global set,
+  and so do the EZ, trap and safety bars: each has its own bar weight (10, 25 and 30 kg until set)
+  and loads the shared plates.
 - **Setup both ways**: a gym screen to list equipment up front, and adding on the go. The first
   time an exercise is done at a gym without a known machine, the app asks "which machine?" (pick or
   add) and its ladder, then remembers it.
@@ -276,8 +278,9 @@ available weights belong to a **machine at a gym**, not to an exercise.
 - A stack is a start, a step and a number of weights. Plates are a base weight (bar or sled) plus
   plate pairs, one of each pair per side; any combination of pairs is a rung. The shared barbell
   plates default to a 20 kg bar with pairs of 20, 20, 20, 15, 10, 5, 2.5 and 1.25 kg.
-- Setup lives in Settings → Gyms and equipment: gyms and their equipment, then the shared dumbbells
-  and plates. Every ladder shows as the kg weights it gives (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`).
+- Setup lives in Settings → Gyms and equipment: gyms and their equipment, then the shared dumbbells,
+  plates and the three specialty bars (`10 kg bar, the shared plates`; a tap asks for the bar's
+  weight). Every ladder shows as the kg weights it gives (`1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing the shared
   dumbbells or plates applies to a running session at once.
 - **Deleting** a gym or an equipment item asks first. One with history (sessions at the gym, sets
@@ -354,8 +357,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        weight in the pad, live; each warm-up row shows its own plates. Plates are the fewest that
        make the weight, heaviest first, from the pairs there are. A weight the plates can't make
        shows no plates (the weight check says so on ✓).
-     - EZ, trap and safety bars have no plate calculator yet, since their ladders are the 2.5 kg
-       stand-in.
+     - EZ, trap and safety bar exercises use the shared plates on their own bar, so they get the
+       same line, warm-ups on 5 kg steps and a weight check against the real weights.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
      set rows (target, last time, kg, reps, RIR), techniques and their planned drops/mini-sets
      visible before the set, and a compact in-app pad drawn like the system number keyboard.
@@ -433,8 +436,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **One ✓, one set**: a ✓ within 1 s of logging a set logs nothing, so a stutter or double
        tap can't log a phantom set. No two sets are ever logged that close on purpose.
      - −/+ and the weight strip use the shared dumbbell ladder for dumbbell exercises, the shared
-       plates on a 20 kg bar for barbell exercises, the machine's ladder for machines and cables,
-       and 2.5 kg steps for everything else (and for machines in a session with no gym).
+       plates on a 20 kg bar for barbell exercises, the shared plates on the bar's own weight for
+       EZ, trap and safety bar exercises, the machine's ladder for machines and cables, and 2.5 kg
+       steps for everything else (and for machines in a session with no gym).
      - Last time, for machines and cables, is the last session on the same machine; free weights
        take the last session at any gym. (A program day's exercise shows the session progression
        judges instead: Automatic progressive overload.)

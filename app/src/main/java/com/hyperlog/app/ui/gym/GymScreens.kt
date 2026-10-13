@@ -1,14 +1,20 @@
 package com.hyperlog.app.ui.gym
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -27,36 +33,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.unit.dp
-import com.hyperlog.app.R
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import java.time.DayOfWeek
-import java.time.format.TextStyle
-import java.util.Locale
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.hyperlog.app.R
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.util.Locale
 
 /**
- * Every gym, then the dumbbells and plates all gyms share. A gym opens its equipment; the shared
- * ladders open the ladder editor.
+ * Every gym, then the dumbbells, plates and specialty bars all gyms share. A gym opens its
+ * equipment; the shared ladders open the ladder editor, a bar a field for its weight.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,14 +66,17 @@ fun GymsScreen(
     gyms: List<Gym>,
     dumbbells: LadderSpec,
     plates: LadderSpec.Plates,
+    bars: Map<Equipment, Double>,
     onAddGym: (String) -> Unit,
     onOpenGym: (Long) -> Unit,
     onDumbbells: () -> Unit,
     onPlates: () -> Unit,
+    onBar: (Equipment, Double) -> Unit,
     onBack: () -> Unit,
 ) {
     BackHandler(onBack = onBack)
     var naming by rememberSaveable { mutableStateOf(false) }
+    var weighing by rememberSaveable { mutableStateOf<Equipment?>(null) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,7 +99,13 @@ fun GymsScreen(
             SectionLabel(stringResource(R.string.gym_shared))
             Row(stringResource(R.string.gym_dumbbells), dumbbells.ladder().preview(), symbol = null, onClick = onDumbbells)
             Row(stringResource(R.string.gym_plates), plates.summary(), symbol = null, onClick = onPlates)
+            bars.forEach { (bar, kg) ->
+                Row(bar.label, stringResource(R.string.gym_bar_summary, formatKg(kg)), symbol = null, onClick = { weighing = bar })
+            }
         }
+    }
+    weighing?.let { bar ->
+        BarDialog(bar.label, bars[bar] ?: 0.0, onDone = { kg -> weighing = null; onBar(bar, kg) }, onDismiss = { weighing = null })
     }
     if (naming) {
         NameDialog(
@@ -274,6 +285,29 @@ internal fun SectionLabel(text: String) {
             modifier = Modifier.padding(start = 64.dp, top = 16.dp, bottom = 8.dp),
         )
     }
+}
+
+/** A specialty bar's own weight, typed on the system keyboard like the rest of setup. */
+@Composable
+private fun BarDialog(title: String, kg: Double, onDone: (Double) -> Unit, onDismiss: () -> Unit) {
+    var text by rememberSaveable { mutableStateOf(formatKg(kg)) }
+    val value = text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it <= 100 }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                text,
+                onValueChange = { text = it },
+                label = { Text(stringResource(R.string.gym_bar_weight)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = { TextButton(onClick = { value?.let(onDone) }, enabled = value != null) { Text(stringResource(R.string.gym_bar_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.gym_cancel)) } },
+    )
 }
 
 @Composable

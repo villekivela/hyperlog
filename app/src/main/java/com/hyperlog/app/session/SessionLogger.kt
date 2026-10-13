@@ -785,7 +785,7 @@ class SessionLogger(
                 techniques = dao.techniques(se.id).associate { it.setIndex to it.technique?.let(TechniqueJson::decode) },
                 plates = when {
                     exercise.equipment == Equipment.Barbell -> shared.plates
-                    else -> machine?.ladder as? LadderSpec.Plates
+                    else -> shared.barPlates(exercise.equipment) ?: machine?.ladder as? LadderSpec.Plates
                 },
                 warmupsDone = se.warmupsDone,
             )

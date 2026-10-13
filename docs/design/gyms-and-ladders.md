@@ -45,6 +45,8 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
       2 · 4 · 6 · 8 … 60 kg                                     1.1 · 3.4 · 5.7 · 7.9 · 10.2 · 12.5 … 89.6 kg
       Barbell plates         >                                  40 weights
       20 kg bar · 20 20 20 15 10 5 2.5 1.25
+      EZ bar                          (also Trap bar, Safety bar; a tap opens a
+      10 kg bar, the shared plates     "Bar weight (kg)" dialog, system keyboard)
 
  Pad strip during a weight check:
  ⚠ 10× last set   ( 22.5 ) ( 25 ) ( 30 )

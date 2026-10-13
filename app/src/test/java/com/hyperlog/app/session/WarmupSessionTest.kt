@@ -124,6 +124,23 @@ class WarmupSessionTest {
     }
 
     @Test
+    fun anEzBarLoadsTheSharedPlatesOnItsOwnBar() = runTest {
+        val gyms = com.hyperlog.app.gym.Gyms(db)
+        val logger = logger()
+        logger.start()
+        logger.addExercise("ez_bar_curl")
+        // The EZ bar is 10 kg until set otherwise, with the shared plates on it.
+        assertEquals(LadderSpec.Plates(10.0, LadderSpec.DefaultPlates.pairs), logger.session.current!!.plates)
+        assertEquals(listOf(10.0, 12.5, 15.0), logger.session.current!!.ladder.rungs.take(3))
+        assertEquals(listOf(5.0, 2.5), logger.session.current!!.plates!!.perSide(25.0))
+
+        gyms.setBar(com.hyperlog.app.library.Equipment.EzBar, 8.0)
+        assertEquals(8.0, gyms.bars.first().getValue(com.hyperlog.app.library.Equipment.EzBar), 0.0)
+        logger.load()
+        assertEquals(8.0, logger.session.current!!.plates!!.baseKg, 0.0)
+    }
+
+    @Test
     fun dumbbellsHaveNoPlateCalculator() = runTest {
         val logger = logger()
         logger.startDay(programs.active.first()!!, gymId = null)

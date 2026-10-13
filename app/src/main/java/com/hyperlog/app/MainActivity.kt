@@ -143,6 +143,7 @@ private fun App(
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
     val dumbbells by gymsModel.dumbbells.collectAsStateWithLifecycle()
     val plates by gymsModel.plates.collectAsStateWithLifecycle()
+    val bars by gymsModel.bars.collectAsStateWithLifecycle()
     val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
     val program by programModel.active.collectAsStateWithLifecycle()
     val importErrors by programModel.errors.collectAsStateWithLifecycle()
@@ -276,11 +277,12 @@ private fun App(
             }
         }
         screen == Screen.Gyms -> GymsScreen(
-            gyms, dumbbells, plates,
+            gyms, dumbbells, plates, bars,
             onAddGym = { name -> gymsModel.addGym(name) { gymId = it } },
             onOpenGym = { gymId = it },
             onDumbbells = { ladder = DumbbellLadder },
             onPlates = { ladder = PlateLadder },
+            onBar = gymsModel::setBar,
             onBack = { screen = Screen.Settings },
         )
         screen == Screen.Library -> LibraryScreen(
