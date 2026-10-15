@@ -4,10 +4,13 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -26,6 +29,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -414,13 +418,15 @@ private fun RowFrame(
     clickLabel: String? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
-    Row(
+    val source = remember { MutableInteractionSource() }
+    Box(
         modifier.fillMaxWidth().height(height)
-            .then(if (onClick != null) Modifier.clip(RowRipple).clickable(onClickLabel = clickLabel, onClick = onClick) else Modifier)
-            .padding(horizontal = RowPad),
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
+            .then(if (onClick != null) Modifier.clickable(interactionSource = source, indication = null, onClickLabel = clickLabel, onClick = onClick) else Modifier),
+    ) {
+        // The ripple covers the row right of the index column, so it never clips the technique's pill.
+        if (onClick != null) Box(Modifier.matchParentSize().padding(start = RowPad + ColIndex).clip(RowRipple).indication(source, ripple()))
+        Row(Modifier.fillMaxSize().padding(horizontal = RowPad), verticalAlignment = Alignment.CenterVertically, content = content)
+    }
 }
 
 @Composable
