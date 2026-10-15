@@ -49,4 +49,21 @@ class InForceTest {
         val history = listOf(record(1, Scope.RestOfProgram))
         assertEquals(0, ActiveProgram(1, program, Position(program.weeks + 1, 0), history, today = oct13).inForce.size)
     }
+
+    @Test
+    fun aChangeInForceShowsWhatItDoesFromHereOn() {
+        val swap = AcceptedChange(
+            7, Change("Hands", Scope.Dates(oct13.minusDays(2), oct13.plusDays(5)), listOf(Operation.Swap("bench", "smith_machine_bench_press"))),
+            oct13.minusDays(2), Position(1, 0), Position(1, 0), program.blockAt(1)!!.id,
+        )
+        val diff = com.hyperlog.app.coach.Changes.inForceDiff(program, Position(1, 0), oct13, listOf(swap), swap)
+        val slot = diff.days.first().slots.single()
+        assertEquals("barbell_bench_press", slot.before!!.exercise)
+        assertEquals("smith_machine_bench_press", slot.after!!.exercise)
+        assertEquals(null, diff.next)
+
+        // A move of the position shows as it was made.
+        val shift = AcceptedChange(8, Change("Back a week", Scope.RestOfProgram, listOf(Operation.ShiftProgram(1))), oct13, Position(3, 0), Position(2, 0), null)
+        assertEquals(Position(3, 0) to Position(2, 0), com.hyperlog.app.coach.Changes.inForceDiff(program, Position(2, 0), oct13, listOf(shift), shift).next)
+    }
 }

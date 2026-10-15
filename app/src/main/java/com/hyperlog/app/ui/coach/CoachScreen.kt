@@ -50,6 +50,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -59,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
@@ -80,6 +84,15 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val Margin = 24.dp
+
+/** The filled button of the bottom bar: the next step. */
+internal const val NextStepTag = "coach-next-step"
+
+/** The gym chip for somewhere not set up in Hyperlog. */
+private const val Elsewhere = -1L
+
+/** Changes in force shown in full; any more fold under "N more in force". */
+private const val ShownChanges = 2
 
 /** A starter: the chip's label, and the sentence it puts into the words. */
 private data class Starter(val label: Int, val words: Int)
@@ -109,8 +122,13 @@ fun CoachScreen(
     gyms: List<Gym> = emptyList(),
     /** The gym the start sheet would pick, preselected. */
     usualGym: UsualGym? = null,
-    /** Shares the prompt for the words and the gym picked with the Claude app. */
-    onAskClaude: (words: String, gym: Gym?) -> Unit = { _, _ -> },
+    /** Shares the prompt for the words and the gym picked (null: [elsewhere] or no gyms) with the Claude app. */
+    onAskClaude: (words: String, gym: Gym?, elsewhere: Boolean) -> Unit = { _, _, _ -> },
+    /** Ask Claude was pressed for these words: pasting the reply is the next step. Kept by the caller, which ends it. */
+    asked: Boolean = false,
+    onAskedChange: (Boolean) -> Unit = {},
+    /** Opens a Change in force, read-only. */
+    onOpenChange: (Long) -> Unit = {},
     /** Reads the clipboard as Claude's reply. */
     onPaste: () -> Unit = {},
     /** The problems of the reply last pasted; null when there are none to show. */
@@ -129,12 +147,22 @@ fun CoachScreen(
     onRevert: (Long) -> Unit = {},
     onSettings: () -> Unit = {},
 ) {
-    /** Ask Claude was pressed: pasting the reply is the next step. */
-    var asked by rememberSaveable { mutableStateOf(false) }
     /** Hyperlog went to the background after asking: on coming back, the clipboard is read once. */
     var away by rememberSaveable { mutableStateOf(false) }
     var picked by rememberSaveable { mutableStateOf<Long?>(null) }
-    val gym = gyms.firstOrNull { it.id == picked } ?: gyms.firstOrNull { it.id == usualGym?.id } ?: gyms.firstOrNull()
+    val elsewhere = picked == Elsewhere && gyms.isNotEmpty()
+    val gym = if (elsewhere) null else gyms.firstOrNull { it.id == picked } ?: gyms.firstOrNull { it.id == usualGym?.id } ?: gyms.firstOrNull()
+    /** The Changes after the first [ShownChanges] are folded under "N more in force" until opened. */
+    var allChanges by rememberSaveable { mutableStateOf(false) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focus = LocalFocusManager.current
+    // A reply found on return is the one thing to do: the keyboard makes way for Review.
+    LaunchedEffect(replyReady) {
+        if (replyReady) {
+            keyboard?.hide()
+            focus.clearFocus()
+        }
+    }
     var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
     val field = remember { FocusRequester() }
     val fieldInView = remember { BringIntoViewRequester() }
@@ -152,6 +180,8 @@ fun CoachScreen(
 
     fun edit(value: TextFieldValue) {
         if (value.text != words.text) onClosePasteErrors()
+        // Cleared words end the request: Ask Claude is the next step again.
+        if (value.text.isBlank() && asked) onAskedChange(false)
         onWords(value)
     }
     fun focusWords() {
@@ -186,8 +216,8 @@ fun CoachScreen(
                 replyReady = replyReady,
                 canAsk = canAsk,
                 onAsk = {
-                    asked = true
-                    onAskClaude(words.text.trim(), gym)
+                    onAskedChange(true)
+                    onAskClaude(words.text.trim(), gym, elsewhere)
                 },
                 onPaste = onPaste,
                 onReview = onReview,
@@ -202,8 +232,11 @@ fun CoachScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (inForce.isNotEmpty()) {
-                inForce.forEachIndexed { i, record ->
-                    Segment(i, inForce.size) {
+                val folded = inForce.size > ShownChanges && !allChanges
+                val shown = if (folded) inForce.take(ShownChanges) else inForce
+                val count = shown.size + if (folded) 1 else 0
+                shown.forEachIndexed { i, record ->
+                    Segment(i, count, onClick = { onOpenChange(record.id) }, onClickLabel = stringResource(R.string.coach_open_change)) {
                         InForce(
                             record, program!!,
                             onRevert = { reverting = record.id },
@@ -214,6 +247,22 @@ fun CoachScreen(
                                 focusWords()
                             },
                         )
+                    }
+                }
+                if (folded) {
+                    Segment(count - 1, count, onClick = { allChanges = true }) {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                pluralStringResource(R.plurals.coach_more_in_force, inForce.size - ShownChanges, inForce.size - ShownChanges),
+                                Modifier.weight(1f).padding(start = 56.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            SymbolIcon(Symbol.ExpandMore, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
                 Spacer(Modifier.size(GroupGap))
@@ -239,6 +288,14 @@ fun CoachScreen(
                                     leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                                 )
                             }
+                            // Somewhere not set up: the words say what's there.
+                            FilterChip(
+                                colors = selectedChipColors(),
+                                selected = elsewhere,
+                                onClick = { picked = Elsewhere },
+                                label = { Text(stringResource(R.string.coach_elsewhere)) },
+                                leadingIcon = if (elsewhere) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
+                            )
                         }
                     }
                 }
@@ -355,7 +412,7 @@ private fun BottomBar(
                     style = MaterialTheme.typography.titleMedium,
                     color = cs.onPrimaryContainer,
                 )
-                Button(onClick = onReview) { Text(stringResource(R.string.coach_review_reply)) }
+                Button(onClick = onReview, modifier = Modifier.testTag(NextStepTag)) { Text(stringResource(R.string.coach_review_reply)) }
             }
         }
         Row(
@@ -373,7 +430,7 @@ private fun BottomBar(
                 // With no program only words come back, so there is nothing to paste.
                 !withProgram -> {
                     Spacer(Modifier.weight(1f))
-                    Button(enabled = canAsk, onClick = onAsk) { ask() }
+                    Button(enabled = canAsk, onClick = onAsk, modifier = Modifier.testTag(NextStepTag)) { ask() }
                 }
                 replyReady -> {
                     TextButton(onClick = onPaste) { paste() }
@@ -383,12 +440,12 @@ private fun BottomBar(
                 asked -> {
                     TextButton(enabled = canAsk, onClick = onAsk) { ask() }
                     Spacer(Modifier.weight(1f))
-                    Button(onClick = onPaste) { paste() }
+                    Button(onClick = onPaste, modifier = Modifier.testTag(NextStepTag)) { paste() }
                 }
                 else -> {
                     TextButton(onClick = onPaste) { paste() }
                     Spacer(Modifier.weight(1f))
-                    Button(enabled = canAsk, onClick = onAsk) { ask() }
+                    Button(enabled = canAsk, onClick = onAsk, modifier = Modifier.testTag(NextStepTag)) { ask() }
                 }
             }
         }
@@ -399,6 +456,7 @@ private fun BottomBar(
 @Composable
 private fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val copyProblem = AskClaude.copyProblem(errors)
     // A failed paste scrolls its problems into view.
     val problems = remember { BringIntoViewRequester() }
     LaunchedEffect(errors) { problems.bringIntoView() }
@@ -410,15 +468,18 @@ private fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) 
                 style = MaterialTheme.typography.titleMedium,
                 color = cs.error,
             )
-            IconButton(onClick = { onCopy(errors) }) {
+            // A copy cut short or without JSON is fixed by copying again, so there's nothing to hand Claude.
+            if (!copyProblem) IconButton(onClick = { onCopy(errors) }) {
                 SymbolIcon(Symbol.ContentCopy, stringResource(R.string.coach_copy_problems))
             }
         }
-        Text(
-            pluralStringResource(R.plurals.coach_paste_problems, errors.size, errors.size),
-            style = MaterialTheme.typography.bodyMedium,
-            color = cs.onSurfaceVariant,
-        )
+        if (!copyProblem) {
+            Text(
+                pluralStringResource(R.plurals.coach_paste_problems, errors.size, errors.size),
+                style = MaterialTheme.typography.bodyMedium,
+                color = cs.onSurfaceVariant,
+            )
+        }
         errors.forEach { Problem(it) }
     }
 }

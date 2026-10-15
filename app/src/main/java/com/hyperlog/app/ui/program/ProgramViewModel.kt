@@ -8,6 +8,7 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ChangeValidator
+import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.History
@@ -118,7 +119,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
      * The prompt Ask Claude shares for [words], with the [gym] picked, the days off since
      * [lastTrained] and the weekly sets; with no program running it asks for advice in words.
      */
-    suspend fun askClaudePrompt(words: String, gym: Gym?, lastTrained: LocalDate?, weekdays: Set<DayOfWeek>): String {
+    suspend fun askClaudePrompt(words: String, gym: Gym?, elsewhere: Boolean, lastTrained: LocalDate?, weekdays: Set<DayOfWeek>): String {
         _reply.value = null
         val active = programs.active.first()
         val db = HyperlogDatabase.get(getApplication())
@@ -126,7 +127,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         val sessions = PastSessionEditor(db, programs).sessions()
         val weeks = History(db, programs).weeklySets(AskClaude.SET_WEEKS)
         return withContext(Dispatchers.Default) {
-            AskClaude.prompt(words, active, sessions, library, gym = gym, lastTrained = lastTrained, weekdays = weekdays, weeklySets = weeks)
+            AskClaude.prompt(words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays, weeklySets = weeks)
         }
     }
 
@@ -153,6 +154,10 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun clearReply() {
+        _reply.value = null
+    }
+
     /** Opens the reply found for review. */
     fun reviewReply() {
         val change = _reply.value ?: return
@@ -170,6 +175,28 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     fun closePasteErrors() {
         _pasteErrors.value = null
+    }
+
+    private val _inForce = MutableStateFlow<Pair<Long, ChangeReview>?>(null)
+
+    /** A Change in force opened from its card on Coach, read-only, with its id for Revert; null when none is open. */
+    val inForce: StateFlow<Pair<Long, ChangeReview>?> = _inForce.asStateFlow()
+
+    /** Opens the Change in force [id]: what it does from here on, with the other Changes applied. */
+    fun openInForce(id: Long) {
+        viewModelScope.launch {
+            val active = programs.active.first() ?: return@launch
+            val record = active.inForce.firstOrNull { it.id == id } ?: return@launch
+            val diff = withContext(Dispatchers.Default) {
+                Changes.inForceDiff(active.program, active.position, active.today, active.changes, record.accepted)
+            }
+            val block = active.program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
+            _inForce.value = id to ChangeReview(record.change, diff, active.program, block)
+        }
+    }
+
+    fun closeInForce() {
+        _inForce.value = null
     }
 
     fun revert(changeId: Long) {

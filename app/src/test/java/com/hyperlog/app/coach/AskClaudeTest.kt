@@ -45,6 +45,17 @@ class AskClaudeTest {
     }
 
     @Test
+    fun eachChangeInForceGoesWithItsOperations() {
+        val record = com.hyperlog.app.program.ChangeRecord(
+            AcceptedChange(3, Change("Lighter close-grip bench", Scope.RestOfBlock, listOf(Operation.AdjustLoad("close_grip_bench", -10, "elbow"))), oct13.minusDays(2), Position(1, 1), Position(1, 1), program.blockAt(1)!!.id),
+            acceptedAt = 3, revertedAt = null,
+        )
+        val text = AskClaude.prompt("x", plan.copy(history = listOf(record)), emptyList(), library.exercises)
+        assertTrue(text, text.contains("- Lighter close-grip bench (rest of the block, accepted 2026-10-11)"))
+        assertTrue(text, text.contains("""  operations: [{"op":"adjust_load","slot":"close_grip_bench","percent":-10,"reason":"elbow"}]"""))
+    }
+
+    @Test
     fun claudeMayAnswerInWordsAlone() {
         val text = prompt()
         assertTrue(text, text.contains("If the plan can stand as it is, say so in words and send no JSON."))
@@ -73,6 +84,11 @@ class AskClaudeTest {
         assertTrue(text, text.contains("- Seated leg curl (5–15 kg"))
         assertTrue(text, text.contains("- Dumbbells: "))
         assertTrue(text, text.contains("Not here, so swap them out: leg_extension (Leg Extension)"))
+        // Elsewhere: no gym's equipment, the words say what there is.
+        val away = AskClaude.prompt("Hotel gym, dumbbells to 30 kg.", plan, emptyList(), library.exercises, gym = null, elsewhere = true)
+        assertTrue(away, away.contains("## Gym: somewhere not set up in Hyperlog"))
+        assertTrue(away, away.contains("The equipment there is in my words above"))
+        assertFalse(away.contains("Dumbbells: "))
         // No gym picked, no section.
         assertFalse(prompt().contains("## Gym"))
     }
@@ -150,6 +166,9 @@ class AskClaudeTest {
         val unknownSlot = "```json\n{\"summary\": \"x\", \"scope\": \"rest_of_program\", \"operations\": [{\"op\": \"remove\", \"slot\": \"rows\"}]}\n```"
         assertEquals(ChangeValidator.Result.Invalid(listOf("operations[0].slot: unknown slot \"rows\"")), AskClaude.read(unknownSlot, program, ids))
         assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.NOTHING_TO_READ)), AskClaude.read("Sounds good, rest up!", program, ids))
+        // A reply copied short says so, once, and not to ask Claude.
+        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":", program, ids))
+        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("```json\n{\"summary\": \"Hands\", \"scope\": {\"from\": \"2026-10-13\", \"to\": \"2026-10-19\"}, \"operations\": [", program, ids))
         assertTrue((AskClaude.read("{\"summary\": }", program, ids) as ChangeValidator.Result.Invalid).errors.single().startsWith("not a Change"))
     }
 }

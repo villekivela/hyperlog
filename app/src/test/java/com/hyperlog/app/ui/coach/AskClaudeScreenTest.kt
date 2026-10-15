@@ -129,9 +129,16 @@ class AskClaudeScreenTest {
         assertTrue(compose.onAllNodes(hasText("Accept")).fetchSemanticsNodes().isEmpty())
         assertEquals(0, runBlocking { db.planChanges().changes(db.programs().active()!!.id).size })
 
+        // A reply copied short says so once, with nothing to hand back to Claude.
+        copy("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":")
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("cut off", substring = true)
+        assertTrue(compose.onAllNodes(hasText("problem", substring = true)).fetchSemanticsNodes().isEmpty())
+        assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasContentDescription("Copy problems")).fetchSemanticsNodes().isEmpty())
+
         // A reply with no JSON says so too.
         copy("Sounds good, rest up!")
         compose.onNodeWithText("Paste reply").performClick()
-        compose.waitFor("no Change found", substring = true)
+        compose.waitFor("No Change found", substring = true)
     }
 }
