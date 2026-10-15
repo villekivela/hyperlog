@@ -172,6 +172,74 @@ class TechniqueSessionTest {
         assertEquals(listOf(2), logger.session.current!!.sets.single().extensions.map { it.reps })
     }
 
+    /** The first mini-set of a myo-reps set, its reps prefilled with the target of 4. */
+    private suspend fun firstMiniSet(): SessionLogger {
+        program("leg_extension", myo)
+        val logger = logger()
+        logger.startNext()
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
+        assertEquals("4", logger.session.entry!!.full)
+        return logger
+    }
+
+    private fun SessionLogger.assertClosedAfter(vararg reps: Int) {
+        assertNull(session.followUp)
+        assertEquals(reps.toList(), session.current!!.sets.single().extensions.map { it.reps })
+    }
+
+    @Test
+    fun theMinusKeyLowersAMiniSetBelowItsTargetAndClosesTheSet() = runTest {
+        val logger = firstMiniSet()
+        logger.press(PadKey.Minus)
+        assertEquals("3", logger.session.entry!!.full)
+        logger.tick()
+        logger.assertClosedAfter(3)
+    }
+
+    @Test
+    fun backspacingAMiniSetThenTypingLowerClosesTheSet() = runTest {
+        val logger = firstMiniSet()
+        logger.press(PadKey.Backspace); logger.type("3"); logger.tick()
+        logger.assertClosedAfter(3)
+    }
+
+    @Test
+    fun tappingTheRepsCellThenTypingLowerClosesTheSet() = runTest {
+        val logger = firstMiniSet()
+        logger.focus(com.hyperlog.app.domain.Field.Reps); logger.type("3"); logger.tick()
+        logger.assertClosedAfter(3)
+    }
+
+    @Test
+    fun theRowsCheckAfterLoweringAMiniSetLogsTheLoweredReps() = runTest {
+        val logger = firstMiniSet()
+        logger.press(PadKey.Minus)
+        now += 5_000
+        logger.logShown()
+        logger.assertClosedAfter(3)
+    }
+
+    @Test
+    fun theMinusKeyOnALaterMiniSetOfTheOwnersLegPressClosesTheSet() = runTest {
+        program("leg_extension", """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 3, "maxMiniSets": 5 } } ]""")
+        val logger = logger()
+        logger.startNext()
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
+        logger.tick(); logger.tick()
+        assertEquals("3", logger.session.entry!!.full)
+        logger.press(PadKey.Minus)
+        assertEquals("2", logger.session.entry!!.full)
+        logger.tick()
+        logger.assertClosedAfter(3, 3, 2)
+    }
+
+    @Test
+    fun typingAfterTheMinusKeyLowersTheMiniSetAndClosesTheSet() = runTest {
+        val logger = firstMiniSet()
+        logger.press(PadKey.Minus); logger.type("2"); logger.tick()
+        logger.assertClosedAfter(2)
+    }
+
     @Test
     fun myoRepsStopAtTheMostMiniSetsAllowed() = runTest {
         program("leg_extension", myo)
