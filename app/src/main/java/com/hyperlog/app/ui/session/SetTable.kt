@@ -3,6 +3,7 @@ package com.hyperlog.app.ui.session
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
@@ -868,10 +870,13 @@ internal fun Cell(
         contentAlignment = Alignment.Center,
     ) {
         val empty = text.isEmpty() && placeholder != null
+        // Long values (`100 + 20`) step down a size; anything still too wide (a `10–12` range) shrinks to fit inside the padding.
+        val style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum)
         Text(
             if (empty) AnnotatedString(placeholder!!) else text,
-            // Long values (`100 + 20`) step down a size so they stay inside the cell.
-            style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum),
+            Modifier.padding(horizontal = CellPad),
+            style = style,
+            autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = style.fontSize),
             color = when { empty -> cs.outline; flagged -> cs.error; else -> cs.onSurface },
             fontWeight = if ((focused || flagged) && !empty) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,

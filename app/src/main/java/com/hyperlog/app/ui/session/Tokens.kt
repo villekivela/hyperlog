@@ -45,6 +45,8 @@ internal val ColRir = 36.dp
 /** The check column at the end of every row. */
 internal val ColCheck = 40.dp
 internal val CellInset = 4.dp
+/** A cell's value keeps this clear of its outline on each side. */
+internal val CellPad = 8.dp
 internal val CellHeight = 48.dp
 internal val KeyHeight = 56.dp
 internal val KeyGap = 4.dp

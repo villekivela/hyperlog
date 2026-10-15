@@ -9,6 +9,11 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -150,6 +155,20 @@ class ActiveRowTest {
         val reps = cell("Reps")
         // A mini-set's weight is the set's, so it is no cell.
         shot.assertActive("active mini-set, dark=$dark", null, DpRect(circle.left, reps.top, circle.right, reps.bottom), focused = reps, other = null)
+    }
+
+    @Test
+    fun aRangePlaceholderFitsInsideItsCell() {
+        shoot(session(exercise(emptyList(), listOf(SetPrescription(RepRange(10, 12), 0, 90))), SetEntry("60", "", "", 0, Field.Reps, partialMode = false, fresh = true)), dark = true)
+        val cell = cell("Reps")
+        val text = compose.onNode(hasText("10–12") and hasAnyAncestor(hasClickAction()), useUnmergedTree = true)
+        val results = mutableListOf<TextLayoutResult>()
+        text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(results) }
+        val layout = results.single()
+        assertTrue("the placeholder overflows", !layout.hasVisualOverflow)
+        val line = (layout.getLineRight(0) - layout.getLineLeft(0)) / compose.density.density
+        val room = (cell.right - cell.left).value - 2 * 8
+        assertTrue("10–12 is $line dp wide, more than the $room dp inside the cell's padding", line <= room)
     }
 
     @Test

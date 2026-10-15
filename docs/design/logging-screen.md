@@ -40,7 +40,7 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Columns | 40 · flex · 72 · 80 · 36 · 40 dp | Index, Last, kg, Reps, RIR, ✓ |
 | Index circle | 32 dp; badge 16 dp on its top corner | `W` or the set number; a technique's symbol |
 | Check | 28 dp circle (24 dp on sub-rows), 2 dp ring | Still to do (ring), done (filled) |
-| Cell | 48 dp tall (40 on sub-rows), 12 dp radius, 4 dp inside its column, 1 dp outline (2 dp focused) | Tappable value in the active row |
+| Cell | 48 dp tall (40 on sub-rows), 12 dp radius, 4 dp inside its column, 1 dp outline (2 dp focused), 8 dp inner padding | Tappable value in the active row; a value or placeholder too wide for the padding (`10–12`) steps its size down to fit |
 | Chip | 32 dp, 8 dp radius, 1 dp outline | Swap or superset, under the name |
 | Next row | 48 dp, 16 dp radius | The pad's top row |
 | Fade | 32 dp | Top or bottom edge of the list, when it has more that way |
