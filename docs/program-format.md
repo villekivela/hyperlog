@@ -85,7 +85,7 @@ To put a technique on the last set only, write the last set as its own line:
 | `kind` | Fields (defaults) |
 | --- | --- |
 | `dropset` | `drops` 1–3 (2), `percent` 5–50 (25): each drop's reduction |
-| `myo_reps` | `miniSetReps` 1–10 (3), `maxMiniSets` 1–10 (5); the set's `reps` are the activation reps |
+| `myo_reps` | `miniSetReps` 1–10 (3); the set's `reps` are the activation reps. Mini-sets continue until one misses the target. `maxMiniSets` from older programs is accepted and ignored |
 | `lengthened_partials` | `partials` 1–30, or leave it out for partials to failure |
 | `iso_hold` | `seconds` 1–300 and `position` `"stretch"` or `"contraction"`, both required |
 | `failure` | none |

@@ -153,8 +153,8 @@ failure) has a tertiaryContainer circle and the technique's Material Symbol as a
 badge on its top corner (`trending_down`, `repeat`, `unfold_less`, `pan_tool`,
 `local_fire_department`), described by the technique's name, so it reads without colour. A set with
 drops, mini-sets or a hold grows its circle into one tall pill down the column through those rows;
-`+` at the pill's foot adds a drop to a drop set or a mini-set to myo-reps, before the set or
-while it is under way. A back-off set has no mark: its
+`+` at the pill's foot adds a drop to a drop set, before the set or
+while it is under way; a myo pill has no `+`. A back-off set has no mark: its
 lowered weight shows it. A tap on a circle of a set still to do opens its set sheet (technique,
 target, Remove set, left and right).
 
@@ -215,7 +215,7 @@ field:
 - Weight: five rungs of the equipment's ladder around the current value.
 - Weight that looks wrong: `warning` symbol, the reason ("10× last set", "3× lighter than the
   plan", "Not on this equipment") and three real rungs near the expected weight.
-- Drop or mini-set: progress ("Drop 1 of 2", "Mini-set 2 of 5") and **Finish set**.
+- Drop or mini-set: progress ("Drop 1 of 2", "Mini-set 2") and **Finish set**.
 
 **Next row.** The pad's top row, on the pad's surface: "Next" in primary, the next exercise
 outside the one on screen (or superset), `expand_less`; "Last exercise" alone when nothing follows.
@@ -297,9 +297,8 @@ buttons this way: the way out first, the action last, at the right.
   Planned sub-rows are muted prefills (drop weights computed from the set's planned or typed weight,
   live), done ones end in a filled check.
 - **Drop**: RIR is a 0 ring, Last is last time's drop (`18 × 9`), reps prefill from it.
-- **Myo-reps**: reps prefill with the mini-set's target. Before the set every mini-set it allows
-  shows as a muted planned row (5 by default), so each `+` adds a row; during it, the done ones
-  and the active one. The weight is muted and can't be tapped.
+- **Myo-reps**: reps prefill with the mini-set's target. Myo-reps have no maximum and no `+`. Before the set one muted planned
+  row shows the target; during it, the done ones and the active one. The weight is muted and can't be tapped.
 - **Iso hold**: one sub-row, its value in seconds (`20 s`); the weight is the set's, muted.
   The strip reads `pan_tool` Hold 20 s, a tonal **Start** / **Stop**, and Finish set. While it
   runs, the header pill shows `pan_tool` and the time held, filling toward the target, and turns
@@ -449,7 +448,7 @@ session reads like the logging screen with nothing to do, so tapping a number is
 | The same with the pad hidden | Logs the set as shown: the target partials if the set has them, else none |
 | Reps of a drop or myo set | Logs the main set; rest stops; the first drop or mini-set becomes active |
 | Drop sub-row | Logs the drop; after the last planned drop the set closes and rest starts |
-| Myo mini-set | Logs the mini-set; closes the set when it misses the target or hits the maximum, else starts the next breathing countdown |
+| Myo mini-set | Logs the mini-set; closes the set when it misses the target, else starts the next breathing countdown |
 | Iso hold | Stops a running hold timer and logs the whole seconds held (or the seconds typed); the set closes and rest starts |
 | Left reps of a split set | (→ in effect) moves to the right side's reps; the next ✓ logs |
 | Correcting a logged row | Saves the correction; the set to do now becomes active again. Rest is not touched |

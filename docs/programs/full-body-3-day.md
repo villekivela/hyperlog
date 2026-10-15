@@ -158,7 +158,7 @@ document and the format don't line up, the file does this:
   override for weeks 1–2: `rirAdd: 1` (so 0 RIR becomes 1, and nothing goes to failure) and no
   techniques. Intensify writes its lower reps into its own days.
 - **Techniques on the last set.** A slot with two sets and a technique is two lines, the second
-  carrying it. Myo-reps and drop sets use the format's defaults (mini-sets of 3, up to 5; drops of
+  carrying it. Myo-reps and drop sets use the format's defaults (mini-sets of 3; drops of
   25%, 2 of them). Lengthened partials go to failure.
 - **Week 12, Day A.** The bench test is one line, 1 rep @ 1 RIR. Its weight is suggested from the
   estimate like any new rep range. The format prescribes no loads, so the goal rule (estimate within

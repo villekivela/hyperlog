@@ -79,7 +79,7 @@ class SetTableTest {
         compose.onNodeWithText("6–8").assertIsDisplayed()
         // `+` at the drop set's foot adds a drop.
         compose.onNodeWithContentDescription("Add a drop").performClick()
-        assertEquals("addDropOrMiniSet 2", calls.last())
+        assertEquals("addDrop 2", calls.last())
     }
 
     /** Set 1 logged with [technique] and [done] of its drops or mini-sets, the set still open for [followUp]. */
@@ -102,21 +102,21 @@ class SetTableTest {
     fun plusAddsADropToADropSetUnderWay() {
         showOpen(Technique.Dropset(2, 25), done = 1, com.hyperlog.app.session.FollowUp.Drop(1, 2))
         compose.onNodeWithContentDescription("Add a drop").performClick()
-        assertEquals("addDropOrMiniSet 0", calls.last())
+        assertEquals("addDrop 0", calls.last())
     }
 
     @Test
-    fun plusAddsAMiniSetToMyoRepsUnderWay() {
-        showOpen(Technique.MyoReps(4, 3), done = 1, com.hyperlog.app.session.FollowUp.MiniSet(1, 3, 4))
-        compose.onNodeWithContentDescription("Add a mini-set").performClick()
-        assertEquals("addDropOrMiniSet 0", calls.last())
+    fun myoRepsHaveNoPlusUnderWayOrBeforeTheyStart() {
+        showOpen(Technique.MyoReps(4), done = 1, com.hyperlog.app.session.FollowUp.MiniSet(1, 4))
+        compose.onAllNodesWithContentDescription("Add a mini-set").assertCountEquals(0)
+        compose.onAllNodesWithContentDescription("Add a drop").assertCountEquals(0)
     }
 
     @Test
-    fun plusAddsAMiniSetBeforeMyoRepsStart() {
-        show(emptyList(), listOf(SetPrescription(RepRange(10, 12), 0, 90, technique = Technique.MyoReps(4, 3))), warmups = false)
-        compose.onNodeWithContentDescription("Add a mini-set").performClick()
-        assertEquals("addDropOrMiniSet 0", calls.last())
+    fun noPlusBeforeMyoRepsStart() {
+        show(emptyList(), listOf(SetPrescription(RepRange(10, 12), 0, 90, technique = Technique.MyoReps(4))), warmups = false)
+        compose.onAllNodesWithContentDescription("Add a mini-set").assertCountEquals(0)
+        compose.onAllNodesWithContentDescription("Add a drop").assertCountEquals(0)
     }
 
     @Test
@@ -210,7 +210,7 @@ class SetTableTest {
 private class Recording(val calls: MutableList<String>) : SessionActions {
     override fun logShown() { calls += "logShown" }
     override fun undo(sessionExerciseId: Long) { calls += "undo $sessionExerciseId" }
-    override fun addDropOrMiniSet(setIndex: Int) { calls += "addDropOrMiniSet $setIndex" }
+    override fun addDrop(setIndex: Int) { calls += "addDrop $setIndex" }
     override fun setTechnique(setIndex: Int, technique: Technique?) { calls += "setTechnique $setIndex $technique" }
     override fun press(key: PadKey) = Unit
     override fun done() = Unit

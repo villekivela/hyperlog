@@ -112,7 +112,7 @@ A work set followed immediately by one or more drops at lower weights, with no r
 One lighter continuation within a drop set. Its weight is reduced from the set's weight and rounded down to a rung.
 
 **Myo-reps**:
-An activation set followed by mini-sets of a few reps separated by short breathing pauses, ending when a mini-set falls short.
+An activation set followed by mini-sets of a few reps separated by short breathing pauses, ending when a mini-set falls short (there is no set number of them).
 _Avoid_: Rest-pause (a different technique)
 
 **Mini-set**:

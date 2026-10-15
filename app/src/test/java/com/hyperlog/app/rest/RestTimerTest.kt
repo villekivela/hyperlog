@@ -247,7 +247,7 @@ class RestTimerTest {
 
     @Test
     fun aMyoBreathingPauseCountsDownToTheMiniSetAndBuzzesShortWhenItEnds() = runTest {
-        val logger = logger(benchTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
+        val logger = logger(benchTechnique = """{ "kind": "myo_reps", "miniSetReps": 4 }""")
         logger.log("20", "12")
 
         val n = notification!!

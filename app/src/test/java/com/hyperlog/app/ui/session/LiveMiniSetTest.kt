@@ -59,7 +59,7 @@ class LiveMiniSetTest {
             """
             { "format": 1, "title": "T", "blocks": [ { "id": "b", "name": "B", "weekStart": 1, "weekEnd": 4, "days": [
               { "id": "a", "name": "Day A", "groups": [ { "slots": [ { "id": "s", "exercise": "leg_extension", "sets": [
-                { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 3, "maxMiniSets": 5 } } ] } ] } ] } ] } ] }
+                { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 3 } } ] } ] } ] } ] } ] }
             """,
         )
         logger = SessionLogger(db, clock = { now }, programs = programs).also { it.load() }
@@ -84,7 +84,7 @@ class LiveMiniSetTest {
         override fun logShown() = runBlocking { logger.logShown() }
         override fun endRest() = runBlocking { logger.endRest() }
         override fun finishSet() = runBlocking { logger.finishSet() }
-        override fun addDropOrMiniSet(setIndex: Int) = runBlocking { logger.addDropOrMiniSet(setIndex) }
+        override fun addDrop(setIndex: Int) = runBlocking { logger.addDrop(setIndex) }
         override fun addExercise(exerciseId: String) = Unit
         override fun switchTo(sessionExerciseId: Long) = Unit
         override fun adjustRest(deltaMs: Long) = Unit

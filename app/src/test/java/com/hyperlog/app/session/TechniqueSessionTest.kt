@@ -113,7 +113,7 @@ class TechniqueSessionTest {
         assertEquals(listOf(Extension(Extension.Kind.Drop, 17.5, 8), Extension(Extension.Kind.Drop, 12.5, 5)), logger.session.current!!.lastTime.single().extensions)
     }
 
-    private val myo = """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 } } ]"""
+    private val myo = """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 4 } } ]"""
 
     @Test
     fun myoRepsRunActivationThenMiniSetsWithABreathingCountdownAndStopOnAMiss() = runTest {
@@ -123,7 +123,7 @@ class TechniqueSessionTest {
         logger.type("60"); logger.done(); logger.type("12"); logger.tick()
 
         // The activation set is logged; a 15 s breathing pause comes before the first mini-set.
-        assertEquals(FollowUp.MiniSet(index = 0, max = 3, target = 4), logger.session.followUp)
+        assertEquals(FollowUp.MiniSet(index = 0, target = 4), logger.session.followUp)
         assertEquals(true, logger.session.breathing)
         assertEquals(now + 15_000, logger.session.restEndsAt)
         assertEquals("60", logger.session.entry!!.weight)
@@ -134,7 +134,7 @@ class TechniqueSessionTest {
         assertEquals(com.hyperlog.app.domain.Field.Reps, logger.session.entry!!.field)
 
         logger.tick()
-        assertEquals(FollowUp.MiniSet(index = 1, max = 3, target = 4), logger.session.followUp)
+        assertEquals(FollowUp.MiniSet(index = 1, target = 4), logger.session.followUp)
         assertEquals(now + 15_000, logger.session.restEndsAt)
 
         // A mini-set short of its target ends the set, and full rest starts.
@@ -221,7 +221,7 @@ class TechniqueSessionTest {
 
     @Test
     fun theMinusKeyOnALaterMiniSetOfTheOwnersLegPressClosesTheSet() = runTest {
-        program("leg_extension", """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 3, "maxMiniSets": 5 } } ]""")
+        program("leg_extension", """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 3 } } ]""")
         val logger = logger()
         logger.startNext()
         logger.type("60"); logger.done(); logger.type("12"); logger.tick()
@@ -241,14 +241,16 @@ class TechniqueSessionTest {
     }
 
     @Test
-    fun myoRepsStopAtTheMostMiniSetsAllowed() = runTest {
-        program("leg_extension", myo)
+    fun myoRepsKeepGoingWhileEveryMiniSetHitsTheTargetAndFinishSetEndsThem() = runTest {
+        program("leg_extension", """[ { "reps": "10-12", "rir": 0, "rest": 90, "technique": { "kind": "myo_reps", "miniSetReps": 4 } } ]""")
         val logger = logger()
         logger.startNext()
         logger.type("60"); logger.done(); logger.type("12"); logger.tick()
-        logger.tick(); logger.tick(); logger.tick()
+        repeat(8) { logger.tick() }
+        assertEquals(FollowUp.MiniSet(index = 8, target = 4), logger.session.followUp)
+        logger.finishSet()
         assertNull(logger.session.followUp)
-        assertEquals(3, logger.session.current!!.sets.single().extensions.size)
+        assertEquals(8, logger.session.current!!.sets.single().extensions.size)
     }
 
     @Test
@@ -374,7 +376,7 @@ class TechniqueSessionTest {
         assertEquals(0, logger.session.entry!!.rir)
         logger.setTechnique(0, Technique.MyoReps(miniSetReps = 3))
         logger.type("9"); logger.tick()
-        assertEquals(FollowUp.MiniSet(0, 5, 3), logger.session.followUp)
+        assertEquals(FollowUp.MiniSet(0, 3), logger.session.followUp)
     }
 
     @Test
@@ -417,7 +419,7 @@ class TechniqueSessionTest {
         logger.type("25"); logger.done(); logger.type("9"); logger.tick()
         logger.tick()
         assertEquals(FollowUp.Drop(index = 1, count = 2), logger.session.followUp)
-        logger.addDropOrMiniSet(0)
+        logger.addDrop(0)
         assertEquals(FollowUp.Drop(index = 1, count = 3), logger.session.followUp)
         logger.tick(); logger.tick()
         // The third drop is the last: the set closes and rest starts.
@@ -429,20 +431,20 @@ class TechniqueSessionTest {
     }
 
     @Test
-    fun plusAddsAMiniSetToMyoRepsBeforeAndDuringTheSet() = runTest {
+    fun plusDoesNothingToMyoReps() = runTest {
         program("leg_extension", myo)
         val logger = logger()
         logger.startNext()
-        logger.addDropOrMiniSet(0)
-        assertEquals(Technique.MyoReps(miniSetReps = 4, maxMiniSets = 4), logger.session.current!!.techniqueAt(0))
-        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
-        logger.tick(); logger.tick(); logger.tick()
-        assertEquals(FollowUp.MiniSet(index = 3, max = 4, target = 4), logger.session.followUp)
-        logger.addDropOrMiniSet(0)
-        assertEquals(FollowUp.MiniSet(index = 3, max = 5, target = 4), logger.session.followUp)
-        logger.tick(); logger.tick()
-        assertNull(logger.session.followUp)
-        assertEquals(5, logger.session.current!!.sets.single().extensions.size)
+        logger.addDrop(0)
+        assertEquals(Technique.MyoReps(miniSetReps = 4), logger.session.current!!.techniqueAt(0))
+    }
+
+    @Test
+    fun aStoredMyoSetThatCarriesAMaximumStillReads() {
+        assertEquals(
+            Technique.MyoReps(miniSetReps = 4),
+            com.hyperlog.app.program.TechniqueJson.decode("""{"kind":"myo_reps","miniSetReps":4,"maxMiniSets":3}"""),
+        )
     }
 
     @Test

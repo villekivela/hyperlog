@@ -13,8 +13,8 @@ sealed interface FollowUp {
     /** Drop [index] (from 0) of [count]. */
     data class Drop(val index: Int, val count: Int) : FollowUp
 
-    /** Mini-set [index] (from 0) of at most [max], aiming for [target] reps. */
-    data class MiniSet(val index: Int, val max: Int, val target: Int) : FollowUp
+    /** Mini-set [index] (from 0), aiming for [target] reps; myo-reps have no set number of them. */
+    data class MiniSet(val index: Int, val target: Int) : FollowUp
 
     data class Hold(val seconds: Int, val position: HoldPosition) : FollowUp
 }
@@ -27,14 +27,14 @@ const val DEFAULT_DROP_REPS = 6
 
 /**
  * The next continuation of this set, or null once its technique has none left: after the last
- * planned drop, after a mini-set that misses its target or the last one allowed, after the hold.
+ * planned drop, after a mini-set that misses its target, after the hold.
  */
 fun LoggedSet.followUp(): FollowUp? = when (val t = technique) {
     is Technique.Dropset -> extensions.size.takeIf { it < t.drops }?.let { FollowUp.Drop(it, t.drops) }
     is Technique.MyoReps -> {
         val last = extensions.lastOrNull()
         val missed = last != null && last.reps < t.miniSetReps
-        if (missed || extensions.size >= t.maxMiniSets) null else FollowUp.MiniSet(extensions.size, t.maxMiniSets, t.miniSetReps)
+        if (missed) null else FollowUp.MiniSet(extensions.size, t.miniSetReps)
     }
     is Technique.IsoHold -> if (extensions.isEmpty()) FollowUp.Hold(t.seconds, t.position) else null
     else -> null

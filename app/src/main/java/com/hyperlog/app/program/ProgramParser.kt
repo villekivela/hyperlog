@@ -43,6 +43,9 @@ object ProgramParser {
 private val Id = Regex("[a-z0-9_]+")
 private val Range = Regex("""(\d+)\s*-\s*(\d+)""")
 
+/** Myo-reps once had a maximum; programs that still carry it read, and it is ignored. */
+private const val LEGACY_MAX_MINI_SETS = "maxMiniSets"
+
 private class Reader(private val exercises: Set<String>, private val merged: Map<String, String>) {
     val errors = mutableListOf<String>()
 
@@ -245,7 +248,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             ?: return Bad.also { error("$path.kind", "unknown technique \"$name\" (${TechniqueKind.keys.joinToString()})") }
         val fields = when (kind) {
             TechniqueKind.Dropset -> setOf("kind", "drops", "percent")
-            TechniqueKind.MyoReps -> setOf("kind", "miniSetReps", "maxMiniSets")
+            TechniqueKind.MyoReps -> setOf("kind", "miniSetReps", LEGACY_MAX_MINI_SETS)
             TechniqueKind.LengthenedPartials -> setOf("kind", "partials")
             TechniqueKind.IsoHold -> setOf("kind", "seconds", "position")
             TechniqueKind.Failure -> setOf("kind")
@@ -259,7 +262,6 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             )
             TechniqueKind.MyoReps -> Technique.MyoReps(
                 miniSetReps = int(o, path, "miniSetReps", min = 1, max = 10) ?: 3,
-                maxMiniSets = int(o, path, "maxMiniSets", min = 1, max = 10) ?: 5,
             )
             TechniqueKind.LengthenedPartials -> Technique.LengthenedPartials(int(o, path, "partials", min = 1, max = 30))
             TechniqueKind.IsoHold -> {

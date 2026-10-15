@@ -127,13 +127,21 @@ class ProgramParserTest {
         assertEquals(
             listOf(
                 Technique.Dropset(drops = 2, percent = 25),
-                Technique.MyoReps(miniSetReps = 4, maxMiniSets = 5),
+                Technique.MyoReps(miniSetReps = 4),
                 Technique.LengthenedPartials(partials = null),
                 Technique.IsoHold(30, HoldPosition.Stretch),
                 Technique.Failure,
             ),
             valid(json).blocks[0].days[0].groups[0].slots[0].sets.map { it.technique },
         )
+    }
+
+    @Test
+    fun aMyoRepsMaximumFromAnOlderProgramIsAcceptedAndIgnored() {
+        val json = """{ "format": 1, "title": "T", "blocks": [ { "id": "b", "name": "B", "weekStart": 1, "weekEnd": 2, "days": [
+            { "id": "a", "name": "A", "groups": [ { "slots": [ { "id": "s", "exercise": "cable_lateral_raise", "sets": [
+                { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 } } ] } ] } ] } ] } ] }"""
+        assertEquals(Technique.MyoReps(miniSetReps = 4), valid(json).blocks[0].days[0].groups[0].slots[0].sets.single().technique)
     }
 
     @Test

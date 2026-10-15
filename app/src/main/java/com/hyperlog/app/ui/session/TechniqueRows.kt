@@ -72,7 +72,7 @@ internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, ac
     val cs = MaterialTheme.colorScheme
     val (symbol, text) = when (followUp) {
         is FollowUp.Drop -> TechniqueLook.Dropset.symbol to stringResource(R.string.follow_drop, followUp.index + 1, followUp.count)
-        is FollowUp.MiniSet -> TechniqueLook.MyoReps.symbol to stringResource(R.string.follow_mini_set, followUp.index + 1, followUp.max)
+        is FollowUp.MiniSet -> TechniqueLook.MyoReps.symbol to stringResource(R.string.follow_mini_set, followUp.index + 1)
         is FollowUp.Hold -> TechniqueLook.IsoHold.symbol to stringResource(R.string.follow_hold, followUp.seconds)
     }
     Spacer(Modifier.width(8.dp))
@@ -103,7 +103,7 @@ private val Offered: List<Technique> = listOf(
 private fun techniqueDetail(technique: Technique): String = when (technique) {
     is Technique.Dropset -> if (technique.drops == 1) stringResource(R.string.technique_detail_drop_one, technique.percent)
     else stringResource(R.string.technique_detail_drops, technique.drops, technique.percent)
-    is Technique.MyoReps -> stringResource(R.string.technique_detail_myo, technique.miniSetReps, technique.maxMiniSets)
+    is Technique.MyoReps -> stringResource(R.string.technique_detail_myo, technique.miniSetReps)
     is Technique.LengthenedPartials -> technique.partials?.let { stringResource(R.string.technique_detail_partials, it) }
         ?: stringResource(R.string.technique_detail_partials_failure)
     is Technique.IsoHold -> when (technique.position) {

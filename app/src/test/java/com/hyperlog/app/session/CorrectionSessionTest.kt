@@ -190,11 +190,12 @@ class CorrectionSessionTest {
 
     @Test
     fun miniSetsFollowTheirSetsCorrectedWeightAndTheirOwnWeightCantBeFocused() = runTest {
-        program("""[ { "reps": "10-12", "rir": 1, "technique": { "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 2 } }, { "reps": "10-12", "rir": 1 } ]""")
+        program("""[ { "reps": "10-12", "rir": 1, "technique": { "kind": "myo_reps", "miniSetReps": 4 } }, { "reps": "10-12", "rir": 1 } ]""")
         val logger = logger()
         logger.startNext()
         logger.type("20"); logger.tick(); logger.type("12"); logger.tick()
         logger.tick(); logger.tick()
+        logger.finishSet()
         val e = logger.session.current!!.id
         logger.correct(e, 0, extension = 0)
         logger.focus(Field.Weight)

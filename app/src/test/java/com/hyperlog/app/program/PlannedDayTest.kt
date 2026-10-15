@@ -49,7 +49,7 @@ class PlannedDayTest {
             ),
             day.slot("bench")!!.sets,
         )
-        assertEquals(Technique.MyoReps(4, 5), day.slot("lateral")!!.sets[1].technique)
+        assertEquals(Technique.MyoReps(4), day.slot("lateral")!!.sets[1].technique)
     }
 
     @Test

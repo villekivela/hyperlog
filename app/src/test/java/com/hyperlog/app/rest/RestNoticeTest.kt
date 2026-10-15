@@ -135,7 +135,7 @@ class RestNoticeTest {
 
     @Test
     fun aMyoMiniSetIsABreathingCountdownToTheMiniSet() = runTest {
-        program(benchTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
+        program(benchTechnique = """{ "kind": "myo_reps", "miniSetReps": 4 }""")
         val logger = logger()
         logger.log("20", "12")
 
