@@ -110,8 +110,9 @@ reply]`. The filled button always sits at the end, so the next step is always in
 Issue #32 (this pass), with the screenshot of each in `screens/` as `light-<name>.png` and
 `dark-<name>.png`. They are Robolectric renders from `CoachRenders` (skipped unless asked for:
 `RENDERS=<dir> ./gradlew testDebugUnitTest --tests '*CoachRenders*'`, `DARK=1` for dark), since
-the phone was locked during the pass; one look at Coach on the phone, with the owner's own two
-Changes in force, led to the starter row below.
+the phone was locked for most of the pass. From the phone (dark, monochrome), with the owner's
+own two Changes in force: `phone-coach-02-in-force` and `phone-coach-03-how-its-going` (the words
+started with the Change, the field above the keyboard with Ask Claude).
 
 - Coach: empty, nothing in force, Ask Claude disabled (`coach-01-empty`); a Change in force
   (`coach-02-in-force`); words typed (`coach-03-words`); asked, Paste reply filled
