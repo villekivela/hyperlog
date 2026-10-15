@@ -58,8 +58,8 @@ data class SessionExercise(
     val plates: LadderSpec.Plates? = null,
     /** How many of its warm-ups are ticked off. */
     val warmupsDone: Int = 0,
-    /** Its warm-ups as typed by hand in this session; null while they follow the ramp. */
-    val typedWarmups: List<WarmupSet>? = null,
+    /** Its warm-ups typed by hand in this session, by index; the others follow the ramp. */
+    val typedWarmups: Map<Int, WarmupSet> = emptyMap(),
     /** The session's gym's plates for the pin, for a [machine] that is a pin stack. */
     val pinPlates: List<Double> = emptyList(),
 ) {
@@ -154,13 +154,13 @@ data class ActiveSession(
         get() {
             val current = current ?: return emptyList()
             if (current.sets.isNotEmpty() || current.needsMachine || current.needsLadder || followUp != null) return emptyList()
-            current.typedWarmups?.let { return it }
             // Not keystroke by keystroke: while the weight is typed, the ramp stays where it was.
             val from = if (entry?.field == com.hyperlog.app.domain.Field.Weight) rampEntry else entry
             val kg = from?.weightKg ?: return emptyList()
             // The reps are the plan's, or last time's for an ad-hoc exercise; typing them changes nothing.
             val reps = current.prescription?.firstOrNull()?.reps?.max ?: current.lastTime.countingSets().firstOrNull()?.fullReps
-            return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
+            // A warm-up typed by hand stays as typed; the others follow the ramp.
+            return Warmups.withTyped(Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null), current.typedWarmups)
         }
 
     /**

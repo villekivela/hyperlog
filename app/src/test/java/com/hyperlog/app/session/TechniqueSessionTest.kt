@@ -316,4 +316,55 @@ class TechniqueSessionTest {
         assertEquals(1, logger.session.current!!.sets.single().extensions.size)
         assertEquals(now + 120_000, logger.session.restEndsAt)
     }
+
+    @Test
+    fun plusAddsADropToADropSetAlreadyUnderWay() = runTest {
+        program("db_bench_press", dropSet)
+        val logger = logger()
+        logger.startNext()
+        logger.type("25"); logger.done(); logger.type("9"); logger.tick()
+        logger.tick()
+        assertEquals(FollowUp.Drop(index = 1, count = 2), logger.session.followUp)
+        logger.addFollowUp(0)
+        assertEquals(FollowUp.Drop(index = 1, count = 3), logger.session.followUp)
+        logger.tick(); logger.tick()
+        // The third drop is the last: the set closes and rest starts.
+        assertNull(logger.session.followUp)
+        assertEquals(now + 120_000, logger.session.restEndsAt)
+        val set = logger.session.current!!.sets.single()
+        assertEquals(3, set.extensions.size)
+        assertEquals(Technique.Dropset(drops = 3), set.technique)
+    }
+
+    @Test
+    fun plusAddsAMiniSetToMyoRepsBeforeAndDuringTheSet() = runTest {
+        program("leg_extension", myo)
+        val logger = logger()
+        logger.startNext()
+        logger.addFollowUp(0)
+        assertEquals(Technique.MyoReps(miniSetReps = 4, maxMiniSets = 4), logger.session.current!!.techniqueAt(0))
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
+        logger.tick(); logger.tick(); logger.tick()
+        assertEquals(FollowUp.MiniSet(index = 3, max = 4, target = 4), logger.session.followUp)
+        logger.addFollowUp(0)
+        assertEquals(FollowUp.MiniSet(index = 3, max = 5, target = 4), logger.session.followUp)
+        logger.tick(); logger.tick()
+        assertNull(logger.session.followUp)
+        assertEquals(5, logger.session.current!!.sets.single().extensions.size)
+    }
+
+    @Test
+    fun aSetWithALoggedDropCantBeTakenBack() = runTest {
+        program("db_bench_press", dropSet)
+        val logger = logger()
+        logger.startNext()
+        logger.type("25"); logger.done(); logger.type("9"); logger.tick()
+        // Before its first drop the set can still be taken back.
+        assertEquals(true, logger.session.undoable(logger.session.current!!, 0))
+        logger.tick()
+        assertEquals(false, logger.session.undoable(logger.session.current!!, 0))
+        now += 5_000
+        logger.undo(logger.session.current!!.id)
+        assertEquals(1, logger.session.current!!.sets.single().extensions.size)
+    }
 }

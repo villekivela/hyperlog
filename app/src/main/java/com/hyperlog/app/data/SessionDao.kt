@@ -125,6 +125,10 @@ interface SessionDao {
     )
     suspend fun history(exerciseId: String, sessionId: Long, anyItem: Boolean, itemId: Long?, limit: Int): List<PastExercise>
 
+    /** The technique logged set [id] is done with, as [com.hyperlog.app.program.TechniqueJson]. */
+    @Query("UPDATE logged_set SET technique = :technique WHERE id = :id")
+    suspend fun setLoggedTechnique(id: Long, technique: String)
+
     @Insert
     suspend fun insertExtension(extension: SetExtensionEntity): Long
 

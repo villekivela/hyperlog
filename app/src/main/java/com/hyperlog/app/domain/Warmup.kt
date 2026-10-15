@@ -52,13 +52,23 @@ object Warmups {
         return ramp
     }
 
-    /** Typed warm-ups as stored with the session exercise: `40:8,55:5`. */
-    fun encode(warmups: List<WarmupSet>): String = warmups.joinToString(",") { "${it.weightKg}:${it.reps}" }
+    /** [ramp] with the warm-ups typed by hand in place of theirs; a typed one past the ramp's end is left out. */
+    fun withTyped(ramp: List<WarmupSet>, typed: Map<Int, WarmupSet>): List<WarmupSet> =
+        ramp.mapIndexed { i, w -> typed[i] ?: w }
 
-    /** The warm-ups [encode] wrote; null for nothing stored or a value it can't read. */
-    fun decode(text: String?): List<WarmupSet>? = text?.takeIf { it.isNotBlank() }?.split(",")?.map { part ->
-        val (kg, reps) = part.split(":").takeIf { it.size == 2 } ?: return null
-        WarmupSet(kg.toDoubleOrNull() ?: return null, reps.toIntOrNull() ?: return null)
+    /** Warm-ups typed by hand, by index, as stored with the session exercise: `0=40.0:8,2=55.0:5`. */
+    fun encode(typed: Map<Int, WarmupSet>): String =
+        typed.toSortedMap().entries.joinToString(",") { (i, w) -> "$i=${w.weightKg}:${w.reps}" }
+
+    /**
+     * The warm-ups [encode] wrote, by index; null for nothing stored or a value it can't read. A
+     * list without indices (`40.0:8,55.0:5`, written before each warm-up was kept on its own) is
+     * read as every warm-up typed.
+     */
+    fun decode(text: String?): Map<Int, WarmupSet>? = text?.takeIf { it.isNotBlank() }?.split(",")?.withIndex()?.associate { (position, part) ->
+        val index = if ('=' in part) part.substringBefore('=').toIntOrNull() ?: return null else position
+        val (kg, reps) = part.substringAfter('=').split(":").takeIf { it.size == 2 } ?: return null
+        index to WarmupSet(kg.toDoubleOrNull() ?: return null, reps.toIntOrNull() ?: return null)
     }
 
     private fun isFiveKgStep(kg: Double) = Math.abs(kg / 5 - Math.round(kg / 5)) < 0.001

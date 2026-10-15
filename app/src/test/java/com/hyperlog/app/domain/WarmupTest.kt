@@ -77,4 +77,12 @@ class WarmupTest {
         val pullUp = exercise(Equipment.WeightedBodyweight, MovementPattern.VerticalPull)
         assertEquals(emptyList<WarmupSet>(), Warmups.ramp(20.0, pullUp, 6, WeightLadder.Default))
     }
+
+    @Test
+    fun typedWarmUpsAreStoredByIndexAndAnOlderWholeListReadsAsAllTyped() {
+        val typed = mapOf(2 to WarmupSet(55.0, 5), 0 to WarmupSet(40.0, 8))
+        assertEquals(typed, Warmups.decode(Warmups.encode(typed)))
+        // A session from before each warm-up was kept on its own stored the whole list.
+        assertEquals(mapOf(0 to WarmupSet(40.0, 8), 1 to WarmupSet(55.0, 5)), Warmups.decode("40.0:8,55.0:5"))
+    }
 }

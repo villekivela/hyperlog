@@ -106,6 +106,7 @@
     <string name="check_undo">Take back set %1$d</string>
     <string name="check_log_follow">Log it as shown</string>
     <string name="add_drop">Add a drop</string>
+    <string name="add_mini_set">Add a mini-set</string>
     <!-- The chips under the exercise name: a swap names what it replaced, a superset its partner. -->
     <string name="chip_swapped">for %1$s</string>
     <string name="chip_superset">%1$s + %2$s</string>

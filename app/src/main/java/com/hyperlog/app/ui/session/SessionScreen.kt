@@ -300,11 +300,7 @@ fun SessionScreen(
                             onLogShown = actions::logShown,
                             undoable = { session.undoable(current, it) },
                             onUndo = { actions.undo(current.id) },
-                            onAddDrop = { i ->
-                                (current.techniqueAt(i) as? com.hyperlog.app.program.Technique.Dropset)?.let { d ->
-                                    actions.setTechnique(i, d.copy(drops = d.drops + 1))
-                                }
-                            },
+                            onAddFollowUp = actions::addFollowUp,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
