@@ -108,7 +108,7 @@ class CoachScreenTest {
         compose.onNodeWithText("My hands hurt").performClick()
         assertEquals("My hands hurt.", wordsText())
         // A second starter goes on a new line.
-        compose.onNodeWithText("Slept badly").performClick()
+        compose.onNodeWithText("Slept badly").performScrollTo().performClick()
         assertEquals("My hands hurt.\nI slept badly last night.", wordsText())
         words().performTextInput(" Left more than right.")
         assertTrue(wordsText(), wordsText().endsWith("Left more than right."))
