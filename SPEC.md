@@ -739,6 +739,11 @@ Program, Coach and History, in that order. Back on Program, Coach or History goe
 is hidden while the session screen is up (a running session left with Back shows it again) and on
 screens opened from a destination (a trend, a past session, a Change under review, Settings).
 
+**Sheets** are Material 3 modal bottom sheets, all through one shared sheet: a drag handle, a scrim,
+Back and a drag down from anywhere on the sheet (scrolling content first scrolls to its top) close
+it with the system's animation. A sheet opens fully expanded at its final height and keeps that
+height while it moves. It stops below the status bar; a list longer than that scrolls inside it.
+
 Settings sit behind an icon at the end of every destination's top bar, and back returns to the
 destination it was opened from: gyms and their equipment, exercise library, export backup, restore
 from a backup, starting weights from the old app, and "Check for updates" (Distribution).

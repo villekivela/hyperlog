@@ -30,6 +30,7 @@ import com.hyperlog.app.ui.theme.Banner
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.EmptyState
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.Sheet
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.material3.Checkbox
@@ -37,13 +38,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -138,13 +137,14 @@ fun TodayScreen(
     // A running session keeps its day on Today, even resumed after finishing moved the program on.
     val next = runningDay?.takeIf { sessionRunning } ?: program?.next
     if (kind != null && !sessionRunning) {
-        StartSheet(
-            gyms, usualGym,
-            day = next.takeIf { !kind },
-            library = library,
-            onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
-            onDismiss = { picking = null },
-        )
+        Sheet(onDismiss = { picking = null }) {
+            StartSheetContent(
+                gyms, usualGym,
+                onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
+                day = next.takeIf { !kind },
+                library = library,
+            )
+        }
     }
     // Time off: more than a week off (by the weekday plan if there is one), with no Change made for today yet.
     val today = program?.today ?: LocalDate.now()
@@ -357,23 +357,6 @@ private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
  * Where you train today: the gyms as a single choice, today's usual one picked and saying why,
  * and Start. Changing the gym is one tap on another row.
  */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun StartSheet(
-    gyms: List<Gym>,
-    usualGym: UsualGym?,
-    day: PlannedDay?,
-    library: List<Exercise>,
-    onStart: (Long, Map<String, String>) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) { StartSheetContent(gyms, usualGym, onStart, day, library) }
-}
-
 @Composable
 internal fun StartSheetContent(
     gyms: List<Gym>,

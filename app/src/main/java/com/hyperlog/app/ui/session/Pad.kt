@@ -95,7 +95,7 @@ internal fun Pad(
     val cs = MaterialTheme.colorScheme
     var wholeBar by remember { mutableStateOf(false) }
     if (wholeBar && plates != null) {
-        ModalBottomSheet(onDismissRequest = { wholeBar = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        com.hyperlog.app.ui.theme.Sheet(onDismiss = { wholeBar = false }) {
             WholeBar(plates, entry.weightKg, Modifier.padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding(), machine = platesOnMachine)
         }
     }
