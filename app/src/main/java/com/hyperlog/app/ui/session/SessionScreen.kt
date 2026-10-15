@@ -7,6 +7,7 @@ import androidx.compose.ui.zIndex
 import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.domain.LadderSpec
 import androidx.compose.foundation.lazy.itemsIndexed
+import com.hyperlog.app.ui.theme.Sheet
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.cardBehind
 import androidx.activity.compose.BackHandler
@@ -46,11 +47,9 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -761,16 +760,6 @@ internal fun BottomRow(content: @Composable () -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) { content() }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun Sheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) { content() }
 }
 
 /** The session's exercises with what has been logged, plus adding one and finishing. */
