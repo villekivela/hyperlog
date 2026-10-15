@@ -257,6 +257,16 @@ class TechniqueSessionTest {
     }
 
     @Test
+    fun switchingASetToFailureKeepsItsRirAtZeroEvenWhenItAlreadyWas() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("db_bench_press")
+        logger.selectRir(0)
+        logger.setTechnique(0, Technique.Failure)
+        assertEquals(0, logger.session.entry!!.rir)
+    }
+
+    @Test
     fun aProgramsTechniqueCanBeTakenOffASetAndAnAdHocSetCanGetOne() = runTest {
         program("db_bench_press", dropSet)
         val logger = logger()

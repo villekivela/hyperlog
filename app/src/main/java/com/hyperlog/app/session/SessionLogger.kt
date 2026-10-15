@@ -579,7 +579,7 @@ class SessionLogger(
             return
         }
         val decided = if (!asShown) entry.done() else entry.toLoggedSet()?.let { SetEntry.Done.Log(it) } ?: run {
-            // Nothing to log as shown (no RIR yet): the pad comes up on the reps to finish it.
+            // Nothing to log as shown (no weight or reps yet): the pad comes up on what is missing.
             val shown = session.copy(padVisible = true)
             if (!session.padVisible) dao.updateSession(dao.session(session.id)!!.copy(padVisible = true))
             saveEntry(shown, if (entry.weightKg == null) entry.focus(Field.Weight) else entry.focus(Field.Reps))
@@ -722,7 +722,7 @@ class SessionLogger(
             // A set taken to failure has nothing in reserve.
             val entry = session.entry
             if (setIndex == current.sets.size && technique == Technique.Failure && entry != null) {
-                dao.updateSession(dao.session(session.id)!!.copy(entry = entry.selectRir(0).toColumns()))
+                dao.updateSession(dao.session(session.id)!!.copy(entry = entry.copy(rir = 0).toColumns()))
             }
         }
         reload()

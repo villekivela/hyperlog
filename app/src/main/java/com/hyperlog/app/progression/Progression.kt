@@ -205,7 +205,7 @@ object Progression {
             return Suggestion(top, predicted(estimate, k, today.load(top), target.rir, range), Suggestion.Kind.Deload, "Deload week: last time's weight, ${target.rir ?: 0} in reserve", "${formatKg(top)} · deload week, ${target.rir ?: 0} in reserve")
         }
         val t = was.rir
-        fun eff(s: LoggedSet) = s.fullReps + (if (t != null) s.rir ?: 0 else 0)
+        fun eff(s: LoggedSet) = if (t != null) effective(s) else s.fullReps
         val worst = sets.minOf(::eff)
         val topEff = range.max + (t ?: 0)
         val bottomEff = range.min + (t ?: 0)

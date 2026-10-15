@@ -32,7 +32,7 @@ data class NextSet(
     /** The myo mini-set's number, from 1; null for a set. */
     val miniSet: Int? = null,
     val weightKg: Double?,
-    /** Target reps (`8–10`), or the prefilled reps without a target. */
+    /** Target reps (`8–10`), or the reps typed without a target. */
     val reps: String,
     /** Target RIR; null without a target. */
     val rir: Int? = null,
