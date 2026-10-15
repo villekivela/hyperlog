@@ -48,7 +48,7 @@ class ProgramChangesTest {
         compose.onNodeWithText("1 week later").assertIsDisplayed()
         compose.onNodeWithText("Review").performClick()
 
-        compose.waitFor("Review change")
+        compose.waitFor("Change to your program")
         compose.onNodeWithText("The plan 1 week later").assertIsDisplayed()
         compose.onNodeWithText("Rest of the program").assertIsDisplayed()
         compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
@@ -56,7 +56,7 @@ class ProgramChangesTest {
         compose.onNodeWithText("Reject").performClick()
 
         // Rejected: the program is where it was.
-        compose.waitGone("Review change")
+        compose.waitGone("Change to your program")
         compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
 
         compose.onNodeWithText("Shift program").performClick()

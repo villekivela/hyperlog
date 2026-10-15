@@ -1,7 +1,7 @@
 package com.hyperlog.app.session
 
 import androidx.room.withTransaction
-import com.hyperlog.app.coach.RuleCoach
+import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.data.EntryColumns
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
@@ -197,7 +197,7 @@ class SessionLogger(
 
     /**
      * Answers "Which machine?" with "Not at this gym": the gym remembers it has no equipment for
-     * the exercise on screen, and the exercise is swapped as the coach would (the slot's
+     * the exercise on screen, and the exercise is swapped as on the start sheet (the slot's
      * alternatives, then the movement pattern) or, with nothing that fits, left out of this session.
      */
     suspend fun notAtGym() {
@@ -208,7 +208,7 @@ class SessionLogger(
         gyms.markMissing(gym.id, current.exercise.id)
         val missing = gyms.gym(gym.id)?.missing.orEmpty()
         val library = db.exercises().all().map { it.toExercise() }
-        val replacement = RuleCoach.replacement(current.slot, current.exercise.id, library, missing)
+        val replacement = MissingSwaps.replacement(current.slot, current.exercise.id, library, missing)
         if (replacement != null) swap(current.id, replacement) else removeExercise(current.id)
     }
 

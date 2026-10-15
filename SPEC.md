@@ -979,24 +979,32 @@ goes through Claude, which reads the program, the week you're in and your sessio
 **The screen** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`), top to bottom:
 
 - **Changes in force.** One card for each accepted Change that covers today or a later day, newest
-  first: its summary and how long it runs (`Until Tue 27 Oct`, `Rest of block`, `Rest of
-  program`), with **Revert** (asking first, as on Program) and **Tell Claude how it's going**. That
-  one starts the words with the Change (`About "Hands need a week off grip work": `) and focuses
-  the text field.
+  first: its summary and how long it runs (`Until Tue 27 Oct`, `Until today`, `Thu 15 Oct – Thu 22
+  Oct` for one that starts later, `Rest of Build` while the block it was accepted in runs, `Rest of
+  the program`), with **Revert** (asking first, as on Program) and **Tell Claude how it's going**.
+  That one starts the words with the Change (`About "Hands need a week off grip work": `) and
+  focuses the text field. A finished program has none.
 - **Gym.** The gyms as chips, the one the start sheet would pick preselected (the usual gym on
   today's weekday). The prompt holds that gym's equipment and what's missing there. With no gyms
   set up the row is left out.
-- **Starters.** Chips that put an editable sentence into the words: "My hands hurt", "Short on
-  time today", "No gym, dumbbells at home", "Slept badly", and **Build me a workout**, which also
-  opens the workout's options (below).
+- **Starters.** Chips that put an editable sentence into the words: "My hands hurt" (`My hands
+  hurt.`), "Short on time today" (`I'm short on time today: I have 45 minutes.`), "No gym,
+  dumbbells at home" (`No gym today, only dumbbells at home.`), "Slept badly" (`I slept badly
+  last night.`), and **Build me a workout**, which also opens the workout's options (below). A
+  starter fills empty words; otherwise its sentence goes on a new line. Either way the field takes
+  focus with the cursor at the end.
 - **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
-- **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step: Ask Claude
-  until you've asked, then Paste reply. Ask Claude is enabled once there are words, or while the
-  workout's options are open.
-- **Reply found.** Coming back to Hyperlog after asking, the app reads the clipboard. If it holds a
-  Change or a workout that validates, a bar over the bottom bar reads "Claude's reply is
-  ready" with **Review**. Nothing opens by itself. Paste reply stays for a reply copied later.
-  Android shows its own toast when an app reads the clipboard.
+- **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step, always at
+  the end of the bar: Ask Claude until you've asked, then Paste reply. Ask Claude is enabled once
+  there are words, or while the workout's options are open. With no program and no workouts yet
+  (before #33) only a reply in words can come back, so Paste reply is left out.
+- **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
+  has focus again, which Android requires for reading the clipboard), the app reads the clipboard
+  once. If it holds a Change or a workout that validates, a card over the bottom bar's buttons
+  reads "Claude's reply is ready" with a filled **Review**, and neither button below is filled.
+  Anything else is ignored quietly. Nothing opens by itself. The card goes when Review opens the
+  reply or Ask Claude asks again. Paste reply stays for a reply copied later. Android shows its
+  own toast when an app reads the clipboard.
 
 **A workout's options**, shown under the starters while Build me a workout is picked:
 
@@ -1028,14 +1036,16 @@ in." The prompt holds the count either way.
   (the user picks the Claude app). It holds, in order: your words quoted, and the workout's
   options when they're open; the instruction to talk it through, then either answer in words when
   the plan can stand or reply with exactly one fenced ```` ```json ```` block holding a Change or a
-  workout, using only the listed ids; today's date and the days off; the gym picked, with its
-  equipment and the exercises missing there; the program's title, the next day (week, day id,
+  workout, using only the listed ids; today's date and the days off (the last finished session's
+  date and how long ago, and with a weekday plan the days off as Today counts them); the gym
+  picked, with its equipment by kind and each item's weights, its dumbbells and plates, and the
+  exercises missing there; the program's title, the next day (week, day id,
   block) and days left; the Changes in force; every block with its days and slots (slot id,
   exercise id and name, sets as planned in the block's first week or the current one,
   alternatives, note); the finished sessions of the last 28 days (date, day, gym, each exercise's
   sets as `80 × 5 @ 1`); the weekly sets per muscle for this week and the 4 before it; every
-  visible library exercise (id, name, equipment, movement pattern, grip, primary muscles); and the
-  two formats.
+  visible library exercise, and any hidden one the program uses (id, name, equipment, movement
+  pattern, grip, primary muscles); and the two formats.
 - **The formats in the prompt are generated** from the code that reads them: operation names and
   fields from the serializer, scopes from the scope serializer, ranges from the validators, an
   example Change built for the running program (a swap to the next day's first alternative, +1

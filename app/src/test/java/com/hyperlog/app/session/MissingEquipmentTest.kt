@@ -1,9 +1,11 @@
-package com.hyperlog.app.coach
+package com.hyperlog.app.session
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.gym.MissingSwaps
+import com.hyperlog.app.gym.SessionSwap
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.Position
@@ -54,7 +56,7 @@ class MissingEquipmentTest {
     fun pickingAGymWithoutALegExtensionSwapsItForThatSessionOnly() = runTest {
         gyms.markMissing(gymId, "leg_extension")
         val gym = gyms.gym(gymId)!!
-        val swaps = RuleCoach.missingEquipment(active().next!!, seed.exercises, gym.missing)
+        val swaps = MissingSwaps.forDay(active().next!!, seed.exercises, gym.missing)
         assertEquals(listOf(SessionSwap("leg_extension", "leg_extension", "reverse_nordic")), swaps)
 
         val logger = logger()
