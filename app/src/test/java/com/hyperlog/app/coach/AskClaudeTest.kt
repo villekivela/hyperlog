@@ -8,6 +8,11 @@ import com.hyperlog.app.program.StarterProgram
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.gym.EquipmentItem
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.history.WeekSets
+import java.time.DayOfWeek
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,31 +40,63 @@ class AskClaudeTest {
         assertTrue(text.contains("Today is 2026-10-13 (Tuesday)."))
         assertFalse(text.contains("## Change format"))
         assertFalse(text.contains("```json"))
+        // The library still helps Claude name exercises.
+        assertTrue(text, text.contains("  machine_chest_press: Machine Chest Press (machine, grip "))
     }
 
     @Test
-    fun theFormatListsEveryOperationAndScopeTheValidatorReads() {
+    fun claudeMayAnswerInWordsAlone() {
         val text = prompt()
-        // SPEC, Coaching: the eleven operations and three scopes.
-        listOf(
-            "swap", "remove", "add", "adjust_sets", "adjust_load", "adjust_rir", "remove_technique",
-            "skip_day", "deload_week", "shift_program", "repeat_week",
-        ).forEach { assertTrue("op $it", text.contains("\"op\": \"$it\"")) }
-        listOf("\"rest_of_program\"", "\"rest_of_block\"", "\"from\"", "\"to\"").forEach { assertTrue("scope $it", text.contains(it)) }
-        listOf("dropset", "myo_reps", "lengthened_partials", "iso_hold", "failure").forEach { assertTrue("technique $it", text.contains(it)) }
-        // The validator's ranges.
-        assertTrue(text, text.contains("−50 to 50"))
-        assertTrue(text, text.contains("1 to 10"))
+        assertTrue(text, text.contains("If the plan can stand as it is, say so in words and send no JSON."))
     }
 
     @Test
-    fun theExampleIsAChangeThePasteAccepts() {
-        val text = prompt()
-        val change = (AskClaude.read(text.substringAfterLast("For example:"), program, ids) as ChangeValidator.Result.Valid).change
-        // It swaps a slot of the next day (Day B) for one of that slot's alternatives.
-        val swap = change.operations.filterIsInstance<Operation.Swap>().single()
-        val slot = plan.next!!.slot(swap.slot)!!
-        assertTrue(swap.exercise in slot.alternatives)
+    fun thePromptHoldsTheDaysOff() {
+        val tuesdays = AskClaude.prompt("x", plan, emptyList(), library.exercises, lastTrained = oct13.minusDays(14), weekdays = setOf(DayOfWeek.TUESDAY))
+        assertTrue(tuesdays, tuesdays.contains("My last finished session was on 2026-09-29, 14 days ago. I plan to train on Tuesday, so that's 7 days off."))
+        val none = AskClaude.prompt("x", plan, emptyList(), library.exercises, lastTrained = null)
+        assertTrue(none, none.contains("I haven't finished a session in Hyperlog yet."))
+        val noPlan = AskClaude.prompt("x", plan, emptyList(), library.exercises, lastTrained = oct13.minusDays(11))
+        assertTrue(noPlan, noPlan.contains("My last finished session was on 2026-10-02, 11 days ago."))
+        assertFalse(noPlan, noPlan.contains("days off"))
+    }
+
+    @Test
+    fun thePromptHoldsTheGymItsEquipmentAndWhatsMissingThere() {
+        val gym = Gym(
+            1, "Harbour",
+            items = listOf(EquipmentItem(gymId = 1, name = "Seated leg curl", ladder = LadderSpec.Explicit(listOf(5.0, 10.0, 15.0)))),
+            missing = setOf("leg_extension"),
+        )
+        val text = AskClaude.prompt("x", plan, emptyList(), library.exercises, gym = gym)
+        assertTrue(text, text.contains("## Gym: Harbour"))
+        assertTrue(text, text.contains("- Seated leg curl (5–15 kg"))
+        assertTrue(text, text.contains("- Dumbbells: "))
+        assertTrue(text, text.contains("Not here, so swap them out: leg_extension (Leg Extension)"))
+        // No gym picked, no section.
+        assertFalse(prompt().contains("## Gym"))
+    }
+
+    @Test
+    fun thePromptHoldsTheWeeklySetsPerMuscleThisWeekAndTheFourBefore() {
+        val weeks = (0 until 8).map { WeekSets(LocalDate.of(2026, 10, 12).minusWeeks(it.toLong()), mapOf("chest" to 6.0 - it, "triceps" to 1.5)) }
+        val text = AskClaude.prompt("x", plan, emptyList(), library.exercises, weeklySets = weeks)
+        assertTrue(text, text.contains("## Weekly sets per muscle"))
+        assertTrue(text, text.contains("Week of 2026-10-12 (this week): chest 6, triceps 1.5"))
+        assertTrue(text, text.contains("Week of 2026-09-14: chest 2, triceps 1.5"))
+        // Five weeks, no more.
+        assertFalse(text, text.contains("Week of 2026-09-07"))
+    }
+
+    @Test
+    fun theLibraryListsEveryVisibleExercise() {
+        val programSection = prompt().substringBefore("## Exercise library")
+        // Two far from anything the program uses: one visible, one hidden.
+        val (visible, hidden) = library.exercises.filter { !it.hidden && it.id !in programSection }.take(2)
+        val exercises = library.exercises.map { if (it.id == hidden.id) it.copy(hidden = true) else it }
+        val text = AskClaude.prompt("x", plan, emptyList(), exercises)
+        assertTrue(visible.id, text.contains("  ${visible.id}: ${visible.name} ("))
+        assertFalse(hidden.id, text.contains("  ${hidden.id}: "))
     }
 
     @Test
