@@ -8,8 +8,8 @@ into nutrition, VBT, a desktop editor and more. This one does three things.
 
 1. **Run the program.** Show today's prescription from where you are in the program.
 2. **Log the session** against that prescription.
-3. **Coach.** When you can't train as planned, propose a concrete change and apply it only
-   after you accept it.
+3. **Coach.** When you can't train as planned, talk it through with Claude and get back a
+   concrete change to the program or a one-off day, applied only after you accept it.
 
 Out of scope: nutrition, VBT, Health Connect, progress photos, body measurements, desktop
 configuration, iOS, web, any server.
@@ -101,6 +101,7 @@ configuration, iOS, web, any server.
 | **Position** | Where you are: program, week, next day. |
 | **Session** | What was done on a date: sets with weight, reps, RIR. It's a record and is never recalculated. |
 | **Change** | A proposed edit to the plan (see Coaching). Accepted changes are kept as history. |
+| **One-off day** | A day Claude builds for one date, outside the program (see Coaching). Training it doesn't move the position. |
 | **Gym** | A place you train, with its equipment. Picked at session start. |
 | **Equipment item** | One piece of equipment at a gym (a cable station, a leg press), with a weight ladder. Dumbbells and plates are global. |
 | **Weight ladder** | The weights an equipment item can actually be set to. A **rung** is one step on it. |
@@ -317,8 +318,7 @@ available weights belong to a **machine at a gym**, not to an exercise.
   - The session list shows the session's gym under its title. Changing gyms mid-session isn't
     offered.
 - **Missing equipment**: on picking the gym, the day is checked against that gym's kit; swaps are
-  proposed from the slot's alternatives, then by movement pattern (same logic as the coach) and
-  apply to this session only.
+  proposed from the slot's alternatives, then by movement pattern, and apply to this session only.
   - A gym's kit is learned like its machines: **Not at <gym>** under "Which machine?" marks the
     exercise as one the gym has no equipment for, and swaps it at once (left out of the session when
     nothing fits). The gym screen lists them under **Not here**, each with × to undo. Everything else
@@ -476,6 +476,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
+   - A **one-off day** added from Coach shows as a card above the program day, or above Start
+     session with no program, for the day it was added (Coaching → One-off day).
      While a program session runs, Today shows that session's day, the one **Resume session**
      opens, even after a finish and Resume moved the program's position on.
    - **A program day's session** has a row for every planned set from the start, its target shown
@@ -713,16 +715,14 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
-3. **Coach** — see below. A destination of the navigation bar (`sports`), there at any time. With a program
-   running the rules and Ask Claude both work; once it is finished the rules say "The program is
-   finished: no day is left to change" and Ask Claude can still propose a Change (a repeated week,
-   a shift). With no program (ad-hoc training) the rules say they need one, and Ask Claude shares
-   your words and the last 4 weeks of sessions for advice in words: no Change comes back, so
-   **Paste change** isn't offered.
+3. **Coach** — see Coaching below. A destination of the navigation bar (`sports`), there at any
+   time: your words to the Claude app, and a Change or a one-off day pasted back. With no program
+   running only a one-off day can come back.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
    A destination of the navigation bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
    Design: `docs/design/history.md`.
-   - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session") and
+   - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session", or a
+     one-off day's name) and
      the date, then the gym and the exercises. A row opens the session (Past sessions are
      editable, below).
    - **Progress** shows the bodyweight (latest value, its date, a small line of the last 90 days;
@@ -764,8 +764,8 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that does not follow the dynamic
   theme; contrast is tuned for light and dark.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
-  train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets the
-  coach detect time off. No reminders or notifications.
+  train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets
+  Today notice time off. No reminders or notifications.
 - **Supersets** log alternately (A1 → A2 → A1…) with no timer between partners and full rest after
   the round. A superset started out of order keeps its partner until the round is done.
   - Closing a partner's set (logged, its last drop or mini-set, or **Finish set**) brings up the other
@@ -879,7 +879,7 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     suggestions and why-lines stay per dumbbell, as logged, and come out the same since the
     estimate scales with the load. Volume is counted in sets, so it doesn't change.
 - **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
-  - A backup holds everything the app stores: programs and their Changes, every session (the
+  - A backup holds everything the app stores: programs and their Changes, one-off days, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
     settings ("Check for updates", the dismissed update). Every table goes in row for row except
@@ -961,112 +961,138 @@ the end of the block the Change was accepted in. A date range covers its first a
   stay in the list, struck through. A running session follows an accept or revert at once.
 - **Reorders stay in the session.** No operation moves a slot; the order is the program's.
 
-### Rules (offline, built in)
-
-You pick a situation and constraints:
-
-- Situation (v1, all five): time off (missed days or a week); pain or injury in an area (hands/grip,
-  shoulder, elbow, knee, lower back); gym not available (home: dumbbells and bodyweight); short on
-  time (session capped at N minutes); poor recovery (bad sleep or stress, lower today's volume or
-  effort).
-- Constraints: no grip, no axial load, no overhead, home (dumbbells/bodyweight), max N minutes.
-
-The rules produce a Change. Swaps come from the slot's own alternatives first, then from library
-exercises with the same `movementPattern` that meet the constraints (equipment, plus a small
-per-exercise tag table such as `grip: high|low|none`). Time off maps to fixed steps: up to 7 days,
-resume as planned; 8–14 days, a reduced-volume re-entry session; more than 14 days, repeat the
-last week.
-
-**How the rules work** (`coach/RuleCoach.kt`; design: `docs/design/coach.md`):
-
-- **The screen.** Coach lists the five situations as a single choice; Pain opens its areas (Hands
-  first), Short on time a minutes stepper (45 by default, 20–120 in 5s). Each situation sets its
-  constraints, shown as chips under **Limits** and editable: Hands → no grip, Shoulder → no
-  overhead, Lower back → no axial load, No gym → home, Short on time → max N minutes. **Review
-  change** opens the Change's diff; with nothing to change one line says so ("3 days since your last
-  session. Resume as planned.", "Nothing in the plan breaks these limits."). Accept goes to Today.
-- **Scope.** Pain: two weeks from today (revert it once the pain is gone, the "hands OK"). Every
-  other situation: today only. Position moves (repeat week) run once on accept as always.
-- **Constraints.** No grip: no high-grip exercise, except pulls (vertical and horizontal), which
-  stay with straps and an open hand, a row only chest-supported. No axial load: no bar, Smith or
-  dumbbells carried through a squat, hinge, lunge, shrug or calf raise, and no standing or seated
-  bar press. No overhead: no vertical push and no overhead triceps extension. Home: dumbbells and
-  bodyweight only. An exercise breaking one is swapped for the first candidate meeting all of them
-  (the slot's alternatives in the program's order, then library exercises with the same movement
-  pattern, most shared primary muscles first, then the least grip, then by name; hidden ones never),
-  or removed when none does.
-- **Pain** (on top of the swaps): −10% load and no drop sets on every kept exercise that loads the
-  area, and +1 RIR on everything. Hands load every exercise that keeps a grip, except lower body and
-  machines (the Smith included), which stay untouched (`docs/programs/full-body-3-day.md`); shoulder
-  the presses, flyes and lateral raises; elbow curls and triceps work; knee squats, lunges and knee
-  extensions; lower back hinges, squats and lunges. The pain rule shows under the areas: pain in a
-  set at 3/10 or less and no worse the next morning.
-  - **Worse the next morning**: while a hand Change is in force, Pain → Hands lists the exercises
-    that kept a grip under `Worse the next morning after`. Picking one makes Review change propose
-    a Change that moves it to its no-grip swap (grip demand none: the slot's alternatives, then the
-    movement pattern), or leaves it out when there is none (`Hands worse after Cable Lateral
-    Raise: no grip on it`), dated to the end of the hand Change.
-- **Time off** is detected from the weekday plan (every gym's usual days): it counts whole days
-  from the first planned day after the last finished session that went untrained (today isn't
-  missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since
-  the last session is 7 days off. With no weekday plan it counts the days since the last finished
-  session. Up to 7: resume (no Change). 8–14: today's session does half its sets (rounded up)
-  where it has more than one, and +1 RIR. More than 14: `repeat_week`. Coach preselects Time off
-  after a week off, and Today shows `11 days since your last session` (the words always count from
-  the last session) with **Ease back in**, which opens that Change, until a Change is accepted
-  that day.
-- **Short on time** estimates the session: 2 minutes per exercise to set up and warm up, a minute per
-  set plus its rest (a superset rests once a round), no rest after the last set. Over the cap,
-  second and later sets go first, from the last exercise back, then exercises from the end; the
-  first exercise always stays.
-- **Poor recovery**: today, one set fewer where there is more than one, and +1 RIR.
-
-### Ask Claude (uses your subscription, no API)
+### Words first, through Claude (uses your subscription, no API)
 
 The app makes no model calls. Anthropic's terms keep subscription credentials inside Anthropic's
-own apps, so Hyperlog hands off to the Claude app instead:
+own apps, so Hyperlog hands off to the Claude app. There are no built-in rules: every situation
+goes through Claude, which reads the program, the week you're in and your sessions (ADR 0003).
 
-1. You describe the situation in plain words.
-2. **Ask Claude** opens the Android share sheet with a prompt for the Claude app. The prompt holds
-   your words, the current program and position, the last ~4 weeks of sessions, the relevant
-   exercise library entries, and the Change JSON format above with instructions to reply with
-   one fenced JSON block.
-3. You talk it through in Claude as long as you like.
-4. Copy the final JSON and press **Paste change** in Hyperlog. Hyperlog validates it (known slots
-   and exercises, valid ops) and shows the diff. Accept or reject.
+1. You say what's going on in your own words, and pick the gym.
+2. **Ask Claude** opens the Android share sheet with a prompt for the Claude app.
+3. You talk it through in Claude as long as you like. Claude may answer in words alone when the
+   plan can stand ("Ramp-in already eases effort. Use straps and train as planned."). Then nothing
+   comes back, and Coach doesn't treat the ask as unfinished.
+4. Otherwise Claude ends with one fenced JSON block holding a **Change** to the program or a
+   **one-off day** for today. Copy it and come back. Hyperlog validates it and opens its review.
+   Nothing changes until you accept.
 
-**How it works** (`coach/AskClaude.kt`; design: `docs/design/coach.md`, Ask Claude):
+**The screen** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`), top to bottom:
 
-- **Where.** **Something else** ("Talk it through with Claude") is the sixth choice on the Coach
-  screen. Picking it opens a text field in place (kept while you're away in the Claude app) and
-  swaps Limits for one line on what is shared. The bottom bar holds **Paste change** and **Ask
-  Claude**; the filled one is the next step: Ask Claude (enabled once there are words), then Paste
-  change once you've asked. With no program running only Ask Claude shows (Screens → Coach).
+- **Changes in force.** One card for each accepted Change that covers today or a later day, newest
+  first: its summary and how long it runs (`Until Tue 27 Oct`, `Rest of block`, `Rest of
+  program`), with **Revert** (asking first, as on Program) and **Tell Claude how it's going**. That
+  one starts the words with the Change (`About "Hands need a week off grip work": `) and focuses
+  the text field.
+- **Gym.** The gyms as chips, the one the start sheet would pick preselected (the usual gym on
+  today's weekday). The prompt holds that gym's equipment and what's missing there. With no gyms
+  set up the row is left out.
+- **Starters.** Chips that put an editable sentence into the words: "My hands hurt", "Short on
+  time today", "No gym, dumbbells at home", "Slept badly", and **Plan a one-off day**, which also
+  opens the one-off day's options (below).
+- **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
+- **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step: Ask Claude
+  until you've asked, then Paste reply. Ask Claude is enabled once there are words, or while the
+  one-off day's options are open.
+- **Reply found.** Coming back to Hyperlog after asking, the app reads the clipboard. If it holds a
+  Change or a one-off day that validates, a bar over the bottom bar reads "Claude's reply is
+  ready" with **Review**. Nothing opens by itself. Paste reply stays for a reply copied later.
+  Android shows its own toast when an app reads the clipboard.
+
+**A one-off day's options**, shown under the starters while Plan a one-off day is picked:
+
+- **Effort**: Easy, Normal (the default) or Hard. The prompt maps them: Easy is 3 RIR or more and
+  no techniques, Normal 1–2 RIR, Hard 0–1 RIR with techniques allowed.
+- **Time**: 45 min, 1 h (the default), 1 h 15 or 1 h 30, the whole session with warm-ups and rest.
+- **Focus**: muscle chips, any number. None picked means a balanced full-body day. Among the
+  muscles trained in the last 4 weeks, the three with the fewest weekly sets this week are marked
+  with the count (`Back · 4 sets`), as History counts them. Nothing is preselected.
+- Words are optional here: gym, effort, time and focus are a whole request.
+
+**With and without a program.** With a program running Claude may reply with either. Once it is
+finished, a Change can still repeat a week or shift the program. With no program only a one-off
+day comes back, the prompt says so, and a pasted Change reads "No program is running, so there's
+nothing for a Change to change."
+
+**Time off on Today.** Days off are counted from the weekday plan (every gym's usual days): whole
+days from the first planned day after the last finished session that went untrained (today isn't
+missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since
+the last session is 7 days off. With no weekday plan it counts the days since the last finished
+session. After more than 7 days off, Today shows `11 days since your last session` (the words
+always count from the last session) with **Ease back in**, until a Change or a one-off day is
+accepted that day. Ease back in opens Coach with the words "I've had 11 days off. Ease me back
+in." The prompt holds the count either way.
+
+**How Ask Claude works** (`coach/AskClaude.kt`):
+
 - **The prompt** is plain English text shared with `ACTION_SEND` through the system share sheet
-  (the user picks the Claude app). It holds, in order: your words quoted; the instruction to talk
-  it through and then reply with exactly one fenced ```` ```json ```` block holding a Change, using
-  only the listed ids; today's date; the program's title, the next day (week, day id, block) and
-  days left; the Changes in force; every block with its days and slots (slot id, exercise id and
-  name, sets as planned in the block's first week or the current one, alternatives, note); the
-  finished sessions of the last 28 days (date, day, gym, each exercise's sets as `80 × 5 @ 1`); the
-  library entries a swap could use (the program's exercises and every visible exercise sharing a
-  movement pattern with one: id, name, equipment, grip, primary muscles); and the Change format.
-- **The format in the prompt is generated** from the code that reads a Change: operation names
-  and fields from the serializer, scopes from the scope serializer, ranges from the validator, and
-  an example Change built for the running program (a swap to the next day's first alternative,
-  +1 RIR, for a week) that the paste accepts. A new operation can't ship without its description.
-- **Paste change** reads the clipboard. It takes the first fenced block holding JSON, else the
-  text from the first `{` to the last `}`, so Claude's whole reply can be copied. A valid Change
-  opens the review screen; Accept goes to Today. Otherwise the problems show under the text field
-  as program import shows them (path over message, "Not a Change Hyperlog can use", "N problems.
-  Nothing changed; ask Claude to fix them, then paste again.") with a copy button to hand them
-  back to Claude, and nothing is applied. A reply with no JSON says "no Change found".
+  (the user picks the Claude app). It holds, in order: your words quoted, and the one-off day's
+  options when they're open; the instruction to talk it through, then either answer in words when
+  the plan can stand or reply with exactly one fenced ```` ```json ```` block holding a Change or a
+  one-off day, using only the listed ids; today's date and the days off; the gym picked, with its
+  equipment and the exercises missing there; the program's title, the next day (week, day id,
+  block) and days left; the Changes in force; every block with its days and slots (slot id,
+  exercise id and name, sets as planned in the block's first week or the current one,
+  alternatives, note); the finished sessions of the last 28 days (date, day, gym, each exercise's
+  sets as `80 × 5 @ 1`); the weekly sets per muscle for this week and the 4 before it; every
+  visible library exercise (id, name, equipment, movement pattern, grip, primary muscles); and the
+  two formats.
+- **The formats in the prompt are generated** from the code that reads them: operation names and
+  fields from the serializer, scopes from the scope serializer, ranges from the validators, an
+  example Change built for the running program (a swap to the next day's first alternative, +1
+  RIR, for a week) and an example one-off day built from the library, both of which the paste
+  accepts. A new operation or field can't ship without its description.
+- **Paste reply** reads the clipboard. It takes the first fenced block holding JSON, else the
+  text from the first `{` to the last `}`, so Claude's whole reply can be copied. An object with
+  `oneOffDay` is a one-off day; anything else is read as a Change. A valid one opens its review.
+  Otherwise the problems show under the text field as program import shows them (path over
+  message, "Not a reply Hyperlog can use", "N problems. Nothing changed; ask Claude to fix them,
+  then paste again.") with a copy button to hand them back to Claude, and nothing is applied. A
+  reply with no JSON says "No Change or one-off day found".
+- **The review** says what came back. A Change's diff is headed "Change to your program" and
+  keeps **Accept**; a one-off day's is headed "One-off day for today" and its button reads **Add
+  to Today**. Accept goes to Today.
 - **No model calls.** A test fails if any source or dependency names a model SDK or host
   (Anthropic, OpenAI, Gemini and the like), or if code outside the update check opens a connection.
 
 Later, if the paste step gets annoying: a custom MCP connector would let the Claude app read the
-plan and write a pending Change directly. That needs a public HTTPS server holding the data, so it
-waits until syncing is wanted for its own sake.
+plan and write a pending reply directly. That needs a public HTTPS server holding the data, so it
+waits until syncing is wanted for its own sake (ADR 0001).
+
+### One-off day
+
+A day Claude builds for one date, outside the program, for a hotel gym, half an hour, or no
+program at all.
+
+```json
+{
+  "oneOffDay": {
+    "name": "Hotel dumbbells, 45 min",
+    "summary": "Upper body with dumbbells only. Back first, since it's behind this week.",
+    "groups": [
+      { "slots": [ {
+        "id": "row",
+        "exercise": "chest_supported_db_row",
+        "sets": [ { "count": 3, "reps": "8-12", "rir": 1, "rest": 120 } ]
+      } ] }
+    ]
+  }
+}
+```
+
+- `groups` are the program file's groups, slots and set lines (`docs/program-format.md`), without
+  week overrides. Slot ids are unique within the day. `name` and `summary` must not be blank. The
+  paste validates it as import does, paths and all (`oneOffDay.groups[0].slots[0].exercise:
+  unknown exercise "bb_row"`).
+- **The review** shows the name, the summary and the exercises as Today lists a day. **Add to
+  Today** keeps it; Reject, × and Back drop it.
+- **On Today** it's a card above the program day (or above Start session with no program):
+  "One-off day" over its name, its exercises, and **Start**, which opens the start sheet with the
+  gym picked on Coach. It holds for the day it was added and is gone the next day if it wasn't
+  started. Adding another replaces it, asking first. ⋮ → Remove drops it.
+- **The session** logs like a program day: targets, suggestions, warm-ups and techniques. It
+  doesn't move the position. Its sets count toward estimates and weekly sets like any session's.
+  History lists it under its name.
+- One-off days are kept with the sessions and go into backups.
 
 ## Fresh start, with starting weights from the old app
 
@@ -1109,7 +1135,7 @@ How the import works:
 
 The **exercise library** is seeded from the legacy library (189 exercises, 150 with technique
 videos), cleaned up: duplicates merged (e.g. `db_incline_press` / `incline_db_press`), equipment types
-fixed, and a grip-demand tag (`high` / `low` / `none`) added for the coach's swap rules. The result
+fixed, and a grip-demand tag (`high` / `low` / `none`) added, which the coach's prompt shares. The result
 ships as `app/src/main/assets/exercises.json`: 176 exercises, 140 with videos (merged duplicates
 shared links), with a `merged` table of legacy id → kept id for anything that still carries an old
 id (the starting-weights import). Three cable exercises were added after the legacy library (v0.1.1):
