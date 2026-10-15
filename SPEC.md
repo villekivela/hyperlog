@@ -224,7 +224,7 @@ logging, and computed loads where it needs them.
 | Technique | Prescription | Logged as | App computes |
 | --- | --- | --- | --- |
 | `dropset` | drops (1–3), reduction % (default 25) | weight × reps for each drop | drop weights from the set weight, rounded to the exercise's increment |
-| `myo_reps` | activation reps, mini-set target reps, max mini-sets | activation set, then reps per mini-set | stop when a mini-set misses target; short rest countdown between mini-sets |
+| `myo_reps` | activation reps, mini-set target reps (no maximum) | activation set, then reps per mini-set | mini-sets continue while each hits the target; a miss, or **Finish set**, closes the set; short rest countdown between mini-sets |
 | `lengthened_partials` | partials to failure, or a target count | full reps + partial reps | — |
 | `iso_hold` | seconds, position (stretch/contraction) | seconds held | hold timer |
 | `failure` | last set to failure | full reps (+ optional partials) | — |
@@ -234,8 +234,10 @@ logging, and computed loads where it needs them.
   the same drop last time, else 6.
 - **Myo-reps**: the set's reps are the activation set. Mini-sets are at its weight (locked) and
   prefill with their target; a 15 s breathing countdown comes before each. The set closes when a
-  mini-set falls short of the target or the maximum is reached. Before the set, one planned
-  mini-set row shows what is coming.
+  mini-set falls short of the target, or **Finish set** is tapped; there is no prescribed number
+  of mini-sets and no maximum, in the program, the coach or the screen. Before the set, one planned
+  mini-set row shows the first one's target; the pad reads "Mini-set N". There is no `+` on a myo
+  pill. Programs and stored sets that still carry `maxMiniSets` load, and it is ignored.
 - **Iso hold**: the hold follows the set's full reps as its own sub-row. **Start** on the pad's
   strip runs a hold timer in the header pill, filling toward the target and buzzing when it is
   reached; ✓ (or Stop) records the whole seconds held. Seconds can be typed instead.
@@ -247,7 +249,7 @@ logging, and computed loads where it needs them.
   Switching to another exercise closes an open set.
 - **Changing a technique** during the session: tap a set's number (or ⋮ → Edit set N)
   on any set not logged yet. The sheet offers None and the five techniques; a newly picked one
-  starts with the format's defaults (2 drops of 25%, mini-sets of 3 up to 5, partials to failure)
+  starts with the format's defaults (2 drops of 25%, mini-sets of 3, partials to failure)
   and iso hold at 20 s in the stretch. The change is for this session only; a logged set keeps
   the technique it was done with.
 - The session list and Session done read a set with its extensions after it:
@@ -551,10 +553,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
      a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
      reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
-     or mini-sets join it in one tall pill down the index column, with `+` at its foot to add
-     another drop or mini-set, before the set or while it is under way. Before a myo-reps set, every
-     mini-set it allows is a muted planned row in the pill, as planned drops are, so each `+` adds a
-     row and the count shows. A tap on a circle explains
+     or mini-sets join it in one tall pill down the index column, with `+` at a drop
+     set's foot to add another drop, before the set or while it is under way. Before a myo-reps set,
+     one muted planned mini-set row shows in its pill; myo-reps have no `+` and no maximum. A tap on a circle explains
      the technique and opens the set's sheet.
    - **The active row has no highlight.** The row being done (a set, a drop, a mini-set, a hold,
      a warm-up on the pad or a row being corrected) sits flat like the others; its kg and reps

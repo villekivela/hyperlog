@@ -300,7 +300,7 @@ fun SessionScreen(
                             onLogShown = actions::logShown,
                             undoable = { session.undoable(current, it) },
                             onUndo = { actions.undo(current.id) },
-                            onAddDropOrMiniSet = actions::addDropOrMiniSet,
+                            onAddDrop = actions::addDrop,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }

@@ -245,7 +245,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             ?: return Bad.also { error("$path.kind", "unknown technique \"$name\" (${TechniqueKind.keys.joinToString()})") }
         val fields = when (kind) {
             TechniqueKind.Dropset -> setOf("kind", "drops", "percent")
-            TechniqueKind.MyoReps -> setOf("kind", "miniSetReps", "maxMiniSets")
+            TechniqueKind.MyoReps -> setOf("kind", "miniSetReps", LEGACY_MAX_MINI_SETS)
             TechniqueKind.LengthenedPartials -> setOf("kind", "partials")
             TechniqueKind.IsoHold -> setOf("kind", "seconds", "position")
             TechniqueKind.Failure -> setOf("kind")
@@ -259,7 +259,6 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             )
             TechniqueKind.MyoReps -> Technique.MyoReps(
                 miniSetReps = int(o, path, "miniSetReps", min = 1, max = 10) ?: 3,
-                maxMiniSets = int(o, path, "maxMiniSets", min = 1, max = 10) ?: 5,
             )
             TechniqueKind.LengthenedPartials -> Technique.LengthenedPartials(int(o, path, "partials", min = 1, max = 30))
             TechniqueKind.IsoHold -> {
@@ -345,6 +344,9 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         unknownFields(o, path, fields)
         return o
     }
+
+    /** Myo-reps once had a maximum; programs and changes that still carry it read, and it is ignored. */
+    private val LEGACY_MAX_MINI_SETS = "maxMiniSets"
 
     private fun unknownFields(o: JsonObject, path: String, fields: Set<String>) {
         o.keys.filter { it !in fields }.forEach { error(path, "unknown field \"$it\"") }

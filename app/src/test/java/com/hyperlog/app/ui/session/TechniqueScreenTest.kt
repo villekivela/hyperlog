@@ -73,19 +73,17 @@ class TechniqueScreenTest {
         startDay("db_bench_press", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 4 } } ]""")
         compose.onNodeWithContentDescription("Myo-reps").assertIsDisplayed()
         compose.press("2"); compose.press("0"); compose.press("Next"); compose.press("1"); compose.press("2"); compose.press("Log set")
-        compose.waitFor("Mini-set 1 of 5")
+        compose.waitFor("Mini-set 1")
         compose.onNodeWithContentDescription("Breathe").assertIsDisplayed()
     }
 
     @Test
-    fun beforeMyoRepsEachMiniSetIsAPlannedRowAndPlusAddsOne() {
-        startDay("db_bench_press", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 7, "maxMiniSets": 2 } } ]""")
+    fun beforeMyoRepsOnePlannedMiniSetRowShowsAndNoPlus() {
+        startDay("db_bench_press", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 7 } } ]""")
         // A planned mini-set reads its target, 7; the pad's 7 key is the clickable one.
         val plannedMiniSet = hasText("7") and hasClickAction().not()
-        compose.onAllNodes(plannedMiniSet).assertCountEquals(2)
-        compose.onNodeWithContentDescription("Add a mini-set").performClick()
-        compose.waitUntil(5_000) { compose.onAllNodes(plannedMiniSet).fetchSemanticsNodes().size == 3 }
-        compose.onAllNodes(plannedMiniSet).assertCountEquals(3)
+        compose.onAllNodes(plannedMiniSet).assertCountEquals(1)
+        compose.onAllNodesWithContentDescription("Add a mini-set").assertCountEquals(0)
     }
 
     @Test

@@ -144,10 +144,10 @@ class ActiveRowTest {
 
     @Test
     fun anActiveMiniSetIsMarkedOnlyByItsCellsAndTheSetsCircleStaysPrimary() = bothThemes { dark ->
-        val myo = Technique.MyoReps(4, 5)
+        val myo = Technique.MyoReps(4)
         val set = LoggedSet(60.0, 12, 0, 0, technique = myo, extensions = listOf(Extension(Extension.Kind.MiniSet, 60.0, 4)))
         val shot = shoot(
-            session(exercise(listOf(set), listOf(SetPrescription(RepRange(10, 12), 0, 90, technique = myo))), SetEntry("60", "4", "", null, Field.Reps, partialMode = false, fresh = true), FollowUp.MiniSet(1, 5, 4)),
+            session(exercise(listOf(set), listOf(SetPrescription(RepRange(10, 12), 0, 90, technique = myo))), SetEntry("60", "4", "", null, Field.Reps, partialMode = false, fresh = true), FollowUp.MiniSet(1, 4)),
             dark,
         )
         val circle = index("1")
@@ -159,7 +159,7 @@ class ActiveRowTest {
 
     @Test
     fun aFinishedMyoRepsSetsPillIsOneSmoothShapeDownItsLeftEdge() = bothThemes { dark ->
-        val myo = Technique.MyoReps(4, 5)
+        val myo = Technique.MyoReps(4)
         val minis = List(5) { Extension(Extension.Kind.MiniSet, 60.0, 4) }
         val set = LoggedSet(60.0, 12, 0, 0, technique = myo, extensions = minis)
         val shot = shoot(

@@ -112,7 +112,7 @@ data class BackoffSpec(val from: Int = 0, val percent: Int = DEFAULT_PERCENT) {
 /** How a work set is extended past its main reps (SPEC, Intensity techniques). */
 sealed interface Technique {
     data class Dropset(val drops: Int = 2, val percent: Int = 25) : Technique
-    data class MyoReps(val miniSetReps: Int = 3, val maxMiniSets: Int = 5) : Technique
+    data class MyoReps(val miniSetReps: Int = 3) : Technique
     /** Partials to failure, or [partials] of them. */
     data class LengthenedPartials(val partials: Int? = null) : Technique
     data class IsoHold(val seconds: Int, val position: HoldPosition) : Technique
@@ -266,6 +266,5 @@ private fun expand(specs: List<SetSpec>, week: Int, overrides: List<WeekOverride
 /** The technique with one more drop or mini-set; null for one with neither. */
 fun Technique.oneMore(): Technique? = when (this) {
     is Technique.Dropset -> copy(drops = drops + 1)
-    is Technique.MyoReps -> copy(maxMiniSets = maxMiniSets + 1)
     else -> null
 }

@@ -119,7 +119,7 @@ internal class TableState(
     val undoable: (Int) -> Boolean = { false },
     val onUndo: () -> Unit = {},
     /** `+` at the foot of a drop set or myo-reps, before or during it: one more drop or mini-set. Null where sets can't change. */
-    val onAddDropOrMiniSet: ((Int) -> Unit)? = null,
+    val onAddDrop: ((Int) -> Unit)? = null,
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
     val activeKg: Double? get() = if (followUp == null) entry?.weightKg else null
@@ -325,9 +325,8 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
     val logged = set?.extensions.orEmpty()
     val lastTime = current.lastTime.getOrNull(index)?.extensions.orEmpty()
     val out = mutableListOf<SubItem>()
-    // `+` at the foot of a drop set or myo-reps, not started yet or under way, adds a drop or a mini-set.
-    val plus = table.onAddDropOrMiniSet?.takeIf { (set == null && current.editable(index)) || open }?.let { { it(index) } }
-    val plusLabel = if (technique is Technique.MyoReps) R.string.add_mini_set else R.string.add_drop
+    // `+` at the foot of a drop set, not started yet or under way, adds a drop.
+    val plus = table.onAddDrop?.takeIf { technique is Technique.Dropset && ((set == null && current.editable(index)) || open) }?.let { { it(index) } }
     fun foot(j: Int, count: Int) = if (j == count - 1) Join.Foot else Join.Middle
     when (technique) {
         is Technique.Dropset -> {
@@ -353,8 +352,8 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                             onCorrect = table.onCorrect?.let { { it(index, j) } },
                             description = stringResource(R.string.correct_drop_description, j + 1, index + 1),
                         )
-                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus, plusLabel = plusLabel)
-                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus, plusLabel = plusLabel)
+                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus)
+                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus)
                     }
                 }
             }
@@ -372,13 +371,10 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                 }
             }
             when {
-                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot, plus = plus, plusLabel = plusLabel) }
-                // Before the set, every mini-set it allows is planned, its target at the set's weight, so each `+` shows.
-                set == null -> for (j in 0 until technique.maxMiniSets) {
-                    val join = foot(j, technique.maxMiniSets)
-                    out += SubItem("ext-$index-$j", false) {
-                        PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", join, plus = if (join == Join.Foot) plus else null, plusLabel = plusLabel)
-                    }
+                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot) }
+                // Before the set, one planned mini-set shows the target of the first, at the set's weight.
+                set == null -> out += SubItem("ext-$index-0", false) {
+                    PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot)
                 }
             }
         }
@@ -549,11 +545,11 @@ private fun AddSetRow(onAdd: () -> Unit) {
 /** A drop or mini-set still to come: muted like every prefill; a drop is to failure, a 0 ring. */
 @Composable
 private fun PlannedSubRow(
-    last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null, @StringRes plusLabel: Int = R.string.add_drop,
+    last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null,
 ) {
     val color = MaterialTheme.colorScheme.outline
     RowFrame(SubRowHeight) {
-        IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusLabel = plusLabel)
+        IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
         SubLast(last)
         ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
         ValueText(reps, ColReps, color)
@@ -594,7 +590,6 @@ private fun ActiveSubRow(
     hold: Boolean = table.followUp is FollowUp.Hold,
     /** `+` at the pill's foot: one more drop or mini-set. */
     plus: (() -> Unit)? = null,
-    @StringRes plusLabel: Int = R.string.add_drop,
 ) {
     val entry = correcting ?: table.entry ?: return
     val actions = table.actions
@@ -603,7 +598,7 @@ private fun ActiveSubRow(
         actions.setPadVisible(true)
     }
     RowFrame(SubRowHeight, modifier = Modifier.testTag(ActiveSubRowTag)) {
-        if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusLabel = plusLabel)
+        if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
         SubLast(last)
         if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline)
         else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg), height = SubCellHeight) { tap(Field.Weight) }
@@ -658,8 +653,6 @@ private fun RowScope.IndexCell(
     onClick: (() -> Unit)? = null,
     description: String? = null,
     plus: (() -> Unit)? = null,
-    /** What [plus] adds: "Add a drop" or "Add a mini-set". */
-    @StringRes plusLabel: Int = R.string.add_drop,
     bold: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -713,7 +706,7 @@ private fun RowScope.IndexCell(
             }
         }
         plus?.let { add ->
-            val text = stringResource(plusLabel)
+            val text = stringResource(R.string.add_drop)
             Box(
                 Modifier.align(Alignment.BottomStart).padding(bottom = 8.dp).size(IndexSize).clip(CircleShape)
                     .clickable(onClickLabel = text, onClick = add).semantics { contentDescription = text },

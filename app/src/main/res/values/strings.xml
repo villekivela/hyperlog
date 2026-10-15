@@ -75,7 +75,7 @@
     <string name="past_minutes">%1$d min</string>
     <string name="past_open_description">Open %1$s</string>
     <string name="follow_drop">Drop %1$d of %2$d</string>
-    <string name="follow_mini_set">Mini-set %1$d of %2$d</string>
+    <string name="follow_mini_set">Mini-set %1$d</string>
     <string name="follow_hold">Hold %1$d s</string>
     <string name="follow_finish_set">Finish set</string>
     <string name="hold_start">Start</string>
@@ -106,7 +106,6 @@
     <string name="check_undo">Take back set %1$d</string>
     <string name="check_log_follow">Log it as shown</string>
     <string name="add_drop">Add a drop</string>
-    <string name="add_mini_set">Add a mini-set</string>
     <!-- The chips under the exercise name: a swap names what it replaced, a superset its partner. -->
     <string name="chip_swapped">for %1$s</string>
     <string name="chip_superset">%1$s + %2$s</string>
@@ -147,7 +146,7 @@
     <string name="technique_failure_name">To failure</string>
     <string name="technique_detail_drops">%1$d drops of %2$d%%</string>
     <string name="technique_detail_drop_one">1 drop of %1$d%%</string>
-    <string name="technique_detail_myo">Mini-sets of %1$d, up to %2$d</string>
+    <string name="technique_detail_myo">Mini-sets of %1$d</string>
     <string name="technique_detail_partials_failure">Partials to failure</string>
     <string name="technique_detail_partials">%1$d partials</string>
     <string name="technique_detail_iso_stretch">%1$d s in the stretch</string>

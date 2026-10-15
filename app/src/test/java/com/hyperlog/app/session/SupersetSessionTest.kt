@@ -138,11 +138,11 @@ class SupersetSessionTest {
 
     @Test
     fun endingAMyoRepSetEarlyInASupersetStartedOutOfOrderGoesToThePartnersSet() = runTest {
-        program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
+        program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4 }""")
         val logger = logger()
         logger.switchTo("db_bicep_curl")
         logger.log("15")
-        assertEquals(FollowUp.MiniSet(index = 0, target = 4, max = 3), logger.session.followUp)
+        assertEquals(FollowUp.MiniSet(index = 0, target = 4), logger.session.followUp)
 
         now += 5_000
         logger.finishSet()
@@ -154,7 +154,7 @@ class SupersetSessionTest {
 
     @Test
     fun leavingAnOpenSupersetSetForAnotherExerciseKeepsItsRest() = runTest {
-        program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4, "maxMiniSets": 3 }""")
+        program(curlTechnique = """{ "kind": "myo_reps", "miniSetReps": 4 }""")
         val logger = logger()
         logger.switchTo("db_bicep_curl")
         logger.log("15")

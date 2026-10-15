@@ -105,7 +105,7 @@ interface SessionActions : PadActions {
     /** The check on the set logged last: takes it back. */
     fun undo(sessionExerciseId: Long) {}
     /** `+` at the foot of set [setIndex]'s tall pill: one more drop or mini-set, before or during the set. */
-    fun addDropOrMiniSet(setIndex: Int) {}
+    fun addDrop(setIndex: Int) {}
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -219,7 +219,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun logShown() = run { logger.logShown() }
     override fun editWarmup(index: Int) = run { logger.editWarmup(index) }
     override fun undo(sessionExerciseId: Long) = run { logger.undo(sessionExerciseId) }
-    override fun addDropOrMiniSet(setIndex: Int) = run { logger.addDropOrMiniSet(setIndex) }
+    override fun addDrop(setIndex: Int) = run { logger.addDrop(setIndex) }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

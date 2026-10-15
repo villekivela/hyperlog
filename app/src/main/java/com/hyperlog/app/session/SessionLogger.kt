@@ -716,7 +716,7 @@ class SessionLogger(
      * technique for this session; on the set that is open it changes what the set was logged with,
      * so its drops or mini-sets go on.
      */
-    suspend fun addDropOrMiniSet(setIndex: Int) = locked {
+    suspend fun addDrop(setIndex: Int) = locked {
         val session = _state.value ?: return@locked
         val current = session.current ?: return@locked
         val more = current.techniqueAt(setIndex)?.oneMore() ?: return@locked
