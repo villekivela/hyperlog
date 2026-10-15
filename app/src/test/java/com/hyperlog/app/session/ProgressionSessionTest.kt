@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -124,6 +125,24 @@ class ProgressionSessionTest {
         assertEquals(true, s.estimated)
         assertEquals("Estimated from 60 kg × 9 @ 2, check on the first set", s.why)
         assertEquals("70", logger.session.entry!!.weight)
+    }
+
+    @Test
+    fun aSetLoggedWithoutAnRirIsStillWhatTheNextSetFollowsAndAdjustsNothing() = runTest {
+        val logger = logger()
+        logger.startWeek()
+        now += 200_000
+        logger.focus(com.hyperlog.app.domain.Field.Weight); logger.type("60"); logger.done()
+        // The target RIR (2) comes prefilled; tapping it clears it.
+        logger.selectRir(2)
+        assertNull(logger.session.entry!!.rir)
+        logger.type("9"); logger.done()
+        val set = logger.bench.sets.single()
+        assertNull(set.rir)
+        // The next set follows the set before, with no RIR gap to adjust the weight by.
+        assertEquals("60", logger.session.entry!!.weight)
+        // It is stored without an RIR, and survives the app being killed.
+        assertNull(logger().bench.sets.single().rir)
     }
 
     @Test

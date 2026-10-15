@@ -121,7 +121,7 @@ object Progression {
             val top = today.sets.getOrNull(b.from)?.set?.weightKg ?: return null
             return Suggestion(backoffWeight(top, b.percent, ladder), followReps(today, target), Suggestion.Kind.Backoff, null)
         }
-        val previous = today.sets.withIndex().lastOrNull { it.value.rated && it.value.target?.backoff == null }
+        val previous = today.sets.withIndex().lastOrNull { it.value.counts && it.value.target?.backoff == null }
         return if (previous != null) withinSession(previous.index, previous.value, target, today, history, ladder)
         else nextSession(target, today, history, ladder)
     }
@@ -268,9 +268,11 @@ object Progression {
         }
         val follow = Suggestion(set.weightKg, followReps(today, target), Suggestion.Kind.Follow, null)
         val t = was.rir ?: return follow
+        // Logged without an RIR there is no gap to adjust the weight by: the next set follows it.
+        if (set.rir == null) return follow
         val range = target.reps
         // About 5% per point of effective reps off the target, capped at ±10%.
-        val gap = set.fullReps + (set.rir ?: 0) - (set.fullReps.coerceIn(range.min, range.max) + t)
+        val gap = set.fullReps + set.rir - (set.fullReps.coerceIn(range.min, range.max) + t)
         if (gap == 0) return follow
         val kg = ladder.rungs[ladder.nearestIndex(today.weightFor(today.load(set.weightKg) * (1 + (0.05 * gap).coerceIn(-0.10, 0.10))))]
         if (abs(kg - set.weightKg) < 0.05) return follow
