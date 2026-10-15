@@ -226,7 +226,7 @@ private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onR
         if (history.isNotEmpty()) {
             item(key = "changes") { SectionHead(stringResource(R.string.program_changes)) }
             itemsIndexed(history, key = { _, it -> "change-${it.id}" }) { i, record ->
-                Segment(i, history.size) { ChangeRow(record, program, onRevert = { reverting = record.id }) }
+                Segment(i, history.size) { ChangeRow(record, program, replaced = record.id in active.replaced, onRevert = { reverting = record.id }) }
             }
         }
         program.blocks.forEach { block ->
@@ -294,7 +294,7 @@ private fun SectionHead(text: String) {
 
 /** An accepted Change: its summary, period and day, with Revert while it is in force. */
 @Composable
-private fun ChangeRow(record: ChangeRecord, program: Program, onRevert: () -> Unit) {
+private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean, onRevert: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val reverted = record.revertedAt != null
     val block = program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
@@ -311,13 +311,15 @@ private fun ChangeRow(record: ChangeRecord, program: Program, onRevert: () -> Un
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                if (reverted) stringResource(R.string.program_change_reverted)
+                if (reverted && replaced) stringResource(R.string.program_change_replaced, shortDate(java.time.Instant.ofEpochMilli(record.revertedAt!!).atZone(java.time.ZoneId.systemDefault()).toLocalDate()))
+                else if (reverted) stringResource(R.string.program_change_reverted)
                 else stringResource(R.string.program_change_accepted, scopeText(record.change.scope, block), shortDate(record.accepted.acceptedOn)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
             )
         }
-        if (!reverted) {
+        // One that only ended others has nothing of its own to revert.
+        if (!reverted && record.change.operations.isNotEmpty()) {
             IconButton(onClick = onRevert) { SymbolIcon(Symbol.Undo, stringResource(R.string.program_change_revert), tint = cs.onSurfaceVariant) }
         }
     }

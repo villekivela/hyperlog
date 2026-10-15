@@ -82,7 +82,10 @@ object Changes {
      * days it covers from the position it leaves, the first of each day of each block.
      */
     fun diff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, proposed: Change): ChangeDiff {
-        val accepted = accept(program, position, proposed, today).copy(id = Long.MAX_VALUE)
+        // The Changes it replaces end first, as Revert would end them; the plan after has them gone.
+        val (ended, kept) = changes.partition { it.id in proposed.replaces }
+        val from = ending(program, position, ended)
+        val accepted = accept(program, from, proposed, today).copy(id = Long.MAX_VALUE)
         val date = (proposed.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
         val window = when (val scope = proposed.scope) {
             is Scope.Dates -> {
@@ -99,7 +102,7 @@ object Changes {
         val seen = mutableSetOf<Pair<String, String>>()
         val days = window.mapNotNull { p ->
             val before = day(program, p, date, changes) ?: return@mapNotNull null
-            val after = day(program, p, date, changes + accepted) ?: return@mapNotNull null
+            val after = day(program, p, date, kept + accepted) ?: return@mapNotNull null
             val key = before.block.id to before.day.id
             if (key in seen) return@mapNotNull null
             val slots = slotDiffs(before, after)
@@ -114,6 +117,10 @@ object Changes {
             days = days,
         )
     }
+
+    /** Where [position] goes once [ended] are reverted, newest first, as Revert takes each back. */
+    fun ending(program: Program, position: Position, ended: List<AcceptedChange>): Position =
+        ended.sortedByDescending { it.id }.fold(position) { p, c -> revert(program, p, c) }
 
     /**
      * What [record], a Change in force, does from [position] on [today]: the days it still covers,

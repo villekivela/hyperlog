@@ -168,9 +168,9 @@ object AskClaude {
      * Reads a pasted Change: Claude's whole reply or just its JSON. The fenced block is taken when
      * there is one, else the outermost braces; then it's checked like any Change.
      */
-    fun read(pasted: String, program: Program, exercises: Set<String>): ChangeValidator.Result {
+    fun read(pasted: String, program: Program, exercises: Set<String>, inForce: Set<Long> = emptySet()): ChangeValidator.Result {
         val json = extract(pasted) ?: return ChangeValidator.Result.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
-        val result = ChangeValidator.validate(json, program, exercises)
+        val result = ChangeValidator.validate(json, program, exercises, inForce)
         // More braces opened than closed: the copy stopped short, so the problems are the copy's, not Claude's.
         val rest = pasted.substring(pasted.indexOf('{'))
         if (result is ChangeValidator.Result.Invalid && rest.count { it == '{' } > rest.count { it == '}' }) {
@@ -213,9 +213,9 @@ object AskClaude {
         val changes = plan.inForce
         if (changes.isNotEmpty()) {
             appendLine()
-            appendLine("Changes in force (accepted earlier, newest first), each with its operations as JSON:")
+            appendLine("Changes in force (accepted earlier, newest first), each with its id and its operations as JSON:")
             changes.forEach {
-                appendLine("- ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.accepted.acceptedOn})")
+                appendLine("- id ${it.id}: ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.accepted.acceptedOn})")
                 appendLine("  operations: ${ChangeJson.format.encodeToString(ListSerializer(Operation.serializer()), it.change.operations)}")
             }
         }
@@ -337,6 +337,10 @@ object ChangeFormat {
         appendLine("  - ${scope(Scope.Dates(plan.today, plan.today.plusDays(6)))}: sessions trained on those dates, both included (temporary);")
         appendLine("  - ${scope(Scope.RestOfBlock)}: from today to the end of the block I'm in;")
         appendLine("  - ${scope(Scope.RestOfProgram)}: from today on.")
+        appendLine(
+            "- \"replaces\"?: a list of ids of Changes in force that this one ends. Accepting it reverts them first, then applies its " +
+                "own operations. With \"replaces\", \"operations\" may be empty, to only end them.",
+        )
         appendLine("- \"operations\": a list, applied in order. Slot edits follow a slot id into later blocks that reuse it. Position operations " +
             "(skip_day, shift_program, repeat_week) run once, when I accept. Every operation may carry a \"reason\". Fields with ? are optional:")
         operations().forEach { (op, fields) ->
@@ -349,6 +353,17 @@ object ChangeFormat {
         appendLine("```json")
         appendLine(pretty.encodeToString(Change.serializer(), example(plan)))
         appendLine("```")
+        plan.inForce.firstOrNull()?.let { record ->
+            appendLine()
+            appendLine("When a Change in force should end, for example \"${record.change.summary}\" (id ${record.id}). To only end it:")
+            appendLine("```json")
+            appendLine(pretty.encodeToString(Change.serializer(), ending(plan, record.id)))
+            appendLine("```")
+            appendLine("To replace it with other operations:")
+            appendLine("```json")
+            appendLine(pretty.encodeToString(Change.serializer(), example(plan).copy(summary = "In place of an earlier Change: an alternative for one exercise and one more rep in reserve, for a week.", replaces = listOf(record.id))))
+            appendLine("```")
+        }
     }
 
     /** Each operation's JSON name with its fields (name, optional), `reason` left out, as the serializer reads them. */
@@ -360,6 +375,10 @@ object ChangeFormat {
     }
 
     private fun scope(scope: Scope) = ChangeJson.format.encodeToString(ScopeSerializer, scope)
+
+    /** A Change that only ends the Change in force [id]. */
+    fun ending(plan: ActiveProgram, id: Long): Change =
+        Change("The earlier Change is no longer needed.", Scope.RestOfProgram, emptyList(), replaces = listOf(id))
 
     /**
      * A Change that fits the running program, so the example names real ids: the next day's first

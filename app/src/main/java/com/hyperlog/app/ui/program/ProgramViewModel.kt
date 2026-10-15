@@ -94,7 +94,8 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
             val active = programs.active.first() ?: return@launch
             val diff = programs.preview(change) ?: return@launch
             val block = active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.name
-            _review.value = ChangeReview(change, diff, active.program, block)
+            val ends = active.history.filter { it.id in change.replaces }.map { it.change.summary }
+            _review.value = ChangeReview(change, diff, active.program, block, ends)
         }
     }
 
@@ -170,7 +171,8 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     private suspend fun read(text: String): ChangeValidator.Result? {
         val active = programs.active.first() ?: return null
         val ids = HyperlogDatabase.get(getApplication()).exercises().all().map { it.id }.toSet()
-        return withContext(Dispatchers.Default) { AskClaude.read(text, active.program, ids) }
+        val inForce = active.inForce.map { it.id }.toSet()
+        return withContext(Dispatchers.Default) { AskClaude.read(text, active.program, ids, inForce) }
     }
 
     fun closePasteErrors() {

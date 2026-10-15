@@ -95,6 +95,42 @@ class ChangesTest {
     }
 
     @Test
+    fun aReplyThatOnlyEndsAChangeRevertsItOnAccept() = runTest {
+        val before = active()
+        programs.accept(change("""{"summary":"No rows","scope":"rest_of_program","operations":[{"op":"remove","slot":"row"},{"op":"skip_day"}]}"""))
+        val id = active().history.single().id
+        val ends = change("""{"summary":"Hands fine now","scope":"rest_of_program","replaces":[$id],"operations":[]}""")
+        assertEquals(listOf(id), ends.replaces)
+
+        // The diff shows the plan going back.
+        val diff = programs.preview(ends)!!
+        assertEquals(Position(1, 1) to Position(1, 0), diff.next)
+        assertEquals("seated_cable_row", diff.days.first().slots.single().after!!.exercise)
+
+        programs.accept(ends)
+        val after = active()
+        assertEquals(before.position, after.position)
+        assertEquals(before.next, after.next)
+        assertNotNull(after.history.first { it.id == id }.revertedAt)
+        // The replaced one reads as replaced; the ending one does nothing, so it isn't in force.
+        assertEquals(setOf(id), after.replaced)
+        assertEquals(emptyList<Long>(), after.inForce.map { it.id })
+    }
+
+    @Test
+    fun aReplyThatReplacesAChangeEndsItAndAppliesItsOwn() = runTest {
+        programs.accept(change("""{"summary":"No rows","scope":"rest_of_program","operations":[{"op":"remove","slot":"row"}]}"""))
+        val id = active().history.single().id
+        programs.accept(
+            change("""{"summary":"Chest-supported rows","scope":"rest_of_program","replaces":[$id],"operations":[{"op":"swap","slot":"row","exercise":"chest_supported_db_row"}]}"""),
+        )
+        val after = active()
+        assertEquals("chest_supported_db_row", after.next!!.slots[1].exercise)
+        assertEquals(listOf("Chest-supported rows"), after.inForce.map { it.change.summary })
+        assertEquals(setOf(id), after.replaced)
+    }
+
+    @Test
     fun revertingAnAcceptedChangeRestoresThePlan() = runTest {
         val before = active()
         programs.accept(

@@ -922,6 +922,15 @@ Operations: `swap`, `remove`, `add`, `adjust_sets`, `adjust_load` (percent), `ad
 `remove_technique`, `skip_day`, `deload_week`, `shift_program`, `repeat_week`. Scope is a date range (temporary), `rest_of_program`
 or `rest_of_block`.
 
+**Ending a Change.** A Change may carry `replaces`: a list of ids of Changes in force (the prompt
+lists each with its id). Accepting it ends those first, by the same rules as Revert, then applies
+its own operations. With `replaces`, `operations` may be empty, for a reply that only ends them
+("Hands feel fine now"); otherwise it ends them and applies its own ("Worse: drop all grip work").
+
+```json
+{ "summary": "Hands feel fine: back to the plan.", "scope": "rest_of_program", "replaces": [12], "operations": [] }
+```
+
 **What each one does.** The program runs as a sequence, so a Change covers sessions by the date
 they are trained on. Plan edits apply, in order, to every day trained on a date in scope;
 position operations run once, when the Change is accepted.
@@ -939,6 +948,7 @@ position operations run once, when the Change is accepted.
 | `deload_week` | `week`? | That program week (the one you're in when left out) is a deload: half its sets per slot (rounded up), RIR + 2, no techniques, and it never lowers the estimate. |
 | `shift_program` | `weeks` (≠ 0) | The rest of the plan starts that many weeks later: the position goes back that many weeks (to week 1 at most), so they are trained again. Negative moves it earlier, skipping weeks. |
 | `repeat_week` | — | The week of the last day trained runs again from its first day. |
+| (`replaces`, on the Change) | ids | The Changes in force with those ids end on accept, as Revert ends them, before the operations apply. Not an operation, so it carries no `reason`. |
 
 Every operation may carry a `reason`. Slots are named by id; a block reusing an id means the same
 place, so a `rest_of_program` edit follows the slot into later blocks, and `rest_of_block` stops at
@@ -947,18 +957,24 @@ the end of the block the Change was accepted in. A date range covers its first a
 
 - **Validation** (pasted or built) names every problem by path, like program import:
   `operations[0].slot: unknown slot "rows"`. Slots, days and exercises must be known, values in
-  range, the summary not blank, and `to` not before `from`.
+  range, the summary not blank, and `to` not before `from`. Every `replaces` id must be a Change in
+  force (`replaces[0]: no Change in force has id 9`), and `operations` may be empty only with
+  `replaces`.
 - **The diff** shows the summary and the scope, then where the next day moves and how many days
   are left (before → after), then the first day of each kind in the block it edits (each day
   of each block once), slot by slot: swapped (`In place of …`), removed (struck through), added
   (`+`), sets before → after, and a moved load. A date range looks one week of days ahead per week
   of dates, and never more program days than dates (a one-day range shows one day); `rest_of_block` to the end of the block; `rest_of_program` to the end. Nothing changes
-  until **Accept**; **Reject**, × and Back drop it.
+  until **Accept**; **Reject**, × and Back drop it. A Change with `replaces` lists what it ends
+  above the diff ("Ends: Hands need a week off grip work"), and its diff compares the plan as it
+  is with the plan once those have ended and it applies; one Accept does both.
 - **History.** Accepted Changes are kept with the day they were accepted, the position they moved
   from and to, and the block. The Program screen lists them, newest first, each with **Revert**
   (asking first). Reverting stops its plan edits and takes its move of the position back; days
   trained since still count (the position moves back by the same number of days). Reverted ones
-  stay in the list, struck through. A running session follows an accept or revert at once.
+  stay in the list, struck through. A Change ended by another's `replaces` stays struck through
+  too, reading "Replaced 18 Oct". One that only ended others has no Revert: it has nothing of its
+  own, and isn't in force. A running session follows an accept or revert at once.
 - **Reorders stay in the session.** No operation moves a slot; the order is the program's.
 
 ### Words first, through Claude (uses your subscription, no API)
@@ -983,10 +999,16 @@ goes through Claude, which reads the program, the week you're in and your sessio
   Oct` for one that starts later, `Rest of Build` while the block it was accepted in runs, `Rest of
   the program`), with **Revert** (asking first, as on Program) and **Tell Claude how it's going**.
   That one starts the words with the Change (`About "Hands need a week off grip work": `) and
-  focuses the text field. A finished program has none.
+  focuses the text field. A finished program has none. Tapping a card opens what that Change does
+  from today on, read-only and headed "Change in force": the days it still covers, slot by slot,
+  with every other Change applied before and after, and the move of the position it made. Its one
+  button is **Revert** (asking first); × and Back close it. Past two cards, the rest fold into a
+  row, `1 more in force`, that opens them, so the words field stays in view.
 - **Gym.** The gyms as chips, the one the start sheet would pick preselected (the usual gym on
-  today's weekday). The prompt holds that gym's equipment and what's missing there. With no gyms
-  set up the row is left out.
+  today's weekday), then **Elsewhere**, for a gym that isn't set up (a hotel, a friend's garage).
+  The prompt holds the gym's equipment and what's missing there; with Elsewhere it holds no
+  gym's equipment and tells Claude the equipment is in the words. With no gyms set up the row is
+  left out.
 - **Starters.** Chips that put an editable sentence into the words: "My hands hurt" (`My hands
   hurt.`), "Short on time today" (`I'm short on time today: I have 45 minutes.`), "No gym,
   dumbbells at home" (`No gym today, only dumbbells at home.`), "Slept badly" (`I slept badly
@@ -996,15 +1018,16 @@ goes through Claude, which reads the program, the week you're in and your sessio
 - **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
 - **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step, always at
   the end of the bar: Ask Claude until you've asked, then Paste reply. Ask Claude is enabled once
-  there are words, or while the workout's options are open. With no program and no workouts yet
-  (before #33) only a reply in words can come back, so Paste reply is left out.
+  there are words, or while the workout's options are open. Once asked, Paste reply stays the next
+  step until the request ends: an accept, a revert, or the words cleared. With no program and no
+  workouts yet (before #33) only a reply in words can come back, so Paste reply is left out.
 - **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
   has focus again, which Android requires for reading the clipboard), the app reads the clipboard
   once. If it holds a Change or a workout that validates, a card over the bottom bar's buttons
   reads "Claude's reply is ready" with a filled **Review**, and neither button below is filled.
   Anything else is ignored quietly. Nothing opens by itself. The card goes when Review opens the
-  reply or Ask Claude asks again. Paste reply stays for a reply copied later. Android shows its
-  own toast when an app reads the clipboard.
+  reply or Ask Claude asks again. The keyboard closes, so Review is in view. Paste reply stays for
+  a reply copied later. Android shows its own toast when an app reads the clipboard.
 
 **A workout's options**, shown under the starters while Build me a workout is picked:
 
@@ -1039,8 +1062,9 @@ in." The prompt holds the count either way.
   workout, using only the listed ids; today's date and the days off (the last finished session's
   date and how long ago, and with a weekday plan the days off as Today counts them); the gym
   picked, with its equipment by kind and each item's weights, its dumbbells and plates, and the
-  exercises missing there; the program's title, the next day (week, day id,
-  block) and days left; the Changes in force; every block with its days and slots (slot id,
+  exercises missing there (or, with Elsewhere, that the equipment is in the words); the program's
+  title, the next day (week, day id, block) and days left; the Changes in force, newest first, each
+  with its id, summary, scope, the day it was accepted and its operations as JSON; every block with its days and slots (slot id,
   exercise id and name, sets as planned in the block's first week or the current one,
   alternatives, note); the finished sessions of the last 28 days (date, day, gym, each exercise's
   sets as `80 × 5 @ 1`); the weekly sets per muscle for this week and the 4 before it; every
@@ -1050,14 +1074,19 @@ in." The prompt holds the count either way.
   fields from the serializer, scopes from the scope serializer, ranges from the validators, an
   example Change built for the running program (a swap to the next day's first alternative, +1
   RIR, for a week) and an example workout built from the library, both of which the paste
-  accepts. A new operation or field can't ship without its description.
+  accepts. With a Change in force, two more examples use its id: one that only ends it, and one
+  that replaces it with the example's operations. A new operation or field can't ship without its description.
 - **Paste reply** reads the clipboard. It takes the first fenced block holding JSON, else the
   text from the first `{` to the last `}`, so Claude's whole reply can be copied. An object with
   `workout` is a workout; anything else is read as a Change. A valid one opens its review.
   Otherwise the problems show under the text field as program import shows them (path over
-  message, "Not a reply Hyperlog can use", "N problems. Nothing changed; ask Claude to fix them,
-  then paste again.") with a copy button to hand them back to Claude, and nothing is applied. A
-  reply with no JSON says "No Change or workout found".
+  message, "Not a reply Hyperlog can use", "N problems. Nothing changed. Copy them into your Claude
+  chat, then paste the new reply.") with a copy button to hand them back to Claude, and nothing is
+  applied. A problem with the copy, not the reply, shows one message and no copy button: a reply
+  with no JSON says "No Change found in what you copied. Copy Claude's whole reply, with its JSON
+  block, then paste again." (with workouts, "No Change or workout found…"), and one whose JSON
+  opens more braces than it closes says "Claude's reply is cut off before its JSON ends. Copy the
+  whole reply, then paste again."
 - **The review** says what came back. A Change's diff is headed "Change to your program" and
   keeps **Accept**; a workout's is headed "Workout for today" and its button reads **Add
   to Today**. Accept goes to Today.

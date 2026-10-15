@@ -23,7 +23,7 @@ object ChangeValidator {
     /** The technique kinds `remove_technique` names, as in a program file. */
     val TechniqueKinds = com.hyperlog.app.program.TechniqueKind.keys
 
-    fun validate(json: String, program: Program, exercises: Set<String>): Result {
+    fun validate(json: String, program: Program, exercises: Set<String>, inForce: Set<Long> = emptySet()): Result {
         val change = try {
             ChangeJson.decode(json)
         } catch (e: SerializationException) {
@@ -31,15 +31,17 @@ object ChangeValidator {
         } catch (e: IllegalArgumentException) {
             return Result.Invalid(listOf("not a Change: ${e.message?.lineSequence()?.firstOrNull().orEmpty()}"))
         }
-        val errors = validate(change, program, exercises)
+        val errors = validate(change, program, exercises, inForce)
         return if (errors.isEmpty()) Result.Valid(change) else Result.Invalid(errors)
     }
 
     /** The problems of a Change already read, such as one built by a coach: none when it's valid. */
-    fun validate(change: Change, program: Program, exercises: Set<String>): List<String> = buildList {
+    fun validate(change: Change, program: Program, exercises: Set<String>, inForce: Set<Long> = emptySet()): List<String> = buildList {
         if (change.summary.isBlank()) add("summary: a summary is required")
         (change.scope as? Scope.Dates)?.let { if (it.to < it.from) add("scope: \"to\" is before \"from\"") }
-        if (change.operations.isEmpty()) add("operations: at least one operation is required")
+        change.replaces.forEachIndexed { i, id -> if (id !in inForce) add("replaces[$i]: no Change in force has id $id") }
+        // A reply that only ends Changes in force has nothing else to do.
+        if (change.operations.isEmpty() && change.replaces.isEmpty()) add("operations: at least one operation is required")
         val days = program.blocks.flatMap { it.days }
         val slots = days.flatMap { d -> d.groups.flatMap { g -> g.slots.map { it.id } } }.toSet()
         change.operations.forEachIndexed { i, op ->

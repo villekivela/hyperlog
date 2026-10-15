@@ -51,8 +51,30 @@ class AskClaudeTest {
             acceptedAt = 3, revertedAt = null,
         )
         val text = AskClaude.prompt("x", plan.copy(history = listOf(record)), emptyList(), library.exercises)
-        assertTrue(text, text.contains("- Lighter close-grip bench (rest of the block, accepted 2026-10-11)"))
+        assertTrue(text, text.contains("- id 3: Lighter close-grip bench (rest of the block, accepted 2026-10-11)"))
         assertTrue(text, text.contains("""  operations: [{"op":"adjust_load","slot":"close_grip_bench","percent":-10,"reason":"elbow"}]"""))
+    }
+
+    @Test
+    fun theFormatShowsHowToEndOrReplaceAChangeInForce() {
+        val record = com.hyperlog.app.program.ChangeRecord(
+            AcceptedChange(3, Change("Lighter close-grip bench", Scope.RestOfBlock, listOf(Operation.AdjustLoad("close_grip_bench", -10))), oct13.minusDays(2), Position(1, 1), Position(1, 1), program.blockAt(1)!!.id),
+            acceptedAt = 3, revertedAt = null,
+        )
+        val withChange = plan.copy(history = listOf(record))
+        val text = AskClaude.prompt("Elbow's fine now.", withChange, emptyList(), library.exercises)
+        assertTrue(text, text.contains("\"replaces\""))
+        // Both examples read back as valid replies.
+        val ends = text.substringAfter("To only end it:").substringBefore("To replace it")
+        val endsChange = (AskClaude.read(ends, program, ids, inForce = setOf(3L)) as ChangeValidator.Result.Valid).change
+        assertEquals(listOf(3L), endsChange.replaces)
+        assertTrue(endsChange.operations.isEmpty())
+        val replaces = text.substringAfter("To replace it")
+        val replacesChange = (AskClaude.read(replaces, program, ids, inForce = setOf(3L)) as ChangeValidator.Result.Valid).change
+        assertEquals(listOf(3L), replacesChange.replaces)
+        assertTrue(replacesChange.operations.isNotEmpty())
+        // Without a Change in force, no such example.
+        assertFalse(prompt().contains("To only end it:"))
     }
 
     @Test

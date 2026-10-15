@@ -81,6 +81,8 @@ data class ChangeReview(
     val program: Program,
     /** The block a `rest_of_block` Change keeps to. */
     val blockName: String?,
+    /** The summaries of the Changes in force it ends (its `replaces`). */
+    val ends: List<String> = emptyList(),
 )
 
 internal const val ChangeDiffTag = "change-diff"
@@ -145,6 +147,18 @@ fun ChangeReviewScreen(
         },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag(ChangeDiffTag)) {
+            // What it ends goes first: those stop before the new one applies.
+            if (review.ends.isNotEmpty()) item {
+                SectionCard(Modifier.padding(top = 8.dp), color = cs.tertiaryContainer) {
+                    review.ends.forEach {
+                        Text(
+                            stringResource(R.string.change_ends, it),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = cs.onTertiaryContainer,
+                        )
+                    }
+                }
+            }
             // What the Change is, and where it moves the program, in one card at the top.
             item {
                 SectionCard(Modifier.padding(top = 8.dp, bottom = 8.dp)) {
