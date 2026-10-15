@@ -464,7 +464,7 @@
     <string name="coach_ease_back">Ease back in</string>
     <string name="coach_words_label">In your words</string>
     <string name="coach_words_hint">Elbow aches on curls; the gym closes early on Fridays…</string>
-    <string name="coach_intro">Tell Claude what’s going on. It answers in words or with a change to your program, and nothing changes until you accept it.</string>
+    <string name="coach_intro">Tell Claude what’s going on. It answers in words, or with a change you review first.</string>
     <string name="coach_intro_no_program">Tell Claude what’s going on and talk it through in the Claude app. With no program running, its answer stays there.</string>
     <string name="coach_gym">Gym</string>
     <string name="coach_until">Until %1$s</string>
