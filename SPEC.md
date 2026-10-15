@@ -480,7 +480,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      as muted placeholders in the empty cells (`6–8` in Reps, an RIR ring in RIR) until typed. The first set prefills with the suggestion (Automatic
      progressive overload): its weight, at the target RIR; with no history, an empty weight. **Reps
      are never prefilled**: the Reps cell starts empty and shows the target range (`6–8`) as a muted
-     placeholder, and the row's ✓ (and the pad's) stays disabled until reps are typed. Later sets
+     placeholder, and the row's ✓ stays disabled until reps are typed (the pad's ✓ on the weight
+     moves on to the reps; on the reps it logs only once they are typed). Later sets
      follow the set before (its RIR), and their weight moves with the RIR gap. Rest after a set is the program's rest for it. After an
      exercise's last planned set the first exercise with sets left comes up. When every planned
      set is logged, the pad gives way to **Day done** and Finish session.
