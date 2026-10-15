@@ -12,18 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 
 /**
- * Every sheet in the app: a Material 3 modal bottom sheet that opens fully expanded.
- *
- * The sheet stops below the status bar, and its content keeps one height wherever the sheet
- * is. With the sheet's default insets, a sheet taller than the screen padded its top by how far
- * it had slid under the status bar, so the content shrank after the sheet looked open and
- * changed size on every frame of a drag (#24). Each sheet's content pads for the navigation bar
- * itself.
+ * Every sheet in the app: a Material 3 modal bottom sheet that opens fully expanded. It stops
+ * below the status bar and keeps one height wherever it is (#24). Each sheet's content pads for
+ * the navigation bar itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun Sheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    val statusBars = WindowInsets.statusBars
+    val statusBarInsets = WindowInsets.statusBars
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -32,7 +28,7 @@ internal fun Sheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     ) {
         Box(
             Modifier.layout { measurable, constraints ->
-                val room = (constraints.maxHeight - statusBars.getTop(this)).coerceAtLeast(0)
+                val room = (constraints.maxHeight - statusBarInsets.getTop(this)).coerceAtLeast(0)
                 val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = room))
                 layout(placeable.width, placeable.height) { placeable.place(0, 0) }
             },

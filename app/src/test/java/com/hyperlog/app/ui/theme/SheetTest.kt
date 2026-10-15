@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -40,28 +43,32 @@ class SheetTest {
     private fun content(): SemanticsNode? =
         runCatching { compose.onNodeWithTag("content").fetchSemanticsNode() }.getOrNull()
 
+    /** The sheet's window, which takes insets and keys. */
+    private fun window(): View = (content()!!.root as View).rootView
+
     /**
      * Opens a sheet holding more than the screen does, frame by frame, with the phone's 204 px
      * status bar and 72 px navigation bar (Robolectric gives a window none). Calls [onFrame]
      * with the content's node on each frame it's shown.
      */
-    private fun openTallSheet(frames: Int = 60, onDismiss: () -> Unit = {}, onFrame: (SemanticsNode) -> Unit = {}) {
-        compose.mainClock.autoAdvance = false
-        compose.setContent {
-            HyperlogTheme {
-                Sheet(onDismiss = onDismiss) {
-                    Column(Modifier.testTag("content").verticalScroll(rememberScrollState())) {
-                        Text("Tall", Modifier.fillMaxWidth().height(3000.dp))
-                    }
-                }
+    private fun openTallSheet(
+        frames: Int = 60,
+        onDismiss: () -> Unit = {},
+        list: @Composable () -> Unit = {
+            Column(Modifier.testTag("content").verticalScroll(rememberScrollState())) {
+                Text("Tall", Modifier.fillMaxWidth().height(3000.dp))
             }
-        }
+        },
+        onFrame: (SemanticsNode) -> Unit = {},
+    ) {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { HyperlogTheme { Sheet(onDismiss = onDismiss) { list() } } }
         while (content() == null) compose.mainClock.advanceTimeByFrame()
         val bars = WindowInsetsCompat.Builder()
             .setInsets(WindowInsetsCompat.Type.statusBars(), Insets.of(0, 204, 0, 0))
             .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, 72))
             .build()
-        ViewCompat.dispatchApplyWindowInsets((content()!!.root as View).rootView, bars)
+        ViewCompat.dispatchApplyWindowInsets(window(), bars)
         repeat(frames) {
             compose.mainClock.advanceTimeByFrame()
             content()?.let(onFrame)
@@ -115,9 +122,8 @@ class SheetTest {
         var dismissed = false
         openTallSheet(onDismiss = { dismissed = true })
 
-        val window = (content()!!.root as View).rootView
-        window.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK))
-        window.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
+        window().dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK))
+        window().dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
         repeat(60) { compose.mainClock.advanceTimeByFrame() }
 
         assertTrue("dismissed", dismissed)
@@ -130,5 +136,18 @@ class SheetTest {
             .map { it.invariantSeparatorsPath }
             .filterNot { it.endsWith("/ui/theme/Sheet.kt") }.toList()
         assertEquals(emptyList<String>(), offenders)
+    }
+
+    @Test
+    fun aSheetIsDismissedByDraggingDownOverALazyList() {
+        var dismissed = false
+        openTallSheet(onDismiss = { dismissed = true }, list = {
+            LazyColumn(Modifier.testTag("content")) { items(60) { Text("Row $it", Modifier.fillMaxWidth().height(56.dp)) } }
+        })
+
+        compose.onNodeWithTag("content").performTouchInput { swipeDown(startY = centerY, endY = bottom, durationMillis = 200) }
+        repeat(60) { compose.mainClock.advanceTimeByFrame() }
+
+        assertTrue("dismissed", dismissed)
     }
 }

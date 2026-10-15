@@ -137,13 +137,14 @@ fun TodayScreen(
     // A running session keeps its day on Today, even resumed after finishing moved the program on.
     val next = runningDay?.takeIf { sessionRunning } ?: program?.next
     if (kind != null && !sessionRunning) {
-        StartSheet(
-            gyms, usualGym,
-            day = next.takeIf { !kind },
-            library = library,
-            onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
-            onDismiss = { picking = null },
-        )
+        Sheet(onDismiss = { picking = null }) {
+            StartSheetContent(
+                gyms, usualGym,
+                onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
+                day = next.takeIf { !kind },
+                library = library,
+            )
+        }
     }
     // Time off: more than a week off (by the weekday plan if there is one), with no Change made for today yet.
     val today = program?.today ?: LocalDate.now()
@@ -356,18 +357,6 @@ private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
  * Where you train today: the gyms as a single choice, today's usual one picked and saying why,
  * and Start. Changing the gym is one tap on another row.
  */
-@Composable
-private fun StartSheet(
-    gyms: List<Gym>,
-    usualGym: UsualGym?,
-    day: PlannedDay?,
-    library: List<Exercise>,
-    onStart: (Long, Map<String, String>) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Sheet(onDismiss) { StartSheetContent(gyms, usualGym, onStart, day, library) }
-}
-
 @Composable
 internal fun StartSheetContent(
     gyms: List<Gym>,
