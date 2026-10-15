@@ -149,6 +149,30 @@ class TechniqueSessionTest {
     }
 
     @Test
+    fun aMiniSetTypedShortOfItsTargetClosesTheSet() = runTest {
+        program("leg_extension", myo)
+        val logger = logger()
+        logger.startNext()
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
+        logger.tick()
+        // The mini-set's reps are typed straight over the prefilled target, with no backspace first.
+        logger.type("3"); logger.tick()
+        assertNull(logger.session.followUp)
+        assertEquals(listOf(4, 3), logger.session.current!!.sets.single().extensions.map { it.reps })
+    }
+
+    @Test
+    fun aFirstMiniSetShortOfItsTargetClosesTheSet() = runTest {
+        program("leg_extension", myo)
+        val logger = logger()
+        logger.startNext()
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
+        logger.type("2"); logger.tick()
+        assertNull(logger.session.followUp)
+        assertEquals(listOf(2), logger.session.current!!.sets.single().extensions.map { it.reps })
+    }
+
+    @Test
     fun myoRepsStopAtTheMostMiniSetsAllowed() = runTest {
         program("leg_extension", myo)
         val logger = logger()
