@@ -46,10 +46,3 @@ val FollowUp.kind: Extension.Kind
         is FollowUp.MiniSet -> Extension.Kind.MiniSet
         is FollowUp.Hold -> Extension.Kind.Hold
     }
-
-/** The technique with one more drop or mini-set; null for one with neither. */
-fun Technique.oneMore(): Technique? = when (this) {
-    is Technique.Dropset -> copy(drops = drops + 1)
-    is Technique.MyoReps -> copy(maxMiniSets = maxMiniSets + 1)
-    else -> null
-}

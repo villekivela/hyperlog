@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -112,7 +113,7 @@ internal class TableState(
     val undoable: (Int) -> Boolean = { false },
     val onUndo: () -> Unit = {},
     /** `+` at the foot of a drop set or myo-reps, before or during it: one more drop or mini-set. Null where sets can't change. */
-    val onAddFollowUp: ((Int) -> Unit)? = null,
+    val onAddDropOrMiniSet: ((Int) -> Unit)? = null,
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
     val activeKg: Double? get() = if (followUp == null) entry?.weightKg else null
@@ -124,6 +125,9 @@ internal class TableState(
         correction?.let { it.sessionExerciseId == current.id && it.set == set && it.extension == extension } == true
 
     fun correctSet(set: Int): (() -> Unit)? = onCorrect?.let { { it(set, null) } }
+
+    /** Set [index] is logged and open for its drops, mini-sets or hold. */
+    fun isOpen(index: Int): Boolean = followUp != null && index == current.sets.size - 1
 }
 
 /** One row of the list, with its key. */
@@ -166,7 +170,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
     }
     Column(modifier.fillMaxWidth()) {
         // The heads sit above the rows, so they stay while the rows scroll.
-        Box(Modifier.padding(horizontal = RowInset)) {
+        Box(Modifier.padding(horizontal = TapInset)) {
             ColumnHeads(
                 showLast = current.lastTime.isNotEmpty(),
                 split = table.entry?.right != null && table.followUp == null && table.warmupEdit == null,
@@ -175,7 +179,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         LazyColumn(
             Modifier.fillMaxWidth().weight(1f).fadingEdges(listState),
             state = listState,
-            contentPadding = PaddingValues(start = RowInset, end = RowInset, bottom = 8.dp),
+            contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
         ) {
             items(items, key = { it.key }) { it.content() }
         }
@@ -311,12 +315,13 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
     technique ?: return emptyList()
     val current = table.current
     val set = current.sets.getOrNull(index)
-    val open = set != null && table.followUp != null && index == current.sets.size - 1
+    val open = table.isOpen(index)
     val logged = set?.extensions.orEmpty()
     val lastTime = current.lastTime.getOrNull(index)?.extensions.orEmpty()
     val out = mutableListOf<SubItem>()
     // `+` at the foot of a drop set or myo-reps, not started yet or under way, adds a drop or a mini-set.
-    val plus = table.onAddFollowUp?.takeIf { (set == null && current.editable(index)) || open }?.let { { it(index) } }
+    val plus = table.onAddDropOrMiniSet?.takeIf { (set == null && current.editable(index)) || open }?.let { { it(index) } }
+    val plusLabel = if (technique is Technique.MyoReps) R.string.add_mini_set else R.string.add_drop
     fun foot(j: Int, count: Int) = if (j == count - 1) Join.Foot else Join.Middle
     when (technique) {
         is Technique.Dropset -> {
@@ -342,8 +347,8 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                             onCorrect = table.onCorrect?.let { { it(index, j) } },
                             description = stringResource(R.string.correct_drop_description, j + 1, index + 1),
                         )
-                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus)
-                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus)
+                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus, plusLabel = plusLabel)
+                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus, plusLabel = plusLabel)
                     }
                 }
             }
@@ -361,9 +366,9 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                 }
             }
             when {
-                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot, plus = plus) }
+                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot, plus = plus, plusLabel = plusLabel) }
                 // Before the set, the first mini-set shows what is coming: its target at the set's weight.
-                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot, plus = plus) }
+                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot, plus = plus, plusLabel = plusLabel) }
             }
         }
         is Technique.IsoHold -> {
@@ -404,7 +409,7 @@ private fun RowFrame(
 ) {
     Row(
         modifier.fillMaxWidth().height(height)
-            .then(if (onClick != null) Modifier.clip(RowShape).clickable(onClickLabel = clickLabel, onClick = onClick) else Modifier)
+            .then(if (onClick != null) Modifier.clip(RowRipple).clickable(onClickLabel = clickLabel, onClick = onClick) else Modifier)
             .padding(horizontal = RowPad),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
@@ -494,7 +499,7 @@ private fun ActiveSetRow(
 @Composable
 private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableState, technique: Technique?, join: Join) {
     // The set whose drops, mini-sets or hold are being done keeps its primary circle for the whole group.
-    val open = table.followUp != null && i == table.current.sets.size - 1
+    val open = table.isOpen(i)
     val color = MaterialTheme.colorScheme.onSurface
     val onClick = table.correctSet(i)
     val correct = stringResource(R.string.correct_set_description, i + 1)
@@ -530,10 +535,12 @@ private fun AddSetRow(onAdd: () -> Unit) {
 
 /** A drop or mini-set still to come: muted like every prefill; a drop is to failure, a 0 ring. */
 @Composable
-private fun PlannedSubRow(last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null) {
+private fun PlannedSubRow(
+    last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null, @StringRes plusLabel: Int = R.string.add_drop,
+) {
     val color = MaterialTheme.colorScheme.outline
     RowFrame(SubRowHeight) {
-        IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusDescription = stringResource(if (toFailure) R.string.add_drop else R.string.add_mini_set))
+        IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusLabel = plusLabel)
         SubLast(last)
         ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
         ValueText(reps, ColReps, color)
@@ -574,6 +581,7 @@ private fun ActiveSubRow(
     hold: Boolean = table.followUp is FollowUp.Hold,
     /** `+` at the pill's foot: one more drop or mini-set. */
     plus: (() -> Unit)? = null,
+    @StringRes plusLabel: Int = R.string.add_drop,
 ) {
     val entry = correcting ?: table.entry ?: return
     val actions = table.actions
@@ -582,7 +590,7 @@ private fun ActiveSubRow(
         actions.setPadVisible(true)
     }
     RowFrame(SubRowHeight, modifier = Modifier.testTag(ActiveSubRowTag)) {
-        if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusDescription = plusDescription(table.followUp))
+        if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusLabel = plusLabel)
         SubLast(last)
         if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline)
         else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg), height = SubCellHeight) { tap(Field.Weight) }
@@ -601,10 +609,6 @@ private fun ActiveSubRow(
         }
     }
 }
-
-/** What `+` on the open set's foot adds. */
-@Composable
-private fun plusDescription(followUp: FollowUp?) = stringResource(if (followUp is FollowUp.MiniSet) R.string.add_mini_set else R.string.add_drop)
 
 /** The index column of the row whose circle reads [label] (`W`, the set number). */
 internal fun indexTag(label: String) = "index-$label"
@@ -642,7 +646,7 @@ private fun RowScope.IndexCell(
     description: String? = null,
     plus: (() -> Unit)? = null,
     /** What [plus] adds: "Add a drop" or "Add a mini-set". */
-    plusDescription: String? = null,
+    @StringRes plusLabel: Int = R.string.add_drop,
     bold: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -696,7 +700,7 @@ private fun RowScope.IndexCell(
             }
         }
         plus?.let { add ->
-            val text = plusDescription ?: stringResource(R.string.add_drop)
+            val text = stringResource(plusLabel)
             Box(
                 Modifier.align(Alignment.BottomStart).padding(bottom = 8.dp).size(IndexSize).clip(CircleShape)
                     .clickable(onClickLabel = text, onClick = add).semantics { contentDescription = text },
@@ -850,8 +854,8 @@ internal fun Cell(
             // The focused cell is a well: the lowest surface, outlined in primary. A flagged weight is outlined in error.
             .then(
                 when {
-                    flagged -> Modifier.border(if (focused) 2.dp else 1.dp, cs.error, CellShape)
-                    focused -> Modifier.background(cs.surfaceContainerLowest).border(2.dp, cs.primary, CellShape)
+                    focused -> Modifier.background(cs.surfaceContainerLowest).border(2.dp, if (flagged) cs.error else cs.primary, CellShape)
+                    flagged -> Modifier.border(1.dp, cs.error, CellShape)
                     else -> Modifier.border(1.dp, cs.outline, CellShape)
                 },
             )

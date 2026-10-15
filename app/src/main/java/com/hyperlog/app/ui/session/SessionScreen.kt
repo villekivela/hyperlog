@@ -300,7 +300,7 @@ fun SessionScreen(
                             onLogShown = actions::logShown,
                             undoable = { session.undoable(current, it) },
                             onUndo = { actions.undo(current.id) },
-                            onAddFollowUp = actions::addFollowUp,
+                            onAddDropOrMiniSet = actions::addDropOrMiniSet,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
@@ -567,13 +567,13 @@ private fun Header(
     }
     // What the slot is: a superset's partner, a swap's planned exercise, as outlined chips.
     val partner = SessionOrder.partner(session.exercises, exercise)
-    val superset = exercise.slot?.takeIf { partner != null }?.let { stringResource(R.string.chip_superset, it.label, partner!!.exercise.name) }
+    val superset = partner?.let { p -> exercise.slot?.let { p to stringResource(R.string.chip_superset, it.label, p.exercise.name) } }
     if (superset != null || swappedFrom != null) {
         Row(
             Modifier.fillMaxWidth().padding(start = Margin, end = Margin, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            superset?.let { HeaderChip(null, it, Modifier.weight(1f, fill = false), onClick = onPartner?.let { go -> { go(partner!!.id) } }) }
+            superset?.let { (p, text) -> HeaderChip(null, text, Modifier.weight(1f, fill = false), onClick = onPartner?.let { go -> { go(p.id) } }) }
             swappedFrom?.let { HeaderChip(Symbol.SwapHoriz, stringResource(R.string.chip_swapped, it), Modifier.weight(1f, fill = false), onClick = onSwap) }
         }
     }
@@ -588,10 +588,9 @@ private fun Header(
 @Composable
 private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val cs = MaterialTheme.colorScheme
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
     Row(
-        modifier.height(32.dp).border(1.dp, cs.outlineVariant, shape)
-            .then(if (onClick != null) Modifier.clip(shape).clickable(onClick = onClick) else Modifier)
+        modifier.height(32.dp).border(1.dp, cs.outlineVariant, ChipShape)
+            .then(if (onClick != null) Modifier.clip(ChipShape).clickable(onClick = onClick) else Modifier)
             .padding(start = if (symbol != null) 8.dp else 12.dp, end = 12.dp).testTag(HeaderChipTag),
         verticalAlignment = Alignment.CenterVertically,
     ) {

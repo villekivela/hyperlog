@@ -131,7 +131,7 @@ clock (rest, breathing or hold pill) and ⋮ on one row, at least 64 dp. Under i
 apply, outlined chips: `swap_horiz` and `for <planned exercise>` for a swapped slot, `1a + <partner>`
 for a superset (both when both apply). They say what the slot is, and a tap acts on it: the swap
 chip opens Swap (while the exercise can still be swapped), the superset chip brings the partner on
-screen. Then the
+screen (as the session list does: a set left open closes). Then the
 **why-line**, one line: the trend symbol (`trending_up`, `trending_flat`, `trending_down`) in the
 fixed trend scale and the short reason in onSurfaceVariant (`100 · hit the top of 4–6 last time`,
 `57.5 · 2 short of 8–10 last time`, `70 · estimated, check on the first set`). A set that just

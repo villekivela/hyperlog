@@ -265,6 +265,19 @@ class WarmupSessionTest {
     }
 
     @Test
+    fun aWarmUpTypedBackToItsRampFollowsTheRampAgain() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        logger.editWarmup(1)
+        logger.type("50"); logger.done(); logger.done()
+        logger.editWarmup(1)
+        logger.type("55"); logger.done(); logger.done()
+        logger.closeWarmup()
+        logger.focus(Field.Weight); logger.type("100"); logger.done()
+        assertEquals(WarmupSet(60.0, 5), logger.session.warmups[1])
+    }
+
+    @Test
     fun theCloseKeyLeavesTheWarmUpAsItWas() = runTest {
         val logger = benchUp()
         logger.type("90"); logger.done()

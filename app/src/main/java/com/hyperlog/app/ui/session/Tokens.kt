@@ -24,8 +24,8 @@ internal val Margin = 24.dp
 /** Cards on the session screen (the ladder offer) sit [TableMargin] from the screen edge. */
 internal val TableMargin = 12.dp
 /** Edge of a tappable row's ripple on the flat table; its content keeps the [Margin]. */
-internal val RowInset = 16.dp
-internal val RowPad = Margin - RowInset
+internal val TapInset = 16.dp
+internal val RowPad = Margin - TapInset
 internal val RowHeight = 64.dp
 internal val LabelHeight = 32.dp
 /** Drops, myo mini-sets and holds under their set. */
@@ -50,8 +50,10 @@ internal val KeyHeight = 56.dp
 internal val KeyGap = 4.dp
 internal val KeyShape = RoundedCornerShape(12.dp)
 /** A tappable row's ripple. No row is filled, the active one included. */
-internal val RowShape = RoundedCornerShape(24.dp)
+internal val RowRipple = RoundedCornerShape(24.dp)
 internal val CellShape = RoundedCornerShape(12.dp)
+/** A chip under the exercise name. */
+internal val ChipShape = RoundedCornerShape(8.dp)
 
 /** Tabular figures, so columns of numbers line up. */
 internal val Tnum = TextStyle(fontFeatureSettings = "tnum")

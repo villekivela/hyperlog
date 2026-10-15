@@ -504,7 +504,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        swapped or removed. A swapped slot has an outlined chip under the name, `⇄ for <planned
        exercise>`; a superset's chip reads `A1 + <partner>`. The chips can be tapped: the swap
        chip opens Swap (while the exercise can still be swapped), the superset chip brings the
-       partner on screen.
+       partner on screen (as the session list does, so a set left open closes and its rest runs).
      - **Sets:** **Add set** under a program exercise's sets adds one like its last planned set,
        without its technique (on a finished exercise it brings the exercise back into the order).
        A set's circle in the index column opens its sheet (the session ⋮ has no set options): **Remove set**, and its target (fewest reps, most reps,
@@ -534,7 +534,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        (the plate strip shows its plates; the rows draw none), and → goes kg, reps, then ticks it
        and moves to the next warm-up or set 1, with no RIR and no rest. A warm-up typed by hand
        stays as typed for this session, and only that one: the others go on following the ramp
-       (a new weight for set 1 still ramps them). The next session ramps again.
+       (a new weight for set 1 still ramps them), and so does one typed back to its ramp value. A
+       typed warm-up past the end of a shorter ramp is left out. The next session ramps again.
      - Its check ticks it off. Warm-ups are never logged: they start no rest, add no volume and
        never reach progression or history. They go once the first work set is logged. Ticking is
        optional. Ticks and typed warm-ups are saved with the session.
@@ -544,8 +545,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      a filled `primary` check and full-strength values, with no row tint. A tap on the check of the
      last checked row takes it back (a work set goes back to editable and unlogged, its exercise
      comes back on screen and its rest stops; not once one of its drops, mini-sets or its hold is
-     logged, so takebacks stay in order, nor as a double tap within a second of logging it); earlier rows are fixed by tapping
-     the row. The check of a drop, mini-set or hold being done logs it as shown.
+     logged, so takebacks stay in order, nor as a double tap within a second of logging it);
+     earlier rows are fixed by tapping the row. The check of a drop, mini-set or hold being done logs it as shown.
    - **The index column** shows `W` for a warm-up and the set number for a work set, on a circle.
      A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
      a tinted circle with the technique's Material Symbol as a small badge on its corner, so it

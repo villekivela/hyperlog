@@ -148,9 +148,14 @@ data class ActiveSession(
 
     /**
      * The warm-ups before [current]'s first work set, ramped from the weight typed for it and the reps planned
-     * (or, for an ad-hoc exercise, last time's). They go once the first work set is logged.
+     * (or, for an ad-hoc exercise, last time's). A warm-up typed by hand stays as typed; the
+     * others follow the ramp. They go once the first work set is logged.
      */
     val warmups: List<WarmupSet>
+        get() = Warmups.withTyped(ramp, current?.typedWarmups.orEmpty())
+
+    /** [warmups] as the ramp gives them, before any typed by hand. */
+    internal val ramp: List<WarmupSet>
         get() {
             val current = current ?: return emptyList()
             if (current.sets.isNotEmpty() || current.needsMachine || current.needsLadder || followUp != null) return emptyList()
@@ -159,8 +164,7 @@ data class ActiveSession(
             val kg = from?.weightKg ?: return emptyList()
             // The reps are the plan's, or last time's for an ad-hoc exercise; typing them changes nothing.
             val reps = current.prescription?.firstOrNull()?.reps?.max ?: current.lastTime.countingSets().firstOrNull()?.fullReps
-            // A warm-up typed by hand stays as typed; the others follow the ramp.
-            return Warmups.withTyped(Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null), current.typedWarmups)
+            return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
         }
 
     /**

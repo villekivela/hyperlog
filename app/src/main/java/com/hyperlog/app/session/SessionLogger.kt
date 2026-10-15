@@ -43,6 +43,7 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.SetPrescriptionJson
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.TechniqueJson
+import com.hyperlog.app.program.oneMore
 import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.program.plannedEntry
 import com.hyperlog.app.progression.Performance
@@ -715,7 +716,7 @@ class SessionLogger(
      * technique for this session; on the set that is open it changes what the set was logged with,
      * so its drops or mini-sets go on.
      */
-    suspend fun addFollowUp(setIndex: Int) = locked {
+    suspend fun addDropOrMiniSet(setIndex: Int) = locked {
         val session = _state.value ?: return@locked
         val current = session.current ?: return@locked
         val more = current.techniqueAt(setIndex)?.oneMore() ?: return@locked
@@ -804,8 +805,8 @@ class SessionLogger(
         val warmups = session.warmups
         if (edit.index !in warmups.indices) return
         val typed = WarmupSet(kg, reps)
-        // Only a warm-up changed by hand is kept as typed; the others go on following the ramp.
-        val kept = if (warmups[edit.index] != typed) current.typedWarmups + (edit.index to typed) else current.typedWarmups
+        // Only a warm-up typed off its ramp is kept as typed; the others, and one typed back to it, follow the ramp.
+        val kept = if (session.ramp.getOrNull(edit.index) == typed) current.typedWarmups - edit.index else current.typedWarmups + (edit.index to typed)
         dao.setWarmups(current.id, kept.takeIf { it.isNotEmpty() }?.let(Warmups::encode), maxOf(current.warmupsDone, edit.index + 1))
         val next = edit.index + 1
         warmupEdit = warmups.getOrNull(next)?.let { WarmupEdit(current.id, next, warmupEntry(it)) }
