@@ -86,7 +86,7 @@ class ProgramDayTest {
         importProgram()
         compose.onNodeWithText("Start session").performClick()
         compose.waitFor("Reps")
-        compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("Log set")
+        compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("6"); compose.press("Log set")
         // The first back-off is up next: 80 − 10% = 72, rounded down to 70 on the plates.
         compose.waitFor("70")
         compose.press("More")
@@ -112,7 +112,7 @@ class ProgramDayTest {
         importProgram()
         compose.onNodeWithText("Start session").performClick()
         compose.waitFor("Reps")
-        compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("Log set")
+        compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("6"); compose.press("Log set")
         compose.waitFor("70")
         compose.press("More")
         compose.onNodeWithText("Finish session").performClick()

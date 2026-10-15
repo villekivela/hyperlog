@@ -120,7 +120,7 @@ class GymAtSessionStartTest {
         waitForPad()
         // 10.2 kg is a rung of the lb stack, so no weight check stops the set.
         compose.press("1"); compose.press("0"); compose.press("Decimal point"); compose.press("2"); compose.press("Next"); compose.press("1"); compose.press("2"); compose.press("RIR 1"); compose.press("Log set")
-        compose.await(hasText("12")) { it >= 2 }
+        compose.await(hasText("12")) { it >= 1 }
 
         compose.press("More")
         compose.onNodeWithText("Finish session").performClick()

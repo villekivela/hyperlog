@@ -67,7 +67,7 @@ class LastTimeSessionTest {
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
         focus(Field.Weight); type(kg); done()
-        type("$reps"); selectRir(rir); done()
+        type("$reps"); if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }
 
     private suspend fun SessionLogger.trainDay(vararg sets: Pair<String, Int>) {

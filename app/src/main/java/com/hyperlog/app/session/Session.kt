@@ -1,5 +1,6 @@
 package com.hyperlog.app.session
 
+import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
@@ -127,8 +128,6 @@ data class ActiveSession(
     val viewingId: Long? = null,
     /** The logged row loaded into the pad to be corrected; null when none. [entry] stays the set to do. */
     val correction: Correction? = null,
-    /** The set logged last (session exercise id and set index), which **Fix** loads; null when none. */
-    val lastLogged: Pair<Long, Int>? = null,
     /** The warm-up on the pad, typed like a set; null when the pad is on the set to do. [entry] stays the set to do. */
     val warmupEdit: WarmupEdit? = null,
     /**
@@ -148,8 +147,8 @@ data class ActiveSession(
     val correctable: Boolean get() = followUp == null
 
     /**
-     * The warm-ups before [current]'s first work set, ramped from the weight and reps planned or
-     * typed for it (the plan's top reps while none are typed). They go once the first work set is logged.
+     * The warm-ups before [current]'s first work set, ramped from the weight typed for it and the reps planned
+     * (or, for an ad-hoc exercise, last time's). They go once the first work set is logged.
      */
     val warmups: List<WarmupSet>
         get() {
@@ -159,7 +158,8 @@ data class ActiveSession(
             // Not keystroke by keystroke: while the weight is typed, the ramp stays where it was.
             val from = if (entry?.field == com.hyperlog.app.domain.Field.Weight) rampEntry else entry
             val kg = from?.weightKg ?: return emptyList()
-            val reps = from.full.toIntOrNull()?.takeIf { it > 0 } ?: current.prescription?.firstOrNull()?.reps?.max
+            // The reps are the plan's, or last time's for an ad-hoc exercise; typing them changes nothing.
+            val reps = current.prescription?.firstOrNull()?.reps?.max ?: current.lastTime.countingSets().firstOrNull()?.fullReps
             return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
         }
 

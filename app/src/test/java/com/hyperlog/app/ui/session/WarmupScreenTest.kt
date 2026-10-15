@@ -123,6 +123,7 @@ class WarmupScreenTest {
         compose.press("Back to the set")
         compose.waitForIdle()
         compose.onNodeWithTag(ActiveWarmupTag).assertDoesNotExist()
+        compose.press("6")
         compose.onNodeWithContentDescription("Log set 1").assertIsDisplayed()
     }
 
@@ -155,10 +156,11 @@ class WarmupScreenTest {
 
     @Test
     // A shorter screen stands in for the why-line a suggestion adds above the table on the phone.
-    @Config(qualifiers = "w410dp-h780dp")
+    @Config(qualifiers = "w410dp-h790dp")
     fun withItsWarmUpsTheActiveSetStaysInViewBelowThem() {
         startDay("barbell_bench_press")
         compose.press("1"); compose.press("0"); compose.press("0"); compose.press("Next")
+        compose.press("5")
         compose.waitForDescription("Warm-up 4, 85 kg × 2")
         // The active set is in view, and the warm-ups above it are not the rows scrolled away first.
         compose.onNodeWithContentDescription("Log set 1").assertIsDisplayed()

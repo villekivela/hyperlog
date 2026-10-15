@@ -27,7 +27,9 @@ import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import androidx.compose.ui.test.getBoundsInRoot
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,13 +47,13 @@ class SetTableTest {
     private val calls = mutableListOf<String>()
 
     /** [warmups]: false leaves the weight being typed with no ramp yet, so no warm-ups show. */
-    private fun show(sets: List<LoggedSet>, plan: List<SetPrescription>, latest: Pair<Long, Int>? = null, warmups: Boolean = true) {
+    private fun show(sets: List<LoggedSet>, plan: List<SetPrescription>, latest: Pair<Long, Int>? = null, warmups: Boolean = true, reps: String = "6") {
         val exercise = SessionExercise(
             id = 1, exercise = bench, sets = sets, lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
             prescription = plan, plates = DefaultPlates,
         )
         val other = SessionExercise(2, bench.copy(id = "squat", name = "Back Squat"), emptyList(), emptyList(), DefaultPlates.ladder(), true)
-        val entry = SetEntry("100", "6", "", 1, if (warmups) Field.Reps else Field.Weight, partialMode = false, fresh = true)
+        val entry = SetEntry("100", reps, "", 1, if (warmups) Field.Reps else Field.Weight, partialMode = false, fresh = true)
         val session = ActiveSession(
             id = 1, startedAt = 0, exercises = listOf(exercise, other), currentId = 1, entry = entry,
             padVisible = true, restEndsAt = null, restTotalMs = 0, rampEntry = entry.takeIf { warmups }, latestSet = latest,
@@ -94,6 +96,36 @@ class SetTableTest {
         assertEquals("logShown", calls.last())
         compose.onNodeWithContentDescription("Take back set 1").assertIsOn().performClick()
         assertEquals("undo 1", calls.last())
+    }
+
+    @Test
+    fun theRepsStartEmptyUnderTheTargetRangeAndTheCheckWaitsForThem() {
+        show(emptyList(), listOf(top), warmups = false, reps = "")
+        // The range is the muted placeholder; no ✓ logs anything yet.
+        compose.onNodeWithText("4–6").assertIsDisplayed()
+        compose.onAllNodesWithContentDescription("Log set 1").assertCountEquals(0)
+    }
+
+    @Test
+    fun theCheckLogsOnceRepsAreTyped() {
+        show(emptyList(), listOf(top), warmups = false, reps = "5")
+        compose.onAllNodesWithText("4–6").assertCountEquals(0)
+        compose.onNodeWithContentDescription("Log set 1").performClick()
+        assertEquals("logShown", calls.last())
+    }
+
+    @Test
+    fun aDividerSeparatesNextFromThePlateStripInLightAndDark() {
+        for (night in listOf("+notnight", "+night")) {
+            org.robolectric.RuntimeEnvironment.setQualifiers(night)
+            show(emptyList(), listOf(top), warmups = false)
+            compose.waitForIdle()
+            val next = compose.onNodeWithTag(NextRowTag).getBoundsInRoot()
+            val divider = compose.onNodeWithTag(PadDividerTag).assertIsDisplayed().getBoundsInRoot()
+            val strip = compose.onNodeWithTag(PlateStripTag).getBoundsInRoot()
+            assertTrue("$night: Next ends above the divider", next.bottom <= divider.top)
+            assertTrue("$night: the divider ends above the plate strip", divider.bottom <= strip.top)
+        }
     }
 
     @Test

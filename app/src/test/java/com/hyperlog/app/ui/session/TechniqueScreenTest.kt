@@ -60,7 +60,7 @@ class TechniqueScreenTest {
         compose.waitFor("17.5")
         compose.waitFor("12.5")
 
-        compose.press("Next"); compose.press("Log set")
+        compose.press("Next"); compose.press("9"); compose.press("Log set")
         compose.waitFor("Drop 1 of 2")
         compose.onNodeWithText("Finish set").assertIsDisplayed()
         // No rest before a drop.
@@ -71,7 +71,7 @@ class TechniqueScreenTest {
     fun myoRepsBreatheBeforeEachMiniSet() {
         startDay("db_bench_press", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 4 } } ]""")
         compose.onNodeWithContentDescription("Myo-reps").assertIsDisplayed()
-        compose.press("2"); compose.press("0"); compose.press("Next"); compose.press("Log set")
+        compose.press("2"); compose.press("0"); compose.press("Next"); compose.press("1"); compose.press("2"); compose.press("Log set")
         compose.waitFor("Mini-set 1 of 5")
         compose.onNodeWithContentDescription("Breathe").assertIsDisplayed()
     }

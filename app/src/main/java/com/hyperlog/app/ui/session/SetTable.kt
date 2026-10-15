@@ -481,10 +481,11 @@ private fun ActiveSetRow(
         else {
             val log = table.onLogShown
             val description = stringResource(R.string.check_log, i + 1)
-            CheckCell(
+            // Nothing logs until a weight and reps are typed: the check stays a grey ring and does nothing.
+            if (entry.canLog) CheckCell(
                 Check.Ready,
                 if (log != null) Modifier.toggleable(false, role = Role.Checkbox, onValueChange = { log() }).semantics { contentDescription = description } else null,
-            )
+            ) else CheckCell(Check.Todo, null)
         }
     }
 }
@@ -502,7 +503,7 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
         ValueText(formatKg(set.weightKg), ColKg, color)
         val reps = set.repsText()
         ValueText(reps, ColReps, color, small = reps.length > 6)
-        RirCell { RirMark(set.rir, filled = true) }
+        RirCell { set.rir?.let { RirMark(it, filled = true) } }
         val logged = stringResource(R.string.check_logged, i + 1)
         val undo = stringResource(R.string.check_undo, i + 1)
         CheckCell(

@@ -180,7 +180,7 @@ interface SessionDao {
         WHERE id = :id
         """,
     )
-    suspend fun correctSet(id: Long, weightKg: Double, fullReps: Int, partialReps: Int, rir: Int, rightReps: Int?)
+    suspend fun correctSet(id: Long, weightKg: Double, fullReps: Int, partialReps: Int, rir: Int?, rightReps: Int?)
 
     @Query("UPDATE logged_set SET kept = 1 WHERE id = :id")
     suspend fun setKept(id: Long)

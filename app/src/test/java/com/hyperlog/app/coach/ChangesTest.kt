@@ -53,7 +53,7 @@ class ChangesTest {
     private suspend fun SessionLogger.logAndFinish(kg: String) {
         focus(Field.Weight)
         kg.forEach { press(if (it == '.') PadKey.Dot else PadKey.Digit(it.digitToInt())) }
-        done(); press(PadKey.Digit(8)); selectRir(1); now += 2_000; done()
+        done(); press(PadKey.Digit(8)); if (state.value?.entry?.rir != 1) selectRir(1); now += 2_000; done()
         now += 2_000
         now += 2_000
         finish()

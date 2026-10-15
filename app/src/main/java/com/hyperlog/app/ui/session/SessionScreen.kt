@@ -3,7 +3,6 @@ package com.hyperlog.app.ui.session
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.ui.zIndex
 import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.domain.LadderSpec
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -218,24 +217,9 @@ fun SessionScreen(
         )
         return
     }
-    // Right after a set is logged, a snackbar offers to fix it in one tap, wherever the session went.
-    val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
-    val logged = session.lastLogged
-    val loggedText = logged?.let { (id, i) ->
-        session.exercises.firstOrNull { it.id == id }?.let { e -> e.sets.getOrNull(i)?.let { stringResource(R.string.fix_logged, e.exercise.name, it.summary()) } }
-    }
-    val fixLabel = stringResource(R.string.fix_action)
-    LaunchedEffect(logged) {
-        snackbar.currentSnackbarData?.dismiss()
-        if (logged != null && loggedText != null && session.correction == null) {
-            val result = snackbar.showSnackbar(loggedText, actionLabel = fixLabel, duration = androidx.compose.material3.SnackbarDuration.Long)
-            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) actions.fixLast()
-        }
-    }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxSize()) {
           Box(Modifier.weight(1f)) {
-            androidx.compose.material3.SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp).zIndex(1f))
             Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
                 if (current == null) {
                     ExercisePicker(

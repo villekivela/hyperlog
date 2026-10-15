@@ -98,8 +98,6 @@ interface SessionActions : PadActions {
     fun closeView()
     /** Loads a logged set, or its drop, mini-set or hold [extension], into the pad to correct it. */
     fun correct(sessionExerciseId: Long, set: Int, extension: Int?)
-    /** **Fix** on the set just logged: its exercise on screen and the set in the pad. */
-    fun fixLast() {}
     /** The check on the set to do: logs it as shown and starts rest. */
     fun logShown() {}
     /** Puts warm-up [index] on the pad to type its weight and reps. */
@@ -214,7 +212,6 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun open(sessionExerciseId: Long) = run { logger.open(sessionExerciseId) }
     override fun closeView() = run { logger.closeView() }
     override fun correct(sessionExerciseId: Long, set: Int, extension: Int?) = run { logger.correct(sessionExerciseId, set, extension) }
-    override fun fixLast() = run { logger.fixLast() }
     override fun cancelCorrection() = run { logger.cancelCorrection() }
     override fun closeWarmup() = run { logger.closeWarmup() }
     override fun logShown() = run { logger.logShown() }

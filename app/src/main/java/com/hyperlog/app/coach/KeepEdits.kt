@@ -56,7 +56,7 @@ object KeepEdits {
 
     private fun added(day: PlannedDay, e: EditedExercise, after: String?): Operation.Add {
         val reps = e.logged.map { it.fullReps }
-        val set = ChangeSet(count = e.logged.size, reps = RepRange(reps.min().coerceAtLeast(1), reps.max().coerceAtLeast(1)), rir = e.logged.minOf { it.rir })
+        val set = ChangeSet(count = e.logged.size, reps = RepRange(reps.min().coerceAtLeast(1), reps.max().coerceAtLeast(1)), rir = e.logged.mapNotNull { it.rir }.minOrNull())
         return Operation.Add(day.day.id, e.exerciseId, listOf(set), after = after)
     }
 

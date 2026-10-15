@@ -87,10 +87,6 @@ class SessionLogger(
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
     private var viewingId: Long? = null
-    /** The set logged last, by session exercise and index, for the one-tap fix; null when none. */
-    private var lastLogged: Pair<Long, Int>? = null
-    /** The correction on screen came from [fixLast]: saving or cancelling it goes back to the set to do. */
-    private var fixingLast = false
     /** The warm-up on the pad: screen state, kept in memory only, like a correction. */
     private var warmupEdit: WarmupEdit? = null
 
@@ -444,31 +440,7 @@ class SessionLogger(
         val session = _state.value ?: return@locked
         correction = null
         checked = null
-        if (fixingLast) {
-            fixingLast = false
-            viewingId = null
-            reload()
-            return@locked
-        }
         _state.value = session.copy(correction = null, weightCheck = null)
-    }
-
-    /**
-     * **Fix** on the last set logged, wherever the session has moved: its exercise comes on screen
-     * with the set loaded into the pad, on the weight if it was kept past a weight check. Saving
-     * or cancelling goes back to the set to do.
-     */
-    suspend fun fixLast() = locked {
-        val session = _state.value ?: return@locked
-        val (id, index) = lastLogged ?: return@locked
-        if (!session.correctable) return@locked
-        val exercise = session.exercises.firstOrNull { it.id == id } ?: return@locked
-        val loaded = corrections.load(id, index) ?: return@locked
-        correction = if (exercise.sets.getOrNull(index)?.kept == true) loaded.copy(entry = loaded.entry.focus(Field.Weight)) else loaded
-        checked = null
-        fixingLast = true
-        viewingId = id.takeIf { it != session.currentId }
-        reload()
     }
 
     /**
@@ -532,11 +504,6 @@ class SessionLogger(
         save()
         if (untouched) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
         correction = null
-        if (fixingLast) {
-            fixingLast = false
-            viewingId = null
-            lastLogged = null
-        }
         // A second ✓ right after saving is a stutter, not the set to do.
         lastLoggedAt = clock()
         reload()
@@ -612,7 +579,7 @@ class SessionLogger(
             return
         }
         val decided = if (!asShown) entry.done() else entry.toLoggedSet()?.let { SetEntry.Done.Log(it) } ?: run {
-            // Nothing to log as shown (no RIR yet): the pad comes up on the reps to finish it.
+            // Nothing to log as shown (no weight or reps yet): the pad comes up on what is missing.
             val shown = session.copy(padVisible = true)
             if (!session.padVisible) dao.updateSession(dao.session(session.id)!!.copy(padVisible = true))
             saveEntry(shown, if (entry.weightKg == null) entry.focus(Field.Weight) else entry.focus(Field.Reps))
@@ -652,7 +619,6 @@ class SessionLogger(
                 val set = result.set.copy(kept = check != null, technique = technique)
                 db.withTransaction {
                     val id = dao.insertSet(set.toEntity(current.id, current.sets.size, now))
-                    lastLogged = current.id to current.sets.size
                     val row = dao.session(session.id)!!.copy(entry = null)
                     // A drop set, myo-reps or iso hold stays open for what follows it, with no rest
                     // (a breathing pause before a mini-set); any other set closes at once.
@@ -756,7 +722,7 @@ class SessionLogger(
             // A set taken to failure has nothing in reserve.
             val entry = session.entry
             if (setIndex == current.sets.size && technique == Technique.Failure && entry != null) {
-                dao.updateSession(dao.session(session.id)!!.copy(entry = entry.selectRir(0).toColumns()))
+                dao.updateSession(dao.session(session.id)!!.copy(entry = entry.copy(rir = 0).toColumns()))
             }
         }
         reload()
@@ -860,7 +826,6 @@ class SessionLogger(
                 ),
             )
         }
-        lastLogged = null
         viewingId = null
         checked = null
         reload()
@@ -1066,7 +1031,6 @@ class SessionLogger(
             openSetId = row.openSetId.takeIf { followUp != null },
             viewingId = viewingId,
             correction = correction,
-            lastLogged = lastLogged?.takeIf { (id, i) -> exercises.any { it.id == id && i < it.sets.size } },
             rampEntry = if (entry?.field != Field.Weight) entry else previous?.takeIf { it.currentId == current?.id }?.rampEntry,
             latestSet = latest?.let { it.first to it.second },
         )
@@ -1082,7 +1046,7 @@ class SessionLogger(
         val plan = current.prescription
         val entry = if (plan != null) plannedEntry(plan, current.sets, current.suggestion)
         else current.suggestion?.let { s ->
-            SetEntry(formatKg(s.kg), s.reps.toString(), "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
+            SetEntry(formatKg(s.kg), "", "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
         } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
         // A plain bodyweight exercise has no weight to type: it starts on the reps at 0 kg.
         val bodyweight = if (current.exercise.equipment == Equipment.Bodyweight && entry.weightKg == null) {
