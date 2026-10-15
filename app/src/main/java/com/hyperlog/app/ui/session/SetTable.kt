@@ -354,7 +354,7 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             }
         }
         is Technique.MyoReps -> {
-            val rows = logged.size + if (open || set == null) 1 else 0
+            val rows = logged.size + if (open) 1 else 0
             logged.forEachIndexed { j, mini ->
                 out += SubItem("ext-$index-$j", table.corrects(index, j)) {
                     if (table.corrects(index, j)) ActiveSubRow(null, table, weightLocked = true, join = foot(j, rows), correcting = table.correction!!.entry, hold = false)
@@ -367,8 +367,13 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             }
             when {
                 open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot, plus = plus, plusLabel = plusLabel) }
-                // Before the set, the first mini-set shows what is coming: its target at the set's weight.
-                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot, plus = plus, plusLabel = plusLabel) }
+                // Before the set, every mini-set it allows is planned, its target at the set's weight, so each `+` shows.
+                set == null -> for (j in 0 until technique.maxMiniSets) {
+                    val join = foot(j, technique.maxMiniSets)
+                    out += SubItem("ext-$index-$j", false) {
+                        PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", join, plus = if (join == Join.Foot) plus else null, plusLabel = plusLabel)
+                    }
+                }
             }
         }
         is Technique.IsoHold -> {

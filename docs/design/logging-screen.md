@@ -4,7 +4,8 @@ The in-workout screen where sets are logged. This note folds in the owner's deci
 2026-10-15, taken after a real session ("the top part is really messy", "no indication what so
 ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Screens:
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
-(`session-active-drop` and `session-active-mini-set` show a set under way);
+(`session-active-drop` and `session-active-mini-set` show a set under way,
+`session-mini-sets-planned` myo-reps about to start);
 `screens/session-*.png` come from the test phone (dark, monochrome system style). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
 testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark.
@@ -296,8 +297,9 @@ buttons this way: the way out first, the action last, at the right.
   Planned sub-rows are muted prefills (drop weights computed from the set's planned or typed weight,
   live), done ones end in a filled check.
 - **Drop**: RIR is a 0 ring, Last is last time's drop (`18 × 9`), reps prefill from it.
-- **Myo-reps**: reps prefill with the mini-set's target. Before the set one planned mini-set
-  shows; during it, the done ones and the active one. The weight is muted and can't be tapped.
+- **Myo-reps**: reps prefill with the mini-set's target. Before the set every mini-set it allows
+  shows as a muted planned row (5 by default), so each `+` adds a row; during it, the done ones
+  and the active one. The weight is muted and can't be tapped.
 - **Iso hold**: one sub-row, its value in seconds (`20 s`); the weight is the set's, muted.
   The strip reads `pan_tool` Hold 20 s, a tonal **Start** / **Stop**, and Finish set. While it
   runs, the header pill shows `pan_tool` and the time held, filling toward the target, and turns
@@ -538,7 +540,9 @@ across a technique's tall pill (the old `screens/dark-session-techniques.png`).
   the set's circle at the top of the pill stays primary for the whole group.
 - **A typed warm-up freezes only itself.** The other warm-ups still follow the ramp.
 - **`+` adds mid-set.** `+` at the foot of a pill adds another drop to a drop set, or another
-  mini-set to myo-reps, also after the set has started.
+  mini-set to myo-reps, also after the set has started. Before a myo-reps set its pill shows a
+  muted planned row for every mini-set it allows, like planned drops, so each `+` adds a row and
+  the count shows.
 - **Undo stays in order.** Once a drop is logged the set can't be taken back (the rule as it
   was); a drop is corrected by tapping its row.
 - **Tappable chips.** The swap chip opens Swap; the superset chip goes to the partner exercise.

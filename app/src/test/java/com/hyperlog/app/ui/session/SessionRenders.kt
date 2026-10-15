@@ -144,6 +144,16 @@ class SessionRenders {
             .copy(followUp = com.hyperlog.app.session.FollowUp.MiniSet(2, 5, 4), openSetId = 9)
     }
 
+    /** Myo-reps about to start: a muted planned row for each mini-set it allows, `+` at the pill's foot. */
+    @Test fun miniSetsPlanned() = both("session-mini-sets-planned") {
+        val e = SessionExercise(
+            id = 5, exercise = curl, sets = emptyList(),
+            lastTime = listOf(LoggedSet(57.5, 12, 0, 0)), ladder = com.hyperlog.app.domain.WeightLadder((1..40).map { it * 2.5 }), ladderKnown = true,
+            prescription = plan(set(10, 12, 0, Technique.MyoReps(4, 3)), set(10, 12, 1)),
+        )
+        session(e, entry = SetEntry("60", "", "", 0, Field.Reps, partialMode = false, fresh = true))
+    }
+
     @Test fun adHoc() = both("adhoc-session") {
         val e = SessionExercise(
             id = 4, exercise = curl, sets = listOf(LoggedSet(40.0, 12, 0, 2)),

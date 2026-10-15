@@ -552,7 +552,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
      reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
      or mini-sets join it in one tall pill down the index column, with `+` at its foot to add
-     another drop or mini-set, before the set or while it is under way. A tap on a circle explains
+     another drop or mini-set, before the set or while it is under way. Before a myo-reps set, every
+     mini-set it allows is a muted planned row in the pill, as planned drops are, so each `+` adds a
+     row and the count shows. A tap on a circle explains
      the technique and opens the set's sheet.
    - **The active row has no highlight.** The row being done (a set, a drop, a mini-set, a hold,
      a warm-up on the pad or a row being corrected) sits flat like the others; its kg and reps
