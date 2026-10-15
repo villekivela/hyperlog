@@ -35,10 +35,12 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 | Intro | bodyLarge, onSurfaceVariant, 24 dp edge, 8 dp under the bar, 16 dp over the first group | The one line under the title |
 | Change in force | segment of a `SegmentedList` (Tones.card), 24 dp outer corners | One per Change, newest first |
 | Change row | `SegmentedRow`: `tune` in the 40 dp secondaryContainer circle, summary bodyLarge (2 lines), how long it runs bodyMedium onSurfaceVariant | The Change |
+| Change card tap | the whole segment, "See what it changes" | Opens the Change in force, read-only |
+| Fold row | 56 dp segment, bodyLarge onSurfaceVariant on the 72 dp text column, `expand_more` at the end | `1 more in force` past two cards |
 | Change actions | 48 dp row, end-aligned, 12 dp from the segment's end, 8 dp between: **Revert** text button, **Tell Claude how it's going** tonal button | Under the Change row, in the same segment |
 | Composer | one `SectionCard` (Tones.card, 24 dp radius, 12 dp padding) | Gym, starters and the words, one thing to fill in |
 | Composer head | labelLarge, onSurfaceVariant, on the 24 dp edge, 16 dp before the gym chips on the same row | "Gym"; the row is left out with no gyms |
-| Gym chip | FilterChip, `selectedChipColors()`, `check` leading when picked, 8 dp apart | Single choice |
+| Gym chip | FilterChip, `selectedChipColors()`, `check` leading when picked, 8 dp apart | Single choice; **Elsewhere** last |
 | Starter chip | SuggestionChip, `add` leading, 8 dp apart, no head: the `add` says what it does. One row that scrolls sideways, running to the card's edges, so the chip cut off at the edge shows there's more | Puts a sentence into the words |
 | Words | OutlinedTextField, label "In your words", 3 lines at least, 16 dp over it | |
 | Bottom bar | Tones.bar strip, 28 dp top corners, 16 dp padding, through the gesture area | Paste reply, Ask Claude |
@@ -119,7 +121,16 @@ started with the Change, the field above the keyboard with Ask Claude).
   (`coach-04-asked`); Claude's reply ready (`coach-05-reply-ready`); a bad paste with its problems
   (`coach-06-bad-paste`); no program running, no Change cards and no Paste reply
   (`coach-07-no-program`).
-- Review of a Change, headed "Change to your program" (`coach-08-review`).
+- Review of a Change, headed "Change to your program" (`coach-08-review`); one that replaces a
+  Change in force, with "Ends: …" in a tertiaryContainer card above it
+  (`coach-14-review-replaces`).
+- A Change in force opened from its card, read-only, headed "Change in force", with Revert
+  (`coach-10-change-in-force`).
+- Three Changes in force: two cards and `1 more in force` (`coach-11-folded`).
+- Elsewhere picked (`coach-12-elsewhere`).
+- A reply copied short: one message, no count and no copy button (`coach-13-cut-off`).
+- Program → Changes: a replaced Change struck through, "Replaced 15 Oct"
+  (`program-change-replaced`).
 - Today: the time-off line with Ease back in (`today-time-off`), which opens Coach with the words
   filled in (`coach-09-ease-back-in`).
 
@@ -139,6 +150,9 @@ Unchanged by the redesign:
 - Tell Claude how it's going starts the words with the Change and focuses the field.
 - The words, the gym, the workout's options and the asked state survive the trip to the Claude
   app (saved state).
+- Once asked, Paste reply stays the next step until the request ends: an accept, a revert, or
+  the words cleared.
+- Tapping a Change card opens it read-only; Revert there asks first, then goes back to Coach.
 - On return after asking, the clipboard is read once. A valid reply shows the ready bar; Review
   opens it. Nothing opens by itself.
 - Editing the words clears a bad paste's problems; so does Back.
@@ -154,3 +168,8 @@ Unchanged by the redesign:
   pushed the words field below the fold. The gym chips moved onto their head's row and the
   starters became one sideways-scrolling row, so the field shows with two cards.
 - Second pass: the intro went from three lines to two.
+- Tester's report (`coach-test-report.md`), fixed: a card opens its Change; the prompt carries
+  each Change's id and operations, and a reply can end or replace one (`replaces`); Elsewhere;
+  the asked state ends; a reply copied short says so once; a third Change folds. The renders for
+  these are from Robolectric: the phone went back to the owner before they could be checked on
+  it.

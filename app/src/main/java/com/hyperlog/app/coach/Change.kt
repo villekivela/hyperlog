@@ -33,6 +33,11 @@ data class Change(
     val summary: String,
     val scope: Scope,
     val operations: List<Operation>,
+    /**
+     * The ids of Changes in force this one ends: accepting reverts them first, as Revert does.
+     * With any, [operations] may be empty, for a reply that only ends them.
+     */
+    val replaces: List<Long> = emptyList(),
 )
 
 /** The period a Change's plan edits cover. Position operations ignore it: they run once, on accept. */

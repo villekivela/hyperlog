@@ -127,4 +127,37 @@ class CoachRenders {
             program = plain, exerciseNames = names, library = library.exercises, lastTrained = today.minusDays(11),
         )
     }
+
+    private val lighter = Change("Lighter close-grip bench", Scope.RestOfProgram, listOf(Operation.AdjustLoad("close_grip_bench", -10, "elbow")))
+
+    @Test fun changeInForce() = render("coach-10-change-in-force") {
+        val record = record(2, hands).accepted
+        val diff = Changes.inForceDiff(program, plain.position, today, listOf(record), record)
+        ChangeReviewScreen(ChangeReview(hands, diff, program, null), names, onAccept = {}, onReject = {}, onRevert = {})
+    }
+
+    @Test fun folded() = render("coach-11-folded") {
+        Coach(plain.copy(history = listOf(record(1, elbow), record(2, hands), record(3, lighter))))
+    }
+
+    @Test fun elsewhere() = render("coach-12-elsewhere", before = { compose.onNodeWithText("Elsewhere").performClick() }) {
+        Coach(words = "Hotel gym this week: dumbbells to 30 kg, a cable stack and a bench.")
+    }
+
+    @Test fun cutOff() = render("coach-13-cut-off") {
+        Coach(words = typed, errors = listOf(com.hyperlog.app.coach.AskClaude.CUT_OFF))
+    }
+
+    @Test fun reviewReplaces() = render("coach-14-review-replaces") {
+        val withHands = plain.copy(history = listOf(record(2, hands)))
+        val replacing = Change("Hands are worse: no grip work at all for two weeks", Scope.Dates(today, today.plusDays(13)), listOf(Operation.Remove("row"), Operation.Swap("bench", "smith_machine_bench_press")), replaces = listOf(2))
+        val diff = Changes.diff(program, withHands.position, today, withHands.changes, replacing)
+        ChangeReviewScreen(ChangeReview(replacing, diff, program, null, ends = listOf(hands.summary)), names, onAccept = {}, onReject = {})
+    }
+
+    @Test fun programReplaced() = render("program-change-replaced") {
+        val ended = ChangeRecord(record(2, hands).accepted, acceptedAt = 2, revertedAt = today.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+        val ending = record(3, Change("Hands feel fine: back to the plan", Scope.RestOfProgram, emptyList(), replaces = listOf(2)))
+        com.hyperlog.app.ui.program.ProgramScreen(plain.copy(history = listOf(record(1, elbow), ended, ending)), null, onImport = {}, onCloseErrors = {}, onBack = {})
+    }
 }
