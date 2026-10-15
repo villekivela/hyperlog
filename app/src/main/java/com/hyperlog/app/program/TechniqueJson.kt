@@ -17,7 +17,7 @@ object TechniqueJson {
         put("kind", technique.kind.key)
         when (technique) {
             is Technique.Dropset -> { put("drops", technique.drops); put("percent", technique.percent) }
-            is Technique.MyoReps -> { put("miniSetReps", technique.miniSetReps) }
+            is Technique.MyoReps -> put("miniSetReps", technique.miniSetReps)
             is Technique.LengthenedPartials -> technique.partials?.let { put("partials", it) }
             is Technique.IsoHold -> { put("seconds", technique.seconds); put("position", technique.position.key) }
             Technique.Failure -> Unit

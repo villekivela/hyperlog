@@ -20,6 +20,7 @@ import com.hyperlog.app.ui.program.ProgramStore
 import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitForDescription
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -66,6 +67,12 @@ class TechniqueScreenTest {
         compose.onNodeWithText("Finish set").assertIsDisplayed()
         // No rest before a drop.
         compose.onAllNodesWithContentDescription("Rest").assertCountEquals(0)
+    }
+
+    @Test
+    fun theTechniqueSheetNamesMyoRepsByMiniSetRepsAloneAndNoMaximum() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        assertEquals("Mini-sets of 4", context.getString(com.hyperlog.app.R.string.technique_detail_myo, 4))
     }
 
     @Test

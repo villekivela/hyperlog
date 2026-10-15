@@ -118,7 +118,7 @@ internal class TableState(
     /** Set [index]'s check takes it back. */
     val undoable: (Int) -> Boolean = { false },
     val onUndo: () -> Unit = {},
-    /** `+` at the foot of a drop set or myo-reps, before or during it: one more drop or mini-set. Null where sets can't change. */
+    /** `+` at the foot of a drop set, before or during it: one more drop. Null where sets can't change. */
     val onAddDrop: ((Int) -> Unit)? = null,
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
@@ -588,7 +588,7 @@ private fun ActiveSubRow(
     /** A logged drop, mini-set or hold being corrected; null for the one being done. */
     correcting: SetEntry? = null,
     hold: Boolean = table.followUp is FollowUp.Hold,
-    /** `+` at the pill's foot: one more drop or mini-set. */
+    /** `+` at the pill's foot: one more drop. */
     plus: (() -> Unit)? = null,
 ) {
     val entry = correcting ?: table.entry ?: return
@@ -640,7 +640,7 @@ private fun RowScope.EntryCells(entry: SetEntry, flagged: Boolean, actions: PadA
 /**
  * The index column: `W` or the set number on a circle. A set with a technique is tinted, with
  * the technique's symbol as a badge on its corner, and joins its drops or mini-sets in one tall
- * pill ([join]); `+` at the pill's foot adds a drop or a mini-set.
+ * pill ([join]); `+` at the pill's foot adds a drop.
  */
 @Composable
 private fun RowScope.IndexCell(

@@ -263,7 +263,7 @@ private fun expand(specs: List<SetSpec>, week: Int, overrides: List<WeekOverride
     return sets
 }
 
-/** The technique with one more drop or mini-set; null for one with neither. */
+/** The technique with one more drop; null for one without drops. */
 fun Technique.oneMore(): Technique? = when (this) {
     is Technique.Dropset -> copy(drops = drops + 1)
     else -> null

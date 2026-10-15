@@ -711,10 +711,9 @@ class SessionLogger(
     }
 
     /**
-     * `+` at the foot of a set's tall pill: one more drop for a drop set, one more mini-set for
-     * myo-reps, on set [setIndex] of the exercise on screen. Before the set it changes the set's
-     * technique for this session; on the set that is open it changes what the set was logged with,
-     * so its drops or mini-sets go on.
+     * `+` at the foot of a drop set's tall pill: one more drop, on set [setIndex] of the exercise
+     * on screen. Before the set it changes the set's technique for this session; on the set that
+     * is open it changes what the set was logged with, so its drops go on.
      */
     suspend fun addDrop(setIndex: Int) = locked {
         val session = _state.value ?: return@locked

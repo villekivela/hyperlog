@@ -104,7 +104,7 @@ interface SessionActions : PadActions {
     fun editWarmup(index: Int) {}
     /** The check on the set logged last: takes it back. */
     fun undo(sessionExerciseId: Long) {}
-    /** `+` at the foot of set [setIndex]'s tall pill: one more drop or mini-set, before or during the set. */
+    /** `+` at the foot of set [setIndex]'s tall pill: one more drop, before or during the set. */
     fun addDrop(setIndex: Int) {}
 }
 

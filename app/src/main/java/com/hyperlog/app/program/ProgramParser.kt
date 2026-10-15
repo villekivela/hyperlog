@@ -43,6 +43,9 @@ object ProgramParser {
 private val Id = Regex("[a-z0-9_]+")
 private val Range = Regex("""(\d+)\s*-\s*(\d+)""")
 
+/** Myo-reps once had a maximum; programs that still carry it read, and it is ignored. */
+private const val LEGACY_MAX_MINI_SETS = "maxMiniSets"
+
 private class Reader(private val exercises: Set<String>, private val merged: Map<String, String>) {
     val errors = mutableListOf<String>()
 
@@ -344,9 +347,6 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         unknownFields(o, path, fields)
         return o
     }
-
-    /** Myo-reps once had a maximum; programs and changes that still carry it read, and it is ignored. */
-    private val LEGACY_MAX_MINI_SETS = "maxMiniSets"
 
     private fun unknownFields(o: JsonObject, path: String, fields: Set<String>) {
         o.keys.filter { it !in fields }.forEach { error(path, "unknown field \"$it\"") }
