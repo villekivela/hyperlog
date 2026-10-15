@@ -80,7 +80,7 @@ class SheetTest {
         val heights = mutableListOf<Int>()
         openTallSheet { heights += it.size.height }
 
-        assertEquals("content heights while opening", listOf(heights.last()), heights.drop(1).distinct())
+        assertEquals("content heights while opening", listOf(heights.last()), heights.distinct())
     }
 
     @Test
