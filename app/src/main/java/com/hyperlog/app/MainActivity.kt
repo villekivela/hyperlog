@@ -33,6 +33,8 @@ import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
 import com.hyperlog.app.ui.coach.ChangeReviewScreen
 import com.hyperlog.app.ui.coach.CoachScreen
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.hyperlog.app.ui.coach.AskClaudeShare
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -246,6 +248,9 @@ private fun App(
     var bodyweightOpen by rememberSaveable { mutableStateOf(false) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
+    val reply by programModel.reply.collectAsStateWithLifecycle()
+    /** The words for Claude on Coach: kept across tabs, so Today's Ease back in can fill them in. */
+    var coachWords by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val update by updateModel.banner.collectAsStateWithLifecycle()
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
@@ -404,18 +409,25 @@ private fun App(
         )
         screen == Screen.Coach -> CoachScreen(
             program,
-            exercises,
-            lastTrained,
-            onPropose = programModel::propose,
+            words = coachWords,
+            onWords = { coachWords = it },
             onBack = { programModel.closePasteErrors(); screen = Screen.Today },
-            onAskClaude = { words ->
-                scope.launch { programModel.askClaudePrompt(words)?.let { context.startActivity(AskClaudeShare.intent(context, it)) } }
+            gyms = gyms,
+            usualGym = usualGym,
+            onAskClaude = { words, gym ->
+                scope.launch {
+                    val prompt = programModel.askClaudePrompt(words, gym, lastTrained, gyms.flatMap { it.weekdays }.toSet())
+                    context.startActivity(AskClaudeShare.intent(context, prompt))
+                }
             },
             onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
             pasteErrors = pasteErrors,
             onClosePasteErrors = programModel::closePasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
-            weekdays = gyms.flatMap { it.weekdays }.toSet(),
+            replyReady = reply != null,
+            onCheckReply = { programModel.checkReply(AskClaudeShare.clipboard(context)) },
+            onReview = programModel::reviewReply,
+            onRevert = programModel::revert,
             onSettings = openSettings,
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
@@ -485,7 +497,12 @@ private fun App(
             onRunStarter = programModel::runStarter,
             library = exercises,
             lastTrained = lastTrained,
-            onPropose = programModel::propose,
+            onEaseBack = { days ->
+                val words = context.getString(R.string.coach_ease_back_words, days)
+                coachWords = TextFieldValue(words, TextRange(words.length))
+                programModel.closePasteErrors()
+                screen = Screen.Coach
+            },
             weekdays = gyms.flatMap { it.weekdays }.toSet(),
             update = update,
             onUpdate = { updateModel.install(context) },

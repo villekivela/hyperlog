@@ -8,7 +8,12 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ChangeValidator
+import com.hyperlog.app.R
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.history.History
 import com.hyperlog.app.library.toExercise
+import java.time.DayOfWeek
+import java.time.LocalDate
 import com.hyperlog.app.session.PastSessionEditor
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.ui.coach.ChangeReview
@@ -109,25 +114,58 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** The problems of the Change last pasted, until it's pasted again or the words change. */
     val pasteErrors: StateFlow<List<String>?> = _pasteErrors.asStateFlow()
 
-    /** The prompt Ask Claude shares for [words]; with no program running it asks for advice in words. */
-    suspend fun askClaudePrompt(words: String): String? {
+    /**
+     * The prompt Ask Claude shares for [words], with the [gym] picked, the days off since
+     * [lastTrained] and the weekly sets; with no program running it asks for advice in words.
+     */
+    suspend fun askClaudePrompt(words: String, gym: Gym?, lastTrained: LocalDate?, weekdays: Set<DayOfWeek>): String {
+        _reply.value = null
         val active = programs.active.first()
         val db = HyperlogDatabase.get(getApplication())
         val library = db.exercises().all().map { it.toExercise() }
         val sessions = PastSessionEditor(db, programs).sessions()
-        return withContext(Dispatchers.Default) { AskClaude.prompt(words, active, sessions, library) }
+        val weeks = History(db, programs).weeklySets(AskClaude.SET_WEEKS)
+        return withContext(Dispatchers.Default) {
+            AskClaude.prompt(words, active, sessions, library, gym = gym, lastTrained = lastTrained, weekdays = weekdays, weeklySets = weeks)
+        }
     }
 
     /** Reads a Change pasted back from Claude: its diff opens for review, or its problems show. */
     fun paste(text: String) {
         viewModelScope.launch {
-            val active = programs.active.first() ?: return@launch
-            val ids = HyperlogDatabase.get(getApplication()).exercises().all().map { it.id }.toSet()
-            when (val result = withContext(Dispatchers.Default) { AskClaude.read(text, active.program, ids) }) {
-                is ChangeValidator.Result.Valid -> { _pasteErrors.value = null; propose(result.change) }
+            when (val result = read(text)) {
+                is ChangeValidator.Result.Valid -> { _pasteErrors.value = null; _reply.value = null; propose(result.change) }
                 is ChangeValidator.Result.Invalid -> _pasteErrors.value = result.errors
+                null -> _pasteErrors.value = listOf(getApplication<Application>().getString(R.string.coach_no_program_paste))
             }
         }
+    }
+
+    private val _reply = MutableStateFlow<Change?>(null)
+
+    /** A valid Change found on the clipboard on coming back from Claude, until reviewed or asked again. */
+    val reply: StateFlow<Change?> = _reply.asStateFlow()
+
+    /** Reads the clipboard [text] quietly on return from Claude: a valid Change is kept for Review; anything else is ignored. */
+    fun checkReply(text: String) {
+        viewModelScope.launch {
+            _reply.value = (read(text) as? ChangeValidator.Result.Valid)?.change
+        }
+    }
+
+    /** Opens the reply found for review. */
+    fun reviewReply() {
+        val change = _reply.value ?: return
+        _reply.value = null
+        _pasteErrors.value = null
+        propose(change)
+    }
+
+    /** [text] read as a Change for the running program; null with none running. */
+    private suspend fun read(text: String): ChangeValidator.Result? {
+        val active = programs.active.first() ?: return null
+        val ids = HyperlogDatabase.get(getApplication()).exercises().all().map { it.id }.toSet()
+        return withContext(Dispatchers.Default) { AskClaude.read(text, active.program, ids) }
     }
 
     fun closePasteErrors() {
