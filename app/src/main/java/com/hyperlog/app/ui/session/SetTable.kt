@@ -1,7 +1,9 @@
 package com.hyperlog.app.ui.session
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
@@ -57,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
@@ -111,8 +114,8 @@ internal class TableState(
     /** Set [index]'s check takes it back. */
     val undoable: (Int) -> Boolean = { false },
     val onUndo: () -> Unit = {},
-    /** `+` at the foot of a drop set still to do: one more drop. Null where sets can't change. */
-    val onAddDrop: ((Int) -> Unit)? = null,
+    /** `+` at the foot of a drop set or myo-reps, before or during it: one more drop or mini-set. Null where sets can't change. */
+    val onAddDropOrMiniSet: ((Int) -> Unit)? = null,
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
     val activeKg: Double? get() = if (followUp == null) entry?.weightKg else null
@@ -124,6 +127,9 @@ internal class TableState(
         correction?.let { it.sessionExerciseId == current.id && it.set == set && it.extension == extension } == true
 
     fun correctSet(set: Int): (() -> Unit)? = onCorrect?.let { { it(set, null) } }
+
+    /** Set [index] is logged and open for its drops, mini-sets or hold. */
+    fun isOpen(index: Int): Boolean = followUp != null && index == current.sets.size - 1
 }
 
 /** One row of the list, with its key. */
@@ -166,7 +172,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
     }
     Column(modifier.fillMaxWidth()) {
         // The heads sit above the rows, so they stay while the rows scroll.
-        Box(Modifier.padding(horizontal = RowInset)) {
+        Box(Modifier.padding(horizontal = TapInset)) {
             ColumnHeads(
                 showLast = current.lastTime.isNotEmpty(),
                 split = table.entry?.right != null && table.followUp == null && table.warmupEdit == null,
@@ -175,7 +181,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         LazyColumn(
             Modifier.fillMaxWidth().weight(1f).fadingEdges(listState),
             state = listState,
-            contentPadding = PaddingValues(start = RowInset, end = RowInset, bottom = 8.dp),
+            contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
         ) {
             items(items, key = { it.key }) { it.content() }
         }
@@ -311,12 +317,13 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
     technique ?: return emptyList()
     val current = table.current
     val set = current.sets.getOrNull(index)
-    val open = set != null && table.followUp != null && index == current.sets.size - 1
+    val open = table.isOpen(index)
     val logged = set?.extensions.orEmpty()
     val lastTime = current.lastTime.getOrNull(index)?.extensions.orEmpty()
     val out = mutableListOf<SubItem>()
-    // `+` at the foot of a drop set not started yet adds a drop.
-    val addDrop = table.onAddDrop?.takeIf { set == null && technique is Technique.Dropset && current.editable(index) }?.let { { it(index) } }
+    // `+` at the foot of a drop set or myo-reps, not started yet or under way, adds a drop or a mini-set.
+    val plus = table.onAddDropOrMiniSet?.takeIf { (set == null && current.editable(index)) || open }?.let { { it(index) } }
+    val plusLabel = if (technique is Technique.MyoReps) R.string.add_mini_set else R.string.add_drop
     fun foot(j: Int, count: Int) = if (j == count - 1) Join.Foot else Join.Middle
     when (technique) {
         is Technique.Dropset -> {
@@ -332,7 +339,7 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             for (j in 0 until count) {
                 val last = lastDrops.getOrNull(j)?.let { "${formatKg(it.weightKg)} × ${it.reps}" }
                 val join = foot(j, count)
-                val plus = if (join == Join.Foot) addDrop else null
+                val footPlus = if (join == Join.Foot) plus else null
                 val active = (open && j == logged.size) || table.corrects(index, j)
                 out += SubItem("ext-$index-$j", active) {
                     when {
@@ -342,14 +349,14 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                             onCorrect = table.onCorrect?.let { { it(index, j) } },
                             description = stringResource(R.string.correct_drop_description, j + 1, index + 1),
                         )
-                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true)
-                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = plus)
+                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus, plusLabel = plusLabel)
+                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus, plusLabel = plusLabel)
                     }
                 }
             }
         }
         is Technique.MyoReps -> {
-            val rows = logged.size + if (open || set == null) 1 else 0
+            val rows = logged.size + if (open) 1 else 0
             logged.forEachIndexed { j, mini ->
                 out += SubItem("ext-$index-$j", table.corrects(index, j)) {
                     if (table.corrects(index, j)) ActiveSubRow(null, table, weightLocked = true, join = foot(j, rows), correcting = table.correction!!.entry, hold = false)
@@ -361,9 +368,14 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                 }
             }
             when {
-                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot) }
-                // Before the set, the first mini-set shows what is coming: its target at the set's weight.
-                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot) }
+                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot, plus = plus, plusLabel = plusLabel) }
+                // Before the set, every mini-set it allows is planned, its target at the set's weight, so each `+` shows.
+                set == null -> for (j in 0 until technique.maxMiniSets) {
+                    val join = foot(j, technique.maxMiniSets)
+                    out += SubItem("ext-$index-$j", false) {
+                        PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", join, plus = if (join == Join.Foot) plus else null, plusLabel = plusLabel)
+                    }
+                }
             }
         }
         is Technique.IsoHold -> {
@@ -390,11 +402,13 @@ private fun seconds(s: Int) = "$s s"
 
 // ---------------------------------------------------------------- rows
 
-/** A row's frame: [height] tall, the active row filled in secondary container, the content at the 24 dp margin. */
+/**
+ * A row's frame: [height] tall, flat on the surface, the content at the 24 dp margin. No row is
+ * filled: the active one is marked by its outlined cells and its primary index circle.
+ */
 @Composable
 private fun RowFrame(
     height: Dp,
-    active: Boolean,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     clickLabel: String? = null,
@@ -402,8 +416,7 @@ private fun RowFrame(
 ) {
     Row(
         modifier.fillMaxWidth().height(height)
-            .then(if (active) Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RowShape) else Modifier)
-            .then(if (onClick != null) Modifier.clip(RowShape).clickable(onClickLabel = clickLabel, onClick = onClick) else Modifier)
+            .then(if (onClick != null) Modifier.clip(RowRipple).clickable(onClickLabel = clickLabel, onClick = onClick) else Modifier)
             .padding(horizontal = RowPad),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
@@ -417,8 +430,8 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
     val tick = Modifier.toggleable(value = done, role = Role.Checkbox, onValueChange = { table.onTickWarmup(i) })
         .semantics { contentDescription = description }
     if (editing != null) {
-        RowFrame(RowHeight, active = true, modifier = Modifier.testTag(ActiveWarmupTag)) {
-            IndexCell(stringResource(R.string.warmup_lead), Tone.Active, null, Join.None, RowHeight)
+        RowFrame(RowHeight, modifier = Modifier.testTag(ActiveWarmupTag)) {
+            IndexCell(stringResource(R.string.warmup_lead), Tone.Active, null, Join.None, RowHeight, bold = true)
             Spacer(Modifier.weight(1f))
             EntryCells(editing, flagged = false, table.actions)
             Spacer(Modifier.width(ColRir))
@@ -427,7 +440,7 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
         return
     }
     val edit = table.onEditWarmup?.takeIf { table.correction == null }
-    RowFrame(RowHeight, active = false, onClick = edit?.let { { it(i) } }, clickLabel = stringResource(R.string.warmup_edit, i + 1)) {
+    RowFrame(RowHeight, onClick = edit?.let { { it(i) } }, clickLabel = stringResource(R.string.warmup_edit, i + 1)) {
         IndexCell(stringResource(R.string.warmup_lead), Tone.Plain, null, Join.None, RowHeight)
         Spacer(Modifier.weight(1f))
         // Planned looks planned, done looks done: muted like a prefill until ticked.
@@ -448,7 +461,7 @@ private fun UpcomingSetRow(
     val color = MaterialTheme.colorScheme.outline
     // The set to do while a warm-up is typed: a tap brings the pad back to it.
     val back = if (steppedBack && table.warmupEdit != null) table.actions::closeWarmup else null
-    RowFrame(RowHeight, active = false, onClick = back, clickLabel = stringResource(R.string.pad_close_warmup)) {
+    RowFrame(RowHeight, onClick = back, clickLabel = stringResource(R.string.pad_close_warmup)) {
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight,
             onClick = if (!steppedBack && table.current.editable(i) || table.current.prescription == null && !steppedBack) { { table.onSetOptions(i) } } else null,
             description = stringResource(R.string.set_options_description, i + 1))
@@ -465,9 +478,9 @@ private fun ActiveSetRow(
     i: Int, last: LoggedSet?, entry: SetEntry, flagged: Boolean, table: TableState, target: SetPrescription?,
     technique: Technique?, join: Join, editing: Boolean = false,
 ) {
-    RowFrame(RowHeight, active = true) {
+    RowFrame(RowHeight) {
         if (editing) EditCell(stringResource(R.string.correct_set_editing, i + 1))
-        else IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Active, technique, join, RowHeight,
+        else IndexCell("${i + 1}", Tone.Active, technique, join, RowHeight,
             onClick = { table.onSetOptions(i) }, description = stringResource(R.string.set_options_description, i + 1), bold = true)
         LastCell(last)
         EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
@@ -492,13 +505,15 @@ private fun ActiveSetRow(
 
 @Composable
 private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableState, technique: Technique?, join: Join) {
+    // The set whose drops, mini-sets or hold are being done keeps its primary circle for the whole group.
+    val open = table.isOpen(i)
     val color = MaterialTheme.colorScheme.onSurface
     val onClick = table.correctSet(i)
     val correct = stringResource(R.string.correct_set_description, i + 1)
     // Anything logged can be tapped and corrected.
-    RowFrame(RowHeight, active = false, onClick = onClick, clickLabel = correct,
+    RowFrame(RowHeight, onClick = onClick, clickLabel = correct,
         modifier = if (onClick != null) Modifier.semantics { contentDescription = correct } else Modifier) {
-        IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight)
+        IndexCell("${i + 1}", if (open) Tone.Active else if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight, bold = open)
         LastCell(last)
         ValueText(formatKg(set.weightKg), ColKg, color)
         val reps = set.repsText()
@@ -517,7 +532,7 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
 @Composable
 private fun AddSetRow(onAdd: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    RowFrame(SubRowHeight, active = false, onClick = onAdd) {
+    RowFrame(SubRowHeight, onClick = onAdd) {
         Box(Modifier.width(ColIndex), contentAlignment = Alignment.CenterStart) {
             Box(Modifier.size(IndexSize), contentAlignment = Alignment.Center) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = muted) }
         }
@@ -527,10 +542,12 @@ private fun AddSetRow(onAdd: () -> Unit) {
 
 /** A drop or mini-set still to come: muted like every prefill; a drop is to failure, a 0 ring. */
 @Composable
-private fun PlannedSubRow(last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null) {
+private fun PlannedSubRow(
+    last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null, @StringRes plusLabel: Int = R.string.add_drop,
+) {
     val color = MaterialTheme.colorScheme.outline
-    RowFrame(SubRowHeight, active = false) {
-        IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
+    RowFrame(SubRowHeight) {
+        IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusLabel = plusLabel)
         SubLast(last)
         ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
         ValueText(reps, ColReps, color)
@@ -543,7 +560,7 @@ private fun PlannedSubRow(last: String?, kg: Double?, reps: String, join: Join, 
 @Composable
 private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCorrect: (() -> Unit)?, description: String) {
     val color = MaterialTheme.colorScheme.onSurface
-    RowFrame(SubRowHeight, active = false, onClick = onCorrect, clickLabel = description,
+    RowFrame(SubRowHeight, onClick = onCorrect, clickLabel = description,
         modifier = if (onCorrect != null) Modifier.semantics { contentDescription = description } else Modifier) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight)
         SubLast(last)
@@ -556,7 +573,7 @@ private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCo
 }
 
 /**
- * The drop, mini-set or hold being done, highlighted like the active row. A mini-set and a hold
+ * The drop, mini-set or hold being done, marked like the active row by its outlined cells. A mini-set and a hold
  * are at the set's weight, so their weight is muted and can't be tapped.
  */
 @Composable
@@ -569,6 +586,9 @@ private fun ActiveSubRow(
     /** A logged drop, mini-set or hold being corrected; null for the one being done. */
     correcting: SetEntry? = null,
     hold: Boolean = table.followUp is FollowUp.Hold,
+    /** `+` at the pill's foot: one more drop or mini-set. */
+    plus: (() -> Unit)? = null,
+    @StringRes plusLabel: Int = R.string.add_drop,
 ) {
     val entry = correcting ?: table.entry ?: return
     val actions = table.actions
@@ -576,8 +596,8 @@ private fun ActiveSubRow(
         actions.focus(field)
         actions.setPadVisible(true)
     }
-    RowFrame(SubRowHeight, active = true, modifier = Modifier.testTag(ActiveSubRowTag)) {
-        if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight)
+    RowFrame(SubRowHeight, modifier = Modifier.testTag(ActiveSubRowTag)) {
+        if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusLabel = plusLabel)
         SubLast(last)
         if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline)
         else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg), height = SubCellHeight) { tap(Field.Weight) }
@@ -596,6 +616,9 @@ private fun ActiveSubRow(
         }
     }
 }
+
+/** The index column of the row whose circle reads [label] (`W`, the set number). */
+internal fun indexTag(label: String) = "index-$label"
 
 internal const val ActiveSubRowTag = "active-sub-row"
 internal const val ActiveWarmupTag = "active-warmup"
@@ -616,7 +639,7 @@ private fun RowScope.EntryCells(entry: SetEntry, flagged: Boolean, actions: PadA
 /**
  * The index column: `W` or the set number on a circle. A set with a technique is tinted, with
  * the technique's symbol as a badge on its corner, and joins its drops or mini-sets in one tall
- * pill ([join]); `+` at the pill's foot adds a drop.
+ * pill ([join]); `+` at the pill's foot adds a drop or a mini-set.
  */
 @Composable
 private fun RowScope.IndexCell(
@@ -629,22 +652,24 @@ private fun RowScope.IndexCell(
     onClick: (() -> Unit)? = null,
     description: String? = null,
     plus: (() -> Unit)? = null,
+    /** What [plus] adds: "Add a drop" or "Add a mini-set". */
+    @StringRes plusLabel: Int = R.string.add_drop,
     bold: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
     val fill = when (tone) {
         Tone.Plain -> cs.surfaceContainerHighest
-        Tone.Active -> cs.surface
+        Tone.Active -> cs.primary
         Tone.Technique -> cs.tertiaryContainer
     }
     val ink = when (tone) {
         Tone.Plain -> cs.onSurfaceVariant
-        Tone.Active -> cs.primary
+        Tone.Active -> cs.onPrimary
         Tone.Technique -> cs.onTertiaryContainer
     }
     val pill = cs.tertiaryContainer
     Box(
-        Modifier.width(ColIndex).fillMaxHeight().drawBehind {
+        Modifier.width(ColIndex).fillMaxHeight().then(if (label != null) Modifier.testTag(indexTag(label)) else Modifier).drawBehind {
             val w = IndexSize.toPx()
             val r = CornerRadius(w / 2)
             val top = (size.height - w) / 2
@@ -660,7 +685,8 @@ private fun RowScope.IndexCell(
     ) {
         if (label != null) {
             Box(
-                Modifier.size(IndexSize).clip(CircleShape).background(if (join == Join.None) fill else pill)
+                // The active set's circle is primary, even at the top of its technique's tall pill.
+                Modifier.size(IndexSize).clip(CircleShape).background(if (join == Join.None || tone == Tone.Active) fill else pill)
                     .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                     .then(if (description != null && onClick != null) Modifier.semantics { contentDescription = description } else Modifier.clearAndSetSemantics { }),
                 contentAlignment = Alignment.Center,
@@ -668,7 +694,7 @@ private fun RowScope.IndexCell(
                 Text(
                     label,
                     style = MaterialTheme.typography.titleSmall.merge(Tnum),
-                    color = if (join == Join.None) ink else cs.onTertiaryContainer,
+                    color = if (join == Join.None || tone == Tone.Active) ink else cs.onTertiaryContainer,
                     fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
                 )
             }
@@ -681,7 +707,7 @@ private fun RowScope.IndexCell(
             }
         }
         plus?.let { add ->
-            val text = stringResource(R.string.add_drop)
+            val text = stringResource(plusLabel)
             Box(
                 Modifier.align(Alignment.BottomStart).padding(bottom = 8.dp).size(IndexSize).clip(CircleShape)
                     .clickable(onClickLabel = text, onClick = add).semantics { contentDescription = text },
@@ -809,7 +835,10 @@ internal fun repsAnnotated(entry: SetEntry): AnnotatedString {
     }
 }
 
-/** A value in the active row. The focused one is filled and outlined; tap any to type into it. */
+/**
+ * A value in the active row, outlined so the row reads as active with no highlight behind it. The
+ * focused one is a well outlined in primary; tap any to type into it.
+ */
 @Composable
 internal fun Cell(
     text: AnnotatedString,
@@ -829,16 +858,25 @@ internal fun Cell(
             .padding(horizontal = CellInset)
             .height(height)
             .clip(CellShape)
-            // The focused cell is a well in the highlighted row: the lowest surface, outlined in primary.
-            .then(if (focused) Modifier.background(cs.surfaceContainerLowest).border(2.dp, cs.primary, CellShape) else Modifier)
+            // The focused cell is a well: the lowest surface, outlined in primary. A flagged weight is outlined in error.
+            .then(
+                when {
+                    focused -> Modifier.background(cs.surfaceContainerLowest).border(2.dp, if (flagged) cs.error else cs.primary, CellShape)
+                    flagged -> Modifier.border(1.dp, cs.error, CellShape)
+                    else -> Modifier.border(1.dp, cs.outline, CellShape)
+                },
+            )
             .clickable(onClickLabel = description, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         val empty = text.isEmpty() && placeholder != null
+        // Long values (`100 + 20`) step down a size; anything still too wide (a `10–12` range) shrinks to fit inside the padding.
+        val style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum)
         Text(
             if (empty) AnnotatedString(placeholder!!) else text,
-            // Long values (`100 + 20`) step down a size so they stay inside the cell.
-            style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum),
+            Modifier.padding(horizontal = CellPad),
+            style = style,
+            autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = style.fontSize),
             color = when { empty -> cs.outline; flagged -> cs.error; else -> cs.onSurface },
             fontWeight = if ((focused || flagged) && !empty) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,

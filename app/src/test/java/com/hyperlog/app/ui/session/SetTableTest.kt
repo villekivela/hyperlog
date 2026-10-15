@@ -79,7 +79,78 @@ class SetTableTest {
         compose.onNodeWithText("6–8").assertIsDisplayed()
         // `+` at the drop set's foot adds a drop.
         compose.onNodeWithContentDescription("Add a drop").performClick()
-        assertEquals("setTechnique 2 Dropset(drops=3, percent=25)", calls.last())
+        assertEquals("addDropOrMiniSet 2", calls.last())
+    }
+
+    /** Set 1 logged with [technique] and [done] of its drops or mini-sets, the set still open for [followUp]. */
+    private fun showOpen(technique: Technique, done: Int, followUp: com.hyperlog.app.session.FollowUp) {
+        val kind = if (technique is Technique.Dropset) com.hyperlog.app.domain.Extension.Kind.Drop else com.hyperlog.app.domain.Extension.Kind.MiniSet
+        val set = LoggedSet(25.0, 9, 0, 1, technique = technique, extensions = List(done) { com.hyperlog.app.domain.Extension(kind, 17.5, 6) })
+        val exercise = SessionExercise(
+            id = 1, exercise = bench, sets = listOf(set), lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
+            prescription = listOf(SetPrescription(RepRange(8, 10), 1, 120, technique = technique)), plates = DefaultPlates,
+        )
+        val entry = SetEntry("17.5", "6", "", null, Field.Reps, partialMode = false, fresh = true)
+        val session = ActiveSession(
+            id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = entry,
+            padVisible = true, restEndsAt = null, restTotalMs = 0, followUp = followUp, openSetId = 7, latestSet = 1L to 0,
+        )
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench), Recording(calls), onLeave = {}) } }
+    }
+
+    @Test
+    fun plusAddsADropToADropSetUnderWay() {
+        showOpen(Technique.Dropset(2, 25), done = 1, com.hyperlog.app.session.FollowUp.Drop(1, 2))
+        compose.onNodeWithContentDescription("Add a drop").performClick()
+        assertEquals("addDropOrMiniSet 0", calls.last())
+    }
+
+    @Test
+    fun plusAddsAMiniSetToMyoRepsUnderWay() {
+        showOpen(Technique.MyoReps(4, 3), done = 1, com.hyperlog.app.session.FollowUp.MiniSet(1, 3, 4))
+        compose.onNodeWithContentDescription("Add a mini-set").performClick()
+        assertEquals("addDropOrMiniSet 0", calls.last())
+    }
+
+    @Test
+    fun plusAddsAMiniSetBeforeMyoRepsStart() {
+        show(emptyList(), listOf(SetPrescription(RepRange(10, 12), 0, 90, technique = Technique.MyoReps(4, 3))), warmups = false)
+        compose.onNodeWithContentDescription("Add a mini-set").performClick()
+        assertEquals("addDropOrMiniSet 0", calls.last())
+    }
+
+    @Test
+    fun theSwapChipOpensSwap() {
+        val db = bench.copy(id = "db_bench_press", name = "DB Bench Press", equipment = Equipment.Dumbbell)
+        val slot = com.hyperlog.app.program.PlannedSlot("s", "1", 0, "barbell_bench_press", emptyList(), null, listOf(top))
+        val exercise = SessionExercise(
+            id = 1, exercise = db, sets = emptyList(), lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
+            prescription = listOf(top), slot = slot,
+        )
+        val session = ActiveSession(
+            id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = SetEntry("25", "", "", 1, Field.Reps, partialMode = false, fresh = true),
+            padVisible = true, restEndsAt = null, restTotalMs = 0,
+        )
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench, db), Recording(calls), onLeave = {}) } }
+        compose.onNodeWithText("for Barbell Bench Press").performClick()
+        compose.onNodeWithText("Swap DB Bench Press").assertIsDisplayed()
+    }
+
+    @Test
+    fun theSupersetChipGoesToThePartner() {
+        val slot = com.hyperlog.app.program.PlannedSlot("a", "1a", 0, "barbell_bench_press", emptyList(), null, listOf(top))
+        val curl = bench.copy(id = "leg_curl", name = "Seated Leg Curl")
+        val exercises = listOf(
+            SessionExercise(1, bench, emptyList(), emptyList(), DefaultPlates.ladder(), true, prescription = listOf(top), slot = slot),
+            SessionExercise(2, curl, emptyList(), emptyList(), DefaultPlates.ladder(), true, prescription = listOf(top), slot = slot.copy(id = "b", label = "1b", exercise = "leg_curl")),
+        )
+        val session = ActiveSession(
+            id = 1, startedAt = 0, exercises = exercises, currentId = 1, entry = SetEntry("100", "", "", 1, Field.Reps, partialMode = false, fresh = true),
+            padVisible = true, restEndsAt = null, restTotalMs = 0,
+        )
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench, curl), Recording(calls), onLeave = {}) } }
+        compose.onNodeWithText("1a + Seated Leg Curl").performClick()
+        assertEquals("switchTo 2", calls.last())
     }
 
     @Test
@@ -139,6 +210,7 @@ class SetTableTest {
 private class Recording(val calls: MutableList<String>) : SessionActions {
     override fun logShown() { calls += "logShown" }
     override fun undo(sessionExerciseId: Long) { calls += "undo $sessionExerciseId" }
+    override fun addDropOrMiniSet(setIndex: Int) { calls += "addDropOrMiniSet $setIndex" }
     override fun setTechnique(setIndex: Int, technique: Technique?) { calls += "setTechnique $setIndex $technique" }
     override fun press(key: PadKey) = Unit
     override fun done() = Unit
@@ -148,7 +220,7 @@ private class Recording(val calls: MutableList<String>) : SessionActions {
     override fun pickWeight(kg: Double) = Unit
     override fun setPadVisible(visible: Boolean) = Unit
     override fun addExercise(exerciseId: String) = Unit
-    override fun switchTo(sessionExerciseId: Long) = Unit
+    override fun switchTo(sessionExerciseId: Long) { calls += "switchTo $sessionExerciseId" }
     override fun adjustRest(deltaMs: Long) = Unit
     override fun endRest() = Unit
     override fun finish() = Unit

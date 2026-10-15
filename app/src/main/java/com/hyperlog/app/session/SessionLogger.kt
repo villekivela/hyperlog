@@ -43,6 +43,7 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.SetPrescriptionJson
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.TechniqueJson
+import com.hyperlog.app.program.oneMore
 import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.program.plannedEntry
 import com.hyperlog.app.progression.Performance
@@ -710,6 +711,24 @@ class SessionLogger(
     }
 
     /**
+     * `+` at the foot of a set's tall pill: one more drop for a drop set, one more mini-set for
+     * myo-reps, on set [setIndex] of the exercise on screen. Before the set it changes the set's
+     * technique for this session; on the set that is open it changes what the set was logged with,
+     * so its drops or mini-sets go on.
+     */
+    suspend fun addDropOrMiniSet(setIndex: Int) = locked {
+        val session = _state.value ?: return@locked
+        val current = session.current ?: return@locked
+        val more = current.techniqueAt(setIndex)?.oneMore() ?: return@locked
+        when {
+            setIndex >= current.sets.size -> dao.setTechnique(SetTechniqueEntity(current.id, setIndex, TechniqueJson.encode(more)))
+            setIndex == current.sets.size - 1 && session.openSetId != null -> dao.setLoggedTechnique(session.openSetId, TechniqueJson.encode(more))
+            else -> return@locked
+        }
+        reload()
+    }
+
+    /**
      * Adds, changes or (with null) takes off the technique of set [setIndex] of the exercise on
      * screen, for this session. Logged sets keep what they were done with.
      */
@@ -783,13 +802,12 @@ class SessionLogger(
         val kg = entry.weightKg ?: return
         val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: return
         val current = session.current ?: return
-        val warmups = session.warmups.toMutableList()
+        val warmups = session.warmups
         if (edit.index !in warmups.indices) return
         val typed = WarmupSet(kg, reps)
-        val changed = warmups[edit.index] != typed
-        warmups[edit.index] = typed
-        val stored = if (changed) Warmups.encode(warmups) else current.typedWarmups?.let(Warmups::encode)
-        dao.setWarmups(current.id, stored, maxOf(current.warmupsDone, edit.index + 1))
+        // Only a warm-up typed off its ramp is kept as typed; the others, and one typed back to it, follow the ramp.
+        val kept = if (session.ramp.getOrNull(edit.index) == typed) current.typedWarmups - edit.index else current.typedWarmups + (edit.index to typed)
+        dao.setWarmups(current.id, kept.takeIf { it.isNotEmpty() }?.let(Warmups::encode), maxOf(current.warmupsDone, edit.index + 1))
         val next = edit.index + 1
         warmupEdit = warmups.getOrNull(next)?.let { WarmupEdit(current.id, next, warmupEntry(it)) }
         reload()
@@ -987,7 +1005,7 @@ class SessionLogger(
                     else -> shared.barPlates(exercise.equipment) ?: machine?.ladder?.withPlates(shared.plates.pairs) as? LadderSpec.Plates
                 },
                 warmupsDone = se.warmupsDone,
-                typedWarmups = Warmups.decode(se.warmups),
+                typedWarmups = Warmups.decode(se.warmups).orEmpty(),
                 pinPlates = gym?.pinPlates.orEmpty(),
             )
         }

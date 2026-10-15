@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.sp
 internal val Margin = 24.dp
 /** Cards on the session screen (the ladder offer) sit [TableMargin] from the screen edge. */
 internal val TableMargin = 12.dp
-/** Edge of the active row's highlight on the flat table; its content keeps the [Margin]. */
-internal val RowInset = 16.dp
-internal val RowPad = Margin - RowInset
+/** Edge of a tappable row's ripple on the flat table; its content keeps the [Margin]. */
+internal val TapInset = 16.dp
+internal val RowPad = Margin - TapInset
 internal val RowHeight = 64.dp
 internal val LabelHeight = 32.dp
 /** Drops, myo mini-sets and holds under their set. */
@@ -45,13 +45,17 @@ internal val ColRir = 36.dp
 /** The check column at the end of every row. */
 internal val ColCheck = 40.dp
 internal val CellInset = 4.dp
+/** A cell's value keeps this clear of its outline on each side. */
+internal val CellPad = 8.dp
 internal val CellHeight = 48.dp
 internal val KeyHeight = 56.dp
 internal val KeyGap = 4.dp
 internal val KeyShape = RoundedCornerShape(12.dp)
-/** The active row's pill. */
-internal val RowShape = RoundedCornerShape(24.dp)
+/** A tappable row's ripple. No row is filled, the active one included. */
+internal val RowRipple = RoundedCornerShape(24.dp)
 internal val CellShape = RoundedCornerShape(12.dp)
+/** A chip under the exercise name. */
+internal val ChipShape = RoundedCornerShape(8.dp)
 
 /** Tabular figures, so columns of numbers line up. */
 internal val Tnum = TextStyle(fontFeatureSettings = "tnum")

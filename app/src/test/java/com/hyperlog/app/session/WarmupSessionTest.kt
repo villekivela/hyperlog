@@ -243,10 +243,38 @@ class WarmupSessionTest {
         val again = logger.logger()
         assertEquals(WarmupSet(30.0, 8), again.session.warmups[0])
         assertEquals(1, again.session.current!!.warmupsDone)
-        // A new weight for set 1 leaves warm-ups typed by hand alone.
+        // A new weight for set 1 leaves the warm-up typed by hand alone.
         again.focus(Field.Weight); again.type("100"); again.done()
         assertEquals(WarmupSet(30.0, 8), again.session.warmups[0])
         assertEquals(4, again.session.warmups.size)
+    }
+
+    @Test
+    fun aTypedWarmUpFreezesOnlyItselfAndTheOthersFollowThePlan() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        logger.editWarmup(1)
+        logger.type("50"); logger.done(); logger.done()
+        assertEquals(WarmupSet(50.0, 5), logger.session.warmups[1])
+        // Set 1 goes up to 100: warm-up 2 stays as typed, the others ramp from 100.
+        logger.closeWarmup()
+        logger.focus(Field.Weight); logger.type("100"); logger.done()
+        assertEquals(listOf(WarmupSet(45.0, 8), WarmupSet(50.0, 5), WarmupSet(75.0, 3), WarmupSet(85.0, 2)), logger.session.warmups)
+        // Still so after the app is killed.
+        assertEquals(listOf(WarmupSet(45.0, 8), WarmupSet(50.0, 5), WarmupSet(75.0, 3), WarmupSet(85.0, 2)), logger.logger().session.warmups)
+    }
+
+    @Test
+    fun aWarmUpTypedBackToItsRampFollowsTheRampAgain() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        logger.editWarmup(1)
+        logger.type("50"); logger.done(); logger.done()
+        logger.editWarmup(1)
+        logger.type("55"); logger.done(); logger.done()
+        logger.closeWarmup()
+        logger.focus(Field.Weight); logger.type("100"); logger.done()
+        assertEquals(WarmupSet(60.0, 5), logger.session.warmups[1])
     }
 
     @Test

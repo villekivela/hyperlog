@@ -265,6 +265,7 @@ fun SessionScreen(
                         onSwap = if (current.sets.isEmpty()) { { swapping = current.id } } else null,
                         onRemove = if (current.sets.isEmpty()) { { removing = current.id } } else null,
                         onKeepEdits = keepSummary?.let { summary -> session.keptEdits(summary)?.let { change -> { onKeepEdits(change) } } },
+                        onPartner = actions::switchTo,
                         swappedFrom = current.inPlaceOf
                             ?.let { id -> exercises.firstOrNull { it.id == id }?.name },
                         why = current.suggestion?.takeIf { it.why != null && !current.done && !current.needsMachine },
@@ -299,11 +300,7 @@ fun SessionScreen(
                             onLogShown = actions::logShown,
                             undoable = { session.undoable(current, it) },
                             onUndo = { actions.undo(current.id) },
-                            onAddDrop = { i ->
-                                (current.techniqueAt(i) as? com.hyperlog.app.program.Technique.Dropset)?.let { d ->
-                                    actions.setTechnique(i, d.copy(drops = d.drops + 1))
-                                }
-                            },
+                            onAddDropOrMiniSet = actions::addDropOrMiniSet,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
@@ -488,6 +485,8 @@ private fun Header(
     swappedFrom: String?,
     /** Keeps the session's edits for the rest of the block; null when there are none to keep. */
     onKeepEdits: (() -> Unit)? = null,
+    /** Brings superset partner [Long] on screen, from its chip; null where the chip only names it. */
+    onPartner: ((Long) -> Unit)? = null,
     /** Why the set to do's weight is what it is; null for none (a set that follows the one before, a finished exercise). */
     why: Suggestion? = null,
 ) {
@@ -568,26 +567,30 @@ private fun Header(
     }
     // What the slot is: a superset's partner, a swap's planned exercise, as outlined chips.
     val partner = SessionOrder.partner(session.exercises, exercise)
-    val superset = exercise.slot?.takeIf { partner != null }?.let { stringResource(R.string.chip_superset, it.label, partner!!.exercise.name) }
+    val superset = partner?.let { p -> exercise.slot?.let { p to stringResource(R.string.chip_superset, it.label, p.exercise.name) } }
     if (superset != null || swappedFrom != null) {
         Row(
             Modifier.fillMaxWidth().padding(start = Margin, end = Margin, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            superset?.let { HeaderChip(null, it, Modifier.weight(1f, fill = false)) }
-            swappedFrom?.let { HeaderChip(Symbol.SwapHoriz, stringResource(R.string.chip_swapped, it), Modifier.weight(1f, fill = false)) }
+            superset?.let { (p, text) -> HeaderChip(null, text, Modifier.weight(1f, fill = false), onClick = onPartner?.let { go -> { go(p.id) } }) }
+            swappedFrom?.let { HeaderChip(Symbol.SwapHoriz, stringResource(R.string.chip_swapped, it), Modifier.weight(1f, fill = false), onClick = onSwap) }
         }
     }
     why?.let { SuggestionLine(it, from = exercise.sets.lastOrNull()?.weightKg) }
     }
 }
 
-/** An outlined chip under the name: `⇄ for Bench Press`, `A1 + Leg Curl`. It only says what the slot is. */
+/**
+ * An outlined chip under the name: `⇄ for Bench Press`, `A1 + Leg Curl`. It says what the slot is;
+ * a tap opens Swap, or goes to the superset partner.
+ */
 @Composable
-private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modifier) {
+private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val cs = MaterialTheme.colorScheme
     Row(
-        modifier.height(32.dp).border(1.dp, cs.outlineVariant, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+        modifier.height(32.dp).border(1.dp, cs.outlineVariant, ChipShape)
+            .then(if (onClick != null) Modifier.clip(ChipShape).clickable(onClick = onClick) else Modifier)
             .padding(start = if (symbol != null) 8.dp else 12.dp, end = 12.dp).testTag(HeaderChipTag),
         verticalAlignment = Alignment.CenterVertically,
     ) {

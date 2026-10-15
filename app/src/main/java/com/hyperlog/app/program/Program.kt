@@ -262,3 +262,10 @@ private fun expand(specs: List<SetSpec>, week: Int, overrides: List<WeekOverride
     }
     return sets
 }
+
+/** The technique with one more drop or mini-set; null for one with neither. */
+fun Technique.oneMore(): Technique? = when (this) {
+    is Technique.Dropset -> copy(drops = drops + 1)
+    is Technique.MyoReps -> copy(maxMiniSets = maxMiniSets + 1)
+    else -> null
+}

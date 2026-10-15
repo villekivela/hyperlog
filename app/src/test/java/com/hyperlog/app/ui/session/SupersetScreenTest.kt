@@ -64,6 +64,14 @@ class SupersetScreenTest {
     }
 
     @Test
+    fun theSupersetChipBringsThePartnerUp() {
+        startDay()
+        compose.onNodeWithText("1a + DB French Press").performClick()
+        compose.waitFor("1b + DB Curl")
+        compose.onNodeWithText("DB French Press").assertIsDisplayed()
+    }
+
+    @Test
     fun theSessionListTagsSupersetPartners() {
         startDay()
         compose.onNodeWithText("DB Lateral Raise").performClick()
