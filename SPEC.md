@@ -206,9 +206,12 @@ work. You can override the suggestion on the spot; the override is logged, not h
 Research behind these rules: `docs/research/progression-and-partials.md`.
 - **Every suggestion says why**, e.g. "Last time 50 kg × 12, 12, 12 @ 2, top of 8–12 → 52.5 kg"
   (every set reached the top at the target RIR; 12, 12, 11 @ 2 would keep 50 kg for 12 reps).
-  - The why-line sits under the exercise name for the active set, one muted line led by a
-    direction symbol (up, flat, down). An estimated weight, or progress that isn't possible, reads
-    in the tertiary colour. A set that just follows the one before has no line.
+  - The why-line sits under the exercise name (and its swap or superset chip) for the active set,
+    one short muted line led by a direction symbol (`trending_up`, `trending_flat`,
+    `trending_down`) in a fixed colour scale like RIR's, the same on every phone: calm green for
+    up, neutral for the same weight, amber for down (a deload or back-off isn't a failure, so never
+    red). It is short (`↑ 62.5 · hit the top of 8–10 last time`); the full sentence is in the
+    exercise sheet. A set that just follows the one before has no line.
 - Coaching changes (e.g. `adjust_load -10%` after time off) apply on top of the suggestion for their
   scope; progression then continues from what you actually lift.
 
@@ -328,7 +331,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
   the weights each gives, and **Add machine** (the ladder editor; a machine exercise's name is
   filled in, a cable station's left for you). The answer is remembered per gym and exercise, so the
   next time it goes straight to the sets. The exercise sheet shows the machine and gym, with
-  **Change** until a set is logged on it.
+  **Edit** (the machine's setup, as on the gym's screen: its name, ladder, add-ons or starting
+  weight; saving applies to the running session at once) and **Change** until a set is logged on it.
 - **Importing a gym.** Settings → Gyms and equipment → **Import gym** reads a gym file
   (`docs/gym-format.md`) through the system file picker and adds it as a new gym; it never
   replaces or changes data already there. The file is validated strictly like a program file,
@@ -472,8 +476,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      program says so and offers an ad-hoc session.
      While a program session runs, Today shows that session's day, the one **Resume session**
      opens, even after a finish and Resume moved the program's position on.
-   - **A program day's session** has a row for every planned set from the start, with a Target
-     column (reps and an RIR ring). The first set prefills with the suggestion (Automatic
+   - **A program day's session** has a row for every planned set from the start, its target shown
+     as muted placeholders in the empty cells (`6–8` in Reps, an RIR ring in RIR) until typed. The first set prefills with the suggestion (Automatic
      progressive overload): its weight and target reps, at the target RIR; with no history, an empty
      weight at the top of the range. Later sets follow the set before (reps capped at the top of
      the range, or the top of a new range), and its weight moves with the RIR gap. Rest after a set is the program's rest for it. After an
@@ -495,10 +499,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        covers the whole library. The swapped exercise keeps the slot (and its superset partner and
        label) and does the sets the program gives it (an alternative's own, else the slot's). Its
        history, suggestion and machine are its own. Once a set is logged on an exercise it can't be
-       swapped or removed. A swapped slot reads "In place of <planned exercise>" above the name.
+       swapped or removed. A swapped slot has an outlined chip under the name, `⇄ for <planned
+       exercise>`; a superset's chip reads `A1 + <partner>`.
      - **Sets:** **Add set** under a program exercise's sets adds one like its last planned set,
        without its technique (on a finished exercise it brings the exercise back into the order).
-       A set's number opens its sheet: **Remove set**, and its target (fewest reps, most reps,
+       A set's circle in the index column opens its sheet (the session ⋮ has no set options): **Remove set**, and its target (fewest reps, most reps,
        RIR, by steps), as long as the set isn't logged. One set always stays, and so does one that
        others back off from. Removing the active exercise's last set to do moves the session on.
      - **Exercises:** the session list row's ⋮ swaps, adds a set, moves the exercise up or down (a
@@ -506,7 +511,10 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        exercises are open-ended like ad-hoc ones (no slot, no target), in a program session too.
    - **Warm-ups** generated from the first work set's weight (ramp by percentage, rounded to the
      equipment's available weights).
-     - The ramp follows the weight planned or typed for the first work set, live. Lifts with
+     - The ramp follows the weight planned or typed for the first work set, but not keystroke by
+       keystroke: while the weight is being typed the warm-ups stay as they were, and they ramp
+       again once the pad moves on to reps or → is pressed (typing `80` never passes through an
+       8 kg ramp). Lifts with
        several joints get 45% × 8, 60% × 5, 75% × 3, 85% × 2 when the first work set is 6 reps or
        fewer (the reps typed for it, else its planned top reps), else 45% × 8, 65% × 5, 85% × 3;
        single-joint exercises (by movement pattern: curls,
@@ -514,19 +522,39 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        bar or plate-loaded machine, the nearest 5 kg step, so the small plates are only for work
        sets. A warm-up that doesn't climb, or reaches the work weight, is left out (a 20 kg top set
        on the bar has none). Bodyweight and weighted bodyweight exercises have none.
-     - They show as `W` rows above the first work set, in ad-hoc sessions too, muted until a tap
-       ticks one off (with the ones above it; a tap on the last one ticked takes it back). Ticks
-       are saved. Warm-ups are never logged: they start no rest, leave the pad and the rest timer
-       alone, add no volume and never reach progression or history. They go once the first work
-       set is logged. Ticking is optional.
+     - They show as full `W` rows above the first work set, in ad-hoc sessions too. They are never
+       the rows scrolled away first: the table scrolls as one list, with a fade at an edge that has
+       more, and the active row always in view.
+     - A warm-up row works like a set row: a tap puts it on the pad, its kg and reps can be typed
+       (the plate strip shows its plates; the rows draw none), and → goes kg, reps, then ticks it
+       and moves to the next warm-up or set 1, with no RIR and no rest. A warm-up typed by hand
+       stays as typed for this session, and the list with it (a new weight for set 1 no longer
+       ramps them); the next session ramps again.
+     - Its check ticks it off. Warm-ups are never logged: they start no rest, add no volume and
+       never reach progression or history. They go once the first work set is logged. Ticking is
+       optional. Ticks and typed warm-ups are saved with the session.
+   - **The check column.** Every row, warm-ups and work sets, ends in a check circle (MacroFactor
+     and Hevy have one). On a work set it logs the set with the values shown, prefilled or typed,
+     and starts rest: a set done as planned is one tap. → on the pad still logs too. A done row has
+     a filled `primary` check and full-strength values, with no row tint. A tap on the check of the
+     last checked row takes it back (a work set goes back to editable and unlogged, its exercise
+     comes back on screen and its rest stops; not once one of its drops, mini-sets or its hold is
+     logged, nor as a double tap within a second of logging it); earlier rows are fixed by tapping
+     the row. The check of a drop, mini-set or hold being done logs it as shown.
+   - **The index column** shows `W` for a warm-up and the set number for a work set, on a circle.
+     A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
+     a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
+     reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
+     or mini-sets join it in one tall pill down the index column, with `+` at its foot to add
+     another. A tap on a circle explains the technique and opens the set's sheet.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
    - **Plate calculator** for barbell and plate-loaded exercises.
      - Barbell exercises use the gym's plates; machines whose ladder is plates use the gym's too,
        or their own pairs if they have them. While
        the weight is typed the pad draws one side of the bar with its plates (fixed competition
-       colours, sized by weight) and a legend (`1 × 20`, `1 × 15`, the bar's 20), live; each
-       warm-up row draws its own, compact. Plates are the fewest that make the weight, heaviest
+       colours, sized by weight) and a legend (`1 × 20`, `1 × 15`, the bar's 20), live, for a
+       warm-up on the pad too. Plates are the fewest that make the weight, heaviest
        first, from the pairs there are. A weight the plates can't make draws the bar alone with
        "Not on these plates" (the weight check says so on ✓). Design:
        `docs/design/logging-screen.md`, Plates.
@@ -550,8 +578,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - EZ, trap and safety bar exercises use the gym's plates on their own bar, so they get the
        same line, warm-ups on 5 kg steps and a weight check against the real weights.
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
-     set rows (target, last time, kg, reps, RIR), techniques and their planned drops/mini-sets
-     visible before the set, and a compact in-app pad drawn like the system number keyboard.
+     set rows (index, last time, kg, reps, RIR, check) flat on the screen with no card behind them,
+     techniques and their planned drops/mini-sets visible before the set, and a compact in-app pad
+     drawn like the system number keyboard. The top is the exercise name with the rest pill and ⋮,
+     the swap or superset chip, and the why-line. **Next** is the pad's top row, on the pad's
+     surface, and stays at the bottom as the same row when the pad is hidden.
    - **Rest rules**: no rest before drops, between myo mini-sets (a short breathing countdown
      instead) or between superset partners; full rest after the set or superset round.
    - **Rest on the lock screen**: an ongoing notification with time left, the next set's target,
@@ -1051,8 +1082,8 @@ How the import works:
   set, the label shows both: "From old app: 60 kg × 12 @ 2 RIR, 12 Sep → 65 kg × 8". An ad-hoc
   exercise is prefilled with the old set itself, on the ladder.
 - The label sits in the suggestion line, tertiary like an estimate (check it on the first set).
-  A machine's hint reads "From old app, another machine" with the set on its own line, and the
-  weight stays empty. Both go once the exercise (for machines, on that machine) has a logged set.
+  A machine's hint ("From old app, another machine" and the set) is in the exercise sheet only,
+  not on the logging screen, and the weight stays empty. Both go once the exercise (for machines, on that machine) has a logged set.
 
 The **exercise library** is seeded from the legacy library (189 exercises, 150 with technique
 videos), cleaned up: duplicates merged (e.g. `db_incline_press` / `incline_db_press`), equipment types

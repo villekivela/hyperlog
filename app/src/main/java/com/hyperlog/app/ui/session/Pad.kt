@@ -85,6 +85,10 @@ internal fun Pad(
     platesOnMachine: Boolean = false,
     /** A pin stack's loading for a weight, drawn at the top like the plates; null for any other equipment. */
     pinLoad: ((Double) -> com.hyperlog.app.domain.PinLoad?)? = null,
+    /** The pad's top row: Next. */
+    top: @Composable () -> Unit = {},
+    /** A warm-up is on the pad, by index and count: no RIR, the hide key goes back to the set, ✓ ticks it. */
+    warmup: Pair<Int, Int>? = null,
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
@@ -96,6 +100,7 @@ internal fun Pad(
     }
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
+            top()
             // The plate calculator, at the top of the pad while a weight is typed, live.
             // Shown on the reps too, so the pad keeps its height from the weight to the reps.
             if (plates != null && check == null) {
@@ -113,6 +118,8 @@ internal fun Pad(
                 val typed = entry.weightKg
                 if (check != null) {
                     WeightCheckStrip(check, actions)
+                } else if (warmup != null && !onWeight) {
+                    WarmupStrip(warmup.first, warmup.second)
                 } else if (correction?.kind != null && !onWeight) {
                     CorrectionStrip(correction)
                 } else if (followUp != null && !onWeight) {
@@ -147,10 +154,11 @@ internal fun Pad(
                 KeyRow {
                     // A correction can only be saved or cancelled, so the hide key cancels it.
                     if (correction != null) SymbolKey(Symbol.Close, R.string.pad_cancel_correction) { actions.cancelCorrection() }
+                    else if (warmup != null) SymbolKey(Symbol.Close, R.string.pad_close_warmup) { actions.closeWarmup() }
                     else SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
                     DigitKey(0, actions)
                     if (onWeight) TextKey(".", stringResource(R.string.pad_dot)) { actions.press(PadKey.Dot) } else Spacer(Modifier.weight(1f))
-                    DoneKey(entry, actions, keeps = check != null, enabled = canConfirm, saves = correction != null)
+                    DoneKey(entry, actions, keeps = check != null, enabled = canConfirm, saves = correction != null, warmup = warmup != null)
                 }
             }
         }
@@ -200,10 +208,12 @@ private fun androidx.compose.foundation.layout.RowScope.CorrectionStrip(correcti
 
 /** The pad folded down to its bottom corners: show the pad, and ✓ to log the set as shown. */
 @Composable
-internal fun HiddenPad(entry: SetEntry, actions: PadActions, modifier: Modifier = Modifier, canConfirm: Boolean = entry.canConfirm) {
+internal fun HiddenPad(entry: SetEntry, actions: PadActions, modifier: Modifier = Modifier, canConfirm: Boolean = entry.canConfirm, top: @Composable () -> Unit = {}) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.testTag(PadTag)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
+        top()
         Row(
-            Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp),
+            Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(KeyGap),
         ) {
             SymbolKey(Symbol.Keyboard, R.string.pad_show) { actions.setPadVisible(true) }
@@ -211,7 +221,17 @@ internal fun HiddenPad(entry: SetEntry, actions: PadActions, modifier: Modifier 
             Spacer(Modifier.weight(1f))
             DoneKey(entry, actions, keeps = false, enabled = canConfirm)
         }
+        }
     }
+}
+
+/** The strip while a warm-up's reps are typed: which warm-up it is, after `stairs`. A warm-up has no RIR. */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.WarmupStrip(index: Int, count: Int) {
+    Spacer(Modifier.width(8.dp))
+    SymbolIcon(Symbol.Stairs, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    Spacer(Modifier.width(8.dp))
+    Text(stringResource(R.string.warmup_strip, index + 1, count), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1)
 }
 
 internal const val PadTag = "pad"
@@ -241,11 +261,11 @@ private fun androidx.compose.foundation.layout.RowScope.SymbolKey(symbol: Symbol
 
 /** ✓: one key, the same size as the others, filled primary. On the weight it reads →. */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: PadActions, keeps: Boolean, enabled: Boolean, saves: Boolean = false) {
+private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry, actions: PadActions, keeps: Boolean, enabled: Boolean, saves: Boolean = false, warmup: Boolean = false) {
     val cs = MaterialTheme.colorScheme
     val onWeight = entry.field == Field.Weight
     Key(
-        stringResource(if (onWeight) R.string.pad_next else if (saves) R.string.pad_save_correction else R.string.pad_log),
+        stringResource(if (onWeight) R.string.pad_next else if (saves) R.string.pad_save_correction else if (warmup) R.string.pad_tick_warmup else R.string.pad_log),
         modifier = Modifier.testTag(DoneKeyTag),
         container = when { keeps -> cs.error; enabled -> cs.primary; else -> cs.surfaceContainerHigh },
         content = when { keeps -> cs.onError; enabled -> cs.onPrimary; else -> cs.outline },

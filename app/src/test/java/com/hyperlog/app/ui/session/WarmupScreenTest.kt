@@ -60,7 +60,7 @@ class WarmupScreenTest {
         }
         compose.waitFor("Day A")
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
     }
 
     private fun clickLabel(label: String) = SemanticsMatcher("click label $label") {
@@ -68,27 +68,24 @@ class WarmupScreenTest {
     }
 
     @Test
-    fun aNinetyKgBenchShowsItsRampAndThePlatesPerSide() {
+    fun aNinetyKgBenchShowsItsRampAsFullRowsWithoutPlates() {
         startDay("barbell_bench_press")
         compose.press("9"); compose.press("0")
-        compose.waitFor("Warm-up")
-        // 40, 55, 65 and 75 kg, each with its plates.
-        compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8").assertIsDisplayed()
+        // The ramp waits for the pad to move on, so it never flickers through a 9 kg ramp.
+        assertEquals(0, compose.onAllNodes(hasContentDescription("Warm-up", substring = true)).fetchSemanticsNodes().size)
+        compose.press("Next")
+        compose.waitForDescription("Warm-up 1, 40 kg × 8")
         compose.onNodeWithContentDescription("Warm-up 4, 75 kg × 2").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Plates per side: 1 × 20, 1 × 5, 1 × 2.5, on a 20 kg bar").assertIsDisplayed()
-        // The pad draws the 90 being typed, live.
+        // Only the pad draws plates: the 90 being typed.
         compose.onNodeWithContentDescription("Plates per side: 1 × 20, 1 × 15, on a 20 kg bar").assertIsDisplayed()
-        // No line of plates as text any more.
-        assertEquals(0, compose.onAllNodes(hasText("per side", substring = true)).fetchSemanticsNodes().size)
+        assertEquals(1, compose.onAllNodes(hasContentDescription("Plates per side", substring = true)).fetchSemanticsNodes().size)
     }
 
     @Test
-    fun aWarmUpTicksOffWithATapAndTheWorkSetStaysActive() {
+    fun aWarmUpsCheckTicksItAndTheWorkSetStaysActive() {
         startDay("barbell_bench_press")
         compose.press("9"); compose.press("0"); compose.press("Next")
-        // The table keeps the work sets in view; the warm-ups are a scroll up.
-        compose.waitForIdle()
-        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasContentDescription("Warm-up 1, 40 kg × 8"))
+        compose.waitForDescription("Warm-up 1, 40 kg × 8")
         val first = compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8")
         first.assertIsOff()
         first.performClick()
@@ -108,10 +105,42 @@ class WarmupScreenTest {
     }
 
     @Test
+    fun aTappedWarmUpIsTypedOnThePadAndArrowTicksItAndMovesOn() {
+        startDay("barbell_bench_press")
+        compose.press("9"); compose.press("0"); compose.press("Next")
+        compose.waitForDescription("Warm-up 2, 55 kg × 5")
+        compose.onNode(clickLabel("Type warm-up 2"), useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        // The pad's plate strip shows the warm-up.
+        compose.onNodeWithContentDescription("Plates per side: 1 × 15, 1 × 2.5, on a 20 kg bar").assertIsDisplayed()
+        compose.press("5"); compose.press("0"); compose.press("Next")
+        compose.waitFor("Warm-up 2 of 4")
+        compose.press("6"); compose.press("Tick warm-up")
+        compose.waitForDescription("Warm-up 2, 50 kg × 6")
+        compose.onNodeWithContentDescription("Warm-up 2, 50 kg × 6").assertIsOn()
+        // The next warm-up is on the pad now; the close key goes back to set 1.
+        compose.onNodeWithTag(ActiveWarmupTag).assertIsDisplayed()
+        compose.press("Back to the set")
+        compose.waitForIdle()
+        compose.onNodeWithTag(ActiveWarmupTag).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Log set 1").assertIsDisplayed()
+    }
+
+    @Test
+    fun theCheckLogsTheSetAsShownAndCanTakeItBack() {
+        startDay("barbell_bench_press")
+        compose.press("9"); compose.press("0"); compose.press("Next"); compose.press("5")
+        compose.onNodeWithContentDescription("Log set 1").performClick()
+        compose.waitForDescription("Rest")
+        // The set just logged is the one its check takes back.
+        compose.onNodeWithContentDescription("Take back set 1").assertIsDisplayed()
+    }
+
+    @Test
     fun dumbbellsHaveWarmUpsButNoPlates() {
         startDay("db_bench_press")
-        compose.press("3"); compose.press("0")
-        compose.waitFor("Warm-up")
+        compose.press("3"); compose.press("0"); compose.press("Next")
+        compose.waitUntil(10_000) { compose.onAllNodes(hasContentDescription("Warm-up 1,", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         assertEquals(0, compose.onAllNodes(hasContentDescription("Plates per side", substring = true)).fetchSemanticsNodes().size)
     }
 
@@ -127,13 +156,13 @@ class WarmupScreenTest {
     @Test
     // A shorter screen stands in for the why-line a suggestion adds above the table on the phone.
     @Config(qualifiers = "w410dp-h780dp")
-    fun withItsWarmUpsTheActiveSetAndTheNextStayInView() {
+    fun withItsWarmUpsTheActiveSetStaysInViewBelowThem() {
         startDay("barbell_bench_press")
-        compose.press("1"); compose.press("0"); compose.press("0")
+        compose.press("1"); compose.press("0"); compose.press("0"); compose.press("Next")
         compose.waitForDescription("Warm-up 4, 85 kg × 2")
-        // The set after the active one is in view, with what heads it.
-        compose.onNodeWithText("Back-off, top set − 10%").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Set 2 options").assertIsDisplayed()
+        // The active set is in view, and the warm-ups above it are not the rows scrolled away first.
+        compose.onNodeWithContentDescription("Log set 1").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Warm-up 2, 60 kg × 5").assertIsDisplayed()
     }
 
     @Test

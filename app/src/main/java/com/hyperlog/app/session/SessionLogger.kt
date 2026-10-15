@@ -18,6 +18,8 @@ import com.hyperlog.app.domain.Reference
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
+import com.hyperlog.app.domain.WarmupSet
+import com.hyperlog.app.domain.Warmups
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.domain.formatKg
@@ -89,6 +91,8 @@ class SessionLogger(
     private var lastLogged: Pair<Long, Int>? = null
     /** The correction on screen came from [fixLast]: saving or cancelling it goes back to the set to do. */
     private var fixingLast = false
+    /** The warm-up on the pad: screen state, kept in memory only, like a correction. */
+    private var warmupEdit: WarmupEdit? = null
 
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
@@ -105,6 +109,7 @@ class SessionLogger(
         checked = null
         correction = null
         viewingId = null
+        warmupEdit = null
         reload()
     }
 
@@ -430,7 +435,8 @@ class SessionLogger(
         if (!session.correctable) return@locked
         correction = corrections.load(sessionExerciseId, set, extension) ?: return@locked
         checked = null
-        _state.value = session.copy(correction = correction, weightCheck = null)
+        warmupEdit = null
+        _state.value = session.copy(correction = correction, weightCheck = null, warmupEdit = null)
     }
 
     /** The hide key while correcting: the row keeps what it had. */
@@ -541,6 +547,7 @@ class SessionLogger(
 
     /** A myo mini-set and a hold are done at the set's weight, so their weight can't be focused. */
     suspend fun focus(field: Field) = editEntry { entry, _ ->
+        if (_state.value?.warmupEdit != null) return@editEntry if (field == Field.Right) entry else entry.focus(field)
         val fixing = _state.value?.correction
         val locked = if (fixing != null) fixing.weightLocked else _state.value?.followUp.let { it is FollowUp.MiniSet || it is FollowUp.Hold }
         if (field == Field.Weight && locked) entry else entry.focus(field)
@@ -550,6 +557,7 @@ class SessionLogger(
     /** Splits the active set of a unilateral exercise into left and right, or back to one number. */
     suspend fun split(on: Boolean) = editEntry { entry, _ ->
         val session = _state.value
+        if (session?.warmupEdit != null) return@editEntry entry
         val fixing = session?.correction
         val exercise = (if (fixing != null) session.exercises.firstOrNull { it.id == fixing.sessionExerciseId } else session?.current)?.exercise
         val splittable = if (fixing != null) fixing.kind == null else session?.followUp == null
@@ -566,38 +574,67 @@ class SessionLogger(
      * ✓: moves from the weight to reps, or logs the set and starts rest. A ✓ within
      * [DOUBLE_TAP_MS] of logging a set logs nothing: one press logs at most one set.
      */
-    suspend fun done() = locked {
-        val session = _state.value ?: return@locked
-        session.correction?.let {
-            saveCorrection(session, it)
-            return@locked
+    suspend fun done() = locked { confirm(asShown = false) }
+
+    /**
+     * The check on the set to do (SPEC, The check column): logs it with the values shown, prefilled
+     * or typed, wherever the pad is, and starts rest, as ✓ on the hidden pad does. A warm-up on the
+     * pad steps back for it. With nothing to log yet (no RIR), the pad opens on the reps instead.
+     */
+    suspend fun logShown() = locked { confirm(asShown = true) }
+
+    private suspend fun confirm(asShown: Boolean) {
+        var session = _state.value ?: return
+        if (asShown) {
+            if (session.correction != null) return
+            if (session.warmupEdit != null) {
+                warmupEdit = null
+                session = session.copy(warmupEdit = null)
+                _state.value = session
+            }
+        } else {
+            session.correction?.let {
+                saveCorrection(session, it)
+                return
+            }
+            session.warmupEdit?.let {
+                confirmWarmup(session, it)
+                return
+            }
         }
-        val current = session.current ?: return@locked
-        var entry = session.entry ?: return@locked
+        val current = session.current ?: return
+        var entry = session.entry ?: return
         val followUp = session.followUp
         // ✓ during a hold stops its timer and logs the seconds held.
         session.holdStartedAt?.let { entry = entry.copy(full = heldSeconds(it).toString()) }
-        if (followUp != null && entry.field == Field.Reps) {
+        if (followUp != null && (entry.field == Field.Reps || asShown)) {
             logFollowUp(session, current, followUp, entry)
-            return@locked
+            return
         }
-        when (val result = entry.done()) {
+        val decided = if (!asShown) entry.done() else entry.toLoggedSet()?.let { SetEntry.Done.Log(it) } ?: run {
+            // Nothing to log as shown (no RIR yet): the pad comes up on the reps to finish it.
+            val shown = session.copy(padVisible = true)
+            if (!session.padVisible) dao.updateSession(dao.session(session.id)!!.copy(padVisible = true))
+            saveEntry(shown, if (entry.weightKg == null) entry.focus(Field.Weight) else entry.focus(Field.Reps))
+            return
+        }
+        when (val result = decided) {
             is SetEntry.Done.Moved -> saveEntry(session, result.entry)
             is SetEntry.Done.Log -> {
                 val now = clock()
-                if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
+                if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return
                 val technique = current.techniqueAt(current.sets.size)
                 var result: SetEntry.Done.Log = result
                 if (technique is Technique.LengthenedPartials && !entry.partialMode && entry.partial.isEmpty()) {
                     val partials = technique.partials?.toString().orEmpty()
-                    if (session.padVisible) {
+                    if (session.padVisible && !asShown) {
                         // Lengthened partials: the first ✓ moves to the partials, the second logs.
                         saveEntry(session, entry.partialMode(true).copy(partial = partials))
-                        return@locked
+                        return
                     }
                     // The hidden pad's ✓ logs the set as shown: the target partials, or none to failure.
                     entry = entry.copy(partial = partials)
-                    result = entry.done() as? SetEntry.Done.Log ?: result
+                    result = entry.toLoggedSet()?.let { SetEntry.Done.Log(it) } ?: result
                 }
                 val check = WeightCheck.of(result.set.weightKg, current.reference(), current.ladder, current.ladderKnown)
                 val raised = checked
@@ -605,10 +642,10 @@ class SessionLogger(
                     if (raised == null || raised.first != entry) {
                         checked = entry to now
                         _state.value = session.copy(weightCheck = check)
-                        return@locked
+                        return
                     }
                     // The same stutter rule as logging: a ✓ right after the warning isn't a decision.
-                    if (now - raised.second < DOUBLE_TAP_MS) return@locked
+                    if (now - raised.second < DOUBLE_TAP_MS) return
                 }
                 checked = null
                 lastLoggedAt = now
@@ -739,6 +776,96 @@ class SessionLogger(
         dao.setWarmupsDone(current.id, done)
     }
 
+    /**
+     * Puts warm-up [index] of the exercise on screen on the pad, typed like a set: its weight,
+     * then its reps. The set to do keeps its entry. Not while a row is corrected.
+     */
+    suspend fun editWarmup(index: Int) = locked {
+        val session = _state.value ?: return@locked
+        val current = session.current ?: return@locked
+        if (session.correction != null || session.followUp != null || current.sets.isNotEmpty()) return@locked
+        val warmup = session.warmups.getOrNull(index) ?: return@locked
+        val edit = WarmupEdit(current.id, index, warmupEntry(warmup))
+        warmupEdit = edit
+        checked = null
+        _state.value = session.copy(warmupEdit = edit, padVisible = true, weightCheck = null)
+        if (!session.padVisible) dao.updateSession(dao.session(session.id)!!.copy(padVisible = true))
+    }
+
+    /** The pad goes back to the set to do; the warm-up keeps what it had. */
+    suspend fun closeWarmup() = locked {
+        val session = _state.value ?: return@locked
+        if (session.warmupEdit == null) return@locked
+        warmupEdit = null
+        _state.value = session.copy(warmupEdit = null)
+    }
+
+    /**
+     * → on a warm-up: from its weight to its reps, then ticks it (a changed one is kept as typed
+     * for this session) and the next warm-up comes on the pad, or after the last one the set to
+     * do. No RIR, no rest: warm-ups are never logged.
+     */
+    private suspend fun confirmWarmup(session: ActiveSession, edit: WarmupEdit) {
+        val entry = edit.entry
+        if (entry.field == Field.Weight) {
+            if (entry.weightKg == null) return
+            val moved = edit.copy(entry = entry.focus(Field.Reps))
+            warmupEdit = moved
+            _state.value = session.copy(warmupEdit = moved)
+            return
+        }
+        val kg = entry.weightKg ?: return
+        val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: return
+        val current = session.current ?: return
+        val warmups = session.warmups.toMutableList()
+        if (edit.index !in warmups.indices) return
+        val typed = WarmupSet(kg, reps)
+        val changed = warmups[edit.index] != typed
+        warmups[edit.index] = typed
+        val stored = if (changed) Warmups.encode(warmups) else current.typedWarmups?.let(Warmups::encode)
+        dao.setWarmups(current.id, stored, maxOf(current.warmupsDone, edit.index + 1))
+        val next = edit.index + 1
+        warmupEdit = warmups.getOrNull(next)?.let { WarmupEdit(current.id, next, warmupEntry(it)) }
+        reload()
+    }
+
+    private fun warmupEntry(warmup: WarmupSet) =
+        SetEntry(formatKg(warmup.weightKg), warmup.reps.toString(), "", null, Field.Weight, partialMode = false, fresh = true)
+
+    /**
+     * The check on the set logged last, tapped again: takes it back (SPEC, The check column). It is
+     * deleted, its values go back on the pad as the set to do, its exercise comes on screen and
+     * rest stops. Only while none of its drops, mini-sets or hold is logged, and not as a stutter
+     * right after logging it.
+     */
+    suspend fun undo(sessionExerciseId: Long) = locked {
+        val session = _state.value ?: return@locked
+        val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
+        val index = exercise.sets.size - 1
+        if (index < 0 || !session.undoable(exercise, index)) return@locked
+        val now = clock()
+        if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
+        val row = dao.sets(exercise.id).lastOrNull() ?: return@locked
+        val set = exercise.sets[index]
+        val entry = SetEntry(
+            formatKg(set.weightKg), set.fullReps.toString(), if (set.partialReps > 0) set.partialReps.toString() else "",
+            set.rir, Field.Reps, partialMode = false, fresh = true, right = set.rightReps?.toString(),
+        )
+        db.withTransaction {
+            dao.deleteSet(row.id)
+            dao.updateSession(
+                dao.session(session.id)!!.copy(
+                    entry = entry.toColumns(), restEndsAt = null, openSetId = null, breathing = false, holdStartedAt = null,
+                    currentSessionExerciseId = exercise.id,
+                ),
+            )
+        }
+        lastLogged = null
+        viewingId = null
+        checked = null
+        reload()
+    }
+
     suspend fun setPadVisible(visible: Boolean) = locked {
         val session = _state.value ?: return@locked
         _state.value = session.copy(padVisible = visible)
@@ -794,6 +921,13 @@ class SessionLogger(
 
     private suspend fun editEntry(change: (SetEntry, WeightLadder) -> SetEntry) = locked {
         val session = _state.value ?: return@locked
+        session.warmupEdit?.let { edit ->
+            val ladder = session.current?.ladder ?: return@locked
+            val next = edit.copy(entry = change(edit.entry, ladder))
+            warmupEdit = next
+            _state.value = session.copy(warmupEdit = next)
+            return@locked
+        }
         session.correction?.let { fixing ->
             val ladder = session.exercises.firstOrNull { it.id == fixing.sessionExerciseId }?.ladder ?: return@locked
             val next = fixing.copy(entry = change(fixing.entry, ladder))
@@ -811,7 +945,8 @@ class SessionLogger(
     private suspend fun saveEntry(session: ActiveSession, entry: SetEntry) {
         // The screen shows the change at once; the write follows before the next call runs.
         checked = null
-        _state.value = session.copy(entry = entry, weightCheck = null)
+        // The warm-ups ramp from the entry as it was when the pad last left the weight.
+        _state.value = session.copy(entry = entry, weightCheck = null, rampEntry = if (entry.field != Field.Weight) entry else session.rampEntry)
         dao.updateSession(dao.session(session.id)!!.copy(entry = entry.toColumns()))
     }
 
@@ -887,6 +1022,7 @@ class SessionLogger(
                     else -> shared.barPlates(exercise.equipment) ?: machine?.ladder?.withPlates(shared.plates.pairs) as? LadderSpec.Plates
                 },
                 warmupsDone = se.warmupsDone,
+                typedWarmups = Warmups.decode(se.warmups),
                 pinPlates = gym?.pinPlates.orEmpty(),
             )
         }
@@ -909,7 +1045,11 @@ class SessionLogger(
         }
         viewingId = exercises.firstOrNull { it.id == viewingId && it.id != current?.id }?.id
         correction = correction?.takeIf { c -> followUp == null && exercises.any { it.id == c.sessionExerciseId } }
-        _state.value = ActiveSession(
+        val previous = _state.value
+        // The set logged most recently, whose check takes it back.
+        val latest = exercises.flatMap { e -> dao.sets(e.id).map { Triple(e.id, it.position, it.loggedAt) } }
+            .maxWithOrNull(compareBy({ it.third }, { it.second }))
+        val loaded = ActiveSession(
             id = row.id,
             startedAt = row.startedAt,
             exercises = exercises,
@@ -927,7 +1067,14 @@ class SessionLogger(
             viewingId = viewingId,
             correction = correction,
             lastLogged = lastLogged?.takeIf { (id, i) -> exercises.any { it.id == id && i < it.sets.size } },
+            rampEntry = if (entry?.field != Field.Weight) entry else previous?.takeIf { it.currentId == current?.id }?.rampEntry,
+            latestSet = latest?.let { it.first to it.second },
         )
+        // A warm-up stays on the pad only while its exercise is on screen with its warm-ups.
+        warmupEdit = warmupEdit?.takeIf { w ->
+            w.sessionExerciseId == current?.id && correction == null && viewingId == null && w.index in loaded.warmups.indices
+        }
+        _state.value = loaded.copy(warmupEdit = warmupEdit)
     }
 
     /** The entry the next set of [current] starts with, before anything is typed. */

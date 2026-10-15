@@ -42,7 +42,14 @@ data class Performance(
 }
 
 /** The weight and target reps for the next set, and why ([why] is null when it just follows the set before). */
-data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: String?) {
+data class Suggestion(
+    val kg: Double,
+    val reps: Int,
+    val kind: Kind,
+    val why: String?,
+    /** [why] for the logging screen, short (`62.5 · hit the top of 8–10 last time`); null to show [why]. */
+    val short: String? = null,
+) {
     enum class Kind {
         /** One rung up: last time reached the top of the range at the target RIR. */
         Up,
@@ -78,7 +85,7 @@ data class Suggestion(val kg: Double, val reps: Int, val kind: Kind, val why: St
         val target = kg * (100 + percent) / 100.0
         val moved = ladder.rungs[ladder.nearestIndex(target)]
         val note = "${abs(percent)}% ${if (percent < 0) "lighter" else "heavier"} for a Change"
-        return copy(kg = moved, why = listOfNotNull(why, note).joinToString(" · "))
+        return copy(kg = moved, why = listOfNotNull(why, note).joinToString(" · "), short = "${formatKg(moved)} · $note")
     }
 }
 
@@ -184,7 +191,7 @@ object Progression {
         // Judged against the last session with this rep range (a day with its own range progresses
         // on its own); one done ad hoc is judged against today's prescription.
         val last = judged(target, history, today.slot)?.let { history[it] }
-            ?: return estimate?.let { fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check on the first set", today) }
+            ?: return estimate?.let { fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check on the first set", today, "check on the first set") }
         val atTop = topSets(last)
         val top = atTop.first().set.weightKg
         val was = atTop.first().target ?: target
@@ -192,7 +199,7 @@ object Progression {
         val sets = atTop.map { it.set }
         val lastly = "Last time ${sets.text()}"
         if (deload) {
-            return Suggestion(top, predicted(estimate, k, today.load(top), target.rir, range), Suggestion.Kind.Deload, "Deload week: last time's weight, ${target.rir ?: 0} in reserve")
+            return Suggestion(top, predicted(estimate, k, today.load(top), target.rir, range), Suggestion.Kind.Deload, "Deload week: last time's weight, ${target.rir ?: 0} in reserve", "${formatKg(top)} · deload week, ${target.rir ?: 0} in reserve")
         }
         val t = was.rir
         fun eff(s: LoggedSet) = s.fullReps + (if (t != null) s.rir else 0)
@@ -203,20 +210,21 @@ object Progression {
         val fewest = sets.minOf { it.fullReps }
         if (worst >= topEff + (if (fixed) 1 else 0)) {
             val reached = if (fixed) "beat $range" else "top of $range"
+            val hit = if (fixed) "beat $range last time" else "hit the top of $range last time"
             val up = ladder.step(top, 1)
             if (up <= top + 0.001) {
-                return Suggestion(top, fewest, Suggestion.Kind.Stuck, "$lastly, $reached, and ${formatKg(top)} kg is the heaviest weight here: progress isn't possible")
+                return Suggestion(top, fewest, Suggestion.Kind.Stuck, "$lastly, $reached, and ${formatKg(top)} kg is the heaviest weight here: progress isn't possible", "${formatKg(top)} · the heaviest here, can't go up")
             }
             // Judged on last time's sets themselves, however many reps they had.
             val reps = predictedRaw(last.load(top) * (1 + sets.minOf(::effective) / k), k, today.load(up), t)
             if (reps >= range.min) {
-                return Suggestion(up, reps.coerceIn(range.min, range.max), Suggestion.Kind.Up, "$lastly, $reached → ${formatKg(up)} kg")
+                return Suggestion(up, reps.coerceIn(range.min, range.max), Suggestion.Kind.Up, "$lastly, $reached → ${formatKg(up)} kg", "${formatKg(up)} · $hit")
             }
             val aim = fewest + 1
             return if (aim > range.max + EXTRA_REPS) {
-                Suggestion(top, fewest, Suggestion.Kind.Stuck, "$lastly, past $range, and ${formatKg(up)} kg is too big a jump: progress isn't possible here")
+                Suggestion(top, fewest, Suggestion.Kind.Stuck, "$lastly, past $range, and ${formatKg(up)} kg is too big a jump: progress isn't possible here", "${formatKg(top)} · ${formatKg(up)} is too big a jump")
             } else {
-                Suggestion(top, aim, Suggestion.Kind.More, "$lastly, $reached; ${formatKg(up)} kg is too big a jump → $aim reps")
+                Suggestion(top, aim, Suggestion.Kind.More, "$lastly, $reached; ${formatKg(up)} kg is too big a jump → $aim reps", "$aim reps · ${formatKg(up)} is too big a jump")
             }
         }
         val short = bottomEff - worst
@@ -225,16 +233,18 @@ object Progression {
             if (below.isNotEmpty()) {
                 // One rung down, or about 5% where the ladder is fine-grained.
                 val down = below.minBy { abs(today.load(it) - today.load(top) * 0.95) }
-                return Suggestion(down, predicted(estimate, k, today.load(down), t, range), Suggestion.Kind.Down, "$lastly, $short short of $range → ${formatKg(down)} kg")
+                return Suggestion(down, predicted(estimate, k, today.load(down), t, range), Suggestion.Kind.Down, "$lastly, $short short of $range → ${formatKg(down)} kg", "${formatKg(down)} · $short short of $range last time")
             }
         }
         if (short >= 1) {
             val why = if (last.deload && short >= 2) "$lastly in a deload: same weight" else "$lastly, ${if (short == 1) "one" else "$short"} short of $range: same weight"
-            return Suggestion(top, range.min, Suggestion.Kind.Hold, why)
+            val brief = if (last.deload && short >= 2) "${formatKg(top)} · last time was a deload" else "${formatKg(top)} · ${if (short == 1) "one" else "$short"} short of $range last time"
+            return Suggestion(top, range.min, Suggestion.Kind.Hold, why, brief)
         }
         val aim = (fewest + 1).coerceIn(range.min, range.max)
         val why = if (fixed) "$lastly, hit $range: beat it by a rep to move up" else "$lastly, in $range → $aim reps"
-        return Suggestion(top, aim, Suggestion.Kind.More, why)
+        val brief = if (fixed) "${formatKg(top)} · beat $range by a rep to move up" else "$aim reps · in $range last time"
+        return Suggestion(top, aim, Suggestion.Kind.More, why, brief)
     }
 
     private fun withinSession(
@@ -251,7 +261,7 @@ object Progression {
         if (was.reps != target.reps) {
             val all = history + today
             val k = constant(all)
-            estimate(all, k)?.let { return fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check this set", today) }
+            estimate(all, k)?.let { return fromEstimate(it, k, target, ladder, "Estimated from ${it.from.text()}, check this set", today, "check this set") }
         }
         val follow = Suggestion(set.weightKg, followReps(today, target), Suggestion.Kind.Follow, null)
         val t = was.rir ?: return follow
@@ -266,16 +276,20 @@ object Progression {
             set.fullReps > range.max -> "above $range"
             else -> "target @ $t"
         }
-        return Suggestion(kg, followReps(today, target).coerceIn(range.min, range.max), Suggestion.Kind.Adjust, "Set $n was ${set.text()}, $reason → ${formatKg(kg)} kg")
+        val brief = when {
+            set.fullReps < range.min || set.fullReps > range.max -> "${formatKg(kg)} · set $n was $reason"
+            else -> "${formatKg(kg)} · set $n was @ ${set.rir}, target @ $t"
+        }
+        return Suggestion(kg, followReps(today, target).coerceIn(range.min, range.max), Suggestion.Kind.Adjust, "Set $n was ${set.text()}, $reason → ${formatKg(kg)} kg", brief)
     }
 
     /** [today] says what a logged weight stands for: the body and both dumbbells. */
-    private fun fromEstimate(estimate: Estimate, k: Double, target: SetPrescription, ladder: WeightLadder, why: String, today: Performance): Suggestion {
+    private fun fromEstimate(estimate: Estimate, k: Double, target: SetPrescription, ladder: WeightLadder, why: String, today: Performance, check: String): Suggestion {
         val t = target.rir ?: 0
         val ideal = today.weightFor(estimate.kg / (1 + (target.reps.min + t) / k))
         // Rounded down: RIR is usually under-reported, so the true capacity is a little higher.
         val kg = ladder.rungs.lastOrNull { it <= ideal + 0.001 } ?: ladder.rungs.first()
-        return Suggestion(kg, predicted(estimate, k, today.load(kg), target.rir, target.reps), Suggestion.Kind.Estimated, why)
+        return Suggestion(kg, predicted(estimate, k, today.load(kg), target.rir, target.reps), Suggestion.Kind.Estimated, why, "${formatKg(kg)} · estimated, $check")
     }
 
     /** Reps at [kg] for [rir] in reserve, as the estimate predicts, kept inside [range]. */

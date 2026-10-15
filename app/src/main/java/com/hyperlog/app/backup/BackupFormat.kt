@@ -19,7 +19,7 @@ object BackupFormat {
      * The Room schema version the tables follow. A backup from an older database needs an upgrade
      * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
      */
-    const val DATABASE = 19
+    const val DATABASE = 20
 
     /** The oldest database version a backup can be restored from. */
     const val OLDEST_DATABASE = 14
@@ -50,6 +50,7 @@ object BackupFormat {
         17 to mapOf("setting" to emptySet()),
         18 to mapOf("gym" to setOf("pin_plates", "dumbbells", "default_stack"), "equipment_item" to setOf("ladder_state", "cable_station", "kind")),
         19 to mapOf("gym" to setOf("plates")),
+        20 to mapOf("session_exercise" to setOf("warmups")),
     )
 
     /** The columns of [table] a file made at database version [database] may lack. */

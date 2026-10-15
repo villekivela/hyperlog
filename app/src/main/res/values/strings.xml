@@ -19,6 +19,8 @@
     <string name="machine_new">New machine</string>
     <string name="machine_change">Change</string>
     <string name="machine_change_description">Change machine</string>
+    <string name="machine_edit">Edit</string>
+    <string name="machine_edit_description">Edit machine</string>
     <!-- The exercise sheet's machine line: machine · gym. -->
     <string name="machine_at">%1$s · %2$s</string>
     <string name="gym_days">Usual days</string>
@@ -92,6 +94,22 @@
     <string name="warmup_label">Warm-up</string>
     <string name="warmup_lead">W</string>
     <string name="warmup_description">Warm-up %1$d, %2$s kg × %3$d</string>
+    <!-- A warm-up row's tap: puts it on the pad. -->
+    <string name="warmup_edit">Type warm-up %1$d</string>
+    <!-- The pad's strip while a warm-up is typed. -->
+    <string name="warmup_strip">Warm-up %1$d of %2$d</string>
+    <string name="pad_tick_warmup">Tick warm-up</string>
+    <string name="pad_close_warmup">Back to the set</string>
+    <!-- The check column. -->
+    <string name="check_log">Log set %1$d</string>
+    <string name="check_logged">Set %1$d logged</string>
+    <string name="check_undo">Take back set %1$d</string>
+    <string name="check_log_follow">Log it as shown</string>
+    <string name="add_drop">Add a drop</string>
+    <!-- The chips under the exercise name: a swap names what it replaced, a superset its partner. -->
+    <string name="chip_swapped">for %1$s</string>
+    <string name="chip_superset">%1$s + %2$s</string>
+    <string name="why_full">Why this weight</string>
     <string name="plates_description">Plates per side: %1$s, on a %2$s kg bar</string>
     <string name="plates_description_no_bar">Plates per side: %1$s</string>
     <string name="plates_description_machine">Plates per side: %1$s, on a %2$s kg machine</string>

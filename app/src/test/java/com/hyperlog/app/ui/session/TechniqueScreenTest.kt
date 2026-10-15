@@ -17,6 +17,7 @@ import com.hyperlog.app.MainActivity
 import com.hyperlog.app.press
 import com.hyperlog.app.ui.program.ProgramStore
 import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitForDescription
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -46,13 +47,14 @@ class TechniqueScreenTest {
         }
         compose.waitFor("Day A")
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
     }
 
     @Test
     fun aDropSetShowsItsPlannedDropsBeforeTheSetAndRunsThemOnThePad() {
         startDay("db_bench_press", """[ { "reps": "8-10", "rir": 1, "technique": { "kind": "dropset", "drops": 2 } } ]""")
-        compose.onNodeWithText("Drop set, 2 drops of 25%").assertIsDisplayed()
+        // The set's circle carries the technique's badge, and its drops are planned under it.
+        compose.onNodeWithContentDescription("Drop set").assertIsDisplayed()
         compose.press("2"); compose.press("5")
         // The drops follow the weight as it is typed: 25 − 25% = 17.5, then 12.5 on the dumbbells.
         compose.waitFor("17.5")
@@ -68,7 +70,7 @@ class TechniqueScreenTest {
     @Test
     fun myoRepsBreatheBeforeEachMiniSet() {
         startDay("db_bench_press", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "myo_reps", "miniSetReps": 4 } } ]""")
-        compose.onNodeWithText("Myo-reps, mini-sets of 4").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Myo-reps").assertIsDisplayed()
         compose.press("2"); compose.press("0"); compose.press("Next"); compose.press("Log set")
         compose.waitFor("Mini-set 1 of 5")
         compose.onNodeWithContentDescription("Breathe").assertIsDisplayed()
@@ -81,6 +83,6 @@ class TechniqueScreenTest {
         compose.waitFor("Intensity technique")
         compose.onNodeWithText("Drop set").performClick()
         compose.waitForIdle()
-        compose.waitFor("Drop set, 2 drops of 25%")
+        compose.waitForDescription("Drop set")
     }
 }

@@ -51,7 +51,7 @@ class SessionEditScreenTest {
         }
         compose.waitFor("Day A")
         compose.click("Start session")
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
     }
 
     @Test
@@ -81,7 +81,7 @@ class SessionEditScreenTest {
     fun theSetSheetChangesTheTarget() {
         startDay()
         compose.onNodeWithContentDescription("Set 2 options").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
         compose.onNodeWithContentDescription("Raise the top of the range").performClick()
         compose.onNodeWithContentDescription("Raise the top of the range").performClick()
         compose.onNodeWithContentDescription("More in reserve").performClick()

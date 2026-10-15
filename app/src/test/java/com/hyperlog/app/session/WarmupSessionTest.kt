@@ -3,6 +3,7 @@ package com.hyperlog.app.session
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.WarmupSet
@@ -74,6 +75,9 @@ class WarmupSessionTest {
     fun aNinetyKgBenchTopSetGetsARampOfWarmUpsOnThePlates() = runTest {
         val logger = benchUp()
         logger.type("90")
+        // Not keystroke by keystroke: the ramp waits for → (typing 90 never passes through a 9 kg ramp).
+        assertEquals(emptyList<WarmupSet>(), logger.session.warmups)
+        logger.done()
         assertEquals(
             listOf(WarmupSet(40.0, 8), WarmupSet(55.0, 5), WarmupSet(65.0, 3), WarmupSet(75.0, 2)),
             logger.session.warmups,
@@ -113,8 +117,10 @@ class WarmupSessionTest {
         logger.start()
         logger.addExercise("barbell_bench_press")
         logger.type("90")
+        assertEquals(0, logger.session.warmups.size)
+        logger.done()
         assertEquals(3, logger.session.warmups.size)
-        logger.done(); logger.type("5")
+        logger.type("5")
         assertEquals(
             listOf(WarmupSet(40.0, 8), WarmupSet(55.0, 5), WarmupSet(65.0, 3), WarmupSet(75.0, 2)),
             logger.session.warmups,
@@ -145,6 +151,82 @@ class WarmupSessionTest {
         val logger = logger()
         logger.startDay(programs.active.first()!!, gymId = null)
         assertNull(logger.session.current!!.plates)
+    }
+
+    @Test
+    fun retypingTheWeightKeepsTheRampUntilThePadMovesOn() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        val at90 = logger.session.warmups
+        logger.focus(Field.Weight)
+        logger.type("1")
+        assertEquals(at90, logger.session.warmups)
+        logger.type("00")
+        assertEquals(at90, logger.session.warmups)
+        // → moves on to the reps: now it ramps from 100.
+        logger.done()
+        assertEquals(WarmupSet(45.0, 8), logger.session.warmups.first())
+        // Tapping the reps cell moves on too.
+        logger.focus(Field.Weight); logger.type("60")
+        assertEquals(WarmupSet(45.0, 8), logger.session.warmups.first())
+        logger.focus(Field.Reps)
+        assertEquals(WarmupSet(25.0, 8), logger.session.warmups.first())
+    }
+
+    @Test
+    fun aWarmUpIsTypedOnThePadAndArrowTicksItAndMovesOn() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        val rest = logger.session.restEndsAt
+        logger.editWarmup(1)
+        assertEquals(1, logger.session.warmupEdit!!.index)
+        assertEquals(Field.Weight, logger.session.warmupEdit!!.entry.field)
+        logger.type("50"); logger.done()
+        assertEquals(Field.Reps, logger.session.warmupEdit!!.entry.field)
+        logger.type("6"); logger.done()
+        // Ticked with the ones before it, kept as typed, and the next warm-up is on the pad.
+        assertEquals(WarmupSet(50.0, 6), logger.session.warmups[1])
+        assertEquals(2, logger.session.current!!.warmupsDone)
+        assertEquals(2, logger.session.warmupEdit!!.index)
+        // No rest, no set, and the set to do keeps its entry.
+        assertEquals(rest, logger.session.restEndsAt)
+        assertEquals(emptyList<Any>(), logger.session.current!!.sets)
+        assertEquals("90", logger.session.entry!!.weight)
+
+        // → through the last two: the pad goes back to set 1.
+        logger.done(); logger.done()
+        logger.done(); logger.done()
+        assertNull(logger.session.warmupEdit)
+        assertEquals(4, logger.session.current!!.warmupsDone)
+    }
+
+    @Test
+    fun typedWarmUpsLastForTheSessionAndNoLongerFollowTheRamp() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        logger.editWarmup(0)
+        logger.type("30"); logger.done(); logger.done()
+        // The app is killed: the typed warm-up is still there.
+        val again = logger.logger()
+        assertEquals(WarmupSet(30.0, 8), again.session.warmups[0])
+        assertEquals(1, again.session.current!!.warmupsDone)
+        // A new weight for set 1 leaves warm-ups typed by hand alone.
+        again.focus(Field.Weight); again.type("100"); again.done()
+        assertEquals(WarmupSet(30.0, 8), again.session.warmups[0])
+        assertEquals(4, again.session.warmups.size)
+    }
+
+    @Test
+    fun theCloseKeyLeavesTheWarmUpAsItWas() = runTest {
+        val logger = benchUp()
+        logger.type("90"); logger.done()
+        val before = logger.session.warmups
+        logger.editWarmup(2)
+        logger.type("70")
+        logger.closeWarmup()
+        assertNull(logger.session.warmupEdit)
+        assertEquals(before, logger.session.warmups)
+        assertEquals(0, logger.session.current!!.warmupsDone)
     }
 
     private suspend fun SessionLogger.logger() = this@WarmupSessionTest.logger()

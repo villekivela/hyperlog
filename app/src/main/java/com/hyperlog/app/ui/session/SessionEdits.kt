@@ -54,20 +54,6 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 // Editing the session on the fly (SPEC, Today → Edit on the fly; docs/design/logging-screen.md,
 // Edit on the fly). Every edit is for this session only.
 
-/** The last line of a program exercise's table: one more set like its last. */
-internal fun LazyListScope.addSetRow(onAdd: () -> Unit) {
-    item(key = "add-set") {
-        val muted = MaterialTheme.colorScheme.onSurfaceVariant
-        Row(
-            Modifier.fillMaxWidth().height(SubRowHeight).clickable(onClick = onAdd).padding(horizontal = RowPad),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.width(ColSet), contentAlignment = Alignment.CenterStart) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = muted) }
-            Text(stringResource(R.string.edit_add_set), style = MaterialTheme.typography.labelLarge, color = muted)
-        }
-    }
-}
-
 /**
  * Swapping [exercise] for another: with no search, the program's choices for the slot (its
  * planned exercise and alternatives) and then the library's exercises with the same movement

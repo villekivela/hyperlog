@@ -189,7 +189,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(19), file["database"])
+        assertEquals(JsonPrimitive(20), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -369,5 +369,16 @@ class BackupsTest {
         assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
         assertEquals(listOf(20.0, 20.0, 20.0, 20.0, 10.0), Gyms(phone).gyms.first().single().plates)
         assertEquals(20.0, Gyms(phone).barbell.first(), 0.0)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase20StillRestores() = runTest {
+        // DB v20: a warm-up typed by hand in the running session.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db20.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val bench = phone.sessions().sessionExercises(2).single { it.id == 3L }
+        assertEquals("40.0:8,60.0:5", bench.warmups)
+        assertEquals(1, bench.warmupsDone)
     }
 }

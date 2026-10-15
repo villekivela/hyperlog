@@ -60,8 +60,7 @@ class ProgramDayTest {
     fun theSessionShowsEveryPlannedSetWithBackOffWeightsFromTheTopSet() {
         importProgram()
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Target")
-        compose.onNodeWithText("Back-off, top set − 10%").assertIsDisplayed()
+        compose.waitFor("Reps")
         compose.press("1"); compose.press("0"); compose.press("0")
         // The back-off rows follow the top set's weight as it is typed: 100 − 10% = 90. The second
         // may sit below the pad's fold, at the table's end.
@@ -74,19 +73,19 @@ class ProgramDayTest {
     fun thePrescriptionSheetShowsEverySetTheRestAndBothNotes() {
         importProgram()
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.waitFor("Same grip, setup and pause every rep.")
         compose.onNodeWithText("Rest 3:00").assertIsDisplayed()
-        // Both back-off sets in the sheet, and the rule heading them in the table behind it.
-        assertEquals(3, compose.onAllNodesWithText("Back-off, top set − 10%").fetchSemanticsNodes().size)
+        // Both back-off sets in the sheet; the table marks none (their lowered weight shows it).
+        assertEquals(2, compose.onAllNodesWithText("Back-off, top set − 10%").fetchSemanticsNodes().size)
     }
 
     @Test
     fun finishingTheDayPutsTheNextDayOnToday() {
         importProgram()
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
         compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("Log set")
         // The first back-off is up next: 80 − 10% = 72, rounded down to 70 on the plates.
         compose.waitFor("70")
@@ -112,7 +111,7 @@ class ProgramDayTest {
     fun aSessionResumedAfterFinishingKeepsItsDayOnToday() {
         importProgram()
         compose.onNodeWithText("Start session").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
         compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("Log set")
         compose.waitFor("70")
         compose.press("More")
@@ -120,7 +119,7 @@ class ProgramDayTest {
         compose.onNodeWithText("Finish").performClick()
         compose.waitFor("Resume session")
         compose.onNodeWithText("Resume session").performClick()
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("Leave").performClick()
         // Today shows the day Resume opens, not the one after it.

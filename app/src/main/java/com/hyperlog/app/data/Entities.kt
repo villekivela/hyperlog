@@ -110,6 +110,11 @@ data class SessionExerciseEntity(
     @ColumnInfo(defaultValue = "0") val removed: Boolean = false,
     /** How many of its warm-ups are ticked off. Warm-ups are never logged as sets. */
     @ColumnInfo(name = "warmups_done", defaultValue = "0") val warmupsDone: Int = 0,
+    /**
+     * Its warm-ups as typed in this session ([com.hyperlog.app.domain.Warmups.encode]); null while
+     * they follow the ramp. They last for this session only.
+     */
+    val warmups: String? = null,
 )
 
 @Entity(

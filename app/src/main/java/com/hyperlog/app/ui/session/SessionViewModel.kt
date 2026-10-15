@@ -50,6 +50,8 @@ interface PadActions {
     fun split(on: Boolean)
     /** The pad's cancel key while correcting: the row keeps what it had. */
     fun cancelCorrection()
+    /** The pad's close key while a warm-up is on it: back to the set to do. */
+    fun closeWarmup() {}
 }
 
 /** What the session screen can ask for. Each call is saved as soon as it is made. */
@@ -67,6 +69,8 @@ interface SessionActions : PadActions {
     fun addMachine(name: String, ladder: LadderSpec)
     /** Asks "Which machine?" again, before any set is logged on it. */
     fun changeMachine()
+    /** Saves an edit to a machine's setup (its name, ladder or starting weight), as on the gym's screen. */
+    fun saveMachine(item: com.hyperlog.app.gym.EquipmentItem)
     /** Sets up the machine on screen's ladder from its stack's labels. */
     fun setUpLadder(spec: LadderSpec)
     /** Leaves the machine on screen's guessed ladder for now. */
@@ -96,6 +100,12 @@ interface SessionActions : PadActions {
     fun correct(sessionExerciseId: Long, set: Int, extension: Int?)
     /** **Fix** on the set just logged: its exercise on screen and the set in the pad. */
     fun fixLast() {}
+    /** The check on the set to do: logs it as shown and starts rest. */
+    fun logShown() {}
+    /** Puts warm-up [index] on the pad to type its weight and reps. */
+    fun editWarmup(index: Int) {}
+    /** The check on the set logged last: takes it back. */
+    fun undo(sessionExerciseId: Long) {}
 }
 
 class SessionViewModel(application: Application) : AndroidViewModel(application), SessionActions {
@@ -182,6 +192,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun chooseMachine(itemId: Long) = run { logger.chooseMachine(itemId) }
     override fun addMachine(name: String, ladder: LadderSpec) = run { logger.addMachine(name, ladder) }
     override fun changeMachine() = run { logger.changeMachine() }
+    // The gyms flow above reloads the session with the new ladder.
+    override fun saveMachine(item: com.hyperlog.app.gym.EquipmentItem) = run { gyms.saveItem(item) }
     override fun setUpLadder(spec: LadderSpec) = run { logger.setUpLadder(spec) }
     override fun skipLadderSetup() = run { logger.skipLadderSetup() }
     override fun takeLadderOffer() = run { logger.takeLadderOffer() }
@@ -204,6 +216,10 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun correct(sessionExerciseId: Long, set: Int, extension: Int?) = run { logger.correct(sessionExerciseId, set, extension) }
     override fun fixLast() = run { logger.fixLast() }
     override fun cancelCorrection() = run { logger.cancelCorrection() }
+    override fun closeWarmup() = run { logger.closeWarmup() }
+    override fun logShown() = run { logger.logShown() }
+    override fun editWarmup(index: Int) = run { logger.editWarmup(index) }
+    override fun undo(sessionExerciseId: Long) = run { logger.undo(sessionExerciseId) }
 
     private fun run(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

@@ -57,7 +57,8 @@ fun StartingWeight.suggestion(target: SetPrescription?, ladder: WeightLadder): S
     val suggested = if (kg <= 0) 0.0 else ladder.rungs.lastOrNull { it <= ideal + 0.001 } ?: ladder.rungs.first()
     val moved = kotlin.math.abs(suggested - kg) >= 0.05 || reps != this.reps
     val why = "From old app: ${text()}" + if (moved) " → " + (if (suggested > 0) "${formatKg(suggested)} kg × $reps" else "$reps reps") else ""
-    return Suggestion(suggested, reps, Suggestion.Kind.Starting, why)
+    val short = (if (suggested > 0) "${formatKg(suggested)} × $reps" else "$reps reps") + " · from the old app"
+    return Suggestion(suggested, reps, Suggestion.Kind.Starting, why, short)
 }
 
 private val DATE = DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)

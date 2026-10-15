@@ -57,6 +57,8 @@ data class SessionExercise(
     val plates: LadderSpec.Plates? = null,
     /** How many of its warm-ups are ticked off. */
     val warmupsDone: Int = 0,
+    /** Its warm-ups as typed by hand in this session; null while they follow the ramp. */
+    val typedWarmups: List<WarmupSet>? = null,
     /** The session's gym's plates for the pin, for a [machine] that is a pin stack. */
     val pinPlates: List<Double> = emptyList(),
 ) {
@@ -127,6 +129,15 @@ data class ActiveSession(
     val correction: Correction? = null,
     /** The set logged last (session exercise id and set index), which **Fix** loads; null when none. */
     val lastLogged: Pair<Long, Int>? = null,
+    /** The warm-up on the pad, typed like a set; null when the pad is on the set to do. [entry] stays the set to do. */
+    val warmupEdit: WarmupEdit? = null,
+    /**
+     * The set to do's entry as it was when the pad last left its weight: the warm-ups ramp from it
+     * while a weight is being typed, so they don't follow each keystroke.
+     */
+    internal val rampEntry: SetEntry? = null,
+    /** The set logged most recently in the session, by session exercise id and set index; null with none. Its check takes it back. */
+    val latestSet: Pair<Long, Int>? = null,
 ) {
     val current: SessionExercise? get() = exercises.firstOrNull { it.id == currentId }
 
@@ -144,10 +155,21 @@ data class ActiveSession(
         get() {
             val current = current ?: return emptyList()
             if (current.sets.isNotEmpty() || current.needsMachine || current.needsLadder || followUp != null) return emptyList()
-            val kg = entry?.weightKg ?: return emptyList()
-            val reps = entry.full.toIntOrNull()?.takeIf { it > 0 } ?: current.prescription?.firstOrNull()?.reps?.max
+            current.typedWarmups?.let { return it }
+            // Not keystroke by keystroke: while the weight is typed, the ramp stays where it was.
+            val from = if (entry?.field == com.hyperlog.app.domain.Field.Weight) rampEntry else entry
+            val kg = from?.weightKg ?: return emptyList()
+            val reps = from.full.toIntOrNull()?.takeIf { it > 0 } ?: current.prescription?.firstOrNull()?.reps?.max
             return Warmups.ramp(kg, current.exercise, reps, current.ladder, plateLoaded = current.plates != null)
         }
+
+    /**
+     * The check on set [index] of [exercise] takes it back: it is the set logged last in the
+     * session, nothing is being corrected, and none of its drops, mini-sets or hold is logged yet.
+     */
+    fun undoable(exercise: SessionExercise, index: Int): Boolean =
+        latestSet == (exercise.id to index) && correction == null && warmupEdit == null &&
+            exercise.sets.getOrNull(index)?.extensions?.isEmpty() == true
 
     /** [current]'s superset partner, or null for straight sets. */
     val partner: SessionExercise? get() = current?.let { SessionOrder.partner(exercises, it) }
@@ -166,6 +188,9 @@ data class ActiveSession(
                 ?: exercises.drop(exercises.indexOf(current) + 1).firstOrNull { it.id !in group && !it.done }
         }
 }
+
+/** Warm-up [index] of session exercise [sessionExerciseId] on the pad, as typed so far. */
+data class WarmupEdit(val sessionExerciseId: Long, val index: Int, val entry: SetEntry)
 
 data class ExerciseSummary(val name: String, val sets: List<LoggedSet>)
 

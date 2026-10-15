@@ -208,9 +208,6 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                     ),
                     Modifier.weight(1f),
                 )
-                if (correction == null) {
-                    NextLine(label = null, name = stringResource(R.string.past_summary), onClick = onBack, symbol = Symbol.ChevronRight, description = stringResource(R.string.past_summary))
-                }
             }
             if (correction != null) {
                 val fixing = correction.entry
@@ -218,7 +215,7 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                 else fixing.toExtension(correction.kind) != null
                 Pad(fixing, shown.ladder, null, actions, canConfirm = canConfirm, correction = correction, plates = shown.plates, platesOnMachine = shown.platesOnMachine)
             } else {
-                Spacer(Modifier.navigationBarsPadding())
+                BottomRow { NextLine(label = null, name = stringResource(R.string.past_summary), onClick = onBack, symbol = Symbol.ChevronRight, description = stringResource(R.string.past_summary)) }
             }
         }
     }

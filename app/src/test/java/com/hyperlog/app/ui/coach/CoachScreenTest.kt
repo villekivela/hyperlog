@@ -132,7 +132,7 @@ class CoachScreenTest {
         compose.onNodeWithText("Reverse Nordic").assertIsDisplayed()
         compose.onNodeWithText("Start").performClick()
 
-        compose.waitFor("Target")
+        compose.waitFor("Reps")
         val session = runBlocking { db.sessions().runningSession()!! }
         val legs = runBlocking { db.sessions().sessionExercises(session.id) }.single { it.slotId == "leg_extension" }
         assertEquals("reverse_nordic", legs.exerciseId)

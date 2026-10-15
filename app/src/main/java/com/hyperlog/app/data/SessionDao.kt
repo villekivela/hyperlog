@@ -140,7 +140,7 @@ interface SessionDao {
     @Query("UPDATE session_exercise SET equipment_item_id = :itemId WHERE id = :id")
     suspend fun setEquipmentItem(id: Long, itemId: Long?)
 
-    @Query("UPDATE session_exercise SET exercise_id = :exerciseId, equipment_item_id = NULL, sets = NULL, warmups_done = 0 WHERE id = :id")
+    @Query("UPDATE session_exercise SET exercise_id = :exerciseId, equipment_item_id = NULL, sets = NULL, warmups_done = 0, warmups = NULL WHERE id = :id")
     suspend fun setExercise(id: Long, exerciseId: String)
 
     @Query("DELETE FROM set_technique WHERE session_exercise_id = :sessionExerciseId")
@@ -158,6 +158,13 @@ interface SessionDao {
 
     @Query("UPDATE session_exercise SET warmups_done = :done WHERE id = :id")
     suspend fun setWarmupsDone(id: Long, done: Int)
+
+    /** The warm-ups typed by hand ([com.hyperlog.app.domain.Warmups.encode]), and how many are ticked off. */
+    @Query("UPDATE session_exercise SET warmups = :warmups, warmups_done = :done WHERE id = :id")
+    suspend fun setWarmups(id: Long, warmups: String?, done: Int)
+
+    @Query("DELETE FROM logged_set WHERE id = :id")
+    suspend fun deleteSet(id: Long)
 
     @Query("UPDATE session_exercise SET removed = 1 WHERE id = :id")
     suspend fun remove(id: Long)

@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
@@ -51,30 +52,33 @@ class SuggestionLineTest {
     }
 
     @Test
-    fun aSuggestionShowsWhyAboveTheSets() {
-        show(Suggestion(62.5, 8, Suggestion.Kind.Up, "Last time 60 kg × 10, 10 @ 2, top of 8–10 → 62.5 kg"))
+    fun aSuggestionShowsAShortWhyUnderTheNameAndTheFullOneInTheSheet() {
+        show(Suggestion(62.5, 8, Suggestion.Kind.Up, "Last time 60 kg × 10, 10 @ 2, top of 8–10 → 62.5 kg", "62.5 · hit the top of 8–10 last time"))
+        compose.onNodeWithText("62.5 · hit the top of 8–10 last time").assertIsDisplayed()
+        compose.onNodeWithText("Last time 60 kg × 10, 10 @ 2, top of 8–10 → 62.5 kg").assertDoesNotExist()
+        compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.onNodeWithText("Last time 60 kg × 10, 10 @ 2, top of 8–10 → 62.5 kg").assertIsDisplayed()
-        compose.onNodeWithTag(SuggestionTag).assertIsDisplayed()
     }
 
     @Test
     fun anEstimatedWeightSaysToCheckItOnTheFirstSet() {
-        show(Suggestion(70.0, 6, Suggestion.Kind.Estimated, "Estimated from 60 kg × 9 @ 2, check on the first set"))
-        compose.onNodeWithText("Estimated from 60 kg × 9 @ 2, check on the first set").assertIsDisplayed()
+        show(Suggestion(70.0, 6, Suggestion.Kind.Estimated, "Estimated from 60 kg × 9 @ 2, check on the first set", "70 · estimated, check on the first set"))
+        compose.onNodeWithText("70 · estimated, check on the first set").assertIsDisplayed()
     }
 
     @Test
     fun aStartingWeightSaysItComesFromTheOldApp() {
-        show(Suggestion(60.0, 8, Suggestion.Kind.Starting, "From old app: 60 kg × 8 @ 2 RIR, 12 Sep"))
-        compose.onNodeWithText("From old app: 60 kg × 8 @ 2 RIR, 12 Sep").assertIsDisplayed()
+        show(Suggestion(60.0, 8, Suggestion.Kind.Starting, "From old app: 60 kg × 8 @ 2 RIR, 12 Sep", "60 × 8 · from the old app"))
+        compose.onNodeWithText("60 × 8 · from the old app").assertIsDisplayed()
     }
 
     @Test
-    fun aMachineShowsTheOldWeightAsAHint() {
+    fun aMachinesOldWeightIsInTheExerciseSheetOnly() {
         show(null, hint = "45 kg × 12 @ 1 RIR, 12 Sep")
+        compose.onNodeWithTag(StartingHintTag).assertDoesNotExist()
+        compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.onNodeWithText("From old app, another machine").assertIsDisplayed()
         compose.onNodeWithText("45 kg × 12 @ 1 RIR, 12 Sep").assertIsDisplayed()
-        compose.onNodeWithTag(StartingHintTag).assertIsDisplayed()
     }
 
     @Test
@@ -100,6 +104,7 @@ private object NoActions : com.hyperlog.app.ui.session.SessionActions {
     override fun chooseMachine(itemId: Long) = Unit
     override fun addMachine(name: String, ladder: LadderSpec) = Unit
     override fun changeMachine() = Unit
+    override fun saveMachine(item: com.hyperlog.app.gym.EquipmentItem) = Unit
     override fun setUpLadder(spec: LadderSpec) = Unit
     override fun skipLadderSetup() = Unit
     override fun takeLadderOffer() = Unit

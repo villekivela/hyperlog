@@ -21,34 +21,35 @@ import androidx.compose.ui.unit.sp
 
 /** Left edge of all text: exercise name, set numbers, Next line, sheets. */
 internal val Margin = 24.dp
-/** The set table's card: [TableMargin] from the screen edge, [TablePad] inside, so rows highlight [RowInset] in. */
+/** Cards on the session screen (the ladder offer) sit [TableMargin] from the screen edge. */
 internal val TableMargin = 12.dp
-internal val TablePad = 4.dp
-internal val TableShape = RoundedCornerShape(28.dp)
-/** Edge of the active row's highlight; its content keeps the [Margin]. */
-internal val RowInset = TableMargin + TablePad
+/** Edge of the active row's highlight on the flat table; its content keeps the [Margin]. */
+internal val RowInset = 16.dp
 internal val RowPad = Margin - RowInset
 internal val RowHeight = 64.dp
 internal val LabelHeight = 32.dp
-/** A technique, back-off or warm-up tag line under its set, roomier than a column head. */
-internal val TagHeight = 40.dp
 /** Drops, myo mini-sets and holds under their set. */
 internal val SubRowHeight = 48.dp
 /** A tappable value in a sub-row, inside its 48 dp. */
 internal val SubCellHeight = 40.dp
+/** The index column: `W` or the set number on a [IndexSize] circle. */
+internal val ColIndex = 40.dp
+internal val IndexSize = 32.dp
+/** Kept for the prescription sheet's set numbers. */
 internal val ColSet = 32.dp
-internal val ColTarget = 80.dp
 // kg and Reps cells sit [CellInset] inside their columns, so a focused cell keeps 8 dp from its
 // neighbour and 12 dp from the RIR dot.
 internal val ColKg = 72.dp
-internal val ColReps = 88.dp
+internal val ColReps = 80.dp
 internal val ColRir = 36.dp
+/** The check column at the end of every row. */
+internal val ColCheck = 40.dp
 internal val CellInset = 4.dp
 internal val CellHeight = 48.dp
 internal val KeyHeight = 56.dp
 internal val KeyGap = 4.dp
 internal val KeyShape = RoundedCornerShape(12.dp)
-/** The active row inside the table card: its radius less the card's padding, so the corners nest. */
+/** The active row's pill. */
 internal val RowShape = RoundedCornerShape(24.dp)
 internal val CellShape = RoundedCornerShape(12.dp)
 
@@ -80,4 +81,30 @@ internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
             fontWeight = FontWeight.Medium,
         )
     }
+}
+
+/** Which way a suggestion moves the weight, for the why-line's symbol. */
+internal enum class Direction { Up, Flat, Down }
+
+/** The fixed trend scale, like RIR's: calm green up, neutral for the same weight, amber down (a deload is no failure, so never red). */
+internal val Direction.color: Color
+    get() = when (this) {
+        Direction.Up -> Color(0xFF5FAE7A)
+        Direction.Flat -> Color(0xFF9AA1A9)
+        Direction.Down -> Color(0xFFE0A84E)
+    }
+
+internal val Direction.symbol: com.hyperlog.app.ui.symbols.Symbol
+    get() = when (this) {
+        Direction.Up -> com.hyperlog.app.ui.symbols.Symbol.TrendingUp
+        Direction.Flat -> com.hyperlog.app.ui.symbols.Symbol.TrendingFlat
+        Direction.Down -> com.hyperlog.app.ui.symbols.Symbol.TrendingDown
+    }
+
+/** The direction of [this] suggestion against [from], the set before's weight (none for a first set). */
+internal fun com.hyperlog.app.progression.Suggestion.direction(from: Double?): Direction = when (kind) {
+    com.hyperlog.app.progression.Suggestion.Kind.Up -> Direction.Up
+    com.hyperlog.app.progression.Suggestion.Kind.Down, com.hyperlog.app.progression.Suggestion.Kind.Deload -> Direction.Down
+    com.hyperlog.app.progression.Suggestion.Kind.Adjust -> if (from == null || kg > from) Direction.Up else Direction.Down
+    else -> Direction.Flat
 }
