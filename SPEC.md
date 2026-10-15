@@ -502,7 +502,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        label) and does the sets the program gives it (an alternative's own, else the slot's). Its
        history, suggestion and machine are its own. Once a set is logged on an exercise it can't be
        swapped or removed. A swapped slot has an outlined chip under the name, `⇄ for <planned
-       exercise>`; a superset's chip reads `A1 + <partner>`.
+       exercise>`; a superset's chip reads `A1 + <partner>`. The chips can be tapped: the swap
+       chip opens Swap (while the exercise can still be swapped), the superset chip brings the
+       partner on screen.
      - **Sets:** **Add set** under a program exercise's sets adds one like its last planned set,
        without its technique (on a finished exercise it brings the exercise back into the order).
        A set's circle in the index column opens its sheet (the session ⋮ has no set options): **Remove set**, and its target (fewest reps, most reps,
@@ -531,8 +533,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - A warm-up row works like a set row: a tap puts it on the pad, its kg and reps can be typed
        (the plate strip shows its plates; the rows draw none), and → goes kg, reps, then ticks it
        and moves to the next warm-up or set 1, with no RIR and no rest. A warm-up typed by hand
-       stays as typed for this session, and the list with it (a new weight for set 1 no longer
-       ramps them); the next session ramps again.
+       stays as typed for this session, and only that one: the others go on following the ramp
+       (a new weight for set 1 still ramps them). The next session ramps again.
      - Its check ticks it off. Warm-ups are never logged: they start no rest, add no volume and
        never reach progression or history. They go once the first work set is logged. Ticking is
        optional. Ticks and typed warm-ups are saved with the session.
@@ -542,14 +544,20 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      a filled `primary` check and full-strength values, with no row tint. A tap on the check of the
      last checked row takes it back (a work set goes back to editable and unlogged, its exercise
      comes back on screen and its rest stops; not once one of its drops, mini-sets or its hold is
-     logged, nor as a double tap within a second of logging it); earlier rows are fixed by tapping
+     logged, so takebacks stay in order, nor as a double tap within a second of logging it); earlier rows are fixed by tapping
      the row. The check of a drop, mini-set or hold being done logs it as shown.
    - **The index column** shows `W` for a warm-up and the set number for a work set, on a circle.
      A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
      a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
      reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
      or mini-sets join it in one tall pill down the index column, with `+` at its foot to add
-     another. A tap on a circle explains the technique and opens the set's sheet.
+     another drop or mini-set, before the set or while it is under way. A tap on a circle explains
+     the technique and opens the set's sheet.
+   - **The active row has no highlight.** The row being done (a set, a drop, a mini-set, a hold,
+     a warm-up on the pad or a row being corrected) sits flat like the others; its kg and reps
+     are outlined cells, the focused one outlined in primary. A set's index circle is filled with
+     primary while it is being done, and stays so through its drops or mini-sets, so a
+     technique's tall pill is never cut by a row shape.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
    - **Plate calculator** for barbell and plate-loaded exercises.

@@ -390,11 +390,13 @@ private fun seconds(s: Int) = "$s s"
 
 // ---------------------------------------------------------------- rows
 
-/** A row's frame: [height] tall, the active row filled in secondary container, the content at the 24 dp margin. */
+/**
+ * A row's frame: [height] tall, flat on the surface, the content at the 24 dp margin. No row is
+ * filled: the active one is marked by its outlined cells and its primary index circle.
+ */
 @Composable
 private fun RowFrame(
     height: Dp,
-    active: Boolean,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     clickLabel: String? = null,
@@ -402,7 +404,6 @@ private fun RowFrame(
 ) {
     Row(
         modifier.fillMaxWidth().height(height)
-            .then(if (active) Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RowShape) else Modifier)
             .then(if (onClick != null) Modifier.clip(RowShape).clickable(onClickLabel = clickLabel, onClick = onClick) else Modifier)
             .padding(horizontal = RowPad),
         verticalAlignment = Alignment.CenterVertically,
@@ -417,8 +418,8 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
     val tick = Modifier.toggleable(value = done, role = Role.Checkbox, onValueChange = { table.onTickWarmup(i) })
         .semantics { contentDescription = description }
     if (editing != null) {
-        RowFrame(RowHeight, active = true, modifier = Modifier.testTag(ActiveWarmupTag)) {
-            IndexCell(stringResource(R.string.warmup_lead), Tone.Active, null, Join.None, RowHeight)
+        RowFrame(RowHeight, modifier = Modifier.testTag(ActiveWarmupTag)) {
+            IndexCell(stringResource(R.string.warmup_lead), Tone.Active, null, Join.None, RowHeight, bold = true)
             Spacer(Modifier.weight(1f))
             EntryCells(editing, flagged = false, table.actions)
             Spacer(Modifier.width(ColRir))
@@ -427,7 +428,7 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
         return
     }
     val edit = table.onEditWarmup?.takeIf { table.correction == null }
-    RowFrame(RowHeight, active = false, onClick = edit?.let { { it(i) } }, clickLabel = stringResource(R.string.warmup_edit, i + 1)) {
+    RowFrame(RowHeight, onClick = edit?.let { { it(i) } }, clickLabel = stringResource(R.string.warmup_edit, i + 1)) {
         IndexCell(stringResource(R.string.warmup_lead), Tone.Plain, null, Join.None, RowHeight)
         Spacer(Modifier.weight(1f))
         // Planned looks planned, done looks done: muted like a prefill until ticked.
@@ -448,7 +449,7 @@ private fun UpcomingSetRow(
     val color = MaterialTheme.colorScheme.outline
     // The set to do while a warm-up is typed: a tap brings the pad back to it.
     val back = if (steppedBack && table.warmupEdit != null) table.actions::closeWarmup else null
-    RowFrame(RowHeight, active = false, onClick = back, clickLabel = stringResource(R.string.pad_close_warmup)) {
+    RowFrame(RowHeight, onClick = back, clickLabel = stringResource(R.string.pad_close_warmup)) {
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight,
             onClick = if (!steppedBack && table.current.editable(i) || table.current.prescription == null && !steppedBack) { { table.onSetOptions(i) } } else null,
             description = stringResource(R.string.set_options_description, i + 1))
@@ -465,9 +466,9 @@ private fun ActiveSetRow(
     i: Int, last: LoggedSet?, entry: SetEntry, flagged: Boolean, table: TableState, target: SetPrescription?,
     technique: Technique?, join: Join, editing: Boolean = false,
 ) {
-    RowFrame(RowHeight, active = true) {
+    RowFrame(RowHeight) {
         if (editing) EditCell(stringResource(R.string.correct_set_editing, i + 1))
-        else IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Active, technique, join, RowHeight,
+        else IndexCell("${i + 1}", Tone.Active, technique, join, RowHeight,
             onClick = { table.onSetOptions(i) }, description = stringResource(R.string.set_options_description, i + 1), bold = true)
         LastCell(last)
         EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
@@ -492,13 +493,15 @@ private fun ActiveSetRow(
 
 @Composable
 private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableState, technique: Technique?, join: Join) {
+    // The set whose drops, mini-sets or hold are being done keeps its primary circle for the whole group.
+    val open = table.followUp != null && i == table.current.sets.size - 1
     val color = MaterialTheme.colorScheme.onSurface
     val onClick = table.correctSet(i)
     val correct = stringResource(R.string.correct_set_description, i + 1)
     // Anything logged can be tapped and corrected.
-    RowFrame(RowHeight, active = false, onClick = onClick, clickLabel = correct,
+    RowFrame(RowHeight, onClick = onClick, clickLabel = correct,
         modifier = if (onClick != null) Modifier.semantics { contentDescription = correct } else Modifier) {
-        IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight)
+        IndexCell("${i + 1}", if (open) Tone.Active else if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight, bold = open)
         LastCell(last)
         ValueText(formatKg(set.weightKg), ColKg, color)
         val reps = set.repsText()
@@ -517,7 +520,7 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
 @Composable
 private fun AddSetRow(onAdd: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    RowFrame(SubRowHeight, active = false, onClick = onAdd) {
+    RowFrame(SubRowHeight, onClick = onAdd) {
         Box(Modifier.width(ColIndex), contentAlignment = Alignment.CenterStart) {
             Box(Modifier.size(IndexSize), contentAlignment = Alignment.Center) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = muted) }
         }
@@ -529,7 +532,7 @@ private fun AddSetRow(onAdd: () -> Unit) {
 @Composable
 private fun PlannedSubRow(last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null) {
     val color = MaterialTheme.colorScheme.outline
-    RowFrame(SubRowHeight, active = false) {
+    RowFrame(SubRowHeight) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusDescription = stringResource(if (toFailure) R.string.add_drop else R.string.add_mini_set))
         SubLast(last)
         ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
@@ -543,7 +546,7 @@ private fun PlannedSubRow(last: String?, kg: Double?, reps: String, join: Join, 
 @Composable
 private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCorrect: (() -> Unit)?, description: String) {
     val color = MaterialTheme.colorScheme.onSurface
-    RowFrame(SubRowHeight, active = false, onClick = onCorrect, clickLabel = description,
+    RowFrame(SubRowHeight, onClick = onCorrect, clickLabel = description,
         modifier = if (onCorrect != null) Modifier.semantics { contentDescription = description } else Modifier) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight)
         SubLast(last)
@@ -556,7 +559,7 @@ private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCo
 }
 
 /**
- * The drop, mini-set or hold being done, highlighted like the active row. A mini-set and a hold
+ * The drop, mini-set or hold being done, marked like the active row by its outlined cells. A mini-set and a hold
  * are at the set's weight, so their weight is muted and can't be tapped.
  */
 @Composable
@@ -578,7 +581,7 @@ private fun ActiveSubRow(
         actions.focus(field)
         actions.setPadVisible(true)
     }
-    RowFrame(SubRowHeight, active = true, modifier = Modifier.testTag(ActiveSubRowTag)) {
+    RowFrame(SubRowHeight, modifier = Modifier.testTag(ActiveSubRowTag)) {
         if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus, plusDescription = plusDescription(table.followUp))
         SubLast(last)
         if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline)
@@ -602,6 +605,9 @@ private fun ActiveSubRow(
 /** What `+` on the open set's foot adds. */
 @Composable
 private fun plusDescription(followUp: FollowUp?) = stringResource(if (followUp is FollowUp.MiniSet) R.string.add_mini_set else R.string.add_drop)
+
+/** The index column of the row whose circle reads [label] (`W`, the set number). */
+internal fun indexTag(label: String) = "index-$label"
 
 internal const val ActiveSubRowTag = "active-sub-row"
 internal const val ActiveWarmupTag = "active-warmup"
@@ -642,17 +648,17 @@ private fun RowScope.IndexCell(
     val cs = MaterialTheme.colorScheme
     val fill = when (tone) {
         Tone.Plain -> cs.surfaceContainerHighest
-        Tone.Active -> cs.surface
+        Tone.Active -> cs.primary
         Tone.Technique -> cs.tertiaryContainer
     }
     val ink = when (tone) {
         Tone.Plain -> cs.onSurfaceVariant
-        Tone.Active -> cs.primary
+        Tone.Active -> cs.onPrimary
         Tone.Technique -> cs.onTertiaryContainer
     }
     val pill = cs.tertiaryContainer
     Box(
-        Modifier.width(ColIndex).fillMaxHeight().drawBehind {
+        Modifier.width(ColIndex).fillMaxHeight().then(if (label != null) Modifier.testTag(indexTag(label)) else Modifier).drawBehind {
             val w = IndexSize.toPx()
             val r = CornerRadius(w / 2)
             val top = (size.height - w) / 2
@@ -668,7 +674,8 @@ private fun RowScope.IndexCell(
     ) {
         if (label != null) {
             Box(
-                Modifier.size(IndexSize).clip(CircleShape).background(if (join == Join.None) fill else pill)
+                // The active set's circle is primary, even at the top of its technique's tall pill.
+                Modifier.size(IndexSize).clip(CircleShape).background(if (join == Join.None || tone == Tone.Active) fill else pill)
                     .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                     .then(if (description != null && onClick != null) Modifier.semantics { contentDescription = description } else Modifier.clearAndSetSemantics { }),
                 contentAlignment = Alignment.Center,
@@ -676,7 +683,7 @@ private fun RowScope.IndexCell(
                 Text(
                     label,
                     style = MaterialTheme.typography.titleSmall.merge(Tnum),
-                    color = if (join == Join.None) ink else cs.onTertiaryContainer,
+                    color = if (join == Join.None || tone == Tone.Active) ink else cs.onTertiaryContainer,
                     fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
                 )
             }
@@ -817,7 +824,10 @@ internal fun repsAnnotated(entry: SetEntry): AnnotatedString {
     }
 }
 
-/** A value in the active row. The focused one is filled and outlined; tap any to type into it. */
+/**
+ * A value in the active row, outlined so the row reads as active with no highlight behind it. The
+ * focused one is a well outlined in primary; tap any to type into it.
+ */
 @Composable
 internal fun Cell(
     text: AnnotatedString,
@@ -837,8 +847,14 @@ internal fun Cell(
             .padding(horizontal = CellInset)
             .height(height)
             .clip(CellShape)
-            // The focused cell is a well in the highlighted row: the lowest surface, outlined in primary.
-            .then(if (focused) Modifier.background(cs.surfaceContainerLowest).border(2.dp, cs.primary, CellShape) else Modifier)
+            // The focused cell is a well: the lowest surface, outlined in primary. A flagged weight is outlined in error.
+            .then(
+                when {
+                    flagged -> Modifier.border(if (focused) 2.dp else 1.dp, cs.error, CellShape)
+                    focused -> Modifier.background(cs.surfaceContainerLowest).border(2.dp, cs.primary, CellShape)
+                    else -> Modifier.border(1.dp, cs.outline, CellShape)
+                },
+            )
             .clickable(onClickLabel = description, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

@@ -114,6 +114,36 @@ class SessionRenders {
         session(e, entry = SetEntry("25", "10", "", 1, Field.Reps, partialMode = false, fresh = true))
     }
 
+    /** A drop set under way: set 3 logged, its first drop done and the second on the pad. */
+    @Test fun activeDrop() = both("session-active-drop") {
+        val drops = Technique.Dropset(2, 25)
+        val e = SessionExercise(
+            id = 3, exercise = fly,
+            sets = listOf(
+                LoggedSet(25.0, 10, 0, 0, technique = Technique.Failure), LoggedSet(25.0, 9, 0, 1),
+                LoggedSet(25.0, 10, 0, 1, technique = drops, extensions = listOf(com.hyperlog.app.domain.Extension(com.hyperlog.app.domain.Extension.Kind.Drop, 17.5, 7))),
+            ),
+            lastTime = listOf(LoggedSet(25.0, 10, 0, 1), LoggedSet(25.0, 9, 0, 0)), ladder = com.hyperlog.app.domain.WeightLadder((1..40).map { it * 2.5 }), ladderKnown = true,
+            prescription = plan(set(8, 10, 0, Technique.Failure), set(8, 10, 1), set(8, 10, 1, drops), set(10, 12, 1)),
+            slot = PlannedSlot("f", "3", 2, "cable_fly", emptyList(), null, emptyList()),
+        )
+        session(e, entry = SetEntry("12.5", "6", "", null, Field.Reps, partialMode = false, fresh = true), latest = 3L to 2)
+            .copy(followUp = com.hyperlog.app.session.FollowUp.Drop(1, 2), openSetId = 9)
+    }
+
+    /** Myo-reps under way: the activation set and two mini-sets logged, the third on the pad. */
+    @Test fun activeMiniSet() = both("session-active-mini-set") {
+        val myo = Technique.MyoReps(4, 5)
+        val mini = com.hyperlog.app.domain.Extension(com.hyperlog.app.domain.Extension.Kind.MiniSet, 60.0, 4)
+        val e = SessionExercise(
+            id = 5, exercise = curl, sets = listOf(LoggedSet(60.0, 12, 0, 0, technique = myo, extensions = listOf(mini, mini))),
+            lastTime = listOf(LoggedSet(57.5, 12, 0, 0)), ladder = com.hyperlog.app.domain.WeightLadder((1..40).map { it * 2.5 }), ladderKnown = true,
+            prescription = plan(set(10, 12, 0, myo), set(10, 12, 1)),
+        )
+        session(e, entry = SetEntry("60", "4", "", null, Field.Reps, partialMode = false, fresh = true), latest = 5L to 0)
+            .copy(followUp = com.hyperlog.app.session.FollowUp.MiniSet(2, 5, 4), openSetId = 9)
+    }
+
     @Test fun adHoc() = both("adhoc-session") {
         val e = SessionExercise(
             id = 4, exercise = curl, sets = listOf(LoggedSet(40.0, 12, 0, 2)),

@@ -3,7 +3,8 @@
 The in-workout screen where sets are logged. This note folds in the owner's decisions of
 2026-10-15, taken after a real session ("the top part is really messy", "no indication what so
 ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Screens:
-`screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state;
+`screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
+(`session-active-drop` and `session-active-mini-set` show a set under way);
 `screens/session-*.png` come from the test phone (dark, monochrome system style). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
 testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark.
@@ -11,8 +12,8 @@ testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark.
 ## Principles
 
 1. **One exercise, one flat table.** Its rows sit straight on the screen's surface, with no card
-   behind them. The row being done is the only filled shape (a secondary-container pill); the
-   focused value is a well in it.
+   behind them and no row filled. The row being done is marked by its outlined kg and reps cells
+   (the focused one outlined in primary) and its index circle filled with primary.
 2. **A calm top.** The name, the one clock and ⋮ on one row; a chip under it only when the slot
    is a swap or a superset; one short why-line. Everything longer lives in the exercise sheet.
 3. **Every row ends in a check.** A tap on the check logs a set as shown; a set done as planned is
@@ -31,19 +32,19 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Token | Value | Use |
 | --- | --- | --- |
 | Margin | 24 dp | Left edge of all text: exercise name, chips, why-line, the index circles, sheets |
-| Row inset | 16 dp | Edge of the active row's pill (content stays at 24 dp) |
+| Tap inset | 16 dp | Edge of a tappable row's ripple (content stays at 24 dp) |
 | Set and warm-up row | 64 dp | Main rows |
 | Sub-row | 48 dp | Drops, myo mini-sets, holds, Add set |
 | Label row | 32 dp | Column heads |
 | Columns | 40 · flex · 72 · 80 · 36 · 40 dp | Index, Last, kg, Reps, RIR, ✓ |
 | Index circle | 32 dp; badge 16 dp on its top corner | `W` or the set number; a technique's symbol |
 | Check | 28 dp circle (24 dp on sub-rows), 2 dp ring | Still to do (ring), done (filled) |
-| Cell | 48 dp tall (40 on sub-rows), 12 dp radius, 4 dp inside its column | Tappable value in the active row |
+| Cell | 48 dp tall (40 on sub-rows), 12 dp radius, 4 dp inside its column, 1 dp outline (2 dp focused) | Tappable value in the active row |
 | Chip | 32 dp, 8 dp radius, 1 dp outline | Swap or superset, under the name |
 | Next row | 48 dp, 16 dp radius | The pad's top row |
 | Fade | 32 dp | Top or bottom edge of the list, when it has more that way |
 | Key | 56 dp tall, 4 dp gaps, 12 dp radius | Pad keys, 4 equal columns |
-| Row pill | 24 dp radius | The active row |
+| Row ripple | 24 dp radius | A tappable row's ripple (a done row, a warm-up) |
 | RIR mark | 20 dp circle, 2 dp ring | Target (ring) and result (filled) |
 
 Type (Material 3 scale, system font, tabular figures for every number):
@@ -64,9 +65,9 @@ Colour comes from the dynamic theme, light and dark:
 | Role | Colour |
 | --- | --- |
 | Screen and table | surface (the one screen that keeps it, so the pad stands off it); rows flat on it |
-| Active row | secondaryContainer pill |
+| Active row | no fill: its cells outlined in outline, the index circle primary |
 | Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
-| Index circle | surfaceContainerHighest, onSurfaceVariant; surface with a bold primary number in the active row |
+| Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a set through its drops or mini-sets |
 | Technique set | tertiaryContainer circle and tall pill, onTertiaryContainer; the badge tertiary with its symbol in onTertiary |
 | Check | outlineVariant ring to do, primary ring on the row a tap logs, filled primary with an onPrimary `check` when done |
 | Prefilled values and placeholders | outline |
@@ -102,9 +103,9 @@ Two fixed scales don't follow the theme, so they read the same on a monochrome p
  (W)                  45      8           (✓)    ← warm-up ticked: full strength, filled check
  (W)                  60      5           (✓)
  (W)                  75      3            ○     ← still to do: muted values, an outlineVariant ring
-╭───────────────────────────────────────────────╮
-│(1)     97.5 × 6    100   [ 6 ]   ●1      ◯     │ ← active pill; ◯ in primary: a tap logs it as shown
-╰───────────────────────────────────────────────╯
+                     ┌───┐  ┏━━━┓
+ (①)     97.5 × 6   │100│  ┃ 6 ┃   ●1      ◯     ← active: no fill; outlined cells, the focused one in
+                     └───┘  ┗━━━┛                    primary; the circle filled primary; ◯ logs it as shown
  (2)     87.5 × 8     90    6–8    (1)      ○    ← upcoming: planned weight, target as placeholders
  (3)ᵈ                 25   8–10    (0)      ○    ← technique set: tinted circle, badge ᵈ on its corner,
  ┃                  17.5      6    (0)      ○       its drops in one tall pill down the column,
@@ -128,7 +129,9 @@ circles, `○` a check to do, `(✓)` a done check.
 **Header.** The exercise name (headlineSmall, ellipsized; a tap opens the exercise sheet), the one
 clock (rest, breathing or hold pill) and ⋮ on one row, at least 64 dp. Under it, only when they
 apply, outlined chips: `swap_horiz` and `for <planned exercise>` for a swapped slot, `1a + <partner>`
-for a superset (both when both apply). They say what the slot is and take no tap. Then the
+for a superset (both when both apply). They say what the slot is, and a tap acts on it: the swap
+chip opens Swap (while the exercise can still be swapped), the superset chip brings the partner on
+screen. Then the
 **why-line**, one line: the trend symbol (`trending_up`, `trending_flat`, `trending_down`) in the
 fixed trend scale and the short reason in onSurfaceVariant (`100 · hit the top of 4–6 last time`,
 `57.5 · 2 short of 8–10 last time`, `70 · estimated, check on the first set`). A set that just
@@ -142,13 +145,15 @@ trend symbol, and the old app's set for a machine with no history on it (`histor
 (only once there is history), `kg`, `Reps` (`L / R` for a split set), `RIR`, blank over ✓.
 
 **Index column.** A 32 dp circle: `W` for a warm-up, the set number for a work set
-(surfaceContainerHighest, onSurfaceVariant). In the active row it is the surface with a bold
-primary number. A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to
+(surfaceContainerHighest, onSurfaceVariant). In the active row it is filled with primary, with a
+bold onPrimary number, technique or not; a set keeps it primary while its drops, mini-sets or hold
+are done. A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to
 failure) has a tertiaryContainer circle and the technique's Material Symbol as a 16 dp tertiary
 badge on its top corner (`trending_down`, `repeat`, `unfold_less`, `pan_tool`,
 `local_fire_department`), described by the technique's name, so it reads without colour. A set with
 drops, mini-sets or a hold grows its circle into one tall pill down the column through those rows;
-on a drop set still to do, `+` at the pill's foot adds a drop. A back-off set has no mark: its
+`+` at the pill's foot adds a drop to a drop set or a mini-set to myo-reps, before the set or
+while it is under way. A back-off set has no mark: its
 lowered weight shows it. A tap on a circle of a set still to do opens its set sheet (technique,
 target, Remove set, left and right).
 
@@ -159,9 +164,9 @@ else the latest), the one the why-line names, matched by position; ad hoc it's t
 last time's remaining sets show as upcoming rows prefilled like the next set. The check is an
 outlineVariant ring and takes no tap.
 
-**Set row, active.** The secondaryContainer pill, 16 dp from the screen edge, its content at
-24 dp. kg and reps are cells; the focused one is a well (surfaceContainerLowest) with a primary
-outline. An empty reps cell shows the range as a muted placeholder. RIR shows the selected RIR as
+**Set row, active.** No fill: the row sits flat like the others, so a technique's tall pill is
+never cut by a row shape. kg and reps are cells outlined in `outline`; the focused one is a well
+(surfaceContainerLowest) with a 2 dp primary outline. The index circle is primary. An empty reps cell shows the range as a muted placeholder. RIR shows the selected RIR as
 a filled dot, else the target ring. The check is a primary ring: a tap logs the set with the
 values shown, prefilled or typed, wherever the pad is (as ✓ on the hidden pad does) and starts
 rest. Until a weight and reps are typed the check is a grey ring and takes no tap (RIR is optional).
@@ -181,20 +186,22 @@ saved or cancelled.
 until ticked, onSurface after. Its check ticks it with the ones above it; on the last one ticked it
 takes the tick back. A tap on the row puts it on the pad (below).
 
-**Warm-up on the pad.** The row takes the active pill with kg and reps cells, and the set to do
+**Warm-up on the pad.** The row becomes the active row (a primary `W` circle, kg and reps cells), and the set to do
 steps back (a tap on it brings the pad back to it). The pad opens on the weight: its strip shows
 the ladder's rungs and its plate strip the warm-up's plates; → goes to the reps, where the strip
 reads `stairs` and "Warm-up 2 of 4" (no RIR, no F/P); ✓ ("Tick warm-up") ticks it and puts the
 next warm-up on the pad, or after the last one goes back to set 1. The hide key is `close` ("Back
-to the set"). No rest, no log. A warm-up changed by hand is kept as typed for this session (with
-the others as they were then), and the next session ramps again.
+to the set"). No rest, no log. A warm-up changed by hand is kept as typed for this session, and
+only that one: the others go on following the ramp. The next session ramps again.
 
 **Sub-row (drop, myo mini-set, hold).** 48 dp, inside its set's tall pill. Last is last time's drop
 (`18 × 7`); kg the planned drop weight (the set's weight less the percent, rounded down to the
 ladder, live while the set's weight is typed) or, for a mini-set or hold, the set's weight muted
 and locked; reps prefilled from last time's drop (else 6), the mini-set's target or the hold's
 seconds. A drop is to failure: a 0 ring in RIR. The check is a 24 dp ring; on the one being done
-a tap logs it as shown; done ones are filled, and a tap on the row corrects them.
+a tap logs it as shown; done ones are filled, and a tap on the row corrects them. The one being
+done is marked only by its outlined cells (a mini-set's or hold's weight is no cell); the set's
+circle at the top of the pill stays primary for the whole group.
 
 **The list.** Warm-ups, sets and sub-rows are one LazyColumn that scrolls as one. When warm-ups
 appear it starts from the top; after that it scrolls as little as it takes to keep the active row
@@ -410,7 +417,7 @@ session reads like the logging screen with nothing to do, so tapping a number is
 ▓ [ × ] [ 0 ] [   ] [ ✓ ]                    ▓  ← × cancels, ✓ saves ("Save correction")
 ```
 
-- **Loaded row**: the active row's look (surfaceContainerHigh, focused cell outlined) with `edit`
+- **Loaded row**: the active row's look (outlined cells, the focused one in primary) with `edit`
   in primary in the set column; a sub-row the same at 48 dp. It opens on reps; the weight cell
   takes a tap. A mini-set's or hold's weight stays muted (it is the set's).
 - **Pad**: always shown while correcting; the hide key becomes `close` (Cancel correction) and ✓
@@ -520,3 +527,18 @@ From the owner's phone test of the DEV build, 2026-10-15 (ticket #25).
 - **No reps prefill.** The reps field is empty and shows the planned range (`6–8`) as a muted
   placeholder; ✓ is disabled until reps are typed. So the open question about showing the range
   under a prefilled value no longer applies.
+
+From the owner's phone test of the DEV build, 2026-10-15 (ticket #26). The active row's pill cut
+across a technique's tall pill (the old `screens/dark-session-techniques.png`).
+
+- **No row highlight.** No row has a background pill. The active row is marked by its kg and reps
+  in outlined cells, the focused one outlined in primary, and its index circle filled with
+  primary. Linked pills (drops, mini-sets, holds) stay whole and untouched.
+- **Active sub-row.** A drop, mini-set or hold being done is marked only by its outlined cells;
+  the set's circle at the top of the pill stays primary for the whole group.
+- **A typed warm-up freezes only itself.** The other warm-ups still follow the ramp.
+- **`+` adds mid-set.** `+` at the foot of a pill adds another drop to a drop set, or another
+  mini-set to myo-reps, also after the set has started.
+- **Undo stays in order.** Once a drop is logged the set can't be taken back (the rule as it
+  was); a drop is corrected by tapping its row.
+- **Tappable chips.** The swap chip opens Swap; the superset chip goes to the partner exercise.

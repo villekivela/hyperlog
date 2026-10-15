@@ -120,6 +120,40 @@ class SetTableTest {
     }
 
     @Test
+    fun theSwapChipOpensSwap() {
+        val db = bench.copy(id = "db_bench_press", name = "DB Bench Press", equipment = Equipment.Dumbbell)
+        val slot = com.hyperlog.app.program.PlannedSlot("s", "1", 0, "barbell_bench_press", emptyList(), null, listOf(top))
+        val exercise = SessionExercise(
+            id = 1, exercise = db, sets = emptyList(), lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
+            prescription = listOf(top), slot = slot,
+        )
+        val session = ActiveSession(
+            id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = SetEntry("25", "", "", 1, Field.Reps, partialMode = false, fresh = true),
+            padVisible = true, restEndsAt = null, restTotalMs = 0,
+        )
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench, db), Recording(calls), onLeave = {}) } }
+        compose.onNodeWithText("for Barbell Bench Press").performClick()
+        compose.onNodeWithText("Swap DB Bench Press").assertIsDisplayed()
+    }
+
+    @Test
+    fun theSupersetChipGoesToThePartner() {
+        val slot = com.hyperlog.app.program.PlannedSlot("a", "1a", 0, "barbell_bench_press", emptyList(), null, listOf(top))
+        val curl = bench.copy(id = "leg_curl", name = "Seated Leg Curl")
+        val exercises = listOf(
+            SessionExercise(1, bench, emptyList(), emptyList(), DefaultPlates.ladder(), true, prescription = listOf(top), slot = slot),
+            SessionExercise(2, curl, emptyList(), emptyList(), DefaultPlates.ladder(), true, prescription = listOf(top), slot = slot.copy(id = "b", label = "1b", exercise = "leg_curl")),
+        )
+        val session = ActiveSession(
+            id = 1, startedAt = 0, exercises = exercises, currentId = 1, entry = SetEntry("100", "", "", 1, Field.Reps, partialMode = false, fresh = true),
+            padVisible = true, restEndsAt = null, restTotalMs = 0,
+        )
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench, curl), Recording(calls), onLeave = {}) } }
+        compose.onNodeWithText("1a + Seated Leg Curl").performClick()
+        assertEquals("switchTo 2", calls.last())
+    }
+
+    @Test
     fun warmUpsAreFullRowsAboveTheSets() {
         show(emptyList(), listOf(top))
         compose.onNodeWithContentDescription("Warm-up 1, 45 kg × 8").assertIsDisplayed()
@@ -186,7 +220,7 @@ private class Recording(val calls: MutableList<String>) : SessionActions {
     override fun pickWeight(kg: Double) = Unit
     override fun setPadVisible(visible: Boolean) = Unit
     override fun addExercise(exerciseId: String) = Unit
-    override fun switchTo(sessionExerciseId: Long) = Unit
+    override fun switchTo(sessionExerciseId: Long) { calls += "switchTo $sessionExerciseId" }
     override fun adjustRest(deltaMs: Long) = Unit
     override fun endRest() = Unit
     override fun finish() = Unit
