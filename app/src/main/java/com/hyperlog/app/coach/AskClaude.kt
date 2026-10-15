@@ -17,6 +17,7 @@ import com.hyperlog.app.program.Program
 import com.hyperlog.app.program.planChunks
 import com.hyperlog.app.session.PastSessionItem
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.elementDescriptors
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -53,6 +54,8 @@ object AskClaude {
         zone: ZoneId = ZoneId.systemDefault(),
         today: LocalDate = plan?.today ?: LocalDate.now(zone),
         gym: Gym? = null,
+        /** Training somewhere not set up in Hyperlog: no gym's equipment goes out, the words say what there is. */
+        elsewhere: Boolean = false,
         lastTrained: LocalDate? = null,
         weekdays: Set<DayOfWeek> = emptySet(),
         weeklySets: List<WeekSets> = emptyList(),
@@ -82,7 +85,11 @@ object AskClaude {
         appendLine()
         appendLine("Today is $today (${today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}).")
         appendLine(daysOff(lastTrained, today, weekdays))
-        gym?.let {
+        if (elsewhere) {
+            appendLine()
+            appendLine("## Gym: somewhere not set up in Hyperlog")
+            appendLine("I'm not at any of my usual gyms. The equipment there is in my words above; plan only with that.")
+        } else gym?.let {
             appendLine()
             gym(it, names)
         }
@@ -162,12 +169,24 @@ object AskClaude {
      * there is one, else the outermost braces; then it's checked like any Change.
      */
     fun read(pasted: String, program: Program, exercises: Set<String>): ChangeValidator.Result {
-        val json = extract(pasted) ?: return ChangeValidator.Result.Invalid(listOf(NOTHING_TO_READ))
-        return ChangeValidator.validate(json, program, exercises)
+        val json = extract(pasted) ?: return ChangeValidator.Result.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
+        val result = ChangeValidator.validate(json, program, exercises)
+        // More braces opened than closed: the copy stopped short, so the problems are the copy's, not Claude's.
+        val rest = pasted.substring(pasted.indexOf('{'))
+        if (result is ChangeValidator.Result.Invalid && rest.count { it == '{' } > rest.count { it == '}' }) {
+            return ChangeValidator.Result.Invalid(listOf(CUT_OFF))
+        }
+        return result
     }
 
     /** The message when the paste holds no JSON at all. */
-    const val NOTHING_TO_READ = "no Change found: copy Claude's reply with its JSON block"
+    const val NOTHING_TO_READ = "No Change found in what you copied. Copy Claude's whole reply, with its JSON block, then paste again."
+
+    /** The message when the paste's JSON stops before its end. */
+    const val CUT_OFF = "Claude's reply is cut off before its JSON ends. Copy the whole reply, then paste again."
+
+    /** Whether [errors] are about the copy, not the Change: then there's nothing to take back to Claude. */
+    fun copyProblem(errors: List<String>): Boolean = errors == listOf(NOTHING_TO_READ) || errors == listOf(CUT_OFF)
 
     private val Fence = Regex("```[a-zA-Z]*\\s*\\n?(.*?)```", RegexOption.DOT_MATCHES_ALL)
 
@@ -191,11 +210,14 @@ object AskClaude {
             )
             appendLine("The program runs as a sequence: the next day is whatever comes after the last one trained, whenever I train.")
         }
-        val changes = plan.changes
+        val changes = plan.inForce
         if (changes.isNotEmpty()) {
             appendLine()
-            appendLine("Changes in force (accepted earlier):")
-            changes.forEach { appendLine("- ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.acceptedOn})") }
+            appendLine("Changes in force (accepted earlier, newest first), each with its operations as JSON:")
+            changes.forEach {
+                appendLine("- ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.accepted.acceptedOn})")
+                appendLine("  operations: ${ChangeJson.format.encodeToString(ListSerializer(Operation.serializer()), it.change.operations)}")
+            }
         }
         val current = plan.position.week.coerceAtMost(program.weeks)
         program.blocks.forEach { block ->

@@ -6,6 +6,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
@@ -27,6 +30,7 @@ import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitGone
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -143,6 +147,54 @@ class CoachScreenTest {
     }
 
     @Test
+    fun tappingAChangeInForceShowsWhatItDoesWithRevert() {
+        runStarter()
+        openCoach()
+        copy(elbow)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Accept")
+        compose.onNodeWithText("Accept").performClick()
+        compose.waitFor("Week 1 · Ramp-in")
+
+        openCoach()
+        compose.onNodeWithText("Elbow: machine curls").performClick()
+        compose.waitFor("Change in force")
+        compose.onNodeWithText("In place of Bayesian Cable Curl").assertIsDisplayed()
+        assertTrue(compose.onAllNodes(hasText("Accept")).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText("Revert").performClick()
+        compose.waitFor("Revert “Elbow: machine curls”?")
+        compose.onAllNodes(hasText("Revert"))[1].performClick()
+        compose.waitFor("In your words")
+        compose.waitGone("Elbow: machine curls")
+        assertEquals(0, runBlocking { db.planChanges().changes(db.programs().active()!!.id) }.count { it.revertedAt == null })
+    }
+
+    @Test
+    fun theNextStepGoesBackToAskClaudeWhenTheRequestEnds() {
+        runStarter()
+        openCoach()
+        val next = compose.onNode(hasTestTag(NextStepTag))
+        words().performTextInput("Elbow aches.")
+        next.assertTextEquals("Ask Claude")
+        ask()
+        next.assertTextEquals("Paste reply")
+        // Cleared words end it.
+        words().performTextClearance()
+        next.assertTextEquals("Ask Claude")
+
+        // So does an accept.
+        words().performTextInput("Elbow aches.")
+        ask()
+        copy(elbow)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Accept")
+        compose.onNodeWithText("Accept").performClick()
+        compose.waitFor("Week 1 · Ramp-in")
+        openCoach()
+        compose.onNode(hasTestTag(NextStepTag)).assertTextEquals("Ask Claude")
+    }
+
+    @Test
     fun theUsualGymIsPickedAndThePromptHoldsItsEquipmentAndWhatsMissing() {
         runStarter()
         runBlocking {
@@ -163,6 +215,12 @@ class CoachScreenTest {
         // Another gym, another prompt.
         compose.onNodeWithText("Itis").performClick()
         assertTrue(ask().contains("## Gym: Itis"))
+
+        // Elsewhere sends no gym's equipment: the words say what's there.
+        compose.onNodeWithText("Elsewhere").performClick()
+        val away = ask()
+        assertTrue(away, away.contains("## Gym: somewhere not set up in Hyperlog"))
+        assertFalse(away, away.contains("## Gym: Harbour") || away.contains("## Gym: Itis"))
     }
 
     @Test

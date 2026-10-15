@@ -413,6 +413,8 @@
 
     <!-- Changes (#16) -->
     <string name="change_review_title">Change to your program</string>
+    <string name="change_in_force_title">Change in force</string>
+    <string name="change_close">Close</string>
     <string name="change_accept">Accept</string>
     <string name="change_reject">Reject</string>
     <string name="change_scope_program">Rest of the program</string>
@@ -467,6 +469,12 @@
     <string name="coach_intro">Tell Claude what’s going on. It answers in words, or with a change you review first.</string>
     <string name="coach_intro_no_program">Tell Claude what’s going on and talk it through in the Claude app. With no program running, its answer stays there.</string>
     <string name="coach_gym">Gym</string>
+    <string name="coach_elsewhere">Elsewhere</string>
+    <string name="coach_open_change">See what it changes</string>
+    <plurals name="coach_more_in_force">
+        <item quantity="one">%1$d more in force</item>
+        <item quantity="other">%1$d more in force</item>
+    </plurals>
     <string name="coach_until">Until %1$s</string>
     <string name="coach_until_today">Until today</string>
     <string name="coach_dates">%1$s – %2$s</string>
@@ -490,8 +498,8 @@
     <string name="coach_copy_problems">Copy problems</string>
     <string name="coach_paste_failed">Not a reply Hyperlog can use</string>
     <plurals name="coach_paste_problems">
-        <item quantity="one">1 problem. Nothing changed; ask Claude to fix it, then paste again.</item>
-        <item quantity="other">%1$d problems. Nothing changed; ask Claude to fix them, then paste again.</item>
+        <item quantity="one">1 problem. Nothing changed. Copy it into your Claude chat, then paste the new reply.</item>
+        <item quantity="other">%1$d problems. Nothing changed. Copy them into your Claude chat, then paste the new reply.</item>
     </plurals>
     <string name="start_missing">Not at %1$s · for this session</string>
     <string name="start_missing_none">%1$s: nothing here fits</string>
