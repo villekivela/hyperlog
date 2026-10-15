@@ -9,7 +9,7 @@ into nutrition, VBT, a desktop editor and more. This one does three things.
 1. **Run the program.** Show today's prescription from where you are in the program.
 2. **Log the session** against that prescription.
 3. **Coach.** When you can't train as planned, talk it through with Claude and get back a
-   concrete change to the program or a one-off day, applied only after you accept it.
+   concrete change to the program or a workout, applied only after you accept it.
 
 Out of scope: nutrition, VBT, Health Connect, progress photos, body measurements, desktop
 configuration, iOS, web, any server.
@@ -101,7 +101,7 @@ configuration, iOS, web, any server.
 | **Position** | Where you are: program, week, next day. |
 | **Session** | What was done on a date: sets with weight, reps, RIR. It's a record and is never recalculated. |
 | **Change** | A proposed edit to the plan (see Coaching). Accepted changes are kept as history. |
-| **One-off day** | A day Claude builds for one date, outside the program (see Coaching). Training it doesn't move the position. |
+| **Workout** | A day Claude builds for one date, outside the program (see Coaching). Training it doesn't move the position. |
 | **Gym** | A place you train, with its equipment. Picked at session start. |
 | **Equipment item** | One piece of equipment at a gym (a cable station, a leg press), with a weight ladder. Dumbbells and plates are global. |
 | **Weight ladder** | The weights an equipment item can actually be set to. A **rung** is one step on it. |
@@ -476,8 +476,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
-   - A **one-off day** added from Coach shows as a card above the program day, or above Start
-     session with no program, for the day it was added (Coaching → One-off day).
+   - A **workout** added from Coach shows as a card above the program day, or above Start
+     session with no program, for the day it was added (Coaching → Workout).
      While a program session runs, Today shows that session's day, the one **Resume session**
      opens, even after a finish and Resume moved the program's position on.
    - **A program day's session** has a row for every planned set from the start, its target shown
@@ -716,13 +716,13 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      doesn't move it twice. After the last day the program is finished.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see Coaching below. A destination of the navigation bar (`sports`), there at any
-   time: your words to the Claude app, and a Change or a one-off day pasted back. With no program
-   running only a one-off day can come back.
+   time: your words to the Claude app, and a Change or a workout pasted back. With no program
+   running only a workout can come back.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
    A destination of the navigation bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
    Design: `docs/design/history.md`.
    - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session", or a
-     one-off day's name) and
+     workout's name) and
      the date, then the gym and the exercises. A row opens the session (Past sessions are
      editable, below).
    - **Progress** shows the bodyweight (latest value, its date, a small line of the last 90 days;
@@ -879,7 +879,7 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     suggestions and why-lines stay per dumbbell, as logged, and come out the same since the
     estimate scales with the load. Volume is counted in sets, so it doesn't change.
 - **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
-  - A backup holds everything the app stores: programs and their Changes, one-off days, every session (the
+  - A backup holds everything the app stores: programs and their Changes, workouts, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
     settings ("Check for updates", the dismissed update). Every table goes in row for row except
@@ -973,7 +973,7 @@ goes through Claude, which reads the program, the week you're in and your sessio
    plan can stand ("Ramp-in already eases effort. Use straps and train as planned."). Then nothing
    comes back, and Coach doesn't treat the ask as unfinished.
 4. Otherwise Claude ends with one fenced JSON block holding a **Change** to the program or a
-   **one-off day** for today. Copy it and come back. Hyperlog validates it and opens its review.
+   **workout** for today. Copy it and come back. Hyperlog validates it and opens its review.
    Nothing changes until you accept.
 
 **The screen** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`), top to bottom:
@@ -987,18 +987,18 @@ goes through Claude, which reads the program, the week you're in and your sessio
   today's weekday). The prompt holds that gym's equipment and what's missing there. With no gyms
   set up the row is left out.
 - **Starters.** Chips that put an editable sentence into the words: "My hands hurt", "Short on
-  time today", "No gym, dumbbells at home", "Slept badly", and **Plan a one-off day**, which also
-  opens the one-off day's options (below).
+  time today", "No gym, dumbbells at home", "Slept badly", and **Build me a workout**, which also
+  opens the workout's options (below).
 - **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
 - **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step: Ask Claude
   until you've asked, then Paste reply. Ask Claude is enabled once there are words, or while the
-  one-off day's options are open.
+  workout's options are open.
 - **Reply found.** Coming back to Hyperlog after asking, the app reads the clipboard. If it holds a
-  Change or a one-off day that validates, a bar over the bottom bar reads "Claude's reply is
+  Change or a workout that validates, a bar over the bottom bar reads "Claude's reply is
   ready" with **Review**. Nothing opens by itself. Paste reply stays for a reply copied later.
   Android shows its own toast when an app reads the clipboard.
 
-**A one-off day's options**, shown under the starters while Plan a one-off day is picked:
+**A workout's options**, shown under the starters while Build me a workout is picked:
 
 - **Effort**: Easy, Normal (the default) or Hard. The prompt maps them: Easy is 3 RIR or more and
   no techniques, Normal 1–2 RIR, Hard 0–1 RIR with techniques allowed.
@@ -1018,17 +1018,17 @@ days from the first planned day after the last finished session that went untrai
 missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since
 the last session is 7 days off. With no weekday plan it counts the days since the last finished
 session. After more than 7 days off, Today shows `11 days since your last session` (the words
-always count from the last session) with **Ease back in**, until a Change or a one-off day is
+always count from the last session) with **Ease back in**, until a Change or a workout is
 accepted that day. Ease back in opens Coach with the words "I've had 11 days off. Ease me back
 in." The prompt holds the count either way.
 
 **How Ask Claude works** (`coach/AskClaude.kt`):
 
 - **The prompt** is plain English text shared with `ACTION_SEND` through the system share sheet
-  (the user picks the Claude app). It holds, in order: your words quoted, and the one-off day's
+  (the user picks the Claude app). It holds, in order: your words quoted, and the workout's
   options when they're open; the instruction to talk it through, then either answer in words when
   the plan can stand or reply with exactly one fenced ```` ```json ```` block holding a Change or a
-  one-off day, using only the listed ids; today's date and the days off; the gym picked, with its
+  workout, using only the listed ids; today's date and the days off; the gym picked, with its
   equipment and the exercises missing there; the program's title, the next day (week, day id,
   block) and days left; the Changes in force; every block with its days and slots (slot id,
   exercise id and name, sets as planned in the block's first week or the current one,
@@ -1039,17 +1039,17 @@ in." The prompt holds the count either way.
 - **The formats in the prompt are generated** from the code that reads them: operation names and
   fields from the serializer, scopes from the scope serializer, ranges from the validators, an
   example Change built for the running program (a swap to the next day's first alternative, +1
-  RIR, for a week) and an example one-off day built from the library, both of which the paste
+  RIR, for a week) and an example workout built from the library, both of which the paste
   accepts. A new operation or field can't ship without its description.
 - **Paste reply** reads the clipboard. It takes the first fenced block holding JSON, else the
   text from the first `{` to the last `}`, so Claude's whole reply can be copied. An object with
-  `oneOffDay` is a one-off day; anything else is read as a Change. A valid one opens its review.
+  `workout` is a workout; anything else is read as a Change. A valid one opens its review.
   Otherwise the problems show under the text field as program import shows them (path over
   message, "Not a reply Hyperlog can use", "N problems. Nothing changed; ask Claude to fix them,
   then paste again.") with a copy button to hand them back to Claude, and nothing is applied. A
-  reply with no JSON says "No Change or one-off day found".
+  reply with no JSON says "No Change or workout found".
 - **The review** says what came back. A Change's diff is headed "Change to your program" and
-  keeps **Accept**; a one-off day's is headed "One-off day for today" and its button reads **Add
+  keeps **Accept**; a workout's is headed "Workout for today" and its button reads **Add
   to Today**. Accept goes to Today.
 - **No model calls.** A test fails if any source or dependency names a model SDK or host
   (Anthropic, OpenAI, Gemini and the like), or if code outside the update check opens a connection.
@@ -1058,14 +1058,14 @@ Later, if the paste step gets annoying: a custom MCP connector would let the Cla
 plan and write a pending reply directly. That needs a public HTTPS server holding the data, so it
 waits until syncing is wanted for its own sake (ADR 0001).
 
-### One-off day
+### Workout
 
 A day Claude builds for one date, outside the program, for a hotel gym, half an hour, or no
 program at all.
 
 ```json
 {
-  "oneOffDay": {
+  "workout": {
     "name": "Hotel dumbbells, 45 min",
     "summary": "Upper body with dumbbells only. Back first, since it's behind this week.",
     "groups": [
@@ -1081,18 +1081,18 @@ program at all.
 
 - `groups` are the program file's groups, slots and set lines (`docs/program-format.md`), without
   week overrides. Slot ids are unique within the day. `name` and `summary` must not be blank. The
-  paste validates it as import does, paths and all (`oneOffDay.groups[0].slots[0].exercise:
+  paste validates it as import does, paths and all (`workout.groups[0].slots[0].exercise:
   unknown exercise "bb_row"`).
 - **The review** shows the name, the summary and the exercises as Today lists a day. **Add to
   Today** keeps it; Reject, × and Back drop it.
 - **On Today** it's a card above the program day (or above Start session with no program):
-  "One-off day" over its name, its exercises, and **Start**, which opens the start sheet with the
+  "Workout" over its name, its exercises, and **Start**, which opens the start sheet with the
   gym picked on Coach. It holds for the day it was added and is gone the next day if it wasn't
   started. Adding another replaces it, asking first. ⋮ → Remove drops it.
 - **The session** logs like a program day: targets, suggestions, warm-ups and techniques. It
   doesn't move the position. Its sets count toward estimates and weekly sets like any session's.
   History lists it under its name.
-- One-off days are kept with the sessions and go into backups.
+- Workouts are kept with the sessions and go into backups.
 
 ## Fresh start, with starting weights from the old app
 

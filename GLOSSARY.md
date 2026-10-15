@@ -18,7 +18,7 @@ A change to a set prescription that applies only to particular weeks of its bloc
 
 **Day**:
 One planned training session in a program: an ordered list of groups.
-_Avoid_: Workout, routine day
+_Avoid_: Routine day, workout (that's a day Claude builds outside the program)
 
 **Group**:
 Exercises done together within a day, either one exercise on its own (straight sets) or a superset.
@@ -75,7 +75,7 @@ A YouTube link for an exercise, opened in the YouTube app at its timestamp.
 
 **Session**:
 What was actually done on one date: the sets logged, with their weights and reps. It's a record, never recalculated from new rules, though it can be corrected.
-_Avoid_: Workout, log, entry
+_Avoid_: Workout (that's the plan, not the record), log, entry
 
 **Logged set**:
 One set as it was done: weight, full reps, partial reps and RIR, plus any drops or mini-sets.
@@ -208,12 +208,12 @@ _Avoid_: Adjustment, modification, override
 Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a Change.
 _Avoid_: Substitution
 
-**One-off day**:
+**Workout**:
 A day Claude builds for one date, outside the program: groups, slots and set prescriptions like a program day's. Training it doesn't move the position.
-_Avoid_: Workout, coach workout, ad-hoc session (that one has no prescription)
+_Avoid_: One-off day, coach workout, ad-hoc session (that one has no prescription)
 
 **Ask Claude**:
-The hand-off of your own words to the Claude app: a prompt shared through the share sheet, and Claude's reply, a Change or a one-off day, pasted back for review. It is the coach's only way in. Hyperlog makes no model calls.
+The hand-off of your own words to the Claude app: a prompt shared through the share sheet, and Claude's reply, a Change or a workout, pasted back for review. It is the coach's only way in. Hyperlog makes no model calls.
 _Avoid_: AI coach, chat
 
 ## Data

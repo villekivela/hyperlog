@@ -1,7 +1,7 @@
 # Coach: design note
 
 The Coach screen is words first: what's going on, in your words, to the Claude app, and Claude's
-reply pasted back as a Change or a one-off day (`SPEC.md`, Coaching; ADR 0003). The rule screen of
+reply pasted back as a Change or a workout (`SPEC.md`, Coaching; ADR 0003). The rule screen of
 ticket #17 (five situations and Limits chips) is gone. The missing-equipment swaps on the start
 sheet stay, and are at the end of this note. The tokens of `program-and-today.md` and
 `logging-screen.md` apply.
@@ -14,12 +14,12 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 ## Principles
 
 1. **Say what it does.** One line under the title: tell Claude what's going on, and get back a
-   Change to your program or a one-off day. Nothing changes until you accept it.
+   Change to your program or a workout. Nothing changes until you accept it.
 2. **What the coach already did comes first.** Changes in force are cards at the top, each with
    Revert and Tell Claude how it's going.
 3. **One way in.** Words, with starter chips to start from. No form, no limits.
 4. **Options only where they mean something.** Effort, time and focus appear only for Plan a
-   one-off day.
+   workout.
 5. **The filled button is the next step.** Ask Claude until you've asked, then Paste reply.
 6. **Swaps read as the session will.** "In place of …" over the new name, on Today, in the start
    sheet and in the session, as in the review.
@@ -31,7 +31,7 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 ```
  Coach                                              ⚙
  Tell Claude what's going on. You get back a change to your program
- or a one-off day, and nothing changes until you accept it.
+ or a workout, and nothing changes until you accept it.
 
  ┌ Hands need a week off grip work ──────────────┐   ← a Change in force
  │ Until Tue 27 Oct                              │
@@ -41,7 +41,7 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
  Gym   [✓ Harbour] [Itis]
 
  [My hands hurt] [Short on time today] [No gym, dumbbells at home]
- [Slept badly] [Plan a one-off day]
+ [Slept badly] [Build me a workout]
 
  ┌ In your words ────────────────────────────────┐
  │ Left elbow aches on curls…                    │
@@ -52,7 +52,7 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 ```
 
 ```
- [✓ Plan a one-off day]
+ [✓ Build me a workout]
  Effort  [Easy] [✓ Normal] [Hard]
  Time    [45 min] [✓ 1 h] [1 h 15] [1 h 30]
  Focus   [Back · 4 sets] [Hamstrings · 2 sets] [Calves · 0 sets]
@@ -61,7 +61,7 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 
 ```
  Today
- ┌ One-off day ──────────────────────────────────┐
+ ┌ Workout ──────────────────────────────────────┐
  │ Hotel dumbbells, 45 min                       │
  │ Chest-Supported DB Row   3 × 8–12 @ 1         │
  │ …                                    [Start]  │
@@ -85,11 +85,11 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 ## States
 
 - Coach: empty, nothing in force (Ask Claude disabled); a Change in force; words typed; Plan a
-  one-off day open; asked (Paste reply filled); Claude's reply ready; a bad paste with its
+  workout open; asked (Paste reply filled); Claude's reply ready; a bad paste with its
   problems; no program running (no Change cards).
-- Reviews: a Change ("Change to your program", Accept); a one-off day ("One-off day for today",
+- Reviews: a Change ("Change to your program", Accept); a workout ("Workout for today",
   Add to Today).
-- Today: a one-off day card above the program day, and above Start session with no program; the
+- Today: a workout card above the program day, and above Start session with no program; the
   time-off line with Ease back in.
 - Start sheet: missing swaps for the gym picked (`start-01-missing`); another gym recomputes them.
 - Which machine?: **Not at Harbour** under Add machine (`machine-01-not-here`).
@@ -99,7 +99,7 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 
 - A starter replaces the words only when they're empty; otherwise it's added on a new line.
 - Tell Claude how it's going starts the words with the Change and focuses the field.
-- The words, the gym, the one-off day's options and the asked state survive the trip to the Claude
+- The words, the gym, the workout's options and the asked state survive the trip to the Claude
   app (saved state).
 - On return after asking, the clipboard is read once. A valid reply shows the ready bar; Review
   opens it. Nothing opens by itself.

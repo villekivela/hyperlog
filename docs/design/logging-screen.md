@@ -1,6 +1,6 @@
 # Logging screen: design note
 
-The in-workout screen where sets are logged. This note folds in the owner's decisions of
+The in-session screen where sets are logged. This note folds in the owner's decisions of
 2026-10-15, taken after a real session ("the top part is really messy", "no indication what so
 ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Screens:
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
