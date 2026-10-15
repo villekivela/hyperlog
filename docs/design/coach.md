@@ -37,9 +37,9 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 | Change row | `SegmentedRow`: `tune` in the 40 dp secondaryContainer circle, summary bodyLarge (2 lines), how long it runs bodyMedium onSurfaceVariant | The Change |
 | Change actions | 48 dp row, end-aligned, 12 dp from the segment's end, 8 dp between: **Revert** text button, **Tell Claude how it's going** tonal button | Under the Change row, in the same segment |
 | Composer | one `SectionCard` (Tones.card, 24 dp radius, 12 dp padding) | Gym, starters and the words, one thing to fill in |
-| Composer head | labelLarge, onSurfaceVariant, 12 dp inside the card (24 dp edge), 4 dp over its chips | "Gym"; the row is left out with no gyms |
+| Composer head | labelLarge, onSurfaceVariant, on the 24 dp edge, 16 dp before the gym chips on the same row | "Gym"; the row is left out with no gyms |
 | Gym chip | FilterChip, `selectedChipColors()`, `check` leading when picked, 8 dp apart | Single choice |
-| Starter chip | SuggestionChip, `add` leading, 8 dp apart, no head: the `add` says what it does | Puts a sentence into the words |
+| Starter chip | SuggestionChip, `add` leading, 8 dp apart, no head: the `add` says what it does. One row that scrolls sideways, running to the card's edges, so the chip cut off at the edge shows there's more | Puts a sentence into the words |
 | Words | OutlinedTextField, label "In your words", 3 lines at least, 16 dp over it | |
 | Bottom bar | Tones.bar strip, 28 dp top corners, 16 dp padding, through the gesture area | Paste reply, Ask Claude |
 | Next step | filled Button at the end of the bar; the other is a text button whose label sits on the 24 dp edge | Ask Claude, then Paste reply, then Review |
@@ -50,7 +50,7 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 ```
  Coach                                              ⚙
  Tell Claude what's going on. It answers in words, or with a
- change to your program that you review before anything changes.
+ change you review first.
 
  ┌──────────────────────────────────────────────────┐ ← a Change in force (segment)
  │ (tune)  Hands need a week off grip work           │
@@ -59,10 +59,8 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
  └──────────────────────────────────────────────────┘
 
  ┌──────────────────────────────────────────────────┐ ← the composer card
- │ Gym                                               │
- │ [✓ Harbour] [Itis]                                │
- │ [+ My hands hurt] [+ Short on time today]         │
- │ [+ No gym, dumbbells at home] [+ Slept badly]     │
+ │ Gym  [✓ Harbour] [Itis]                           │
+ │ [+ My hands hurt] [+ Short on time today] [+ No g ├→ scrolls sideways
  │ ┌ In your words ────────────────────────────────┐ │
  │ │ Left elbow aches on curls…                    │ │
  │ └───────────────────────────────────────────────┘ │
@@ -109,7 +107,11 @@ reply]`. The filled button always sits at the end, so the next step is always in
 
 ## States
 
-Issue #32 (this pass), with the screenshot of each in `screens/`, light and dark:
+Issue #32 (this pass), with the screenshot of each in `screens/` as `light-<name>.png` and
+`dark-<name>.png`. They are Robolectric renders from `CoachRenders` (skipped unless asked for:
+`RENDERS=<dir> ./gradlew testDebugUnitTest --tests '*CoachRenders*'`, `DARK=1` for dark), since
+the phone was locked during the pass; one look at Coach on the phone, with the owner's own two
+Changes in force, led to the starter row below.
 
 - Coach: empty, nothing in force, Ask Claude disabled (`coach-01-empty`); a Change in force
   (`coach-02-in-force`); words typed (`coach-03-words`); asked, Paste reply filled
@@ -144,3 +146,10 @@ Unchanged by the redesign:
   applies the ticked ones to this session only; the plan is untouched.
 - Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
   the session with nothing that fits).
+
+## Pass notes
+
+- First pass on the phone: with two Changes in force, the starters wrapped to three rows and
+  pushed the words field below the fold. The gym chips moved onto their head's row and the
+  starters became one sideways-scrolling row, so the field shows with two cards.
+- Second pass: the intro went from three lines to two.

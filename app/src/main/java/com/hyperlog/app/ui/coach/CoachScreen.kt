@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -217,29 +218,34 @@ fun CoachScreen(
                 }
                 Spacer(Modifier.size(GroupGap))
             }
-            SectionCard {
+            // The composer: one card, its chips and field on the 24 dp edge, the starters scrolling to its edges.
+            SectionCard(padding = 0.dp) {
                 if (gyms.isNotEmpty()) {
-                    Text(
-                        stringResource(R.string.coach_gym),
-                        Modifier.padding(top = 4.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        gyms.forEach { g ->
-                            val selected = g.id == gym?.id
-                            FilterChip(
-                                colors = selectedChipColors(),
-                                selected = selected,
-                                onClick = { picked = g.id },
-                                label = { Text(g.name) },
-                                leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
-                            )
+                    Row(Modifier.padding(start = CardPadding, end = CardPadding, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            stringResource(R.string.coach_gym),
+                            Modifier.padding(end = 16.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            gyms.forEach { g ->
+                                val selected = g.id == gym?.id
+                                FilterChip(
+                                    colors = selectedChipColors(),
+                                    selected = selected,
+                                    onClick = { picked = g.id },
+                                    label = { Text(g.name) },
+                                    leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
+                                )
+                            }
                         }
                     }
-                    Spacer(Modifier.size(8.dp))
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = CardPadding).padding(top = if (gyms.isEmpty()) 8.dp else 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     starters.forEach { (label, sentence) ->
                         SuggestionChip(
                             onClick = {
@@ -256,7 +262,8 @@ fun CoachScreen(
                 OutlinedTextField(
                     value = words,
                     onValueChange = ::edit,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp).focusRequester(field).bringIntoViewRequester(fieldInView),
+                    modifier = Modifier.fillMaxWidth().padding(start = CardPadding, end = CardPadding, top = 4.dp, bottom = CardPadding)
+                        .focusRequester(field).bringIntoViewRequester(fieldInView),
                     label = { Text(stringResource(R.string.coach_words_label)) },
                     placeholder = { Text(stringResource(R.string.coach_words_hint)) },
                     minLines = 3,
