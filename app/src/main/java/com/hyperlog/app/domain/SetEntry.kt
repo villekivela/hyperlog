@@ -12,7 +12,8 @@ data class LoggedSet(
     val weightKg: Double,
     val fullReps: Int,
     val partialReps: Int,
-    val rir: Int,
+    /** Null when the set was logged without an RIR. */
+    val rir: Int?,
     /** Its weight was kept past a weight check with a second ✓. */
     val kept: Boolean = false,
     /** The intensity technique it was done with. */
@@ -50,8 +51,8 @@ sealed interface PadKey {
  * focused and whether reps go to full or partial. Values are text so that a half-typed weight
  * ("62.") survives as typed.
  *
- * Prefilled values are real values: [done] logs them as shown. The first key on a field replaces
- * its value ([fresh]); − and + step from it.
+ * Prefilled weight and RIR are real values: [done] logs them as shown. Reps are never prefilled.
+ * The first key on a field replaces its value ([fresh]); − and + step from it.
  */
 data class SetEntry(
     val weight: String,
@@ -121,7 +122,8 @@ data class SetEntry(
             else -> 3
         }
 
-    fun selectRir(value: Int) = copy(rir = value)
+    /** Picking the selected RIR again clears it. */
+    fun selectRir(value: Int) = copy(rir = if (rir == value) null else value)
 
     fun focus(to: Field) = copy(field = to, fresh = true, partialMode = if (to == Field.Weight) false else partialMode)
 
@@ -145,10 +147,9 @@ data class SetEntry(
     fun toLoggedSet(): LoggedSet? {
         val kg = weightKg ?: return null
         val reps = full.toIntOrNull() ?: return null
-        val selected = rir ?: return null
         if (reps <= 0) return null
         val rightReps = if (right == null) null else right.toIntOrNull()?.takeIf { it > 0 } ?: return null
-        return LoggedSet(kg, reps, partial.toIntOrNull() ?: 0, selected, rightReps = rightReps)
+        return LoggedSet(kg, reps, partial.toIntOrNull() ?: 0, rir, rightReps = rightReps)
     }
 
     /** A drop, mini-set or hold as typed: a weight and its reps (a hold's seconds); no RIR. */
@@ -177,15 +178,15 @@ data class SetEntry(
 
     companion object {
         /**
-         * The entry for the next set: the previous set's weight, reps and RIR, or, with nothing
-         * to go on, an empty weight to type first.
+         * The entry for the next set: the previous set's weight and RIR, or, with nothing to go on,
+         * an empty weight to type first. Reps are never prefilled.
          */
         fun prefill(previous: LoggedSet?): SetEntry = if (previous == null) {
             SetEntry("", "", "", null, Field.Weight, partialMode = false, fresh = true)
         } else {
             SetEntry(
                 weight = formatKg(previous.weightKg),
-                full = previous.fullReps.toString(),
+                full = "",
                 partial = "",
                 rir = previous.rir,
                 field = Field.Reps,
@@ -210,7 +211,7 @@ fun LoggedSet.summary(): String = buildString {
     append("${formatKg(weightKg)} × $fullReps")
     rightReps?.let { append("/$it") }
     if (partialReps > 0) append(" + ${partialReps}p")
-    append(" @ $rir")
+    rir?.let { append(" @ $it") }
     extensions.forEach {
         when (it.kind) {
             Extension.Kind.Drop -> append(", ${formatKg(it.weightKg)} × ${it.reps}")

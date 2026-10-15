@@ -11,10 +11,22 @@ class SetEntryTest {
     private fun SetEntry.type(vararg keys: PadKey) = keys.fold(this) { e, k -> e.press(k, ladder) }
 
     @Test
-    fun theFirstKeyReplacesThePrefill() {
-        val entry = SetEntry.prefill(LoggedSet(60.0, 10, 0, 2)).type(PadKey.Digit(8))
-        assertEquals("8", entry.full)
-        assertEquals(Field.Reps, entry.field)
+    fun theNextSetTakesTheWeightAndRirButNeverTheReps() {
+        val entry = SetEntry.prefill(LoggedSet(60.0, 10, 0, 2))
+        assertEquals("60", entry.weight)
+        assertEquals(2, entry.rir)
+        assertEquals("", entry.full)
+        assertFalse(entry.canLog)
+        assertEquals(SetEntry.Done.Nothing, entry.done())
+        assertEquals(SetEntry.Done.Log(LoggedSet(60.0, 8, 0, 2)), entry.type(PadKey.Digit(8)).done())
+    }
+
+    @Test
+    fun selectingThePickedRirAgainClearsIt() {
+        val entry = SetEntry.prefill(LoggedSet(60.0, 10, 0, 2)).type(PadKey.Digit(1), PadKey.Digit(0))
+        assertEquals(1, entry.selectRir(1).rir)
+        assertNull(entry.selectRir(2).rir)
+        assertEquals(SetEntry.Done.Log(LoggedSet(60.0, 10, 0, null)), entry.selectRir(2).done())
     }
 
     @Test
@@ -28,7 +40,7 @@ class SetEntryTest {
 
     @Test
     fun aSplitSetTakesTheLeftRepsThenTheRightThenLogsBoth() {
-        var entry = SetEntry.prefill(LoggedSet(20.0, 10, 0, 1)).split(true)
+        var entry = SetEntry.prefill(LoggedSet(20.0, 10, 0, 1)).type(PadKey.Digit(1), PadKey.Digit(0)).split(true)
         // Splitting starts the right side on the same reps as the left.
         assertEquals("10", entry.right)
         entry = entry.type(PadKey.Digit(9))
@@ -82,18 +94,19 @@ class SetEntryTest {
 
     @Test
     fun minusAndPlusStepOneRungOnWeightAndOneRepOnReps() {
-        val entry = SetEntry.prefill(LoggedSet(60.0, 10, 0, 2))
+        val entry = SetEntry.prefill(LoggedSet(60.0, 10, 0, 2)).type(PadKey.Digit(1), PadKey.Digit(0))
         assertEquals("11", entry.type(PadKey.Plus).full)
         val weight = entry.focus(Field.Weight).type(PadKey.Minus)
         assertEquals("57.5", weight.weight)
     }
 
     @Test
-    fun nothingLogsWithoutWeightRepsAndRir() {
+    fun nothingLogsWithoutWeightAndReps() {
         val noRir = SetEntry.prefill(null).type(PadKey.Digit(4), PadKey.Digit(0)).focus(Field.Reps).type(PadKey.Digit(8))
         assertNull(noRir.rir)
-        assertFalse(noRir.canLog)
-        assertEquals(SetEntry.Done.Nothing, noRir.done())
+        assertEquals(SetEntry.Done.Log(LoggedSet(40.0, 8, 0, null)), noRir.done())
+        val noWeight = SetEntry.prefill(null).focus(Field.Reps).type(PadKey.Digit(8))
+        assertFalse(noWeight.canLog)
         val noReps = SetEntry.prefill(LoggedSet(60.0, 10, 0, 2)).type(PadKey.Backspace, PadKey.Backspace)
         assertEquals("", noReps.full)
         assertEquals(SetEntry.Done.Nothing, noReps.done())
@@ -101,7 +114,7 @@ class SetEntryTest {
 
     @Test
     fun backspaceEditsThePrefillInsteadOfReplacingIt() {
-        val entry = SetEntry.prefill(LoggedSet(60.0, 12, 0, 2)).type(PadKey.Backspace)
+        val entry = SetEntry.prefill(LoggedSet(60.0, 12, 0, 2)).type(PadKey.Digit(1), PadKey.Digit(2), PadKey.Backspace)
         assertEquals("1", entry.full)
     }
 
@@ -125,8 +138,8 @@ class SetEntryTest {
 
     @Test
     fun theRepsCellReadsFullPlusPartials() {
-        val entry = SetEntry.prefill(LoggedSet(60.0, 12, 0, 2)).partialMode(true).type(PadKey.Digit(6))
+        val entry = SetEntry.prefill(LoggedSet(60.0, 12, 0, 2)).type(PadKey.Digit(1), PadKey.Digit(2)).partialMode(true).type(PadKey.Digit(6))
         assertEquals("12 + 6", entry.repsText)
-        assertEquals("12", SetEntry.prefill(LoggedSet(60.0, 12, 0, 2)).repsText)
+        assertEquals("", SetEntry.prefill(LoggedSet(60.0, 12, 0, 2)).repsText)
     }
 }

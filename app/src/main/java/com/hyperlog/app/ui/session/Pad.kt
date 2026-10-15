@@ -64,6 +64,7 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  * through the gesture area.
  */
 internal const val PlateStripTag = "plate-strip"
+internal const val PadDividerTag = "pad-divider"
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -101,6 +102,10 @@ internal fun Pad(
     Surface(color = cs.surfaceContainer, modifier = modifier.testTag(PadTag)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp)) {
             top()
+            // Next ends and the plate strip (or the stack's load) begins: a line between them.
+            if (check == null && (plates != null || pinLoad != null)) {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag(PadDividerTag), color = cs.outlineVariant)
+            }
             // The plate calculator, at the top of the pad while a weight is typed, live.
             // Shown on the reps too, so the pad keeps its height from the weight to the reps.
             if (plates != null && check == null) {

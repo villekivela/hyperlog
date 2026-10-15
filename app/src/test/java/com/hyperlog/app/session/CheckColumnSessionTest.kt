@@ -63,6 +63,7 @@ class CheckColumnSessionTest {
     fun theCheckLogsTheSetAsShownFromTheWeightAndStartsRest() = runTest {
         val logger = started()
         logger.type("10")
+        logger.focus(Field.Reps); logger.type("12"); logger.focus(Field.Weight)
         assertEquals(Field.Weight, logger.session.entry!!.field)
         logger.logShown()
         assertEquals(listOf(LoggedSet(10.0, 12, 0, 1)), logger.session.current!!.sets)
@@ -105,9 +106,9 @@ class CheckColumnSessionTest {
     @Test
     fun onlyTheSetLoggedLastCanBeTakenBack() = runTest {
         val logger = started()
-        logger.type("10"); logger.logShown()
+        logger.type("10"); logger.focus(Field.Reps); logger.type("12"); logger.logShown()
         now += 5_000
-        logger.logShown()
+        logger.type("12"); logger.logShown()
         now += 5_000
         val lateral = logger.session.exercises.first()
         assertEquals(2, lateral.sets.size)

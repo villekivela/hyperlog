@@ -57,7 +57,7 @@ class PastSessionEditorTest {
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
         focus(Field.Weight); type(kg, ::press); done()
-        type("$reps", ::press); selectRir(rir); done()
+        type("$reps", ::press); if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }
 
     /** Week 1: bench 60 × 10, 10 @ 2, the top of 8–10, and the drop set. */

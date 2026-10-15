@@ -19,7 +19,7 @@ object BackupFormat {
      * The Room schema version the tables follow. A backup from an older database needs an upgrade
      * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
      */
-    const val DATABASE = 20
+    const val DATABASE = 21
 
     /** The oldest database version a backup can be restored from. */
     const val OLDEST_DATABASE = 14

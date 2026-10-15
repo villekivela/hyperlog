@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,7 +70,7 @@ class ProgressionSessionTest {
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
         focus(com.hyperlog.app.domain.Field.Weight); type(kg); done()
-        type("$reps"); selectRir(rir); done()
+        type("$reps"); if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }
 
     private suspend fun SessionLogger.startWeek() {
@@ -99,7 +100,7 @@ class ProgressionSessionTest {
         assertEquals(Suggestion.Kind.Up, s.kind)
         assertEquals("Last time 60 kg × 10, 10 @ 2, top of 8–10 → 62.5 kg", s.why)
         assertEquals("62.5", logger.session.entry!!.weight)
-        assertEquals("${s.reps}", logger.session.entry!!.full)
+        assertEquals("", logger.session.entry!!.full)
         logger.log("62.5", 6, 2); logger.log("62.5", 6, 2)
         logger.finish()
 
@@ -127,6 +128,24 @@ class ProgressionSessionTest {
     }
 
     @Test
+    fun aSetLoggedWithoutAnRirIsStillWhatTheNextSetFollowsAndAdjustsNothing() = runTest {
+        val logger = logger()
+        logger.startWeek()
+        now += 200_000
+        logger.focus(com.hyperlog.app.domain.Field.Weight); logger.type("60"); logger.done()
+        // The target RIR (2) comes prefilled; tapping it clears it.
+        logger.selectRir(2)
+        assertNull(logger.session.entry!!.rir)
+        logger.type("9"); logger.done()
+        val set = logger.bench.sets.single()
+        assertNull(set.rir)
+        // The next set follows the set before, with no RIR gap to adjust the weight by.
+        assertEquals("60", logger.session.entry!!.weight)
+        // It is stored without an RIR, and survives the app being killed.
+        assertNull(logger().bench.sets.single().rir)
+    }
+
+    @Test
     fun aCableStackJumpTooBigForTheRangeHoldsTheWeightAndAddsARep() = runTest {
         val logger = logger()
         logger.startWeek()
@@ -139,6 +158,7 @@ class ProgressionSessionTest {
         val lateral = logger.session.current!!
         assertEquals(Suggestion.Kind.More, lateral.suggestion!!.kind)
         assertEquals("5.7", logger.session.entry!!.weight)
-        assertEquals("13", logger.session.entry!!.full)
+        assertEquals(13, lateral.suggestion!!.reps)
+        assertEquals("", logger.session.entry!!.full)
     }
 }

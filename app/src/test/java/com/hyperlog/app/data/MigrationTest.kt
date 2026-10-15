@@ -484,4 +484,31 @@ class MigrationTest {
         assertEquals(LadderSpec.DefaultGymPlates, Gyms(db).gyms.first().single().plates)
         db.close()
     }
+
+    @Test
+    fun version20SetsKeepEverythingAndMayNowLackAnRir() = runTest {
+        val file = context.getDatabasePath("migration-test-20.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(20, file) { db ->
+            db.execSQL("INSERT INTO exercise (id, name, equipment) VALUES ('pull_up', 'Pull-up', 'Bodyweight')")
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'pull_up', 0)")
+            db.execSQL(
+                "INSERT INTO logged_set (id, session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at, kept, right_reps) " +
+                    "VALUES (7, 1, 0, 0, 8, 0, 2, 1500, 1, 7)",
+            )
+            db.execSQL("INSERT INTO set_extension (logged_set_id, position, kind, weight_kg, reps) VALUES (7, 0, 'Drop', 0, 5)")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val sets = db.openHelper.writableDatabase
+        sets.query("SELECT id, full_reps, rir, kept, right_reps FROM logged_set").use {
+            assertTrue(it.moveToFirst())
+            assertEquals(listOf(7L, 8L, 2L, 1L, 7L), (0..4).map { c -> it.getLong(c) })
+        }
+        sets.query("SELECT COUNT(*) FROM set_extension").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+        sets.execSQL("INSERT INTO logged_set (session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at) VALUES (1, 1, 0, 6, 0, NULL, 1600)")
+        db.close()
+    }
 }

@@ -112,21 +112,54 @@ class WarmupSessionTest {
     }
 
     @Test
-    fun anAdHocBenchForFiveRepsGetsTheHeavyRamp() = runTest {
+    fun typingRepsNeverChangesTheWarmUpsAndAPlannedTwelveGetsTheMediumRamp() = runTest {
+        programs.import(
+            """
+            { "format": 1, "title": "Volume", "blocks": [ { "id": "b", "name": "B", "weekStart": 1, "weekEnd": 4, "days": [
+              { "id": "a", "name": "Day A", "groups": [
+                { "slots": [ { "id": "bench", "exercise": "barbell_bench_press", "sets": [ { "reps": "10-12", "rir": 1, "rest": 120 } ] } ] }
+              ] } ] } ] }
+            """,
+        )
+        val logger = logger()
+        logger.startDay(programs.active.first()!!, gymId = null)
+        logger.type("90"); logger.done()
+        val planned = logger.session.warmups
+        // Planned for 10–12: the medium ramp, not the heavy one that one or five typed reps would give.
+        assertEquals(listOf(WarmupSet(40.0, 8), WarmupSet(60.0, 5), WarmupSet(75.0, 3)), planned)
+        logger.type("1")
+        assertEquals(planned, logger.session.warmups)
+        logger.type("12")
+        assertEquals(planned, logger.session.warmups)
+    }
+
+    @Test
+    fun anAdHocBenchRampsFromLastTimesRepsNotFromWhatIsTyped() = runTest {
+        val first = logger()
+        first.start()
+        first.addExercise("barbell_bench_press")
+        first.type("90"); first.done(); first.type("5"); first.selectRir(2); first.tick()
+        first.finish()
         val logger = logger()
         logger.start()
         logger.addExercise("barbell_bench_press")
-        logger.type("90")
-        assertEquals(0, logger.session.warmups.size)
-        logger.done()
-        assertEquals(3, logger.session.warmups.size)
+        // Last time was five reps: the heavy ramp, whatever is typed now.
+        val heavy = listOf(WarmupSet(40.0, 8), WarmupSet(55.0, 5), WarmupSet(65.0, 3), WarmupSet(75.0, 2))
+        assertEquals(heavy, logger.session.warmups)
+        logger.type("12")
+        assertEquals(heavy, logger.session.warmups)
+    }
+
+    @Test
+    fun anAdHocBenchWithNoHistoryHasTheMediumRamp() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("barbell_bench_press")
+        logger.type("90"); logger.done()
+        val medium = logger.session.warmups
+        assertEquals(3, medium.size)
         logger.type("5")
-        assertEquals(
-            listOf(WarmupSet(40.0, 8), WarmupSet(55.0, 5), WarmupSet(65.0, 3), WarmupSet(75.0, 2)),
-            logger.session.warmups,
-        )
-        logger.press(PadKey.Backspace); logger.type("8")
-        assertEquals(3, logger.session.warmups.size)
+        assertEquals(medium, logger.session.warmups)
     }
 
     @Test

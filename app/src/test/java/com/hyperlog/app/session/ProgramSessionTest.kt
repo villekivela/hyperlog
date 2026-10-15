@@ -51,9 +51,10 @@ class ProgramSessionTest {
 
     private val SessionLogger.session get() = state.value!!
 
-    /** Logs the active set as prefilled, after resting. */
-    private suspend fun SessionLogger.logAsShown() {
+    /** Logs the active set with the weight and RIR it came with and the reps typed, after resting. */
+    private suspend fun SessionLogger.logAsShown(reps: String = "6") {
         now += 200_000
+        type(reps)
         done()
     }
 
@@ -70,9 +71,9 @@ class ProgramSessionTest {
         assertEquals(listOf(RepRange(4, 6), RepRange(6, 8), RepRange(6, 8)), bench.prescription!!.map { it.reps })
         assertEquals(listOf(2, 2, 2), bench.prescription!!.map { it.rir })
         assertNull(session.exercises[1].prescription!!.single().technique)
-        // No history: an empty weight, the top of the range and the target RIR.
+        // No history: an empty weight, empty reps and the target RIR.
         assertEquals("", session.entry!!.weight)
-        assertEquals("6", session.entry!!.full)
+        assertEquals("", session.entry!!.full)
         assertEquals(2, session.entry!!.rir)
     }
 
@@ -81,12 +82,12 @@ class ProgramSessionTest {
         val logger = logger()
         logger.startNext()
         logger.type("92.5"); logger.done()
-        logger.done()
+        logger.type("6"); logger.done()
         assertEquals(LoggedSet(92.5, 6, 0, 2), logger.session.current!!.sets.single())
         assertEquals(now + 180_000, logger.session.restEndsAt)
         // 92.5 − 10% = 83.25, rounded down on the shared plates.
         assertEquals("82.5", logger.session.entry!!.weight)
-        assertEquals("8", logger.session.entry!!.full)
+        assertEquals("", logger.session.entry!!.full)
     }
 
     @Test
@@ -130,7 +131,7 @@ class ProgramSessionTest {
 
     @Test
     fun theDayKeepsRunningAfterTheAppIsReopened() = runTest {
-        logger().apply { startNext(); type("80"); done(); done() }
+        logger().apply { startNext(); type("80"); done(); type("6"); done() }
         val reopened = logger()
         assertEquals("Day A", reopened.session.day!!.day.name)
         // 80 − 10% = 72: the rung below on the shared plates is 70.

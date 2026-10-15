@@ -41,15 +41,15 @@ class PlannedPrefillTest {
     }
 
     @Test
-    fun theEntryTakesTheSuggestionsWeightAndRepsAndTheTargetRir() {
+    fun theEntryTakesTheSuggestionsWeightAndTheTargetRirButNoReps() {
         val entry = plannedEntry(bench, logged = emptyList(), Suggestion(87.5, 5, Suggestion.Kind.Up, "why"))
-        assertEquals(SetEntry("87.5", "5", "", 1, Field.Reps, partialMode = false, fresh = true), entry)
+        assertEquals(SetEntry("87.5", "", "", 1, Field.Reps, partialMode = false, fresh = true), entry)
     }
 
     @Test
-    fun withNoSuggestionTheFirstSetStartsOnAnEmptyWeightAtTheTopOfTheRange() {
+    fun withNoSuggestionTheFirstSetStartsOnAnEmptyWeightAndEmptyReps() {
         val entry = plannedEntry(bench, logged = emptyList(), suggestion = null)
-        assertEquals(SetEntry("", "6", "", 1, Field.Weight, partialMode = false, fresh = true), entry)
+        assertEquals(SetEntry("", "", "", 1, Field.Weight, partialMode = false, fresh = true), entry)
     }
 
     @Test

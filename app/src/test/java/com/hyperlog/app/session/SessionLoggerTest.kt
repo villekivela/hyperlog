@@ -57,9 +57,9 @@ class SessionLoggerTest {
 
         logger.type("25"); logger.done()
         logger.type("10"); logger.selectRir(2); logger.done()
-        // The next set comes prefilled from the last one: just ✓, after resting.
+        // The next set comes with the last one's weight and RIR: type the reps, then ✓, after resting.
         now += 120_000
-        logger.done()
+        logger.type("10"); logger.done()
         now += 120_000
         logger.type("9"); logger.partialMode(true); logger.type("4"); logger.selectRir(0); logger.done()
 
@@ -107,8 +107,7 @@ class SessionLoggerTest {
 
         val reopened = logger()
 
-        // Everything but the one-tap Fix of the set just logged, which is for the moment after logging.
-        assertEquals(first.session.copy(lastLogged = null), reopened.session)
+        assertEquals(first.session, reopened.session)
         val entry = reopened.session.entry!!
         assertEquals("1", entry.full)
         assertEquals("5", entry.partial)
@@ -127,7 +126,7 @@ class SessionLoggerTest {
         val entry = logger.session.entry!!
         assertEquals(Field.Reps, entry.field)
         assertEquals("60", entry.weight)
-        assertEquals("12", entry.full)
+        assertEquals("", entry.full)
         assertEquals(1, entry.rir)
     }
 
@@ -157,6 +156,7 @@ class SessionLoggerTest {
         logger.type("7.5"); logger.done(); logger.type("12"); logger.selectRir(2); logger.done()
 
         // A stutter on ✓, 150 ms after the set was logged.
+        logger.type("12")
         now += 150
         logger.done()
         assertEquals(1, logger.session.current!!.sets.size)
@@ -246,7 +246,7 @@ class SessionLoggerTest {
         logger.type("25"); logger.done(); logger.type("10"); logger.selectRir(2); logger.done()
         now += 120_000
 
-        logger.focus(Field.Weight); logger.type("255"); logger.done(); logger.done()
+        logger.focus(Field.Weight); logger.type("255"); logger.done(); logger.type("10"); logger.done()
 
         assertEquals(1, logger.session.current!!.sets.size)
         val check = logger.session.weightCheck!!
@@ -264,7 +264,7 @@ class SessionLoggerTest {
 
     /** Types [weight] over the prefill and keeps it past the weight check with a second ✓. */
     private suspend fun SessionLogger.keep(weight: String) {
-        focus(Field.Weight); type(weight); done(); done()
+        focus(Field.Weight); type(weight); done(); type("12"); done()
         now += 2_000
         done()
         now += 120_000
@@ -286,7 +286,7 @@ class SessionLoggerTest {
 
         // The next set prefills last time's weight, and logging it raises no check.
         assertEquals("7.5", logger.session.entry!!.weight)
-        logger.done()
+        logger.type("12"); logger.done()
         assertNull(logger.session.weightCheck)
         assertEquals(listOf(75.0, 7.5), logger.session.current!!.sets.map { it.weightKg })
         assertEquals("7.5", logger.session.entry!!.weight)
@@ -301,7 +301,7 @@ class SessionLoggerTest {
         logger.keep("20")
         logger.keep("20")
         assertEquals("20", logger.session.entry!!.weight)
-        logger.done()
+        logger.type("12"); logger.done()
         assertNull(logger.session.weightCheck)
         assertEquals(4, logger.session.current!!.sets.size)
     }
@@ -333,7 +333,7 @@ class SessionLoggerTest {
     }
 
     private suspend fun SessionLogger.logSet(weight: String, reps: String, rir: Int) {
-        type(weight); done(); type(reps); selectRir(rir); done()
+        type(weight); done(); type(reps); if (state.value?.entry?.rir != rir) selectRir(rir); done()
         now += 120_000
     }
 

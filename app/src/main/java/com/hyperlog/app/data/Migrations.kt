@@ -4,7 +4,30 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21)
+
+/**
+ * v21: a set may be logged without an RIR (SPEC, Logging a set). SQLite can't drop NOT NULL in
+ * place, so the table is rebuilt. Foreign keys are off while a migration runs, so the drop leaves
+ * the sets' drops, mini-sets and holds alone.
+ */
+object Migration20To21 : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE `logged_set_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_exercise_id` INTEGER NOT NULL, " +
+                "`position` INTEGER NOT NULL, `weight_kg` REAL NOT NULL, `full_reps` INTEGER NOT NULL, `partial_reps` INTEGER NOT NULL, " +
+                "`rir` INTEGER, `logged_at` INTEGER NOT NULL, `kept` INTEGER NOT NULL DEFAULT 0, `technique` TEXT, `right_reps` INTEGER, " +
+                "FOREIGN KEY(`session_exercise_id`) REFERENCES `session_exercise`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL(
+            "INSERT INTO logged_set_new (id, session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at, kept, technique, right_reps) " +
+                "SELECT id, session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at, kept, technique, right_reps FROM logged_set",
+        )
+        db.execSQL("DROP TABLE logged_set")
+        db.execSQL("ALTER TABLE logged_set_new RENAME TO logged_set")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_logged_set_session_exercise_id` ON `logged_set` (`session_exercise_id`)")
+    }
+}
 
 /** v20: warm-ups typed by hand, kept with the session exercise for that session (SPEC, Warm-ups). */
 object Migration19To20 : Migration(19, 20) {

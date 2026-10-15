@@ -58,18 +58,28 @@ class SessionScreenTest {
         compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
 
         waitForLoggedSet()
-        compose.onAllNodesWithText("12").assertCountEquals(2)
+        compose.onAllNodesWithText("12").assertCountEquals(1)
         compose.onNodeWithContentDescription("RIR 1").assertIsSelected()
     }
 
     @Test
-    fun aLoggedSetIsOneTapFromItsFix() {
+    fun loggingASetShowsNoSnackbar() {
         startWithBenchPress()
         compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
         waitForLoggedSet()
-        compose.waitFor("Barbell Bench Press 60 × 12 @ 1 logged")
-        compose.onNodeWithText("Fix").performClick()
-        compose.waitForDescription("Cancel correction")
+        compose.onAllNodesWithText("Fix").assertCountEquals(0)
+        compose.onAllNodesWithText("Barbell Bench Press 60 × 12 @ 1 logged").assertCountEquals(0)
+    }
+
+    @Test
+    fun aLoggedSetIsStillTakenBackByItsCheck() {
+        startWithBenchPress()
+        compose.press("6", "0", "Next", "1", "2", "RIR 1", "Log set")
+        waitForLoggedSet()
+        // A tap on the check within a second of logging is taken for a stutter.
+        Thread.sleep(1_100)
+        compose.onNodeWithContentDescription("Take back set 1").performClick()
+        compose.waitForDescription("Log set 1")
     }
 
     @Test

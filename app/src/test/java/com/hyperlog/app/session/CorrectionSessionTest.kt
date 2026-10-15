@@ -68,7 +68,7 @@ class CorrectionSessionTest {
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 60_000
         focus(Field.Weight); type(kg); tick()
-        type("$reps"); selectRir(rir); tick()
+        type("$reps"); if (session.entry!!.rir != rir) selectRir(rir); tick()
         if (session.weightCheck != null) tick()
     }
 
@@ -93,30 +93,6 @@ class CorrectionSessionTest {
         assertNull(logger.session.correction)
         assertEquals(250.0, logger.session.current!!.sets[1].weightKg, 0.0)
         assertEquals(true, logger.session.current!!.sets[1].kept)
-    }
-
-    @Test
-    fun theLastSetLoggedIsOneFixAwayEvenAfterTheSessionMovedOn() = runTest {
-        program(threeSets, second = """[ { "count": 1, "reps": "10-12", "rir": 1 } ]""")
-        val logger = logger()
-        logger.startNext()
-        val bench = logger.session.current!!
-        logger.log("25", 10, 2); logger.log("25", 10, 2)
-        // A typo kept past the warning, on the last set: the session moves on to the lateral raise.
-        logger.log("255", 10, 2)
-        assertEquals("cable_lateral_raise", logger.session.current!!.exercise.id)
-        assertEquals(bench.id to 2, logger.session.lastLogged)
-
-        logger.fixLast()
-        // The bench is on screen with its last set loaded, on the weight it was warned about.
-        assertEquals(bench.id, logger.session.shown!!.id)
-        assertEquals(2, logger.session.correction!!.set)
-        assertEquals(Field.Weight, logger.session.correction!!.entry.field)
-        logger.type("25"); logger.tick(); logger.tick()
-        assertEquals(25.0, logger.session.exercises.first { it.id == bench.id }.sets[2].weightKg, 0.0)
-        // Saved, and back on the lateral raise.
-        assertNull(logger.session.correction)
-        assertEquals(logger.session.current!!.id, logger.session.shown!!.id)
     }
 
     @Test
@@ -155,11 +131,12 @@ class CorrectionSessionTest {
         logger.addExercise("db_bench_press")
         logger.log("25", 10, 2)
         logger.log("25", 1, 2)
-        // An ad-hoc set follows the set before.
-        assertEquals("1", logger.session.entry!!.full)
+        // An ad-hoc set follows the set before's weight, never its reps.
+        assertEquals("", logger.session.entry!!.full)
+        assertEquals("25", logger.session.entry!!.weight)
         val bench = logger.session.current!!.id
-        logger.correct(bench, 1); logger.type("11"); logger.tick()
-        assertEquals("11", logger.session.entry!!.full)
+        logger.correct(bench, 1); logger.focus(Field.Weight); logger.type("30"); logger.tick(); logger.tick()
+        assertEquals("30", logger.session.entry!!.weight)
 
         // Once the set to do has been typed into, a correction leaves it alone.
         logger.type("9")

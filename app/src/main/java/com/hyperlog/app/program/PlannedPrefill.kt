@@ -23,10 +23,10 @@ fun dropWeights(setKg: Double, technique: Technique.Dropset, ladder: WeightLadde
 }
 
 /**
- * The pad's entry for the next set of [plan] after the [logged] ones: [suggestion]'s weight and
- * reps (progression works them out from history and the sets before), and the target's RIR, else
- * the set before's. With no suggestion (no history yet) the weight is empty, to type first, and
- * the reps are the top of the range.
+ * The pad's entry for the next set of [plan] after the [logged] ones: [suggestion]'s weight
+ * (progression works it out from history and the sets before), and the target's RIR, else the
+ * set before's. With no suggestion (no history yet) the weight is empty, to type first. The reps
+ * are always empty: the row shows the target range as a placeholder until they are typed.
  */
 fun plannedEntry(plan: List<SetPrescription>, logged: List<LoggedSet>, suggestion: Suggestion?): SetEntry {
     val set = plan.getOrNull(logged.size) ?: plan.last()
@@ -34,7 +34,7 @@ fun plannedEntry(plan: List<SetPrescription>, logged: List<LoggedSet>, suggestio
     val kg = suggestion?.kg
     return SetEntry(
         weight = kg?.let(::formatKg).orEmpty(),
-        full = (suggestion?.reps ?: set.reps.max).toString(),
+        full = "",
         partial = "",
         rir = set.rir ?: previous?.rir,
         field = if (kg == null) Field.Weight else Field.Reps,

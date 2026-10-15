@@ -189,7 +189,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(20), file["database"])
+        assertEquals(JsonPrimitive(21), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }

@@ -164,7 +164,7 @@ outlineVariant ring and takes no tap.
 outline. An empty reps cell shows the range as a muted placeholder. RIR shows the selected RIR as
 a filled dot, else the target ring. The check is a primary ring: a tap logs the set with the
 values shown, prefilled or typed, wherever the pad is (as ✓ on the hidden pad does) and starts
-rest. With nothing to log yet (no RIR, no weight), the tap opens the pad on what's missing.
+rest. Until a weight and reps are typed the check is a grey ring and takes no tap (RIR is optional).
 
 **Set row, done.** Values in onSurface, a filled RIR dot with the logged RIR, partials as
 `12 + 6`, and a filled primary check. No row tint. A tap on the row loads it into the pad for a
@@ -347,7 +347,9 @@ Principles: warm-ups are guidance, not records: full rows that look like the set
 lighter, typed and ticked like sets, and never logged; the plates for a weight are drawn by one
 component, on the pad only; nothing about a warm-up touches the clock.
 
-- **The ramp** follows the weight planned or typed for set 1, but not keystroke by keystroke:
+- **The ramp** follows the weight planned or typed for set 1 and the reps planned for it (last
+  time's for an ad-hoc exercise); typing reps never changes it. It does not follow the weight
+  keystroke by keystroke:
   while the weight is being typed the warm-ups stay as they were, and they ramp again once the pad
   moves on to the reps (→, or a tap on the reps cell). Typing `80` never passes through an 8 kg
   ramp. With nothing to ramp from yet (an empty first weight), there are none until →.
@@ -371,7 +373,8 @@ component, on the pad only; nothing about a warm-up touches the clock.
   each reads on light and dark containers.
 - **In the pad**: a 48 dp strip under the Next row for a barbell or plate-loaded exercise, on the
   weight and the reps alike (a warm-up on the pad too), so the pad keeps its height between them,
-  then a thin outlineVariant divider, then the strip and keys. It updates as the weight is typed;
+  under a thin outlineVariant divider that separates it from the Next row, then a second divider,
+  then the strip and keys. It updates as the weight is typed;
   with nothing typed it draws the bar alone, and a weight the plates can't make draws the bar muted
   with "Not on these plates". The weight check's strip replaces it. A correction shows it too.
   Regular size: a 40 dp drawing, titleSmall legend.
@@ -385,12 +388,9 @@ component, on the pad only; nothing about a warm-up touches the clock.
 
 **Corrections** (built in ticket #15).
 
-**Fix the set just logged.** A Material snackbar, just above the pad, after each logged set:
-"<exercise> 60 × 12 @ 1 logged" with **Fix** (long duration). Fix loads that set into the pad on
-its own exercise's table, focused on the weight when it was kept past a weight check, and saving
-or cancelling returns to the set to do: a 255-for-25 typo is Fix, 2, 5, →, ✓ (5 taps, was 9). A
-corrected weight runs the same weight check as logging, its reason and three weights in the
-strip.
+**No snackbar.** Logging a set shows nothing over the table; the check of the set logged last
+takes it back, and a tap on any logged row corrects it. A corrected weight runs the same weight
+check as logging, its reason and three weights in the strip.
 
 Principles: a correction is the same pad on the row it fixes, so there is nothing new to learn;
 the set to do steps back while it happens and the clock never notices; a finished exercise or past
@@ -461,12 +461,11 @@ session reads like the logging screen with nothing to do, so tapping a number is
 | A warm-up | Ticks it and those above; on the last ticked, takes the tick back |
 | Any other row | Nothing (its row tap corrects a logged one) |
 
-Prefilled values are real values: ✓ without typing logs the set as planned. The first key on a
-field replaces the prefill. − / + step from the current value.
+Prefilled weight and RIR are real values; reps never are. The first key on a field replaces the
+prefill. − / + step from the current value.
 
 **Prefills follow what just happened.** The next set takes the last logged set's weight and its
-reps (capped at the set's top of range). The first set takes the suggestion and the top of the
-range. A correction to an earlier set feeds the prefills of the sets after it. The SPEC rule of
+RIR, never its reps. The first set takes the suggestion's weight. A correction to an earlier set feeds the prefills of the sets after it. The SPEC rule of
 adjusting weight by the RIR gap is not in the prototype.
 
 **Weight check.** A typed weight is flagged when it is 1.5× or more, or half or less, of the
@@ -505,3 +504,19 @@ drop or mini-set, Finish set) moves on to the partner's set of the same round wi
 - Tapping any value in the active row brings the pad back, focused on that value.
 - F/P: F types full reps, P types partials into the same cell (`12 + 6`). While typing partials
   the full reps are muted.
+
+## Owner decisions
+
+From the owner's phone test of the DEV build, 2026-10-15 (ticket #25).
+
+- **Clearing RIR.** Tapping the selected RIR again deselects it; no new control. The set logs
+  without an RIR, and RIR is optional everywhere a set is logged or corrected.
+- **No "logged" snackbar.** It is gone, with its Fix. The undo is the check of the set logged last
+  (unchanged); correcting is a tap on the row.
+- **Divider on the pad** between the Next row and the plate strip (or the stack's load), in light
+  and dark.
+- **Warm-ups never follow typed reps.** Typing "12" passed through "1" and added warm-ups. The ramp
+  comes from the planned reps, or last time's reps for an ad-hoc exercise.
+- **No reps prefill.** The reps field is empty and shows the planned range (`6–8`) as a muted
+  placeholder; ✓ is disabled until reps are typed. So the open question about showing the range
+  under a prefilled value no longer applies.

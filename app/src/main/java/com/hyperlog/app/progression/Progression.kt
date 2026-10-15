@@ -18,7 +18,10 @@ data class WorkSet(
     val target: SetPrescription?,
     /** False for a weight kept past a weight check that nothing logged since has confirmed. */
     val counts: Boolean = true,
-)
+) {
+    /** Counts and has an RIR: a set logged without one never feeds the estimate or moves a suggestion. */
+    val rated: Boolean get() = counts && set.rir != null
+}
 
 /**
  * One session of an exercise (on one machine, for machines): its main sets in order. For a
@@ -137,7 +140,7 @@ object Progression {
 
     /** A session's sets at its top weight that counted; back-offs follow the top set. */
     private fun topSets(p: Performance): List<WorkSet> {
-        val judged = p.sets.filter { it.counts && it.target?.backoff == null }.ifEmpty { return emptyList() }
+        val judged = p.sets.filter { it.rated && it.target?.backoff == null }.ifEmpty { return emptyList() }
         val top = judged.maxOf { it.set.weightKg }
         return judged.filter { abs(it.set.weightKg - top) < 0.05 }
     }
@@ -149,10 +152,10 @@ object Progression {
         var estimate: Estimate? = null
         for (p in history) {
             fun best(sets: List<WorkSet>) = sets.maxByOrNull { estimateFrom(it.set, k, p) }?.let { Estimate(estimateFrom(it.set, k, p), it.set) }
-            val sets = p.sets.filter { it.counts && it.set.fullReps in 1..MAX_ESTIMATE_REPS }
-            val normal = if (p.deload) null else best(sets.filter { it.set.rir < HIGH_RIR })
+            val sets = p.sets.filter { it.rated && it.set.fullReps in 1..MAX_ESTIMATE_REPS }
+            val normal = if (p.deload) null else best(sets.filter { it.set.rir!! < HIGH_RIR })
             // Deload and high-RIR sets only ever raise it.
-            val guarded = best(sets.filter { p.deload || it.set.rir >= HIGH_RIR })
+            val guarded = best(sets.filter { p.deload || it.set.rir!! >= HIGH_RIR })
             if (normal != null) estimate = normal
             if (guarded != null && guarded.kg > (estimate?.kg ?: 0.0)) estimate = guarded
         }
@@ -166,7 +169,7 @@ object Progression {
      */
     fun constant(history: List<Performance>): Double {
         val ks = history.filter { !it.deload }.flatMap { p ->
-            val sets = p.sets.filter { it.counts && it.set.fullReps in 1..MAX_ESTIMATE_REPS && it.set.rir < HIGH_RIR }.map { it.set }
+            val sets = p.sets.filter { it.rated && it.set.fullReps in 1..MAX_ESTIMATE_REPS && it.set.rir!! < HIGH_RIR }.map { it.set }
             sets.flatMap { a ->
                 sets.mapNotNull { b ->
                     val ea = effective(a)
@@ -202,7 +205,7 @@ object Progression {
             return Suggestion(top, predicted(estimate, k, today.load(top), target.rir, range), Suggestion.Kind.Deload, "Deload week: last time's weight, ${target.rir ?: 0} in reserve", "${formatKg(top)} · deload week, ${target.rir ?: 0} in reserve")
         }
         val t = was.rir
-        fun eff(s: LoggedSet) = s.fullReps + (if (t != null) s.rir else 0)
+        fun eff(s: LoggedSet) = if (t != null) effective(s) else s.fullReps
         val worst = sets.minOf(::eff)
         val topEff = range.max + (t ?: 0)
         val bottomEff = range.min + (t ?: 0)
@@ -265,6 +268,8 @@ object Progression {
         }
         val follow = Suggestion(set.weightKg, followReps(today, target), Suggestion.Kind.Follow, null)
         val t = was.rir ?: return follow
+        // Logged without an RIR there is no gap to adjust the weight by: the next set follows it.
+        if (set.rir == null) return follow
         val range = target.reps
         // About 5% per point of effective reps off the target, capped at ±10%.
         val gap = set.fullReps + set.rir - (set.fullReps.coerceIn(range.min, range.max) + t)
@@ -305,17 +310,17 @@ object Progression {
         return if (previous.target?.reps == target.reps) previous.set.fullReps.coerceAtMost(target.reps.max) else target.reps.max
     }
 
-    private fun effective(s: LoggedSet) = s.fullReps + s.rir
+    private fun effective(s: LoggedSet) = s.fullReps + (s.rir ?: 0)
 
     private fun estimateFrom(s: LoggedSet, k: Double, p: Performance) = p.load(s.weightKg) * (1 + effective(s) / k)
 
     /** `41.5 kg × 10 @ 2`. */
-    private fun LoggedSet.text() = "${formatKg(weightKg)} kg × $fullReps @ $rir"
+    private fun LoggedSet.text() = "${formatKg(weightKg)} kg × $fullReps${rir?.let { " @ $it" }.orEmpty()}"
 
     /** `41.5 kg × 10, 10 @ 2`, or `41.5 kg × 10 @ 2, 9 @ 1` when the RIRs differ. Sets share a weight. */
     private fun List<LoggedSet>.text(): String {
         val kg = "${formatKg(first().weightKg)} kg × "
-        return if (all { it.rir == first().rir }) kg + joinToString(", ") { "${it.fullReps}" } + " @ ${first().rir}"
-        else kg + joinToString(", ") { "${it.fullReps} @ ${it.rir}" }
+        return if (all { it.rir == first().rir }) kg + joinToString(", ") { "${it.fullReps}" } + first().rir?.let { " @ $it" }.orEmpty()
+        else kg + joinToString(", ") { "${it.fullReps}${it.rir?.let { r -> " @ $r" }.orEmpty()}" }
     }
 }

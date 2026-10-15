@@ -82,7 +82,8 @@ class SessionRenders {
         warmupEdit = warmupEdit, rampEntry = entry, latestSet = latest,
     )
 
-    private val reps100 = SetEntry("100", "6", "", 1, Field.Reps, partialMode = false, fresh = true)
+    /** Reps are never prefilled: the cell shows the target range as a placeholder. */
+    private val reps100 = SetEntry("100", "", "", 1, Field.Reps, partialMode = false, fresh = true)
 
     @Test fun warmups() = both("session-warmups") {
         session(benchExercise(warmupsDone = 2), SessionExercise(2, curl, emptyList(), emptyList(), plates.ladder(), true), entry = reps100)
@@ -98,7 +99,7 @@ class SessionRenders {
         session(
             benchExercise(sets = listOf(LoggedSet(100.0, 6, 0, 1)), slot = slot).copy(suggestion = Suggestion(90.0, 8, Suggestion.Kind.Backoff, null)),
             SessionExercise(2, curl, emptyList(), emptyList(), plates.ladder(), true, slot = slot.copy(id = "c", label = "1b", exercise = "leg_curl")),
-            entry = SetEntry("90", "8", "", 1, Field.Reps, partialMode = false, fresh = true), rest = true, latest = 1L to 0,
+            entry = SetEntry("90", "", "", 1, Field.Reps, partialMode = false, fresh = true), rest = true, latest = 1L to 0,
         )
     }
 
