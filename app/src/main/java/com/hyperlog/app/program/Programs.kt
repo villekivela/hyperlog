@@ -17,6 +17,7 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ChangeDiff
 import com.hyperlog.app.coach.ChangeJson
 import com.hyperlog.app.coach.Changes
+import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.data.PlanChangeEntity
 import java.time.Instant
 import java.time.LocalDate
@@ -38,6 +39,20 @@ data class ActiveProgram(
 
     /** The Changes in force, oldest first. */
     val changes: List<AcceptedChange> get() = history.filter { it.revertedAt == null }.map { it.accepted }
+
+    /**
+     * The accepted Changes, not reverted, that still cover today or a later day, newest first:
+     * the cards at the top of Coach. A date range runs to its last day, the rest of the block
+     * while the block it was accepted in runs, the rest of the program until it's finished.
+     */
+    val inForce: List<ChangeRecord>
+        get() = if (finished) emptyList() else history.filter { record ->
+            record.revertedAt == null && when (val scope = record.change.scope) {
+                is Scope.Dates -> scope.to >= today
+                Scope.RestOfProgram -> true
+                Scope.RestOfBlock -> program.blockAt(position.week)?.id == record.accepted.blockId
+            }
+        }.sortedWith(compareByDescending<ChangeRecord> { it.acceptedAt }.thenByDescending { it.id })
 
     /** The day Today runs, with today's Changes; null once the program is finished. */
     val next: PlannedDay? get() = if (finished) null else Changes.day(program, position, today, changes)
