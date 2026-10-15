@@ -158,6 +158,25 @@ class ActiveRowTest {
     }
 
     @Test
+    fun aFinishedMyoRepsSetsPillIsOneSmoothShapeDownItsLeftEdge() = bothThemes { dark ->
+        val myo = Technique.MyoReps(4, 5)
+        val minis = List(5) { Extension(Extension.Kind.MiniSet, 60.0, 4) }
+        val set = LoggedSet(60.0, 12, 0, 0, technique = myo, extensions = minis)
+        val shot = shoot(
+            session(exercise(listOf(set), listOf(SetPrescription(RepRange(10, 12), 0, 90, technique = myo))), SetEntry("60", "", "", null, Field.Reps, partialMode = false, fresh = true)),
+            dark,
+        )
+        val circle = index("1")
+        // Down the pill's left edge, from below the circle to its last mini-set, every pixel is the pill's.
+        val end = mid(circle) + RowHeight / 2 + SubRowHeight * 4f
+        var y = circle.bottom
+        while (y < end) {
+            assertColor("myo set, dark=$dark: pill's left edge at y=$y", shot.cs.tertiaryContainer, shot.at(circle.left + 1.dp, y))
+            y += 1.dp
+        }
+    }
+
+    @Test
     fun aRangePlaceholderFitsInsideItsCell() {
         shoot(session(exercise(emptyList(), listOf(SetPrescription(RepRange(10, 12), 0, 90))), SetEntry("60", "", "", 0, Field.Reps, partialMode = false, fresh = true)), dark = true)
         val cell = cell("Reps")
