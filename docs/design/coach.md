@@ -8,8 +8,8 @@ sheet stay, and are at the end of this note. The tokens of `program-and-today.md
 
 The owner's review on 2026-10-15 found the old screen hard to read: it never said what it does,
 the Limits repeated the situations, Time off showed at 0 days, and Pain → Hands buried a list of
-six exercise chips. The redesign answers those. Tokens for the new screen are set in the designer
-pass. Old screens: `screens/coach.png`, `coach-pain.png`.
+six exercise chips. The redesign answers those, with the tokens of the designer
+pass below. Old screens: `screens/coach.png`, `coach-pain.png`.
 
 ## Principles
 
@@ -26,30 +26,55 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 7. **The gym learns what it lacks** the way it learns machines: on the go ("Not at Harbour"), undone
    on the gym screen.
 
+## Tokens
+
+The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coach's own.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Intro | bodyLarge, onSurfaceVariant, 24 dp edge, 8 dp under the bar, 16 dp over the first group | The one line under the title |
+| Change in force | segment of a `SegmentedList` (Tones.card), 24 dp outer corners | One per Change, newest first |
+| Change row | `SegmentedRow`: `tune` in the 40 dp secondaryContainer circle, summary bodyLarge (2 lines), how long it runs bodyMedium onSurfaceVariant | The Change |
+| Change actions | 48 dp row, end-aligned, 12 dp from the segment's end, 8 dp between: **Revert** text button, **Tell Claude how it's going** tonal button | Under the Change row, in the same segment |
+| Composer | one `SectionCard` (Tones.card, 24 dp radius, 12 dp padding) | Gym, starters and the words, one thing to fill in |
+| Composer head | labelLarge, onSurfaceVariant, 12 dp inside the card (24 dp edge), 4 dp over its chips | "Gym"; the row is left out with no gyms |
+| Gym chip | FilterChip, `selectedChipColors()`, `check` leading when picked, 8 dp apart | Single choice |
+| Starter chip | SuggestionChip, `add` leading, 8 dp apart, no head: the `add` says what it does | Puts a sentence into the words |
+| Words | OutlinedTextField, label "In your words", 3 lines at least, 16 dp over it | |
+| Bottom bar | Tones.bar strip, 28 dp top corners, 16 dp padding, through the gesture area | Paste reply, Ask Claude |
+| Next step | filled Button at the end of the bar; the other is a text button whose label sits on the 24 dp edge | Ask Claude, then Paste reply, then Review |
+| Reply ready | primaryContainer card, 16 dp radius, inside the bar over its buttons, 12 dp under the strip's top: `check_circle` 24 dp, titleMedium "Claude's reply is ready", filled **Review** | The one accent of the screen |
+
 ## Wireframes
 
 ```
  Coach                                              ⚙
- Tell Claude what's going on. You get back a change to your program
- or a workout, and nothing changes until you accept it.
+ Tell Claude what's going on. It answers in words, or with a
+ change to your program that you review before anything changes.
 
- ┌ Hands need a week off grip work ──────────────┐   ← a Change in force
- │ Until Tue 27 Oct                              │
- │ [Revert]          [Tell Claude how it's going] │
- └───────────────────────────────────────────────┘
+ ┌──────────────────────────────────────────────────┐ ← a Change in force (segment)
+ │ (tune)  Hands need a week off grip work           │
+ │         Until Tue 27 Oct                          │
+ │                 Revert  [Tell Claude how it's going]│
+ └──────────────────────────────────────────────────┘
 
- Gym   [✓ Harbour] [Itis]
-
- [My hands hurt] [Short on time today] [No gym, dumbbells at home]
- [Slept badly] [Build me a workout]
-
- ┌ In your words ────────────────────────────────┐
- │ Left elbow aches on curls…                    │
- └───────────────────────────────────────────────┘
- ───────────────────────────────────────────────────
- Claude's reply is ready                  [Review]   ← after asking, when the clipboard holds one
- Paste reply                           [Ask Claude]
+ ┌──────────────────────────────────────────────────┐ ← the composer card
+ │ Gym                                               │
+ │ [✓ Harbour] [Itis]                                │
+ │ [+ My hands hurt] [+ Short on time today]         │
+ │ [+ No gym, dumbbells at home] [+ Slept badly]     │
+ │ ┌ In your words ────────────────────────────────┐ │
+ │ │ Left elbow aches on curls…                    │ │
+ │ └───────────────────────────────────────────────┘ │
+ └──────────────────────────────────────────────────┘
+ ╭──────────────────────────────────────────────────╮
+ │ ┌ ✓ Claude's reply is ready          [Review] ┐  │ ← after asking, when the clipboard holds one
+ │ Paste reply                        Ask Claude    │   (then neither is filled)
+ ╰──────────────────────────────────────────────────╯
 ```
+
+Before asking the bar reads `Paste reply   [Ask Claude]`; once asked, `Ask Claude   [Paste
+reply]`. The filled button always sits at the end, so the next step is always in the same place.
 
 ```
  [✓ Build me a workout]
@@ -84,13 +109,23 @@ pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 
 ## States
 
-- Coach: empty, nothing in force (Ask Claude disabled); a Change in force; words typed; Plan a
-  workout open; asked (Paste reply filled); Claude's reply ready; a bad paste with its
-  problems; no program running (no Change cards).
-- Reviews: a Change ("Change to your program", Accept); a workout ("Workout for today",
-  Add to Today).
-- Today: a workout card above the program day, and above Start session with no program; the
-  time-off line with Ease back in.
+Issue #32 (this pass), with the screenshot of each in `screens/`, light and dark:
+
+- Coach: empty, nothing in force, Ask Claude disabled (`coach-01-empty`); a Change in force
+  (`coach-02-in-force`); words typed (`coach-03-words`); asked, Paste reply filled
+  (`coach-04-asked`); Claude's reply ready (`coach-05-reply-ready`); a bad paste with its problems
+  (`coach-06-bad-paste`); no program running, no Change cards and no Paste reply
+  (`coach-07-no-program`).
+- Review of a Change, headed "Change to your program" (`coach-08-review`).
+- Today: the time-off line with Ease back in (`today-time-off`), which opens Coach with the words
+  filled in (`coach-09-ease-back-in`).
+
+Issue #33 (workouts): Plan a workout open; a workout's review ("Workout for today", Add to
+Today); Today's workout card above the program day, and above Start session with no program.
+Until then Paste reply is left out with no program, since only a workout could come back.
+
+Unchanged by the redesign:
+
 - Start sheet: missing swaps for the gym picked (`start-01-missing`); another gym recomputes them.
 - Which machine?: **Not at Harbour** under Add machine (`machine-01-not-here`).
 - Gym screen: **Not here** list with × to undo (`gym-01-not-here`).
