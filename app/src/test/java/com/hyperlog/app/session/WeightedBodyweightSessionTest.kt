@@ -59,7 +59,7 @@ class WeightedBodyweightSessionTest {
         logger.startDay(programs.active.first()!!, gymId = null)
         now += 200_000
         logger.focus(Field.Weight); logger.press(PadKey.Digit(1)); logger.press(PadKey.Digit(0)); logger.done()
-        logger.press(PadKey.Digit(8)); logger.selectRir(1); logger.done()
+        logger.press(PadKey.Digit(8)); if (logger.state.value?.entry?.rir != 1) logger.selectRir(1); logger.done()
         logger.finish()
 
         now += 7 * 86_400_000L

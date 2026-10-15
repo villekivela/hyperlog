@@ -87,7 +87,7 @@ class StartingWeightSessionTest {
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
         focus(Field.Weight); kg.forEach { press(if (it == '.') PadKey.Dot else PadKey.Digit(it.digitToInt())) }; done()
-        "$reps".forEach { press(PadKey.Digit(it.digitToInt())) }; selectRir(rir); done()
+        "$reps".forEach { press(PadKey.Digit(it.digitToInt())) }; if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }
 
     @Test
@@ -100,7 +100,7 @@ class StartingWeightSessionTest {
         assertEquals(Suggestion.Kind.Starting, s.kind)
         assertEquals("From old app: 60 kg × 8 @ 2 RIR, 12 Sep", s.why)
         assertEquals("60", logger.session.entry!!.weight)
-        assertEquals("8", logger.session.entry!!.full)
+        assertEquals("", logger.session.entry!!.full)
     }
 
     @Test
@@ -158,7 +158,7 @@ class StartingWeightSessionTest {
         logger.addExercise("barbell_bench_press")
         assertEquals("From old app: 60 kg × 8 @ 2 RIR, 12 Sep", logger.session.current!!.suggestion!!.why)
         assertEquals("60", logger.session.entry!!.weight)
-        assertEquals("8", logger.session.entry!!.full)
+        assertEquals("", logger.session.entry!!.full)
     }
 
     @Test

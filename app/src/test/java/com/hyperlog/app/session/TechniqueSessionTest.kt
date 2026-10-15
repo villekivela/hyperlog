@@ -106,7 +106,7 @@ class TechniqueSessionTest {
         }
         val logger = logger()
         logger.startNext()
-        logger.tick()
+        logger.type("9"); logger.tick()
         assertEquals("8", logger.session.entry!!.full)
         logger.tick()
         assertEquals("5", logger.session.entry!!.full)
@@ -183,7 +183,7 @@ class TechniqueSessionTest {
         program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "lengthened_partials", "partials": 6 } } ]""")
         val logger = logger()
         logger.startNext()
-        logger.type("60"); logger.done(); logger.tick()
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
         assertEquals("6", logger.session.entry!!.partial)
         logger.tick()
         assertEquals(12 to 6, logger.session.current!!.sets.single().let { it.fullReps to it.partialReps })
@@ -195,7 +195,7 @@ class TechniqueSessionTest {
         program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "lengthened_partials", "partials": 6 } } ]""")
         logger().apply {
             startNext()
-            type("60"); done()
+            type("60"); done(); type("12")
             setPadVisible(false)
             tick()
             assertEquals(listOf(12 to 6), session.current!!.sets.map { it.fullReps to it.partialReps })
@@ -207,7 +207,7 @@ class TechniqueSessionTest {
         program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "lengthened_partials" } } ]""")
         logger().apply {
             startNext()
-            type("60"); done()
+            type("60"); done(); type("12")
             setPadVisible(false)
             tick()
             assertEquals(listOf(12 to 0), session.current!!.sets.map { it.fullReps to it.partialReps })
@@ -219,7 +219,7 @@ class TechniqueSessionTest {
         program("leg_extension", """[ { "reps": "10-12", "rir": 0, "technique": { "kind": "iso_hold", "seconds": 20, "position": "stretch" } } ]""")
         val logger = logger()
         logger.startNext()
-        logger.type("60"); logger.done(); logger.tick()
+        logger.type("60"); logger.done(); logger.type("12"); logger.tick()
         assertEquals(FollowUp.Hold(20, com.hyperlog.app.program.HoldPosition.Stretch), logger.session.followUp)
         assertNull(logger.session.restEndsAt)
         assertEquals("20", logger.session.entry!!.full)
@@ -239,7 +239,7 @@ class TechniqueSessionTest {
         program("db_bench_press", """[ { "count": 2, "reps": "8-10", "rir": 1 } ]""")
         val logger = logger()
         logger.startNext()
-        logger.type("25"); logger.done(); logger.tick()
+        logger.type("25"); logger.done(); logger.type("10"); logger.tick()
         assertNull(logger.session.followUp)
 
         logger.setTechnique(1, Technique.Dropset())
@@ -248,7 +248,7 @@ class TechniqueSessionTest {
         assertEquals(Technique.Dropset(), logger().session.current!!.techniqueAt(1))
 
         now += 120_000
-        logger.done()
+        logger.type("10"); logger.done()
         assertEquals(FollowUp.Drop(0, 2), logger.session.followUp)
         assertEquals("17.5", logger.session.entry!!.weight)
         // A logged set keeps what it was done with.
@@ -262,7 +262,7 @@ class TechniqueSessionTest {
         val logger = logger()
         logger.startNext()
         logger.setTechnique(0, null)
-        logger.type("25"); logger.done(); logger.tick()
+        logger.type("25"); logger.done(); logger.type("9"); logger.tick()
         assertNull(logger.session.followUp)
         logger.finish()
 
@@ -271,7 +271,7 @@ class TechniqueSessionTest {
         logger.setTechnique(0, Technique.Failure)
         assertEquals(0, logger.session.entry!!.rir)
         logger.setTechnique(0, Technique.MyoReps(miniSetReps = 3))
-        logger.tick()
+        logger.type("9"); logger.tick()
         assertEquals(FollowUp.MiniSet(0, 5, 3), logger.session.followUp)
     }
 
@@ -299,7 +299,7 @@ class TechniqueSessionTest {
         program("db_bench_press", dropSet)
         val logger = logger()
         logger.startNext()
-        logger.type("25"); logger.done(); logger.tick()
+        logger.type("25"); logger.done(); logger.type("9"); logger.tick()
         logger.tick()
         logger.finishSet()
         assertNull(logger.session.followUp)

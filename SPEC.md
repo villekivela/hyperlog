@@ -478,9 +478,10 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      opens, even after a finish and Resume moved the program's position on.
    - **A program day's session** has a row for every planned set from the start, its target shown
      as muted placeholders in the empty cells (`6–8` in Reps, an RIR ring in RIR) until typed. The first set prefills with the suggestion (Automatic
-     progressive overload): its weight and target reps, at the target RIR; with no history, an empty
-     weight at the top of the range. Later sets follow the set before (reps capped at the top of
-     the range, or the top of a new range), and its weight moves with the RIR gap. Rest after a set is the program's rest for it. After an
+     progressive overload): its weight, at the target RIR; with no history, an empty weight. **Reps
+     are never prefilled**: the Reps cell starts empty and shows the target range (`6–8`) as a muted
+     placeholder, and the row's ✓ (and the pad's) stays disabled until reps are typed. Later sets
+     follow the set before (its RIR), and their weight moves with the RIR gap. Rest after a set is the program's rest for it. After an
      exercise's last planned set the first exercise with sets left comes up. When every planned
      set is logged, the pad gives way to **Day done** and Finish session.
    - The **prescription sheet** (tap the exercise name) shows every set's target, technique or
@@ -516,7 +517,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        again once the pad moves on to reps or → is pressed (typing `80` never passes through an
        8 kg ramp). Lifts with
        several joints get 45% × 8, 60% × 5, 75% × 3, 85% × 2 when the first work set is 6 reps or
-       fewer (the reps typed for it, else its planned top reps), else 45% × 8, 65% × 5, 85% × 3;
+       fewer (its planned top reps, or last time's reps for an ad-hoc exercise; typing reps never
+       changes the warm-ups), else 45% × 8, 65% × 5, 85% × 3;
        single-joint exercises (by movement pattern: curls,
        raises, extensions, flyes, calf raises…) get one, 60% × 8. Each is the nearest rung; on a
        bar or plate-loaded machine, the nearest 5 kg step, so the small plates are only for work
@@ -607,8 +609,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        it and its rest runs; only the partner's set of the same round comes without rest.
    - **Every tap is saved immediately**; a session survives back gestures, app kills and reboots.
      Logged sets stay editable during and after the session; editing one never resets the timer.
-   - **Prefills** follow what just happened (each set takes the previous set's weight and reps; drop
-     reps prefill from last time's drops).
+   - **Prefills** follow what just happened (each set takes the previous set's weight and RIR, never
+     its reps; drop reps prefill from last time's drops).
    - **Weight check**: a weight 1.5× or more (or half or less) of the reference, or not on the
      equipment's ladder, is shown with the reason ("10× last set") and three real weights to pick;
      the first ✓ doesn't log it, a second ✓ keeps it.
@@ -638,16 +640,18 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        changed weight gets the weight check a logged one does (against the set before it, else
        last time's first): the first ✓ warns, a second keeps it, and it then counts as kept. A
        corrected weight that passes the check no longer counts as kept.
-     - **Fix the set just logged**: after each set a snackbar reads `Barbell Bench Press 60 × 12 @ 1
-       logged` with **Fix** for about ten seconds. Fix puts that set's exercise on screen with the
-       set in the pad (on the weight if it was kept past a check), wherever the session moved; saving
-       or cancelling goes back to the set to do. It isn't kept across an app restart.
+     - **No "logged" snackbar**: logging a set shows nothing over the table. The check of the set
+       logged last takes it back; any other fix is a tap on its row.
      - The set to do is prefilled again from the correction if nothing was typed into it yet.
      - Rows can't be corrected while a drop set, myo-reps or hold is still open; finish it first.
      - A correction half typed isn't kept if the app is killed; the row keeps its logged values.
      - **Open** on a finished exercise in the session list shows its table in place of the current
        one, to look at or correct; the line at the bottom reads "Now <current exercise>" and goes
        back, as does Back. The session stays on its set and rest keeps running.
+   - **RIR is optional.** Tapping the selected RIR again clears it, and the set logs without one
+     (the RIR cell stays empty). A set without an RIR is kept like any other but feeds no estimate
+     and moves no suggestion, since progression is judged on reps + RIR. It reads without `@ RIR`
+     wherever sets are summarised.
    - Drops and myo mini-sets record no RIR; they are taken to failure.
    - **Ad-hoc session** (no program): Today offers **Start session**, or **Resume session** while
      one runs. At most one session runs at a time, and the app opens on it. You add exercises from
@@ -657,8 +661,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        there is always one active row after the logged ones. Last time's sets of the exercise show
        as muted upcoming rows, so you can see what is likely to come.
      - The first set prefills from last time's first set. With no history the pad starts on an
-       empty weight. Later sets take the previous set's weight, reps and RIR. A set logs only
-       with a weight, full reps and an RIR.
+       empty weight. Later sets take the previous set's weight and RIR, never its reps. A set logs only
+       with a weight and full reps; **RIR is optional**.
      - Rest after each set is 2:00.
      - **One ✓, one set**: a ✓ within 1 s of logging a set logs nothing, so a stutter or double
        tap can't log a phantom set. No two sets are ever logged that close on purpose.

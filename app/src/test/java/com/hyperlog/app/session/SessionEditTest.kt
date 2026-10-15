@@ -155,14 +155,14 @@ class SessionEditTest {
     }
 
     @Test
-    fun aSetsTargetRepsAndRirCanChangeAndTheActiveSetIsPrefilledFromIt() = runTest {
+    fun aSetsTargetRepsAndRirCanChangeAndTheActiveSetTakesTheRirFromIt() = runTest {
         val logger = logger()
         val bench = logger.session.current!!.id
         logger.setTarget(bench, 0, RepRange(3, 5), rir = 2)
         val current = logger.session.current!!
         assertEquals(SetPrescription(RepRange(3, 5), 2, 180), current.prescription!![0])
         assertEquals(SetPrescription(RepRange(6, 8), 1, 180), current.prescription!![1])
-        assertEquals("5", logger.session.entry!!.full)
+        assertEquals("", logger.session.entry!!.full)
         assertEquals(2, logger.session.entry!!.rir)
     }
 

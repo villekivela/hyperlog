@@ -602,8 +602,6 @@
     <string name="settings_check_now_found">A newer version is ready: see Today</string>
     <string name="settings_check_now_none">No newer version, or no connection</string>
     <string name="machine_others">Other equipment at %1$s</string>
-    <string name="fix_logged">%1$s %2$s logged</string>
-    <string name="fix_action">Fix</string>
     <plurals name="ladder_rung_count">
         <item quantity="one">%1$d weight</item>
         <item quantity="other">%1$d weights</item>
