@@ -4,7 +4,8 @@ Ticket #19 brings History: the session list (taking over #15's Past sessions), e
 sets and estimate over time, weekly sets per muscle, and the bodyweight log. It extends
 `logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Screens:
 `history-progress.png`, `history-progress-exercises.png`, `past-exercise.png` (phone, dark);
-`light-` and `dark-history.png` (renders from `AppRenders`).
+`light-` and `dark-history.png` (renders from `AppRenders`); `light-` and
+`dark-exercise-progress.png`, an exercise's trend with its chips in one column (`TrendRenders`).
 
 ## Principles
 
@@ -78,8 +79,8 @@ surface. Material's light `outline` itself failed (ΔE 11.2), hence the lift tow
  └────────────────────────────────
  28 Sep                          5 Oct     ← first and last date
  ━ Estimate   ● Top set                     ← legend (two series)
- Mon 5 Oct      60 × 5 [4]         99      ← the table: date · top set · estimate
- Thu 1 Oct      82.5 × 5 [1]       99
+ Mon 5 Oct          60 × 5 [4]     99      ← the table: date · top set · estimate
+ Thu 1 Oct        82.5 × 5 [1]     99      ← top sets right-aligned, so the chips make a column
 ```
 
 For a machine exercise the block from the figure down repeats per machine, headed

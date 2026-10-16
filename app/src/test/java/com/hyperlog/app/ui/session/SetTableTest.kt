@@ -28,6 +28,10 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -200,12 +204,36 @@ class SetTableTest {
     }
 
     @Test
+    fun theRirColumnAndThePadDrawRirChips() {
+        // Set 1 logged at 0, set 2 being done with RIR 1 chosen, set 3 still to come at its target.
+        show(listOf(LoggedSet(100.0, 6, 0, 0)), listOf(top, top, top), latest = 1L to 0, warmups = false)
+        compose.onNodeWithContentDescription("Log set 2").assertIsDisplayed()
+        compose.onAllNodes(hasTestTag(RirChipLoggedTag) and !onRirPad, useUnmergedTree = true).assertCountEquals(2)
+        compose.onAllNodes(hasTestTag(RirChipTargetTag) and !onRirPad, useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun theChosenRirKeyIsTheBadgeItWillBecome() {
+        show(emptyList(), listOf(top))
+        compose.onNode(hasTestTag(RirChipLoggedTag) and hasAnyAncestor(hasContentDescription("RIR 1")), useUnmergedTree = true).assertExists()
+        for (other in listOf("RIR 0", "RIR 2", "RIR 3", "RIR 4+")) {
+            compose.onNode(hasTestTag(RirChipTargetTag) and hasAnyAncestor(hasContentDescription(other)), useUnmergedTree = true).assertExists()
+        }
+        // Each key stays a 48 dp tap target.
+        val key = compose.onNodeWithContentDescription("RIR 1").getBoundsInRoot()
+        assertTrue("RIR key is ${key.bottom - key.top} tall", key.bottom - key.top >= 48.dp)
+    }
+
+    @Test
     fun nextIsThePadsTopRow() {
         show(emptyList(), listOf(top))
         compose.onNodeWithTag(NextRowTag).assertIsDisplayed()
         compose.onNodeWithText("Back Squat").assertIsDisplayed()
     }
 }
+
+/** Inside one of the pad's RIR keys, whose descriptions read "RIR 0" to "RIR 4+". */
+internal val onRirPad = hasAnyAncestor(hasContentDescription("RIR ", substring = true))
 
 private class Recording(val calls: MutableList<String>) : SessionActions {
     override fun logShown() { calls += "logShown" }

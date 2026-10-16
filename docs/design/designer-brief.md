@@ -46,7 +46,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **Navigation:** a navigation bar for Today, Program, Coach and History; Settings is an icon at
   the end of each destination's top bar. The bar is hidden during a session.
 - **A roomy set table.** Columns `32 · 80 · flex · 72 · 88 · 36` with the kg and reps cells 4 dp
-  inside their columns, so a focused cell keeps 8 dp from its neighbour and 12 dp from the RIR dot.
+  inside their columns, so a focused cell keeps 8 dp from its neighbour and 12 dp from the RIR chip.
 - **Input looks native.** Numbers go through the compact in-app pad drawn like the system number
   keyboard. The pad continues into the gesture area and can be hidden. The owner likes it as it is:
   don't change it.
@@ -55,7 +55,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
   (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
 - **Hyperlog's own theme:** Navy on grey, light and dark, through the whole tree; nothing hard-codes
-  a colour but two fixed scales. RIR uses its own three colours (ring = target, dot = logged).
+  a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a solid fill = logged).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
 - **Plates are drawn, never written out**: one component, a drawing of one side of the bar with a

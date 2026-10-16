@@ -195,7 +195,7 @@ Myo-reps, mini-sets of 4 · `unfold_less` Lengthened partials to failure · `pan
 filled **Finish session** (the usual Finish dialog follows).
 
 **Prescription sheet.** Name, equipment and muscles; then each set as a 40 dp row (number, target
-reps and RIR ring, technique or back-off); rest as one line (`timer` Rest 3:00) when all sets share
+reps and outlined RIR chip, technique or back-off); rest as one line (`timer` Rest 3:00) when all sets share
 it, else per row at the right; the slot note with `view_timeline` (the program's cue); the
 technique note with `sticky_note_2`; **Technique video**.
 

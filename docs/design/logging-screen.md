@@ -6,10 +6,13 @@ ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Scr
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
 (`session-active-drop` and `session-active-mini-set` show a set under way,
 `session-mini-sets-planned` myo-reps about to start, `session-done-sets` finished sets with
-drops, partials and myo-reps, each ending in its RIR chip). The renders
+drops, partials and myo-reps, each ending in its RIR chip; `exercise-sheet` the exercise sheet's
+prescription with its outlined target chips). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
 testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark; the whole bar and machine
 from `WholeBarRenders` and Session done from `AppRenders`, the same way.
+`phone-dark-rir-session.png`, `phone-dark-rir-sheet.png` and `phone-dark-rir-progress.png` are the
+RIR chip checked on the phone (#46, dark mode).
 
 ## Principles
 
@@ -21,7 +24,8 @@ from `WholeBarRenders` and Session done from `AppRenders`, the same way.
 3. **Every row ends in a check.** A tap on the check logs a set as shown; a set done as planned is
    one tap. The pad still logs too, and keeps every decision for a set in thumb reach.
 4. **Planned things look planned, done things look done.** Prefills and targets are muted; done
-   rows are full strength with a filled primary check. A ring is a target, a filled dot a result.
+   rows are full strength with a filled primary check. RIR is the one chip the whole app uses: an
+   outlined chip is a target, a solid badge a result.
 5. **The index column says what a set is.** `W` or the set number on a circle; a technique tints
    it and adds its symbol, and its drops or mini-sets hang off it in one tall pill.
 6. **One list, visibly scrollable.** Warm-ups and sets scroll together, fading at an edge with
@@ -47,8 +51,9 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Fade | 32 dp | Top or bottom edge of the list, when it has more that way |
 | Key | 56 dp tall, 4 dp gaps, 12 dp radius | Pad keys, 4 equal columns |
 | Row ripple | 24 dp radius | A tappable row's ripple (a done row, a warm-up) |
-| RIR mark | 20 dp circle, 2 dp ring | Target (ring) and result (filled) |
-| RIR chip | 1.25 em tall, (0.9 + 0.5 per digit) em wide, 1.5 dp outline, 4 dp corners | `@ N` in set text everywhere else: target outlined, logged filled |
+| RIR chip | 1.25 em tall, (0.9 + 0.5 per digit) em wide, 1.5 dp outline, 4 dp corners | `@ N` in set text: target outlined, logged a badge |
+| RIR chip on its own | the same, its number 12 sp (14 sp on the pad), so 21 × 19 dp for one digit; `4+` for 4 and up | RIR column, exercise sheet, set sheet stepper and RIR pad |
+| RIR pad key | 48 dp tap target, 40 dp pill | The chip on the strip; the chosen key's pill secondaryContainer |
 
 Type (Material 3 scale with tabular figures in every style; Space Grotesk for headlineSmall and
 titleLarge, the system font for the rest):
@@ -90,13 +95,14 @@ Colour comes from Hyperlog's Navy on grey theme, light and dark:
 
 Two fixed scales sit outside the theme:
 
-- **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots. In light
-  mode the target rings are `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at
-  least 3:1 on every light surface so they read in daylight (`RirContrastTest`); filled dots and
-  dark mode keep the base colours. The RIR chip in set text follows the mark: a target is an
-  outline in the ring's colour with an onSurface number; a logged set is a solid badge, the same in
-  both modes, a white number (semibold, 0.8 em) on `#D14237`, `#9D6B1C` or `#447E79`, the ring's
-  light shades darkened just far enough for 4.5:1 (#43, the owner's call).
+- **RIR:** one shape everywhere, the RIR chip, here as on Today, Program and History (#46, the
+  owner's call). A target is an outline with an onSurface number: `#D9645B`, `#E0A84E`, `#6BAFA9`
+  in dark mode, and in light mode `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at
+  least 3:1 on every light surface so they read in daylight (`RirContrastTest`). A logged or chosen
+  RIR is a solid badge, the same in both modes, a white number (semibold) on `#D14237`, `#9D6B1C`
+  or `#447E79`, the outlines' light shades darkened just far enough for 4.5:1 (#43). So a set looks
+  the same the moment you tap its RIR as it does in History. On the pad every key is an outlined
+  chip and the chosen one turns into its badge.
 - **Trend** (the why-line's symbol): up `#5FAE7A` (calm green), same weight `#9AA1A9`
   (neutral), down `#E0A84E` (amber; a deload or back-off is no failure, so never red).
 
@@ -114,16 +120,16 @@ Two fixed scales sit outside the theme:
  (W)                  60      5           (✓)
  (W)                  75      3            ○     ← still to do: muted values, an outlineVariant ring
                      ┌───┐  ┏━━━┓
- (①)     97.5 × 6   │100│  ┃ 6 ┃   ●1      ◯     ← active: no fill; outlined cells, the focused one in
+ (①)     97.5 × 6   │100│  ┃ 6 ┃   ▐1▌     ◯     ← active: no fill; outlined cells, the focused one in
                      └───┘  ┗━━━┛                    primary; the circle filled primary; ◯ logs it as shown
- (2)     87.5 × 8     90    6–8    (1)      ○    ← upcoming: planned weight, target as placeholders
- (3)ᵈ                 25   8–10    (0)      ○    ← technique set: tinted circle, badge ᵈ on its corner,
- ┃                  17.5      6    (0)      ○       its drops in one tall pill down the column,
- +                  12.5      6    (0)      ○       `+` at its foot adds a drop
+ (2)     87.5 × 8     90    6–8    [1]      ○    ← upcoming: planned weight, target as placeholders
+ (3)ᵈ                 25   8–10    [0]      ○    ← technique set: tinted circle, badge ᵈ on its corner,
+ ┃                  17.5      6    [0]      ○       its drops in one tall pill down the column,
+ +                  12.5      6    [0]      ○       `+` at its foot adds a drop
 ░░░░░░░░░░░░░░░░░░░░░░░ fade ░░░░░░░░░░░░░░░░░░   ← the list scrolls as one; fades where it has more
 ▓ Next  Seated Leg Curl                       ⌃ ▓  ← the pad's top row, on the pad's surface
 ▓   ─┤▐█▐█├──   ■ 2 × 20   ⟋ 20                 ▓  ← plates, while a barbell weight is on the pad
-▓  ●0   ●1   (●2)  ●3   ●4+         [F| P ]     ▓  ← strip: RIR + full/partial (warm-up: its name)
+▓  [0]  [1]  ▐2▌  [3]  [4+]         [F| P ]     ▓  ← strip: RIR + full/partial (warm-up: its name)
 ▓ [ 1 ] [ 2 ] [ 3 ] [ ⌫ ]                       ▓
 ▓ [ 4 ] [ 5 ] [ 6 ] [ − ]                       ▓
 ▓ [ 7 ] [ 8 ] [ 9 ] [ + ]                       ▓
@@ -131,7 +137,7 @@ Two fixed scales sit outside the theme:
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ gesture area ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ```
 
-`(n)` is an RIR ring (target), `●n` a filled RIR dot (result or selection), `(W)` and `(1)` index
+`[n]` is an outlined RIR chip (target, or a pad key), `▐n▌` a filled RIR chip (result or selection), `(W)` and `(1)` index
 circles, `○` a check to do, `(✓)` a done check.
 
 ## Components
@@ -168,7 +174,7 @@ lowered weight shows it. A tap on a circle of a set still to do opens its set sh
 target, Remove set, left and right).
 
 **Set row, upcoming.** Planned weight in `outline`; the target as placeholders in the empty cells:
-the rep range (`6–8`) in Reps and an RIR ring for the target RIR. Last is last time's set, muted.
+the rep range (`6–8`) in Reps and an outlined RIR chip for the target RIR. Last is last time's set, muted.
 In a program session "last time" is the session progression judges (same slot and rep range,
 else the latest), the one the why-line names, matched by position; ad hoc it's the latest. Ad hoc,
 last time's remaining sets show as upcoming rows prefilled like the next set. The check is an
@@ -177,11 +183,11 @@ outlineVariant ring and takes no tap.
 **Set row, active.** No fill: the row sits flat like the others, so a technique's tall pill is
 never cut by a row shape. kg and reps are cells outlined in `outline`; the focused one is a well
 (surfaceContainerLowest) with a 2 dp primary outline. The index circle is primary. An empty reps cell shows the range as a muted placeholder. RIR shows the selected RIR as
-a filled dot, else the target ring. The check is a primary ring: a tap logs the set with the
+a badge, else the target's outlined chip. The check is a primary ring: a tap logs the set with the
 values shown, prefilled or typed, wherever the pad is (as ✓ on the hidden pad does) and starts
 rest. Until a weight and reps are typed the check is a grey ring and takes no tap (RIR is optional).
 
-**Set row, done.** Values in onSurface, a filled RIR dot with the logged RIR, partials as
+**Set row, done.** Values in onSurface, an RIR badge with the logged RIR, partials as
 `12 + 6`, and a filled primary check. No row tint. A tap on the row loads it into the pad for a
 correction. The check of the set logged last in the session takes it back: the set is deleted, its
 values go back on the pad as the set to do, its exercise comes back on screen and rest stops.
@@ -208,7 +214,7 @@ only that one: the others go on following the ramp. The next session ramps again
 (`18 × 7`); kg the planned drop weight (the set's weight less the percent, rounded down to the
 ladder, live while the set's weight is typed) or, for a mini-set or hold, the set's weight muted
 and locked; reps prefilled from last time's drop (else 6), the mini-set's target or the hold's
-seconds. A drop is to failure: a 0 ring in RIR. The check is a 24 dp ring; on the one being done
+seconds. A drop is to failure: an outlined 0 chip in RIR. The check is a 24 dp ring; on the one being done
 a tap logs it as shown; done ones are filled, and a tap on the row corrects them. The one being
 done is marked only by its outlined cells (a mini-set's or hold's weight is no cell); the set's
 circle at the top of the pill stays primary for the whole group.
@@ -220,7 +226,7 @@ at the top or bottom edge shows there is more that way.
 
 **Pad.** Drawn like**Pad.** Drawn like the system number keyboard. The strip above the keys changes with the
 field:
-- Reps of a set: RIR 0–4+ as filled dots, then the F/P toggle.
+- Reps of a set: RIR 0–4+ as outlined chips, the chosen one its badge, then the F/P toggle.
 - Weight: five rungs of the equipment's ladder around the current value.
 - Weight that looks wrong: `warning` symbol, the reason ("10× last set", "3× lighter than the
   plan", "Not on this equipment") and three real rungs near the expected weight.
@@ -261,7 +267,7 @@ prescription's plan, the machine row and the set sheet's target steppers are car
   onSurfaceVariant. A superset on screen shows both partners as now, with no Start on either. The
   done symbol means every planned set is logged: an exercise left halfway keeps the empty circle
   and shows its logged sets.
-- *Prescription:* name, equipment, each set (reps, RIR ring, technique with its numbers, e.g.
+- *Prescription:* name, equipment, each set (reps, outlined RIR chip, technique with its numbers, e.g.
   "2 drops of 25%"), rest, why the weight was suggested, the technique note, and
   **Technique video**.
 - *Rest:* see Timer.
@@ -280,7 +286,7 @@ offers **Resume session**. The app opens on a running session. Every dialog in t
 buttons this way: the way out first, the action last, at the right.
 
 **Ad-hoc session** (built in ticket #2). The same table, without a plan:
-- No targets, so no placeholders or rings. The "Last" head shows only once there is history.
+- No targets, so no placeholders or target chips. The "Last" head shows only once there is history.
 - The sets are open-ended: logged rows, the active row, then last time's remaining sets as
   muted upcoming rows (prefilled the way the next set will be).
 - With no history the first set starts on an empty weight. Empty cells show nothing rather than a
@@ -306,7 +312,7 @@ buttons this way: the way out first, the action last, at the right.
   hold follow as 48 dp sub-rows in its tall pill from the start, in the order they'll be done.
   Planned sub-rows are muted prefills (drop weights computed from the set's planned or typed weight,
   live), done ones end in a filled check.
-- **Drop**: RIR is a 0 ring, Last is last time's drop (`18 × 9`), reps prefill from it.
+- **Drop**: RIR is an outlined 0 chip, Last is last time's drop (`18 × 9`), reps prefill from it.
 - **Myo-reps**: reps prefill with the mini-set's target. Myo-reps have no maximum and no `+`. Before the set one muted planned
   row shows the target; during it, the done ones and the active one. The weight is muted and can't be tapped.
 - **Iso hold**: one sub-row, its value in seconds (`20 s`); the weight is the set's, muted.
@@ -350,7 +356,7 @@ stays readable (a swap names what it replaced).
   labelLarge heads over 56 dp rows. A search lists the whole library instead.
 - **Set sheet**: the title row ends in a text **Remove set** (`delete`)
   when the set can go. "Target" then has three 56 dp rows, label at the margin and a − value +
-  stepper at the end, values in one column: Fewest reps, Most reps, RIR (the value as its ring).
+  stepper at the end, values in one column: Fewest reps, Most reps, RIR (the value as its outlined chip).
   Separate rows, because a dash between two steppers reads as a minus. Steps that can't go
   further are dimmed (outlineVariant). Then the technique choices as before.
 - **Session list**: each row ends in a 48 dp ⋮ (Swap exercise, Add set,

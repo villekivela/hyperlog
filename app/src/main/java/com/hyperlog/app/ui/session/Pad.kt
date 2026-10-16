@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.HorizontalDivider
 import com.hyperlog.app.domain.LadderSpec
 import android.view.HapticFeedbackConstants
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -144,7 +144,7 @@ internal fun Pad(
                     val rirLabel = stringResource(R.string.pad_rir)
                     (0..4).forEach { v ->
                         StripChip(entry.rir == v, Modifier.weight(1f), "$rirLabel ${if (v == 4) "4+" else v}", onClick = { actions.selectRir(v) }) {
-                            RirMark(v, filled = true)
+                            RirChip(v, target = entry.rir != v, fontSize = 14.sp)
                         }
                     }
                     Spacer(Modifier.width(8.dp))
@@ -313,17 +313,22 @@ private fun StripChip(
     outlined: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    // A 48 dp tap target around the 40 dp pill that shows.
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-        border = if (outlined) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
-        modifier = modifier.height(40.dp).padding(horizontal = 4.dp).semantics {
+        color = Color.Transparent,
+        modifier = modifier.height(48.dp).padding(horizontal = 4.dp).semantics {
             contentDescription = description
             this.selected = selected
         },
     ) {
-        Box(contentAlignment = Alignment.Center) { content() }
+        Box(
+            Modifier.fillMaxWidth().height(40.dp)
+                .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent, CircleShape)
+                .then(if (outlined) Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape) else Modifier),
+            contentAlignment = Alignment.Center,
+        ) { content() }
     }
 }
 
