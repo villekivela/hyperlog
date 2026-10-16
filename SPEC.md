@@ -66,6 +66,8 @@ configuration, iOS, web, any server.
   - **Settings → Check for updates now** (under the switch, while it is on) reads GitHub at once,
     whatever the last answer, and says what it found: `A newer version is ready: see Today` (the
     banner shows) or `No newer version, or no connection`.
+  - **The installed version** is the last line of Settings, under the update rows: "Hyperlog
+    0.2.0" (a debug build says "Hyperlog 0.1.0-dev").
   - "Check for updates" and the dismissed version are backed up; the last check is a cache and
     isn't.
   - **Debug builds (`.dev`) don't check.** A launch extra feeds them a fake release whose APK is

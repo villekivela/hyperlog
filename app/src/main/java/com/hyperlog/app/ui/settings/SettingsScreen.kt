@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.backup.Backups
@@ -65,7 +67,7 @@ sealed interface BackupState {
 
 /**
  * Settings: gyms and their equipment, the exercise library, backups, the one-off import of
- * starting weights from the old app, and "Check for updates".
+ * starting weights from the old app, "Check for updates", and the installed version at the foot.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +90,8 @@ fun SettingsScreen(
     /** "Check for updates now", and what it found; null before it is tapped. */
     onCheckNow: () -> Unit = {},
     checkedNow: com.hyperlog.app.update.UpdateViewModel.CheckedNow? = null,
+    /** The installed versionName ("0.2.0"), shown at the foot; null shows none. */
+    version: String? = null,
 ) {
     BackHandler(onBack = onBack)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -175,6 +179,15 @@ fun SettingsScreen(
                         onClick = if (checking) null else onCheckNow,
                     )
                 }
+            }
+            if (version != null) {
+                Text(
+                    stringResource(R.string.settings_version, version),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = muted,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = GroupGap),
+                )
             }
             Spacer(Modifier.height(GroupGap))
         }

@@ -160,4 +160,18 @@ class SettingsScreenTest {
         show()
         compose.onNodeWithText("Android also keeps a copy in your Google account", substring = true).assertIsDisplayed()
     }
+
+    @Test
+    fun showsTheInstalledVersionAtTheFoot() {
+        compose.setContent {
+            HyperlogTheme {
+                SettingsScreen(
+                    gymCount = 0, exerciseCount = 173, onGyms = {}, onLibrary = {}, onBack = {},
+                    startingWeights = StartingWeightsStatus(count = 0, invalid = false), onImportStartingWeights = {},
+                    version = "0.2.0",
+                )
+            }
+        }
+        compose.onNodeWithText("Hyperlog 0.2.0").performScrollTo().assertIsDisplayed()
+    }
 }
