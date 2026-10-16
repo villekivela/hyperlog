@@ -6,7 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -43,7 +43,7 @@ fun HyperlogTheme(content: @Composable () -> Unit) {
     ) {
         Box(Modifier.fillMaxSize()) {
             content()
-            if (BuildConfig.DEBUG) PaletteSwitcher(palette.name, Modifier.align(Alignment.BottomCenter))
+            if (BuildConfig.DEBUG) PaletteSwitcher(palette.name, Modifier.align(Alignment.TopCenter))
         }
     }
 }
@@ -53,8 +53,8 @@ private fun PaletteSwitcher(name: String, modifier: Modifier) {
     val n = PrototypePalettes.size
     Row(
         modifier
-            .navigationBarsPadding()
-            .padding(bottom = 92.dp)
+            .statusBarsPadding()
+            .padding(top = 4.dp)
             .shadow(8.dp, RoundedCornerShape(50))
             .background(Color(0xEE000000), RoundedCornerShape(50))
             .padding(horizontal = 4.dp),
