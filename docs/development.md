@@ -30,13 +30,14 @@ what the files don't explain.
 - **Unit tests run on Robolectric**, so Compose screens and Android resources are tested on the
   JVM without a phone (`createComposeRule` / `createAndroidComposeRule` from
   `androidx.compose.ui.test.junit4.v2`). The default SDK is 36 (`app/src/test/resources/robolectric.properties`);
-  use `@Config(sdk = [30])` for the pre-dynamic-colour path. SDK 36 needs the
+  use `@Config(sdk = [30])` for an older Android. SDK 36 needs the
   `--add-exports=java.base/jdk.internal.access` JVM argument, already set in `app/build.gradle.kts`.
 - Debug builds are `com.hyperlog.app.dev`, labelled "DEV Hyperlog" with an amber DEV-badged icon (`app/src/debug/res`). Launch with
   `adb shell am start -n com.hyperlog.app.dev/com.hyperlog.app.MainActivity`.
 - **Icons**: every icon is a Material Symbol (Rounded) vector drawable, added with
   `scripts/add-symbol.sh <name>` and listed in `ui/symbols/Symbol.kt`. Draw them with `SymbolIcon`.
-  Never add the variable font; a test fails if `res/font` exists.
+  Never add the Material Symbols variable font; a test fails if `res/font` holds it. `res/font`
+  holds only Space Grotesk, the display face (licence in `docs/licences/`).
 
 ## Phone
 
