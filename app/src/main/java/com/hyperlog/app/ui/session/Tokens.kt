@@ -12,8 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -57,20 +58,44 @@ internal val CellShape = RoundedCornerShape(12.dp)
 /** A chip under the exercise name. */
 internal val ChipShape = RoundedCornerShape(8.dp)
 
-/** Tabular figures, so columns of numbers line up. */
-internal val Tnum = TextStyle(fontFeatureSettings = "tnum")
+/**
+ * An exercise's name at the top of the session and past-exercise screens: headlineSmall at full
+ * size. Space Grotesk runs wide, so a long name wraps to a second line before it ellipsizes.
+ */
+@Composable
+internal fun ExerciseName(name: String, modifier: Modifier = Modifier) {
+    Text(
+        name,
+        modifier,
+        style = MaterialTheme.typography.headlineSmall,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
 
-/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot). It does not follow the dynamic theme. */
+/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot): filled dots everywhere, and rings in dark mode. */
 internal fun rirColor(rir: Int): Color = when {
     rir <= 0 -> Color(0xFFD9645B)
     rir <= 2 -> Color(0xFFE0A84E)
     else -> Color(0xFF6BAFA9)
 }
 
+/**
+ * A target ring's colour. In light mode each ring is a darker shade of its hue, so a 2 dp ring
+ * keeps 3:1 against every light surface in daylight; dark mode keeps [rirColor].
+ */
+internal fun rirRingColor(rir: Int, dark: Boolean): Color = when {
+    dark -> rirColor(rir)
+    rir <= 0 -> Color(0xFFD5544A)
+    rir <= 2 -> Color(0xFFAA741E)
+    else -> Color(0xFF4A8983)
+}
+
 /** An RIR mark: a ring is a target, a filled dot is a result or the selection. */
 @Composable
 internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
-    val color = rirColor(rir)
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val color = if (filled) rirColor(rir) else rirRingColor(rir, dark)
     Box(
         modifier.size(20.dp).then(
             if (filled) Modifier.background(color, CircleShape) else Modifier.border(2.dp, color, CircleShape),
@@ -79,7 +104,7 @@ internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
     ) {
         Text(
             if (rir >= 4) "4+" else "$rir",
-            style = MaterialTheme.typography.labelSmall.merge(Tnum),
+            style = MaterialTheme.typography.labelSmall,
             fontSize = if (rir >= 4) 9.sp else 11.sp,
             color = if (filled) Color.Black.copy(alpha = 0.87f) else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium,

@@ -60,7 +60,7 @@ fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: ()
                         minutes,
                     ),
                     Modifier.padding(horizontal = Margin),
-                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(16.dp))

@@ -51,7 +51,6 @@ import com.hyperlog.app.coach.SlotDiff
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.program.SetSummary
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.BottomActions
@@ -234,9 +233,9 @@ private fun HeadRow(label: String, before: String, after: String) {
     Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(vertical = 8.dp)) {
         Text(label, Modifier.width(HeadColumn).alignByBaseline(), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
         FlowRow(Modifier.weight(1f).alignByBaseline(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(before, style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = cs.onSurfaceVariant)
+            Text(before, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
             Arrow()
-            Text(after, style = MaterialTheme.typography.bodyLarge.merge(Tnum), fontWeight = FontWeight.Medium)
+            Text(after, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
         }
     }
 }
@@ -289,7 +288,7 @@ private fun SlotRow(slot: SlotDiff, name: (String) -> String) {
         Text(
             shown.label,
             Modifier.width(LabelColumn).alignByBaseline(),
-            style = MaterialTheme.typography.bodyLarge.merge(Tnum),
+            style = MaterialTheme.typography.bodyLarge,
             color = if (before == null) cs.primary else cs.onSurfaceVariant,
             fontWeight = if (before == null) FontWeight.Bold else FontWeight.Normal,
         )
@@ -329,7 +328,7 @@ private fun SlotRow(slot: SlotDiff, name: (String) -> String) {
                     Spacer(Modifier.width(8.dp))
                     Text(
                         stringResource(R.string.change_load, percent(after.loadPercent)),
-                        style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = cs.tertiary,
                     )
                 }

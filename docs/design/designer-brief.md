@@ -54,7 +54,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   item.
 - **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
   (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
-- **The Android theme:** dynamic colour, light and dark, through the whole tree; nothing hard-codes
+- **Hyperlog's own theme:** Navy (seed `#16236E`), light and dark, through the whole tree; nothing hard-codes
   a colour but two fixed scales. RIR uses its own three colours (ring = target, dot = logged).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
@@ -64,10 +64,13 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **Visible state.** The active row and cell, the intensity technique on a set, and the weights
   involved can all be read from the screen at a glance.
 
-A monochrome system style (Wallpaper and style, as set on the test phone) makes every dynamic
-colour grey, and Hyperlog follows it. **Decided: follow the phone.** Dynamic colour stays as it is,
-with no special palette for a monochrome system; in grey the hierarchy comes from tone and shape,
-which is why the rules above lean on them rather than on hue.
+**Decided: Hyperlog has its own theme** (#37), the same on every phone whatever the wallpaper or
+system style. The colours are Navy: Material 3 schemes from `#16236E` (`ui/theme/NavyPalette.kt`),
+with deeper blue-tinted surfaces and a stronger primaryContainer in dark mode. Light and dark
+still follow the system. Space Grotesk, bundled, sets display, headline and titleLarge text
+(screen titles, the day's name, exercise names, the kg and reps in the set table); body and labels
+stay the system font. Every style in the type scale has tabular figures (`tnum`). The hierarchy
+still comes from tone and shape first, so the rules above hold as they are.
 
 ## Process
 

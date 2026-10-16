@@ -529,7 +529,7 @@ private fun PlatesDialog(pairs: List<Double>, onDone: (List<Double>) -> Unit, on
                         }
                         Text(
                             counts[i].toString(),
-                            style = MaterialTheme.typography.titleMedium.merge(com.hyperlog.app.ui.session.Tnum),
+                            style = MaterialTheme.typography.titleMedium,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             modifier = Modifier.width(32.dp),
                         )
@@ -551,7 +551,7 @@ private fun PlatesDialog(pairs: List<Double>, onDone: (List<Double>) -> Unit, on
 internal fun Row(headline: String, supporting: String, symbol: Symbol?, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(headline) },
-        supportingContent = { Text(supporting, style = MaterialTheme.typography.bodyMedium.merge(com.hyperlog.app.ui.session.Tnum)) },
+        supportingContent = { Text(supporting, style = MaterialTheme.typography.bodyMedium) },
         // Rows without a symbol keep its column, so every name lines up with the add row's label.
         leadingContent = {
             if (symbol != null) SymbolIcon(symbol, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) else Spacer(Modifier.width(24.dp))

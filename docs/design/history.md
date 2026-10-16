@@ -36,7 +36,8 @@ sets and estimate over time, weekly sets per muscle, and the bodyweight log. It 
 | Bar | 8 dp tall, 4 dp rounded data end, square at the baseline, `primary` | sets per muscle |
 | Muscle column | the longest name plus 8 dp, 128 dp at least (8 dp grid), half the width at most (names wrap past it) | labels before the bars; value after the tip in tabular figures |
 
-The palette is Material 3 dynamic colour, so it can't be validated once. The chart needs one hue
+This was written when the palette was Material 3 dynamic colour, which can't be validated once;
+since #37 it is the fixed Navy theme, which these figures don't yet cover. The chart needs one hue
 (`primary`) and a neutral context ink for the second mark, which also differs in shape (dot
 against line), so identity never rests on colour alone. The dataviz validator, run on the
 baseline and logo palettes: primary against context ink is normal-vision ΔE 18.7 (baseline light),

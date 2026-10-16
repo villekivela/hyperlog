@@ -137,7 +137,7 @@ internal fun Pad(
                     ladder.around(typed).forEach { kg ->
                         val label = formatKg(kg)
                         StripChip(label == entry.weight, Modifier.weight(1f), label, onClick = { actions.pickWeight(kg) }) {
-                            Text(label, style = MaterialTheme.typography.titleSmall.merge(Tnum))
+                            Text(label, style = MaterialTheme.typography.titleSmall)
                         }
                     }
                 } else {
@@ -188,7 +188,7 @@ private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: 
     check.options.forEach { kg ->
         val label = formatKg(kg)
         StripChip(false, Modifier.weight(1f), label, onClick = { actions.pickWeight(kg) }, outlined = true) {
-            Text(label, style = MaterialTheme.typography.titleSmall.merge(Tnum))
+            Text(label, style = MaterialTheme.typography.titleSmall)
         }
     }
 }

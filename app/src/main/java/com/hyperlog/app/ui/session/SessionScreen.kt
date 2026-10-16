@@ -512,13 +512,7 @@ private fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val details = stringResource(R.string.session_exercise_details)
-        Text(
-            exercise.exercise.name,
-            Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName),
-            style = MaterialTheme.typography.headlineSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        ExerciseName(exercise.exercise.name, Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName))
         val hold = session.followUp as? com.hyperlog.app.session.FollowUp.Hold
         val holdStarted = session.holdStartedAt
         val restEnds = session.restEndsAt
@@ -630,7 +624,7 @@ private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) 
             Text(
                 clock(leftMs),
                 Modifier.width(160.dp),
-                style = MaterialTheme.typography.displayMedium.merge(Tnum),
+                style = MaterialTheme.typography.displayMedium,
                 textAlign = TextAlign.Center,
             )
             FilledTonalButton(onClick = { actions.adjustRest(15_000) }, Modifier.width(96.dp)) { Text("+15") }
@@ -659,7 +653,7 @@ private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
     ) {
         SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
         Spacer(Modifier.width(8.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -684,7 +678,7 @@ internal fun LadderOffer(offer: com.hyperlog.app.domain.LadderSpec.PinStack, mac
             )
             Text(
                 stringResource(R.string.ladder_offer_body, machine, offer.summary(pinPlates)),
-                style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onTertiaryContainer,
+                style = MaterialTheme.typography.bodyMedium, color = cs.onTertiaryContainer,
                 modifier = Modifier.padding(top = 4.dp, end = 8.dp),
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -707,7 +701,7 @@ private fun StartingHintRow(set: String) {
         // The set on a line of its own, so it never breaks inside "@ 2 RIR".
         Column {
             Text(stringResource(R.string.starting_hint), style = MaterialTheme.typography.bodyMedium, color = muted)
-            Text(set, style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(set, style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -807,7 +801,7 @@ internal fun SessionList(
                     Box(Modifier.width(40.dp)) {
                         e.slot?.label?.let {
                             val paired = SessionOrder.partner(session.exercises, e) != null
-                            Text(it, style = MaterialTheme.typography.labelLarge.merge(Tnum), color = if (paired) cs.tertiary else cs.onSurfaceVariant)
+                            Text(it, style = MaterialTheme.typography.labelLarge, color = if (paired) cs.tertiary else cs.onSurfaceVariant)
                         }
                     }
                 }
@@ -816,7 +810,7 @@ internal fun SessionList(
                     if (e.sets.isNotEmpty()) {
                         Text(
                             e.sets.joinToString("   ") { it.summary().replace(' ', ' ') },
-                            style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = cs.onSurfaceVariant,
                         )
                     } else {
@@ -917,7 +911,7 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
                 Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     item.ladder.withPlates(gymPlates).summary(pinPlates),
-                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1070,7 +1064,7 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
             GoalFigure(estimate, progress.goal, MaterialTheme.typography.titleLarge)
-            Text(goalStatus(estimate, progress.goal), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+            Text(goalStatus(estimate, progress.goal), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             val points = progress.points.filter { it.estimateKg != null }
             if (points.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
@@ -1108,10 +1102,10 @@ private fun Prescription(plan: List<SetPrescription>) {
             Text(
                 "${i + 1}",
                 Modifier.width(ColSet),
-                style = MaterialTheme.typography.titleMedium.merge(Tnum),
+                style = MaterialTheme.typography.titleMedium,
                 color = cs.onSurfaceVariant,
             )
-            Text(set.reps.toString(), Modifier.width(64.dp), style = MaterialTheme.typography.bodyLarge.merge(Tnum), maxLines = 1)
+            Text(set.reps.toString(), Modifier.width(64.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1)
             Box(Modifier.width(32.dp)) { set.rir?.let { RirMark(it, filled = false) } }
             val technique = set.technique
             val backoff = set.backoff
@@ -1135,7 +1129,7 @@ private fun Prescription(plan: List<SetPrescription>) {
                     }
                 }
             }
-            if (!sameRest) Text(clock(set.rest * 1000L), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+            if (!sameRest) Text(clock(set.rest * 1000L), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }
     }
     if (sameRest) {
@@ -1143,7 +1137,7 @@ private fun Prescription(plan: List<SetPrescription>) {
         Row(Modifier.heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
             SymbolIcon(Symbol.Timer, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
             Spacer(Modifier.width(16.dp))
-            Text(stringResource(R.string.sheet_rest, clock(plan.first().rest * 1000L)), style = MaterialTheme.typography.bodyLarge.merge(Tnum))
+            Text(stringResource(R.string.sheet_rest, clock(plan.first().rest * 1000L)), style = MaterialTheme.typography.bodyLarge)
         }
     }
     }

@@ -46,7 +46,6 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.session.SessionList
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.BottomActions
@@ -217,7 +216,7 @@ internal fun BodyweightSummary(bodyweights: List<Bodyweight>, onClick: (() -> Un
         Row(Modifier.padding(horizontal = Margin), verticalAlignment = Alignment.Bottom) {
             Text(stringResource(R.string.weight_kg, formatKg(latest.kg)), style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.weight(1f))
-            Text(short(latest.date), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+            Text(short(latest.date), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }
         val recent = bodyweights.filter { it.date >= latest.date.minusDays(90) }.reversed()
         if (recent.size > 1) {
@@ -259,7 +258,7 @@ private fun ExerciseRow(trend: ExerciseTrend) {
             Text(
                 values.lastOrNull()?.let { if (trend.byReps) "${it.roundToInt()}" else stringResource(R.string.weight_kg, estimateText(it)) } ?: "",
                 Modifier.width(64.dp),
-                style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.End,
             )

@@ -93,7 +93,7 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.width(16.dp))
-                    Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+                    Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
                 Text(
                     (listOfNotNull(s.gym) + s.exercises.map { it.name }).joinToString(" · "),
@@ -129,7 +129,7 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
                 // Spaces inside a set never break, so a set is never split across lines.
                 Text(
                     e.sets.joinToString("   ") { it.summary().replace(' ', ' ') },
-                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                 )
             }
@@ -169,7 +169,7 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
                         session.gym,
                     ).joinToString(" · "),
                     Modifier.padding(horizontal = Margin),
-                    style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                 )
                 Spacer(Modifier.heightIn(min = 16.dp))
@@ -197,7 +197,7 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                     Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = Margin, top = 8.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(shown.exercise.name, style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    ExerciseName(shown.exercise.name)
                 }
                 SetTable(
                     TableState(

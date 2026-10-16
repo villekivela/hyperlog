@@ -6,7 +6,8 @@ ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Scr
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
 (`session-active-drop` and `session-active-mini-set` show a set under way,
 `session-mini-sets-planned` myo-reps about to start);
-`screens/session-*.png` come from the test phone (dark, monochrome system style). The renders
+`screens/session-*.png` come from the test phone (dark, monochrome system style) and still show
+the theme before Navy (#37). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
 testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark.
 
@@ -48,11 +49,12 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Row ripple | 24 dp radius | A tappable row's ripple (a done row, a warm-up) |
 | RIR mark | 20 dp circle, 2 dp ring | Target (ring) and result (filled) |
 
-Type (Material 3 scale, system font, tabular figures for every number):
+Type (Material 3 scale with tabular figures in every style; Space Grotesk for headlineSmall and
+titleLarge, the system font for the rest):
 
 | Role | Style |
 | --- | --- |
-| Exercise name | headlineSmall |
+| Exercise name | headlineSmall, wrapping to two lines at full size before it ellipsizes |
 | Chips, Next label | labelLarge |
 | Why-line | bodyMedium, one line |
 | Column heads | labelMedium |
@@ -61,7 +63,7 @@ Type (Material 3 scale, system font, tabular figures for every number):
 | Last time | bodyMedium |
 | Keys | 24 sp |
 
-Colour comes from the dynamic theme, light and dark:
+Colour comes from Hyperlog's Navy theme, light and dark:
 
 | Role | Colour |
 | --- | --- |
@@ -85,9 +87,12 @@ Colour comes from the dynamic theme, light and dark:
 | Day done strip | primaryContainer, rounded 28 dp at the top |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
-Two fixed scales don't follow the theme, so they read the same on a monochrome phone:
+Two fixed scales sit outside the theme:
 
-- **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots.
+- **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots. In light
+  mode the target rings are `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at
+  least 3:1 on every light surface so they read in daylight (`RirContrastTest`); filled dots and
+  dark mode keep the base colours.
 - **Trend** (the why-line's symbol): up `#5FAE7A` (calm green), same weight `#9AA1A9`
   (neutral), down `#E0A84E` (amber; a deload or back-off is no failure, so never red).
 

@@ -104,7 +104,7 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
     val cs = MaterialTheme.colorScheme
     val side = totalKg?.let { plates.perSide(it) }
     val description = platesDescription(plates, side, totalKg, machine)
-    val text = (if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall).merge(Tnum)
+    val text = (if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall)
     Row(modifier.clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         BarSide(side.orEmpty(), height = if (compact) 24.dp else 40.dp, muted = side == null && totalKg != null, scale = if (compact) 1f else 1.5f)
         Spacer(Modifier.width(if (compact) 8.dp else 16.dp))
@@ -225,7 +225,7 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
     val side = totalKg?.let { plates.perSide(it) }
     val description = wholeDescription(plates, side, totalKg, machine)
     androidx.compose.foundation.layout.Column(modifier.clearAndSetSemantics { contentDescription = description }) {
-        Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.headlineMedium.merge(Tnum))
+        Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.headlineMedium)
         Text(
             stringResource(if (machine) R.string.plates_whole_machine_line else R.string.plates_whole_bar_line, formatKg(plates.baseKg)),
             style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
@@ -240,8 +240,8 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
             Row(Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
                 PlateSwatch(kg, 16.dp)
                 Spacer(Modifier.width(16.dp))
-                Text(stringResource(R.string.weight_kg, formatKg(kg)), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge.merge(Tnum))
-                Text(stringResource(R.string.plates_each_side, n), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = cs.onSurfaceVariant)
+                Text(stringResource(R.string.weight_kg, formatKg(kg)), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.plates_each_side, n), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
             }
         }
         if (plates.baseKg > 0) {
@@ -249,7 +249,7 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
                 if (machine) MachineSwatch(16.dp) else BarSwatch(16.dp)
                 Spacer(Modifier.width(16.dp))
                 Text(stringResource(if (machine) R.string.plates_machine_row else R.string.plates_bar_row), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.weight_kg, formatKg(plates.baseKg)), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = cs.onSurfaceVariant)
+                Text(stringResource(R.string.weight_kg, formatKg(plates.baseKg)), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
             }
         }
     }

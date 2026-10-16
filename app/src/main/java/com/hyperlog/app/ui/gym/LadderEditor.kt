@@ -52,7 +52,6 @@ import com.hyperlog.app.domain.WeightUnit
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.ui.session.Margin
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.ConnectedChoice
@@ -230,7 +229,7 @@ fun LadderEditor(
                     label = { Text(stringResource(if (machine) R.string.reading_field else R.string.reading_field_rack)) },
                     placeholder = { Text(stringResource(if (machine) R.string.reading_placeholder else R.string.reading_placeholder_rack)) },
                     supportingText = { Text(stringResource(R.string.reading_help)) },
-                    textStyle = MaterialTheme.typography.bodyLarge.merge(Tnum),
+                    textStyle = MaterialTheme.typography.bodyLarge,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier.fillMaxWidth().testTag(ReadingFieldTag),
                 )
@@ -386,7 +385,7 @@ internal fun LadderCheck(draft: LadderSpec?, pinPlates: List<Double>, status: St
         }
         Text(
             stringResource(R.string.ladder_summary_count, draft.summary(pinPlates), pluralStringResource(R.plurals.ladder_rung_count, rungs.size, rungs.size)),
-            style = MaterialTheme.typography.titleMedium.merge(Tnum),
+            style = MaterialTheme.typography.titleMedium,
         )
         status?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.primary) }
         Spacer(Modifier.height(8.dp))
@@ -397,7 +396,7 @@ internal fun LadderCheck(draft: LadderSpec?, pinPlates: List<Double>, status: St
             Text(
                 if (open) rungs.joinToString(" · ") { formatKg(it) } + " kg" else stringResource(R.string.ladder_check, firstFew),
                 Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
             )
             SymbolIcon(if (open) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
@@ -428,7 +427,7 @@ private fun NumberField(value: String, onChange: (String) -> Unit, label: String
         label = { Text(label) },
         supportingText = supporting?.let { { Text(it) } },
         singleLine = !many,
-        textStyle = MaterialTheme.typography.bodyLarge.merge(Tnum),
+        textStyle = MaterialTheme.typography.bodyLarge,
         keyboardOptions = KeyboardOptions(keyboardType = if (whole) KeyboardType.Number else if (many) KeyboardType.Text else KeyboardType.Decimal),
         modifier = modifier,
     )
