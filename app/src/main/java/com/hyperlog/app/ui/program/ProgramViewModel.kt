@@ -111,14 +111,21 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     private val _pasteErrors = MutableStateFlow<List<String>?>(null)
 
-    /** The problems of the Change last pasted, until it's pasted again or the words change. */
+    /** The problems of the reply last pasted, until it's pasted again or the words change. */
     val pasteErrors: StateFlow<List<String>?> = _pasteErrors.asStateFlow()
 
     /**
      * The prompt Ask Claude shares for [words], with the [gym] picked, the days off since
-     * [lastTrained] and the weekly sets; with no program running it asks for advice in words.
+     * [lastTrained], the weekly sets and Build me a workout's [options] (null while closed).
      */
-    suspend fun askClaudePrompt(words: String, gym: Gym?, elsewhere: Boolean, lastTrained: LocalDate?, weekdays: Set<DayOfWeek>): String {
+    suspend fun askClaudePrompt(
+        words: String,
+        gym: Gym?,
+        elsewhere: Boolean,
+        lastTrained: LocalDate?,
+        weekdays: Set<DayOfWeek>,
+        options: com.hyperlog.app.coach.WorkoutOptions? = null,
+    ): String {
         _reply.value = null
         val active = programs.active.first()
         val db = HyperlogDatabase.get(getApplication())
@@ -126,7 +133,10 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         val sessions = PastSessionEditor(db, programs).sessions()
         val weeks = History(db, programs).weeklySets(AskClaude.SET_WEEKS)
         return withContext(Dispatchers.Default) {
-            AskClaude.prompt(words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays, weeklySets = weeks)
+            AskClaude.prompt(
+                words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays,
+                weeklySets = weeks, options = options,
+            )
         }
     }
 
@@ -180,6 +190,37 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** Drops the workout under review; nothing changes. */
     fun rejectWorkout() {
         _workout.value = null
+    }
+
+    private val workouts = com.hyperlog.app.coach.Workouts(HyperlogDatabase.get(application))
+
+    /** The workouts waiting on Today, newest first; Today shows the one added today. */
+    val waiting: StateFlow<List<com.hyperlog.app.coach.Workouts.Waiting>> =
+        workouts.waiting.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Puts the workout under review on Today, to start at [gymId] (the gym picked on Coach); any other waiting goes. */
+    fun addWorkout(gymId: Long?) {
+        val workout = _workout.value ?: return
+        _workout.value = null
+        viewModelScope.launch { workouts.add(workout, gymId) }
+    }
+
+    /** Takes waiting workout [id] off Today. */
+    fun removeWorkout(id: Long) {
+        viewModelScope.launch { workouts.remove(id) }
+    }
+
+    private val _lowest = MutableStateFlow<List<Pair<String, Double>>>(emptyList())
+
+    /** The focus's marks on Coach: the muscles trained lately with the fewest sets this week. */
+    val lowest: StateFlow<List<Pair<String, Double>>> = _lowest.asStateFlow()
+
+    /** Reads the focus's marks again, as Coach opens. */
+    fun refreshLowest() {
+        viewModelScope.launch {
+            val db = HyperlogDatabase.get(getApplication())
+            _lowest.value = com.hyperlog.app.coach.WorkoutOptions.lowest(History(db, programs).weeklySets(AskClaude.SET_WEEKS))
+        }
     }
 
     /** [text] read as a Change for the running program or a workout. */

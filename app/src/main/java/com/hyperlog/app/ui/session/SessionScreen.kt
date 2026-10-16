@@ -147,7 +147,8 @@ fun SessionScreen(
     var removing by rememberSaveable { mutableStateOf<Long?>(null) }
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
-    val keepSummary = session.day?.let { day -> stringResource(R.string.session_keep_summary, day.day.name, day.block.name) }
+    // A workout's edits have no program to keep them in.
+    val keepSummary = session.day?.takeIf { session.workoutId == null }?.let { day -> stringResource(R.string.session_keep_summary, day.day.name, day.block.name) }
     KeepScreenOn()
 
     // Back steps out of a correction, then out of a finished exercise, and only then asks to leave.

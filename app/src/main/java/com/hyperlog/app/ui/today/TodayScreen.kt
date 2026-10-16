@@ -64,6 +64,8 @@ import com.hyperlog.app.gym.SessionSwap
 import com.hyperlog.app.history.TimeOff
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
+import com.hyperlog.app.coach.Workouts
+import androidx.compose.ui.platform.testTag
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
@@ -120,26 +122,58 @@ fun TodayScreen(
     onDismissUpdate: () -> Unit = {},
     /** The program day of the session running, which Resume opens; it is the day Today shows. */
     runningDay: PlannedDay? = null,
+    /** The session running trains a workout: Today shows it as the day, headed "Workout". */
+    runningWorkout: Boolean = false,
+    /** The workout from Claude waiting today; null with none. */
+    workout: Workouts.Waiting? = null,
+    /** Starts [workout]'s session at the gym (null with no gyms), with swaps for what the gym lacks. */
+    onStartWorkout: (id: Long, gymId: Long?, swaps: Map<String, String>) -> Unit = { _, _, _ -> },
+    /** Takes the waiting workout off Today. */
+    onRemoveWorkout: (Long) -> Unit = {},
 ) {
-    /** The kind of session the gym sheet is open for: null when closed, true for ad hoc. */
-    var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    val start: (Boolean) -> Unit = { adHoc ->
+    /** The kind of session the gym sheet is open for: null when closed. */
+    var picking by rememberSaveable { mutableStateOf<Kind?>(null) }
+    val launch: (Kind, Long?, Map<String, String>) -> Unit = { kind, gym, swaps ->
+        when (kind) {
+            Kind.Workout -> workout?.let { onStartWorkout(it.id, gym, swaps) }
+            Kind.AdHoc -> onStart(gym, true, swaps)
+            Kind.Day -> onStart(gym, false, swaps)
+        }
+    }
+    val start: (Kind) -> Unit = { kind ->
         when {
             sessionRunning -> onResume()
-            gyms.isEmpty() -> onStart(null, adHoc, emptyMap())
-            else -> picking = adHoc
+            gyms.isEmpty() -> launch(kind, null, emptyMap())
+            else -> picking = kind
         }
     }
     val kind = picking
     // A running session keeps its day on Today, even resumed after finishing moved the program on.
     val next = runningDay?.takeIf { sessionRunning } ?: program?.next
+    val workoutDay = remember(workout) { workout?.workout?.day() }
     if (kind != null && !sessionRunning) {
         Sheet(onDismiss = { picking = null }) {
             StartSheetContent(
                 gyms, usualGym,
-                onStart = { gym, swaps -> picking = null; onStart(gym, kind, swaps) },
-                day = next.takeIf { !kind },
+                onStart = { gym, swaps -> picking = null; launch(kind, gym, swaps) },
+                day = when (kind) {
+                    Kind.Day -> next
+                    Kind.Workout -> workoutDay
+                    Kind.AdHoc -> null
+                },
                 library = library,
+                // A workout starts at the gym picked on Coach.
+                picked = workout?.gymId?.takeIf { kind == Kind.Workout },
+            )
+        }
+    }
+    val waitingCard: @Composable () -> Unit = {
+        if (workout != null && workoutDay != null) {
+            WorkoutCard(
+                workout, workoutDay, exerciseNames,
+                onStart = if (sessionRunning) null else { { start(Kind.Workout) } },
+                onRemove = { onRemoveWorkout(workout.id) },
+                primary = next == null,
             )
         }
     }
@@ -147,7 +181,7 @@ fun TodayScreen(
     val today = program?.today ?: LocalDate.now()
     // The words count from the last session, whatever the weekday plan.
     val daysOff = TimeOff.daysSince(lastTrained, today)
-    val easeBack = program != null && next != null && !sessionRunning && daysOff != null &&
+    val easeBack = program != null && next != null && !sessionRunning && daysOff != null && workout == null &&
         TimeOff.isTimeOff(TimeOff.daysOff(lastTrained, today, weekdays)) && program.changes.none { it.acceptedOn == program.today }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val startLabel = stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session)
@@ -171,7 +205,7 @@ fun TodayScreen(
         floatingActionButton = {
             if (next != null) {
                 // The expressive medium size: the day's one action, unmistakable.
-                MediumExtendedFloatingActionButton(onClick = { start(false) }) {
+                MediumExtendedFloatingActionButton(onClick = { start(Kind.Day) }) {
                     SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
                     Spacer(Modifier.width(12.dp))
                     Text(startLabel, style = MaterialTheme.typography.titleMedium)
@@ -187,13 +221,26 @@ fun TodayScreen(
                     update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
                     if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
                 },
-                adHoc = if (!sessionRunning) { { start(true) } } else null,
+                adHoc = if (!sessionRunning) { { start(Kind.AdHoc) } } else null,
+                workout = waitingCard,
+                isWorkout = runningWorkout && sessionRunning,
             )
+        } else if (workout != null) {
+            // No program day: the workout is the day, with an ad-hoc session after it.
+            LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+                item {
+                    Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
+                    }
+                    waitingCard()
+                }
+                if (!sessionRunning) item { AdHocRow(onAdHoc = { start(Kind.AdHoc) }) }
+            }
         } else {
             update?.let { UpdateBanner(it, onUpdate, onDismissUpdate, Modifier.padding(bottom = 8.dp)) }
             if (program == null && starter != null && !sessionRunning) {
                 StarterOffer(starter, onRunStarter, Modifier.weight(1f)) {
-                    TextButton(onClick = { start(true) }) { Text(stringResource(R.string.today_start_session)) }
+                    TextButton(onClick = { start(Kind.AdHoc) }) { Text(stringResource(R.string.today_start_session)) }
                     TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
                 }
             } else {
@@ -204,7 +251,7 @@ fun TodayScreen(
                     body = stringResource(if (finished) R.string.program_finished_body else R.string.today_no_program_body),
                     modifier = Modifier.weight(1f),
                 ) {
-                    Button(onClick = { start(true) }, contentPadding = ButtonDefaults.MediumContentPadding, modifier = Modifier.heightIn(min = ButtonDefaults.MediumContainerHeight)) {
+                    Button(onClick = { start(Kind.AdHoc) }, contentPadding = ButtonDefaults.MediumContentPadding, modifier = Modifier.heightIn(min = ButtonDefaults.MediumContainerHeight)) {
                         SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.MediumIconSize))
                         Spacer(Modifier.width(8.dp))
                         Text(startLabel, style = MaterialTheme.typography.titleMedium)
@@ -256,15 +303,20 @@ private fun NextDay(
     modifier: Modifier = Modifier,
     banners: @Composable ColumnScope.() -> Unit = {},
     adHoc: (() -> Unit)? = null,
+    /** The workout waiting today, above the day. */
+    workout: @Composable () -> Unit = {},
+    /** [day] is a workout's, being trained: headed "Workout", not by week and block. */
+    isWorkout: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
     // The bottom padding keeps the last row clear of the floating Start session.
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
         item {
             Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
+            workout()
             Column(Modifier.padding(horizontal = 24.dp).padding(top = 8.dp, bottom = 16.dp)) {
                 Text(
-                    stringResource(R.string.today_week_block, day.position.week, day.block.name),
+                    if (isWorkout) stringResource(R.string.today_workout) else stringResource(R.string.today_week_block, day.position.week, day.block.name),
                     style = MaterialTheme.typography.labelLarge,
                     color = cs.primary,
                 )
@@ -275,52 +327,98 @@ private fun NextDay(
         // One row per slot, one segment per group: a superset's partners share theirs.
         val groups = day.slots.groupBy { it.group }.values.toList()
         itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
-            Segment(i, groups.size) { group.forEach { slot ->
-                Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp)) {
-                    // A Change's swap reads as the session will: "In place of …" over the name.
-                    slot.inPlaceOf?.let { planned ->
-                        Text(
-                            stringResource(R.string.edit_swapped_from, names[planned] ?: planned),
-                            Modifier.padding(start = 40.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = cs.tertiary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    // The label sits on the name's baseline.
-                    Row {
-                        Text(
-                            slot.label,
-                            Modifier.width(40.dp).alignByBaseline(),
-                            style = MaterialTheme.typography.titleSmall.merge(Tnum),
-                            color = cs.primary,
-                        )
-                        Text(
-                            names[slot.exercise] ?: slot.exercise,
-                            Modifier.weight(1f).alignByBaseline(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    SetSummary(slot.sets, Modifier.padding(start = 40.dp))
-                }
-            } }
+            Segment(i, groups.size) { SlotRows(group, names) }
         }
         adHoc?.let { onAdHoc ->
             item {
                 Spacer(Modifier.height(16.dp))
-                Segment(0, 1, onClick = onAdHoc) {
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
-                        Spacer(Modifier.width(16.dp))
-                        Text(stringResource(R.string.today_ad_hoc), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                        SymbolIcon(Symbol.ChevronRight, null, tint = cs.onSurfaceVariant)
+                AdHocRow(onAdHoc)
+            }
+        }
+    }
+}
+
+/** An ad-hoc session, a row of its own after the day. */
+@Composable
+private fun AdHocRow(onAdHoc: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Segment(0, 1, onClick = onAdHoc) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
+            Spacer(Modifier.width(16.dp))
+            Text(stringResource(R.string.today_ad_hoc), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            SymbolIcon(Symbol.ChevronRight, null, tint = cs.onSurfaceVariant)
+        }
+    }
+}
+
+/** What kind of session the start sheet is open for. */
+private enum class Kind { Day, AdHoc, Workout }
+
+internal const val WorkoutCardTag = "today-workout"
+
+/**
+ * The workout from Claude waiting today (SPEC, Coaching → Workout), above the program day: "Workout"
+ * over its name and summary, with ⋮ → Remove; its exercises as a day's; and Start, which opens the
+ * start sheet at the gym picked on Coach. Start is left out while a session runs.
+ */
+@Composable
+private fun WorkoutCard(
+    waiting: Workouts.Waiting,
+    day: PlannedDay,
+    names: Map<String, String>,
+    onStart: (() -> Unit)?,
+    onRemove: () -> Unit,
+    /** No program day beside it: Start is the screen's one action. */
+    primary: Boolean = false,
+) {
+    val cs = MaterialTheme.colorScheme
+    val groups = remember(day) { day.slots.groupBy { it.group }.values.toList() }
+    val count = groups.size + if (onStart != null) 2 else 1
+    var menu by remember { mutableStateOf(false) }
+    Column(Modifier.padding(bottom = 16.dp).testTag(WorkoutCardTag)) {
+        Segment(0, count, color = cs.secondaryContainer) {
+            Row(Modifier.fillMaxWidth().padding(start = CardPadding, top = 16.dp, bottom = 16.dp, end = 4.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.today_workout), style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                    Spacer(Modifier.height(4.dp))
+                    Text(waiting.workout.name, style = MaterialTheme.typography.headlineSmall, color = cs.onSecondaryContainer)
+                    Spacer(Modifier.height(4.dp))
+                    Text(waiting.workout.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer)
+                }
+                androidx.compose.foundation.layout.Box {
+                    IconButton(onClick = { menu = true }) {
+                        SymbolIcon(Symbol.MoreVert, stringResource(R.string.today_workout_more), tint = cs.onSecondaryContainer)
                     }
+                    androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(stringResource(R.string.today_workout_remove)) },
+                            leadingIcon = { SymbolIcon(Symbol.Delete, null) },
+                            onClick = { menu = false; onRemove() },
+                        )
+                    }
+                }
+            }
+        }
+        groups.forEachIndexed { i, group -> Segment(i + 1, count) { SlotRows(group, names) } }
+        if (onStart != null) {
+            Segment(count - 1, count) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val label = @Composable {
+                        SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.today_workout_start))
+                    }
+                    // Beside a program day, tonal: that day's Start session stays the screen's one primary action.
+                    if (primary) Button(onClick = onStart) { label() }
+                    else androidx.compose.material3.FilledTonalButton(onClick = onStart) { label() }
                 }
             }
         }
@@ -360,8 +458,10 @@ internal fun StartSheetContent(
     /** The program day to start, checked against the chosen gym's equipment; null ad hoc. */
     day: PlannedDay? = null,
     library: List<Exercise> = emptyList(),
+    /** The gym to pick in place of the usual one: a workout's, picked on Coach. */
+    picked: Long? = null,
 ) {
-    var chosen by rememberSaveable { mutableStateOf(usualGym?.id ?: gyms.first().id) }
+    var chosen by rememberSaveable { mutableStateOf(picked?.takeIf { p -> gyms.any { it.id == p } } ?: usualGym?.id ?: gyms.first().id) }
     val gym = gyms.firstOrNull { it.id == chosen } ?: gyms.first()
     val missing = remember(day, gym.missing, library) { day?.let { MissingSwaps.forDay(it, library, gym.missing) }.orEmpty() }
     /** Proposed swaps turned down, by slot id; another gym starts over. */
@@ -468,4 +568,45 @@ private fun MissingSwaps(gym: String, swaps: List<SessionSwap>, names: Map<Strin
 @Composable
 private fun TodayScreenPreview() {
     HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> }) }
+}
+
+/**
+ * One group of a day's slots, as Today lists them: the label on the name's baseline, the sets under
+ * it, and a Change's swap as "In place of …" over the name. A superset's partners share the group.
+ */
+@Composable
+internal fun SlotRows(group: List<com.hyperlog.app.program.PlannedSlot>, names: Map<String, String>) {
+    val cs = MaterialTheme.colorScheme
+    group.forEach { slot ->
+        Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp)) {
+            // A Change's swap reads as the session will: "In place of …" over the name.
+            slot.inPlaceOf?.let { planned ->
+                Text(
+                    stringResource(R.string.edit_swapped_from, names[planned] ?: planned),
+                    Modifier.padding(start = 40.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = cs.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            // The label sits on the name's baseline.
+            Row {
+                Text(
+                    slot.label,
+                    Modifier.width(40.dp).alignByBaseline(),
+                    style = MaterialTheme.typography.titleSmall.merge(Tnum),
+                    color = cs.primary,
+                )
+                Text(
+                    names[slot.exercise] ?: slot.exercise,
+                    Modifier.weight(1f).alignByBaseline(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            SetSummary(slot.sets, Modifier.padding(start = 40.dp))
+        }
+    }
 }

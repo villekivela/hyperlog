@@ -14,6 +14,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
@@ -283,14 +284,100 @@ class CoachScreenTest {
         assertEquals("reverse_nordic", legs.exerciseId)
     }
 
+    private val hotel = "```json\n" +
+        """{"workout": {"name": "Hotel dumbbells, 45 min", "summary": "Dumbbells only.", "groups": [""" +
+        """{"slots": [{"id": "row", "exercise": "chest_supported_db_row", "sets": [{"count": 3, "reps": "8-12", "rir": 1}]}]}]}}""" +
+        "\n```"
+
     @Test
-    fun withNoProgramClaudeAnswersInWordsAndNothingComesBack() {
+    fun withNoProgramOnlyAWorkoutComesBackAndGoesAboveStartSession() {
         compose.waitFor("Run this program")
         openCoach()
-        compose.onNodeWithText("With no program running", substring = true).assertIsDisplayed()
-        assertTrue(compose.onAllNodes(hasText("Paste reply")).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText("builds you a workout", substring = true).assertIsDisplayed()
         words().performTextInput("My knee hurts on lunges.")
         assertTrue(ask().contains("No program is running in Hyperlog"))
+        // A Change has nothing to change.
+        copy(elbow)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("No program is running, so there’s nothing for a Change to change.")
+        // A workout opens its review, and Add to Today puts it on Today.
+        copy(hotel)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Workout for today")
+        compose.onNodeWithText("Chest-Supported DB Row").assertIsDisplayed()
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Hotel dumbbells, 45 min")
+        compose.onNode(hasTestTag(com.hyperlog.app.ui.today.WorkoutCardTag)).assertIsDisplayed()
+        compose.onNodeWithText("Ad-hoc session").assertIsDisplayed()
+    }
+
+    @Test
+    fun buildMeAWorkoutOpensItsOptionsWithTheirDefaultsAndThePromptCarriesThem() {
+        runStarter()
+        openCoach()
+        compose.onNodeWithText("Build me a workout").performClick()
+        compose.onNode(hasTestTag(WorkoutOptionsTag)).assertIsDisplayed()
+        compose.onNode(hasText("Normal") and androidx.compose.ui.test.isOn()).assertIsDisplayed()
+        compose.onNode(hasText("1 h") and androidx.compose.ui.test.isOn()).assertIsDisplayed()
+        // Words are optional with the options open.
+        assertEquals("", wordsText())
+        compose.onNodeWithText("Hard").performClick()
+        compose.onNodeWithText("45 min").performClick()
+        compose.onNodeWithText("All muscles").performScrollTo().performClick()
+        compose.onNodeWithText("Hamstrings").performScrollTo().performClick()
+        val prompt = ask()
+        assertTrue(prompt, prompt.contains("Build me a workout for today:"))
+        assertTrue(prompt, prompt.contains("- Effort: hard"))
+        assertTrue(prompt, prompt.contains("- Time: 45 min"))
+        assertTrue(prompt, prompt.contains("- Focus: Hamstrings."))
+        // Closing the options takes them out of the request.
+        compose.onNodeWithText("Build me a workout").performClick()
+        assertTrue(compose.onAllNodes(hasTestTag(WorkoutOptionsTag)).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText("Ask Claude").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aWorkoutGoesAboveTheProgramDayAndRemoveTakesItOff() {
+        runStarter()
+        openCoach()
+        copy(hotel)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Add to Today")
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Hotel dumbbells, 45 min")
+        compose.onNodeWithText("Week 1 · Ramp-in").assertIsDisplayed()
+        // Another asks before it replaces this one.
+        compose.openTab("Coach")
+        compose.waitFor("In your words")
+        copy(hotel.replace("Hotel dumbbells, 45 min", "Legs at home"))
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Add to Today")
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Replace today’s workout?")
+        compose.onNodeWithText("Replace").performClick()
+        compose.waitFor("Legs at home")
+        assertTrue(compose.onAllNodes(hasText("Hotel dumbbells, 45 min")).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithContentDescription("More for this workout").performClick()
+        compose.onNodeWithText("Remove").performClick()
+        compose.waitGone("Legs at home")
+    }
+
+    @Test
+    fun startingAWorkoutTrainsItAndLeavesTheProgramWhereItWas() {
+        runStarter()
+        openCoach()
+        copy(hotel)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Add to Today")
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Hotel dumbbells, 45 min")
+        compose.onNodeWithText("Start").performClick()
+        compose.waitFor("Reps")
+        val session = runBlocking { db.sessions().runningSession()!! }
+        assertTrue(session.workoutId != null)
+        assertEquals(listOf("chest_supported_db_row"), runBlocking { db.sessions().sessionExercises(session.id) }.map { it.exerciseId })
+        assertEquals(1, runBlocking { db.programs().active()!!.week })
+        assertEquals(0, runBlocking { db.programs().active()!!.dayIndex })
     }
 
     private companion object {
