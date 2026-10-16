@@ -822,9 +822,12 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   (`1 × 4–6 [1] · 2 × 6–8 [1]`, written `[1]` in this spec). A **target** (planned sets, a block's
   rule, a suggestion's "target") is an outlined chip, like the logging screen's ring; a **logged** set
   (History, past and finished sessions, Last time in a why-line) is a filled chip, like its dot.
-  Outline and fill both use the ring's shades, so in light mode a fill is darker than the logging
-  screen's dot and every chip keeps 3:1 against every surface; a fill's number (black at 87%) keeps
-  4.5:1 on it. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
+  An outline uses the ring's shades, darker in light mode, so it keeps 3:1 against every surface,
+  with an onSurface number. A fill is a solid badge, the same in light and dark (the owner's call,
+  2026-10-16): a white number on the ring's light-mode shade darkened, hue kept, just far enough for
+  4.5:1 (hot `#D14237`, warm `#9D6B1C`, calm `#447E79`). It keeps 3:1 on every light surface; in
+  dark mode the white number carries it, since the fill's edge drops to about 2.8:1 on the lightest
+  container. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
   0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the navy accent or a
   button. A set's parts and its chip are joined by no-break spaces, so a line wraps only between
   sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads

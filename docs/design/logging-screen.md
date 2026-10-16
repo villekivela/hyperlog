@@ -93,10 +93,10 @@ Two fixed scales sit outside the theme:
 - **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots. In light
   mode the target rings are `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at
   least 3:1 on every light surface so they read in daylight (`RirContrastTest`); filled dots and
-  dark mode keep the base colours. The RIR chip in set text follows the mark: an outline in the
-  ring's colour with an onSurface number, a fill in the same colour with a black 87% number
-  (semibold, 0.8 em). In light mode a fill takes the ring's darker shade too, so the chip keeps
-  3:1 on every surface (#43); the black number still keeps 4.5:1 on it.
+  dark mode keep the base colours. The RIR chip in set text follows the mark: a target is an
+  outline in the ring's colour with an onSurface number; a logged set is a solid badge, the same in
+  both modes, a white number (semibold, 0.8 em) on `#D14237`, `#9D6B1C` or `#447E79`, the ring's
+  light shades darkened just far enough for 4.5:1 (#43, the owner's call).
 - **Trend** (the why-line's symbol): up `#5FAE7A` (calm green), same weight `#9AA1A9`
   (neutral), down `#E0A84E` (amber; a deload or back-off is no failure, so never red).
 

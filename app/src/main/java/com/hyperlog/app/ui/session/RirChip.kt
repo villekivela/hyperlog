@@ -48,11 +48,21 @@ private val RirPattern = Regex("(^|$Gap)@$Gap(\\d+)(?:${Gap}RIR\\b)?")
 private val TargetWord = Regex("\\btarget$Gap$", RegexOption.IGNORE_CASE)
 private val RirChipShape = RoundedCornerShape(4.dp)
 
-/**
- * A chip's outline (target) or fill (logged): the ring's shades, darker in light mode so a chip
- * keeps 3:1 on every surface; its number, [RirOnFill] on a fill, keeps 4.5:1.
- */
+/** A target chip's outline: the ring's shades, darker in light mode so it keeps 3:1 on every surface. */
 internal fun rirChipColor(rir: Int, dark: Boolean): Color = rirRingColor(rir, dark)
+
+/**
+ * A logged chip's fill, the same in light and dark: a solid badge. Each is the ring's light-mode
+ * shade darkened, keeping its hue, just far enough for [RirBadgeNumber] to keep 4.5:1.
+ */
+internal fun rirBadgeColor(rir: Int): Color = when {
+    rir <= 0 -> Color(0xFFD14237)
+    rir <= 2 -> Color(0xFF9D6B1C)
+    else -> Color(0xFF447E79)
+}
+
+/** A logged chip's number. */
+internal val RirBadgeNumber = Color.White
 
 /**
  * Appends [text] with each `@ N` as a chip, a target if [target] or if the word before it is
@@ -91,12 +101,12 @@ internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<Str
 /** The chip itself. */
 @Composable
 private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
-    val color = rirChipColor(rir, isDarkSurface())
+    val dark = isDarkSurface()
     Box(
         Modifier.fillMaxSize()
             // Drawing only: the line's alternate text already reads "N RIR".
             .clearAndSetSemantics { testTag = if (target) RirChipTargetTag else RirChipLoggedTag }
-            .then(if (target) Modifier.border(1.5.dp, color, RirChipShape) else Modifier.background(color, RirChipShape)),
+            .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirBadgeColor(rir), RirChipShape)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -104,7 +114,7 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
             fontSize = fontSize,
             lineHeight = fontSize,
             fontWeight = FontWeight.SemiBold,
-            color = if (target) MaterialTheme.colorScheme.onSurface else RirOnFill,
+            color = if (target) MaterialTheme.colorScheme.onSurface else RirBadgeNumber,
             maxLines = 1,
         )
     }
