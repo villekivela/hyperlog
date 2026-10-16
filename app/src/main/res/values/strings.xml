@@ -362,9 +362,13 @@
     <string name="program_close">Close</string>
     <string name="program_choose_file">Choose file</string>
     <string name="program_unreadable">The file couldn\'t be read.</string>
-    <string name="program_day_done">Day %1$s, done</string>
-    <string name="program_day_next">Day %1$s, next</string>
-    <string name="program_day_upcoming">Day %1$s</string>
+    <string name="program_day_done_label">Done</string>
+    <string name="program_day_skipped">Skipped</string>
+    <string name="program_from">From %1$s</string>
+    <string name="program_from_same">Every day as in %1$s</string>
+    <string name="program_week_n">Week %1$d</string>
+    <string name="program_week_done">Week %1$d, done</string>
+    <string name="program_ends">Ends %1$s; if this day falls later, it\'s as written.</string>
     <string name="today_week_block">Week %1$d · %2$s</string>
     <string name="today_ad_hoc">Ad-hoc session</string>
     <string name="today_no_program_body">Import a program to train it day by day, or start an ad-hoc session.</string>
@@ -437,6 +441,11 @@
     <string name="change_load">Weights %1$s</string>
     <string name="change_day_head">Week %1$d · %2$s</string>
     <string name="program_changes">Changes</string>
+    <string name="program_changes_none">Changes · none in force</string>
+    <plurals name="program_changes_in_force">
+        <item quantity="one">Changes · %1$d in force</item>
+        <item quantity="other">Changes · %1$d in force</item>
+    </plurals>
     <string name="program_change_accepted">%1$s · accepted %2$s</string>
     <string name="program_change_reverted">Reverted</string>
     <string name="program_change_replaced">Replaced %1$s</string>

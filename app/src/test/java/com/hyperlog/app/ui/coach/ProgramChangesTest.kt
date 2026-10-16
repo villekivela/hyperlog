@@ -41,10 +41,16 @@ class ProgramChangesTest {
         compose.waitFor("Week $week · Day A", substring = true)
     }
 
+    /** A program action, from the menu. */
+    private fun action(label: String) {
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.onNodeWithText(label).performClick()
+    }
+
     @Test
     fun shiftingTheProgramByOneWeekShowsADiffAndAppliesOnlyAfterAccept() {
         programAtWeek(3)
-        compose.onNodeWithText("Shift program").performClick()
+        action("Shift program")
         compose.onNodeWithText("1 week later").assertIsDisplayed()
         compose.onNodeWithText("Review").performClick()
 
@@ -59,29 +65,32 @@ class ProgramChangesTest {
         compose.waitGone("Change to your program")
         compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
 
-        compose.onNodeWithText("Shift program").performClick()
+        action("Shift program")
         compose.onNodeWithText("Review").performClick()
         compose.waitFor("Accept")
         compose.onNodeWithText("Accept").performClick()
         compose.waitFor("Week 2 · Day A", substring = true)
-        compose.onNodeWithText("Changes").assertIsDisplayed()
+        compose.onNodeWithText("Changes · 1 in force").performClick()
         compose.onNodeWithText("The plan 1 week later").assertIsDisplayed()
     }
 
     @Test
     fun revertingAnAcceptedChangeRestoresThePlan() {
         programAtWeek(3)
-        compose.onNodeWithText("Skip day").performClick()
+        action("Skip day")
         compose.waitFor("Accept")
         compose.onNodeWithText("Skip week 3 · Day A", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Accept").performClick()
         compose.waitFor("Week 3 · Day B", substring = true)
 
+        compose.onNodeWithText("Changes · 1 in force").performClick()
         compose.onNodeWithContentDescription("Revert").performClick()
         compose.onNodeWithText("Revert “Skip week 3 · Day A", substring = true).assertIsDisplayed()
         compose.assertButtonOrder("Cancel", "Revert")
         compose.onNodeWithText("Revert").performClick()
         compose.waitFor("Reverted")
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.waitFor("Changes · none in force")
         compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
     }
 }

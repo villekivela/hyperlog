@@ -706,15 +706,36 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **Finishing is deliberate and recoverable.** Finish session (⋮, below a divider, or the
        session list) asks "Finish the session?" (Keep going / Finish). Session done offers
        **Resume session**, which reopens the session exactly as it was.
-2. **Program** — blocks and weeks, where you are now, past sessions in context. Actions: skip day,
-   repeat week, deload week, shift the remaining plan by N weeks. A destination of the navigation bar.
-   - **The actions are Changes**, chips under the Next line while the program runs: **Skip day**
-     (`skip_day`), **Repeat week** (`repeat_week`), **Deload week** (`deload_week` for the week
-     you're in) and **Shift program** (`shift_program`, 1–8 weeks later, picked by steps first). Each
-     opens its diff, and applies only on Accept. Accepted Changes are listed under **Changes**
-     with Revert (Coaching).
-   - Each block is a heading (`Build · weeks 3–6`), each week a row of day tokens (A, B, C…): done,
-     next (the one filled shape) or to come. The current week names its next day.
+2. **Program** — the block you're in and how it differs from the one before, its weeks, and each
+   day of a week in full, past days as trained. A destination of the navigation bar. It reads the
+   plan; it never edits it.
+   - **The header card** holds the program's title and its **Next** day (or "Program finished").
+     Under it, while there are accepted Changes, one row **Changes · 1 in force** opens the Changes
+     list with Revert (Coaching).
+   - **The actions are Changes**, in ⋮ above Import program and Run Hyperlog Full Body (a divider
+     between) while the program runs: **Skip day** (`skip_day`), **Repeat week** (`repeat_week`),
+     **Deload week** (`deload_week` for the week you're in) and **Shift program** (`shift_program`,
+     1–8 weeks later, picked by steps first). Each opens its diff, and applies only on Accept.
+   - **Blocks**: a connected button group picks the block (a scrolling row of chips past four
+     blocks), opening on the block you're in. The block's card names it (`Build · weeks 3–6`), then
+     **From <previous block>**: each slot that differs between the previous block's last week and
+     this block's first, as written, Day A beside Day A, slot by slot (a swap as "In place of …",
+     sets before → after, an added or removed slot). That comparison is the whole description of a
+     block; the program format has no note for it. The first block has none. Chips pick the week,
+     opening on the week you're in; done weeks are ticked.
+   - **Days**: the picked week's days, each headed by its name. A day to come is in full, slot by
+     slot as Today lists it, exactly as the session will prescribe it: the program's day with week
+     and day overrides, deloads and the Changes covering it, through the same plan Today and the
+     session read. The next day is headed **Next**; a deload day **Deload**. There are no dates: a
+     date-ranged Change lands on days to come by the diff's rule, one week of program days per week
+     of dates from the next day: counting from the next day, the first week of program days (as many
+     days as a week of the current block has) is read for today, the next for a week from today,
+     and so on. A day a
+     date-ranged Change covers reads "Ends 26 Oct; if this day falls later, it's as written."
+   - **Past days show the sessions.** A done day (one before the position with a session of this
+     program for it, the latest if a repeated week trained it twice) shows the date and each
+     exercise's top set, and opens that session in History. A day before the position with no
+     session was skipped: it shows its plan, headed **Skipped**.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
      and imports nothing. Importing over a program asks first ("Replace <title>?").
    - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog
@@ -983,8 +1004,8 @@ the end of the block the Change was accepted in. A date range covers its first a
   above the diff ("Ends: Hands need a week off grip work"), and its diff compares the plan as it
   is with the plan once those have ended and it applies; one Accept does both.
 - **History.** Accepted Changes are kept with the day they were accepted, the position they moved
-  from and to, and the block. The Program screen lists them, newest first, each with **Revert**
-  (asking first). Reverting stops its plan edits and takes its move of the position back; days
+  from and to, and the block. The Program screen lists them on its Changes page (the **Changes ·
+  1 in force** row), newest first, each with **Revert** (asking first). Reverting stops its plan edits and takes its move of the position back; days
   trained since still count (the position moves back by the same number of days). Reverted ones
   stay in the list, struck through. A Change ended by another's `replaces` stays struck through
   too, reading "Replaced 18 Oct". One that only ended others has no Revert: it has nothing of its

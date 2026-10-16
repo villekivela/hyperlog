@@ -439,7 +439,10 @@ private fun App(
             onNew = { editing = NewExercise },
             onBack = { screen = Screen.Settings; libraryQuery = "" },
         )
-        screen == Screen.Program -> ProgramScreen(
+        screen == Screen.Program -> {
+            // Done days show what was logged, so the list is read as Program opens.
+            LaunchedEffect(Unit) { pastModel.refresh() }
+            ProgramScreen(
             program,
             importErrors,
             onImport = { programModel.closeErrors(); pickProgram.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
@@ -450,7 +453,11 @@ private fun App(
             onPropose = programModel::propose,
             onRevert = programModel::revert,
             onSettings = openSettings,
-        )
+            exerciseNames = exercises.associate { it.id to it.name },
+            sessions = pastSessions.orEmpty(),
+            onOpenSession = { id -> pastModel.open(id); screen = Screen.History },
+            )
+        }
         screen == Screen.Coach -> CoachScreen(
             program,
             words = coachWords,
