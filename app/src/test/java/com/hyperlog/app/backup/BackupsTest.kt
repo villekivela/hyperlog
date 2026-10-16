@@ -118,6 +118,14 @@ class BackupsTest {
         logger.log("80", 8, 2)
         logger.log("80", 8, 1)
         logger.finish()
+        // v22: a workout from the coach trained, and another waiting on Today.
+        val workouts = com.hyperlog.app.coach.Workouts(db, clock = { now })
+        val hotel = com.hyperlog.app.coach.WorkoutFormat.example(db.exercises().all().map { it.toExercise() })
+        now += 86_400_000L
+        logger.startWorkout(workouts.add(hotel, gym), gym)
+        logger.log("30", 10, 1)
+        logger.finish()
+        workouts.add(hotel.copy(name = "Legs at home"), null)
         // The running one: a set logged, rest running, a technique changed and a half-typed set on the pad.
         now += 3 * 86_400_000L
         logger.startDay(programs.active.first()!!, gym)
@@ -189,7 +197,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(21), file["database"])
+        assertEquals(JsonPrimitive(22), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -380,5 +388,25 @@ class BackupsTest {
         val bench = phone.sessions().sessionExercises(2).single { it.id == 3L }
         assertEquals("40.0:8,60.0:5", bench.warmups)
         assertEquals(1, bench.warmupsDone)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase21StillRestores() = runTest {
+        // DB v21, before workouts: its sessions train none, and none waits.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db21.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        assertTrue(phone.sessions().finishedSessions().all { it.workoutId == null })
+        assertEquals(emptyList<com.hyperlog.app.coach.Workouts.Waiting>(), com.hyperlog.app.coach.Workouts(phone).waiting.first())
+    }
+
+    @Test
+    fun aWorkoutAndItsSessionComeBackFromABackup() = runTest {
+        val file = Backups(usedPhone(), clock = { now }).export()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        assertEquals(listOf("Legs at home"), com.hyperlog.app.coach.Workouts(phone).waiting.first().map { it.workout.name })
+        val titles = com.hyperlog.app.session.PastSessionEditor(phone, Programs(phone, clock = { now })).sessions().map { it.title }
+        assertTrue(titles.toString(), "Upper body, 45 min" in titles)
     }
 }

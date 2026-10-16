@@ -33,6 +33,7 @@ import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
 import com.hyperlog.app.ui.coach.ChangeReviewScreen
 import com.hyperlog.app.ui.coach.CoachScreen
+import com.hyperlog.app.ui.coach.WorkoutReviewScreen
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.hyperlog.app.ui.coach.AskClaudeShare
@@ -253,6 +254,16 @@ private fun App(
     var coachWords by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     /** Ask Claude was pressed for the words on Coach; an accept, a revert or cleared words end it. */
     var coachAsked by rememberSaveable { mutableStateOf(false) }
+    /** The gym picked on Coach (null: Elsewhere or no gyms), which a workout added to Today starts at. */
+    var coachGym by rememberSaveable { mutableStateOf<Long?>(null) }
+    /** A Change was just accepted from Coach: Today brings the program day it changed into view. */
+    var showProgramDay by rememberSaveable { mutableStateOf(false) }
+    /** The gym chip and Build me a workout's options on Coach, kept across tabs like the words. */
+    var coachPicked by rememberSaveable { mutableStateOf<Long?>(null) }
+    var coachOptions by rememberSaveable(stateSaver = com.hyperlog.app.ui.coach.OptionsSaver) { mutableStateOf<com.hyperlog.app.coach.WorkoutOptions?>(null) }
+    val waitingWorkouts by programModel.waiting.collectAsStateWithLifecycle()
+    val lowest by programModel.lowest.collectAsStateWithLifecycle()
+    val workoutReview by programModel.workout.collectAsStateWithLifecycle()
     val endAsk = { coachAsked = false; programModel.clearReply() }
     val inForce by programModel.inForce.collectAsStateWithLifecycle()
     val update by updateModel.banner.collectAsStateWithLifecycle()
@@ -274,6 +285,8 @@ private fun App(
     // Time off counts from the last session finished: read again whenever Today or the coach shows,
     // and on start, when a session may already be running (a restart or a restore).
     LaunchedEffect(screen, running == null) { sessions.refreshLastTrained() }
+    // The focus's marks count the sets trained so far this week.
+    LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()
     if (running != null) AskForNotifications()
     // A Change under review covers whatever proposed it: the Program screen or the session.
@@ -281,8 +294,25 @@ private fun App(
         ChangeReviewScreen(
             r, exercises.associate { it.id to it.name },
             // A coach's Change, once accepted, is the plan Today shows.
-            onAccept = { programModel.accept(); endAsk(); if (screen == Screen.Coach) screen = Screen.Today },
+            onAccept = {
+                programModel.accept(); endAsk()
+                if (screen == Screen.Coach) { screen = Screen.Today; showProgramDay = true }
+            },
             onReject = programModel::reject,
+        )
+        return
+    }
+    // A workout's date is the program's today, or the phone's with no program.
+    val todayWorkout = waitingWorkouts.firstOrNull { it.addedOn == (program?.today ?: java.time.LocalDate.now()) }
+    // A workout from Claude, before it goes on Today.
+    workoutReview?.let { w ->
+        WorkoutReviewScreen(
+            w, exercises.associate { it.id to it.name },
+            onAdd = { programModel.addWorkout(coachGym); endAsk(); screen = Screen.Today },
+            onReject = programModel::rejectWorkout,
+            replaces = todayWorkout?.workout?.name,
+            gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == coachGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
+                ?: context.getString(R.string.coach_elsewhere),
         )
         return
     }
@@ -431,9 +461,15 @@ private fun App(
             asked = coachAsked,
             onAskedChange = { if (it) coachAsked = true else endAsk() },
             onOpenChange = programModel::openInForce,
-            onAskClaude = { words, gym, elsewhere ->
+            onGym = { coachGym = it },
+            picked = coachPicked,
+            onPick = { coachPicked = it },
+            options = coachOptions,
+            onOptions = { coachOptions = it },
+            lowest = lowest,
+            onAskClaude = { words, gym, elsewhere, options ->
                 scope.launch {
-                    val prompt = programModel.askClaudePrompt(words, gym, elsewhere, lastTrained, gyms.flatMap { it.weekdays }.toSet())
+                    val prompt = programModel.askClaudePrompt(words, gym, elsewhere, lastTrained, gyms.flatMap { it.weekdays }.toSet(), options)
                     context.startActivity(AskClaudeShare.intent(context, prompt))
                 }
             },
@@ -525,6 +561,16 @@ private fun App(
             onUpdate = { updateModel.install(context) },
             onDismissUpdate = updateModel::dismiss,
             runningDay = running?.day,
+            runningWorkout = running?.workoutId != null,
+            workout = todayWorkout,
+            onStartWorkout = { id, gym, swaps ->
+                left = false
+                sessions.startWorkout(id, gym, swaps)
+            },
+            onRemoveWorkout = programModel::removeWorkout,
+            onUndoRemoveWorkout = programModel::undoRemoveWorkout,
+            showProgramDay = showProgramDay,
+            onProgramDayShown = { showProgramDay = false },
         )
     }
     }

@@ -64,6 +64,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Scope
+import com.hyperlog.app.coach.WorkoutOptions
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.program.ActiveProgram
@@ -89,7 +90,7 @@ private val Margin = 24.dp
 internal const val NextStepTag = "coach-next-step"
 
 /** The gym chip for somewhere not set up in Hyperlog. */
-private const val Elsewhere = -1L
+internal const val Elsewhere = -1L
 
 /** Changes in force shown in full; any more fold under "N more in force". */
 private const val ShownChanges = 2
@@ -122,8 +123,23 @@ fun CoachScreen(
     gyms: List<Gym> = emptyList(),
     /** The gym the start sheet would pick, preselected. */
     usualGym: UsualGym? = null,
-    /** Shares the prompt for the words and the gym picked (null: [elsewhere] or no gyms) with the Claude app. */
-    onAskClaude: (words: String, gym: Gym?, elsewhere: Boolean) -> Unit = { _, _, _ -> },
+    /**
+     * Shares the prompt for the words, the gym picked (null: [elsewhere] or no gyms) and Build me a
+     * workout's options (null while closed) with the Claude app.
+     */
+    onAskClaude: (words: String, gym: Gym?, elsewhere: Boolean, options: WorkoutOptions?) -> Unit = { _, _, _, _ -> },
+    /**
+     * The gym chip picked ([Elsewhere] for somewhere not set up; null: the usual one), and Build me a
+     * workout's options (null while closed). Kept by the caller with the words, so a tab switch keeps them.
+     */
+    picked: Long? = null,
+    onPick: (Long?) -> Unit = {},
+    options: WorkoutOptions? = null,
+    onOptions: (WorkoutOptions?) -> Unit = {},
+    /** The gym picked now (null: Elsewhere or no gyms), which a workout added to Today starts at. */
+    onGym: (Long?) -> Unit = {},
+    /** The focus's marks: the groups trained in the last 4 weeks with the fewest sets this week, with those sets. */
+    lowest: List<Pair<String, Double>> = emptyList(),
     /** Ask Claude was pressed for these words: pasting the reply is the next step. Kept by the caller, which ends it. */
     asked: Boolean = false,
     onAskedChange: (Boolean) -> Unit = {},
@@ -149,9 +165,9 @@ fun CoachScreen(
 ) {
     /** Hyperlog went to the background after asking: on coming back, the clipboard is read once. */
     var away by rememberSaveable { mutableStateOf(false) }
-    var picked by rememberSaveable { mutableStateOf<Long?>(null) }
     val elsewhere = picked == Elsewhere && gyms.isNotEmpty()
     val gym = if (elsewhere) null else gyms.firstOrNull { it.id == picked } ?: gyms.firstOrNull { it.id == usualGym?.id } ?: gyms.firstOrNull()
+    LaunchedEffect(gym?.id) { onGym(gym?.id) }
     /** The Changes after the first [ShownChanges] are folded under "N more in force" until opened. */
     var allChanges by rememberSaveable { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -193,7 +209,12 @@ fun CoachScreen(
     val inForce = program?.inForce.orEmpty()
     val about = inForce.associate { it.id to stringResource(R.string.coach_about, it.change.summary) }
     val starters = Starters.map { stringResource(it.label) to stringResource(it.words) }
-    val canAsk = words.text.isNotBlank()
+    // Gym, effort, time and focus are a whole request: words are optional with the options open.
+    // Elsewhere's equipment is only in the words, so it needs some.
+    val canAsk = (words.text.isNotBlank() || options != null) && !(elsewhere && words.text.isBlank())
+    // A new gym or new options make a new request: Ask Claude is the next step again.
+    fun pick(id: Long?) { if (asked) onAskedChange(false); onPick(id) }
+    fun choose(o: WorkoutOptions?) { if (asked) onAskedChange(false); onOptions(o) }
 
     BackHandler(onBack = onBack)
     Scaffold(
@@ -211,13 +232,12 @@ fun CoachScreen(
         },
         bottomBar = {
             BottomBar(
-                withProgram = program != null,
                 asked = asked,
                 replyReady = replyReady,
                 canAsk = canAsk,
                 onAsk = {
                     onAskedChange(true)
-                    onAskClaude(words.text.trim(), gym, elsewhere)
+                    onAskClaude(words.text.trim(), gym, elsewhere, options)
                 },
                 onPaste = onPaste,
                 onReview = onReview,
@@ -271,19 +291,14 @@ fun CoachScreen(
             SectionCard(padding = 0.dp) {
                 if (gyms.isNotEmpty()) {
                     Row(Modifier.padding(start = CardPadding, end = CardPadding, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            stringResource(R.string.coach_gym),
-                            Modifier.padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        OptionHead(stringResource(R.string.coach_gym))
                         FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             gyms.forEach { g ->
                                 val selected = g.id == gym?.id
                                 FilterChip(
                                     colors = selectedChipColors(),
                                     selected = selected,
-                                    onClick = { picked = g.id },
+                                    onClick = { pick(g.id) },
                                     label = { Text(g.name) },
                                     leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                                 )
@@ -292,7 +307,7 @@ fun CoachScreen(
                             FilterChip(
                                 colors = selectedChipColors(),
                                 selected = elsewhere,
-                                onClick = { picked = Elsewhere },
+                                onClick = { pick(Elsewhere) },
                                 label = { Text(stringResource(R.string.coach_elsewhere)) },
                                 leadingIcon = if (elsewhere) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                             )
@@ -303,6 +318,22 @@ fun CoachScreen(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = CardPadding).padding(top = if (gyms.isEmpty()) 8.dp else 0.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    // First, so it shows without scrolling: it opens the options rather than typing a sentence.
+                    val building = options != null
+                    FilterChip(
+                        colors = selectedChipColors(),
+                        selected = building,
+                        onClick = {
+                            choose(if (building) null else WorkoutOptions())
+                            if (!building) {
+                                // The options are what to fill in: the keyboard makes way for them.
+                                keyboard?.hide()
+                                focus.clearFocus()
+                            }
+                        },
+                        label = { Text(stringResource(R.string.coach_starter_workout)) },
+                        leadingIcon = { SymbolIcon(if (building) Symbol.Check else Symbol.Add, null, Modifier.size(18.dp)) },
+                    )
                     starters.forEach { (label, sentence) ->
                         SuggestionChip(
                             onClick = {
@@ -316,6 +347,12 @@ fun CoachScreen(
                         )
                     }
                 }
+                options?.let { picked ->
+                    WorkoutOptionsRows(
+                        picked, lowest,
+                        onChange = { choose(it) },
+                    )
+                }
                 OutlinedTextField(
                     value = words,
                     onValueChange = ::edit,
@@ -323,6 +360,8 @@ fun CoachScreen(
                         .focusRequester(field).bringIntoViewRequester(fieldInView),
                     label = { Text(stringResource(R.string.coach_words_label)) },
                     placeholder = { Text(stringResource(R.string.coach_words_hint)) },
+                    // At Elsewhere the words are the only equipment Claude gets, so Ask Claude waits for them.
+                    supportingText = if (elsewhere && words.text.isBlank()) { { Text(stringResource(R.string.coach_words_hint_elsewhere)) } } else null,
                     minLines = 3,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 )
@@ -380,7 +419,6 @@ private fun runsText(record: ChangeRecord, program: ActiveProgram): String = whe
  */
 @Composable
 private fun BottomBar(
-    withProgram: Boolean,
     asked: Boolean,
     replyReady: Boolean,
     canAsk: Boolean,
@@ -395,7 +433,7 @@ private fun BottomBar(
             .background(Tones.bar)
             .navigationBarsPadding(),
     ) {
-        if (replyReady && withProgram) {
+        if (replyReady) {
             Row(
                 Modifier.padding(start = CardPadding, end = CardPadding, top = CardPadding)
                     .fillMaxWidth()
@@ -426,12 +464,8 @@ private fun BottomBar(
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.coach_paste))
             }
+            // With no program running a workout can still come back, so Paste reply is always there.
             when {
-                // With no program only words come back, so there is nothing to paste.
-                !withProgram -> {
-                    Spacer(Modifier.weight(1f))
-                    Button(enabled = canAsk, onClick = onAsk, modifier = Modifier.testTag(NextStepTag)) { ask() }
-                }
                 replyReady -> {
                     TextButton(onClick = onPaste) { paste() }
                     Spacer(Modifier.weight(1f))
@@ -483,3 +517,103 @@ private fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) 
         errors.forEach { Problem(it) }
     }
 }
+
+/** Saves Build me a workout's options: closed, or the effort, the minutes and the focus. */
+internal val OptionsSaver = androidx.compose.runtime.saveable.Saver<WorkoutOptions?, List<Any>>(
+    save = { o -> if (o == null) emptyList() else listOf(o.effort.name, o.minutes, o.focus.joinToString("\n")) },
+    restore = { l ->
+        if (l.isEmpty()) null
+        else WorkoutOptions(WorkoutOptions.Effort.valueOf(l[0] as String), l[1] as Int, (l[2] as String).split("\n").filter { it.isNotEmpty() })
+    },
+)
+
+/** The head of a row in the composer: Gym, Effort, Time, Focus, in one column so the choices line up. */
+@Composable
+private fun OptionHead(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        modifier.width(OptionHeadWidth),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+private val OptionHeadWidth = 56.dp
+
+/** The text of a muscle's sets this week: `0 sets`, `1 set`, `2.5 sets`. */
+@Composable
+private fun setsText(sets: Double): String {
+    val n = com.hyperlog.app.domain.formatKg(sets)
+    return if (sets == 1.0) stringResource(R.string.coach_focus_set, n) else stringResource(R.string.coach_focus_sets, n)
+}
+
+/**
+ * Build me a workout's options: Effort and Time as connected button groups with their defaults
+ * picked, and Focus as the seven muscle groups, the three trained in the last 4 weeks with the
+ * fewest sets this week marked with them (`Back · 4 sets`). Nothing is preselected: no focus is a
+ * balanced full-body day.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun WorkoutOptionsRows(
+    options: WorkoutOptions,
+    lowest: List<Pair<String, Double>>,
+    onChange: (WorkoutOptions) -> Unit,
+) {
+    val efforts = WorkoutOptions.Effort.entries
+    Column(
+        Modifier.fillMaxWidth().padding(start = CardPadding, end = CardPadding, top = 12.dp).testTag(WorkoutOptionsTag),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OptionHead(stringResource(R.string.coach_effort))
+            com.hyperlog.app.ui.theme.ConnectedChoice(
+                efforts.map {
+                    stringResource(
+                        when (it) {
+                            WorkoutOptions.Effort.Easy -> R.string.coach_effort_easy
+                            WorkoutOptions.Effort.Normal -> R.string.coach_effort_normal
+                            WorkoutOptions.Effort.Hard -> R.string.coach_effort_hard
+                        },
+                    )
+                },
+                selected = efforts.indexOf(options.effort),
+                onSelect = { onChange(options.copy(effort = efforts[it])) },
+                modifier = Modifier.weight(1f),
+                color = Tones.screen,
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OptionHead(stringResource(R.string.coach_time))
+            com.hyperlog.app.ui.theme.ConnectedChoice(
+                WorkoutOptions.Times.map { WorkoutOptions.timeText(it) },
+                selected = WorkoutOptions.Times.indexOf(options.minutes),
+                onSelect = { onChange(options.copy(minutes = WorkoutOptions.Times[it])) },
+                modifier = Modifier.weight(1f),
+                color = Tones.screen,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
+            )
+        }
+        Row {
+            OptionHead(stringResource(R.string.coach_focus), Modifier.padding(top = 14.dp))
+            val marks = lowest.toMap()
+            // The seven groups in body order; the three behind this week carry their sets.
+            val shown = com.hyperlog.app.library.MuscleGroup.entries.map { it.label }
+            FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                shown.forEach { muscle ->
+                    val selected = muscle in options.focus
+                    FilterChip(
+                        colors = selectedChipColors(),
+                        selected = selected,
+                        onClick = { onChange(options.copy(focus = if (selected) options.focus - muscle else options.focus + muscle)) },
+                        label = { Text(marks[muscle]?.let { stringResource(R.string.coach_focus_marked, muscle, setsText(it)) } ?: muscle) },
+                        leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Build me a workout's options, for tests. */
+internal const val WorkoutOptionsTag = "coach-workout-options"

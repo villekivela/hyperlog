@@ -476,10 +476,12 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
-   - A **workout** added from Coach shows as a card above the program day, or above Start
-     session with no program, for the day it was added (Coaching → Workout).
+   - A **workout** added from Coach comes first, for the day it was added, as today's main
+     Start (Start workout floats); the program day follows as a second card with a tonal Start
+     (Coaching → Workout).
      While a program session runs, Today shows that session's day, the one **Resume session**
-     opens, even after a finish and Resume moved the program's position on.
+     opens, even after a finish and Resume moved the program's position on; while a workout's
+     session runs, the workout, headed "Workout".
    - **A program day's session** has a row for every planned set from the start, its target shown
      as muted placeholders in the empty cells (`6–8` in Reps, an RIR ring in RIR) until typed. The first set prefills with the suggestion (Automatic
      progressive overload): its weight, at the target RIR; with no history, an empty weight. **Reps
@@ -1011,16 +1013,21 @@ goes through Claude, which reads the program, the week you're in and your sessio
   left out.
 - **Starters.** Chips that put an editable sentence into the words: "Something hurts" (`Something
   hurts: `, for you to say where), "Short on time today" (`I'm short on time today: I have 45 minutes.`), "No gym,
-  dumbbells at home" (`No gym today, only dumbbells at home.`), "Slept badly" (`I slept badly
-  last night.`), and **Build me a workout**, which also opens the workout's options (below). A
-  starter fills empty words; otherwise its sentence goes on a new line. Either way the field takes
-  focus with the cursor at the end.
+  dumbbells at home" (`No gym today, only dumbbells at home.`) and "Slept badly" (`I slept badly
+  last night.`). A starter fills empty words; otherwise its sentence goes on a new line. Either
+  way the field takes focus with the cursor at the end. **Build me a workout** comes first in the
+  row, so it shows without scrolling. It is a toggle that opens the workout's options (below) and
+  types nothing: the keyboard stays down, since the options are what to fill in. Tapping it again
+  closes them, and they leave the request.
 - **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
 - **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step, always at
   the end of the bar: Ask Claude until you've asked, then Paste reply. Ask Claude is enabled once
-  there are words, or while the workout's options are open. Once asked, Paste reply stays the next
-  step until the request ends: an accept, a revert, or the words cleared. With no program and no
-  workouts yet (before #33) only a reply in words can come back, so Paste reply is left out.
+  there are words, or while the workout's options are open; with **Elsewhere** picked it needs
+  words, since they are the only equipment Claude gets, and the field says so under it ("Say what
+  equipment is there, so Claude plans with it"). Once asked, Paste reply stays the next step until
+  the request ends: an accept, an Add to Today, a revert, or the words cleared. Changing the gym or
+  the workout's options after asking makes a new request: Ask Claude is the next step again. With
+  no program running a workout can still come back, so Paste reply is always there.
 - **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
   has focus again, which Android requires for reading the clipboard), the app reads the clipboard
   once. If it holds a Change or a workout that validates, a card over the bottom bar's buttons
@@ -1034,15 +1041,30 @@ goes through Claude, which reads the program, the week you're in and your sessio
 - **Effort**: Easy, Normal (the default) or Hard. The prompt maps them: Easy is 3 RIR or more and
   no techniques, Normal 1–2 RIR, Hard 0–1 RIR with techniques allowed.
 - **Time**: 45 min, 1 h (the default), 1 h 15 or 1 h 30, the whole session with warm-ups and rest.
-- **Focus**: muscle chips, any number. None picked means a balanced full-body day. Among the
-  muscles trained in the last 4 weeks, the three with the fewest weekly sets this week are marked
-  with the count (`Back · 4 sets`), as History counts them. Nothing is preselected.
-- Words are optional here: gym, effort, time and focus are a whole request.
+- **Focus**: seven muscle-group chips, any number: Chest, Back, Shoulders, Arms, Legs, Glutes,
+  Core (`MuscleGroup`; a test checks every muscle the library names has one). None picked means a
+  balanced full-body day; nothing is preselected. **Marks count groups** (owner, 2026-10-16):
+  weekly sets per group are counted as History counts muscles, a set counting 1 for each group
+  holding a primary muscle of its exercise and 0.5 for each other group holding a secondary one,
+  once per group however many of its muscles it works (`History.weeklyGroupSets`). Among the
+  groups trained in the last 4 weeks (this week and the 3 before), the three with the fewest sets
+  this week carry the count on their chip (`Back · 4 sets`), fewest first, ties in group order.
+  No muscle is marked on its own. The prompt sends a group by name with the muscles it covers
+  (`Back (Lats, Teres Major, Traps, …)`).
+- Words are optional here: gym, effort, time and focus are a whole request. Effort and Time are
+  connected button groups.
+- **Kept across tabs.** The gym chip and the options live with the words, outside the screen, so
+  switching to History to check the weekly sets and back keeps them all, as the trip to the Claude
+  app does.
 
 **With and without a program.** With a program running Claude may reply with either. Once it is
-finished, a Change can still repeat a week or shift the program. With no program only a one-off
-day comes back, the prompt says so, and a pasted Change reads "No program is running, so there's
-nothing for a Change to change."
+finished, a Change can still repeat a week or shift the program. With no program only a workout
+comes back: the prompt says so and carries only the workout format, the intro reads "It answers in
+words or builds you a workout for today.", and a pasted Change reads "No program is running, so
+there’s nothing for a Change to change." (one problem, with the copy button, for Claude).
+
+**After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
+day the Change edited into view, its heading at the top.
 
 **Time off on Today.** Days off are counted from the weekday plan (every gym's usual days): whole
 days from the first planned day after the last finished session that went untrained (today isn't
@@ -1056,8 +1078,10 @@ in." The prompt holds the count either way.
 **How Ask Claude works** (`coach/AskClaude.kt`):
 
 - **The prompt** is plain English text shared with `ACTION_SEND` through the system share sheet
-  (the user picks the Claude app). It holds, in order: your words quoted, and the workout's
-  options when they're open; the instruction to talk it through, then either answer in words when
+  (the user picks the Claude app). It holds, in order: your words quoted (none with no words),
+  and the workout's options when they're open (`Build me a workout for today:` with the effort
+  as reps in reserve, the time for the whole session, and the focus or "a balanced full-body
+  day"); the instruction to talk it through, then either answer in words when
   the plan can stand or reply with exactly one fenced ```` ```json ```` block holding a Change or a
   workout, using only the listed ids; today's date and the days off (the last finished session's
   date and how long ago, and with a weekday plan the days off as Today counts them); the gym
@@ -1083,13 +1107,12 @@ in." The prompt holds the count either way.
   message, "Not a reply Hyperlog can use", "N problems. Nothing changed. Copy them into your Claude
   chat, then paste the new reply.") with a copy button to hand them back to Claude, and nothing is
   applied. A problem with the copy, not the reply, shows one message and no copy button: a reply
-  with no JSON says "No Change found in what you copied. Copy Claude's whole reply, with its JSON
-  block, then paste again." (with workouts, "No Change or workout found…"), and one whose JSON
-  opens more braces than it closes says "Claude's reply is cut off before its JSON ends. Copy the
+  with no JSON says "No Change or workout found in what you copied. Copy Claude's whole reply,
+  with its JSON block, then paste again.", and one whose JSON opens more braces than it closes says "Claude's reply is cut off before its JSON ends. Copy the
   whole reply, then paste again."
 - **The review** says what came back. A Change's diff is headed "Change to your program" and
   keeps **Accept**; a workout's is headed "Workout for today" and its button reads **Add
-  to Today**. Accept goes to Today.
+  to Today**. Accept and Add to Today go to Today.
 - **No model calls.** A test fails if any source or dependency names a model SDK or host
   (Anthropic, OpenAI, Gemini and the like), or if code outside the update check opens a connection.
 
@@ -1119,19 +1142,41 @@ program at all.
 ```
 
 - `groups` are the program file's groups, slots and set lines (`docs/program-format.md`), without
-  week overrides. Slot ids are unique within the day. `name` and `summary` must not be blank. The
+  week overrides (`weeks` on a set line is an unknown field). Slot ids are unique within the day. `name` and `summary` must not be blank. The
   paste validates it as import does, paths and all (`workout.groups[0].slots[0].exercise:
   unknown exercise "bb_row"`).
-- **The review** shows the name, the summary and the exercises as Today lists a day. **Add to
-  Today** keeps it; Reject, × and Back drop it.
-- **On Today** it's a card above the program day (or above Start session with no program):
-  "Workout" over its name, its exercises, and **Start**, which opens the start sheet with the
-  gym picked on Coach. It holds for the day it was added and is gone the next day if it wasn't
-  started. Adding another replaces it, asking first. ⋮ → Remove drops it.
+- **The review** shows the name, the summary, where it's for (`At Itis`, or `Elsewhere`; nothing
+  with no gyms set up) and the exercises as Today lists a day, each with its rest after its sets
+  (`3 × 8–12 @ 1 · 2:00 rest`, `1:00–2:00` when its sets rest differently). **Add to Today**
+  keeps it; Reject, × and Back drop it.
+- **On Today, it's today's main Start** (tester's report, 2026-10-16). It comes first as a card:
+  "Workout" over its name, summary and gym line on the secondaryContainer head (decided, owner
+  2026-10-16), with ⋮, then its exercises with their rest. The floating button reads **Start
+  workout** and starts it, through the start sheet. The program day follows as the second card,
+  its head holding week and block over the day's name with a tonal **Start**, so its heading and
+  its Start show together and the floating button never covers them; then its exercises and the
+  Ad-hoc session row. With no program the card is followed by the Ad-hoc row. While another
+  session runs, Today shows that session's day and not the workout. It holds for the day it was
+  added and is gone the next day if it wasn't started. Adding another replaces it, asking first
+  ("Replace today's workout?"). ⋮ → Remove drops it at once, with a snackbar, "Workout removed"
+  with **Undo**, for the long duration (a lifter looks up before tapping); Undo puts it back as
+  it was (its day and the gym picked on Coach).
+- **Elsewhere means no gym.** A workout asked for with Elsewhere keeps no gym. The start sheet for
+  a workout names it under the title and offers **Elsewhere** ("No gym: the usual dumbbells and
+  plates") after the gyms, picked for such a workout; the gym picked on Coach otherwise (a gym
+  since deleted reads as Elsewhere). Elsewhere starts the session without a gym, by the rules of a
+  session with no gym: the usual dumbbell rack and plates, machines asked about without a gym, no
+  missing-equipment swaps, and no gym on the session.
 - **The session** logs like a program day: targets, suggestions, warm-ups and techniques. It
   doesn't move the position. Its sets count toward estimates and weekly sets like any session's.
-  History lists it under its name.
-- Workouts are kept with the sessions and go into backups.
+  History lists it under its name. While it runs, Today shows it as the day, headed "Workout",
+  with Resume session. Once it has started the card is gone; a session discarded with nothing
+  logged puts it back for that day. Finishing a session with nothing logged says so: "Nothing is
+  logged yet, so the session is dropped and the workout goes back on Today." (for any other
+  session, "…dropped, and nothing goes to History."), never a Session done it won't show. Its edits stay in the session: there's no "Keep edits for the
+  block", since a workout has no program to keep them in.
+- Workouts are kept with the sessions (the `workout` table, the session's `workout_id`) and go
+  into backups.
 
 ## Fresh start, with starting weights from the old app
 

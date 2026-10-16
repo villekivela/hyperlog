@@ -147,7 +147,8 @@ fun SessionScreen(
     var removing by rememberSaveable { mutableStateOf<Long?>(null) }
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
-    val keepSummary = session.day?.let { day -> stringResource(R.string.session_keep_summary, day.day.name, day.block.name) }
+    // A workout's edits have no program to keep them in.
+    val keepSummary = session.day?.takeIf { session.workoutId == null }?.let { day -> stringResource(R.string.session_keep_summary, day.day.name, day.block.name) }
     KeepScreenOn()
 
     // Back steps out of a correction, then out of a finished exercise, and only then asks to leave.
@@ -374,11 +375,23 @@ fun SessionScreen(
         )
     }
     if (showFinish) {
+        // An empty session is dropped, not kept: there is no Session done to resume it from.
+        val empty = session.exercises.all { it.sets.isEmpty() }
         // Finishing is one menu row away from Add exercise, so it asks first, like leaving does.
         AlertDialog(
             onDismissRequest = { showFinish = false },
             title = { Text(stringResource(R.string.finish_title)) },
-            text = { Text(stringResource(R.string.finish_body)) },
+            text = {
+                Text(
+                    stringResource(
+                        when {
+                            !empty -> R.string.finish_body
+                            session.workoutId != null -> R.string.finish_body_empty_workout
+                            else -> R.string.finish_body_empty
+                        },
+                    ),
+                )
+            },
             confirmButton = {
                 TextButton(onClick = { showFinish = false; actions.finish() }) { Text(stringResource(R.string.finish_finish)) }
             },

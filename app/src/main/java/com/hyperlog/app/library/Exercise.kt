@@ -152,3 +152,29 @@ fun List<Exercise>.search(query: String): List<Exercise> {
         }
     }
 }
+
+/**
+ * The seven groups Coach's focus picks from (SPEC, Coaching → A workout's options), each covering
+ * library muscles in body order. Every muscle the library names is in exactly one.
+ */
+enum class MuscleGroup(val label: String, private val names: Set<String>) {
+    Chest("Chest", setOf("Chest", "Serratus Anterior")),
+    Back("Back", setOf("Lats", "Teres Major", "Traps", "Rhomboids", "Lower Back", "Neck")),
+    Shoulders("Shoulders", setOf("Front Delts", "Side Delts", "Rear Delts", "Rotator Cuff")),
+    Arms("Arms", setOf("Triceps Long Head", "Triceps Lateral Head", "Biceps", "Brachialis", "Forearm Flexors", "Forearm Extensors")),
+    Legs("Legs", setOf("Quads", "Hamstrings", "Adductors", "Gastrocnemius", "Soleus")),
+    Glutes("Glutes", setOf("Glutes", "Hip Abductors")),
+    Core("Core", setOf("Upper Abs", "Lower Abs", "Obliques", "Hip Flexors")),
+    ;
+
+    /** Its muscles, in body order. */
+    val muscles: List<String> get() = Muscles.filter { it in names }
+
+    companion object {
+        /** The group [muscle] belongs to; null for a name the library doesn't use. */
+        fun of(muscle: String): MuscleGroup? = entries.firstOrNull { muscle in it.names }
+
+        /** The group labelled [label]: `Back`. */
+        fun labelled(label: String): MuscleGroup? = entries.firstOrNull { it.label == label }
+    }
+}

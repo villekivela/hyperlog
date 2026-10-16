@@ -96,3 +96,45 @@ interface PlanChangeDao {
     @Query("UPDATE plan_change SET reverted_at = :at WHERE id = :id AND reverted_at IS NULL")
     suspend fun revert(id: Long, at: Long): Int
 }
+
+/**
+ * A workout from Claude (SPEC, Coaching → Workout): its JSON as [com.hyperlog.app.coach.WorkoutJson]
+ * writes it, the day it was added for, and the gym picked on Coach. It waits on Today that day
+ * until a session trains it; that session keeps it, for History.
+ */
+@Entity(
+    tableName = "workout",
+    foreignKeys = [ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.SET_NULL)],
+    indices = [Index("gym_id")],
+)
+data class WorkoutEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val json: String,
+    @ColumnInfo(name = "added_at") val addedAt: Long,
+    /** The day it was added, as an epoch day: Today shows it on that day only. */
+    @ColumnInfo(name = "added_on") val addedOn: Long,
+    /** The gym picked on Coach, which the start sheet picks; null for Elsewhere or with no gyms. */
+    @ColumnInfo(name = "gym_id") val gymId: Long? = null,
+)
+
+@Dao
+interface WorkoutDao {
+    /** The workouts no session has trained yet, newest first. */
+    @Query("SELECT * FROM workout w WHERE NOT EXISTS (SELECT 1 FROM session s WHERE s.workout_id = w.id) ORDER BY id DESC")
+    fun waitingFlow(): Flow<List<WorkoutEntity>>
+
+    @Query("SELECT * FROM workout WHERE id = :id")
+    suspend fun workout(id: Long): WorkoutEntity?
+
+    @Insert
+    suspend fun insert(workout: WorkoutEntity): Long
+
+    /** Drops workout [id] unless a session trains it. */
+    @Query("DELETE FROM workout WHERE id = :id AND NOT EXISTS (SELECT 1 FROM session s WHERE s.workout_id = workout.id)")
+    suspend fun remove(id: Long)
+
+    /** Drops every workout no session has trained. */
+    @Query("DELETE FROM workout WHERE NOT EXISTS (SELECT 1 FROM session s WHERE s.workout_id = workout.id)")
+    suspend fun removeWaiting()
+}

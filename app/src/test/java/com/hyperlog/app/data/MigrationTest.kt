@@ -511,4 +511,22 @@ class MigrationTest {
         sets.execSQL("INSERT INTO logged_set (session_exercise_id, position, weight_kg, full_reps, partial_reps, rir, logged_at) VALUES (1, 1, 0, 6, 0, NULL, 1600)")
         db.close()
     }
+
+    @Test
+    fun version21SessionsTrainNoWorkoutAndWorkoutsCanBeAdded() = runTest {
+        val file = context.getDatabasePath("migration-test-21.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(21, file) { db ->
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(null, db.sessions().session(1)!!.workoutId)
+        val id = db.workouts().insert(WorkoutEntity(name = "Hotel", json = "{}", addedAt = 3000, addedOn = 20_000))
+        assertEquals(listOf("Hotel"), db.workouts().waitingFlow().first().map { it.name })
+        db.sessions().updateSession(db.sessions().session(1)!!.copy(workoutId = id))
+        assertEquals(emptyList<WorkoutEntity>(), db.workouts().waitingFlow().first())
+        db.close()
+    }
 }

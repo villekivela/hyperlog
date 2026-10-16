@@ -13,3 +13,6 @@ local.properties
 # Backups hold personal data; only test fixtures are committed
 *backup*.json
 !app/src/test/resources/**/*.json
+
+# Agent worktrees made by Claude Code
+.claude/worktrees/

@@ -17,6 +17,7 @@ before switching phones. Auto Backup is the safety net.
 Everything you made, as stored on the phone:
 
 - **Programs** with their position, and every **Change** accepted on them (reverted ones too).
+- **Workouts** from the coach: the one waiting on Today, and each one a session trained.
 - **Sessions**: finished ones with every set, drop, mini-set and hold, the edits made during them
   (swaps, added and removed sets, techniques), and **the running session** with the set half-typed on
   the pad, the exercise on screen and the rest timer.
@@ -78,7 +79,7 @@ The backup follows the database. When a ticket bumps the Room version:
 1. Bump `BackupFormat.DATABASE`; `BackupTablesTest` checks it matches.
 2. A new table goes into `BackupFormat.Tables` or `Excluded` with a reason.
 3. Backups from older versions must still restore: `BackupsTest` restores the kept file
-   `app/src/test/resources/backup/hyperlog-backup-db14.json` and `-db16.json`. Add an upgrade step for older files
+   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db21.json`). Add an upgrade step for older files
    in `Backups` (new tables and new columns with defaults need none: list them in
    `BackupFormat.Added` under the version that added them, so an older file may lack them; a
    renamed or reshaped column needs a step), and keep a fixture for each version.

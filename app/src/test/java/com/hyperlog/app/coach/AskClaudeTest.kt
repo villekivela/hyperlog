@@ -33,13 +33,16 @@ class AskClaudeTest {
         AskClaude.prompt(words, plan, sessions = emptyList(), library = library.exercises)
 
     @Test
-    fun withNoProgramThePromptAsksForAdviceNotAChange() {
+    fun withNoProgramThePromptAsksForWordsOrAWorkoutNotAChange() {
         val text = AskClaude.prompt("My knee hurts on lunges.", plan = null, sessions = emptyList(), library = library.exercises, today = oct13)
         assertTrue(text.contains("> My knee hurts on lunges."))
         assertTrue(text, text.contains("No program is running in Hyperlog"))
         assertTrue(text.contains("Today is 2026-10-13 (Tuesday)."))
         assertFalse(text.contains("## Change format"))
-        assertFalse(text.contains("```json"))
+        assertTrue(text, text.contains("## Workout format"))
+        // Its example is a workout the paste takes, with no program running.
+        val example = text.substringAfter("## Workout format")
+        assertTrue(AskClaude.read(example, null, ids) is AskClaude.Reply.WorkoutReply)
         // The library still helps Claude name exercises.
         assertTrue(text, text.contains("  machine_chest_press: Machine Chest Press (machine, grip "))
     }
@@ -66,11 +69,11 @@ class AskClaudeTest {
         assertTrue(text, text.contains("\"replaces\""))
         // Both examples read back as valid replies.
         val ends = text.substringAfter("To only end it:").substringBefore("To replace it")
-        val endsChange = (AskClaude.read(ends, program, ids, inForce = setOf(3L)) as ChangeValidator.Result.Valid).change
+        val endsChange = (AskClaude.read(ends, program, ids, inForce = setOf(3L)) as AskClaude.Reply.ChangeReply).change
         assertEquals(listOf(3L), endsChange.replaces)
         assertTrue(endsChange.operations.isEmpty())
         val replaces = text.substringAfter("To replace it")
-        val replacesChange = (AskClaude.read(replaces, program, ids, inForce = setOf(3L)) as ChangeValidator.Result.Valid).change
+        val replacesChange = (AskClaude.read(replaces, program, ids, inForce = setOf(3L)) as AskClaude.Reply.ChangeReply).change
         assertEquals(listOf(3L), replacesChange.replaces)
         assertTrue(replacesChange.operations.isNotEmpty())
         // Without a Change in force, no such example.
@@ -176,21 +179,104 @@ class AskClaudeTest {
 
             Paste it into Hyperlog to review.
         """.trimIndent()
-        val change = (AskClaude.read(reply, program, ids) as ChangeValidator.Result.Valid).change
+        val change = (AskClaude.read(reply, program, ids) as AskClaude.Reply.ChangeReply).change
         assertEquals(Change("Rest the elbow", Scope.RestOfBlock, listOf(Operation.RemoveTechnique("curl"))), change)
         // Just the JSON works too.
         val bare = """{"summary": "Skip", "scope": "rest_of_program", "operations": [{"op": "skip_day"}]}"""
-        assertTrue(AskClaude.read(bare, program, ids) is ChangeValidator.Result.Valid)
+        assertTrue(AskClaude.read(bare, program, ids) is AskClaude.Reply.ChangeReply)
     }
 
     @Test
     fun aBadPasteSaysWhatsWrong() {
         val unknownSlot = "```json\n{\"summary\": \"x\", \"scope\": \"rest_of_program\", \"operations\": [{\"op\": \"remove\", \"slot\": \"rows\"}]}\n```"
-        assertEquals(ChangeValidator.Result.Invalid(listOf("operations[0].slot: unknown slot \"rows\"")), AskClaude.read(unknownSlot, program, ids))
-        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.NOTHING_TO_READ)), AskClaude.read("Sounds good, rest up!", program, ids))
+        assertEquals(AskClaude.Reply.Invalid(listOf("operations[0].slot: unknown slot \"rows\"")), AskClaude.read(unknownSlot, program, ids))
+        assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.NOTHING_TO_READ)), AskClaude.read("Sounds good, rest up!", program, ids))
+        assertTrue(AskClaude.NOTHING_TO_READ.startsWith("No Change or workout found"))
         // A reply copied short says so, once, and not to ask Claude.
-        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":", program, ids))
-        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("```json\n{\"summary\": \"Hands\", \"scope\": {\"from\": \"2026-10-13\", \"to\": \"2026-10-19\"}, \"operations\": [", program, ids))
-        assertTrue((AskClaude.read("{\"summary\": }", program, ids) as ChangeValidator.Result.Invalid).errors.single().startsWith("not a Change"))
+        assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":", program, ids))
+        assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("```json\n{\"summary\": \"Hands\", \"scope\": {\"from\": \"2026-10-13\", \"to\": \"2026-10-19\"}, \"operations\": [", program, ids))
+        assertTrue((AskClaude.read("{\"summary\": }", program, ids) as AskClaude.Reply.Invalid).errors.single().startsWith("not a Change"))
+    }
+
+    @Test
+    fun withAProgramThePromptDescribesBothRepliesAndBothExamplesPaste() {
+        val text = prompt()
+        assertTrue(text, text.contains("a Change or a workout"))
+        assertTrue(text.contains("## Change format"))
+        assertTrue(text.contains("## Workout format"))
+        val change = text.substringAfter("## Change format").substringBefore("## Workout format")
+        assertTrue(AskClaude.read(change, program, ids) is AskClaude.Reply.ChangeReply)
+        val workout = text.substringAfter("## Workout format")
+        assertTrue(AskClaude.read(workout, program, ids) is AskClaude.Reply.WorkoutReply)
+    }
+
+    @Test
+    fun theWorkoutsOptionsGoInThePromptAndMakeAWholeRequest() {
+        val options = WorkoutOptions(WorkoutOptions.Effort.Hard, 75, listOf("Hamstrings", "Back"))
+        val text = AskClaude.prompt("", plan, emptyList(), library.exercises, options = options)
+        assertTrue(text, text.contains("Build me a workout for today:"))
+        assertTrue(text, text.contains("- Effort: hard, 0–1 reps in reserve, intensity techniques allowed."))
+        assertTrue(text, text.contains("- Time: 1 h 15 for the whole session, warm-ups and rest included."))
+        // A marked muscle by name; a group by name with the muscles it covers.
+        assertTrue(text, text.contains("- Focus: Hamstrings; Back (Lats, Teres Major, Traps, Rhomboids, Lower Back, Neck)."))
+        // No words: nothing quoted.
+        assertFalse(text, text.contains("> "))
+        val easy = AskClaude.prompt("Hotel gym.", plan, emptyList(), library.exercises, options = WorkoutOptions(WorkoutOptions.Effort.Easy))
+        assertTrue(easy, easy.contains("> Hotel gym."))
+        assertTrue(easy, easy.contains("- Effort: easy, 3 or more reps in reserve, no intensity techniques."))
+        assertTrue(easy, easy.contains("- Time: 1 h for the whole session"))
+        assertTrue(easy, easy.contains("- Focus: none, so a balanced full-body day."))
+        val normal = AskClaude.prompt("", null, emptyList(), library.exercises, options = WorkoutOptions(minutes = 45), today = oct13)
+        assertTrue(normal, normal.contains("- Effort: normal, 1–2 reps in reserve."))
+        assertTrue(normal, normal.contains("- Time: 45 min for the whole session"))
+        // Closed options say nothing.
+        assertFalse(prompt().contains("Build me a workout"))
+    }
+
+    @Test
+    fun aPastedWorkoutReadsAsOneAndItsProblemsHavePaths() {
+        val reply = """
+            Here's the hotel day:
+            ```json
+            { "workout": { "name": "Hotel, 45 min", "summary": "Dumbbells only.", "groups": [
+              { "slots": [ { "id": "row", "exercise": "chest_supported_db_row", "sets": [ { "count": 3, "reps": "8-12", "rir": 1 } ] } ] } ] } }
+            ```
+        """.trimIndent()
+        val workout = (AskClaude.read(reply, program, ids) as AskClaude.Reply.WorkoutReply).workout
+        assertEquals("Hotel, 45 min", workout.name)
+        // With no program a workout still pastes.
+        assertTrue(AskClaude.read(reply, null, ids) is AskClaude.Reply.WorkoutReply)
+        val bad = reply.replace("chest_supported_db_row", "bb_row")
+        assertEquals(
+            AskClaude.Reply.Invalid(listOf("workout.groups[0].slots[0].exercise: unknown exercise \"bb_row\"")),
+            AskClaude.read(bad, program, ids),
+        )
+    }
+
+    @Test
+    fun aChangePastedWithNoProgramRunningSaysThereIsNothingToChange() {
+        val change = """{"summary": "Skip", "scope": "rest_of_program", "operations": [{"op": "skip_day"}]}"""
+        assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.NO_PROGRAM)), AskClaude.read(change, null, ids))
+        assertEquals("No program is running, so there’s nothing for a Change to change.", AskClaude.NO_PROGRAM)
+    }
+
+    @Test
+    fun theFocusMarksTheThreeGroupsTrainedInTheLastFourWeeksWithTheFewestSetsThisWeek() {
+        val thisWeek = LocalDate.of(2026, 10, 12)
+        val weeks = listOf(
+            WeekSets(thisWeek, mapOf("Chest" to 18.0, "Back" to 4.0, "Shoulders" to 3.0, "Arms" to 6.0)),
+            WeekSets(thisWeek.minusWeeks(1), mapOf("Legs" to 9.0, "Chest" to 12.0)),
+            WeekSets(thisWeek.minusWeeks(3), mapOf("Core" to 2.0)),
+            // Four weeks back: outside the last four weeks.
+            WeekSets(thisWeek.minusWeeks(4), mapOf("Glutes" to 1.0)),
+        )
+        // Legs and Core had none this week; then Shoulders with 3. Glutes isn't trained lately.
+        assertEquals(listOf("Legs" to 0.0, "Core" to 0.0, "Shoulders" to 3.0), WorkoutOptions.lowest(weeks))
+        assertEquals(emptyList<Pair<String, Double>>(), WorkoutOptions.lowest(emptyList()))
+    }
+
+    @Test
+    fun theTimesReadAsTheChipsDo() {
+        assertEquals(listOf("45 min", "1 h", "1 h 15", "1 h 30"), WorkoutOptions.Times.map { WorkoutOptions.timeText(it) })
     }
 }
