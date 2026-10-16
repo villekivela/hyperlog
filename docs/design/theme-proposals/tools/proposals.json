@@ -4,5 +4,15 @@
   {"name": "Lime", "seed": "#C6F21C", "sec": 18, "ter": [250, 20], "neu": [170, 4], "nv": 8,
    "override": {"light": {"primaryContainer": 90, "onPrimaryContainer": 10, "primary": 35, "inversePrimary": 90}, "dark": {"primary": 90, "onPrimary": 10, "primaryContainer": 90, "onPrimaryContainer": 10, "inversePrimary": 35}}},
   {"name": "Plum", "seed": "#8B2FA8", "sec": 24, "ter": [270, 24], "neu": [null, 7], "nv": 13,
-   "override": {"light": {"primaryContainer": 40, "onPrimaryContainer": 100}}}
+   "override": {"light": {"primaryContainer": 40, "onPrimaryContainer": 100}}},
+  {"name": "Navy", "seed": "#16236E", "primaryChroma": 50, "sec": 18, "ter": [300, 24], "neu": [null, 6], "nv": 10, "neuDark": 16, "nvDark": 20,
+   "override": {"light": {"primary": 30, "primaryContainer": 22, "onPrimaryContainer": 92},
+                "dark": {"primaryContainer": 30, "onPrimaryContainer": 95, "surface": 5, "background": 5, "surfaceDim": 5, "surfaceContainerLowest": 3, "surfaceContainerLow": 8, "surfaceContainer": 10, "surfaceContainerHigh": 15, "surfaceContainerHighest": 20, "surfaceBright": 22}}},
+  {"name": "Indigo", "seed": "#4338CA", "sec": 22, "ter": [250, 26], "neu": [null, 9], "nv": 14,
+   "override": {"light": {"primary": 38, "primaryContainer": 36, "onPrimaryContainer": 100}}},
+  {"name": "Electric", "seed": "#0066FF", "primaryChroma": 80, "sec": 16, "ter": [295, 30], "neu": [null, 3], "nv": 6,
+   "override": {"light": {"primary": 45, "primaryContainer": 50, "onPrimaryContainer": 100},
+                "dark": {"primary": 75, "onPrimary": 10, "primaryContainer": 55, "onPrimaryContainer": 100}}},
+  {"name": "Cerulean", "seed": "#0284C7", "sec": 16, "ter": [280, 26], "neu": [null, 6], "nv": 10,
+   "override": {"light": {"primary": 40, "primaryContainer": 42, "onPrimaryContainer": 100}, "dark": {"primaryContainer": 40, "onPrimaryContainer": 100}}}
 ]

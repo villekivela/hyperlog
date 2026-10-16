@@ -30,6 +30,9 @@ for (const p of proposals) {
     e: TonalPalette.fromHueAndChroma(25, 84),
     n: TonalPalette.fromHueAndChroma(p.neu[0] ?? seed.hue, p.neu[1]),
     nv: TonalPalette.fromHueAndChroma(p.neu[0] ?? seed.hue, p.nv),
+    // Dark surfaces may carry a different amount of colour (neuDark, nvDark).
+    nDark: TonalPalette.fromHueAndChroma(p.neu[0] ?? seed.hue, p.neuDark ?? p.neu[1]),
+    nvDark: TonalPalette.fromHueAndChroma(p.neu[0] ?? seed.hue, p.nvDark ?? p.nv),
   };
   summary[p.name] = { seedHue: seed.hue, seedChroma: seed.chroma, seedTone: seed.tone };
   for (const dark of [false, true]) {
@@ -40,7 +43,7 @@ for (const p of proposals) {
       let argb;
       if (typeof o === 'string' && o.startsWith('#')) argb = argbFromHex(o);
       else if (Array.isArray(o)) argb = pal[o[0]].tone(o[1]);
-      else argb = pal[k].tone(o ?? (dark ? dt : lt));
+      else argb = pal[dark && (k === 'n' || k === 'nv') ? k + 'Dark' : k].tone(o ?? (dark ? dt : lt));
       summary[p.name][mode + '.' + r] = hexFromArgb(argb);
       return `    ${r} = Color(0xFF${hexFromArgb(argb).slice(1).toUpperCase()}),`;
     });

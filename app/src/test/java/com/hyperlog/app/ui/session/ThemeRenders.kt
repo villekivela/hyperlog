@@ -60,7 +60,7 @@ class ThemeRenders {
 
     private val out = System.getenv("RENDERS")
     private val dark = System.getenv("DARK") == "1"
-    private val theme = System.getenv("THEME") ?: "cobalt"
+    private val theme = (System.getenv("THEME") ?: "cobalt") + (System.getenv("FONT")?.let { "-$it" } ?: "")
 
     private val library = LibrarySeed.parse(File("src/main/assets/exercises.json").readText())
     private val program = (ProgramParser.parse(File("src/main/assets/${StarterProgram.ASSET}").readText(), library.exercises.map { it.id }.toSet(), library.merged) as ProgramParser.Result.Valid).program
@@ -109,6 +109,29 @@ class ThemeRenders {
             entry = SetEntry("12.5", "6", "", null, Field.Reps, partialMode = false, fresh = true), padVisible = true,
             restEndsAt = null, restTotalMs = 180_000, warmupEdit = null, rampEntry = null, latestSet = 3L to 2,
         ).copy(followUp = FollowUp.Drop(1, 2), openSetId = 9)
+        SessionScreen(session, listOf(fly), Noop, onLeave = {})
+    }
+
+    /** A drop set under way with a column of mixed-width weights (12.5, 10, 7.5, 100 typed) and reps, for tabular figures. */
+    @Test fun numbers() = render("5-numbers") {
+        val fly = byId.getValue("cable_flye")
+        val drops = Technique.Dropset(1, 25)
+        fun set(min: Int, max: Int, rir: Int, technique: Technique? = null) = SetPrescription(RepRange(min, max), rir, 180, technique = technique)
+        val e = SessionExercise(
+            id = 3, exercise = fly,
+            sets = listOf(
+                LoggedSet(12.5, 10, 0, 1, technique = Technique.Failure), LoggedSet(10.0, 11, 0, 1),
+                LoggedSet(7.5, 8, 0, 0, technique = drops, extensions = listOf(Extension(Extension.Kind.Drop, 5.0, 11))),
+            ),
+            lastTime = listOf(LoggedSet(12.5, 10, 0, 1), LoggedSet(10.0, 11, 0, 0), LoggedSet(7.5, 8, 0, 0)), ladder = WeightLadder((1..60).map { it * 2.5 }), ladderKnown = true,
+            prescription = listOf(set(8, 10, 1, Technique.Failure), set(10, 12, 1), set(8, 10, 0, drops), set(8, 10, 1)),
+            slot = PlannedSlot("f", "3", 2, "cable_flye", emptyList(), null, emptyList()),
+        )
+        val session = ActiveSession(
+            id = 1, startedAt = 0, exercises = listOf(e), currentId = e.id,
+            entry = SetEntry("100", "", "", 1, Field.Weight, partialMode = false, fresh = false), padVisible = true,
+            restEndsAt = null, restTotalMs = 180_000, warmupEdit = null, rampEntry = null, latestSet = 3L to 2,
+        )
         SessionScreen(session, listOf(fly), Noop, onLeave = {})
     }
 

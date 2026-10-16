@@ -13,51 +13,64 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 
 /**
- * THEME PROPOSALS (throwaway branch): the palette and display face are picked by the THEME
- * environment variable (cobalt, lime, plum), so Robolectric renders can show each one.
+ * THEME PROPOSALS (throwaway branch). The THEME environment variable picks the colours
+ * (cobalt, lime, plum, navy, indigo, electric, cerulean) and FONT the display face (archivo,
+ * barlow, outfit, spacegrotesk, azeret, unbounded, bricolage), so Robolectric renders can show
+ * each one. FONT defaults to the palette's own face.
  */
-enum class Proposal(val light: ColorScheme, val dark: ColorScheme, val display: FontFamily, val tracking: TextUnit, val scale: Float) {
-    Cobalt(
-        CobaltLight, CobaltDark,
-        FontFamily(Font(R.font.archivo_semiexpanded_semibold, FontWeight.SemiBold), Font(R.font.archivo_semiexpanded_bold, FontWeight.Bold)),
-        (-0.01).em, 1f,
-    ),
-    Lime(
-        LimeLight, LimeDark,
-        FontFamily(Font(R.font.barlow_condensed_semibold, FontWeight.SemiBold), Font(R.font.barlow_condensed_bold, FontWeight.Bold)),
-        0.em, 1.12f,
-    ),
-    Plum(
-        PlumLight, PlumDark,
-        FontFamily(Font(R.font.bricolage_condensed_semibold, FontWeight.SemiBold), Font(R.font.bricolage_condensed_bold, FontWeight.Bold)),
-        (-0.01).em, 1.04f,
-    ),
+enum class Palette(val light: ColorScheme, val dark: ColorScheme, val face: Display) {
+    Cobalt(CobaltLight, CobaltDark, Display.Archivo),
+    Lime(LimeLight, LimeDark, Display.Barlow),
+    Plum(PlumLight, PlumDark, Display.Bricolage),
+    Navy(NavyLight, NavyDark, Display.Archivo),
+    Indigo(IndigoLight, IndigoDark, Display.Archivo),
+    Electric(ElectricLight, ElectricDark, Display.Archivo),
+    Cerulean(CeruleanLight, CeruleanDark, Display.Archivo),
     ;
 
     companion object {
-        val current: Proposal
-            get() = when (System.getenv("THEME")?.lowercase()) {
-                "lime" -> Lime
-                "plum" -> Plum
-                else -> Cobalt
-            }
+        val current: Palette
+            get() = entries.firstOrNull { it.name.equals(System.getenv("THEME"), ignoreCase = true) } ?: Cobalt
     }
 }
 
-private fun Proposal.typography(): Typography {
+/** A display face for headings and big numbers: its SemiBold and Bold, tracking and a size scale to match Roboto's. */
+enum class Display(semiBold: Int, bold: Int, val tracking: TextUnit, val scale: Float, val text: FontWeight = FontWeight.SemiBold) {
+    Archivo(R.font.archivo_semiexpanded_semibold, R.font.archivo_semiexpanded_bold, (-0.01).em, 1f),
+    Barlow(R.font.barlow_condensed_semibold, R.font.barlow_condensed_bold, 0.01.em, 1.12f, FontWeight.Bold),
+    Outfit(R.font.outfit_semibold, R.font.outfit_bold, 0.em, 1.04f),
+    SpaceGrotesk(R.font.space_grotesk_semibold, R.font.space_grotesk_bold, (-0.01).em, 1.02f),
+    Azeret(R.font.azeret_mono_semibold, R.font.azeret_mono_bold, (-0.05).em, 0.92f),
+    Unbounded(R.font.unbounded_semibold, R.font.unbounded_bold, (-0.01).em, 0.86f),
+    Bricolage(R.font.bricolage_condensed_semibold, R.font.bricolage_condensed_bold, (-0.01).em, 1.04f),
+    ;
+
+    val family = FontFamily(Font(semiBold, FontWeight.SemiBold), Font(bold, FontWeight.Bold))
+
+    companion object {
+        val current: Display
+            get() = entries.firstOrNull { it.name.equals(System.getenv("FONT"), ignoreCase = true) } ?: Palette.current.face
+    }
+}
+
+/** Tabular figures in every style, system body included, so numbers keep their place as they change. */
+private const val Tabular = "tnum"
+
+private fun Display.typography(): Typography {
     val base = Typography()
-    fun TextStyle.display(weight: FontWeight = FontWeight.SemiBold) = copy(
-        fontFamily = display,
+    fun TextStyle.tnum() = copy(fontFeatureSettings = Tabular)
+    fun TextStyle.display(weight: FontWeight = text) = copy(
+        fontFamily = family,
         fontWeight = weight,
         letterSpacing = tracking,
         fontSize = fontSize * scale,
         lineHeight = lineHeight * scale,
+        fontFeatureSettings = Tabular,
     )
-    return base.copy(
+    return Typography(
         displayLarge = base.displayLarge.display(FontWeight.Bold),
         displayMedium = base.displayMedium.display(FontWeight.Bold),
         displaySmall = base.displaySmall.display(FontWeight.Bold),
@@ -65,16 +78,24 @@ private fun Proposal.typography(): Typography {
         headlineMedium = base.headlineMedium.display(),
         headlineSmall = base.headlineSmall.display(),
         titleLarge = base.titleLarge.display(),
+        titleMedium = base.titleMedium.tnum(),
+        titleSmall = base.titleSmall.tnum(),
+        bodyLarge = base.bodyLarge.tnum(),
+        bodyMedium = base.bodyMedium.tnum(),
+        bodySmall = base.bodySmall.tnum(),
+        labelLarge = base.labelLarge.tnum(),
+        labelMedium = base.labelMedium.tnum(),
+        labelSmall = base.labelSmall.tnum(),
     )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HyperlogTheme(content: @Composable () -> Unit) {
-    val proposal = Proposal.current
+    val palette = Palette.current
     MaterialExpressiveTheme(
-        colorScheme = if (isSystemInDarkTheme()) proposal.dark else proposal.light,
-        typography = proposal.typography(),
+        colorScheme = if (isSystemInDarkTheme()) palette.dark else palette.light,
+        typography = Display.current.typography(),
         motionScheme = MotionScheme.expressive(),
         content = content,
     )
