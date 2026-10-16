@@ -702,7 +702,7 @@ internal fun SlotRows(
                     SetSummary(slot.sets)
                     Text(
                         "  ·  " + stringResource(R.string.today_rest, restText(slot.sets.map { it.rest })),
-                        style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = cs.onSurfaceVariant,
                     )
                 }
