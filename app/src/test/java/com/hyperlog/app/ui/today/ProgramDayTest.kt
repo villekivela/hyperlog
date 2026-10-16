@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.today
 
 import androidx.compose.ui.test.hasScrollToIndexAction
+import com.hyperlog.app.onScreen
 import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.openTab
 import android.app.Application
@@ -119,8 +120,8 @@ class ProgramDayTest {
 
         compose.openTab("Program")
         compose.waitFor("Main · weeks 1–2")
-        compose.waitFor("80 × 6", substring = true)
-        compose.onNodeWithText("80 × 6", substring = true).performClick()
+        compose.waitFor(onScreen("80 × 6"), substring = true)
+        compose.onNodeWithText(onScreen("80 × 6"), substring = true).performClick()
         compose.waitFor("Barbell Bench Press")
         compose.onNodeWithText("Main · weeks 1–2").assertDoesNotExist()
         // Back returns to Program, where the session was opened from.

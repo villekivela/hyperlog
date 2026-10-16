@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.program
 
 import androidx.compose.foundation.clickable
+import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -332,7 +333,7 @@ private fun DoneDay(session: PastSessionItem) {
                 Row {
                     Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.width(16.dp))
-                    RirText(top.copy(extensions = emptyList()).summary(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    RirText(top.copy(extensions = emptyList()).setText(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
             }
         }

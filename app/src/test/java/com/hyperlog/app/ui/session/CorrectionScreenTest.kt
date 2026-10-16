@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.session
 
 import com.hyperlog.app.await
+import com.hyperlog.app.onScreen
 import com.hyperlog.app.openTab
 import com.hyperlog.app.navItem
 import androidx.compose.ui.semantics.SemanticsActions
@@ -109,7 +110,7 @@ class CorrectionScreenTest {
 
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitFor("Session done")
-        compose.onNodeWithText("25 × 8\u00A02 RIR").assertIsDisplayed()
+        compose.onNodeWithText(onScreen("25 × 8 @ 2")).assertIsDisplayed()
     }
 
     @Test

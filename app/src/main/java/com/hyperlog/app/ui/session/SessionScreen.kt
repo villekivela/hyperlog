@@ -809,7 +809,7 @@ internal fun SessionList(
                     Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (e.sets.isNotEmpty()) {
                         RirText(
-                            e.sets.joinToString("   ") { it.summary().replace(' ', ' ') },
+                            e.sets.joinToString("   ") { it.setText() },
                             style = MaterialTheme.typography.bodyMedium,
                             color = cs.onSurfaceVariant,
                         )

@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.history
 
 import com.hyperlog.app.await
+import com.hyperlog.app.onScreen
 import com.hyperlog.app.navItem
 import com.hyperlog.app.openTab
 import android.content.Context
@@ -78,7 +79,7 @@ class HistoryScreenTest {
         compose.waitForTappable("Mon 28 Sep")
         compose.onNodeWithText("Mon 28 Sep").performClick()
         // Its summary, then an exercise's table to correct.
-        compose.waitFor("80 × 6\u00A01 RIR")
+        compose.waitFor(onScreen("80 × 6 @ 1"))
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.waitForDescription("Correct set 1")
     }
@@ -103,7 +104,7 @@ class HistoryScreenTest {
 
         compose.waitFor("Tall cable · Harbour")
         compose.onNodeWithText("Cable left · Harbour").assertIsDisplayed()
-        compose.onNodeWithText("10.2 × 10\u00A01 RIR").assertIsDisplayed()
+        compose.onNodeWithText(onScreen("10.2 × 10 @ 1")).assertIsDisplayed()
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.program
 
 import androidx.compose.ui.test.assertIsDisplayed
+import com.hyperlog.app.onScreen
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -253,10 +254,10 @@ class ProgramScreenTest {
             }
         }
         compose.onNodeWithText("Tue 13 Oct").assertIsDisplayed()
-        compose.onNodeWithText("80 × 5\u00A01 RIR").assertIsDisplayed()
+        compose.onNodeWithText(onScreen("80 × 5 @ 1")).assertIsDisplayed()
         // Logged sets: filled RIR chips.
         compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipLoggedTag, useUnmergedTree = true).assertCountEquals(2)
-        compose.onNodeWithText("50 × 10\u00A00 RIR").assertIsDisplayed()
+        compose.onNodeWithText(onScreen("50 × 10 @ 0")).assertIsDisplayed()
         compose.onNodeWithText("Tue 13 Oct").performClick()
         assertEquals(7L, opened)
     }

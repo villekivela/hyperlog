@@ -83,3 +83,9 @@ fun ComposeTestRule.openTab(label: String) {
     waitForIdle()
     onNode(navItem(label)).performClick()
 }
+
+/** A logged set as the screen reads it: `80 × 6 @ 1` with no-break spaces and its chip's "1 RIR". */
+fun onScreen(set: String): String {
+    val (text, rir) = set.split(" @ ").let { it[0] to it.getOrNull(1) }
+    return text.replace(' ', '\u00A0') + rir?.let { "\u00A0$it RIR" }.orEmpty()
+}

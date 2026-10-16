@@ -253,7 +253,8 @@ surfaceContainerHighest groups 12 dp in, with the picked or current row in secon
 (the session list's exercise on screen, the set sheet's technique, the start sheet's gym); the
 prescription's plan, the machine row and the set sheet's target steppers are cards too.
 - *Session list:* status symbol (done, now, upcoming), superset tag, name, a summary (logged sets
-  as `25 × 10 [2]`, `5.7 × 12 + 6p [0]`, drops and mini-sets after it; never broken inside a set;
+  as `25 × 10 [2]`, `5.7 × 12 + 6p [0]`, `45 × 10 + 3 + 3 [2]`: drops and mini-sets before the
+  chip, which ends the set; never broken inside a set;
   or set count and rep range) with technique symbols. A tonal **Start** on exercises not yet
   done, **Open** on finished ones.
   In a program session (ticket #11) the tag is a 40 dp column after the status symbol holding every

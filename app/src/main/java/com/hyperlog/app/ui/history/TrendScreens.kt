@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.history
 
 import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -177,7 +178,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
     }
     val p = points[index]
     RirText(
-        listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.summary()}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
+        listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.setText()}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
             .joinToString(" · "),
         Modifier.padding(horizontal = Margin),
         style = MaterialTheme.typography.bodyMedium,
@@ -227,7 +228,7 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-        RirText(p.top.summary(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        RirText(p.top.setText(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (!trend.byReps) {
             Text(
                 p.estimateKg?.let { estimateText(it) } ?: "",

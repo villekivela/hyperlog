@@ -1,6 +1,8 @@
 package com.hyperlog.app.ui.session
 
 import androidx.compose.foundation.background
+import com.hyperlog.app.domain.summary
+import com.hyperlog.app.domain.LoggedSet
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -107,6 +109,9 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
         )
     }
 }
+
+/** A logged set as the screen writes it: its RIR after the whole set, and no break inside it. */
+internal fun LoggedSet.setText(): String = summary(rirLast = true).replace(' ', '\u00A0')
 
 /** Set text, with each `@ N` drawn as an RIR chip: outlined for a [target], else filled. */
 @Composable

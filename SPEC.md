@@ -263,8 +263,10 @@ logging, and computed loads where it needs them.
   starts with the format's defaults (2 drops of 25%, mini-sets of 3, partials to failure)
   and iso hold at 20 s in the stretch. The change is for this session only; a logged set keeps
   the technique it was done with.
-- The session list and Session done read a set with its extensions after it:
-  `25 × 9 [1], 18 × 7, 12 × 6`, `60 × 12 [0] + 4 + 3`, `40 × 10 [0] + 20 s`.
+- The session list and Session done read a set with its extensions after it and its RIR chip
+  last, after the whole set: `25 × 9, 18 × 7, 12 × 6 [1]`, `60 × 12 + 4 + 3 [0]`,
+  `40 × 10 + 20 s [0]`, `50 × 8 + 3p [0]`. A set never wraps inside. Plain text keeps the RIR after
+  the set's own reps (`25 × 9 @ 1, 18 × 7, 12 × 6`), as the Claude prompt's legend reads it.
 
 ### Full and partial reps
 
@@ -819,7 +821,8 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   screen's dot and every chip keeps 3:1 against every surface; a fill's number (black at 87%) keeps
   4.5:1 on it. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
   0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the navy accent or a
-  button. A no-break space ties it to its set, so a line never wraps between the two. TalkBack reads
+  button. A set's parts and its chip are joined by no-break spaces, so a line wraps only between
+  sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads
   each one once, as "1 RIR"; the number is always there, so colour is never the only sign. The chip
   is for set text the app writes: Claude's own words (a Change's or workout's summary) show as
   Claude wrote them, and the set table and the exercise sheet's prescription keep their RIR column
