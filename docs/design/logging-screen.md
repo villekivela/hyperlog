@@ -11,6 +11,8 @@ prescription with its outlined target chips). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
 testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark; the whole bar and machine
 from `WholeBarRenders` and Session done from `AppRenders`, the same way.
+`phone-dark-rir-session.png`, `phone-dark-rir-sheet.png` and `phone-dark-rir-progress.png` are the
+RIR chip checked on the phone (#46, dark mode).
 
 ## Principles
 
