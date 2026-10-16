@@ -8,6 +8,7 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,9 @@ data class PastSessionItem(
     val title: String?,
     val gym: String?,
     val exercises: List<ExerciseSummary>,
+    /** The program whose day it trained, and that day; null for an ad-hoc session or a workout. */
+    val programId: Long? = null,
+    val position: Position? = null,
 )
 
 /** A finished session opened to look at or correct. */
@@ -78,7 +82,10 @@ class PastSessionEditor(
             val sets = stored.sets(se.id)
             if (sets.isEmpty()) null else ExerciseSummary(library[se.exerciseId] ?: se.exerciseId, sets)
         }
-        return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises)
+        return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises,
+            programId = row.programId.takeIf { row.workoutId == null },
+            position = if (row.workoutId == null && row.week != null && row.dayIndex != null) Position(row.week, row.dayIndex) else null,
+        )
     }
 
     /** Opens finished session [sessionId] on its summary. */

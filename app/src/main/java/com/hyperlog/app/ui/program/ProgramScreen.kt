@@ -1,8 +1,6 @@
 package com.hyperlog.app.ui.program
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,20 +32,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -54,27 +52,19 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramActions
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.program.Program
+import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
 import com.hyperlog.app.ui.coach.shortDate
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.ui.text.style.TextDecoration
-import com.hyperlog.app.program.Block
-import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.EmptyState
 import com.hyperlog.app.ui.theme.GroupHead
-import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
 
 private val Margin = 24.dp
 
@@ -100,10 +90,29 @@ fun ProgramScreen(
     /** Reverts the accepted Change with this id. */
     onRevert: (Long) -> Unit = {},
     onSettings: () -> Unit = {},
+    exerciseNames: Map<String, String> = emptyMap(),
+    /** Finished sessions, so a done day shows what was logged. */
+    sessions: List<PastSessionItem> = emptyList(),
+    /** Opens a finished session in History. */
+    onOpenSession: (Long) -> Unit = {},
+    /**
+     * What Program shows, kept by the host so it survives a session opened in History or a
+     * review; null keeps it here.
+     */
+    view: ProgramView? = null,
+    onView: (ProgramView) -> Unit = {},
 ) {
+    var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
+    val shown = view ?: kept
+    val show = { v: ProgramView -> if (view == null) kept = v else onView(v) }
     /** The replacement waiting for "Replace <title>?": a file, or the starter program. */
     var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
     var menu by rememberSaveable { mutableStateOf(false) }
+    var shifting by rememberSaveable { mutableStateOf(false) }
+    if (shown.changesOpen && active != null && errors == null) {
+        ChangesPage(active, onRevert, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
+        return
+    }
     val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
     BackHandler { if (errors != null) onCloseErrors() else onBack() }
     Scaffold(
@@ -122,6 +131,11 @@ fun ProgramScreen(
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                                // The program actions are Changes: each opens its diff and applies only on Accept.
+                                if (active.next != null) {
+                                    ProgramActionItems(active, onPropose, onShift = { shifting = true }, close = { menu = false })
+                                    HorizontalDivider()
+                                }
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.program_import)) },
                                     leadingIcon = { SymbolIcon(Symbol.FileOpen, null) },
@@ -148,16 +162,28 @@ fun ProgramScreen(
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
                 }
                 active == null -> NoProgram(onImport)
-                else -> ProgramWeeks(active, onPropose, onRevert)
+                else -> ProgramWeeks(active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week) { show(shown.copy(week = it)) }
             }
         }
+    }
+    if (shifting) {
+        ShiftDialog(
+            onReview = { weeks, summary -> shifting = false; onPropose(ProgramActions.shift(summary, weeks)) },
+            onDismiss = { shifting = false },
+        )
     }
     val replacing = confirmReplace
     if (replacing != null && active != null) {
         AlertDialog(
             onDismissRequest = { confirmReplace = null },
             title = { Text(stringResource(R.string.program_replace_title, active.program.title)) },
-            text = { Text(stringResource(R.string.program_replace_body)) },
+            // Replacing loses the position, so the question says where you are.
+            text = {
+                Text(
+                    if (active.finished) stringResource(R.string.program_replace_body)
+                    else stringResource(R.string.program_replace_body_at, active.position.week, active.program.title),
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReplace = null
@@ -171,6 +197,16 @@ fun ProgramScreen(
 
 private enum class Replacement { File, Starter }
 
+/** What Program shows: the week picked (null for the week you're in) and whether the Changes page is open. */
+data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false) {
+    companion object {
+        val Saver = androidx.compose.runtime.saveable.listSaver<ProgramView, Any?>(
+            save = { listOf(it.week, it.changesOpen) },
+            restore = { ProgramView(it[0] as Int?, it[1] as Boolean) },
+        )
+    }
+}
+
 @Composable
 private fun NoProgram(onImport: () -> Unit) {
     EmptyState(Symbol.ViewTimeline, stringResource(R.string.today_empty_title), stringResource(R.string.program_none_body)) {
@@ -179,70 +215,105 @@ private fun NoProgram(onImport: () -> Unit) {
 }
 
 @Composable
-private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onRevert: (Long) -> Unit) {
+private fun ProgramWeeks(
+    active: ActiveProgram,
+    onOpenChanges: () -> Unit,
+    names: Map<String, String>,
+    sessions: List<PastSessionItem>,
+    onOpenSession: (Long) -> Unit,
+    /** The week picked; null for the week you're in. */
+    picked: Int?,
+    onWeek: (Int) -> Unit,
+) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
     val next = active.next
-    var shifting by rememberSaveable { mutableStateOf(false) }
-    var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
+    // It opens on the block and week you're in; past the end, on the last.
+    val currentWeek = active.position.week.coerceAtMost(program.weeks)
+    val week = picked?.takeIf { it in 1..program.weeks } ?: currentWeek
+    val block = program.blockAt(week) ?: program.blocks.last()
+    val days = remember(active, week, sessions) { ProgramWeek.days(active, week, sessions) }
+    val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
     LazyColumn(Modifier.fillMaxSize()) {
-        item {
-            // Where you are, and what can be done about it, in one card at the top.
-            SectionCard(Modifier.padding(top = 8.dp)) {
-            Column(Modifier.padding(vertical = 4.dp)) {
-                Text(program.title, style = MaterialTheme.typography.headlineSmall)
-                program.author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
-                Spacer(Modifier.height(16.dp))
-                Row(Modifier.heightIn(min = 32.dp), verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
-                    if (next != null) {
-                        Text(
-                            stringResource(R.string.program_next),
-                            Modifier.width(56.dp).alignByBaseline(),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = cs.onSurfaceVariant,
-                        )
-                        Text(
-                            stringResource(R.string.program_week_day, next.position.week, next.day.name),
-                            Modifier.alignByBaseline(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    } else {
-                        SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary)
-                        Spacer(Modifier.width(16.dp))
-                        Text(stringResource(R.string.program_finished), style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
-                if (next != null) {
-                    Spacer(Modifier.height(16.dp))
-                    ProgramActionRow(active, onPropose, onShift = { shifting = true })
+        item(key = "header") {
+            // Where you are, with the Changes under it as one group: the title and Next, then the row
+            // that opens the Changes page.
+            val count = active.inForce.size
+            val changes = if (count == 0) stringResource(R.string.program_changes_none) else pluralStringResource(R.plurals.program_changes_in_force, count, count)
+            val chevron = cs.onSurfaceVariant
+            val nextDay = next?.let { stringResource(R.string.program_week_day, it.position.week, it.day.name) }
+            SegmentedList(Modifier.padding(top = 8.dp)) {
+                item { ProgramHeader(program.title, program.author, nextDay) }
+                if (active.history.isNotEmpty()) {
+                    row(
+                        title = changes,
+                        symbol = Symbol.SwapHoriz,
+                        onClick = onOpenChanges,
+                        trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = chevron) },
+                    )
                 }
             }
-            }
         }
-        val history = active.history.asReversed()
-        if (history.isNotEmpty()) {
-            item(key = "changes") { SectionHead(stringResource(R.string.program_changes)) }
-            itemsIndexed(history, key = { _, it -> "change-${it.id}" }) { i, record ->
-                Segment(i, history.size) { ChangeRow(record, program, replaced = record.id in active.replaced, onRevert = { reverting = record.id }) }
-            }
-        }
-        program.blocks.forEach { block ->
-            val current = active.position.week in block.weekStart..block.weekEnd
-            item(key = "block-${block.id}") { BlockHead(block, current) }
-            val weeks = (block.weekStart..block.weekEnd).toList()
-            itemsIndexed(weeks, key = { _, it -> "week-$it" }) { i, week ->
-                Segment(i, weeks.size) { WeekRow(week, block, active) }
-            }
-        }
+        blockItems(
+            program, block, active, comparison, week, days, names,
+            onBlock = { i -> program.blocks[i].let { b -> onWeek(if (currentWeek in b.weekStart..b.weekEnd) currentWeek else b.weekStart) } },
+            onWeek = onWeek, onOpenSession = onOpenSession,
+        )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
     }
-    if (shifting) {
-        ShiftDialog(
-            onReview = { weeks, summary -> shifting = false; onPropose(ProgramActions.shift(summary, weeks)) },
-            onDismiss = { shifting = false },
-        )
+}
+
+/** The program's title and author, then the next day, or "Program finished" with a flag. */
+@Composable
+private fun ProgramHeader(title: String, author: String?, next: String?) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.padding(horizontal = CardPadding).padding(top = 16.dp, bottom = 16.dp)) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
+        Spacer(Modifier.height(16.dp))
+        Row(verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
+            if (next != null) {
+                Text(
+                    stringResource(R.string.program_next),
+                    Modifier.width(56.dp).alignByBaseline(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = cs.primary,
+                )
+                Text(next, Modifier.alignByBaseline(), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            } else {
+                // The flag takes Next's column, so the words start where the next day's do.
+                Box(Modifier.width(56.dp)) { SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary) }
+                Text(stringResource(R.string.program_finished), style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+}
+
+/** The Changes, newest first: Revert on each in force; reverted and replaced ones stay, struck through. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
+    BackHandler(onBack = onBack)
+    Scaffold(
+        modifier = modifier,
+        containerColor = Tones.screen,
+        topBar = {
+            TopAppBar(
+                colors = hyperlogTopBarColors(),
+                title = { Text(stringResource(R.string.program_changes)) },
+                navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
+            )
+        },
+    ) { padding ->
+        val history = active.history.asReversed()
+        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
+            item { Spacer(Modifier.height(8.dp)) }
+            itemsIndexed(history, key = { _, it -> "change-${it.id}" }) { i, record ->
+                Segment(i, history.size) { ChangeRow(record, active.program, replaced = record.id in active.replaced, onRevert = { reverting = record.id }) }
+            }
+            item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
+        }
     }
     active.history.firstOrNull { it.id == reverting }?.let { record ->
         AlertDialog(
@@ -258,32 +329,26 @@ private fun ProgramWeeks(active: ActiveProgram, onPropose: (Change) -> Unit, onR
 }
 
 /**
- * Skip day, repeat week, deload week and shift plan: each makes a Change and opens its review,
- * so nothing moves until it is accepted.
+ * Skip day, repeat week, deload week and shift program, in the menu: each makes a Change and opens
+ * its review, so nothing moves until it is accepted.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ProgramActionRow(active: ActiveProgram, onPropose: (Change) -> Unit, onShift: () -> Unit) {
+private fun ProgramActionItems(active: ActiveProgram, onPropose: (Change) -> Unit, onShift: () -> Unit, close: () -> Unit) {
     val position = active.position
     val next = active.next ?: return
     val skip = stringResource(R.string.program_skip_summary, position.week, next.day.name)
     val repeat = stringResource(R.string.program_repeat_summary, ProgramActions.repeatedWeek(position))
     val deload = stringResource(R.string.program_deload_summary, position.week)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        ActionChip(stringResource(R.string.program_action_skip), Symbol.SkipNext) { onPropose(ProgramActions.skipDay(skip)) }
-        ActionChip(stringResource(R.string.program_action_repeat), Symbol.Replay) { onPropose(ProgramActions.repeatWeek(repeat)) }
-        ActionChip(stringResource(R.string.program_action_deload), Symbol.Spa) { onPropose(ProgramActions.deloadWeek(deload, position.week)) }
-        ActionChip(stringResource(R.string.program_action_shift), Symbol.MoreTime, onShift)
-    }
+    ActionItem(stringResource(R.string.program_action_skip), Symbol.SkipNext) { close(); onPropose(ProgramActions.skipDay(skip)) }
+    // Named for the week it repeats, the last one trained, which isn't always the week you're in.
+    ActionItem(repeat, Symbol.Replay) { close(); onPropose(ProgramActions.repeatWeek(repeat)) }
+    ActionItem(stringResource(R.string.program_action_deload), Symbol.Spa) { close(); onPropose(ProgramActions.deloadWeek(deload, position.week)) }
+    ActionItem(stringResource(R.string.program_action_shift), Symbol.MoreTime) { close(); onShift() }
 }
 
 @Composable
-private fun ActionChip(label: String, symbol: Symbol, onClick: () -> Unit) {
-    AssistChip(
-        onClick = onClick,
-        label = { Text(label) },
-        leadingIcon = { SymbolIcon(symbol, null, Modifier.size(AssistChipDefaults.IconSize)) },
-    )
+private fun ActionItem(label: String, symbol: Symbol, onClick: () -> Unit) {
+    DropdownMenuItem(text = { Text(label) }, leadingIcon = { SymbolIcon(symbol, null) }, onClick = onClick)
 }
 
 @Composable
@@ -296,6 +361,7 @@ private fun SectionHead(text: String) {
 private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean, onRevert: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val reverted = record.revertedAt != null
+    val revertedOn = record.revertedAt?.let { shortDate(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()) }
     val block = program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
     Row(
         Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = CardPadding, end = 4.dp, top = 8.dp, bottom = 8.dp),
@@ -310,8 +376,8 @@ private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                if (reverted && replaced) stringResource(R.string.program_change_replaced, shortDate(java.time.Instant.ofEpochMilli(record.revertedAt!!).atZone(java.time.ZoneId.systemDefault()).toLocalDate()))
-                else if (reverted) stringResource(R.string.program_change_reverted)
+                if (reverted && replaced) stringResource(R.string.program_change_replaced, revertedOn!!)
+                else if (reverted) stringResource(R.string.program_change_reverted, revertedOn!!)
                 else stringResource(R.string.program_change_accepted, scopeText(record.change.scope, block), shortDate(record.accepted.acceptedOn)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
@@ -353,77 +419,6 @@ private fun ShiftDialog(onReview: (Int, String) -> Unit, onDismiss: () -> Unit) 
         confirmButton = { TextButton(onClick = { onReview(weeks, summary) }) { Text(stringResource(R.string.program_review)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.program_cancel)) } },
     )
-}
-
-@Composable
-private fun BlockHead(block: Block, current: Boolean) {
-    val text = if (block.weekStart == block.weekEnd) stringResource(R.string.program_block_week, block.name, block.weekStart)
-    else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd)
-    // The block you're in is headed in primary; the others step back.
-    GroupHead(text, color = if (current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-/** A week: its number and a token per day, done, next or to come. The Next line names the next day. */
-@Composable
-private fun WeekRow(week: Int, block: Block, active: ActiveProgram) {
-    val cs = MaterialTheme.colorScheme
-    val position = active.position
-    Row(
-        Modifier.fillMaxWidth().height(56.dp).padding(horizontal = CardPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "$week",
-            Modifier.width(40.dp),
-            style = MaterialTheme.typography.titleMedium,
-            color = if (week == position.week) cs.onSurface else cs.onSurfaceVariant,
-            fontWeight = if (week == position.week) FontWeight.Bold else FontWeight.Normal,
-        )
-        block.days.forEachIndexed { i, day ->
-            val letter = ('A' + i).toString()
-            val state = when {
-                week < position.week || (week == position.week && i < position.day) -> DayState.Done
-                week == position.week && i == position.day -> DayState.Next
-                else -> DayState.Upcoming
-            }
-            val description = when (state) {
-                DayState.Done -> stringResource(R.string.program_day_done, "$week$letter")
-                DayState.Next -> stringResource(R.string.program_day_next, "$week$letter")
-                DayState.Upcoming -> stringResource(R.string.program_day_upcoming, "$week$letter")
-            }
-            DayToken(letter, state, Modifier.semantics { contentDescription = description })
-            Spacer(Modifier.width(8.dp))
-        }
-    }
-}
-
-private enum class DayState { Done, Next, Upcoming }
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun DayToken(letter: String, state: DayState, modifier: Modifier = Modifier) {
-    val cs = MaterialTheme.colorScheme
-    val shape = Modifier.size(32.dp).then(
-        when (state) {
-            // Done days are a tint of primary, so they read on a card in any palette, grey included.
-            DayState.Done -> Modifier.background(cs.primary.copy(alpha = 0.2f), CircleShape)
-            // The one filled shape: the expressive cookie in primary.
-            DayState.Next -> Modifier.size(36.dp).background(cs.primary, MaterialShapes.Cookie9Sided.toShape())
-            DayState.Upcoming -> Modifier.border(1.dp, cs.outlineVariant, CircleShape)
-        },
-    )
-    Box(modifier.then(shape), contentAlignment = Alignment.Center) {
-        Text(
-            letter,
-            style = MaterialTheme.typography.labelLarge,
-            color = when (state) {
-                DayState.Next -> cs.onPrimary
-                DayState.Done -> cs.onSurface
-                DayState.Upcoming -> cs.onSurfaceVariant
-            },
-            fontWeight = if (state == DayState.Next) FontWeight.Bold else FontWeight.Medium,
-        )
-    }
 }
 
 /**

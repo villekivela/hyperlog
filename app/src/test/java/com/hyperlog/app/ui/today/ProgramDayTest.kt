@@ -5,7 +5,6 @@ import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.openTab
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -99,12 +98,28 @@ class ProgramDayTest {
     }
 
     @Test
-    fun theProgramScreenShowsTheWeeksAndWhereYouAre() {
+    fun theProgramScreenShowsTheDoneDayAsLoggedAndOpensItsSession() {
         importProgram()
+        compose.onNodeWithText("Start session").performClick()
+        compose.waitFor("Reps")
+        compose.press("8"); compose.press("0"); compose.press("Next"); compose.press("6"); compose.press("Log set")
+        compose.waitFor("70")
+        compose.press("More")
+        compose.onNodeWithText("Finish session").performClick()
+        compose.onNodeWithText("Finish").performClick()
+        compose.waitFor("Done")
+        compose.onNodeWithText("Done").performClick()
+        compose.waitFor("Day B")
+
         compose.openTab("Program")
         compose.waitFor("Main · weeks 1–2")
-        compose.onNode(hasContentDescription("Day 1A, next")).assertIsDisplayed()
-        compose.onNode(hasContentDescription("Day 2B")).assertIsDisplayed()
+        compose.waitFor("80 × 6", substring = true)
+        compose.onNodeWithText("80 × 6", substring = true).performClick()
+        compose.waitFor("Barbell Bench Press")
+        compose.onNodeWithText("Main · weeks 1–2").assertDoesNotExist()
+        // Back returns to Program, where the session was opened from.
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.waitFor("Main · weeks 1–2")
     }
 
     @Test

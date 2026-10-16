@@ -3,8 +3,8 @@
 Ticket #6 brings a program to the app: the Program screen, Today showing the next day, and the
 logging screen's Target column, planned rows and prescription sheet. Everything extends
 `logging-screen.md`. The expressive pass (below, first) replaces the earlier flat look. Screens:
-`today-session-running.png`, `today-superset-group.png`, `program.png`, `program-weeks.png` from
-the phone; `light-today-starter.png`, `light-today-update-banner.png`, `light-today-day.png`
+`today-session-running.png`, `today-superset-group.png` from the phone (Program's own screens are
+listed under "Program screen (#40)"); `light-today-starter.png`, `light-today-update-banner.png`, `light-today-day.png`
 rendered in light.
 
 ## Expressive pass
@@ -22,10 +22,7 @@ rendered in light.
   with the program symbol, "Starter program" in primary, the title, the description and a
   medium **Run this program**, with Start session and Import a program under the card. Empty
   states (no program, finished) take the same shaped symbol.
-- **Program**: the header (title, author, Next, the action chips) is one card; Changes and each
-  block are groups headed in labelLarge (the current block in primary); weeks are 56 dp
-  segments. Done days are primary at 20%, the next day the primary cookie, days to come an
-  outline ring.
+- **Program**: rebuilt by #40 around the block you're in; see "Program screen (#40)" below.
 
 ## Principles
 
@@ -33,10 +30,10 @@ rendered in light.
    away on Program. The program runs as a sequence, so there is no calendar.
 2. **The plan reads like the table it becomes.** Today's slot lines, the session list and the
    prescription sheet all write sets the same way: `1 × 4–6 @ 1 · 2 × 6–8 @ 1`.
-3. **Structure is the hierarchy.** Blocks are headed groups, weeks are rows, days are tokens; the
-   groups are tonal cards on the screen.
-4. **Where you are is the one accent.** The next day's token is the only filled primary shape on
-   the Program screen.
+3. **Structure is the hierarchy.** On Program the block is the unit: its card, its weeks as chips,
+   then the week's days as segmented groups on the screen.
+4. **Where you are is where it opens.** Program opens on the block and week you're in, the next day
+   headed **Next** in primary.
 5. **Errors are a to-do list.** A rejected file shows every problem as path, then message, so it can
    be fixed in one pass; nothing changes until a file is valid.
 
@@ -46,13 +43,10 @@ rendered in light.
 | --- | --- | --- |
 | Slot label column | 40 dp | `1`, `5a` on Today and in the sheet; names start at 64 dp |
 | Slot line | 72 dp min | Today's slot rows (name + set summary) |
-| Week row | 48 dp | Program screen; week number column 40 dp |
-| Day token | 32 dp circle, 8 dp gap | A, B, C… for the days of a week |
-| Block head | 48 dp, labelLarge | `Build · weeks 3–6`; primary for the current block |
+| Block card title | titleLarge | `Build · weeks 3–6`, at the top of the block's card |
+| Day head | labelLarge, 24 dp above, 8 dp below | the day's name; Next / Deload / Done / Skipped at the end |
 | Target column | 88 dp | Logging table, between Set and Last |
 
-Day tokens (before the expressive pass, see above): done was surfaceContainerHighest with onSurfaceVariant letter; next is primary with
-onPrimary letter; upcoming is a 1 dp outlineVariant ring with onSurfaceVariant letter.
 
 ## Wireframes
 
@@ -71,16 +65,41 @@ onPrimary letter; upcoming is a 1 dp outlineVariant ring with onSurfaceVariant l
 ```
 
 ```
- ←  Program                              ⋮      ← ⋮: Import program
- Hyperlog Full Body                             ← headlineSmall
- Next  Week 3 · Day B — Hinge, close-grip      ← labelLarge + bodyLarge, wraps to 2 lines
-       bench, row
- Ramp-in · weeks 1–2                            ← block head
- 1    (A) (B) (C)                               ← done tokens
- 2    (A) (B) (C)
- Build · weeks 3–6                              ← primary: the current block
- 3    (A) [B] (C)                               ← next token filled
- 4    (A) (B) (C)
+ Program                                ⚙  ⋮    ← ⋮: Skip day, Repeat week, Deload week, Shift
+╭───────────────────────────────────────────╮     program, ─, Import program, Run Hyperlog…
+│ Hyperlog Full Body                        │   ← headlineSmall; author under it
+│ Next  Week 4 · Day B — Hinge, close-grip  │   ← Next in primary, the day in a 56 dp column
+│       bench, row                          │
+├───────────────────────────────────────────┤   ← one segmented group, 4 dp join
+│ (⇄)  Changes · 1 in force               › │   ← opens the Changes page
+╰───────────────────────────────────────────╯
+ ( Ramp-in | ■Build■ | Intensify | Deload + test )  ← connected group, widths by label
+╭───────────────────────────────────────────╮
+│ Build · weeks 3–6                         │   ← titleLarge
+│ [✓3] [■4■] [5] [6]                        │   ← week chips first; done weeks ticked
+│ From Ramp-in                              │   ← labelLarge, primary
+│ Every set: 1 RIR closer to failure ·      │   ← a block-wide override, said once (bodyLarge)
+│ techniques back                           │
+│ Otherwise written as in Ramp-in           │   ← or the slots written differently:
+╰───────────────────────────────────────────╯
+   (Intensify: Day A · Barbell Bench Press · 1 × 4–6 @ 1 · ↘ … → 1 × 3–5 @ 1 · ↘ …, the arrow
+    leading the after when it wraps; past 5 slots the first 3 show, then "19 more ⌄")
+ Week 4 · Day A — Heavy bench, squat, …  Done
+╭───────────────────────────────────────────╮
+│ Tue 13 Oct                              › │   ← opens the session in History
+│ Barbell Bench Press             85 × 5 @ 1│   ← each exercise's top set
+╰───────────────────────────────────────────╯
+ Week 4 · Day B — Hinge, close-grip …   Next     ← day head with its week; Next in primary
+╭───────────────────────────────────────────╮
+│ (⇄) Ends 26 Oct; if this day falls later, │   ← only under a date-ranged Change
+│     it's as written.                      │
+├───────────────────────────────────────────┤
+│ 1   In place of Barbell RDL               │   ← Today's slot rows, one segment per group
+│     45° Hyperextension                    │
+│     2 × 6–8 @ 1                           │
+╰───────────────────────────────────────────╯
+ Week 3 · Day B — …                 Skipped      ← a past week: the plan at 60 % opacity
+ Week 12 · Day A — …               ✿ Deload       ← spa symbol and Deload in tertiary
 ```
 
 ```
@@ -149,11 +168,11 @@ session, Import a program).
   Start session   Import a program             ← text buttons, 8 dp apart
 ```
 
-**Program screen.** Title and author, the Next line (the only place the next day is named; it
-wraps to two lines), then each block's head and week rows. With no program: the same starter
+**Program screen.** See "Program screen (#40)" below. With no program: the same starter
 offer, with **Import program** as its one text button (the old "No program yet" state is the
-fallback if the starter can't be read). ⋮ holds **Import program** and **Run Hyperlog Full Body**
-(`view_timeline`), both behind the replace question. Importing over a program asks first: "Replace <title>?", "The new program starts at
+fallback if the starter can't be read). ⋮ holds the four program actions (Changes: each opens its
+diff), a divider, then **Import program** and **Run Hyperlog Full Body** (`view_timeline`), both
+behind the replace question. Importing over a program asks first: "Replace <title>?", "The new program starts at
 week 1, day 1. Past sessions are kept." (Replace / Cancel, the change on the left as in the Leave
 and Finish dialogs).
 
@@ -226,3 +245,71 @@ supporting "From an old Hyperlog backup, no history", then "42 exercises · tap 
   logged is discarded and the day stays next. Finishing a resumed session again doesn't move it
   twice.
 - Rest after a planned set is that set's rest from the program.
+
+## Program screen (#40)
+
+The owner picked proposal B (blocks) on 2026-10-16, out of three: up next by date, blocks, and
+exercise arcs. Program answers "what am I doing this block?" and "how is this block different?".
+It reads the plan and never edits it.
+
+Principles:
+
+- **The block is the unit.** Its card, its weeks and its days sit together. The block group picks
+  it, opening on the one you're in.
+- **Differences are shown, not described.** "From Build" is computed: a block-wide override
+  said once for every set, then each slot written differently, before → after. There is no
+  written note.
+- **Every week resolves.** A day to come reads exactly as the session will prescribe it, with
+  overrides, deloads and Changes (`ProgramWeek.days` through `Changes.day`).
+- **Past weeks are what happened.** A done day shows its date and top sets and opens the session.
+  A skipped day shows its plan, headed Skipped.
+- **No dates.** The next day reads as Today shows it. A later day takes a date-ranged Change by
+  the window its in-force diff shows (`Changes.dayAhead`), and says when the Change ends.
+- **The actions live in ⋮.** The header holds only the title and Next. Changes are one row that
+  opens their own page.
+
+States: a program running (opening on the current block and week), a past week (done and skipped
+days), a future block (its comparison and its days), the deload block (days headed Deload), a day
+under a date-ranged Change (the Ends line), finished (Next reads "Program finished", opening on the
+last block), the Changes page (Revert on each in force; reverted and replaced struck through), and
+the empty, starter and import-error states as before.
+
+Layout (build pass):
+
+- **Header and Changes are one segmented group**: the title card on top, the Changes row joined
+  under it (4 dp join), 16 dp above the block group. **Next** is primary here as on the day head,
+  so the one word means the same everywhere; the day sits in a 56 dp column, and "Program
+  finished" takes the same column with the flag in Next's place.
+- **The block group sizes buttons by their labels** (`ConnectedChoice(fitLabels = true)`), so
+  `Deload + test` keeps its words beside `Build`. Past four blocks, or about 40 characters of
+  names, it is a scrolling row of chips.
+- **A block-wide rule is one line.** Ramp-in → Build differs only by Ramp-in's week override
+  (+1 RIR, no techniques), so Build reads "Every set: 1 RIR closer to failure · techniques back"
+  and lists no slot (the tester found 22 identical rows a wall). The week chips come before the
+  comparison, so changing week never means scrolling past it.
+- **The comparison folds.** A block written afresh (week 12 rewrites every slot) can still list
+  22 slots. Up to 5 slots show in full; past that the
+  first 3 show, then **19 more ⌄** (labelLarge, primary, 48 dp row) unfolds the rest in place and
+  **Fewer ⌃** folds it again. Each pair is before (muted), then the arrow and after (onSurface) as
+  one piece, so a long pair breaks before the arrow, never after it.
+- **A skipped day's plan sits back**: its slot rows at 60 % opacity, under "Skipped", so a past
+  week doesn't read as days still to train. Done days keep full tone (they're real sessions).
+
+Interaction: tapping a block resets the week to the current week if it's in that block, else the
+block's first; the comparison opens folded on each block. A done day's segment opens its session
+in History, and Back from there returns to Program on the same week. The week picked and the
+Changes page are kept by the host (`ProgramView`) through a session opened from Program or a
+review; choosing Program on the navigation bar opens it on where you are. The navigation bar is
+hidden on the Changes page; Back there returns to Program. The menu names Repeat week for the week
+it repeats ("Repeat week 5"), and the replace question says where you are ("You're in week 6 of
+Hyperlog Full Body; …"). Test report: `program-test-report.md`.
+
+Screens (Robolectric renders from `ProgramRenders`, `RENDERS=<dir>`, `DARK=1` for dark, each
+`light-` and `dark-`): `program-current` (Build, week 4, Day A done, Day B next),
+`program-past-week` (week 3: Day B skipped, Day C done), `program-future-block` (Intensify and
+its From Build card), `program-deload` (Deload + test, days headed Deload), `program-ends` (a
+date-ranged Change: the Ends line), `program-menu` (⋮ open), `program-changes` (a reverted and a
+replaced Change struck through), `program-finished`. Checked on the phone (dark, the owner's
+data): the current week matches Today slot for slot, done days show the logged top sets and open
+their sessions. Light mode was checked through the renders only; the phone's theme was left as set.
+
