@@ -1,6 +1,11 @@
 package com.hyperlog.app.ui.coach
 
 import com.hyperlog.app.openTab
+import android.content.Intent
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.performTextInput
+import org.junit.Assert.assertTrue
+import org.robolectric.Shadows.shadowOf
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -22,7 +27,8 @@ import org.robolectric.annotation.Config
 
 /**
  * The app starting with a session already running, as after a process restart or a restore: the
- * coach still knows the last finished session. Found on the phone: Time off read "No sessions yet".
+ * coach still knows the last finished session. Found on the phone: Time off read "No sessions yet";
+ * now the prompt's days off would.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w410dp-h914dp")
@@ -52,8 +58,17 @@ class CoachAfterRestartTest {
         compose.waitFor("Resume session")
 
         compose.openTab("Coach")
-        compose.waitFor("What’s in the way?")
-        compose.waitFor("3 days since your last session")
+        compose.waitFor("In your words")
+        compose.onNode(hasSetTextAction()).performTextInput("Tired.")
+        compose.onNodeWithText("Ask Claude").performClick()
+        // The session running may have asked for something first (notifications): find the share sheet.
+        var chooser: Intent? = null
+        compose.waitUntil(5_000) {
+            generateSequence { shadowOf(compose.activity).nextStartedActivity }.firstOrNull { it.action == Intent.ACTION_CHOOSER }?.also { chooser = it } != null
+        }
+        @Suppress("DEPRECATION")
+        val prompt = chooser!!.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)!!.getStringExtra(Intent.EXTRA_TEXT)!!
+        assertTrue(prompt, prompt.contains(", 3 days ago."))
     }
 
     private companion object {

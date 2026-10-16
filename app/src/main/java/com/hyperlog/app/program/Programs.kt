@@ -17,6 +17,7 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ChangeDiff
 import com.hyperlog.app.coach.ChangeJson
 import com.hyperlog.app.coach.Changes
+import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.data.PlanChangeEntity
 import java.time.Instant
 import java.time.LocalDate
@@ -38,6 +39,24 @@ data class ActiveProgram(
 
     /** The Changes in force, oldest first. */
     val changes: List<AcceptedChange> get() = history.filter { it.revertedAt == null }.map { it.accepted }
+
+    /**
+     * The accepted Changes, not reverted, that still cover today or a later day, newest first:
+     * the cards at the top of Coach. A date range runs to its last day, the rest of the block
+     * while the block it was accepted in runs, the rest of the program until it's finished.
+     */
+    val inForce: List<ChangeRecord>
+        get() = if (finished) emptyList() else history.filter { record ->
+            // One that only ended others does nothing more.
+            record.revertedAt == null && record.change.operations.isNotEmpty() && when (val scope = record.change.scope) {
+                is Scope.Dates -> scope.to >= today
+                Scope.RestOfProgram -> true
+                Scope.RestOfBlock -> program.blockAt(position.week)?.id == record.accepted.blockId
+            }
+        }.sortedWith(compareByDescending<ChangeRecord> { it.acceptedAt }.thenByDescending { it.id })
+
+    /** The ids of Changes ended by a later one's `replaces`. */
+    val replaced: Set<Long> get() = history.flatMap { it.change.replaces }.toSet()
 
     /** The day Today runs, with today's Changes; null once the program is finished. */
     val next: PlannedDay? get() = if (finished) null else Changes.day(program, position, today, changes)
@@ -84,10 +103,12 @@ class Programs(
      * apply to the sessions it covers. It is kept as history.
      */
     suspend fun accept(change: Change) {
-        val row = dao.active() ?: return
-        val program = program(row.id) ?: return
-        val accepted = Changes.accept(program, Position(row.week, row.dayIndex), change, dateOf(clock()))
         db.withTransaction {
+            // The Changes it replaces end first, by the rules of Revert.
+            change.replaces.sortedDescending().forEach { revertIn(it) }
+            val row = dao.active() ?: return@withTransaction
+            val program = program(row.id) ?: return@withTransaction
+            val accepted = Changes.accept(program, Position(row.week, row.dayIndex), change, dateOf(clock()))
             changeDao.insert(
                 PlanChangeEntity(
                     programId = row.id, json = ChangeJson.encode(accepted.change), acceptedAt = clock(),
@@ -103,15 +124,17 @@ class Programs(
 
     /** Reverts the accepted Change [id]: its plan edits stop, and its move of the position is taken back. */
     suspend fun revert(id: Long) {
-        db.withTransaction {
-            val entity = changeDao.change(id) ?: return@withTransaction
-            val row = dao.program(entity.programId) ?: return@withTransaction
-            val program = program(row.id) ?: return@withTransaction
-            if (changeDao.revert(id, clock()) == 0) return@withTransaction
-            val accepted = entity.toAccepted() ?: return@withTransaction
-            val back = Changes.revert(program, Position(row.week, row.dayIndex), accepted)
-            dao.setPosition(row.id, back.week, back.day)
-        }
+        db.withTransaction { revertIn(id) }
+    }
+
+    private suspend fun revertIn(id: Long) {
+        val entity = changeDao.change(id) ?: return
+        val row = dao.program(entity.programId) ?: return
+        val program = program(row.id) ?: return
+        if (changeDao.revert(id, clock()) == 0) return
+        val accepted = entity.toAccepted() ?: return
+        val back = Changes.revert(program, Position(row.week, row.dayIndex), accepted)
+        dao.setPosition(row.id, back.week, back.day)
     }
 
     /**

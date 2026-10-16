@@ -33,6 +33,8 @@ import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
 import com.hyperlog.app.ui.coach.ChangeReviewScreen
 import com.hyperlog.app.ui.coach.CoachScreen
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.hyperlog.app.ui.coach.AskClaudeShare
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -246,6 +248,13 @@ private fun App(
     var bodyweightOpen by rememberSaveable { mutableStateOf(false) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
+    val reply by programModel.reply.collectAsStateWithLifecycle()
+    /** The words for Claude on Coach: kept across tabs, so Today's Ease back in can fill them in. */
+    var coachWords by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    /** Ask Claude was pressed for the words on Coach; an accept, a revert or cleared words end it. */
+    var coachAsked by rememberSaveable { mutableStateOf(false) }
+    val endAsk = { coachAsked = false; programModel.clearReply() }
+    val inForce by programModel.inForce.collectAsStateWithLifecycle()
     val update by updateModel.banner.collectAsStateWithLifecycle()
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
@@ -272,8 +281,18 @@ private fun App(
         ChangeReviewScreen(
             r, exercises.associate { it.id to it.name },
             // A coach's Change, once accepted, is the plan Today shows.
-            onAccept = { programModel.accept(); if (screen == Screen.Coach) screen = Screen.Today },
+            onAccept = { programModel.accept(); endAsk(); if (screen == Screen.Coach) screen = Screen.Today },
             onReject = programModel::reject,
+        )
+        return
+    }
+    // A Change in force opened from its card on Coach: what it does, read-only, with Revert.
+    inForce?.let { (id, r) ->
+        ChangeReviewScreen(
+            r, exercises.associate { it.id to it.name },
+            onAccept = {},
+            onReject = programModel::closeInForce,
+            onRevert = { programModel.revert(id); programModel.closeInForce(); endAsk() },
         )
         return
     }
@@ -404,18 +423,28 @@ private fun App(
         )
         screen == Screen.Coach -> CoachScreen(
             program,
-            exercises,
-            lastTrained,
-            onPropose = programModel::propose,
+            words = coachWords,
+            onWords = { coachWords = it },
             onBack = { programModel.closePasteErrors(); screen = Screen.Today },
-            onAskClaude = { words ->
-                scope.launch { programModel.askClaudePrompt(words)?.let { context.startActivity(AskClaudeShare.intent(context, it)) } }
+            gyms = gyms,
+            usualGym = usualGym,
+            asked = coachAsked,
+            onAskedChange = { if (it) coachAsked = true else endAsk() },
+            onOpenChange = programModel::openInForce,
+            onAskClaude = { words, gym, elsewhere ->
+                scope.launch {
+                    val prompt = programModel.askClaudePrompt(words, gym, elsewhere, lastTrained, gyms.flatMap { it.weekdays }.toSet())
+                    context.startActivity(AskClaudeShare.intent(context, prompt))
+                }
             },
             onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
             pasteErrors = pasteErrors,
             onClosePasteErrors = programModel::closePasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
-            weekdays = gyms.flatMap { it.weekdays }.toSet(),
+            replyReady = reply != null,
+            onCheckReply = { programModel.checkReply(AskClaudeShare.clipboard(context)) },
+            onReview = programModel::reviewReply,
+            onRevert = { programModel.revert(it); endAsk() },
             onSettings = openSettings,
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
@@ -485,7 +514,12 @@ private fun App(
             onRunStarter = programModel::runStarter,
             library = exercises,
             lastTrained = lastTrained,
-            onPropose = programModel::propose,
+            onEaseBack = { days ->
+                val words = context.getString(R.string.coach_ease_back_words, days)
+                coachWords = TextFieldValue(words, TextRange(words.length))
+                programModel.closePasteErrors()
+                screen = Screen.Coach
+            },
             weekdays = gyms.flatMap { it.weekdays }.toSet(),
             update = update,
             onUpdate = { updateModel.install(context) },

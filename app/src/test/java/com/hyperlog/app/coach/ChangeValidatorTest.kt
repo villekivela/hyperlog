@@ -37,6 +37,19 @@ class ChangeValidatorTest {
     }
 
     @Test
+    fun replacesNamesChangesInForceAndMayComeWithoutOperations() {
+        val ends = """{"summary": "Hands fine", "scope": "rest_of_program", "replaces": [4], "operations": []}"""
+        val change = (ChangeValidator.validate(ends, program, exercises, inForce = setOf(4L)) as ChangeValidator.Result.Valid).change
+        assertEquals(listOf(4L), change.replaces)
+        assertEquals(
+            listOf("replaces[1]: no Change in force has id 9"),
+            (ChangeValidator.validate("""{"summary": "x", "scope": "rest_of_program", "replaces": [4, 9], "operations": []}""", program, exercises, inForce = setOf(4L)) as ChangeValidator.Result.Invalid).errors,
+        )
+        // Without replaces, a Change still needs an operation.
+        assertEquals(listOf("operations: at least one operation is required"), errors("""{"summary": "x", "scope": "rest_of_program", "operations": []}"""))
+    }
+
+    @Test
     fun unknownSlotsExercisesAndBadValuesAreNamedByPath() {
         assertEquals(
             listOf(

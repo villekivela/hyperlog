@@ -82,7 +82,10 @@ object Changes {
      * days it covers from the position it leaves, the first of each day of each block.
      */
     fun diff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, proposed: Change): ChangeDiff {
-        val accepted = accept(program, position, proposed, today).copy(id = Long.MAX_VALUE)
+        // The Changes it replaces end first, as Revert would end them; the plan after has them gone.
+        val (ended, kept) = changes.partition { it.id in proposed.replaces }
+        val from = ending(program, position, ended)
+        val accepted = accept(program, from, proposed, today).copy(id = Long.MAX_VALUE)
         val date = (proposed.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
         val window = when (val scope = proposed.scope) {
             is Scope.Dates -> {
@@ -99,7 +102,7 @@ object Changes {
         val seen = mutableSetOf<Pair<String, String>>()
         val days = window.mapNotNull { p ->
             val before = day(program, p, date, changes) ?: return@mapNotNull null
-            val after = day(program, p, date, changes + accepted) ?: return@mapNotNull null
+            val after = day(program, p, date, kept + accepted) ?: return@mapNotNull null
             val key = before.block.id to before.day.id
             if (key in seen) return@mapNotNull null
             val slots = slotDiffs(before, after)
@@ -111,6 +114,46 @@ object Changes {
         return ChangeDiff(
             next = if (moved) position to accepted.after else null,
             daysLeft = if (moved) program.daysLeft(position) to program.daysLeft(accepted.after) else null,
+            days = days,
+        )
+    }
+
+    /** Where [position] goes once [ended] are reverted, newest first, as Revert takes each back. */
+    fun ending(program: Program, position: Position, ended: List<AcceptedChange>): Position =
+        ended.sortedByDescending { it.id }.fold(position) { p, c -> revert(program, p, c) }
+
+    /**
+     * What [record], a Change in force, does from [position] on [today]: the days it still covers,
+     * each with every other Change in [changes] applied before and after, and the move of the
+     * position it made when it was accepted.
+     */
+    fun inForceDiff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, record: AcceptedChange): ChangeDiff {
+        val others = changes.filter { it.id != record.id }
+        val date = (record.change.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
+        val window = when (val scope = record.change.scope) {
+            is Scope.Dates -> {
+                val dates = ChronoUnit.DAYS.between(date, scope.to).toInt() + 1
+                val perWeek = program.blockAt(position.week)?.days?.size ?: 0
+                generateSequence(position) { program.next(it) }.take(minOf(dates, ((dates + 6) / 7) * perWeek).coerceAtLeast(0))
+            }
+            Scope.RestOfBlock -> generateSequence(position) { program.next(it) }.takeWhile { program.blockAt(it.week)?.id == record.blockId }
+            Scope.RestOfProgram -> generateSequence(position) { program.next(it) }
+        }.filter { it.week <= program.weeks }
+        val seen = mutableSetOf<Pair<String, String>>()
+        val days = window.mapNotNull { p ->
+            val before = day(program, p, date, others) ?: return@mapNotNull null
+            val after = day(program, p, date, others + record) ?: return@mapNotNull null
+            val key = before.block.id to before.day.id
+            if (key in seen) return@mapNotNull null
+            val slots = slotDiffs(before, after)
+            if (slots.isEmpty() && before.deload == after.deload) return@mapNotNull null
+            seen += key
+            DayDiff(after, slots)
+        }.toList()
+        val moved = record.after != record.before
+        return ChangeDiff(
+            next = if (moved) record.before to record.after else null,
+            daysLeft = if (moved) program.daysLeft(record.before) to program.daysLeft(record.after) else null,
             days = days,
         )
     }

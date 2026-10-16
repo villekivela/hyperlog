@@ -8,6 +8,11 @@ import com.hyperlog.app.program.StarterProgram
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.gym.EquipmentItem
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.history.WeekSets
+import java.time.DayOfWeek
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,31 +40,101 @@ class AskClaudeTest {
         assertTrue(text.contains("Today is 2026-10-13 (Tuesday)."))
         assertFalse(text.contains("## Change format"))
         assertFalse(text.contains("```json"))
+        // The library still helps Claude name exercises.
+        assertTrue(text, text.contains("  machine_chest_press: Machine Chest Press (machine, grip "))
     }
 
     @Test
-    fun theFormatListsEveryOperationAndScopeTheValidatorReads() {
-        val text = prompt()
-        // SPEC, Coaching: the eleven operations and three scopes.
-        listOf(
-            "swap", "remove", "add", "adjust_sets", "adjust_load", "adjust_rir", "remove_technique",
-            "skip_day", "deload_week", "shift_program", "repeat_week",
-        ).forEach { assertTrue("op $it", text.contains("\"op\": \"$it\"")) }
-        listOf("\"rest_of_program\"", "\"rest_of_block\"", "\"from\"", "\"to\"").forEach { assertTrue("scope $it", text.contains(it)) }
-        listOf("dropset", "myo_reps", "lengthened_partials", "iso_hold", "failure").forEach { assertTrue("technique $it", text.contains(it)) }
-        // The validator's ranges.
-        assertTrue(text, text.contains("−50 to 50"))
-        assertTrue(text, text.contains("1 to 10"))
+    fun eachChangeInForceGoesWithItsOperations() {
+        val record = com.hyperlog.app.program.ChangeRecord(
+            AcceptedChange(3, Change("Lighter close-grip bench", Scope.RestOfBlock, listOf(Operation.AdjustLoad("close_grip_bench", -10, "elbow"))), oct13.minusDays(2), Position(1, 1), Position(1, 1), program.blockAt(1)!!.id),
+            acceptedAt = 3, revertedAt = null,
+        )
+        val text = AskClaude.prompt("x", plan.copy(history = listOf(record)), emptyList(), library.exercises)
+        assertTrue(text, text.contains("- id 3: Lighter close-grip bench (rest of the block, accepted 2026-10-11)"))
+        assertTrue(text, text.contains("""  operations: [{"op":"adjust_load","slot":"close_grip_bench","percent":-10,"reason":"elbow"}]"""))
     }
 
     @Test
-    fun theExampleIsAChangeThePasteAccepts() {
+    fun theFormatShowsHowToEndOrReplaceAChangeInForce() {
+        val record = com.hyperlog.app.program.ChangeRecord(
+            AcceptedChange(3, Change("Lighter close-grip bench", Scope.RestOfBlock, listOf(Operation.AdjustLoad("close_grip_bench", -10))), oct13.minusDays(2), Position(1, 1), Position(1, 1), program.blockAt(1)!!.id),
+            acceptedAt = 3, revertedAt = null,
+        )
+        val withChange = plan.copy(history = listOf(record))
+        val text = AskClaude.prompt("Elbow's fine now.", withChange, emptyList(), library.exercises)
+        assertTrue(text, text.contains("\"replaces\""))
+        // Both examples read back as valid replies.
+        val ends = text.substringAfter("To only end it:").substringBefore("To replace it")
+        val endsChange = (AskClaude.read(ends, program, ids, inForce = setOf(3L)) as ChangeValidator.Result.Valid).change
+        assertEquals(listOf(3L), endsChange.replaces)
+        assertTrue(endsChange.operations.isEmpty())
+        val replaces = text.substringAfter("To replace it")
+        val replacesChange = (AskClaude.read(replaces, program, ids, inForce = setOf(3L)) as ChangeValidator.Result.Valid).change
+        assertEquals(listOf(3L), replacesChange.replaces)
+        assertTrue(replacesChange.operations.isNotEmpty())
+        // Without a Change in force, no such example.
+        assertFalse(prompt().contains("To only end it:"))
+    }
+
+    @Test
+    fun claudeMayAnswerInWordsAlone() {
         val text = prompt()
-        val change = (AskClaude.read(text.substringAfterLast("For example:"), program, ids) as ChangeValidator.Result.Valid).change
-        // It swaps a slot of the next day (Day B) for one of that slot's alternatives.
-        val swap = change.operations.filterIsInstance<Operation.Swap>().single()
-        val slot = plan.next!!.slot(swap.slot)!!
-        assertTrue(swap.exercise in slot.alternatives)
+        assertTrue(text, text.contains("If the plan can stand as it is, say so in words and send no JSON."))
+    }
+
+    @Test
+    fun thePromptHoldsTheDaysOff() {
+        val tuesdays = AskClaude.prompt("x", plan, emptyList(), library.exercises, lastTrained = oct13.minusDays(14), weekdays = setOf(DayOfWeek.TUESDAY))
+        assertTrue(tuesdays, tuesdays.contains("My last finished session was on 2026-09-29, 14 days ago. I plan to train on Tuesday, so that's 7 days off."))
+        val none = AskClaude.prompt("x", plan, emptyList(), library.exercises, lastTrained = null)
+        assertTrue(none, none.contains("I haven't finished a session in Hyperlog yet."))
+        val noPlan = AskClaude.prompt("x", plan, emptyList(), library.exercises, lastTrained = oct13.minusDays(11))
+        assertTrue(noPlan, noPlan.contains("My last finished session was on 2026-10-02, 11 days ago."))
+        assertFalse(noPlan, noPlan.contains("days off"))
+    }
+
+    @Test
+    fun thePromptHoldsTheGymItsEquipmentAndWhatsMissingThere() {
+        val gym = Gym(
+            1, "Harbour",
+            items = listOf(EquipmentItem(gymId = 1, name = "Seated leg curl", ladder = LadderSpec.Explicit(listOf(5.0, 10.0, 15.0)))),
+            missing = setOf("leg_extension"),
+        )
+        val text = AskClaude.prompt("x", plan, emptyList(), library.exercises, gym = gym)
+        assertTrue(text, text.contains("## Gym: Harbour"))
+        assertTrue(text, text.contains("- Seated leg curl (5–15 kg"))
+        assertTrue(text, text.contains("- Dumbbells: "))
+        assertTrue(text, text.contains("Not here, so swap them out: leg_extension (Leg Extension)"))
+        // Elsewhere: no gym's equipment, the words say what there is.
+        val away = AskClaude.prompt("Hotel gym, dumbbells to 30 kg.", plan, emptyList(), library.exercises, gym = null, elsewhere = true)
+        assertTrue(away, away.contains("## Gym: somewhere not set up in Hyperlog"))
+        assertTrue(away, away.contains("The equipment there is in my words above"))
+        assertFalse(away.contains("Dumbbells: "))
+        // No gym picked, no section.
+        assertFalse(prompt().contains("## Gym"))
+    }
+
+    @Test
+    fun thePromptHoldsTheWeeklySetsPerMuscleThisWeekAndTheFourBefore() {
+        val weeks = (0 until 8).map { WeekSets(LocalDate.of(2026, 10, 12).minusWeeks(it.toLong()), mapOf("chest" to 6.0 - it, "triceps" to 1.5)) }
+        val text = AskClaude.prompt("x", plan, emptyList(), library.exercises, weeklySets = weeks)
+        assertTrue(text, text.contains("## Weekly sets per muscle"))
+        assertTrue(text, text.contains("Week of 2026-10-12 (this week): chest 6, triceps 1.5"))
+        assertTrue(text, text.contains("Week of 2026-09-14: chest 2, triceps 1.5"))
+        // Five weeks, no more.
+        assertFalse(text, text.contains("Week of 2026-09-07"))
+    }
+
+    @Test
+    fun theLibraryListsEveryVisibleExercise() {
+        val programSection = prompt().substringBefore("## Exercise library")
+        // Two far from anything the program uses: one visible, one hidden.
+        val (visible, hidden) = library.exercises.filter { !it.hidden && it.id !in programSection }.take(2)
+        val exercises = library.exercises.map { if (it.id == hidden.id) it.copy(hidden = true) else it }
+        val text = AskClaude.prompt("x", plan, emptyList(), exercises)
+        assertTrue(visible.id, text.contains("  ${visible.id}: ${visible.name} ("))
+        assertFalse(hidden.id, text.contains("  ${hidden.id}: "))
     }
 
     @Test
@@ -113,6 +188,9 @@ class AskClaudeTest {
         val unknownSlot = "```json\n{\"summary\": \"x\", \"scope\": \"rest_of_program\", \"operations\": [{\"op\": \"remove\", \"slot\": \"rows\"}]}\n```"
         assertEquals(ChangeValidator.Result.Invalid(listOf("operations[0].slot: unknown slot \"rows\"")), AskClaude.read(unknownSlot, program, ids))
         assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.NOTHING_TO_READ)), AskClaude.read("Sounds good, rest up!", program, ids))
+        // A reply copied short says so, once, and not to ask Claude.
+        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":", program, ids))
+        assertEquals(ChangeValidator.Result.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("```json\n{\"summary\": \"Hands\", \"scope\": {\"from\": \"2026-10-13\", \"to\": \"2026-10-19\"}, \"operations\": [", program, ids))
         assertTrue((AskClaude.read("{\"summary\": }", program, ids) as ChangeValidator.Result.Invalid).errors.single().startsWith("not a Change"))
     }
 }

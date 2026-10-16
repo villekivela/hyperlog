@@ -1,6 +1,14 @@
 package com.hyperlog.app.coach
 
+import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
+import com.hyperlog.app.gym.EquipmentKind
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.gym.sections
+import com.hyperlog.app.history.TimeOff
+import com.hyperlog.app.history.WeekSets
+import java.time.DayOfWeek
+import java.time.format.TextStyle
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.PlannedDay
@@ -9,6 +17,7 @@ import com.hyperlog.app.program.Program
 import com.hyperlog.app.program.planChunks
 import com.hyperlog.app.session.PastSessionItem
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.elementDescriptors
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -18,19 +27,24 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Free-text coaching through the user's Claude app (SPEC, Ask Claude; ADR 0001). Hyperlog makes no
- * model calls: [prompt] is shared to the Claude app through the share sheet, and the Change it
- * replies with comes back through the clipboard to [read].
+ * Coaching through the user's Claude app (SPEC, Coaching → Words first; ADRs 0001 and 0003).
+ * Hyperlog makes no model calls: [prompt] is shared to the Claude app through the share sheet, and
+ * the Change it replies with comes back through the clipboard to [read].
  */
 object AskClaude {
     /** The sessions the prompt carries: the last four weeks. */
     const val HISTORY_DAYS = 28L
 
+    /** The weeks of weekly sets the prompt carries: this week and the 4 before it. */
+    const val SET_WEEKS = 5
+
     /**
-     * The prompt for the Claude app: [words], the program and where you are in it, the sessions of
-     * the last [HISTORY_DAYS] days, the library entries a swap could use, and the Change format
-     * with the instruction to reply with one fenced JSON block. With no program running ([plan]
-     * null) there is no plan to change: the prompt asks for advice in words, with the sessions.
+     * The prompt for the Claude app: [words], what Claude may answer with, today and the days off
+     * since [lastTrained] (by the [weekdays] plan when there is one), the [gym] picked with its
+     * equipment and what's missing there, the program and where you are in it, the sessions of the
+     * last [HISTORY_DAYS] days, the [weeklySets] of the last [SET_WEEKS] weeks, every visible
+     * library exercise, and the Change format. Claude may answer in words alone. With no program
+     * running ([plan] null) there is no plan to change: Claude answers in words.
      */
     fun prompt(
         words: String,
@@ -39,58 +53,140 @@ object AskClaude {
         library: List<Exercise>,
         zone: ZoneId = ZoneId.systemDefault(),
         today: LocalDate = plan?.today ?: LocalDate.now(zone),
-    ): String = if (plan == null) withoutProgram(words, sessions, today, zone) else buildString {
-        val program = plan.program
+        gym: Gym? = null,
+        /** Training somewhere not set up in Hyperlog: no gym's equipment goes out, the words say what there is. */
+        elsewhere: Boolean = false,
+        lastTrained: LocalDate? = null,
+        weekdays: Set<DayOfWeek> = emptySet(),
+        weeklySets: List<WeekSets> = emptyList(),
+    ): String = buildString {
         val names = library.associate { it.id to it.name }
-        appendLine("I train with Hyperlog, an app that runs my strength program and logs my sessions. Help me adjust the plan around this:")
+        if (plan == null) {
+            appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
+        } else {
+            appendLine("I train with Hyperlog, an app that runs my strength program and logs my sessions. Help me with this:")
+        }
         appendLine()
         words.trim().lines().forEach { appendLine("> $it") }
         appendLine()
-        appendLine(
-            "Talk it through with me first if you need to know more. When we agree on a change, reply with exactly one " +
-                "fenced ```json block holding a Change in the format at the end, and nothing else in that message. I'll paste it " +
-                "into Hyperlog, which checks it and shows me the diff before anything changes. Use only the slot, day and " +
-                "exercise ids listed here.",
-        )
+        if (plan == null) {
+            appendLine(
+                "No program is running in Hyperlog: I train ad hoc, so there is no plan to change and nothing to paste back. " +
+                    "Talk it through with me and tell me in words what to do in my next sessions.",
+            )
+        } else {
+            appendLine(
+                "Talk it through with me first if you need to know more. If the plan can stand as it is, say so in words and " +
+                    "send no JSON. When we agree on a change, reply with exactly one fenced ```json block holding a Change in the " +
+                    "format at the end, and nothing else in that message. I'll paste it into Hyperlog, which checks it and shows " +
+                    "me the diff before anything changes. Use only the slot, day and exercise ids listed here.",
+            )
+        }
         appendLine()
-        appendLine("Today is ${plan.today} (${plan.today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)}).")
-        appendLine()
-        program(plan, names)
-        appendLine()
-        sessions(sessions, plan.today, zone)
-        appendLine()
-        library(program, library)
-        appendLine()
-        append(ChangeFormat.text(plan))
-    }
-
-    /** No program runs: Claude advises in words, from the sessions; nothing comes back to paste. */
-    private fun withoutProgram(words: String, sessions: List<PastSessionItem>, today: LocalDate, zone: ZoneId) = buildString {
-        appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
-        appendLine()
-        words.trim().lines().forEach { appendLine("> $it") }
-        appendLine()
-        appendLine(
-            "No program is running in Hyperlog: I train ad hoc, so there is no plan to change and nothing to paste back. " +
-                "Talk it through with me and tell me in words what to do in my next sessions.",
-        )
-        appendLine()
-        appendLine("Today is $today (${today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)}).")
+        appendLine("Today is $today (${today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}).")
+        appendLine(daysOff(lastTrained, today, weekdays))
+        if (elsewhere) {
+            appendLine()
+            appendLine("## Gym: somewhere not set up in Hyperlog")
+            appendLine("I'm not at any of my usual gyms. The equipment there is in my words above; plan only with that.")
+        } else gym?.let {
+            appendLine()
+            gym(it, names)
+        }
+        if (plan != null) {
+            appendLine()
+            program(plan, names)
+        }
         appendLine()
         sessions(sessions, today, zone)
+        if (weeklySets.isNotEmpty()) {
+            appendLine()
+            weeklySets(weeklySets)
+        }
+        appendLine()
+        library(plan?.program, library)
+        if (plan != null) {
+            appendLine()
+            append(ChangeFormat.text(plan))
+        }
+    }
+
+    private fun daysOff(lastTrained: LocalDate?, today: LocalDate, weekdays: Set<DayOfWeek>): String {
+        val since = TimeOff.daysSince(lastTrained, today) ?: return "I haven't finished a session in Hyperlog yet."
+        val ago = when (since) {
+            0 -> "today"
+            1 -> "1 day ago"
+            else -> "$since days ago"
+        }
+        val line = "My last finished session was on $lastTrained, $ago."
+        if (weekdays.isEmpty()) return line
+        val off = TimeOff.daysOff(lastTrained, today, weekdays) ?: return line
+        val days = weekdays.sorted().map { it.getDisplayName(TextStyle.FULL, Locale.ENGLISH) }
+        val plan = if (days.size == 1) days.single() else days.dropLast(1).joinToString() + " and " + days.last()
+        return "$line I plan to train on $plan, so that's $off ${if (off == 1) "day" else "days"} off."
+    }
+
+    /** The gym picked: its equipment by kind, its dumbbells and plates, and the exercises it has nothing for. */
+    private fun StringBuilder.gym(gym: Gym, names: Map<String, String>) {
+        appendLine("## Gym: ${gym.name}")
+        appendLine("Where I'm training. Its equipment:")
+        gym.sections().forEach { (kind, items) ->
+            appendLine("${kind.heading}:")
+            items.forEach { item ->
+                val ladder = if (kind == EquipmentKind.RackBench) "" else " (${item.ladder.summary(gym.pinPlates)})"
+                appendLine("- ${item.name}$ladder")
+            }
+        }
+        appendLine("- Dumbbells: ${gym.dumbbells.summary()}")
+        val plates = gym.plates.groupingBy { it }.eachCount().toSortedMap(compareByDescending { it })
+            .map { (kg, pairs) -> "$pairs × ${formatKg(kg)}" }
+        if (plates.isNotEmpty()) appendLine("- Plates, in pairs: ${plates.joinToString()} kg")
+        if (gym.missing.isNotEmpty()) {
+            appendLine("Not here, so swap them out: ${gym.missing.sorted().joinToString { "$it (${names[it] ?: it})" }}")
+        }
+    }
+
+    private val EquipmentKind.heading: String
+        get() = when (this) {
+            EquipmentKind.Stack -> "Stack machines"
+            EquipmentKind.PlateLoaded -> "Plate-loaded"
+            EquipmentKind.Bar -> "Bars"
+            EquipmentKind.RackBench -> "Racks and benches"
+        }
+
+    /** Sets per muscle for this week and the [SET_WEEKS] − 1 before it, as History counts them. */
+    private fun StringBuilder.weeklySets(weeks: List<WeekSets>) {
+        appendLine("## Weekly sets per muscle")
+        appendLine("Work sets, Monday to Sunday: 1 for each primary muscle of the exercise, 0.5 for each secondary one.")
+        weeks.sortedByDescending { it.start }.take(SET_WEEKS).forEachIndexed { i, week ->
+            val sets = week.sets.filterValues { it > 0 }.entries.joinToString { (muscle, n) -> "$muscle ${formatKg(n)}" }.ifEmpty { "none" }
+            appendLine("Week of ${week.start}${if (i == 0) " (this week)" else ""}: $sets")
+        }
     }
 
     /**
      * Reads a pasted Change: Claude's whole reply or just its JSON. The fenced block is taken when
      * there is one, else the outermost braces; then it's checked like any Change.
      */
-    fun read(pasted: String, program: Program, exercises: Set<String>): ChangeValidator.Result {
-        val json = extract(pasted) ?: return ChangeValidator.Result.Invalid(listOf(NOTHING_TO_READ))
-        return ChangeValidator.validate(json, program, exercises)
+    fun read(pasted: String, program: Program, exercises: Set<String>, inForce: Set<Long> = emptySet()): ChangeValidator.Result {
+        val json = extract(pasted) ?: return ChangeValidator.Result.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
+        val result = ChangeValidator.validate(json, program, exercises, inForce)
+        // More braces opened than closed: the copy stopped short, so the problems are the copy's, not Claude's.
+        val rest = pasted.substring(pasted.indexOf('{'))
+        if (result is ChangeValidator.Result.Invalid && rest.count { it == '{' } > rest.count { it == '}' }) {
+            return ChangeValidator.Result.Invalid(listOf(CUT_OFF))
+        }
+        return result
     }
 
     /** The message when the paste holds no JSON at all. */
-    const val NOTHING_TO_READ = "no Change found: copy Claude's reply with its JSON block"
+    const val NOTHING_TO_READ = "No Change found in what you copied. Copy Claude's whole reply, with its JSON block, then paste again."
+
+    /** The message when the paste's JSON stops before its end. */
+    const val CUT_OFF = "Claude's reply is cut off before its JSON ends. Copy the whole reply, then paste again."
+
+    /** Whether [errors] are about the copy, not the Change: then there's nothing to take back to Claude. */
+    fun copyProblem(errors: List<String>): Boolean = errors == listOf(NOTHING_TO_READ) || errors == listOf(CUT_OFF)
 
     private val Fence = Regex("```[a-zA-Z]*\\s*\\n?(.*?)```", RegexOption.DOT_MATCHES_ALL)
 
@@ -114,11 +210,14 @@ object AskClaude {
             )
             appendLine("The program runs as a sequence: the next day is whatever comes after the last one trained, whenever I train.")
         }
-        val changes = plan.changes
+        val changes = plan.inForce
         if (changes.isNotEmpty()) {
             appendLine()
-            appendLine("Changes in force (accepted earlier):")
-            changes.forEach { appendLine("- ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.acceptedOn})") }
+            appendLine("Changes in force (accepted earlier, newest first), each with its id and its operations as JSON:")
+            changes.forEach {
+                appendLine("- id ${it.id}: ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.accepted.acceptedOn})")
+                appendLine("  operations: ${ChangeJson.format.encodeToString(ListSerializer(Operation.serializer()), it.change.operations)}")
+            }
         }
         val current = plan.position.week.coerceAtMost(program.weeks)
         program.blocks.forEach { block ->
@@ -165,14 +264,13 @@ object AskClaude {
         }
     }
 
-    /** The program's exercises and every exercise sharing a movement pattern with one, by pattern. */
-    private fun StringBuilder.library(program: Program, library: List<Exercise>) {
-        val used = program.blocks.flatMap { b -> b.days.flatMap { d -> d.groups.flatMap { g -> g.slots.flatMap { s -> listOf(s.exercise) + s.alternatives.map { it.exercise } } } } }.toSet()
-        val patterns = library.filter { it.id in used }.map { it.pattern }.toSet()
-        val relevant = library.filter { it.id in used || (!it.hidden && it.pattern in patterns) }
-        appendLine("## Exercise library (the ones a swap or add can use)")
+    /** Every visible library exercise, and any hidden one the program uses, by movement pattern. */
+    private fun StringBuilder.library(program: Program?, library: List<Exercise>) {
+        val used = program?.blocks.orEmpty().flatMap { b -> b.days.flatMap { d -> d.groups.flatMap { g -> g.slots.flatMap { s -> listOf(s.exercise) + s.alternatives.map { it.exercise } } } } }.toSet()
+        val listed = library.filter { !it.hidden || it.id in used }
+        appendLine("## Exercise library")
         appendLine("id: name (equipment, grip demand; primary muscles)")
-        relevant.groupBy { it.pattern }.toSortedMap(compareBy { it.ordinal }).forEach { (pattern, exercises) ->
+        listed.groupBy { it.pattern }.toSortedMap(compareBy { it.ordinal }).forEach { (pattern, exercises) ->
             appendLine("${pattern.label}:")
             exercises.sortedBy { it.name }.forEach { e ->
                 appendLine("  ${e.id}: ${e.name} (${e.equipment.key}, grip ${e.grip.key}; ${e.muscles.joinToString()})")
@@ -239,6 +337,10 @@ object ChangeFormat {
         appendLine("  - ${scope(Scope.Dates(plan.today, plan.today.plusDays(6)))}: sessions trained on those dates, both included (temporary);")
         appendLine("  - ${scope(Scope.RestOfBlock)}: from today to the end of the block I'm in;")
         appendLine("  - ${scope(Scope.RestOfProgram)}: from today on.")
+        appendLine(
+            "- \"replaces\"?: a list of ids of Changes in force that this one ends. Accepting it reverts them first, then applies its " +
+                "own operations. With \"replaces\", \"operations\" may be empty, to only end them.",
+        )
         appendLine("- \"operations\": a list, applied in order. Slot edits follow a slot id into later blocks that reuse it. Position operations " +
             "(skip_day, shift_program, repeat_week) run once, when I accept. Every operation may carry a \"reason\". Fields with ? are optional:")
         operations().forEach { (op, fields) ->
@@ -251,6 +353,17 @@ object ChangeFormat {
         appendLine("```json")
         appendLine(pretty.encodeToString(Change.serializer(), example(plan)))
         appendLine("```")
+        plan.inForce.firstOrNull()?.let { record ->
+            appendLine()
+            appendLine("When a Change in force should end, for example \"${record.change.summary}\" (id ${record.id}). To only end it:")
+            appendLine("```json")
+            appendLine(pretty.encodeToString(Change.serializer(), ending(plan, record.id)))
+            appendLine("```")
+            appendLine("To replace it with other operations:")
+            appendLine("```json")
+            appendLine(pretty.encodeToString(Change.serializer(), example(plan).copy(summary = "In place of an earlier Change: an alternative for one exercise and one more rep in reserve, for a week.", replaces = listOf(record.id))))
+            appendLine("```")
+        }
     }
 
     /** Each operation's JSON name with its fields (name, optional), `reason` left out, as the serializer reads them. */
@@ -262,6 +375,10 @@ object ChangeFormat {
     }
 
     private fun scope(scope: Scope) = ChangeJson.format.encodeToString(ScopeSerializer, scope)
+
+    /** A Change that only ends the Change in force [id]. */
+    fun ending(plan: ActiveProgram, id: Long): Change =
+        Change("The earlier Change is no longer needed.", Scope.RestOfProgram, emptyList(), replaces = listOf(id))
 
     /**
      * A Change that fits the running program, so the example names real ids: the next day's first

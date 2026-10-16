@@ -1,5 +1,11 @@
 package com.hyperlog.app.ui.coach
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.AlertDialog
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -75,6 +81,8 @@ data class ChangeReview(
     val program: Program,
     /** The block a `rest_of_block` Change keeps to. */
     val blockName: String?,
+    /** The summaries of the Changes in force it ends (its `replaces`). */
+    val ends: List<String> = emptyList(),
 )
 
 internal const val ChangeDiffTag = "change-diff"
@@ -92,8 +100,23 @@ fun ChangeReviewScreen(
     onAccept: () -> Unit,
     onReject: () -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * A Change in force, opened from its card on Coach: read-only, headed "Change in force", with
+     * Revert (asking first) in place of Accept; × and Back close it ([onReject]).
+     */
+    onRevert: (() -> Unit)? = null,
 ) {
     BackHandler(onBack = onReject)
+    var reverting by rememberSaveable { mutableStateOf(false) }
+    if (reverting && onRevert != null) {
+        AlertDialog(
+            onDismissRequest = { reverting = false },
+            title = { Text(stringResource(R.string.program_revert_title, review.change.summary)) },
+            text = { Text(stringResource(R.string.program_revert_body)) },
+            confirmButton = { TextButton(onClick = { reverting = false; onRevert() }) { Text(stringResource(R.string.program_change_revert)) } },
+            dismissButton = { TextButton(onClick = { reverting = false }) { Text(stringResource(R.string.program_cancel)) } },
+        )
+    }
     val cs = MaterialTheme.colorScheme
     val name = { id: String -> exerciseNames[id] ?: id }
     Scaffold(
@@ -102,22 +125,40 @@ fun ChangeReviewScreen(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(stringResource(R.string.change_review_title)) },
+                title = { Text(stringResource(if (onRevert != null) R.string.change_in_force_title else R.string.change_review_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onReject) { SymbolIcon(Symbol.Close, stringResource(R.string.change_reject)) }
+                    IconButton(onClick = onReject) {
+                        SymbolIcon(Symbol.Close, stringResource(if (onRevert != null) R.string.change_close else R.string.change_reject))
+                    }
                 },
             )
         },
         bottomBar = {
             BottomActions(padding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onReject) { Text(stringResource(R.string.change_reject)) }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = onAccept) { Text(stringResource(R.string.change_accept)) }
+                if (onRevert != null) {
+                    OutlinedButton(onClick = { reverting = true }) { Text(stringResource(R.string.program_change_revert)) }
+                } else {
+                    TextButton(onClick = onReject) { Text(stringResource(R.string.change_reject)) }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = onAccept) { Text(stringResource(R.string.change_accept)) }
+                }
             }
         },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag(ChangeDiffTag)) {
+            // What it ends goes first: those stop before the new one applies.
+            if (review.ends.isNotEmpty()) item {
+                SectionCard(Modifier.padding(top = 8.dp), color = cs.tertiaryContainer) {
+                    review.ends.forEach {
+                        Text(
+                            stringResource(R.string.change_ends, it),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = cs.onTertiaryContainer,
+                        )
+                    }
+                }
+            }
             // What the Change is, and where it moves the program, in one card at the top.
             item {
                 SectionCard(Modifier.padding(top = 8.dp, bottom = 8.dp)) {

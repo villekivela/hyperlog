@@ -46,13 +46,12 @@ class AskClaudeScreenTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     private val db get() = HyperlogDatabase.get(context)
 
-    private fun openSomethingElse() {
+    private fun openCoach() {
         compose.waitFor("Run this program")
         compose.onNodeWithText("Run this program").performClick()
         compose.waitFor("Week 1 · Ramp-in")
         compose.openTab("Coach")
-        compose.waitFor("What’s in the way?")
-        compose.onNodeWithText("Something else").performScrollTo().performClick()
+        compose.waitFor("In your words")
     }
 
     private fun copy(text: String) {
@@ -61,7 +60,7 @@ class AskClaudeScreenTest {
 
     @Test
     fun askClaudeOpensTheShareSheetWithTheWholePrompt() {
-        openSomethingElse()
+        openCoach()
         compose.onNodeWithText("Ask Claude").assertIsNotEnabled()
         compose.onNode(hasSetTextAction()).performTextInput("My left elbow aches on curls.")
         compose.onNodeWithText("Ask Claude").performClick()
@@ -78,12 +77,13 @@ class AskClaudeScreenTest {
         assertTrue(prompt.contains("## Sessions of the last 4 weeks"))
         assertTrue(prompt.contains("## Exercise library"))
         assertTrue(prompt.contains("\"op\": \"repeat_week\""))
+        assertTrue(prompt.contains("## Weekly sets per muscle"))
     }
 
     @Test
     fun theKeyboardDoesNotCoverTheWordsField() {
         // Found on the phone: the field stayed under the keyboard, so the words were typed blind.
-        openSomethingElse()
+        openCoach()
         val field = compose.onNode(hasSetTextAction())
         field.performClick()
         val root = compose.activity.window.decorView
@@ -101,13 +101,13 @@ class AskClaudeScreenTest {
 
     @Test
     fun aPastedChangeOpensItsDiff() {
-        openSomethingElse()
+        openCoach()
         copy(
             "Here it is:\n```json\n" +
                 """{"summary": "Elbow: no drop set on curls", "scope": "rest_of_block", "operations": [{"op": "swap", "slot": "curl", "exercise": "machine_preacher_curl"}]}""" +
                 "\n```",
         )
-        compose.onNodeWithText("Paste change").performClick()
+        compose.onNodeWithText("Paste reply").performClick()
 
         compose.waitFor("Accept")
         compose.onNodeWithText("Elbow: no drop set on curls").assertIsDisplayed()
@@ -119,9 +119,9 @@ class AskClaudeScreenTest {
 
     @Test
     fun anInvalidPasteSaysWhatsWrongAndChangesNothing() {
-        openSomethingElse()
+        openCoach()
         copy("""{"summary": "Rows", "scope": "rest_of_program", "operations": [{"op": "remove", "slot": "rows"}, {"op": "adjust_load", "percent": 80}]}""")
-        compose.onNodeWithText("Paste change").performClick()
+        compose.onNodeWithText("Paste reply").performClick()
 
         compose.waitFor("2 problems", substring = true)
         compose.onNodeWithText("unknown slot \"rows\"").assertIsDisplayed()
@@ -129,9 +129,16 @@ class AskClaudeScreenTest {
         assertTrue(compose.onAllNodes(hasText("Accept")).fetchSemanticsNodes().isEmpty())
         assertEquals(0, runBlocking { db.planChanges().changes(db.programs().active()!!.id).size })
 
+        // A reply copied short says so once, with nothing to hand back to Claude.
+        copy("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":")
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("cut off", substring = true)
+        assertTrue(compose.onAllNodes(hasText("problem", substring = true)).fetchSemanticsNodes().isEmpty())
+        assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasContentDescription("Copy problems")).fetchSemanticsNodes().isEmpty())
+
         // A reply with no JSON says so too.
         copy("Sounds good, rest up!")
-        compose.onNodeWithText("Paste change").performClick()
-        compose.waitFor("no Change found", substring = true)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("No Change found", substring = true)
     }
 }

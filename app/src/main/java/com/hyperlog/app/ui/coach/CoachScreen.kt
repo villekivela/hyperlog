@@ -1,7 +1,7 @@
 package com.hyperlog.app.ui.coach
 
-import com.hyperlog.app.ui.theme.selectedChipColors
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -16,160 +16,185 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import com.hyperlog.app.ui.program.Problem
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.hyperlog.app.R
-import com.hyperlog.app.coach.Advice
-import com.hyperlog.app.coach.Area
-import com.hyperlog.app.coach.Change
-import com.hyperlog.app.coach.Constraints
-import com.hyperlog.app.coach.RuleCoach
-import com.hyperlog.app.coach.Situation
-import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.coach.AskClaude
+import com.hyperlog.app.coach.Scope
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.ui.session.Tnum
+import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.ui.program.Problem
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.BottomActions
-import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
-import com.hyperlog.app.ui.theme.CardShape
-import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.GroupGap
 import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.background
-import androidx.compose.ui.draw.clip
-import java.time.DayOfWeek
-import java.time.LocalDate
+import com.hyperlog.app.ui.theme.selectedChipColors
+import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private val Margin = 24.dp
 
-/** The text column of a situation row: past the 48 dp radio and its 12 dp inset (docs/design/coach.md). */
-private val TextIndent = 64.dp
+/** The filled button of the bottom bar: the next step. */
+internal const val NextStepTag = "coach-next-step"
 
-/** The situations, in the order the screen lists them. */
-enum class SituationKind { TimeOff, Pain, NoGym, ShortOnTime, PoorRecovery, SomethingElse }
+/** The gym chip for somewhere not set up in Hyperlog. */
+private const val Elsewhere = -1L
 
-/** The minutes Short on time starts at, and its range in 5-minute steps. */
-private const val DEFAULT_MINUTES = 45
-private val MinutesRange = 20..120
+/** Changes in force shown in full; any more fold under "N more in force". */
+private const val ShownChanges = 2
+
+/** A starter: the chip's label, and the sentence it puts into the words. */
+private data class Starter(val label: Int, val words: Int)
+
+private val Starters = listOf(
+    Starter(R.string.coach_starter_pain, R.string.coach_starter_pain_words),
+    Starter(R.string.coach_starter_short, R.string.coach_starter_short_words),
+    Starter(R.string.coach_starter_home, R.string.coach_starter_home_words),
+    Starter(R.string.coach_starter_sleep, R.string.coach_starter_sleep_words),
+)
 
 /**
- * The offline coach (SPEC, Coaching → Rules): pick what's in the way and the limits, then
- * Review change opens the Change's diff. When the plan can stand, one line says so.
+ * The coach, words first (SPEC, Coaching → Words first, through Claude; docs/design/coach.md): the
+ * Changes in force, then the gym and your words for the Claude app, and its reply pasted back.
+ * Nothing here changes the plan; a reply opens its review.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CoachScreen(
-    /** The program running, null with none: then only Ask Claude has something to work with. */
+    /** The program running, null with none: then Claude answers in words and nothing comes back. */
     program: ActiveProgram?,
-    library: List<Exercise>,
-    /** The day of the last session finished; null with none yet. */
-    lastTrained: LocalDate?,
-    onPropose: (Change) -> Unit,
+    /** The words for Claude; kept by the caller, so Today's Ease back in can fill them in. */
+    words: TextFieldValue,
+    onWords: (TextFieldValue) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    /** Shares the prompt for the words typed under Something else with the Claude app. */
-    onAskClaude: (String) -> Unit = {},
-    /** Reads the clipboard as a Change pasted back from Claude. */
+    gyms: List<Gym> = emptyList(),
+    /** The gym the start sheet would pick, preselected. */
+    usualGym: UsualGym? = null,
+    /** Shares the prompt for the words and the gym picked (null: [elsewhere] or no gyms) with the Claude app. */
+    onAskClaude: (words: String, gym: Gym?, elsewhere: Boolean) -> Unit = { _, _, _ -> },
+    /** Ask Claude was pressed for these words: pasting the reply is the next step. Kept by the caller, which ends it. */
+    asked: Boolean = false,
+    onAskedChange: (Boolean) -> Unit = {},
+    /** Opens a Change in force, read-only. */
+    onOpenChange: (Long) -> Unit = {},
+    /** Reads the clipboard as Claude's reply. */
     onPaste: () -> Unit = {},
-    /** The problems of the Change last pasted; null when there are none to show. */
+    /** The problems of the reply last pasted; null when there are none to show. */
     pasteErrors: List<String>? = null,
-    /** The words changed or the situation did: the paste problems no longer apply. */
+    /** The words changed: the paste problems no longer apply. */
     onClosePasteErrors: () -> Unit = {},
     /** Copies the paste problems, to give them back to Claude. */
     onCopyProblems: (List<String>) -> Unit = {},
-    /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
-    weekdays: Set<DayOfWeek> = emptySet(),
+    /** The clipboard held a valid Change on coming back from Claude. */
+    replyReady: Boolean = false,
+    /** Coming back after asking: read the clipboard once, quietly. */
+    onCheckReply: () -> Unit = {},
+    /** Opens the reply found for review. */
+    onReview: () -> Unit = {},
+    /** Reverts the accepted Change with this id. */
+    onRevert: (Long) -> Unit = {},
     onSettings: () -> Unit = {},
 ) {
-    val today = program?.today ?: LocalDate.now()
-    val daysOff = RuleCoach.daysSince(lastTrained, today)
-    var kind by rememberSaveable { mutableStateOf(if (RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, today, weekdays))) SituationKind.TimeOff else null) }
-    var area by rememberSaveable { mutableStateOf(Area.Hands) }
-    /** The slot the hands were worse after, under a hand Change in force; null for the pain itself. */
-    var worseAfter by rememberSaveable { mutableStateOf<String?>(null) }
-    val handsInForce = program?.changes?.any { it.change.summary == RuleCoach.painSummary(Area.Hands) } == true
-    val keptGrip = remember(program, library) { if (program != null && handsInForce) RuleCoach.keptGrip(program, library) else emptyList() }
-    val names = remember(library) { library.associate { it.id to it.name } }
-    var minutes by rememberSaveable { mutableIntStateOf(DEFAULT_MINUTES) }
-    var noGrip by rememberSaveable { mutableStateOf(false) }
-    var noAxial by rememberSaveable { mutableStateOf(false) }
-    var noOverhead by rememberSaveable { mutableStateOf(false) }
-    var home by rememberSaveable { mutableStateOf(false) }
-    var capped by rememberSaveable { mutableStateOf(false) }
-    /** What the last Review said when it had no Change; cleared by any edit. */
-    var said by rememberSaveable { mutableStateOf<String?>(null) }
-
-    /** What Claude is told, under Something else. Kept across the trip to the Claude app. */
-    var words by rememberSaveable { mutableStateOf("") }
-    /** Ask Claude was pressed: pasting the reply is the next step. */
-    var asked by rememberSaveable { mutableStateOf(false) }
-
-    /** The rule situation picked; null for Something else, which goes to Claude instead. */
-    fun situation(k: SituationKind): Situation? = when (k) {
-        SituationKind.TimeOff -> Situation.TimeOff
-        SituationKind.Pain -> Situation.Pain(area, worseAfter.takeIf { area == Area.Hands })
-        SituationKind.NoGym -> Situation.NoGym
-        SituationKind.ShortOnTime -> Situation.ShortOnTime(minutes)
-        SituationKind.PoorRecovery -> Situation.PoorRecovery
-        SituationKind.SomethingElse -> null
+    /** Hyperlog went to the background after asking: on coming back, the clipboard is read once. */
+    var away by rememberSaveable { mutableStateOf(false) }
+    var picked by rememberSaveable { mutableStateOf<Long?>(null) }
+    val elsewhere = picked == Elsewhere && gyms.isNotEmpty()
+    val gym = if (elsewhere) null else gyms.firstOrNull { it.id == picked } ?: gyms.firstOrNull { it.id == usualGym?.id } ?: gyms.firstOrNull()
+    /** The Changes after the first [ShownChanges] are folded under "N more in force" until opened. */
+    var allChanges by rememberSaveable { mutableStateOf(false) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focus = LocalFocusManager.current
+    // A reply found on return is the one thing to do: the keyboard makes way for Review.
+    LaunchedEffect(replyReady) {
+        if (replyReady) {
+            keyboard?.hide()
+            focus.clearFocus()
+        }
     }
-    // A situation brings its own limits; they stay editable.
-    fun limitsFor(s: Situation) {
-        val c = s.constraints()
-        noGrip = c.noGrip; noAxial = c.noAxialLoad; noOverhead = c.noOverhead; home = c.home; capped = c.maxMinutes != null
-        said = null
-    }
-    fun pick(k: SituationKind) {
-        kind = k
-        situation(k)?.let(::limitsFor)
-        onClosePasteErrors()
-    }
-    val asking = kind == SituationKind.SomethingElse
+    var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
+    val field = remember { FocusRequester() }
+    val fieldInView = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
 
-    val resume = stringResource(R.string.coach_resume)
-    val nothing = stringResource(R.string.coach_nothing)
-    val finished = stringResource(R.string.coach_finished)
-    val noProgram = stringResource(R.string.coach_no_program)
-    val daysText = daysText(daysOff)
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { if (asked) away = true }
+    // Android only lets an app read the clipboard while its window has focus.
+    val focused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(away, focused) {
+        if (away && focused) {
+            away = false
+            onCheckReply()
+        }
+    }
+
+    fun edit(value: TextFieldValue) {
+        if (value.text != words.text) onClosePasteErrors()
+        // Cleared words end the request: Ask Claude is the next step again.
+        if (value.text.isBlank() && asked) onAskedChange(false)
+        onWords(value)
+    }
+    fun focusWords() {
+        scope.launch {
+            runCatching { field.requestFocus() }
+            fieldInView.bringIntoView()
+        }
+    }
+    val inForce = program?.inForce.orEmpty()
+    val about = inForce.associate { it.id to stringResource(R.string.coach_about, it.change.summary) }
+    val starters = Starters.map { stringResource(it.label) to stringResource(it.words) }
+    val canAsk = words.text.isNotBlank()
+
     BackHandler(onBack = onBack)
     Scaffold(
         // The keyboard shrinks the screen, so the words field scrolls into view above it, with Ask Claude.
@@ -185,258 +210,276 @@ fun CoachScreen(
             )
         },
         bottomBar = {
-            // The next step sits on a strip a tone off the screen, so it doesn't blend into it.
-            Column(Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).background(Tones.bar).navigationBarsPadding()) {
-                Row(
-                    // Paste change is a text button: its label, not its edge, lines up with the 24 dp margin.
-                    Modifier.fillMaxWidth().padding(start = if (asking) Margin - 12.dp else Margin, end = 16.dp, top = 16.dp, bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (asking) {
-                        // The next step is the filled button: Ask Claude first, then Paste change once asked.
-                        val ask = @Composable { Text(stringResource(R.string.coach_ask)) }
-                        val paste = @Composable {
-                            SymbolIcon(Symbol.ContentPaste, null, Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.coach_paste))
-                        }
-                        val askClaude = { asked = true; onAskClaude(words.trim()) }
-                        // With no program there is no plan for a Change: Claude's advice stays in the Claude app.
-                        if (program == null) {
-                            Spacer(Modifier.weight(1f))
-                            Button(enabled = words.isNotBlank(), onClick = askClaude) { ask() }
-                        } else if (asked) {
-                            TextButton(enabled = words.isNotBlank(), onClick = askClaude) { ask() }
-                            Spacer(Modifier.weight(1f))
-                            Button(onClick = onPaste) { paste() }
-                        } else {
-                            TextButton(onClick = onPaste) { paste() }
-                            Spacer(Modifier.weight(1f))
-                            Button(enabled = words.isNotBlank(), onClick = askClaude) { ask() }
-                        }
-                        return@Row
-                    }
-                    Text(
-                        said.orEmpty(),
-                        Modifier.weight(1f).padding(end = 16.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Button(
-                        enabled = kind != null,
-                        onClick = {
-                            val k = kind ?: return@Button
-                            val situation = situation(k) ?: return@Button
-                            val constraints = Constraints(noGrip, noAxial, noOverhead, home, minutes.takeIf { capped })
-                            if (program == null) {
-                                said = noProgram
-                                return@Button
-                            }
-                            when (val advice = RuleCoach.advise(situation, constraints, program, library, lastTrained, weekdays)) {
-                                is Advice.Propose -> { said = null; onPropose(advice.change) }
-                                is Advice.Resume -> said = listOfNotNull(daysText.takeIf { advice.daysOff != null }, resume).joinToString(". ")
-                                Advice.NothingToChange -> said = nothing
-                                Advice.Finished -> said = finished
-                            }
-                        },
-                    ) { Text(stringResource(R.string.coach_review)) }
-                }
-            }
+            BottomBar(
+                withProgram = program != null,
+                asked = asked,
+                replyReady = replyReady,
+                canAsk = canAsk,
+                onAsk = {
+                    onAskedChange(true)
+                    onAskClaude(words.text.trim(), gym, elsewhere)
+                },
+                onPaste = onPaste,
+                onReview = onReview,
+            )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = GroupGap)) {
             Text(
-                stringResource(R.string.coach_question),
-                Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.headlineSmall,
+                stringResource(if (program != null) R.string.coach_intro else R.string.coach_intro_no_program),
+                Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = GroupGap),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            // The situations are one card; the one picked is lifted into secondary container.
-            Column(Modifier.padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).selectableGroup()) {
-                SituationRow(stringResource(R.string.coach_time_off), daysText, kind == SituationKind.TimeOff) { pick(SituationKind.TimeOff) }
-                SituationRow(stringResource(R.string.coach_pain), null, kind == SituationKind.Pain) { pick(SituationKind.Pain) }
-                if (kind == SituationKind.Pain) {
-                    FlowRow(
-                        Modifier.padding(start = TextIndent - CardMargin, end = CardPadding),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Area.entries.forEach { a ->
-                            FilterChip(
-                                colors = selectedChipColors(),
-                                selected = a == area,
-                                onClick = { area = a; worseAfter = null; limitsFor(Situation.Pain(a)) },
-                                label = { Text(a.label) },
+            if (inForce.isNotEmpty()) {
+                val folded = inForce.size > ShownChanges && !allChanges
+                val shown = if (folded) inForce.take(ShownChanges) else inForce
+                val count = shown.size + if (folded) 1 else 0
+                shown.forEachIndexed { i, record ->
+                    Segment(i, count, onClick = { onOpenChange(record.id) }, onClickLabel = stringResource(R.string.coach_open_change)) {
+                        InForce(
+                            record, program!!,
+                            onRevert = { reverting = record.id },
+                            onHowItsGoing = {
+                                val prefix = about.getValue(record.id)
+                                val rest = words.text.removePrefix(prefix)
+                                edit(TextFieldValue(prefix + rest, TextRange(prefix.length + rest.length)))
+                                focusWords()
+                            },
+                        )
+                    }
+                }
+                if (folded) {
+                    Segment(count - 1, count, onClick = { allChanges = true }) {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                pluralStringResource(R.plurals.coach_more_in_force, inForce.size - ShownChanges, inForce.size - ShownChanges),
+                                Modifier.weight(1f).padding(start = 56.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                            SymbolIcon(Symbol.ExpandMore, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    Text(
-                        stringResource(R.string.coach_pain_body),
-                        Modifier.padding(start = TextIndent - CardMargin, end = CardPadding, top = 4.dp, bottom = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    // The pain rule: worse the next morning after an exercise moves it to its no-grip swap.
-                    if (area == Area.Hands && keptGrip.isNotEmpty()) {
+                }
+                Spacer(Modifier.size(GroupGap))
+            }
+            // The composer: one card, its chips and field on the 24 dp edge, the starters scrolling to its edges.
+            SectionCard(padding = 0.dp) {
+                if (gyms.isNotEmpty()) {
+                    Row(Modifier.padding(start = CardPadding, end = CardPadding, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            stringResource(R.string.coach_worse_after),
-                            Modifier.padding(start = TextIndent - CardMargin, end = CardPadding, top = 8.dp, bottom = 8.dp),
+                            stringResource(R.string.coach_gym),
+                            Modifier.padding(end = 16.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        FlowRow(
-                            Modifier.padding(start = TextIndent - CardMargin, end = CardPadding),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            keptGrip.forEach { slot ->
+                        FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            gyms.forEach { g ->
+                                val selected = g.id == gym?.id
                                 FilterChip(
                                     colors = selectedChipColors(),
-                                    selected = worseAfter == slot.id,
-                                    onClick = { worseAfter = slot.id.takeIf { it != worseAfter }; said = null },
-                                    label = { Text(names[slot.exercise] ?: slot.exercise) },
+                                    selected = selected,
+                                    onClick = { picked = g.id },
+                                    label = { Text(g.name) },
+                                    leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                                 )
                             }
+                            // Somewhere not set up: the words say what's there.
+                            FilterChip(
+                                colors = selectedChipColors(),
+                                selected = elsewhere,
+                                onClick = { picked = Elsewhere },
+                                label = { Text(stringResource(R.string.coach_elsewhere)) },
+                                leadingIcon = if (elsewhere) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
+                            )
                         }
                     }
                 }
-                SituationRow(stringResource(R.string.coach_no_gym), stringResource(R.string.coach_no_gym_body), kind == SituationKind.NoGym) { pick(SituationKind.NoGym) }
-                SituationRow(stringResource(R.string.coach_short), null, kind == SituationKind.ShortOnTime) { pick(SituationKind.ShortOnTime) }
-                if (kind == SituationKind.ShortOnTime || (capped && !asking)) {
-                    MinutesStepper(minutes, onChange = { minutes = it; said = null }, Modifier.padding(start = TextIndent - 12.dp - CardMargin))
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = CardPadding).padding(top = if (gyms.isEmpty()) 8.dp else 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    starters.forEach { (label, sentence) ->
+                        SuggestionChip(
+                            onClick = {
+                                // A starter fills empty words; otherwise it goes on a new line.
+                                val text = if (words.text.isBlank()) sentence else words.text.trimEnd() + "\n" + sentence
+                                edit(TextFieldValue(text, TextRange(text.length)))
+                                focusWords()
+                            },
+                            label = { Text(label) },
+                            icon = { SymbolIcon(Symbol.Add, null, Modifier.size(18.dp)) },
+                        )
+                    }
                 }
-                SituationRow(stringResource(R.string.coach_recovery), stringResource(R.string.coach_recovery_body), kind == SituationKind.PoorRecovery) { pick(SituationKind.PoorRecovery) }
-                SituationRow(stringResource(R.string.coach_something_else), stringResource(R.string.coach_something_else_body), asking) { pick(SituationKind.SomethingElse) }
-            }
-            if (asking) {
-                AskClaudeDetails(
-                    words,
-                    onWords = { words = it; onClosePasteErrors() },
-                    pasteErrors,
-                    onCopyProblems,
-                    withProgram = program != null,
+                OutlinedTextField(
+                    value = words,
+                    onValueChange = ::edit,
+                    modifier = Modifier.fillMaxWidth().padding(start = CardPadding, end = CardPadding, top = 4.dp, bottom = CardPadding)
+                        .focusRequester(field).bringIntoViewRequester(fieldInView),
+                    label = { Text(stringResource(R.string.coach_words_label)) },
+                    placeholder = { Text(stringResource(R.string.coach_words_hint)) },
+                    minLines = 3,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 )
-                return@Column
             }
-            GroupHead(stringResource(R.string.coach_limits))
-            FlowRow(Modifier.padding(horizontal = Margin), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Limit(stringResource(R.string.coach_no_grip), noGrip) { noGrip = it; said = null }
-                Limit(stringResource(R.string.coach_no_axial), noAxial) { noAxial = it; said = null }
-                Limit(stringResource(R.string.coach_no_overhead), noOverhead) { noOverhead = it; said = null }
-                Limit(stringResource(R.string.coach_home), home) { home = it; said = null }
-                Limit(stringResource(R.string.coach_max_minutes, minutes), capped) { capped = it; said = null }
-            }
+            if (pasteErrors != null) PasteProblems(pasteErrors, onCopyProblems)
         }
+    }
+    inForce.firstOrNull { it.id == reverting }?.let { record ->
+        AlertDialog(
+            onDismissRequest = { reverting = null },
+            title = { Text(stringResource(R.string.program_revert_title, record.change.summary)) },
+            text = { Text(stringResource(R.string.program_revert_body)) },
+            confirmButton = {
+                TextButton(onClick = { reverting = null; onRevert(record.id) }) { Text(stringResource(R.string.program_change_revert)) }
+            },
+            dismissButton = { TextButton(onClick = { reverting = null }) { Text(stringResource(R.string.program_cancel)) } },
+        )
+    }
+}
+
+/** A Change in force: its summary and how long it runs, with Revert and Tell Claude how it's going. */
+@Composable
+private fun InForce(record: ChangeRecord, program: ActiveProgram, onRevert: () -> Unit, onHowItsGoing: () -> Unit) {
+    SegmentedRow(record.change.summary, runsText(record, program), Symbol.Tune)
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = CardPadding, bottom = CardPadding),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TextButton(onClick = onRevert) { Text(stringResource(R.string.program_change_revert)) }
+        FilledTonalButton(onClick = onHowItsGoing) { Text(stringResource(R.string.coach_how_its_going)) }
+    }
+}
+
+private val WeekdayDayMonth = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
+
+/** How long a Change in force runs: `Until Tue 27 Oct`, `Rest of Build`, `Rest of the program`. */
+@Composable
+private fun runsText(record: ChangeRecord, program: ActiveProgram): String = when (val scope = record.change.scope) {
+    Scope.RestOfProgram -> stringResource(R.string.change_scope_program)
+    Scope.RestOfBlock -> stringResource(
+        R.string.change_scope_block,
+        program.program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name.orEmpty(),
+    )
+    is Scope.Dates -> when {
+        scope.from > program.today -> stringResource(R.string.coach_dates, WeekdayDayMonth.format(scope.from), WeekdayDayMonth.format(scope.to))
+        scope.to == program.today -> stringResource(R.string.coach_until_today)
+        else -> stringResource(R.string.coach_until, WeekdayDayMonth.format(scope.to))
     }
 }
 
 /**
- * Something else, opened in place: the words for Claude, what Ask Claude shares, and the problems
- * of a Change pasted back that Hyperlog can't use (SPEC, Ask Claude).
+ * The bottom strip: Paste reply and Ask Claude, the next step filled and always at the end; over
+ * them, once Claude's reply is found on the clipboard, the ready card with Review.
  */
 @Composable
-private fun AskClaudeDetails(
-    words: String,
-    onWords: (String) -> Unit,
-    pasteErrors: List<String>?,
-    onCopyProblems: (List<String>) -> Unit,
-    /** A program runs, so Claude can send back a Change to paste. */
+private fun BottomBar(
     withProgram: Boolean,
+    asked: Boolean,
+    replyReady: Boolean,
+    canAsk: Boolean,
+    onAsk: () -> Unit,
+    onPaste: () -> Unit,
+    onReview: () -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.padding(start = TextIndent, end = Margin)) {
-        OutlinedTextField(
-            value = words,
-            onValueChange = onWords,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            label = { Text(stringResource(R.string.coach_words_label)) },
-            placeholder = { Text(stringResource(R.string.coach_words_hint)) },
-            minLines = 3,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-        )
-        Text(
-            stringResource(if (withProgram) R.string.coach_ask_body else R.string.coach_ask_body_no_program),
-            Modifier.padding(top = 8.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = cs.onSurfaceVariant,
-        )
-        // A failed paste scrolls its problems into view.
-        val problems = remember { BringIntoViewRequester() }
-        LaunchedEffect(pasteErrors) { if (pasteErrors != null) problems.bringIntoView() }
-        if (pasteErrors != null) Column(Modifier.bringIntoViewRequester(problems)) {
-            Row(Modifier.fillMaxWidth().padding(top = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(Tones.bar)
+            .navigationBarsPadding(),
+    ) {
+        if (replyReady && withProgram) {
+            Row(
+                Modifier.padding(start = CardPadding, end = CardPadding, top = CardPadding)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(cs.primaryContainer)
+                    .padding(start = CardPadding, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = cs.onPrimaryContainer)
+                Spacer(Modifier.width(12.dp))
                 Text(
-                    stringResource(R.string.coach_paste_failed),
+                    stringResource(R.string.coach_reply_ready),
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
-                    color = cs.error,
+                    color = cs.onPrimaryContainer,
                 )
-                IconButton(onClick = { onCopyProblems(pasteErrors) }) {
-                    SymbolIcon(Symbol.ContentCopy, stringResource(R.string.coach_copy_problems))
+                Button(onClick = onReview, modifier = Modifier.testTag(NextStepTag)) { Text(stringResource(R.string.coach_review_reply)) }
+            }
+        }
+        Row(
+            // A text button's label, not its edge, lines up with the 24 dp margin.
+            Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin - 12.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val ask = @Composable { Text(stringResource(R.string.coach_ask)) }
+            val paste = @Composable {
+                SymbolIcon(Symbol.ContentPaste, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.coach_paste))
+            }
+            when {
+                // With no program only words come back, so there is nothing to paste.
+                !withProgram -> {
+                    Spacer(Modifier.weight(1f))
+                    Button(enabled = canAsk, onClick = onAsk, modifier = Modifier.testTag(NextStepTag)) { ask() }
+                }
+                replyReady -> {
+                    TextButton(onClick = onPaste) { paste() }
+                    Spacer(Modifier.weight(1f))
+                    TextButton(enabled = canAsk, onClick = onAsk) { ask() }
+                }
+                asked -> {
+                    TextButton(enabled = canAsk, onClick = onAsk) { ask() }
+                    Spacer(Modifier.weight(1f))
+                    Button(onClick = onPaste, modifier = Modifier.testTag(NextStepTag)) { paste() }
+                }
+                else -> {
+                    TextButton(onClick = onPaste) { paste() }
+                    Spacer(Modifier.weight(1f))
+                    Button(enabled = canAsk, onClick = onAsk, modifier = Modifier.testTag(NextStepTag)) { ask() }
                 }
             }
+        }
+    }
+}
+
+/** The problems of a reply pasted back that Hyperlog can't use, with a button to copy them for Claude. */
+@Composable
+private fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val copyProblem = AskClaude.copyProblem(errors)
+    // A failed paste scrolls its problems into view.
+    val problems = remember { BringIntoViewRequester() }
+    LaunchedEffect(errors) { problems.bringIntoView() }
+    Column(Modifier.padding(horizontal = Margin).bringIntoViewRequester(problems)) {
+        Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                pluralStringResource(R.plurals.coach_paste_problems, pasteErrors.size, pasteErrors.size),
+                stringResource(R.string.coach_paste_failed),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                color = cs.error,
+            )
+            // A copy cut short or without JSON is fixed by copying again, so there's nothing to hand Claude.
+            if (!copyProblem) IconButton(onClick = { onCopy(errors) }) {
+                SymbolIcon(Symbol.ContentCopy, stringResource(R.string.coach_copy_problems))
+            }
+        }
+        if (!copyProblem) {
+            Text(
+                pluralStringResource(R.plurals.coach_paste_problems, errors.size, errors.size),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
             )
-            pasteErrors.forEach { Problem(it) }
         }
-    }
-}
-
-@Composable
-private fun daysText(days: Int?): String = when (days) {
-    null -> stringResource(R.string.coach_no_sessions)
-    1 -> stringResource(R.string.coach_day_off)
-    else -> stringResource(R.string.coach_days_off, days)
-}
-
-/** One situation: a radio row, as the gym sheet's, with a line under the name when it has one. */
-@Composable
-private fun SituationRow(name: String, body: String?, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth()
-            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
-            .selectable(selected, role = Role.RadioButton, onClick = onClick)
-            .heightIn(min = 64.dp)
-            .padding(end = CardPadding, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null, Modifier.size(48.dp))
-        Spacer(Modifier.width(4.dp))
-        Column {
-            Text(name, style = MaterialTheme.typography.bodyLarge)
-            if (body != null) {
-                Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-private fun Limit(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
-    FilterChip(
-        colors = selectedChipColors(),
-        selected = on,
-        onClick = { onChange(!on) },
-        label = { Text(label) },
-        leadingIcon = if (on) { { SymbolIcon(Symbol.Check, null, Modifier.size(20.dp)) } } else null,
-    )
-}
-
-/** `−  45 min  +`, in 5-minute steps. */
-@Composable
-private fun MinutesStepper(minutes: Int, onChange: (Int) -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { onChange((minutes - 5).coerceIn(MinutesRange)) }, enabled = minutes > MinutesRange.first) {
-            SymbolIcon(Symbol.Remove, stringResource(R.string.coach_less_time))
-        }
-        Text(
-            stringResource(R.string.coach_minutes, minutes),
-            Modifier.widthIn(min = 64.dp),
-            style = MaterialTheme.typography.titleMedium.merge(Tnum),
-            textAlign = TextAlign.Center,
-        )
-        IconButton(onClick = { onChange((minutes + 5).coerceIn(MinutesRange)) }, enabled = minutes < MinutesRange.last) {
-            SymbolIcon(Symbol.Add, stringResource(R.string.coach_more_time))
-        }
+        errors.forEach { Problem(it) }
     }
 }

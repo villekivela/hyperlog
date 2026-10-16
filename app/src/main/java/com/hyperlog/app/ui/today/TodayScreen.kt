@@ -59,12 +59,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
-import com.hyperlog.app.coach.Advice
-import com.hyperlog.app.coach.Change
-import com.hyperlog.app.coach.Constraints
-import com.hyperlog.app.coach.RuleCoach
-import com.hyperlog.app.coach.SessionSwap
-import com.hyperlog.app.coach.Situation
+import com.hyperlog.app.gym.MissingSwaps
+import com.hyperlog.app.gym.SessionSwap
+import com.hyperlog.app.history.TimeOff
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.library.Exercise
@@ -113,8 +110,8 @@ fun TodayScreen(
     library: List<Exercise> = emptyList(),
     /** The day of the last session finished; null with none yet. */
     lastTrained: LocalDate? = null,
-    /** Shows a coach's Change for review. */
-    onPropose: (Change) -> Unit = {},
+    /** Opens Coach with the words for [days] days off filled in. */
+    onEaseBack: (days: Int) -> Unit = {},
     /** The weekday plan, every gym's usual days: time off counts from the first planned day missed. */
     weekdays: Set<DayOfWeek> = emptySet(),
     /** A newer release to offer, above the day; null for none. */
@@ -148,12 +145,10 @@ fun TodayScreen(
     }
     // Time off: more than a week off (by the weekday plan if there is one), with no Change made for today yet.
     val today = program?.today ?: LocalDate.now()
-    val daysOff = RuleCoach.daysSince(lastTrained, today)
-    val easeBack = if (program != null && next != null && !sessionRunning && RuleCoach.timeOff(RuleCoach.daysOff(lastTrained, today, weekdays)) &&
-        program.changes.none { it.acceptedOn == program.today }
-    ) {
-        (RuleCoach.advise(Situation.TimeOff, Constraints(), program, library, lastTrained, weekdays) as? Advice.Propose)?.change
-    } else null
+    // The words count from the last session, whatever the weekday plan.
+    val daysOff = TimeOff.daysSince(lastTrained, today)
+    val easeBack = program != null && next != null && !sessionRunning && daysOff != null &&
+        TimeOff.isTimeOff(TimeOff.daysOff(lastTrained, today, weekdays)) && program.changes.none { it.acceptedOn == program.today }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val startLabel = stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session)
     Scaffold(
@@ -190,7 +185,7 @@ fun TodayScreen(
                 next, exerciseNames, Modifier.weight(1f),
                 banners = {
                     update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
-                    easeBack?.let { change -> TimeOffBanner(daysOff!!, onEaseBack = { onPropose(change) }) }
+                    if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
                 },
                 adHoc = if (!sessionRunning) { { start(true) } } else null,
             )
@@ -334,7 +329,7 @@ private fun NextDay(
 
 /**
  * `11 days since your last session` with **Ease back in**, a tertiary-container banner: it opens
- * the coach's re-entry Change (or Repeat week after more than two weeks) for review.
+ * Coach with "I've had 11 days off. Ease me back in." in the words.
  */
 @Composable
 private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
@@ -368,7 +363,7 @@ internal fun StartSheetContent(
 ) {
     var chosen by rememberSaveable { mutableStateOf(usualGym?.id ?: gyms.first().id) }
     val gym = gyms.firstOrNull { it.id == chosen } ?: gyms.first()
-    val missing = remember(day, gym.missing, library) { day?.let { RuleCoach.missingEquipment(it, library, gym.missing) }.orEmpty() }
+    val missing = remember(day, gym.missing, library) { day?.let { MissingSwaps.forDay(it, library, gym.missing) }.orEmpty() }
     /** Proposed swaps turned down, by slot id; another gym starts over. */
     var declined by remember(chosen) { mutableStateOf(emptySet<String>()) }
     val names = remember(library) { library.associate { it.id to it.name } }

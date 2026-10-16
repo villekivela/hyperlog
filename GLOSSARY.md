@@ -204,6 +204,18 @@ _Avoid_: Sanity check, outlier warning
 A proposed edit to the plan for a period or the rest of the program, shown as a diff and applied only after you accept it.
 _Avoid_: Adjustment, modification, override
 
+**Change in force**:
+An accepted Change, not reverted, that still covers today or a later day. Coach shows each as a card with Revert.
+_Avoid_: Active change, current change
+
+**Replaces**:
+A Change's list of Changes in force it ends on accept, as Revert ends them. A Change that only ends others has no operations. The ended ones read "Replaced" on Program.
+_Avoid_: Supersedes, cancels, overrides
+
+**Time off**:
+Days without training beyond the plan's own rest days: from the first day of the weekday plan missed since the last session, or the days since it with no weekday plan. More than a week shows Today's time-off line.
+_Avoid_: Break, layoff
+
 **Swap**:
 Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a Change.
 _Avoid_: Substitution
