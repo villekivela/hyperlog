@@ -109,14 +109,14 @@ class CoachScreenTest {
     fun startersFillTheWordsAndTheWordsStayEditable() {
         runStarter()
         openCoach()
-        compose.onNodeWithText("My hands hurt").performClick()
-        assertEquals("My hands hurt.", wordsText())
+        compose.onNodeWithText("Something hurts").performClick()
+        assertEquals("Something hurts: ", wordsText())
+        words().performTextInput("left elbow.")
+        assertEquals("Something hurts: left elbow.", wordsText())
         // A second starter goes on a new line.
         compose.onNodeWithText("Slept badly").performScrollTo().performClick()
-        assertEquals("My hands hurt.\nI slept badly last night.", wordsText())
-        words().performTextInput(" Left more than right.")
-        assertTrue(wordsText(), wordsText().endsWith("Left more than right."))
-        assertTrue(ask().contains("> My hands hurt.\n> I slept badly last night. Left more than right."))
+        assertEquals("Something hurts: left elbow.\nI slept badly last night.", wordsText())
+        assertTrue(ask().contains("> Something hurts: left elbow.\n> I slept badly last night."))
     }
 
     @Test

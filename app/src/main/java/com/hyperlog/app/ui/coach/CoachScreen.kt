@@ -98,7 +98,7 @@ private const val ShownChanges = 2
 private data class Starter(val label: Int, val words: Int)
 
 private val Starters = listOf(
-    Starter(R.string.coach_starter_hands, R.string.coach_starter_hands_words),
+    Starter(R.string.coach_starter_pain, R.string.coach_starter_pain_words),
     Starter(R.string.coach_starter_short, R.string.coach_starter_short_words),
     Starter(R.string.coach_starter_home, R.string.coach_starter_home_words),
     Starter(R.string.coach_starter_sleep, R.string.coach_starter_sleep_words),

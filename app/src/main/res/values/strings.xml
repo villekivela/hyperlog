@@ -484,8 +484,8 @@
     <string name="coach_about">"About “%1$s”: "</string>
     <string name="coach_reply_ready">Claude’s reply is ready</string>
     <string name="coach_review_reply">Review</string>
-    <string name="coach_starter_hands">My hands hurt</string>
-    <string name="coach_starter_hands_words">My hands hurt.</string>
+    <string name="coach_starter_pain">Something hurts</string>
+    <string name="coach_starter_pain_words">Something hurts:\u0020</string>
     <string name="coach_starter_short">Short on time today</string>
     <string name="coach_starter_short_words">I’m short on time today: I have 45 minutes.</string>
     <string name="coach_starter_home">No gym, dumbbells at home</string>
