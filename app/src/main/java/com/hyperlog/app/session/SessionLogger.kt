@@ -128,19 +128,33 @@ class SessionLogger(
         if (program.finished || _state.value != null) return@locked
         // The day as trained today, with the Changes in force for today's date.
         val day = programs.plannedDay(program.id, program.position, programs.dateOf(clock())) ?: return@locked
+        startPlanned(
+            day,
+            SessionEntity(startedAt = clock(), gymId = gymId, programId = program.id, week = day.position.week, dayIndex = day.position.day),
+            swaps,
+        )
+    }
+
+    /**
+     * Starts a session of workout [workoutId] at [gymId], like a program day: its slots become the
+     * session's exercises with their sets. It belongs to no program, so finishing it leaves the
+     * position alone. Does nothing if a session is running.
+     */
+    suspend fun startWorkout(workoutId: Long, gymId: Long?, swaps: Map<String, String> = emptyMap()) = locked {
+        if (_state.value != null) return@locked
+        val day = programs.workoutDay(workoutId) ?: return@locked
+        startPlanned(day, SessionEntity(startedAt = clock(), gymId = gymId, workoutId = workoutId), swaps)
+    }
+
+    private suspend fun startPlanned(day: com.hyperlog.app.program.PlannedDay, row: SessionEntity, swaps: Map<String, String>) {
         db.withTransaction {
-            val sessionId = dao.insertSession(
-                SessionEntity(
-                    startedAt = clock(), gymId = gymId, programId = program.id,
-                    week = day.position.week, dayIndex = day.position.day,
-                ),
-            )
+            val sessionId = dao.insertSession(row)
             val ids = day.slots.mapIndexed { i, slot ->
                 val exerciseId = swaps[slot.id] ?: slot.exercise
                 val id = dao.insertSessionExercise(
                     SessionExerciseEntity(sessionId = sessionId, exerciseId = exerciseId, position = i, slotId = slot.id),
                 )
-                rememberMachine(id, gymId, exerciseId)
+                rememberMachine(id, row.gymId, exerciseId)
                 id
             }
             dao.updateSession(dao.session(sessionId)!!.copy(currentSessionExerciseId = ids.firstOrNull()))
@@ -1042,6 +1056,7 @@ class SessionLogger(
             restTotalMs = row.restTotalMs,
             gym = gym,
             day = day,
+            workoutId = row.workoutId,
             followUp = followUp,
             breathing = row.breathing,
             holdStartedAt = row.holdStartedAt,
@@ -1102,8 +1117,11 @@ class SessionLogger(
      */
     private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean, dumbbells: Int): List<Pair<Long, Performance>> =
         dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
-            val day = if (past.programId == null || past.week == null || past.dayIndex == null) null
-            else programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt), asOf = past.finishedAt)
+            val day = when {
+                past.workoutId != null -> programs.workoutDay(past.workoutId)
+                past.programId == null || past.week == null || past.dayIndex == null -> null
+                else -> programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt), asOf = past.finishedAt)
+            }
             val plan = past.sets?.let(SetPrescriptionJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
             past.id to Performance(
                 workSets(stored.sets(past.id), plan),

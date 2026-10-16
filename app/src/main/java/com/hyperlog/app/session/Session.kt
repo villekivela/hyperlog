@@ -114,8 +114,10 @@ data class ActiveSession(
     val weightCheck: WeightCheck? = null,
     /** Where the session is trained, with its equipment; null when no gym is set up. */
     val gym: Gym? = null,
-    /** The program day this session trains; null for an ad-hoc session. */
+    /** The program day or workout this session trains; null for an ad-hoc session. */
     val day: PlannedDay? = null,
+    /** The workout this session trains, outside the program; null otherwise. */
+    val workoutId: Long? = null,
     /** What comes next in the open set (the current exercise's last one); null when no set is open. */
     val followUp: FollowUp? = null,
     /** [restEndsAt] is a myo-reps breathing pause, not rest. */

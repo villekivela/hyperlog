@@ -150,11 +150,27 @@ class Programs(
         return Changes.day(program, position, date, changes)
     }
 
-    /** [plannedDay] for stored session [row]: as it was when it finished, or as now while it runs. */
+    /**
+     * [plannedDay] for stored session [row]: as it was when it finished, or as now while it runs.
+     * A workout's session trains the workout's day.
+     */
     suspend fun plannedDay(row: SessionEntity): PlannedDay? {
+        row.workoutId?.let { return workoutDay(it) }
         if (row.programId == null || row.week == null || row.dayIndex == null) return null
         return plannedDay(row.programId, Position(row.week, row.dayIndex), dateOf(row.startedAt), asOf = row.finishedAt)
     }
+
+    private val workouts: MutableMap<Long, com.hyperlog.app.coach.Workout?> = java.util.Collections.synchronizedMap(mutableMapOf())
+
+    /** The stored workout [id], or null if there's none (it was removed before a session trained it). */
+    suspend fun workout(id: Long): com.hyperlog.app.coach.Workout? {
+        if (id in workouts) return workouts[id]
+        val row = db.workouts().workout(id) ?: return null
+        return com.hyperlog.app.coach.Workout.stored(row.json).also { workouts[id] = it }
+    }
+
+    /** Workout [id] as a day to train. */
+    suspend fun workoutDay(id: Long): PlannedDay? = workout(id)?.day()
 
     /**
      * Imports [json] as the program to run, from its first day; the one running before stays as a
