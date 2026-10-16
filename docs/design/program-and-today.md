@@ -3,9 +3,10 @@
 Ticket #6 brings a program to the app: the Program screen, Today showing the next day, and the
 logging screen's Target column, planned rows and prescription sheet. Everything extends
 `logging-screen.md`. The expressive pass (below, first) replaces the earlier flat look. Screens:
-`today-session-running.png`, `today-superset-group.png` from the phone (Program's own screens are
-listed under "Program screen (#40)"); `light-today-starter.png`, `light-today-update-banner.png`, `light-today-day.png`
-rendered in light.
+`light-` and `dark-today-starter.png`, `-today-update-banner.png` and `-today-day.png` (a
+superset as 5a and 5b) are renders from `AppRenders` (`RENDERS=<dir> ./gradlew testDebugUnitTest
+--tests '*AppRenders*'`, `DARK=1` for dark). Program's own screens are listed under "Program
+screen (#40)".
 
 ## Expressive pass
 
