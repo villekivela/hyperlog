@@ -772,8 +772,9 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that is not part of the
-  theme. In light mode the warm and calm target rings are darker shades of the same hues, at
-  least 3:1 against every light surface; filled dots and dark mode keep the base colours.
+  theme. In light mode every target ring (hot, warm and calm) is a darker shade of its hue,
+  at least 3:1 against every light surface so it reads in daylight; filled dots and dark mode keep
+  the base colours.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
   train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets
   Today notice time off. No reminders or notifications.

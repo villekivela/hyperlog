@@ -81,11 +81,12 @@ internal fun rirColor(rir: Int): Color = when {
 }
 
 /**
- * A target ring's colour. In light mode the warm and calm rings are darker shades of the same hues,
- * so a 2 dp ring keeps 3:1 against every light surface; the hot ring and dark mode keep [rirColor].
+ * A target ring's colour. In light mode each ring is a darker shade of its hue, so a 2 dp ring
+ * keeps 3:1 against every light surface in daylight; dark mode keeps [rirColor].
  */
 internal fun rirRingColor(rir: Int, dark: Boolean): Color = when {
-    dark || rir <= 0 -> rirColor(rir)
+    dark -> rirColor(rir)
+    rir <= 0 -> Color(0xFFD5544A)
     rir <= 2 -> Color(0xFFAA741E)
     else -> Color(0xFF4A8983)
 }

@@ -22,8 +22,8 @@ class RirContrastTest {
     }
 
     @Test
-    fun lightWarmAndCalmRingsKeepThreeToOneOnEveryLightSurface() {
-        for (rir in listOf(1, 2, 3, 4)) {
+    fun lightRingsKeepThreeToOneOnEveryLightSurface() {
+        for (rir in 0..4) {
             lightSurfaces.forEach { (name, surface) ->
                 val ratio = contrast(rirRingColor(rir, dark = false), surface)
                 assertTrue("RIR $rir ring on $name is $ratio:1", ratio >= 3f)
@@ -32,8 +32,7 @@ class RirContrastTest {
     }
 
     @Test
-    fun darkRingsAndFilledDotsKeepTheScale() {
+    fun darkRingsKeepTheBaseScale() {
         for (rir in 0..4) assertEquals(rirColor(rir), rirRingColor(rir, dark = true))
-        assertEquals(rirColor(0), rirRingColor(0, dark = false))
     }
 }
