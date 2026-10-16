@@ -6,6 +6,7 @@ import com.hyperlog.app.domain.LoggedSet
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -18,12 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -32,8 +36,8 @@ import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 
 // The RIR chip (SPEC, RIR chip): set text keeps `@ N` as its one source, and the UI draws each
-// `@ N` (or `@ N RIR`) as the number in a small chip of the fixed RIR scale. A target is outlined,
-// like the logging screen's ring; a logged set is filled, like its dot.
+// `@ N` (or `@ N RIR`) as the number in a small chip of the fixed RIR scale. A target is outlined;
+// a logged set is a solid badge. The logging screen draws the same chip on its own ([RirMark]).
 
 internal const val RirChipTargetTag = "rir-chip-target"
 internal const val RirChipLoggedTag = "rir-chip-logged"
@@ -48,11 +52,9 @@ private val RirPattern = Regex("(^|$Gap)@$Gap(\\d+)(?:${Gap}RIR\\b)?")
 private val TargetWord = Regex("\\btarget$Gap$", RegexOption.IGNORE_CASE)
 private val RirChipShape = RoundedCornerShape(4.dp)
 
-/** A target chip's outline: the ring's shades, darker in light mode so it keeps 3:1 on every surface. */
-internal fun rirChipColor(rir: Int, dark: Boolean): Color = rirRingColor(rir, dark)
 
 /**
- * A logged chip's fill, the same in light and dark: a solid badge. Each is the ring's light-mode
+ * A logged chip's fill, the same in light and dark: a solid badge. Each is the outline's light-mode
  * shade darkened, keeping its hue, just far enough for [RirBadgeNumber] to keep 4.5:1.
  */
 internal fun rirBadgeColor(rir: Int): Color = when {
@@ -93,24 +95,22 @@ internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<Str
         // The number is 0.8 em; each semibold digit takes about 0.5 em, with 0.45 em either side.
         val width = (0.9f + 0.5f * "${key.rir}".length).em
         key.id to InlineTextContent(Placeholder(width, 1.25.em, PlaceholderVerticalAlign.TextCenter)) {
-            RirChip(key.rir, key.target, (size.value * 0.8f).sp)
+            // Drawing only: the line's alternate text already reads "N RIR".
+            RirChip(key.rir, key.target, (size.value * 0.8f).sp, Modifier.fillMaxSize().clearAndSetSemantics { testTag = if (key.target) RirChipTargetTag else RirChipLoggedTag })
         }
     }
 }
 
-/** The chip itself. */
+/** The chip itself, filling [modifier]'s size, with [label] at [fontSize]. */
 @Composable
-private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
+private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit, modifier: Modifier, label: String = "$rir") {
     val dark = isDarkSurface()
     Box(
-        Modifier.fillMaxSize()
-            // Drawing only: the line's alternate text already reads "N RIR".
-            .clearAndSetSemantics { testTag = if (target) RirChipTargetTag else RirChipLoggedTag }
-            .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirBadgeColor(rir), RirChipShape)),
+        modifier.then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirBadgeColor(rir), RirChipShape)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "$rir",
+            label,
             fontSize = fontSize,
             lineHeight = fontSize,
             fontWeight = FontWeight.SemiBold,
@@ -118,6 +118,22 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
             maxLines = 1,
         )
     }
+}
+
+/**
+ * An RIR chip on its own, outside set text: the logging screen's RIR column, its pad and the
+ * exercise sheet. Its number is [fontSize]; 4 and up read `4+`, as on the pad.
+ */
+@Composable
+internal fun RirMark(rir: Int, target: Boolean, modifier: Modifier = Modifier, fontSize: TextUnit = 12.sp) {
+    val label = if (rir >= 4) "4+" else "$rir"
+    // The same proportions as in set text: the number is 0.8 of the chip's em.
+    val em = with(LocalDensity.current) { fontSize.toDp() } / 0.8f
+    RirChip(
+        rir, target, fontSize,
+        modifier.size(em * (0.9f + 0.5f * label.length), em * 1.25f).testTag(if (target) RirChipTargetTag else RirChipLoggedTag),
+        label,
+    )
 }
 
 /** A logged set as the screen writes it: its RIR after the whole set, and no break inside it. */
@@ -133,8 +149,9 @@ internal fun RirText(
     color: Color = Color.Unspecified,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
+    textAlign: TextAlign? = null,
 ) {
     val chips = mutableSetOf<RirChipKey>()
     val annotated = buildAnnotatedString { appendRir(text, target, chips) }
-    Text(annotated, modifier, color = color, style = style, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize))
+    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize))
 }

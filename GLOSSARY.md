@@ -134,7 +134,7 @@ Reps in reserve: how many more full reps could have been done. It's the only eff
 _Avoid_: RPE
 
 **RIR chip**:
-How the app shows an RIR in set text: the number in a small chip of the RIR colour scale, outlined for a target and filled for a logged set. Text that leaves the app writes `@ N` instead.
+How the app shows an RIR, in set text and on its own (the logging screen, its pad, the exercise sheet): the number in a small chip of the RIR colour scale, outlined for a target and a solid fill for a logged set. Text that leaves the app writes `@ N` instead.
 _Avoid_: RIR badge, RIR pill
 
 **Estimate**:

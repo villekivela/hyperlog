@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -87,8 +90,10 @@ class SuggestionLineTest {
     fun theShortWhyShowsTheLoggedAndTargetRirAsChips() {
         show(Suggestion(57.5, 8, Suggestion.Kind.Adjust, "Set 1 was 60 kg × 8 @ 0, target @ 2 → 57.5 kg", "57.5 · set 1 was @ 0, target @ 2"), sets = listOf(LoggedSet(60.0, 8, 0, 0)))
         compose.onNodeWithText("57.5 · set 1 was\u00A00 RIR, target\u00A02 RIR").assertIsDisplayed()
-        compose.onAllNodesWithTag(RirChipLoggedTag, useUnmergedTree = true).assertCountEquals(1)
-        compose.onAllNodesWithTag(RirChipTargetTag, useUnmergedTree = true).assertCountEquals(1)
+        // The set table has chips of its own: count the line's.
+        val inLine = hasAnyAncestor(hasTestTag(SuggestionTag))
+        compose.onAllNodes(hasTestTag(RirChipLoggedTag) and inLine, useUnmergedTree = true).assertCountEquals(1)
+        compose.onAllNodes(hasTestTag(RirChipTargetTag) and inLine, useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test

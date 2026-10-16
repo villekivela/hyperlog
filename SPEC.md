@@ -500,7 +500,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      opens, even after a finish and Resume moved the program's position on; while a workout's
      session runs, the workout, headed "Workout".
    - **A program day's session** has a row for every planned set from the start, its target shown
-     as muted placeholders in the empty cells (`6–8` in Reps, an RIR ring in RIR) until typed. The first set prefills with the suggestion (Automatic
+     as muted placeholders in the empty cells (`6–8` in Reps, an outlined RIR chip in RIR) until typed. The first set prefills with the suggestion (Automatic
      progressive overload): its weight, at the target RIR; with no history, an empty weight. **Reps
      are never prefilled**: the Reps cell starts empty and shows the target range (`6–8`) as a muted
      placeholder, and the row's ✓ stays disabled until reps are typed (the pad's ✓ on the weight
@@ -814,18 +814,19 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that is not part of the
-  theme. In light mode every target ring (hot, warm and calm) is a darker shade of its hue,
-  at least 3:1 against every light surface so it reads in daylight; filled dots and dark mode keep
-  the base colours.
+  theme. **RIR has one shape everywhere** (the owner's call, 2026-10-16): the RIR chip below, in set
+  text and on its own alike. The logging screen's RIR column, its RIR pad and the exercise sheet's
+  set table draw the same chips as Today, Program and History, never rings or dots.
 - **RIR is a coloured chip** wherever the app shows set text, in place of `@ N`: the number in a
   small rounded chip of the RIR scale, sitting on the text's baseline and wrapping with it
   (`1 × 4–6 [1] · 2 × 6–8 [1]`, written `[1]` in this spec). A **target** (planned sets, a block's
-  rule, a suggestion's "target") is an outlined chip, like the logging screen's ring; a **logged** set
-  (History, past and finished sessions, Last time in a why-line) is a filled chip, like its dot.
-  An outline uses the ring's shades, darker in light mode, so it keeps 3:1 against every surface,
-  with an onSurface number. A fill is a solid badge, the same in light and dark (the owner's call,
-  2026-10-16): a white number on the ring's light-mode shade darkened, hue kept, just far enough for
-  4.5:1 (hot `#D14237`, warm `#9D6B1C`, calm `#447E79`). It keeps 3:1 on every light surface; in
+  rule, a suggestion's "target") is an outlined chip; a **logged** set (History, past and finished
+  sessions, Last time in a why-line, a logged row on the logging screen) is a filled chip, a badge.
+  An outline is the scale's colour, darkened in light mode (`#D5544A`, `#AA741E`, `#4A8983`) so it
+  keeps 3:1 against every light surface in daylight, with an onSurface number; dark mode keeps the
+  base colours (`#D9645B`, `#E0A84E`, `#6BAFA9`). A fill is a solid badge, the same in light and dark
+  (the owner's call, 2026-10-16): a white number on the outline's light-mode shade darkened, hue
+  kept, just far enough for 4.5:1 (hot `#D14237`, warm `#9D6B1C`, calm `#447E79`). It keeps 3:1 on every light surface; in
   dark mode the white number carries it, since the fill's edge drops to about 2.8:1 on the lightest
   container. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
   0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the navy accent or a
@@ -833,8 +834,16 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads
   each one once, as "1 RIR"; the number is always there, so colour is never the only sign. The chip
   is for set text the app writes: Claude's own words (a Change's or workout's summary) show as
-  Claude wrote them, and the set table and the exercise sheet's prescription keep their RIR column
-  of rings and dots.
+  Claude wrote them.
+  - **On its own**, outside set text, the chip takes the same shape and colours at a fixed size: in
+    the set table's RIR column (a target outlined, the RIR chosen or logged a badge), on the exercise
+    sheet's set table and the set sheet's RIR stepper (targets outlined) and on the RIR pad. A pad
+    key is an outlined chip, and the
+    chosen one is the badge it will become, so a set looks the same when you tap its RIR as it does
+    in History later. `4` reads `4+` there, as the pad offers it. Each pad key keeps a 48 dp tap
+    target, and logging a set takes no more taps than before.
+  - **In a column**, a list of sets right-aligns its set text so the chips line up, for scanning
+    "where did I hit 0": Program's done days and an exercise's progress page.
   - **Text that leaves the app keeps `@ N`:** the Claude prompts (`@ N RIR` in the legend), backups,
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
@@ -849,7 +858,7 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   - "Until the round is done" means until all of the superset's planned sets are logged. The pair
     stays on screen as one, then the session goes back to the first group with sets left.
   - The superset line above the name reads `2a with Seated Leg Curl`, using the day's slot labels
-    (as Today numbers them), then the partner's last set this session with its RIR dot.
+    (as Today numbers them), then the partner's last set this session with its RIR chip.
 - **Session order**: the Next line names what comes up after the exercise (or superset) on screen:
   the first exercise with planned sets left, in the day's order, so a skipped one comes first. It
   opens the session list, whose **Start** does another exercise now; when it is done the session

@@ -227,7 +227,7 @@ internal fun TargetEditor(planned: SetPrescription, onChange: (RepRange, Int?) -
             up = stringResource(R.string.edit_rir_up) to ((rir ?: 0) < MaxRir),
             onDown = { change(reps, (rir ?: 1) - 1) },
             onUp = { change(reps, (rir ?: -1) + 1) },
-            mark = rir?.let { { RirMark(it, filled = false) } },
+            mark = rir?.let { { RirMark(it, target = true) } },
         )
     }
     }

@@ -40,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
@@ -219,16 +220,19 @@ private fun Legend() {
     }
 }
 
+internal const val TrendRowTag = "trend-row"
+
 /** A session on the trend, as a table row: date, top set, estimate. */
 @Composable
 private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = CardPadding),
+        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = CardPadding).testTag(TrendRowTag),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-        RirText(p.top.setText(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Right-aligned, as on Program's done days, so the chips make one column to scan.
+        RirText(p.top.setText(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
         if (!trend.byReps) {
             Text(
                 p.estimateKg?.let { estimateText(it) } ?: "",

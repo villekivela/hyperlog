@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
@@ -186,6 +188,27 @@ class SessionRenders {
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         File(out).mkdirs()
         File(out, "${if (dark) "dark" else "light"}-session-done-sets.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** The exercise sheet's prescription: each set's target RIR as an outlined chip (#46). */
+    @Test fun exerciseSheet() {
+        assumeTrue(out != null)
+        val dark = System.getenv("DARK") == "1"
+        RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
+        val plan = plan(set(4, 6, 1), set(6, 8, 2, backoff = true), set(8, 10, 0, Technique.Dropset(2, 25)), set(10, 12, 3))
+        compose.setContent {
+            HyperlogTheme {
+                androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerLow) {
+                    androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(top = 24.dp)) {
+                        ExerciseSheet(bench, machine = null, onChangeMachine = null, plan = plan, why = "Last time 97.5 kg × 6 @ 1, top of 4–6 → 100 kg" to Direction.Up)
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(out).mkdirs()
+        File(out, "${if (dark) "dark" else "light"}-exercise-sheet.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 }
 

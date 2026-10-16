@@ -15,27 +15,9 @@ class RirContrastTest {
         return (hi + 0.05f) / (lo + 0.05f)
     }
 
-    private val lightSurfaces = with(NavyLight) {
-        mapOf(
-            "surface" to surface, "surfaceContainerLowest" to surfaceContainerLowest, "surfaceContainerLow" to surfaceContainerLow,
-            "surfaceContainer" to surfaceContainer, "surfaceContainerHigh" to surfaceContainerHigh,
-            "surfaceContainerHighest" to surfaceContainerHighest,
-        )
-    }
-
     @Test
-    fun lightRingsKeepThreeToOneOnEveryLightSurface() {
-        for (rir in 0..4) {
-            lightSurfaces.forEach { (name, surface) ->
-                val ratio = contrast(rirRingColor(rir, dark = false), surface)
-                assertTrue("RIR $rir ring on $name is $ratio:1", ratio >= 3f)
-            }
-        }
-    }
-
-    @Test
-    fun darkRingsKeepTheBaseScale() {
-        for (rir in 0..4) assertEquals(rirColor(rir), rirRingColor(rir, dark = true))
+    fun darkOutlinesKeepTheBaseScale() {
+        for (rir in 0..4) assertEquals(rirColor(rir), rirChipColor(rir, dark = true))
     }
 
     /** Every surface and container a chip can sit on, from the theme's own schemes. */
@@ -85,10 +67,10 @@ class RirContrastTest {
     fun aBadgeKeepsItsHue() {
         // Darkened only as far as white needs: still recognisably hot, warm and calm.
         for (rir in listOf(0, 1, 3)) {
-            val ring = rirRingColor(rir, dark = false)
+            val outline = rirChipColor(rir, dark = false)
             val badge = rirBadgeColor(rir)
-            assertEquals("RIR $rir hue", hue(ring), hue(badge), 4f)
-            assertTrue("RIR $rir is darker", badge.luminance() < ring.luminance())
+            assertEquals("RIR $rir hue", hue(outline), hue(badge), 4f)
+            assertTrue("RIR $rir is darker", badge.luminance() < outline.luminance())
         }
     }
 

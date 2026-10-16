@@ -1,22 +1,14 @@
 package com.hyperlog.app.ui.session
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 // Tokens from docs/design/logging-screen.md: an 8 dp grid with 4 dp half steps.
 
@@ -39,7 +31,7 @@ internal val IndexSize = 32.dp
 /** Kept for the prescription sheet's set numbers. */
 internal val ColSet = 32.dp
 // kg and Reps cells sit [CellInset] inside their columns, so a focused cell keeps 8 dp from its
-// neighbour and 12 dp from the RIR dot.
+// neighbour and 12 dp from the RIR chip.
 internal val ColKg = 72.dp
 internal val ColReps = 80.dp
 internal val ColRir = 36.dp
@@ -73,7 +65,7 @@ internal fun ExerciseName(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot): filled dots everywhere, and rings in dark mode. */
+/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot): a target chip's outline in dark mode. */
 internal fun rirColor(rir: Int): Color = when {
     rir <= 0 -> Color(0xFFD9645B)
     rir <= 2 -> Color(0xFFE0A84E)
@@ -81,42 +73,19 @@ internal fun rirColor(rir: Int): Color = when {
 }
 
 /**
- * A target ring's colour. In light mode each ring is a darker shade of its hue, so a 2 dp ring
+ * A target chip's outline colour. In light mode each is a darker shade of its hue, so the outline
  * keeps 3:1 against every light surface in daylight; dark mode keeps [rirColor].
  */
-internal fun rirRingColor(rir: Int, dark: Boolean): Color = when {
+internal fun rirChipColor(rir: Int, dark: Boolean): Color = when {
     dark -> rirColor(rir)
     rir <= 0 -> Color(0xFFD5544A)
     rir <= 2 -> Color(0xFFAA741E)
     else -> Color(0xFF4A8983)
 }
 
-/** The number on a filled RIR dot or chip, on every shade of the scale. */
-internal val RirOnFill = Color.Black.copy(alpha = 0.87f)
-
 /** Whether the theme's surface is dark, for the colours that don't follow the theme. */
 @Composable
 internal fun isDarkSurface(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-
-/** An RIR mark: a ring is a target, a filled dot is a result or the selection. */
-@Composable
-internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
-    val color = if (filled) rirColor(rir) else rirRingColor(rir, isDarkSurface())
-    Box(
-        modifier.size(20.dp).then(
-            if (filled) Modifier.background(color, CircleShape) else Modifier.border(2.dp, color, CircleShape),
-        ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            if (rir >= 4) "4+" else "$rir",
-            style = MaterialTheme.typography.labelSmall,
-            fontSize = if (rir >= 4) 9.sp else 11.sp,
-            color = if (filled) RirOnFill else MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium,
-        )
-    }
-}
 
 /** Which way a suggestion moves the weight, for the why-line's symbol. */
 internal enum class Direction { Up, Flat, Down }

@@ -1087,7 +1087,7 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
 }
 
 /**
- * Every planned set: number, target reps and RIR ring, and its technique or back-off rule. Rest
+ * Every planned set: number, target reps and RIR chip, and its technique or back-off rule. Rest
  * is one line when every set shares it, else at the end of each row.
  */
 @Composable
@@ -1106,7 +1106,7 @@ private fun Prescription(plan: List<SetPrescription>) {
                 color = cs.onSurfaceVariant,
             )
             Text(set.reps.toString(), Modifier.width(64.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1)
-            Box(Modifier.width(32.dp)) { set.rir?.let { RirMark(it, filled = false) } }
+            Box(Modifier.width(32.dp)) { set.rir?.let { RirMark(it, target = true) } }
             val technique = set.technique
             val backoff = set.backoff
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {

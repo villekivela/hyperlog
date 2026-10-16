@@ -264,7 +264,7 @@ private fun buildPlanned(table: TableState, plan: List<SetPrescription>, add: Ad
                     UpcomingSetRow(i, last, entry.weight, entry.repsText, target, technique, join, table, steppedBack = true)
                 isActive -> ActiveSetRow(i, last, entry!!, table.weightFlagged, table, target, technique, join)
                 else -> {
-                    // Targets are placeholders: the planned weight, the rep range and an RIR ring.
+                    // Targets are placeholders: the planned weight, the rep range and an outlined RIR chip.
                     UpcomingSetRow(i, last, kg?.let(::formatKg).orEmpty(), target?.reps?.toString().orEmpty(), target, technique, join, table)
                 }
             }
@@ -454,7 +454,7 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
     }
 }
 
-/** A set still to come: the planned weight and the target as muted placeholders, an RIR ring for the target RIR. */
+/** A set still to come: the planned weight and the target as muted placeholders, an outlined RIR chip for the target RIR. */
 @Composable
 private fun UpcomingSetRow(
     i: Int, last: LoggedSet?, weight: String, reps: String, target: SetPrescription?, technique: Technique?, join: Join,
@@ -470,7 +470,7 @@ private fun UpcomingSetRow(
         LastCell(last)
         ValueText(weight, ColKg, color)
         ValueText(reps, ColReps, color)
-        RirCell { target?.rir?.let { RirMark(it, filled = false) } }
+        RirCell { target?.rir?.let { RirMark(it, target = true) } }
         CheckCell(Check.Todo, null)
     }
 }
@@ -488,8 +488,8 @@ private fun ActiveSetRow(
         EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
         RirCell {
             when {
-                entry.rir != null -> RirMark(entry.rir, filled = true)
-                target?.rir != null -> RirMark(target.rir, filled = false)
+                entry.rir != null -> RirMark(entry.rir, target = false)
+                target?.rir != null -> RirMark(target.rir, target = true)
             }
         }
         if (editing) CheckCell(Check.Done, null)
@@ -520,7 +520,7 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
         ValueText(formatKg(set.weightKg), ColKg, color)
         val reps = set.repsText()
         ValueText(reps, ColReps, color, small = reps.length > 6)
-        RirCell { set.rir?.let { RirMark(it, filled = true) } }
+        RirCell { set.rir?.let { RirMark(it, target = false) } }
         val logged = stringResource(R.string.check_logged, i + 1)
         val undo = stringResource(R.string.check_undo, i + 1)
         CheckCell(
@@ -542,7 +542,7 @@ private fun AddSetRow(onAdd: () -> Unit) {
     }
 }
 
-/** A drop or mini-set still to come: muted like every prefill; a drop is to failure, a 0 ring. */
+/** A drop or mini-set still to come: muted like every prefill; a drop is to failure, an outlined 0 chip. */
 @Composable
 private fun PlannedSubRow(
     last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null,
@@ -553,7 +553,7 @@ private fun PlannedSubRow(
         SubLast(last)
         ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
         ValueText(reps, ColReps, color)
-        RirCell { if (toFailure) RirMark(0, filled = false) }
+        RirCell { if (toFailure) RirMark(0, target = true) }
         CheckCell(Check.Todo, null, small = true)
     }
 }
@@ -608,7 +608,7 @@ private fun ActiveSubRow(
             else -> repsAnnotated(entry)
         }
         Cell(reps, focused = entry.field == Field.Reps, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), height = SubCellHeight) { tap(Field.Reps) }
-        RirCell { if (toFailure) RirMark(0, filled = false) }
+        RirCell { if (toFailure) RirMark(0, target = true) }
         if (correcting != null) CheckCell(Check.Done, null, small = true)
         else {
             val log = table.onLogShown
