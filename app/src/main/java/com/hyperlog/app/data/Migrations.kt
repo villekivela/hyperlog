@@ -4,7 +4,24 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22)
+
+/**
+ * v22: workouts from the coach, a day outside the program (SPEC, Coaching → Workout), and the
+ * session that trains one. Existing sessions train none.
+ */
+object Migration21To22 : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `workout` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `json` TEXT NOT NULL, " +
+                "`added_at` INTEGER NOT NULL, `added_on` INTEGER NOT NULL, `gym_id` INTEGER, " +
+                "FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_gym_id` ON `workout` (`gym_id`)")
+        db.execSQL("ALTER TABLE session ADD COLUMN workout_id INTEGER REFERENCES workout(id) ON UPDATE NO ACTION ON DELETE SET NULL")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_session_workout_id` ON `session` (`workout_id`)")
+    }
+}
 
 /**
  * v21: a set may be logged without an RIR (SPEC, Logging a set). SQLite can't drop NOT NULL in

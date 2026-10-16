@@ -35,8 +35,9 @@ data class ExerciseEntity(
     foreignKeys = [
         ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.SET_NULL),
         ForeignKey(ProgramEntity::class, ["id"], ["program_id"], onDelete = ForeignKey.SET_NULL),
+        ForeignKey(WorkoutEntity::class, ["id"], ["workout_id"], onDelete = ForeignKey.SET_NULL),
     ],
-    indices = [Index("gym_id"), Index("program_id")],
+    indices = [Index("gym_id"), Index("program_id"), Index("workout_id")],
 )
 data class SessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -65,6 +66,8 @@ data class SessionEntity(
     @ColumnInfo(defaultValue = "0") val breathing: Boolean = false,
     /** When the running iso hold started; null with no hold timer running. */
     @ColumnInfo(name = "hold_started_at") val holdStartedAt: Long? = null,
+    /** The workout this session trains, outside the program; null otherwise. */
+    @ColumnInfo(name = "workout_id") val workoutId: Long? = null,
 )
 
 data class EntryColumns(
