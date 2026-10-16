@@ -1,61 +1,73 @@
 # Coach: design note
 
-Ticket #17 adds the offline rule coach: the Coach screen, the time-off line on Today, and the
-missing-equipment swaps when a gym is picked. Every proposal ends in the review screen of
-`changes.md`, except missing equipment, which is for one session and never a Change. The tokens of
-`program-and-today.md` and `logging-screen.md` apply. Screens: `screens/coach.png`,
-`coach-pain.png` (phone).
+The Coach screen is words first: what's going on, in your words, to the Claude app, and Claude's
+reply pasted back as a Change or a workout (`SPEC.md`, Coaching; ADR 0003). The rule screen of
+ticket #17 (five situations and Limits chips) is gone. The missing-equipment swaps on the start
+sheet stay, and are at the end of this note. The tokens of `program-and-today.md` and
+`logging-screen.md` apply.
+
+The owner's review on 2026-10-15 found the old screen hard to read: it never said what it does,
+the Limits repeated the situations, Time off showed at 0 days, and Pain → Hands buried a list of
+six exercise chips. The redesign answers those. Tokens for the new screen are set in the designer
+pass. Old screens: `screens/coach.png`, `coach-pain.png`.
 
 ## Principles
 
-1. **One question, then the diff.** The screen asks what's in the way; the answer is always the
-   Change review, or one line saying the plan can stand.
-2. **Defaults from the situation.** Picking a situation sets its limits (Pain → Hands → No grip);
-   every limit stays a chip you can turn off or on.
-3. **Details open in place.** The pain areas and the minutes appear under their row only when it's
-   picked, so the list stays five lines.
-4. **Swaps read as the session will.** "In place of …" over the new name, on Today, in the start
+1. **Say what it does.** One line under the title: tell Claude what's going on, and get back a
+   Change to your program or a workout. Nothing changes until you accept it.
+2. **What the coach already did comes first.** Changes in force are cards at the top, each with
+   Revert and Tell Claude how it's going.
+3. **One way in.** Words, with starter chips to start from. No form, no limits.
+4. **Options only where they mean something.** Effort, time and focus appear only for Plan a
+   workout.
+5. **The filled button is the next step.** Ask Claude until you've asked, then Paste reply.
+6. **Swaps read as the session will.** "In place of …" over the new name, on Today, in the start
    sheet and in the session, as in the review.
-5. **The gym learns what it lacks** the way it learns machines: on the go ("Not at Harbour"), undone
+7. **The gym learns what it lacks** the way it learns machines: on the go ("Not at Harbour"), undone
    on the gym screen.
-
-## Tokens
-
-| Token | Value | Use |
-| --- | --- | --- |
-| Situation row | 56 dp min, radio 48 dp at 12 dp, text at 64 dp | as the start sheet's gym rows |
-| Detail indent | 64 dp | area chips, pain note, minutes stepper (its − at 52 dp so the icon centres under the text) |
-| Area / limit chips | FilterChip, 8 dp gaps, FlowRow | a limit that's on shows `check` |
-| Minutes | titleMedium tabular, 64 dp wide, 5-min steps, 20–120 | `−  45 min  +` |
-| Limits head | labelLarge onSurfaceVariant, 24 dp top | as Changes' section heads |
-| Bottom bar | a surfaceContainerHighest strip rounded at the top, over the navigation bar: the message (bodyMedium, muted) left of **Review change** | the message holds "Resume as planned." |
-| Time-off line | `history` 18 dp tertiary, bodyMedium muted, TextButton **Ease back in** | under Today's day name |
-| Missing swaps | labelLarge head `Not at Harbour · for this session`; checkbox rows 56 dp, text at 64 dp | in the start sheet under the gyms |
-| Coach entry | the navigation bar's Coach (`sports`), always (no program: Ask Claude only; finished: rules say so) | |
 
 ## Wireframes
 
 ```
- ←  Coach
- What’s in the way?                         ← headlineSmall
- ( ) Time off
-     3 days since your last session
- (•) Pain
-     [Hands] [Shoulder] [Elbow]
-     [Knee] [Lower back]
-     Keep pain at 3/10 or less, no worse the next morning. Revert the Change when it’s gone.
-     Worse the next morning after             ← labelLarge, only while a hand Change is in force
-     [Cable Lateral Raise] [Triceps Pressdown] …   ← filter chips, one at most
- ( ) No gym
-     Dumbbells and bodyweight at home
- ( ) Short on time                          ← picked: −  45 min  +
- ( ) Poor recovery
-     Bad sleep or stress
- Limits
- [✓ No grip] [No axial load] [No overhead]
- [Home] [Max 45 min]
- ───────────────────────────────────────────
- (Resume as planned.)        [Review change]
+ Coach                                              ⚙
+ Tell Claude what's going on. You get back a change to your program
+ or a workout, and nothing changes until you accept it.
+
+ ┌ Hands need a week off grip work ──────────────┐   ← a Change in force
+ │ Until Tue 27 Oct                              │
+ │ [Revert]          [Tell Claude how it's going] │
+ └───────────────────────────────────────────────┘
+
+ Gym   [✓ Harbour] [Itis]
+
+ [My hands hurt] [Short on time today] [No gym, dumbbells at home]
+ [Slept badly] [Build me a workout]
+
+ ┌ In your words ────────────────────────────────┐
+ │ Left elbow aches on curls…                    │
+ └───────────────────────────────────────────────┘
+ ───────────────────────────────────────────────────
+ Claude's reply is ready                  [Review]   ← after asking, when the clipboard holds one
+ Paste reply                           [Ask Claude]
+```
+
+```
+ [✓ Build me a workout]
+ Effort  [Easy] [✓ Normal] [Hard]
+ Time    [45 min] [✓ 1 h] [1 h 15] [1 h 30]
+ Focus   [Back · 4 sets] [Hamstrings · 2 sets] [Calves · 0 sets]
+         [Chest] [Quads] [Shoulders] …                ← none picked: balanced full body
+```
+
+```
+ Today
+ ┌ Workout ──────────────────────────────────────┐
+ │ Hotel dumbbells, 45 min                       │
+ │ Chest-Supported DB Row   3 × 8–12 @ 1         │
+ │ …                                    [Start]  │
+ └───────────────────────────────────────────────┘
+ Week 2 · Ramp-in
+ Day B — …
 ```
 
 ```
@@ -72,88 +84,28 @@ missing-equipment swaps when a gym is picked. Every proposal ends in the review 
 
 ## States
 
-- Coach: nothing picked (Review disabled, `coach-01`); Pain with areas (`coach-02`); Short on time
-  with the stepper (`coach-03`); Time off of a week or less, "3 days since your last session.
-  Resume as planned." (`coach-04`); the hand review (`coach-05`) and Today after it (`coach-06`).
-- Today: more than a week since the last session and no Change accepted today: the time-off line
-  (`coach-07`), whose Ease back in opens the re-entry review (`coach-08`). After two weeks the same
-  button opens Repeat week.
+- Coach: empty, nothing in force (Ask Claude disabled); a Change in force; words typed; Plan a
+  workout open; asked (Paste reply filled); Claude's reply ready; a bad paste with its
+  problems; no program running (no Change cards).
+- Reviews: a Change ("Change to your program", Accept); a workout ("Workout for today",
+  Add to Today).
+- Today: a workout card above the program day, and above Start session with no program; the
+  time-off line with Ease back in.
 - Start sheet: missing swaps for the gym picked (`start-01-missing`); another gym recomputes them.
 - Which machine?: **Not at Harbour** under Add machine (`machine-01-not-here`).
 - Gym screen: **Not here** list with × to undo (`gym-01-not-here`).
 
 ## Interaction rules
 
-- Picking a situation (or a pain area) resets the limits to its defaults; chips edit them after.
-  Any edit clears the message.
-- Review change runs the rules at once. A Change opens the review; Accept returns to Today, Reject
-  to the coach as it was.
-- Coach preselects Time off when more than a week has passed.
+- A starter replaces the words only when they're empty; otherwise it's added on a new line.
+- Tell Claude how it's going starts the words with the Change and focuses the field.
+- The words, the gym, the workout's options and the asked state survive the trip to the Claude
+  app (saved state).
+- On return after asking, the clipboard is read once. A valid reply shows the ready bar; Review
+  opens it. Nothing opens by itself.
+- Editing the words clears a bad paste's problems; so does Back.
+- Accept or Add to Today goes to Today; Reject goes back to Coach as it was.
 - Missing swaps start ticked; unticking one keeps the planned exercise for that session. Start
   applies the ticked ones to this session only; the plan is untouched.
 - Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
   the session with nothing that fits).
-
-## Ask Claude
-
-Ticket #18 adds **Something else** to the Coach screen: free text for the Claude app, and the
-Change pasted back (ADR 0001). Earlier renders (dark, and
-`ask-04-problems-light`).
-
-### Principles
-
-1. **One more situation, not another screen.** Something else is the sixth row; its details open
-   in place like Pain's areas, and Limits give way to one line on what is shared.
-2. **The filled button is the next step.** Ask Claude until you've asked, then Paste change. The
-   other stays a text button in the same bar.
-3. **Problems read like import's.** Path in small monospace over the message, the same component,
-   with one way back to Claude: copy them.
-4. **Nothing changes without the review.** A good paste opens the same diff as every Change.
-
-### Tokens
-
-| Token | Value | Use |
-| --- | --- | --- |
-| Text field | OutlinedTextField, 3 lines min, label "In your words", 8 dp top, at the 64 dp indent | the words |
-| Shared line | bodyMedium onSurfaceVariant, 8 dp top | what Ask Claude shares |
-| Problems head | titleMedium in `error`, 24 dp top; `content_copy` IconButton at the end | "Not a Change Hyperlog can use" |
-| Problems | the count line (bodyMedium muted), then `Problem` rows (8 dp vertical) | as program import |
-| Bottom bar | `TextButton` (label at the 24 dp margin) left, `Button` right | Paste change has `content_paste` 18 dp |
-
-### Wireframe
-
-```
- (•) Something else
-     Talk it through with Claude
-     ┌ In your words ───────────────────┐
-     │ Left elbow aches on curls…       │
-     └──────────────────────────────────┘
-     Shares this, your program, the last 4 weeks of sessions and the Change format with the
-     Claude app. Copy its reply, then Paste change.
-     Not a Change Hyperlog can use        ⧉     ← only after a bad paste, scrolled into view
-     3 problems. Nothing changed; ask Claude to fix them, then paste again.
-     operations[0].slot
-     unknown slot "rows"
- ───────────────────────────────────────────
- [⎘ Paste change]                [Ask Claude]   ← before asking
- Ask Claude                  [⎘ Paste change]   ← after
-```
-
-### States
-
-Something else picked, empty (`ask-01`, Ask Claude disabled); words typed (`ask-02`); asked
-(`ask-03`, Paste change filled); a bad paste (`ask-04-problems`); a good paste's review (`ask-05`).
-
-### Interaction rules
-
-- The words and the asked state survive the trip to the Claude app (saved state).
-- Editing the words or picking another situation clears the problems; Back clears them too.
-- Paste reads the whole clipboard; Claude's full reply works, so does the JSON alone.
-
-## Expressive pass
-
-The coach is a destination of the navigation bar, on surfaceContainer. The situations are one
-card; the picked one is lifted into secondaryContainer under its radio. Its details (areas, the
-pain rule, the exercises worse after) open inside the card. Filter chips pick in
-primaryContainer, since secondary container is too close to a card in a grey palette. Limits are a
-group headed in primary.

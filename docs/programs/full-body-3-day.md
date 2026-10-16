@@ -105,10 +105,10 @@ Values are for Build. "Techniques" apply to the last set only, from week 3.
 
 ## First coaching case: training around hand pain
 
-A worked example for the coach: a lifter starts this program with sore hands. This is the coach's
-acceptance case (spec:
-Coaching → Rules; situation "pain in an area", area "hands/grip"). It should produce this Change,
-for weeks 1–2 (or until "hands OK" is reported):
+A worked example for the coach: a lifter starts this program with sore hands and tells Claude
+"my hands hurt" on the Coach screen (spec: Coaching; ADR 0003). A good reply is this Change, for
+weeks 1–2 (or until "hands OK" is reported). In Ramp-in, the program's own +1 RIR already covers the
+effort, so the swaps are what matters:
 
 - **Swaps to remove or reduce gripping:**
   - Barbell bench → Smith machine bench press (or machine chest press if gripping the bar still hurts).
@@ -118,8 +118,8 @@ for weeks 1–2 (or until "hands OK" is reported):
   - DB / barbell curls → machine preacher curl or Bayesian cable curl with a loose grip.
 - **Pulls:** keep pulldowns and rows, with straps and a hook-free, open-hand grip; chest-supported
   only.
-- **Load:** −10% on any exercise that kept a grip. All targets +1 RIR, and no drop sets on grip
-  exercises.
+- **Load:** −10% on any exercise that kept a grip, and no drop sets on grip exercises. No extra
+  RIR: Ramp-in's +1 already holds for weeks 1–2. Later in the program, +1 RIR on everything.
 - **Pain rule:** pain during a set stays at 3/10 or less and isn't worse the next morning. If it is
   worse, that exercise moves to its no-grip swap for the rest of the Change's scope.
 

@@ -18,7 +18,7 @@ A change to a set prescription that applies only to particular weeks of its bloc
 
 **Day**:
 One planned training session in a program: an ordered list of groups.
-_Avoid_: Workout, routine day
+_Avoid_: Routine day, workout (that's a day Claude builds outside the program)
 
 **Group**:
 Exercises done together within a day, either one exercise on its own (straight sets) or a superset.
@@ -62,7 +62,7 @@ _Avoid_: Exercise database, catalogue
 What an exercise's movement does, such as vertical pull or knee flexion. Swaps look for exercises with the same pattern.
 
 **Grip demand**:
-How hard an exercise works the hands: high, low or none. The coach's "no grip" constraint reads it.
+How hard an exercise works the hands: high, low or none. The coach's prompt shares it, so Claude can keep sore hands off grip work.
 
 **Technique note**:
 An exercise's own cue on how to do it, kept in the library. A program's slot note is the program's cue for that slot.
@@ -75,7 +75,7 @@ A YouTube link for an exercise, opened in the YouTube app at its timestamp.
 
 **Session**:
 What was actually done on one date: the sets logged, with their weights and reps. It's a record, never recalculated from new rules, though it can be corrected.
-_Avoid_: Workout, log, entry
+_Avoid_: Workout (that's the plan, not the record), log, entry
 
 **Logged set**:
 One set as it was done: weight, full reps, partial reps and RIR, plus any drops or mini-sets.
@@ -204,18 +204,16 @@ _Avoid_: Sanity check, outlier warning
 A proposed edit to the plan for a period or the rest of the program, shown as a diff and applied only after you accept it.
 _Avoid_: Adjustment, modification, override
 
-**Situation**:
-Why the plan can't be followed as written: time off, pain in an area, no gym, short on time or poor recovery.
-
-**Constraint**:
-A limit on what an exercise may demand, such as no grip, no axial load or home equipment only. Swaps respect it.
-
 **Swap**:
-Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a change.
+Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a Change.
 _Avoid_: Substitution
 
+**Workout**:
+A day Claude builds for one date, outside the program: groups, slots and set prescriptions like a program day's. Training it doesn't move the position.
+_Avoid_: One-off day, coach workout, ad-hoc session (that one has no prescription)
+
 **Ask Claude**:
-The hand-off of a situation in your own words to the Claude app: a prompt shared through the share sheet, and the Change Claude replies with pasted back for review. Hyperlog makes no model calls.
+The hand-off of your own words to the Claude app: a prompt shared through the share sheet, and Claude's reply, a Change or a workout, pasted back for review. It is the coach's only way in. Hyperlog makes no model calls.
 _Avoid_: AI coach, chat
 
 ## Data
