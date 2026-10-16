@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.today
 
 import androidx.compose.ui.test.hasScrollToIndexAction
+import com.hyperlog.app.onScreen
 import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.openTab
 import android.app.Application
@@ -8,6 +9,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -50,8 +54,11 @@ class ProgramDayTest {
         compose.onNodeWithText("Week 1 · Main").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
         // Week 1's ramp-in is one RIR easier than written.
-        compose.onNodeWithText("1 × 4–6 @ 2", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("2 × 6–8 @ 2", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("1 × 4–6\u00A02 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("2 × 6–8\u00A02 RIR", substring = true).assertIsDisplayed()
+        // Planned sets are targets: outlined RIR chips, and no `@` left on screen.
+        compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipTargetTag, useUnmergedTree = true).onFirst().assertExists()
+        compose.onAllNodesWithText("@", substring = true).assertCountEquals(0)
         compose.onNodeWithText("Ad-hoc session").assertIsDisplayed()
     }
 
@@ -113,8 +120,8 @@ class ProgramDayTest {
 
         compose.openTab("Program")
         compose.waitFor("Main · weeks 1–2")
-        compose.waitFor("80 × 6", substring = true)
-        compose.onNodeWithText("80 × 6", substring = true).performClick()
+        compose.waitFor(onScreen("80 × 6"), substring = true)
+        compose.onNodeWithText(onScreen("80 × 6"), substring = true).performClick()
         compose.waitFor("Barbell Bench Press")
         compose.onNodeWithText("Main · weeks 1–2").assertDoesNotExist()
         // Back returns to Program, where the session was opened from.

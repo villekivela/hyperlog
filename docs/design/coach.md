@@ -102,7 +102,7 @@ reply]`. The filled button always sits at the end, so the next step is always in
  │ ⌖ At Itis                                      │ ← or Elsewhere
  ├────────────────────────────────────────────────┤
  │ 1   Chest-Supported DB Row                     │
- │     3 × 8–12 @ 1  ·  2:00 rest                 │
+ │     3 × 8–12 [1]  ·  2:00 rest                 │
  └────────────────────────────────────────────────┘
  ┌────────────────────────────────────────────────┐ ← the program day, second
  │ Week 2 · Ramp-in                    (▶ Start)  │ ← tonal, beside its heading

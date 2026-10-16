@@ -220,8 +220,8 @@ work. You can override the suggestion on the spot; the override is logged, not h
   the set and don't add sets.
 
 Research behind these rules: `docs/research/progression-and-partials.md`.
-- **Every suggestion says why**, e.g. "Last time 50 kg × 12, 12, 12 @ 2, top of 8–12 → 52.5 kg"
-  (every set reached the top at the target RIR; 12, 12, 11 @ 2 would keep 50 kg for 12 reps).
+- **Every suggestion says why**, e.g. "Last time 50 kg × 12, 12, 12 [2], top of 8–12 → 52.5 kg"
+  (every set reached the top at the target RIR; 12, 12, 11 [2] would keep 50 kg for 12 reps).
   - The why-line sits under the exercise name (and its swap or superset chip) for the active set,
     one short muted line led by a direction symbol (`trending_up`, `trending_flat`,
     `trending_down`) in a fixed colour scale like RIR's, the same on every phone: calm green for
@@ -268,8 +268,10 @@ logging, and computed loads where it needs them.
   starts with the format's defaults (2 drops of 25%, mini-sets of 3, partials to failure)
   and iso hold at 20 s in the stretch. The change is for this session only; a logged set keeps
   the technique it was done with.
-- The session list and Session done read a set with its extensions after it:
-  `25 × 9 @ 1, 18 × 7, 12 × 6`, `60 × 12 @ 0 + 4 + 3`, `40 × 10 @ 0 + 20 s`.
+- The session list and Session done read a set with its extensions after it and its RIR chip
+  last, after the whole set: `25 × 9, 18 × 7, 12 × 6 [1]`, `60 × 12 + 4 + 3 [0]`,
+  `40 × 10 + 20 s [0]`, `50 × 8 + 3p [0]`. A set never wraps inside. Plain text keeps the RIR after
+  the set's own reps (`25 × 9 @ 1, 18 × 7, 12 × 6`), as the Claude prompt's legend reads it.
 
 ### Full and partial reps
 
@@ -488,7 +490,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    swap to an alternative, add or change an intensity technique on a set. Works without a program
    too (ad-hoc session).
    - **With a program**, Today shows the next day: week and block, the day's name, and each slot's
-     exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
+     exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
    - A **workout** added from Coach comes first, for the day it was added, as today's main
@@ -815,6 +817,27 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   theme. In light mode every target ring (hot, warm and calm) is a darker shade of its hue,
   at least 3:1 against every light surface so it reads in daylight; filled dots and dark mode keep
   the base colours.
+- **RIR is a coloured chip** wherever the app shows set text, in place of `@ N`: the number in a
+  small rounded chip of the RIR scale, sitting on the text's baseline and wrapping with it
+  (`1 × 4–6 [1] · 2 × 6–8 [1]`, written `[1]` in this spec). A **target** (planned sets, a block's
+  rule, a suggestion's "target") is an outlined chip, like the logging screen's ring; a **logged** set
+  (History, past and finished sessions, Last time in a why-line) is a filled chip, like its dot.
+  An outline uses the ring's shades, darker in light mode, so it keeps 3:1 against every surface,
+  with an onSurface number. A fill is a solid badge, the same in light and dark (the owner's call,
+  2026-10-16): a white number on the ring's light-mode shade darkened, hue kept, just far enough for
+  4.5:1 (hot `#D14237`, warm `#9D6B1C`, calm `#447E79`). It keeps 3:1 on every light surface; in
+  dark mode the white number carries it, since the fill's edge drops to about 2.8:1 on the lightest
+  container. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
+  0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the navy accent or a
+  button. A set's parts and its chip are joined by no-break spaces, so a line wraps only between
+  sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads
+  each one once, as "1 RIR"; the number is always there, so colour is never the only sign. The chip
+  is for set text the app writes: Claude's own words (a Change's or workout's summary) show as
+  Claude wrote them, and the set table and the exercise sheet's prescription keep their RIR column
+  of rings and dots.
+  - **Text that leaves the app keeps `@ N`:** the Claude prompts (`@ N RIR` in the legend), backups,
+    the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
+    domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
   train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets
   Today notice time off. No reminders or notifications.
@@ -840,7 +863,7 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   - An exercise is unilateral when its name says so (`1-Arm`, `1-Leg`, `Single-Arm`,
     `Single-Leg`, lunges, split squats, step-ups); the names carry the implement and the side.
   - The toggle is "Left and right apart" in the active set's sheet (tap its number). A split set
-    takes the left reps, ✓, then the right, under an `L / R` head, and logs as `30 × 10/9 @ 1`.
+    takes the left reps, ✓, then the right, under an `L / R` head, and logs as `30 × 10/9 [1]`.
     The next set stays split. Progression reads the weaker side.
 - **Past sessions are editable.** The app never recalculates a past session from new rules, but you
   can correct one; progression then reruns from the corrected data.
@@ -1141,7 +1164,7 @@ in." The prompt holds the count either way.
   with its id, summary, scope, the day it was accepted and its operations as JSON; every block with its days and slots (slot id,
   exercise id and name, sets as planned in the block's first week or the current one,
   alternatives, note); the finished sessions of the last 28 days (date, day, gym, each exercise's
-  sets as `80 × 5 @ 1`); the weekly sets per muscle for this week and the 4 before it; every
+  sets as `80 × 5 [1]`); the weekly sets per muscle for this week and the 4 before it; every
   visible library exercise, and any hidden one the program uses (id, name, equipment, movement
   pattern, grip, primary muscles); and the two formats.
 - **The formats in the prompt are generated** from the code that reads them: operation names and
@@ -1197,7 +1220,7 @@ program at all.
   unknown exercise "bb_row"`).
 - **The review** shows the name, the summary, where it's for (`At Itis`, or `Elsewhere`; nothing
   with no gyms set up) and the exercises as Today lists a day, each with its rest after its sets
-  (`3 × 8–12 @ 1 · 2:00 rest`, `1:00–2:00` when its sets rest differently). **Add to Today**
+  (`3 × 8–12 [1] · 2:00 rest`, `1:00–2:00` when its sets rest differently). **Add to Today**
   keeps it; Reject, × and Back drop it.
 - **On Today, it's today's main Start** (tester's report, 2026-10-16). It comes first as a card:
   "Workout" over its name, summary and gym line on the secondaryContainer head (decided, owner
@@ -1238,7 +1261,7 @@ The one thing taken from it is **starting weights**. For each exercise, the most
 in the backup become a one-off starting point, used only until the exercise has its own history:
 
 - **Free weights** (barbell, dumbbells, bodyweight): the first suggestion comes from the old data,
-  labelled "from old app: 60 kg × 8 @ 2 RIR, 12 Sep". The first real session replaces it.
+  labelled "from old app: 60 kg × 8 [2], 12 Sep". The first real session replaces it.
 - **Machines and cables**: the old data doesn't say which gym or machine, so the old weight is shown
   as a hint only while you pick a weight on the new machine's ladder.
 - Old dumbbell weights logged as both dumbbells together are halved. These five were totals:
@@ -1261,7 +1284,7 @@ How the import works:
   old app's base for that exercise.
 - In a program session the old set is **worked into today's prescription** through its e1RM: the
   old reps kept inside the target range, the weight rounded down to a rung. When that changes the
-  set, the label shows both: "From old app: 60 kg × 12 @ 2 RIR, 12 Sep → 65 kg × 8". An ad-hoc
+  set, the label shows both: "From old app: 60 kg × 12 [2], 12 Sep → 65 kg × 8". An ad-hoc
   exercise is prefilled with the old set itself, on the ladder.
 - The label sits in the suggestion line, tertiary like an estimate (check it on the first set).
   A machine's hint ("From old app, another machine" and the set) is in the exercise sheet only,

@@ -286,7 +286,7 @@ class CoachScreenTest {
     }
 
     private val hotel = "```json\n" +
-        """{"workout": {"name": "Hotel dumbbells, 45 min", "summary": "Dumbbells only.", "groups": [""" +
+        """{"workout": {"name": "Hotel dumbbells, 45 min", "summary": "Dumbbells only, rows @ 1.", "groups": [""" +
         """{"slots": [{"id": "row", "exercise": "chest_supported_db_row", "sets": [{"count": 3, "reps": "8-12", "rir": 1}]}]}]}}""" +
         "\n```"
 
@@ -306,6 +306,9 @@ class CoachScreenTest {
         compose.onNodeWithText("Paste reply").performClick()
         compose.waitFor("Workout for today")
         compose.onNodeWithText("Chest-Supported DB Row").assertIsDisplayed()
+        // The sets show RIR as a chip; Claude's own words stay as Claude wrote them.
+        compose.onNodeWithText("3 × 8–12\u00A01 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Dumbbells only, rows @ 1.").assertIsDisplayed()
         compose.onNodeWithText("Add to Today").performClick()
         compose.waitFor("Hotel dumbbells, 45 min")
         compose.onNode(hasTestTag(com.hyperlog.app.ui.today.WorkoutCardTag)).assertIsDisplayed()

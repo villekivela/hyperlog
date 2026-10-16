@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onRoot
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
+import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.SetEntry
@@ -165,6 +166,26 @@ class SessionRenders {
 
     @Test fun padHidden() = both("session-pad-hidden") {
         session(benchExercise(warmupsDone = 4), SessionExercise(2, curl, emptyList(), emptyList(), plates.ladder(), true), entry = reps100, pad = false)
+    }
+
+    @Test fun done() {
+        assumeTrue(out != null)
+        val dark = System.getenv("DARK") == "1"
+        RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
+        val start = java.time.LocalDateTime.of(2026, 10, 13, 10, 22).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val summary = com.hyperlog.app.session.SessionSummary(
+            1, start, start + 52 * 60_000,
+            listOf(
+                com.hyperlog.app.session.ExerciseSummary(bench.name, listOf(LoggedSet(100.0, 6, 0, 1), LoggedSet(90.0, 8, 0, 1), LoggedSet(90.0, 7, 0, 0, extensions = listOf(Extension(Extension.Kind.Drop, 70.0, 6))))),
+                // Myo-reps and partials: the chip ends the whole set.
+                com.hyperlog.app.session.ExerciseSummary(curl.name, listOf(LoggedSet(60.0, 12, 0, 2), LoggedSet(60.0, 10, 4, 0), LoggedSet(45.0, 10, 0, 2, extensions = List(3) { Extension(Extension.Kind.MiniSet, 45.0, 3) }))),
+            ),
+        )
+        compose.setContent { HyperlogTheme { SessionDoneScreen(summary, onResume = {}, onClose = {}, onOpen = {}) } }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(out).mkdirs()
+        File(out, "${if (dark) "dark" else "light"}-session-done-sets.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 }
 

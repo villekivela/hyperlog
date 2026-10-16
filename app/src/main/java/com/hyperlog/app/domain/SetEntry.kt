@@ -205,13 +205,13 @@ fun formatKg(kg: Double): String =
 /**
  * `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0` (SPEC, Full and partial reps), with what extended the set
  * after it: drops (`, 18 × 7, 12 × 6`), mini-sets (` + 4 + 3`) or a hold (` + 20 s`). A split set
- * reads `10/9`.
+ * reads `10/9`. On screen the RIR goes [rirLast], after the whole set (`45 × 10 + 3 + 3 @ 2`).
  */
-fun LoggedSet.summary(): String = buildString {
+fun LoggedSet.summary(rirLast: Boolean = false): String = buildString {
     append("${formatKg(weightKg)} × $fullReps")
     rightReps?.let { append("/$it") }
     if (partialReps > 0) append(" + ${partialReps}p")
-    rir?.let { append(" @ $it") }
+    if (!rirLast) rir?.let { append(" @ $it") }
     extensions.forEach {
         when (it.kind) {
             Extension.Kind.Drop -> append(", ${formatKg(it.weightKg)} × ${it.reps}")
@@ -219,4 +219,5 @@ fun LoggedSet.summary(): String = buildString {
             Extension.Kind.Hold -> append(" + ${it.reps} s")
         }
     }
+    if (rirLast) rir?.let { append(" @ $it") }
 }

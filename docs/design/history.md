@@ -71,15 +71,15 @@ surface. Material's light `outline` itself failed (ΔE 11.2), hence the lift tow
  ←  Barbell Bench Press
  Estimate
  99 kg                                     ← figure: latest estimate
- Thu 1 Oct · top 82.5 × 5 @ 1 · 99 kg      ← readout: the selected session
+ Thu 1 Oct · top 82.5 × 5 [1] · 99 kg      ← readout: the selected session
  ┌──────────────────────────────── 100     ← hairline grid, ticks right
  │        ●━━━━━━━━━━●━━━━━━━━━━●            ← estimate line, top sets as dots
  │ ●                                 80
  └────────────────────────────────
  28 Sep                          5 Oct     ← first and last date
  ━ Estimate   ● Top set                     ← legend (two series)
- Mon 5 Oct      60 × 5 @ 4         99      ← the table: date · top set · estimate
- Thu 1 Oct      82.5 × 5 @ 1       99
+ Mon 5 Oct      60 × 5 [4]         99      ← the table: date · top set · estimate
+ Thu 1 Oct      82.5 × 5 [1]       99
 ```
 
 For a machine exercise the block from the figure down repeats per machine, headed

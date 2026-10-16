@@ -1,6 +1,8 @@
 package com.hyperlog.app.ui.program
 
 import androidx.compose.foundation.clickable
+import com.hyperlog.app.ui.session.setText
+import com.hyperlog.app.ui.session.RirText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -176,7 +178,7 @@ private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComp
                 Text(stringResource(R.string.program_from, comparison.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                 // A block-wide change is said once, for every set; the slots below are those written differently.
                 val rule = ruleText(comparison.rule.first, comparison.rule.second)
-                rule.forEach { Text(it, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyLarge) }
+                rule.forEach { RirText(it, Modifier.padding(top = 8.dp), target = true, style = MaterialTheme.typography.bodyLarge) }
                 // A block written afresh differs in every slot, so a long comparison folds after its first few.
                 val total = comparison.days.sumOf { it.slots.size }
                 var open by rememberSaveable(block.id) { mutableStateOf(false) }
@@ -331,7 +333,7 @@ private fun DoneDay(session: PastSessionItem) {
                 Row {
                     Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.width(16.dp))
-                    Text(top.copy(extensions = emptyList()).summary(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    RirText(top.copy(extensions = emptyList()).setText(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
             }
         }

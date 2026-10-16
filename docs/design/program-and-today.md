@@ -30,7 +30,7 @@ screen (#40)".
 1. **One next thing.** Today names the next day and offers Start; the rest of the program is a tap
    away on Program. The program runs as a sequence, so there is no calendar.
 2. **The plan reads like the table it becomes.** Today's slot lines, the session list and the
-   prescription sheet all write sets the same way: `1 × 4–6 @ 1 · 2 × 6–8 @ 1`.
+   prescription sheet all write sets the same way: `1 × 4–6 [1] · 2 × 6–8 [1]`.
 3. **Structure is the hierarchy.** On Program the block is the unit: its card, its weeks as chips,
    then the week's days as segmented groups on the screen.
 4. **Where you are is where it opens.** Program opens on the block and week you're in, the next day
@@ -56,11 +56,11 @@ screen (#40)".
  Week 3 · Build                                ← labelLarge, onSurfaceVariant
  Day A — Heavy bench, squat, pulldown          ← headlineSmall
  1   Barbell Bench Press                       ← bodyLarge
-     1 × 4–6 @ 1 · ↘ 2 × 6–8 @ 1               ← bodyMedium, onSurfaceVariant; ↘ = back-off
+     1 × 4–6 [1] · ↘ 2 × 6–8 [1]               ← bodyMedium, onSurfaceVariant; ↘ = back-off
  2   Hack Squat
-     1 × 6–8 @ 1 · 1 × 8–10 @ 0
+     1 × 6–8 [1] · 1 × 8–10 [0]
  5a  Cable Lateral Raise
-     2 × 10–12 @ 0  ⟲                          ← technique symbols in tertiary
+     2 × 10–12 [0]  ⟲                          ← technique symbols in tertiary
  ───────────────────────────────────────────
                     Ad-hoc session  [Start]    ← bottom bar over the gesture area
 ```
@@ -83,12 +83,12 @@ screen (#40)".
 │ techniques back                           │
 │ Otherwise written as in Ramp-in           │   ← or the slots written differently:
 ╰───────────────────────────────────────────╯
-   (Intensify: Day A · Barbell Bench Press · 1 × 4–6 @ 1 · ↘ … → 1 × 3–5 @ 1 · ↘ …, the arrow
+   (Intensify: Day A · Barbell Bench Press · 1 × 4–6 [1] · ↘ … → 1 × 3–5 [1] · ↘ …, the arrow
     leading the after when it wraps; past 5 slots the first 3 show, then "19 more ⌄")
  Week 4 · Day A — Heavy bench, squat, …  Done
 ╭───────────────────────────────────────────╮
 │ Tue 13 Oct                              › │   ← opens the session in History
-│ Barbell Bench Press             85 × 5 @ 1│   ← each exercise's top set
+│ Barbell Bench Press             85 × 5 [1]│   ← each exercise's top set
 ╰───────────────────────────────────────────╯
  Week 4 · Day B — Hinge, close-grip …   Next     ← day head with its week; Next in primary
 ╭───────────────────────────────────────────╮
@@ -97,7 +97,7 @@ screen (#40)".
 ├───────────────────────────────────────────┤
 │ 1   In place of Barbell RDL               │   ← Today's slot rows, one segment per group
 │     45° Hyperextension                    │
-│     2 × 6–8 @ 1                           │
+│     2 × 6–8 [1]                           │
 ╰───────────────────────────────────────────╯
  Week 3 · Day B — …                 Skipped      ← a past week: the plan at 60 % opacity
  Week 12 · Day A — …               ✿ Deload       ← spa symbol and Deload in tertiary
@@ -210,7 +210,7 @@ The pad prefills the suggested weight and reps, so accepting it is one ✓.
 
 ```
  Barbell Bench Press                       ⋮
- ↗ Last time 80 kg × 6 @ 2, top of 4–6 → 82.5 kg     ← bodyMedium, onSurfaceVariant
+ ↗ Last time 80 kg × 6 [2], top of 4–6 → 82.5 kg     ← bodyMedium, onSurfaceVariant
        Target   Last       kg   Reps  RIR
  1     4–6 (2)  80 × 7    82.5    5    ●2
 ```
@@ -218,17 +218,17 @@ The pad prefills the suggested weight and reps, so accepting it is one ✓.
 The suggestion screens of this ticket were replaced with the expressive pass's.
 
 **Starting weights (#9).** A free weight with no history yet gets the why-line with `history`,
-tertiary like an estimate: "From old app: 20 kg × 10 @ 2 RIR, 3 Sep", with "→ 22.5 kg × 8" appended when
+tertiary like an estimate: "From old app: 20 kg × 10 [2], 3 Sep", with "→ 22.5 kg × 8" appended when
 the ladder or today's range changed the set. A machine or cable with no history on the machine
 picked gets the same row in onSurfaceVariant, two lines: "From old app, another machine" and the set
-(tabular figures, never broken inside "@ 2 RIR"). Its weight cell stays empty: the hint informs the
+(tabular figures, the chip never parted from its set). Its weight cell stays empty: the hint informs the
 pick on the ladder, it doesn't prefill it. No screenshots are kept: they would show real data from a
 legacy backup.
 
 ```
  Chest-Supported Machine Row               ⋮
  ⟲ From old app, another machine
-   45 kg × 12 @ 1 RIR, 3 Sep
+   45 kg × 12 [1], 3 Sep
        Target          kg   Reps  RIR
  1     8–10 (1)      [   ]   10    ●1
 ```
