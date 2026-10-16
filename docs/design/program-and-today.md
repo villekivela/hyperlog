@@ -76,21 +76,20 @@ rendered in light.
  ( Ramp-in | ■Build■ | Intensify | Deload + test )  ← connected group, widths by label
 ╭───────────────────────────────────────────╮
 │ Build · weeks 3–6                         │   ← titleLarge
+│ [✓3] [■4■] [5] [6]                        │   ← week chips first; done weeks ticked
 │ From Ramp-in                              │   ← labelLarge, primary
-│ Day A                                     │   ← labelMedium, when several days changed
-│ Barbell Bench Press                       │
-│ 1 × 4–6 @ 2 · ↘ 2 × 6–8 @ 2               │   ← before, muted
-│ → 1 × 4–6 @ 1 · ↘ 2 × 6–8 @ 1             │   ← the arrow leads the after when it wraps
-│ …two more slots                           │
-│ 19 more ⌄                                 │   ← past 5 slots, the first 3 show; tap to unfold
-│ [✓3] [■4■] [5] [6]                        │   ← week chips; done weeks ticked
+│ Every set: 1 RIR closer to failure ·      │   ← a block-wide override, said once (bodyLarge)
+│ techniques back                           │
+│ Otherwise written as in Ramp-in           │   ← or the slots written differently:
 ╰───────────────────────────────────────────╯
- Day A — Heavy bench, squat, pulldown   Done
+   (Intensify: Day A · Barbell Bench Press · 1 × 4–6 @ 1 · ↘ … → 1 × 3–5 @ 1 · ↘ …, the arrow
+    leading the after when it wraps; past 5 slots the first 3 show, then "19 more ⌄")
+ Week 4 · Day A — Heavy bench, squat, …  Done
 ╭───────────────────────────────────────────╮
 │ Tue 13 Oct                              › │   ← opens the session in History
 │ Barbell Bench Press             85 × 5 @ 1│   ← each exercise's top set
 ╰───────────────────────────────────────────╯
- Day B — Hinge, close-grip bench, row   Next      ← day head; Next in primary
+ Week 4 · Day B — Hinge, close-grip …   Next     ← day head with its week; Next in primary
 ╭───────────────────────────────────────────╮
 │ (⇄) Ends 26 Oct; if this day falls later, │   ← only under a date-ranged Change
 │     it's as written.                      │
@@ -99,7 +98,8 @@ rendered in light.
 │     45° Hyperextension                    │
 │     2 × 6–8 @ 1                           │
 ╰───────────────────────────────────────────╯
- Day B — …                           Skipped      ← a past week: the plan at 60 % opacity
+ Week 3 · Day B — …                 Skipped      ← a past week: the plan at 60 % opacity
+ Week 12 · Day A — …               ✿ Deload       ← spa symbol and Deload in tertiary
 ```
 
 ```
@@ -256,8 +256,8 @@ Principles:
 
 - **The block is the unit.** Its card, its weeks and its days sit together. The block group picks
   it, opening on the one you're in.
-- **Differences are shown, not described.** "From Build" is computed: each slot that differs
-  between the previous block's last week and this block's first, before → after. There is no
+- **Differences are shown, not described.** "From Build" is computed: a block-wide override
+  said once for every set, then each slot written differently, before → after. There is no
   written note.
 - **Every week resolves.** A day to come reads exactly as the session will prescribe it, with
   overrides, deloads and Changes (`ProgramWeek.days` through `Changes.day`).
@@ -283,8 +283,12 @@ Layout (build pass):
 - **The block group sizes buttons by their labels** (`ConnectedChoice(fitLabels = true)`), so
   `Deload + test` keeps its words beside `Build`. Past four blocks, or about 40 characters of
   names, it is a scrolling row of chips.
-- **The comparison folds.** A block that moves RIR differs on every slot (Build has 22), which
-  pushed the week chips and days off the first screen. Up to 5 slots show in full; past that the
+- **A block-wide rule is one line.** Ramp-in → Build differs only by Ramp-in's week override
+  (+1 RIR, no techniques), so Build reads "Every set: 1 RIR closer to failure · techniques back"
+  and lists no slot (the tester found 22 identical rows a wall). The week chips come before the
+  comparison, so changing week never means scrolling past it.
+- **The comparison folds.** A block written afresh (week 12 rewrites every slot) can still list
+  22 slots. Up to 5 slots show in full; past that the
   first 3 show, then **19 more ⌄** (labelLarge, primary, 48 dp row) unfolds the rest in place and
   **Fewer ⌃** folds it again. Each pair is before (muted), then the arrow and after (onSurface) as
   one piece, so a long pair breaks before the arrow, never after it.
@@ -293,13 +297,19 @@ Layout (build pass):
 
 Interaction: tapping a block resets the week to the current week if it's in that block, else the
 block's first; the comparison opens folded on each block. A done day's segment opens its session
-in History, and back from there returns to History. Back on the Changes page returns to Program.
+in History, and Back from there returns to Program on the same week. The week picked and the
+Changes page are kept by the host (`ProgramView`) through a session opened from Program or a
+review; choosing Program on the navigation bar opens it on where you are. The navigation bar is
+hidden on the Changes page; Back there returns to Program. The menu names Repeat week for the week
+it repeats ("Repeat week 5"), and the replace question says where you are ("You're in week 6 of
+Hyperlog Full Body; …"). Test report: `program-test-report.md`.
 
 Screens (Robolectric renders from `ProgramRenders`, `RENDERS=<dir>`, `DARK=1` for dark, each
 `light-` and `dark-`): `program-current` (Build, week 4, Day A done, Day B next),
 `program-past-week` (week 3: Day B skipped, Day C done), `program-future-block` (Intensify and
 its From Build card), `program-deload` (Deload + test, days headed Deload), `program-ends` (a
 date-ranged Change: the Ends line), `program-menu` (⋮ open), `program-changes` (a reverted and a
-replaced Change struck through), `program-finished`. The phone stayed locked through this pass, so
-the build is installed there but the phone check of the current week is still to do.
+replaced Change struck through), `program-finished`. Checked on the phone (dark, the owner's
+data): the current week matches Today slot for slot, done days show the logged top sets and open
+their sessions. Light mode was checked through the renders only; the phone's theme was left as set.
 

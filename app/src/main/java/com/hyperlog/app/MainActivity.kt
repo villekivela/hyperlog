@@ -31,6 +31,7 @@ import com.hyperlog.app.ui.library.ExerciseEditor
 import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.library.LibraryViewModel
 import com.hyperlog.app.ui.program.ProgramScreen
+import com.hyperlog.app.ui.program.ProgramView
 import com.hyperlog.app.ui.coach.ChangeReviewScreen
 import com.hyperlog.app.ui.coach.CoachScreen
 import com.hyperlog.app.ui.coach.WorkoutReviewScreen
@@ -247,6 +248,10 @@ private fun App(
     val bodyweights by historyModel.bodyweights.collectAsStateWithLifecycle()
     var historyTab by rememberSaveable { mutableStateOf(0) }
     var bodyweightOpen by rememberSaveable { mutableStateOf(false) }
+    // What Program shows, kept while a session opened from it is looked at in History or a review is up.
+    var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
+    // A session opened from Program goes back there.
+    var sessionFromProgram by rememberSaveable { mutableStateOf(false) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
     val reply by programModel.reply.collectAsStateWithLifecycle()
@@ -332,7 +337,8 @@ private fun App(
     val sessionShown = finished == null && running != null && !left
     // The navigation bar is for the four destinations themselves; a session, a sub-screen or Settings hides it.
     val tabShown = finished == null && !sessionShown && editing == null && when (screen) {
-        Screen.Today, Screen.Program, Screen.Coach -> true
+        Screen.Today, Screen.Coach -> true
+        Screen.Program -> !programView.changesOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
     }
@@ -344,6 +350,8 @@ private fun App(
                     Screen.Coach -> programModel.closePasteErrors()
                     else -> Unit
                 }
+                // Chosen from the bar, Program opens on where you are.
+                if (tab == Screen.Program && screen != Screen.Program) programView = ProgramView()
                 screen = tab
             }
         },
@@ -455,7 +463,9 @@ private fun App(
             onSettings = openSettings,
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
-            onOpenSession = { id -> pastModel.open(id); screen = Screen.History },
+            onOpenSession = { id -> pastModel.open(id); sessionFromProgram = true; screen = Screen.History },
+            view = programView,
+            onView = { programView = it },
             )
         }
         screen == Screen.Coach -> CoachScreen(
@@ -495,7 +505,10 @@ private fun App(
         screen == Screen.History && pastSession != null -> PastSessionScreen(
             pastSession!!,
             onOpen = pastModel::show,
-            onBack = { pastModel.close(); pastModel.refresh(); historyModel.refresh() },
+            onBack = {
+                pastModel.close(); pastModel.refresh(); historyModel.refresh()
+                if (sessionFromProgram) { sessionFromProgram = false; screen = Screen.Program }
+            },
         )
         screen == Screen.History && bodyweightOpen -> BodyweightScreen(
             bodyweights,

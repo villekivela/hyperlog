@@ -31,8 +31,14 @@ sealed interface ProgramDay {
     data class Skipped(override val day: PlannedDay) : ProgramDay
 }
 
-/** What [previous]'s last week becomes in a block's first week: each day's slots that differ. */
-data class BlockComparison(val previous: Block, val days: List<DayComparison>)
+/**
+ * What [previous]'s last week becomes in a block's first week: the block-wide [rule] before → after,
+ * and each day's slots written differently.
+ */
+data class BlockComparison(val previous: Block, val days: List<DayComparison>, val rule: Pair<BlockRule, BlockRule> = BlockRule() to BlockRule())
+
+/** A block's override for a week, every set of it: [WeekOverride] without its weeks. */
+data class BlockRule(val rir: Int? = null, val rirAdd: Int = 0, val noTechniques: Boolean = false, val fewerSets: Int = 0, val deload: Boolean = false)
 
 data class DayComparison(val day: Day, val slots: List<SlotDiff>)
 
@@ -42,22 +48,27 @@ data class DayComparison(val day: Day, val slots: List<SlotDiff>)
  */
 object ProgramWeek {
     /**
-     * [block] against the block before it, as written: the previous block's last week beside this
-     * block's first, day by day (Day A with Day A) and slot by slot; null for the first block.
+     * [block] against the block before it: the previous block's last week beside this block's
+     * first. A block-wide override is named once, as [BlockComparison.rule]; slots are compared as
+     * written without it, day by day (Day A with Day A) and slot by slot. Null for the first block.
      */
     fun comparison(program: Program, block: Block): BlockComparison? {
         val previous = program.blocks.getOrNull(program.blocks.indexOf(block) - 1) ?: return null
+        val written = program.copy(blocks = program.blocks.map { it.copy(weeks = emptyList()) })
         val days = block.days.indices.mapNotNull { i ->
-            val after = program.plannedDay(Position(block.weekStart, i)) ?: return@mapNotNull null
-            val before = program.plannedDay(Position(previous.weekEnd, i))?.slots.orEmpty()
+            val after = written.plannedDay(Position(block.weekStart, i)) ?: return@mapNotNull null
+            val before = written.plannedDay(Position(previous.weekEnd, i))?.slots.orEmpty()
             val slots = after.slots.mapNotNull { slot ->
                 val was = before.firstOrNull { it.id == slot.id }
                 if (was != null && was.exercise == slot.exercise && was.sets == slot.sets) null else SlotDiff(was, slot)
             } + before.filter { was -> after.slots.none { it.id == was.id } }.map { SlotDiff(it, null) }
             slots.takeIf { it.isNotEmpty() }?.let { DayComparison(after.day, it) }
         }
-        return BlockComparison(previous, days)
+        return BlockComparison(previous, days, previous.rule(previous.weekEnd) to block.rule(block.weekStart))
     }
+
+    private fun Block.rule(week: Int): BlockRule =
+        weeks.firstOrNull { week in it.weeks }?.let { BlockRule(it.rir, it.rirAdd, it.noTechniques, it.fewerSets, it.deload) } ?: BlockRule()
 
     /**
      * The days of [week]: those before the position done (with the latest of [sessions] for each)

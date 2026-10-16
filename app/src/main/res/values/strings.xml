@@ -352,6 +352,7 @@
     <string name="program_finished_body">Import the next one from Program, or train ad hoc.</string>
     <string name="program_replace_title">Replace %1$s?</string>
     <string name="program_replace_body">The new program starts at week 1, day 1. Past sessions are kept.</string>
+    <string name="program_replace_body_at">You\'re in week %1$d of %2$s; the new program starts at week 1, day 1 instead. Past sessions are kept.</string>
     <string name="program_replace">Replace</string>
     <string name="program_cancel">Cancel</string>
     <string name="program_not_imported">Not imported</string>
@@ -371,6 +372,29 @@
     </plurals>
     <string name="program_from_fewer">Fewer</string>
     <string name="program_from_same">Every day as in %1$s</string>
+    <string name="program_from_otherwise">Otherwise written as in %1$s</string>
+    <string name="program_rule_every_set">Every set: %1$s</string>
+    <plurals name="program_rule_closer">
+        <item quantity="one">%1$d RIR closer to failure</item>
+        <item quantity="other">%1$d RIR closer to failure</item>
+    </plurals>
+    <plurals name="program_rule_further">
+        <item quantity="one">%1$d RIR further from failure</item>
+        <item quantity="other">%1$d RIR further from failure</item>
+    </plurals>
+    <string name="program_rule_rir">@ %1$d</string>
+    <string name="program_rule_techniques_back">techniques back</string>
+    <string name="program_rule_no_techniques">no techniques</string>
+    <plurals name="program_rule_fewer">
+        <item quantity="one">%1$d set fewer a slot</item>
+        <item quantity="other">%1$d sets fewer a slot</item>
+    </plurals>
+    <plurals name="program_rule_more">
+        <item quantity="one">%1$d set more a slot</item>
+        <item quantity="other">%1$d sets more a slot</item>
+    </plurals>
+    <string name="program_rule_deload">A deload week</string>
+    <string name="program_rule_out_of_deload">Out of the deload</string>
     <string name="program_week_n">Week %1$d</string>
     <string name="program_week_done">Week %1$d, done</string>
     <string name="program_ends">Ends %1$s; if this day falls later, it\'s as written.</string>
@@ -452,13 +476,12 @@
         <item quantity="other">Changes · %1$d in force</item>
     </plurals>
     <string name="program_change_accepted">%1$s · accepted %2$s</string>
-    <string name="program_change_reverted">Reverted</string>
+    <string name="program_change_reverted">Reverted %1$s</string>
     <string name="program_change_replaced">Replaced %1$s</string>
     <string name="program_change_revert">Revert</string>
     <string name="program_revert_title">Revert “%1$s”?</string>
     <string name="program_revert_body">Its edits to the plan stop, and any move of the position is taken back. Sessions trained since still count.</string>
     <string name="program_action_skip">Skip day</string>
-    <string name="program_action_repeat">Repeat week</string>
     <string name="program_action_deload">Deload week</string>
     <string name="program_action_shift">Shift program</string>
     <string name="program_skip_summary">Skip week %1$d · %2$s</string>

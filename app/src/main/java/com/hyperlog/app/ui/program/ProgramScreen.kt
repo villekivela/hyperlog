@@ -95,14 +95,22 @@ fun ProgramScreen(
     sessions: List<PastSessionItem> = emptyList(),
     /** Opens a finished session in History. */
     onOpenSession: (Long) -> Unit = {},
+    /**
+     * What Program shows, kept by the host so it survives a session opened in History or a
+     * review; null keeps it here.
+     */
+    view: ProgramView? = null,
+    onView: (ProgramView) -> Unit = {},
 ) {
+    var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
+    val shown = view ?: kept
+    val show = { v: ProgramView -> if (view == null) kept = v else onView(v) }
     /** The replacement waiting for "Replace <title>?": a file, or the starter program. */
     var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
     var menu by rememberSaveable { mutableStateOf(false) }
     var shifting by rememberSaveable { mutableStateOf(false) }
-    var changesOpen by rememberSaveable { mutableStateOf(false) }
-    if (changesOpen && active != null && errors == null) {
-        ChangesPage(active, onRevert, onBack = { changesOpen = false }, modifier = modifier)
+    if (shown.changesOpen && active != null && errors == null) {
+        ChangesPage(active, onRevert, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
         return
     }
     val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
@@ -154,7 +162,7 @@ fun ProgramScreen(
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
                 }
                 active == null -> NoProgram(onImport)
-                else -> ProgramWeeks(active, onOpenChanges = { changesOpen = true }, exerciseNames, sessions, onOpenSession)
+                else -> ProgramWeeks(active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week) { show(shown.copy(week = it)) }
             }
         }
     }
@@ -169,7 +177,13 @@ fun ProgramScreen(
         AlertDialog(
             onDismissRequest = { confirmReplace = null },
             title = { Text(stringResource(R.string.program_replace_title, active.program.title)) },
-            text = { Text(stringResource(R.string.program_replace_body)) },
+            // Replacing loses the position, so the question says where you are.
+            text = {
+                Text(
+                    if (active.finished) stringResource(R.string.program_replace_body)
+                    else stringResource(R.string.program_replace_body_at, active.position.week, active.program.title),
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReplace = null
@@ -182,6 +196,16 @@ fun ProgramScreen(
 }
 
 private enum class Replacement { File, Starter }
+
+/** What Program shows: the week picked (null for the week you're in) and whether the Changes page is open. */
+data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false) {
+    companion object {
+        val Saver = androidx.compose.runtime.saveable.listSaver<ProgramView, Any?>(
+            save = { listOf(it.week, it.changesOpen) },
+            restore = { ProgramView(it[0] as Int?, it[1] as Boolean) },
+        )
+    }
+}
 
 @Composable
 private fun NoProgram(onImport: () -> Unit) {
@@ -197,15 +221,17 @@ private fun ProgramWeeks(
     names: Map<String, String>,
     sessions: List<PastSessionItem>,
     onOpenSession: (Long) -> Unit,
+    /** The week picked; null for the week you're in. */
+    picked: Int?,
+    onWeek: (Int) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
     val next = active.next
     // It opens on the block and week you're in; past the end, on the last.
     val currentWeek = active.position.week.coerceAtMost(program.weeks)
-    var picked by rememberSaveable(program) { mutableStateOf(program.blocks.indexOfFirst { currentWeek in it.weekStart..it.weekEnd }.coerceAtLeast(0)) }
-    val block = program.blocks[picked.coerceIn(program.blocks.indices)]
-    var week by rememberSaveable(program, picked) { mutableStateOf(if (currentWeek in block.weekStart..block.weekEnd) currentWeek else block.weekStart) }
+    val week = picked?.takeIf { it in 1..program.weeks } ?: currentWeek
+    val block = program.blockAt(week) ?: program.blocks.last()
     val days = remember(active, week, sessions) { ProgramWeek.days(active, week, sessions) }
     val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
     LazyColumn(Modifier.fillMaxSize()) {
@@ -230,7 +256,8 @@ private fun ProgramWeeks(
         }
         blockItems(
             program, block, active, comparison, week, days, names,
-            onBlock = { picked = it }, onWeek = { week = it }, onOpenSession = onOpenSession,
+            onBlock = { i -> program.blocks[i].let { b -> onWeek(if (currentWeek in b.weekStart..b.weekEnd) currentWeek else b.weekStart) } },
+            onWeek = onWeek, onOpenSession = onOpenSession,
         )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
     }
@@ -313,7 +340,8 @@ private fun ProgramActionItems(active: ActiveProgram, onPropose: (Change) -> Uni
     val repeat = stringResource(R.string.program_repeat_summary, ProgramActions.repeatedWeek(position))
     val deload = stringResource(R.string.program_deload_summary, position.week)
     ActionItem(stringResource(R.string.program_action_skip), Symbol.SkipNext) { close(); onPropose(ProgramActions.skipDay(skip)) }
-    ActionItem(stringResource(R.string.program_action_repeat), Symbol.Replay) { close(); onPropose(ProgramActions.repeatWeek(repeat)) }
+    // Named for the week it repeats, the last one trained, which isn't always the week you're in.
+    ActionItem(repeat, Symbol.Replay) { close(); onPropose(ProgramActions.repeatWeek(repeat)) }
     ActionItem(stringResource(R.string.program_action_deload), Symbol.Spa) { close(); onPropose(ProgramActions.deloadWeek(deload, position.week)) }
     ActionItem(stringResource(R.string.program_action_shift), Symbol.MoreTime) { close(); onShift() }
 }
@@ -333,6 +361,7 @@ private fun SectionHead(text: String) {
 private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean, onRevert: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val reverted = record.revertedAt != null
+    val revertedOn = record.revertedAt?.let { shortDate(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()) }
     val block = program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
     Row(
         Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = CardPadding, end = 4.dp, top = 8.dp, bottom = 8.dp),
@@ -347,8 +376,8 @@ private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                if (reverted && replaced) stringResource(R.string.program_change_replaced, shortDate(java.time.Instant.ofEpochMilli(record.revertedAt!!).atZone(java.time.ZoneId.systemDefault()).toLocalDate()))
-                else if (reverted) stringResource(R.string.program_change_reverted)
+                if (reverted && replaced) stringResource(R.string.program_change_replaced, revertedOn!!)
+                else if (reverted) stringResource(R.string.program_change_reverted, revertedOn!!)
                 else stringResource(R.string.program_change_accepted, scopeText(record.change.scope, block), shortDate(record.accepted.acceptedOn)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,

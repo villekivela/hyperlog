@@ -14,6 +14,7 @@ import com.hyperlog.app.program.ChangeRecord
 import java.time.LocalDate
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.ExerciseSummary
+import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.ProgramParser
@@ -26,6 +27,9 @@ import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -165,7 +169,7 @@ class ProgramScreenTest {
         compose.onNodeWithText("Repeat week 1").assertDoesNotExist()
         compose.onNodeWithText("Changes · 1 in force").performClick()
         compose.onNodeWithText("Repeat week 1").assertIsDisplayed()
-        compose.onNodeWithText("Reverted").assertIsDisplayed()
+        compose.onNodeWithText("Reverted", substring = true).assertIsDisplayed()
         compose.onNodeWithContentDescription("Revert").performClick()
         compose.onNodeWithText("Revert").performClick()
         assertEquals(1L, reverted)
@@ -181,13 +185,11 @@ class ProgramScreenTest {
         }
         // It opens on the block and week you're in.
         compose.onNodeWithText("From Ramp-in").assertIsDisplayed()
-        // Every slot of Build differs from Ramp-in, so the comparison folds after its first three.
-        compose.onNodeWithText("Day B").assertDoesNotExist()
-        compose.onNodeWithText("19 more").performClick()
-        compose.onNodeWithText("Day B").assertExists()
-        compose.onNodeWithText("Fewer").performScrollTo().performClick()
-        scrollTo("Day A — Heavy bench, squat, pulldown")
-        compose.onNodeWithText("Day A — Heavy bench, squat, pulldown").assertIsDisplayed()
+        // Build is Ramp-in's slots without its block-wide rule: the rule is said once, no slot listed.
+        compose.onNodeWithText("Every set: 1 RIR closer to failure · techniques back").assertIsDisplayed()
+        compose.onNodeWithText("Otherwise written as in Ramp-in").assertIsDisplayed()
+        scrollTo("Week 6 · Day A — Heavy bench, squat, pulldown")
+        compose.onAllNodesWithText("Week 6 · Day A — Heavy bench, squat, pulldown")[1].assertIsDisplayed()
         // Next heads the header's day and the day's own head.
         compose.onAllNodesWithText("Next")[1].assertIsDisplayed()
 
@@ -195,12 +197,18 @@ class ProgramScreenTest {
         compose.onNodeWithText("Intensify").performClick()
         compose.onNodeWithText("From Build").assertIsDisplayed()
         compose.onAllNodesWithText("1 × 3–5 @ 1", substring = true)[0].assertExists()
-        scrollTo("Day C — Bench volume, leg press, pulldown")
-        compose.onNodeWithText("Day C — Bench volume, leg press, pulldown").assertIsDisplayed()
+        scrollTo("Week 7 · Day C — Bench volume, leg press, pulldown")
+        compose.onNodeWithText("Week 7 · Day C — Bench volume, leg press, pulldown").assertIsDisplayed()
 
         scrollTo("Deload + test")
         compose.onNodeWithText("Deload + test").performClick()
         compose.onNodeWithText("From Intensify").assertIsDisplayed()
+        compose.onNodeWithText("A deload week").assertIsDisplayed()
+        // Week 12 is written afresh, every slot different, so the comparison folds after three.
+        compose.onNodeWithText("Day B").assertDoesNotExist()
+        compose.onNodeWithText("19 more", substring = true).performClick()
+        compose.onNodeWithText("Day B").assertExists()
+        compose.onNodeWithText("Fewer").performScrollTo().performClick()
         scrollTo("Deload")
         compose.onAllNodesWithText("Deload")[0].assertIsDisplayed()
     }
@@ -211,7 +219,11 @@ class ProgramScreenTest {
         val at = LocalDate.of(2026, 10, 13).atTime(18, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
         val session = PastSessionItem(
             7, at, at, "Day A", null,
-            listOf(ExerciseSummary("Barbell Bench Press", listOf(LoggedSet(80.0, 5, 0, 1), LoggedSet(70.0, 8, 0, 1)))),
+            listOf(
+                ExerciseSummary("Barbell Bench Press", listOf(LoggedSet(80.0, 5, 0, 1), LoggedSet(70.0, 8, 0, 1))),
+                // A drop set's top set is the set itself, without its drops.
+                ExerciseSummary("Pec Deck", listOf(LoggedSet(50.0, 10, 0, 0, extensions = listOf(Extension(Extension.Kind.Drop, 37.5, 6))))),
+            ),
             programId = 1, position = Position(1, 0),
         )
         var opened: Long? = null
@@ -225,8 +237,21 @@ class ProgramScreenTest {
         }
         compose.onNodeWithText("Tue 13 Oct").assertIsDisplayed()
         compose.onNodeWithText("80 × 5 @ 1").assertIsDisplayed()
+        compose.onNodeWithText("50 × 10 @ 0").assertIsDisplayed()
         compose.onNodeWithText("Tue 13 Oct").performClick()
         assertEquals(7L, opened)
+    }
+
+    @Test
+    fun theWeekShownIsKeptByTheHostSoItSurvivesLeavingTheScreen() {
+        val active = ActiveProgram(1, starter(), Position(6, 0), today = LocalDate.of(2026, 10, 13))
+        var view by mutableStateOf(ProgramView(week = 7))
+        compose.setContent {
+            HyperlogTheme { ProgramScreen(active, null, onImport = {}, onCloseErrors = {}, onBack = {}, view = view, onView = { view = it }) }
+        }
+        compose.onNodeWithText("From Build").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Week 8").performClick()
+        assertEquals(ProgramView(week = 8), view)
     }
 }
 

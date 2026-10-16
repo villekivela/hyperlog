@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -57,13 +58,13 @@ class ProgramChangesTest {
         compose.waitFor("Change to your program")
         compose.onNodeWithText("The plan 1 week later").assertIsDisplayed()
         compose.onNodeWithText("Rest of the program").assertIsDisplayed()
-        compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Week 2 · Day A", substring = true).assertIsDisplayed()
+        compose.onAllNodesWithText("Week 3 · Day A", substring = true)[0].assertIsDisplayed()
+        compose.onAllNodesWithText("Week 2 · Day A", substring = true)[0].assertIsDisplayed()
         compose.onNodeWithText("Reject").performClick()
 
         // Rejected: the program is where it was.
         compose.waitGone("Change to your program")
-        compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
+        compose.onAllNodesWithText("Week 3 · Day A", substring = true)[0].assertIsDisplayed()
 
         action("Shift program")
         compose.onNodeWithText("Review").performClick()
@@ -88,9 +89,9 @@ class ProgramChangesTest {
         compose.onNodeWithText("Revert “Skip week 3 · Day A", substring = true).assertIsDisplayed()
         compose.assertButtonOrder("Cancel", "Revert")
         compose.onNodeWithText("Revert").performClick()
-        compose.waitFor("Reverted")
+        compose.waitFor("Reverted", substring = true)
         compose.onNodeWithContentDescription("Back").performClick()
         compose.waitFor("Changes · none in force")
-        compose.onNodeWithText("Week 3 · Day A", substring = true).assertIsDisplayed()
+        compose.onAllNodesWithText("Week 3 · Day A", substring = true)[0].assertIsDisplayed()
     }
 }

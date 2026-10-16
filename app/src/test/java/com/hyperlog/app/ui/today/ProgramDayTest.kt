@@ -116,8 +116,10 @@ class ProgramDayTest {
         compose.waitFor("80 × 6", substring = true)
         compose.onNodeWithText("80 × 6", substring = true).performClick()
         compose.waitFor("Barbell Bench Press")
-        compose.onNodeWithContentDescription("Back").assertIsDisplayed()
         compose.onNodeWithText("Main · weeks 1–2").assertDoesNotExist()
+        // Back returns to Program, where the session was opened from.
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.waitFor("Main · weeks 1–2")
     }
 
     @Test

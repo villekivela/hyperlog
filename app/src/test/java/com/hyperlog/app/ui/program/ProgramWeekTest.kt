@@ -140,4 +140,17 @@ class ProgramWeekTest {
         // Unchanged slots are left out: the pulldown is the same in both blocks.
         assertTrue(dayA.slots.none { it.after?.id == "lat_pulldown" })
     }
+
+    @Test
+    fun aBlockWideRuleIsNamedOnceAndSlotsAreComparedAsWritten() = runTest {
+        val program = active().program
+        // Ramp-in is Build written the same, one RIR easier and without techniques.
+        val build = ProgramWeek.comparison(program, program.blocks.first { it.name == "Build" })!!
+        assertEquals(BlockRule(rirAdd = 1, noTechniques = true), build.rule.first)
+        assertEquals(BlockRule(), build.rule.second)
+        assertEquals(emptyList<DayComparison>(), build.days)
+
+        val test = ProgramWeek.comparison(program, program.blocks.last())!!
+        assertTrue(test.rule.second.deload)
+    }
 }

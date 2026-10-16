@@ -711,23 +711,28 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    plan; it never edits it.
    - **The header card** holds the program's title and its **Next** day (or "Program finished").
      Under it, while there are accepted Changes, one row **Changes · 1 in force** ("Changes · none
-     in force" once all are reverted or replaced) opens the Changes list with Revert (Coaching).
+     in force" once all are reverted or replaced) opens the Changes page with Revert (Coaching),
+     a reverted one reading "Reverted 16 Oct". The navigation bar is hidden on that page.
    - **The actions are Changes**, in ⋮ above Import program and Run Hyperlog Full Body (a divider
-     between) while the program runs: **Skip day** (`skip_day`), **Repeat week** (`repeat_week`),
+     between) while the program runs: **Skip day** (`skip_day`), **Repeat week 5** (`repeat_week`,
+     named for the week it repeats: the last one trained),
      **Deload week** (`deload_week` for the week you're in) and **Shift program** (`shift_program`,
      1–8 weeks later, picked by steps first). Each opens its diff, and applies only on Accept.
    - **Blocks**: a connected button group picks the block (a scrolling row of chips past four
      blocks), opening on the block you're in. The block's card names it (`Build · weeks 3–6`), then
-     **From <previous block>**: each slot that differs between the previous block's last week and
-     this block's first, as written, Day A beside Day A, slot by slot (a swap as "In place of …",
-     sets before → after, an added or removed slot). That comparison is the whole description of a
-     block; the program format has no note for it. The first block has none. Past five slots it
-     shows the first three and folds the rest behind "N more", unfolded in place. Chips pick the week,
-     opening on the week you're in; done weeks are ticked.
-   - **Days**: the picked week's days, each headed by its name. A day to come is in full, slot by
+     chips pick the week, opening on the week you're in (done weeks ticked), then **From <previous
+     block>**. A block-wide week override that differs is said once, for every set ("Every set:
+     1 RIR closer to failure · techniques back", "A deload week"). Then each slot written
+     differently, comparing the previous block's last week with this block's first without that
+     override, Day A beside Day A (a swap as "In place of …", sets before → after, an added or
+     removed slot), or "Otherwise written as in Ramp-in" when none is. That comparison is the
+     whole description of a block; the program format has no note for it. The first block has
+     none. Past five slots it shows the first three and folds the rest behind "N more", unfolded
+     in place.
+   - **Days**: the picked week's days, each headed by its week and name (`Week 7 · Day A — …`). A day to come is in full, slot by
      slot as Today lists it, exactly as the session will prescribe it: the program's day with week
      and day overrides, deloads and the Changes covering it, through the same plan Today and the
-     session read. The next day is headed **Next**; a deload day **Deload**. There are no dates.
+     session read. The next day is headed **Next**; a deload day **Deload** with the `spa` symbol. There are no dates.
      The next day is read for today, as Today shows it. A later day takes a date-ranged Change by
      the window the Change's card on Coach shows (its in-force diff): one week of program days per
      week of dates, counted from the later of the range's start and today, never more program days
@@ -735,10 +740,16 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      date-ranged Change covers reads "Ends 26 Oct; if this day falls later, it's as written."
    - **Past days show the sessions.** A done day (one before the position with a session of this
      program for it, the latest if a repeated week trained it twice) shows the date and each
-     exercise's top set, and opens that session in History. A day before the position with no
+     exercise's top set (the set itself, without its drops, mini-sets or hold), and opens that
+     session in History; Back from it returns to Program. A day before the position with no
      session was skipped: it shows its plan, dimmed, headed **Skipped**.
+   - **Program keeps where you were** (the week picked, the Changes page) while a session opened
+     from it or a Change's review is up; choosing Program on the navigation bar opens it on where
+     you are.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
-     and imports nothing. Importing over a program asks first ("Replace <title>?").
+     and imports nothing. Importing over a program asks first ("Replace <title>?"), saying where
+     you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
+     instead. Past sessions are kept."
    - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog
      Full Body with **Run this program**; Today keeps Start session (ad hoc) and Import a program
      beside it. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the

@@ -155,10 +155,29 @@ private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComp
                 else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd),
                 style = MaterialTheme.typography.titleLarge,
             )
+            // The weeks first, so changing week never means scrolling past the comparison.
+            Spacer(Modifier.height(12.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                (block.weekStart..block.weekEnd).forEach { w ->
+                    val done = w < active.position.week
+                    val description = if (done) stringResource(R.string.program_week_done, w) else stringResource(R.string.program_week_n, w)
+                    FilterChip(
+                        selected = w == week,
+                        onClick = { onWeek(w) },
+                        label = { Text("$w") },
+                        modifier = Modifier.semantics { contentDescription = description },
+                        leadingIcon = if (done) ({ SymbolIcon(Symbol.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }) else null,
+                        colors = selectedChipColors(),
+                    )
+                }
+            }
             if (comparison != null) {
                 Spacer(Modifier.height(16.dp))
                 Text(stringResource(R.string.program_from, comparison.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
-                // Every slot of a block that moves RIR differs, so a long comparison folds after its first few.
+                // A block-wide change is said once, for every set; the slots below are those written differently.
+                val rule = ruleText(comparison.rule.first, comparison.rule.second)
+                rule.forEach { Text(it, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyLarge) }
+                // A block written afresh differs in every slot, so a long comparison folds after its first few.
                 val total = comparison.days.sumOf { it.slots.size }
                 var open by rememberSaveable(block.id) { mutableStateOf(false) }
                 var budget = if (open || total <= ComparedFolded) total else ComparedShown
@@ -188,26 +207,43 @@ private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComp
                     }
                 }
                 if (comparison.days.isEmpty()) {
-                    Text(stringResource(R.string.program_from_same, comparison.previous.name), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                (block.weekStart..block.weekEnd).forEach { w ->
-                    val done = w < active.position.week
-                    val description = if (done) stringResource(R.string.program_week_done, w) else stringResource(R.string.program_week_n, w)
-                    FilterChip(
-                        selected = w == week,
-                        onClick = { onWeek(w) },
-                        label = { Text("$w") },
-                        modifier = Modifier.semantics { contentDescription = description },
-                        leadingIcon = if (done) ({ SymbolIcon(Symbol.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }) else null,
-                        colors = selectedChipColors(),
+                    Text(
+                        stringResource(if (rule.isEmpty()) R.string.program_from_same else R.string.program_from_otherwise, comparison.previous.name),
+                        Modifier.padding(top = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = cs.onSurfaceVariant,
                     )
                 }
             }
         }
     }
+}
+
+/**
+ * A block-wide override's change in words, a line each: `Every set: 1 RIR closer to failure ·
+ * techniques back`, and `A deload week` or `Out of the deload`.
+ */
+@Composable
+private fun ruleText(before: BlockRule, after: BlockRule): List<String> {
+    val sets = buildList {
+        val closer = before.rirAdd - after.rirAdd
+        if (closer > 0) add(pluralStringResource(R.plurals.program_rule_closer, closer, closer))
+        if (closer < 0) add(pluralStringResource(R.plurals.program_rule_further, -closer, -closer))
+        if (after.rir != null && after.rir != before.rir) add(stringResource(R.string.program_rule_rir, after.rir))
+        if (before.noTechniques && !after.noTechniques) add(stringResource(R.string.program_rule_techniques_back))
+        if (!before.noTechniques && after.noTechniques) add(stringResource(R.string.program_rule_no_techniques))
+        val fewer = after.fewerSets - before.fewerSets
+        if (fewer > 0) add(pluralStringResource(R.plurals.program_rule_fewer, fewer, fewer))
+        if (fewer < 0) add(pluralStringResource(R.plurals.program_rule_more, -fewer, -fewer))
+    }
+    return listOfNotNull(
+        sets.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.program_rule_every_set, it.joinToString(" · ")) },
+        when {
+            after.deload && !before.deload -> stringResource(R.string.program_rule_deload)
+            before.deload && !after.deload -> stringResource(R.string.program_rule_out_of_deload)
+            else -> null
+        },
+    )
 }
 
 /** One slot that changed: the exercise, then its sets before → after (or added, or gone). */
@@ -245,7 +281,8 @@ private fun ComparedSlot(slot: SlotDiff, name: (String) -> String) {
 @Composable
 private fun DayHead(day: ProgramDay) {
     val cs = MaterialTheme.colorScheme
-    val name = day.day.day.name
+    // The week is in every head, so a day still says which week it is once the chips scroll away.
+    val name = stringResource(R.string.program_week_day, day.position.week, day.day.day.name)
     val (state, color) = when (day) {
         is ProgramDay.Ahead -> when {
             day.next -> stringResource(R.string.program_next)
@@ -270,6 +307,10 @@ private fun DayHead(day: ProgramDay) {
         )
         if (state != null) {
             Spacer(Modifier.width(16.dp))
+            if (day is ProgramDay.Ahead && !day.next && day.day.deload) {
+                SymbolIcon(Symbol.Spa, null, Modifier.size(18.dp), tint = color)
+                Spacer(Modifier.width(4.dp))
+            }
             Text(state, style = MaterialTheme.typography.labelLarge, color = color, fontWeight = FontWeight.Medium)
         }
     }
@@ -290,7 +331,7 @@ private fun DoneDay(session: PastSessionItem) {
                 Row {
                     Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.width(16.dp))
-                    Text(top.summary(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    Text(top.copy(extensions = emptyList()).summary(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
             }
         }
