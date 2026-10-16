@@ -6,11 +6,10 @@ ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Scr
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
 (`session-active-drop` and `session-active-mini-set` show a set under way,
 `session-mini-sets-planned` myo-reps about to start, `session-done` the finished session's sets
-with RIR chips);
-`screens/session-*.png` come from the test phone (dark, monochrome system style) and still show
-the theme before Navy (#37). The renders
+with RIR chips). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
-testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark.
+testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark; the whole bar and machine
+from `WholeBarRenders` and Session done from `AppRenders`, the same way.
 
 ## Principles
 
@@ -65,7 +64,7 @@ titleLarge, the system font for the rest):
 | Last time | bodyMedium |
 | Keys | 24 sp |
 
-Colour comes from Hyperlog's Navy theme, light and dark:
+Colour comes from Hyperlog's Navy on grey theme, light and dark:
 
 | Role | Colour |
 | --- | --- |

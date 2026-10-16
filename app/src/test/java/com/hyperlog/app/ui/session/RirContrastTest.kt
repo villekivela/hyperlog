@@ -3,6 +3,8 @@ package com.hyperlog.app.ui.session
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.ColorScheme
+import com.hyperlog.app.ui.theme.NavyDark
 import com.hyperlog.app.ui.theme.NavyLight
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -37,9 +39,12 @@ class RirContrastTest {
         for (rir in 0..4) assertEquals(rirColor(rir), rirRingColor(rir, dark = true))
     }
 
-    // Navy on grey (#42): its light and dark surfaces and containers, and its accents.
-    private val neutralLight = listOf(0xFFFFFFFF, 0xFFF7F7F8, 0xFFEEEEF0, 0xFFE9E9EC, 0xFFE4E4E7).map(::Color)
-    private val neutralDark = listOf(0xFF111214, 0xFF17181A, 0xFF1E1F22, 0xFF26272A, 0xFF303134).map(::Color)
+    /** Every surface and container a chip can sit on, from the theme's own schemes. */
+    private fun surfaces(scheme: ColorScheme) = with(scheme) {
+        listOf(surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest)
+    }
+    private val neutralLight = surfaces(NavyLight)
+    private val neutralDark = surfaces(NavyDark)
 
     @Test
     fun targetChipsKeepThreeToOneOnEveryNeutralSurface() {

@@ -19,10 +19,15 @@ configuration, iOS, web, any server.
 - Kotlin, Jetpack Compose, Material 3. Android only. minSdk 26, targetSdk 36, compileSdk 37 (current Compose needs it).
 - **Material 3 Expressive** (the current Compose Material 3 expressive components, shapes and
   motion).
-- **Hyperlog's own theme**: Navy, Material 3 light and dark schemes from the seed `#16236E`, the
-  same on every phone, with no dynamic colour. Dark mode has deeper, blue-tinted surfaces than the
-  generated scheme and a stronger primaryContainer (`#303E94`), so its buttons stand off them.
-  Light and dark follow the system setting; there is no in-app theme picker.
+- **Hyperlog's own theme**: Navy on grey, the same on every phone, with no dynamic colour. Surfaces,
+  text and dividers are neutral grey: white in light mode (containers `#F7F7F8` to `#E4E4E7`, text
+  `#1A1A1C`), near-black grey in dark (`#111214`, containers `#17181A` to `#303134`, text
+  `#E6E6E8`). One navy accent marks only what you act on or what's selected: primary and
+  primaryContainer (`#2B3A8F` light; `#B4BEFF` and `#3A49A8` dark, so the Start button stands off
+  the dark surfaces), and a navy tint in secondaryContainer for the selected tab and chips that are
+  on. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
+  stay grey. The RIR, progression, plate and error colours stay fixed, so the accent is never
+  green, amber or red. Light and dark follow the system setting; there is no in-app theme picker.
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
   1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets display, headline and titleLarge text: screen
   titles, the day's name, exercise names, and the kg and reps in the set table. Everything else is

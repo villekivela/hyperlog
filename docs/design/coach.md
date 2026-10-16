@@ -9,7 +9,8 @@ sheet stay, and are at the end of this note. The tokens of `program-and-today.md
 The owner's review on 2026-10-15 found the old screen hard to read: it never said what it does,
 the Limits repeated the situations, Time off showed at 0 days, and Pain → Hands buried a list of
 six exercise chips. The redesign answers those, with the tokens of the designer
-pass below. Old screens: `screens/coach.png`, `coach-pain.png`.
+pass below. The screens before it were dropped in #42; `screens/coach.png` is today's Coach on the
+phone (dark).
 
 ## Principles
 
@@ -133,9 +134,7 @@ Start workout floats as on any day.
 Issue #32 (this pass), with the screenshot of each in `screens/` as `light-<name>.png` and
 `dark-<name>.png`. They are Robolectric renders from `CoachRenders` (skipped unless asked for:
 `RENDERS=<dir> ./gradlew testDebugUnitTest --tests '*CoachRenders*'`, `DARK=1` for dark), since
-the phone was locked for most of the pass. From the phone (dark, monochrome), with the owner's
-own two Changes in force: `phone-coach-02-in-force` and `phone-coach-03-how-its-going` (the words
-started with the Change, the field above the keyboard with Ask Claude).
+the phone was locked for most of the pass.
 
 - Coach: empty, nothing in force, Ask Claude disabled (`coach-01-empty`); a Change in force
   (`coach-02-in-force`); words typed (`coach-03-words`); asked, Paste reply filled
