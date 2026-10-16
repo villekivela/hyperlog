@@ -26,8 +26,8 @@ configuration, iOS, web, any server.
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
   1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets display, headline and titleLarge text: screen
   titles, the day's name, exercise names, and the kg and reps in the set table. Everything else is
-  the system font. A long exercise name at the top of a session steps down to 18 sp before it is
-  cut off.
+  the system font. A long exercise name at the top of a session or a past exercise wraps to a
+  second line at full size; only a name longer than two lines is cut off.
 - **Tabular figures everywhere**: every style in the type scale sets `tnum`, so weights, reps,
   RIR, dates, timers and counts keep their columns as they change.
 - **Every symbol is a Material Symbol** (Rounded). The prototype bundles the 15 MB variable font;
@@ -772,7 +772,8 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that is not part of the
-  theme; contrast is tuned for light and dark.
+  theme. In light mode the warm and calm target rings are darker shades of the same hues, at
+  least 3:1 against every light surface; filled dots and dark mode keep the base colours.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
   train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets
   Today notice time off. No reminders or notifications.

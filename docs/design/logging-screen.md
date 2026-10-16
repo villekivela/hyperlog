@@ -54,7 +54,7 @@ titleLarge, the system font for the rest):
 
 | Role | Style |
 | --- | --- |
-| Exercise name | headlineSmall, stepping down to 18 sp before it ellipsizes |
+| Exercise name | headlineSmall, wrapping to two lines at full size before it ellipsizes |
 | Chips, Next label | labelLarge |
 | Why-line | bodyMedium, one line |
 | Column heads | labelMedium |
@@ -89,7 +89,10 @@ Colour comes from Hyperlog's Navy theme, light and dark:
 
 Two fixed scales sit outside the theme and are the same in light and dark:
 
-- **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots.
+- **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots. In light
+  mode the 1–2 and 3+ target rings are `#AA741E` and `#4A8983`, the same hues darkened to at least
+  3:1 on every light surface (`RirContrastTest`); the 0 ring, filled dots and dark mode keep the
+  base colours.
 - **Trend** (the why-line's symbol): up `#5FAE7A` (calm green), same weight `#9AA1A9`
   (neutral), down `#E0A84E` (amber; a deload or back-off is no failure, so never red).
 

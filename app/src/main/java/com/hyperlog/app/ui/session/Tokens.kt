@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,33 +59,42 @@ internal val CellShape = RoundedCornerShape(12.dp)
 internal val ChipShape = RoundedCornerShape(8.dp)
 
 /**
- * An exercise's name at the top of the session and past-exercise screens: one line of
- * headlineSmall. Space Grotesk runs wide, so a long name steps down to 18 sp before it ellipsizes.
+ * An exercise's name at the top of the session and past-exercise screens: headlineSmall at full
+ * size. Space Grotesk runs wide, so a long name wraps to a second line before it ellipsizes.
  */
 @Composable
 internal fun ExerciseName(name: String, modifier: Modifier = Modifier) {
-    val style = MaterialTheme.typography.headlineSmall
     Text(
         name,
         modifier,
-        style = style,
-        autoSize = TextAutoSize.StepBased(minFontSize = 18.sp, maxFontSize = style.fontSize, stepSize = 1.sp),
-        maxLines = 1,
+        style = MaterialTheme.typography.headlineSmall,
+        maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )
 }
 
-/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot), the same in light and dark. */
+/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot): filled dots everywhere, and rings in dark mode. */
 internal fun rirColor(rir: Int): Color = when {
     rir <= 0 -> Color(0xFFD9645B)
     rir <= 2 -> Color(0xFFE0A84E)
     else -> Color(0xFF6BAFA9)
 }
 
+/**
+ * A target ring's colour. In light mode the warm and calm rings are darker shades of the same hues,
+ * so a 2 dp ring keeps 3:1 against every light surface; the hot ring and dark mode keep [rirColor].
+ */
+internal fun rirRingColor(rir: Int, dark: Boolean): Color = when {
+    dark || rir <= 0 -> rirColor(rir)
+    rir <= 2 -> Color(0xFFAA741E)
+    else -> Color(0xFF4A8983)
+}
+
 /** An RIR mark: a ring is a target, a filled dot is a result or the selection. */
 @Composable
 internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
-    val color = rirColor(rir)
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val color = if (filled) rirColor(rir) else rirRingColor(rir, dark)
     Box(
         modifier.size(20.dp).then(
             if (filled) Modifier.background(color, CircleShape) else Modifier.border(2.dp, color, CircleShape),
