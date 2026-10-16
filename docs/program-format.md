@@ -107,6 +107,14 @@ block's weeks, and keys may not overlap.
 They apply in this order: the line's own override, then the block's, then the day's. So a day's
 `"rir": 3` in a deload week wins over everything.
 
+## Workouts
+
+A workout from the coach (`SPEC.md`, Coaching → Workout) is one day in this format, outside any
+program: `{ "workout": { "name", "summary", "groups" } }`, with the groups, slots and set lines
+above and no week overrides. `ProgramParser.workout` checks it with the same rules and paths,
+under `workout.` (`workout.groups[0].slots[0].exercise: unknown exercise "bb_row"`), and slot ids
+are unique within it.
+
 ## Running a program
 
 The program runs as a sequence. Today shows the next day; finishing a session of it makes the day
