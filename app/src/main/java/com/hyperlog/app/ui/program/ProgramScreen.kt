@@ -63,7 +63,6 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.ui.text.style.TextDecoration
 import com.hyperlog.app.program.Block
 import com.hyperlog.app.program.Program
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardPadding
@@ -342,7 +341,7 @@ private fun ShiftDialog(onReview: (Int, String) -> Unit, onDismiss: () -> Unit) 
                     Text(
                         pluralStringResource(R.plurals.program_shift_weeks, weeks, weeks),
                         Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleMedium.merge(Tnum),
+                        style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center,
                     )
                     IconButton(onClick = { weeks++ }, enabled = weeks < ProgramActions.MAX_SHIFT_WEEKS) {
@@ -376,7 +375,7 @@ private fun WeekRow(week: Int, block: Block, active: ActiveProgram) {
         Text(
             "$week",
             Modifier.width(40.dp),
-            style = MaterialTheme.typography.titleMedium.merge(Tnum),
+            style = MaterialTheme.typography.titleMedium,
             color = if (week == position.week) cs.onSurface else cs.onSurfaceVariant,
             fontWeight = if (week == position.week) FontWeight.Bold else FontWeight.Normal,
         )

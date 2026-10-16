@@ -101,7 +101,7 @@ fun SegmentedRow(
             if (supporting != null) {
                 Text(
                     supporting,
-                    style = MaterialTheme.typography.bodyMedium.merge(com.hyperlog.app.ui.session.Tnum),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = supportingColor ?: cs.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

@@ -55,7 +55,6 @@ import com.hyperlog.app.history.takesGoal
 import java.time.LocalDate
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.session.Margin
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlin.math.roundToInt
@@ -180,7 +179,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
         listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.summary()}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
             .joinToString(" · "),
         Modifier.padding(horizontal = Margin),
-        style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+        style = MaterialTheme.typography.bodyMedium,
         color = cs.onSurfaceVariant,
     )
     note?.let { Text(it, Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary) }
@@ -226,13 +225,13 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
         Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = CardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
-        Text(p.top.summary(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.merge(Tnum), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        Text(p.top.summary(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (!trend.byReps) {
             Text(
                 p.estimateKg?.let { estimateText(it) } ?: "",
                 Modifier.width(56.dp),
-                style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End,
             )
         }
@@ -285,8 +284,8 @@ fun BodyweightScreen(
                     Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = CardPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(long(b.date), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = if (picked) cs.primary else cs.onSurfaceVariant)
-                    Text(stringResource(R.string.weight_kg, formatKg(b.kg)), style = MaterialTheme.typography.bodyLarge.merge(Tnum), color = if (picked) cs.primary else cs.onSurface)
+                    Text(long(b.date), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = if (picked) cs.primary else cs.onSurfaceVariant)
+                    Text(stringResource(R.string.weight_kg, formatKg(b.kg)), style = MaterialTheme.typography.bodyLarge, color = if (picked) cs.primary else cs.onSurface)
                 }
                 }
             }
@@ -312,7 +311,7 @@ private fun BodyweightChart(days: List<Bodyweight>, index: Int, onSelect: (Int) 
             Text(
                 "${long(days[index].date)} · ${stringResource(R.string.weight_kg, formatKg(days[index].kg))}",
                 Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
             )
             IconButton(onClick = { onDelete(days[index].date) }) {

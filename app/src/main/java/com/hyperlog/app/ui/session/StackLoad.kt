@@ -45,7 +45,7 @@ internal const val StackLoadTag = "stack-load"
 @Composable
 internal fun StackLoad(load: PinLoad?, typedKg: Double?, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    val text = MaterialTheme.typography.titleSmall.merge(Tnum)
+    val text = MaterialTheme.typography.titleSmall
     val description = when {
         load != null -> stringResource(R.string.stack_load_description, load.hint(), formatKg(load.kg))
         typedKg != null -> stringResource(R.string.stack_load_off, formatKg(typedKg))

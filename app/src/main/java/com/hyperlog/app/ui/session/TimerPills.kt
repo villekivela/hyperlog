@@ -95,7 +95,7 @@ private fun TimerPill(
         ) {
             SymbolIcon(symbol, description, Modifier.width(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text(time, style = MaterialTheme.typography.titleMedium.merge(Tnum))
+            Text(time, style = MaterialTheme.typography.titleMedium)
         }
     }
     if (onClick != null) Surface(onClick = onClick, shape = CircleShape, color = container, contentColor = content) { inside() }

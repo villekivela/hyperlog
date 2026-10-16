@@ -260,7 +260,7 @@ private fun Stepper(
         SymbolIcon(Symbol.Remove, down.first, tint = if (down.second) cs.onSurfaceVariant else cs.outlineVariant)
     }
     Box(Modifier.width(40.dp), contentAlignment = Alignment.Center) {
-        if (mark != null) mark() else Text(value, style = MaterialTheme.typography.titleLarge.merge(Tnum))
+        if (mark != null) mark() else Text(value, style = MaterialTheme.typography.titleLarge)
     }
     IconButton(onClick = onUp, enabled = up.second) {
         SymbolIcon(Symbol.Add, up.first, tint = if (up.second) cs.onSurfaceVariant else cs.outlineVariant)

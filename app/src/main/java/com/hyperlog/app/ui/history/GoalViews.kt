@@ -36,7 +36,6 @@ import com.hyperlog.app.R
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.history.LiftGoal
 import com.hyperlog.app.ui.session.Margin
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import java.time.Instant
@@ -55,7 +54,7 @@ internal fun GoalFigure(estimateKg: Double?, goal: LiftGoal, figure: TextStyle, 
         Text(
             stringResource(R.string.goal_of, formatKg(goal.kg)),
             Modifier.alignByBaseline(),
-            style = MaterialTheme.typography.titleMedium.merge(Tnum),
+            style = MaterialTheme.typography.titleMedium,
             color = cs.onSurfaceVariant,
         )
     }
@@ -84,7 +83,7 @@ internal fun GoalStatusRow(estimateKg: Double?, goal: LiftGoal, modifier: Modifi
     Row(modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
         SymbolIcon(if (reached) Symbol.CheckCircle else Symbol.Flag, null, Modifier.size(16.dp), tint = if (reached) cs.primary else cs.onSurfaceVariant)
         Spacer(Modifier.width(8.dp))
-        Text(goalStatus(estimateKg, goal), style = MaterialTheme.typography.bodyMedium.merge(Tnum), color = cs.onSurfaceVariant)
+        Text(goalStatus(estimateKg, goal), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
     }
 }
 

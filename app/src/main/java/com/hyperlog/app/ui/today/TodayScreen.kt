@@ -73,7 +73,6 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.StarterOffer
-import com.hyperlog.app.ui.session.Tnum
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
@@ -687,7 +686,7 @@ internal fun SlotRows(
                 Text(
                     slot.label,
                     Modifier.width(40.dp).alignByBaseline(),
-                    style = MaterialTheme.typography.titleSmall.merge(Tnum),
+                    style = MaterialTheme.typography.titleSmall,
                     color = cs.primary,
                 )
                 Text(

@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,10 +56,7 @@ internal val CellShape = RoundedCornerShape(12.dp)
 /** A chip under the exercise name. */
 internal val ChipShape = RoundedCornerShape(8.dp)
 
-/** Tabular figures, so columns of numbers line up. */
-internal val Tnum = TextStyle(fontFeatureSettings = "tnum")
-
-/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot). It does not follow the dynamic theme. */
+/** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot), the same in light and dark. */
 internal fun rirColor(rir: Int): Color = when {
     rir <= 0 -> Color(0xFFD9645B)
     rir <= 2 -> Color(0xFFE0A84E)
@@ -79,7 +75,7 @@ internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
     ) {
         Text(
             if (rir >= 4) "4+" else "$rir",
-            style = MaterialTheme.typography.labelSmall.merge(Tnum),
+            style = MaterialTheme.typography.labelSmall,
             fontSize = if (rir >= 4) 9.sp else 11.sp,
             color = if (filled) Color.Black.copy(alpha = 0.87f) else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium,

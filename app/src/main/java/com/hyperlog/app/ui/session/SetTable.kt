@@ -692,7 +692,7 @@ private fun RowScope.IndexCell(
             ) {
                 Text(
                     label,
-                    style = MaterialTheme.typography.titleSmall.merge(Tnum),
+                    style = MaterialTheme.typography.titleSmall,
                     color = if (join == Join.None || tone == Tone.Active) ink else cs.onTertiaryContainer,
                     fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
                 )
@@ -763,7 +763,7 @@ private fun RowScope.SubLast(last: String?) {
     Text(
         last.orEmpty(),
         Modifier.weight(1f),
-        style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -777,7 +777,7 @@ private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = fa
         Modifier.width(width),
         color = color,
         textAlign = TextAlign.Center,
-        style = (if (small) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum),
+        style = (if (small) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge),
         maxLines = 1,
     )
 }
@@ -870,7 +870,7 @@ internal fun Cell(
     ) {
         val empty = text.isEmpty() && placeholder != null
         // Long values (`100 + 20`) step down a size; anything still too wide (a `10–12` range) shrinks to fit inside the padding.
-        val style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge).merge(Tnum)
+        val style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
         Text(
             if (empty) AnnotatedString(placeholder!!) else text,
             Modifier.padding(horizontal = CellPad),

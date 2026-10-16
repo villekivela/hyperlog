@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.ui.session.Margin
-import com.hyperlog.app.ui.session.Tnum
 import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -97,10 +96,10 @@ fun TrendChart(
     val cs = MaterialTheme.colorScheme
     val context = contextInk()
     val measurer = rememberTextMeasurer()
-    val tick = MaterialTheme.typography.labelSmall.merge(Tnum).copy(color = cs.onSurfaceVariant)
+    val tick = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
     // Muted ink: apart from the hairline grid, quieter than the estimate it is read against.
     val goalInk = cs.onSurfaceVariant
-    val goalStyle = MaterialTheme.typography.labelSmall.merge(Tnum).copy(color = cs.onSurfaceVariant)
+    val goalStyle = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
     val values = (line + dots).filterNotNull()
     if (dates.isEmpty() || values.isEmpty()) return
     val scaled = values + listOfNotNull(goal)
@@ -196,7 +195,7 @@ fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
 fun WeekSets(sets: Map<String, Double>) {
     val most = sets.values.maxOrNull() ?: return
     val style = MaterialTheme.typography.bodyMedium
-    val valueStyle = MaterialTheme.typography.labelLarge.merge(Tnum)
+    val valueStyle = MaterialTheme.typography.labelLarge
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -243,7 +242,7 @@ fun SetsBar(
                 Spacer(Modifier.width(8.dp))
                 Text(
                     formatSets(sets),
-                    style = MaterialTheme.typography.labelLarge.merge(Tnum),
+                    style = MaterialTheme.typography.labelLarge,
                     color = cs.onSurfaceVariant,
                     maxLines = 1,
                     softWrap = false,
