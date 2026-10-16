@@ -532,6 +532,7 @@ private fun App(
             onCheckForUpdates = updateModel::setCheckForUpdates,
             onCheckNow = updateModel::checkNow,
             checkedNow = checkedNow,
+            version = BuildConfig.VERSION_NAME,
         )
         else -> TodayScreen(
             onSettings = openSettings,
