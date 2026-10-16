@@ -53,6 +53,13 @@ class RirChipTest {
     }
 
     @Test
+    fun talkBackHearsTheChipOnceAsNRir() {
+        show("80 × 5 @ 1")
+        // The chip's own number is drawing only: the line's "1 RIR" is all TalkBack reads.
+        compose.onAllNodesWithText("1").assertCountEquals(0)
+    }
+
+    @Test
     fun textWithoutRirIsLeftAsItIs() {
         show("25 × 10, 18 × 7")
         compose.onNodeWithText("25 × 10, 18 × 7").assertIsDisplayed()

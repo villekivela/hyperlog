@@ -216,7 +216,7 @@ work. You can override the suggestion on the spot; the override is logged, not h
 
 Research behind these rules: `docs/research/progression-and-partials.md`.
 - **Every suggestion says why**, e.g. "Last time 50 kg × 12, 12, 12 [2], top of 8–12 → 52.5 kg"
-  (every set reached the top at the target RIR; 12, 12, 11 @ 2 would keep 50 kg for 12 reps).
+  (every set reached the top at the target RIR; 12, 12, 11 [2] would keep 50 kg for 12 reps).
   - The why-line sits under the exercise name (and its swap or superset chip) for the active set,
     one short muted line led by a direction symbol (`trending_up`, `trending_flat`,
     `trending_down`) in a fixed colour scale like RIR's, the same on every phone: calm green for

@@ -15,7 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -94,7 +95,8 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     Box(
         Modifier.fillMaxSize()
-            .testTag(if (target) RirChipTargetTag else RirChipLoggedTag)
+            // Drawing only: the line's alternate text already reads "N RIR".
+            .clearAndSetSemantics { testTag = if (target) RirChipTargetTag else RirChipLoggedTag }
             .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirChipFill(rir, dark), RirChipShape)),
         contentAlignment = Alignment.Center,
     ) {
