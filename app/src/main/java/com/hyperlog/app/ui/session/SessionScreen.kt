@@ -1106,7 +1106,7 @@ private fun Prescription(plan: List<SetPrescription>) {
                 color = cs.onSurfaceVariant,
             )
             Text(set.reps.toString(), Modifier.width(64.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1)
-            Box(Modifier.width(32.dp)) { set.rir?.let { RirMark(it, target = true) } }
+            Box(Modifier.width(32.dp)) { set.rir?.let { RirChip(it, target = true) } }
             val technique = set.technique
             val backoff = set.backoff
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {

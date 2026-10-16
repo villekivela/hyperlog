@@ -470,7 +470,7 @@ private fun UpcomingSetRow(
         LastCell(last)
         ValueText(weight, ColKg, color)
         ValueText(reps, ColReps, color)
-        RirCell { target?.rir?.let { RirMark(it, target = true) } }
+        RirCell { target?.rir?.let { RirChip(it, target = true) } }
         CheckCell(Check.Todo, null)
     }
 }
@@ -488,8 +488,8 @@ private fun ActiveSetRow(
         EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
         RirCell {
             when {
-                entry.rir != null -> RirMark(entry.rir, target = false)
-                target?.rir != null -> RirMark(target.rir, target = true)
+                entry.rir != null -> RirChip(entry.rir, target = false)
+                target?.rir != null -> RirChip(target.rir, target = true)
             }
         }
         if (editing) CheckCell(Check.Done, null)
@@ -520,7 +520,7 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
         ValueText(formatKg(set.weightKg), ColKg, color)
         val reps = set.repsText()
         ValueText(reps, ColReps, color, small = reps.length > 6)
-        RirCell { set.rir?.let { RirMark(it, target = false) } }
+        RirCell { set.rir?.let { RirChip(it, target = false) } }
         val logged = stringResource(R.string.check_logged, i + 1)
         val undo = stringResource(R.string.check_undo, i + 1)
         CheckCell(
@@ -553,7 +553,7 @@ private fun PlannedSubRow(
         SubLast(last)
         ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
         ValueText(reps, ColReps, color)
-        RirCell { if (toFailure) RirMark(0, target = true) }
+        RirCell { if (toFailure) RirChip(0, target = true) }
         CheckCell(Check.Todo, null, small = true)
     }
 }
@@ -608,7 +608,7 @@ private fun ActiveSubRow(
             else -> repsAnnotated(entry)
         }
         Cell(reps, focused = entry.field == Field.Reps, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), height = SubCellHeight) { tap(Field.Reps) }
-        RirCell { if (toFailure) RirMark(0, target = true) }
+        RirCell { if (toFailure) RirChip(0, target = true) }
         if (correcting != null) CheckCell(Check.Done, null, small = true)
         else {
             val log = table.onLogShown

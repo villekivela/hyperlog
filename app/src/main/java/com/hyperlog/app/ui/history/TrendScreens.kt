@@ -231,8 +231,9 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-        // Right-aligned, as on Program's done days, so the chips make one column to scan.
-        RirText(p.top.setText(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
+        // Right-aligned, as on Program's done days, so the chips make one column to scan. A set too
+        // long for the column loses its start, never its chip.
+        RirText(p.top.setText(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.StartEllipsis, textAlign = TextAlign.End)
         if (!trend.byReps) {
             Text(
                 p.estimateKg?.let { estimateText(it) } ?: "",

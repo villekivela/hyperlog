@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 
 // The RIR chip (SPEC, RIR chip): set text keeps `@ N` as its one source, and the UI draws each
 // `@ N` (or `@ N RIR`) as the number in a small chip of the fixed RIR scale. A target is outlined;
-// a logged set is a solid badge. The logging screen draws the same chip on its own ([RirMark]).
+// a logged set is a solid badge. The logging screen draws the same chip on its own ([RirChip]).
 
 internal const val RirChipTargetTag = "rir-chip-target"
 internal const val RirChipLoggedTag = "rir-chip-logged"
@@ -52,6 +52,17 @@ private val RirPattern = Regex("(^|$Gap)@$Gap(\\d+)(?:${Gap}RIR\\b)?")
 private val TargetWord = Regex("\\btarget$Gap$", RegexOption.IGNORE_CASE)
 private val RirChipShape = RoundedCornerShape(4.dp)
 
+
+/**
+ * A target chip's outline colour. In light mode each is a darker shade of its hue, so the outline
+ * keeps 3:1 against every light surface in daylight; dark mode keeps [rirColor].
+ */
+internal fun rirChipColor(rir: Int, dark: Boolean): Color = when {
+    dark -> rirColor(rir)
+    rir <= 0 -> Color(0xFFD5544A)
+    rir <= 2 -> Color(0xFFAA741E)
+    else -> Color(0xFF4A8983)
+}
 
 /**
  * A logged chip's fill, the same in light and dark: a solid badge. Each is the outline's light-mode
@@ -92,18 +103,23 @@ internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<Str
     // A style without a size is drawn at bodyMedium's.
     val size = if (fontSize.isSpecified) fontSize else 14.sp
     return chips.associate { key ->
-        // The number is 0.8 em; each semibold digit takes about 0.5 em, with 0.45 em either side.
-        val width = (0.9f + 0.5f * "${key.rir}".length).em
-        key.id to InlineTextContent(Placeholder(width, 1.25.em, PlaceholderVerticalAlign.TextCenter)) {
+        val label = "${key.rir}"
+        key.id to InlineTextContent(Placeholder(chipWidth(label).em, ChipHeight.em, PlaceholderVerticalAlign.TextCenter)) {
             // Drawing only: the line's alternate text already reads "N RIR".
-            RirChip(key.rir, key.target, (size.value * 0.8f).sp, Modifier.fillMaxSize().clearAndSetSemantics { testTag = if (key.target) RirChipTargetTag else RirChipLoggedTag })
+            ChipBox(key.rir, key.target, (size.value * NumberSize).sp, label, Modifier.fillMaxSize().clearAndSetSemantics { testTag = chipTag(key.target) })
         }
     }
 }
 
-/** The chip itself, filling [modifier]'s size, with [label] at [fontSize]. */
+// The number is 0.8 em; each semibold digit takes about 0.5 em, with 0.45 em either side.
+private const val NumberSize = 0.8f
+private const val ChipHeight = 1.25f
+private fun chipWidth(label: String) = 0.9f + 0.5f * label.length
+private fun chipTag(target: Boolean) = if (target) RirChipTargetTag else RirChipLoggedTag
+
+/** The chip's drawing, filling [modifier]'s size, with [label] at [fontSize]. */
 @Composable
-private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit, modifier: Modifier, label: String = "$rir") {
+private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String, modifier: Modifier) {
     val dark = isDarkSurface()
     Box(
         modifier.then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirBadgeColor(rir), RirChipShape)),
@@ -125,15 +141,10 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit, modifier: Mod
  * exercise sheet. Its number is [fontSize]; 4 and up read `4+`, as on the pad.
  */
 @Composable
-internal fun RirMark(rir: Int, target: Boolean, modifier: Modifier = Modifier, fontSize: TextUnit = 12.sp) {
+internal fun RirChip(rir: Int, target: Boolean, modifier: Modifier = Modifier, fontSize: TextUnit = 12.sp) {
     val label = if (rir >= 4) "4+" else "$rir"
-    // The same proportions as in set text: the number is 0.8 of the chip's em.
-    val em = with(LocalDensity.current) { fontSize.toDp() } / 0.8f
-    RirChip(
-        rir, target, fontSize,
-        modifier.size(em * (0.9f + 0.5f * label.length), em * 1.25f).testTag(if (target) RirChipTargetTag else RirChipLoggedTag),
-        label,
-    )
+    val em = with(LocalDensity.current) { fontSize.toDp() } / NumberSize
+    ChipBox(rir, target, fontSize, label, modifier.size(em * chipWidth(label), em * ChipHeight).testTag(chipTag(target)))
 }
 
 /** A logged set as the screen writes it: its RIR after the whole set, and no break inside it. */

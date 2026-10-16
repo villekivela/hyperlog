@@ -144,7 +144,7 @@ internal fun Pad(
                     val rirLabel = stringResource(R.string.pad_rir)
                     (0..4).forEach { v ->
                         StripChip(entry.rir == v, Modifier.weight(1f), "$rirLabel ${if (v == 4) "4+" else v}", onClick = { actions.selectRir(v) }) {
-                            RirMark(v, target = entry.rir != v, fontSize = 14.sp)
+                            RirChip(v, target = entry.rir != v, fontSize = 14.sp)
                         }
                     }
                     Spacer(Modifier.width(8.dp))

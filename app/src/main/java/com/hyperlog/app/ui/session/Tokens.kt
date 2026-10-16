@@ -72,17 +72,6 @@ internal fun rirColor(rir: Int): Color = when {
     else -> Color(0xFF6BAFA9)
 }
 
-/**
- * A target chip's outline colour. In light mode each is a darker shade of its hue, so the outline
- * keeps 3:1 against every light surface in daylight; dark mode keeps [rirColor].
- */
-internal fun rirChipColor(rir: Int, dark: Boolean): Color = when {
-    dark -> rirColor(rir)
-    rir <= 0 -> Color(0xFFD5544A)
-    rir <= 2 -> Color(0xFFAA741E)
-    else -> Color(0xFF4A8983)
-}
-
 /** Whether the theme's surface is dark, for the colours that don't follow the theme. */
 @Composable
 internal fun isDarkSurface(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f

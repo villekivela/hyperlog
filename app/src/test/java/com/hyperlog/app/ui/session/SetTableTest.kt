@@ -208,9 +208,8 @@ class SetTableTest {
         // Set 1 logged at 0, set 2 being done with RIR 1 chosen, set 3 still to come at its target.
         show(listOf(LoggedSet(100.0, 6, 0, 0)), listOf(top, top, top), latest = 1L to 0, warmups = false)
         compose.onNodeWithContentDescription("Log set 2").assertIsDisplayed()
-        val onPad = hasAnyAncestor(hasContentDescription("RIR", substring = true))
-        compose.onAllNodes(hasTestTag(RirChipLoggedTag) and !onPad, useUnmergedTree = true).assertCountEquals(2)
-        compose.onAllNodes(hasTestTag(RirChipTargetTag) and !onPad, useUnmergedTree = true).assertCountEquals(1)
+        compose.onAllNodes(hasTestTag(RirChipLoggedTag) and !onRirPad, useUnmergedTree = true).assertCountEquals(2)
+        compose.onAllNodes(hasTestTag(RirChipTargetTag) and !onRirPad, useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test
@@ -232,6 +231,9 @@ class SetTableTest {
         compose.onNodeWithText("Back Squat").assertIsDisplayed()
     }
 }
+
+/** Inside one of the pad's RIR keys, whose descriptions read "RIR 0" to "RIR 4+". */
+internal val onRirPad = hasAnyAncestor(hasContentDescription("RIR ", substring = true))
 
 private class Recording(val calls: MutableList<String>) : SessionActions {
     override fun logShown() { calls += "logShown" }

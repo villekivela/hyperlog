@@ -1,10 +1,9 @@
 package com.hyperlog.app.ui.session
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.hyperlog.app.domain.Field
@@ -21,6 +20,7 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,8 +42,8 @@ class LoggedRirColourTest {
 
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"))
 
-    /** The fill at the left edge of the one logged chip in the set table, with set 1 logged at [rir]. */
-    private fun loggedFill(rir: Int, dark: Boolean): Color {
+    /** The fill at the left edge of the one logged chip in the set table, with set 1 logged at [rir], and its number's colour. */
+    private fun loggedChip(rir: Int, dark: Boolean): Pair<Color, Color> {
         RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
         val top = SetPrescription(RepRange(4, 6), 1, 180)
         val exercise = SessionExercise(
@@ -56,19 +56,20 @@ class LoggedRirColourTest {
             padVisible = true, restEndsAt = null, restTotalMs = 0, latestSet = 1L to 0,
         )
         compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench), Noop, onLeave = {}) } }
-        val chip = compose.onNode(hasTestTag(RirChipLoggedTag) and !hasAnyAncestor(hasContentDescription("RIR", substring = true)), useUnmergedTree = true)
-            .captureToImage()
-        val pixel = chip.toPixelMap()[3, chip.height / 2]
-        return pixel
+        val chip = compose.onNode(hasTestTag(RirChipLoggedTag) and !onRirPad, useUnmergedTree = true).captureToImage().toPixelMap()
+        // The number is the chip's lightest pixel.
+        val number = (0 until chip.width).flatMap { x -> (0 until chip.height).map { y -> chip[x, y] } }.maxBy { it.luminance() }
+        return chip[3, chip.height / 2] to number
     }
 
     private fun assertBadge(expected: Long, rir: Int) {
         for (dark in listOf(false, true)) {
-            val fill = loggedFill(rir, dark)
+            val (fill, number) = loggedChip(rir, dark)
             val want = Color(expected)
             assertEquals("RIR $rir (dark=$dark) red", want.red, fill.red, 0.02f)
             assertEquals("RIR $rir (dark=$dark) green", want.green, fill.green, 0.02f)
             assertEquals("RIR $rir (dark=$dark) blue", want.blue, fill.blue, 0.02f)
+            assertTrue("RIR $rir (dark=$dark) number is white, was $number", number.red > 0.95f && number.green > 0.95f && number.blue > 0.95f)
         }
     }
 
