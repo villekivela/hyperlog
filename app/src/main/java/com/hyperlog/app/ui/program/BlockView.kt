@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.program
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,8 +22,14 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -83,9 +90,11 @@ internal fun LazyListScope.blockItems(
                 if (ends != null) {
                     item(key = "ends-${position.week}-${position.day}") { Segment(0, count) { EndsLine(ends) } }
                 }
+                // A skipped day's plan is there to read, not to train: it sits back from the days to come.
+                val content = if (day is PlanDay.Skipped) Modifier.alpha(SkippedAlpha) else Modifier
                 groups.forEachIndexed { i, group ->
                     item(key = "slots-${position.week}-${position.day}-$i") {
-                        Segment(i + count - groups.size, count) { SlotRows(group, names) }
+                        Segment(i + count - groups.size, count) { Column(content) { SlotRows(group, names) } }
                     }
                 }
             }
@@ -98,11 +107,12 @@ internal fun LazyListScope.blockItems(
 private fun BlockChoice(program: Program, picked: Int, onBlock: (Int) -> Unit) {
     val names = program.blocks.map { it.name }
     Column(Modifier.padding(top = 16.dp)) {
-        if (names.size <= MaxConnected) {
+        if (names.size <= MaxConnected && names.sumOf { it.length } <= MaxConnectedChars) {
             ConnectedChoice(
                 names, picked, onBlock,
                 Modifier.padding(horizontal = CardMargin),
                 contentPadding = PaddingValues(horizontal = 8.dp),
+                fitLabels = true,
             )
         } else {
             Row(
@@ -118,6 +128,15 @@ private fun BlockChoice(program: Program, picked: Int, onBlock: (Int) -> Unit) {
 }
 
 private const val MaxConnected = 4
+
+private const val SkippedAlpha = 0.6f
+
+/** About what four buttons hold across a phone; longer names scroll as chips. */
+private const val MaxConnectedChars = 40
+
+/** A comparison this long shows its first slots and folds the rest behind "N more". */
+private const val ComparedShown = 3
+private const val ComparedFolded = 5
 
 /**
  * The block: its name and weeks, what changed from the block before (each slot that differs,
@@ -138,17 +157,34 @@ private fun BlockCard(block: Block, active: ActiveProgram, from: BlockComparison
             if (from != null) {
                 Spacer(Modifier.height(16.dp))
                 Text(stringResource(R.string.program_from, from.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                // Every slot of a block that moves RIR differs, so a long comparison folds after its first few.
+                val total = from.days.sumOf { it.slots.size }
+                var open by rememberSaveable(block.id) { mutableStateOf(false) }
+                var budget = if (open || total <= ComparedFolded) total else ComparedShown
                 val several = from.days.size > 1
                 from.days.forEach { day ->
+                    if (budget <= 0) return@forEach
                     if (several) {
                         Text(
                             day.day.name.substringBefore(" — "),
-                            Modifier.padding(top = 12.dp),
+                            Modifier.padding(top = 16.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = cs.onSurfaceVariant,
                         )
                     }
-                    day.slots.forEach { ComparedSlot(it, name) }
+                    day.slots.take(budget).forEach { ComparedSlot(it, name) }
+                    budget -= day.slots.size
+                }
+                if (total > ComparedFolded) {
+                    val label = if (open) stringResource(R.string.program_from_fewer) else pluralStringResource(R.plurals.program_from_more, total - ComparedShown, total - ComparedShown)
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 48.dp).clickable { open = !open },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(label, style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                        Spacer(Modifier.width(4.dp))
+                        SymbolIcon(if (open) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(20.dp), tint = cs.primary)
+                    }
                 }
                 if (from.days.isEmpty()) {
                     Text(stringResource(R.string.program_from_same, from.previous.name), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
@@ -192,10 +228,13 @@ private fun ComparedSlot(slot: SlotDiff, name: (String) -> String) {
         when {
             after == null -> Text(stringResource(R.string.change_removed), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             before == null -> SetSummary(after.sets, color = cs.onSurface)
-            else -> FlowRow(verticalArrangement = Arrangement.Center) {
-                SetSummary(before.sets)
-                SymbolIcon(Symbol.ArrowForward, null, Modifier.padding(horizontal = 8.dp).size(20.dp), tint = cs.primary)
-                SetSummary(after.sets, color = cs.onSurface)
+            // The arrow leads the new sets, so a pair too long for one line breaks before it.
+            else -> FlowRow(itemVerticalAlignment = Alignment.CenterVertically) {
+                SetSummary(before.sets, Modifier.padding(end = 8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SymbolIcon(Symbol.ArrowForward, null, Modifier.padding(end = 8.dp).size(20.dp), tint = cs.primary)
+                    SetSummary(after.sets, color = cs.onSurface)
+                }
             }
         }
     }

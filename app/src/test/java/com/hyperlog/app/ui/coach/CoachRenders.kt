@@ -161,7 +161,7 @@ class CoachRenders {
         ChangeReviewScreen(ChangeReview(replacing, diff, program, null, ends = listOf(hands.summary)), names, onAccept = {}, onReject = {})
     }
 
-    @Test fun programReplaced() = render("program-change-replaced") {
+    @Test fun programReplaced() = render("program-change-replaced", before = { compose.onNodeWithText("Changes · ", substring = true).performClick() }) {
         val ended = ChangeRecord(record(2, hands).accepted, acceptedAt = 2, revertedAt = today.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
         val ending = record(3, Change("Hands feel fine: back to the plan", Scope.RestOfProgram, emptyList(), replaces = listOf(2)))
         com.hyperlog.app.ui.program.ProgramScreen(plain.copy(history = listOf(record(1, elbow), ended, ending)), null, onImport = {}, onCloseErrors = {}, onBack = {})

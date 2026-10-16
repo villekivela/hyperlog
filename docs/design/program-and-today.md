@@ -3,8 +3,8 @@
 Ticket #6 brings a program to the app: the Program screen, Today showing the next day, and the
 logging screen's Target column, planned rows and prescription sheet. Everything extends
 `logging-screen.md`. The expressive pass (below, first) replaces the earlier flat look. Screens:
-`today-session-running.png`, `today-superset-group.png`, `program.png`, `program-weeks.png` from
-the phone; `light-today-starter.png`, `light-today-update-banner.png`, `light-today-day.png`
+`today-session-running.png`, `today-superset-group.png` from the phone (Program's own screens are
+listed under "Program screen (#40)"); `light-today-starter.png`, `light-today-update-banner.png`, `light-today-day.png`
 rendered in light.
 
 ## Expressive pass
@@ -68,33 +68,38 @@ rendered in light.
  Program                                ⚙  ⋮    ← ⋮: Skip day, Repeat week, Deload week, Shift
 ╭───────────────────────────────────────────╮     program, ─, Import program, Run Hyperlog…
 │ Hyperlog Full Body                        │   ← headlineSmall; author under it
-│ Next  Week 6 · Day A — Heavy bench, …     │
-╰───────────────────────────────────────────╯
-╭───────────────────────────────────────────╮
+│ Next  Week 4 · Day B — Hinge, close-grip  │   ← Next in primary, the day in a 56 dp column
+│       bench, row                          │
+├───────────────────────────────────────────┤   ← one segmented group, 4 dp join
 │ (⇄)  Changes · 1 in force               › │   ← opens the Changes page
 ╰───────────────────────────────────────────╯
- ( Ramp-in | ■Build■ | Intensify | Deload… )      ← connected button group
+ ( Ramp-in | ■Build■ | Intensify | Deload + test )  ← connected group, widths by label
 ╭───────────────────────────────────────────╮
 │ Build · weeks 3–6                         │   ← titleLarge
 │ From Ramp-in                              │   ← labelLarge, primary
 │ Day A                                     │   ← labelMedium, when several days changed
 │ Barbell Bench Press                       │
-│ 1 × 4–6 @ 2 · ↘ 2 × 6–8 @ 2 → 1 × 4–6 @ 1 │   ← before (muted) → after
-│ [✓3] [✓4] [✓5] [6]                        │   ← week chips; done weeks ticked
+│ 1 × 4–6 @ 2 · ↘ 2 × 6–8 @ 2               │   ← before, muted
+│ → 1 × 4–6 @ 1 · ↘ 2 × 6–8 @ 1             │   ← the arrow leads the after when it wraps
+│ …two more slots                           │
+│ 19 more ⌄                                 │   ← past 5 slots, the first 3 show; tap to unfold
+│ [✓3] [■4■] [5] [6]                        │   ← week chips; done weeks ticked
 ╰───────────────────────────────────────────╯
- Day A — Heavy bench, squat, pulldown   Next      ← day head; Next in primary
+ Day A — Heavy bench, squat, pulldown   Done
+╭───────────────────────────────────────────╮
+│ Tue 13 Oct                              › │   ← opens the session in History
+│ Barbell Bench Press             85 × 5 @ 1│   ← each exercise's top set
+╰───────────────────────────────────────────╯
+ Day B — Hinge, close-grip bench, row   Next      ← day head; Next in primary
 ╭───────────────────────────────────────────╮
 │ (⇄) Ends 26 Oct; if this day falls later, │   ← only under a date-ranged Change
 │     it's as written.                      │
-│ 1   In place of Barbell Bench Press       │   ← Today's slot rows, one segment per group
-│     Smith Machine Bench Press             │
-│     1 × 4–6 @ 1 · ↘ 2 × 6–8 @ 1           │
+├───────────────────────────────────────────┤
+│ 1   In place of Barbell RDL               │   ← Today's slot rows, one segment per group
+│     45° Hyperextension                    │
+│     2 × 6–8 @ 1                           │
 ╰───────────────────────────────────────────╯
- Day B — Hinge, close-grip bench, row   Done
-╭───────────────────────────────────────────╮
-│ Tue 13 Oct                              › │   ← opens the session in History
-│ Barbell RDL                 100 × 6 @ 1   │   ← each exercise's top set
-╰───────────────────────────────────────────╯
+ Day B — …                           Skipped      ← a past week: the plan at 60 % opacity
 ```
 
 ```
@@ -269,7 +274,32 @@ under a date-ranged Change (the Ends line), finished (Next reads "Program finish
 last block), the Changes page (Revert on each in force; reverted and replaced struck through), and
 the empty, starter and import-error states as before.
 
+Layout (build pass):
+
+- **Header and Changes are one segmented group**: the title card on top, the Changes row joined
+  under it (4 dp join), 16 dp above the block group. **Next** is primary here as on the day head,
+  so the one word means the same everywhere; the day sits in a 56 dp column, and "Program
+  finished" takes the same column with the flag in Next's place.
+- **The block group sizes buttons by their labels** (`ConnectedChoice(fitLabels = true)`), so
+  `Deload + test` keeps its words beside `Build`. Past four blocks, or about 40 characters of
+  names, it is a scrolling row of chips.
+- **The comparison folds.** A block that moves RIR differs on every slot (Build has 22), which
+  pushed the week chips and days off the first screen. Up to 5 slots show in full; past that the
+  first 3 show, then **19 more ⌄** (labelLarge, primary, 48 dp row) unfolds the rest in place and
+  **Fewer ⌃** folds it again. Each pair is before (muted), then the arrow and after (onSurface) as
+  one piece, so a long pair breaks before the arrow, never after it.
+- **A skipped day's plan sits back**: its slot rows at 60 % opacity, under "Skipped", so a past
+  week doesn't read as days still to train. Done days keep full tone (they're real sessions).
+
 Interaction: tapping a block resets the week to the current week if it's in that block, else the
-block's first. A done day's segment opens its session in History, and back from there returns to
-History. Back on the Changes page returns to Program.
+block's first; the comparison opens folded on each block. A done day's segment opens its session
+in History, and back from there returns to History. Back on the Changes page returns to Program.
+
+Screens (Robolectric renders from `ProgramRenders`, `RENDERS=<dir>`, `DARK=1` for dark, each
+`light-` and `dark-`): `program-current` (Build, week 4, Day A done, Day B next),
+`program-past-week` (week 3: Day B skipped, Day C done), `program-future-block` (Intensify and
+its From Build card), `program-deload` (Deload + test, days headed Deload), `program-ends` (a
+date-ranged Change: the Ends line), `program-menu` (⋮ open), `program-changes` (a reverted and a
+replaced Change struck through), `program-finished`. The phone stayed locked through this pass, so
+the build is installed there but the phone check of the current week is still to do.
 

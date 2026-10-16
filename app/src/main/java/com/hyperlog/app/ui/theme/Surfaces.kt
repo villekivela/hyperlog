@@ -287,13 +287,15 @@ fun ConnectedChoice(
     color: Color = Tones.card,
     /** Narrower for four options in a row, so `45 min` keeps its unit. */
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    /** Widths follow the labels, so one long name (`Deload + test`) keeps its words beside short ones. */
+    fitLabels: Boolean = false,
 ) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         labels.forEachIndexed { i, label ->
             ToggleButton(
                 checked = i == selected,
                 onCheckedChange = { onSelect(i) },
-                modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                modifier = Modifier.weight(if (fitLabels) label.length + 4f else 1f).semantics { role = Role.RadioButton },
                 shapes = when (i) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                     labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()

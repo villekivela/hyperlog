@@ -721,7 +721,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      **From <previous block>**: each slot that differs between the previous block's last week and
      this block's first, as written, Day A beside Day A, slot by slot (a swap as "In place of …",
      sets before → after, an added or removed slot). That comparison is the whole description of a
-     block; the program format has no note for it. The first block has none. Chips pick the week,
+     block; the program format has no note for it. The first block has none. Past five slots it
+     shows the first three and folds the rest behind "N more", unfolded in place. Chips pick the week,
      opening on the week you're in; done weeks are ticked.
    - **Days**: the picked week's days, each headed by its name. A day to come is in full, slot by
      slot as Today lists it, exactly as the session will prescribe it: the program's day with week
@@ -735,7 +736,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Past days show the sessions.** A done day (one before the position with a session of this
      program for it, the latest if a repeated week trained it twice) shows the date and each
      exercise's top set, and opens that session in History. A day before the position with no
-     session was skipped: it shows its plan, headed **Skipped**.
+     session was skipped: it shows its plan, dimmed, headed **Skipped**.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
      and imports nothing. Importing over a program asks first ("Replace <title>?").
    - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog

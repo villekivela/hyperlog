@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.hyperlog.app.assertButtonOrder
 import com.hyperlog.app.coach.AcceptedChange
 import com.hyperlog.app.coach.ProgramActions
@@ -180,9 +181,15 @@ class ProgramScreenTest {
         }
         // It opens on the block and week you're in.
         compose.onNodeWithText("From Ramp-in").assertIsDisplayed()
+        // Every slot of Build differs from Ramp-in, so the comparison folds after its first three.
+        compose.onNodeWithText("Day B").assertDoesNotExist()
+        compose.onNodeWithText("19 more").performClick()
+        compose.onNodeWithText("Day B").assertExists()
+        compose.onNodeWithText("Fewer").performScrollTo().performClick()
         scrollTo("Day A — Heavy bench, squat, pulldown")
         compose.onNodeWithText("Day A — Heavy bench, squat, pulldown").assertIsDisplayed()
-        compose.onNodeWithText("Next").assertIsDisplayed()
+        // Next heads the header's day and the day's own head.
+        compose.onAllNodesWithText("Next")[1].assertIsDisplayed()
 
         scrollTo("Intensify")
         compose.onNodeWithText("Intensify").performClick()

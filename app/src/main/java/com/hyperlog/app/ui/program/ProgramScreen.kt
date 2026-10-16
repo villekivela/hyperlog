@@ -223,45 +223,18 @@ private fun ProgramWeeks(
     val days = remember(active, week, sessions) { ProgramPlan.week(active, week, sessions) }
     val from = remember(program, block) { ProgramPlan.from(program, block) }
     LazyColumn(Modifier.fillMaxSize()) {
-        item {
-            // Where you are, and what can be done about it, in one card at the top.
-            SectionCard(Modifier.padding(top = 8.dp)) {
-            Column(Modifier.padding(vertical = 4.dp)) {
-                Text(program.title, style = MaterialTheme.typography.headlineSmall)
-                program.author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
-                Spacer(Modifier.height(16.dp))
-                Row(Modifier.heightIn(min = 32.dp), verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
-                    if (next != null) {
-                        Text(
-                            stringResource(R.string.program_next),
-                            Modifier.width(56.dp).alignByBaseline(),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = cs.onSurfaceVariant,
-                        )
-                        Text(
-                            stringResource(R.string.program_week_day, next.position.week, next.day.name),
-                            Modifier.alignByBaseline(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    } else {
-                        SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary)
-                        Spacer(Modifier.width(16.dp))
-                        Text(stringResource(R.string.program_finished), style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
-            }
-            }
-        }
-        if (active.history.isNotEmpty()) {
-            item(key = "changes") {
-                val count = active.inForce.size
-                val title = if (count == 0) stringResource(R.string.program_changes_none) else pluralStringResource(R.plurals.program_changes_in_force, count, count)
-                val chevron = MaterialTheme.colorScheme.onSurfaceVariant
-                SegmentedList(Modifier.padding(top = 2.dp)) {
+        item(key = "header") {
+            // Where you are, with the Changes under it as one group: the title and Next, then the row
+            // that opens the Changes page.
+            val count = active.inForce.size
+            val changes = if (count == 0) stringResource(R.string.program_changes_none) else pluralStringResource(R.plurals.program_changes_in_force, count, count)
+            val chevron = cs.onSurfaceVariant
+            val nextDay = next?.let { stringResource(R.string.program_week_day, it.position.week, it.day.name) }
+            SegmentedList(Modifier.padding(top = 8.dp)) {
+                item { ProgramHeader(program.title, program.author, nextDay) }
+                if (active.history.isNotEmpty()) {
                     row(
-                        title = title,
+                        title = changes,
                         symbol = Symbol.SwapHoriz,
                         onClick = onOpenChanges,
                         trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = chevron) },
@@ -274,6 +247,32 @@ private fun ProgramWeeks(
             onBlock = { picked = it }, onWeek = { week = it }, onOpenSession = onOpenSession,
         )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
+    }
+}
+
+/** The program's title and author, then the next day, or "Program finished" with a flag. */
+@Composable
+private fun ProgramHeader(title: String, author: String?, next: String?) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.padding(horizontal = CardPadding).padding(top = 16.dp, bottom = 16.dp)) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
+        Spacer(Modifier.height(16.dp))
+        Row(verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
+            if (next != null) {
+                Text(
+                    stringResource(R.string.program_next),
+                    Modifier.width(56.dp).alignByBaseline(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = cs.primary,
+                )
+                Text(next, Modifier.alignByBaseline(), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            } else {
+                // The flag takes Next's column, so the words start where the next day's do.
+                Box(Modifier.width(56.dp)) { SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary) }
+                Text(stringResource(R.string.program_finished), style = MaterialTheme.typography.bodyLarge)
+            }
+        }
     }
 }
 

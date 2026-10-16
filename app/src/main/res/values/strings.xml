@@ -365,6 +365,11 @@
     <string name="program_day_done_label">Done</string>
     <string name="program_day_skipped">Skipped</string>
     <string name="program_from">From %1$s</string>
+    <plurals name="program_from_more">
+        <item quantity="one">%1$d more</item>
+        <item quantity="other">%1$d more</item>
+    </plurals>
+    <string name="program_from_fewer">Fewer</string>
     <string name="program_from_same">Every day as in %1$s</string>
     <string name="program_week_n">Week %1$d</string>
     <string name="program_week_done">Week %1$d, done</string>
