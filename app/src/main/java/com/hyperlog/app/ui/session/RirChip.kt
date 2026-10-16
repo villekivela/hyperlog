@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.AnnotatedString
@@ -47,14 +46,11 @@ private val RirPattern = Regex("(^|$Gap)@$Gap(\\d+)(?:${Gap}RIR\\b)?")
 private val TargetWord = Regex("\\btarget$Gap$", RegexOption.IGNORE_CASE)
 private val RirChipShape = RoundedCornerShape(4.dp)
 
-/** A target chip's outline: the ring's shades, darker in light mode so it keeps 3:1 on every surface. */
+/**
+ * A chip's outline (target) or fill (logged): the ring's shades, darker in light mode so a chip
+ * keeps 3:1 on every surface; its number, [RirOnFill] on a fill, keeps 4.5:1.
+ */
 internal fun rirChipColor(rir: Int, dark: Boolean): Color = rirRingColor(rir, dark)
-
-/** A logged chip's fill: the same shades as the outline, so a chip keeps 3:1 on every surface in light mode too. */
-internal fun rirChipFill(rir: Int, dark: Boolean): Color = rirChipColor(rir, dark)
-
-/** A filled chip's number, on every shade of the scale. */
-internal val RirChipOnFill = Color.Black.copy(alpha = 0.87f)
 
 /**
  * Appends [text] with each `@ N` as a chip, a target if [target] or if the word before it is
@@ -79,6 +75,7 @@ internal fun AnnotatedString.Builder.appendRir(text: String, target: Boolean, ch
 /** The inline chips for [chips], sized to text of [fontSize]. */
 @Composable
 internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<String, InlineTextContent> {
+    // A style without a size is drawn at bodyMedium's.
     val size = if (fontSize.isSpecified) fontSize else 14.sp
     return chips.associate { key ->
         // The number is 0.8 em; each semibold digit takes about 0.5 em, with 0.45 em either side.
@@ -92,12 +89,12 @@ internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<Str
 /** The chip itself. */
 @Composable
 private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val color = rirChipColor(rir, isDarkSurface())
     Box(
         Modifier.fillMaxSize()
             // Drawing only: the line's alternate text already reads "N RIR".
             .clearAndSetSemantics { testTag = if (target) RirChipTargetTag else RirChipLoggedTag }
-            .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirChipFill(rir, dark), RirChipShape)),
+            .then(if (target) Modifier.border(1.5.dp, color, RirChipShape) else Modifier.background(color, RirChipShape)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -105,7 +102,7 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
             fontSize = fontSize,
             lineHeight = fontSize,
             fontWeight = FontWeight.SemiBold,
-            color = if (target) MaterialTheme.colorScheme.onSurface else RirChipOnFill,
+            color = if (target) MaterialTheme.colorScheme.onSurface else RirOnFill,
             maxLines = 1,
         )
     }

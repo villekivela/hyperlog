@@ -58,7 +58,7 @@ class RirContrastTest {
         for (rir in 0..10) {
             for (dark in listOf(false, true)) {
                 (if (dark) neutralDark else neutralLight).forEach { surface ->
-                    val ratio = contrast(rirChipFill(rir, dark), surface)
+                    val ratio = contrast(rirChipColor(rir, dark), surface)
                     assertTrue("RIR $rir fill (dark=$dark) on $surface is $ratio:1", ratio >= 3f)
                 }
             }
@@ -69,8 +69,8 @@ class RirContrastTest {
     fun aFilledChipsNumberReadsAtFourAndAHalfToOne() {
         for (rir in 0..10) {
             for (dark in listOf(false, true)) {
-                val fill = rirChipFill(rir, dark)
-                val ratio = contrast(RirChipOnFill.compositeOver(fill), fill)
+                val fill = rirChipColor(rir, dark)
+                val ratio = contrast(RirOnFill.compositeOver(fill), fill)
                 assertTrue("RIR $rir number (dark=$dark) is $ratio:1", ratio >= 4.5f)
             }
         }

@@ -91,11 +91,17 @@ internal fun rirRingColor(rir: Int, dark: Boolean): Color = when {
     else -> Color(0xFF4A8983)
 }
 
+/** The number on a filled RIR dot or chip, on every shade of the scale. */
+internal val RirOnFill = Color.Black.copy(alpha = 0.87f)
+
+/** Whether the theme's surface is dark, for the colours that don't follow the theme. */
+@Composable
+internal fun isDarkSurface(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
 /** An RIR mark: a ring is a target, a filled dot is a result or the selection. */
 @Composable
 internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val color = if (filled) rirColor(rir) else rirRingColor(rir, dark)
+    val color = if (filled) rirColor(rir) else rirRingColor(rir, isDarkSurface())
     Box(
         modifier.size(20.dp).then(
             if (filled) Modifier.background(color, CircleShape) else Modifier.border(2.dp, color, CircleShape),
@@ -106,7 +112,7 @@ internal fun RirMark(rir: Int, filled: Boolean, modifier: Modifier = Modifier) {
             if (rir >= 4) "4+" else "$rir",
             style = MaterialTheme.typography.labelSmall,
             fontSize = if (rir >= 4) 9.sp else 11.sp,
-            color = if (filled) Color.Black.copy(alpha = 0.87f) else MaterialTheme.colorScheme.onSurface,
+            color = if (filled) RirOnFill else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium,
         )
     }
