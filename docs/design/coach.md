@@ -62,7 +62,7 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 
  ┌──────────────────────────────────────────────────┐ ← the composer card
  │ Gym  [✓ Harbour] [Itis]                           │
- │ [+ My hands hurt] [+ Short on time today] [+ No g ├→ scrolls sideways
+ │ [+ Something hurts] [+ Short on time today] [+ N ├→ scrolls sideways
  │ ┌ In your words ────────────────────────────────┐ │
  │ │ Left elbow aches on curls…                    │ │
  │ └───────────────────────────────────────────────┘ │

@@ -1009,8 +1009,8 @@ goes through Claude, which reads the program, the week you're in and your sessio
   The prompt holds the gym's equipment and what's missing there; with Elsewhere it holds no
   gym's equipment and tells Claude the equipment is in the words. With no gyms set up the row is
   left out.
-- **Starters.** Chips that put an editable sentence into the words: "My hands hurt" (`My hands
-  hurt.`), "Short on time today" (`I'm short on time today: I have 45 minutes.`), "No gym,
+- **Starters.** Chips that put an editable sentence into the words: "Something hurts" (`Something
+  hurts: `, for you to say where), "Short on time today" (`I'm short on time today: I have 45 minutes.`), "No gym,
   dumbbells at home" (`No gym today, only dumbbells at home.`), "Slept badly" (`I slept badly
   last night.`), and **Build me a workout**, which also opens the workout's options (below). A
   starter fills empty words; otherwise its sentence goes on a new line. Either way the field takes
