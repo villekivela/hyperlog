@@ -815,9 +815,8 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   (`1 × 4–6 [1] · 2 × 6–8 [1]`, written `[1]` in this spec). A **target** (planned sets, a
   block's rule, a suggestion's "target") is an outlined chip, like the logging screen's ring; a
   **logged** set (History, past and finished sessions, Last time in a why-line) is a filled chip,
-  like its dot. An outline uses the ring's shades, so in light mode it is the darker one and keeps
-  3:1 against every surface; a fill uses the dot's colours in both modes, and its number (black at
-  87%) keeps 4.5:1 on it. The chip is 1.25 em tall and centred on the line, its number 0.8 em
+  like its dot. Outline and fill use the ring's shades, so in light mode they are the darker ones
+  and keep 3:1 against every surface; a fill's number (black at 87%) keeps 4.5:1 on it. The chip is 1.25 em tall and centred on the line, its number 0.8 em
   semibold with 0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the navy
   accent or a button. A no-break space ties it to its set, so a line never wraps between the two. TalkBack reads each one as "1 RIR";
   the number is always there, so colour is never the only sign. Claude's own words in a Change or

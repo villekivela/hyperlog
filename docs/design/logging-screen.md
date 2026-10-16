@@ -95,9 +95,9 @@ Two fixed scales sit outside the theme:
   mode the target rings are `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at
   least 3:1 on every light surface so they read in daylight (`RirContrastTest`); filled dots and
   dark mode keep the base colours. The RIR chip in set text follows the mark: an outline in the
-  ring's colour with an onSurface number, a fill in the dot's colour with a black 87% number
-  (semibold, 0.8 em). Filled chips keep the base colours in light mode too: the darker shades
-  made black numbers muddy, and the number, not the fill's edge, carries the reading.
+  ring's colour with an onSurface number, a fill in the same colour with a black 87% number
+  (semibold, 0.8 em). In light mode a fill takes the ring's darker shade too, so the chip keeps
+  3:1 on every surface (#43); the black number still keeps 4.5:1 on it.
 - **Trend** (the why-line's symbol): up `#5FAE7A` (calm green), same weight `#9AA1A9`
   (neutral), down `#E0A84E` (amber; a deload or back-off is no failure, so never red).
 

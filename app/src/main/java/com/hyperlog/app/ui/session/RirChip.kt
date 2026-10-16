@@ -49,8 +49,8 @@ private val RirChipShape = RoundedCornerShape(4.dp)
 /** A target chip's outline: the ring's shades, darker in light mode so it keeps 3:1 on every surface. */
 internal fun rirChipColor(rir: Int, dark: Boolean): Color = rirRingColor(rir, dark)
 
-/** A logged chip's fill: the dot's colour, the base scale in both modes; its number carries the contrast. */
-internal fun rirChipFill(rir: Int): Color = rirColor(rir)
+/** A logged chip's fill: the same shades as the outline, so a chip keeps 3:1 on every surface in light mode too. */
+internal fun rirChipFill(rir: Int, dark: Boolean): Color = rirChipColor(rir, dark)
 
 /** A filled chip's number, on every shade of the scale. */
 internal val RirChipOnFill = Color.Black.copy(alpha = 0.87f)
@@ -95,7 +95,7 @@ private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
     Box(
         Modifier.fillMaxSize()
             .testTag(if (target) RirChipTargetTag else RirChipLoggedTag)
-            .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirChipFill(rir), RirChipShape)),
+            .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirChipFill(rir, dark), RirChipShape)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
