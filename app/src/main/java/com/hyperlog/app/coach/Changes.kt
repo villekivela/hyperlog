@@ -131,11 +131,7 @@ object Changes {
         val others = changes.filter { it.id != record.id }
         val date = (record.change.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
         val window = when (val scope = record.change.scope) {
-            is Scope.Dates -> {
-                val dates = ChronoUnit.DAYS.between(date, scope.to).toInt() + 1
-                val perWeek = program.blockAt(position.week)?.days?.size ?: 0
-                generateSequence(position) { program.next(it) }.take(minOf(dates, ((dates + 6) / 7) * perWeek).coerceAtLeast(0))
-            }
+            is Scope.Dates -> generateSequence(position) { program.next(it) }.take(datesWindow(program, position, today, scope))
             Scope.RestOfBlock -> generateSequence(position) { program.next(it) }.takeWhile { program.blockAt(it.week)?.id == record.blockId }
             Scope.RestOfProgram -> generateSequence(position) { program.next(it) }
         }.filter { it.week <= program.weeks }
@@ -156,6 +152,36 @@ object Changes {
             daysLeft = if (moved) program.daysLeft(record.before) to program.daysLeft(record.after) else null,
             days = days,
         )
+    }
+
+    /**
+     * How many program days from [next] a date range still covers on [today]: one week of program
+     * days per week of dates from the later of its start and today, and never more days than dates.
+     */
+    private fun datesWindow(program: Program, next: Position, today: LocalDate, scope: Scope.Dates): Int {
+        val from = scope.from.takeIf { it > today } ?: today
+        val dates = ChronoUnit.DAYS.between(from, scope.to).toInt() + 1
+        val perWeek = program.blockAt(next.week)?.days?.size ?: 0
+        return minOf(dates, ((dates + 6) / 7) * perWeek).coerceAtLeast(0)
+    }
+
+    /**
+     * The day at [position], at or after the next one at [next], as Program shows it without
+     * dates: the next day as trained [today], as Today shows it; a later one with the Changes in
+     * [changes] that cover it as the in-force diff reads them, a date range by [datesWindow].
+     * Returns the day and the date-ranged Changes on it.
+     */
+    fun dayAhead(program: Program, next: Position, position: Position, today: LocalDate, changes: List<AcceptedChange>): Pair<PlannedDay, List<AcceptedChange>>? {
+        val written = program.plannedDay(position) ?: return null
+        val ahead = program.ordinal(position) - program.ordinal(next)
+        val covering = changes.filter { c ->
+            when (val scope = c.change.scope) {
+                is Scope.Dates -> if (ahead == 0) c.covers(written, today) else ahead < datesWindow(program, next, today, scope)
+                else -> c.covers(written, today)
+            }
+        }
+        val day = covering.fold(written) { day, c -> c.change.operations.fold(day, ::edit) }
+        return day to covering.filter { it.change.scope is Scope.Dates }
     }
 
     private fun slotDiffs(before: PlannedDay, after: PlannedDay): List<SlotDiff> {

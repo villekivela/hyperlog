@@ -8,11 +8,11 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
+import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.hyperlog.app.program.Position
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 

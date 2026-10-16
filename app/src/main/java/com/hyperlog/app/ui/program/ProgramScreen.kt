@@ -1,8 +1,6 @@
 package com.hyperlog.app.ui.program
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,13 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,22 +31,20 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -56,29 +52,19 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramActions
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
 import com.hyperlog.app.ui.coach.shortDate
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.ui.text.style.TextDecoration
-import com.hyperlog.app.program.Block
-import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.EmptyState
 import com.hyperlog.app.ui.theme.GroupHead
-import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
 
 private val Margin = 24.dp
 
@@ -220,8 +206,8 @@ private fun ProgramWeeks(
     var picked by rememberSaveable(program) { mutableStateOf(program.blocks.indexOfFirst { currentWeek in it.weekStart..it.weekEnd }.coerceAtLeast(0)) }
     val block = program.blocks[picked.coerceIn(program.blocks.indices)]
     var week by rememberSaveable(program, picked) { mutableStateOf(if (currentWeek in block.weekStart..block.weekEnd) currentWeek else block.weekStart) }
-    val days = remember(active, week, sessions) { ProgramPlan.week(active, week, sessions) }
-    val from = remember(program, block) { ProgramPlan.from(program, block) }
+    val days = remember(active, week, sessions) { ProgramWeek.days(active, week, sessions) }
+    val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
     LazyColumn(Modifier.fillMaxSize()) {
         item(key = "header") {
             // Where you are, with the Changes under it as one group: the title and Next, then the row
@@ -243,7 +229,7 @@ private fun ProgramWeeks(
             }
         }
         blockItems(
-            program, block, active, from, week, days, names,
+            program, block, active, comparison, week, days, names,
             onBlock = { picked = it }, onWeek = { week = it }, onOpenSession = onOpenSession,
         )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }

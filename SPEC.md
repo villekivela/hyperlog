@@ -710,8 +710,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    day of a week in full, past days as trained. A destination of the navigation bar. It reads the
    plan; it never edits it.
    - **The header card** holds the program's title and its **Next** day (or "Program finished").
-     Under it, while there are accepted Changes, one row **Changes · 1 in force** opens the Changes
-     list with Revert (Coaching).
+     Under it, while there are accepted Changes, one row **Changes · 1 in force** ("Changes · none
+     in force" once all are reverted or replaced) opens the Changes list with Revert (Coaching).
    - **The actions are Changes**, in ⋮ above Import program and Run Hyperlog Full Body (a divider
      between) while the program runs: **Skip day** (`skip_day`), **Repeat week** (`repeat_week`),
      **Deload week** (`deload_week` for the week you're in) and **Shift program** (`shift_program`,
@@ -727,11 +727,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Days**: the picked week's days, each headed by its name. A day to come is in full, slot by
      slot as Today lists it, exactly as the session will prescribe it: the program's day with week
      and day overrides, deloads and the Changes covering it, through the same plan Today and the
-     session read. The next day is headed **Next**; a deload day **Deload**. There are no dates: a
-     date-ranged Change lands on days to come by the diff's rule, one week of program days per week
-     of dates from the next day: counting from the next day, the first week of program days (as many
-     days as a week of the current block has) is read for today, the next for a week from today,
-     and so on. A day a
+     session read. The next day is headed **Next**; a deload day **Deload**. There are no dates.
+     The next day is read for today, as Today shows it. A later day takes a date-ranged Change by
+     the window the Change's card on Coach shows (its in-force diff): one week of program days per
+     week of dates, counted from the later of the range's start and today, never more program days
+     than dates, starting at the next day. Other Changes cover it as they cover today. A day a
      date-ranged Change covers reads "Ends 26 Oct; if this day falls later, it's as written."
    - **Past days show the sessions.** A done day (one before the position with a session of this
      program for it, the latest if a repeated week trained it twice) shows the date and each

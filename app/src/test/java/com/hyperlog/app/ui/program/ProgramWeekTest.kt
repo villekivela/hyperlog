@@ -28,7 +28,7 @@ import java.time.ZoneId
 
 /** What Program shows of a week: each day as the session would prescribe it, or as it was trained. */
 @RunWith(RobolectricTestRunner::class)
-class ProgramPlanTest {
+class ProgramWeekTest {
     private lateinit var db: HyperlogDatabase
     private lateinit var programs: Programs
     private val zone = ZoneId.systemDefault()
@@ -52,7 +52,7 @@ class ProgramPlanTest {
     private suspend fun active() = programs.active.first()!!
     private fun days(n: Long) { now += n * 86_400_000L }
 
-    private fun List<PlanDay>.ahead(day: Int) = this[day] as PlanDay.Ahead
+    private fun List<ProgramDay>.ahead(day: Int) = this[day] as ProgramDay.Ahead
 
     @Test
     fun aDayAheadIsWhatTheSessionPrescribesWithChangesAndDeloadsApplied() = runTest {
@@ -64,13 +64,13 @@ class ProgramPlanTest {
             ),
         )
         val active = active()
-        val week7 = ProgramPlan.week(active, 7, emptyList())
+        val week7 = ProgramWeek.days(active, 7, emptyList())
         assertEquals("smith_machine_bench_press", week7.ahead(0).day.slot("bench")!!.exercise)
-        assertEquals("barbell_bench_press", ProgramPlan.week(active, 8, emptyList()).ahead(0).day.slot("bench")!!.exercise)
-        assertTrue(ProgramPlan.week(active, 12, emptyList()).ahead(0).day.deload)
+        assertEquals("barbell_bench_press", ProgramWeek.days(active, 8, emptyList()).ahead(0).day.slot("bench")!!.exercise)
+        assertTrue(ProgramWeek.days(active, 12, emptyList()).ahead(0).day.deload)
         // A day under a date-ranged Change says when it ends, in case the day falls later.
         assertEquals(LocalDate.of(2026, 10, 26), week7.ahead(0).endsOn)
-        assertEquals(null, ProgramPlan.week(active, 8, emptyList()).ahead(0).endsOn)
+        assertEquals(null, ProgramWeek.days(active, 8, emptyList()).ahead(0).endsOn)
 
         // Week 7 · Day A, trained a week from now, is the day Program showed.
         days(7)
@@ -80,6 +80,29 @@ class ProgramPlanTest {
         val shown = week7.ahead(0).day
         assertEquals(shown.slots.map { it.exercise }, logger.state.value!!.exercises.map { it.exercise.id })
         assertEquals(shown, programs.plannedDay(active.id, Position(7, 0), LocalDate.of(2026, 10, 20)))
+    }
+
+    @Test
+    fun aDateRangeStartingLaterLandsAsTheInForceDiffReadsIt() = runTest {
+        // 15–21 Oct, two days from now: a week of dates is one week of program days, three here.
+        programs.accept(
+            ChangeJson.decode(
+                """{"summary":"Back","scope":{"from":"2026-10-15","to":"2026-10-21"},
+                   "operations":[{"op":"swap","slot":"rdl","exercise":"45_hyperextension"}]}""",
+            ),
+        )
+        val active = active()
+        // The next day is read for today, as Today shows it; the range hasn't started.
+        assertEquals(null, ProgramWeek.days(active, 6, emptyList()).ahead(0).endsOn)
+        // Day B, the day after, is the window's first day ahead...
+        assertEquals("45_hyperextension", ProgramWeek.days(active, 6, emptyList()).ahead(1).day.slot("rdl")!!.exercise)
+        assertEquals(LocalDate.of(2026, 10, 21), ProgramWeek.days(active, 6, emptyList()).ahead(1).endsOn)
+        // ...and week 7's Day B, four days on, is past its three days.
+        assertEquals("barbell_rdl", ProgramWeek.days(active, 7, emptyList()).ahead(1).day.slot("rdl")!!.exercise)
+        // As the Change's card on Coach shows it.
+        val record = active.inForce.single().accepted
+        val diff = com.hyperlog.app.coach.Changes.inForceDiff(active.program, active.position, active.today, active.changes, record)
+        assertEquals(listOf(Position(6, 1)), diff.days.map { it.day.position })
     }
 
     @Test
@@ -95,19 +118,19 @@ class ProgramPlanTest {
         programs.accept(ChangeJson.decode("""{"summary":"Skip B","scope":"rest_of_program","operations":[{"op":"skip_day"}]}"""))
 
         val sessions = PastSessionEditor(db, programs).sessions()
-        val week = ProgramPlan.week(active(), 6, sessions)
-        val done = week[0] as PlanDay.Done
+        val week = ProgramWeek.days(active(), 6, sessions)
+        val done = week[0] as ProgramDay.Done
         assertEquals(sessions.single().id, done.session.id)
-        assertEquals("Day B — Hinge, close-grip bench, row", (week[1] as PlanDay.Skipped).day.day.name)
+        assertEquals("Day B — Hinge, close-grip bench, row", (week[1] as ProgramDay.Skipped).day.day.name)
         assertTrue(week.ahead(2).next)
     }
 
     @Test
     fun aBlockIsComparedWithTheOneBeforeSlotBySlot() = runTest {
         val program = active().program
-        assertEquals(null, ProgramPlan.from(program, program.blocks[0]))
+        assertEquals(null, ProgramWeek.comparison(program, program.blocks[0]))
 
-        val from = ProgramPlan.from(program, program.blocks.first { it.name == "Intensify" })!!
+        val from = ProgramWeek.comparison(program, program.blocks.first { it.name == "Intensify" })!!
         assertEquals("Build", from.previous.name)
         val dayA = from.days.first()
         assertEquals("Day A — Heavy bench, squat, pulldown", dayA.day.name)

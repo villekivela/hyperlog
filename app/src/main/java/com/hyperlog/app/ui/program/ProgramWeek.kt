@@ -3,37 +3,32 @@ package com.hyperlog.app.ui.program
 import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.coach.SlotDiff
-import com.hyperlog.app.program.Block
-import com.hyperlog.app.program.Day
-import com.hyperlog.app.program.Program
 import com.hyperlog.app.coach.ordinal
 import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.Block
+import com.hyperlog.app.program.Day
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Position
+import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import java.time.LocalDate
 
-/** A day of a week as Program shows it. */
-sealed interface PlanDay {
-    val position: Position
+/** A day of a week as Program shows it, with the day as written or as it will be trained. */
+sealed interface ProgramDay {
+    val day: PlannedDay
+    val position: Position get() = day.position
 
     /**
-     * A day still to train, as the session will prescribe it on [date]: the date it is read for,
-     * one week of program days per week of dates from the next day, as the diff reads a Change.
+     * A day still to train, as the session will prescribe it ([Changes.dayAhead]). [endsOn] is the
+     * end of a date-ranged Change on it, which the day may fall after.
      */
-    data class Ahead(val day: PlannedDay, val next: Boolean, val date: LocalDate, val endsOn: LocalDate?) : PlanDay {
-        override val position get() = day.position
-    }
+    data class Ahead(override val day: PlannedDay, val next: Boolean, val endsOn: LocalDate?) : ProgramDay
 
-    /** A day trained: the session logged for it, and the day as written, for its name. */
-    data class Done(val day: PlannedDay, val session: PastSessionItem) : PlanDay {
-        override val position get() = day.position
-    }
+    /** A day trained: the session logged for it. */
+    data class Done(override val day: PlannedDay, val session: PastSessionItem) : ProgramDay
 
-    /** A day passed without a session, by a skip: its plan, marked skipped. */
-    data class Skipped(val day: PlannedDay) : PlanDay {
-        override val position get() = day.position
-    }
+    /** A day passed without a session, by a skip: what it prescribed, marked skipped. */
+    data class Skipped(override val day: PlannedDay) : ProgramDay
 }
 
 /** What [previous]'s last week becomes in a block's first week: each day's slots that differ. */
@@ -42,15 +37,15 @@ data class BlockComparison(val previous: Block, val days: List<DayComparison>)
 data class DayComparison(val day: Day, val slots: List<SlotDiff>)
 
 /**
- * The plan as Program reads it (docs/design/program-and-today.md): a week's days, each resolved
- * through [Changes.day] as Today and the session resolve it.
+ * The weeks as Program reads them (docs/design/program-and-today.md): a week's days, each resolved
+ * through [Changes] as Today and the session resolve it, and a block against the one before.
  */
-object ProgramPlan {
+object ProgramWeek {
     /**
      * [block] against the block before it, as written: the previous block's last week beside this
      * block's first, day by day (Day A with Day A) and slot by slot; null for the first block.
      */
-    fun from(program: Program, block: Block): BlockComparison? {
+    fun comparison(program: Program, block: Block): BlockComparison? {
         val previous = program.blocks.getOrNull(program.blocks.indexOf(block) - 1) ?: return null
         val days = block.days.indices.mapNotNull { i ->
             val after = program.plannedDay(Position(block.weekStart, i)) ?: return@mapNotNull null
@@ -64,28 +59,27 @@ object ProgramPlan {
         return BlockComparison(previous, days)
     }
 
-    fun week(active: ActiveProgram, week: Int, sessions: List<PastSessionItem>): List<PlanDay> {
+    /**
+     * The days of [week]: those before the position done (with the latest of [sessions] for each)
+     * or skipped, the rest still to train, without dates.
+     */
+    fun days(active: ActiveProgram, week: Int, sessions: List<PastSessionItem>): List<ProgramDay> {
         val program = active.program
         val block = program.blockAt(week) ?: return emptyList()
-        val from = program.ordinal(active.position)
-        val perWeek = program.blockAt(active.position.week)?.days?.size ?: block.days.size
+        val next = program.ordinal(active.position)
         // The latest session of each day of this program; a repeated week trains its days again.
         val trained = sessions.filter { it.programId == active.id && it.position != null }
             .sortedBy { it.startedAt }.associateBy { it.position!! }
         return block.days.indices.mapNotNull { i ->
             val position = Position(week, i)
-            val ahead = program.ordinal(position) - from
-            if (ahead < 0) {
+            if (program.ordinal(position) < next) {
                 val planned = Changes.day(program, position, active.today, active.changes) ?: return@mapNotNull null
-                return@mapNotNull trained[position]?.let { PlanDay.Done(planned, it) } ?: PlanDay.Skipped(planned)
+                return@mapNotNull trained[position]?.let { ProgramDay.Done(planned, it) } ?: ProgramDay.Skipped(planned)
             }
-            val date = active.today.plusWeeks((ahead / perWeek).toLong())
-            val day = Changes.day(program, position, date, active.changes) ?: return@mapNotNull null
-            val written = program.plannedDay(position) ?: return@mapNotNull null
-            // Trained later than its date, a day can fall past a date-ranged Change's end.
-            val endsOn = active.changes.filter { it.change.operations.isNotEmpty() && it.covers(written, date) }
-                .mapNotNull { (it.change.scope as? Scope.Dates)?.to }.minOrNull()
-            PlanDay.Ahead(day, ahead == 0, date, endsOn)
+            val (day, dated) = Changes.dayAhead(program, active.position, position, active.today, active.changes) ?: return@mapNotNull null
+            // Trained later than the diff's rule reads it, a day can fall past a date range's end.
+            val endsOn = dated.filter { it.change.operations.isNotEmpty() }.mapNotNull { (it.change.scope as? Scope.Dates)?.to }.minOrNull()
+            ProgramDay.Ahead(day, program.ordinal(position) == next, endsOn)
         }
     }
 }

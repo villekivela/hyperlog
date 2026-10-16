@@ -260,11 +260,11 @@ Principles:
   between the previous block's last week and this block's first, before → after. There is no
   written note.
 - **Every week resolves.** A day to come reads exactly as the session will prescribe it, with
-  overrides, deloads and Changes (`ProgramPlan.week` through `Changes.day`).
+  overrides, deloads and Changes (`ProgramWeek.days` through `Changes.day`).
 - **Past weeks are what happened.** A done day shows its date and top sets and opens the session.
   A skipped day shows its plan, headed Skipped.
-- **No dates.** A date-ranged Change lands on days to come by the diff's rule (one week of program
-  days per week of dates from the next day). A day it covers says when it ends.
+- **No dates.** The next day reads as Today shows it. A later day takes a date-ranged Change by
+  the window its in-force diff shows (`Changes.dayAhead`), and says when the Change ends.
 - **The actions live in ⋮.** The header holds only the title and Next. Changes are one row that
   opens their own page.
 

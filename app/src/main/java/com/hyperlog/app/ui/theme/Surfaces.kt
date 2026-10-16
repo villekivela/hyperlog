@@ -295,6 +295,7 @@ fun ConnectedChoice(
             ToggleButton(
                 checked = i == selected,
                 onCheckedChange = { onSelect(i) },
+                // Each button's padding counts as a few characters, so short names still get room.
                 modifier = Modifier.weight(if (fitLabels) label.length + 4f else 1f).semantics { role = Role.RadioButton },
                 shapes = when (i) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()

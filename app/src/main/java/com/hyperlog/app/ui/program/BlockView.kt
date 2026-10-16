@@ -26,10 +26,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -42,7 +42,6 @@ import com.hyperlog.app.coach.SlotDiff
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Block
-import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.shortDate
@@ -54,7 +53,9 @@ import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.selectedChipColors
 import com.hyperlog.app.ui.today.SlotRows
+import java.time.LocalDate
 
 /**
  * The block picked (Program, docs/design/program-and-today.md): the blocks as a connected group,
@@ -65,33 +66,33 @@ internal fun LazyListScope.blockItems(
     program: Program,
     block: Block,
     active: ActiveProgram,
-    from: BlockComparison?,
+    comparison: BlockComparison?,
     week: Int,
-    days: List<PlanDay>,
+    days: List<ProgramDay>,
     names: Map<String, String>,
     onBlock: (Int) -> Unit,
     onWeek: (Int) -> Unit,
     onOpenSession: (Long) -> Unit,
 ) {
     item(key = "blocks") { BlockChoice(program, program.blocks.indexOf(block), onBlock) }
-    item(key = "block") { BlockCard(block, active, from, week, names, onWeek) }
+    item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek) }
     days.forEach { day ->
         val position = day.position
         item(key = "head-${position.week}-${position.day}") { DayHead(day) }
         when (day) {
-            is PlanDay.Done -> item(key = "done-${position.week}-${position.day}") {
+            is ProgramDay.Done -> item(key = "done-${position.week}-${position.day}") {
                 Segment(0, 1, onClick = { onOpenSession(day.session.id) }) { DoneDay(day.session) }
             }
-            is PlanDay.Ahead, is PlanDay.Skipped -> {
-                val planned = if (day is PlanDay.Ahead) day.day else (day as PlanDay.Skipped).day
-                val ends = (day as? PlanDay.Ahead)?.endsOn
+            is ProgramDay.Ahead, is ProgramDay.Skipped -> {
+                val planned = day.day
+                val ends = (day as? ProgramDay.Ahead)?.endsOn
                 val groups = planned.slots.groupBy { it.group }.values.toList()
                 val count = groups.size + if (ends != null) 1 else 0
                 if (ends != null) {
                     item(key = "ends-${position.week}-${position.day}") { Segment(0, count) { EndsLine(ends) } }
                 }
                 // A skipped day's plan is there to read, not to train: it sits back from the days to come.
-                val content = if (day is PlanDay.Skipped) Modifier.alpha(SkippedAlpha) else Modifier
+                val content = if (day is ProgramDay.Skipped) Modifier.alpha(SkippedAlpha) else Modifier
                 groups.forEachIndexed { i, group ->
                     item(key = "slots-${position.week}-${position.day}-$i") {
                         Segment(i + count - groups.size, count) { Column(content) { SlotRows(group, names) } }
@@ -120,7 +121,7 @@ private fun BlockChoice(program: Program, picked: Int, onBlock: (Int) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 names.forEachIndexed { i, name ->
-                    FilterChip(selected = i == picked, onClick = { onBlock(i) }, label = { Text(name) }, colors = com.hyperlog.app.ui.theme.selectedChipColors())
+                    FilterChip(selected = i == picked, onClick = { onBlock(i) }, label = { Text(name) }, colors = selectedChipColors())
                 }
             }
         }
@@ -144,7 +145,7 @@ private const val ComparedFolded = 5
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BlockCard(block: Block, active: ActiveProgram, from: BlockComparison?, week: Int, names: Map<String, String>, onWeek: (Int) -> Unit) {
+private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComparison?, week: Int, names: Map<String, String>, onWeek: (Int) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val name = { id: String -> names[id] ?: id }
     SectionCard(Modifier.padding(top = 16.dp)) {
@@ -154,15 +155,15 @@ private fun BlockCard(block: Block, active: ActiveProgram, from: BlockComparison
                 else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd),
                 style = MaterialTheme.typography.titleLarge,
             )
-            if (from != null) {
+            if (comparison != null) {
                 Spacer(Modifier.height(16.dp))
-                Text(stringResource(R.string.program_from, from.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                Text(stringResource(R.string.program_from, comparison.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                 // Every slot of a block that moves RIR differs, so a long comparison folds after its first few.
-                val total = from.days.sumOf { it.slots.size }
+                val total = comparison.days.sumOf { it.slots.size }
                 var open by rememberSaveable(block.id) { mutableStateOf(false) }
                 var budget = if (open || total <= ComparedFolded) total else ComparedShown
-                val several = from.days.size > 1
-                from.days.forEach { day ->
+                val several = comparison.days.size > 1
+                comparison.days.forEach { day ->
                     if (budget <= 0) return@forEach
                     if (several) {
                         Text(
@@ -186,8 +187,8 @@ private fun BlockCard(block: Block, active: ActiveProgram, from: BlockComparison
                         SymbolIcon(if (open) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(20.dp), tint = cs.primary)
                     }
                 }
-                if (from.days.isEmpty()) {
-                    Text(stringResource(R.string.program_from_same, from.previous.name), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                if (comparison.days.isEmpty()) {
+                    Text(stringResource(R.string.program_from_same, comparison.previous.name), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -201,7 +202,7 @@ private fun BlockCard(block: Block, active: ActiveProgram, from: BlockComparison
                         label = { Text("$w") },
                         modifier = Modifier.semantics { contentDescription = description },
                         leadingIcon = if (done) ({ SymbolIcon(Symbol.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }) else null,
-                        colors = com.hyperlog.app.ui.theme.selectedChipColors(),
+                        colors = selectedChipColors(),
                     )
                 }
             }
@@ -242,30 +243,27 @@ private fun ComparedSlot(slot: SlotDiff, name: (String) -> String) {
 
 /** A day's head: its name, with Next, Done, Skipped or Deload at the end. */
 @Composable
-private fun DayHead(day: PlanDay) {
+private fun DayHead(day: ProgramDay) {
     val cs = MaterialTheme.colorScheme
-    val (name, state, color) = when (day) {
-        is PlanDay.Ahead -> Triple(
-            day.day.day.name,
-            when {
-                day.next -> stringResource(R.string.program_next)
-                day.day.deload -> stringResource(R.string.change_deload)
-                else -> null
-            },
-            if (day.next) cs.primary else cs.tertiary,
-        )
-        is PlanDay.Skipped -> Triple(day.day.day.name, stringResource(R.string.program_day_skipped), cs.onSurfaceVariant)
-        is PlanDay.Done -> Triple(day.day.day.name, stringResource(R.string.program_day_done_label), cs.onSurfaceVariant)
+    val name = day.day.day.name
+    val (state, color) = when (day) {
+        is ProgramDay.Ahead -> when {
+            day.next -> stringResource(R.string.program_next)
+            day.day.deload -> stringResource(R.string.change_deload)
+            else -> null
+        } to if (day.next) cs.primary else cs.tertiary
+        is ProgramDay.Skipped -> stringResource(R.string.program_day_skipped) to cs.onSurfaceVariant
+        is ProgramDay.Done -> stringResource(R.string.program_day_done_label) to cs.onSurfaceVariant
     }
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 24.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = CardMargin + CardPadding).padding(top = 24.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Text(
             name,
             Modifier.weight(1f),
             style = MaterialTheme.typography.labelLarge,
-            color = if (day is PlanDay.Ahead && day.next) cs.primary else cs.onSurfaceVariant,
+            color = if (day is ProgramDay.Ahead && day.next) cs.primary else cs.onSurfaceVariant,
             fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -303,7 +301,7 @@ private fun DoneDay(session: PastSessionItem) {
 
 /** A date-ranged Change over a day to come: the day may fall after it ends. */
 @Composable
-private fun EndsLine(ends: java.time.LocalDate) {
+private fun EndsLine(ends: LocalDate) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = CardPadding, vertical = 12.dp),
