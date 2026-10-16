@@ -4,12 +4,13 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-// Hyperlog's own colours, Navy on grey (#42): neutral grey surfaces, text and dividers, and one navy
+// Hyperlog's own colours, Navy on grey: neutral grey surfaces, text and dividers, and one navy
 // accent, the same on every phone. The accent fills primary and primaryContainer (the Start button)
-// and tints secondaryContainer (the selected tab, chips that are on); tertiary follows primary, and
-// secondary and tertiaryContainer (advice cards, technique pills) stay neutral grey, so nothing else
-// tints the screen. Light is white, dark near-black grey.
-// Errors keep Material's defaults. surfaceTint is transparent so elevation never tints a surface.
+// and tints secondaryContainer (the selected tab, chips that are on); tertiary follows primary.
+// Secondary and tertiaryContainer (advice, technique pills) stay grey, so nothing else tints the
+// screen; tertiaryContainer is its own step, apart from the plain sets' grey and the cards'. Light
+// is white, dark near-black grey. Errors keep Material's defaults. surfaceTint is transparent so
+// elevation never tints a surface.
 
 internal val NavyLight = lightColorScheme(
     primary = Color(0xFF2B3A8F),
@@ -24,7 +25,7 @@ internal val NavyLight = lightColorScheme(
     onSecondaryContainer = Color(0xFF1B2560),
     tertiary = Color(0xFF2B3A8F),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFE4E4E7),
+    tertiaryContainer = Color(0xFFDCDCE0),
     onTertiaryContainer = Color(0xFF1A1A1C),
     error = Color(0xFFBA1A1A),
     onError = Color(0xFFFFFFFF),
@@ -63,7 +64,7 @@ internal val NavyDark = darkColorScheme(
     onSecondaryContainer = Color(0xFFDDE1FF),
     tertiary = Color(0xFFB4BEFF),
     onTertiary = Color(0xFF16257D),
-    tertiaryContainer = Color(0xFF303134),
+    tertiaryContainer = Color(0xFF3A3B3F),
     onTertiaryContainer = Color(0xFFE6E6E8),
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),

@@ -3,28 +3,20 @@ package com.hyperlog.app
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
 import com.hyperlog.app.data.SessionEntity
 import com.hyperlog.app.data.SessionExerciseEntity
-import com.hyperlog.app.domain.LadderSpec
-import com.hyperlog.app.ui.session.WholeBar
-import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.update.BuildReleases
 import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
@@ -42,6 +34,7 @@ import java.time.ZoneId
 /**
  * Renders of the whole app's screens that the screen-level renders (Session, Program, Coach,
  * Workout) don't cover: Today, Settings, the library, History, the ad-hoc session and Session done.
+ * The whole bar is in `WholeBarRenders`.
  * Skipped unless asked for: `RENDERS=<dir> ./gradlew testDebugUnitTest --tests '*AppRenders*'`,
  * with `DARK=1` for dark.
  */
@@ -61,7 +54,7 @@ class AppRenders {
         assumeTrue(out != null)
         RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intent = Intent(context, MainActivity::class.java).apply { fakeRelease?.let { putExtra("fake_release", it) } }
+        val intent = Intent(context, MainActivity::class.java).apply { fakeRelease?.let { putExtra(BuildReleases.FAKE_RELEASE, it) } }
         ActivityScenario.launch<MainActivity>(intent)
         compose.waitFor("Today")
     }
@@ -81,9 +74,9 @@ class AppRenders {
     private fun session(date: LocalDate, exerciseId: String, vararg sets: Pair<Double, Int>) = runBlocking {
         val dao = db.sessions()
         val id = dao.insertSession(SessionEntity(startedAt = at(date), finishedAt = at(date) + 3_600_000))
-        val se = dao.insertSessionExercise(SessionExerciseEntity(sessionId = id, exerciseId = exerciseId, position = 0))
+        val exercise = dao.insertSessionExercise(SessionExerciseEntity(sessionId = id, exerciseId = exerciseId, position = 0))
         sets.forEachIndexed { i, (kg, reps) ->
-            dao.insertSet(LoggedSetEntity(sessionExerciseId = se, position = i, weightKg = kg, fullReps = reps, partialReps = 0, rir = 1, loggedAt = at(date)))
+            dao.insertSet(LoggedSetEntity(sessionExerciseId = exercise, position = i, weightKg = kg, fullReps = reps, partialReps = 0, rir = 1, loggedAt = at(date)))
         }
     }
 
@@ -165,38 +158,4 @@ class AppRenders {
         compose.waitFor("Session done")
         save("session-done")
     }
-}
-
-/** The whole bar and the whole machine, each on its own. */
-@RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w412dp-h915dp-xxhdpi")
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-class WholeBarRenders {
-    @get:Rule
-    val compose = createComposeRule()
-
-    private val out = System.getenv("RENDERS")
-
-    private fun render(name: String, plates: LadderSpec.Plates, kg: Double, machine: Boolean) {
-        assumeTrue(out != null)
-        val dark = System.getenv("DARK") == "1"
-        RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
-        compose.setContent {
-            HyperlogTheme {
-                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    WholeBar(plates, kg, Modifier.padding(24.dp), machine = machine)
-                }
-            }
-        }
-        compose.waitForIdle()
-        val bitmap = compose.onAllNodes(isRoot())[0].captureToImage().asAndroidBitmap()
-        File(out).mkdirs()
-        File(out, "${if (dark) "dark" else "light"}-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-    }
-
-    @Test
-    fun wholeBar() = render("whole-bar", LadderSpec.DefaultPlates, 100.0, machine = false)
-
-    @Test
-    fun wholeMachine() = render("whole-machine", LadderSpec.Plates(30.0, listOf(20.0, 10.0)), 90.0, machine = true)
 }

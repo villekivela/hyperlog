@@ -12,7 +12,7 @@ import java.io.File
  * A dismissed fake version stays hidden; launch with another.
  */
 internal object BuildReleases {
-    private const val FAKE_RELEASE = "fake_release"
+    internal const val FAKE_RELEASE = "fake_release"
 
     fun source(activity: Activity): ReleaseSource? {
         val version = activity.intent?.getStringExtra(FAKE_RELEASE)?.let(AppVersion::parse) ?: return null

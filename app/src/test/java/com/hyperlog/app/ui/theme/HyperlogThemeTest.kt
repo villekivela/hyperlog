@@ -79,6 +79,13 @@ class HyperlogThemeTest {
     }
 
     @Test
+    fun lightTechniqueGreyIsItsOwnStep() = assertTechniqueGreyStandsOff(themed().first)
+
+    @Test
+    @Config(qualifiers = "night")
+    fun darkTechniqueGreyIsItsOwnStep() = assertTechniqueGreyStandsOff(themed().first)
+
+    @Test
     fun lightTextOnAccentReads() = assertTextContrast(themed().first)
 
     @Test
@@ -95,12 +102,20 @@ class HyperlogThemeTest {
             "surfaceContainerHighest" to s.surfaceContainerHighest, "onSurface" to s.onSurface,
             "onSurfaceVariant" to s.onSurfaceVariant, "outline" to s.outline, "outlineVariant" to s.outlineVariant,
             "inverseSurface" to s.inverseSurface, "secondary" to s.secondary,
-            // Advice cards (the coach's workout, time off) and technique pills: grey, not an accent block.
+            // Advice (time off) and technique pills: grey, not an accent block.
             "tertiaryContainer" to s.tertiaryContainer, "onTertiaryContainer" to s.onTertiaryContainer,
         ).forEach { (name, c) ->
             val channels = listOf(c.red, c.green, c.blue).map { (it * 255).toInt() }
             assertTrue("$name $c is tinted", channels.max() - channels.min() <= 8)
         }
+    }
+
+    /** A technique set's pill and circle are grey, but not the plain set's grey or any card's. */
+    private fun assertTechniqueGreyStandsOff(s: ColorScheme) {
+        listOf(
+            s.surface, s.surfaceContainerLowest, s.surfaceContainerLow, s.surfaceContainer,
+            s.surfaceContainerHigh, s.surfaceContainerHighest,
+        ).forEach { assertNotEquals(it, s.tertiaryContainer) }
     }
 
     private fun assertTextContrast(s: ColorScheme) {
