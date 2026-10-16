@@ -1,0 +1,8 @@
+[
+  {"name": "Cobalt", "seed": "#1F4FD8", "sec": 20, "ter": [300, 32], "neu": [null, 7], "nv": 12,
+   "override": {"light": {"primaryContainer": 40, "onPrimaryContainer": 100, "primary": 40}}},
+  {"name": "Lime", "seed": "#C6F21C", "sec": 18, "ter": [250, 20], "neu": [170, 4], "nv": 8,
+   "override": {"light": {"primaryContainer": 90, "onPrimaryContainer": 10, "primary": 35, "inversePrimary": 90}, "dark": {"primary": 90, "onPrimary": 10, "primaryContainer": 90, "onPrimaryContainer": 10, "inversePrimary": 35}}},
+  {"name": "Plum", "seed": "#8B2FA8", "sec": 24, "ter": [270, 24], "neu": [null, 7], "nv": 13,
+   "override": {"light": {"primaryContainer": 40, "onPrimaryContainer": 100}}}
+]
