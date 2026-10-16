@@ -21,6 +21,9 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TestPrograms
 import com.hyperlog.app.program.StarterProgram
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToNode
@@ -196,7 +199,7 @@ class ProgramScreenTest {
         scrollTo("Intensify")
         compose.onNodeWithText("Intensify").performClick()
         compose.onNodeWithText("From Build").assertIsDisplayed()
-        compose.onAllNodesWithText("1 × 3–5 @ 1", substring = true)[0].assertExists()
+        compose.onAllNodesWithText("1 × 3–5 1 RIR", substring = true)[0].assertExists()
         scrollTo("Week 7 · Day C — Bench volume, leg press, pulldown")
         compose.onNodeWithText("Week 7 · Day C — Bench volume, leg press, pulldown").assertIsDisplayed()
 
@@ -211,6 +214,20 @@ class ProgramScreenTest {
         compose.onNodeWithText("Fewer").performScrollTo().performClick()
         scrollTo("Deload")
         compose.onAllNodesWithText("Deload")[0].assertIsDisplayed()
+    }
+
+    @Test
+    fun aBlockWideTargetRirIsAnOutlinedChip() {
+        val program = (ProgramParser.parse(TwoBlocks, AnyId) as ProgramParser.Result.Valid).program
+        compose.setContent {
+            HyperlogTheme { ProgramScreen(ActiveProgram(1, program, Position(0, 0)), null, onImport = {}, onCloseErrors = {}, onBack = {}) }
+        }
+        scrollTo("Peak")
+        compose.onNodeWithText("Peak").performClick()
+        compose.onNodeWithText("From Main").assertIsDisplayed()
+        compose.onNodeWithText("Every set: 2 RIR").assertIsDisplayed()
+        compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipTargetTag, useUnmergedTree = true).onFirst().assertExists()
+        compose.onAllNodesWithText("@", substring = true).assertCountEquals(0)
     }
 
     @Test
@@ -236,8 +253,10 @@ class ProgramScreenTest {
             }
         }
         compose.onNodeWithText("Tue 13 Oct").assertIsDisplayed()
-        compose.onNodeWithText("80 × 5 @ 1").assertIsDisplayed()
-        compose.onNodeWithText("50 × 10 @ 0").assertIsDisplayed()
+        compose.onNodeWithText("80 × 5 1 RIR").assertIsDisplayed()
+        // Logged sets: filled RIR chips.
+        compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipLoggedTag, useUnmergedTree = true).assertCountEquals(2)
+        compose.onNodeWithText("50 × 10 0 RIR").assertIsDisplayed()
         compose.onNodeWithText("Tue 13 Oct").performClick()
         assertEquals(7L, opened)
     }
@@ -262,3 +281,14 @@ private fun starter() = (ProgramParser.parse(java.io.File("src/main/assets/${Sta
 private object AnyId : Set<String> by emptySet() {
     override fun contains(element: String) = true
 }
+
+/** A block, then one that sets every set's target RIR. */
+private val TwoBlocks = """
+    { "format": 1, "title": "Two blocks", "blocks": [
+      { "id": "main", "name": "Main", "weekStart": 1, "weekEnd": 1, "days": [
+        { "id": "a", "name": "Day A", "groups": [ { "slots": [ { "id": "bench", "exercise": "barbell_bench_press",
+          "sets": [ { "count": 2, "reps": "6-8", "rir": 1 } ] } ] } ] } ] },
+      { "id": "peak", "name": "Peak", "weekStart": 2, "weekEnd": 2, "weeks": { "2": { "rir": 2 } }, "days": [
+        { "id": "a", "name": "Day A", "groups": [ { "slots": [ { "id": "bench", "exercise": "barbell_bench_press",
+          "sets": [ { "count": 2, "reps": "6-8", "rir": 1 } ] } ] } ] } ] } ] }
+"""

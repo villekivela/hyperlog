@@ -110,8 +110,8 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
 }
 
 /**
- * Each exercise with its sets, `25 × 10 @ 2`. With [onOpen] a row opens the exercise's table to
- * correct it, and ends in a chevron.
+ * Each exercise with its sets, `25 × 10 [2]` with its RIR a filled chip. With [onOpen] a row opens
+ * the exercise's table to correct it, and ends in a chevron.
  */
 @Composable
 internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Unit)?) {
@@ -127,7 +127,7 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
             Column(Modifier.weight(1f)) {
                 Text(e.name, style = MaterialTheme.typography.bodyLarge)
                 // Spaces inside a set never break, so a set is never split across lines.
-                Text(
+                RirText(
                     e.sets.joinToString("   ") { it.summary().replace(' ', ' ') },
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,

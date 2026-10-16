@@ -41,7 +41,7 @@ class MainActivityTest {
         compose.waitFor("Week 1 · Ramp-in")
         compose.onNodeWithText("Day A — Heavy bench, squat, pulldown").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
-        compose.onNodeWithText("1 × 4–6 @ 2", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("1 × 4–6 2 RIR", substring = true).assertIsDisplayed()
         compose.onNodeWithText("5a").assertIsDisplayed()
     }
 

@@ -133,6 +133,10 @@ A work set taken to zero reps in reserve.
 Reps in reserve: how many more full reps could have been done. It's the only effort scale the app uses.
 _Avoid_: RPE
 
+**RIR chip**:
+How the app shows an RIR in set text: the number in a small chip of the RIR colour scale, outlined for a target and filled for a logged set. Text that leaves the app writes `@ N` instead.
+_Avoid_: RIR badge, RIR pill
+
 **Estimate**:
 The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR. It drives suggestions.
 _Avoid_: 1RM, max

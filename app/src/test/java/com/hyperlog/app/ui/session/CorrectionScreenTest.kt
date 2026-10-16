@@ -109,7 +109,7 @@ class CorrectionScreenTest {
 
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitFor("Session done")
-        compose.onNodeWithText("25 × 8 @ 2").assertIsDisplayed()
+        compose.onNodeWithText("25 × 8 2 RIR").assertIsDisplayed()
     }
 
     @Test

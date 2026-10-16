@@ -653,7 +653,7 @@ private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
     ) {
         SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
         Spacer(Modifier.width(8.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        RirText(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -698,10 +698,10 @@ private fun StartingHintRow(set: String) {
     Row(Modifier.fillMaxWidth().testTag(StartingHintTag), verticalAlignment = Alignment.Top) {
         SymbolIcon(Symbol.History, null, Modifier.size(20.dp), tint = muted)
         Spacer(Modifier.width(16.dp))
-        // The set on a line of its own, so it never breaks inside "@ 2 RIR".
+        // The set on a line of its own, so it never breaks inside it.
         Column {
             Text(stringResource(R.string.starting_hint), style = MaterialTheme.typography.bodyMedium, color = muted)
-            Text(set, style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            RirText(set, style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -808,7 +808,7 @@ internal fun SessionList(
                 Column(Modifier.weight(1f)) {
                     Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (e.sets.isNotEmpty()) {
-                        Text(
+                        RirText(
                             e.sets.joinToString("   ") { it.summary().replace(' ', ' ') },
                             style = MaterialTheme.typography.bodyMedium,
                             color = cs.onSurfaceVariant,
@@ -1004,7 +1004,7 @@ internal fun ExerciseSheet(
             Row(Modifier.testTag(SuggestionTag)) {
                 SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
                 Spacer(Modifier.width(16.dp))
-                Text(text, style = MaterialTheme.typography.bodyLarge)
+                RirText(text, style = MaterialTheme.typography.bodyLarge)
             }
         }
         startingHint?.let {

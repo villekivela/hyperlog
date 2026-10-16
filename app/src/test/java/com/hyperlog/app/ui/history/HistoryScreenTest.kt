@@ -78,7 +78,7 @@ class HistoryScreenTest {
         compose.waitForTappable("Mon 28 Sep")
         compose.onNodeWithText("Mon 28 Sep").performClick()
         // Its summary, then an exercise's table to correct.
-        compose.waitFor("80 × 6 @ 1")
+        compose.waitFor("80 × 6 1 RIR")
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.waitForDescription("Correct set 1")
     }
@@ -103,7 +103,7 @@ class HistoryScreenTest {
 
         compose.waitFor("Tall cable · Harbour")
         compose.onNodeWithText("Cable left · Harbour").assertIsDisplayed()
-        compose.onNodeWithText("10.2 × 10 @ 1").assertIsDisplayed()
+        compose.onNodeWithText("10.2 × 10 1 RIR").assertIsDisplayed()
     }
 
     @Test

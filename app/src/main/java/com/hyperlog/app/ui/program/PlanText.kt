@@ -21,6 +21,9 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.program.planChunks
+import com.hyperlog.app.ui.session.RirChipKey
+import com.hyperlog.app.ui.session.appendRir
+import com.hyperlog.app.ui.session.rirChipContent
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
@@ -64,8 +67,8 @@ fun techniqueText(technique: Technique): String = when (technique) {
 }
 
 /**
- * Sets summed up in one line: `1 × 4–6 @ 1 · ↘ 2 × 6–8 @ 1`, a back-off run marked with
- * `south_east` and each technique's symbol after its run, in tertiary.
+ * Sets summed up in one line: `1 × 4–6 [1] · ↘ 2 × 6–8 [1]`, each target RIR an outlined chip, a
+ * back-off run marked with `south_east` and each technique's symbol after its run, in tertiary.
  */
 @Composable
 fun SetSummary(
@@ -76,6 +79,7 @@ fun SetSummary(
 ) {
     val chunks = planChunks(sets)
     val symbols = mutableMapOf<String, Symbol>()
+    val chips = mutableSetOf<RirChipKey>()
     val parts = chunks.map { c ->
         if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
         else stringResource(R.string.plan_sets, c.count, c.reps.toString())
@@ -88,7 +92,7 @@ fun SetSummary(
                 appendInlineContent("backoff", "back-off")
                 append(" ")
             }
-            append(parts[i])
+            appendRir(parts[i], target = true, chips)
             c.techniques.distinct().forEach { t ->
                 val key = t.symbol().name
                 symbols[key] = t.symbol()
@@ -102,6 +106,6 @@ fun SetSummary(
         InlineTextContent(Placeholder(1.2.em, 1.2.em, PlaceholderVerticalAlign.Center)) {
             SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else tertiary)
         }
-    }
+    } + rirChipContent(chips, style.fontSize)
     Text(text, modifier, style = style, color = color, inlineContent = inline, maxLines = 2, overflow = TextOverflow.Ellipsis)
 }
