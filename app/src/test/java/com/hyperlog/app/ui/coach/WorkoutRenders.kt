@@ -119,6 +119,11 @@ class WorkoutRenders {
         compose.onNodeWithText("Glutes").performScrollTo().performClick()
     }) { Coach(words = "Hotel gym this week: dumbbells to 30 kg and a bench.") }
 
+    @Test fun elsewhereNeedsWords() = render("coach-19-elsewhere-needs-words", before = {
+        compose.onNodeWithText("Elsewhere").performClick()
+        build()
+    }) { Coach() }
+
     @Test fun optionsNoProgram() = render("coach-17-workout-no-program", before = build) { Coach(program = null, lowest = emptyList()) }
 
     @Test fun review() = render("coach-18-workout-review") {

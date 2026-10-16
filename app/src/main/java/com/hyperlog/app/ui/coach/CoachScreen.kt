@@ -210,7 +210,11 @@ fun CoachScreen(
     val about = inForce.associate { it.id to stringResource(R.string.coach_about, it.change.summary) }
     val starters = Starters.map { stringResource(it.label) to stringResource(it.words) }
     // Gym, effort, time and focus are a whole request: words are optional with the options open.
-    val canAsk = words.text.isNotBlank() || options != null
+    // Elsewhere's equipment is only in the words, so it needs some.
+    val canAsk = (words.text.isNotBlank() || options != null) && !(elsewhere && words.text.isBlank())
+    // A new gym or new options make a new request: Ask Claude is the next step again.
+    fun pick(id: Long?) { if (asked) onAskedChange(false); onPick(id) }
+    fun choose(o: WorkoutOptions?) { if (asked) onAskedChange(false); onOptions(o) }
 
     BackHandler(onBack = onBack)
     Scaffold(
@@ -294,7 +298,7 @@ fun CoachScreen(
                                 FilterChip(
                                     colors = selectedChipColors(),
                                     selected = selected,
-                                    onClick = { onPick(g.id) },
+                                    onClick = { pick(g.id) },
                                     label = { Text(g.name) },
                                     leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                                 )
@@ -303,7 +307,7 @@ fun CoachScreen(
                             FilterChip(
                                 colors = selectedChipColors(),
                                 selected = elsewhere,
-                                onClick = { onPick(Elsewhere) },
+                                onClick = { pick(Elsewhere) },
                                 label = { Text(stringResource(R.string.coach_elsewhere)) },
                                 leadingIcon = if (elsewhere) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                             )
@@ -320,7 +324,7 @@ fun CoachScreen(
                         colors = selectedChipColors(),
                         selected = building,
                         onClick = {
-                            onOptions(if (building) null else WorkoutOptions())
+                            choose(if (building) null else WorkoutOptions())
                             if (!building) {
                                 // The options are what to fill in: the keyboard makes way for them.
                                 keyboard?.hide()
@@ -346,7 +350,7 @@ fun CoachScreen(
                 options?.let { picked ->
                     WorkoutOptionsRows(
                         picked, lowest,
-                        onChange = { onOptions(it) },
+                        onChange = { choose(it) },
                     )
                 }
                 OutlinedTextField(
@@ -356,6 +360,8 @@ fun CoachScreen(
                         .focusRequester(field).bringIntoViewRequester(fieldInView),
                     label = { Text(stringResource(R.string.coach_words_label)) },
                     placeholder = { Text(stringResource(R.string.coach_words_hint)) },
+                    // At Elsewhere the words are the only equipment Claude gets, so Ask Claude waits for them.
+                    supportingText = if (elsewhere && words.text.isBlank()) { { Text(stringResource(R.string.coach_words_hint_elsewhere)) } } else null,
                     minLines = 3,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 )

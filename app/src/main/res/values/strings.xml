@@ -469,6 +469,7 @@
     <string name="coach_days_off">%1$d days since your last session</string>
     <string name="coach_ease_back">Ease back in</string>
     <string name="coach_words_label">In your words</string>
+    <string name="coach_words_hint_elsewhere">Say what equipment is there, so Claude plans with it</string>
     <string name="coach_words_hint">Elbow aches on curls; the gym closes early on Fridays…</string>
     <string name="coach_intro">Tell Claude what’s going on. It answers in words, a change or a workout you review.</string>
     <string name="coach_intro_no_program">Tell Claude what’s going on. It answers in words or builds you a workout for today.</string>

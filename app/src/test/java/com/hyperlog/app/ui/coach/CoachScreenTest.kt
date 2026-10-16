@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTextClearance
@@ -426,6 +427,7 @@ class CoachScreenTest {
         compose.waitFor("In your words")
         compose.onNode(hasText("Elsewhere") and isSelected()).assertExists()
         compose.onNode(hasText("Easy") and androidx.compose.ui.test.isOn()).assertExists()
+        words().performTextInput("Dumbbells to 30 kg.")
         val prompt = ask()
         assertTrue(prompt, prompt.contains("## Gym: somewhere not set up in Hyperlog"))
         assertTrue(prompt, prompt.contains("- Effort: easy"))
@@ -446,6 +448,56 @@ class CoachScreenTest {
         compose.onNodeWithContentDescription("More").performClick()
         compose.onNodeWithText("Finish session").performClick()
         compose.waitFor("Nothing is logged yet, so the session is dropped and the workout goes back on Today.")
+    }
+
+    @Test
+    fun changingTheOptionsOrTheGymAfterAskingMakesAskClaudeTheNextStepAgain() {
+        runStarter()
+        runBlocking { Gyms(db).addGym("Harbour"); Gyms(db).addGym("Itis") }
+        openCoach()
+        compose.waitFor("Itis")
+        compose.onNodeWithText("Build me a workout").performClick()
+        ask()
+        compose.onNode(hasTestTag(NextStepTag)).assertTextEquals("Paste reply")
+        compose.onNodeWithText("Hard").performClick()
+        compose.onNode(hasTestTag(NextStepTag)).assertTextEquals("Ask Claude")
+        ask()
+        compose.onNodeWithText("Itis").performClick()
+        compose.onNode(hasTestTag(NextStepTag)).assertTextEquals("Ask Claude")
+    }
+
+    @Test
+    fun elsewhereNeedsWordsSayingWhatEquipmentIsThere() {
+        runStarter()
+        runBlocking { Gyms(db).addGym("Harbour") }
+        openCoach()
+        compose.waitFor("Elsewhere")
+        compose.onNodeWithText("Elsewhere").performClick()
+        compose.onNodeWithText("Build me a workout").performClick()
+        compose.onNodeWithText("Ask Claude").assertIsNotEnabled()
+        compose.onNodeWithText("Say what equipment is there", substring = true).assertExists()
+        words().performTextInput("Dumbbells to 30 kg and a bench.")
+        compose.onNodeWithText("Ask Claude").assertIsEnabled()
+    }
+
+    @Test
+    fun acceptingAChangeWithAWorkoutOnTodayShowsTheProgramDay() {
+        runStarter()
+        openCoach()
+        copy(hotel.replace("\"groups\": [", "\"groups\": [" + List(5) { i -> """{"slots": [{"id": "x$i", "exercise": "db_bench_press", "sets": [{"reps": 8}]}]},""" }.joinToString("")))
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Add to Today")
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Hotel dumbbells, 45 min")
+        compose.openTab("Coach")
+        compose.waitFor("In your words")
+        copy(elbow)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Accept")
+        compose.onNodeWithText("Accept").performClick()
+        compose.waitFor("Week 1 · Ramp-in")
+        compose.waitUntil(5_000) { runCatching { compose.onNodeWithText("Week 1 · Ramp-in").assertIsDisplayed() }.isSuccess }
+        compose.onNodeWithText("Week 1 · Ramp-in").assertIsDisplayed()
     }
 
     private companion object {

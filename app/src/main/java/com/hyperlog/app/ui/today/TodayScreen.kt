@@ -133,6 +133,9 @@ fun TodayScreen(
     onRemoveWorkout: (Long) -> Unit = {},
     /** Puts the workout just removed back, from the snackbar's Undo. */
     onUndoRemoveWorkout: () -> Unit = {},
+    /** A Change was just accepted: bring the program day into view under the workout, then [onProgramDayShown]. */
+    showProgramDay: Boolean = false,
+    onProgramDayShown: () -> Unit = {},
 ) {
     val snackbars = remember { androidx.compose.material3.SnackbarHostState() }
     val snackScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -230,7 +233,17 @@ fun TodayScreen(
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding)) {
         if (workoutFirst) {
-            LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
+            val list = androidx.compose.foundation.lazy.rememberLazyListState()
+            // After a Change is accepted, what it changed is the program day, under the workout.
+            androidx.compose.runtime.LaunchedEffect(showProgramDay) {
+                if (showProgramDay) {
+                    if (program?.next != null) {
+                        list.animateScrollToItem(1)
+                    }
+                    onProgramDayShown()
+                }
+            }
+            LazyColumn(Modifier.weight(1f).fillMaxSize(), state = list, contentPadding = PaddingValues(bottom = 112.dp)) {
                 item {
                     Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }

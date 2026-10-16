@@ -1022,8 +1022,11 @@ goes through Claude, which reads the program, the week you're in and your sessio
 - **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
 - **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step, always at
   the end of the bar: Ask Claude until you've asked, then Paste reply. Ask Claude is enabled once
-  there are words, or while the workout's options are open. Once asked, Paste reply stays the next
-  step until the request ends: an accept, an Add to Today, a revert, or the words cleared. With
+  there are words, or while the workout's options are open; with **Elsewhere** picked it needs
+  words, since they are the only equipment Claude gets, and the field says so under it ("Say what
+  equipment is there, so Claude plans with it"). Once asked, Paste reply stays the next step until
+  the request ends: an accept, an Add to Today, a revert, or the words cleared. Changing the gym or
+  the workout's options after asking makes a new request: Ask Claude is the next step again. With
   no program running a workout can still come back, so Paste reply is always there.
 - **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
   has focus again, which Android requires for reading the clipboard), the app reads the clipboard
@@ -1059,6 +1062,9 @@ finished, a Change can still repeat a week or shift the program. With no program
 comes back: the prompt says so and carries only the workout format, the intro reads "It answers in
 words or builds you a workout for today.", and a pasted Change reads "No program is running, so
 there’s nothing for a Change to change." (one problem, with the copy button, for Claude).
+
+**After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
+day the Change edited into view, its heading at the top.
 
 **Time off on Today.** Days off are counted from the weekday plan (every gym's usual days): whole
 days from the first planned day after the last finished session that went untrained (today isn't

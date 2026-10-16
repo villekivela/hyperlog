@@ -256,6 +256,8 @@ private fun App(
     var coachAsked by rememberSaveable { mutableStateOf(false) }
     /** The gym picked on Coach (null: Elsewhere or no gyms), which a workout added to Today starts at. */
     var coachGym by rememberSaveable { mutableStateOf<Long?>(null) }
+    /** A Change was just accepted from Coach: Today brings the program day it changed into view. */
+    var showProgramDay by rememberSaveable { mutableStateOf(false) }
     /** The gym chip and Build me a workout's options on Coach, kept across tabs like the words. */
     var coachPicked by rememberSaveable { mutableStateOf<Long?>(null) }
     var coachOptions by rememberSaveable(stateSaver = com.hyperlog.app.ui.coach.OptionsSaver) { mutableStateOf<com.hyperlog.app.coach.WorkoutOptions?>(null) }
@@ -292,7 +294,10 @@ private fun App(
         ChangeReviewScreen(
             r, exercises.associate { it.id to it.name },
             // A coach's Change, once accepted, is the plan Today shows.
-            onAccept = { programModel.accept(); endAsk(); if (screen == Screen.Coach) screen = Screen.Today },
+            onAccept = {
+                programModel.accept(); endAsk()
+                if (screen == Screen.Coach) { screen = Screen.Today; showProgramDay = true }
+            },
             onReject = programModel::reject,
         )
         return
@@ -564,6 +569,8 @@ private fun App(
             },
             onRemoveWorkout = programModel::removeWorkout,
             onUndoRemoveWorkout = programModel::undoRemoveWorkout,
+            showProgramDay = showProgramDay,
+            onProgramDayShown = { showProgramDay = false },
         )
     }
     }

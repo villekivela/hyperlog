@@ -200,6 +200,11 @@ Unchanged by the redesign:
   off at once, with a long "Workout removed" snackbar whose Undo puts it back as it was. While
   another session runs, Today shows that session and not the workout.
 - Finish on a session with nothing logged says it's dropped (and, for a workout, back on Today).
+- Changing the gym or the options after asking ends the asked state: Ask Claude is filled again.
+- With Elsewhere picked, Ask Claude waits for words; the field's supporting text reads "Say what
+  equipment is there, so Claude plans with it" (`coach-19-elsewhere-needs-words`).
+- Accepting a Change from Coach lands on Today scrolled to the program day when a workout is
+  above it, so the screen shows what the Change edited.
 - Missing swaps start ticked; unticking one keeps the planned exercise for that session. Start
   applies the ticked ones to this session only; the plan is untouched.
 - Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
@@ -227,8 +232,9 @@ Unchanged by the redesign:
   the review and the card show each exercise's rest and the gym. Renders only: the phone was
   locked for this pass (`today-workout`, `today-workout-program-day`, `today-workout-start`,
   `today-workout-start-elsewhere`, `today-workout-no-program`, `today-workout-removed`,
-  `coach-15`, `coach-16`, `coach-17`, `coach-18`, `coach-12-elsewhere`). Left for later: the
-  report's minor 8 to 10 and its spec gaps.
+  `coach-15`, `coach-16`, `coach-17`, `coach-18`, `coach-12-elsewhere`). Then 8 to 10: a new
+  gym or options after asking is a new request; Elsewhere needs words; an accepted Change lands on
+  the program day. Left for later: the report's spec gaps.
 - Owner's answers (2026-10-16): the card's secondaryContainer head stays, as decided. Focus
   picks seven muscle groups in place of All muscles (29 chips), with the per-muscle marks first.
   Remove gets Undo in a snackbar instead of a confirmation.
