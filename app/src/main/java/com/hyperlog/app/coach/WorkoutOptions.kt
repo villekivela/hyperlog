@@ -12,7 +12,7 @@ data class WorkoutOptions(
     val effort: Effort = Effort.Normal,
     /** The whole session, warm-ups and rest included: one of [Times]. */
     val minutes: Int = 60,
-    /** Muscles as the library names them, in the order picked. */
+    /** Muscle groups by label (`Back`) and marked muscles (`Hamstrings`), in the order picked. */
     val focus: List<String> = emptyList(),
 ) {
     enum class Effort { Easy, Normal, Hard }

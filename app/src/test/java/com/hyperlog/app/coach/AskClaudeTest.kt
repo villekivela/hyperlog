@@ -212,12 +212,13 @@ class AskClaudeTest {
 
     @Test
     fun theWorkoutsOptionsGoInThePromptAndMakeAWholeRequest() {
-        val options = WorkoutOptions(WorkoutOptions.Effort.Hard, 75, listOf("Lats", "Rear Delts"))
+        val options = WorkoutOptions(WorkoutOptions.Effort.Hard, 75, listOf("Hamstrings", "Back"))
         val text = AskClaude.prompt("", plan, emptyList(), library.exercises, options = options)
         assertTrue(text, text.contains("Build me a workout for today:"))
         assertTrue(text, text.contains("- Effort: hard, 0–1 reps in reserve, intensity techniques allowed."))
         assertTrue(text, text.contains("- Time: 1 h 15 for the whole session, warm-ups and rest included."))
-        assertTrue(text, text.contains("- Focus: Lats, Rear Delts."))
+        // A marked muscle by name; a group by name with the muscles it covers.
+        assertTrue(text, text.contains("- Focus: Hamstrings; Back (Lats, Teres Major, Traps, Rhomboids, Lower Back, Neck)."))
         // No words: nothing quoted.
         assertFalse(text, text.contains("> "))
         val easy = AskClaude.prompt("Hotel gym.", plan, emptyList(), library.exercises, options = WorkoutOptions(WorkoutOptions.Effort.Easy))

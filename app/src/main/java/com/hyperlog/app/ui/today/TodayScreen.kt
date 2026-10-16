@@ -65,6 +65,7 @@ import com.hyperlog.app.history.TimeOff
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.coach.Workouts
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.testTag
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.ActiveProgram
@@ -130,7 +131,13 @@ fun TodayScreen(
     onStartWorkout: (id: Long, gymId: Long?, swaps: Map<String, String>) -> Unit = { _, _, _ -> },
     /** Takes the waiting workout off Today. */
     onRemoveWorkout: (Long) -> Unit = {},
+    /** Puts the workout just removed back, from the snackbar's Undo. */
+    onUndoRemoveWorkout: () -> Unit = {},
 ) {
+    val snackbars = remember { androidx.compose.material3.SnackbarHostState() }
+    val snackScope = androidx.compose.runtime.rememberCoroutineScope()
+    val removedText = stringResource(R.string.today_workout_removed)
+    val undoText = stringResource(R.string.today_workout_undo)
     /** The kind of session the gym sheet is open for: null when closed. */
     var picking by rememberSaveable { mutableStateOf<Kind?>(null) }
     val launch: (Kind, Long?, Map<String, String>) -> Unit = { kind, gym, swaps ->
@@ -172,7 +179,15 @@ fun TodayScreen(
             WorkoutCard(
                 workout, workoutDay, exerciseNames,
                 onStart = if (sessionRunning) null else { { start(Kind.Workout) } },
-                onRemove = { onRemoveWorkout(workout.id) },
+                onRemove = {
+                    onRemoveWorkout(workout.id)
+                    // At once, with Undo for the standard short time.
+                    snackScope.launch {
+                        snackbars.currentSnackbarData?.dismiss()
+                        val result = snackbars.showSnackbar(removedText, actionLabel = undoText, duration = androidx.compose.material3.SnackbarDuration.Short)
+                        if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) onUndoRemoveWorkout()
+                    }
+                },
                 primary = next == null,
             )
         }
@@ -188,6 +203,7 @@ fun TodayScreen(
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = Tones.screen,
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbars) },
         topBar = {
             LargeFlexibleTopAppBar(
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.

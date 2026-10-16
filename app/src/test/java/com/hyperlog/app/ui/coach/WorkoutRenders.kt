@@ -2,10 +2,13 @@ package com.hyperlog.app.ui.coach
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -107,7 +110,7 @@ class WorkoutRenders {
         compose.onNodeWithText("Hard").performClick()
         compose.onNodeWithText("1 h 15").performClick()
         compose.onNodeWithText("Hamstrings · 0 sets").performClick()
-        compose.onNodeWithText("All muscles").performScrollTo().performClick()
+        compose.onNodeWithText("Back").performScrollTo().performClick()
         compose.onNodeWithText("Glutes").performScrollTo().performClick()
     }) { Coach(words = "Hotel gym this week: dumbbells to 30 kg and a bench.") }
 
@@ -128,6 +131,18 @@ class WorkoutRenders {
         TodayScreen(
             onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = null, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
+        )
+    }
+
+    @Test fun todayRemoved() = render("today-workout-removed", before = {
+        compose.onNodeWithContentDescription("More for this workout").performClick()
+        compose.onNodeWithText("Remove").performClick()
+    }) {
+        var shown by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Workouts.Waiting?>(waiting) }
+        TodayScreen(
+            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            program = plain, exerciseNames = names, library = library.exercises, workout = shown, gyms = gyms, usualGym = usual,
+            onRemoveWorkout = { shown = null },
         )
     }
 

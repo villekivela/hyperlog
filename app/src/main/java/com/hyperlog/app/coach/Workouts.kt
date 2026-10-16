@@ -36,8 +36,18 @@ class Workouts(private val db: HyperlogDatabase, private val clock: () -> Long =
         )
     }
 
-    /** Drops waiting workout [id]; one a session trains stays. */
-    suspend fun remove(id: Long) = dao.remove(id)
+    /** Drops waiting workout [id] and returns it, for [restore]; one a session trains stays, and null comes back. */
+    suspend fun remove(id: Long): WorkoutEntity? = db.withTransaction {
+        dao.workout(id)?.also { dao.remove(id) }?.takeIf { dao.workout(id) == null }
+    }
+
+    /** Puts a removed workout back as it was (Undo): its id, its day and its gym. */
+    suspend fun restore(workout: WorkoutEntity) {
+        db.withTransaction {
+            dao.removeWaiting()
+            dao.insert(workout)
+        }
+    }
 
     private fun WorkoutEntity.toWaiting(): Waiting? =
         Workout.stored(json)?.let { Waiting(id, it, LocalDate.ofEpochDay(addedOn), gymId) }

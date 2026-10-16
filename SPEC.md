@@ -1037,11 +1037,13 @@ goes through Claude, which reads the program, the week you're in and your sessio
 - **Effort**: Easy, Normal (the default) or Hard. The prompt maps them: Easy is 3 RIR or more and
   no techniques, Normal 1–2 RIR, Hard 0–1 RIR with techniques allowed.
 - **Time**: 45 min, 1 h (the default), 1 h 15 or 1 h 30, the whole session with warm-ups and rest.
-- **Focus**: muscle chips, any number. None picked means a balanced full-body day. Among the
-  muscles trained lately (this week or the 4 before), the three with the fewest sets this week
-  are marked with the count (`Hamstrings · 0 sets`), as History counts them, fewest first and
-  ties in body order. Nothing is preselected. Folded, the row holds the marked muscles, any
-  picked, and **All muscles**, which opens every muscle in body order after the marked ones.
+- **Focus**: chips, any number. None picked means a balanced full-body day. First the marks,
+  per muscle: among the muscles trained lately (this week or the 4 before), the three with the
+  fewest sets this week, with the count (`Hamstrings · 0 sets`), as History counts them, fewest
+  first and ties in body order. Then seven muscle groups: Chest, Back, Shoulders, Arms, Legs,
+  Glutes, Core (`MuscleGroup`; a test checks every muscle the library names has one). The prompt
+  sends a group by name with the muscles it covers (`Back (Lats, Teres Major, Traps, …)`) and a
+  marked muscle by its name. Nothing is preselected.
 - Words are optional here: gym, effort, time and focus are a whole request. Effort and Time are
   connected button groups; the options are kept through the trip to the Claude app.
 
@@ -1140,7 +1142,9 @@ program at all.
   and an Ad-hoc session row follows the card in place of the empty state. Start is left out
   while a session runs. It holds for the day it was added and is gone the next day if it wasn't
   started. Adding another replaces it, asking first ("Replace today's workout?"). ⋮ → Remove
-  drops it.
+  drops it at once, with a snackbar, "Workout removed" with **Undo**, for the standard short
+  duration; Undo puts it back as it was (its day and the gym picked on Coach). The head's
+  secondaryContainer accent is decided (owner, 2026-10-16).
 - **The session** logs like a program day: targets, suggestions, warm-ups and techniques. It
   doesn't move the position. Its sets count toward estimates and weekly sets like any session's.
   History lists it under its name. While it runs, Today shows it as the day, headed "Workout",

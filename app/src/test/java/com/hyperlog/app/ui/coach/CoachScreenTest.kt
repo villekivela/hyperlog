@@ -323,13 +323,12 @@ class CoachScreenTest {
         assertEquals("", wordsText())
         compose.onNodeWithText("Hard").performClick()
         compose.onNodeWithText("45 min").performClick()
-        compose.onNodeWithText("All muscles").performScrollTo().performClick()
-        compose.onNodeWithText("Hamstrings").performScrollTo().performClick()
+        compose.onNodeWithText("Legs").performScrollTo().performClick()
         val prompt = ask()
         assertTrue(prompt, prompt.contains("Build me a workout for today:"))
         assertTrue(prompt, prompt.contains("- Effort: hard"))
         assertTrue(prompt, prompt.contains("- Time: 45 min"))
-        assertTrue(prompt, prompt.contains("- Focus: Hamstrings."))
+        assertTrue(prompt, prompt.contains("- Focus: Legs (Quads, Hamstrings, Adductors, Gastrocnemius, Soleus)."))
         // Closing the options takes them out of the request.
         compose.onNodeWithText("Build me a workout").performClick()
         assertTrue(compose.onAllNodes(hasTestTag(WorkoutOptionsTag)).fetchSemanticsNodes().isEmpty())
@@ -360,6 +359,10 @@ class CoachScreenTest {
         compose.onNodeWithContentDescription("More for this workout").performClick()
         compose.onNodeWithText("Remove").performClick()
         compose.waitGone("Legs at home")
+        // Undo puts it back as it was.
+        compose.waitFor("Workout removed")
+        compose.onNodeWithText("Undo").performClick()
+        compose.waitFor("Legs at home")
     }
 
     @Test

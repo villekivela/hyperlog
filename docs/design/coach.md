@@ -49,9 +49,9 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 | Row head | labelLarge onSurfaceVariant in a 56 dp column on the 24 dp edge | Gym, Effort, Time, Focus, so their choices start on one line |
 | Build me a workout | FilterChip, first in the starter row: `add` leading, `check` and primaryContainer when open | Opens the options; types nothing |
 | Effort, Time | `ConnectedChoice` (connected button group) on Tones.screen inside the card, 8 dp apart; Time with 8 dp content padding so `45 min` fits | Normal and 1 h picked |
-| Focus | FilterChips, 8 dp apart, wrapping; marked ones read `Hamstrings · 0 sets`; **All muscles** / **Fewer** with `expand_more` / `expand_less` at the end | Nothing picked |
+| Focus | FilterChips, 8 dp apart, wrapping: the three marked muscles (`Hamstrings · 0 sets`), then the seven groups, Chest, Back, Shoulders, Arms, Legs, Glutes, Core | Nothing picked |
 | Workout review | as a Change's: a SectionCard with the name (headlineSmall) and summary (bodyMedium onSurfaceVariant), then the groups as segments with Today's slot rows | "Workout for today", Reject and **Add to Today** |
-| Workout card (Today) | a segmented group 16 dp above the day's head: a secondaryContainer head segment ("Workout" labelLarge primary, the name headlineSmall, the summary bodyMedium, ⋮ at the end), one segment per group with Today's slot rows, and a 64 dp segment with **Start** at the end | Start tonal beside a program day, filled without one |
+| Workout card (Today) | a segmented group 16 dp above the day's head: a secondaryContainer head segment ("Workout" labelLarge primary, the name headlineSmall, the summary bodyMedium, ⋮ at the end), one segment per group with Today's slot rows, and a 64 dp segment with **Start** at the end | Start tonal beside a program day, filled without one. The accent head is decided |
 
 ## Wireframes
 
@@ -88,7 +88,8 @@ reply]`. The filled button always sits at the end, so the next step is always in
  Effort  ( Easy |▐Normal▌| Hard )                     ← connected button groups
  Time    ( 45 min |▐1 h▌| 1 h 15 | 1 h 30 )
  Focus   [Hamstrings · 0 sets] [Rear Delts · 1.5 sets]
-         [Lats · 4 sets] [All muscles ⌄]               ← none picked: balanced full body
+         [Lats · 4 sets] [Chest] [Back] [Shoulders]
+         [Arms] [Legs] [Glutes] [Core]                 ← none picked: balanced full body
  ┌ In your words ─────────────────────────────────┐
 ```
 
@@ -156,14 +157,15 @@ Issue #33 (workouts), Robolectric renders from `WorkoutRenders` (same switches a
 `CoachRenders`), since the phone stayed with the owner:
 
 - Build me a workout open with its defaults and the focus's three marks
-  (`coach-15-workout-options`); Hard, 1 h 15, Hamstrings picked and All muscles open with
-  Glutes picked (`coach-16-workout-focus`); with no program, no marks yet and Paste reply back
+  and the seven groups (`coach-15-workout-options`); Hard, 1 h 15, Hamstrings, Back and Glutes
+  picked (`coach-16-workout-focus`); with no program, no marks yet and Paste reply back
   (`coach-17-workout-no-program`, and `coach-07-no-program` with words).
 - A workout's review, "Workout for today" with Add to Today (`coach-18-workout-review`).
 - Today: the card above the program day (`today-workout`); with no program, above an Ad-hoc
   session row (`today-workout-no-program`); Start's sheet at the gym picked on Coach, Itis, while
   Harbour is the usual one (`today-workout-start`); the workout's session running, headed
-  "Workout" (`today-workout-running`).
+  "Workout" (`today-workout-running`); removed, with "Workout removed" and Undo
+  (`today-workout-removed`).
 - The workout's session, logging with last time, the suggestion and warm-ups
   (`session-workout`), and History listing it under its name (`history-workout`).
 
@@ -190,7 +192,8 @@ Unchanged by the redesign:
   again closes them and they leave the request. Ask Claude is enabled while they're open.
 - Add to Today asks first when a workout already waits today ("Replace today's workout?").
 - The workout card's Start opens the start sheet at the gym picked on Coach (the usual one for
-  Elsewhere); ⋮ → Remove takes it off at once. While a session runs the card has no Start.
+  Elsewhere); ⋮ → Remove takes it off at once, with a short "Workout removed" snackbar whose
+  Undo puts it back as it was. While a session runs the card has no Start.
 - Missing swaps start ticked; unticking one keeps the planned exercise for that session. Start
   applies the ticked ones to this session only; the plan is untouched.
 - Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
@@ -210,6 +213,9 @@ Unchanged by the redesign:
   so both intros were cut back to two ("It answers in words, a change or a workout you review.";
   with no program, "It answers in words or builds you a workout for today."). The focus folds to
   its marks and picks: all 29 muscles at once filled the screen.
+- Owner's answers (2026-10-16): the card's secondaryContainer head stays, as decided. Focus
+  picks seven muscle groups in place of All muscles (29 chips), with the per-muscle marks first.
+  Remove gets Undo in a snackbar instead of a confirmation.
 - Tester's report (`coach-test-report.md`), fixed: a card opens its Change; the prompt carries
   each Change's id and operations, and a reply can end or replace one (`replaces`); Elsewhere;
   the asked state ends; a reply copied short says so once; a third Change folds. The renders for

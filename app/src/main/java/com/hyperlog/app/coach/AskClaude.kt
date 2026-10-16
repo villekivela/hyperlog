@@ -135,7 +135,11 @@ object AskClaude {
         }
         appendLine("- Effort: $effort")
         appendLine("- Time: ${WorkoutOptions.timeText(options.minutes)} for the whole session, warm-ups and rest included.")
-        appendLine("- Focus: " + if (options.focus.isEmpty()) "none, so a balanced full-body day." else options.focus.joinToString(postfix = "."))
+        // A group goes by name with the muscles it covers; a marked muscle by its own name.
+        val focus = options.focus.joinToString("; ", postfix = ".") { picked ->
+            com.hyperlog.app.library.MuscleGroup.labelled(picked)?.let { "${it.label} (${it.muscles.joinToString()})" } ?: picked
+        }
+        appendLine("- Focus: " + if (options.focus.isEmpty()) "none, so a balanced full-body day." else focus)
     }
 
     private fun daysOff(lastTrained: LocalDate?, today: LocalDate, weekdays: Set<DayOfWeek>): String {

@@ -554,6 +554,7 @@ private fun App(
                 sessions.startWorkout(id, gym, swaps)
             },
             onRemoveWorkout = programModel::removeWorkout,
+            onUndoRemoveWorkout = programModel::undoRemoveWorkout,
         )
     }
     }

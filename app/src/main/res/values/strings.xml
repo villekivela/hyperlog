@@ -503,8 +503,6 @@
     <string name="coach_focus_marked">%1$s · %2$s</string>
     <string name="coach_focus_set">%1$s set</string>
     <string name="coach_focus_sets">%1$s sets</string>
-    <string name="coach_focus_all">All muscles</string>
-    <string name="coach_focus_fewer">Fewer</string>
     <string name="workout_review_title">Workout for today</string>
     <string name="workout_add">Add to Today</string>
     <string name="workout_replace_title">Replace today’s workout?</string>
@@ -514,6 +512,8 @@
     <string name="today_workout_start">Start</string>
     <string name="today_workout_remove">Remove</string>
     <string name="today_workout_more">More for this workout</string>
+    <string name="today_workout_removed">Workout removed</string>
+    <string name="today_workout_undo">Undo</string>
     <string name="coach_ask">Ask Claude</string>
     <string name="coach_ask_chooser">Ask Claude</string>
     <string name="coach_paste">Paste reply</string>

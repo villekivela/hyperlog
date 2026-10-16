@@ -147,6 +147,19 @@ class WorkoutSessionTest {
     }
 
     @Test
+    fun undoPutsARemovedWorkoutBackAsItWas() = runTest {
+        val gym = com.hyperlog.app.gym.Gyms(db).addGym("Itis")
+        val id = workouts.add(hotel, gymId = gym)
+        val before = db.workouts().workout(id)
+        val removed = workouts.remove(id)!!
+        assertEquals(emptyList<Workouts.Waiting>(), workouts.waiting.first())
+        now += 3_600_000
+        workouts.restore(removed)
+        assertEquals(before, db.workouts().workout(id))
+        assertEquals(listOf(Workouts.Waiting(id, hotel, oct15, gym)), workouts.waiting.first())
+    }
+
+    @Test
     fun aStoredWorkoutReadsBackForItsSession() = runTest {
         val id = workouts.add(hotel, gymId = null)
         assertEquals(hotel, programs.workout(id))

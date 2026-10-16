@@ -163,8 +163,6 @@ fun CoachScreen(
     LaunchedEffect(gym?.id) { onGym(gym?.id) }
     /** Build me a workout's options, kept through the trip to the Claude app; null while closed. */
     var options by rememberSaveable(stateSaver = OptionsSaver) { mutableStateOf<WorkoutOptions?>(null) }
-    /** The focus shows every muscle, not only the marked and picked ones. */
-    var allMuscles by rememberSaveable { mutableStateOf(false) }
     /** The Changes after the first [ShownChanges] are folded under "N more in force" until opened. */
     var allChanges by rememberSaveable { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -342,9 +340,8 @@ fun CoachScreen(
                 }
                 options?.let { picked ->
                     WorkoutOptionsRows(
-                        picked, lowest, allMuscles,
+                        picked, lowest,
                         onChange = { options = it },
-                        onAllMuscles = { allMuscles = it },
                     )
                 }
                 OutlinedTextField(
@@ -541,18 +538,16 @@ private fun setsText(sets: Double): String {
 
 /**
  * Build me a workout's options: Effort and Time as connected button groups with their defaults
- * picked, and Focus as muscle chips. The muscles trained lately with the fewest sets this week come
- * first, each with its sets (`Hamstrings · 0 sets`); the rest are behind All muscles. Nothing is
- * preselected: no focus is a balanced full-body day.
+ * picked, and Focus as chips: the muscles trained lately with the fewest sets this week, each with
+ * its sets (`Hamstrings · 0 sets`), then the seven muscle groups. Nothing is preselected: no focus
+ * is a balanced full-body day.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WorkoutOptionsRows(
     options: WorkoutOptions,
     lowest: List<Pair<String, Double>>,
-    all: Boolean,
     onChange: (WorkoutOptions) -> Unit,
-    onAllMuscles: (Boolean) -> Unit,
 ) {
     val efforts = WorkoutOptions.Effort.entries
     Column(
@@ -591,10 +586,10 @@ private fun WorkoutOptionsRows(
         Row {
             OptionHead(stringResource(R.string.coach_focus), Modifier.padding(top = 14.dp))
             val marks = lowest.toMap()
-            // The marked muscles first; folded, then any picked, else every other muscle in body order.
-            val shown = (lowest.map { it.first } + if (all) com.hyperlog.app.library.Muscles else options.focus).distinct()
+            // The marked muscles first, then the seven groups.
+            val shown = lowest.map { it.first } + com.hyperlog.app.library.MuscleGroup.entries.map { it.label }
             FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                shown.forEach { muscle ->
+                shown.distinct().forEach { muscle ->
                     val selected = muscle in options.focus
                     FilterChip(
                         colors = selectedChipColors(),
@@ -604,12 +599,6 @@ private fun WorkoutOptionsRows(
                         leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                     )
                 }
-                FilterChip(
-                    selected = false,
-                    onClick = { onAllMuscles(!all) },
-                    label = { Text(stringResource(if (all) R.string.coach_focus_fewer else R.string.coach_focus_all)) },
-                    trailingIcon = { SymbolIcon(if (all) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(18.dp)) },
-                )
             }
         }
     }

@@ -205,9 +205,21 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { workouts.add(workout, gymId) }
     }
 
-    /** Takes waiting workout [id] off Today. */
+    /** The workout last removed, for Undo; null once undone or with none. */
+    private var removed: com.hyperlog.app.data.WorkoutEntity? = null
+
+    /** Takes waiting workout [id] off Today, keeping it for [undoRemoveWorkout]. */
     fun removeWorkout(id: Long) {
-        viewModelScope.launch { workouts.remove(id) }
+        viewModelScope.launch { removed = workouts.remove(id) }
+    }
+
+    /** Puts the workout just removed back as it was. */
+    fun undoRemoveWorkout() {
+        viewModelScope.launch {
+            val workout = removed ?: return@launch
+            removed = null
+            workouts.restore(workout)
+        }
     }
 
     private val _lowest = MutableStateFlow<List<Pair<String, Double>>>(emptyList())
