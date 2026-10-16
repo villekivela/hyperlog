@@ -57,9 +57,9 @@ class SuggestionLineTest {
     fun aSuggestionShowsAShortWhyUnderTheNameAndTheFullOneInTheSheet() {
         show(Suggestion(62.5, 8, Suggestion.Kind.Up, "Last time 60 kg × 10, 10 @ 2, top of 8–10 → 62.5 kg", "62.5 · hit the top of 8–10 last time"))
         compose.onNodeWithText("62.5 · hit the top of 8–10 last time").assertIsDisplayed()
-        compose.onNodeWithText("Last time 60 kg × 10, 10 2 RIR, top of 8–10 → 62.5 kg").assertDoesNotExist()
+        compose.onNodeWithText("Last time 60 kg × 10, 10\u00A02 RIR, top of 8–10 → 62.5 kg").assertDoesNotExist()
         compose.onNodeWithText("Barbell Bench Press").performClick()
-        compose.onNodeWithText("Last time 60 kg × 10, 10 2 RIR, top of 8–10 → 62.5 kg").assertIsDisplayed()
+        compose.onNodeWithText("Last time 60 kg × 10, 10\u00A02 RIR, top of 8–10 → 62.5 kg").assertIsDisplayed()
     }
 
     @Test
@@ -80,13 +80,13 @@ class SuggestionLineTest {
         compose.onNodeWithTag(StartingHintTag).assertDoesNotExist()
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.onNodeWithText("From old app, another machine").assertIsDisplayed()
-        compose.onNodeWithText("45 kg × 12 1 RIR, 12 Sep").assertIsDisplayed()
+        compose.onNodeWithText("45 kg × 12\u00A01 RIR, 12 Sep").assertIsDisplayed()
     }
 
     @Test
     fun theShortWhyShowsTheLoggedAndTargetRirAsChips() {
         show(Suggestion(57.5, 8, Suggestion.Kind.Adjust, "Set 1 was 60 kg × 8 @ 0, target @ 2 → 57.5 kg", "57.5 · set 1 was @ 0, target @ 2"), sets = listOf(LoggedSet(60.0, 8, 0, 0)))
-        compose.onNodeWithText("57.5 · set 1 was 0 RIR, target 2 RIR").assertIsDisplayed()
+        compose.onNodeWithText("57.5 · set 1 was\u00A00 RIR, target\u00A02 RIR").assertIsDisplayed()
         compose.onAllNodesWithTag(RirChipLoggedTag, useUnmergedTree = true).assertCountEquals(1)
         compose.onAllNodesWithTag(RirChipTargetTag, useUnmergedTree = true).assertCountEquals(1)
     }

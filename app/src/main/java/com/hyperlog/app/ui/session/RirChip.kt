@@ -46,8 +46,11 @@ private val RirPattern = Regex("(^|$Gap)@$Gap(\\d+)(?:${Gap}RIR\\b)?")
 private val TargetWord = Regex("\\btarget$Gap$", RegexOption.IGNORE_CASE)
 private val RirChipShape = RoundedCornerShape(4.dp)
 
-/** A chip's fill or outline: the ring's shades, darker in light mode so a chip keeps 3:1 on every surface. */
+/** A target chip's outline: the ring's shades, darker in light mode so it keeps 3:1 on every surface. */
 internal fun rirChipColor(rir: Int, dark: Boolean): Color = rirRingColor(rir, dark)
+
+/** A logged chip's fill: the dot's colour, the base scale in both modes; its number carries the contrast. */
+internal fun rirChipFill(rir: Int): Color = rirColor(rir)
 
 /** A filled chip's number, on every shade of the scale. */
 internal val RirChipOnFill = Color.Black.copy(alpha = 0.87f)
@@ -62,7 +65,8 @@ internal fun AnnotatedString.Builder.appendRir(text: String, target: Boolean, ch
     for (m in RirPattern.findAll(text)) {
         val before = text.substring(at, m.range.first)
         append(before)
-        append(m.groupValues[1])
+        // A no-break space keeps the chip on its number's line.
+        if (m.groupValues[1].isNotEmpty()) append('\u00A0')
         val key = RirChipKey(m.groupValues[2].toInt(), target || TargetWord.containsMatchIn(text.substring(0, m.range.first + m.groupValues[1].length)))
         chips += key
         appendInlineContent(key.id, "${key.rir} RIR")
@@ -76,7 +80,8 @@ internal fun AnnotatedString.Builder.appendRir(text: String, target: Boolean, ch
 internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<String, InlineTextContent> {
     val size = if (fontSize.isSpecified) fontSize else 14.sp
     return chips.associate { key ->
-        val width = if (key.rir >= 10) 2.1.em else 1.5.em
+        // The number is 0.8 em; each semibold digit takes about 0.5 em, with 0.45 em either side.
+        val width = (0.9f + 0.5f * "${key.rir}".length).em
         key.id to InlineTextContent(Placeholder(width, 1.25.em, PlaceholderVerticalAlign.TextCenter)) {
             RirChip(key.rir, key.target, (size.value * 0.8f).sp)
         }
@@ -87,11 +92,10 @@ internal fun rirChipContent(chips: Set<RirChipKey>, fontSize: TextUnit): Map<Str
 @Composable
 private fun RirChip(rir: Int, target: Boolean, fontSize: TextUnit) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val color = rirChipColor(rir, dark)
     Box(
         Modifier.fillMaxSize()
             .testTag(if (target) RirChipTargetTag else RirChipLoggedTag)
-            .then(if (target) Modifier.border(1.5.dp, color, RirChipShape) else Modifier.background(color, RirChipShape)),
+            .then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirChipFill(rir), RirChipShape)),
         contentAlignment = Alignment.Center,
     ) {
         Text(

@@ -42,7 +42,7 @@ class RirContrastTest {
     private val neutralDark = listOf(0xFF111214, 0xFF17181A, 0xFF1E1F22, 0xFF26272A, 0xFF303134).map(::Color)
 
     @Test
-    fun chipsKeepThreeToOneOnEveryNeutralSurface() {
+    fun targetChipsKeepThreeToOneOnEveryNeutralSurface() {
         for (rir in 0..10) {
             for (dark in listOf(false, true)) {
                 (if (dark) neutralDark else neutralLight).forEach { surface ->
@@ -56,10 +56,8 @@ class RirContrastTest {
     @Test
     fun aFilledChipsNumberReadsAtFourAndAHalfToOne() {
         for (rir in 0..10) {
-            for (dark in listOf(false, true)) {
-                val ratio = contrast(RirChipOnFill.compositeOver(rirChipColor(rir, dark)), rirChipColor(rir, dark))
-                assertTrue("RIR $rir number (dark=$dark) is $ratio:1", ratio >= 4.5f)
-            }
+            val ratio = contrast(RirChipOnFill.compositeOver(rirChipFill(rir)), rirChipFill(rir))
+            assertTrue("RIR $rir number is $ratio:1", ratio >= 4.5f)
         }
     }
 }

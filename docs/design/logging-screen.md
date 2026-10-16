@@ -5,7 +5,8 @@ The in-session screen where sets are logged. This note folds in the owner's deci
 ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Screens:
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
 (`session-active-drop` and `session-active-mini-set` show a set under way,
-`session-mini-sets-planned` myo-reps about to start);
+`session-mini-sets-planned` myo-reps about to start, `session-done` the finished session's sets
+with RIR chips);
 `screens/session-*.png` come from the test phone (dark, monochrome system style) and still show
 the theme before Navy (#37). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
@@ -48,6 +49,7 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Key | 56 dp tall, 4 dp gaps, 12 dp radius | Pad keys, 4 equal columns |
 | Row ripple | 24 dp radius | A tappable row's ripple (a done row, a warm-up) |
 | RIR mark | 20 dp circle, 2 dp ring | Target (ring) and result (filled) |
+| RIR chip | 1.25 em tall, (0.9 + 0.5 per digit) em wide, 1.5 dp outline, 4 dp corners | `@ N` in set text everywhere else: target outlined, logged filled |
 
 Type (Material 3 scale with tabular figures in every style; Space Grotesk for headlineSmall and
 titleLarge, the system font for the rest):
@@ -92,7 +94,10 @@ Two fixed scales sit outside the theme:
 - **RIR:** 0 `#D9645B`, 1–2 `#E0A84E`, 3+ `#6BAFA9`, with dark numerals on filled dots. In light
   mode the target rings are `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at
   least 3:1 on every light surface so they read in daylight (`RirContrastTest`); filled dots and
-  dark mode keep the base colours.
+  dark mode keep the base colours. The RIR chip in set text follows the mark: an outline in the
+  ring's colour with an onSurface number, a fill in the dot's colour with a black 87% number
+  (semibold, 0.8 em). Filled chips keep the base colours in light mode too: the darker shades
+  made black numbers muddy, and the number, not the fill's edge, carries the reading.
 - **Trend** (the why-line's symbol): up `#5FAE7A` (calm green), same weight `#9AA1A9`
   (neutral), down `#E0A84E` (amber; a deload or back-off is no failure, so never red).
 
@@ -248,7 +253,7 @@ surfaceContainerHighest groups 12 dp in, with the picked or current row in secon
 (the session list's exercise on screen, the set sheet's technique, the start sheet's gym); the
 prescription's plan, the machine row and the set sheet's target steppers are cards too.
 - *Session list:* status symbol (done, now, upcoming), superset tag, name, a summary (logged sets
-  as `25 × 10 @ 2`, `5.7 × 12 + 6p @ 0`, drops and mini-sets after it; never broken inside a set;
+  as `25 × 10 [2]`, `5.7 × 12 + 6p [0]`, drops and mini-sets after it; never broken inside a set;
   or set count and rep range) with technique symbols. A tonal **Start** on exercises not yet
   done, **Open** on finished ones.
   In a program session (ticket #11) the tag is a 40 dp column after the status symbol holding every

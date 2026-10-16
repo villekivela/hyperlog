@@ -45,15 +45,15 @@ segments; **Reject** and **Accept** sit on a surfaceContainerHighest strip round
  1   B̶a̶r̶b̶e̶l̶l̶ ̶R̶D̶L̶                                ← removed, struck through
      Removed
  2   Close-Grip Bench Press
-     2̶ ̶×̶ ̶6̶–̶8̶ ̶@̶ ̶2̶  →  1 × 6–8 @ 2              ← sets before → after
+     2̶ ̶×̶ ̶6̶–̶8̶ ̶[̶2̶]̶  →  1 × 6–8 [2]              ← sets before → after
  3   In place of Chest-Supported Machine Row    ← labelMedium, as the session's swapped line
      Chest-Supported DB Row
-     1 × 8–10 @ 2 · 1 × 8–10 @ 1
+     1 × 8–10 [2] · 1 × 8–10 [1]
  1   Barbell Bench Press
-     1 × 4–6 @ 1 · ↘ 2 × 6–8 @ 1
+     1 × 4–6 [1] · ↘ 2 × 6–8 [1]
      ↘ Weights −10%                             ← tertiary
  +   Leg Extension                              ← added
-     2 × 12–15 @ 1
+     2 × 12–15 [1]
  ───────────────────────────────────────────
                          Reject   [Accept]
 ```

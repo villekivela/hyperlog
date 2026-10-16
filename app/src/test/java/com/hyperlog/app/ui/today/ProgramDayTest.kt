@@ -53,8 +53,8 @@ class ProgramDayTest {
         compose.onNodeWithText("Week 1 · Main").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
         // Week 1's ramp-in is one RIR easier than written.
-        compose.onNodeWithText("1 × 4–6 2 RIR", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("2 × 6–8 2 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("1 × 4–6\u00A02 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("2 × 6–8\u00A02 RIR", substring = true).assertIsDisplayed()
         // Planned sets are targets: outlined RIR chips, and no `@` left on screen.
         compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipTargetTag, useUnmergedTree = true).onFirst().assertExists()
         compose.onAllNodesWithText("@", substring = true).assertCountEquals(0)

@@ -199,7 +199,7 @@ class ProgramScreenTest {
         scrollTo("Intensify")
         compose.onNodeWithText("Intensify").performClick()
         compose.onNodeWithText("From Build").assertIsDisplayed()
-        compose.onAllNodesWithText("1 × 3–5 1 RIR", substring = true)[0].assertExists()
+        compose.onAllNodesWithText("1 × 3–5\u00A01 RIR", substring = true)[0].assertExists()
         scrollTo("Week 7 · Day C — Bench volume, leg press, pulldown")
         compose.onNodeWithText("Week 7 · Day C — Bench volume, leg press, pulldown").assertIsDisplayed()
 
@@ -225,7 +225,7 @@ class ProgramScreenTest {
         scrollTo("Peak")
         compose.onNodeWithText("Peak").performClick()
         compose.onNodeWithText("From Main").assertIsDisplayed()
-        compose.onNodeWithText("Every set: 2 RIR").assertIsDisplayed()
+        compose.onNodeWithText("Every set:\u00A02 RIR").assertIsDisplayed()
         compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipTargetTag, useUnmergedTree = true).onFirst().assertExists()
         compose.onAllNodesWithText("@", substring = true).assertCountEquals(0)
     }
@@ -253,10 +253,10 @@ class ProgramScreenTest {
             }
         }
         compose.onNodeWithText("Tue 13 Oct").assertIsDisplayed()
-        compose.onNodeWithText("80 × 5 1 RIR").assertIsDisplayed()
+        compose.onNodeWithText("80 × 5\u00A01 RIR").assertIsDisplayed()
         // Logged sets: filled RIR chips.
         compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipLoggedTag, useUnmergedTree = true).assertCountEquals(2)
-        compose.onNodeWithText("50 × 10 0 RIR").assertIsDisplayed()
+        compose.onNodeWithText("50 × 10\u00A00 RIR").assertIsDisplayed()
         compose.onNodeWithText("Tue 13 Oct").performClick()
         assertEquals(7L, opened)
     }
