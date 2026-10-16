@@ -1,7 +1,6 @@
 package com.hyperlog.app.ui.coach
 
 import androidx.compose.runtime.setValue
-import com.hyperlog.app.ui.session.RirText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -162,7 +161,7 @@ fun ChangeReviewScreen(
             // What the Change is, and where it moves the program, in one card at the top.
             item {
                 SectionCard(Modifier.padding(top = 8.dp, bottom = 8.dp)) {
-                    RirText(review.change.summary, target = true, style = MaterialTheme.typography.headlineSmall)
+                    Text(review.change.summary, style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(scopeText(review.change.scope, review.blockName), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     review.diff.next?.let { (from, to) ->

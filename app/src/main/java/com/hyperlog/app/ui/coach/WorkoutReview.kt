@@ -1,7 +1,6 @@
 package com.hyperlog.app.ui.coach
 
 import androidx.activity.compose.BackHandler
-import com.hyperlog.app.ui.session.RirText
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -101,7 +100,7 @@ fun WorkoutReviewScreen(
                 SectionCard(Modifier.padding(top = 8.dp, bottom = 16.dp)) {
                     Text(workout.name, style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
-                    RirText(workout.summary, target = true, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    Text(workout.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     gym?.let {
                         Spacer(Modifier.height(8.dp))
                         androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
