@@ -154,6 +154,11 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         if (program?.next != null) logger.startDay(program, gymId, swaps) else logger.start(gymId)
     }
 
+    /** Starts a session of the workout [workoutId] at [gymId], with [swaps] for what the gym lacks. */
+    fun startWorkout(workoutId: Long, gymId: Long?, swaps: Map<String, String> = emptyMap()) = run {
+        logger.startWorkout(workoutId, gymId, swaps)
+    }
+
     private val _lastTrained = MutableStateFlow<java.time.LocalDate?>(null)
 
     /**

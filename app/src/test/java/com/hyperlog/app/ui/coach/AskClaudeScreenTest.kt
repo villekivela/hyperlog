@@ -139,6 +139,6 @@ class AskClaudeScreenTest {
         // A reply with no JSON says so too.
         copy("Sounds good, rest up!")
         compose.onNodeWithText("Paste reply").performClick()
-        compose.waitFor("No Change found", substring = true)
+        compose.waitFor("No Change or workout found", substring = true)
     }
 }

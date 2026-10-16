@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.theme
 
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -278,7 +279,15 @@ fun BottomActions(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ConnectedChoice(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, color: Color = Tones.card) {
+fun ConnectedChoice(
+    labels: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    color: Color = Tones.card,
+    /** Narrower for four options in a row, so `45 min` keeps its unit. */
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         labels.forEachIndexed { i, label ->
             ToggleButton(
@@ -291,6 +300,7 @@ fun ConnectedChoice(labels: List<String>, selected: Int, onSelect: (Int) -> Unit
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
                 colors = ToggleButtonDefaults.colors(containerColor = color),
+                contentPadding = contentPadding,
             ) { Text(label, maxLines = 1) }
         }
     }

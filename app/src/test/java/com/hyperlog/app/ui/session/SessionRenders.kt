@@ -170,7 +170,7 @@ class SessionRenders {
 
 private typealias Plan = List<SetPrescription>
 
-private object Noop : SessionActions {
+internal object Noop : SessionActions {
     override fun press(key: PadKey) = Unit
     override fun done() = Unit
     override fun selectRir(value: Int) = Unit
