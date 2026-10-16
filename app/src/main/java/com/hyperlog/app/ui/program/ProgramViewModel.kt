@@ -224,14 +224,14 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     private val _lowest = MutableStateFlow<List<Pair<String, Double>>>(emptyList())
 
-    /** The focus's marks on Coach: the muscles trained lately with the fewest sets this week. */
+    /** The focus's marks on Coach: the groups trained in the last 4 weeks with the fewest sets this week. */
     val lowest: StateFlow<List<Pair<String, Double>>> = _lowest.asStateFlow()
 
     /** Reads the focus's marks again, as Coach opens. */
     fun refreshLowest() {
         viewModelScope.launch {
             val db = HyperlogDatabase.get(getApplication())
-            _lowest.value = com.hyperlog.app.coach.WorkoutOptions.lowest(History(db, programs).weeklySets(AskClaude.SET_WEEKS))
+            _lowest.value = com.hyperlog.app.coach.WorkoutOptions.lowest(History(db, programs).weeklyGroupSets(AskClaude.SET_WEEKS))
         }
     }
 

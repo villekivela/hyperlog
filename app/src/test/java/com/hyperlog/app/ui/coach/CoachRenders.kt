@@ -2,6 +2,8 @@ package com.hyperlog.app.ui.coach
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -89,10 +91,14 @@ class CoachRenders {
         words: String = "",
         replyReady: Boolean = false,
         errors: List<String>? = null,
-    ) = CoachScreen(
-        program, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {},
-        gyms = gyms, usualGym = usual, replyReady = replyReady, pasteErrors = errors,
-    )
+    ) {
+        var picked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Long?>(null) }
+        CoachScreen(
+            program, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {},
+            gyms = gyms, usualGym = usual, replyReady = replyReady, pasteErrors = errors,
+            picked = picked, onPick = { picked = it },
+        )
+    }
 
     private val typed = "Left elbow aches on curls since Monday, about 3/10. Pressing is fine."
 

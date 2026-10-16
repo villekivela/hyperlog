@@ -179,6 +179,8 @@
     <string name="done_close">Done</string>
     <string name="finish_title">Finish the session?</string>
     <string name="finish_body">Exercises with nothing logged are left out. You can resume it from Session done.</string>
+    <string name="finish_body_empty">Nothing is logged yet, so the session is dropped, and nothing goes to History.</string>
+    <string name="finish_body_empty_workout">Nothing is logged yet, so the session is dropped and the workout goes back on Today.</string>
     <string name="finish_keep_going">Keep going</string>
     <string name="finish_finish">Finish</string>
     <string name="back">Back</string>
@@ -513,6 +515,10 @@
     <string name="today_workout_remove">Remove</string>
     <string name="today_workout_more">More for this workout</string>
     <string name="today_workout_removed">Workout removed</string>
+    <string name="today_workout_at">At %1$s</string>
+    <string name="today_start_workout">Start workout</string>
+    <string name="today_rest">%1$s rest</string>
+    <string name="start_elsewhere">No gym: the usual dumbbells and plates</string>
     <string name="today_workout_undo">Undo</string>
     <string name="coach_ask">Ask Claude</string>
     <string name="coach_ask_chooser">Ask Claude</string>

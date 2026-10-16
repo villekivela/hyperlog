@@ -49,7 +49,7 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 | Row head | labelLarge onSurfaceVariant in a 56 dp column on the 24 dp edge | Gym, Effort, Time, Focus, so their choices start on one line |
 | Build me a workout | FilterChip, first in the starter row: `add` leading, `check` and primaryContainer when open | Opens the options; types nothing |
 | Effort, Time | `ConnectedChoice` (connected button group) on Tones.screen inside the card, 8 dp apart; Time with 8 dp content padding so `45 min` fits | Normal and 1 h picked |
-| Focus | FilterChips, 8 dp apart, wrapping: the three marked muscles (`Hamstrings · 0 sets`), then the seven groups, Chest, Back, Shoulders, Arms, Legs, Glutes, Core | Nothing picked |
+| Focus | FilterChips, 8 dp apart, wrapping: the seven groups, Chest, Back, Shoulders, Arms, Legs, Glutes, Core; the three behind this week carry their sets (`Back · 4 sets`) | Nothing picked |
 | Workout review | as a Change's: a SectionCard with the name (headlineSmall) and summary (bodyMedium onSurfaceVariant), then the groups as segments with Today's slot rows | "Workout for today", Reject and **Add to Today** |
 | Workout card (Today) | a segmented group 16 dp above the day's head: a secondaryContainer head segment ("Workout" labelLarge primary, the name headlineSmall, the summary bodyMedium, ⋮ at the end), one segment per group with Today's slot rows, and a 64 dp segment with **Start** at the end | Start tonal beside a program day, filled without one. The accent head is decided |
 
@@ -87,9 +87,8 @@ reply]`. The filled button always sits at the end, so the next step is always in
  [✓ Build me a workout] [+ Something hurts] [+ Sho├→
  Effort  ( Easy |▐Normal▌| Hard )                     ← connected button groups
  Time    ( 45 min |▐1 h▌| 1 h 15 | 1 h 30 )
- Focus   [Hamstrings · 0 sets] [Rear Delts · 1.5 sets]
-         [Lats · 4 sets] [Chest] [Back] [Shoulders]
-         [Arms] [Legs] [Glutes] [Core]                 ← none picked: balanced full body
+ Focus   [Chest] [Back · 4 sets] [Shoulders]
+         [Arms] [Legs · 0 sets] [Glutes] [Core · 0 sets] ← none picked: balanced full body
  ┌ In your words ─────────────────────────────────┐
 ```
 
@@ -99,20 +98,23 @@ reply]`. The filled button always sits at the end, so the next step is always in
  │ Workout                                      ⋮ │
  │ Hotel dumbbells, 45 min                        │
  │ Upper body with dumbbells only. Back first…    │
+ │ ⌖ At Itis                                      │ ← or Elsewhere
  ├────────────────────────────────────────────────┤
  │ 1   Chest-Supported DB Row                     │
- │     3 × 8–12 @ 1                               │
- ├────────────────────────────────────────────────┤
- │ …                                              │
- ├────────────────────────────────────────────────┤
- │                                     [▶ Start]  │ ← tonal beside a program day
+ │     3 × 8–12 @ 1  ·  2:00 rest                 │
  └────────────────────────────────────────────────┘
- Week 2 · Ramp-in
- Day B — …                                [▶ Start session]
+ ┌────────────────────────────────────────────────┐ ← the program day, second
+ │ Week 2 · Ramp-in                    (▶ Start)  │ ← tonal, beside its heading
+ │ Day B — Hinge, close-grip bench, row           │
+ ├────────────────────────────────────────────────┤
+ │ 1   Barbell RDL …                              │
+ └────────────────────────────────────────────────┘
+ [Ad-hoc session                              ›]
+                                  [▶ Start workout] ← floating: starts the workout
 ```
 
-With no program the card comes first and an **Ad-hoc session** row follows it, in place of the
-empty state; its Start is filled, the screen's one action.
+With no program the card is followed by the **Ad-hoc session** row, in place of the empty state;
+Start workout floats as on any day.
 
 ```
  Start session
@@ -179,7 +181,8 @@ Unchanged by the redesign:
 
 - A starter replaces the words only when they're empty; otherwise it's added on a new line.
 - Tell Claude how it's going starts the words with the Change and focuses the field.
-- The words, the gym, the workout's options and the asked state survive the trip to the Claude
+- The words, the gym, the workout's options and the asked state live outside the screen: they
+  survive a tab switch (to History to check the weekly sets) as well as the trip to the Claude
   app (saved state).
 - Once asked, Paste reply stays the next step until the request ends: an accept, a revert, or
   the words cleared.
@@ -191,9 +194,12 @@ Unchanged by the redesign:
 - Build me a workout opens its options and types nothing, with the keyboard down; tapping it
   again closes them and they leave the request. Ask Claude is enabled while they're open.
 - Add to Today asks first when a workout already waits today ("Replace today's workout?").
-- The workout card's Start opens the start sheet at the gym picked on Coach (the usual one for
-  Elsewhere); ⋮ → Remove takes it off at once, with a short "Workout removed" snackbar whose
-  Undo puts it back as it was. While a session runs the card has no Start.
+- Start workout opens the start sheet with the workout's name under the title, at the gym picked
+  on Coach, or at **Elsewhere** (no gym) for a workout asked for there; Elsewhere is offered for
+  any workout. The program day's tonal Start opens it for the day. ⋮ → Remove takes the workout
+  off at once, with a long "Workout removed" snackbar whose Undo puts it back as it was. While
+  another session runs, Today shows that session and not the workout.
+- Finish on a session with nothing logged says it's dropped (and, for a workout, back on Today).
 - Missing swaps start ticked; unticking one keeps the planned exercise for that session. Start
   applies the ticked ones to this session only; the plan is untouched.
 - Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
@@ -213,6 +219,16 @@ Unchanged by the redesign:
   so both intros were cut back to two ("It answers in words, a change or a workout you review.";
   with no program, "It answers in words or builds you a workout for today."). The focus folds to
   its marks and picks: all 29 muscles at once filled the screen.
+- Tester's report on workouts (`workouts-test-report.md`), fixed: a workout added for today is
+  today's main Start (Start workout floats; the program day is the second card with its heading
+  and a tonal Start together); Elsewhere starts without a gym, and the sheet offers it and names the
+  workout; the focus marks count groups, on the group chips; the gym and options survive a tab
+  switch; the Undo snackbar is long; Finish on an empty session no longer promises Session done;
+  the review and the card show each exercise's rest and the gym. Renders only: the phone was
+  locked for this pass (`today-workout`, `today-workout-program-day`, `today-workout-start`,
+  `today-workout-start-elsewhere`, `today-workout-no-program`, `today-workout-removed`,
+  `coach-15`, `coach-16`, `coach-17`, `coach-18`, `coach-12-elsewhere`). Left for later: the
+  report's minor 8 to 10 and its spec gaps.
 - Owner's answers (2026-10-16): the card's secondaryContainer head stays, as decided. Focus
   picks seven muscle groups in place of All muscles (29 chips), with the per-muscle marks first.
   Remove gets Undo in a snackbar instead of a confirmation.

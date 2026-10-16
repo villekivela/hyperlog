@@ -476,8 +476,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      exercise with its sets (`1 × 4–6 @ 1 · 2 × 6–8 @ 1`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
      session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
      program says so and offers an ad-hoc session.
-   - A **workout** added from Coach shows as a card above the program day, or above Start
-     session with no program, for the day it was added (Coaching → Workout).
+   - A **workout** added from Coach comes first, for the day it was added, as today's main
+     Start (Start workout floats); the program day follows as a second card with a tonal Start
+     (Coaching → Workout).
      While a program session runs, Today shows that session's day, the one **Resume session**
      opens, even after a finish and Resume moved the program's position on; while a workout's
      session runs, the workout, headed "Workout".
@@ -1037,15 +1038,21 @@ goes through Claude, which reads the program, the week you're in and your sessio
 - **Effort**: Easy, Normal (the default) or Hard. The prompt maps them: Easy is 3 RIR or more and
   no techniques, Normal 1–2 RIR, Hard 0–1 RIR with techniques allowed.
 - **Time**: 45 min, 1 h (the default), 1 h 15 or 1 h 30, the whole session with warm-ups and rest.
-- **Focus**: chips, any number. None picked means a balanced full-body day. First the marks,
-  per muscle: among the muscles trained lately (this week or the 4 before), the three with the
-  fewest sets this week, with the count (`Hamstrings · 0 sets`), as History counts them, fewest
-  first and ties in body order. Then seven muscle groups: Chest, Back, Shoulders, Arms, Legs,
-  Glutes, Core (`MuscleGroup`; a test checks every muscle the library names has one). The prompt
-  sends a group by name with the muscles it covers (`Back (Lats, Teres Major, Traps, …)`) and a
-  marked muscle by its name. Nothing is preselected.
+- **Focus**: seven muscle-group chips, any number: Chest, Back, Shoulders, Arms, Legs, Glutes,
+  Core (`MuscleGroup`; a test checks every muscle the library names has one). None picked means a
+  balanced full-body day; nothing is preselected. **Marks count groups** (owner, 2026-10-16):
+  weekly sets per group are counted as History counts muscles, a set counting 1 for each group
+  holding a primary muscle of its exercise and 0.5 for each other group holding a secondary one,
+  once per group however many of its muscles it works (`History.weeklyGroupSets`). Among the
+  groups trained in the last 4 weeks (this week and the 3 before), the three with the fewest sets
+  this week carry the count on their chip (`Back · 4 sets`), fewest first, ties in group order.
+  No muscle is marked on its own. The prompt sends a group by name with the muscles it covers
+  (`Back (Lats, Teres Major, Traps, …)`).
 - Words are optional here: gym, effort, time and focus are a whole request. Effort and Time are
-  connected button groups; the options are kept through the trip to the Claude app.
+  connected button groups.
+- **Kept across tabs.** The gym chip and the options live with the words, outside the screen, so
+  switching to History to check the weekly sets and back keeps them all, as the trip to the Claude
+  app does.
 
 **With and without a program.** With a program running Claude may reply with either. Once it is
 finished, a Change can still repeat a week or shift the program. With no program only a workout
@@ -1132,24 +1139,35 @@ program at all.
   week overrides (`weeks` on a set line is an unknown field). Slot ids are unique within the day. `name` and `summary` must not be blank. The
   paste validates it as import does, paths and all (`workout.groups[0].slots[0].exercise:
   unknown exercise "bb_row"`).
-- **The review** shows the name, the summary and the exercises as Today lists a day. **Add to
-  Today** keeps it; Reject, × and Back drop it.
-- **On Today** it's a card above the program day (or above Start session with no program):
-  "Workout" over its name and summary on a secondaryContainer head, its exercises as Today lists a
-  day, and **Start**, which opens the start sheet with the gym picked on Coach (the usual gym
-  for Elsewhere, no gym, or a gym since deleted). Beside a program day, Start is tonal, so the
-  day's Start session stays the screen's one primary action; with no program day it is filled,
-  and an Ad-hoc session row follows the card in place of the empty state. Start is left out
-  while a session runs. It holds for the day it was added and is gone the next day if it wasn't
-  started. Adding another replaces it, asking first ("Replace today's workout?"). ⋮ → Remove
-  drops it at once, with a snackbar, "Workout removed" with **Undo**, for the standard short
-  duration; Undo puts it back as it was (its day and the gym picked on Coach). The head's
-  secondaryContainer accent is decided (owner, 2026-10-16).
+- **The review** shows the name, the summary, where it's for (`At Itis`, or `Elsewhere`; nothing
+  with no gyms set up) and the exercises as Today lists a day, each with its rest after its sets
+  (`3 × 8–12 @ 1 · 2:00 rest`, `1:00–2:00` when its sets rest differently). **Add to Today**
+  keeps it; Reject, × and Back drop it.
+- **On Today, it's today's main Start** (tester's report, 2026-10-16). It comes first as a card:
+  "Workout" over its name, summary and gym line on the secondaryContainer head (decided, owner
+  2026-10-16), with ⋮, then its exercises with their rest. The floating button reads **Start
+  workout** and starts it, through the start sheet. The program day follows as the second card,
+  its head holding week and block over the day's name with a tonal **Start**, so its heading and
+  its Start show together and the floating button never covers them; then its exercises and the
+  Ad-hoc session row. With no program the card is followed by the Ad-hoc row. While another
+  session runs, Today shows that session's day and not the workout. It holds for the day it was
+  added and is gone the next day if it wasn't started. Adding another replaces it, asking first
+  ("Replace today's workout?"). ⋮ → Remove drops it at once, with a snackbar, "Workout removed"
+  with **Undo**, for the long duration (a lifter looks up before tapping); Undo puts it back as
+  it was (its day and the gym picked on Coach).
+- **Elsewhere means no gym.** A workout asked for with Elsewhere keeps no gym. The start sheet for
+  a workout names it under the title and offers **Elsewhere** ("No gym: the usual dumbbells and
+  plates") after the gyms, picked for such a workout; the gym picked on Coach otherwise (a gym
+  since deleted reads as Elsewhere). Elsewhere starts the session without a gym, by the rules of a
+  session with no gym: the usual dumbbell rack and plates, machines asked about without a gym, no
+  missing-equipment swaps, and no gym on the session.
 - **The session** logs like a program day: targets, suggestions, warm-ups and techniques. It
   doesn't move the position. Its sets count toward estimates and weekly sets like any session's.
   History lists it under its name. While it runs, Today shows it as the day, headed "Workout",
   with Resume session. Once it has started the card is gone; a session discarded with nothing
-  logged puts it back for that day. Its edits stay in the session: there's no "Keep edits for the
+  logged puts it back for that day. Finishing a session with nothing logged says so: "Nothing is
+  logged yet, so the session is dropped and the workout goes back on Today." (for any other
+  session, "…dropped, and nothing goes to History."), never a Session done it won't show. Its edits stay in the session: there's no "Keep edits for the
   block", since a workout has no program to keep them in.
 - Workouts are kept with the sessions (the `workout` table, the session's `workout_id`) and go
   into backups.

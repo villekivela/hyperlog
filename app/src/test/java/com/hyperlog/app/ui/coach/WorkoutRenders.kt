@@ -63,7 +63,7 @@ class WorkoutRenders {
     private val gyms = listOf(Gym(1, "Harbour", emptyList()), Gym(2, "Itis", emptyList()))
     private val usual = UsualGym(1, UsualGym.Why.Weekday)
     private val plain = ActiveProgram(1, program, Position(2, 1), today = today)
-    private val lowest = listOf("Hamstrings" to 0.0, "Rear Delts" to 1.5, "Lats" to 4.0)
+    private val lowest = listOf("Legs" to 0.0, "Core" to 0.0, "Back" to 4.0)
 
     private val hotel = (ProgramParser.workout(
         """
@@ -96,10 +96,15 @@ class WorkoutRenders {
     }
 
     @Composable
-    private fun Coach(program: ActiveProgram? = plain, words: String = "", lowest: List<Pair<String, Double>> = this.lowest) = CoachScreen(
-        program, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {},
-        gyms = gyms, usualGym = usual, lowest = lowest,
-    )
+    private fun Coach(program: ActiveProgram? = plain, words: String = "", lowest: List<Pair<String, Double>> = this.lowest) {
+        var picked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Long?>(null) }
+        var options by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.hyperlog.app.coach.WorkoutOptions?>(null) }
+        CoachScreen(
+            program, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {},
+            gyms = gyms, usualGym = usual, lowest = lowest,
+            picked = picked, onPick = { picked = it }, options = options, onOptions = { options = it },
+        )
+    }
 
     private val build = { compose.onNodeWithText("Build me a workout").performClick(); Unit }
 
@@ -109,21 +114,37 @@ class WorkoutRenders {
         build()
         compose.onNodeWithText("Hard").performClick()
         compose.onNodeWithText("1 h 15").performClick()
-        compose.onNodeWithText("Hamstrings · 0 sets").performClick()
-        compose.onNodeWithText("Back").performScrollTo().performClick()
+        compose.onNodeWithText("Elsewhere").performClick()
+        compose.onNodeWithText("Back · 4 sets").performScrollTo().performClick()
         compose.onNodeWithText("Glutes").performScrollTo().performClick()
     }) { Coach(words = "Hotel gym this week: dumbbells to 30 kg and a bench.") }
 
     @Test fun optionsNoProgram() = render("coach-17-workout-no-program", before = build) { Coach(program = null, lowest = emptyList()) }
 
     @Test fun review() = render("coach-18-workout-review") {
-        WorkoutReviewScreen(hotel, names, onAdd = {}, onReject = {})
+        WorkoutReviewScreen(hotel, names, onAdd = {}, onReject = {}, gym = "At Itis")
     }
 
     @Test fun todayWithProgram() = render("today-workout") {
         TodayScreen(
             onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
+        )
+    }
+
+    @Test fun todayProgramDay() = render("today-workout-program-day", before = {
+        compose.onNode(androidx.compose.ui.test.hasTestTag(com.hyperlog.app.ui.today.ProgramDayCardTag)).performScrollTo()
+    }) {
+        TodayScreen(
+            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            program = plain, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
+        )
+    }
+
+    @Test fun todayElsewhereStart() = render("today-workout-start-elsewhere", before = { compose.onNodeWithText("Start workout").performClick() }) {
+        TodayScreen(
+            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            program = plain, exerciseNames = names, library = library.exercises, workout = waiting.copy(gymId = null), gyms = gyms, usualGym = usual,
         )
     }
 
@@ -146,7 +167,7 @@ class WorkoutRenders {
         )
     }
 
-    @Test fun todayStartSheet() = render("today-workout-start", before = { compose.onNodeWithText("Start").performClick() }) {
+    @Test fun todayStartSheet() = render("today-workout-start", before = { compose.onNodeWithText("Start workout").performClick() }) {
         TodayScreen(
             onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,

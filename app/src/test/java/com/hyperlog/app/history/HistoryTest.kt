@@ -124,6 +124,20 @@ class HistoryTest {
     }
 
     @Test
+    fun weeklyGroupSetsCountASetOnceForEachGroupItWorks() = runTest {
+        session(
+            LocalDate.of(2026, 10, 12),
+            // Primary Lats, Traps, Rhomboids (Back); secondary Biceps, Forearm Flexors (Arms), Rear Delts (Shoulders), Teres Major (Back).
+            "chest_supported_db_row" to listOf(Logged(26.0, 10, 1), Logged(26.0, 9, 1)),
+            // Primary Chest; secondary Front Delts (Shoulders) and both triceps heads (Arms).
+            "barbell_bench_press" to listOf(Logged(80.0, 6, 1)),
+        )
+        val week = history().weeklyGroupSets(weeks = 1).single()
+        // A set counts 1 for a group with a primary muscle, else 0.5 for one with a secondary: never once per muscle.
+        assertEquals(mapOf("Chest" to 1.0, "Back" to 2.0, "Shoulders" to 1.5, "Arms" to 1.5), week.sets)
+    }
+
+    @Test
     fun aFreeWeightTrendShowsTheTopSetAndTheEstimateAfterEachSession() = runTest {
         val gyms = Gyms(db)
         val harbour = gyms.addGym("Harbour")

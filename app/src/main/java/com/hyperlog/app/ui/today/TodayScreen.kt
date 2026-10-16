@@ -169,27 +169,24 @@ fun TodayScreen(
                     Kind.AdHoc -> null
                 },
                 library = library,
-                // A workout starts at the gym picked on Coach.
-                picked = workout?.gymId?.takeIf { kind == Kind.Workout },
+                // A workout starts at the gym picked on Coach, or Elsewhere, without a gym.
+                picked = if (kind == Kind.Workout) workout?.gymId ?: ElsewhereChoice else null,
+                elsewhere = kind == Kind.Workout,
+                what = workout?.workout?.name?.takeIf { kind == Kind.Workout },
             )
         }
     }
-    val waitingCard: @Composable () -> Unit = {
-        if (workout != null && workoutDay != null) {
-            WorkoutCard(
-                workout, workoutDay, exerciseNames,
-                onStart = if (sessionRunning) null else { { start(Kind.Workout) } },
-                onRemove = {
-                    onRemoveWorkout(workout.id)
-                    // At once, with Undo for the standard short time.
-                    snackScope.launch {
-                        snackbars.currentSnackbarData?.dismiss()
-                        val result = snackbars.showSnackbar(removedText, actionLabel = undoText, duration = androidx.compose.material3.SnackbarDuration.Short)
-                        if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) onUndoRemoveWorkout()
-                    }
-                },
-                primary = next == null,
-            )
+    // A workout added for today is today's main Start; the program day becomes the second card.
+    val workoutFirst = workout != null && workoutDay != null && !sessionRunning
+    val workoutGym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workout?.gymId }?.name?.let { stringResource(R.string.today_workout_at, it) }
+        ?: stringResource(R.string.coach_elsewhere)
+    val removeWorkout: () -> Unit = {
+        workout?.let { onRemoveWorkout(it.id) }
+        // At once, with Undo for the long duration: a lifter looks up before tapping.
+        snackScope.launch {
+            snackbars.currentSnackbarData?.dismiss()
+            val result = snackbars.showSnackbar(removedText, actionLabel = undoText, duration = androidx.compose.material3.SnackbarDuration.Long)
+            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) onUndoRemoveWorkout()
         }
     }
     // Time off: more than a week off (by the weekday plan if there is one), with no Change made for today yet.
@@ -200,6 +197,8 @@ fun TodayScreen(
         TimeOff.isTimeOff(TimeOff.daysOff(lastTrained, today, weekdays)) && program.changes.none { it.acceptedOn == program.today }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val startLabel = stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session)
+    // Named for what it starts, since the program day's card sits beside it with its own Start.
+    val fabLabel = if (workoutFirst) stringResource(R.string.today_start_workout) else startLabel
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = Tones.screen,
@@ -219,18 +218,31 @@ fun TodayScreen(
         },
         // The day's one action floats over the list in primary container, clear of the background.
         floatingActionButton = {
-            if (next != null) {
-                // The expressive medium size: the day's one action, unmistakable.
-                MediumExtendedFloatingActionButton(onClick = { start(Kind.Day) }) {
+            if (workoutFirst || next != null) {
+                // The expressive medium size: the day's one action, unmistakable. With a workout today, it starts that.
+                MediumExtendedFloatingActionButton(onClick = { start(if (workoutFirst) Kind.Workout else Kind.Day) }) {
                     SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text(startLabel, style = MaterialTheme.typography.titleMedium)
+                    Text(fabLabel, style = MaterialTheme.typography.titleMedium)
                 }
             }
         },
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding)) {
-        if (next != null) {
+        if (workoutFirst) {
+            LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
+                item {
+                    Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
+                    }
+                    WorkoutCard(workout!!, workoutDay!!, exerciseNames, gym = workoutGym, onRemove = removeWorkout)
+                }
+                program?.next?.let { day ->
+                    item { ProgramDayCard(day, exerciseNames, onStart = { start(Kind.Day) }) }
+                }
+                item { AdHocRow(onAdHoc = { start(Kind.AdHoc) }) }
+            }
+        } else if (next != null) {
             NextDay(
                 next, exerciseNames, Modifier.weight(1f),
                 banners = {
@@ -238,20 +250,8 @@ fun TodayScreen(
                     if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
                 },
                 adHoc = if (!sessionRunning) { { start(Kind.AdHoc) } } else null,
-                workout = waitingCard,
                 isWorkout = runningWorkout && sessionRunning,
             )
-        } else if (workout != null) {
-            // No program day: the workout is the day, with an ad-hoc session after it.
-            LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
-                item {
-                    Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
-                    }
-                    waitingCard()
-                }
-                if (!sessionRunning) item { AdHocRow(onAdHoc = { start(Kind.AdHoc) }) }
-            }
         } else {
             update?.let { UpdateBanner(it, onUpdate, onDismissUpdate, Modifier.padding(bottom = 8.dp)) }
             if (program == null && starter != null && !sessionRunning) {
@@ -319,8 +319,6 @@ private fun NextDay(
     modifier: Modifier = Modifier,
     banners: @Composable ColumnScope.() -> Unit = {},
     adHoc: (() -> Unit)? = null,
-    /** The workout waiting today, above the day. */
-    workout: @Composable () -> Unit = {},
     /** [day] is a workout's, being trained: headed "Workout", not by week and block. */
     isWorkout: Boolean = false,
 ) {
@@ -329,7 +327,6 @@ private fun NextDay(
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
         item {
             Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
-            workout()
             Column(Modifier.padding(horizontal = 24.dp).padding(top = 8.dp, bottom = 16.dp)) {
                 Text(
                     if (isWorkout) stringResource(R.string.today_workout) else stringResource(R.string.today_week_block, day.position.week, day.block.name),
@@ -376,26 +373,27 @@ private enum class Kind { Day, AdHoc, Workout }
 
 internal const val WorkoutCardTag = "today-workout"
 
+/** The start sheet's choice for a workout without a gym. */
+private const val ElsewhereChoice = -1L
+
 /**
- * The workout from Claude waiting today (SPEC, Coaching → Workout), above the program day: "Workout"
- * over its name and summary, with ⋮ → Remove; its exercises as a day's; and Start, which opens the
- * start sheet at the gym picked on Coach. Start is left out while a session runs.
+ * The workout from Claude added for today (SPEC, Coaching → Workout), first on Today: "Workout"
+ * over its name, summary and gym ([gym]: `At Itis`, `Elsewhere`) on the accent head, with ⋮ →
+ * Remove; then its exercises with their rest. Start session, floating, starts it.
  */
 @Composable
 private fun WorkoutCard(
     waiting: Workouts.Waiting,
     day: PlannedDay,
     names: Map<String, String>,
-    onStart: (() -> Unit)?,
+    gym: String?,
     onRemove: () -> Unit,
-    /** No program day beside it: Start is the screen's one action. */
-    primary: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
     val groups = remember(day) { day.slots.groupBy { it.group }.values.toList() }
-    val count = groups.size + if (onStart != null) 2 else 1
+    val count = groups.size + 1
     var menu by remember { mutableStateOf(false) }
-    Column(Modifier.padding(bottom = 16.dp).testTag(WorkoutCardTag)) {
+    Column(Modifier.padding(top = 8.dp).testTag(WorkoutCardTag)) {
         Segment(0, count, color = cs.secondaryContainer) {
             Row(Modifier.fillMaxWidth().padding(start = CardPadding, top = 16.dp, bottom = 16.dp, end = 4.dp)) {
                 Column(Modifier.weight(1f)) {
@@ -404,6 +402,14 @@ private fun WorkoutCard(
                     Text(waiting.workout.name, style = MaterialTheme.typography.headlineSmall, color = cs.onSecondaryContainer)
                     Spacer(Modifier.height(4.dp))
                     Text(waiting.workout.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer)
+                    gym?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            SymbolIcon(Symbol.LocationOn, null, Modifier.size(18.dp), tint = cs.onSecondaryContainer)
+                            Spacer(Modifier.width(8.dp))
+                            Text(it, style = MaterialTheme.typography.labelLarge, color = cs.onSecondaryContainer)
+                        }
+                    }
                 }
                 androidx.compose.foundation.layout.Box {
                     IconButton(onClick = { menu = true }) {
@@ -419,25 +425,41 @@ private fun WorkoutCard(
                 }
             }
         }
-        groups.forEachIndexed { i, group -> Segment(i + 1, count) { SlotRows(group, names) } }
-        if (onStart != null) {
-            Segment(count - 1, count) {
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val label = @Composable {
-                        SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.IconSize))
-                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.today_workout_start))
-                    }
-                    // Beside a program day, tonal: that day's Start session stays the screen's one primary action.
-                    if (primary) Button(onClick = onStart) { label() }
-                    else androidx.compose.material3.FilledTonalButton(onClick = onStart) { label() }
+        groups.forEachIndexed { i, group -> Segment(i + 1, count) { SlotRows(group, names, rest = true) } }
+    }
+}
+
+internal const val ProgramDayCardTag = "today-program-day"
+
+/**
+ * The program day under today's workout: a card whose head holds week and block over the day's
+ * name and a tonal Start, so its heading and its Start show together; then its exercises.
+ */
+@Composable
+private fun ProgramDayCard(day: PlannedDay, names: Map<String, String>, onStart: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val groups = remember(day) { day.slots.groupBy { it.group }.values.toList() }
+    val count = groups.size + 1
+    Column(Modifier.padding(top = 24.dp, bottom = 16.dp).testTag(ProgramDayCardTag)) {
+        Segment(0, count) {
+            Row(
+                Modifier.fillMaxWidth().padding(start = CardPadding, end = CardPadding, top = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.today_week_block, day.position.week, day.block.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                    Spacer(Modifier.height(4.dp))
+                    Text(day.day.name, style = MaterialTheme.typography.titleLarge)
+                }
+                Spacer(Modifier.width(12.dp))
+                androidx.compose.material3.FilledTonalButton(onClick = onStart) {
+                    SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.today_workout_start))
                 }
             }
         }
+        groups.forEachIndexed { i, group -> Segment(i + 1, count) { SlotRows(group, names) } }
     }
 }
 
@@ -470,16 +492,24 @@ private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
 internal fun StartSheetContent(
     gyms: List<Gym>,
     usualGym: UsualGym?,
-    onStart: (Long, Map<String, String>) -> Unit,
+    /** The gym picked (null: Elsewhere, without a gym) and the swaps for what it lacks. */
+    onStart: (Long?, Map<String, String>) -> Unit,
     /** The program day to start, checked against the chosen gym's equipment; null ad hoc. */
     day: PlannedDay? = null,
     library: List<Exercise> = emptyList(),
-    /** The gym to pick in place of the usual one: a workout's, picked on Coach. */
+    /** The gym to pick in place of the usual one: a workout's, picked on Coach, or [ElsewhereChoice]. */
     picked: Long? = null,
+    /** Offers Elsewhere after the gyms: a session without a gym. */
+    elsewhere: Boolean = false,
+    /** What starts, under the title: a workout's name. */
+    what: String? = null,
 ) {
-    var chosen by rememberSaveable { mutableStateOf(picked?.takeIf { p -> gyms.any { it.id == p } } ?: usualGym?.id ?: gyms.first().id) }
-    val gym = gyms.firstOrNull { it.id == chosen } ?: gyms.first()
-    val missing = remember(day, gym.missing, library) { day?.let { MissingSwaps.forDay(it, library, gym.missing) }.orEmpty() }
+    var chosen by rememberSaveable {
+        mutableStateOf(picked?.takeIf { p -> gyms.any { it.id == p } || (elsewhere && p == ElsewhereChoice) } ?: usualGym?.id ?: gyms.first().id)
+    }
+    val away = elsewhere && chosen == ElsewhereChoice
+    val gym = if (away) null else gyms.firstOrNull { it.id == chosen } ?: gyms.first()
+    val missing = remember(day, gym?.missing, library) { if (gym == null) emptyList() else day?.let { MissingSwaps.forDay(it, library, gym.missing) }.orEmpty() }
     /** Proposed swaps turned down, by slot id; another gym starts over. */
     var declined by remember(chosen) { mutableStateOf(emptySet<String>()) }
     val names = remember(library) { library.associate { it.id to it.name } }
@@ -488,9 +518,17 @@ internal fun StartSheetContent(
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp).selectableGroup()) {
             Text(
                 stringResource(R.string.start_title),
-                Modifier.padding(horizontal = 24.dp).padding(bottom = 8.dp),
+                Modifier.padding(horizontal = 24.dp).padding(bottom = if (what == null) 8.dp else 0.dp),
                 style = MaterialTheme.typography.headlineSmall,
             )
+            what?.let {
+                Text(
+                    it,
+                    Modifier.padding(horizontal = 24.dp).padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Group(color = Tones.sheetCard) { gyms.forEach { gym ->
                 val selected = gym.id == chosen
                 Row(
@@ -520,13 +558,33 @@ internal fun StartSheetContent(
                         }
                     }
                 }
-            } }
-            if (missing.isNotEmpty()) {
+            }
+                // Somewhere not set up: the session runs without a gym, on the usual dumbbells and plates.
+                if (elsewhere) {
+                    val selected = away
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
+                            .selectable(selected, role = Role.RadioButton, onClick = { chosen = ElsewhereChoice })
+                            .heightIn(min = 64.dp)
+                            .padding(end = 12.dp, top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = selected, onClick = null, Modifier.size(48.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Column {
+                            Text(stringResource(R.string.coach_elsewhere), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.start_elsewhere), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+            if (missing.isNotEmpty() && gym != null) {
                 MissingSwaps(gym.name, missing, names, declined, onToggle = { slot -> declined = if (slot in declined) declined - slot else declined + slot })
             }
             Spacer(Modifier.height(16.dp))
             val swaps = missing.filter { it.replacement != null && it.slot !in declined }.associate { it.slot to it.replacement!! }
-            Button(onClick = { onStart(chosen, swaps) }, Modifier.align(Alignment.End).padding(end = 16.dp).heightIn(min = ButtonDefaults.MediumContainerHeight), contentPadding = ButtonDefaults.MediumContentPadding) {
+            Button(onClick = { onStart(if (away) null else gym?.id, swaps) }, Modifier.align(Alignment.End).padding(end = 16.dp).heightIn(min = ButtonDefaults.MediumContainerHeight), contentPadding = ButtonDefaults.MediumContentPadding) {
                 Text(stringResource(R.string.start_start))
             }
         }
@@ -591,7 +649,12 @@ private fun TodayScreenPreview() {
  * it, and a Change's swap as "In place of …" over the name. A superset's partners share the group.
  */
 @Composable
-internal fun SlotRows(group: List<com.hyperlog.app.program.PlannedSlot>, names: Map<String, String>) {
+internal fun SlotRows(
+    group: List<com.hyperlog.app.program.PlannedSlot>,
+    names: Map<String, String>,
+    /** Adds each exercise's rest after its sets (`· 1:30 rest`): a workout's, whose rest decides whether it fits the time. */
+    rest: Boolean = false,
+) {
     val cs = MaterialTheme.colorScheme
     group.forEach { slot ->
         Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp)) {
@@ -622,7 +685,26 @@ internal fun SlotRows(group: List<com.hyperlog.app.program.PlannedSlot>, names: 
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            SetSummary(slot.sets, Modifier.padding(start = 40.dp))
+            if (rest && slot.sets.isNotEmpty()) {
+                Row(Modifier.padding(start = 40.dp)) {
+                    SetSummary(slot.sets)
+                    Text(
+                        "  ·  " + stringResource(R.string.today_rest, restText(slot.sets.map { it.rest })),
+                        style = MaterialTheme.typography.bodyMedium.merge(Tnum),
+                        color = cs.onSurfaceVariant,
+                    )
+                }
+            } else {
+                SetSummary(slot.sets, Modifier.padding(start = 40.dp))
+            }
         }
     }
+}
+
+/** Rest as the timer shows it: `1:30`, or `1:00–2:00` when an exercise's sets rest differently. */
+internal fun restText(seconds: List<Int>): String {
+    fun clock(s: Int) = "${s / 60}:${(s % 60).toString().padStart(2, '0')}"
+    val lo = seconds.min()
+    val hi = seconds.max()
+    return if (lo == hi) clock(lo) else "${clock(lo)}–${clock(hi)}"
 }

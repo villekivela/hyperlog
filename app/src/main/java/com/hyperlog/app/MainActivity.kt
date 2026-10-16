@@ -256,6 +256,9 @@ private fun App(
     var coachAsked by rememberSaveable { mutableStateOf(false) }
     /** The gym picked on Coach (null: Elsewhere or no gyms), which a workout added to Today starts at. */
     var coachGym by rememberSaveable { mutableStateOf<Long?>(null) }
+    /** The gym chip and Build me a workout's options on Coach, kept across tabs like the words. */
+    var coachPicked by rememberSaveable { mutableStateOf<Long?>(null) }
+    var coachOptions by rememberSaveable(stateSaver = com.hyperlog.app.ui.coach.OptionsSaver) { mutableStateOf<com.hyperlog.app.coach.WorkoutOptions?>(null) }
     val waitingWorkouts by programModel.waiting.collectAsStateWithLifecycle()
     val lowest by programModel.lowest.collectAsStateWithLifecycle()
     val workoutReview by programModel.workout.collectAsStateWithLifecycle()
@@ -303,6 +306,8 @@ private fun App(
             onAdd = { programModel.addWorkout(coachGym); endAsk(); screen = Screen.Today },
             onReject = programModel::rejectWorkout,
             replaces = todayWorkout?.workout?.name,
+            gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == coachGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
+                ?: context.getString(R.string.coach_elsewhere),
         )
         return
     }
@@ -452,6 +457,10 @@ private fun App(
             onAskedChange = { if (it) coachAsked = true else endAsk() },
             onOpenChange = programModel::openInForce,
             onGym = { coachGym = it },
+            picked = coachPicked,
+            onPick = { coachPicked = it },
+            options = coachOptions,
+            onOptions = { coachOptions = it },
             lowest = lowest,
             onAskClaude = { words, gym, elsewhere, options ->
                 scope.launch {

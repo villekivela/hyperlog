@@ -261,17 +261,17 @@ class AskClaudeTest {
     }
 
     @Test
-    fun theFocusMarksTheThreeMusclesTrainedLatelyWithTheFewestSetsThisWeek() {
+    fun theFocusMarksTheThreeGroupsTrainedInTheLastFourWeeksWithTheFewestSetsThisWeek() {
         val thisWeek = LocalDate.of(2026, 10, 12)
         val weeks = listOf(
-            WeekSets(thisWeek, mapOf("Chest" to 6.0, "Lats" to 4.0, "Quads" to 2.0, "Biceps" to 3.0)),
-            WeekSets(thisWeek.minusWeeks(1), mapOf("Hamstrings" to 5.0, "Chest" to 6.0)),
-            WeekSets(thisWeek.minusWeeks(4), mapOf("Gastrocnemius" to 2.0)),
-            // Five weeks back: too long ago to count as trained lately.
-            WeekSets(thisWeek.minusWeeks(5), mapOf("Neck" to 1.0)),
+            WeekSets(thisWeek, mapOf("Chest" to 18.0, "Back" to 4.0, "Shoulders" to 3.0, "Arms" to 6.0)),
+            WeekSets(thisWeek.minusWeeks(1), mapOf("Legs" to 9.0, "Chest" to 12.0)),
+            WeekSets(thisWeek.minusWeeks(3), mapOf("Core" to 2.0)),
+            // Four weeks back: outside the last four weeks.
+            WeekSets(thisWeek.minusWeeks(4), mapOf("Glutes" to 1.0)),
         )
-        // Hamstrings and Gastrocnemius had none this week; then Quads with 2. Neck isn't trained lately.
-        assertEquals(listOf("Hamstrings" to 0.0, "Gastrocnemius" to 0.0, "Quads" to 2.0), WorkoutOptions.lowest(weeks))
+        // Legs and Core had none this week; then Shoulders with 3. Glutes isn't trained lately.
+        assertEquals(listOf("Legs" to 0.0, "Core" to 0.0, "Shoulders" to 3.0), WorkoutOptions.lowest(weeks))
         assertEquals(emptyList<Pair<String, Double>>(), WorkoutOptions.lowest(emptyList()))
     }
 

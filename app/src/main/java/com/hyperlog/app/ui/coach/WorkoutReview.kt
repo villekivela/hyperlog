@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -55,6 +56,8 @@ fun WorkoutReviewScreen(
     onReject: () -> Unit,
     modifier: Modifier = Modifier,
     replaces: String? = null,
+    /** Where it's for: `At Itis`, `Elsewhere`; null with no gyms set up. */
+    gym: String? = null,
 ) {
     BackHandler(onBack = onReject)
     var replacing by rememberSaveable { mutableStateOf(false) }
@@ -98,10 +101,18 @@ fun WorkoutReviewScreen(
                     Text(workout.name, style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(workout.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    gym?.let {
+                        Spacer(Modifier.height(8.dp))
+                        androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            SymbolIcon(Symbol.LocationOn, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
+                            Spacer(Modifier.width(8.dp))
+                            Text(it, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                        }
+                    }
                 }
             }
             itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
-                Segment(i, groups.size) { SlotRows(group, exerciseNames) }
+                Segment(i, groups.size) { SlotRows(group, exerciseNames, rest = true) }
             }
             item { Spacer(Modifier.height(24.dp)) }
         }

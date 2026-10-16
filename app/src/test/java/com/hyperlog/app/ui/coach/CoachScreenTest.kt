@@ -336,7 +336,7 @@ class CoachScreenTest {
     }
 
     @Test
-    fun aWorkoutGoesAboveTheProgramDayAndRemoveTakesItOff() {
+    fun aWorkoutIsTodaysMainStartWithTheProgramDayUnderItAndRemoveTakesItOff() {
         runStarter()
         openCoach()
         copy(hotel)
@@ -344,6 +344,9 @@ class CoachScreenTest {
         compose.waitFor("Add to Today")
         compose.onNodeWithText("Add to Today").performClick()
         compose.waitFor("Hotel dumbbells, 45 min")
+        // The workout comes first with its rest; the program day follows as a card with its own Start.
+        compose.onNodeWithText("2:00 rest", substring = true).assertExists()
+        compose.onNode(hasTestTag(com.hyperlog.app.ui.today.ProgramDayCardTag)).performScrollTo()
         compose.onNodeWithText("Week 1 · Ramp-in").assertIsDisplayed()
         // Another asks before it replaces this one.
         compose.openTab("Coach")
@@ -374,13 +377,75 @@ class CoachScreenTest {
         compose.waitFor("Add to Today")
         compose.onNodeWithText("Add to Today").performClick()
         compose.waitFor("Hotel dumbbells, 45 min")
-        compose.onNodeWithText("Start").performClick()
+        // The floating Start workout starts the workout, not the program day.
+        compose.onNodeWithText("Start workout").performClick()
         compose.waitFor("Reps")
         val session = runBlocking { db.sessions().runningSession()!! }
         assertTrue(session.workoutId != null)
         assertEquals(listOf("chest_supported_db_row"), runBlocking { db.sessions().sessionExercises(session.id) }.map { it.exerciseId })
         assertEquals(1, runBlocking { db.programs().active()!!.week })
         assertEquals(0, runBlocking { db.programs().active()!!.dayIndex })
+    }
+
+    @Test
+    fun aWorkoutAskedForElsewhereStartsWithoutAGym() {
+        runStarter()
+        runBlocking { Gyms(db).addGym("Harbour") }
+        openCoach()
+        compose.waitFor("Elsewhere")
+        compose.onNodeWithText("Elsewhere").performClick()
+        copy(hotel)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Add to Today")
+        compose.onNodeWithText("Elsewhere").assertIsDisplayed()
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Hotel dumbbells, 45 min")
+        compose.onNodeWithText("Start workout").performClick()
+        // The sheet names the workout and has Elsewhere picked.
+        compose.waitFor("No gym: the usual dumbbells and plates")
+        compose.onNode(hasText("Elsewhere") and isSelected()).assertExists()
+        compose.onAllNodes(hasText("Start"))[compose.onAllNodes(hasText("Start")).fetchSemanticsNodes().size - 1].performClick()
+        compose.waitFor("Reps")
+        val session = runBlocking { db.sessions().runningSession()!! }
+        assertEquals(null, session.gymId)
+        assertTrue(session.workoutId != null)
+    }
+
+    @Test
+    fun switchingTabsKeepsTheGymAndTheWorkoutsOptions() {
+        runStarter()
+        runBlocking { Gyms(db).addGym("Harbour"); Gyms(db).addGym("Itis") }
+        openCoach()
+        compose.waitFor("Itis")
+        compose.onNodeWithText("Elsewhere").performClick()
+        compose.onNodeWithText("Build me a workout").performClick()
+        compose.onNodeWithText("Easy").performClick()
+        compose.onNodeWithText("Back", substring = true).performScrollTo().performClick()
+        compose.openTab("History")
+        compose.openTab("Coach")
+        compose.waitFor("In your words")
+        compose.onNode(hasText("Elsewhere") and isSelected()).assertExists()
+        compose.onNode(hasText("Easy") and androidx.compose.ui.test.isOn()).assertExists()
+        val prompt = ask()
+        assertTrue(prompt, prompt.contains("## Gym: somewhere not set up in Hyperlog"))
+        assertTrue(prompt, prompt.contains("- Effort: easy"))
+        assertTrue(prompt, prompt.contains("- Focus: Back ("))
+    }
+
+    @Test
+    fun finishingAWorkoutWithNothingLoggedSaysItGoesBackOnToday() {
+        runStarter()
+        openCoach()
+        copy(hotel)
+        compose.onNodeWithText("Paste reply").performClick()
+        compose.waitFor("Add to Today")
+        compose.onNodeWithText("Add to Today").performClick()
+        compose.waitFor("Hotel dumbbells, 45 min")
+        compose.onNodeWithText("Start workout").performClick()
+        compose.waitFor("Reps")
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.onNodeWithText("Finish session").performClick()
+        compose.waitFor("Nothing is logged yet, so the session is dropped and the workout goes back on Today.")
     }
 
     private companion object {

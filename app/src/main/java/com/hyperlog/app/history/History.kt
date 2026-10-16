@@ -8,6 +8,7 @@ import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.Muscles
+import com.hyperlog.app.library.MuscleGroup
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
@@ -78,7 +79,27 @@ class History(
      * for each secondary one, whatever partials, drops or mini-sets extend it (SPEC, Volume).
      * Warm-ups are never logged.
      */
-    suspend fun weeklySets(weeks: Int = 8): List<WeekSets> {
+    suspend fun weeklySets(weeks: Int = 8): List<WeekSets> = counted(weeks) { exercise, sets, week ->
+        for (m in exercise.muscles) week[m] = (week[m] ?: 0.0) + sets
+        for (m in exercise.secondary - exercise.muscles.toSet()) week[m] = (week[m] ?: 0.0) + sets * 0.5
+    }.map { WeekSets(it.start, it.sets.inBodyOrder()) }
+
+    /**
+     * Sets per muscle group (Chest, Back, Shoulders, Arms, Legs, Glutes, Core) for the last [weeks]
+     * weeks, newest first, counted as [weeklySets] counts muscles: a set counts 1 for each group
+     * holding a primary muscle of its exercise and 0.5 for each other group holding a secondary
+     * one, once per group however many of its muscles the exercise works. Coach's focus marks
+     * come from these.
+     */
+    suspend fun weeklyGroupSets(weeks: Int = 8): List<WeekSets> = counted(weeks) { exercise, sets, week ->
+        val primary = exercise.muscles.mapNotNull { MuscleGroup.of(it) }.toSet()
+        val secondary = exercise.secondary.mapNotNull { MuscleGroup.of(it) }.toSet() - primary
+        for (g in primary) week[g.label] = (week[g.label] ?: 0.0) + sets
+        for (g in secondary) week[g.label] = (week[g.label] ?: 0.0) + sets * 0.5
+    }.map { w -> WeekSets(w.start, MuscleGroup.entries.mapNotNull { g -> w.sets[g.label]?.let { g.label to it } }.toMap()) }
+
+    /** Every finished session's work sets in the last [weeks] weeks, newest week first, added up by [count]. */
+    private suspend fun counted(weeks: Int, count: (Exercise, Int, MutableMap<String, Double>) -> Unit): List<WeekSets> {
         val thisWeek = monday(today())
         val starts = (0 until weeks).map { thisWeek.minusWeeks(it.toLong()) }
         val exercises = db.exercises().all().associate { it.id to it.toExercise() }
@@ -90,11 +111,10 @@ class History(
                 val sets = dao.sets(se.id).size
                 if (sets == 0) continue
                 val exercise = exercises[se.exerciseId] ?: continue
-                for (m in exercise.muscles) week[m] = (week[m] ?: 0.0) + sets
-                for (m in exercise.secondary - exercise.muscles.toSet()) week[m] = (week[m] ?: 0.0) + sets * 0.5
+                count(exercise, sets, week)
             }
         }
-        return starts.map { start -> WeekSets(start, counts.getValue(start).inBodyOrder()) }
+        return starts.map { start -> WeekSets(start, counts.getValue(start)) }
     }
 
     /** Every exercise with sets in a finished session, the one done last first, with its trend. */

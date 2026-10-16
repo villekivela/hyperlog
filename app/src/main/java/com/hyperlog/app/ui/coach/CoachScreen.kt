@@ -90,7 +90,7 @@ private val Margin = 24.dp
 internal const val NextStepTag = "coach-next-step"
 
 /** The gym chip for somewhere not set up in Hyperlog. */
-private const val Elsewhere = -1L
+internal const val Elsewhere = -1L
 
 /** Changes in force shown in full; any more fold under "N more in force". */
 private const val ShownChanges = 2
@@ -128,9 +128,17 @@ fun CoachScreen(
      * workout's options (null while closed) with the Claude app.
      */
     onAskClaude: (words: String, gym: Gym?, elsewhere: Boolean, options: WorkoutOptions?) -> Unit = { _, _, _, _ -> },
+    /**
+     * The gym chip picked ([Elsewhere] for somewhere not set up; null: the usual one), and Build me a
+     * workout's options (null while closed). Kept by the caller with the words, so a tab switch keeps them.
+     */
+    picked: Long? = null,
+    onPick: (Long?) -> Unit = {},
+    options: WorkoutOptions? = null,
+    onOptions: (WorkoutOptions?) -> Unit = {},
     /** The gym picked now (null: Elsewhere or no gyms), which a workout added to Today starts at. */
     onGym: (Long?) -> Unit = {},
-    /** The focus's marks: the muscles trained lately with the fewest sets this week, with those sets. */
+    /** The focus's marks: the groups trained in the last 4 weeks with the fewest sets this week, with those sets. */
     lowest: List<Pair<String, Double>> = emptyList(),
     /** Ask Claude was pressed for these words: pasting the reply is the next step. Kept by the caller, which ends it. */
     asked: Boolean = false,
@@ -157,12 +165,9 @@ fun CoachScreen(
 ) {
     /** Hyperlog went to the background after asking: on coming back, the clipboard is read once. */
     var away by rememberSaveable { mutableStateOf(false) }
-    var picked by rememberSaveable { mutableStateOf<Long?>(null) }
     val elsewhere = picked == Elsewhere && gyms.isNotEmpty()
     val gym = if (elsewhere) null else gyms.firstOrNull { it.id == picked } ?: gyms.firstOrNull { it.id == usualGym?.id } ?: gyms.firstOrNull()
     LaunchedEffect(gym?.id) { onGym(gym?.id) }
-    /** Build me a workout's options, kept through the trip to the Claude app; null while closed. */
-    var options by rememberSaveable(stateSaver = OptionsSaver) { mutableStateOf<WorkoutOptions?>(null) }
     /** The Changes after the first [ShownChanges] are folded under "N more in force" until opened. */
     var allChanges by rememberSaveable { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -289,7 +294,7 @@ fun CoachScreen(
                                 FilterChip(
                                     colors = selectedChipColors(),
                                     selected = selected,
-                                    onClick = { picked = g.id },
+                                    onClick = { onPick(g.id) },
                                     label = { Text(g.name) },
                                     leadingIcon = if (selected) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                                 )
@@ -298,7 +303,7 @@ fun CoachScreen(
                             FilterChip(
                                 colors = selectedChipColors(),
                                 selected = elsewhere,
-                                onClick = { picked = Elsewhere },
+                                onClick = { onPick(Elsewhere) },
                                 label = { Text(stringResource(R.string.coach_elsewhere)) },
                                 leadingIcon = if (elsewhere) { { SymbolIcon(Symbol.Check, null, Modifier.size(18.dp)) } } else null,
                             )
@@ -315,7 +320,7 @@ fun CoachScreen(
                         colors = selectedChipColors(),
                         selected = building,
                         onClick = {
-                            options = if (building) null else WorkoutOptions()
+                            onOptions(if (building) null else WorkoutOptions())
                             if (!building) {
                                 // The options are what to fill in: the keyboard makes way for them.
                                 keyboard?.hide()
@@ -341,7 +346,7 @@ fun CoachScreen(
                 options?.let { picked ->
                     WorkoutOptionsRows(
                         picked, lowest,
-                        onChange = { options = it },
+                        onChange = { onOptions(it) },
                     )
                 }
                 OutlinedTextField(
@@ -508,7 +513,7 @@ private fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) 
 }
 
 /** Saves Build me a workout's options: closed, or the effort, the minutes and the focus. */
-private val OptionsSaver = androidx.compose.runtime.saveable.Saver<WorkoutOptions?, List<Any>>(
+internal val OptionsSaver = androidx.compose.runtime.saveable.Saver<WorkoutOptions?, List<Any>>(
     save = { o -> if (o == null) emptyList() else listOf(o.effort.name, o.minutes, o.focus.joinToString("\n")) },
     restore = { l ->
         if (l.isEmpty()) null
@@ -538,9 +543,9 @@ private fun setsText(sets: Double): String {
 
 /**
  * Build me a workout's options: Effort and Time as connected button groups with their defaults
- * picked, and Focus as chips: the muscles trained lately with the fewest sets this week, each with
- * its sets (`Hamstrings · 0 sets`), then the seven muscle groups. Nothing is preselected: no focus
- * is a balanced full-body day.
+ * picked, and Focus as the seven muscle groups, the three trained in the last 4 weeks with the
+ * fewest sets this week marked with them (`Back · 4 sets`). Nothing is preselected: no focus is a
+ * balanced full-body day.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -586,10 +591,10 @@ private fun WorkoutOptionsRows(
         Row {
             OptionHead(stringResource(R.string.coach_focus), Modifier.padding(top = 14.dp))
             val marks = lowest.toMap()
-            // The marked muscles first, then the seven groups.
-            val shown = lowest.map { it.first } + com.hyperlog.app.library.MuscleGroup.entries.map { it.label }
+            // The seven groups in body order; the three behind this week carry their sets.
+            val shown = com.hyperlog.app.library.MuscleGroup.entries.map { it.label }
             FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                shown.distinct().forEach { muscle ->
+                shown.forEach { muscle ->
                     val selected = muscle in options.focus
                     FilterChip(
                         colors = selectedChipColors(),
