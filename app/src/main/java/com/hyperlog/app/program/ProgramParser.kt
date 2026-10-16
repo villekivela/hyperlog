@@ -38,6 +38,27 @@ object ProgramParser {
         val program = reader.program(root)
         return if (reader.errors.isEmpty() && program != null) Result.Valid(program) else Result.Invalid(reader.errors)
     }
+
+    sealed interface WorkoutResult {
+        data class Valid(val workout: com.hyperlog.app.coach.Workout) : WorkoutResult
+        data class Invalid(val errors: List<String>) : WorkoutResult
+    }
+
+    /**
+     * Reads a workout, `{ "workout": { name, summary, groups } }` (SPEC, Coaching → Workout): a
+     * program day's groups, slots and set lines without week overrides, checked as a program is,
+     * with every problem's path (`workout.groups[0].slots[0].exercise: unknown exercise "bb_row"`).
+     */
+    fun workout(json: String, exercises: Set<String>, merged: Map<String, String> = emptyMap()): WorkoutResult {
+        val root = try {
+            Json.parseToJsonElement(json)
+        } catch (e: SerializationException) {
+            return WorkoutResult.Invalid(listOf("not valid JSON: ${e.message?.lineSequence()?.firstOrNull().orEmpty()}"))
+        }
+        val reader = Reader(exercises, merged, weeks = false)
+        val workout = reader.workout(root)
+        return if (reader.errors.isEmpty() && workout != null) WorkoutResult.Valid(workout) else WorkoutResult.Invalid(reader.errors)
+    }
 }
 
 private val Id = Regex("[a-z0-9_]+")
@@ -46,7 +67,8 @@ private val Range = Regex("""(\d+)\s*-\s*(\d+)""")
 /** Myo-reps once had a maximum; programs that still carry it read, and it is ignored. */
 private const val LEGACY_MAX_MINI_SETS = "maxMiniSets"
 
-private class Reader(private val exercises: Set<String>, private val merged: Map<String, String>) {
+/** Reads a program file, or with [weeks] false a workout, whose set lines have no week overrides. */
+private class Reader(private val exercises: Set<String>, private val merged: Map<String, String>, private val weeks: Boolean = true) {
     val errors = mutableListOf<String>()
 
     private fun error(path: String, message: String) {
@@ -81,6 +103,27 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         }
         if (title == null || blocks == null || blocks.any { it == null }) return null
         return Program(title, author, blocks.filterNotNull(), description)
+    }
+
+    fun workout(root: JsonElement): com.hyperlog.app.coach.Workout? {
+        val top = obj(root, "", setOf("workout")) ?: return null
+        val el = top["workout"] ?: return null.also { error("workout", "is required") }
+        val path = "workout"
+        val o = obj(el, path, setOf("name", "summary", "groups")) ?: return null
+        val name = string(o, path, "name", required = true)
+        val summary = string(o, path, "summary", required = true)
+        val groups = list(o, path, "groups", required = true) { e, p -> group(e, p, null) }
+        if (groups != null) {
+            // Read the ids again from the JSON, so a slot with problems inside still has its id checked.
+            val slots = (o["groups"] as JsonArray).flatMapIndexed { g, group ->
+                ((group as? JsonObject)?.get("slots") as? JsonArray).orEmpty().mapIndexed { s, slot ->
+                    "$path.groups[$g].slots[$s].id" to ((slot as? JsonObject)?.get("id") as? JsonPrimitive)?.takeIf { it.isString }?.content
+                }
+            }
+            duplicates(slots.map { it.second }) { i, s -> error(slots[i].first, "\"$s\" is used by another slot in this workout") }
+        }
+        if (name == null || summary == null || groups == null || groups.any { it == null }) return null
+        return com.hyperlog.app.coach.Workout(name, summary, groups.filterNotNull())
     }
 
     private fun block(el: JsonElement, path: String): Block? {
@@ -194,7 +237,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
     }
 
     private fun set(el: JsonElement, path: String, weeks: WeekRange?): SetSpec? {
-        val o = obj(el, path, setOf("count", "reps", "rir", "rest", "technique", "backoff", "weeks")) ?: return null
+        val o = obj(el, path, setOf("count", "reps", "rir", "rest", "technique", "backoff") + if (this.weeks) setOf("weeks") else emptySet()) ?: return null
         val count = int(o, path, "count", min = 1, max = 10) ?: if (o["count"] == null) 1 else null
         val reps = reps(o["reps"], "$path.reps", required = true)
         val rir = int(o, path, "rir", min = 0, max = 10)
