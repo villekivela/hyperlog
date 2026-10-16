@@ -512,13 +512,7 @@ private fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val details = stringResource(R.string.session_exercise_details)
-        Text(
-            exercise.exercise.name,
-            Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName),
-            style = MaterialTheme.typography.headlineSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        ExerciseName(exercise.exercise.name, Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName))
         val hold = session.followUp as? com.hyperlog.app.session.FollowUp.Hold
         val holdStarted = session.holdStartedAt
         val restEnds = session.restEndsAt

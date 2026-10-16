@@ -197,7 +197,7 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                     Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin, end = Margin, top = 8.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(shown.exercise.name, style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    ExerciseName(shown.exercise.name)
                 }
                 SetTable(
                     TableState(

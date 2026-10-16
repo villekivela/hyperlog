@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -55,6 +57,23 @@ internal val RowRipple = RoundedCornerShape(24.dp)
 internal val CellShape = RoundedCornerShape(12.dp)
 /** A chip under the exercise name. */
 internal val ChipShape = RoundedCornerShape(8.dp)
+
+/**
+ * An exercise's name at the top of the session and past-exercise screens: one line of
+ * headlineSmall. Space Grotesk runs wide, so a long name steps down to 18 sp before it ellipsizes.
+ */
+@Composable
+internal fun ExerciseName(name: String, modifier: Modifier = Modifier) {
+    val style = MaterialTheme.typography.headlineSmall
+    Text(
+        name,
+        modifier,
+        style = style,
+        autoSize = TextAutoSize.StepBased(minFontSize = 18.sp, maxFontSize = style.fontSize, stepSize = 1.sp),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
 
 /** The fixed RIR scale (3+ calm, 1–2 warm, 0 hot), the same in light and dark. */
 internal fun rirColor(rir: Int): Color = when {
