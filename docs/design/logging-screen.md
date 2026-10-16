@@ -5,8 +5,8 @@ The in-session screen where sets are logged. This note folds in the owner's deci
 ever that it can be scrolled", warm-ups hidden); SPEC.md has the same rules. Screens:
 `screens/light-*.png` and `screens/dark-*.png` are Robolectric renders of each state
 (`session-active-drop` and `session-active-mini-set` show a set under way,
-`session-mini-sets-planned` myo-reps about to start, `session-done` the finished session's sets
-with RIR chips). The renders
+`session-mini-sets-planned` myo-reps about to start, `session-done-sets` finished sets with
+drops, partials and myo-reps, each ending in its RIR chip). The renders
 come from `SessionRenders` (skipped unless asked for): `RENDERS=<dir> ./gradlew
 testDebugUnitTest --tests '*SessionRenders*'`, with `DARK=1` for dark; the whole bar and machine
 from `WholeBarRenders` and Session done from `AppRenders`, the same way.
