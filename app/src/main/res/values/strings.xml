@@ -493,7 +493,6 @@
     <string name="coach_starter_sleep">Slept badly</string>
     <string name="coach_starter_sleep_words">I slept badly last night.</string>
     <string name="coach_ease_back_words">I’ve had %1$d days off. Ease me back in.</string>
-    <string name="coach_no_program_paste">No program is running, so there’s nothing for a Change to change.</string>
     <string name="coach_ask">Ask Claude</string>
     <string name="coach_ask_chooser">Ask Claude</string>
     <string name="coach_paste">Paste reply</string>

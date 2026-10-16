@@ -103,7 +103,7 @@ object WorkoutFormat {
     fun text(library: List<Exercise>): String = buildString {
         appendLine("## Workout format")
         appendLine("A workout is one day for today, outside the program: Hyperlog shows it on Today, and training it doesn't move the program on.")
-        appendLine("Reply with one fenced ```json block holding {\"workout\": {...}}:")
+        appendLine("Reply with one fenced json code block holding {\"workout\": {...}}:")
         appendLine("- \"name\": a short name for the day (\"Hotel dumbbells, 45 min\").")
         appendLine("- \"summary\": one or two sentences on what it trains and why.")
         appendLine(

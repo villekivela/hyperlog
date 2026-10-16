@@ -29,7 +29,7 @@ import java.util.Locale
 /**
  * Coaching through the user's Claude app (SPEC, Coaching → Words first; ADRs 0001 and 0003).
  * Hyperlog makes no model calls: [prompt] is shared to the Claude app through the share sheet, and
- * the Change it replies with comes back through the clipboard to [read].
+ * the Change or workout it replies with comes back through the clipboard to [read].
  */
 object AskClaude {
     /** The sessions the prompt carries: the last four weeks. */
@@ -43,8 +43,8 @@ object AskClaude {
      * since [lastTrained] (by the [weekdays] plan when there is one), the [gym] picked with its
      * equipment and what's missing there, the program and where you are in it, the sessions of the
      * last [HISTORY_DAYS] days, the [weeklySets] of the last [SET_WEEKS] weeks, every visible
-     * library exercise, and the Change format. Claude may answer in words alone. With no program
-     * running ([plan] null) there is no plan to change: Claude answers in words.
+     * library exercise, and the formats of a Change and a workout. Claude may answer in words alone.
+     * With no program running ([plan] null) there is no plan to change: words or a workout.
      */
     fun prompt(
         words: String,
@@ -59,6 +59,8 @@ object AskClaude {
         lastTrained: LocalDate? = null,
         weekdays: Set<DayOfWeek> = emptySet(),
         weeklySets: List<WeekSets> = emptyList(),
+        /** Build me a workout's options, while they're open; null when closed. */
+        options: WorkoutOptions? = null,
     ): String = buildString {
         val names = library.associate { it.id to it.name }
         if (plan == null) {
@@ -67,19 +69,29 @@ object AskClaude {
             appendLine("I train with Hyperlog, an app that runs my strength program and logs my sessions. Help me with this:")
         }
         appendLine()
-        words.trim().lines().forEach { appendLine("> $it") }
-        appendLine()
+        if (words.isNotBlank()) {
+            words.trim().lines().forEach { appendLine("> $it") }
+            appendLine()
+        }
+        options?.let {
+            options(it)
+            appendLine()
+        }
         if (plan == null) {
             appendLine(
-                "No program is running in Hyperlog: I train ad hoc, so there is no plan to change and nothing to paste back. " +
-                    "Talk it through with me and tell me in words what to do in my next sessions.",
+                "No program is running in Hyperlog: I train ad hoc, so there is no plan to change. Talk it through with me first if " +
+                    "you need to know more. Advice for my next sessions can stay in words. When you build me a workout for today, " +
+                    "reply with exactly one fenced ```json block holding it in the workout format at the end, and nothing else in " +
+                    "that message. I'll paste it into Hyperlog, which checks it and shows it to me before it goes on Today. " +
+                    "Use only the exercise ids listed here.",
             )
         } else {
             appendLine(
                 "Talk it through with me first if you need to know more. If the plan can stand as it is, say so in words and " +
-                    "send no JSON. When we agree on a change, reply with exactly one fenced ```json block holding a Change in the " +
-                    "format at the end, and nothing else in that message. I'll paste it into Hyperlog, which checks it and shows " +
-                    "me the diff before anything changes. Use only the slot, day and exercise ids listed here.",
+                    "send no JSON. Otherwise reply with exactly one fenced ```json block holding a Change or a workout in the " +
+                    "formats at the end, and nothing else in that message: a Change edits the program for a while, a workout is " +
+                    "one day for today outside the program. I'll paste it into Hyperlog, which checks it and shows it to me " +
+                    "before anything changes. Use only the slot, day and exercise ids listed here.",
             )
         }
         appendLine()
@@ -109,6 +121,21 @@ object AskClaude {
             appendLine()
             append(ChangeFormat.text(plan))
         }
+        appendLine()
+        append(WorkoutFormat.text(library))
+    }
+
+    /** Build me a workout's options: the effort as reps in reserve, the time, and the focus. */
+    private fun StringBuilder.options(options: WorkoutOptions) {
+        appendLine("Build me a workout for today:")
+        val effort = when (options.effort) {
+            WorkoutOptions.Effort.Easy -> "easy, 3 or more reps in reserve, no intensity techniques."
+            WorkoutOptions.Effort.Normal -> "normal, 1–2 reps in reserve."
+            WorkoutOptions.Effort.Hard -> "hard, 0–1 reps in reserve, intensity techniques allowed."
+        }
+        appendLine("- Effort: $effort")
+        appendLine("- Time: ${WorkoutOptions.timeText(options.minutes)} for the whole session, warm-ups and rest included.")
+        appendLine("- Focus: " + if (options.focus.isEmpty()) "none, so a balanced full-body day." else options.focus.joinToString(postfix = "."))
     }
 
     private fun daysOff(lastTrained: LocalDate?, today: LocalDate, weekdays: Set<DayOfWeek>): String {
@@ -164,28 +191,57 @@ object AskClaude {
         }
     }
 
+    /** What a paste holds: a Change, a workout, or the problems that keep it out. */
+    sealed interface Reply {
+        data class ChangeReply(val change: Change) : Reply
+        data class WorkoutReply(val workout: Workout) : Reply
+        data class Invalid(val errors: List<String>) : Reply
+    }
+
     /**
-     * Reads a pasted Change: Claude's whole reply or just its JSON. The fenced block is taken when
-     * there is one, else the outermost braces; then it's checked like any Change.
+     * Reads a pasted reply: Claude's whole reply or just its JSON. The fenced block is taken when
+     * there is one, else the outermost braces. An object with `workout` is a workout, checked as
+     * program import checks a day; anything else is a Change for [program], which must be running.
      */
-    fun read(pasted: String, program: Program, exercises: Set<String>, inForce: Set<Long> = emptySet()): ChangeValidator.Result {
-        val json = extract(pasted) ?: return ChangeValidator.Result.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
-        val result = ChangeValidator.validate(json, program, exercises, inForce)
+    fun read(
+        pasted: String,
+        program: Program?,
+        exercises: Set<String>,
+        inForce: Set<Long> = emptySet(),
+        merged: Map<String, String> = emptyMap(),
+    ): Reply {
+        val json = extract(pasted) ?: return Reply.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
+        val workout = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(json) as? kotlinx.serialization.json.JsonObject }
+            .getOrNull()?.containsKey("workout") == true
+        val result = when {
+            workout -> when (val read = com.hyperlog.app.program.ProgramParser.workout(json, exercises, merged)) {
+                is com.hyperlog.app.program.ProgramParser.WorkoutResult.Valid -> Reply.WorkoutReply(read.workout)
+                is com.hyperlog.app.program.ProgramParser.WorkoutResult.Invalid -> Reply.Invalid(read.errors)
+            }
+            program == null -> Reply.Invalid(listOf(NO_PROGRAM))
+            else -> when (val read = ChangeValidator.validate(json, program, exercises, inForce)) {
+                is ChangeValidator.Result.Valid -> Reply.ChangeReply(read.change)
+                is ChangeValidator.Result.Invalid -> Reply.Invalid(read.errors)
+            }
+        }
         // More braces opened than closed: the copy stopped short, so the problems are the copy's, not Claude's.
         val rest = pasted.substring(pasted.indexOf('{'))
-        if (result is ChangeValidator.Result.Invalid && rest.count { it == '{' } > rest.count { it == '}' }) {
-            return ChangeValidator.Result.Invalid(listOf(CUT_OFF))
+        if (result is Reply.Invalid && rest.count { it == '{' } > rest.count { it == '}' }) {
+            return Reply.Invalid(listOf(CUT_OFF))
         }
         return result
     }
 
     /** The message when the paste holds no JSON at all. */
-    const val NOTHING_TO_READ = "No Change found in what you copied. Copy Claude's whole reply, with its JSON block, then paste again."
+    const val NOTHING_TO_READ = "No Change or workout found in what you copied. Copy Claude's whole reply, with its JSON block, then paste again."
 
     /** The message when the paste's JSON stops before its end. */
     const val CUT_OFF = "Claude's reply is cut off before its JSON ends. Copy the whole reply, then paste again."
 
-    /** Whether [errors] are about the copy, not the Change: then there's nothing to take back to Claude. */
+    /** The message for a Change pasted with no program running. */
+    const val NO_PROGRAM = "No program is running, so there’s nothing for a Change to change."
+
+    /** Whether [errors] are about the copy, not the reply: then there's nothing to take back to Claude. */
     fun copyProblem(errors: List<String>): Boolean = errors == listOf(NOTHING_TO_READ) || errors == listOf(CUT_OFF)
 
     private val Fence = Regex("```[a-zA-Z]*\\s*\\n?(.*?)```", RegexOption.DOT_MATCHES_ALL)
@@ -331,7 +387,7 @@ object ChangeFormat {
     fun text(plan: ActiveProgram): String = buildString {
         val program = plan.program
         appendLine("## Change format")
-        appendLine("Reply with one fenced ```json block holding one JSON object:")
+        appendLine("Reply with one fenced json code block holding one JSON object:")
         appendLine("- \"summary\": one short sentence saying what changes and why.")
         appendLine("- \"scope\": which sessions the plan edits cover. One of:")
         appendLine("  - ${scope(Scope.Dates(plan.today, plan.today.plusDays(6)))}: sessions trained on those dates, both included (temporary);")

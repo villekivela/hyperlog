@@ -7,9 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
-import com.hyperlog.app.coach.ChangeValidator
 import com.hyperlog.app.coach.Changes
-import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.History
 import com.hyperlog.app.library.toExercise
@@ -132,26 +130,25 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Reads a Change pasted back from Claude: its diff opens for review, or its problems show. */
+    /** Reads a reply pasted back from Claude: a Change's diff or a workout opens for review, or its problems show. */
     fun paste(text: String) {
         viewModelScope.launch {
             when (val result = read(text)) {
-                is ChangeValidator.Result.Valid -> { _pasteErrors.value = null; _reply.value = null; propose(result.change) }
-                is ChangeValidator.Result.Invalid -> _pasteErrors.value = result.errors
-                null -> _pasteErrors.value = listOf(getApplication<Application>().getString(R.string.coach_no_program_paste))
+                is AskClaude.Reply.Invalid -> _pasteErrors.value = result.errors
+                else -> { _pasteErrors.value = null; _reply.value = null; open(result) }
             }
         }
     }
 
-    private val _reply = MutableStateFlow<Change?>(null)
+    private val _reply = MutableStateFlow<AskClaude.Reply?>(null)
 
-    /** A valid Change found on the clipboard on coming back from Claude, until reviewed or asked again. */
-    val reply: StateFlow<Change?> = _reply.asStateFlow()
+    /** A valid Change or workout found on the clipboard on coming back from Claude, until reviewed or asked again. */
+    val reply: StateFlow<AskClaude.Reply?> = _reply.asStateFlow()
 
-    /** Reads the clipboard [text] quietly on return from Claude: a valid Change is kept for Review; anything else is ignored. */
+    /** Reads the clipboard [text] quietly on return from Claude: a valid reply is kept for Review; anything else is ignored. */
     fun checkReply(text: String) {
         viewModelScope.launch {
-            _reply.value = (read(text) as? ChangeValidator.Result.Valid)?.change
+            _reply.value = read(text).takeIf { it !is AskClaude.Reply.Invalid }
         }
     }
 
@@ -161,18 +158,36 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     /** Opens the reply found for review. */
     fun reviewReply() {
-        val change = _reply.value ?: return
+        val reply = _reply.value ?: return
         _reply.value = null
         _pasteErrors.value = null
-        propose(change)
+        open(reply)
     }
 
-    /** [text] read as a Change for the running program; null with none running. */
-    private suspend fun read(text: String): ChangeValidator.Result? {
-        val active = programs.active.first() ?: return null
+    private fun open(reply: AskClaude.Reply) {
+        when (reply) {
+            is AskClaude.Reply.ChangeReply -> propose(reply.change)
+            is AskClaude.Reply.WorkoutReply -> _workout.value = reply.workout
+            is AskClaude.Reply.Invalid -> Unit
+        }
+    }
+
+    private val _workout = MutableStateFlow<com.hyperlog.app.coach.Workout?>(null)
+
+    /** A workout from Claude waiting for Add to Today or Reject; null when none is. */
+    val workout: StateFlow<com.hyperlog.app.coach.Workout?> = _workout.asStateFlow()
+
+    /** Drops the workout under review; nothing changes. */
+    fun rejectWorkout() {
+        _workout.value = null
+    }
+
+    /** [text] read as a Change for the running program or a workout. */
+    private suspend fun read(text: String): AskClaude.Reply {
+        val active = programs.active.first()
         val ids = HyperlogDatabase.get(getApplication()).exercises().all().map { it.id }.toSet()
-        val inForce = active.inForce.map { it.id }.toSet()
-        return withContext(Dispatchers.Default) { AskClaude.read(text, active.program, ids, inForce) }
+        val inForce = active?.inForce.orEmpty().map { it.id }.toSet()
+        return withContext(Dispatchers.Default) { AskClaude.read(text, active?.program, ids, inForce) }
     }
 
     fun closePasteErrors() {
