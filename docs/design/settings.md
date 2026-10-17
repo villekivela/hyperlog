@@ -45,6 +45,7 @@ The fifth tab of the navigation bar: a destination with no back arrow, its title
 - The starting-weights row now says "the old app's backup" so it can't be mistaken for a Hyperlog
   backup.
 
-Screens: `screens/settings.png` (phone, dark), `light-settings.png` and `dark-settings.png` (renders
+Screens: `screens/settings.png` (phone, dark; from before Settings became a tab, so it still shows
+the back arrow and no bar), `light-settings.png` and `dark-settings.png` (renders
 from `AppRenders`). The restore dialog
 doesn't render in Robolectric; check it on the phone.
