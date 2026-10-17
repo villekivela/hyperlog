@@ -4,7 +4,44 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23)
+
+/**
+ * v23: the weekday plan is yours, not the gym's (ADR 0004). Every gym's weekdays become your
+ * training days, each with that gym, and the gym table is rebuilt without them. Foreign keys are
+ * off while a migration runs, so the drop leaves the tables that point at gyms alone.
+ */
+object Migration22To23 : Migration(22, 23) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `weekday_plan` (`weekday` INTEGER NOT NULL, `gym_id` INTEGER, PRIMARY KEY(`weekday`), " +
+                "FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_weekday_plan_gym_id` ON `weekday_plan` (`gym_id`)")
+        val gyms = db.query("SELECT id, weekdays FROM gym WHERE archived = 0 ORDER BY name COLLATE NOCASE, id").use { c ->
+            buildList { while (c.moveToNext()) add(c.getLong(0) to c.getInt(1)) }
+        }
+        com.hyperlog.app.week.WeekdayPlan.fromGymWeekdays(gyms).gyms.forEach { (day, gym) ->
+            db.execSQL("INSERT INTO weekday_plan (weekday, gym_id) VALUES (?, ?)", arrayOf<Any?>(day.value, gym))
+        }
+        db.execSQL(
+            "CREATE TABLE `gym_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, " +
+                "`pin_plates` TEXT, `dumbbells` TEXT, `default_stack` TEXT, `plates` TEXT)",
+        )
+        db.execSQL(
+            "INSERT INTO gym_new (id, name, archived, pin_plates, dumbbells, default_stack, plates) " +
+                "SELECT id, name, archived, pin_plates, dumbbells, default_stack, plates FROM gym",
+        )
+        // The id counter carries over, so a deleted gym's id isn't given out again.
+        val seq = db.query("SELECT seq FROM sqlite_sequence WHERE name = 'gym'").use { if (it.moveToFirst()) it.getLong(0) else null }
+        db.execSQL("DROP TABLE gym")
+        db.execSQL("ALTER TABLE gym_new RENAME TO gym")
+        seq?.let {
+            db.execSQL("DELETE FROM sqlite_sequence WHERE name = 'gym'")
+            db.execSQL("INSERT INTO sqlite_sequence (name, seq) VALUES ('gym', ?)", arrayOf<Any?>(it))
+        }
+    }
+}
 
 /**
  * v22: workouts from the coach, a day outside the program (SPEC, Coaching → Workout), and the

@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -48,9 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -65,9 +61,6 @@ import com.hyperlog.app.gym.sections
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import java.time.DayOfWeek
-import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * Every gym, then the bars all gyms share: the barbell and the EZ, trap and safety bars, each
@@ -142,8 +135,8 @@ fun GymsScreen(
 }
 
 /**
- * One gym's equipment, each with its ladder, then its usual days. Rename and delete sit in the
- * top bar.
+ * One gym's equipment, each with its ladder. Rename and delete sit in the top bar. Training days
+ * are yours, not the gym's: they're set from Program (ADR 0004).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,7 +144,6 @@ fun GymScreen(
     gym: Gym,
     onRename: (String) -> Unit,
     onDelete: () -> Unit,
-    onWeekdays: (Set<DayOfWeek>) -> Unit,
     onOpenItem: (Long) -> Unit,
     onAddItem: () -> Unit,
     onBack: () -> Unit,
@@ -239,20 +231,6 @@ fun GymScreen(
                 row(pinsTitle, pins, Symbol.PushPin, onClick = { pinning = true }, trailing = chevron)
             }
 
-            SectionLabel(stringResource(R.string.gym_days))
-            SegmentedList {
-                item {
-                    Spacer(Modifier.height(16.dp))
-                    WeekdayPicker(gym.weekdays, onWeekdays)
-                    Text(
-                        stringResource(R.string.gym_days_body, gym.name),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 72.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                    )
-                }
-            }
-
             if (gym.missing.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.gym_missing))
                 val missing = gym.missing.map { it to (exerciseNames[it] ?: it) }.sortedBy { it.second }
@@ -317,42 +295,6 @@ fun GymScreen(
             confirmButton = { TextButton(onClick = { deleting = false; onDelete() }) { Text(stringResource(R.string.gym_delete_confirm)) } },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.gym_keep)) } },
         )
-    }
-}
-
-/**
- * The weekday plan: seven round toggles, Monday first, filled when the gym is planned for that
- * day. The first lines up with the text column; the rest spread to the edge (a 360 dp phone still
- * fits all seven).
- */
-@Composable
-private fun WeekdayPicker(days: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    androidx.compose.foundation.layout.Row(
-        Modifier.fillMaxWidth().padding(start = 72.dp, end = 16.dp),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
-    ) {
-        DayOfWeek.entries.forEach { day ->
-            val on = day in days
-            run {
-                Box(
-                    Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(if (on) cs.primary else Color.Transparent)
-                        .border(1.dp, if (on) cs.primary else cs.outlineVariant, CircleShape)
-                        .toggleable(on, role = Role.Checkbox) { onChange(if (it) days + day else days - day) }
-                        .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        day.getDisplayName(TextStyle.NARROW, Locale.ENGLISH),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (on) cs.onPrimary else cs.onSurfaceVariant,
-                    )
-                }
-            }
-        }
     }
 }
 

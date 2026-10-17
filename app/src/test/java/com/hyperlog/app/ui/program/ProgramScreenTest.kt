@@ -35,6 +35,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.junit.Test
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.week.WeekdayPlan
+import java.time.DayOfWeek
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -272,6 +277,61 @@ class ProgramScreenTest {
         compose.onNodeWithText("From Build").assertIsDisplayed()
         compose.onNodeWithContentDescription("Week 8").performClick()
         assertEquals(ProgramView(week = 8), view)
+    }
+    private fun running() = ActiveProgram(1, program(), Position(1, 0), today = LocalDate.of(2026, 10, 14))
+
+    @Test
+    fun withNoTrainingDaysProgramAsksForThem() {
+        compose.setContent { HyperlogTheme { ProgramScreen(running(), null, onImport = {}, onCloseErrors = {}, onBack = {}) } }
+        compose.onNodeWithText("Set your training days").assertIsDisplayed()
+    }
+
+    @Test
+    fun programShowsYourTrainingDaysAndTheSheetTogglesThem() {
+        var plan by mutableStateOf(WeekdayPlan(mapOf(DayOfWeek.MONDAY to null, DayOfWeek.WEDNESDAY to null, DayOfWeek.FRIDAY to null)))
+        compose.setContent {
+            HyperlogTheme {
+                ProgramScreen(
+                    running(), null, onImport = {}, onCloseErrors = {}, onBack = {},
+                    weekdayPlan = plan, gyms = listOf(Gym(1, "Central", emptyList())), onWeekdayPlan = { plan = it },
+                )
+            }
+        }
+        compose.onNodeWithText("3 days a week · Mon Wed Fri").performClick()
+        compose.onNodeWithText("Training days").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Monday").assertIsOn()
+        compose.onNodeWithContentDescription("Tuesday").assertIsOff().performClick()
+        compose.onNodeWithContentDescription("Wednesday").performClick()
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.FRIDAY), plan.days)
+        // With one gym every day is at it, so no day picks one.
+        compose.onNodeWithContentDescription("Gym on Monday", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("3 days a week · Mon Tue Fri").assertIsDisplayed()
+    }
+
+    @Test
+    fun withSeveralGymsEachTrainingDayPicksItsGym() {
+        var plan by mutableStateOf(WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.WEDNESDAY to null)))
+        compose.setContent {
+            HyperlogTheme {
+                ProgramScreen(
+                    running(), null, onImport = {}, onCloseErrors = {}, onBack = {},
+                    weekdayPlan = plan, gyms = listOf(Gym(1, "Kalliokoski", emptyList()), Gym(2, "Hotel", emptyList())),
+                    onWeekdayPlan = { plan = it },
+                )
+            }
+        }
+        compose.onNodeWithText("2 days a week · Mon Wed").performClick()
+        compose.onNodeWithContentDescription("Gym on Monday: Kalliokoski").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Gym on Wednesday: Any gym").performClick()
+        compose.onNodeWithText("Hotel").performClick()
+        assertEquals(WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.WEDNESDAY to 2L)), plan)
+        // A day turned on names no gym until one is picked; one turned off has none to pick.
+        compose.onNodeWithContentDescription("Friday").performClick()
+        compose.onNodeWithContentDescription("Gym on Friday: Any gym").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Monday").performClick()
+        compose.onNodeWithContentDescription("Gym on Monday: Kalliokoski").assertDoesNotExist()
+        assertEquals(WeekdayPlan(mapOf(DayOfWeek.WEDNESDAY to 2L, DayOfWeek.FRIDAY to null)), plan)
     }
 }
 

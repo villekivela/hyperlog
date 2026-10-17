@@ -266,8 +266,9 @@ Principles:
   A skipped day shows its plan, headed Skipped.
 - **No dates.** The next day reads as Today shows it. A later day takes a date-ranged Change by
   the window its in-force diff shows (`Changes.dayAhead`), and says when the Change ends.
-- **The actions live in ⋮.** The header holds only the title and Next. Changes are one row that
-  opens their own page.
+- **The actions live in ⋮.** The header holds only the title and Next. Your training days are one
+  row under it (`3 days a week · Mon Wed Fri`, or `Set your training days`) that opens their sheet
+  (#52, ADR 0004); Changes are one row that opens their own page.
 
 States: a program running (opening on the current block and week), a past week (done and skipped
 days), a future block (its comparison and its days), the deload block (days headed Deload), a day
@@ -277,8 +278,12 @@ the empty, starter and import-error states as before.
 
 Layout (build pass):
 
-- **Header and Changes are one segmented group**: the title card on top, the Changes row joined
-  under it (4 dp join), 16 dp above the block group. **Next** is primary here as on the day head,
+- **Header, training days and Changes are one segmented group**: the title card on top, the
+  training days row (`calendar_today`) and the Changes row joined under it (4 dp joins), 16 dp
+  above the block group. The Training days sheet: title, one line on what the days do, the seven
+  round toggles across the sheet's 24 dp text edges, and, with two or more gyms, a
+  `surfaceContainerHighest` group with a row per day that's on (the day, then its gym as a text
+  button with a menu: the gyms, then Any gym), then Done. **Next** is primary here as on the day head,
   so the one word means the same everywhere; the day sits in a 56 dp column, and "Program
   finished" takes the same column with the flag in Next's place.
 - **The block group sizes buttons by their labels** (`ConnectedChoice(fitLabels = true)`), so

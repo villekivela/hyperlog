@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import com.hyperlog.app.week.WeekdayPlan
+import com.hyperlog.app.week.WeekdayPlans
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -35,6 +37,16 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     private val programs = ProgramStore.get(application)
 
     val active: StateFlow<ActiveProgram?> = programs.active.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val weekdayPlans = WeekdayPlans(HyperlogDatabase.get(application))
+
+    /** Your training days, each with its gym (SPEC, Training days). */
+    val weekdayPlan: StateFlow<WeekdayPlan> =
+        weekdayPlans.plan.stateIn(viewModelScope, SharingStarted.Eagerly, WeekdayPlan.None)
+
+    fun setWeekdayPlan(plan: WeekdayPlan) {
+        viewModelScope.launch { weekdayPlans.set(plan) }
+    }
 
     private val _errors = MutableStateFlow<List<String>?>(null)
 

@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
 
 /** Gyms with their equipment, dumbbells and plates, and the shared bars' weights, for the settings screens. */
 class GymsViewModel(application: Application) : AndroidViewModel(application), GymActions {
@@ -76,7 +75,6 @@ class GymsViewModel(application: Application) : AndroidViewModel(application), G
 
     override fun renameGym(id: Long, name: String) = run { store.renameGym(id, name) }
     override fun deleteGym(id: Long) = run { store.deleteGym(id) }
-    override fun setWeekdays(id: Long, days: Set<DayOfWeek>) = run { store.setWeekdays(id, days) }
     override fun setPinPlates(id: Long, plates: List<Double>) = run { store.setPinPlates(id, plates) }
     override fun unmarkMissing(gymId: Long, exerciseId: String) = run { store.unmarkMissing(gymId, exerciseId) }
     override fun saveItem(item: EquipmentItem) = run { store.saveItem(item) }
@@ -95,7 +93,6 @@ interface GymActions {
     fun addGym(name: String, then: (Long) -> Unit)
     fun renameGym(id: Long, name: String)
     fun deleteGym(id: Long)
-    fun setWeekdays(id: Long, days: Set<DayOfWeek>)
     fun setPinPlates(id: Long, plates: List<Double>)
     fun addProgramEquipment(gymId: Long, stack: LadderSpec)
     fun unmarkMissing(gymId: Long, exerciseId: String)

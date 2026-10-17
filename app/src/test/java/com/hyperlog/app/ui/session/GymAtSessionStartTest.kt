@@ -66,7 +66,7 @@ class GymAtSessionStartTest {
     fun startingASessionPreselectsTodaysUsualGymAndTheGymCanBeChanged() {
         val riverside = runBlocking {
             gyms.addGym("Central")
-            gyms.addGym("Riverside").also { gyms.setWeekdays(it, setOf(LocalDate.now().dayOfWeek)) }
+            gyms.addGym("Riverside").also { com.hyperlog.app.week.WeekdayPlans(HyperlogDatabase.get(ApplicationProvider.getApplicationContext())).set(com.hyperlog.app.week.WeekdayPlan(mapOf(LocalDate.now().dayOfWeek to it))) }
         }
         compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()

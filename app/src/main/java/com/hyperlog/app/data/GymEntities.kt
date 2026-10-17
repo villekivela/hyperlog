@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.Flow
 data class GymEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    /** The weekday plan: bit 0 is Monday. Starting a session on one of these days picks this gym. */
-    @ColumnInfo(defaultValue = "0") val weekdays: Int = 0,
     /** Deleted after sessions were trained at it: hidden everywhere but in the history it keeps. */
     @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
     /** The small plates that hang on a stack's pin, as a list ladder; null for the SPEC default (1.25 and 2.5 kg). */
@@ -141,8 +139,6 @@ interface GymDao {
     @Query("UPDATE gym SET plates = :plates WHERE id = :id")
     suspend fun setPlates(id: Long, plates: String)
 
-    @Query("UPDATE gym SET weekdays = :weekdays WHERE id = :id")
-    suspend fun setWeekdays(id: Long, weekdays: Int)
 
     @Query("SELECT gym_id, started_at FROM session WHERE gym_id IS NOT NULL")
     fun observeVisits(): Flow<List<Visit>>

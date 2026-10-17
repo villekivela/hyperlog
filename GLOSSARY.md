@@ -178,7 +178,9 @@ _Avoid_: Plate set, shared plates
 _Avoid_: Machine (when you mean any equipment)
 
 **Weekday plan**:
-The weekdays a gym is planned for. Starting a session on one of them picks that gym.
+The weekdays you train on, each with an optional gym. Kept once for the app, not per gym; called
+"Training days" on screen. A day's gym is the one a session started that day picks; Time off
+counts from the days.
 _Avoid_: Schedule (the program runs as a sequence, not on dates)
 
 **Pin stack**:

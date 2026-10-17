@@ -91,7 +91,7 @@ class BackupsTest {
 
         val gyms = Gyms(db)
         val gym = gyms.addGym("Central")
-        gyms.setWeekdays(gym, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
+        com.hyperlog.app.week.WeekdayPlans(db).set(com.hyperlog.app.week.WeekdayPlan(mapOf(DayOfWeek.MONDAY to gym, DayOfWeek.THURSDAY to gym)))
         val cable = gyms.addItem(EquipmentItem(gymId = gym, name = "Cable station", ladder = LadderSpec.lbStack()))
         gyms.setDumbbells(gym, LadderSpec.Steps(2.0, 2.0, WeightUnit.Kg, 20))
         gyms.setBar(com.hyperlog.app.library.Equipment.EzBar, 8.0)
@@ -198,7 +198,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(22), file["database"])
+        assertEquals(JsonPrimitive(23), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -250,7 +250,7 @@ class BackupsTest {
     @Test
     fun aRowWithAnUnknownColumnChangesNothing() = runTest {
         val file = Backups(usedPhone(), clock = { now }).export()
-        val damaged = file.replaceFirst("\"weekdays\":", "\"colour\":\"red\",\"weekdays\":")
+        val damaged = file.replaceFirst("\"archived\":", "\"colour\":\"red\",\"archived\":")
         assertRefused(Backups.Reason.Damaged, damaged)
     }
 
@@ -266,7 +266,7 @@ class BackupsTest {
     fun aRowMissingAColumnChangesNothing() = runTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         val tables = file["tables"]!!.jsonObject
-        val gyms = kotlinx.serialization.json.JsonArray(tables["gym"]!!.jsonArray.map { JsonObject(it.jsonObject - "weekdays") })
+        val gyms = kotlinx.serialization.json.JsonArray(tables["gym"]!!.jsonArray.map { JsonObject(it.jsonObject - "archived") })
         assertRefused(Backups.Reason.Damaged, JsonObject(file + ("tables" to JsonObject(tables + ("gym" to gyms)))).toString())
     }
 
@@ -409,5 +409,18 @@ class BackupsTest {
         assertEquals(listOf("Legs at home"), com.hyperlog.app.coach.Workouts(phone).waiting.first().map { it.workout.name })
         val titles = com.hyperlog.app.session.PastSessionEditor(phone, Programs(phone, clock = { now })).sessions().map { it.title }
         assertTrue(titles.toString(), "Upper body, 45 min" in titles)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase22RestoresItsGymsDaysAsYourTrainingDays() = runTest {
+        // DB v22, when each gym had its weekdays: Central on Mondays and Thursdays.
+        val file = javaClass.getResource("/backup/hyperlog-backup-db22.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        assertEquals(
+            com.hyperlog.app.week.WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.THURSDAY to 1L)),
+            com.hyperlog.app.week.WeekdayPlans(phone).plan.first(),
+        )
+        assertEquals(listOf("Central"), Gyms(phone).gyms.first().map { it.name })
     }
 }
