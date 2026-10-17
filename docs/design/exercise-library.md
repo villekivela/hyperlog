@@ -2,7 +2,7 @@
 
 Settings → Exercise library, the exercise editor, and the exercise sheet a session opens from the
 exercise name. It extends `logging-screen.md`: same margins, type scale, symbols and theme roles.
-Screens: `screens/library.png`, `exercise-editor.png` (phone, dark; library.png predates Settings as a tab); `light-` and `dark-library.png`,
+Screens: `screens/library.png`, `exercise-editor.png` (phone, dark, Ink and violet, retaken in #58; `phone-dark-library-end.png`, from the emulator at 115 % text, shows the list's 96 dp foot keeping the last row clear of New exercise); `light-` and `dark-library.png`,
 `-exercise-editor.png` (renders from `AppRenders`).
 
 ## Principles

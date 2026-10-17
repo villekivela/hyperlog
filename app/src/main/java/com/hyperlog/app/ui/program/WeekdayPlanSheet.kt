@@ -118,7 +118,7 @@ private fun DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -
     }
 }
 
-/** The seven weekdays as round toggles, Monday first, filled when on, spread to the edges (a 360 dp phone fits all seven). */
+/** The seven weekdays as round toggles (`Mo` … `Su`), Monday first, filled when on, spread to the edges (a 360 dp phone fits all seven). */
 @Composable
 internal fun WeekdayToggles(days: Set<DayOfWeek>, modifier: Modifier = Modifier, onToggle: (DayOfWeek, Boolean) -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -135,8 +135,9 @@ internal fun WeekdayToggles(days: Set<DayOfWeek>, modifier: Modifier = Modifier,
                     .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
                 contentAlignment = Alignment.Center,
             ) {
+                // Two letters, so Tuesday and Thursday (and the weekend) never read the same.
                 Text(
-                    day.getDisplayName(TextStyle.NARROW, Locale.ENGLISH),
+                    day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).take(2),
                     style = MaterialTheme.typography.labelLarge,
                     color = if (on) cs.onPrimary else cs.onSurfaceVariant,
                 )

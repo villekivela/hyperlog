@@ -139,4 +139,7 @@ class TodayRenders {
     }) { Today() }
 
     @Test fun noTrainingDays() = render("today-calendar-no-training-days") { Today(plan = WeekdayPlan.None) }
+
+    /** Week 12's Day B, a deload day, today: the Deload tag under its name. */
+    @Test fun deload() = render("today-calendar-deload") { Today(Position(12, 1)) }
 }

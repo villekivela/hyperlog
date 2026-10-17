@@ -194,6 +194,26 @@ class BackupsTest {
     }
 
     @Test
+    fun theLastExportIsKeptForSettingsToShow() = runTest {
+        val backups = Backups(freshInstall(), clock = { now })
+        assertEquals(null, backups.lastExport.first())
+        backups.recordExport(now)
+        assertEquals(now, backups.lastExport.first())
+    }
+
+    @Test
+    fun aBackupHoldsTheExportBeforeItAndARestoreShowsThatOne() = runTest {
+        val phone = Backups(usedPhone(), clock = { now })
+        phone.recordExport(now - 86_400_000)
+        // The second export's file is made before its time is recorded.
+        val file = phone.export()
+        phone.recordExport(now)
+        val other = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(other, clock = { now }).restore(file))
+        assertEquals(now - 86_400_000, Backups(other, clock = { now }).lastExport.first())
+    }
+
+    @Test
     fun theFileSaysWhatItIs() = runTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])

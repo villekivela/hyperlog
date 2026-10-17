@@ -20,6 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import com.hyperlog.app.gym.EquipmentItem
 
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w410dp-h914dp")
@@ -88,6 +89,25 @@ class GymScreenTest {
         }
         compose.onNodeWithText("Add gym").assertHasClickAction()
         compose.onNodeWithText("Import gym").assertHasClickAction()
+    }
+
+    @Test
+    fun theGymsListSaysWhatEachGymHolds() {
+        // Every gym has its dumbbells, plates and pin plates; its items are machines and cable stations.
+        val press = EquipmentItem(1, 1, "Shoulder Press", LadderSpec.DefaultPinStack)
+        val station = EquipmentItem(2, 1, "Cable station", LadderSpec.DefaultPinStack, cableStation = true)
+        compose.setContent {
+            HyperlogTheme {
+                GymsScreen(
+                    listOf(Gym(1, "Kalliokoski", listOf(press)), Gym(2, "Hotel", emptyList()), Gym(3, "Central", listOf(press, station))), bars = emptyMap(),
+                    onAddGym = {}, onOpenGym = {}, onBar = { _, _ -> }, onBack = {},
+                )
+            }
+        }
+        compose.onNodeWithText("1 machine · dumbbells and plates").assertExists()
+        compose.onNodeWithText("Dumbbells and plates").assertExists()
+        // A cable station isn't a machine (GLOSSARY, Equipment item).
+        compose.onNodeWithText("1 machine, 1 cable station · dumbbells and plates").assertExists()
     }
 
     @Test

@@ -4,6 +4,12 @@ import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelected
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -22,10 +28,13 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TestPrograms
 import com.hyperlog.app.ui.program.ProgramStore
 import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitGone
+import com.hyperlog.app.waitForDescription
 import com.hyperlog.app.week.WeekdayPlan
 import com.hyperlog.app.week.WeekdayPlans
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -36,6 +45,10 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.abs
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import com.hyperlog.app.data.SessionEntity
 
 /** Today around a calendar of done and planned sessions (SPEC, Today). */
 @RunWith(RobolectricTestRunner::class)
@@ -67,6 +80,12 @@ class TodayCalendarTest {
     /** The calendar's cell for [date], once it shows. */
     private fun cell(date: LocalDate, state: String = "") =
         hasContentDescription(short(date) + state, substring = true)
+
+    /** A finished ad-hoc session on [date], an hour long. */
+    private fun adHocOn(date: LocalDate, hour: Int = 18) = runBlocking {
+        val at = date.atTime(hour, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        HyperlogDatabase.get(app).sessions().insertSession(SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
+    }
 
     /** Swipes the calendar to [date]'s week. */
     private fun show(date: LocalDate) {
@@ -124,7 +143,8 @@ class TodayCalendarTest {
         compose.await(cell(today, ", planned Day A"))
         show(today.plusDays(1))
         compose.onNode(cell(today.plusDays(1), ", planned")).assertDoesNotExist()
-        compose.click("Set your training days")
+        // The words, or the pencil alone when the month needs the room (CalendarHeadTest).
+        compose.onNode(hasText("Set your training days").or(hasContentDescription("Set your training days"))).performClick()
         compose.waitFor("Training days")
         compose.waitFor("Done")
     }
@@ -137,8 +157,14 @@ class TodayCalendarTest {
         compose.await(cell(today, ", done Day A"))
         // With no training days, the next day goes on tomorrow.
         val tomorrow = today.plusDays(1)
+        // What's next comes first, over what was done.
+        val next = compose.onNodeWithText("Next: Day B on ${short(tomorrow)}").fetchSemanticsNode().boundsInRoot
+        val doneCard = compose.onNodeWithText("Done · ${short(today)}", substring = true).fetchSemanticsNode().boundsInRoot
+        assertTrue("The Next link should sit above the done card", next.bottom <= doneCard.top)
         compose.click("Next: Day B on ${short(tomorrow)}")
-        compose.waitFor("Next · ${short(tomorrow)} · Week 1 · Main")
+        // On another date the head names the date and the week, as a planned day's does; the
+        // block's name would wrap it onto a second line on the phone.
+        compose.waitFor("Next · ${short(tomorrow)} · Week 1")
         compose.onNodeWithText("Leg Extension").assertIsDisplayed()
         compose.onNodeWithText("Start session").assertIsDisplayed()
         compose.onNode(hasTestTag(TodayButtonTag)).performClick()
@@ -209,5 +235,90 @@ class TodayCalendarTest {
         compose.onNode(cell(tomorrow)).performClick()
         compose.waitFor("Planned · ${short(tomorrow)} · Week 1")
         compose.onNode(hasTestTag(HeroCardTag)).assertDoesNotExist()
+    }
+
+    @Test
+    fun backFromADoneDaysSessionReturnsToThatDayAndWeek() {
+        val lastWeek = today.minusDays(8)
+        adHocOn(lastWeek)
+        importProgram()
+        show(lastWeek)
+        compose.onNode(cell(lastWeek)).performClick()
+        compose.click("Open session")
+        compose.waitForDescription("Back")
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.await(cell(lastWeek, ", done").and(isSelected()))
+        compose.waitFor("Done · ${short(lastWeek)}", substring = true)
+    }
+
+    @Test
+    fun pagingTheStripSelectsTheSameWeekdayInTheWeekShown() {
+        importProgram()
+        compose.onNode(hasTestTag(CalendarTag)).performTouchInput { swipeLeft() }
+        compose.await(cell(today.plusWeeks(1)).and(isSelected()))
+        compose.onNode(hasTestTag(CalendarTag)).performTouchInput { swipeRight() }
+        compose.onNode(hasTestTag(CalendarTag)).performTouchInput { swipeRight() }
+        compose.await(cell(today.minusWeeks(1)).and(isSelected()))
+    }
+
+    @Test
+    fun pastTheProgramsLastDayNothingIsPlannedAndTheLastDaySaysSo() {
+        trainingDays(DayOfWeek.MONDAY)
+        importProgram()
+        // Four days left, on Mondays: the last is three Mondays after the first.
+        val lastMonday = generateSequence(today.plusDays(1)) { it.plusDays(1) }.first { it.dayOfWeek == DayOfWeek.MONDAY }.plusWeeks(2)
+        show(lastMonday)
+        compose.onNode(cell(lastMonday)).performClick()
+        compose.waitFor("Last day · ${short(lastMonday)} · Week 2")
+        val after = lastMonday.plusDays(1)
+        compose.onNode(cell(after)).performClick()
+        compose.waitFor("Nothing planned")
+        compose.click("Last planned: Day B on ${short(lastMonday)}")
+        compose.waitFor("Last day · ${short(lastMonday)} · Week 2")
+    }
+
+    @Test
+    fun withNoTrainingDaysLaterDatesSayTheProgramGoesOnUndated() {
+        importProgram()
+        val later = today.plusDays(2)
+        show(later)
+        compose.onNode(cell(later)).performClick()
+        compose.waitFor("Not planned yet")
+        compose.onNodeWithText("Nothing planned").assertDoesNotExist()
+        compose.onNodeWithText("Next: Day A on ${short(today)}").assertIsDisplayed()
+        // The card's own button, after the header's.
+        compose.onAllNodes(hasText("Set your training days").and(hasClickAction())).onLast().performClick()
+        compose.waitFor("Training days")
+    }
+
+    @Test
+    fun backFromADoneDaysSessionKeepsWhereTheDayWasScrolled() {
+        val lastWeek = today.minusDays(8)
+        (8..11).forEach { adHocOn(lastWeek, hour = it) }
+        importProgram()
+        show(lastWeek)
+        compose.onNode(cell(lastWeek)).performClick()
+        compose.waitFor("Open session")
+        compose.onNode(hasTestTag(TodayDayListTag)).performScrollToIndex(7)
+        compose.waitForIdle()
+        val open = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().last()
+        val top = open.boundsInRoot.top
+        compose.onAllNodesWithText("Open session").filter(hasAnyAncestor(hasTestTag(TodayDayListTag))).onLast().performClick()
+        compose.waitForDescription("Back")
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.await(cell(lastWeek, ", done").and(isSelected()))
+        compose.waitForIdle()
+        val tops = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().map { it.boundsInRoot.top }
+        assertTrue("The day opened at the top again: $tops, was $top", tops.any { abs(it - top) < 2f })
+    }
+
+    @Test
+    fun theHeadNamesTheProgramWeekOfTheWeekShown() {
+        importProgram()
+        // Today is week 1's Day A, planned: this calendar week is program week 1.
+        compose.waitFor("· Week 1", substring = true)
+        // With no training days nothing else is dated: next week is just its month.
+        show(today.plusWeeks(1))
+        compose.waitGone("· Week", substring = true)
     }
 }

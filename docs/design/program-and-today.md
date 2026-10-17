@@ -30,7 +30,8 @@ screen (#40)".
 ## Principles
 
 1. **One next thing.** Today names the next day and offers Start; the rest of the program is a tap
-   away on Program. The program runs as a sequence, so there is no calendar.
+   away on Program. Since #53 a calendar of done and planned days sits above it, its dates an
+   estimate of the sequence.
 2. **The plan reads like the table it becomes.** Today's slot lines, the session list and the
    prescription sheet all write sets the same way: `1 × 4–6 [1] · 2 × 6–8 [1]`.
 3. **Structure is the hierarchy.** On Program the block is the unit: its card, its weeks as chips,
@@ -247,6 +248,24 @@ supporting "From an old Hyperlog backup, no history", then "42 exercises · tap 
 - Finishing a session of a program day moves the position to the next day. A session with nothing
   logged is discarded and the day stays next. Finishing a resumed session again doesn't move it
   twice.
+- **The owner's answers (#58, 2026-10-17).** The next program day stays on today even on a day
+  that isn't a training day; training days only place the later dates (issue 2, decided). Deload
+  days carry a `Deload` tag under the name on the hero and planned cards: the program's spa
+  symbol and the word, labelMedium in onTertiaryContainer, in a 24 dp tertiaryContainer pill with
+  8 dp sides, 8 dp under the title (the program doesn't mark a test, so none is tagged). The head
+  names the program week (`programWeekOf`: the week of the first planned day in the calendar week,
+  else of its first program session done): `October 2026 · Week 7`. When it doesn't fit, the
+  pencil's words go, then the month abbreviates (`Sep 2026 · Week 12` beside Today and the pencil
+  at 115 % on the phone's 426 dp), then the week goes; a cut month is the last resort, since the
+  month anchors the strip and the week is also on the cards. Every connected group picks in
+  primaryContainer (in dark, the others in a `surfaceContainerLowest` well for 3:1).
+- **Code review (f4d74f7).** TalkBack names a day's sessions `Day C`, `workout` or `ad-hoc
+  session` from resources (a workout is never ad hoc, GLOSSARY). The floating Start workout waits
+  for the sessions too. Today's saved state lives in the host's `SaveableStateHolder`, and each
+  day's list keeps its scroll under a key of its day and kind (done, planned, rest), with the
+  workout list keyed by its workout, since a restored value ignores `rememberSaveable`'s inputs.
+  The header's probe measures with the text button's own padding and least width, and places
+  relative for right-to-left. A day with nothing is a `RestMode`: Rest, AfterProgram or Undated.
 - Rest after a planned set is that set's rest from the program.
 
 ## Program screen (#40)
@@ -351,27 +370,32 @@ the future.
   titleLarge (`October 2026`, `Oct – Nov 2026` across a month), **Today** (a text button) once the
   strip or the selection is off today, and the `edit` pencil, which opens the Training days sheet.
   With no training days the pencil reads `✎ Set your training days`. It is the way to the sheet
-  without a program, which #52 left open.
+  without a program, which #52 left open. **The month is never cut short** (#58): when the words
+  don't fit beside it, the pencil shows alone, read out as `Set your training days`
+  (`CalendarHead` measures the month and the prompt; `CalendarHeadTest` holds it at 115 % text).
 - **The strip** is a HorizontalPager a week a page, from the week of the first finished session to
   the week of the last planned day, four weeks each way at least. A day is its narrow weekday
   letter (primary on today), its date in `figureMedium` in a 40 dp circle (primaryContainer when selected,
-  a 2 dp primary ring on today otherwise) and a 28 × 20 dp marker: secondaryContainer with the
+  a 2 dp primary ring on today otherwise) and a 28 × 20 dp marker: primary with the
   day's letter in labelMedium Bold when done (`check` for an ad-hoc session or a workout), a 1.5 dp
   primary outline with the letter when planned. Past days without a session have their dates at
   70 % onSurfaceVariant. Each day reads as one tab to TalkBack: `Sat 17 Oct, planned Day A`.
 - **The hero** (the next day to train, today or later; only a plan while a session runs) is a 32 dp
-  primaryContainer card, its text on the 24 dp edge: the
+  primaryContainer card, its text on the 24 dp edge (#58: see "Tester fixes" for markers, Next
+  and the program's end): the
   letter in a 64 dp `Cookie9Sided` filled onPrimaryContainer, the head (`Week 7 · Intensify`,
-  `Next · Mon 19 Oct · Week 7 · Intensify` on another date) at 80 % over the name after its letter
+  `Next · Mon 19 Oct · Week 7` on another date, as a planned card names it) at 80 % over the name after its letter
   in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
   **Start session** button in onPrimaryContainer across the card. It replaces the floating Start.
 - **Done** cards and **planned** cards are the same layout on the card tone: the letter's cookie
-  filled secondaryContainer (done) or outlined in primary (planned), the head in primary (`Done ·
+  filled primary with its letter in onPrimary (done) or outlined in primary (planned), the head in primary (`Done ·
   Sat 17 Oct · Kalliokoski`, `Planned · Wed 21 Oct · Week 7`). A done card's stats are the minutes
   taken and its button a tonal **Open session**; a planned card has no button. A done day lists
   its exercises with the sets as logged, filled RIR chips; on today `Next: Day B on Mon 19 Oct ›`
   and Ad-hoc session follow.
 - **Rest day**: a card with the date in primary over `Rest day` and `Next: Day A on Sat 17 Oct ›`.
+  The link's 48 dp row carries its own space under the words, so the card's bottom padding is
+  8 dp with it (20 dp without), and the words sit as far from the bottom as the date from the top.
 - **Slot rows** centre the label (`1`, `5a`) on the row, beside the name and the sets, where it
   used to sit on the name's baseline.
 - The update and time-off banners sit between the strip and the day while today is selected. A
@@ -382,10 +406,100 @@ Screens (Robolectric renders from `TodayRenders`, `RENDERS=<dir>`, `DARK=1` for 
 `light-` and `dark-`): `today-calendar-hero` (week 7 Day A today, week 6 done), `-done` (Day A
 finished today: the card, the logged sets, Next), `-next` (the hero on Mon 19 Oct, from Next),
 `-planned` (Wed 21 Oct, outlined), `-rest`, `-past-done` (Wed 14 Oct), `-last-week` (swiped
-back to an ad-hoc session: the tick), `-no-training-days` (only today marked; the header asks).
+back to an ad-hoc session: the tick), `-no-training-days` (only today marked; the header asks),
+`-deload` (week 12's Day B today: the Deload tag; the owner's imported copy of the program has no
+deload mark, so the emulator's data shows none).
 The older Today renders (`today-starter`, `-update-banner`, `-day`, `-time-off`, `-workout*`) are
 rendered again with the calendar on top.
 
-**Open:** the designer's and tester's passes on the phone, and checking each state on the phone
-in light and dark. The phone wasn't connected for #53, so these renders are the only check so far.
+### Phone pass (#58)
+
+Checked on the phone (dark, the owner's data, system text at 115 %) in Ink and violet, two rounds.
+The renders run at 100 % text on a 412 dp screen; the phone is 426 dp at 115 %, which is where
+they parted.
+
+- **The month went to `Octob…`** off today with no training days: `Today` and the
+  `✎ Set your training days` words took the row. Now the words drop to the pencil when they don't
+  fit, and the month keeps its whole name.
+- **The hero's head wrapped to two lines** on another date (`Next · Sun 18 Oct · Week 7 ·` /
+  `Intensify`), pushing the name down. It now drops the block, as the planned card does; the block
+  shows on today's hero and on Program.
+- **The rest card sat low**: 20 dp over the date, about 34 dp under the Next link. Balanced (above).
+- **The sheet's line was out of date**: it said only that time off counts from the days. It now
+  leads with what #53 made them do: `Today plans your next sessions on these days and counts time
+  off from them.`
+- Held up as built: the strip (circles, markers, the today ring), the hero's cookie and Start, the
+  done and planned cards, the sticky calendar over scrolling cards, Program's training-days row.
+
+### Tester fixes (#58, `today-test-report.md`)
+
+- **The day picked survives Open session.** Today's selection lives in the host (`todayDay` in
+  `MainActivity`, beside `programView`), so Back from History lands on the same day and week. The
+  navigation bar's Today starts again on today.
+- **The card follows the strip.** When a page settles on another week, the same weekday there is
+  picked (`snapshotFlow { pager.settledPage }`). The pages are whole weeks, so nothing to clamp.
+- **What's next comes first after training.** On today with sessions done, `Next: Day B on …`
+  sits between the strip (and any banner) and the first done card; Ad-hoc session stays at the
+  foot.
+- **Every session of a day shows on its marker.** `CA` for two program days in order, `A+` for
+  more or for a program day beside an ad-hoc session, a tick for ad hoc alone; the pill grows
+  past 28 dp to fit two letters. TalkBack reads them all (`done Day C, Day A`).
+- **The program's end is marked.** With training days the last planned date reads `Last day ·
+  Wed 25 Nov · Week 12` in Planned's place (one line, as the hero's head). Any date after the last
+  planned one reads `Nothing planned` with `Last planned: Day C on Wed 25 Nov ›`; with no training
+  days that covers every date after the next day, which `Rest day` used to claim.
+- **The weekday toggles say `Mo Tu We Th Fr Sa Su`**, so Tuesday and Thursday never look alike.
+- **Re-test (6fc835b).** With no training days a later date is `Not planned yet` (the next day's
+  link and **✎ Set your training days**, both text buttons on the card), not `Nothing planned`,
+  which now means past the program's end. Today composes nothing under the bar until the sessions
+  are read (`sessions` null), so a cold start goes from blank to the real day with no false hero.
+  The picked day's scroll lives in the host beside its date (`rememberSaveable(todayDay)` of a
+  `LazyListState`), so Back from a session returns to the same card; another day starts at its
+  top. Back from another tab keeps the day picked, like any Back; the bar's Today starts on today.
+  The header's width probe is now a plain replica of the buttons, so nothing tappable is composed
+  twice.
+- **The owner's answers (#58, 2026-10-17).** The next program day stays on today even on a day
+  that isn't a training day; training days only place the later dates (issue 2, decided). Deload
+  days carry a `Deload` tag under the name on the hero and planned cards: the program's spa
+  symbol and the word, labelMedium in onTertiaryContainer, in a 24 dp tertiaryContainer pill with
+  8 dp sides, 8 dp under the title (the program doesn't mark a test, so none is tagged). The head
+  names the program week (`programWeekOf`: the week of the first planned day in the calendar week,
+  else of its first program session done): `October 2026 · Week 7`. When it doesn't fit, the
+  pencil's words go, then the month abbreviates (`Sep 2026 · Week 12` beside Today and the pencil
+  at 115 % on the phone's 426 dp), then the week goes; a cut month is the last resort, since the
+  month anchors the strip and the week is also on the cards. Every connected group picks in
+  primaryContainer (in dark, the others in a `surfaceContainerLowest` well for 3:1).
+- **Code review (f4d74f7).** TalkBack names a day's sessions `Day C`, `workout` or `ad-hoc
+  session` from resources (a workout is never ad hoc, GLOSSARY). The floating Start workout waits
+  for the sessions too. Today's saved state lives in the host's `SaveableStateHolder`, and each
+  day's list keeps its scroll under a key of its day and kind (done, planned, rest), with the
+  workout list keyed by its workout, since a restored value ignores `rememberSaveable`'s inputs.
+  The header's probe measures with the text button's own padding and least width, and places
+  relative for right-to-left. A day with nothing is a `RestMode`: Rest, AfterProgram or Undated.
+- **Done reads in light too.** Done markers and the done card's cookie were secondaryContainer,
+  `#E6DEFF` on the `#F0ECF7` screen (1.1:1, gone on the emulator in light). They are now filled
+  primary with the letter in onPrimary: the planned day's outline filled in, so done and planned
+  read as one pair in both modes (`doneFill`, `AccentContrastTest`).
+- **On the hero and other accent cards**, a filled button or the picked choice is
+  onPrimaryContainer (white) with violet words, like Start; see SPEC, theme. The selected choice
+  colours elsewhere (toggle buttons primary, filter chips primaryContainer) are one violet in light
+  and differ only in dark, where Material's own roles differ too (toggle buttons primary, chips
+  secondaryContainer, which Hyperlog already moved to primaryContainer): left to the owner.
+- Kept: Program's Next line has no date (issue 9). Program's "No dates" principle (#40) stands,
+  and Program's training-days row sits right under it with Today one tap away.
+
+Phone screens, each in `phone-dark-` and `phone-light-`: `today-done` (two sessions today,
+Mon Wed Fri set: Next on Mon 19 Oct), `-today-no-training-days` (today, the header asking), `-today-next-no-training-days` (the hero on
+tomorrow: the header off today with Today and the pencil alone), `-today-hero` (Mon Wed Fri: the
+hero on Mon 19 Oct), `-today-planned` (Wed 21 Oct), `-today-rest` (Tue 20 Oct),
+`-training-days-sheet` (from the pencil, Mon Wed Fri on), `-program-training-days` (the row with
+Mon Wed Fri), `-program-no-training-days`, `-program-training-days-sheet` (from Program's row,
+none on). After the tester's fixes these came from the emulator (AVD `hyperlog`, the phone's
+size and density, text at 115 %): `phone-dark-today-done`, `-today-no-training-days`,
+`-today-hero`, `-today-planned`, `-today-rest`, `-today-not-planned-yet`, `-today-last-day`,
+`-today-after-program`, `-today-past-done`, `-past-session`, `-training-days-sheet`,
+`-program-training-days`, `-program-training-days-sheet`, and every `phone-light-*` shot.
+`phone-{dark,light}-rir-session` and `-rir-sheet` (the session's RIR chips and the prescription
+sheet, Day B's Barbell RDL) came from a session started on the emulator's copy of the data, which
+was then put back from a saved database.
 

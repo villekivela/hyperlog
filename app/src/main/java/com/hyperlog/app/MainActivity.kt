@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
@@ -227,6 +228,7 @@ private fun App(
         uri?.let(startingWeightsModel::import)
     }
     val backup by backupModel.state.collectAsStateWithLifecycle()
+    val lastExport by backupModel.lastExport.collectAsStateWithLifecycle()
     val exportBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let(backupModel::export)
     }
@@ -250,6 +252,10 @@ private fun App(
     var bodyweightOpen by rememberSaveable { mutableStateOf(false) }
     // What Program shows, kept while a session opened from it is looked at in History or a review is up.
     var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
+    // The day picked on Today's calendar (epoch day; null: today), kept while a session opened from it is looked at.
+    var todayDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    // Today's own saved state (each day's scroll), kept while another screen is up.
+    val todayState = rememberSaveableStateHolder()
     // A session opened from Program or Today goes back there.
     var sessionFrom by rememberSaveable { mutableStateOf<Screen?>(null) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
@@ -354,6 +360,8 @@ private fun App(
                 }
                 // Chosen from the bar, Program opens on where you are.
                 if (tab == Screen.Program && screen != Screen.Program) programView = ProgramView()
+                // And Today on today.
+                if (tab == Screen.Today && screen != Screen.Today) todayDay = null
                 screen = tab
             }
         },
@@ -545,6 +553,7 @@ private fun App(
             startingWeights = startingWeights,
             onImportStartingWeights = { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             backup = backup,
+            lastExport = lastExport,
             onExport = { exportBackup.launch(backupModel.fileName()) },
             onRestore = { pickRestore.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             onConfirmRestore = backupModel::restore,
@@ -555,7 +564,7 @@ private fun App(
             checkedNow = checkedNow,
             version = BuildConfig.VERSION_NAME,
         )
-        else -> TodayScreen(
+        else -> todayState.SaveableStateProvider("today") { TodayScreen(
             sessionRunning = running != null,
             onResume = { left = false },
             onStart = { gym, adHoc, swaps ->
@@ -579,7 +588,7 @@ private fun App(
             },
             weekdayPlan = weekdayPlan,
             onWeekdayPlan = programModel::setWeekdayPlan,
-            sessions = pastSessions.orEmpty(),
+            sessions = pastSessions,
             onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Today; screen = Screen.History },
             update = update,
             onUpdate = { updateModel.install(context) },
@@ -595,7 +604,9 @@ private fun App(
             onUndoRemoveWorkout = programModel::undoRemoveWorkout,
             showProgramDay = showProgramDay,
             onProgramDayShown = { showProgramDay = false },
-        )
+            selectedDay = todayDay,
+            onSelectDay = { todayDay = it },
+        ) }
     }
     }
     }

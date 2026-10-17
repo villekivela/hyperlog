@@ -5,6 +5,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonColors
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -43,6 +44,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ButtonColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.geometry.Size
@@ -289,6 +292,8 @@ fun ConnectedChoice(
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     /** Widths follow the labels, so one long name (`Deload + test`) keeps its words beside short ones. */
     fitLabels: Boolean = false,
+    /** It sits on the accent card (primaryContainer): the picked one in white (choiceColors). */
+    onAccent: Boolean = false,
 ) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         labels.forEachIndexed { i, label ->
@@ -302,11 +307,51 @@ fun ConnectedChoice(
                     labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-                colors = ToggleButtonDefaults.colors(containerColor = color),
+                colors = connectedChoiceColors(color, onAccent),
                 contentPadding = contentPadding,
             ) { Text(label, maxLines = 1) }
         }
     }
+}
+
+/** A connected choice's colours: the checked button's fill and words, the others' fill and words. */
+data class ChoiceColors(val checked: Color, val onChecked: Color, val unchecked: Color, val onUnchecked: Color)
+
+/**
+ * The colours of a connected choice on [card], or on the accent card when [onAccent]. On a
+ * neutral card the picked one is filled primaryContainer, the deep violet of the selected day,
+ * tab and Start (the owner's call, #58). On the accent card (primaryContainer) that fill would
+ * vanish, so the picked one is filled onPrimaryContainer with the card's violet for its words, as
+ * the hero's Start, and the others sit in a shaded well.
+ */
+fun choiceColors(scheme: ColorScheme, card: Color, onAccent: Boolean): ChoiceColors = with(scheme) {
+    if (onAccent) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
+    // In dark the deep violet is only 2.9:1 on a card, so the others sit in a well a tone below
+    // the screen (3.4:1 to the picked one); in light they're the white card.
+    else ChoiceColors(primaryContainer, onPrimaryContainer, if (surface.luminance() < 0.5f) surfaceContainerLowest else card, onSurfaceVariant)
+}
+
+/** [choiceColors] as a toggle button's colours, for every connected group. */
+@Composable
+fun connectedChoiceColors(card: Color = Tones.card, onAccent: Boolean = false): ToggleButtonColors =
+    choiceColors(MaterialTheme.colorScheme, card, onAccent).let {
+        ToggleButtonDefaults.colors(containerColor = it.unchecked, contentColor = it.onUnchecked, checkedContainerColor = it.checked, checkedContentColor = it.onChecked)
+    }
+
+/**
+ * A filled button's fill and words on the accent card (primaryContainer): onPrimaryContainer with
+ * the card's violet for words, as the hero's Start. A primary button vanishes there in light,
+ * where primary and primaryContainer are one violet.
+ */
+fun accentButton(scheme: ColorScheme): AccentButton = AccentButton(scheme.onPrimaryContainer, scheme.primaryContainer)
+
+/** A filled button's [fill] and [words] on the accent card. */
+data class AccentButton(val fill: Color, val words: Color)
+
+/** [accentButton] as a filled button's colours. */
+@Composable
+fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme).let {
+    ButtonDefaults.buttonColors(containerColor = it.fill, contentColor = it.words)
 }
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */

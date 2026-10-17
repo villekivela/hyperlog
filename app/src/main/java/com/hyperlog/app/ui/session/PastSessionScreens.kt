@@ -25,6 +25,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -155,13 +157,21 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(interFigures(session.title ?: stringResource(R.string.past_ad_hoc)), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                // The day's name is the screen's headline below, where it can wrap to two lines.
+                title = {},
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
             )
         },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding)) {
             item {
+                Text(
+                    interFigures(session.title ?: stringResource(R.string.past_ad_hoc)),
+                    Modifier.padding(horizontal = Margin).padding(bottom = 8.dp).semantics { heading() },
+                    style = MaterialTheme.typography.headlineSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Text(
                     listOfNotNull(
                         day(session.startedAt),

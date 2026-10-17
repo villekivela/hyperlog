@@ -34,6 +34,7 @@ class SettingsScreenTest {
     private fun show(
         status: StartingWeightsStatus = StartingWeightsStatus(count = 0, invalid = false),
         backup: BackupState = BackupState.Idle,
+        lastExport: Long? = null,
         onImport: () -> Unit = {},
     ) = compose.setContent {
         HyperlogTheme {
@@ -41,6 +42,7 @@ class SettingsScreenTest {
                 gymCount = 0, exerciseCount = 173, onGyms = {}, onLibrary = {}, onBack = {},
                 startingWeights = status, onImportStartingWeights = onImport,
                 backup = backup,
+                lastExport = lastExport,
                 onExport = { exported++ },
                 onRestore = { picked++ },
                 onConfirmRestore = { confirmed++ },
@@ -97,6 +99,12 @@ class SettingsScreenTest {
         compose.onNodeWithText("Everything on this phone, in one file").assertIsDisplayed()
         compose.onNodeWithText("Export backup").performClick()
         assertEquals(1, exported)
+    }
+
+    @Test
+    fun theLastExportStaysOnTheRowAfterwards() {
+        show(lastExport = at("2026-10-13T14:05"))
+        compose.onNodeWithText("Saved Tue 13 Oct, 14:05").assertIsDisplayed()
     }
 
     @Test

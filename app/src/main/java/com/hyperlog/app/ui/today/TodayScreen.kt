@@ -80,10 +80,18 @@ import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
 import com.hyperlog.app.week.PlannedDates
 import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.foundation.pager.HorizontalPager
+import java.time.DayOfWeek
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
@@ -96,7 +104,7 @@ import java.util.Locale
  * runs, the way back in. Starting asks for the gym, with today's usual gym picked; with no gyms
  * set up it starts straight away (docs/design/program-and-today.md).
  */
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TodayScreen(
     sessionRunning: Boolean,
@@ -127,8 +135,8 @@ fun TodayScreen(
      */
     weekdayPlan: WeekdayPlan = WeekdayPlan.None,
     onWeekdayPlan: (WeekdayPlan) -> Unit = {},
-    /** Every finished session, which the calendar marks as done. */
-    sessions: List<PastSessionItem> = emptyList(),
+    /** Every finished session, which the calendar marks as done; null until they've been read. */
+    sessions: List<PastSessionItem>? = emptyList(),
     /** Opens a finished session in History. */
     onOpenSession: (Long) -> Unit = {},
     /** A newer release to offer, above the day; null for none. */
@@ -149,10 +157,16 @@ fun TodayScreen(
     onUndoRemoveWorkout: () -> Unit = {},
     /** A Change was just accepted: bring the program day into view under the workout, then [onProgramDayShown]. */
     showProgramDay: Boolean = false,
+    /**
+     * The day picked on the calendar (epoch day; null: today), kept by the host so Back from a
+     * session opened here returns to it. Without [onSelectDay] Today keeps its own.
+     */
+    selectedDay: Long? = null,
+    onSelectDay: ((Long?) -> Unit)? = null,
     onProgramDayShown: () -> Unit = {},
 ) {
-    val snackbars = remember { androidx.compose.material3.SnackbarHostState() }
-    val snackScope = androidx.compose.runtime.rememberCoroutineScope()
+    val snackbars = remember { SnackbarHostState() }
+    val snackScope = rememberCoroutineScope()
     val removedText = stringResource(R.string.today_workout_removed)
     val undoText = stringResource(R.string.today_workout_undo)
     /** The kind of session the gym sheet is open for: null when closed. */
@@ -202,8 +216,8 @@ fun TodayScreen(
         // At once, with Undo for the long duration: a lifter looks up before tapping.
         snackScope.launch {
             snackbars.currentSnackbarData?.dismiss()
-            val result = snackbars.showSnackbar(removedText, actionLabel = undoText, duration = androidx.compose.material3.SnackbarDuration.Long)
-            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) onUndoRemoveWorkout()
+            val result = snackbars.showSnackbar(removedText, actionLabel = undoText, duration = SnackbarDuration.Long)
+            if (result == SnackbarResult.ActionPerformed) onUndoRemoveWorkout()
         }
     }
     // Time off: more than a week off (by the weekday plan if there is one), with no Change made for today yet.
@@ -216,29 +230,63 @@ fun TodayScreen(
     // Named for what it starts, since the program day's card sits beside it with its own Start.
     val fabLabel = if (workoutFirst) stringResource(R.string.today_start_workout) else startLabel
 
+    // Until the finished sessions are read Today holds its day: today drawn untrained (the next day's
+    // hero and Start) would flash on every cold start, then jump.
+    val loaded = sessions != null
+    val finished = sessions.orEmpty()
     // The calendar: done sessions by date, and the program's coming days put on dates.
-    val done = remember(sessions) { sessions.groupBy { it.date() }.mapValues { (_, s) -> s.sortedBy { it.startedAt } } }
+    val done = remember(finished) { finished.groupBy { it.date() }.mapValues { (_, s) -> s.sortedBy { it.startedAt } } }
     val trainedToday = done[today].orEmpty().isNotEmpty()
     val planned = remember(program, weekdayPlan.days, trainedToday) { PlannedDates.of(program, weekdayPlan.days, trainedToday) }
     val thisWeek = weekOf(today)
     // Back to the week of the first finished session and on to the last planned day's, at least four weeks each way.
-    val firstWeek = minOf(sessions.minOfOrNull { weekOf(it.date()) } ?: thisWeek, thisWeek.minusWeeks(4))
+    val firstWeek = minOf(finished.minOfOrNull { weekOf(it.date()) } ?: thisWeek, thisWeek.minusWeeks(4))
     val lastWeek = maxOf(planned.keys.maxOrNull()?.let(::weekOf) ?: thisWeek, thisWeek.plusWeeks(4))
     val todayPage = ChronoUnit.WEEKS.between(firstWeek, thisWeek).toInt()
     val weeks by rememberUpdatedState(ChronoUnit.WEEKS.between(firstWeek, lastWeek).toInt() + 1)
-    var selectedDay by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
-    val selected = LocalDate.ofEpochDay(selectedDay)
+    var ownDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    val pickedDay = if (onSelectDay != null) selectedDay else ownDay
+    val selected = pickedDay?.let(LocalDate::ofEpochDay) ?: today
+    val setSelected: (LocalDate) -> Unit = { date ->
+        val day = date.toEpochDay().takeIf { date != today }
+        if (onSelectDay != null) onSelectDay(day) else ownDay = day
+    }
     // Sessions read in later reach further back: the pages start again on the selected day's week.
     val pager = remember(firstWeek) { PagerState(ChronoUnit.WEEKS.between(firstWeek, weekOf(selected)).toInt()) { weeks } }
     val scope = rememberCoroutineScope()
     val select: (LocalDate) -> Unit = { date ->
-        selectedDay = date.toEpochDay()
+        setSelected(date)
         val page = ChronoUnit.WEEKS.between(firstWeek, weekOf(date)).toInt()
         if (page != pager.currentPage) scope.launch { pager.animateScrollToPage(page) }
+    }
+    // Paged to another week, the same weekday there is picked, so the card is always of the week
+    // shown. The pages are whole weeks, so that day is always on the calendar.
+    val shownSelected by rememberUpdatedState(selected)
+    val shownSetSelected by rememberUpdatedState(setSelected)
+    LaunchedEffect(pager, firstWeek) {
+        snapshotFlow { pager.settledPage }.collect { page ->
+            val monday = firstWeek.plusWeeks(page.toLong())
+            if (weekOf(shownSelected) != monday) shownSetSelected(monday.plusDays(shownSelected.dayOfWeek.value - 1L))
+        }
     }
     val isToday = selected == today
     // A running session keeps today as it was, whatever else was done or planned for it.
     val runningToday = isToday && sessionRunning
+    val doneOn = done[selected].orEmpty()
+    val plannedOn = planned[selected]
+    // Each day keeps its scroll for each kind of list it shows, saved while Today is away (the
+    // host keeps Today's saved state): Back returns to the same card, and a day that turns from
+    // planned to done, or another day, opens at its top.
+    val dayKind = when {
+        !runningToday && doneOn.isNotEmpty() -> DayKind.Done
+        plannedOn != null && !runningToday -> DayKind.Planned
+        else -> DayKind.Rest
+    }
+    // A saved value comes back whatever the inputs, so the day and kind are in the key itself.
+    val dayList = rememberSaveable(selected, dayKind, saver = LazyListState.Saver, key = "day-$selected-$dayKind") { LazyListState() }
+    // How many days the program has left if every weekday were a training day: more than are
+    // planned means it goes on past the dates shown.
+    val daysLeft = remember(program, trainedToday) { PlannedDates.of(program, DayOfWeek.entries.toSet(), trainedToday).size }
     var editingWeekdayPlan by rememberSaveable { mutableStateOf(false) }
     if (editingWeekdayPlan) {
         Sheet(onDismiss = { editingWeekdayPlan = false }) {
@@ -246,7 +294,8 @@ fun TodayScreen(
         }
     }
     // A workout or a running session keeps its Start floating; the next day's Start is in its card.
-    val fab = isToday && (workoutFirst || (sessionRunning && next != null))
+    // Not before the sessions are read: nothing floats over the held day.
+    val fab = loaded && isToday && (workoutFirst || (sessionRunning && next != null))
     val bottom = if (fab) 112.dp else 24.dp
     val nextAfter = { date: LocalDate -> planned.entries.firstOrNull { it.key > date }?.toPair() }
     val banners: @Composable ColumnScope.() -> Unit = {
@@ -256,7 +305,7 @@ fun TodayScreen(
     Scaffold(
         modifier = modifier,
         containerColor = Tones.screen,
-        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbars) },
+        snackbarHost = { SnackbarHost(snackbars) },
         floatingActionButton = {
             if (fab) {
                 // The expressive medium size: the day's one action, unmistakable. With a workout today, it starts that.
@@ -268,10 +317,12 @@ fun TodayScreen(
             }
         },
     ) { padding ->
-      Column(Modifier.fillMaxSize().padding(padding)) {
+      if (loaded) Column(Modifier.fillMaxSize().padding(padding)) {
         // No title bar: the calendar is the top of the screen.
+        val shownWeek = firstWeek.plusWeeks(pager.currentPage.toLong())
         CalendarHead(
-            firstWeek.plusWeeks(pager.currentPage.toLong()),
+            shownWeek,
+            week = programWeekOf(shownWeek, planned, done),
             showToday = !isToday || pager.currentPage != todayPage,
             onToday = { select(today) },
             noWeekdayPlan = weekdayPlan.days.isEmpty(),
@@ -281,13 +332,14 @@ fun TodayScreen(
             WeekRow(firstWeek.plusWeeks(page.toLong()), today, selected, done, planned, onSelect = select)
         }
         Spacer(Modifier.height(8.dp))
-        val doneOn = done[selected].orEmpty()
-        val plannedOn = planned[selected]
         when {
             isToday && workoutFirst -> {
-                val list = androidx.compose.foundation.lazy.rememberLazyListState()
+                // Today's state is kept while away, so each workout keeps its own scroll and a new
+                // one starts at its top. A saved value comes back whatever the inputs, so the
+                // workout is in the key itself.
+                val list = rememberSaveable(workout, saver = LazyListState.Saver, key = "workout-${workout?.id}-${workout?.workout?.name}") { LazyListState() }
                 // After a Change is accepted, what it changed is the program day, under the workout.
-                androidx.compose.runtime.LaunchedEffect(showProgramDay) {
+                LaunchedEffect(showProgramDay) {
                     if (showProgramDay) {
                         if (program?.next != null) {
                             list.animateScrollToItem(1)
@@ -314,8 +366,12 @@ fun TodayScreen(
                 banners = banners,
                 isWorkout = runningWorkout,
             )
-            !runningToday && doneOn.isNotEmpty() -> LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
-                if (isToday) item { BannerColumn(banners) }
+            !runningToday && doneOn.isNotEmpty() -> LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+                if (isToday) {
+                    item { BannerColumn(banners) }
+                    // What's next comes first after training, over what was done.
+                    nextAfter(today)?.let { (date, day) -> item { NextLink(date, day, select, Modifier.padding(start = 12.dp, bottom = 8.dp)) } }
+                }
                 doneOn.forEach { session ->
                     item(key = "s${session.id}") {
                         DoneCard(session, onOpen = { onOpenSession(session.id) })
@@ -326,21 +382,19 @@ fun TodayScreen(
                     }
                     item(key = "gap${session.id}") { Spacer(Modifier.height(16.dp)) }
                 }
-                if (isToday) {
-                    nextAfter(today)?.let { (date, day) -> item { NextLink(date, day, select, Modifier.padding(start = 12.dp)) } }
-                    item { AdHocButton { start(Kind.AdHoc) } }
-                }
+                if (isToday) item { AdHocButton { start(Kind.AdHoc) } }
             }
             plannedOn != null && !runningToday -> {
                 // The next day to train, on whatever date it falls, has Start; a later one is only a
                 // plan, and so is the next one while a session runs.
                 val isNext = selected == planned.keys.first() && !sessionRunning
                 val groups = groupsOf(plannedOn)
-                LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
+                LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
                     item {
                         if (isToday) BannerColumn(banners)
                         if (isNext) HeroCard(plannedOn, date = selected.takeIf { !isToday }, onStart = { start(Kind.Day) })
-                        else PlannedCard(plannedOn, selected)
+                        // With training days the last date planned is the program's last day.
+                        else PlannedCard(plannedOn, selected, last = weekdayPlan.days.isNotEmpty() && selected == planned.keys.last())
                         Spacer(Modifier.height(16.dp))
                     }
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
@@ -376,13 +430,28 @@ fun TodayScreen(
                     }
                 }
             }
-            else -> LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
-                item { RestCard(selected, nextAfter(selected), select) }
+            else -> LazyColumn(Modifier.weight(1f).fillMaxSize(), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+                // Past the last planned day nothing is planned: it points back to that day. With no
+                // training days only the next day has a date, so a later one is the program going
+                // on undated, with the way to set them.
+                val lastPlanned = planned.entries.lastOrNull()?.takeIf { it.key < selected }?.toPair()
+                val mode = nextAfter(selected)?.let { RestMode.Rest(it) }
+                    ?: lastPlanned?.let { last ->
+                        if (weekdayPlan.days.isEmpty() && daysLeft > planned.size) RestMode.Undated(last) { editingWeekdayPlan = true }
+                        else RestMode.AfterProgram(last)
+                    }
+                    ?: RestMode.Rest(null)
+                item { RestCard(selected, mode, select) }
             }
         }
       }
     }
 }
+
+internal const val TodayDayListTag = "today-day-list"
+
+/** The kinds of list a day picked shows, each with its own scroll. */
+private enum class DayKind { Done, Planned, Rest }
 
 /** The update and time-off banners, over today's day. */
 @Composable

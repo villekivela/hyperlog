@@ -4,8 +4,11 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.data.SettingEntity
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -14,6 +17,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
+
+/** The `setting` key holding when the last export was saved. */
+private const val LAST_EXPORT = "last_export"
 
 /**
  * Manual backups (SPEC, Backups): [export] writes everything on the phone to one JSON file, and
@@ -36,6 +42,16 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
         /** A backup, but its rows are broken or don't fit together. */
         Damaged,
     }
+
+    /**
+     * When the last export was saved (epoch ms), null before the first: Settings keeps it on the
+     * Export row. A row in `setting`, written after the file is saved, so a backup holds the
+     * export before it (or none), and a restore shows that one.
+     */
+    val lastExport: Flow<Long?> = db.settings().observe(LAST_EXPORT).map { it?.toLongOrNull() }
+
+    /** Records an export saved at [at], once its file is written. */
+    suspend fun recordExport(at: Long) = db.settings().put(SettingEntity(LAST_EXPORT, at.toString()))
 
     /** Every table in [BackupFormat.Tables], read in one transaction so the file is consistent. */
     suspend fun export(): String = withContext(Dispatchers.IO) {

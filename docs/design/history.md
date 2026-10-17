@@ -3,7 +3,10 @@
 Ticket #19 brings History: the session list (taking over #15's Past sessions), each exercise's top
 sets and estimate over time, weekly sets per muscle, and the bodyweight log. It extends
 `logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Screens:
-`history-progress.png`, `history-progress-exercises.png`, `past-exercise.png` (phone, dark);
+`history-progress.png`, `history-progress-exercises.png`, `past-exercise.png` (phone, dark;
+`phone-light-*` versions and `phone-dark-past-session.png` from the emulator). A past session's
+day name is its headline (headlineSmall, two lines at most) under a top bar holding only Back,
+since #58: in the bar it was cut to `Day C — Bench volume, leg pre…` at 115 % text;
 `light-` and `dark-history.png` (renders from `AppRenders`); `light-` and
 `dark-exercise-progress.png`, an exercise's trend with its chips in one column (`TrendRenders`).
 
@@ -137,7 +140,8 @@ A goal is read against the estimate, never instead of it.
 
 ## Expressive pass
 
-Sessions | Progress is a connected button group (toggle buttons, the picked one filled) under the
+Sessions | Progress is a connected button group (toggle buttons, the picked one filled in
+primaryContainer, the others in a well in dark, `connectedChoiceColors`, as every group) under the
 top bar, in place of tabs. Section heads are titleSmall in primary. A trend's head (figure,
 status, chart, legend) is a card; its sessions follow as 52 dp segments. A past session's
 summary rows are segments; its exercise table is the logging screen's card with the Session

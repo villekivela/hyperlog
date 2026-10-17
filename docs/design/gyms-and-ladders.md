@@ -3,7 +3,16 @@
 Settings → Gyms and equipment, a gym's equipment, the ladder editor, and the two places a ladder
 shows in a session: the pad's weight strip and the weight check. It extends `logging-screen.md`
 and `exercise-library.md`: same margins, type scale, symbols and theme roles. Screenshot:
-`screens/ladder-dumbbells.png` (phone).
+`screens/ladder-dumbbells.png` (phone), `phone-light-ladder-dumbbells.png`, `phone-dark-gyms.png`,
+`phone-dark-gym.png` and their light versions (emulator, text at 115 %). Since #58 the gyms list
+says what a gym holds (`1 machine, 1 cable station · dumbbells and plates`, `Dumbbells and
+plates`): its equipment items counted as machines and cable stations (a cable station isn't a
+machine, GLOSSARY), then the rack, plates and pin plates every gym has. A gym's Plates
+row wraps (up to three lines) so every plate shows; other rows keep one supporting line. The setup
+card (**Add the equipment your program uses**, primaryContainer) picks its stack in white with
+violet words and the other choice in a shaded well, and its **Add** is white too: in light the
+primary fills matched the card's violet, so the picked stack looked unpicked and Add had no shape.
+No render covered this card, so only the device showed it.
 
 ## Principles
 

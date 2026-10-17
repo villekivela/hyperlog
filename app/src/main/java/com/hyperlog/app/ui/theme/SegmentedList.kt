@@ -35,7 +35,10 @@ class SegmentedListScope internal constructor() {
     internal val clicks = mutableListOf<(() -> Unit)?>()
     internal val labels = mutableListOf<String?>()
 
-    /** A standard row: [symbol] in a tonal circle, [title], one line of [supporting], and [trailing]. */
+    /**
+     * A standard row: [symbol] in a tonal circle, [title], one line of [supporting] (or up to
+     * [supportingLines] where every word counts, as a gym's plates), and [trailing].
+     */
     fun row(
         title: String,
         supporting: String? = null,
@@ -43,8 +46,9 @@ class SegmentedListScope internal constructor() {
         onClick: (() -> Unit)? = null,
         supportingColor: Color? = null,
         titleColor: Color? = null,
+        supportingLines: Int = 1,
         trailing: (@Composable () -> Unit)? = null,
-    ) = item(onClick) { SegmentedRow(title, supporting, symbol, supportingColor, titleColor, trailing) }
+    ) = item(onClick) { SegmentedRow(title, supporting, symbol, supportingColor, titleColor, supportingLines, trailing) }
 
     /** A row of its own layout, on the same tile. */
     fun item(onClick: (() -> Unit)? = null, onClickLabel: String? = null, content: @Composable ColumnScope.() -> Unit) {
@@ -82,6 +86,7 @@ fun SegmentedRow(
     symbol: Symbol? = null,
     supportingColor: Color? = null,
     titleColor: Color? = null,
+    supportingLines: Int = 1,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -103,7 +108,7 @@ fun SegmentedRow(
                     supporting,
                     style = MaterialTheme.typography.bodyMedium,
                     color = supportingColor ?: cs.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = supportingLines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

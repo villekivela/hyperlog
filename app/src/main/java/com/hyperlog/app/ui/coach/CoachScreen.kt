@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.ui.theme.accentButtonColors
 import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -449,7 +450,7 @@ private fun BottomBar(
                     style = MaterialTheme.typography.titleMedium,
                     color = cs.onPrimaryContainer,
                 )
-                Button(onClick = onReview, modifier = Modifier.testTag(NextStepTag)) { Text(stringResource(R.string.coach_review_reply)) }
+                Button(onClick = onReview, modifier = Modifier.testTag(NextStepTag), colors = accentButtonColors()) { Text(stringResource(R.string.coach_review_reply)) }
             }
         }
         Row(

@@ -27,11 +27,20 @@ configuration, iOS, web, any server.
   marks only what you act on or what's selected: primary and primaryContainer (`#5B3DD0` light;
   `#C4B1FF` and `#6A4CE0` dark, so the Start button stands off the dark surfaces), and a violet
   tint in secondaryContainer (`#E6DEFF` light, `#3A2C66` dark) for the selected tab and chips that
-  are on. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
+  are on. **Every connected button group picks in primaryContainer** with onPrimaryContainer
+  words, the deep violet of the selected calendar day, the selected tab and Start (decided by
+  the owner on #58; in light it is the same violet as primary). In dark that fill is 2.9:1 on a
+  card, so the choices not picked sit in a `surfaceContainerLowest` well (3.4:1 to the picked
+  one); in light they are the white card. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
   stay tinted greys. The RIR, progression, plate and error colours stay fixed, and every one keeps
   at least 30° of hue from the accent, so the accent is never green, amber, red or plate blue. The
   lightest-but-one container stops at `#E4DEEE` so the hot RIR chip keeps 3:1 on it. Light and dark
-  follow the system setting; there is no in-app theme picker.
+  follow the system setting; there is no in-app theme picker. **On the accent** (a
+  primaryContainer card or strip: the hero, the gym's setup card, Claude's reply, Day done), a
+  filled button or a picked choice is onPrimaryContainer with the card's violet for its words, as
+  the hero's Start, and the choices not picked sit in a shaded well: in light primary and
+  primaryContainer are one violet, so a primary button there would vanish (#58). Everything that
+  marks a state keeps 3:1 on what it sits on (`AccentContrastTest`).
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
   1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets the words of display, headline and titleLarge
   text: screen titles, the day's name and exercise names. A long exercise name at the top of a session or a
@@ -473,7 +482,9 @@ available weights belong to a **machine at a gym**, not to an exercise.
     `Load pin 40 + 2 add-ons + 2.5 on the pin for 47.5 kg`. A weight off the stack reads `Not on
     this stack`.
 - Setup lives in Settings → Gyms and equipment: gyms (each with its equipment, dumbbell rack and pin
-  plates), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
+  plates; the list says what each holds: its equipment items as machines and cable stations, then
+  the rack, plates and pin plates every gym has, `1 machine, 1 cable station · dumbbells and
+  plates`, or `Dumbbells and plates` with none; its Plates row wraps to show every plate), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
   weight). Every ladder shows in one line as its runs of steps and its count (`1–10 kg by 1 ·
   12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing a gym's
@@ -512,27 +523,43 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Today opens on a calendar of weeks** (decided 2026-10-17, #53), and the day picked on it
      fills the screen below. Today has no title bar: the calendar is the top of the screen.
      - **The calendar** is a row of seven days, Monday to Sunday, under the month and year
-       (`October 2026`, or `Oct – Nov 2026` for a week across two months). It swipes sideways a
+       (`October 2026`, or `Oct – Nov 2026` for a week across two months) and the program week
+       the calendar week stands for (`October 2026 · Week 7`, its figure in Inter): the week of
+       the first planned day in it, else of the first program session done in it. A week with
+       neither (outside the program, or with no program) shows the month alone. When the head
+       doesn't fit, the pencil's words go first, then the month abbreviates (`Sep 2026 · Week
+       12`), then the week goes; the month is cut only past all three. It swipes sideways a
        week at a time, back to the week of the first finished session and on to the week of the
-       last planned day, and at least four weeks each way. A **Today** button in the header shows
+       last planned day, and at least four weeks each way. **Paging to another week picks the same
+       weekday in it**, so the card below is always of a day on screen (the pages are whole weeks,
+       so that day is always on the calendar). The day picked is kept while a session opened from
+       it is looked at: Back returns to that day and week, scrolled where it was. Back from another
+       destination also returns to the day picked, as Back returns you to where you were; choosing
+       Today on the navigation bar starts again on today. A **Today** button in the header shows
        once you've moved off today and brings the strip and the selection back. A pencil in the
        header opens the **Training days** sheet, with or without a program; with no training days
-       the header says `Set your training days` beside it.
+       the header says `Set your training days` beside it. When the words don't fit (larger system
+       text, a long month, the Today button), the pencil shows alone and is still read out as
+       `Set your training days`.
      - **Each day** has its weekday letter, its date in a 40 dp circle (filled primaryContainer
        when selected, ringed in primary when it's today and not selected) and a marker under it:
-       a filled secondaryContainer pill with the day's letter when a session was finished on it (a
-       tick for an ad-hoc session or a workout), an outlined primary pill with the letter when a
+       a filled primary pill with the day's letter in onPrimary when a session was finished on it (a
+       tick for an ad-hoc session or a workout; two program days' letters in order, `CA`, for two
+       sessions; the first letter and a plus, `A+`, for more, or for a program day beside an
+       ad-hoc session; TalkBack names every one: `done Day C, workout, ad-hoc session`, a
+       workout never called ad hoc), an outlined primary pill with the letter when a
        program day is planned for it, else nothing. Past days without a session have muted dates.
        A day's letter is the one its name starts with (`Day A — …`), else its place in the week.
      - **Planned dates.** The program runs as a sequence, so its dates are an estimate. The next
-       day goes on today, or on the next training day when a session was already finished today
-       (any session). Each following day goes on the next training day after that, to the
+       day goes on today, even when today isn't a training day (decided by the owner on #58:
+       Start is always for today), or on the next training day when a session was already
+       finished today (any session). Training days only place the later, estimated dates. Each following day goes on the next training day after that, to the
        program's last day. **With no training days, only the next day is marked** (tomorrow when
        a session was finished today). Each planned day is read for its date, with the Changes
        covering it. A finished program plans nothing.
      - **The next day to train**, on whatever date it falls, is the hero card in primaryContainer:
-       the day's letter in the 9-sided cookie, `Week 7 · Intensify` (with `Next · Mon 19 Oct ·` in
-       front when it isn't today) over the name, its numbers (exercises, sets, about how many
+       the day's letter in the 9-sided cookie, `Week 7 · Intensify` (`Next · Mon 19 Oct · Week 7`
+       when it isn't today, like a later planned day's, so the line fits) over the name, its numbers (exercises, sets, about how many
        minutes: each set's rest and about 45 s of work, to the nearest 5) and **Start session**
        across the card. Then each slot's exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`,
        technique symbols after; a Change's swap reads `In place of …` over the name), the slot
@@ -542,12 +569,25 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **A day with finished sessions** has a card for each on the card tone: `Done · Sat 17 Oct ·
        Kalliokoski`, the letter, the name, the numbers (exercises, sets, minutes taken) and **Open
        session**, which opens it in History (Back comes back to Today). Then its exercises with
-       the sets as logged, RIR chips filled. On today, `Next: Day A on Mon 19 Oct` follows,
-       selecting that day, and Ad-hoc session after it.
+       the sets as logged, RIR chips filled. On today, `Next: Day A on Mon 19 Oct` comes first,
+       over the cards (what's next is the first question after training), selecting that day;
+       Ad-hoc session follows the day.
+     - **A day of a deload week** (as the program marks it, GLOSSARY Deload), the hero or a planned
+       card, carries a small `Deload` tag under its name: the spa symbol and the word in a 24 dp
+       tertiaryContainer pill, like the technique pills. The program has no mark for a test, so
+       the week-12 bench test isn't tagged.
      - **A later planned day** reads `Planned · Wed 21 Oct · Week 7` with the letter outlined, its
-       numbers and its planned exercises. It has no Start.
+       numbers and its planned exercises. It has no Start. With training days, the last date
+       planned is the program's last day, and reads `Last day · Wed 25 Nov · Week 12`.
      - **A day with nothing** is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
-       planned day.
+       planned day. **Past the program's last planned day** it reads `Nothing planned`, with
+       `Last planned: Day C on Wed 25 Nov` selecting that day. **With no training days** only the
+       next day has a date, so a later date reads `Not planned yet`, with `Next: Day B on Sun 18
+       Oct` selecting the next day and **Set your training days** opening their sheet: the program
+       goes on, it just isn't dated.
+     - **Until the finished sessions are read**, Today shows nothing under the navigation bar: no
+       calendar, no plan, no Start, and no floating Start workout. Drawing today untrained first would offer the wrong Start
+       for a moment on every cold start, then jump.
      - The update and time-off banners show only while today is selected. A workout from Claude
        and a running session keep their own layout on today, with their Start or Resume floating.
      - With no program, today keeps the starter offer (or the empty state) under the calendar, and
@@ -840,7 +880,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session", or a
      workout's name) and
      the date, then the gym and the exercises. A row opens the session (Past sessions are
-     editable, below).
+     editable, below). An open session's top bar holds only Back; its name is the headline under
+     it, two lines at most, so a long day name (`Day C — Bench volume, leg press, pulldown`)
+     isn't cut at large text sizes.
    - **Progress** shows the bodyweight (latest value, its date, a small line of the last 90 days;
      a tap opens the log, + logs today's), sets per muscle for this week (chevrons step back up to
      8 weeks), and every exercise trained, the one done last first, with a sparkline of its
@@ -923,7 +965,11 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     `calendar_today` symbol, or `Set your training days` with none. The row opens the **Training
     days** sheet. **Today's calendar** has a pencil in its header that opens the same sheet, also
     with no program (Screens → Today).
-  - **The sheet** has the seven weekdays as round toggles, Monday first, and, with two or more
+  - **The sheet** says what the days do (`Today plans your next sessions on these days and counts
+    time off from them`; with two or more gyms, `… and counts time off from them. A session
+    started on one picks its gym.`),
+    then has the seven weekdays as round toggles labelled `Mo Tu We Th Fr Sa Su` (two letters,
+    so no two read the same; TalkBack says the full name), Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
     named). With several gyms, a day turned on names no gym until one is picked. With one gym
     there's no menu: a day turned on is at that gym, so it keeps it when a second gym is added.
@@ -1055,7 +1101,10 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     the last update check, a cache of GitHub's answer (a test fails on a table that is neither in
     the backup nor excluded with a reason).
   - **Settings → Export backup** saves one JSON file through the system's save dialog
-    (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`. The file names its
+    (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`, and keeps saying
+    so afterwards. The time is kept in the `setting` table and recorded once the file is saved, so
+    a backup never holds its own export: it holds the export before it, or none. Restoring a
+    backup therefore shows the export made before that backup (or the row's plain line). The file names its
     format, its own version and the database version (`"format": "hyperlog-backup", "version": 1,
     "database": 17`).
   - **Settings → Restore from a backup** picks a file, then asks "Replace everything on this

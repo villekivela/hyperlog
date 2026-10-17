@@ -13,7 +13,9 @@ import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -23,6 +25,9 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     private val backups = Backups(db)
     private val _state = MutableStateFlow<BackupState>(BackupState.Idle)
     val state: StateFlow<BackupState> = _state.asStateFlow()
+
+    /** When the last export was saved, for the Export row (null before the first). */
+    val lastExport: StateFlow<Long?> = backups.lastExport.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** The picked file, held while the user is asked. */
     private var picked: String? = null
@@ -39,7 +44,9 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                     app.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(file.toByteArray()) }
                 }.isSuccess
             }
-            _state.value = if (saved) BackupState.Exported(System.currentTimeMillis()) else BackupState.ExportFailed
+            val at = System.currentTimeMillis()
+            if (saved) backups.recordExport(at)
+            _state.value = if (saved) BackupState.Exported(at) else BackupState.ExportFailed
         }
     }
 

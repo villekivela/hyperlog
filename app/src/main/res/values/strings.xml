@@ -256,10 +256,16 @@
         <item quantity="one">Add-on</item>
         <item quantity="other">%1$d add-ons</item>
     </plurals>
-    <plurals name="gym_item_count">
-        <item quantity="one">%1$d equipment item</item>
-        <item quantity="other">%1$d equipment items</item>
+    <plurals name="gym_machines">
+        <item quantity="one">%1$d machine</item>
+        <item quantity="other">%1$d machines</item>
     </plurals>
+    <plurals name="gym_cable_stations">
+        <item quantity="one">%1$d cable station</item>
+        <item quantity="other">%1$d cable stations</item>
+    </plurals>
+    <string name="gym_holds">%1$s · dumbbells and plates</string>
+    <string name="gym_no_items">Dumbbells and plates</string>
     <string name="gym_shared">Shared by every gym</string>
     <string name="gym_dumbbells">Dumbbells</string>
     <string name="gym_plates">Plates</string>
@@ -340,8 +346,8 @@
         <item quantity="other">%1$d days a week · %2$s</item>
     </plurals>
     <string name="weekday_plan_title">Training days</string>
-    <string name="weekday_plan_body">Time off on Today counts from these days.</string>
-    <string name="weekday_plan_body_gyms">Time off on Today counts from these days, and a session started on one picks its gym.</string>
+    <string name="weekday_plan_body">Today plans your next sessions on these days and counts time off from them.</string>
+    <string name="weekday_plan_body_gyms">Today plans your next sessions on these days and counts time off from them. A session started on one picks its gym.</string>
     <string name="weekday_plan_any_gym">Any gym</string>
     <string name="weekday_plan_gym_on">Gym on %1$s: %2$s</string>
     <string name="program_import">Import program</string>
@@ -409,14 +415,23 @@
     <string name="today_week_block">Week %1$d · %2$s</string>
     <string name="today_ad_hoc">Ad-hoc session</string>
     <string name="today_calendar_today">Today</string>
-    <string name="today_cell_done_day">done Day %1$s</string>
+    <string name="today_head_week">Week %1$d</string>
+    <string name="today_deload">Deload</string>
     <string name="today_cell_done">done</string>
+    <string name="today_cell_ad_hoc">ad-hoc session</string>
+    <string name="today_cell_workout">workout</string>
+    <string name="today_cell_day">Day %1$s</string>
+    <string name="today_cell_done_list">done %1$s</string>
     <string name="today_cell_planned_day">planned Day %1$s</string>
-    <string name="today_next_head">Next · %1$s · %2$s</string>
+    <string name="today_next_head">Next · %1$s · Week %2$d</string>
     <string name="today_done_head">Done · %1$s</string>
     <string name="today_done_head_gym">Done · %1$s · %2$s</string>
     <string name="today_planned_head">Planned · %1$s · Week %2$d</string>
     <string name="today_rest_day">Rest day</string>
+    <string name="today_nothing_planned">Nothing planned</string>
+    <string name="today_not_planned_yet">Not planned yet</string>
+    <string name="today_last_link">Last planned: Day %1$s on %2$s</string>
+    <string name="today_last_day">Last day · %1$s · Week %2$d</string>
     <string name="today_next_link">Next: Day %1$s on %2$s</string>
     <string name="today_open_session">Open session</string>
     <plurals name="today_stat_exercises">
