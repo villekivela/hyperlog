@@ -122,6 +122,12 @@ configuration, iOS, web, any server.
   phone. **No third-party programs are bundled**: Nippard's programs are paid and copyrighted, so
   each user imports program files they own. The app ships with the exercise library and one
   original starter program, Hyperlog Full Body (`docs/programs/full-body-3-day.md`).
+  - **Its time budget** is two ~55-min days (A, B) and one ~45-min day (C), from the first
+    warm-up set to the last set. Day A ends on a seated calf raise, Day B holds the cable shoulder
+    press and lateral raise, cable flye and reverse crossover supersets and ends on the Bayesian
+    curl, and Day C pairs the machine pulldown with the DB incline press and has no pec deck or
+    calf raise. It stays gym-neutral; hand pain and missing equipment are the coach's Change and
+    swaps.
   - **Its week-12 bench test** ("the bench goal if the week-11 estimate is within 3% of it, e.g.
     97 kg for a 100 kg goal, else a single @ 1 RIR") is a load rule, which the program format
     can't hold. It is written as a heavy single (1 rep @ 1 RIR, its weight suggested from the

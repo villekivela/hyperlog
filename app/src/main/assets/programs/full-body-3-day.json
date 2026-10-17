@@ -9,9 +9,7 @@
       "name": "Ramp-in",
       "weekStart": 1,
       "weekEnd": 2,
-      "weeks": {
-        "1-2": {"rirAdd": 1, "technique": null}
-      },
+      "weeks": {"1-2": {"rirAdd": 1, "technique": null}},
       "days": [
         {
           "id": "a",
@@ -26,7 +24,7 @@
                   "note": "Same grip, setup and pause every rep.",
                   "sets": [
                     {"reps": "4-6", "rir": 1, "rest": 180},
-                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                    {"count": 2, "reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
                   ]
                 }
               ]
@@ -92,6 +90,19 @@
                   ]
                 }
               ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -130,7 +141,7 @@
                 {
                   "id": "row",
                   "exercise": "chest_supported_machine_row",
-                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "alternatives": ["seated_cable_row", "chest_supported_db_row"],
                   "note": "Chest on the pad, pull with the elbows.",
                   "sets": [
                     {"reps": "8-10", "rir": 1, "rest": 180},
@@ -153,14 +164,23 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "shoulder_press",
-                  "exercise": "machine_shoulder_press",
-                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "exercise": "cable_shoulder_press",
+                  "alternatives": ["machine_shoulder_press", "seated_db_shoulder_press"],
                   "note": "Control the stretch, 1 s pause at the bottom.",
                   "sets": [
                     {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                },
+                {
+                  "id": "side_delt_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
                   ]
                 }
               ]
@@ -169,12 +189,11 @@
               "type": "superset",
               "slots": [
                 {
-                  "id": "curl",
-                  "exercise": "bayesian_cable_curl",
-                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
-                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "id": "flye",
+                  "exercise": "cable_flye",
+                  "alternatives": ["pec_deck"],
                   "sets": [
-                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 },
                 {
@@ -183,6 +202,19 @@
                   "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
                   "sets": [
                     {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
                   ]
                 }
               ]
@@ -221,6 +253,7 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "pulldown",
@@ -230,11 +263,7 @@
                   "sets": [
                     {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
                   ]
-                }
-              ]
-            },
-            {
-              "slots": [
+                },
                 {
                   "id": "incline_press",
                   "exercise": "db_incline_press",
@@ -259,18 +288,6 @@
               ]
             },
             {
-              "slots": [
-                {
-                  "id": "pec_deck",
-                  "exercise": "pec_deck",
-                  "alternatives": ["cable_flye"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
-                  ]
-                }
-              ]
-            },
-            {
               "type": "superset",
               "slots": [
                 {
@@ -288,19 +305,6 @@
                   "alternatives": ["cable_triceps_kickback"],
                   "sets": [
                     {"reps": "10-12", "rir": 0, "rest": 90}
-                  ]
-                }
-              ]
-            },
-            {
-              "slots": [
-                {
-                  "id": "calf_raise",
-                  "exercise": "seated_calf_raise",
-                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90},
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 }
               ]
@@ -328,7 +332,7 @@
                   "note": "Same grip, setup and pause every rep.",
                   "sets": [
                     {"reps": "4-6", "rir": 1, "rest": 180},
-                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                    {"count": 2, "reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
                   ]
                 }
               ]
@@ -394,6 +398,19 @@
                   ]
                 }
               ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -432,7 +449,7 @@
                 {
                   "id": "row",
                   "exercise": "chest_supported_machine_row",
-                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "alternatives": ["seated_cable_row", "chest_supported_db_row"],
                   "note": "Chest on the pad, pull with the elbows.",
                   "sets": [
                     {"reps": "8-10", "rir": 1, "rest": 180},
@@ -455,14 +472,23 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "shoulder_press",
-                  "exercise": "machine_shoulder_press",
-                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "exercise": "cable_shoulder_press",
+                  "alternatives": ["machine_shoulder_press", "seated_db_shoulder_press"],
                   "note": "Control the stretch, 1 s pause at the bottom.",
                   "sets": [
                     {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                },
+                {
+                  "id": "side_delt_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
                   ]
                 }
               ]
@@ -471,12 +497,11 @@
               "type": "superset",
               "slots": [
                 {
-                  "id": "curl",
-                  "exercise": "bayesian_cable_curl",
-                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
-                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "id": "flye",
+                  "exercise": "cable_flye",
+                  "alternatives": ["pec_deck"],
                   "sets": [
-                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 },
                 {
@@ -485,6 +510,19 @@
                   "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
                   "sets": [
                     {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
                   ]
                 }
               ]
@@ -523,6 +561,7 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "pulldown",
@@ -532,11 +571,7 @@
                   "sets": [
                     {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
                   ]
-                }
-              ]
-            },
-            {
-              "slots": [
+                },
                 {
                   "id": "incline_press",
                   "exercise": "db_incline_press",
@@ -561,18 +596,6 @@
               ]
             },
             {
-              "slots": [
-                {
-                  "id": "pec_deck",
-                  "exercise": "pec_deck",
-                  "alternatives": ["cable_flye"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
-                  ]
-                }
-              ]
-            },
-            {
               "type": "superset",
               "slots": [
                 {
@@ -590,19 +613,6 @@
                   "alternatives": ["cable_triceps_kickback"],
                   "sets": [
                     {"reps": "10-12", "rir": 0, "rest": 90}
-                  ]
-                }
-              ]
-            },
-            {
-              "slots": [
-                {
-                  "id": "calf_raise",
-                  "exercise": "seated_calf_raise",
-                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90},
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 }
               ]
@@ -630,7 +640,7 @@
                   "note": "Same grip, setup and pause every rep.",
                   "sets": [
                     {"reps": "3-5", "rir": 1, "rest": 180},
-                    {"count": 2, "reps": "6-8", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
+                    {"count": 2, "reps": "8-10", "rir": 1, "rest": 180, "backoff": {"from": 0, "percent": 10}}
                   ]
                 }
               ]
@@ -696,6 +706,19 @@
                   ]
                 }
               ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 0, "rest": 90},
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -734,7 +757,7 @@
                 {
                   "id": "row",
                   "exercise": "chest_supported_machine_row",
-                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "alternatives": ["seated_cable_row", "chest_supported_db_row"],
                   "note": "Chest on the pad, pull with the elbows.",
                   "sets": [
                     {"reps": "8-10", "rir": 1, "rest": 180},
@@ -757,14 +780,23 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "shoulder_press",
-                  "exercise": "machine_shoulder_press",
-                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "exercise": "cable_shoulder_press",
+                  "alternatives": ["machine_shoulder_press", "seated_db_shoulder_press"],
                   "note": "Control the stretch, 1 s pause at the bottom.",
                   "sets": [
                     {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                },
+                {
+                  "id": "side_delt_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
                   ]
                 }
               ]
@@ -773,12 +805,11 @@
               "type": "superset",
               "slots": [
                 {
-                  "id": "curl",
-                  "exercise": "bayesian_cable_curl",
-                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
-                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "id": "flye",
+                  "exercise": "cable_flye",
+                  "alternatives": ["pec_deck"],
                   "sets": [
-                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 },
                 {
@@ -787,6 +818,19 @@
                   "alternatives": ["1_arm_reverse_pec_deck", "lying_reverse_db_flye"],
                   "sets": [
                     {"reps": "12-15", "rir": 0, "rest": 90}
+                  ]
+                }
+              ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
                   ]
                 }
               ]
@@ -825,6 +869,7 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "pulldown",
@@ -834,11 +879,7 @@
                   "sets": [
                     {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
                   ]
-                }
-              ]
-            },
-            {
-              "slots": [
+                },
                 {
                   "id": "incline_press",
                   "exercise": "db_incline_press",
@@ -858,18 +899,6 @@
                   "alternatives": ["seated_leg_curl"],
                   "sets": [
                     {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
-                  ]
-                }
-              ]
-            },
-            {
-              "slots": [
-                {
-                  "id": "pec_deck",
-                  "exercise": "pec_deck",
-                  "alternatives": ["cable_flye"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 }
               ]
@@ -895,19 +924,6 @@
                   ]
                 }
               ]
-            },
-            {
-              "slots": [
-                {
-                  "id": "calf_raise",
-                  "exercise": "seated_calf_raise",
-                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90},
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
-                  ]
-                }
-              ]
             }
           ]
         }
@@ -918,7 +934,7 @@
       "name": "Deload + test",
       "weekStart": 12,
       "weekEnd": 12,
-      "weeks": { "12": { "deload": true } },
+      "weeks": {"12": {"deload": true}},
       "days": [
         {
           "id": "a",
@@ -994,15 +1010,25 @@
                   ]
                 }
               ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "calf_raise",
+                  "exercise": "seated_calf_raise",
+                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
+                  "sets": [
+                    {"reps": "12-15", "rir": 3, "rest": 90}
+                  ]
+                }
+              ]
             }
           ]
         },
         {
           "id": "b",
           "name": "Day B — Hinge, close-grip bench, row",
-          "weeks": {
-            "12": {"rir": 3, "technique": null, "fewerSets": 1}
-          },
+          "weeks": {"12": {"rir": 3, "technique": null, "fewerSets": 1}},
           "groups": [
             {
               "slots": [
@@ -1035,7 +1061,7 @@
                 {
                   "id": "row",
                   "exercise": "chest_supported_machine_row",
-                  "alternatives": ["chest_supported_db_row", "seated_cable_row"],
+                  "alternatives": ["seated_cable_row", "chest_supported_db_row"],
                   "note": "Chest on the pad, pull with the elbows.",
                   "sets": [
                     {"reps": "8-10", "rir": 1, "rest": 180},
@@ -1058,14 +1084,23 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "shoulder_press",
-                  "exercise": "machine_shoulder_press",
-                  "alternatives": ["cable_shoulder_press", "seated_db_shoulder_press"],
+                  "exercise": "cable_shoulder_press",
+                  "alternatives": ["machine_shoulder_press", "seated_db_shoulder_press"],
                   "note": "Control the stretch, 1 s pause at the bottom.",
                   "sets": [
                     {"reps": "8-10", "rir": 0, "rest": 120}
+                  ]
+                },
+                {
+                  "id": "side_delt_raise",
+                  "exercise": "cable_lateral_raise",
+                  "alternatives": ["machine_lateral_raise", "db_lateral_raise"],
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "myo_reps"}}
                   ]
                 }
               ]
@@ -1074,12 +1109,11 @@
               "type": "superset",
               "slots": [
                 {
-                  "id": "curl",
-                  "exercise": "bayesian_cable_curl",
-                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
-                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "id": "flye",
+                  "exercise": "cable_flye",
+                  "alternatives": ["pec_deck"],
                   "sets": [
-                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 },
                 {
@@ -1091,15 +1125,26 @@
                   ]
                 }
               ]
+            },
+            {
+              "slots": [
+                {
+                  "id": "curl",
+                  "exercise": "bayesian_cable_curl",
+                  "alternatives": ["machine_preacher_curl", "db_incline_curl"],
+                  "note": "Control the stretch, 1 s pause at the bottom.",
+                  "sets": [
+                    {"reps": "10-12", "rir": 0, "rest": 90, "technique": {"kind": "dropset", "drops": 2}}
+                  ]
+                }
+              ]
             }
           ]
         },
         {
           "id": "c",
           "name": "Day C — Bench volume, leg press, pulldown",
-          "weeks": {
-            "12": {"rir": 3, "technique": null, "fewerSets": 1}
-          },
+          "weeks": {"12": {"rir": 3, "technique": null, "fewerSets": 1}},
           "groups": [
             {
               "slots": [
@@ -1129,6 +1174,7 @@
               ]
             },
             {
+              "type": "superset",
               "slots": [
                 {
                   "id": "pulldown",
@@ -1138,11 +1184,7 @@
                   "sets": [
                     {"count": 2, "reps": "8-10", "rir": 0, "rest": 120}
                   ]
-                }
-              ]
-            },
-            {
-              "slots": [
+                },
                 {
                   "id": "incline_press",
                   "exercise": "db_incline_press",
@@ -1167,18 +1209,6 @@
               ]
             },
             {
-              "slots": [
-                {
-                  "id": "pec_deck",
-                  "exercise": "pec_deck",
-                  "alternatives": ["cable_flye"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
-                  ]
-                }
-              ]
-            },
-            {
               "type": "superset",
               "slots": [
                 {
@@ -1196,19 +1226,6 @@
                   "alternatives": ["cable_triceps_kickback"],
                   "sets": [
                     {"reps": "10-12", "rir": 0, "rest": 90}
-                  ]
-                }
-              ]
-            },
-            {
-              "slots": [
-                {
-                  "id": "calf_raise",
-                  "exercise": "seated_calf_raise",
-                  "alternatives": ["standing_calf_raise", "leg_press_calf_press"],
-                  "sets": [
-                    {"reps": "12-15", "rir": 0, "rest": 90},
-                    {"reps": "12-15", "rir": 0, "rest": 90, "technique": {"kind": "lengthened_partials"}}
                   ]
                 }
               ]
