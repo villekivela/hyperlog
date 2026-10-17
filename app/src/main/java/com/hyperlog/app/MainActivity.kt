@@ -250,8 +250,8 @@ private fun App(
     var bodyweightOpen by rememberSaveable { mutableStateOf(false) }
     // What Program shows, kept while a session opened from it is looked at in History or a review is up.
     var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
-    // A session opened from Program goes back there.
-    var sessionFromProgram by rememberSaveable { mutableStateOf(false) }
+    // A session opened from Program or Today goes back there.
+    var sessionFrom by rememberSaveable { mutableStateOf<Screen?>(null) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
     val pasteErrors by programModel.pasteErrors.collectAsStateWithLifecycle()
     val reply by programModel.reply.collectAsStateWithLifecycle()
@@ -289,7 +289,8 @@ private fun App(
     val finished = summary
     // Time off counts from the last session finished: read again whenever Today or the coach shows,
     // and on start, when a session may already be running (a restart or a restore).
-    LaunchedEffect(screen, running == null) { sessions.refreshLastTrained() }
+    // Today's calendar marks the finished sessions, read again on the same occasions.
+    LaunchedEffect(screen, running == null, finished == null) { sessions.refreshLastTrained(); pastModel.refresh() }
     // The focus's marks count the sets trained so far this week.
     LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()
@@ -461,7 +462,7 @@ private fun App(
             onRevert = programModel::revert,
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
-            onOpenSession = { id -> pastModel.open(id); sessionFromProgram = true; screen = Screen.History },
+            onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Program; screen = Screen.History },
             view = programView,
             onView = { programView = it },
             weekdayPlan = weekdayPlan,
@@ -507,7 +508,7 @@ private fun App(
             onOpen = pastModel::show,
             onBack = {
                 pastModel.close(); pastModel.refresh(); historyModel.refresh()
-                if (sessionFromProgram) { sessionFromProgram = false; screen = Screen.Program }
+                sessionFrom?.let { screen = it; sessionFrom = null }
             },
         )
         screen == Screen.History && bodyweightOpen -> BodyweightScreen(
@@ -575,7 +576,10 @@ private fun App(
                 programModel.closePasteErrors()
                 screen = Screen.Coach
             },
-            weekdays = weekdayPlan.days,
+            weekdayPlan = weekdayPlan,
+            onWeekdayPlan = programModel::setWeekdayPlan,
+            sessions = pastSessions.orEmpty(),
+            onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Today; screen = Screen.History },
             update = update,
             onUpdate = { updateModel.install(context) },
             onDismissUpdate = updateModel::dismiss,

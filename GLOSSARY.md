@@ -52,6 +52,16 @@ _Avoid_: Default program, bundled program
 **Position**:
 Where you are in a program: which program, which week, and which day comes next.
 
+**Planned date**:
+The date Today's calendar puts a coming day on: the next day on today (or the next training day
+once a session was finished today), each day after it on the next day of the weekday plan. An
+estimate, since the program runs as a sequence; with no weekday plan only the next day has one.
+_Avoid_: Scheduled date, due date
+
+**Day letter**:
+The letter a day goes by on Today's calendar and cards: `A` from `Day A — …`, else its place in
+the week.
+
 ## Exercises
 
 **Exercise library**:

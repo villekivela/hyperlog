@@ -100,8 +100,10 @@ class ProgramDayTest {
         compose.onNodeWithText("Finish").performClick()
         compose.waitFor("Done")
         compose.onNodeWithText("Done").performClick()
-        compose.waitFor("Day B")
-        compose.onNodeWithText("Leg Extension").assertIsDisplayed()
+        // Today shows the finished session, and points to the next day.
+        compose.waitFor("Next: Day B on", substring = true)
+        compose.onNodeWithText("Next: Day B on", substring = true).performClick()
+        compose.waitFor("Leg Extension")
     }
 
     @Test
@@ -116,7 +118,7 @@ class ProgramDayTest {
         compose.onNodeWithText("Finish").performClick()
         compose.waitFor("Done")
         compose.onNodeWithText("Done").performClick()
-        compose.waitFor("Day B")
+        compose.waitFor("Next: Day B on", substring = true)
 
         compose.openTab("Program")
         compose.waitFor("Main · weeks 1–2")

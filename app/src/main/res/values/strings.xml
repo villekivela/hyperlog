@@ -408,6 +408,29 @@
     <string name="program_ends">Ends %1$s; if this day falls later, it\'s as written.</string>
     <string name="today_week_block">Week %1$d · %2$s</string>
     <string name="today_ad_hoc">Ad-hoc session</string>
+    <string name="today_calendar_today">Today</string>
+    <string name="today_cell_done_day">done Day %1$s</string>
+    <string name="today_cell_done">done</string>
+    <string name="today_cell_planned_day">planned Day %1$s</string>
+    <string name="today_next_head">Next · %1$s · %2$s</string>
+    <string name="today_done_head">Done · %1$s</string>
+    <string name="today_done_head_gym">Done · %1$s · %2$s</string>
+    <string name="today_planned_head">Planned · %1$s · Week %2$d</string>
+    <string name="today_rest_day">Rest day</string>
+    <string name="today_next_link">Next: Day %1$s on %2$s</string>
+    <string name="today_open_session">Open session</string>
+    <plurals name="today_stat_exercises">
+        <item quantity="one">exercise</item>
+        <item quantity="other">exercises</item>
+    </plurals>
+    <plurals name="today_stat_sets">
+        <item quantity="one">set</item>
+        <item quantity="other">sets</item>
+    </plurals>
+    <plurals name="today_stat_minutes">
+        <item quantity="one">minute</item>
+        <item quantity="other">minutes</item>
+    </plurals>
     <string name="today_no_program_body">Import a program to train it day by day, or start an ad-hoc session.</string>
     <string name="col_target">Target</string>
     <string name="session_day_done">Day done</string>

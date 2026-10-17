@@ -1,0 +1,196 @@
+package com.hyperlog.app.ui.today
+
+import android.app.Application
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
+import com.hyperlog.app.FreshDatabaseRule
+import com.hyperlog.app.MainActivity
+import com.hyperlog.app.await
+import com.hyperlog.app.click
+import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.press
+import com.hyperlog.app.program.ProgramParser
+import com.hyperlog.app.program.TestPrograms
+import com.hyperlog.app.ui.program.ProgramStore
+import com.hyperlog.app.waitFor
+import com.hyperlog.app.week.WeekdayPlan
+import com.hyperlog.app.week.WeekdayPlans
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
+
+/** Today around a calendar of done and planned sessions (SPEC, Today). */
+@RunWith(RobolectricTestRunner::class)
+@Config(qualifiers = "w410dp-h914dp")
+class TodayCalendarTest {
+    val compose = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule
+    val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
+
+    private val app get() = ApplicationProvider.getApplicationContext<Application>()
+    private val today = LocalDate.now()
+
+    /** `Sat 17 Oct`, as the calendar and the cards name a date. */
+    private fun short(d: LocalDate) =
+        "${d.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${d.dayOfMonth} ${d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}"
+
+    private fun importProgram() {
+        compose.waitFor("Today")
+        val result = runBlocking { ProgramStore.get(app).import(TestPrograms.twoDays("Test")) }
+        assertEquals(ProgramParser.Result.Valid::class, result::class)
+        compose.waitFor("Day A")
+    }
+
+    private fun trainingDays(vararg days: DayOfWeek) = runBlocking {
+        WeekdayPlans(HyperlogDatabase.get(app)).set(WeekdayPlan(days.associateWith { null }))
+    }
+
+    /** The calendar's cell for [date], once it shows. */
+    private fun cell(date: LocalDate, state: String = "") =
+        hasContentDescription(short(date) + state, substring = true)
+
+    /** Swipes the calendar to [date]'s week. */
+    private fun show(date: LocalDate) {
+        val monday = { d: LocalDate -> d.minusDays(d.dayOfWeek.value - 1L) }
+        val weeks = java.time.temporal.ChronoUnit.WEEKS.between(monday(today), monday(date)).toInt()
+        repeat(kotlin.math.abs(weeks)) {
+            compose.onNode(hasTestTag(CalendarTag)).performTouchInput { if (weeks > 0) swipeLeft() else swipeRight() }
+            compose.waitForIdle()
+        }
+    }
+
+    private fun finishDayA() {
+        compose.onNodeWithText("Start session").performClick()
+        compose.waitFor("Reps")
+        compose.press("8", "0", "Next", "6", "Log set")
+        compose.waitFor("70")
+        compose.press("More")
+        compose.click("Finish session")
+        compose.click("Finish")
+        compose.click("Done")
+    }
+
+    @Test
+    fun todayOpensOnTheNextDayWithStartInsideItsCard() {
+        importProgram()
+        compose.onNodeWithText("Week 1 · Main").assertIsDisplayed()
+        compose.onNodeWithText("Start session").assertIsDisplayed()
+        compose.onNodeWithText("Ad-hoc session").assertIsDisplayed()
+        // Today is the planned day, marked with its letter, and Today's own button isn't needed.
+        compose.await(cell(today, ", planned Day A"))
+        compose.onNode(hasTestTag(TodayButtonTag)).assertDoesNotExist()
+    }
+
+    @Test
+    fun withTrainingDaysTheLaterDaysArePlannedOnThemAndSelectingOneShowsItsPlan() {
+        // Every weekday but today's: Day B goes on tomorrow's weekday at the earliest.
+        val days = DayOfWeek.entries.filter { it != today.dayOfWeek }.toTypedArray()
+        trainingDays(*days)
+        importProgram()
+        val tomorrow = today.plusDays(1)
+        show(tomorrow)
+        compose.await(cell(tomorrow, ", planned Day B"))
+        compose.onNode(cell(tomorrow)).performClick()
+        compose.waitFor("Planned · ${short(tomorrow)} · Week 1")
+        compose.onNodeWithText("Leg Extension").assertIsDisplayed()
+        compose.onNodeWithText("Start session").assertDoesNotExist()
+        // Off today: the header offers the way back.
+        compose.onNode(hasTestTag(TodayButtonTag)).performClick()
+        compose.waitFor("Week 1 · Main")
+    }
+
+    @Test
+    fun withNoTrainingDaysOnlyTheNextDayIsMarkedAndTheHeaderAsksForThem() {
+        importProgram()
+        compose.await(cell(today, ", planned Day A"))
+        show(today.plusDays(1))
+        compose.onNode(cell(today.plusDays(1), ", planned")).assertDoesNotExist()
+        compose.click("Set your training days")
+        compose.waitFor("Training days")
+        compose.waitFor("Done")
+    }
+
+    @Test
+    fun aSessionFinishedTodayShowsItsCardOpensInHistoryAndPointsToTheNextDay() {
+        importProgram()
+        finishDayA()
+        compose.waitFor("Done · ${short(today)}", substring = true)
+        compose.await(cell(today, ", done Day A"))
+        // With no training days, the next day goes on tomorrow.
+        val tomorrow = today.plusDays(1)
+        compose.click("Next: Day B on ${short(tomorrow)}")
+        compose.waitFor("Next · ${short(tomorrow)} · Week 1 · Main")
+        compose.onNodeWithText("Leg Extension").assertIsDisplayed()
+        compose.onNodeWithText("Start session").assertIsDisplayed()
+        compose.onNode(hasTestTag(TodayButtonTag)).performClick()
+        compose.click("Open session")
+        compose.waitFor("Barbell Bench Press")
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.waitFor("Done · ${short(today)}", substring = true)
+    }
+
+    @Test
+    fun aDayWithNothingIsARestDayPointingToTheNextSession() {
+        importProgram()
+        val yesterday = today.minusDays(1)
+        show(yesterday)
+        compose.onNode(cell(yesterday)).performClick()
+        compose.waitFor("Rest day")
+        compose.click("Next: Day A on ${short(today)}")
+        compose.waitFor("Week 1 · Main")
+    }
+
+    @Test
+    fun theCalendarSwipesBackToTheFirstSessionAndOnToTheLastPlannedWeek() {
+        val longAgo = today.minusWeeks(10)
+        runBlocking {
+            val dao = HyperlogDatabase.get(app).sessions()
+            val at = longAgo.atTime(18, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            dao.insertSession(com.hyperlog.app.data.SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
+        }
+        trainingDays(DayOfWeek.MONDAY)
+        importProgram()
+        show(longAgo)
+        // An ad-hoc session: done, with a tick for its letter.
+        compose.await(cell(longAgo, ", done"))
+        compose.onNode(hasTestTag(TodayButtonTag)).assertIsDisplayed()
+        // Its week is the first: one more swipe stays on it.
+        compose.onNode(hasTestTag(CalendarTag)).performTouchInput { swipeRight() }
+        compose.waitForIdle()
+        compose.await(cell(longAgo, ", done"))
+        compose.onNode(hasTestTag(TodayButtonTag)).performClick()
+        compose.await(cell(today, ", planned Day A"))
+        compose.onNode(hasTestTag(TodayButtonTag)).assertDoesNotExist()
+        // Four days left, on Mondays: the last is three Mondays after the first, inside the four weeks on.
+        val lastMonday = generateSequence(today.plusDays(1)) { it.plusDays(1) }.first { it.dayOfWeek == DayOfWeek.MONDAY }.plusWeeks(2)
+        show(lastMonday)
+        compose.await(cell(lastMonday, ", planned Day B"))
+    }
+
+    @Test
+    fun slotLabelsAreCentredOnTheirRows() {
+        importProgram()
+        val label = compose.onAllNodes(hasTestTag(SlotLabelTag), useUnmergedTree = true)[0].fetchSemanticsNode().boundsInRoot
+        val row = compose.onAllNodes(hasTestTag(SlotRowTag), useUnmergedTree = true)[0].fetchSemanticsNode().boundsInRoot
+        assertEquals(row.center.y, label.center.y, 2f)
+    }
+}
