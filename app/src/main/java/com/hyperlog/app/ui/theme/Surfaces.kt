@@ -291,6 +291,8 @@ fun ConnectedChoice(
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     /** Widths follow the labels, so one long name (`Deload + test`) keeps its words beside short ones. */
     fitLabels: Boolean = false,
+    /** It sits on the accent card (primaryContainer): the picked one in white (choiceColors). */
+    onAccent: Boolean = false,
 ) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         labels.forEachIndexed { i, label ->
@@ -304,7 +306,7 @@ fun ConnectedChoice(
                     labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-                colors = choiceColors(MaterialTheme.colorScheme, color).let {
+                colors = choiceColors(MaterialTheme.colorScheme, color, onAccent).let {
                     ToggleButtonDefaults.colors(containerColor = it.unchecked, contentColor = it.onUnchecked, checkedContainerColor = it.checked, checkedContentColor = it.onChecked)
                 },
                 contentPadding = contentPadding,
@@ -317,14 +319,14 @@ fun ConnectedChoice(
 data class ChoiceColors(val checked: Color, val onChecked: Color, val unchecked: Color, val onUnchecked: Color)
 
 /**
- * The colours of a connected choice sitting [on] a card. On a neutral card the picked one is filled
+ * The colours of a connected choice on [card], or on the accent card when [onAccent]. On a neutral card the picked one is filled
  * primary (Material's toggle button). On the accent card (primaryContainer) primary would vanish in
  * light, where the two are one violet, so the picked one is filled onPrimaryContainer with the
  * card's violet for its words, as the hero's Start, and the others sit in a shaded well.
  */
-fun choiceColors(scheme: ColorScheme, on: Color): ChoiceColors = with(scheme) {
-    if (on == primaryContainer) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
-    else ChoiceColors(primary, onPrimary, on, onSurfaceVariant)
+fun choiceColors(scheme: ColorScheme, card: Color, onAccent: Boolean): ChoiceColors = with(scheme) {
+    if (onAccent) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
+    else ChoiceColors(primary, onPrimary, card, onSurfaceVariant)
 }
 
 /**
@@ -332,12 +334,15 @@ fun choiceColors(scheme: ColorScheme, on: Color): ChoiceColors = with(scheme) {
  * the card's violet for words, as the hero's Start. A primary button vanishes there in light,
  * where primary and primaryContainer are one violet.
  */
-fun accentButton(scheme: ColorScheme): Pair<Color, Color> = scheme.onPrimaryContainer to scheme.primaryContainer
+fun accentButton(scheme: ColorScheme): AccentButton = AccentButton(scheme.onPrimaryContainer, scheme.primaryContainer)
+
+/** A filled button's [fill] and [words] on the accent card. */
+data class AccentButton(val fill: Color, val words: Color)
 
 /** [accentButton] as a filled button's colours. */
 @Composable
-fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme).let { (fill, words) ->
-    ButtonDefaults.buttonColors(containerColor = fill, contentColor = words)
+fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme).let {
+    ButtonDefaults.buttonColors(containerColor = it.fill, contentColor = it.words)
 }
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */

@@ -19,6 +19,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -109,7 +111,10 @@ internal val PlannedDay.letter: String get() = dayLetter(day.name, position.day)
  * A done day's fill (the strip's marker, the done card's cookie) and its letter: solid primary,
  * the planned day's outline filled in. secondaryContainer was a lilac on lilac in light (1.1:1).
  */
-internal fun doneFill(scheme: androidx.compose.material3.ColorScheme): Pair<Color, Color> = scheme.primary to scheme.onPrimary
+internal fun doneFill(scheme: ColorScheme): DoneColors = DoneColors(scheme.primary, scheme.onPrimary)
+
+/** A done day's [fill] and the [letter] on it. */
+internal data class DoneColors(val fill: Color, val letter: Color)
 
 /** A finished session's letter: its program day's, or null for an ad-hoc session or a workout. */
 internal val PastSessionItem.letter: String? get() = position?.let { p -> title?.let { dayLetter(it, p.day) } }
@@ -129,9 +134,28 @@ internal fun doneMarker(sessions: List<PastSessionItem>): String? {
     }
 }
 
-/** Every session of a day as TalkBack names it: `Day C`, then [adHoc]'s word for one without a letter. */
-internal fun doneNames(sessions: List<PastSessionItem>, adHoc: () -> String): List<String> =
-    sessions.map { s -> s.letter?.let { "Day $it" } ?: adHoc() }
+/** How TalkBack names one of a day's finished sessions. */
+internal sealed interface DoneName {
+    data class Day(val letter: String) : DoneName
+    data object Workout : DoneName
+    data object AdHoc : DoneName
+}
+
+/**
+ * Every session of a day as TalkBack names it: a program day by its letter, a workout from
+ * Claude as a workout (its own name, no program day), else an ad-hoc session (GLOSSARY).
+ */
+internal fun doneNames(sessions: List<PastSessionItem>): List<DoneName> = sessions.map { s ->
+    s.letter?.let { DoneName.Day(it) } ?: if (s.position == null && s.title != null) DoneName.Workout else DoneName.AdHoc
+}
+
+/** [name] read out: `Day C`, `workout`, `ad-hoc session`. */
+@Composable
+private fun spoken(name: DoneName): String = when (name) {
+    is DoneName.Day -> stringResource(R.string.today_cell_day, name.letter)
+    DoneName.Workout -> stringResource(R.string.today_cell_workout)
+    DoneName.AdHoc -> stringResource(R.string.today_cell_ad_hoc)
+}
 
 /** About how long a day takes: each set's rest and about 45 s of work, to the nearest 5 minutes. */
 internal fun aboutMinutes(day: PlannedDay): Int =
@@ -175,14 +199,16 @@ internal fun CalendarHead(
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val monthText = subcompose("month", month).single()
         val monthWidth = monthText.maxIntrinsicWidth(loose.maxHeight)
-        // The actions with the prompt's words, measured unseen: a plain replica of the buttons (their
-        // 12 dp sides, the icon and its gap), so nothing to tap or read is composed twice.
+        // The actions with the prompt's words, measured unseen: the text buttons' own padding and
+        // least width around their contents, with no semantics, so nothing to tap or read is
+        // composed twice.
         val withWords = noWeekdayPlan &&
             subcompose("probe") {
                 Row(Modifier.clearAndSetSemantics {}) {
+                    val button = Modifier.defaultMinSize(minWidth = ButtonDefaults.MinWidth).padding(ButtonDefaults.TextButtonContentPadding)
                     val label = MaterialTheme.typography.labelLarge
-                    if (showToday) Text(stringResource(R.string.today_calendar_today), Modifier.padding(horizontal = 12.dp), style = label)
-                    Row(Modifier.padding(horizontal = 12.dp)) {
+                    if (showToday) Box(button) { Text(stringResource(R.string.today_calendar_today), style = label) }
+                    Row(button) {
                         Spacer(Modifier.width(ButtonDefaults.IconSize + ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.weekday_plan_none), style = label)
                     }
@@ -192,8 +218,9 @@ internal fun CalendarHead(
         val start = monthText.measure(loose.copy(maxWidth = (constraints.maxWidth - end.width).coerceAtLeast(0)))
         val height = maxOf(start.height, end.height, constraints.minHeight)
         layout(constraints.maxWidth, height) {
-            start.place(0, (height - start.height) / 2)
-            end.place(constraints.maxWidth - end.width, (height - end.height) / 2)
+            // Relative, so a right-to-left layout mirrors the head.
+            start.placeRelative(0, (height - start.height) / 2)
+            end.placeRelative(constraints.maxWidth - end.width, (height - end.height) / 2)
         }
     }
 }
@@ -220,11 +247,11 @@ internal fun WeekRow(
             val sessions = done[date].orEmpty()
             val plan = planned[date]
             val doneLetter = doneMarker(sessions)
-            val adHoc = stringResource(R.string.today_cell_ad_hoc)
+            val names = doneNames(sessions).map { spoken(it) }
             val description = shortDate(date) + when {
                 sessions.isNotEmpty() -> ", " + (
                     if (doneLetter == null) stringResource(R.string.today_cell_done)
-                    else stringResource(R.string.today_cell_done_list, doneNames(sessions) { adHoc }.joinToString(", "))
+                    else stringResource(R.string.today_cell_done_list, names.joinToString(", "))
                 )
                 plan != null -> ", " + stringResource(R.string.today_cell_planned_day, plan.letter)
                 else -> ""
@@ -397,13 +424,14 @@ private fun DayCard(bottom: Dp = 20.dp, content: @Composable () -> Unit) {
 @Composable
 internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val doneColors = doneFill(cs)
     val date = shortDate(session.date())
     DayCard {
         CardHead(
             session.letter,
             head = session.gym?.let { stringResource(R.string.today_done_head_gym, date, it) } ?: stringResource(R.string.today_done_head, date),
             title = session.title?.let(::dayTitle) ?: stringResource(R.string.today_ad_hoc),
-            letterContainer = doneFill(cs).first, letterContent = doneFill(cs).second,
+            letterContainer = doneColors.fill, letterContent = doneColors.letter,
             headColor = cs.primary, titleColor = cs.onSurface,
         )
         Spacer(Modifier.height(20.dp))
@@ -435,28 +463,26 @@ internal fun PlannedCard(day: PlannedDay, date: LocalDate, last: Boolean = false
     }
 }
 
-/**
- * A day with nothing on it: `Rest day`, and the next session to select. Past the last planned
- * day ([lastPlanned], with nothing after it) it's `Nothing planned`, pointing back to that day;
- * or, while the program goes on but only its next day has a date (no training days,
- * [onWeekdayPlan] given), `Not planned yet`, with the next session and Set your training days.
- */
+/** What a day with nothing on it says beyond its date. */
+internal sealed interface RestMode {
+    /** `Rest day`, and the next session to select ([next] null past it). */
+    data class Rest(val next: Pair<LocalDate, PlannedDay>?) : RestMode
+
+    /** Past the program's last planned day: `Nothing planned`, pointing back to [last]. */
+    data class AfterProgram(val last: Pair<LocalDate, PlannedDay>) : RestMode
+
+    /** The program goes on but only its [next] day has a date (no training days): `Not planned yet`. */
+    data class Undated(val next: Pair<LocalDate, PlannedDay>, val onWeekdayPlan: () -> Unit) : RestMode
+}
+
+/** A day with nothing on it: its date, then what [mode] says, with a link to the day it names. */
 @Composable
-internal fun RestCard(
-    date: LocalDate,
-    next: Pair<LocalDate, PlannedDay>?,
-    onNext: (LocalDate) -> Unit,
-    lastPlanned: Pair<LocalDate, PlannedDay>? = null,
-    onWeekdayPlan: (() -> Unit)? = null,
-) {
+internal fun RestCard(date: LocalDate, mode: RestMode, onNext: (LocalDate) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    val after = next == null && lastPlanned != null
-    val undated = after && onWeekdayPlan != null
-    val link = next ?: lastPlanned
-    val title = when {
-        undated -> R.string.today_not_planned_yet
-        after -> R.string.today_nothing_planned
-        else -> R.string.today_rest_day
+    val (title, link) = when (mode) {
+        is RestMode.Rest -> R.string.today_rest_day to mode.next
+        is RestMode.AfterProgram -> R.string.today_nothing_planned to mode.last
+        is RestMode.Undated -> R.string.today_not_planned_yet to mode.next
     }
     // The link's 48 dp row already holds 14 dp under its words: 8 dp more matches the 20 dp on top.
     DayCard(bottom = if (link != null) 8.dp else 20.dp) {
@@ -464,10 +490,10 @@ internal fun RestCard(
         Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
         link?.let { (d, day) ->
             Spacer(Modifier.height(8.dp))
-            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = after && !undated)
+            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = mode is RestMode.AfterProgram)
         }
-        if (undated) {
-            TextButton(onClick = onWeekdayPlan!!, contentPadding = PaddingValues(0.dp)) {
+        if (mode is RestMode.Undated) {
+            TextButton(onClick = mode.onWeekdayPlan, contentPadding = PaddingValues(0.dp)) {
                 SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.weekday_plan_none))

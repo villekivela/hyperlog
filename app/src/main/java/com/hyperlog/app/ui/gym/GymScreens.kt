@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.accentButtonColors
 import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -61,6 +62,7 @@ import com.hyperlog.app.gym.sections
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import androidx.compose.material3.Button
 
 /**
  * Every gym, then the bars all gyms share: the barbell and the EZ, trap and safety bars, each
@@ -105,9 +107,18 @@ fun GymsScreen(
             val chevron = chevron()
             val add = stringResource(R.string.gym_add)
             val import = stringResource(R.string.gym_import)
-            // Its machines and cable stations (items), and the dumbbells, plates and pin plates every gym has.
+            // What a gym holds: its equipment items counted as machines and cable stations (GLOSSARY,
+            // Equipment item), then the dumbbells, plates and pin plates every gym has.
             val noItems = stringResource(R.string.gym_no_items)
-            val counts = gyms.map { if (it.items.isEmpty()) noItems else pluralStringResource(R.plurals.gym_item_count, it.items.size, it.items.size) }
+            val counts = gyms.map { gym ->
+                val stations = gym.items.count { it.cableStation }
+                val machines = gym.items.size - stations
+                val parts = listOfNotNull(
+                    machines.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.gym_machines, it, it) },
+                    stations.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.gym_cable_stations, it, it) },
+                )
+                if (parts.isEmpty()) noItems else stringResource(R.string.gym_holds, parts.joinToString(", "))
+            }
             Spacer(Modifier.height(8.dp))
             SegmentedList {
                 gyms.forEachIndexed { i, gym -> row(gym.name, counts[i], Symbol.LocationOn, onClick = { onOpenGym(gym.id) }, trailing = chevron) }
@@ -328,8 +339,7 @@ private fun ProgramEquipmentCard(setup: com.hyperlog.app.gym.ProgramSetup, progr
                 listOf(stringResource(R.string.gym_program_kg), stringResource(R.string.gym_program_lb)),
                 if (lb) 1 else 0,
                 onSelect = { lb = it == 1 },
-                // On the accent card: the picked one in white (choiceColors).
-                color = cs.primaryContainer,
+                onAccent = true,
             )
             Text(
                 stringResource(R.string.gym_program_guess),
@@ -337,7 +347,7 @@ private fun ProgramEquipmentCard(setup: com.hyperlog.app.gym.ProgramSetup, progr
             )
         }
         androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
-            androidx.compose.material3.Button(onClick = { onAdd(chosen ?: if (lb) LadderSpec.LbPinStack else LadderSpec.DefaultPinStack) }, colors = com.hyperlog.app.ui.theme.accentButtonColors()) {
+            Button(onClick = { onAdd(chosen ?: if (lb) LadderSpec.LbPinStack else LadderSpec.DefaultPinStack) }, colors = accentButtonColors()) {
                 Text(stringResource(R.string.gym_program_add))
             }
         }

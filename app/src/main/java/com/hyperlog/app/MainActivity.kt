@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
@@ -253,8 +254,8 @@ private fun App(
     var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     // The day picked on Today's calendar (epoch day; null: today), kept while a session opened from it is looked at.
     var todayDay by rememberSaveable { mutableStateOf<Long?>(null) }
-    // And that day's scroll: a new day starts at its top.
-    val todayList = rememberSaveable(todayDay, saver = androidx.compose.foundation.lazy.LazyListState.Saver) { androidx.compose.foundation.lazy.LazyListState() }
+    // Today's own saved state (each day's scroll), kept while another screen is up.
+    val todayState = rememberSaveableStateHolder()
     // A session opened from Program or Today goes back there.
     var sessionFrom by rememberSaveable { mutableStateOf<Screen?>(null) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
@@ -563,7 +564,7 @@ private fun App(
             checkedNow = checkedNow,
             version = BuildConfig.VERSION_NAME,
         )
-        else -> TodayScreen(
+        else -> todayState.SaveableStateProvider("today") { TodayScreen(
             sessionRunning = running != null,
             onResume = { left = false },
             onStart = { gym, adHoc, swaps ->
@@ -605,8 +606,7 @@ private fun App(
             onProgramDayShown = { showProgramDay = false },
             selectedDay = todayDay,
             onSelectDay = { todayDay = it },
-            dayListState = todayList,
-        )
+        ) }
     }
     }
     }

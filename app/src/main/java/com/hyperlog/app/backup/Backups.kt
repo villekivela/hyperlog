@@ -1,15 +1,14 @@
 package com.hyperlog.app.backup
 
-import com.hyperlog.app.data.SettingEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.data.SettingEntity
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -44,15 +43,17 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
         Damaged,
     }
 
-    /** Every table in [BackupFormat.Tables], read in one transaction so the file is consistent. */
     /**
      * When the last export was saved (epoch ms), null before the first: Settings keeps it on the
-     * Export row. A row in `setting`, so a restore brings back the restored phone's own.
+     * Export row. A row in `setting`, written after the file is saved, so a backup holds the
+     * export before it (or none), and a restore shows that one.
      */
     val lastExport: Flow<Long?> = db.settings().observe(LAST_EXPORT).map { it?.toLongOrNull() }
 
+    /** Records an export saved at [at], once its file is written. */
     suspend fun recordExport(at: Long) = db.settings().put(SettingEntity(LAST_EXPORT, at.toString()))
 
+    /** Every table in [BackupFormat.Tables], read in one transaction so the file is consistent. */
     suspend fun export(): String = withContext(Dispatchers.IO) {
         db.runInTransaction<String> {
             val sql = db.openHelper.writableDatabase

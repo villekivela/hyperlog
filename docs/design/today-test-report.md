@@ -297,3 +297,9 @@ None.
 | 17 | **Fixed.** Today shows nothing under the navigation bar until the finished sessions are read (`sessions` is null until then). On the emulator a cold start now goes from blank straight to the done day. `TodayLoadingTest.beforeTheSessionsAreReadTodayShowsNoPlanAndNoStart` uses a source that hasn't emitted yet. |
 | 18 | **Fixed.** The day's scroll is kept by the host, keyed by the day. Back from Open session on Fri 16's second card returns to that card, and another day opens at its top. `TodayCalendarTest.backFromADoneDaysSessionKeepsWhereTheDayWasScrolled`. |
 | 19 | **Kept, recorded in SPEC** (Today, the calendar). Back from another destination returns to the day picked, as Back returns you to where you were. Choosing Today on the navigation bar starts on today. SPEC's navigation rules don't say otherwise. |
+
+## Code review (f4d74f7)
+
+The two-axis review's findings were fixed in this PR. Gym lists now say
+`1 machine, 1 cable station · dumbbells and plates`, so the wording from fix 12 above has changed.
+A cable station isn't a machine (GLOSSARY, Equipment item).

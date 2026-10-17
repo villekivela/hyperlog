@@ -478,9 +478,9 @@ available weights belong to a **machine at a gym**, not to an exercise.
     `Load pin 40 + 2 add-ons + 2.5 on the pin for 47.5 kg`. A weight off the stack reads `Not on
     this stack`.
 - Setup lives in Settings → Gyms and equipment: gyms (each with its equipment, dumbbell rack and pin
-  plates; the list says `1 machine · dumbbells and plates`, or `Dumbbells and plates` with no
-  machines, since every gym has a rack, plates and pin plates and its items are its machines and
-  cable stations; its Plates row wraps to show every plate), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
+  plates; the list says what each holds: its equipment items as machines and cable stations, then
+  the rack, plates and pin plates every gym has, `1 machine, 1 cable station · dumbbells and
+  plates`, or `Dumbbells and plates` with none; its Plates row wraps to show every plate), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
   weight). Every ladder shows in one line as its runs of steps and its count (`1–10 kg by 1 ·
   12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing a gym's
@@ -537,7 +537,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        a filled primary pill with the day's letter in onPrimary when a session was finished on it (a
        tick for an ad-hoc session or a workout; two program days' letters in order, `CA`, for two
        sessions; the first letter and a plus, `A+`, for more, or for a program day beside an
-       ad-hoc session; TalkBack names every one), an outlined primary pill with the letter when a
+       ad-hoc session; TalkBack names every one: `done Day C, workout, ad-hoc session`, a
+       workout never called ad hoc), an outlined primary pill with the letter when a
        program day is planned for it, else nothing. Past days without a session have muted dates.
        A day's letter is the one its name starts with (`Day A — …`), else its place in the week.
      - **Planned dates.** The program runs as a sequence, so its dates are an estimate. The next
@@ -571,7 +572,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        Oct` selecting the next day and **Set your training days** opening their sheet: the program
        goes on, it just isn't dated.
      - **Until the finished sessions are read**, Today shows nothing under the navigation bar: no
-       calendar, no plan, no Start. Drawing today untrained first would offer the wrong Start
+       calendar, no plan, no Start, and no floating Start workout. Drawing today untrained first would offer the wrong Start
        for a moment on every cold start, then jump.
      - The update and time-off banners show only while today is selected. A workout from Claude
        and a running session keep their own layout on today, with their Start or Resume floating.
@@ -865,7 +866,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Sessions** lists finished sessions newest first: the day trained (or "Ad-hoc session", or a
      workout's name) and
      the date, then the gym and the exercises. A row opens the session (Past sessions are
-     editable, below).
+     editable, below). An open session's top bar holds only Back; its name is the headline under
+     it, two lines at most, so a long day name (`Day C — Bench volume, leg press, pulldown`)
+     isn't cut at large text sizes.
    - **Progress** shows the bodyweight (latest value, its date, a small line of the last 90 days;
      a tap opens the log, + logs today's), sets per muscle for this week (chevrons step back up to
      8 weeks), and every exercise trained, the one done last first, with a sparkline of its
@@ -949,7 +952,8 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     days** sheet. **Today's calendar** has a pencil in its header that opens the same sheet, also
     with no program (Screens → Today).
   - **The sheet** says what the days do (`Today plans your next sessions on these days and counts
-    time off from them`; with two or more gyms, `… and a session started on one picks its gym`),
+    time off from them`; with two or more gyms, `… and counts time off from them. A session
+    started on one picks its gym.`),
     then has the seven weekdays as round toggles labelled `Mo Tu We Th Fr Sa Su` (two letters,
     so no two read the same; TalkBack says the full name), Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
@@ -1084,8 +1088,9 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     the backup nor excluded with a reason).
   - **Settings → Export backup** saves one JSON file through the system's save dialog
     (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`, and keeps saying
-    so afterwards (the time is kept in the `setting` table, so a backup carries the export before
-    it and a restore shows the restored data's last export). The file names its
+    so afterwards. The time is kept in the `setting` table and recorded once the file is saved, so
+    a backup never holds its own export: it holds the export before it, or none. Restoring a
+    backup therefore shows the export made before that backup (or the row's plain line). The file names its
     format, its own version and the database version (`"format": "hyperlog-backup", "version": 1,
     "database": 17`).
   - **Settings → Restore from a backup** picks a file, then asks "Replace everything on this

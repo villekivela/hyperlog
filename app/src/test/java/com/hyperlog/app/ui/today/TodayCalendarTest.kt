@@ -44,6 +44,10 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.abs
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import com.hyperlog.app.data.SessionEntity
 
 /** Today around a calendar of done and planned sessions (SPEC, Today). */
 @RunWith(RobolectricTestRunner::class)
@@ -79,7 +83,7 @@ class TodayCalendarTest {
     /** A finished ad-hoc session on [date], an hour long. */
     private fun adHocOn(date: LocalDate, hour: Int = 18) = runBlocking {
         val at = date.atTime(hour, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-        HyperlogDatabase.get(app).sessions().insertSession(com.hyperlog.app.data.SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
+        HyperlogDatabase.get(app).sessions().insertSession(SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
     }
 
     /** Swipes the calendar to [date]'s week. */
@@ -155,7 +159,7 @@ class TodayCalendarTest {
         // What's next comes first, over what was done.
         val next = compose.onNodeWithText("Next: Day B on ${short(tomorrow)}").fetchSemanticsNode().boundsInRoot
         val doneCard = compose.onNodeWithText("Done · ${short(today)}", substring = true).fetchSemanticsNode().boundsInRoot
-        assertTrue("Next sits under the done card", next.bottom <= doneCard.top)
+        assertTrue("The Next link should sit above the done card", next.bottom <= doneCard.top)
         compose.click("Next: Day B on ${short(tomorrow)}")
         // On another date the head names the date and the week, as a planned day's does; the
         // block's name would wrap it onto a second line on the phone.
@@ -282,7 +286,7 @@ class TodayCalendarTest {
         compose.onNodeWithText("Nothing planned").assertDoesNotExist()
         compose.onNodeWithText("Next: Day A on ${short(today)}").assertIsDisplayed()
         // The card's own button, after the header's.
-        compose.onAllNodes(hasText("Set your training days").and(androidx.compose.ui.test.hasClickAction())).onLast().performClick()
+        compose.onAllNodes(hasText("Set your training days").and(hasClickAction())).onLast().performClick()
         compose.waitFor("Training days")
     }
 
@@ -298,12 +302,12 @@ class TodayCalendarTest {
         compose.waitForIdle()
         val open = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().last()
         val top = open.boundsInRoot.top
-        compose.onAllNodesWithText("Open session").filter(androidx.compose.ui.test.hasAnyAncestor(hasTestTag(TodayDayListTag))).onLast().performClick()
+        compose.onAllNodesWithText("Open session").filter(hasAnyAncestor(hasTestTag(TodayDayListTag))).onLast().performClick()
         compose.waitForDescription("Back")
         compose.onNodeWithContentDescription("Back").performClick()
         compose.await(cell(lastWeek, ", done").and(isSelected()))
         compose.waitForIdle()
         val tops = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().map { it.boundsInRoot.top }
-        assertTrue("The day opened at the top again: $tops, was $top", tops.any { kotlin.math.abs(it - top) < 2f })
+        assertTrue("The day opened at the top again: $tops, was $top", tops.any { abs(it - top) < 2f })
     }
 }

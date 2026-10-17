@@ -5,8 +5,9 @@ shows in a session: the pad's weight strip and the weight check. It extends `log
 and `exercise-library.md`: same margins, type scale, symbols and theme roles. Screenshot:
 `screens/ladder-dumbbells.png` (phone), `phone-light-ladder-dumbbells.png`, `phone-dark-gyms.png`,
 `phone-dark-gym.png` and their light versions (emulator, text at 115 %). Since #58 the gyms list
-says what a gym holds (`1 machine · dumbbells and plates`, `Dumbbells and plates`): every gym has
-a rack, plates and pin plates, and its items are its machines and cable stations. A gym's Plates
+says what a gym holds (`1 machine, 1 cable station · dumbbells and plates`, `Dumbbells and
+plates`): its equipment items counted as machines and cable stations (a cable station isn't a
+machine, GLOSSARY), then the rack, plates and pin plates every gym has. A gym's Plates
 row wraps (up to three lines) so every plate shows; other rows keep one supporting line. The setup
 card (**Add the equipment your program uses**, primaryContainer) picks its stack in white with
 violet words and the other choice in a shaded well, and its **Add** is white too: in light the

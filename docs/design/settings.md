@@ -38,8 +38,9 @@ Settings                                           ← no back arrow: a tab; the
 ## States and rules
 
 - **Export**: tap → the system save dialog with `hyperlog-backup-<date>.json` → `Saved <EEE d MMM, HH:mm>`,
-  which stays on the row afterwards (the time is kept in `setting` as `last_export`, no migration),
-  so a backup weeks old shows. Before the first export the row says what it does.
+  which stays on the row afterwards (the time is kept in `setting` as `last_export`, no migration,
+  recorded once the file is saved, so a backup holds the export before it and a restore shows
+  that one), so a backup weeks old shows. Before the first export the row says what it does.
 - **Restore**: tap → the system file picker → a readable backup opens the dialog
   (`restore_page` symbol, "Replace everything on this phone?", the backup's date, Cancel / Restore).
   Restore → the app starts again on the backup's data (Today, or the restored session).

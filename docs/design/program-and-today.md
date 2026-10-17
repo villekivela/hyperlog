@@ -248,6 +248,13 @@ supporting "From an old Hyperlog backup, no history", then "42 exercises · tap 
 - Finishing a session of a program day moves the position to the next day. A session with nothing
   logged is discarded and the day stays next. Finishing a resumed session again doesn't move it
   twice.
+- **Code review (f4d74f7).** TalkBack names a day's sessions `Day C`, `workout` or `ad-hoc
+  session` from resources (a workout is never ad hoc, GLOSSARY). The floating Start workout waits
+  for the sessions too. Today's saved state lives in the host's `SaveableStateHolder`, and each
+  day's list keeps its scroll under a key of its day and kind (done, planned, rest), with the
+  workout list keyed by its workout, since a restored value ignores `rememberSaveable`'s inputs.
+  The header's probe measures with the text button's own padding and least width, and places
+  relative for right-to-left. A day with nothing is a `RestMode`: Rest, AfterProgram or Undated.
 - Rest after a planned set is that set's rest from the program.
 
 ## Program screen (#40)
@@ -438,6 +445,13 @@ they parted.
   top. Back from another tab keeps the day picked, like any Back; the bar's Today starts on today.
   The header's width probe is now a plain replica of the buttons, so nothing tappable is composed
   twice.
+- **Code review (f4d74f7).** TalkBack names a day's sessions `Day C`, `workout` or `ad-hoc
+  session` from resources (a workout is never ad hoc, GLOSSARY). The floating Start workout waits
+  for the sessions too. Today's saved state lives in the host's `SaveableStateHolder`, and each
+  day's list keeps its scroll under a key of its day and kind (done, planned, rest), with the
+  workout list keyed by its workout, since a restored value ignores `rememberSaveable`'s inputs.
+  The header's probe measures with the text button's own padding and least width, and places
+  relative for right-to-left. A day with nothing is a `RestMode`: Rest, AfterProgram or Undated.
 - **Done reads in light too.** Done markers and the done card's cookie were secondaryContainer,
   `#E6DEFF` on the `#F0ECF7` screen (1.1:1, gone on the emulator in light). They are now filled
   primary with the letter in onPrimary: the planned day's outline filled in, so done and planned
@@ -450,8 +464,8 @@ they parted.
 - Kept: Program's Next line has no date (issue 9). Program's "No dates" principle (#40) stands,
   and Program's training-days row sits right under it with Today one tap away.
 
-Phone screens (dark): `phone-dark-today-done` (two sessions today, training days set),
-`-today-no-training-days` (today, the header asking), `-today-next-no-training-days` (the hero on
+Phone screens, each in `phone-dark-` and `phone-light-`: `today-done` (two sessions today,
+Mon Wed Fri set: Next on Mon 19 Oct), `-today-no-training-days` (today, the header asking), `-today-next-no-training-days` (the hero on
 tomorrow: the header off today with Today and the pencil alone), `-today-hero` (Mon Wed Fri: the
 hero on Mon 19 Oct), `-today-planned` (Wed 21 Oct), `-today-rest` (Tue 20 Oct),
 `-training-days-sheet` (from the pencil, Mon Wed Fri on), `-program-training-days` (the row with
@@ -461,4 +475,7 @@ size and density, text at 115 %): `phone-dark-today-done`, `-today-no-training-d
 `-today-hero`, `-today-planned`, `-today-rest`, `-today-not-planned-yet`, `-today-last-day`,
 `-today-after-program`, `-today-past-done`, `-past-session`, `-training-days-sheet`,
 `-program-training-days`, `-program-training-days-sheet`, and every `phone-light-*` shot.
+`phone-{dark,light}-rir-session` and `-rir-sheet` (the session's RIR chips and the prescription
+sheet, Day B's Barbell RDL) came from a session started on the emulator's copy of the data, which
+was then put back from a saved database.
 

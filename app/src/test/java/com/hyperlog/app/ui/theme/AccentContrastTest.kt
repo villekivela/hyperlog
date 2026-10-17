@@ -39,7 +39,7 @@ class AccentContrastTest {
     fun aChoiceOnTheAccentCardShowsWhichIsPicked() {
         schemes.forEach { (name, s) ->
             listOf("card" to (if (s == InkDark) s.surfaceBright else s.surfaceContainerLowest), "accent card" to s.primaryContainer).forEach { (where, card) ->
-                val c = choiceColors(s, on = card)
+                val c = choiceColors(s, card, onAccent = where == "accent card")
                 val unchecked = c.unchecked.compositeOver(card)
                 assertTrue("$name checked on $where is ${contrast(c.checked, card)}:1", contrast(c.checked, card) >= 3f)
                 assertTrue("$name checked vs unchecked on $where is ${contrast(c.checked, unchecked)}:1", contrast(c.checked, unchecked) >= 3f)
