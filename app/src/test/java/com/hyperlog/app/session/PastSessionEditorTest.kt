@@ -56,6 +56,7 @@ class PastSessionEditorTest {
 
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
+        closeWarmup()
         focus(Field.Weight); type(kg, ::press); done()
         type("$reps", ::press); if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }

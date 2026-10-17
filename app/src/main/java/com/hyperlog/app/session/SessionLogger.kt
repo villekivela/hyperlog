@@ -1066,6 +1066,10 @@ class SessionLogger(
             rampEntry = if (entry?.field != Field.Weight) entry else previous?.takeIf { it.currentId == current?.id }?.rampEntry,
             latestSet = latest?.let { it.first to it.second },
         )
+        // Moving to an exercise puts its first unticked warm-up on the pad; with none, set 1 is the active row.
+        if (previous != null && current?.id != previous.currentId) {
+            warmupEdit = loaded.warmups.getOrNull(current?.warmupsDone ?: 0)?.let { WarmupEdit(current!!.id, current.warmupsDone, warmupEntry(it)) }
+        }
         // A warm-up stays on the pad only while its exercise is on screen with its warm-ups.
         warmupEdit = warmupEdit?.takeIf { w ->
             w.sessionExerciseId == current?.id && correction == null && viewingId == null && w.index in loaded.warmups.indices

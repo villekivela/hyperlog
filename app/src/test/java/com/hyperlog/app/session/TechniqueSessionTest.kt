@@ -372,6 +372,7 @@ class TechniqueSessionTest {
 
         logger.start()
         logger.addExercise("db_bench_press")
+        logger.closeWarmup()
         logger.setTechnique(0, Technique.Failure)
         assertEquals(0, logger.session.entry!!.rir)
         logger.setTechnique(0, Technique.MyoReps(miniSetReps = 3))

@@ -290,5 +290,60 @@ class WarmupSessionTest {
         assertEquals(0, logger.session.current!!.warmupsDone)
     }
 
+    /** A finished day, so the next one's bench arrives with a weight and so with warm-ups. */
+    private suspend fun benchWithHistory(): SessionLogger {
+        val first = logger()
+        first.startDay(programs.active.first()!!, gymId = null)
+        first.type("10"); first.done(); first.closeWarmup(); first.type("12"); first.tick()
+        first.type("90"); first.done(); first.type("5"); first.tick()
+        first.finish()
+        now += 86_400_000
+        return logger().also { it.startDay(programs.active.first()!!, gymId = null) }
+    }
+
+    /** The raise comes up on its warm-up with last time's weight; this steps past it and logs its set. */
+    private suspend fun SessionLogger.logRaise() {
+        closeWarmup(); type("12"); tick()
+    }
+
+    @Test
+    fun theNextExerciseOpensOnItsFirstWarmUpWhenItHasWarmUps() = runTest {
+        val logger = benchWithHistory()
+        logger.logRaise()
+        assertEquals("Barbell Bench Press", logger.session.current!!.exercise.name)
+                assertEquals(true, logger.session.warmups.isNotEmpty())
+        assertEquals(0, logger.session.warmupEdit!!.index)
+    }
+
+    @Test
+    fun anExerciseWithNoWarmUpsOpensOnSetOne() = runTest {
+        // No weight yet, so no ramp: the bench comes up on set 1.
+        val logger = benchUp()
+        assertEquals(emptyList<WarmupSet>(), logger.session.warmups)
+        assertNull(logger.session.warmupEdit)
+    }
+
+    @Test
+    fun tickedWarmUpsAreSkippedWhenAnExerciseComesBackUp() = runTest {
+        val logger = benchWithHistory()
+        logger.logRaise()
+        logger.tickWarmup(1)
+        val bench = logger.session.current!!.id
+        val raise = logger.session.exercises.first { it.id != bench }.id
+        logger.switchTo(raise)
+        assertNull(logger.session.warmupEdit)
+        logger.switchTo(bench)
+        assertEquals(2, logger.session.warmupEdit!!.index)
+    }
+
+    @Test
+    fun openingAnExerciseFromTheListLandsOnItsFirstWarmUp() = runTest {
+        val logger = benchWithHistory()
+        val bench = logger.session.exercises.first { it.exercise.name == "Barbell Bench Press" }.id
+        logger.open(bench)
+        assertEquals(bench, logger.session.currentId)
+        assertEquals(0, logger.session.warmupEdit!!.index)
+    }
+
     private suspend fun SessionLogger.logger() = this@WarmupSessionTest.logger()
 }
