@@ -107,7 +107,8 @@ raise moved to Days B and A.
 - Main lifts (bench, squat pattern, RDL, row): 3:00.
 - Everything else: 1:30–2:00.
 - `SPEC.md`'s rest rules apply on top of this: no rest before drops, a breathing countdown between
-  myo mini-sets, and no rest between superset partners.
+  myo mini-sets, and no rest between superset partners. Rest is taken after the pair, so Day C's pulldown and
+  DB incline press rest 2:00 once, after the incline press.
 
 ## First coaching case: training around hand pain
 
@@ -178,8 +179,8 @@ document and the format don't line up, the file does this:
   `fewerSets: 1`. "One set fewer" takes the last set off each slot, and a slot with one set keeps it.
 - **Rest.** Main lifts (both benches, close-grip bench, hack squat, leg press, RDL, row) rest
   3:00. Pulldowns, the shoulder press and the DB incline press rest 2:00; everything else 1:30.
-- **Slot notes.** Close-grip bench gets the bench note. The shoulder press, DB incline press and
-  both curls get the press and curl note.
+- **Slot notes.** Close-grip bench gets the bench note. The cable shoulder press, DB incline press and
+  both curls get the press and curl note. The lateral raises, flye and calf raise have none.
 - **Slot ids** are unique within a block, so Day B's lateral raise is `side_delt_raise` (Day A's is
   `lateral_raise`).
 - **Not in the file**, because the app owns them: warm-ups, the "deload sets never lower the

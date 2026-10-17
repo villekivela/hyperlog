@@ -123,7 +123,7 @@ configuration, iOS, web, any server.
   each user imports program files they own. The app ships with the exercise library and one
   original starter program, Hyperlog Full Body (`docs/programs/full-body-3-day.md`).
   - **Its time budget** is two ~55-min days (A, B) and one ~45-min day (C), from the first
-    warm-up set to the last set. Day A ends on a seated calf raise, Day B holds the cable shoulder
+    warm-up set to the last set. Day A's bench back-offs are 2 × 8–10 @ 1 and it ends on a seated calf raise, Day B holds the cable shoulder
     press and lateral raise, cable flye and reverse crossover supersets and ends on the Bayesian
     curl, and Day C pairs the machine pulldown with the DB incline press and has no pec deck or
     calf raise. It stays gym-neutral; hand pain and missing equipment are the coach's Change and
