@@ -977,7 +977,7 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     then has the seven weekdays as round toggles labelled `Mo Tu We Th Fr Sa Su` (two letters,
     so no two read the same; TalkBack says the full name), Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
-    named). With several gyms, a day turned on names no gym until one is picked. With one gym
+    named); the row shows the short day name (`Mon` … `Sun`) on one line, never wrapped, and the gym name on one line with an ellipsis when it doesn't fit, the drop-down arrow always showing (TalkBack reads the full day and gym name; the menu lists full gym names). With several gyms, a day turned on names no gym until one is picked. With one gym
     there's no menu: a day turned on is at that gym, so it keeps it when a second gym is added.
     Each change applies at once; **Done** closes it.
   - With no training days, everything behaves as with no weekday plan: the usual gym comes from
