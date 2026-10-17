@@ -104,9 +104,17 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(stringResource(R.string.settings)) },
+                // PROTOTYPE: as look C's fifth tab, Settings is a destination of its own, with no back arrow.
+                title = {
+                    Text(
+                        stringResource(R.string.settings),
+                        if (com.hyperlog.app.ui.theme.PrototypeLook.settingsTab) Modifier.padding(start = 8.dp) else Modifier,
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
+                    if (!com.hyperlog.app.ui.theme.PrototypeLook.settingsTab) {
+                        IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
+                    }
                 },
             )
         },

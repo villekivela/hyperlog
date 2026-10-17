@@ -245,6 +245,8 @@ private fun App(
     var ladder by rememberSaveable { mutableStateOf<Long?>(null) }
     val pastSession by pastModel.session.collectAsStateWithLifecycle()
     val pastSessions by pastModel.sessions.collectAsStateWithLifecycle()
+    // PROTOTYPE: Today's calendar needs the finished sessions from the start.
+    LaunchedEffect(Unit) { pastModel.refresh() }
     val weeks by historyModel.weeks.collectAsStateWithLifecycle()
     val trained by historyModel.exercises.collectAsStateWithLifecycle()
     val trend by historyModel.trend.collectAsStateWithLifecycle()
@@ -544,7 +546,7 @@ private fun App(
             exerciseCount = exercises.count { !it.hidden },
             onGyms = { screen = Screen.Gyms; gymId = null; ladder = null },
             onLibrary = { screen = Screen.Library },
-            onBack = { screen = settingsFrom },
+            onBack = { screen = if (com.hyperlog.app.ui.theme.PrototypeLook.settingsTab) Screen.Today else settingsFrom },
             startingWeights = startingWeights,
             onImportStartingWeights = { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             backup = backup,
@@ -596,6 +598,8 @@ private fun App(
             onUndoRemoveWorkout = programModel::undoRemoveWorkout,
             showProgramDay = showProgramDay,
             onProgramDayShown = { showProgramDay = false },
+            history = pastSessions.orEmpty(),
+            onOpenSession = { id -> pastModel.open(id); screen = Screen.History },
         )
     }
     }

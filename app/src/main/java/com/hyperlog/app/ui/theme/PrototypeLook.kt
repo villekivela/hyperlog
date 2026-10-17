@@ -127,7 +127,7 @@ internal val Looks = listOf(
 )
 
 object PrototypeLook {
-    internal var index by mutableIntStateOf(1)
+    internal var index by mutableIntStateOf(2)
     internal var forcedDark by mutableStateOf<Boolean?>(null)
     internal val look get() = Looks[index]
     val key: String get() = look.key

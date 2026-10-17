@@ -135,6 +135,9 @@ fun TodayScreen(
     /** A Change was just accepted: bring the program day into view under the workout, then [onProgramDayShown]. */
     showProgramDay: Boolean = false,
     onProgramDayShown: () -> Unit = {},
+    /** PROTOTYPE: finished sessions, newest first, for look C's calendar. */
+    history: List<com.hyperlog.app.session.PastSessionItem> = emptyList(),
+    onOpenSession: (Long) -> Unit = {},
 ) {
     val snackbars = remember { androidx.compose.material3.SnackbarHostState() }
     val snackScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -214,6 +217,9 @@ fun TodayScreen(
             onStart = { start(Kind.Day) },
             onAdHoc = if (!sessionRunning) { { start(Kind.AdHoc) } } else null,
             onSettings = onSettings,
+            program = program,
+            history = history,
+            onOpenSession = onOpenSession,
             modifier = modifier,
         )
         return
