@@ -105,7 +105,9 @@ fun GymsScreen(
             val chevron = chevron()
             val add = stringResource(R.string.gym_add)
             val import = stringResource(R.string.gym_import)
-            val counts = gyms.map { pluralStringResource(R.plurals.gym_item_count, it.items.size, it.items.size) }
+            // Its machines and cable stations (items), and the dumbbells, plates and pin plates every gym has.
+            val noItems = stringResource(R.string.gym_no_items)
+            val counts = gyms.map { if (it.items.isEmpty()) noItems else pluralStringResource(R.plurals.gym_item_count, it.items.size, it.items.size) }
             Spacer(Modifier.height(8.dp))
             SegmentedList {
                 gyms.forEachIndexed { i, gym -> row(gym.name, counts[i], Symbol.LocationOn, onClick = { onOpenGym(gym.id) }, trailing = chevron) }
@@ -227,7 +229,8 @@ fun GymScreen(
             val plates = gym.plates.ifEmpty { null }?.let(::platesLine) ?: stringResource(R.string.gym_plates_none)
             SegmentedList {
                 row(dumbbellsTitle, dumbbells, Symbol.Exercise, onClick = onDumbbells, trailing = chevron)
-                row(platesTitle, plates, Symbol.Toll, onClick = { plating = true }, trailing = chevron)
+                // Every plate, wrapping: the smallest are the ones a lifter checks.
+                row(platesTitle, plates, Symbol.Toll, onClick = { plating = true }, supportingLines = 3, trailing = chevron)
                 row(pinsTitle, pins, Symbol.PushPin, onClick = { pinning = true }, trailing = chevron)
             }
 

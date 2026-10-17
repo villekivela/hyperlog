@@ -3,7 +3,11 @@
 Settings → Gyms and equipment, a gym's equipment, the ladder editor, and the two places a ladder
 shows in a session: the pad's weight strip and the weight check. It extends `logging-screen.md`
 and `exercise-library.md`: same margins, type scale, symbols and theme roles. Screenshot:
-`screens/ladder-dumbbells.png` (phone).
+`screens/ladder-dumbbells.png` (phone), `phone-light-ladder-dumbbells.png`, `phone-dark-gyms.png`,
+`phone-dark-gym.png` and their light versions (emulator, text at 115 %). Since #58 the gyms list
+says what a gym holds (`1 machine · dumbbells and plates`, `Dumbbells and plates`): every gym has
+a rack, plates and pin plates, and its items are its machines and cable stations. A gym's Plates
+row wraps (up to three lines) so every plate shows; other rows keep one supporting line.
 
 ## Principles
 

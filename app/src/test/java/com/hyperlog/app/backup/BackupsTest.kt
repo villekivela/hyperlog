@@ -194,6 +194,14 @@ class BackupsTest {
     }
 
     @Test
+    fun theLastExportIsKeptForSettingsToShow() = runTest {
+        val backups = Backups(freshInstall(), clock = { now })
+        assertEquals(null, backups.lastExport.first())
+        backups.recordExport(now)
+        assertEquals(now, backups.lastExport.first())
+    }
+
+    @Test
     fun theFileSaysWhatItIs() = runTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])

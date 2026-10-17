@@ -60,6 +60,28 @@ what the files don't explain.
   (`com.hyperlog.app.alpha`) may still be installed and holds your old data, so leave it in
   place.
 
+## Emulator
+
+When the phone isn't free, an emulator stands in for it: the same screen, 1280 × 2856 at 480 dpi.
+
+- **Install:** `~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk 'emulator' 'system-images;android-36;google_apis;x86_64'`.
+- **Create the AVD:** `avdmanager create avd -n hyperlog -k 'system-images;android-36;google_apis;x86_64' -d pixel_9_pro_xl`,
+  then set `hw.lcd.width=1280` and `hw.lcd.height=2856` in `~/.android/avd/hyperlog.avd/config.ini`.
+- **Start it headless:** `~/Android/Sdk/emulator/emulator -avd hyperlog -no-window -no-audio -gpu swiftshader_indirect`.
+  It comes up as `emulator-5554`.
+- **With the phone attached too**, set `ANDROID_SERIAL=emulator-5554` (or `adb -s emulator-5554`)
+  for every command, so nothing reaches the phone.
+- **Load data** by pushing a database through `run-as` into an installed `.dev` build:
+  ```
+  adb shell am force-stop com.hyperlog.app.dev
+  adb push hyperlog.db /data/local/tmp/hyperlog.db
+  adb shell run-as com.hyperlog.app.dev sh -c 'rm -f databases/hyperlog.db-wal databases/hyperlog.db-shm; cp /data/local/tmp/hyperlog.db databases/hyperlog.db'
+  adb shell rm /data/local/tmp/hyperlog.db
+  ```
+  An older database migrates on the next launch, as it would on the phone.
+- The emulator's settings are yours to change: `adb shell settings put system font_scale 1.15`
+  matches the phone's text size, and `adb shell cmd uimode night yes|no` switches dark and light.
+
 ## UI work: designer and tester
 
 UI is designed and checked by agents, and the owner judges whole passes on the phone:

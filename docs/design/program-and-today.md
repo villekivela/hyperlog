@@ -363,7 +363,8 @@ the future.
   primary outline with the letter when planned. Past days without a session have their dates at
   70 % onSurfaceVariant. Each day reads as one tab to TalkBack: `Sat 17 Oct, planned Day A`.
 - **The hero** (the next day to train, today or later; only a plan while a session runs) is a 32 dp
-  primaryContainer card, its text on the 24 dp edge: the
+  primaryContainer card, its text on the 24 dp edge (#58: see "Tester fixes" for markers, Next
+  and the program's end): the
   letter in a 64 dp `Cookie9Sided` filled onPrimaryContainer, the head (`Week 7 · Intensify`,
   `Next · Mon 19 Oct · Week 7` on another date, as a planned card names it) at 80 % over the name after its letter
   in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
@@ -410,12 +411,36 @@ they parted.
 - Held up as built: the strip (circles, markers, the today ring), the hero's cookie and Start, the
   done and planned cards, the sticky calendar over scrolling cards, Program's training-days row.
 
+### Tester fixes (#58, `today-test-report.md`)
+
+- **The day picked survives Open session.** Today's selection lives in the host (`todayDay` in
+  `MainActivity`, beside `programView`), so Back from History lands on the same day and week. The
+  navigation bar's Today starts again on today.
+- **The card follows the strip.** When a page settles on another week, the same weekday there is
+  picked (`snapshotFlow { pager.settledPage }`). The pages are whole weeks, so nothing to clamp.
+- **What's next comes first after training.** On today with sessions done, `Next: Day B on …`
+  sits between the strip (and any banner) and the first done card; Ad-hoc session stays at the
+  foot.
+- **Every session of a day shows on its marker.** `CA` for two program days in order, `A+` for
+  more or for a program day beside an ad-hoc session, a tick for ad hoc alone; the pill grows
+  past 28 dp to fit two letters. TalkBack reads them all (`done Day C, Day A`).
+- **The program's end is marked.** With training days the last planned date reads `Last day ·
+  Wed 25 Nov · Week 12` in Planned's place (one line, as the hero's head). Any date after the last
+  planned one reads `Nothing planned` with `Last planned: Day C on Wed 25 Nov ›`; with no training
+  days that covers every date after the next day, which `Rest day` used to claim.
+- **The weekday toggles say `Mo Tu We Th Fr Sa Su`**, so Tuesday and Thursday never look alike.
+- Kept: Program's Next line has no date (issue 9). Program's "No dates" principle (#40) stands,
+  and Program's training-days row sits right under it with Today one tap away.
+
 Phone screens (dark): `phone-dark-today-done` (two sessions today, training days set),
 `-today-no-training-days` (today, the header asking), `-today-next-no-training-days` (the hero on
 tomorrow: the header off today with Today and the pencil alone), `-today-hero` (Mon Wed Fri: the
 hero on Mon 19 Oct), `-today-planned` (Wed 21 Oct), `-today-rest` (Tue 20 Oct),
 `-training-days-sheet` (from the pencil, Mon Wed Fri on), `-program-training-days` (the row with
 Mon Wed Fri), `-program-no-training-days`, `-program-training-days-sheet` (from Program's row,
-none on). The phone's theme is dark, and system settings stay as the owner set them, so light was
-checked through the renders only.
+none on). After the tester's fixes these came from the emulator (AVD `hyperlog`, the phone's
+size and density, text at 115 %): `phone-dark-today-done`, `-today-no-training-days`,
+`-today-hero`, `-today-planned`, `-today-rest`, `-today-nothing-planned`, `-today-last-day`,
+`-today-after-program`, `-today-past-done`, `-past-session`, `-training-days-sheet`,
+`-program-training-days`, `-program-training-days-sheet`, and every `phone-light-*` shot.
 

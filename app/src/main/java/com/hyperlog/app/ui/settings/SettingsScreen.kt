@@ -80,6 +80,7 @@ fun SettingsScreen(
     onImportStartingWeights: () -> Unit,
     modifier: Modifier = Modifier,
     backup: BackupState = BackupState.Idle,
+    lastExport: Long? = null,
     onExport: () -> Unit = {},
     onRestore: () -> Unit = {},
     onConfirmRestore: () -> Unit = {},
@@ -135,7 +136,8 @@ fun SettingsScreen(
             val export = when (backup) {
                 is BackupState.Exported -> stringResource(R.string.backup_exported, backupTime(backup.at))
                 BackupState.ExportFailed -> stringResource(R.string.backup_export_failed)
-                else -> stringResource(R.string.backup_export_about)
+                // The last export stays on the row, so a stale backup shows.
+                else -> lastExport?.let { stringResource(R.string.backup_exported, backupTime(it)) } ?: stringResource(R.string.backup_export_about)
             }
             val restore = if (backup is BackupState.Refused) refusal(backup.reason) else stringResource(R.string.backup_restore_about)
             val exportTitle = stringResource(R.string.backup_export)

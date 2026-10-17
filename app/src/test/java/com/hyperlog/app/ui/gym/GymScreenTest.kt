@@ -91,6 +91,22 @@ class GymScreenTest {
     }
 
     @Test
+    fun theGymsListSaysWhatEachGymHolds() {
+        // Every gym has its dumbbells, plates and pin plates; its items are machines and cable stations.
+        val press = com.hyperlog.app.gym.EquipmentItem(1, 1, "Shoulder Press", LadderSpec.DefaultPinStack)
+        compose.setContent {
+            HyperlogTheme {
+                GymsScreen(
+                    listOf(Gym(1, "Kalliokoski", listOf(press)), Gym(2, "Hotel", emptyList())), bars = emptyMap(),
+                    onAddGym = {}, onOpenGym = {}, onBar = { _, _ -> }, onBack = {},
+                )
+            }
+        }
+        compose.onNodeWithText("1 machine · dumbbells and plates").assertExists()
+        compose.onNodeWithText("Dumbbells and plates").assertExists()
+    }
+
+    @Test
     fun aGymKeepsItsDumbbellRow() {
         var dumbbells = 0
         compose.setContent {

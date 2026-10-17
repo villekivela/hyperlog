@@ -473,7 +473,9 @@ available weights belong to a **machine at a gym**, not to an exercise.
     `Load pin 40 + 2 add-ons + 2.5 on the pin for 47.5 kg`. A weight off the stack reads `Not on
     this stack`.
 - Setup lives in Settings → Gyms and equipment: gyms (each with its equipment, dumbbell rack and pin
-  plates), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
+  plates; the list says `1 machine · dumbbells and plates`, or `Dumbbells and plates` with no
+  machines, since every gym has a rack, plates and pin plates and its items are its machines and
+  cable stations; its Plates row wraps to show every plate), then the barbell and the three specialty bars (`10 kg bar, the gym’s plates`; a tap asks for the bar's
   weight). Every ladder shows in one line as its runs of steps and its count (`1–10 kg by 1 ·
   12.5–50 by 2.5 · 26 weights`, an lb stack by its kg labels and lb step: `1.1–89.6 kg by 5 lb`).
   Setup uses the system keyboard, since it happens once and away from a set. Editing a gym's
@@ -514,7 +516,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **The calendar** is a row of seven days, Monday to Sunday, under the month and year
        (`October 2026`, or `Oct – Nov 2026` for a week across two months). It swipes sideways a
        week at a time, back to the week of the first finished session and on to the week of the
-       last planned day, and at least four weeks each way. A **Today** button in the header shows
+       last planned day, and at least four weeks each way. **Paging to another week picks the same
+       weekday in it**, so the card below is always of a day on screen (the pages are whole weeks,
+       so that day is always on the calendar). The day picked is kept while a session opened from
+       it is looked at: Back returns to that day and week. Choosing Today on the navigation bar
+       starts again on today. A **Today** button in the header shows
        once you've moved off today and brings the strip and the selection back. A pencil in the
        header opens the **Training days** sheet, with or without a program; with no training days
        the header says `Set your training days` beside it. The month is never cut short: when the
@@ -523,7 +529,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **Each day** has its weekday letter, its date in a 40 dp circle (filled primaryContainer
        when selected, ringed in primary when it's today and not selected) and a marker under it:
        a filled secondaryContainer pill with the day's letter when a session was finished on it (a
-       tick for an ad-hoc session or a workout), an outlined primary pill with the letter when a
+       tick for an ad-hoc session or a workout; two program days' letters in order, `CA`, for two
+       sessions; the first letter and a plus, `A+`, for more, or for a program day beside an
+       ad-hoc session; TalkBack names every one), an outlined primary pill with the letter when a
        program day is planned for it, else nothing. Past days without a session have muted dates.
        A day's letter is the one its name starts with (`Day A — …`), else its place in the week.
      - **Planned dates.** The program runs as a sequence, so its dates are an estimate. The next
@@ -544,12 +552,16 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **A day with finished sessions** has a card for each on the card tone: `Done · Sat 17 Oct ·
        Kalliokoski`, the letter, the name, the numbers (exercises, sets, minutes taken) and **Open
        session**, which opens it in History (Back comes back to Today). Then its exercises with
-       the sets as logged, RIR chips filled. On today, `Next: Day A on Mon 19 Oct` follows,
-       selecting that day, and Ad-hoc session after it.
+       the sets as logged, RIR chips filled. On today, `Next: Day A on Mon 19 Oct` comes first,
+       over the cards (what's next is the first question after training), selecting that day;
+       Ad-hoc session follows the day.
      - **A later planned day** reads `Planned · Wed 21 Oct · Week 7` with the letter outlined, its
-       numbers and its planned exercises. It has no Start.
+       numbers and its planned exercises. It has no Start. With training days, the last date
+       planned is the program's last day, and reads `Last day · Wed 25 Nov · Week 12`.
      - **A day with nothing** is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
-       planned day.
+       planned day. **After the last planned day** (past the program's end, or past the next day
+       with no training days) it reads `Nothing planned`, with `Last planned: Day C on Wed 25 Nov`
+       selecting that day.
      - The update and time-off banners show only while today is selected. A workout from Claude
        and a running session keep their own layout on today, with their Start or Resume floating.
      - With no program, today keeps the starter offer (or the empty state) under the calendar, and
@@ -927,7 +939,8 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     with no program (Screens → Today).
   - **The sheet** says what the days do (`Today plans your next sessions on these days and counts
     time off from them`; with two or more gyms, `… and a session started on one picks its gym`),
-    then has the seven weekdays as round toggles, Monday first, and, with two or more
+    then has the seven weekdays as round toggles labelled `Mo Tu We Th Fr Sa Su` (two letters,
+    so no two read the same; TalkBack says the full name), Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
     named). With several gyms, a day turned on names no gym until one is picked. With one gym
     there's no menu: a day turned on is at that gym, so it keeps it when a second gym is added.
@@ -1059,7 +1072,9 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     the last update check, a cache of GitHub's answer (a test fails on a table that is neither in
     the backup nor excluded with a reason).
   - **Settings → Export backup** saves one JSON file through the system's save dialog
-    (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`. The file names its
+    (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`, and keeps saying
+    so afterwards (the time is kept in the `setting` table, so a backup carries the export before
+    it and a restore shows the restored data's last export). The file names its
     format, its own version and the database version (`"format": "hyperlog-backup", "version": 1,
     "database": 17`).
   - **Settings → Restore from a backup** picks a file, then asks "Replace everything on this

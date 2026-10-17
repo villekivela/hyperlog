@@ -37,7 +37,9 @@ Settings                                           ← no back arrow: a tab; the
 
 ## States and rules
 
-- **Export**: tap → the system save dialog with `hyperlog-backup-<date>.json` → `Saved <EEE d MMM, HH:mm>`.
+- **Export**: tap → the system save dialog with `hyperlog-backup-<date>.json` → `Saved <EEE d MMM, HH:mm>`,
+  which stays on the row afterwards (the time is kept in `setting` as `last_export`, no migration),
+  so a backup weeks old shows. Before the first export the row says what it does.
 - **Restore**: tap → the system file picker → a readable backup opens the dialog
   (`restore_page` symbol, "Replace everything on this phone?", the backup's date, Cancel / Restore).
   Restore → the app starts again on the backup's data (Today, or the restored session).
@@ -55,4 +57,5 @@ doesn't render in Robolectric; check it on the phone.
 
 Phone pass (#58, dark, system text at 115 %): the tab holds up as built. Every row keeps its one
 supporting line, the footnote wraps under the restore row's text edge, and the version line clears
-the navigation bar. Nothing changed.
+the navigation bar. Nothing changed in that pass; the tester's report then gave the Export row its
+lasting `Saved …` line. Light: `phone-light-settings.png`, `phone-light-library.png` (emulator).
