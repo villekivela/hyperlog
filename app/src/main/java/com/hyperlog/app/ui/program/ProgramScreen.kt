@@ -116,10 +116,10 @@ fun ProgramScreen(
     var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
     var menu by rememberSaveable { mutableStateOf(false) }
     var shifting by rememberSaveable { mutableStateOf(false) }
-    var settingDays by rememberSaveable { mutableStateOf(false) }
-    if (settingDays) {
-        com.hyperlog.app.ui.theme.Sheet(onDismiss = { settingDays = false }) {
-            TrainingDaysSheetContent(weekdayPlan, gyms, onWeekdayPlan, onDone = { settingDays = false })
+    var editingWeekdayPlan by rememberSaveable { mutableStateOf(false) }
+    if (editingWeekdayPlan) {
+        com.hyperlog.app.ui.theme.Sheet(onDismiss = { editingWeekdayPlan = false }) {
+            WeekdayPlanSheetContent(weekdayPlan, gyms, onWeekdayPlan, onDone = { editingWeekdayPlan = false })
         }
     }
     if (shown.changesOpen && active != null && errors == null) {
@@ -176,7 +176,7 @@ fun ProgramScreen(
                 active == null -> NoProgram(onImport)
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
-                    onWeek = { show(shown.copy(week = it)) }, trainingDays = trainingDaysLine(weekdayPlan), onOpenDays = { settingDays = true },
+                    onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },
                 )
             }
         }
@@ -239,9 +239,9 @@ private fun ProgramWeeks(
     /** The week picked; null for the week you're in. */
     picked: Int?,
     onWeek: (Int) -> Unit,
-    /** Your training days as a line, and what opens their sheet. */
-    trainingDays: String,
-    onOpenDays: () -> Unit,
+    /** The weekday plan as a line, and what opens its sheet. */
+    weekdayPlanLine: String,
+    onOpenWeekdayPlan: () -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
@@ -263,9 +263,9 @@ private fun ProgramWeeks(
             SegmentedList(Modifier.padding(top = 8.dp)) {
                 item { ProgramHeader(program.title, program.author, nextDay) }
                 row(
-                    title = trainingDays,
+                    title = weekdayPlanLine,
                     symbol = Symbol.CalendarToday,
-                    onClick = onOpenDays,
+                    onClick = onOpenWeekdayPlan,
                     trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = chevron) },
                 )
                 if (active.history.isNotEmpty()) {

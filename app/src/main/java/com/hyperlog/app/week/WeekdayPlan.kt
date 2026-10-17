@@ -16,17 +16,6 @@ data class WeekdayPlan(val gyms: Map<DayOfWeek, Long?> = emptyMap()) {
 
     companion object {
         val None = WeekdayPlan()
-
-        /**
-         * The plan from before it was yours, when each gym had its own weekdays (database v22): every
-         * gym's days, each with that gym, the first gym in [gyms] keeping a day two share. [gyms] are
-         * the gyms not deleted, in the gym list's order, each with its days as bits (bit 0 Monday).
-         */
-        fun fromGymWeekdays(gyms: List<Pair<Long, Int>>): WeekdayPlan = WeekdayPlan(
-            DayOfWeek.entries.mapNotNull { day ->
-                gyms.firstOrNull { (_, bits) -> bits and (1 shl (day.value - 1)) != 0 }?.let { day to it.first }
-            }.toMap(),
-        )
     }
 }
 
@@ -36,9 +25,15 @@ class WeekdayPlans(db: HyperlogDatabase) {
 
     val plan: Flow<WeekdayPlan> = dao.observe().map { rows -> rows.toPlan() }
 
+    /** The plan as it is now. */
+    suspend fun current(): WeekdayPlan = dao.all().toPlan()
+
     /** Replaces the plan with [plan]. */
     suspend fun set(plan: WeekdayPlan) =
         dao.replace(plan.gyms.entries.sortedBy { it.key }.map { (day, gym) -> WeekdayPlanEntity(day.value, gym) })
+
+    /** A gym deleted or archived: its days stay training days, naming no gym. */
+    suspend fun forgetGym(gymId: Long) = dao.forgetGym(gymId)
 }
 
-internal fun List<WeekdayPlanEntity>.toPlan() = WeekdayPlan(associate { DayOfWeek.of(it.weekday) to it.gymId })
+private fun List<WeekdayPlanEntity>.toPlan() = WeekdayPlan(associate { DayOfWeek.of(it.weekday) to it.gymId })

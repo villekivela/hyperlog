@@ -21,8 +21,8 @@ object Migration22To23 : Migration(22, 23) {
         val gyms = db.query("SELECT id, weekdays FROM gym WHERE archived = 0 ORDER BY name COLLATE NOCASE, id").use { c ->
             buildList { while (c.moveToNext()) add(c.getLong(0) to c.getInt(1)) }
         }
-        com.hyperlog.app.week.WeekdayPlan.fromGymWeekdays(gyms).gyms.forEach { (day, gym) ->
-            db.execSQL("INSERT INTO weekday_plan (weekday, gym_id) VALUES (?, ?)", arrayOf<Any?>(day.value, gym))
+        planFrom(gyms).forEach { (day, gym) ->
+            db.execSQL("INSERT INTO weekday_plan (weekday, gym_id) VALUES (?, ?)", arrayOf<Any?>(day, gym))
         }
         db.execSQL(
             "CREATE TABLE `gym_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `archived` INTEGER NOT NULL DEFAULT 0, " +
@@ -41,6 +41,14 @@ object Migration22To23 : Migration(22, 23) {
             db.execSQL("INSERT INTO sqlite_sequence (name, seq) VALUES ('gym', ?)", arrayOf<Any?>(it))
         }
     }
+
+    /**
+     * The weekday plan from each gym's weekdays: every day any gym had (1 is Monday), with the first
+     * gym in [gyms] that had it. [gyms] are the gyms not deleted, in the gym list's order, each with
+     * its days as bits (bit 0 Monday). Also run on a restored backup from before v23.
+     */
+    fun planFrom(gyms: List<Pair<Long, Int>>): Map<Int, Long> =
+        (1..7).mapNotNull { day -> gyms.firstOrNull { (_, bits) -> bits and (1 shl (day - 1)) != 0 }?.let { day to it.first } }.toMap()
 }
 
 /**

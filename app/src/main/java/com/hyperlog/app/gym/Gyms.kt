@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.hyperlog.app.week.WeekdayPlan
 import com.hyperlog.app.week.WeekdayPlans
-import com.hyperlog.app.week.toPlan
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
@@ -113,6 +112,7 @@ enum class LadderState(val key: String) {
  */
 class Gyms(private val db: HyperlogDatabase) {
     private val dao = db.gyms()
+    private val weekdayPlans = WeekdayPlans(db)
 
     val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems(), dao.observeMissing(), dao.observeRemembered()) { gyms, items, missing, remembered ->
         val byGym = items.groupBy { it.gymId }
@@ -137,7 +137,7 @@ class Gyms(private val db: HyperlogDatabase) {
     suspend fun deleteGym(id: Long) {
         val items = dao.items(id)
         items.forEach { deleteItem(it.id) }
-        db.weekdayPlan().forgetGym(id)
+        weekdayPlans.forgetGym(id)
         if (dao.gymUsed(id) || items.any { dao.itemUsed(it.id) }) dao.archiveGym(id) else dao.deleteGym(id)
     }
 
@@ -160,7 +160,7 @@ class Gyms(private val db: HyperlogDatabase) {
 
     /**
      * Imports the gym in [text] (docs/gym-format.md) as a new gym, all in one transaction: its
-     * usual days (training days with this gym), pin plates, dumbbell rack, bars, racks and machines, each machine remembered for
+     * usual days (weekday plan days at this gym, taken from any gym that had them), pin plates, dumbbell rack, bars, racks and machines, each machine remembered for
      * the exercises it serves. Gyms already here are never changed.
      */
     suspend fun import(text: String): Import {
@@ -172,8 +172,7 @@ class Gyms(private val db: HyperlogDatabase) {
         val id = db.withTransaction {
             val id = addGym(file.name)
             if (file.usualDays.isNotEmpty()) {
-                val plan = db.weekdayPlan().all().toPlan()
-                WeekdayPlans(db).set(WeekdayPlan(plan.gyms + file.usualDays.associateWith { id }))
+                weekdayPlans.set(WeekdayPlan(weekdayPlans.current().gyms + file.usualDays.associateWith { id }))
             }
             file.pinPlates?.let { setPinPlates(id, it) }
             file.plates?.let { setPlates(id, it) }
@@ -236,12 +235,12 @@ class Gyms(private val db: HyperlogDatabase) {
     /** The gym to preselect when a session starts on [day]; see [usualGym]. */
     suspend fun usualGym(day: DayOfWeek, zone: ZoneId = ZoneId.systemDefault()): UsualGym? {
         val gyms = dao.observeGyms().first().map { it.toGym(emptyList()) }
-        return usualGym(gyms, db.weekdayPlan().all().toPlan(), dao.visits(), day, zone)
+        return usualGym(gyms, weekdayPlans.current(), dao.visits(), day, zone)
     }
 
     /** The usual gym for a session started today, kept up to date as gyms and sessions change. */
     fun usualGymToday(zone: ZoneId = ZoneId.systemDefault()): Flow<UsualGym?> =
-        combine(gyms, WeekdayPlans(db).plan, dao.observeVisits()) { gyms, plan, visits ->
+        combine(gyms, weekdayPlans.plan, dao.observeVisits()) { gyms, plan, visits ->
             usualGym(gyms, plan, visits, java.time.LocalDate.now(zone).dayOfWeek, zone)
         }
 

@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.hyperlog.app.data.HyperlogDatabase
-import com.hyperlog.app.week.WeekdayPlan
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -139,8 +138,8 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
     }
 
     /**
-     * A file from before v23, when each gym had its weekdays: they become your training days, each
-     * with its gym, as Migration22To23 moves them, and leave the gym rows.
+     * A file from before v23, when each gym had its weekdays: they become the weekday plan, each day
+     * with its gym, as [com.hyperlog.app.data.Migration22To23] moves them, and leave the gym rows.
      */
     private fun movedWeekdays(tables: JsonObject): JsonObject {
         val gyms = tables["gym"]?.let { it as JsonArray }.orEmpty().map { it as JsonObject }
@@ -148,12 +147,11 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
         // Not deleted, in the gym list's order: by name ignoring ASCII case (SQLite's NOCASE), then id.
         val listed = gyms.filter { (it["archived"] as? JsonPrimitive)?.longOrNull != 1L }
             .sortedWith(compareBy<JsonObject>({ (it["name"] as JsonPrimitive).content.asciiLowercase() }, { it.long("id") }))
-        val plan = WeekdayPlan.fromGymWeekdays(listed.map { it.long("id") to ((it["weekdays"] as? JsonPrimitive)?.longOrNull ?: 0L).toInt() })
-        val days = plan.gyms.entries.sortedBy { it.key }.map { (day, gym) ->
-            JsonObject(mapOf("weekday" to JsonPrimitive(day.value), "gym_id" to JsonPrimitive(gym)))
+        val plan = com.hyperlog.app.data.Migration22To23.planFrom(listed.map { it.long("id") to ((it["weekdays"] as? JsonPrimitive)?.longOrNull ?: 0L).toInt() })
+        val days = plan.entries.sortedBy { it.key }.map { (day, gym) ->
+            JsonObject(mapOf("weekday" to JsonPrimitive(day), "gym_id" to JsonPrimitive(gym)))
         }
-        val dropped = BackupFormat.Dropped.getValue(23).getValue("gym")
-        return JsonObject(tables + mapOf("gym" to JsonArray(gyms.map { JsonObject(it - dropped) }), "weekday_plan" to JsonArray(days)))
+        return JsonObject(tables + mapOf("gym" to JsonArray(gyms.map { JsonObject(it - "weekdays") }), "weekday_plan" to JsonArray(days)))
     }
 
     private fun String.asciiLowercase() = map { if (it in 'A'..'Z') it + ('a' - 'A') else it }.joinToString("")

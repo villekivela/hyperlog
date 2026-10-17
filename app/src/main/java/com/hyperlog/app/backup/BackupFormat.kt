@@ -59,14 +59,6 @@ object BackupFormat {
         23 to mapOf("weekday_plan" to emptySet()),
     )
 
-    /**
-     * What each database version after [OLDEST_DATABASE] dropped, table to columns. A file from
-     * before it still has them, and its upgrade step in [Backups] reads them before the rows go in.
-     */
-    val Dropped: Map<Int, Map<String, Set<String>>> = mapOf(
-        23 to mapOf("gym" to setOf("weekdays")),
-    )
-
     /** The columns of [table] a file made at database version [database] may lack. */
     fun addedSince(database: Int, table: String): Set<String>? =
         Added.filterKeys { it > database }.values.mapNotNull { it[table] }.takeIf { it.isNotEmpty() }?.flatten()?.toSet()

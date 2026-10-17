@@ -41,39 +41,39 @@ import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.Group
 import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.week.WeekdayPlan
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
 
-/** Program's line for your training days: `3 days a week · Mon Wed Fri`, or `Set your training days`. */
+/** Program's line for the weekday plan: `3 days a week · Mon Wed Fri`, or `Set your training days`. */
 @Composable
-internal fun trainingDaysLine(plan: WeekdayPlan): String =
-    if (plan.days.isEmpty()) stringResource(R.string.training_days_none)
+internal fun weekdayPlanLine(plan: WeekdayPlan): String =
+    if (plan.days.isEmpty()) stringResource(R.string.weekday_plan_none)
     else pluralStringResource(
-        R.plurals.training_days_line, plan.days.size, plan.days.size,
+        R.plurals.weekday_plan_line, plan.days.size, plan.days.size,
         plan.days.sorted().joinToString(" ") { it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) },
     )
 
 /**
- * Your training days (SPEC, Training days): the seven weekdays as toggles and, with two or more
- * gyms, each day that's on with the gym it's at. Every change applies at once.
+ * The weekday plan's sheet, "Training days" on screen (SPEC, Training days): the seven weekdays as
+ * toggles and, with two or more gyms, each day that's on with the gym it's at. A day turned on
+ * with one gym is at it, so it keeps its gym when a second gym is added. Every change applies at once.
  */
 @Composable
-internal fun TrainingDaysSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChange: (WeekdayPlan) -> Unit, onDone: () -> Unit) {
+internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChange: (WeekdayPlan) -> Unit, onDone: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val several = gyms.size >= 2
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
-        Text(stringResource(R.string.training_days_title), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.weekday_plan_title), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.headlineSmall)
         Text(
-            stringResource(if (several) R.string.training_days_body_gyms else R.string.training_days_body),
+            stringResource(if (several) R.string.weekday_plan_body_gyms else R.string.weekday_plan_body),
             Modifier.padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 16.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,
         )
         WeekdayToggles(plan.days, Modifier.padding(horizontal = 24.dp)) { day, on ->
-            onChange(WeekdayPlan(if (on) plan.gyms + (day to null) else plan.gyms - day))
+            onChange(WeekdayPlan(if (on) plan.gyms + (day to gyms.singleOrNull()?.id) else plan.gyms - day))
         }
         if (several && plan.days.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
@@ -95,8 +95,8 @@ internal fun TrainingDaysSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChan
 private fun DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
-    val gymName = gym?.name ?: stringResource(R.string.training_days_any_gym)
-    val described = stringResource(R.string.training_days_gym_on, dayName, gymName)
+    val gymName = gym?.name ?: stringResource(R.string.weekday_plan_any_gym)
+    val described = stringResource(R.string.weekday_plan_gym_on, dayName, gymName)
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -104,15 +104,15 @@ private fun DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -
         Text(dayName, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Box {
             TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
-                Text(interFigures(gymName))
+                Text(gymName)
                 Spacer(Modifier.size(4.dp))
                 SymbolIcon(Symbol.ArrowDropDown, null)
             }
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
                 gyms.forEach { g ->
-                    DropdownMenuItem(text = { Text(interFigures(g.name)) }, onClick = { open = false; onPick(g.id) })
+                    DropdownMenuItem(text = { Text(g.name) }, onClick = { open = false; onPick(g.id) })
                 }
-                DropdownMenuItem(text = { Text(stringResource(R.string.training_days_any_gym)) }, onClick = { open = false; onPick(null) })
+                DropdownMenuItem(text = { Text(stringResource(R.string.weekday_plan_any_gym)) }, onClick = { open = false; onPick(null) })
             }
         }
     }

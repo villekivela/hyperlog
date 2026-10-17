@@ -303,6 +303,8 @@ class ProgramScreenTest {
         compose.onNodeWithContentDescription("Tuesday").assertIsOff().performClick()
         compose.onNodeWithContentDescription("Wednesday").performClick()
         assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.FRIDAY), plan.days)
+        // A day turned on with one gym is at it, so it keeps it when a second gym comes.
+        assertEquals(1L, plan.gyms[DayOfWeek.TUESDAY])
         // With one gym every day is at it, so no day picks one.
         compose.onNodeWithContentDescription("Gym on Monday", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Done").performClick()

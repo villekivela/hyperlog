@@ -85,9 +85,9 @@ The backup follows the database. When a ticket bumps the Room version:
    in `Backups` (new tables and new columns with defaults need none: list them in
    `BackupFormat.Added` under the version that added them, so an older file may lack them; a
    renamed or reshaped column needs a step), and keep a fixture for each version. A dropped
-   column goes in `BackupFormat.Dropped`, and its step reads it out of an older file before the
-   rows go in: a file from before v23 has each gym's `weekdays`, which become `weekday_plan`
-   rows as the v23 migration moves them.
+   column needs a step that reads it out of an older file before the rows go in: a file from
+   before v23 has each gym's `weekdays`, which become `weekday_plan` rows as the v23 migration
+   moves them (`Migration22To23.planFrom`).
 
 ## Android Auto Backup
 

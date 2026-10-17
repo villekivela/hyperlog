@@ -334,16 +334,16 @@
 
     <!-- Program (#6) -->
     <string name="program_title">Program</string>
-    <string name="training_days_none">Set your training days</string>
-    <plurals name="training_days_line">
+    <string name="weekday_plan_none">Set your training days</string>
+    <plurals name="weekday_plan_line">
         <item quantity="one">%1$d day a week · %2$s</item>
         <item quantity="other">%1$d days a week · %2$s</item>
     </plurals>
-    <string name="training_days_title">Training days</string>
-    <string name="training_days_body">Time off on Today counts from these days.</string>
-    <string name="training_days_body_gyms">Time off on Today counts from these days, and a session started on one picks its gym.</string>
-    <string name="training_days_any_gym">Any gym</string>
-    <string name="training_days_gym_on">Gym on %1$s: %2$s</string>
+    <string name="weekday_plan_title">Training days</string>
+    <string name="weekday_plan_body">Time off on Today counts from these days.</string>
+    <string name="weekday_plan_body_gyms">Time off on Today counts from these days, and a session started on one picks its gym.</string>
+    <string name="weekday_plan_any_gym">Any gym</string>
+    <string name="weekday_plan_gym_on">Gym on %1$s: %2$s</string>
     <string name="program_import">Import program</string>
     <string name="program_import_short">Import a program</string>
     <string name="starter_label">Starter program</string>

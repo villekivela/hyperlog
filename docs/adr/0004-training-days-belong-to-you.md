@@ -12,5 +12,8 @@ before. Deleting a gym keeps its days, naming no gym.
 
 The v23 migration, and the restore of an older backup, turn every gym's weekdays into training days
 with that gym; when two gyms shared a day, the first in the gym list (by name) keeps it, as the old
-usual-gym rule picked it. A gym file's `usualDays` is still read on import, as those days' gym, and
-never written.
+usual-gym rule picked it. An archived gym's days are left out, as they no longer counted. A gym file's `usualDays` is still read on import, as those days' gym (moving a
+day from another gym), and never written.
+
+In code and docs it stays the **weekday plan** (`WeekdayPlan`, table `weekday_plan`); "Training
+days" is only the words on screen, since a program's days are also days.
