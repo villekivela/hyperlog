@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
@@ -95,16 +96,18 @@ internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChang
 private fun DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    val shortName = day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
     val gymName = gym?.name ?: stringResource(R.string.weekday_plan_any_gym)
     val described = stringResource(R.string.weekday_plan_gym_on, dayName, gymName)
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(dayName, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-        Box {
+        Text(shortName, Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1, softWrap = false)
+        // The gym takes what the day name leaves and ends in an ellipsis, so the arrow always shows.
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
-                Text(gymName)
+                Text(gymName, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.size(4.dp))
                 SymbolIcon(Symbol.ArrowDropDown, null)
             }
