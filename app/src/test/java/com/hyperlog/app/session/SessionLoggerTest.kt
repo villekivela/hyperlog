@@ -281,6 +281,7 @@ class SessionLoggerTest {
         now += 86_400_000
         logger.start()
         logger.addExercise("cable_lateral_raise")
+        logger.closeWarmup()
         logger.keep("75")
         assertEquals(75.0, logger.session.current!!.sets.single().weightKg, 0.001)
 

@@ -74,6 +74,7 @@ class BackupsTest {
 
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
+        closeWarmup()
         focus(Field.Weight); type(kg); done()
         type("$reps"); selectRir(rir); done()
     }

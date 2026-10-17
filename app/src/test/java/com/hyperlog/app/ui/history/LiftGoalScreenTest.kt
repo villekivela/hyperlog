@@ -91,7 +91,7 @@ class LiftGoalScreenTest {
         compose.onNodeWithText("Start session").performClick()
         compose.waitFor("Add exercise")
         compose.onNodeWithText("Barbell Bench Press").performClick()
-        compose.waitForDescription("Hide keypad")
+        compose.waitForDescription("Back to the set")
 
         compose.onNodeWithText("Barbell Bench Press").performClick()
 

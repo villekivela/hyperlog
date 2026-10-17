@@ -106,6 +106,7 @@ class GymsTest {
             now = at(day)
             logger.start(gym)
             logger.addExercise("db_bench_press")
+            logger.closeWarmup()
             "25".forEach { logger.press(PadKey.Digit(it.digitToInt())) }
             logger.done(); logger.press(PadKey.Digit(8)); logger.selectRir(2); logger.done()
             logger.finish()

@@ -86,6 +86,7 @@ class StartingWeightSessionTest {
 
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
+        closeWarmup()
         focus(Field.Weight); kg.forEach { press(if (it == '.') PadKey.Dot else PadKey.Digit(it.digitToInt())) }; done()
         "$reps".forEach { press(PadKey.Digit(it.digitToInt())) }; if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }

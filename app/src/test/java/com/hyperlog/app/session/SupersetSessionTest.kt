@@ -105,6 +105,25 @@ class SupersetSessionTest {
     }
 
     @Test
+    fun theSecondOfASupersetPairOpensOnItsFirstWarmUp() = runTest {
+        program()
+        val first = logger()
+        first.log("20"); first.log("20")
+        first.log("15"); first.log("10"); first.log("15"); first.log("10")
+        first.log("8"); first.log("8")
+        first.finish()
+        now += 86_400_000
+
+        val logger = logger()
+        listOf(1, 2).forEach { now += 5_000; logger.closeWarmup(); logger.type("8"); logger.done() }
+        assertEquals("db_bicep_curl", logger.onScreen)
+        now += 5_000; logger.closeWarmup(); logger.type("8"); logger.done()
+        // The curl's set 1 is logged: the French press comes up on its warm-up, not on set 1.
+        assertEquals("db_french_press", logger.onScreen)
+        assertEquals(0, logger.session.warmupEdit!!.index)
+    }
+
+    @Test
     fun anotherExerciseStartedFromTheListReturnsToTheSkippedOneWhenItIsDone() = runTest {
         program()
         val logger = logger()

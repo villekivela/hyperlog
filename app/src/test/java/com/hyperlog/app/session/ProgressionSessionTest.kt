@@ -69,6 +69,7 @@ class ProgressionSessionTest {
     /** Logs the active set with this weight, reps and RIR, whatever was prefilled. */
     private suspend fun SessionLogger.log(kg: String, reps: Int, rir: Int) {
         now += 200_000
+        closeWarmup()
         focus(com.hyperlog.app.domain.Field.Weight); type(kg); done()
         type("$reps"); if (state.value?.entry?.rir != rir) selectRir(rir); done()
     }

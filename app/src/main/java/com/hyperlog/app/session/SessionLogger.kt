@@ -91,6 +91,9 @@ class SessionLogger(
     /** The warm-up on the pad: screen state, kept in memory only, like a correction. */
     private var warmupEdit: WarmupEdit? = null
 
+    /** Set while a session is being started, so its first exercise is moved to; a load or restore isn't a move. */
+    private var starting = false
+
     /** The running session, or null when there is none. */
     val state: StateFlow<ActiveSession?> = _state.asStateFlow()
 
@@ -114,6 +117,7 @@ class SessionLogger(
     suspend fun start(gymId: Long? = null) = locked {
         if (_state.value == null) {
             dao.insertSession(SessionEntity(startedAt = clock(), gymId = gymId))
+            starting = true
             reload()
         }
     }
@@ -159,6 +163,7 @@ class SessionLogger(
             }
             dao.updateSession(dao.session(sessionId)!!.copy(currentSessionExerciseId = ids.firstOrNull()))
         }
+        starting = true
         reload()
     }
 
@@ -772,6 +777,12 @@ class SessionLogger(
         // The screen shows the tick at once; the write follows before the next call runs.
         _state.value = session.copy(exercises = session.exercises.map { if (it.id == current.id) it.copy(warmupsDone = done) else it })
         dao.setWarmupsDone(current.id, done)
+        // The pad was on a warm-up that is now ticked: it goes to the first unticked one, or to set 1.
+        val onPad = warmupEdit
+        if (onPad != null && onPad.sessionExerciseId == current.id && onPad.index < done) {
+            warmupEdit = session.warmups.getOrNull(done)?.let { WarmupEdit(current.id, done, warmupEntry(it)) }
+            _state.value = _state.value?.copy(warmupEdit = warmupEdit)
+        }
     }
 
     /**
@@ -1066,6 +1077,12 @@ class SessionLogger(
             rampEntry = if (entry?.field != Field.Weight) entry else previous?.takeIf { it.currentId == current?.id }?.rampEntry,
             latestSet = latest?.let { it.first to it.second },
         )
+        // Moving to an exercise puts its first unticked warm-up on the pad; with none, set 1 is the active row.
+        val moved = current?.id != previous?.currentId && (previous != null || starting)
+        starting = false
+        if (moved) {
+            warmupEdit = current?.let { c -> loaded.warmups.getOrNull(c.warmupsDone)?.let { WarmupEdit(c.id, c.warmupsDone, warmupEntry(it)) } }
+        }
         // A warm-up stays on the pad only while its exercise is on screen with its warm-ups.
         warmupEdit = warmupEdit?.takeIf { w ->
             w.sessionExerciseId == current?.id && correction == null && viewingId == null && w.index in loaded.warmups.indices
