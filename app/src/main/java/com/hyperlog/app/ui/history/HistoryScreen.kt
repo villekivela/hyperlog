@@ -61,7 +61,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
+import com.hyperlog.app.ui.theme.connectedChoiceColors
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -131,7 +131,7 @@ fun HistoryScreen(
                             onCheckedChange = { onTab(i) },
                             modifier = Modifier.weight(1f).semantics { role = Role.Tab },
                             shapes = if (i == 0) ButtonGroupDefaults.connectedLeadingButtonShapes() else ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                            colors = ToggleButtonDefaults.colors(containerColor = Tones.card),
+                            colors = connectedChoiceColors(),
                         ) { Text(stringResource(label)) }
                     }
                 }

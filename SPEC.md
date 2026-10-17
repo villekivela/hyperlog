@@ -27,7 +27,11 @@ configuration, iOS, web, any server.
   marks only what you act on or what's selected: primary and primaryContainer (`#5B3DD0` light;
   `#C4B1FF` and `#6A4CE0` dark, so the Start button stands off the dark surfaces), and a violet
   tint in secondaryContainer (`#E6DEFF` light, `#3A2C66` dark) for the selected tab and chips that
-  are on. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
+  are on. **Every connected button group picks in primaryContainer** with onPrimaryContainer
+  words, the deep violet of the selected calendar day, the selected tab and Start (decided by
+  the owner on #58; in light it is the same violet as primary). In dark that fill is 2.9:1 on a
+  card, so the choices not picked sit in a `surfaceContainerLowest` well (3.4:1 to the picked
+  one); in light they are the white card. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
   stay tinted greys. The RIR, progression, plate and error colours stay fixed, and every one keeps
   at least 30° of hue from the accent, so the accent is never green, amber, red or plate blue. The
   lightest-but-one container stops at `#E4DEEE` so the hot RIR chip keeps 3:1 on it. Light and dark
@@ -519,7 +523,12 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Today opens on a calendar of weeks** (decided 2026-10-17, #53), and the day picked on it
      fills the screen below. Today has no title bar: the calendar is the top of the screen.
      - **The calendar** is a row of seven days, Monday to Sunday, under the month and year
-       (`October 2026`, or `Oct – Nov 2026` for a week across two months). It swipes sideways a
+       (`October 2026`, or `Oct – Nov 2026` for a week across two months) and the program week
+       the calendar week stands for (`October 2026 · Week 7`, its figure in Inter): the week of
+       the first planned day in it, else of the first program session done in it. A week with
+       neither (outside the program, or with no program) shows the month alone. When the head
+       doesn't fit, the pencil's words go first, then the month abbreviates (`Sep 2026 · Week
+       12`), then the week goes; the month is cut only past all three. It swipes sideways a
        week at a time, back to the week of the first finished session and on to the week of the
        last planned day, and at least four weeks each way. **Paging to another week picks the same
        weekday in it**, so the card below is always of a day on screen (the pages are whole weeks,
@@ -529,9 +538,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        Today on the navigation bar starts again on today. A **Today** button in the header shows
        once you've moved off today and brings the strip and the selection back. A pencil in the
        header opens the **Training days** sheet, with or without a program; with no training days
-       the header says `Set your training days` beside it. The month is never cut short: when the
-       words don't fit beside it (larger system text, a long month, the Today button), the pencil
-       shows alone and is still read out as `Set your training days`.
+       the header says `Set your training days` beside it. When the words don't fit (larger system
+       text, a long month, the Today button), the pencil shows alone and is still read out as
+       `Set your training days`.
      - **Each day** has its weekday letter, its date in a 40 dp circle (filled primaryContainer
        when selected, ringed in primary when it's today and not selected) and a marker under it:
        a filled primary pill with the day's letter in onPrimary when a session was finished on it (a
@@ -542,8 +551,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        program day is planned for it, else nothing. Past days without a session have muted dates.
        A day's letter is the one its name starts with (`Day A — …`), else its place in the week.
      - **Planned dates.** The program runs as a sequence, so its dates are an estimate. The next
-       day goes on today, or on the next training day when a session was already finished today
-       (any session). Each following day goes on the next training day after that, to the
+       day goes on today, even when today isn't a training day (decided by the owner on #58:
+       Start is always for today), or on the next training day when a session was already
+       finished today (any session). Training days only place the later, estimated dates. Each following day goes on the next training day after that, to the
        program's last day. **With no training days, only the next day is marked** (tomorrow when
        a session was finished today). Each planned day is read for its date, with the Changes
        covering it. A finished program plans nothing.
@@ -562,6 +572,10 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        the sets as logged, RIR chips filled. On today, `Next: Day A on Mon 19 Oct` comes first,
        over the cards (what's next is the first question after training), selecting that day;
        Ad-hoc session follows the day.
+     - **A day of a deload week** (as the program marks it, GLOSSARY Deload), the hero or a planned
+       card, carries a small `Deload` tag under its name: the spa symbol and the word in a 24 dp
+       tertiaryContainer pill, like the technique pills. The program has no mark for a test, so
+       the week-12 bench test isn't tagged.
      - **A later planned day** reads `Planned · Wed 21 Oct · Week 7` with the letter outlined, its
        numbers and its planned exercises. It has no Start. With training days, the last date
        planned is the program's last day, and reads `Last day · Wed 25 Nov · Week 12`.

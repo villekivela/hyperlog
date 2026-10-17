@@ -84,11 +84,11 @@ internal fun shortDate(date: LocalDate): String =
     "${date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${date.dayOfMonth} ${date.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}"
 
 /** `October 2026`, or `Oct – Nov 2026` for a week across two months (`Dec 2026 – Jan 2027` across years). */
-internal fun monthLine(monday: LocalDate): String {
+internal fun monthLine(monday: LocalDate, abbreviated: Boolean = false): String {
     val sunday = monday.plusDays(6)
     fun short(d: LocalDate) = d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
     return when {
-        monday.month == sunday.month -> "${monday.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${monday.year}"
+        monday.month == sunday.month -> "${monday.month.getDisplayName(if (abbreviated) TextStyle.SHORT else TextStyle.FULL, Locale.ENGLISH)} ${monday.year}"
         monday.year == sunday.year -> "${short(monday)} – ${short(sunday)} ${sunday.year}"
         else -> "${short(monday)} ${monday.year} – ${short(sunday)} ${sunday.year}"
     }
@@ -157,6 +157,17 @@ private fun spoken(name: DoneName): String = when (name) {
     DoneName.AdHoc -> stringResource(R.string.today_cell_ad_hoc)
 }
 
+/**
+ * The program week a calendar week from [monday] stands for: the week of its first planned day,
+ * else of its first program session done; null when it has neither (outside the program, or no
+ * program).
+ */
+internal fun programWeekOf(monday: LocalDate, planned: Map<LocalDate, PlannedDay>, done: Map<LocalDate, List<PastSessionItem>>): Int? {
+    val days = (0..6L).map { monday.plusDays(it) }
+    return days.firstNotNullOfOrNull { planned[it]?.position?.week }
+        ?: days.firstNotNullOfOrNull { d -> done[d]?.firstNotNullOfOrNull { it.position?.week } }
+}
+
 /** About how long a day takes: each set's rest and about 45 s of work, to the nearest 5 minutes. */
 internal fun aboutMinutes(day: PlannedDay): Int =
     Math.round(day.slots.sumOf { s -> s.sets.sumOf { it.rest + 45 } } / 60.0 / 5).toInt() * 5
@@ -175,9 +186,19 @@ internal fun CalendarHead(
     noWeekdayPlan: Boolean,
     onWeekdayPlan: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The program week of the week shown (programWeekOf); null outside the program. */
+    week: Int? = null,
 ) {
-    val month: @Composable () -> Unit = {
-        Text(interFigures(monthLine(monday)), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    // What the head can say, longest first: the month and the week, the month abbreviated and the
+    // week, then the month alone, cut only as a last resort.
+    val weekWords = week?.let { stringResource(R.string.today_head_week, it) }
+    val lines = listOfNotNull(
+        weekWords?.let { "${monthLine(monday)} · $it" },
+        weekWords?.let { "${monthLine(monday, abbreviated = true)} · $it" },
+        monthLine(monday),
+    ).distinct()
+    val month: @Composable (String) -> Unit = { line ->
+        Text(interFigures(line), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     val actions: @Composable (words: Boolean) -> Unit = { words ->
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -197,8 +218,11 @@ internal fun CalendarHead(
     }
     SubcomposeLayout(modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 24.dp, end = 8.dp)) { constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
-        val monthText = subcompose("month", month).single()
-        val monthWidth = monthText.maxIntrinsicWidth(loose.maxHeight)
+        // Each line's width, measured unseen.
+        val widths = lines.mapIndexed { i, line ->
+            subcompose("line-$i") { Box(Modifier.clearAndSetSemantics {}) { month(line) } }.single().maxIntrinsicWidth(loose.maxHeight)
+        }
+        val longest = widths.first()
         // The actions with the prompt's words, measured unseen: the text buttons' own padding and
         // least width around their contents, with no semantics, so nothing to tap or read is
         // composed twice.
@@ -213,9 +237,12 @@ internal fun CalendarHead(
                         Text(stringResource(R.string.weekday_plan_none), style = label)
                     }
                 }
-            }.single().maxIntrinsicWidth(loose.maxHeight) + monthWidth <= constraints.maxWidth
+            }.single().maxIntrinsicWidth(loose.maxHeight) + longest <= constraints.maxWidth
         val end = subcompose("actions") { actions(withWords) }.single().measure(loose)
-        val start = monthText.measure(loose.copy(maxWidth = (constraints.maxWidth - end.width).coerceAtLeast(0)))
+        // The pencil's words went first; then the month abbreviates; then the week goes.
+        val room = (constraints.maxWidth - end.width).coerceAtLeast(0)
+        val line = lines[widths.indexOfFirst { it <= room }.takeIf { it >= 0 } ?: lines.lastIndex]
+        val start = subcompose("month") { month(line) }.single().measure(loose.copy(maxWidth = room))
         val height = maxOf(start.height, end.height, constraints.minHeight)
         layout(constraints.maxWidth, height) {
             // Relative, so a right-to-left layout mirrors the head.
@@ -359,7 +386,16 @@ private fun PlannedStats(day: PlannedDay, color: Color) =
 
 /** The letter, the head over the day's title, side by side at the top of a day's card. */
 @Composable
-private fun CardHead(letter: String?, head: String, title: String, letterContainer: Color?, letterContent: Color, headColor: Color, titleColor: Color) {
+private fun CardHead(
+    letter: String?,
+    head: String,
+    title: String,
+    letterContainer: Color?,
+    letterContent: Color,
+    headColor: Color,
+    titleColor: Color,
+    deload: Boolean = false,
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (letter != null) {
             LetterBadge(letter, letterContainer, letterContent)
@@ -368,11 +404,33 @@ private fun CardHead(letter: String?, head: String, title: String, letterContain
         Column(Modifier.weight(1f)) {
             Text(interFigures(head), style = MaterialTheme.typography.labelLarge, color = headColor)
             Text(interFigures(title), style = MaterialTheme.typography.titleLarge, color = titleColor)
+            if (deload) {
+                Spacer(Modifier.height(8.dp))
+                DeloadTag()
+            }
         }
     }
 }
 
+/**
+ * `Deload` on a day of a deload week: a small tonal tag like the technique pills, the program's
+ * spa symbol and the word in onTertiaryContainer, 24 dp high on the 8 dp grid.
+ */
+@Composable
+private fun DeloadTag() {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.height(24.dp).clip(RoundedCornerShape(8.dp)).background(cs.tertiaryContainer).padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SymbolIcon(Symbol.Spa, null, Modifier.size(16.dp), tint = cs.onTertiaryContainer)
+        Spacer(Modifier.width(4.dp))
+        Text(stringResource(R.string.today_deload), Modifier.testTag(DeloadTagTag), style = MaterialTheme.typography.labelMedium, color = cs.onTertiaryContainer)
+    }
+}
+
 internal const val HeroCardTag = "today-hero"
+internal const val DeloadTagTag = "today-deload"
 
 /**
  * The next day to train, in primary container: its letter in the cookie, `Week 7 · Intensify`
@@ -394,6 +452,7 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
             title = dayTitle(day.day.name),
             letterContainer = cs.onPrimaryContainer, letterContent = cs.primaryContainer,
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
+            deload = day.deload,
         )
         Spacer(Modifier.height(20.dp))
         PlannedStats(day, cs.onPrimaryContainer)
@@ -457,6 +516,7 @@ internal fun PlannedCard(day: PlannedDay, date: LocalDate, last: Boolean = false
             title = dayTitle(day.day.name),
             letterContainer = null, letterContent = cs.primary,
             headColor = cs.primary, titleColor = cs.onSurface,
+            deload = day.deload,
         )
         Spacer(Modifier.height(20.dp))
         PlannedStats(day, cs.onSurface)

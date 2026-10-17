@@ -36,11 +36,11 @@ class CalendarHeadTest {
     /** The longest month name. */
     private val september = LocalDate.of(2026, 9, 14)
 
-    private fun head(showToday: Boolean, fontScale: Float = 1.15f, monday: LocalDate = september) = compose.setContent {
+    private fun head(showToday: Boolean, fontScale: Float = 1.15f, monday: LocalDate = september, week: Int? = null) = compose.setContent {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
             HyperlogTheme {
-                CalendarHead(monday, showToday = showToday, onToday = {}, noWeekdayPlan = true, onWeekdayPlan = {})
+                CalendarHead(monday, showToday = showToday, onToday = {}, noWeekdayPlan = true, onWeekdayPlan = {}, week = week)
             }
         }
     }
@@ -70,5 +70,23 @@ class CalendarHeadTest {
     fun withRoomThePromptKeepsItsWords() {
         head(showToday = false, fontScale = 1f, monday = LocalDate.of(2026, 10, 12))
         compose.onNodeWithText("Set your training days").assertHasClickAction()
+    }
+
+    @Test
+    fun theProgramWeekFollowsTheMonth() {
+        head(showToday = false, fontScale = 1f, monday = LocalDate.of(2026, 10, 12), week = 7)
+        compose.onNodeWithText("October 2026 · Week 7").assertExists()
+    }
+
+    @Test
+    @Config(qualifiers = "w426dp-h952dp")
+    fun onThePhonesWidthTheLongestMonthAbbreviatesToKeepItsWeekBesideTodayAndThePencil() {
+        head(showToday = true, week = 12)
+        val head = compose.onNodeWithText("Week 12", substring = true)
+        assertFalse("The head is cut short", head.cutShort())
+        // Off today the whole name and the week don't both fit beside Today and the pencil: the
+        // month abbreviates before the week goes, and nothing is cut.
+        compose.onNodeWithText("Sep 2026 · Week 12").assertExists()
+        compose.onNodeWithContentDescription("Set your training days").assertHasClickAction()
     }
 }

@@ -319,8 +319,10 @@ fun TodayScreen(
     ) { padding ->
       if (loaded) Column(Modifier.fillMaxSize().padding(padding)) {
         // No title bar: the calendar is the top of the screen.
+        val shownWeek = firstWeek.plusWeeks(pager.currentPage.toLong())
         CalendarHead(
-            firstWeek.plusWeeks(pager.currentPage.toLong()),
+            shownWeek,
+            week = programWeekOf(shownWeek, planned, done),
             showToday = !isToday || pager.currentPage != todayPage,
             onToday = { select(today) },
             noWeekdayPlan = weekdayPlan.days.isEmpty(),

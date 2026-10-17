@@ -28,6 +28,7 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TestPrograms
 import com.hyperlog.app.ui.program.ProgramStore
 import com.hyperlog.app.waitFor
+import com.hyperlog.app.waitGone
 import com.hyperlog.app.waitForDescription
 import com.hyperlog.app.week.WeekdayPlan
 import com.hyperlog.app.week.WeekdayPlans
@@ -309,5 +310,15 @@ class TodayCalendarTest {
         compose.waitForIdle()
         val tops = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().map { it.boundsInRoot.top }
         assertTrue("The day opened at the top again: $tops, was $top", tops.any { abs(it - top) < 2f })
+    }
+
+    @Test
+    fun theHeadNamesTheProgramWeekOfTheWeekShown() {
+        importProgram()
+        // Today is week 1's Day A, planned: this calendar week is program week 1.
+        compose.waitFor("· Week 1", substring = true)
+        // With no training days nothing else is dated: next week is just its month.
+        show(today.plusWeeks(1))
+        compose.waitGone("· Week", substring = true)
     }
 }

@@ -5,6 +5,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonColors
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -306,9 +307,7 @@ fun ConnectedChoice(
                     labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-                colors = choiceColors(MaterialTheme.colorScheme, color, onAccent).let {
-                    ToggleButtonDefaults.colors(containerColor = it.unchecked, contentColor = it.onUnchecked, checkedContainerColor = it.checked, checkedContentColor = it.onChecked)
-                },
+                colors = connectedChoiceColors(color, onAccent),
                 contentPadding = contentPadding,
             ) { Text(label, maxLines = 1) }
         }
@@ -319,15 +318,25 @@ fun ConnectedChoice(
 data class ChoiceColors(val checked: Color, val onChecked: Color, val unchecked: Color, val onUnchecked: Color)
 
 /**
- * The colours of a connected choice on [card], or on the accent card when [onAccent]. On a neutral card the picked one is filled
- * primary (Material's toggle button). On the accent card (primaryContainer) primary would vanish in
- * light, where the two are one violet, so the picked one is filled onPrimaryContainer with the
- * card's violet for its words, as the hero's Start, and the others sit in a shaded well.
+ * The colours of a connected choice on [card], or on the accent card when [onAccent]. On a
+ * neutral card the picked one is filled primaryContainer, the deep violet of the selected day,
+ * tab and Start (the owner's call, #58). On the accent card (primaryContainer) that fill would
+ * vanish, so the picked one is filled onPrimaryContainer with the card's violet for its words, as
+ * the hero's Start, and the others sit in a shaded well.
  */
 fun choiceColors(scheme: ColorScheme, card: Color, onAccent: Boolean): ChoiceColors = with(scheme) {
     if (onAccent) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
-    else ChoiceColors(primary, onPrimary, card, onSurfaceVariant)
+    // In dark the deep violet is only 2.9:1 on a card, so the others sit in a well a tone below
+    // the screen (3.4:1 to the picked one); in light they're the white card.
+    else ChoiceColors(primaryContainer, onPrimaryContainer, if (surface.luminance() < 0.5f) surfaceContainerLowest else card, onSurfaceVariant)
 }
+
+/** [choiceColors] as a toggle button's colours, for every connected group. */
+@Composable
+fun connectedChoiceColors(card: Color = Tones.card, onAccent: Boolean = false): ToggleButtonColors =
+    choiceColors(MaterialTheme.colorScheme, card, onAccent).let {
+        ToggleButtonDefaults.colors(containerColor = it.unchecked, contentColor = it.onUnchecked, checkedContainerColor = it.checked, checkedContentColor = it.onChecked)
+    }
 
 /**
  * A filled button's fill and words on the accent card (primaryContainer): onPrimaryContainer with

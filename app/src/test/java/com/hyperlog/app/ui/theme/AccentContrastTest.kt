@@ -41,7 +41,9 @@ class AccentContrastTest {
             listOf("card" to (if (s == InkDark) s.surfaceBright else s.surfaceContainerLowest), "accent card" to s.primaryContainer).forEach { (where, card) ->
                 val c = choiceColors(s, card, onAccent = where == "accent card")
                 val unchecked = c.unchecked.compositeOver(card)
-                assertTrue("$name checked on $where is ${contrast(c.checked, card)}:1", contrast(c.checked, card) >= 3f)
+                // On the accent card the picked one must stand off the card itself. On a neutral card
+                // the group's buttons are its edge: the picked one stands off the others.
+                if (where == "accent card") assertTrue("$name checked on $where is ${contrast(c.checked, card)}:1", contrast(c.checked, card) >= 3f)
                 assertTrue("$name checked vs unchecked on $where is ${contrast(c.checked, unchecked)}:1", contrast(c.checked, unchecked) >= 3f)
                 assertTrue("$name checked words on $where", contrast(c.onChecked, c.checked) >= 4.5f)
                 assertTrue("$name unchecked words on $where", contrast(c.onUnchecked, unchecked) >= 4.5f)
@@ -56,6 +58,17 @@ class AccentContrastTest {
             val (fill, words) = accentButton(s)
             assertTrue("$name button on the accent card is ${contrast(fill, s.primaryContainer)}:1", contrast(fill, s.primaryContainer) >= 3f)
             assertTrue("$name button words", contrast(words, fill) >= 4.5f)
+        }
+    }
+
+    @Test
+    fun aPickedChoiceIsFilledPrimaryContainerInBothModes() {
+        // The owner's call (#58): every connected group picks in the deep violet of the selected
+        // day, the selected tab and Start; in light primary is the same violet anyway.
+        schemes.forEach { (name, s) ->
+            val card = if (s == InkDark) s.surfaceBright else s.surfaceContainerLowest
+            assertTrue("$name picked fill is ${choiceColors(s, card, onAccent = false).checked}", choiceColors(s, card, onAccent = false).checked == s.primaryContainer)
+            assertTrue("$name picked words", choiceColors(s, card, onAccent = false).onChecked == s.onPrimaryContainer)
         }
     }
 }

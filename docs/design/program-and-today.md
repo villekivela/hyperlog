@@ -248,6 +248,17 @@ supporting "From an old Hyperlog backup, no history", then "42 exercises · tap 
 - Finishing a session of a program day moves the position to the next day. A session with nothing
   logged is discarded and the day stays next. Finishing a resumed session again doesn't move it
   twice.
+- **The owner's answers (#58, 2026-10-17).** The next program day stays on today even on a day
+  that isn't a training day; training days only place the later dates (issue 2, decided). Deload
+  days carry a `Deload` tag under the name on the hero and planned cards: the program's spa
+  symbol and the word, labelMedium in onTertiaryContainer, in a 24 dp tertiaryContainer pill with
+  8 dp sides, 8 dp under the title (the program doesn't mark a test, so none is tagged). The head
+  names the program week (`programWeekOf`: the week of the first planned day in the calendar week,
+  else of its first program session done): `October 2026 · Week 7`. When it doesn't fit, the
+  pencil's words go, then the month abbreviates (`Sep 2026 · Week 12` beside Today and the pencil
+  at 115 % on the phone's 426 dp), then the week goes; a cut month is the last resort, since the
+  month anchors the strip and the week is also on the cards. Every connected group picks in
+  primaryContainer (in dark, the others in a `surfaceContainerLowest` well for 3:1).
 - **Code review (f4d74f7).** TalkBack names a day's sessions `Day C`, `workout` or `ad-hoc
   session` from resources (a workout is never ad hoc, GLOSSARY). The floating Start workout waits
   for the sessions too. Today's saved state lives in the host's `SaveableStateHolder`, and each
@@ -395,7 +406,9 @@ Screens (Robolectric renders from `TodayRenders`, `RENDERS=<dir>`, `DARK=1` for 
 `light-` and `dark-`): `today-calendar-hero` (week 7 Day A today, week 6 done), `-done` (Day A
 finished today: the card, the logged sets, Next), `-next` (the hero on Mon 19 Oct, from Next),
 `-planned` (Wed 21 Oct, outlined), `-rest`, `-past-done` (Wed 14 Oct), `-last-week` (swiped
-back to an ad-hoc session: the tick), `-no-training-days` (only today marked; the header asks).
+back to an ad-hoc session: the tick), `-no-training-days` (only today marked; the header asks),
+`-deload` (week 12's Day B today: the Deload tag; the owner's imported copy of the program has no
+deload mark, so the emulator's data shows none).
 The older Today renders (`today-starter`, `-update-banner`, `-day`, `-time-off`, `-workout*`) are
 rendered again with the calendar on top.
 
@@ -445,6 +458,17 @@ they parted.
   top. Back from another tab keeps the day picked, like any Back; the bar's Today starts on today.
   The header's width probe is now a plain replica of the buttons, so nothing tappable is composed
   twice.
+- **The owner's answers (#58, 2026-10-17).** The next program day stays on today even on a day
+  that isn't a training day; training days only place the later dates (issue 2, decided). Deload
+  days carry a `Deload` tag under the name on the hero and planned cards: the program's spa
+  symbol and the word, labelMedium in onTertiaryContainer, in a 24 dp tertiaryContainer pill with
+  8 dp sides, 8 dp under the title (the program doesn't mark a test, so none is tagged). The head
+  names the program week (`programWeekOf`: the week of the first planned day in the calendar week,
+  else of its first program session done): `October 2026 · Week 7`. When it doesn't fit, the
+  pencil's words go, then the month abbreviates (`Sep 2026 · Week 12` beside Today and the pencil
+  at 115 % on the phone's 426 dp), then the week goes; a cut month is the last resort, since the
+  month anchors the strip and the week is also on the cards. Every connected group picks in
+  primaryContainer (in dark, the others in a `surfaceContainerLowest` well for 3:1).
 - **Code review (f4d74f7).** TalkBack names a day's sessions `Day C`, `workout` or `ad-hoc
   session` from resources (a workout is never ad hoc, GLOSSARY). The floating Start workout waits
   for the sessions too. Today's saved state lives in the host's `SaveableStateHolder`, and each

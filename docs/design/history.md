@@ -140,7 +140,8 @@ A goal is read against the estimate, never instead of it.
 
 ## Expressive pass
 
-Sessions | Progress is a connected button group (toggle buttons, the picked one filled) under the
+Sessions | Progress is a connected button group (toggle buttons, the picked one filled in
+primaryContainer, the others in a well in dark, `connectedChoiceColors`, as every group) under the
 top bar, in place of tabs. Section heads are titleSmall in primary. A trend's head (figure,
 status, chart, legend) is a card; its sessions follow as 52 dp segments. A past session's
 summary rows are segments; its exercise table is the logging screen's card with the Session

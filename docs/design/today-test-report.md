@@ -189,13 +189,13 @@ code changed. Checked on the emulator (AVD `hyperlog`, the phone's size and dens
 | # | Outcome |
 |---|---|
 | 1 | **Fixed.** Today's selection is held by the host, so Back from Open session returns to the day and week. Choosing Today on the bar starts again on today. `TodayCalendarTest.backFromADoneDaysSessionReturnsToThatDayAndWeek`. |
-| 2 | **Owner question.** SPEC's Planned dates rule puts the next day on today, even on a day that isn't a training day. Whether a non-training day should read as a rest day (with Start one tap away) is the owner's call. |
+| 2 | **Decided by the owner (2026-10-17):** the next day stays on today, even when today isn't a training day. Training days only place the later dates. See "The owner's answers" below. |
 | 3 | **Fixed.** Paging picks the same weekday in the week shown. The pages are whole weeks, so it never falls off the calendar. In SPEC (Today, the calendar). `TodayCalendarTest.pagingTheStripSelectsTheSameWeekdayInTheWeekShown`. |
 | 4 | **Fixed.** On today, after training, `Next: Day B on …` comes first, above the done cards. The assertion was added to `TodayCalendarTest.aSessionFinishedTodayShowsItsCardOpensInHistoryAndPointsToTheNextDay`. |
 | 5 | **Fixed (designer's call).** The marker shows `CA` for two program days in order, and `A+` for more sessions or for a program day beside an ad-hoc session. TalkBack names every session. `DayMarkerTest` (all four tests). |
 | 6 | **Fixed (designer's call).** With training days, the last planned date reads `Last day · Wed 25 Nov · Week 12`. Any date after it reads `Nothing planned` with `Last planned: Day C on Wed 25 Nov ›`. `TodayCalendarTest.pastTheProgramsLastDayNothingIsPlannedAndTheLastDaySaysSo`. |
-| 7 | **Kept, owner question.** Marking deload and test weeks on Today is the same open question as Program's issue 6. |
-| 8 | **Kept, owner question.** It's the same question as 7: whether the strip should name the program week or block. |
+| 7 | **Fixed after the owner answered:** deload days are tagged. See "The owner's answers" below. |
+| 8 | **Fixed after the owner answered:** the head names the program week. See "The owner's answers" below. |
 | 9 | **Kept (designer's call).** Program's "No dates" principle (#40, the owner's pick) stands. The training-days row sits right under Next, and Today shows the date one tap away. |
 | 10 | **Fixed.** The toggles read `Mo Tu We Th Fr Sa Su`, TalkBack still says the full name, and they fit at 115 % on the emulator. `WeekdayTogglesTest.noTwoDaysShareALabelAndTalkBackKeepsTheirNames`. |
 | 11 | **Fixed.** The past session's day name is now a two-line headline under a bar with only Back (`LargeTextTest.aPastSessionsTitleWrapsRatherThanBeingCut`). The Plates row wraps, up to three lines (`LargeTextTest.aGymsPlatesRowShowsEveryPlate`). The library already ended with a 96 dp foot plus the navigation inset. At the end of the list on the emulator, the last row clears New exercise, so there was no change and no test. A row passing under the button mid-scroll is how a floating button works. |
@@ -210,7 +210,7 @@ code changed. Checked on the emulator (AVD `hyperlog`, the phone's size and dens
 |---|---|
 | The gym's setup card looked inverted in light: the picked "kg, with small" had no fill, "lb stacks" was white, and Add had no shape. In light, primary and primaryContainer are the same `#5B3DD0`. No render covered the card, so only the device showed it. | **Fixed.** On an accent card, the picked choice and filled buttons are onPrimaryContainer with violet words, and the other choices sit in a shaded well. The same fix covers Coach's Review button and the session's Finish session. `AccentContrastTest.aChoiceOnTheAccentCardShowsWhichIsPicked` and `AccentContrastTest.aFilledButtonOnTheAccentCardStandsOffIt`. |
 | Done markers and the done card's cookie barely showed in light (secondaryContainer on the screen, 1.1:1). | **Fixed.** They are now filled primary with an onPrimary letter. `AccentContrastTest.aDoneDaysFillStandsOffTheScreenAndItsCards`. |
-| Connected-group selection is light lilac in some places and deep violet in others (dark only). | **Owner question.** In light both are one violet. Material's own roles differ between toggle buttons and chips, so this is taste. |
+| Connected-group selection is light lilac in some places and deep violet in others (dark only). | **Decided by the owner (2026-10-17):** every connected group picks in primaryContainer. See "The owner's answers". |
 
 ## Re-test on the emulator (6fc835b)
 
@@ -303,3 +303,12 @@ None.
 The two-axis review's findings were fixed in this PR. Gym lists now say
 `1 machine, 1 cable station · dumbbells and plates`, so the wording from fix 12 above has changed.
 A cable station isn't a machine (GLOSSARY, Equipment item).
+
+## The owner's answers (2026-10-17)
+
+| # | Outcome |
+|---|---|
+| 2 | **Decided:** the next program day stays on today, even when today isn't a training day. Training days only place the later, estimated dates (SPEC, Planned dates). |
+| 7 | **Fixed.** Deload days carry a `Deload` tag on the hero and planned cards. The program doesn't mark a test week, so nothing is tagged as a test. `DeloadTagTest`. |
+| 8 | **Fixed.** The head names the program week, as in `October 2026 · Week 7`. When space runs short, the month abbreviates before the week is dropped. `CalendarHeadTest.theProgramWeekFollowsTheMonth`, `CalendarHeadTest.onThePhonesWidthTheLongestMonthAbbreviatesToKeepItsWeekBesideTodayAndThePencil` and `TodayCalendarTest.theHeadNamesTheProgramWeekOfTheWeekShown`. |
+| Selection colours | **Fixed.** Every connected group now picks in primaryContainer. `AccentContrastTest.aPickedChoiceIsFilledPrimaryContainerInBothModes`. |

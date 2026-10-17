@@ -415,6 +415,8 @@
     <string name="today_week_block">Week %1$d · %2$s</string>
     <string name="today_ad_hoc">Ad-hoc session</string>
     <string name="today_calendar_today">Today</string>
+    <string name="today_head_week">Week %1$d</string>
+    <string name="today_deload">Deload</string>
     <string name="today_cell_done">done</string>
     <string name="today_cell_ad_hoc">ad-hoc session</string>
     <string name="today_cell_workout">workout</string>
