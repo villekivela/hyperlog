@@ -311,7 +311,7 @@ class WarmupSessionTest {
         val logger = benchWithHistory()
         logger.logRaise()
         assertEquals("Barbell Bench Press", logger.session.current!!.exercise.name)
-                assertEquals(true, logger.session.warmups.isNotEmpty())
+        assertEquals(true, logger.session.warmups.isNotEmpty())
         assertEquals(0, logger.session.warmupEdit!!.index)
     }
 
