@@ -1,6 +1,6 @@
 # Settings
 
-Behind the settings icon at the end of every destination's top bar; back returns there. Backups (#21) join it as a group of two rows.
+The fifth tab of the navigation bar: a destination with no back arrow, its title at the 24 dp text edge. Back goes to Today. The bar hides on its sub-screens (Gyms and equipment, the exercise library), whose back arrows return here. Backups (#21) join it as a group of two rows.
 
 ## Principles
 

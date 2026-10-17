@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.library
 
+import com.hyperlog.app.openTab
 import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -41,7 +42,7 @@ class LibraryScreenTest {
 
     private fun openLibrary() {
         compose.waitFor("Today")
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.waitFor("176 exercises")
         compose.click("Exercise library")
         compose.waitFor("Search 176 exercises")
@@ -119,8 +120,7 @@ class LibraryScreenTest {
         compose.onNodeWithText("Pec Deck").assertIsDisplayed()
 
         compose.onNodeWithContentDescription("Back").performClick()
-        compose.waitForIdle()
-        compose.onNodeWithContentDescription("Back").performClick()
+        compose.openTab("Today")
         compose.waitFor("Start session")
         compose.click("Start session")
         compose.waitFor("Add exercise")

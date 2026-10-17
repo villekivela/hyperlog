@@ -43,8 +43,9 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   for two- or three-way choices, expressive shapes (`MaterialShapes`) for the one memorable element
   of an empty or first-run screen, flexible top app bars. Selection is a filled container
   (`secondaryContainer` rows, a `primaryContainer` navigation pill), not just a radio dot.
-- **Navigation:** a navigation bar for Today, Program, Coach and History; Settings is an icon at
-  the end of each destination's top bar. The bar is hidden during a session.
+- **Navigation:** a navigation bar for Today, Program, Coach, History and Settings (the fifth
+  tab, with a filled symbol when selected); no destination's top bar has a gear. The bar is hidden
+  during a session and on sub-screens such as Gyms and equipment and the exercise library.
 - **A roomy set table.** Columns `32 · 80 · flex · 72 · 88 · 36` with the kg and reps cells 4 dp
   inside their columns, so a focused cell keeps 8 dp from its neighbour and 12 dp from the RIR chip.
 - **Input looks native.** Numbers go through the compact in-app pad drawn like the system number

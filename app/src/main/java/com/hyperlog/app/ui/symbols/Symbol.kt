@@ -65,6 +65,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     RestorePage(R.drawable.symbol_restore_page),
     Search(R.drawable.symbol_search),
     Settings(R.drawable.symbol_settings),
+    SettingsFill(R.drawable.symbol_settings_fill),
     SkipNext(R.drawable.symbol_skip_next),
     SmartDisplay(R.drawable.symbol_smart_display),
     SouthEast(R.drawable.symbol_south_east),

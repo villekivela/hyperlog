@@ -106,7 +106,6 @@ fun HistoryScreen(
     onLogBodyweight: (Double) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onSettings: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     Scaffold(
@@ -118,8 +117,7 @@ fun HistoryScreen(
                     colors = hyperlogTopBarColors(),
                     // The bar sets titles 16 dp in; the screen's text edge is 24 dp.
                 title = { Text(stringResource(R.string.history_title), Modifier.padding(start = 8.dp)) },
-                    // A destination of the navigation bar: no back arrow (back goes to Today), Settings at the end.
-                    actions = { IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) } },
+                    // A destination of the navigation bar: no back arrow (back goes to Today).
                 )
                 // Sessions | Progress as a connected button group, the expressive segmented control.
                 Row(

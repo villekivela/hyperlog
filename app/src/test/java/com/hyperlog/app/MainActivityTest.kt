@@ -29,7 +29,7 @@ class MainActivityTest {
         compose.waitFor("Today")
         compose.onNodeWithText("Starter program").assertIsDisplayed()
         compose.onNodeWithText("Hyperlog Full Body").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Settings").assertIsDisplayed()
+        compose.onNode(navItem("Settings")).assertIsDisplayed()
         compose.onNodeWithText("Start session").assertIsDisplayed()
         compose.onNodeWithText("Import a program").assertIsDisplayed()
     }
@@ -85,16 +85,44 @@ class MainActivityTest {
     }
 
     @Test
-    fun settingsOpensFromEveryDestinationsTopBarAndGoesBackThere() {
+    fun settingsIsTheFifthTabAndHasNoBackArrow() {
         compose.waitFor("Today")
-        listOf("Program", "Coach", "History").forEach { tab ->
-            compose.onNode(navItem(tab)).performClick()
-            compose.onNodeWithContentDescription("Settings").performClick()
-            compose.waitFor("Exercise library")
-            compose.onNode(hasTestTag(NavigationBarTag)).assertDoesNotExist()
-            compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
-            compose.await(navItem(tab).and(isSelected()))
+        compose.openTab("Settings")
+        compose.waitFor("Exercise library")
+        compose.onNode(navItem("Settings").and(isSelected())).assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back").assertDoesNotExist()
+    }
+
+    @Test
+    fun noDestinationsTopBarHasAGear() {
+        compose.waitFor("Today")
+        listOf("Today", "Program", "Coach", "History").forEach { tab ->
+            compose.openTab(tab)
+            compose.waitForIdle()
+            compose.onNodeWithContentDescription("Settings").assertDoesNotExist()
         }
+    }
+
+    @Test
+    fun backFromSettingsGoesToToday() {
+        compose.waitFor("Today")
+        compose.openTab("Program")
+        compose.openTab("Settings")
+        compose.waitFor("Exercise library")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.await(navItem("Today").and(isSelected()))
+    }
+
+    @Test
+    fun settingsSubScreensHideTheBarAndGoBackToSettings() {
+        compose.waitFor("Today")
+        compose.openTab("Settings")
+        compose.click("Exercise library")
+        compose.waitFor("Search 176 exercises")
+        compose.onNode(hasTestTag(NavigationBarTag)).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.await(navItem("Settings").and(isSelected()))
+        compose.onNode(hasTestTag(NavigationBarTag)).assertIsDisplayed()
     }
 
     @Test

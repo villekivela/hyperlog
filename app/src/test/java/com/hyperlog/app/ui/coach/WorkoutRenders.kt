@@ -132,7 +132,7 @@ class WorkoutRenders {
 
     @Test fun todayWithProgram() = render("today-workout") {
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
         )
     }
@@ -141,21 +141,21 @@ class WorkoutRenders {
         compose.onNode(androidx.compose.ui.test.hasTestTag(com.hyperlog.app.ui.today.ProgramDayCardTag)).performScrollTo()
     }) {
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
         )
     }
 
     @Test fun todayElsewhereStart() = render("today-workout-start-elsewhere", before = { compose.onNodeWithText("Start workout").performClick() }) {
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = waiting.copy(gymId = null), gyms = gyms, usualGym = usual,
         )
     }
 
     @Test fun todayNoProgram() = render("today-workout-no-program") {
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = null, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
         )
     }
@@ -166,7 +166,7 @@ class WorkoutRenders {
     }) {
         var shown by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Workouts.Waiting?>(waiting) }
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = shown, gyms = gyms, usualGym = usual,
             onRemoveWorkout = { shown = null },
         )
@@ -174,14 +174,14 @@ class WorkoutRenders {
 
     @Test fun todayStartSheet() = render("today-workout-start", before = { compose.onNodeWithText("Start workout").performClick() }) {
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, workout = waiting, gyms = gyms, usualGym = usual,
         )
     }
 
     @Test fun todayRunning() = render("today-workout-running") {
         TodayScreen(
-            onSettings = {}, sessionRunning = true, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = true, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, gyms = gyms, usualGym = usual,
             runningDay = hotel.day(), runningWorkout = true,
         )

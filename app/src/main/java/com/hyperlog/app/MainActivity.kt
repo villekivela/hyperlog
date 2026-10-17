@@ -136,16 +136,17 @@ private enum class Screen { Today, Settings, Library, Gyms, Program, History, Co
 
 internal const val NavigationBarTag = "navigation-bar"
 
-/** The four destinations, in the bar's order, with their symbols (outlined, filled when selected). */
+/** The five destinations, in the bar's order, with their symbols (outlined, filled when selected). */
 private val Tabs = listOf(
     Triple(Screen.Today, Symbol.Today, Symbol.TodayFill),
     Triple(Screen.Program, Symbol.ViewTimeline, Symbol.ViewTimelineFill),
     Triple(Screen.Coach, Symbol.Sports, Symbol.SportsFill),
     Triple(Screen.History, Symbol.History, Symbol.History),
+    Triple(Screen.Settings, Symbol.Settings, Symbol.SettingsFill),
 )
 
 /**
- * Today, Program, Coach and History as a Material 3 Expressive short navigation bar, a tone above
+ * Today, Program, Coach, History and Settings as a Material 3 Expressive short navigation bar, a tone above
  * the screens, with the selected item in a primary-container pill (docs/design/designer-brief.md).
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -159,6 +160,7 @@ private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
                     Screen.Program -> R.string.program_title
                     Screen.Coach -> R.string.coach_title
                     Screen.History -> R.string.history_title
+                    Screen.Settings -> R.string.settings
                     else -> R.string.today_title
                 },
             )
@@ -208,9 +210,6 @@ private fun App(
     val goals by sessions.goals.collectAsStateWithLifecycle()
     var left by rememberSaveable { mutableStateOf(false) }
     var screen by rememberSaveable { mutableStateOf(Screen.Today) }
-    /** The destination Settings was opened from, which back returns to. */
-    var settingsFrom by rememberSaveable { mutableStateOf(Screen.Today) }
-    val openSettings = { settingsFrom = screen; screen = Screen.Settings }
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
     var libraryQuery by rememberSaveable { mutableStateOf("") }
     val gyms by gymsModel.gyms.collectAsStateWithLifecycle()
@@ -335,9 +334,9 @@ private fun App(
     LaunchedEffect(finished?.sessionId) { finished?.let { pastModel.open(it.sessionId) } }
     val done = pastSession?.takeIf { it.id == finished?.sessionId }
     val sessionShown = finished == null && running != null && !left
-    // The navigation bar is for the four destinations themselves; a session, a sub-screen or Settings hides it.
+    // The navigation bar is for the five destinations themselves; a session or a sub-screen hides it.
     val tabShown = finished == null && !sessionShown && editing == null && when (screen) {
-        Screen.Today, Screen.Coach -> true
+        Screen.Today, Screen.Coach, Screen.Settings -> true
         Screen.Program -> !programView.changesOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
@@ -460,7 +459,6 @@ private fun App(
             onRunStarter = programModel::runStarter,
             onPropose = programModel::propose,
             onRevert = programModel::revert,
-            onSettings = openSettings,
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
             onOpenSession = { id -> pastModel.open(id); sessionFromProgram = true; screen = Screen.History },
@@ -498,7 +496,6 @@ private fun App(
             onCheckReply = { programModel.checkReply(AskClaudeShare.clipboard(context)) },
             onReview = programModel::reviewReply,
             onRevert = { programModel.revert(it); endAsk() },
-            onSettings = openSettings,
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         // A session opened from History or a trend goes back there, read again with any correction.
@@ -533,14 +530,13 @@ private fun App(
             onBodyweight = { bodyweightOpen = true },
             onLogBodyweight = historyModel::logBodyweight,
             onBack = { screen = Screen.Today },
-            onSettings = openSettings,
         )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
             onGyms = { screen = Screen.Gyms; gymId = null; ladder = null },
             onLibrary = { screen = Screen.Library },
-            onBack = { screen = settingsFrom },
+            onBack = { screen = Screen.Today },
             startingWeights = startingWeights,
             onImportStartingWeights = { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             backup = backup,
@@ -555,7 +551,6 @@ private fun App(
             version = BuildConfig.VERSION_NAME,
         )
         else -> TodayScreen(
-            onSettings = openSettings,
             sessionRunning = running != null,
             onResume = { left = false },
             onStart = { gym, adHoc, swaps ->

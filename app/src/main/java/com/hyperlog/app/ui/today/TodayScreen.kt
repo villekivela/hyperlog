@@ -92,7 +92,6 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TodayScreen(
-    onSettings: () -> Unit,
     sessionRunning: Boolean,
     onResume: () -> Unit,
     /**
@@ -210,11 +209,6 @@ fun TodayScreen(
             LargeFlexibleTopAppBar(
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp, as on the logging screen.
                 title = { Text(stringResource(R.string.today_title), Modifier.padding(start = 8.dp)) },
-                actions = {
-                    IconButton(onClick = onSettings) {
-                        SymbolIcon(Symbol.Settings, stringResource(R.string.settings))
-                    }
-                },
                 colors = hyperlogTopBarColors(),
                 scrollBehavior = scrollBehavior,
             )
@@ -654,7 +648,7 @@ private fun MissingSwaps(gym: String, swaps: List<SessionSwap>, names: Map<Strin
 @Preview
 @Composable
 private fun TodayScreenPreview() {
-    HyperlogTheme { TodayScreen(onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> }) }
+    HyperlogTheme { TodayScreen(sessionRunning = false, onResume = {}, onStart = { _, _, _ -> }) }
 }
 
 /**

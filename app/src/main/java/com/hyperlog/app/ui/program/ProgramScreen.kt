@@ -90,7 +90,6 @@ fun ProgramScreen(
     onPropose: (Change) -> Unit = {},
     /** Reverts the accepted Change with this id. */
     onRevert: (Long) -> Unit = {},
-    onSettings: () -> Unit = {},
     exerciseNames: Map<String, String> = emptyMap(),
     /** Finished sessions, so a done day shows what was logged. */
     sessions: List<PastSessionItem> = emptyList(),
@@ -127,7 +126,6 @@ fun ProgramScreen(
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
                 actions = {
-                    IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) }
                     if (active != null && errors == null) {
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }
