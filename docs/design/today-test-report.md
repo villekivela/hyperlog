@@ -211,3 +211,89 @@ code changed. Checked on the emulator (AVD `hyperlog`, the phone's size and dens
 | The gym's setup card looked inverted in light: the picked "kg, with small" had no fill, "lb stacks" was white, and Add had no shape. In light, primary and primaryContainer are the same `#5B3DD0`. No render covered the card, so only the device showed it. | **Fixed.** On an accent card, the picked choice and filled buttons are onPrimaryContainer with violet words, and the other choices sit in a shaded well. The same fix covers Coach's Review button and the session's Finish session. `AccentContrastTest.aChoiceOnTheAccentCardShowsWhichIsPicked` and `AccentContrastTest.aFilledButtonOnTheAccentCardStandsOffIt`. |
 | Done markers and the done card's cookie barely showed in light (secondaryContainer on the screen, 1.1:1). | **Fixed.** They are now filled primary with an onPrimary letter. `AccentContrastTest.aDoneDaysFillStandsOffTheScreenAndItsCards`. |
 | Connected-group selection is light lilac in some places and deep violet in others (dark only). | **Owner question.** In light both are one violet. Material's own roles differ between toggle buttons and chips, so this is taste. |
+
+## Re-test on the emulator (6fc835b)
+
+- **When:** 2026-10-17, 19:35–19:41.
+- **Build:** the worktree's debug APK (`app-debug.apk`, built from 6fc835b; no source newer than
+  it) installed on AVD `hyperlog`: 1280 × 2856 at 480 dpi, font scale 1.15. I checked in dark,
+  switched to light, and switched back to dark at the end.
+- **Data:** the owner's data on the emulator: 19 sessions, no training days, no export recorded.
+- **What I touched:** training days (Mo We Fr from the pencil, cleared at the end). I opened three
+  past sessions read-only and three gym and library screens. I didn't export or restore. Afterwards
+  the database had `weekday_plan` 0 rows and `session` 19 rows, and the app was on Today in dark.
+
+### The issues, again
+
+| # | Verdict | What I saw (dark and light alike unless said) |
+|---|---|---|
+| 1 | **Verified** | Thu 15 → Open session → system Back lands on Thu 15 with this week's strip. Fri 16 → Open session → the bar's back arrow does the same. Scroll position isn't kept (new issue 18). |
+| 3 | **Verified** | From Fri 16, paging forward selects Fri 23. Two pages back select Fri 9 Oct. From Sat 17, six pages forward select Sat 28 Nov. The card always matches the week on screen. |
+| 4 | **Verified** | On today, `Next: Day B on Sun 18 Oct ›` (with Mo We Fr: `… on Mon 19 Oct ›`) sits right under the strip, above the done cards. It's the first thing I read. |
+| 5 | **Verified** | 12 Oct `A+`, 13 Oct `B+`, 16 Oct `AB`, 17 Oct `CA`, 15 Oct `C`. I can tell two-session days at a glance. In light the done pills are solid violet and stand off the page. |
+| 6 | **Verified** (with training days) | Wed 25 Nov reads `Last day · Wed 25 Nov · Week 12`. Sat 28 and Thu 26 Nov read `Nothing planned` with `Last planned: Day C on Wed 25 Nov ›`, and the link selects the 25th. Without training days the same words mislead (new issue 16). |
+| 10 | **Verified** | `Mo Tu We Th Fr Sa Su`, all seven fit on one row at 115 % in both themes. |
+| 11 | **Verified** | The past session's title wraps to two lines (`Day C — Bench volume, leg` / `press, pulldown`). Kalliokoski's Plates row wraps to `… 2×2.5` / `2×1.25`. At the end of the library, Zercher Squat clears New exercise. |
+| 12 | **Verified** | `Kalliokoski · 1 machine · dumbbells and plates`. |
+| 13 | **Not verifiable without an export** | The emulator has no export recorded, and the row reads `Everything on this phone, in one file`, as it should. I didn't export, as asked. The owner's earlier exports (13 Oct, before this build) aren't known to the app, so the row stays generic until the next export. |
+
+### Light mode
+
+Today, the training-days sheet, Settings, Gyms and equipment, Kalliokoski and a past session all
+read cleanly in light. The gym's setup card shows the picked `kg, with small` as a white pill with
+violet words beside a darker `lb stacks`, and Add is a white pill. That's clear. The planned
+outlined pills and the Last-day cookie read well on the light page. I found nothing new that reads
+wrong in light.
+
+### Cold start
+
+Recorded three cold starts (`am force-stop`, then launch, with `screenrecord`). Each time, after
+the splash, Today first draws **today as an untrained day**: the violet hero `Week 7 · Intensify`,
+`B — Hinge, close-grip bench, row`, **Start session**, a `B` outlined under Sat 17, and no done
+markers anywhere on the strip. Then it swaps to the real day: the markers appear, the Next link
+comes in above, and the hero becomes the done Day C card with Open session. The wrong frame lasted
+about **0.33 s, 0.32 s and 0.43 s**.
+
+It's misleading but short. The first thing the screen tells me is "you haven't trained today, start
+Day B", and the layout jumps under my thumb as it corrects. A thumb already moving toward the big
+white Start button can hit it. With one gym that opens the gym sheet rather than starting, so it
+isn't destructive, but it's the wrong first impression on every cold open, and a slower phone
+would hold it longer.
+
+### New issues
+
+#### Major
+
+None.
+
+#### Minor
+
+16. **Without training days, any later date says `Last planned`, as if the program ends
+    tomorrow.** (Scenario 3) With no training days, Fri 23 Oct reads `Nothing planned` and
+    `Last planned: Day B on Sun 18 Oct ›`. The program runs to week 12. Only tomorrow is planned
+    because I haven't set training days. "Last" reads as the end of the program, and it's the
+    default state for anyone who hasn't set days. Something like `Next: Day B on Sun 18 Oct` (and a
+    nudge to set training days to see the rest) would say what's true.
+
+17. **Cold start shows an untrained today for about a third of a second.** (Scenario 1) See Cold
+    start above: the hero with Start session and no done markers, then the done card. Holding the
+    calendar until the sessions are read would remove both the false "start Day B" and the jump.
+
+18. **Back from Open session keeps the day but not the scroll.** (Scenario 4) On Fri 16 I scrolled
+    to the second card (Day B), opened it and came back. Fri 16 was still selected, but the page
+    was back at the top, on Day A. With two sessions on a day, you scroll again each time.
+
+19. **Back from another tab keeps Today's old selection, while the Today tab starts on today.**
+    (Scenario 7) I left Today on Wed 25 Nov, went to Settings → Gyms → Kalliokoski and pressed Back
+    three times. Today came back on 25 Nov. Tapping the Today tab instead goes to today. Either is
+    defensible, but coming back from Settings to a day five weeks out took me a second to place.
+    The Today button is there, so it's minor.
+
+## Resolution of the re-test
+
+| # | Outcome |
+|---|---|
+| 16 | **Fixed.** With no training days, a date after the next day reads `Not planned yet`, with `Next: Day B on Sun 18 Oct ›` and **✎ Set your training days**, which opens the sheet. `Nothing planned` is kept for dates past the program's real end. The wording is in SPEC (Today, a day with nothing). `TodayCalendarTest.withNoTrainingDaysLaterDatesSayTheProgramGoesOnUndated`. |
+| 17 | **Fixed.** Today shows nothing under the navigation bar until the finished sessions are read (`sessions` is null until then). On the emulator a cold start now goes from blank straight to the done day. `TodayLoadingTest.beforeTheSessionsAreReadTodayShowsNoPlanAndNoStart` uses a source that hasn't emitted yet. |
+| 18 | **Fixed.** The day's scroll is kept by the host, keyed by the day. Back from Open session on Fri 16's second card returns to that card, and another day opens at its top. `TodayCalendarTest.backFromADoneDaysSessionKeepsWhereTheDayWasScrolled`. |
+| 19 | **Kept, recorded in SPEC** (Today, the calendar). Back from another destination returns to the day picked, as Back returns you to where you were. Choosing Today on the navigation bar starts on today. SPEC's navigation rules don't say otherwise. |

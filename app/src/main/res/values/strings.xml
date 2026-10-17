@@ -420,6 +420,7 @@
     <string name="today_planned_head">Planned · %1$s · Week %2$d</string>
     <string name="today_rest_day">Rest day</string>
     <string name="today_nothing_planned">Nothing planned</string>
+    <string name="today_not_planned_yet">Not planned yet</string>
     <string name="today_last_link">Last planned: Day %1$s on %2$s</string>
     <string name="today_last_day">Last day · %1$s · Week %2$d</string>
     <string name="today_next_link">Next: Day %1$s on %2$s</string>

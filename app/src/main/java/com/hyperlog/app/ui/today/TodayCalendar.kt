@@ -175,9 +175,19 @@ internal fun CalendarHead(
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val monthText = subcompose("month", month).single()
         val monthWidth = monthText.maxIntrinsicWidth(loose.maxHeight)
-        // The prompt with its words, measured unseen: placed only through the "actions" slot.
+        // The actions with the prompt's words, measured unseen: a plain replica of the buttons (their
+        // 12 dp sides, the icon and its gap), so nothing to tap or read is composed twice.
         val withWords = noWeekdayPlan &&
-            subcompose("probe") { Box(Modifier.clearAndSetSemantics {}) { actions(true) } }.single().maxIntrinsicWidth(loose.maxHeight) + monthWidth <= constraints.maxWidth
+            subcompose("probe") {
+                Row(Modifier.clearAndSetSemantics {}) {
+                    val label = MaterialTheme.typography.labelLarge
+                    if (showToday) Text(stringResource(R.string.today_calendar_today), Modifier.padding(horizontal = 12.dp), style = label)
+                    Row(Modifier.padding(horizontal = 12.dp)) {
+                        Spacer(Modifier.width(ButtonDefaults.IconSize + ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.weekday_plan_none), style = label)
+                    }
+                }
+            }.single().maxIntrinsicWidth(loose.maxHeight) + monthWidth <= constraints.maxWidth
         val end = subcompose("actions") { actions(withWords) }.single().measure(loose)
         val start = monthText.measure(loose.copy(maxWidth = (constraints.maxWidth - end.width).coerceAtLeast(0)))
         val height = maxOf(start.height, end.height, constraints.minHeight)
@@ -427,20 +437,41 @@ internal fun PlannedCard(day: PlannedDay, date: LocalDate, last: Boolean = false
 
 /**
  * A day with nothing on it: `Rest day`, and the next session to select. Past the last planned
- * day ([lastPlanned], with nothing after it) it's `Nothing planned`, pointing back to that day.
+ * day ([lastPlanned], with nothing after it) it's `Nothing planned`, pointing back to that day;
+ * or, while the program goes on but only its next day has a date (no training days,
+ * [onWeekdayPlan] given), `Not planned yet`, with the next session and Set your training days.
  */
 @Composable
-internal fun RestCard(date: LocalDate, next: Pair<LocalDate, PlannedDay>?, onNext: (LocalDate) -> Unit, lastPlanned: Pair<LocalDate, PlannedDay>? = null) {
+internal fun RestCard(
+    date: LocalDate,
+    next: Pair<LocalDate, PlannedDay>?,
+    onNext: (LocalDate) -> Unit,
+    lastPlanned: Pair<LocalDate, PlannedDay>? = null,
+    onWeekdayPlan: (() -> Unit)? = null,
+) {
     val cs = MaterialTheme.colorScheme
     val after = next == null && lastPlanned != null
+    val undated = after && onWeekdayPlan != null
     val link = next ?: lastPlanned
+    val title = when {
+        undated -> R.string.today_not_planned_yet
+        after -> R.string.today_nothing_planned
+        else -> R.string.today_rest_day
+    }
     // The link's 48 dp row already holds 14 dp under its words: 8 dp more matches the 20 dp on top.
     DayCard(bottom = if (link != null) 8.dp else 20.dp) {
         Text(interFigures(shortDate(date)), style = MaterialTheme.typography.labelLarge, color = cs.primary)
-        Text(stringResource(if (after) R.string.today_nothing_planned else R.string.today_rest_day), style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
         link?.let { (d, day) ->
             Spacer(Modifier.height(8.dp))
-            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = after)
+            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = after && !undated)
+        }
+        if (undated) {
+            TextButton(onClick = onWeekdayPlan!!, contentPadding = PaddingValues(0.dp)) {
+                SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.weekday_plan_none))
+            }
         }
     }
 }

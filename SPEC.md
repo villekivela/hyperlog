@@ -524,8 +524,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        last planned day, and at least four weeks each way. **Paging to another week picks the same
        weekday in it**, so the card below is always of a day on screen (the pages are whole weeks,
        so that day is always on the calendar). The day picked is kept while a session opened from
-       it is looked at: Back returns to that day and week. Choosing Today on the navigation bar
-       starts again on today. A **Today** button in the header shows
+       it is looked at: Back returns to that day and week, scrolled where it was. Back from another
+       destination also returns to the day picked, as Back returns you to where you were; choosing
+       Today on the navigation bar starts again on today. A **Today** button in the header shows
        once you've moved off today and brings the strip and the selection back. A pencil in the
        header opens the **Training days** sheet, with or without a program; with no training days
        the header says `Set your training days` beside it. The month is never cut short: when the
@@ -564,9 +565,14 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        numbers and its planned exercises. It has no Start. With training days, the last date
        planned is the program's last day, and reads `Last day · Wed 25 Nov · Week 12`.
      - **A day with nothing** is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
-       planned day. **After the last planned day** (past the program's end, or past the next day
-       with no training days) it reads `Nothing planned`, with `Last planned: Day C on Wed 25 Nov`
-       selecting that day.
+       planned day. **Past the program's last planned day** it reads `Nothing planned`, with
+       `Last planned: Day C on Wed 25 Nov` selecting that day. **With no training days** only the
+       next day has a date, so a later date reads `Not planned yet`, with `Next: Day B on Sun 18
+       Oct` selecting the next day and **Set your training days** opening their sheet: the program
+       goes on, it just isn't dated.
+     - **Until the finished sessions are read**, Today shows nothing under the navigation bar: no
+       calendar, no plan, no Start. Drawing today untrained first would offer the wrong Start
+       for a moment on every cold start, then jump.
      - The update and time-off banners show only while today is selected. A workout from Claude
        and a running session keep their own layout on today, with their Start or Resume floating.
      - With no program, today keeps the starter offer (or the empty state) under the calendar, and

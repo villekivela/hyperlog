@@ -429,6 +429,15 @@ they parted.
   planned one reads `Nothing planned` with `Last planned: Day C on Wed 25 Nov ›`; with no training
   days that covers every date after the next day, which `Rest day` used to claim.
 - **The weekday toggles say `Mo Tu We Th Fr Sa Su`**, so Tuesday and Thursday never look alike.
+- **Re-test (6fc835b).** With no training days a later date is `Not planned yet` (the next day's
+  link and **✎ Set your training days**, both text buttons on the card), not `Nothing planned`,
+  which now means past the program's end. Today composes nothing under the bar until the sessions
+  are read (`sessions` null), so a cold start goes from blank to the real day with no false hero.
+  The picked day's scroll lives in the host beside its date (`rememberSaveable(todayDay)` of a
+  `LazyListState`), so Back from a session returns to the same card; another day starts at its
+  top. Back from another tab keeps the day picked, like any Back; the bar's Today starts on today.
+  The header's width probe is now a plain replica of the buttons, so nothing tappable is composed
+  twice.
 - **Done reads in light too.** Done markers and the done card's cookie were secondaryContainer,
   `#E6DEFF` on the `#F0ECF7` screen (1.1:1, gone on the emulator in light). They are now filled
   primary with the letter in onPrimary: the planned day's outline filled in, so done and planned
@@ -449,7 +458,7 @@ hero on Mon 19 Oct), `-today-planned` (Wed 21 Oct), `-today-rest` (Tue 20 Oct),
 Mon Wed Fri), `-program-no-training-days`, `-program-training-days-sheet` (from Program's row,
 none on). After the tester's fixes these came from the emulator (AVD `hyperlog`, the phone's
 size and density, text at 115 %): `phone-dark-today-done`, `-today-no-training-days`,
-`-today-hero`, `-today-planned`, `-today-rest`, `-today-nothing-planned`, `-today-last-day`,
+`-today-hero`, `-today-planned`, `-today-rest`, `-today-not-planned-yet`, `-today-last-day`,
 `-today-after-program`, `-today-past-done`, `-past-session`, `-training-days-sheet`,
 `-program-training-days`, `-program-training-days-sheet`, and every `phone-light-*` shot.
 

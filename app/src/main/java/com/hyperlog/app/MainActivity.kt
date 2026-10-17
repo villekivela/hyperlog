@@ -253,6 +253,8 @@ private fun App(
     var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     // The day picked on Today's calendar (epoch day; null: today), kept while a session opened from it is looked at.
     var todayDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    // And that day's scroll: a new day starts at its top.
+    val todayList = rememberSaveable(todayDay, saver = androidx.compose.foundation.lazy.LazyListState.Saver) { androidx.compose.foundation.lazy.LazyListState() }
     // A session opened from Program or Today goes back there.
     var sessionFrom by rememberSaveable { mutableStateOf<Screen?>(null) }
     val lastTrained by sessions.lastTrained.collectAsStateWithLifecycle()
@@ -585,7 +587,7 @@ private fun App(
             },
             weekdayPlan = weekdayPlan,
             onWeekdayPlan = programModel::setWeekdayPlan,
-            sessions = pastSessions.orEmpty(),
+            sessions = pastSessions,
             onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Today; screen = Screen.History },
             update = update,
             onUpdate = { updateModel.install(context) },
@@ -603,6 +605,7 @@ private fun App(
             onProgramDayShown = { showProgramDay = false },
             selectedDay = todayDay,
             onSelectDay = { todayDay = it },
+            dayListState = todayList,
         )
     }
     }

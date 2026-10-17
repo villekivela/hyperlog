@@ -6,6 +6,10 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -73,8 +77,8 @@ class TodayCalendarTest {
         hasContentDescription(short(date) + state, substring = true)
 
     /** A finished ad-hoc session on [date], an hour long. */
-    private fun adHocOn(date: LocalDate) = runBlocking {
-        val at = date.atTime(18, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    private fun adHocOn(date: LocalDate, hour: Int = 18) = runBlocking {
+        val at = date.atTime(hour, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
         HyperlogDatabase.get(app).sessions().insertSession(com.hyperlog.app.data.SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
     }
 
@@ -266,5 +270,40 @@ class TodayCalendarTest {
         compose.waitFor("Nothing planned")
         compose.click("Last planned: Day B on ${short(lastMonday)}")
         compose.waitFor("Last day · ${short(lastMonday)} · Week 2")
+    }
+
+    @Test
+    fun withNoTrainingDaysLaterDatesSayTheProgramGoesOnUndated() {
+        importProgram()
+        val later = today.plusDays(2)
+        show(later)
+        compose.onNode(cell(later)).performClick()
+        compose.waitFor("Not planned yet")
+        compose.onNodeWithText("Nothing planned").assertDoesNotExist()
+        compose.onNodeWithText("Next: Day A on ${short(today)}").assertIsDisplayed()
+        // The card's own button, after the header's.
+        compose.onAllNodes(hasText("Set your training days").and(androidx.compose.ui.test.hasClickAction())).onLast().performClick()
+        compose.waitFor("Training days")
+    }
+
+    @Test
+    fun backFromADoneDaysSessionKeepsWhereTheDayWasScrolled() {
+        val lastWeek = today.minusDays(8)
+        (8..11).forEach { adHocOn(lastWeek, hour = it) }
+        importProgram()
+        show(lastWeek)
+        compose.onNode(cell(lastWeek)).performClick()
+        compose.waitFor("Open session")
+        compose.onNode(hasTestTag(TodayDayListTag)).performScrollToIndex(7)
+        compose.waitForIdle()
+        val open = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().last()
+        val top = open.boundsInRoot.top
+        compose.onAllNodesWithText("Open session").filter(androidx.compose.ui.test.hasAnyAncestor(hasTestTag(TodayDayListTag))).onLast().performClick()
+        compose.waitForDescription("Back")
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.await(cell(lastWeek, ", done").and(isSelected()))
+        compose.waitForIdle()
+        val tops = compose.onAllNodesWithText("Open session").fetchSemanticsNodes().map { it.boundsInRoot.top }
+        assertTrue("The day opened at the top again: $tops, was $top", tops.any { kotlin.math.abs(it - top) < 2f })
     }
 }
