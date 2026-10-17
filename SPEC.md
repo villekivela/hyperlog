@@ -561,8 +561,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        typed warm-up past the end of a shorter ramp is left out. The next session ramps again.
      - When the session moves to an exercise, its first unticked warm-up is the active row; with
        none, set 1. This holds however it gets there: the last set of the one before, the second
-       exercise of a superset pair, or opening it from the session list. The first exercise of a
-       session still opens on set 1.
+       exercise of a superset pair, or opening it from the session list; the first exercise of a session
+       and an exercise added to it count too. Reopening an app already on an exercise changes nothing.
      - Its check ticks it off. Warm-ups are never logged: they start no rest, add no volume and
        never reach progression or history. They go once the first work set is logged. Ticking is
        optional. Ticks and typed warm-ups are saved with the session.

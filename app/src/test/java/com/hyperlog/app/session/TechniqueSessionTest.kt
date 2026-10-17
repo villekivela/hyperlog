@@ -106,6 +106,7 @@ class TechniqueSessionTest {
         }
         val logger = logger()
         logger.startNext()
+        logger.closeWarmup()
         logger.type("9"); logger.tick()
         assertEquals("8", logger.session.entry!!.full)
         logger.tick()

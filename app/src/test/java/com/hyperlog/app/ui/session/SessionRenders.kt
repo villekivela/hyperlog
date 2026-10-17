@@ -96,6 +96,11 @@ class SessionRenders {
         session(benchExercise(warmupsDone = 2), SessionExercise(2, curl, emptyList(), emptyList(), plates.ladder(), true), entry = reps100)
     }
 
+    @Test fun warmupOnArrival() = both("session-warmup-on-arrival") {
+        session(benchExercise(warmupsDone = 0), entry = reps100,
+            warmupEdit = WarmupEdit(1, 0, SetEntry("40", "8", "", null, Field.Weight, partialMode = false, fresh = true)))
+    }
+
     @Test fun warmupOnPad() = both("session-warmup-on-pad") {
         session(benchExercise(warmupsDone = 2), entry = reps100,
             warmupEdit = WarmupEdit(1, 2, SetEntry("75", "3", "", null, Field.Weight, partialMode = false, fresh = true)))

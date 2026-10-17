@@ -337,6 +337,61 @@ class WarmupSessionTest {
     }
 
     @Test
+    fun theFirstExerciseOfADayOpensOnItsFirstWarmUpToo() = runTest {
+        val logger = benchWithHistory()
+        assertEquals("DB Lateral Raise", logger.session.current!!.exercise.name)
+        assertEquals(0, logger.session.warmupEdit!!.index)
+    }
+
+    @Test
+    fun anAddedExerciseWithWarmUpsOpensOnTheFirst() = runTest {
+        val first = logger()
+        first.start(); first.addExercise("barbell_bench_press")
+        first.type("90"); first.done(); first.type("5"); first.tick()
+        first.finish()
+        val logger = logger()
+        logger.start()
+        assertNull(logger.session.warmupEdit)
+        logger.addExercise("barbell_bench_press")
+        assertEquals(0, logger.session.warmupEdit!!.index)
+    }
+
+    @Test
+    fun aTopSetOnTheBarAloneHasNoWarmUpsAndOpensOnSetOne() = runTest {
+        val first = logger()
+        first.start(); first.addExercise("barbell_bench_press")
+        first.type("20"); first.done(); first.type("5"); first.tick()
+        first.finish()
+        val logger = logger()
+        logger.start()
+        logger.addExercise("barbell_bench_press")
+        assertEquals("20", logger.session.entry!!.weight)
+        assertEquals(emptyList<WarmupSet>(), logger.session.warmups)
+        assertNull(logger.session.warmupEdit)
+    }
+
+    @Test
+    fun aSessionRestoredOrResumedDoesNotReopenAWarmUp() = runTest {
+        val logger = benchWithHistory()
+        assertEquals(0, logger.session.warmupEdit!!.index)
+        assertNull(logger.logger().session.warmupEdit)
+    }
+
+    @Test
+    fun tickingTheWarmUpOnThePadMovesThePadToTheNextAndAfterTheLastToSetOne() = runTest {
+        val logger = benchWithHistory()
+        logger.logRaise()
+        val count = logger.session.warmups.size
+        assertEquals(0, logger.session.warmupEdit!!.index)
+        logger.tickWarmup(0)
+        assertEquals(1, logger.session.warmupEdit!!.index)
+        // Ticking one ahead leaves the pad on the first unticked.
+        logger.tickWarmup(count - 1)
+        assertNull(logger.session.warmupEdit)
+        assertEquals(count, logger.session.current!!.warmupsDone)
+    }
+
+    @Test
     fun openingAnExerciseFromTheListLandsOnItsFirstWarmUp() = runTest {
         val logger = benchWithHistory()
         val bench = logger.session.exercises.first { it.exercise.name == "Barbell Bench Press" }.id
