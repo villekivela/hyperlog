@@ -104,6 +104,7 @@ private fun DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(shortName, Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1, softWrap = false)
+        // The gym takes what the day name leaves and ends in an ellipsis, so the arrow always shows.
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
                 Text(gymName, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
