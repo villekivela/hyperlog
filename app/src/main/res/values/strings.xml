@@ -340,8 +340,8 @@
         <item quantity="other">%1$d days a week · %2$s</item>
     </plurals>
     <string name="weekday_plan_title">Training days</string>
-    <string name="weekday_plan_body">Time off on Today counts from these days.</string>
-    <string name="weekday_plan_body_gyms">Time off on Today counts from these days, and a session started on one picks its gym.</string>
+    <string name="weekday_plan_body">Today plans your next sessions on these days and counts time off from them.</string>
+    <string name="weekday_plan_body_gyms">Today plans your next sessions on these days, and a session started on one picks its gym.</string>
     <string name="weekday_plan_any_gym">Any gym</string>
     <string name="weekday_plan_gym_on">Gym on %1$s: %2$s</string>
     <string name="program_import">Import program</string>
@@ -412,7 +412,7 @@
     <string name="today_cell_done_day">done Day %1$s</string>
     <string name="today_cell_done">done</string>
     <string name="today_cell_planned_day">planned Day %1$s</string>
-    <string name="today_next_head">Next · %1$s · %2$s</string>
+    <string name="today_next_head">Next · %1$s · Week %2$d</string>
     <string name="today_done_head">Done · %1$s</string>
     <string name="today_done_head_gym">Done · %1$s · %2$s</string>
     <string name="today_planned_head">Planned · %1$s · Week %2$d</string>

@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -42,6 +43,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.program.PlannedDay
@@ -112,6 +114,8 @@ internal fun aboutMinutes(day: PlannedDay): Int =
 /**
  * The calendar's head: the month and year of the week shown, **Today** once you've moved off
  * today, and the pencil to the weekday plan's sheet (`Set your training days` with none set).
+ * The month is never cut short: when the words don't fit beside it (larger text, a long month),
+ * the prompt is the pencil alone, still read as `Set your training days`.
  */
 @Composable
 internal fun CalendarHead(
@@ -122,22 +126,38 @@ internal fun CalendarHead(
     onWeekdayPlan: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 24.dp, end = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(interFigures(monthLine(monday)), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (showToday) {
-            TextButton(onClick = onToday, Modifier.testTag(TodayButtonTag)) { Text(stringResource(R.string.today_calendar_today)) }
-        }
-        if (noWeekdayPlan) {
-            TextButton(onClick = onWeekdayPlan) {
-                SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.weekday_plan_none))
+    val month: @Composable () -> Unit = {
+        Text(interFigures(monthLine(monday)), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    val actions: @Composable (words: Boolean) -> Unit = { words ->
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (showToday) {
+                TextButton(onClick = onToday, Modifier.testTag(TodayButtonTag)) { Text(stringResource(R.string.today_calendar_today)) }
             }
-        } else {
-            IconButton(onClick = onWeekdayPlan) { SymbolIcon(Symbol.Edit, stringResource(R.string.weekday_plan_title)) }
+            when {
+                noWeekdayPlan && words -> TextButton(onClick = onWeekdayPlan) {
+                    SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.weekday_plan_none))
+                }
+                noWeekdayPlan -> IconButton(onClick = onWeekdayPlan) { SymbolIcon(Symbol.Edit, stringResource(R.string.weekday_plan_none)) }
+                else -> IconButton(onClick = onWeekdayPlan) { SymbolIcon(Symbol.Edit, stringResource(R.string.weekday_plan_title)) }
+            }
+        }
+    }
+    SubcomposeLayout(modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 24.dp, end = 8.dp)) { constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val monthText = subcompose("month", month).single()
+        val monthWidth = monthText.maxIntrinsicWidth(loose.maxHeight)
+        // The prompt with its words, measured unseen: placed only through the "actions" slot.
+        val withWords = noWeekdayPlan &&
+            subcompose("probe") { Box(Modifier.clearAndSetSemantics {}) { actions(true) } }.single().maxIntrinsicWidth(loose.maxHeight) + monthWidth <= constraints.maxWidth
+        val end = subcompose("actions") { actions(withWords) }.single().measure(loose)
+        val start = monthText.measure(loose.copy(maxWidth = (constraints.maxWidth - end.width).coerceAtLeast(0)))
+        val height = maxOf(start.height, end.height, constraints.minHeight)
+        layout(constraints.maxWidth, height) {
+            start.place(0, (height - start.height) / 2)
+            end.place(constraints.maxWidth - end.width, (height - end.height) / 2)
         }
     }
 }
@@ -285,7 +305,7 @@ internal const val HeroCardTag = "today-hero"
 
 /**
  * The next day to train, in primary container: its letter in the cookie, `Week 7 · Intensify`
- * (with `Next · Mon 19 Oct ·` in front on another date) over its title, its numbers, and Start
+ * (`Next · Mon 19 Oct · Week 7` on another date) over its title, its numbers, and Start
  * session across the card.
  */
 @Composable
@@ -298,7 +318,8 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
     ) {
         CardHead(
             day.letter,
-            head = date?.let { stringResource(R.string.today_next_head, shortDate(it), week) } ?: week,
+            // On another date the block's name goes, as on a planned day, so the head stays one line.
+            head = date?.let { stringResource(R.string.today_next_head, shortDate(it), day.position.week) } ?: week,
             title = dayTitle(day.day.name),
             letterContainer = cs.onPrimaryContainer, letterContent = cs.primaryContainer,
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
@@ -321,8 +342,8 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
 
 /** A card on the card tone, its text on the 24 dp edge. */
 @Composable
-private fun DayCard(content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).padding(horizontal = CardPadding, vertical = 20.dp)) { content() }
+private fun DayCard(bottom: Dp = 20.dp, content: @Composable () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).padding(start = CardPadding, end = CardPadding, top = 20.dp, bottom = bottom)) { content() }
 }
 
 /**
@@ -370,7 +391,8 @@ internal fun PlannedCard(day: PlannedDay, date: LocalDate) {
 @Composable
 internal fun RestCard(date: LocalDate, next: Pair<LocalDate, PlannedDay>?, onNext: (LocalDate) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    DayCard {
+    // The Next link's 48 dp row already holds 14 dp under its words: 8 dp more matches the 20 dp on top.
+    DayCard(bottom = if (next != null) 8.dp else 20.dp) {
         Text(interFigures(shortDate(date)), style = MaterialTheme.typography.labelLarge, color = cs.primary)
         Text(stringResource(R.string.today_rest_day), style = MaterialTheme.typography.titleLarge)
         next?.let { (d, day) ->

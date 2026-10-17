@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -124,7 +125,8 @@ class TodayCalendarTest {
         compose.await(cell(today, ", planned Day A"))
         show(today.plusDays(1))
         compose.onNode(cell(today.plusDays(1), ", planned")).assertDoesNotExist()
-        compose.click("Set your training days")
+        // The words, or the pencil alone when the month needs the room (CalendarHeadTest).
+        compose.onNode(hasText("Set your training days").or(hasContentDescription("Set your training days"))).performClick()
         compose.waitFor("Training days")
         compose.waitFor("Done")
     }
@@ -138,7 +140,9 @@ class TodayCalendarTest {
         // With no training days, the next day goes on tomorrow.
         val tomorrow = today.plusDays(1)
         compose.click("Next: Day B on ${short(tomorrow)}")
-        compose.waitFor("Next · ${short(tomorrow)} · Week 1 · Main")
+        // On another date the head names the date and the week, as a planned day's does; the
+        // block's name would wrap it onto a second line on the phone.
+        compose.waitFor("Next · ${short(tomorrow)} · Week 1")
         compose.onNodeWithText("Leg Extension").assertIsDisplayed()
         compose.onNodeWithText("Start session").assertIsDisplayed()
         compose.onNode(hasTestTag(TodayButtonTag)).performClick()

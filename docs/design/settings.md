@@ -14,7 +14,7 @@ The fifth tab of the navigation bar: a destination with no back arrow, its title
 ## Layout
 
 ```
-←  Settings
+Settings                                           ← no back arrow: a tab; the bar shows under it
 [fitness]   Gyms and equipment               >
             2 gyms · dumbbells and plates
 [list]      Exercise library                 >
@@ -29,7 +29,10 @@ The fifth tab of the navigation bar: a destination with no back arrow, its title
             Android also keeps a copy in your Google account, …   (bodySmall, onSurfaceVariant)
                                                   24 dp (the footnote's bottom padding)
 [system_update] Check for updates             (●)  ← Switch; the whole row toggles it
-            Once a day when Hyperlog opens
+            Whenever you open the app
+[replay]    Check for updates now                 ← while the switch is on
+            Ask GitHub for the latest version
+                 Hyperlog 0.1.0                   ← the installed version, bodySmall, centred
 ```
 
 ## States and rules
@@ -40,12 +43,16 @@ The fifth tab of the navigation bar: a destination with no back arrow, its title
   Restore → the app starts again on the backup's data (Today, or the restored session).
 - A refused file shows its reason in the restore row: not a Hyperlog backup, made by a newer
   Hyperlog (update first), too old, damaged. Nothing on the phone changes.
-- **Check for updates** is the last row, a switch on by default. Turning it off hides any update
-  banner on Today at once and stops the check (SPEC, Distribution).
+- **Check for updates** is a switch, on by default, with **Check for updates now** under it.
+  Turning it off hides any update banner on Today at once and stops the check (SPEC, Distribution).
 - The starting-weights row now says "the old app's backup" so it can't be mistaken for a Hyperlog
   backup.
 
-Screens: `screens/settings.png` (phone, dark; from before Settings became a tab, so it still shows
-the back arrow and no bar), `light-settings.png` and `dark-settings.png` (renders
-from `AppRenders`). The restore dialog
+Screens: `screens/settings.png` (phone, dark, Ink and violet: Settings as the fifth tab, retaken
+in #58), `library.png` (phone, dark: the exercise library under it, its back arrow and no bar),
+`light-settings.png` and `dark-settings.png` (renders from `AppRenders`). The restore dialog
 doesn't render in Robolectric; check it on the phone.
+
+Phone pass (#58, dark, system text at 115 %): the tab holds up as built. Every row keeps its one
+supporting line, the footnote wraps under the restore row's text edge, and the version line clears
+the navigation bar. Nothing changed.

@@ -517,7 +517,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        last planned day, and at least four weeks each way. A **Today** button in the header shows
        once you've moved off today and brings the strip and the selection back. A pencil in the
        header opens the **Training days** sheet, with or without a program; with no training days
-       the header says `Set your training days` beside it.
+       the header says `Set your training days` beside it. The month is never cut short: when the
+       words don't fit beside it (larger system text, a long month, the Today button), the pencil
+       shows alone and is still read out as `Set your training days`.
      - **Each day** has its weekday letter, its date in a 40 dp circle (filled primaryContainer
        when selected, ringed in primary when it's today and not selected) and a marker under it:
        a filled secondaryContainer pill with the day's letter when a session was finished on it (a
@@ -531,8 +533,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        a session was finished today). Each planned day is read for its date, with the Changes
        covering it. A finished program plans nothing.
      - **The next day to train**, on whatever date it falls, is the hero card in primaryContainer:
-       the day's letter in the 9-sided cookie, `Week 7 · Intensify` (with `Next · Mon 19 Oct ·` in
-       front when it isn't today) over the name, its numbers (exercises, sets, about how many
+       the day's letter in the 9-sided cookie, `Week 7 · Intensify` (`Next · Mon 19 Oct · Week 7`
+       when it isn't today, like a later planned day's, so the line fits) over the name, its numbers (exercises, sets, about how many
        minutes: each set's rest and about 45 s of work, to the nearest 5) and **Start session**
        across the card. Then each slot's exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`,
        technique symbols after; a Change's swap reads `In place of …` over the name), the slot
@@ -923,7 +925,9 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     `calendar_today` symbol, or `Set your training days` with none. The row opens the **Training
     days** sheet. **Today's calendar** has a pencil in its header that opens the same sheet, also
     with no program (Screens → Today).
-  - **The sheet** has the seven weekdays as round toggles, Monday first, and, with two or more
+  - **The sheet** says what the days do (`Today plans your next sessions on these days and counts
+    time off from them`; with two or more gyms, `… and a session started on one picks its gym`),
+    then has the seven weekdays as round toggles, Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
     named). With several gyms, a day turned on names no gym until one is picked. With one gym
     there's no menu: a day turned on is at that gym, so it keeps it when a second gym is added.

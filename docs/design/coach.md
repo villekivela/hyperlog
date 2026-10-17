@@ -10,7 +10,7 @@ The owner's review on 2026-10-15 found the old screen hard to read: it never sai
 the Limits repeated the situations, Time off showed at 0 days, and Pain → Hands buried a list of
 six exercise chips. The redesign answers those, with the tokens of the designer
 pass below. The screens before it were dropped in #42; `screens/coach.png` is today's Coach on the
-phone (dark).
+phone (dark, Ink and violet, #58).
 
 ## Principles
 

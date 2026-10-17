@@ -30,7 +30,8 @@ screen (#40)".
 ## Principles
 
 1. **One next thing.** Today names the next day and offers Start; the rest of the program is a tap
-   away on Program. The program runs as a sequence, so there is no calendar.
+   away on Program. Since #53 a calendar of done and planned days sits above it, its dates an
+   estimate of the sequence.
 2. **The plan reads like the table it becomes.** Today's slot lines, the session list and the
    prescription sheet all write sets the same way: `1 × 4–6 [1] · 2 × 6–8 [1]`.
 3. **Structure is the hierarchy.** On Program the block is the unit: its card, its weeks as chips,
@@ -351,7 +352,9 @@ the future.
   titleLarge (`October 2026`, `Oct – Nov 2026` across a month), **Today** (a text button) once the
   strip or the selection is off today, and the `edit` pencil, which opens the Training days sheet.
   With no training days the pencil reads `✎ Set your training days`. It is the way to the sheet
-  without a program, which #52 left open.
+  without a program, which #52 left open. **The month is never cut short** (#58): when the words
+  don't fit beside it, the pencil shows alone, read out as `Set your training days`
+  (`CalendarHead` measures the month and the prompt; `CalendarHeadTest` holds it at 115 % text).
 - **The strip** is a HorizontalPager a week a page, from the week of the first finished session to
   the week of the last planned day, four weeks each way at least. A day is its narrow weekday
   letter (primary on today), its date in `figureMedium` in a 40 dp circle (primaryContainer when selected,
@@ -362,7 +365,7 @@ the future.
 - **The hero** (the next day to train, today or later; only a plan while a session runs) is a 32 dp
   primaryContainer card, its text on the 24 dp edge: the
   letter in a 64 dp `Cookie9Sided` filled onPrimaryContainer, the head (`Week 7 · Intensify`,
-  `Next · Mon 19 Oct · Week 7 · Intensify` on another date) at 80 % over the name after its letter
+  `Next · Mon 19 Oct · Week 7` on another date, as a planned card names it) at 80 % over the name after its letter
   in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
   **Start session** button in onPrimaryContainer across the card. It replaces the floating Start.
 - **Done** cards and **planned** cards are the same layout on the card tone: the letter's cookie
@@ -372,6 +375,8 @@ the future.
   its exercises with the sets as logged, filled RIR chips; on today `Next: Day B on Mon 19 Oct ›`
   and Ad-hoc session follow.
 - **Rest day**: a card with the date in primary over `Rest day` and `Next: Day A on Sat 17 Oct ›`.
+  The link's 48 dp row carries its own space under the words, so the card's bottom padding is
+  8 dp with it (20 dp without), and the words sit as far from the bottom as the date from the top.
 - **Slot rows** centre the label (`1`, `5a`) on the row, beside the name and the sets, where it
   used to sit on the name's baseline.
 - The update and time-off banners sit between the strip and the day while today is selected. A
@@ -386,6 +391,31 @@ back to an ad-hoc session: the tick), `-no-training-days` (only today marked; th
 The older Today renders (`today-starter`, `-update-banner`, `-day`, `-time-off`, `-workout*`) are
 rendered again with the calendar on top.
 
-**Open:** the designer's and tester's passes on the phone, and checking each state on the phone
-in light and dark. The phone wasn't connected for #53, so these renders are the only check so far.
+### Phone pass (#58)
+
+Checked on the phone (dark, the owner's data, system text at 115 %) in Ink and violet, two rounds.
+The renders run at 100 % text on a 412 dp screen; the phone is 426 dp at 115 %, which is where
+they parted.
+
+- **The month went to `Octob…`** off today with no training days: `Today` and the
+  `✎ Set your training days` words took the row. Now the words drop to the pencil when they don't
+  fit, and the month keeps its whole name.
+- **The hero's head wrapped to two lines** on another date (`Next · Sun 18 Oct · Week 7 ·` /
+  `Intensify`), pushing the name down. It now drops the block, as the planned card does; the block
+  shows on today's hero and on Program.
+- **The rest card sat low**: 20 dp over the date, about 34 dp under the Next link. Balanced (above).
+- **The sheet's line was out of date**: it said only that time off counts from the days. It now
+  leads with what #53 made them do: `Today plans your next sessions on these days and counts time
+  off from them.`
+- Held up as built: the strip (circles, markers, the today ring), the hero's cookie and Start, the
+  done and planned cards, the sticky calendar over scrolling cards, Program's training-days row.
+
+Phone screens (dark): `phone-dark-today-done` (two sessions today, training days set),
+`-today-no-training-days` (today, the header asking), `-today-next-no-training-days` (the hero on
+tomorrow: the header off today with Today and the pencil alone), `-today-hero` (Mon Wed Fri: the
+hero on Mon 19 Oct), `-today-planned` (Wed 21 Oct), `-today-rest` (Tue 20 Oct),
+`-training-days-sheet` (from the pencil, Mon Wed Fri on), `-program-training-days` (the row with
+Mon Wed Fri), `-program-no-training-days`, `-program-training-days-sheet` (from Program's row,
+none on). The phone's theme is dark, and system settings stay as the owner set them, so light was
+checked through the renders only.
 
