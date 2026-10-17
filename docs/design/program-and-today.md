@@ -354,15 +354,16 @@ the future.
   without a program, which #52 left open.
 - **The strip** is a HorizontalPager a week a page, from the week of the first finished session to
   the week of the last planned day, four weeks each way at least. A day is its narrow weekday
-  letter (primary on today), its date in Inter in a 40 dp circle (primaryContainer when selected,
+  letter (primary on today), its date in `figureMedium` in a 40 dp circle (primaryContainer when selected,
   a 2 dp primary ring on today otherwise) and a 28 × 20 dp marker: secondaryContainer with the
-  day's letter in Inter Bold when done (`check` for an ad-hoc session or a workout), a 1.5 dp
+  day's letter in labelMedium Bold when done (`check` for an ad-hoc session or a workout), a 1.5 dp
   primary outline with the letter when planned. Past days without a session have their dates at
   70 % onSurfaceVariant. Each day reads as one tab to TalkBack: `Sat 17 Oct, planned Day A`.
-- **The hero** (the next day to train, today or later) is a 32 dp primaryContainer card: the
+- **The hero** (the next day to train, today or later; only a plan while a session runs) is a 32 dp
+  primaryContainer card, its text on the 24 dp edge: the
   letter in a 64 dp `Cookie9Sided` filled onPrimaryContainer, the head (`Week 7 · Intensify`,
   `Next · Mon 19 Oct · Week 7 · Intensify` on another date) at 80 % over the name after its letter
-  in titleLarge, the stats (Inter SemiBold headlineSmall over bodySmall labels) and a medium
+  in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
   **Start session** button in onPrimaryContainer across the card. It replaces the floating Start.
 - **Done** cards and **planned** cards are the same layout on the card tone: the letter's cookie
   filled secondaryContainer (done) or outlined in primary (planned), the head in primary (`Done ·

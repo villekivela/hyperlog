@@ -537,7 +537,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        across the card. Then each slot's exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`,
        technique symbols after; a Change's swap reads `In place of …` over the name), the slot
        label (`1`, `5a`) centred on its row, and **Ad-hoc session** as a text button after them.
-       Start session starts the program's next day at the picked gym.
+       Start session starts the program's next day at the picked gym. While a session runs, the
+       next day on a later date reads as a later planned day, without Start.
      - **A day with finished sessions** has a card for each on the card tone: `Done · Sat 17 Oct ·
        Kalliokoski`, the letter, the name, the numbers (exercises, sets, minutes taken) and **Open
        session**, which opens it in History (Back comes back to Today). Then its exercises with

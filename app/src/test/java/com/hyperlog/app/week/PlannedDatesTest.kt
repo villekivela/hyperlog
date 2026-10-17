@@ -25,7 +25,7 @@ class PlannedDatesTest {
 
     @Test
     fun theNextDayGoesOnTodayAndTheRestOnTheTrainingDaysAfterIt() {
-        // Two weeks of Day A and Day B, from week 1 Day B: four days left.
+        // Two weeks of Day A and Day B, from week 1 Day B: three days left.
         assertEquals(
             listOf(
                 sat17 to "1.Day B",

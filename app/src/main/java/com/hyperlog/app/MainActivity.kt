@@ -289,8 +289,9 @@ private fun App(
     val finished = summary
     // Time off counts from the last session finished: read again whenever Today or the coach shows,
     // and on start, when a session may already be running (a restart or a restore).
-    // Today's calendar marks the finished sessions, read again on the same occasions.
-    LaunchedEffect(screen, running == null, finished == null) { sessions.refreshLastTrained(); pastModel.refresh() }
+    LaunchedEffect(screen, running == null) { sessions.refreshLastTrained() }
+    // Today's calendar marks the finished sessions: read again whenever Today shows or a session starts or ends.
+    LaunchedEffect(screen, running == null, finished == null) { if (screen == Screen.Today) pastModel.refresh() }
     // The focus's marks count the sets trained so far this week.
     LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()

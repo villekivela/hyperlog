@@ -193,4 +193,21 @@ class TodayCalendarTest {
         val row = compose.onAllNodes(hasTestTag(SlotRowTag), useUnmergedTree = true)[0].fetchSemanticsNode().boundsInRoot
         assertEquals(row.center.y, label.center.y, 2f)
     }
+
+    @Test
+    fun whileASessionRunsTheNextDayOnALaterDateIsOnlyAPlan() {
+        importProgram()
+        finishDayA()
+        // A second session today, left running.
+        compose.onNode(androidx.compose.ui.test.hasText("Ad-hoc session").and(androidx.compose.ui.test.hasClickAction())).performClick()
+        compose.waitFor("Add exercise")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.click("Leave")
+        compose.waitFor("Resume session")
+        val tomorrow = today.plusDays(1)
+        show(tomorrow)
+        compose.onNode(cell(tomorrow)).performClick()
+        compose.waitFor("Planned · ${short(tomorrow)} · Week 1")
+        compose.onNode(hasTestTag(HeroCardTag)).assertDoesNotExist()
+    }
 }

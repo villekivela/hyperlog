@@ -75,17 +75,18 @@ import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.update.UpdateBanner
-import java.time.temporal.ChronoUnit
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
 import com.hyperlog.app.week.PlannedDates
 import com.hyperlog.app.week.WeekdayPlan
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import java.time.LocalDate
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 /**
@@ -224,7 +225,7 @@ fun TodayScreen(
     val firstWeek = minOf(sessions.minOfOrNull { weekOf(it.date()) } ?: thisWeek, thisWeek.minusWeeks(4))
     val lastWeek = maxOf(planned.keys.maxOrNull()?.let(::weekOf) ?: thisWeek, thisWeek.plusWeeks(4))
     val todayPage = ChronoUnit.WEEKS.between(firstWeek, thisWeek).toInt()
-    val weeks by androidx.compose.runtime.rememberUpdatedState(ChronoUnit.WEEKS.between(firstWeek, lastWeek).toInt() + 1)
+    val weeks by rememberUpdatedState(ChronoUnit.WEEKS.between(firstWeek, lastWeek).toInt() + 1)
     var selectedDay by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
     val selected = LocalDate.ofEpochDay(selectedDay)
     // Sessions read in later reach further back: the pages start again on the selected day's week.
@@ -236,6 +237,8 @@ fun TodayScreen(
         if (page != pager.currentPage) scope.launch { pager.animateScrollToPage(page) }
     }
     val isToday = selected == today
+    // A running session keeps today as it was, whatever else was done or planned for it.
+    val runningToday = isToday && sessionRunning
     var editingWeekdayPlan by rememberSaveable { mutableStateOf(false) }
     if (editingWeekdayPlan) {
         Sheet(onDismiss = { editingWeekdayPlan = false }) {
@@ -268,11 +271,11 @@ fun TodayScreen(
       Column(Modifier.fillMaxSize().padding(padding)) {
         // No title bar: the calendar is the top of the screen.
         CalendarHead(
-            weekOf(firstWeek.plusWeeks(pager.currentPage.toLong())),
+            firstWeek.plusWeeks(pager.currentPage.toLong()),
             showToday = !isToday || pager.currentPage != todayPage,
             onToday = { select(today) },
-            noTrainingDays = weekdayPlan.days.isEmpty(),
-            onTrainingDays = { editingWeekdayPlan = true },
+            noWeekdayPlan = weekdayPlan.days.isEmpty(),
+            onWeekdayPlan = { editingWeekdayPlan = true },
         )
         HorizontalPager(pager, Modifier.fillMaxWidth().testTag(CalendarTag)) { page ->
             WeekRow(firstWeek.plusWeeks(page.toLong()), today, selected, done, planned, onSelect = select)
@@ -306,12 +309,12 @@ fun TodayScreen(
                 }
             }
             // A running session keeps its day on today, with Resume floating.
-            isToday && sessionRunning && next != null -> NextDay(
+            runningToday && next != null -> NextDay(
                 next, exerciseNames, Modifier.weight(1f),
                 banners = banners,
                 isWorkout = runningWorkout,
             )
-            !(isToday && sessionRunning) && doneOn.isNotEmpty() -> LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
+            !runningToday && doneOn.isNotEmpty() -> LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
                 if (isToday) item { BannerColumn(banners) }
                 doneOn.forEach { session ->
                     item(key = "s${session.id}") {
@@ -328,9 +331,10 @@ fun TodayScreen(
                     item { AdHocButton { start(Kind.AdHoc) } }
                 }
             }
-            plannedOn != null && !(isToday && sessionRunning) -> {
-                // The next day to train, on whatever date it falls, has Start; a later one is only a plan.
-                val isNext = selected == planned.keys.first()
+            plannedOn != null && !runningToday -> {
+                // The next day to train, on whatever date it falls, has Start; a later one is only a
+                // plan, and so is the next one while a session runs.
+                val isNext = selected == planned.keys.first() && !sessionRunning
                 val groups = groupsOf(plannedOn)
                 LazyColumn(Modifier.weight(1f).fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
                     item {
@@ -342,7 +346,7 @@ fun TodayScreen(
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
                         Segment(i, groups.size) { SlotRows(group, exerciseNames) }
                     }
-                    if (isNext && !sessionRunning) item { AdHocButton { start(Kind.AdHoc) } }
+                    if (isNext) item { AdHocButton { start(Kind.AdHoc) } }
                 }
             }
             isToday -> {

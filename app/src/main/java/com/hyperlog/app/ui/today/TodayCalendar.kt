@@ -55,7 +55,8 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.CardShape
-import com.hyperlog.app.ui.theme.Inter
+import com.hyperlog.app.ui.theme.figureHeadline
+import com.hyperlog.app.ui.theme.figureMedium
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.interFigures
 import java.time.Instant
@@ -110,15 +111,15 @@ internal fun aboutMinutes(day: PlannedDay): Int =
 
 /**
  * The calendar's head: the month and year of the week shown, **Today** once you've moved off
- * today, and the pencil to the training days (`Set your training days` with none set).
+ * today, and the pencil to the weekday plan's sheet (`Set your training days` with none set).
  */
 @Composable
 internal fun CalendarHead(
     monday: LocalDate,
     showToday: Boolean,
     onToday: () -> Unit,
-    noTrainingDays: Boolean,
-    onTrainingDays: () -> Unit,
+    noWeekdayPlan: Boolean,
+    onWeekdayPlan: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -129,14 +130,14 @@ internal fun CalendarHead(
         if (showToday) {
             TextButton(onClick = onToday, Modifier.testTag(TodayButtonTag)) { Text(stringResource(R.string.today_calendar_today)) }
         }
-        if (noTrainingDays) {
-            TextButton(onClick = onTrainingDays) {
+        if (noWeekdayPlan) {
+            TextButton(onClick = onWeekdayPlan) {
                 SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.weekday_plan_none))
             }
         } else {
-            IconButton(onClick = onTrainingDays) { SymbolIcon(Symbol.Edit, stringResource(R.string.weekday_plan_title)) }
+            IconButton(onClick = onWeekdayPlan) { SymbolIcon(Symbol.Edit, stringResource(R.string.weekday_plan_title)) }
         }
     }
 }
@@ -176,7 +177,7 @@ internal fun WeekRow(
                         role = Role.Tab
                         this.selected = isSelected
                     }
-                    .padding(horizontal = 2.dp, vertical = 6.dp),
+                    .padding(horizontal = 4.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -184,7 +185,7 @@ internal fun WeekRow(
                     style = MaterialTheme.typography.labelMedium,
                     color = if (isToday) cs.primary else cs.onSurfaceVariant,
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(4.dp))
                 Box(
                     Modifier.size(40.dp).clip(CircleShape).then(
                         when {
@@ -197,9 +198,8 @@ internal fun WeekRow(
                 ) {
                     Text(
                         "${date.dayOfMonth}",
-                        fontFamily = Inter,
-                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium,
-                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (isSelected || isToday) FontWeight.Bold else null,
+                        style = MaterialTheme.typography.figureMedium,
                         color = when {
                             isSelected -> cs.onPrimaryContainer
                             // A past day without a session is muted.
@@ -208,19 +208,19 @@ internal fun WeekRow(
                         },
                     )
                 }
-                Spacer(Modifier.height(6.dp))
-                val shape = RoundedCornerShape(6.dp)
+                Spacer(Modifier.height(4.dp))
+                val shape = RoundedCornerShape(8.dp)
                 val marker = Modifier.height(20.dp).width(28.dp).clip(shape)
                 when {
                     sessions.isNotEmpty() -> Box(marker.background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
                         if (doneLetter != null) {
-                            Text(doneLetter, fontFamily = Inter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer)
+                            Text(doneLetter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer)
                         } else {
                             SymbolIcon(Symbol.Check, null, Modifier.size(16.dp), tint = cs.onSecondaryContainer)
                         }
                     }
                     plan != null -> Box(marker.border(1.5.dp, cs.primary, shape), contentAlignment = Alignment.Center) {
-                        Text(plan.letter, fontFamily = Inter, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium, color = cs.primary)
+                        Text(plan.letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = cs.primary)
                     }
                     else -> Spacer(marker)
                 }
@@ -246,7 +246,7 @@ private fun LetterBadge(letter: String, container: Color?, content: Color) {
 @Composable
 private fun Stat(number: String, label: String, color: Color) {
     Column {
-        Text(number, fontFamily = Inter, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.headlineSmall, color = color)
+        Text(number, style = MaterialTheme.typography.figureHeadline, color = color)
         Text(label, style = MaterialTheme.typography.bodySmall, color = color.copy(alpha = 0.78f))
     }
 }
@@ -261,6 +261,11 @@ private fun Stats(exercises: Int, sets: Int, minutes: Int, estimate: Boolean, co
     }
 }
 
+/** A planned day's exercises, sets and about how many minutes. */
+@Composable
+private fun PlannedStats(day: PlannedDay, color: Color) =
+    Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day), estimate = true, color = color)
+
 /** The letter, the head over the day's title, side by side at the top of a day's card. */
 @Composable
 private fun CardHead(letter: String?, head: String, title: String, letterContainer: Color?, letterContent: Color, headColor: Color, titleColor: Color) {
@@ -271,7 +276,6 @@ private fun CardHead(letter: String?, head: String, title: String, letterContain
         }
         Column(Modifier.weight(1f)) {
             Text(interFigures(head), style = MaterialTheme.typography.labelLarge, color = headColor)
-            Spacer(Modifier.height(2.dp))
             Text(interFigures(title), style = MaterialTheme.typography.titleLarge, color = titleColor)
         }
     }
@@ -289,7 +293,8 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val week = stringResource(R.string.today_week_block, day.position.week, day.block.name)
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer).padding(20.dp).testTag(HeroCardTag),
+        Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer)
+            .padding(horizontal = CardPadding, vertical = 20.dp).testTag(HeroCardTag),
     ) {
         CardHead(
             day.letter,
@@ -299,7 +304,7 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
         )
         Spacer(Modifier.height(20.dp))
-        Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day), estimate = true, color = cs.onPrimaryContainer)
+        PlannedStats(day, cs.onPrimaryContainer)
         Spacer(Modifier.height(20.dp))
         Button(
             onClick = onStart,
@@ -314,10 +319,10 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
     }
 }
 
-/** A card on the card tone. */
+/** A card on the card tone, its text on the 24 dp edge. */
 @Composable
 private fun DayCard(content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).padding(20.dp)) { content() }
+    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).padding(horizontal = CardPadding, vertical = 20.dp)) { content() }
 }
 
 /**
@@ -357,7 +362,7 @@ internal fun PlannedCard(day: PlannedDay, date: LocalDate) {
             headColor = cs.primary, titleColor = cs.onSurface,
         )
         Spacer(Modifier.height(20.dp))
-        Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day), estimate = true, color = cs.onSurface)
+        PlannedStats(day, cs.onSurface)
     }
 }
 
@@ -367,11 +372,10 @@ internal fun RestCard(date: LocalDate, next: Pair<LocalDate, PlannedDay>?, onNex
     val cs = MaterialTheme.colorScheme
     DayCard {
         Text(interFigures(shortDate(date)), style = MaterialTheme.typography.labelLarge, color = cs.primary)
-        Spacer(Modifier.height(2.dp))
         Text(stringResource(R.string.today_rest_day), style = MaterialTheme.typography.titleLarge)
         next?.let { (d, day) ->
             Spacer(Modifier.height(8.dp))
-            NextLink(d, day, onNext, Modifier.padding(start = 0.dp), PaddingValues(0.dp))
+            NextLink(d, day, onNext, padding = PaddingValues(0.dp))
         }
     }
 }
@@ -394,7 +398,7 @@ internal fun DoneRow(number: Int, exercise: ExerciseSummary) {
         Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("$number", Modifier.width(40.dp), fontFamily = Inter, style = MaterialTheme.typography.titleSmall, color = cs.primary)
+        Text("$number", Modifier.width(40.dp), style = MaterialTheme.typography.titleSmall, color = cs.primary)
         Column(Modifier.weight(1f)) {
             Text(exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             RirText(exercise.sets.joinToString("   ") { it.setText() }, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
