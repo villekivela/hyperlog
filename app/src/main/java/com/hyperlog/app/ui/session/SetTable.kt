@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.figureMedium
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -777,7 +779,7 @@ private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = fa
         Modifier.width(width),
         color = color,
         textAlign = TextAlign.Center,
-        style = (if (small) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge),
+        style = (if (small) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge),
         maxLines = 1,
     )
 }
@@ -870,7 +872,7 @@ internal fun Cell(
     ) {
         val empty = text.isEmpty() && placeholder != null
         // Long values (`100 + 20`) step down a size; anything still too wide (a `10–12` range) shrinks to fit inside the padding.
-        val style = (if (text.length > 6) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
+        val style = (if (text.length > 6) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge)
         Text(
             if (empty) AnnotatedString(placeholder!!) else text,
             Modifier.padding(horizontal = CellPad),

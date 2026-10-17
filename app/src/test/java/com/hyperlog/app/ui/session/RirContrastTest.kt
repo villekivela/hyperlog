@@ -3,8 +3,8 @@ package com.hyperlog.app.ui.session
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.material3.ColorScheme
-import com.hyperlog.app.ui.theme.NavyDark
-import com.hyperlog.app.ui.theme.NavyLight
+import com.hyperlog.app.ui.theme.InkDark
+import com.hyperlog.app.ui.theme.InkLight
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,8 +24,8 @@ class RirContrastTest {
     private fun surfaces(scheme: ColorScheme) = with(scheme) {
         listOf(surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest)
     }
-    private val neutralLight = surfaces(NavyLight)
-    private val neutralDark = surfaces(NavyDark)
+    private val neutralLight = surfaces(InkLight)
+    private val neutralDark = surfaces(InkDark)
 
     @Test
     fun targetChipsKeepThreeToOneOnEveryNeutralSurface() {

@@ -27,7 +27,7 @@ sets and estimate over time, weekly sets per muscle, and the bodyweight log. It 
 | Token | Value | Use |
 | --- | --- | --- |
 | Section head | 48 dp, titleSmall, onSurfaceVariant | `Bodyweight`, `Sets this week`, `Exercises` |
-| Figure | headlineMedium, proportional figures | `99 kg`, `82.4 kg` |
+| Figure | Inter SemiBold at headlineMedium's size (`figureHeadline`), tabular figures | `99 kg`, `82.4 kg` |
 | Trend chart | 160 dp plot + 24 dp date axis | exercise trend, one per machine |
 | Bodyweight chart | 64 dp on Progress (no grid, ticks or crosshair), 160 dp on its screen | small trend line |
 | Sparkline | 72 × 24 dp | exercise rows on Progress |
@@ -39,7 +39,7 @@ sets and estimate over time, weekly sets per muscle, and the bodyweight log. It 
 | Muscle column | the longest name plus 8 dp, 128 dp at least (8 dp grid), half the width at most (names wrap past it) | labels before the bars; value after the tip in tabular figures |
 
 This was written when the palette was Material 3 dynamic colour, which can't be validated once;
-since #42 it is the fixed Navy on grey theme, which these figures don't yet cover. The chart needs one hue
+since #50 it is the fixed Ink and violet theme, which these figures don't yet cover. The chart needs one hue
 (`primary`) and a neutral context ink for the second mark, which also differs in shape (dot
 against line), so identity never rests on colour alone. The dataviz validator, run on the
 baseline and logo palettes: primary against context ink is normal-vision ΔE 18.7 (baseline light),
@@ -117,7 +117,7 @@ estimate: its figure, line and table show the top set's reps instead (`12 reps`)
 A goal is read against the estimate, never instead of it. 
 
 - **The figure carries it.** With a goal the figure reads `95 kg  of 100 kg`: the estimate in
-  headlineMedium, the goal after it on the same baseline in titleMedium, muted. Under it one 32 dp
+  `figureHeadline` (Inter), the goal after it on the same baseline in titleMedium, muted. Under it one 32 dp
   row: the flag (16 dp, muted) and `5 kg to go · by Thu 31 Dec`; once reached, check_circle in
   primary and `Goal reached`. The row opens the editor.
 - **The goal line is a reference, not data.** 1 dp, solid, `onSurfaceVariant` (apart from the

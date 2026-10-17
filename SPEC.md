@@ -19,20 +19,37 @@ configuration, iOS, web, any server.
 - Kotlin, Jetpack Compose, Material 3. Android only. minSdk 26, targetSdk 36, compileSdk 37 (current Compose needs it).
 - **Material 3 Expressive** (the current Compose Material 3 expressive components, shapes and
   motion).
-- **Hyperlog's own theme**: Navy on grey, the same on every phone, with no dynamic colour. Surfaces,
-  text and dividers are neutral grey: white in light mode (containers `#F7F7F8` to `#E4E4E7`, text
-  `#1A1A1C`), near-black grey in dark (`#111214`, containers `#17181A` to `#303134`, text
-  `#E6E6E8`). One navy accent marks only what you act on or what's selected: primary and
-  primaryContainer (`#2B3A8F` light; `#B4BEFF` and `#3A49A8` dark, so the Start button stands off
-  the dark surfaces), and a navy tint in secondaryContainer for the selected tab and chips that are
-  on. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
-  stay grey. The RIR, progression, plate and error colours stay fixed, so the accent is never
-  green, amber or red. Light and dark follow the system setting; there is no in-app theme picker.
+- **Hyperlog's own theme**: Ink and violet (#50), the same on every phone, with no dynamic colour.
+  Surfaces, text and dividers carry a faint violet tint: in light mode the surface is `#FBF9FE`,
+  screens `#F0ECF7`, cards white, containers `#F7F4FB` to `#E4DEEE`, text `#1B1623` and muted text
+  `#5E5570`; in dark the surface is near-black ink `#14111B`, screens `#18141F`, cards `#241E2F`,
+  containers `#1C1724` to `#2E2640`, text `#ECE6F5` and muted text `#A9A0BA`. One violet accent
+  marks only what you act on or what's selected: primary and primaryContainer (`#5B3DD0` light;
+  `#C4B1FF` and `#6A4CE0` dark, so the Start button stands off the dark surfaces), and a violet
+  tint in secondaryContainer (`#E6DEFF` light, `#3A2C66` dark) for the selected tab and chips that
+  are on. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
+  stay tinted greys. The RIR, progression, plate and error colours stay fixed, and every one keeps
+  at least 30° of hue from the accent, so the accent is never green, amber, red or plate blue. The
+  lightest-but-one container stops at `#E4DEEE` so the hot RIR chip keeps 3:1 on it. Light and dark
+  follow the system setting; there is no in-app theme picker.
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
-  1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets display, headline and titleLarge text: screen
-  titles, the day's name, exercise names, and the kg and reps in the set table. Everything else is
-  the system font. A long exercise name at the top of a session or a past exercise wraps to a
-  second line at full size; only a name longer than two lines is cut off.
+  1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets the words of display, headline and titleLarge
+  text: screen titles, the day's name and exercise names. A long exercise name at the top of a session or a
+  past exercise wraps to a second line at full size; only a name longer than two lines is cut off.
+- **Inter** (Regular, Medium, SemiBold and Bold, bundled as static fonts under the SIL Open Font
+  License 1.1, `docs/licences/Inter-OFL.txt`) sets everything else: body, labels, titleMedium and
+  titleSmall (SemiBold), and every number. **Words in titles are Space Grotesk; numbers are always
+  Inter** (the owner's rule): a title's digits (`Build · weeks 3–6`, `Set 2`) are set in Inter at
+  the title's weight (`interFigures`), and a figure on its own line is all Inter: the set table's
+  kg and reps (Inter Medium at titleLarge's size, titleMedium's for a long value), History's latest
+  weight, a trend's estimate, the goal figure and the plates' total (Inter SemiBold at
+  headlineMedium's size), and the rest timer (Inter SemiBold at displayMedium's size).
+  Inter's tabular figures would also widen the hyphen to a digit's width ("Ramp - in"), so the
+  bundled fonts are patched to keep the hyphen proportional
+  (`scripts/inter-proportional-hyphen.py`); digits stay tabular.
+- **Larger, rounder groups**: a segmented group's outer corners are 32 dp, its joins 8 dp and its
+  rows 4 dp apart; a lone card is 32 dp. Every group and card draws through `Segment` and
+  `CardShape`.
 - **Tabular figures everywhere**: every style in the type scale sets `tnum`, so weights, reps,
   RIR, dates, timers and counts keep their columns as they change.
 - **Every symbol is a Material Symbol** (Rounded). The prototype bundles the 15 MB variable font;
@@ -833,7 +850,7 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   kept, just far enough for 4.5:1 (hot `#D14237`, warm `#9D6B1C`, calm `#447E79`). It keeps 3:1 on every light surface; in
   dark mode the white number carries it, since the fill's edge drops to about 2.8:1 on the lightest
   container. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
-  0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the navy accent or a
+  0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the violet accent or a
   button. A set's parts and its chip are joined by no-break spaces, so a line wraps only between
   sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads
   each one once, as "1 RIR"; the number is always there, so colour is never the only sign. The chip

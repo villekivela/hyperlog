@@ -34,12 +34,12 @@ The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coa
 | Token | Value | Use |
 | --- | --- | --- |
 | Intro | bodyLarge, onSurfaceVariant, 24 dp edge, 8 dp under the bar, 16 dp over the first group | The one line under the title |
-| Change in force | segment of a `SegmentedList` (Tones.card), 24 dp outer corners | One per Change, newest first |
+| Change in force | segment of a `SegmentedList` (Tones.card), 32 dp outer corners | One per Change, newest first |
 | Change row | `SegmentedRow`: `tune` in the 40 dp secondaryContainer circle, summary bodyLarge (2 lines), how long it runs bodyMedium onSurfaceVariant | The Change |
 | Change card tap | the whole segment, "See what it changes" | Opens the Change in force, read-only |
 | Fold row | 56 dp segment, bodyLarge onSurfaceVariant on the 72 dp text column, `expand_more` at the end | `1 more in force` past two cards |
 | Change actions | 48 dp row, end-aligned, 12 dp from the segment's end, 8 dp between: **Revert** text button, **Tell Claude how it's going** tonal button | Under the Change row, in the same segment |
-| Composer | one `SectionCard` (Tones.card, 24 dp radius, 12 dp padding) | Gym, starters and the words, one thing to fill in |
+| Composer | one `SectionCard` (Tones.card, 32 dp radius, 12 dp padding) | Gym, starters and the words, one thing to fill in |
 | Composer head | labelLarge, onSurfaceVariant, on the 24 dp edge, 16 dp before the gym chips on the same row | "Gym"; the row is left out with no gyms |
 | Gym chip | FilterChip, `selectedChipColors()`, `check` leading when picked, 8 dp apart | Single choice; **Elsewhere** last |
 | Starter chip | SuggestionChip, `add` leading, 8 dp apart, no head: the `add` says what it does. One row that scrolls sideways, running to the card's edges, so the chip cut off at the edge shows there's more | Puts a sentence into the words |

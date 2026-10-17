@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.Group
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.CardMargin
@@ -134,7 +135,7 @@ internal fun SetSheet(
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = Margin, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.set_sheet_title, number), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+            Text(interFigures(stringResource(R.string.set_sheet_title, number)), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
             onRemove?.let { remove ->
                 TextButton(onClick = remove) {
                     SymbolIcon(Symbol.Delete, null, Modifier.size(20.dp))

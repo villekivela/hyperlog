@@ -37,7 +37,10 @@ what the files don't explain.
 - **Icons**: every icon is a Material Symbol (Rounded) vector drawable, added with
   `scripts/add-symbol.sh <name>` and listed in `ui/symbols/Symbol.kt`. Draw them with `SymbolIcon`.
   Never add the Material Symbols variable font; a test fails if `res/font` holds it. `res/font`
-  holds only Space Grotesk, the display face (licence in `docs/licences/`).
+  holds only Space Grotesk, the display face, and Inter, the text and number face (licences in
+  `docs/licences/`). Inter's static fonts come from its release and then go through
+  `scripts/inter-proportional-hyphen.py`, which keeps the hyphen proportional under tabular
+  figures; `InterFiguresTest` fails on an unpatched font.
 
 ## Phone
 

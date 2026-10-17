@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -98,7 +99,7 @@ fun WorkoutReviewScreen(
             // What Claude built and why, in one card at the top, as a Change's review has.
             item {
                 SectionCard(Modifier.padding(top = 8.dp, bottom = 16.dp)) {
-                    Text(workout.name, style = MaterialTheme.typography.headlineSmall)
+                    Text(interFigures(workout.name), style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(workout.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     gym?.let {

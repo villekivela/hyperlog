@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.history
 
+import com.hyperlog.app.ui.theme.figureHeadline
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -214,7 +215,7 @@ internal fun BodyweightSummary(bodyweights: List<Bodyweight>, onClick: (() -> Un
     }
     Column(Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
         Row(Modifier.padding(horizontal = Margin), verticalAlignment = Alignment.Bottom) {
-            Text(stringResource(R.string.weight_kg, formatKg(latest.kg)), style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.weight_kg, formatKg(latest.kg)), style = MaterialTheme.typography.figureHeadline)
             Spacer(Modifier.weight(1f))
             Text(short(latest.date), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }

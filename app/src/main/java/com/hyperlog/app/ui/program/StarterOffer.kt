@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.program
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,7 +44,7 @@ fun StarterOffer(starter: Program, onRun: () -> Unit, modifier: Modifier = Modif
                 Spacer(Modifier.height(24.dp))
                 Text(stringResource(R.string.starter_label), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                 Spacer(Modifier.height(4.dp))
-                Text(starter.title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+                Text(interFigures(starter.title), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
                 starter.description?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)

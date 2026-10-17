@@ -40,30 +40,34 @@ class HyperlogThemeTest {
     }
 
     @Test
-    fun lightIsNavyOnWhite() {
+    fun lightIsInkAndViolet() {
         val scheme = themed().first
-        assertEquals(Color(0xFF2B3A8F), scheme.primary)
-        assertEquals(Color(0xFF2B3A8F), scheme.primaryContainer)
-        assertEquals(Color.White, scheme.surface)
-        assertEquals(Color(0xFFE3E6F7), scheme.secondaryContainer)
+        assertEquals(Color(0xFF5B3DD0), scheme.primary)
+        assertEquals(Color(0xFF5B3DD0), scheme.primaryContainer)
+        assertEquals(Color(0xFFFBF9FE), scheme.surface)
+        assertEquals(Color(0xFFF0ECF7), scheme.surfaceContainer)
+        assertEquals(Color.White, scheme.surfaceBright)
+        assertEquals(Color(0xFFE6DEFF), scheme.secondaryContainer)
     }
 
     @Test
     @Config(qualifiers = "night")
-    fun darkIsNavyOnNearBlackGrey() {
+    fun darkIsInkAndViolet() {
         val scheme = themed().first
-        assertEquals(Color(0xFFB4BEFF), scheme.primary)
-        assertEquals(Color(0xFF3A49A8), scheme.primaryContainer)
-        assertEquals(Color(0xFF111214), scheme.surface)
-        assertEquals(Color(0xFF262C4A), scheme.secondaryContainer)
+        assertEquals(Color(0xFFC4B1FF), scheme.primary)
+        assertEquals(Color(0xFF6A4CE0), scheme.primaryContainer)
+        assertEquals(Color(0xFF14111B), scheme.surface)
+        assertEquals(Color(0xFF18141F), scheme.surfaceContainer)
+        assertEquals(Color(0xFF241E2F), scheme.surfaceBright)
+        assertEquals(Color(0xFF3A2C66), scheme.secondaryContainer)
     }
 
     @Test
-    fun lightSurfacesTextAndDividersAreNeutralGrey() = assertNeutral(themed().first)
+    fun lightSurfacesTextAndDividersCarryAFaintVioletTint() = assertFaintViolet(themed().first)
 
     @Test
     @Config(qualifiers = "night")
-    fun darkSurfacesTextAndDividersAreNeutralGrey() = assertNeutral(themed().first)
+    fun darkSurfacesTextAndDividersCarryAFaintVioletTint() = assertFaintViolet(themed().first)
 
     @Test
     fun lightTertiaryIsTheAccentNotASecondHue() {
@@ -92,8 +96,12 @@ class HyperlogThemeTest {
     @Config(qualifiers = "night")
     fun darkTextOnAccentReads() = assertTextContrast(themed().first)
 
-    /** Surfaces, text, dividers and secondary carry at most a faint tint: channels within 8 of each other. */
-    private fun assertNeutral(s: ColorScheme) {
+    /**
+     * Surfaces, text, dividers and secondary lean violet (blue the strongest channel, red over
+     * green) but only faintly: no channel more than 40 from another, so nothing reads as an accent.
+     * White (light mode's cards) is the one untinted surface.
+     */
+    private fun assertFaintViolet(s: ColorScheme) {
         listOf(
             "background" to s.background, "surface" to s.surface, "surfaceDim" to s.surfaceDim,
             "surfaceBright" to s.surfaceBright, "surfaceVariant" to s.surfaceVariant,
@@ -102,11 +110,12 @@ class HyperlogThemeTest {
             "surfaceContainerHighest" to s.surfaceContainerHighest, "onSurface" to s.onSurface,
             "onSurfaceVariant" to s.onSurfaceVariant, "outline" to s.outline, "outlineVariant" to s.outlineVariant,
             "inverseSurface" to s.inverseSurface, "secondary" to s.secondary,
-            // Advice (time off) and technique pills: grey, not an accent block.
+            // Advice (time off) and technique pills: a tinted grey, not an accent block.
             "tertiaryContainer" to s.tertiaryContainer, "onTertiaryContainer" to s.onTertiaryContainer,
-        ).forEach { (name, c) ->
-            val channels = listOf(c.red, c.green, c.blue).map { (it * 255).toInt() }
-            assertTrue("$name $c is tinted", channels.max() - channels.min() <= 8)
+        ).filter { it.second != Color.White }.forEach { (name, c) ->
+            val (r, g, b) = listOf(c.red, c.green, c.blue).map { (it * 255).toInt() }
+            assertTrue("$name $c isn't violet", b >= r && r >= g && b > g)
+            assertTrue("$name $c is more than a tint", b - g <= 40)
         }
     }
 
@@ -150,8 +159,8 @@ class HyperlogThemeTest {
 
     @Test
     @Config(sdk = [30])
-    fun phonesBeforeAndroidTwelveGetTheSameNavyOnGrey() {
-        assertEquals(NavyLight.primary, themed().first.primary)
+    fun phonesBeforeAndroidTwelveGetTheSameInkAndViolet() {
+        assertEquals(InkLight.primary, themed().first.primary)
     }
 
     @Test
@@ -161,11 +170,31 @@ class HyperlogThemeTest {
     }
 
     @Test
-    fun displayHeadlineAndTitleLargeAreSpaceGroteskAndTheRestTheSystemFont() {
+    fun displayHeadlineAndTitleLargeAreSpaceGroteskAndTheRestInter() {
         val type = themed().second
         styles(type).forEach { (name, style) ->
             val display = name.startsWith("display") || name.startsWith("headline") || name.startsWith("titleLarge")
-            assertEquals(name, if (display) SpaceGrotesk else FontFamily.SansSerif, style.fontFamily)
+            assertEquals(name, if (display) SpaceGrotesk else Inter, style.fontFamily)
+        }
+    }
+
+    @Test
+    fun theSetTablesFiguresAreInterWithTabularFiguresAtTitleSizes() {
+        val type = themed().second
+        listOf(type.figureLarge to type.titleLarge, type.figureMedium to type.titleMedium).forEach { (figure, title) ->
+            assertEquals(Inter, figure.fontFamily)
+            assertEquals("tnum", figure.fontFeatureSettings)
+            assertEquals(title.fontSize, figure.fontSize)
+        }
+    }
+
+    @Test
+    fun headlineAndDisplayFiguresAreInterAtTheirSizes() {
+        val type = themed().second
+        listOf(type.figureHeadline to type.headlineMedium, type.figureDisplay to type.displayMedium).forEach { (figure, size) ->
+            assertEquals(Inter, figure.fontFamily)
+            assertEquals("tnum", figure.fontFeatureSettings)
+            assertEquals(size.fontSize, figure.fontSize)
         }
     }
 

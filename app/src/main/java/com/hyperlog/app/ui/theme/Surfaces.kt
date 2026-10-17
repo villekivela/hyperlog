@@ -82,16 +82,16 @@ object Tones {
 /** A card's or a group's distance from the screen edge; its content adds the same, for the 24 dp text edge. */
 val CardMargin = 12.dp
 val CardPadding = 12.dp
-private val Outer = 24.dp
-private val Inner = 4.dp
+private val Outer = 32.dp
+private val Inner = 8.dp
 
 /** A lone card: the expressive large radius. */
 val CardShape = RoundedCornerShape(Outer)
 
 /** Gap between the rows of a group. */
-val SegmentGap = 2.dp
+val SegmentGap = 4.dp
 
-/** Row [index] of [count] in a group: the group's outer corners round, the joins between rows nearly square. */
+/** Row [index] of [count] in a group: the group's outer corners round, the joins between rows small. */
 fun segmentShape(index: Int, count: Int) = RoundedCornerShape(
     topStart = if (index == 0) Outer else Inner,
     topEnd = if (index == 0) Outer else Inner,
@@ -241,7 +241,7 @@ fun EmptyState(
     ) {
         ShapedSymbol(symbol)
         Spacer(Modifier.height(24.dp))
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Text(interFigures(title), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         Spacer(Modifier.height(32.dp))

@@ -1,9 +1,11 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.lazy.itemsIndexed
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.cardBehind
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -70,7 +72,7 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
     val same = library.filter { !it.hidden && it.pattern == exercise.exercise.pattern && it.id !in shown }.sortedBy { it.name }
     Column(Modifier.fillMaxWidth()) {
         Text(
-            stringResource(R.string.edit_swap_title, exercise.exercise.name),
+            interFigures(stringResource(R.string.edit_swap_title, exercise.exercise.name)),
             Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
             maxLines = 2,
@@ -260,7 +262,7 @@ private fun Stepper(
         SymbolIcon(Symbol.Remove, down.first, tint = if (down.second) cs.onSurfaceVariant else cs.outlineVariant)
     }
     Box(Modifier.width(40.dp), contentAlignment = Alignment.Center) {
-        if (mark != null) mark() else Text(value, style = MaterialTheme.typography.titleLarge)
+        if (mark != null) mark() else Text(value, style = MaterialTheme.typography.figureLarge)
     }
     IconButton(onClick = onUp, enabled = up.second) {
         SymbolIcon(Symbol.Add, up.first, tint = if (up.second) cs.onSurfaceVariant else cs.outlineVariant)

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -54,6 +54,7 @@ import com.hyperlog.app.domain.summary
 import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.CardShape
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -184,7 +185,7 @@ fun LadderEditor(
     if (deleting && onDelete != null) {
         AlertDialog(
             onDismissRequest = { deleting = false },
-            title = { Text(stringResource(R.string.ladder_delete_title, name.orEmpty())) },
+            title = { Text(interFigures(stringResource(R.string.ladder_delete_title, name.orEmpty()))) },
             text = { Text(stringResource(R.string.ladder_delete_text)) },
             confirmButton = { TextButton(onClick = { deleting = false; onDelete() }) { Text(stringResource(R.string.gym_delete_confirm)) } },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.gym_keep)) } },
@@ -196,7 +197,7 @@ fun LadderEditor(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(title) },
+                title = { Text(interFigures(title)) },
                 navigationIcon = { IconButton(onClick = onClose) { SymbolIcon(Symbol.Close, stringResource(R.string.editor_close)) } },
                 actions = {
                     if (onDelete != null) IconButton(onClick = { deleting = true }) { SymbolIcon(Symbol.Delete, stringResource(R.string.gym_delete_item)) }
@@ -373,7 +374,7 @@ internal fun LadderCheck(draft: LadderSpec?, pinPlates: List<Double>, status: St
     var open by rememberSaveable { mutableStateOf(false) }
     val rungs = draft?.ladder(pinPlates)?.rungs
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Tones.card)
+        Modifier.fillMaxWidth().clip(CardShape).background(Tones.card)
             .then(if (rungs != null) Modifier.clickable(onClickLabel = stringResource(if (open) R.string.ladder_check_hide else R.string.ladder_check_show)) { open = !open } else Modifier)
             .padding(16.dp).animateContentSize().testTag(LadderPreviewTag),
     ) {

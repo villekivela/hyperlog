@@ -25,7 +25,7 @@ class SymbolTest {
     @Test
     fun theAppBundlesNoSymbolFont() {
         // The Material Symbols variable font is 15 MB; icons ship as vector drawables instead.
-        // res/font holds the display face's static fonts, each well under 1 MB.
+        // res/font holds the display and text faces' static fonts, each well under 1 MB.
         File("src/main/res/font").listFiles().orEmpty().forEach { font ->
             assertFalse("${font.name} is Material Symbols", font.name.contains("symbol", ignoreCase = true))
             assertTrue("${font.name} is ${font.length()} bytes", font.length() < 1_000_000)
