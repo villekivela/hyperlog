@@ -819,18 +819,21 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      muscle (Volume, above: drops, myo mini-sets and partials still add no sets). Halves read
      `7.5`, whole sets `7`.
 
-**Navigation**: a Material 3 navigation bar at the bottom holds the four destinations, Today,
-Program, Coach and History, in that order. Back on Program, Coach or History goes to Today. The bar
-is hidden while the session screen is up (a running session left with Back shows it again) and on
-screens opened from a destination (a trend, a past session, a Change under review, Settings).
+**Navigation**: a Material 3 navigation bar at the bottom holds the five destinations, Today,
+Program, Coach, History and Settings, in that order (the owner's call, 2026-10-17: Settings is a
+tab, not a gear on every top bar). Back on Program, Coach, History or Settings goes to Today. The
+bar is hidden while the session screen is up (a running session left with Back shows it again) and
+on screens opened from a destination (a trend, a past session, a Change under review, Gyms and
+equipment, the exercise library).
 
 **Sheets** are Material 3 modal bottom sheets, all through one shared sheet: a drag handle, a scrim,
 Back and a drag down from anywhere on the sheet (scrolling content first scrolls to its top) close
 it with the system's animation. A sheet opens fully expanded at its final height and keeps that
 height while it moves. It stops below the status bar; a list longer than that scrolls inside it.
 
-Settings sit behind an icon at the end of every destination's top bar, and back returns to the
-destination it was opened from: gyms and their equipment, exercise library, export backup, restore
+Settings is the navigation bar's fifth tab, a destination with no back arrow and no gear on any top
+bar; its sub-screens (Gyms and equipment, the exercise library) keep their back arrows to Settings.
+It holds gyms and their equipment, exercise library, export backup, restore
 from a backup, starting weights from the old app, and "Check for updates" (Distribution).
 
 - **Effort is RIR everywhere**, both targets and logging.

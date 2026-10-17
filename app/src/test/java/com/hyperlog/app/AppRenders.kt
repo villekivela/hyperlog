@@ -104,7 +104,7 @@ class AppRenders {
     @Test
     fun settings() {
         launch()
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.waitFor("Exercise library")
         save("settings")
     }
@@ -112,7 +112,7 @@ class AppRenders {
     @Test
     fun library() {
         launch()
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.click("Exercise library")
         compose.waitFor("Barbell Bench Press")
         save("library")
@@ -121,7 +121,7 @@ class AppRenders {
     @Test
     fun exerciseEditor() {
         launch()
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.click("Exercise library")
         compose.click("Barbell Bench Press")
         compose.waitFor("Save")

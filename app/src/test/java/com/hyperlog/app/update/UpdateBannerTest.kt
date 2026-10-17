@@ -1,5 +1,6 @@
 package com.hyperlog.app.update
 
+import com.hyperlog.app.openTab
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -110,13 +111,13 @@ class UpdateBannerTest {
     @Test
     fun turningOffCheckForUpdatesHidesTheBannerAndStopsTheCheck() {
         compose.waitFor("Hyperlog 0.2.0 is available")
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.waitFor("Check for updates")
         compose.onNode(hasText("Check for updates")).assertIsOn()
         compose.click("Check for updates")
         compose.onNode(hasText("Check for updates")).assertIsOff()
         assertEquals(false, runBlocking { preferences.checkForUpdates() })
-        compose.onNodeWithContentDescription("Back").performClick()
+        compose.openTab("Today")
         compose.waitFor("Today")
         compose.onNodeWithText("Hyperlog 0.2.0 is available").assertDoesNotExist()
     }

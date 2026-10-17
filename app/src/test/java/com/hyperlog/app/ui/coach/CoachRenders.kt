@@ -129,7 +129,7 @@ class CoachRenders {
 
     @Test fun todayTimeOff() = render("today-time-off") {
         TodayScreen(
-            onSettings = {}, sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
+            sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
             program = plain, exerciseNames = names, library = library.exercises, lastTrained = today.minusDays(11),
         )
     }

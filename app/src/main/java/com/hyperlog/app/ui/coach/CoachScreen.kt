@@ -162,7 +162,6 @@ fun CoachScreen(
     onReview: () -> Unit = {},
     /** Reverts the accepted Change with this id. */
     onRevert: (Long) -> Unit = {},
-    onSettings: () -> Unit = {},
 ) {
     /** Hyperlog went to the background after asking: on coming back, the clipboard is read once. */
     var away by rememberSaveable { mutableStateOf(false) }
@@ -227,8 +226,7 @@ fun CoachScreen(
                 colors = hyperlogTopBarColors(),
                 // The bar sets titles 16 dp in; the screen's text edge is 24 dp.
                 title = { Text(stringResource(R.string.coach_title), Modifier.padding(start = 8.dp)) },
-                // A destination of the navigation bar: no back arrow (back goes to Today), Settings at the end.
-                actions = { IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) } },
+                // A destination of the navigation bar: no back arrow (back goes to Today).
             )
         },
         bottomBar = {

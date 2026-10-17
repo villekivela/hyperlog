@@ -25,7 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -104,10 +103,9 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(stringResource(R.string.settings)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) }
-                },
+                // A destination of the navigation bar: no back arrow (back goes to Today). The bar sets
+                // titles 16 dp in; the screen's text edge is 24 dp.
+                title = { Text(stringResource(R.string.settings), Modifier.padding(start = 8.dp)) },
             )
         },
     ) { padding ->

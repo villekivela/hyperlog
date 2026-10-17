@@ -1,6 +1,6 @@
 # Settings
 
-Behind the settings icon at the end of every destination's top bar; back returns there. Backups (#21) join it as a group of two rows.
+The fifth tab of the navigation bar: a destination with no back arrow, its title at the 24 dp text edge. Back goes to Today. The bar hides on its sub-screens (Gyms and equipment, the exercise library), whose back arrows return here. Backups (#21) join it as a group of two rows.
 
 ## Principles
 
@@ -45,6 +45,7 @@ Behind the settings icon at the end of every destination's top bar; back returns
 - The starting-weights row now says "the old app's backup" so it can't be mistaken for a Hyperlog
   backup.
 
-Screens: `screens/settings.png` (phone, dark), `light-settings.png` and `dark-settings.png` (renders
+Screens: `screens/settings.png` (phone, dark; from before Settings became a tab, so it still shows
+the back arrow and no bar), `light-settings.png` and `dark-settings.png` (renders
 from `AppRenders`). The restore dialog
 doesn't render in Robolectric; check it on the phone.

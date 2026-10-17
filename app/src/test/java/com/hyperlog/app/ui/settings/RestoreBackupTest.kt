@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.settings
 
+import com.hyperlog.app.openTab
 import android.net.Uri
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -40,7 +41,7 @@ class RestoreBackupTest {
         val file = File(compose.activity.cacheDir, "hyperlog-backup.json")
         file.writeText(javaClass.getResource("/backup/hyperlog-backup-db14.json")!!.readText())
         compose.waitFor("Today")
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.waitFor("Restore from a backup")
 
         // The system file picker hands back this file.
@@ -63,7 +64,7 @@ class RestoreBackupTest {
     fun exportWritesTheBackupToThePickedFile() {
         val file = File(compose.activity.cacheDir, "export.json")
         compose.waitFor("Today")
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.openTab("Settings")
         compose.waitFor("Export backup")
 
         // The system save dialog hands back this file.
