@@ -509,10 +509,49 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    reps, RIR, technique follow-ups), rest timer, technique video link and note for each exercise,
    swap to an alternative, add or change an intensity technique on a set. Works without a program
    too (ad-hoc session).
-   - **With a program**, Today shows the next day: week and block, the day's name, and each slot's
-     exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`, technique symbols after; a Change's swap reads `In place of …` over the name). **Start
-     session** starts that day at the picked gym; **Ad-hoc session** stays available. A finished
-     program says so and offers an ad-hoc session.
+   - **Today opens on a calendar of weeks** (decided 2026-10-17, #53), and the day picked on it
+     fills the screen below. Today has no title bar: the calendar is the top of the screen.
+     - **The calendar** is a row of seven days, Monday to Sunday, under the month and year
+       (`October 2026`, or `Oct – Nov 2026` for a week across two months). It swipes sideways a
+       week at a time, back to the week of the first finished session and on to the week of the
+       last planned day, and at least four weeks each way. A **Today** button in the header shows
+       once you've moved off today and brings the strip and the selection back. A pencil in the
+       header opens the **Training days** sheet, with or without a program; with no training days
+       the header says `Set your training days` beside it.
+     - **Each day** has its weekday letter, its date in a 40 dp circle (filled primaryContainer
+       when selected, ringed in primary when it's today and not selected) and a marker under it:
+       a filled secondaryContainer pill with the day's letter when a session was finished on it (a
+       tick for an ad-hoc session or a workout), an outlined primary pill with the letter when a
+       program day is planned for it, else nothing. Past days without a session have muted dates.
+       A day's letter is the one its name starts with (`Day A — …`), else its place in the week.
+     - **Planned dates.** The program runs as a sequence, so its dates are an estimate. The next
+       day goes on today, or on the next training day when a session was already finished today
+       (any session). Each following day goes on the next training day after that, to the
+       program's last day. **With no training days, only the next day is marked** (tomorrow when
+       a session was finished today). Each planned day is read for its date, with the Changes
+       covering it. A finished program plans nothing.
+     - **The next day to train**, on whatever date it falls, is the hero card in primaryContainer:
+       the day's letter in the 9-sided cookie, `Week 7 · Intensify` (with `Next · Mon 19 Oct ·` in
+       front when it isn't today) over the name, its numbers (exercises, sets, about how many
+       minutes: each set's rest and about 45 s of work, to the nearest 5) and **Start session**
+       across the card. Then each slot's exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`,
+       technique symbols after; a Change's swap reads `In place of …` over the name), the slot
+       label (`1`, `5a`) centred on its row, and **Ad-hoc session** as a text button after them.
+       Start session starts the program's next day at the picked gym. While a session runs, the
+       next day on a later date reads as a later planned day, without Start.
+     - **A day with finished sessions** has a card for each on the card tone: `Done · Sat 17 Oct ·
+       Kalliokoski`, the letter, the name, the numbers (exercises, sets, minutes taken) and **Open
+       session**, which opens it in History (Back comes back to Today). Then its exercises with
+       the sets as logged, RIR chips filled. On today, `Next: Day A on Mon 19 Oct` follows,
+       selecting that day, and Ad-hoc session after it.
+     - **A later planned day** reads `Planned · Wed 21 Oct · Week 7` with the letter outlined, its
+       numbers and its planned exercises. It has no Start.
+     - **A day with nothing** is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
+       planned day.
+     - The update and time-off banners show only while today is selected. A workout from Claude
+       and a running session keep their own layout on today, with their Start or Resume floating.
+     - With no program, today keeps the starter offer (or the empty state) under the calendar, and
+       a finished program says so and offers an ad-hoc session.
    - A **workout** added from Coach comes first, for the day it was added, as today's main
      Start (Start workout floats); the program day follows as a second card with a tonal Start
      (Coaching → Workout).
@@ -876,13 +915,14 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
-  train). Optional training days (Training days, below) set the default gym and let Today notice
-  time off. No reminders or notifications.
+  train). Optional training days (Training days, below) set the default gym, let Today notice
+  time off and place the program's coming days on Today's calendar. No reminders or notifications.
 - **Training days** (the weekday plan) are yours, kept once for the app, not per gym (ADR 0004):
   the weekdays you train on, each with an optional gym (Mon = Kalliokoski, Wed = hotel).
   - **Program shows them** as a row under its header card: `3 days a week · Mon Wed Fri` with a
     `calendar_today` symbol, or `Set your training days` with none. The row opens the **Training
-    days** sheet.
+    days** sheet. **Today's calendar** has a pencil in its header that opens the same sheet, also
+    with no program (Screens → Today).
   - **The sheet** has the seven weekdays as round toggles, Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
     named). With several gyms, a day turned on names no gym until one is picked. With one gym

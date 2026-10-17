@@ -27,6 +27,8 @@ import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Rule
+import androidx.compose.ui.test.hasClickAction
+import com.hyperlog.app.waitForTappable
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
@@ -47,9 +49,10 @@ class GymAtSessionStartTest {
 
     private fun gymRow(name: String): SemanticsNodeInteraction = compose.onNode(isSelectable().and(hasText(name, substring = true)))
 
-    private fun startAt(gym: String) {
-        compose.waitFor("Start session")
-        compose.onNodeWithText("Start session").performClick()
+    /** Starts an ad-hoc session at [gym]: from [button], which is Ad-hoc session once a session was finished today. */
+    private fun startAt(gym: String, button: String = "Start session") {
+        compose.waitForTappable(button)
+        compose.onNode(hasText(button).and(hasClickAction())).performClick()
         compose.waitFor(gym)
         gymRow(gym).performClick()
         compose.onNodeWithText("Start").performClick()
@@ -128,7 +131,7 @@ class GymAtSessionStartTest {
         compose.waitFor("Done")
         compose.onNodeWithText("Done").performClick()
 
-        startAt("Central")
+        startAt("Central", "Ad-hoc session")
         addExercise("Leg Extension")
         waitForPad()
         compose.onNodeWithText("Leg Extension").performClick()

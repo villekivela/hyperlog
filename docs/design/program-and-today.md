@@ -2,7 +2,9 @@
 
 Ticket #6 brings a program to the app: the Program screen, Today showing the next day, and the
 logging screen's Target column, planned rows and prescription sheet. Everything extends
-`logging-screen.md`. The expressive pass (below, first) replaces the earlier flat look. Screens:
+`logging-screen.md`. The expressive pass (below, first) replaces the earlier flat look. **Today's
+calendar (#53, last section) replaces Today's title bar, its floating Start and its next-day
+layout;** the workout and running-session layouts below still hold on today. Screens:
 `light-` and `dark-today-starter.png`, `-today-update-banner.png` and `-today-day.png` (a
 superset as 5a and 5b) are renders from `AppRenders` (`RENDERS=<dir> ./gradlew testDebugUnitTest
 --tests '*AppRenders*'`, `DARK=1` for dark). Program's own screens are listed under "Program
@@ -318,4 +320,72 @@ date-ranged Change: the Ends line), `program-menu` (⋮ open), `program-changes`
 replaced Change struck through), `program-finished`. Checked on the phone (dark, the owner's
 data): the current week matches Today slot for slot, done days show the logged top sets and open
 their sessions. Light mode was checked through the renders only; the phone's theme was left as set.
+
+## Today's calendar (#53)
+
+Decided on 2026-10-17 from the look C prototype (`prototype/today-settings`, never merged): Today
+opens on a calendar of weeks, and the day picked fills the screen below it. The owner wanted the
+strip "to do something": show planned and done sessions, and scroll back into history and on into
+the future.
+
+```
+ October 2026                  Today  ✎     ← Today once you've moved off it; ✎ training days
+  M    T    W    T    F    S    S
+ 12   13   14   15   16  (17)  18          ← 40 dp circles: selected filled, today ringed
+ [A]       [B]       [C]  ⟦A⟧               ← done filled, planned outlined, past rest days muted
+┌──────────────────────────────────────┐
+│ (A)  Week 7 · Intensify              │   ← primaryContainer hero: the cookie, then the name
+│      Heavy bench, squat, pulldown    │
+│ 6          12        ~35             │   ← Inter stats
+│ exercises  sets      minutes         │
+│ ┌──────────────────────────────────┐ │
+│ │        ▶ Start session           │ │   ← onPrimaryContainer, across the card
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘
+ 1   Barbell Bench Press                   ← label centred on the row
+     1 × 3–5 [1] · ↘ 2 × 6–8 [1]
+              🏋 Ad-hoc session              ← text button after the day
+```
+
+- **No title bar.** The calendar head is the top of the screen: the month and year in
+  titleLarge (`October 2026`, `Oct – Nov 2026` across a month), **Today** (a text button) once the
+  strip or the selection is off today, and the `edit` pencil, which opens the Training days sheet.
+  With no training days the pencil reads `✎ Set your training days`. It is the way to the sheet
+  without a program, which #52 left open.
+- **The strip** is a HorizontalPager a week a page, from the week of the first finished session to
+  the week of the last planned day, four weeks each way at least. A day is its narrow weekday
+  letter (primary on today), its date in `figureMedium` in a 40 dp circle (primaryContainer when selected,
+  a 2 dp primary ring on today otherwise) and a 28 × 20 dp marker: secondaryContainer with the
+  day's letter in labelMedium Bold when done (`check` for an ad-hoc session or a workout), a 1.5 dp
+  primary outline with the letter when planned. Past days without a session have their dates at
+  70 % onSurfaceVariant. Each day reads as one tab to TalkBack: `Sat 17 Oct, planned Day A`.
+- **The hero** (the next day to train, today or later; only a plan while a session runs) is a 32 dp
+  primaryContainer card, its text on the 24 dp edge: the
+  letter in a 64 dp `Cookie9Sided` filled onPrimaryContainer, the head (`Week 7 · Intensify`,
+  `Next · Mon 19 Oct · Week 7 · Intensify` on another date) at 80 % over the name after its letter
+  in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
+  **Start session** button in onPrimaryContainer across the card. It replaces the floating Start.
+- **Done** cards and **planned** cards are the same layout on the card tone: the letter's cookie
+  filled secondaryContainer (done) or outlined in primary (planned), the head in primary (`Done ·
+  Sat 17 Oct · Kalliokoski`, `Planned · Wed 21 Oct · Week 7`). A done card's stats are the minutes
+  taken and its button a tonal **Open session**; a planned card has no button. A done day lists
+  its exercises with the sets as logged, filled RIR chips; on today `Next: Day B on Mon 19 Oct ›`
+  and Ad-hoc session follow.
+- **Rest day**: a card with the date in primary over `Rest day` and `Next: Day A on Sat 17 Oct ›`.
+- **Slot rows** centre the label (`1`, `5a`) on the row, beside the name and the sets, where it
+  used to sit on the name's baseline.
+- The update and time-off banners sit between the strip and the day while today is selected. A
+  workout from Claude and a running session keep their layouts under the strip, with the
+  floating Start workout or Resume session.
+
+Screens (Robolectric renders from `TodayRenders`, `RENDERS=<dir>`, `DARK=1` for dark, each
+`light-` and `dark-`): `today-calendar-hero` (week 7 Day A today, week 6 done), `-done` (Day A
+finished today: the card, the logged sets, Next), `-next` (the hero on Mon 19 Oct, from Next),
+`-planned` (Wed 21 Oct, outlined), `-rest`, `-past-done` (Wed 14 Oct), `-last-week` (swiped
+back to an ad-hoc session: the tick), `-no-training-days` (only today marked; the header asks).
+The older Today renders (`today-starter`, `-update-banner`, `-day`, `-time-off`, `-workout*`) are
+rendered again with the calendar on top.
+
+**Open:** the designer's and tester's passes on the phone, and checking each state on the phone
+in light and dark. The phone wasn't connected for #53, so these renders are the only check so far.
 

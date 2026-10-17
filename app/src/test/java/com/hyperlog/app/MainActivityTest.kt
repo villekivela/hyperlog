@@ -10,6 +10,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.hyperlog.app.waitFor
 import org.junit.Rule
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.performScrollToNode
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
@@ -39,9 +41,12 @@ class MainActivityTest {
         compose.waitFor("Run this program")
         compose.onNodeWithText("Run this program").performClick()
         compose.waitFor("Week 1 · Ramp-in")
-        compose.onNodeWithText("Day A — Heavy bench, squat, pulldown").assertIsDisplayed()
+        // The day's letter is in its cookie, its name after the letter beside it.
+        compose.onNodeWithText("Heavy bench, squat, pulldown").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
         compose.onNodeWithText("1 × 4–6\u00A02 RIR", substring = true).assertIsDisplayed()
+        // The superset is further down, under the day's card.
+        compose.onNode(hasScrollToIndexAction().and(hasTestTag(com.hyperlog.app.ui.today.CalendarTag).not())).performScrollToNode(hasText("5a"))
         compose.onNodeWithText("5a").assertIsDisplayed()
     }
 
