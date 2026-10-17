@@ -99,16 +99,16 @@ Values are for Build. "Techniques" apply to the last set only, from week 3.
 | 5a | Machine preacher curl | Bayesian cable curl | 1 × 10–12 @ 0 | Myo-reps |
 | 5b | Triceps pressdown | Cable triceps kickback | 1 × 10–12 @ 0 | — |
 
-3a and 3b are a superset, and so are 5a and 5b. Rest after the pair. The pec deck and the calf
-raise moved to Days B and A.
+3a and 3b are a superset, and so are 5a and 5b. Rest after the pair. Day C's chest fly is now
+Day B's cable flye, and the calf raise is on Day A.
 
 ## Rest
 
 - Main lifts (bench, squat pattern, RDL, row): 3:00.
 - Everything else: 1:30–2:00.
 - `SPEC.md`'s rest rules apply on top of this: no rest before drops, a breathing countdown between
-  myo mini-sets, and no rest between superset partners. Rest is taken after the pair, so Day C's pulldown and
-  DB incline press rest 2:00 once, after the incline press.
+  myo mini-sets, and no rest between superset partners. Rest is taken after the pair, so Day C's
+  pulldown and DB incline press rest 2:00 once, after the incline press.
 
 ## First coaching case: training around hand pain
 
@@ -124,8 +124,8 @@ effort, so the swaps are what matters:
   - Barbell RDL → 45° hyperextension (no grip at all).
   - Cable shoulder press → machine shoulder press.
   - Bayesian cable curl → machine preacher curl (a loose grip, or none), and no drop sets.
-- **Pulls:** keep pulldowns and rows, with straps and a hook-free, open-hand grip; chest-supported
-  only.
+- **Pulls:** keep pulldowns and rows, with straps and a hook-free, open-hand grip; chest-supported, or
+  the seated cable row with straps.
 - **Load:** −10% on any exercise that kept a grip, and no drop sets on grip exercises. No extra
   RIR: Ramp-in's +1 already holds for weeks 1–2. Later in the program, +1 RIR on everything.
 - **Pain rule:** pain during a set stays at 3/10 or less and isn't worse the next morning. If it is
@@ -142,10 +142,9 @@ different equipment.
   `smith_machine_bench_press`, `hack_squat`, `leg_press`, `2_grip_lat_pulldown`,
   `machine_pulldown`, `seated_leg_curl`, `lying_leg_curl`, `cable_lateral_raise`,
   `overhead_cable_triceps_extension`, `barbell_rdl`, `45_hyperextension`,
-  `chest_supported_machine_row`, `leg_extension`, `cable_shoulder_press`, `cable_flye`, `bayesian_cable_curl`,
-  `machine_preacher_curl`, `reverse_cable_crossover`, `db_incline_press`,
-  `incline_machine_press`, `triceps_pressdown`, `seated_calf_raise`, and the listed
-  alternatives. Use the cleaned library's ID wherever duplicates were merged.
+  `chest_supported_machine_row`, `leg_extension`, `cable_shoulder_press`, `cable_flye`,
+  `bayesian_cable_curl`, `machine_preacher_curl`, `reverse_cable_crossover`, `db_incline_press`,
+  `incline_machine_press`, `triceps_pressdown`, `seated_calf_raise`, and the listed alternatives. Use the cleaned library's ID wherever duplicates were merged.
 - **Top set and back-off** is new to the program format. A back-off set is "same exercise, weight =
   top set − 10%, rounded down to a rung". The program-import ticket covers it, and progression
   judges the top set.
@@ -179,8 +178,8 @@ document and the format don't line up, the file does this:
   `fewerSets: 1`. "One set fewer" takes the last set off each slot, and a slot with one set keeps it.
 - **Rest.** Main lifts (both benches, close-grip bench, hack squat, leg press, RDL, row) rest
   3:00. Pulldowns, the shoulder press and the DB incline press rest 2:00; everything else 1:30.
-- **Slot notes.** Close-grip bench gets the bench note. The cable shoulder press, DB incline press and
-  both curls get the press and curl note. The lateral raises, flye and calf raise have none.
+- **Slot notes.** Close-grip bench gets the bench note. The cable shoulder press, DB incline press
+  and both curls get the press and curl note. The lateral raises, flye and calf raise have none.
 - **Slot ids** are unique within a block, so Day B's lateral raise is `side_delt_raise` (Day A's is
   `lateral_raise`).
 - **Not in the file**, because the app owns them: warm-ups, the "deload sets never lower the
