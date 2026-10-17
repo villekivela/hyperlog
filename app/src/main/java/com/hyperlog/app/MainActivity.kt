@@ -153,9 +153,12 @@ private val Tabs = listOf(
 private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
     val cs = MaterialTheme.colorScheme
     ShortNavigationBar(Modifier.testTag(NavigationBarTag), containerColor = Tones.bar) {
-        Tabs.forEach { (tab, symbol, filled) ->
+        // PROTOTYPE: look C makes Settings a fifth tab.
+        val tabs = if (com.hyperlog.app.ui.theme.PrototypeLook.settingsTab) Tabs + Triple(Screen.Settings, Symbol.Settings, Symbol.Settings) else Tabs
+        tabs.forEach { (tab, symbol, filled) ->
             val label = stringResource(
                 when (tab) {
+                    Screen.Settings -> R.string.settings
                     Screen.Program -> R.string.program_title
                     Screen.Coach -> R.string.coach_title
                     Screen.History -> R.string.history_title
@@ -338,6 +341,7 @@ private fun App(
     // The navigation bar is for the four destinations themselves; a session, a sub-screen or Settings hides it.
     val tabShown = finished == null && !sessionShown && editing == null && when (screen) {
         Screen.Today, Screen.Coach -> true
+        Screen.Settings -> com.hyperlog.app.ui.theme.PrototypeLook.settingsTab
         Screen.Program -> !programView.changesOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
@@ -352,7 +356,7 @@ private fun App(
                 }
                 // Chosen from the bar, Program opens on where you are.
                 if (tab == Screen.Program && screen != Screen.Program) programView = ProgramView()
-                screen = tab
+                if (tab == Screen.Settings) { if (screen != Screen.Settings) openSettings() } else screen = tab
             }
         },
         contentWindowInsets = WindowInsets(0),

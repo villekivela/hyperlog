@@ -201,6 +201,23 @@ fun TodayScreen(
     val startLabel = stringResource(if (sessionRunning) R.string.today_resume_session else R.string.today_start_session)
     // Named for what it starts, since the program day's card sits beside it with its own Start.
     val fabLabel = if (workoutFirst) stringResource(R.string.today_start_workout) else startLabel
+    // PROTOTYPE: looks B to D lay the program day out their own way.
+    val lookKey = com.hyperlog.app.ui.theme.PrototypeLook.key
+    if (lookKey != "A" && !workoutFirst && next != null) {
+        PrototypeToday(
+            lookKey, next, exerciseNames, today, weekdays, lastTrained,
+            banners = {
+                update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
+                if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
+            },
+            startLabel = startLabel,
+            onStart = { start(Kind.Day) },
+            onAdHoc = if (!sessionRunning) { { start(Kind.AdHoc) } } else null,
+            onSettings = onSettings,
+            modifier = modifier,
+        )
+        return
+    }
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = Tones.screen,

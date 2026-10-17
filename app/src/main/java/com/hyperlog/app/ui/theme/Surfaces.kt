@@ -82,14 +82,15 @@ object Tones {
 /** A card's or a group's distance from the screen edge; its content adds the same, for the 24 dp text edge. */
 val CardMargin = 12.dp
 val CardPadding = 12.dp
-private val Outer = 24.dp
-private val Inner = 4.dp
+// PROTOTYPE: radii and gaps follow the look.
+private val Outer get() = PrototypeLook.look.outer
+private val Inner get() = PrototypeLook.look.inner
 
 /** A lone card: the expressive large radius. */
-val CardShape = RoundedCornerShape(Outer)
+val CardShape get() = RoundedCornerShape(Outer)
 
 /** Gap between the rows of a group. */
-val SegmentGap = 2.dp
+val SegmentGap get() = PrototypeLook.look.gap
 
 /** Row [index] of [count] in a group: the group's outer corners round, the joins between rows nearly square. */
 fun segmentShape(index: Int, count: Int) = RoundedCornerShape(

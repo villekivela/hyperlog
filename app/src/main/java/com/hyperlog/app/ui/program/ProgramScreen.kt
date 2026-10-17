@@ -126,7 +126,7 @@ fun ProgramScreen(
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
                 actions = {
-                    IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) }
+                    if (com.hyperlog.app.ui.theme.PrototypeLook.gearInTopBar) IconButton(onClick = onSettings) { SymbolIcon(Symbol.Settings, stringResource(R.string.settings)) }
                     if (active != null && errors == null) {
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }

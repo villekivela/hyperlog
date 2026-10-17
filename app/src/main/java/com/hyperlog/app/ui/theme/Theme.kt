@@ -1,22 +1,30 @@
 package com.hyperlog.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.hyperlog.app.BuildConfig
 
-/**
- * Hyperlog's own theme: Navy on grey (neutral surfaces, one navy accent) and Space Grotesk on every phone, with no dynamic colour.
- * Light and dark follow the system; there is no in-app theme picker.
- */
+// PROTOTYPE: the look comes from PrototypeLook, cycled by its floating switcher (debug builds only).
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HyperlogTheme(content: @Composable () -> Unit) {
+    val look = PrototypeLook.look
+    val dark = PrototypeLook.forcedDark ?: isSystemInDarkTheme()
     MaterialExpressiveTheme(
-        colorScheme = if (isSystemInDarkTheme()) NavyDark else NavyLight,
-        typography = HyperlogTypography,
+        colorScheme = if (dark) look.dark else look.light,
+        typography = if (look.inter) InterTypography else HyperlogTypography,
         motionScheme = MotionScheme.expressive(),
-        content = content,
-    )
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            content()
+            if (BuildConfig.DEBUG) LookSwitcher(Modifier.align(Alignment.TopCenter))
+        }
+    }
 }
