@@ -33,13 +33,17 @@ configuration, iOS, web, any server.
   lightest-but-one container stops at `#E4DEEE` so the hot RIR chip keeps 3:1 on it. Light and dark
   follow the system setting; there is no in-app theme picker.
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
-  1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets display, headline and titleLarge text: screen
-  titles, the day's name and exercise names. A long exercise name at the top of a session or a
+  1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets the words of display, headline and titleLarge
+  text: screen titles, the day's name and exercise names. A long exercise name at the top of a session or a
   past exercise wraps to a second line at full size; only a name longer than two lines is cut off.
 - **Inter** (Regular, Medium, SemiBold and Bold, bundled as static fonts under the SIL Open Font
   License 1.1, `docs/licences/Inter-OFL.txt`) sets everything else: body, labels, titleMedium and
-  titleSmall (SemiBold), and the set table's kg and reps (Inter Medium at titleLarge's size,
-  titleMedium's for a long value), which the owner wants in Inter as the numbers that matter most.
+  titleSmall (SemiBold), and every number. **Words in titles are Space Grotesk; numbers are always
+  Inter** (the owner's rule): a title's digits (`Build · weeks 3–6`, `Set 2`) are set in Inter at
+  the title's weight (`interFigures`), and a figure on its own line is all Inter: the set table's
+  kg and reps (Inter Medium at titleLarge's size, titleMedium's for a long value), History's latest
+  weight, a trend's estimate, the goal figure and the plates' total (Inter SemiBold at
+  headlineMedium's size), and the rest timer (Inter SemiBold at displayMedium's size).
   Inter's tabular figures would also widen the hyphen to a digit's width ("Ramp - in"), so the
   bundled fonts are patched to keep the hyphen proportional
   (`scripts/inter-proportional-hyphen.py`); digits stay tabular.

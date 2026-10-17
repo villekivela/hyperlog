@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -154,7 +155,7 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(session.title ?: stringResource(R.string.past_ad_hoc), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { Text(interFigures(session.title ?: stringResource(R.string.past_ad_hoc)), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
             )
         },

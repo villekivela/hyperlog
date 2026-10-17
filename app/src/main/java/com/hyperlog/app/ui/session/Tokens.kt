@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -57,7 +58,7 @@ internal val ChipShape = RoundedCornerShape(8.dp)
 @Composable
 internal fun ExerciseName(name: String, modifier: Modifier = Modifier) {
     Text(
-        name,
+        interFigures(name),
         modifier,
         style = MaterialTheme.typography.headlineSmall,
         maxLines = 2,

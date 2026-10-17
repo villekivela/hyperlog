@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -372,7 +373,7 @@ fun CoachScreen(
     inForce.firstOrNull { it.id == reverting }?.let { record ->
         AlertDialog(
             onDismissRequest = { reverting = null },
-            title = { Text(stringResource(R.string.program_revert_title, record.change.summary)) },
+            title = { Text(interFigures(stringResource(R.string.program_revert_title, record.change.summary))) },
             text = { Text(stringResource(R.string.program_revert_body)) },
             confirmButton = {
                 TextButton(onClick = { reverting = null; onRevert(record.id) }) { Text(stringResource(R.string.program_change_revert)) }

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.program
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.clickable
 import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
@@ -153,8 +154,10 @@ private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComp
     SectionCard(Modifier.padding(top = 16.dp)) {
         Column(Modifier.padding(vertical = 4.dp)) {
             Text(
-                if (block.weekStart == block.weekEnd) stringResource(R.string.program_block_week, block.name, block.weekStart)
-                else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd),
+                interFigures(
+                    if (block.weekStart == block.weekEnd) stringResource(R.string.program_block_week, block.name, block.weekStart)
+                    else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd),
+                ),
                 style = MaterialTheme.typography.titleLarge,
             )
             // The weeks first, so changing week never means scrolling past the comparison.

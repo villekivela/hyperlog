@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.history
 
+import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.ui.theme.figureHeadline
 import com.hyperlog.app.ui.theme.cardBehind
 import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
@@ -86,7 +88,7 @@ fun ExerciseTrendScreen(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(trend.exercise.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { Text(interFigures(trend.exercise.name), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
                 actions = {
                     if (trend.exercise.takesGoal) {
@@ -170,11 +172,11 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
         Text(
             points.last().let(value)?.let { figure(it, byReps) } ?: "–",
             Modifier.padding(horizontal = Margin),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.figureHeadline,
         )
     } else {
         val estimate = points.lastOrNull { it.estimateKg != null }?.estimateKg
-        GoalFigure(estimate, goal, MaterialTheme.typography.headlineMedium, Modifier.padding(horizontal = Margin))
+        GoalFigure(estimate, goal, MaterialTheme.typography.figureHeadline, Modifier.padding(horizontal = Margin))
         GoalStatusRow(estimate, goal, Modifier.clickable(onClick = onGoal).padding(horizontal = Margin))
     }
     val p = points[index]
@@ -313,7 +315,7 @@ private fun BodyweightChart(days: List<Bodyweight>, index: Int, onSelect: (Int) 
         return
     }
     Column(Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.weight_kg, formatKg(days.last().kg)), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.weight_kg, formatKg(days.last().kg)), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.figureHeadline)
         Row(Modifier.fillMaxWidth().padding(start = Margin, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "${long(days[index].date)} · ${stringResource(R.string.weight_kg, formatKg(days[index].kg))}",

@@ -2,7 +2,11 @@ package com.hyperlog.app.ui.theme
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -92,12 +96,36 @@ internal val HyperlogTypography: Typography = Typography().run {
 }
 
 /**
- * A set table's kg or reps: Inter Medium at titleLarge's size. Untracked, since titleLarge's
- * tracking is Space Grotesk's and titleMedium's would loosen the digits.
+ * A set table's kg or reps: Inter Medium at titleLarge's size. Figures are untracked, since the
+ * display styles' tracking is Space Grotesk's and titleMedium's would loosen the digits.
  */
 internal val Typography.figureLarge: TextStyle get() = titleLarge.figure()
 
 /** A long kg or reps value (`100 + 20`), a step down: Inter Medium at titleMedium's size. */
 internal val Typography.figureMedium: TextStyle get() = titleMedium.figure()
 
-private fun TextStyle.figure() = inter(FontWeight.Medium).copy(letterSpacing = 0.sp)
+/** A headline figure on its own line (History's latest weight, a trend's estimate, the plates' total), SemiBold as the headline was. */
+internal val Typography.figureHeadline: TextStyle get() = headlineMedium.figure(FontWeight.SemiBold)
+
+/** The rest timer's clock, SemiBold. */
+internal val Typography.figureDisplay: TextStyle get() = displayMedium.figure(FontWeight.SemiBold)
+
+private fun TextStyle.figure(weight: FontWeight = FontWeight.Medium) = inter(weight).copy(letterSpacing = 0.sp)
+
+
+/** A number with its decimals, ranges, times and open end: `122.5`, `3–6`, `1:30`, `4+`. */
+private val NumberRun = Regex("""\d+(?:[.,:/–-]\d+)*\+?""")
+
+/**
+ * [text] for a Space Grotesk title with its numbers set in Inter: words in titles are Space
+ * Grotesk, numbers are always Inter (the owner's rule, #50). Inter keeps the title's weight.
+ */
+fun interFigures(text: String): AnnotatedString = buildAnnotatedString {
+    var from = 0
+    NumberRun.findAll(text).forEach { number ->
+        append(text.substring(from, number.range.first))
+        withStyle(SpanStyle(fontFamily = Inter, letterSpacing = 0.sp)) { append(number.value) }
+        from = number.range.last + 1
+    }
+    append(text.substring(from))
+}

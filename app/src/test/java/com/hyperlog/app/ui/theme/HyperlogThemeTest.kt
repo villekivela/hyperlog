@@ -188,6 +188,16 @@ class HyperlogThemeTest {
         }
     }
 
+    @Test
+    fun headlineAndDisplayFiguresAreInterAtTheirSizes() {
+        val type = themed().second
+        listOf(type.figureHeadline to type.headlineMedium, type.figureDisplay to type.displayMedium).forEach { (figure, size) ->
+            assertEquals(Inter, figure.fontFamily)
+            assertEquals("tnum", figure.fontFeatureSettings)
+            assertEquals(size.fontSize, figure.fontSize)
+        }
+    }
+
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     private fun styles(t: Typography): List<Pair<String, TextStyle>> = listOf(
         "displayLarge" to t.displayLarge, "displayMedium" to t.displayMedium, "displaySmall" to t.displaySmall,

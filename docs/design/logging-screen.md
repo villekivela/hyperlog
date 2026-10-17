@@ -55,8 +55,8 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | RIR chip on its own | the same, its number 12 sp (14 sp on the pad), so 21 × 19 dp for one digit; `4+` for 4 and up | RIR column, exercise sheet, set sheet stepper and RIR pad |
 | RIR pad key | 48 dp tap target, 40 dp pill | The chip on the strip; the chosen key's pill secondaryContainer |
 
-Type (Material 3 scale with tabular figures in every style; Space Grotesk for headlineSmall and
-titleLarge, Inter for the rest and for the values):
+Type (Material 3 scale with tabular figures in every style; Space Grotesk for the words of
+headlineSmall and titleLarge, Inter for the rest and for every number):
 
 | Role | Style |
 | --- | --- |
@@ -403,7 +403,7 @@ component, on the pad only; nothing about a warm-up touches the clock.
   with "Not on these plates". The weight check's strip replaces it. A correction shows it too.
   Regular size: a 40 dp drawing, titleSmall legend.
 - **The whole bar**: a tap on the pad's strip ("Show the whole bar") opens a sheet: the total in
-  headlineMedium over "On a 20 kg bar" ("On a 30 kg machine, empty"); both sides drawn 96 dp tall,
+  `figureHeadline` (Inter) over "On a 20 kg bar" ("On a 30 kg machine, empty"); both sides drawn 96 dp tall,
   mirrored about the grip (on a machine, the machine as a block in the middle), every plate
   heaviest inside; then a 40 dp row per plate (its colour, `25 kg`, `2 each side`) and a last row
   for the bar or the machine's starting weight with its symbol. Description: "147.5 kg: a 20 kg

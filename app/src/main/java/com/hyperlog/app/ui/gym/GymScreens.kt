@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.material3.ListItemDefaults
@@ -186,7 +187,7 @@ fun GymScreen(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(gym.name) },
+                title = { Text(interFigures(gym.name)) },
                 navigationIcon = { IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.back)) } },
                 actions = {
                     IconButton(onClick = { renaming = true }) { SymbolIcon(Symbol.Edit, stringResource(R.string.gym_rename)) }
@@ -287,7 +288,7 @@ fun GymScreen(
     allItems.firstOrNull { it.id == deletingItem }?.let { item ->
         AlertDialog(
             onDismissRequest = { deletingItem = null },
-            title = { Text(stringResource(R.string.ladder_delete_title, item.name)) },
+            title = { Text(interFigures(stringResource(R.string.ladder_delete_title, item.name))) },
             text = { Text(stringResource(R.string.ladder_delete_text)) },
             confirmButton = { TextButton(onClick = { deletingItem = null; onDeleteItem(item) }) { Text(stringResource(R.string.gym_delete_confirm)) } },
             dismissButton = { TextButton(onClick = { deletingItem = null }) { Text(stringResource(R.string.gym_keep)) } },
@@ -311,7 +312,7 @@ fun GymScreen(
     if (deleting) {
         AlertDialog(
             onDismissRequest = { deleting = false },
-            title = { Text(stringResource(R.string.gym_delete_title, gym.name)) },
+            title = { Text(interFigures(stringResource(R.string.gym_delete_title, gym.name))) },
             text = { Text(stringResource(R.string.gym_delete_text)) },
             confirmButton = { TextButton(onClick = { deleting = false; onDelete() }) { Text(stringResource(R.string.gym_delete_confirm)) } },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.gym_keep)) } },
@@ -585,7 +586,7 @@ private fun BarDialog(title: String, kg: Double, onDone: (Double) -> Unit, onDis
     val value = text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it <= com.hyperlog.app.gym.MAX_BAR_KG }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(interFigures(title)) },
         text = {
             OutlinedTextField(
                 text,
@@ -606,7 +607,7 @@ internal fun NameDialog(title: String, initial: String, confirm: String, onDone:
     var name by rememberSaveable { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(interFigures(title)) },
         text = {
             OutlinedTextField(
                 name,

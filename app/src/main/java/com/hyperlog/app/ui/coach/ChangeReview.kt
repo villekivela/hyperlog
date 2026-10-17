@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -110,7 +111,7 @@ fun ChangeReviewScreen(
     if (reverting && onRevert != null) {
         AlertDialog(
             onDismissRequest = { reverting = false },
-            title = { Text(stringResource(R.string.program_revert_title, review.change.summary)) },
+            title = { Text(interFigures(stringResource(R.string.program_revert_title, review.change.summary))) },
             text = { Text(stringResource(R.string.program_revert_body)) },
             confirmButton = { TextButton(onClick = { reverting = false; onRevert() }) { Text(stringResource(R.string.program_change_revert)) } },
             dismissButton = { TextButton(onClick = { reverting = false }) { Text(stringResource(R.string.program_cancel)) } },
@@ -161,7 +162,7 @@ fun ChangeReviewScreen(
             // What the Change is, and where it moves the program, in one card at the top.
             item {
                 SectionCard(Modifier.padding(top = 8.dp, bottom = 8.dp)) {
-                    Text(review.change.summary, style = MaterialTheme.typography.headlineSmall)
+                    Text(interFigures(review.change.summary), style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(scopeText(review.change.scope, review.blockName), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     review.diff.next?.let { (from, to) ->

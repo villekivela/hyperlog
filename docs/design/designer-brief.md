@@ -73,9 +73,11 @@ selected tab, the active set, chips and toggles that are on. secondaryContainer 
 for selected things; tertiary follows primary; secondary and tertiaryContainer are tinted greys.
 The accent is never green, amber, red or plate blue, which belong to RIR, progression, plates and
 errors (`FixedColoursTest` keeps 30° of hue between them). Light and dark still follow the system.
-Space Grotesk, bundled, sets display, headline and titleLarge text (screen titles, the day's name,
-exercise names). Inter, bundled, sets body, labels, the smaller titles and the set table's kg and
-reps: the owner wants Inter "for important parts like numbers". Every
+Space Grotesk, bundled, sets the words of display, headline and titleLarge text (screen titles,
+the day's name, exercise names). Inter, bundled, sets body, labels, the smaller titles and every
+number. The owner's rule: **words in titles are Space Grotesk, numbers are always Inter**. A
+title's digits go through `interFigures`; a figure on its own line takes a figure style
+(`figureLarge`, `figureMedium`, `figureHeadline`, `figureDisplay`). Every
 style in the type scale has tabular figures (`tnum`). Shapes are larger and rounder than before
 (32 dp outer corners, 8 dp joins, 4 dp gaps). The hierarchy still comes from tone and shape first,
 so the rules above hold as they are.

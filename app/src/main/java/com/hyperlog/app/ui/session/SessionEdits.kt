@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.lazy.itemsIndexed
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.CardPadding
@@ -71,7 +72,7 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
     val same = library.filter { !it.hidden && it.pattern == exercise.exercise.pattern && it.id !in shown }.sortedBy { it.name }
     Column(Modifier.fillMaxWidth()) {
         Text(
-            stringResource(R.string.edit_swap_title, exercise.exercise.name),
+            interFigures(stringResource(R.string.edit_swap_title, exercise.exercise.name)),
             Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
             maxLines = 2,

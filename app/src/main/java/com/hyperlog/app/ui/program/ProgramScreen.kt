@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.program
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -176,7 +177,7 @@ fun ProgramScreen(
     if (replacing != null && active != null) {
         AlertDialog(
             onDismissRequest = { confirmReplace = null },
-            title = { Text(stringResource(R.string.program_replace_title, active.program.title)) },
+            title = { Text(interFigures(stringResource(R.string.program_replace_title, active.program.title))) },
             // Replacing loses the position, so the question says where you are.
             text = {
                 Text(
@@ -268,7 +269,7 @@ private fun ProgramWeeks(
 private fun ProgramHeader(title: String, author: String?, next: String?) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(horizontal = CardPadding).padding(top = 16.dp, bottom = 16.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineSmall)
+        Text(interFigures(title), style = MaterialTheme.typography.headlineSmall)
         author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
@@ -318,7 +319,7 @@ private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onBack:
     active.history.firstOrNull { it.id == reverting }?.let { record ->
         AlertDialog(
             onDismissRequest = { reverting = null },
-            title = { Text(stringResource(R.string.program_revert_title, record.change.summary)) },
+            title = { Text(interFigures(stringResource(R.string.program_revert_title, record.change.summary))) },
             text = { Text(stringResource(R.string.program_revert_body)) },
             confirmButton = {
                 TextButton(onClick = { reverting = null; onRevert(record.id) }) { Text(stringResource(R.string.program_change_revert)) }

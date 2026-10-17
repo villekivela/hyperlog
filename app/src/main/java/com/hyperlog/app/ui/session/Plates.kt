@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.figureHeadline
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -225,7 +226,7 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
     val side = totalKg?.let { plates.perSide(it) }
     val description = wholeDescription(plates, side, totalKg, machine)
     androidx.compose.foundation.layout.Column(modifier.clearAndSetSemantics { contentDescription = description }) {
-        Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.headlineMedium)
+        Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.figureHeadline)
         Text(
             stringResource(if (machine) R.string.plates_whole_machine_line else R.string.plates_whole_bar_line, formatKg(plates.baseKg)),
             style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,

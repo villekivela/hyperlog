@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.figureDisplay
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollBy
@@ -624,7 +627,7 @@ private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) 
             Text(
                 clock(leftMs),
                 Modifier.width(160.dp),
-                style = MaterialTheme.typography.displayMedium,
+                style = MaterialTheme.typography.figureDisplay,
                 textAlign = TextAlign.Center,
             )
             FilledTonalButton(onClick = { actions.adjustRest(15_000) }, Modifier.width(96.dp)) { Text("+15") }
@@ -926,7 +929,7 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
     var query by rememberSaveable { mutableStateOf("") }
     Column(modifier.fillMaxWidth()) {
         Text(
-            title,
+            interFigures(title),
             Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
         )
@@ -976,7 +979,7 @@ internal fun ExerciseSheet(
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     Column(Modifier.fillMaxWidth().padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding()) {
-        Text(exercise.name, style = MaterialTheme.typography.headlineSmall)
+        Text(interFigures(exercise.name), style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(4.dp))
         Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         machine?.let {
@@ -1063,7 +1066,7 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
         SymbolIcon(Symbol.Flag, null, Modifier.padding(top = 4.dp).size(20.dp), tint = cs.onSurfaceVariant)
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            GoalFigure(estimate, progress.goal, MaterialTheme.typography.titleLarge)
+            GoalFigure(estimate, progress.goal, MaterialTheme.typography.figureLarge)
             Text(goalStatus(estimate, progress.goal), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             val points = progress.points.filter { it.estimateKg != null }
             if (points.isNotEmpty()) {

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.today
 
+import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.Group
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -346,7 +347,7 @@ private fun NextDay(
                     color = cs.primary,
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(day.day.name, style = MaterialTheme.typography.headlineSmall)
+                Text(interFigures(day.day.name), style = MaterialTheme.typography.headlineSmall)
             }
         }
         // One row per slot, one segment per group: a superset's partners share theirs.
@@ -411,7 +412,7 @@ private fun WorkoutCard(
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.today_workout), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                     Spacer(Modifier.height(4.dp))
-                    Text(waiting.workout.name, style = MaterialTheme.typography.headlineSmall, color = cs.onSecondaryContainer)
+                    Text(interFigures(waiting.workout.name), style = MaterialTheme.typography.headlineSmall, color = cs.onSecondaryContainer)
                     Spacer(Modifier.height(4.dp))
                     Text(waiting.workout.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer)
                     gym?.let {
@@ -461,7 +462,7 @@ private fun ProgramDayCard(day: PlannedDay, names: Map<String, String>, onStart:
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.today_week_block, day.position.week, day.block.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                     Spacer(Modifier.height(4.dp))
-                    Text(day.day.name, style = MaterialTheme.typography.titleLarge)
+                    Text(interFigures(day.day.name), style = MaterialTheme.typography.titleLarge)
                 }
                 Spacer(Modifier.width(12.dp))
                 androidx.compose.material3.FilledTonalButton(onClick = onStart) {

@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.gym
 
+import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -184,7 +185,7 @@ fun LadderEditor(
     if (deleting && onDelete != null) {
         AlertDialog(
             onDismissRequest = { deleting = false },
-            title = { Text(stringResource(R.string.ladder_delete_title, name.orEmpty())) },
+            title = { Text(interFigures(stringResource(R.string.ladder_delete_title, name.orEmpty()))) },
             text = { Text(stringResource(R.string.ladder_delete_text)) },
             confirmButton = { TextButton(onClick = { deleting = false; onDelete() }) { Text(stringResource(R.string.gym_delete_confirm)) } },
             dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.gym_keep)) } },
@@ -196,7 +197,7 @@ fun LadderEditor(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                title = { Text(title) },
+                title = { Text(interFigures(title)) },
                 navigationIcon = { IconButton(onClick = onClose) { SymbolIcon(Symbol.Close, stringResource(R.string.editor_close)) } },
                 actions = {
                     if (onDelete != null) IconButton(onClick = { deleting = true }) { SymbolIcon(Symbol.Delete, stringResource(R.string.gym_delete_item)) }
