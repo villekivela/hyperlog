@@ -25,8 +25,8 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **Calm.** Focus on the task at hand, with what's coming visible on demand, and minimal text.
 - **Sections divide by tone.** Screens sit on `surfaceContainer`, as the system's Settings does.
   Sections and row groups are cards on it (`surfaceBright` in dark, `surfaceContainerLowest` in
-  light): one card for a lone section, or a segmented group for a list (24 dp outer corners, 4 dp
-  joins, 2 dp apart, 12 dp from the screen edge, 16 dp between groups), Android 16 Settings'
+  light): one card for a lone section, or a segmented group for a list (32 dp outer corners, 8 dp
+  joins, 4 dp apart, 12 dp from the screen edge, 16 dp between groups), Android 16 Settings'
   grouped list. Every list draws it through one component, `SegmentedList` on `Segment`
   (`ui/theme`), which Today's exercises use too. Its standard row (`SegmentedRow`, 72 dp at least)
   is a Material Symbol in a 40 dp `secondaryContainer` circle, a title and one line of supporting
@@ -54,7 +54,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   item.
 - **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
   (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
-- **Hyperlog's own theme:** Navy on grey, light and dark, through the whole tree; nothing hard-codes
+- **Hyperlog's own theme:** Ink and violet, light and dark, through the whole tree; nothing hard-codes
   a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a solid fill = logged).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
@@ -65,16 +65,19 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   involved can all be read from the screen at a glance.
 
 **Decided: Hyperlog has its own theme** (#37), the same on every phone whatever the wallpaper or
-system style. The colours are Navy on grey (#42, `ui/theme/NavyPalette.kt`), structured like
-WhatsApp but not coloured like it: surfaces, text and dividers are neutral grey (white in light,
-near-black grey in dark), and one navy accent marks only what you act on or what's selected, the
-Start button, the selected tab, the active set, chips and toggles that are on. secondaryContainer
-is a navy tint for selected things; tertiary follows primary; secondary and tertiaryContainer are
-grey. The accent is never green, amber or red, which belong to RIR, progression, plates and errors.
-Light and dark still follow the system. Space Grotesk, bundled, sets display, headline and titleLarge text
-(screen titles, the day's name, exercise names, the kg and reps in the set table); body and labels
-stay the system font. Every style in the type scale has tabular figures (`tnum`). The hierarchy
-still comes from tone and shape first, so the rules above hold as they are.
+system style. The colours are Ink and violet (#50, `ui/theme/InkPalette.kt`), the look the owner
+picked on 2026-10-17 (look C, Week): surfaces, text and dividers carry a faint violet tint (white cards on a lilac-white screen in light, near-black ink in dark),
+and one violet accent marks only what you act on or what's selected, the Start button, the
+selected tab, the active set, chips and toggles that are on. secondaryContainer is a violet tint
+for selected things; tertiary follows primary; secondary and tertiaryContainer are tinted greys.
+The accent is never green, amber, red or plate blue, which belong to RIR, progression, plates and
+errors (`FixedColoursTest` keeps 30° of hue between them). Light and dark still follow the system.
+Space Grotesk, bundled, sets display, headline and titleLarge text (screen titles, the day's name,
+exercise names). Inter, bundled, sets body, labels, the smaller titles and the numbers, the set
+table's kg and reps included: the owner wants Inter "for important parts like numbers". Every
+style in the type scale has tabular figures (`tnum`). Shapes are larger and rounder than before
+(32 dp outer corners, 8 dp joins, 4 dp gaps). The hierarchy still comes from tone and shape first,
+so the rules above hold as they are.
 
 ## Process
 

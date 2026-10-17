@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -54,6 +53,7 @@ import com.hyperlog.app.domain.summary
 import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.CardShape
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -373,7 +373,7 @@ internal fun LadderCheck(draft: LadderSpec?, pinPlates: List<Double>, status: St
     var open by rememberSaveable { mutableStateOf(false) }
     val rungs = draft?.ladder(pinPlates)?.rungs
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Tones.card)
+        Modifier.fillMaxWidth().clip(CardShape).background(Tones.card)
             .then(if (rungs != null) Modifier.clickable(onClickLabel = stringResource(if (open) R.string.ladder_check_hide else R.string.ladder_check_show)) { open = !open } else Modifier)
             .padding(16.dp).animateContentSize().testTag(LadderPreviewTag),
     ) {

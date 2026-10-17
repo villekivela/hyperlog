@@ -56,7 +56,7 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | RIR pad key | 48 dp tap target, 40 dp pill | The chip on the strip; the chosen key's pill secondaryContainer |
 
 Type (Material 3 scale with tabular figures in every style; Space Grotesk for headlineSmall and
-titleLarge, the system font for the rest):
+titleLarge, Inter for the rest and for the values):
 
 | Role | Style |
 | --- | --- |
@@ -64,12 +64,12 @@ titleLarge, the system font for the rest):
 | Chips, Next label | labelLarge |
 | Why-line | bodyMedium, one line |
 | Column heads | labelMedium |
-| Values (kg, reps, placeholders) | titleLarge; focused cell SemiBold |
+| Values (kg, reps, placeholders) | Inter Medium at titleLarge's size (`figureLarge`), titleMedium's for a long value; focused cell SemiBold |
 | Index (`W`, set number) | titleSmall; Bold in the active row |
 | Last time | bodyMedium |
 | Keys | 24 sp |
 
-Colour comes from Hyperlog's Navy on grey theme, light and dark:
+Colour comes from Hyperlog's Ink and violet theme, light and dark:
 
 | Role | Colour |
 | --- | --- |

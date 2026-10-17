@@ -4,6 +4,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.cardBehind
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -260,7 +261,7 @@ private fun Stepper(
         SymbolIcon(Symbol.Remove, down.first, tint = if (down.second) cs.onSurfaceVariant else cs.outlineVariant)
     }
     Box(Modifier.width(40.dp), contentAlignment = Alignment.Center) {
-        if (mark != null) mark() else Text(value, style = MaterialTheme.typography.titleLarge)
+        if (mark != null) mark() else Text(value, style = MaterialTheme.typography.figureLarge)
     }
     IconButton(onClick = onUp, enabled = up.second) {
         SymbolIcon(Symbol.Add, up.first, tint = if (up.second) cs.onSurfaceVariant else cs.outlineVariant)

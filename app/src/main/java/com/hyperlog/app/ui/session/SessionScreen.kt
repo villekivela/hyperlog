@@ -668,7 +668,7 @@ internal fun LadderOffer(offer: com.hyperlog.app.domain.LadderSpec.PinStack, mac
     val cs = MaterialTheme.colorScheme
     androidx.compose.material3.Surface(
         color = cs.tertiaryContainer,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        shape = com.hyperlog.app.ui.theme.CardShape,
         modifier = Modifier.fillMaxWidth().padding(horizontal = com.hyperlog.app.ui.theme.CardMargin).padding(bottom = 8.dp).testTag(LadderOfferTag),
     ) {
         Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
