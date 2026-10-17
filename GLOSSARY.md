@@ -6,7 +6,7 @@ training can't go as planned. This glossary is the language the app, its docs an
 ## Program
 
 **Program**:
-A periodized plan made of blocks of weeks, each week a set of training days.
+A periodized plan made of blocks of weeks, each week a set of days.
 _Avoid_: Plan, routine, template
 
 **Block**:
@@ -178,8 +178,10 @@ _Avoid_: Plate set, shared plates
 _Avoid_: Machine (when you mean any equipment)
 
 **Weekday plan**:
-The weekdays a gym is planned for. Starting a session on one of them picks that gym.
-_Avoid_: Schedule (the program runs as a sequence, not on dates)
+The weekdays you train on, each with an optional gym. Kept once for the app, not per gym. A day's
+gym is the one a session started that day picks; Time off counts from the days. "Training days"
+on screen only; in code and docs it is the weekday plan, since a program's days are days.
+_Avoid_: Schedule (the program runs as a sequence, not on dates), training days (in code)
 
 **Pin stack**:
 A selectorised machine's weight stack: the pin picks a plate, and add-ons go on top. Its ladder is every pin weight plus every combination of the add-ons.

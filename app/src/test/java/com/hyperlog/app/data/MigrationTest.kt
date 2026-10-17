@@ -20,6 +20,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
+import java.time.DayOfWeek
+import com.hyperlog.app.week.WeekdayPlan
+import com.hyperlog.app.week.WeekdayPlans
 
 @RunWith(RobolectricTestRunner::class)
 class MigrationTest {
@@ -123,7 +126,7 @@ class MigrationTest {
         assertEquals(null, db.sessions().session(1)!!.gymId)
         assertEquals(null, db.sessions().sessionExercises(1).single().equipmentItemId)
         val gyms = Gyms(db)
-        assertEquals(emptySet<java.time.DayOfWeek>(), gyms.gyms.first().single().weekdays)
+        assertEquals(WeekdayPlan.None, WeekdayPlans(db).plan.first())
         gyms.remember(1, "leg_extension", 1)
         assertEquals(1L, gyms.remembered(1, "leg_extension"))
         // Deleting the machine forgets it.
@@ -529,4 +532,46 @@ class MigrationTest {
         assertEquals(emptyList<WorkoutEntity>(), db.workouts().waitingFlow().first())
         db.close()
     }
+
+    @Test
+    fun version22GymWeekdaysBecomeYourTrainingDaysEachWithItsGym() = runTest {
+        val file = context.getDatabasePath("migration-test-22.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(22, file) { db ->
+            // Mon and Wed at Kalliokoski, Wed and Fri at the hotel too, and an archived gym's Sunday.
+            db.execSQL("INSERT INTO gym (id, name, weekdays) VALUES (1, 'Kalliokoski', 5), (2, 'Hotel', 20), (3, 'Old', 64)")
+            db.execSQL("UPDATE gym SET archived = 1 WHERE id = 3")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        // Two gyms sharing Wednesday: the first in the gym list (by name) keeps it.
+        assertEquals(
+            WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.WEDNESDAY to 2L, DayOfWeek.FRIDAY to 2L)),
+            WeekdayPlans(db).plan.first(),
+        )
+        db.close()
+    }
+
+    @Test
+    fun aRealVersion22DatabaseKeepsEverythingAndMovesItsGymsDays() = runTest {
+        // A database the v22 app wrote: a gym trained Mondays and Thursdays, sessions, a workout.
+        val file = context.getDatabasePath("migration-test-real-22.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        javaClass.getResourceAsStream("/db/hyperlog-db22.db")!!.use { input -> file.outputStream().use { input.copyTo(it) } }
+        val before = SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use { old -> counts { q -> old.rawQuery(q, null).use { it.moveToFirst(); it.getInt(0) } } }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.THURSDAY to 1L)), WeekdayPlans(db).plan.first())
+        assertEquals(before, counts { q -> db.openHelper.writableDatabase.query(q).use { it.moveToFirst(); it.getInt(0) } })
+        assertEquals(listOf("Central"), Gyms(db).gyms.first().map { it.name })
+        db.openHelper.writableDatabase.query("PRAGMA foreign_key_check").use { assertEquals(0, it.count) }
+        db.close()
+    }
+
+    /** Rows in every table the v22 app had, which the migration must leave as they were. */
+    private fun counts(count: (String) -> Int): Map<String, Int> =
+        listOf("exercise", "gym", "equipment_item", "gym_exercise_item", "gym_missing_exercise", "session", "session_exercise", "logged_set", "set_extension", "set_technique", "program", "plan_change", "workout")
+            .associateWith { count("SELECT COUNT(*) FROM `$it`") }
 }

@@ -131,9 +131,21 @@ class ProgramRenders {
         return out
     }
 
+    private val trainingDays = com.hyperlog.app.week.WeekdayPlan(
+        mapOf(java.time.DayOfWeek.MONDAY to 1L, java.time.DayOfWeek.WEDNESDAY to 2L, java.time.DayOfWeek.FRIDAY to null),
+    )
+    private val twoGyms = listOf(com.hyperlog.app.gym.Gym(1, "Kalliokoski", emptyList()), com.hyperlog.app.gym.Gym(2, "Hotel", emptyList()))
+
     @Composable
-    private fun Program(active: ActiveProgram = running) {
-        ProgramScreen(active, null, onImport = {}, onCloseErrors = {}, onBack = {}, exerciseNames = names, sessions = sessions, starter = program)
+    private fun Program(
+        active: ActiveProgram = running,
+        plan: com.hyperlog.app.week.WeekdayPlan = trainingDays,
+        gyms: List<com.hyperlog.app.gym.Gym> = twoGyms,
+    ) {
+        ProgramScreen(
+            active, null, onImport = {}, onCloseErrors = {}, onBack = {}, exerciseNames = names, sessions = sessions, starter = program,
+            weekdayPlan = plan, gyms = gyms,
+        )
     }
 
     private fun scrollTo(text: String) {
@@ -166,6 +178,14 @@ class ProgramRenders {
         val ending = record(3, Change("Hands feel fine: back to the plan", Scope.RestOfProgram, emptyList(), replaces = listOf(2)))
         val lighter = record(4, Change("Lighter close-grip bench", Scope.RestOfProgram, listOf(Operation.AdjustLoad("close_grip_bench", -10, "elbow"))), revertedAt = replacedOn)
         Program(running.copy(history = listOf(record(1, elbow), ended, ending, lighter)))
+    }
+
+    @Test fun noTrainingDays() = render("no-training-days") { Program(plan = com.hyperlog.app.week.WeekdayPlan.None) }
+
+    @Test fun trainingDays() = render("training-days", before = { compose.onNodeWithText("3 days a week", substring = true).performClick() }) { Program() }
+
+    @Test fun trainingDaysOneGym() = render("training-days-one-gym", before = { compose.onNodeWithText("3 days a week", substring = true).performClick() }) {
+        Program(gyms = twoGyms.take(1))
     }
 
     @Test fun finished() = render("finished") { Program(running.copy(position = Position(program.weeks + 1, 0))) }

@@ -217,6 +217,7 @@ private fun App(
     val programSetups by gymsModel.programSetups.collectAsStateWithLifecycle()
     val usualGym by sessions.usualGym.collectAsStateWithLifecycle()
     val program by programModel.active.collectAsStateWithLifecycle()
+    val weekdayPlan by programModel.weekdayPlan.collectAsStateWithLifecycle()
     val importErrors by programModel.errors.collectAsStateWithLifecycle()
     val pickProgram = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(programModel::import)
@@ -410,7 +411,6 @@ private fun App(
                 GymScreen(
                     gym,
                     onRename = { gymsModel.renameGym(gym.id, it) },
-                    onWeekdays = { gymsModel.setWeekdays(gym.id, it) },
                     onDelete = { gymsModel.deleteGym(gym.id); gymId = null },
                     onOpenItem = { ladder = it },
                     onAddItem = { ladder = NewItem },
@@ -464,6 +464,9 @@ private fun App(
             onOpenSession = { id -> pastModel.open(id); sessionFromProgram = true; screen = Screen.History },
             view = programView,
             onView = { programView = it },
+            weekdayPlan = weekdayPlan,
+            gyms = gyms,
+            onWeekdayPlan = programModel::setWeekdayPlan,
             )
         }
         screen == Screen.Coach -> CoachScreen(
@@ -484,7 +487,7 @@ private fun App(
             lowest = lowest,
             onAskClaude = { words, gym, elsewhere, options ->
                 scope.launch {
-                    val prompt = programModel.askClaudePrompt(words, gym, elsewhere, lastTrained, gyms.flatMap { it.weekdays }.toSet(), options)
+                    val prompt = programModel.askClaudePrompt(words, gym, elsewhere, lastTrained, weekdayPlan.days, options)
                     context.startActivity(AskClaudeShare.intent(context, prompt))
                 }
             },
@@ -572,7 +575,7 @@ private fun App(
                 programModel.closePasteErrors()
                 screen = Screen.Coach
             },
-            weekdays = gyms.flatMap { it.weekdays }.toSet(),
+            weekdays = weekdayPlan.days,
             update = update,
             onUpdate = { updateModel.install(context) },
             onDismissUpdate = updateModel::dismiss,

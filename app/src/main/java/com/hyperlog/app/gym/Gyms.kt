@@ -15,16 +15,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import com.hyperlog.app.week.WeekdayPlan
+import com.hyperlog.app.week.WeekdayPlans
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
 
-/** A gym, its equipment, and the weekdays it is planned for (empty: no plan). */
+/** A gym and its equipment. */
 data class Gym(
     val id: Long,
     val name: String,
     val items: List<EquipmentItem>,
-    val weekdays: Set<DayOfWeek> = emptySet(),
     /** Exercises the gym has no equipment for: picking it proposes swaps for them. */
     val missing: Set<String> = emptySet(),
     /** The gym's small plates for hanging on a stack's pin, one entry per plate (SPEC, Stacks with add-ons). */
@@ -111,6 +112,7 @@ enum class LadderState(val key: String) {
  */
 class Gyms(private val db: HyperlogDatabase) {
     private val dao = db.gyms()
+    private val weekdayPlans = WeekdayPlans(db)
 
     val gyms: Flow<List<Gym>> = combine(dao.observeGyms(), dao.observeItems(), dao.observeMissing(), dao.observeRemembered()) { gyms, items, missing, remembered ->
         val byGym = items.groupBy { it.gymId }
@@ -135,9 +137,9 @@ class Gyms(private val db: HyperlogDatabase) {
     suspend fun deleteGym(id: Long) {
         val items = dao.items(id)
         items.forEach { deleteItem(it.id) }
+        weekdayPlans.forgetGym(id)
         if (dao.gymUsed(id) || items.any { dao.itemUsed(it.id) }) dao.archiveGym(id) else dao.deleteGym(id)
     }
-    suspend fun setWeekdays(id: Long, days: Set<DayOfWeek>) = dao.setWeekdays(id, days.toBits())
 
     /** Sets the small plates [id] has for the pin of its stacks, one entry per plate. */
     suspend fun setPinPlates(id: Long, plates: List<Double>) =
@@ -158,7 +160,7 @@ class Gyms(private val db: HyperlogDatabase) {
 
     /**
      * Imports the gym in [text] (docs/gym-format.md) as a new gym, all in one transaction: its
-     * usual days, pin plates, dumbbell rack, bars, racks and machines, each machine remembered for
+     * usual days (weekday plan days at this gym, taken from any gym that had them), pin plates, dumbbell rack, bars, racks and machines, each machine remembered for
      * the exercises it serves. Gyms already here are never changed.
      */
     suspend fun import(text: String): Import {
@@ -169,7 +171,9 @@ class Gyms(private val db: HyperlogDatabase) {
         }
         val id = db.withTransaction {
             val id = addGym(file.name)
-            setWeekdays(id, file.usualDays)
+            if (file.usualDays.isNotEmpty()) {
+                weekdayPlans.set(WeekdayPlan(weekdayPlans.current().gyms + file.usualDays.associateWith { id }))
+            }
             file.pinPlates?.let { setPinPlates(id, it) }
             file.plates?.let { setPlates(id, it) }
             file.dumbbells?.let { setDumbbells(id, it) }
@@ -231,13 +235,13 @@ class Gyms(private val db: HyperlogDatabase) {
     /** The gym to preselect when a session starts on [day]; see [usualGym]. */
     suspend fun usualGym(day: DayOfWeek, zone: ZoneId = ZoneId.systemDefault()): UsualGym? {
         val gyms = dao.observeGyms().first().map { it.toGym(emptyList()) }
-        return usualGym(gyms, dao.visits(), day, zone)
+        return usualGym(gyms, weekdayPlans.current(), dao.visits(), day, zone)
     }
 
     /** The usual gym for a session started today, kept up to date as gyms and sessions change. */
     fun usualGymToday(zone: ZoneId = ZoneId.systemDefault()): Flow<UsualGym?> =
-        combine(gyms, dao.observeVisits()) { gyms, visits ->
-            usualGym(gyms, visits, java.time.LocalDate.now(zone).dayOfWeek, zone)
+        combine(gyms, weekdayPlans.plan, dao.observeVisits()) { gyms, plan, visits ->
+            usualGym(gyms, plan, visits, java.time.LocalDate.now(zone).dayOfWeek, zone)
         }
 
     /** Remembers [itemId] as the machine [exerciseId] is done on at [gymId]. */
@@ -309,7 +313,7 @@ class Gyms(private val db: HyperlogDatabase) {
 
     private fun GymEntity.toGym(items: List<EquipmentItemEntity>, missing: List<String> = emptyList(), remembered: List<GymExerciseItemEntity> = emptyList()) =
         Gym(
-            id, name, items.filter { it.kind == EquipmentItem.MACHINE }.mapNotNull { it.toItem() }, weekdays.toDays(), missing.toSet(), pinPlates.toPinPlates(),
+            id, name, items.filter { it.kind == EquipmentItem.MACHINE }.mapNotNull { it.toItem() }, missing.toSet(), pinPlates.toPinPlates(),
             dumbbells?.let { LadderSpec.decode(it) } ?: LadderSpec.DefaultDumbbells,
             items.filter { it.kind != EquipmentItem.MACHINE && !it.archived }.mapNotNull { it.toItem() },
             remembered.associate { it.exerciseId to it.equipmentItemId },
@@ -352,7 +356,7 @@ data class SharedLadders(
 /** The gym a session preselects, and [why]: only a weekday plan or habit makes it "Usual on Mondays". */
 data class UsualGym(val id: Long, val why: Why) {
     enum class Why {
-        /** Its weekday plan has the day, or most sessions on that weekday were there. */
+        /** The weekday plan names it for the day, or most sessions on that weekday were there. */
         Weekday,
         /** Trained at last, with nothing known about the weekday. */
         Last,
@@ -362,14 +366,18 @@ data class UsualGym(val id: Long, val why: Why) {
 }
 
 /**
- * The gym a session starting on [day] defaults to. A gym whose weekday plan has [day] comes first;
- * otherwise the gym trained at most often on that weekday, the latest visit breaking a tie; then
- * the gym trained at last; then the first gym. Null with no gyms.
+ * The gym a session starting on [day] defaults to. The gym the weekday [plan] names for [day] comes
+ * first, or the only gym when [day] is a training day naming none; otherwise the gym trained at
+ * most often on that weekday, the latest visit breaking a tie; then the gym trained at last; then
+ * the first gym. Null with no gyms.
  */
-fun usualGym(gyms: List<Gym>, visits: List<Visit>, day: DayOfWeek, zone: ZoneId): UsualGym? {
+fun usualGym(gyms: List<Gym>, plan: WeekdayPlan, visits: List<Visit>, day: DayOfWeek, zone: ZoneId): UsualGym? {
     if (gyms.isEmpty()) return null
     val ids = gyms.map { it.id }.toSet()
-    gyms.firstOrNull { day in it.weekdays }?.let { return UsualGym(it.id, UsualGym.Why.Weekday) }
+    if (day in plan.days) {
+        val planned = plan.gyms[day]?.takeIf { it in ids } ?: gyms.singleOrNull()?.id
+        planned?.let { return UsualGym(it, UsualGym.Why.Weekday) }
+    }
     val known = visits.filter { it.gymId in ids }
     val onDay = known.filter { Instant.ofEpochMilli(it.startedAt).atZone(zone).dayOfWeek == day }
     onDay.groupBy { it.gymId }
@@ -382,6 +390,3 @@ fun usualGym(gyms: List<Gym>, visits: List<Visit>, day: DayOfWeek, zone: ZoneId)
 private fun String?.toPinPlates(): List<Double> =
     this?.split(",")?.mapNotNull { it.trim().toDoubleOrNull() } ?: LadderSpec.DefaultPinPlates
 
-private fun Set<DayOfWeek>.toBits() = fold(0) { bits, d -> bits or (1 shl (d.value - 1)) }
-
-private fun Int.toDays() = DayOfWeek.entries.filter { this and (1 shl (it.value - 1)) != 0 }.toSet()

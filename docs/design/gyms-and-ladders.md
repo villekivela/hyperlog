@@ -16,8 +16,8 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
    in reach however long the gym's list grows. A gym opens on **Add the equipment your program uses** (a
    `primaryContainer` card) while the program needs machines there, then its equipment by
    kind, each under its header and in name order (Stack machines, Plate-loaded machines, Bars,
-   Racks and benches), then **Dumbbells and plates** (the rack, plates for the pin), usual days
-   and **Not here**. Each kind has its own symbol (`stacks`, `cable`, `album`, `fitness_center`,
+   Racks and benches), then **Dumbbells and plates** (the rack, plates for the pin), and
+   **Not here**. Training days left the gym for Program (ADR 0004). Each kind has its own symbol (`stacks`, `cable`, `album`, `fitness_center`,
    `airline_seat_flat`; dumbbells `exercise`, pin plates `push_pin`).
 3. **Shared is visibly shared.** The bars' weights sit on their own card under "Shared by every
    gym", in the same Gyms screen. A gym's plates are its own: pairs per size, under **Dumbbells and
@@ -112,12 +112,12 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
  ○  Home                              1.1 · 3.4 · 5.7 · 7.9 … 89.6 kg
                          [ Start ]    Leg extension
                                       5 · 10 · 15 · 20 … 100 kg
- Central's gym screen, below the       + Add machine
- equipment:
+ Training days (from Program's         + Add machine
+ row; ADR 0004):
  ───────────────────────────          Next  Seated Leg Curl       ⌃
-      Usual days                      (no pad)
-      (M) (T) (W) (T) (F) (S) (S)
-      Starting a session on these days picks Central.
+  (M) (T) (W) (T) (F) (S) (S)         (no pad)
+  Monday              Central ▾
+  Wednesday          Any gym ▾
 ```
 
 ### Tokens
@@ -140,7 +140,6 @@ and `exercise-library.md`: same margins, type scale, symbols and theme roles. Sc
   ladder editor as "New machine", the name filled in for machines and the Smith machine, empty for
   cables. Close returns to the question; Save answers it and opens the pad on the first set.
 - Exercise sheet: machine and gym with Change before any set; without Change after one.
-- Usual days: none, some.
 
 ### Interaction rules
 
@@ -160,7 +159,7 @@ Pairs of its own are one number a pair, or a count:
 `3×20 15 10 5 2.5 1.25` (`x` and `*` work too), and existing pairs are written back that way, so
 the field says how many of each plate there are.
 
-Expressive pass: every group (a gym's equipment, the shared ladders, the usual days, what the gym
+Expressive pass: every group (a gym's equipment, the shared ladders, what the gym
 hasn't got) is a card on surfaceContainer; the ladder editor's kind and unit are connected button
 groups.
 

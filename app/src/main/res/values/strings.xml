@@ -23,8 +23,6 @@
     <string name="machine_edit_description">Edit machine</string>
     <!-- The exercise sheet's machine line: machine · gym. -->
     <string name="machine_at">%1$s · %2$s</string>
-    <string name="gym_days">Usual days</string>
-    <string name="gym_days_body">Starting a session on these days picks %1$s.</string>
 
     <string name="session_title">Session</string>
     <string name="session_add_exercise">Add exercise</string>
@@ -336,6 +334,16 @@
 
     <!-- Program (#6) -->
     <string name="program_title">Program</string>
+    <string name="weekday_plan_none">Set your training days</string>
+    <plurals name="weekday_plan_line">
+        <item quantity="one">%1$d day a week · %2$s</item>
+        <item quantity="other">%1$d days a week · %2$s</item>
+    </plurals>
+    <string name="weekday_plan_title">Training days</string>
+    <string name="weekday_plan_body">Time off on Today counts from these days.</string>
+    <string name="weekday_plan_body_gyms">Time off on Today counts from these days, and a session started on one picks its gym.</string>
+    <string name="weekday_plan_any_gym">Any gym</string>
+    <string name="weekday_plan_gym_on">Gym on %1$s: %2$s</string>
     <string name="program_import">Import program</string>
     <string name="program_import_short">Import a program</string>
     <string name="starter_label">Starter program</string>

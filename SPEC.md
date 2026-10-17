@@ -124,7 +124,7 @@ configuration, iOS, web, any server.
 
 | Term | Meaning |
 | --- | --- |
-| **Program** | A periodized plan: blocks of weeks, each week a set of training days. |
+| **Program** | A periodized plan: blocks of weeks, each week a set of days. |
 | **Block** | A run of weeks (`weekStart..weekEnd`) that share the same days, e.g. Accumulation 1–7. |
 | **Day** | One planned session: an ordered list of groups. |
 | **Group** | Exercises done together: `straight` or `superset`. |
@@ -340,15 +340,16 @@ available weights belong to a **machine at a gym**, not to an exercise.
   time an exercise is done at a gym without a known machine, the app asks "which machine?" (pick or
   add) and its ladder, then remembers it.
 - **Gym is picked at session start**, defaulting to the gym you usually train at on that weekday
-  (learned from history, editable per gym).
+  (your training days' gym, else learned from history).
   - Start session opens a sheet with the gyms as a single choice and **Start**. The preselected gym
     says why: "Usual on Mondays" when the weekday plan or that weekday's sessions picked it,
     "Trained here last" when the last session did; the first gym, picked with nothing to go on,
     says nothing. One tap on another row changes it. With no gyms set up the session starts at
     once, without a gym.
-  - The usual gym on a weekday: a gym whose weekday plan has that day (Gyms and equipment → the
-    gym → Usual days); else the gym with the most sessions on that weekday, the latest breaking a
-    tie; else the gym trained at last; else the first gym.
+  - The usual gym on a weekday: the gym your training days name for that day (Training days,
+    below), or the only gym when that day is a training day and you have one gym; else the gym
+    with the most sessions on that weekday, the latest breaking a tie; else the gym trained at
+    last; else the first gym.
   - The session list shows the session's gym under its title. Changing gyms mid-session isn't
     offered.
 - **Missing equipment**: on picking the gym, the day is checked against that gym's kit; swaps are
@@ -373,7 +374,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
   (`docs/gym-format.md`) through the system file picker and adds it as a new gym; it never
   replaces or changes data already there. The file is validated strictly like a program file,
   every problem listed with its path, and nothing is added until it is clean. A file holds the
-  gym's name, its usual days (`usualDays`), its pin plates, its dumbbell rack, its bars with their
+  gym's name, its usual days (`usualDays`: those days become training days at this gym, taken
+  from any gym that had them), its pin plates, its dumbbell rack, its bars with their
   weights, and its equipment: stacks, plate-loaded machines, and racks and benches, each stack or
   plate-loaded item with a ladder of any kind (or the default guess) and the library exercises it
   serves, which fills in "Which machine?" for them. An item marked `unconfirmed` (the default
@@ -486,7 +488,8 @@ available weights belong to a **machine at a gym**, not to an exercise.
   plates, to 465 kg`); the bar has no plates of its own. A plate-loaded machine's setup has
   **Starting weight (kg)** (the empty machine or sled) the same way, over its own pairs, empty for
   the gym's. Racks and benches have no weights, so they only rename and delete.
-- **Everything a gym file sets can be edited in the app**: the usual days, the pin plates (up to
+- **Everything a gym file sets can be edited in the app**: the usual days (as training days), the
+  pin plates (up to
   six, each up to 25 kg), the plates, the dumbbell rack, each bar's weight, and each machine's
   ladder with its add-ons and pin plates. The file's limits are the setup's, so an import never
   holds a value setup can't save.
@@ -738,7 +741,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    day of a week in full, past days as trained. A destination of the navigation bar. It reads the
    plan; it never edits it.
    - **The header card** holds the program's title and its **Next** day (or "Program finished").
-     Under it, while there are accepted Changes, one row **Changes · 1 in force** ("Changes · none
+     Under it, the training days' row (Training days), then, while there are accepted
+     Changes, one row **Changes · 1 in force** ("Changes · none
      in force" once all are reverted or replaced) opens the Changes page with Revert (Coaching),
      a reverted one reading "Reverted 16 Oct". The navigation bar is hidden on that page.
    - **The actions are Changes**, in ⋮ above Import program and Run Hyperlog Full Body (a divider
@@ -872,8 +876,25 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
 - **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
-  train). An optional weekday plan (e.g. Mon = gym A, Wed = gym B) sets the default gym and lets
-  Today notice time off. No reminders or notifications.
+  train). Optional training days (Training days, below) set the default gym and let Today notice
+  time off. No reminders or notifications.
+- **Training days** (the weekday plan) are yours, kept once for the app, not per gym (ADR 0004):
+  the weekdays you train on, each with an optional gym (Mon = Kalliokoski, Wed = hotel).
+  - **Program shows them** as a row under its header card: `3 days a week · Mon Wed Fri` with a
+    `calendar_today` symbol, or `Set your training days` with none. The row opens the **Training
+    days** sheet.
+  - **The sheet** has the seven weekdays as round toggles, Monday first, and, with two or more
+    gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
+    named). With several gyms, a day turned on names no gym until one is picked. With one gym
+    there's no menu: a day turned on is at that gym, so it keeps it when a second gym is added.
+    Each change applies at once; **Done** closes it.
+  - With no training days, everything behaves as with no weekday plan: the usual gym comes from
+    history, and time off counts the days since the last session.
+  - Deleting a gym keeps its days as training days naming no gym.
+  - **From before (database v23):** every gym's weekdays became training days, each with that
+    gym; when two gyms shared a day, the first in the gym list (by name) kept it. A gym already
+    deleted (archived) gave none, as its days no longer counted. An older backup restores the same
+    way.
 - **Supersets** log alternately (A1 → A2 → A1…) with no timer between partners and full rest after
   the round. A superset started out of order keeps its partner until the round is done.
   - Closing a partner's set (logged, its last drop or mini-set, or **Finish set**) brings up the other
@@ -1172,7 +1193,7 @@ there’s nothing for a Change to change." (one problem, with the copy button, f
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
 day the Change edited into view, its heading at the top.
 
-**Time off on Today.** Days off are counted from the weekday plan (every gym's usual days): whole
+**Time off on Today.** Days off are counted from your training days (the weekday plan): whole
 days from the first planned day after the last finished session that went untrained (today isn't
 missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since
 the last session is 7 days off. With no weekday plan it counts the days since the last finished

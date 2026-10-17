@@ -40,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -101,6 +103,11 @@ fun ProgramScreen(
      */
     view: ProgramView? = null,
     onView: (ProgramView) -> Unit = {},
+    /** Your training days, shown by the program and set in their sheet (SPEC, Training days). */
+    weekdayPlan: WeekdayPlan = WeekdayPlan.None,
+    /** The gyms set up: with two or more, each training day can pick one. */
+    gyms: List<Gym> = emptyList(),
+    onWeekdayPlan: (WeekdayPlan) -> Unit = {},
 ) {
     var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     val shown = view ?: kept
@@ -109,6 +116,12 @@ fun ProgramScreen(
     var confirmReplace by rememberSaveable { mutableStateOf<Replacement?>(null) }
     var menu by rememberSaveable { mutableStateOf(false) }
     var shifting by rememberSaveable { mutableStateOf(false) }
+    var editingWeekdayPlan by rememberSaveable { mutableStateOf(false) }
+    if (editingWeekdayPlan) {
+        com.hyperlog.app.ui.theme.Sheet(onDismiss = { editingWeekdayPlan = false }) {
+            WeekdayPlanSheetContent(weekdayPlan, gyms, onWeekdayPlan, onDone = { editingWeekdayPlan = false })
+        }
+    }
     if (shown.changesOpen && active != null && errors == null) {
         ChangesPage(active, onRevert, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
         return
@@ -161,7 +174,10 @@ fun ProgramScreen(
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
                 }
                 active == null -> NoProgram(onImport)
-                else -> ProgramWeeks(active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week) { show(shown.copy(week = it)) }
+                else -> ProgramWeeks(
+                    active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
+                    onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },
+                )
             }
         }
     }
@@ -223,6 +239,9 @@ private fun ProgramWeeks(
     /** The week picked; null for the week you're in. */
     picked: Int?,
     onWeek: (Int) -> Unit,
+    /** The weekday plan as a line, and what opens its sheet. */
+    weekdayPlanLine: String,
+    onOpenWeekdayPlan: () -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
@@ -235,14 +254,20 @@ private fun ProgramWeeks(
     val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
     LazyColumn(Modifier.fillMaxSize()) {
         item(key = "header") {
-            // Where you are, with the Changes under it as one group: the title and Next, then the row
-            // that opens the Changes page.
+            // Where you are, with your training days and the Changes under it as one group: the
+            // title and Next, then the rows that open the training days and the Changes page.
             val count = active.inForce.size
             val changes = if (count == 0) stringResource(R.string.program_changes_none) else pluralStringResource(R.plurals.program_changes_in_force, count, count)
             val chevron = cs.onSurfaceVariant
             val nextDay = next?.let { stringResource(R.string.program_week_day, it.position.week, it.day.name) }
             SegmentedList(Modifier.padding(top = 8.dp)) {
                 item { ProgramHeader(program.title, program.author, nextDay) }
+                row(
+                    title = weekdayPlanLine,
+                    symbol = Symbol.CalendarToday,
+                    onClick = onOpenWeekdayPlan,
+                    trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = chevron) },
+                )
                 if (active.history.isNotEmpty()) {
                     row(
                         title = changes,

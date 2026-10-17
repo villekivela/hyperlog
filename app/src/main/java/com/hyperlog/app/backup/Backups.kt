@@ -124,8 +124,9 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
             database < BackupFormat.OLDEST_DATABASE -> return Parsed.Refused(Reason.Older)
         }
         val exportedAt = (backup["exportedAt"] as? JsonPrimitive)?.longOrNull ?: return Parsed.Refused(Reason.Damaged)
-        val tables = backup["tables"] as? JsonObject ?: return Parsed.Refused(Reason.Damaged)
-        if (!BackupFormat.Tables.containsAll(tables.keys)) return Parsed.Refused(Reason.Damaged)
+        val stored = backup["tables"] as? JsonObject ?: return Parsed.Refused(Reason.Damaged)
+        if (!BackupFormat.Tables.containsAll(stored.keys)) return Parsed.Refused(Reason.Damaged)
+        val tables = if (database < 23) runCatching { movedWeekdays(stored) }.getOrNull() ?: return Parsed.Refused(Reason.Damaged) else stored
         // A table left out of the file would be wiped, so every one must be there unless it is newer than the file.
         val missing = BackupFormat.Tables - tables.keys
         if (missing.any { BackupFormat.addedSince(database, it)?.isEmpty() != true }) return Parsed.Refused(Reason.Damaged)
@@ -135,6 +136,25 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
             Parsed.Refused(Reason.Damaged)
         }
     }
+
+    /**
+     * A file from before v23, when each gym had its weekdays: they become the weekday plan, each day
+     * with its gym, as [com.hyperlog.app.data.Migration22To23] moves them, and leave the gym rows.
+     */
+    private fun movedWeekdays(tables: JsonObject): JsonObject {
+        val gyms = tables["gym"]?.let { it as JsonArray }.orEmpty().map { it as JsonObject }
+        fun JsonObject.long(key: String) = (get(key) as JsonPrimitive).longOrNull!!
+        // Not deleted, in the gym list's order: by name ignoring ASCII case (SQLite's NOCASE), then id.
+        val listed = gyms.filter { (it["archived"] as? JsonPrimitive)?.longOrNull != 1L }
+            .sortedWith(compareBy<JsonObject>({ (it["name"] as JsonPrimitive).content.asciiLowercase() }, { it.long("id") }))
+        val plan = com.hyperlog.app.data.Migration22To23.planFrom(listed.map { it.long("id") to ((it["weekdays"] as? JsonPrimitive)?.longOrNull ?: 0L).toInt() })
+        val days = plan.entries.sortedBy { it.key }.map { (day, gym) ->
+            JsonObject(mapOf("weekday" to JsonPrimitive(day), "gym_id" to JsonPrimitive(gym)))
+        }
+        return JsonObject(tables + mapOf("gym" to JsonArray(gyms.map { JsonObject(it - "weekdays") }), "weekday_plan" to JsonArray(days)))
+    }
+
+    private fun String.asciiLowercase() = map { if (it in 'A'..'Z') it + ('a' - 'A') else it }.joinToString("")
 
     private class Mismatch : RuntimeException()
 

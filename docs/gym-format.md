@@ -51,7 +51,7 @@ A made-up gym:
 | `format` | yes | Always `"hyperlog-gym"`. |
 | `version` | yes | Always `1`. |
 | `name` | yes | The gym's name. A gym of the same name already there stays; the import is a second one. |
-| `usualDays` | no | The weekday plan: `"monday"` … `"sunday"`. Starting a session on one picks this gym. |
+| `usualDays` | no | `"monday"` … `"sunday"`: on import, these days become your training days at this gym (the weekday plan is yours, not the gym's; ADR 0004). An export never writes it. |
 | `pinPlates` | no | The small loose plates that hang on any stack's pin, kg, one entry per plate: up to six, each up to 25 kg. Default `[1.25, 2.5]`. |
 | `plates` | no | The gym's plates, each size once as `{ "kg", "pairs" }`: how many pairs (0 to 50) of that size. Its bars and plate-loaded machines load them. Default: 8 pairs of 20, then 2 pairs each of 15, 10, 5, 2.5 and 1.25. |
 | `dumbbells` | no | The dumbbell rack, as a weights shorthand (below) or a `steps` or `list` ladder. Default: 1 to 10 kg by 1, then 12.5 to 50 by 2.5. |

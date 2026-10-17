@@ -14,7 +14,6 @@ import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.theme.HyperlogTheme
-import java.time.DayOfWeek
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -50,22 +49,15 @@ class GymScreenTest {
     }
 
     @Test
-    fun theUsualDaysToggleOneWeekdayAtATime() {
-        var days: Set<DayOfWeek>? = null
+    fun theGymHasNoUsualDaysTrainingDaysAreYours() {
         compose.setContent {
             HyperlogTheme {
-                GymScreen(
-                    Gym(1, "Central", emptyList(), setOf(DayOfWeek.MONDAY)),
-                    onRename = {}, onDelete = {}, onWeekdays = { days = it }, onOpenItem = {}, onAddItem = {}, onBack = {},
-                )
+                GymScreen(Gym(1, "Central", emptyList()), onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {})
             }
         }
-        compose.onNodeWithText("Starting a session on these days picks Central.").assertExists()
-        compose.onNodeWithContentDescription("Monday").assertIsOn()
-        compose.onNodeWithContentDescription("Wednesday").assertIsOff().performClick()
-        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), days)
-        compose.onNodeWithContentDescription("Monday").performClick()
-        assertEquals(emptySet<DayOfWeek>(), days)
+        compose.onNodeWithText("Dumbbells").assertExists()
+        compose.onNodeWithText("Usual days").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Monday").assertDoesNotExist()
     }
 
     @Test
@@ -76,7 +68,7 @@ class GymScreenTest {
             HyperlogTheme {
                 GymScreen(
                     Gym(1, "Central", items),
-                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = { added++ }, onBack = {},
+                    onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = { added++ }, onBack = {},
                 )
             }
         }
@@ -105,7 +97,7 @@ class GymScreenTest {
             HyperlogTheme {
                 GymScreen(
                     Gym(1, "Central", emptyList()),
-                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
                     onDumbbells = { dumbbells++ },
                 )
             }
@@ -129,7 +121,7 @@ class GymScreenTest {
         )
         compose.setContent {
             HyperlogTheme {
-                GymScreen(gym, onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {})
+                GymScreen(gym, onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {})
             }
         }
         val order = listOf("Stack machines", "Pec deck", "Plate-loaded machines", "Leg press", "Bars", "EZ bar", "Racks and benches", "Flat bench", "Dumbbells and plates", "Dumbbells")
@@ -149,7 +141,7 @@ class GymScreenTest {
         )
         compose.setContent {
             HyperlogTheme {
-                GymScreen(gym, onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = { opened = it }, onAddItem = {}, onBack = {})
+                GymScreen(gym, onRename = {}, onDelete = {}, onOpenItem = { opened = it }, onAddItem = {}, onBack = {})
             }
         }
         compose.onNodeWithText("Flat bench").performClick()
@@ -165,7 +157,7 @@ class GymScreenTest {
             HyperlogTheme {
                 GymScreen(
                     Gym(1, "Central", emptyList()),
-                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
                     onPlates = { saved = it },
                 )
             }
@@ -188,7 +180,7 @@ class GymScreenTest {
         val gym = Gym(1, "Central", items = listOf(com.hyperlog.app.gym.EquipmentItem(1, 1, "Pec deck", LadderSpec.DefaultPinStack)), kit = listOf(bench))
         compose.setContent {
             HyperlogTheme {
-                GymScreen(gym, onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {}, onDeleteItem = { deleted = it })
+                GymScreen(gym, onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {}, onDeleteItem = { deleted = it })
             }
         }
         compose.onNodeWithContentDescription("More for Pec deck").assertHasClickAction()
@@ -215,7 +207,7 @@ class GymScreenTest {
             HyperlogTheme {
                 GymScreen(
                     Gym(1, "Central", emptyList()),
-                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
                     programSetup = com.hyperlog.app.gym.ProgramSetup(listOf(legExtension), listOf(lateralRaise), station = null),
                     programTitle = "Full Body",
                     onAddProgramEquipment = { added = it },
@@ -236,7 +228,7 @@ class GymScreenTest {
             HyperlogTheme {
                 GymScreen(
                     Gym(1, "Central", emptyList(), defaultStack = LadderSpec.DefaultPinStack),
-                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
                     programSetup = com.hyperlog.app.gym.ProgramSetup(listOf(legExtension, legExtension.copy(id = "pec_deck", name = "Pec Deck")), emptyList(), station = null),
                     programTitle = "Full Body",
                     onAddProgramEquipment = { added = it },
@@ -255,7 +247,7 @@ class GymScreenTest {
             HyperlogTheme {
                 GymScreen(
                     Gym(1, "Central", emptyList()),
-                    onRename = {}, onDelete = {}, onWeekdays = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
+                    onRename = {}, onDelete = {}, onOpenItem = {}, onAddItem = {}, onBack = {},
                     programSetup = com.hyperlog.app.gym.ProgramSetup(emptyList(), emptyList(), station = null),
                     programTitle = "Full Body",
                 )

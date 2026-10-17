@@ -18,6 +18,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
+import com.hyperlog.app.week.WeekdayPlan
+import com.hyperlog.app.week.WeekdayPlans
 import java.time.DayOfWeek
 
 /** Settings → Gyms and equipment → Import gym adds the gym in a file, never touching one already there. */
@@ -66,7 +68,8 @@ class GymImportTest {
     @Test
     fun theGymComesWithItsDaysPlatesRackAndBars() = runTest {
         val gym = gyms.gym(import())!!
-        assertEquals(setOf(DayOfWeek.MONDAY), gym.weekdays)
+        // Its usual days become training days at this gym.
+        assertEquals(WeekdayPlan(mapOf(DayOfWeek.MONDAY to gym.id)), WeekdayPlans(db).plan.first())
         assertEquals(listOf(2.5), gym.pinPlates)
         assertEquals(24, gym.dumbbells.ladder().rungs.size)
         assertEquals(listOf("EZ bar", "Squat rack", "Swiss bar"), gym.kit.map { it.name })

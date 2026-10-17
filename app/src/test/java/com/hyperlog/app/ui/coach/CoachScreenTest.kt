@@ -203,7 +203,7 @@ class CoachScreenTest {
             val gyms = Gyms(db)
             gyms.addGym("Itis")
             val harbour = gyms.addGym("Harbour")
-            gyms.setWeekdays(harbour, setOf(LocalDate.now().dayOfWeek))
+            com.hyperlog.app.week.WeekdayPlans(db).set(com.hyperlog.app.week.WeekdayPlan(mapOf(LocalDate.now().dayOfWeek to harbour)))
             gyms.markMissing(harbour, "leg_extension")
         }
         openCoach()
@@ -261,6 +261,28 @@ class CoachScreenTest {
         assertEquals("I’ve had 11 days off. Ease me back in.", wordsText())
         val prompt = ask()
         assertTrue(prompt, prompt.contains("11 days ago"))
+    }
+
+    @Test
+    fun yourTrainingDaysCountTimeOffWithNoGymSetUp() {
+        runStarter()
+        // Nine days since the last session, but you train only on the weekday two days ago: 2 days off.
+        val planned = LocalDate.now().minusDays(2).dayOfWeek
+        runBlocking {
+            db.sessions().insertSession(SessionEntity(startedAt = System.currentTimeMillis() - 9 * DAY, finishedAt = System.currentTimeMillis() - 9 * DAY + 3_600_000))
+            com.hyperlog.app.week.WeekdayPlans(db).set(com.hyperlog.app.week.WeekdayPlan(mapOf(planned to null)))
+        }
+        compose.openTab("Program")
+        compose.waitFor("Ramp-in · weeks 1–2", substring = true)
+        compose.openTab("Today")
+        compose.waitFor("Start session")
+        assertTrue(compose.onAllNodes(hasText("since your last session", substring = true)).fetchSemanticsNodes().isEmpty())
+
+        openCoach()
+        words().performTextInput("Back today.")
+        val name = planned.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH)
+        val prompt = ask()
+        assertTrue(prompt, prompt.contains("I plan to train on $name, so that's 2 days off."))
     }
 
     @Test

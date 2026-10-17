@@ -8,6 +8,8 @@ import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.session.SessionLogger
+import com.hyperlog.app.week.WeekdayPlan
+import com.hyperlog.app.week.WeekdayPlans
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -119,10 +121,33 @@ class GymsTest {
         // A weekday with no history takes the gym trained at last, and doesn't call it usual on Fridays.
         assertEquals(UsualGym(riverside, UsualGym.Why.Last), gyms.usualGym(DayOfWeek.FRIDAY, ZoneOffset.UTC))
 
-        // A weekday plan beats history.
-        gyms.setWeekdays(riverside, setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
+        // A training day naming a gym beats history.
+        WeekdayPlans(db).set(WeekdayPlan(mapOf(DayOfWeek.MONDAY to riverside, DayOfWeek.THURSDAY to riverside)))
         assertEquals(UsualGym(riverside, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
-        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), gyms.gyms.first().first { it.id == riverside }.weekdays)
+        // One naming no gym leaves it to history when there are several gyms.
+        WeekdayPlans(db).set(WeekdayPlan(mapOf(DayOfWeek.MONDAY to null)))
+        assertEquals(UsualGym(central, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.MONDAY, ZoneOffset.UTC))
+    }
+
+    @Test
+    fun withOneGymEveryTrainingDayIsAtIt() = runTest {
+        val central = gyms.addGym("Central")
+        WeekdayPlans(db).set(WeekdayPlan(mapOf(DayOfWeek.TUESDAY to null)))
+        assertEquals(UsualGym(central, UsualGym.Why.Weekday), gyms.usualGym(DayOfWeek.TUESDAY, ZoneOffset.UTC))
+        // A day you don't train on isn't usual anywhere.
+        assertEquals(UsualGym(central, UsualGym.Why.First), gyms.usualGym(DayOfWeek.WEDNESDAY, ZoneOffset.UTC))
+    }
+
+    @Test
+    fun deletingAGymKeepsItsTrainingDaysWithNoGym() = runTest {
+        val central = gyms.addGym("Central")
+        val hotel = gyms.addGym("Hotel")
+        val plans = WeekdayPlans(db)
+        plans.set(WeekdayPlan(mapOf(DayOfWeek.MONDAY to central, DayOfWeek.FRIDAY to hotel)))
+        // Trained at, so deleting it archives it rather than removing the row.
+        db.sessions().insertSession(com.hyperlog.app.data.SessionEntity(startedAt = at(4), finishedAt = at(4) + 3_600_000, gymId = hotel))
+        gyms.deleteGym(hotel)
+        assertEquals(WeekdayPlan(mapOf(DayOfWeek.MONDAY to central, DayOfWeek.FRIDAY to null)), plans.plan.first())
     }
 
     @Test

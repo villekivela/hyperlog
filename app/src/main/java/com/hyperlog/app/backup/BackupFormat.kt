@@ -6,7 +6,7 @@ package com.hyperlog.app.backup
  *
  * ```json
  * { "format": "hyperlog-backup", "version": 1, "database": 17, "exportedAt": 1760000000000,
- *   "tables": { "gym": [ { "id": 1, "name": "Central", "weekdays": 1 } ], … } }
+ *   "tables": { "gym": [ { "id": 1, "name": "Central", "archived": 0, … } ], "weekday_plan": [ { "weekday": 1, "gym_id": 1 } ], … } }
  * ```
  */
 object BackupFormat {
@@ -19,7 +19,7 @@ object BackupFormat {
      * The Room schema version the tables follow. A backup from an older database needs an upgrade
      * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
      */
-    const val DATABASE = 22
+    const val DATABASE = 23
 
     /** The oldest database version a backup can be restored from. */
     const val OLDEST_DATABASE = 14
@@ -30,6 +30,8 @@ object BackupFormat {
         "exercise",
         // Gyms, their equipment and ladders, the remembered machine and missing equipment per gym.
         "gym", "equipment_item", "shared_ladder", "gym_exercise_item", "gym_missing_exercise",
+        // Your training days, each with its gym.
+        "weekday_plan",
         // Programs with their position, and the Changes accepted (and reverted) on them.
         "program", "plan_change",
         // Workouts from the coach: the one waiting on Today, and those sessions trained.
@@ -54,6 +56,7 @@ object BackupFormat {
         19 to mapOf("gym" to setOf("plates")),
         20 to mapOf("session_exercise" to setOf("warmups")),
         22 to mapOf("workout" to emptySet(), "session" to setOf("workout_id")),
+        23 to mapOf("weekday_plan" to emptySet()),
     )
 
     /** The columns of [table] a file made at database version [database] may lack. */

@@ -21,7 +21,8 @@ Everything you made, as stored on the phone:
 - **Sessions**: finished ones with every set, drop, mini-set and hold, the edits made during them
   (swaps, added and removed sets, techniques), and **the running session** with the set half-typed on
   the pad, the exercise on screen and the rest timer.
-- **Gyms and equipment**: gyms, weekday plans, equipment and their weight ladders, the shared
+- **Training days** (the weekday plan), each with its gym.
+- **Gyms and equipment**: gyms, equipment and their weight ladders, the shared
   dumbbells and plates, the machine remembered for each exercise, and the exercises a gym is
   missing.
 - **Exercise library**: the shipped exercises, your edits, hidden exercises and the ones you added.
@@ -52,10 +53,11 @@ again from the restored rest timer.
 {
   "format": "hyperlog-backup",
   "version": 1,
-  "database": 17,
+  "database": 23,
   "exportedAt": 1791889500000,
   "tables": {
-    "gym": [ { "id": 1, "name": "Central", "weekdays": 9 } ],
+    "gym": [ { "id": 1, "name": "Central", "archived": 0, … } ],
+    "weekday_plan": [ { "weekday": 1, "gym_id": 1 }, { "weekday": 4, "gym_id": 1 } ],
     "logged_set": [ { "id": 1, "session_exercise_id": 1, "position": 0, "weight_kg": 80.0, "full_reps": 8, … } ],
     …
   }
@@ -79,10 +81,13 @@ The backup follows the database. When a ticket bumps the Room version:
 1. Bump `BackupFormat.DATABASE`; `BackupTablesTest` checks it matches.
 2. A new table goes into `BackupFormat.Tables` or `Excluded` with a reason.
 3. Backups from older versions must still restore: `BackupsTest` restores the kept file
-   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db21.json`). Add an upgrade step for older files
+   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db22.json`). Add an upgrade step for older files
    in `Backups` (new tables and new columns with defaults need none: list them in
    `BackupFormat.Added` under the version that added them, so an older file may lack them; a
-   renamed or reshaped column needs a step), and keep a fixture for each version.
+   renamed or reshaped column needs a step), and keep a fixture for each version. A dropped
+   column needs a step that reads it out of an older file before the rows go in: a file from
+   before v23 has each gym's `weekdays`, which become `weekday_plan` rows as the v23 migration
+   moves them (`Migration22To23.planFrom`).
 
 ## Android Auto Backup
 
