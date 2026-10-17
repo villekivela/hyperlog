@@ -105,6 +105,12 @@ internal fun dayTitle(name: String): String = name.replace(DayPrefix, "").ifBlan
 
 internal val PlannedDay.letter: String get() = dayLetter(day.name, position.day)
 
+/**
+ * A done day's fill (the strip's marker, the done card's cookie) and its letter: solid primary,
+ * the planned day's outline filled in. secondaryContainer was a lilac on lilac in light (1.1:1).
+ */
+internal fun doneFill(scheme: androidx.compose.material3.ColorScheme): Pair<Color, Color> = scheme.primary to scheme.onPrimary
+
 /** A finished session's letter: its program day's, or null for an ad-hoc session or a workout. */
 internal val PastSessionItem.letter: String? get() = position?.let { p -> title?.let { dayLetter(it, p.day) } }
 
@@ -257,11 +263,14 @@ internal fun WeekRow(
                 // Two letters (`CA`, `A+`) widen it; one keeps 28 dp.
                 val marker = Modifier.height(20.dp).widthIn(min = 28.dp).clip(shape)
                 when {
-                    sessions.isNotEmpty() -> Box(marker.background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
-                        if (doneLetter != null) {
-                            Text(doneLetter, Modifier.padding(horizontal = 4.dp), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer)
-                        } else {
-                            SymbolIcon(Symbol.Check, null, Modifier.size(16.dp), tint = cs.onSecondaryContainer)
+                    sessions.isNotEmpty() -> {
+                        val (fill, letter) = doneFill(cs)
+                        Box(marker.background(fill), contentAlignment = Alignment.Center) {
+                            if (doneLetter != null) {
+                                Text(doneLetter, Modifier.padding(horizontal = 4.dp), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = letter)
+                            } else {
+                                SymbolIcon(Symbol.Check, null, Modifier.size(16.dp), tint = letter)
+                            }
                         }
                     }
                     plan != null -> Box(marker.border(1.5.dp, cs.primary, shape), contentAlignment = Alignment.Center) {
@@ -384,7 +393,7 @@ internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
             session.letter,
             head = session.gym?.let { stringResource(R.string.today_done_head_gym, date, it) } ?: stringResource(R.string.today_done_head, date),
             title = session.title?.let(::dayTitle) ?: stringResource(R.string.today_ad_hoc),
-            letterContainer = cs.secondaryContainer, letterContent = cs.onSecondaryContainer,
+            letterContainer = doneFill(cs).first, letterContent = doneFill(cs).second,
             headColor = cs.primary, titleColor = cs.onSurface,
         )
         Spacer(Modifier.height(20.dp))

@@ -449,7 +449,7 @@ private fun BottomBar(
                     style = MaterialTheme.typography.titleMedium,
                     color = cs.onPrimaryContainer,
                 )
-                Button(onClick = onReview, modifier = Modifier.testTag(NextStepTag)) { Text(stringResource(R.string.coach_review_reply)) }
+                Button(onClick = onReview, modifier = Modifier.testTag(NextStepTag), colors = com.hyperlog.app.ui.theme.accentButtonColors()) { Text(stringResource(R.string.coach_review_reply)) }
             }
         }
         Row(

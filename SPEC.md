@@ -31,7 +31,12 @@ configuration, iOS, web, any server.
   stay tinted greys. The RIR, progression, plate and error colours stay fixed, and every one keeps
   at least 30° of hue from the accent, so the accent is never green, amber, red or plate blue. The
   lightest-but-one container stops at `#E4DEEE` so the hot RIR chip keeps 3:1 on it. Light and dark
-  follow the system setting; there is no in-app theme picker.
+  follow the system setting; there is no in-app theme picker. **On the accent** (a
+  primaryContainer card or strip: the hero, the gym's setup card, Claude's reply, Day done), a
+  filled button or a picked choice is onPrimaryContainer with the card's violet for its words, as
+  the hero's Start, and the choices not picked sit in a shaded well: in light primary and
+  primaryContainer are one violet, so a primary button there would vanish (#58). Everything that
+  marks a state keeps 3:1 on what it sits on (`AccentContrastTest`).
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
   1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets the words of display, headline and titleLarge
   text: screen titles, the day's name and exercise names. A long exercise name at the top of a session or a
@@ -528,7 +533,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        shows alone and is still read out as `Set your training days`.
      - **Each day** has its weekday letter, its date in a 40 dp circle (filled primaryContainer
        when selected, ringed in primary when it's today and not selected) and a marker under it:
-       a filled secondaryContainer pill with the day's letter when a session was finished on it (a
+       a filled primary pill with the day's letter in onPrimary when a session was finished on it (a
        tick for an ad-hoc session or a workout; two program days' letters in order, `CA`, for two
        sessions; the first letter and a plus, `A+`, for more, or for a program day beside an
        ad-hoc session; TalkBack names every one), an outlined primary pill with the letter when a

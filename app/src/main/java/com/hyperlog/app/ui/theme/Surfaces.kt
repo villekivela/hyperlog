@@ -43,6 +43,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ButtonColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.geometry.Size
@@ -302,11 +304,40 @@ fun ConnectedChoice(
                     labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-                colors = ToggleButtonDefaults.colors(containerColor = color),
+                colors = choiceColors(MaterialTheme.colorScheme, color).let {
+                    ToggleButtonDefaults.colors(containerColor = it.unchecked, contentColor = it.onUnchecked, checkedContainerColor = it.checked, checkedContentColor = it.onChecked)
+                },
                 contentPadding = contentPadding,
             ) { Text(label, maxLines = 1) }
         }
     }
+}
+
+/** A connected choice's colours: the checked button's fill and words, the others' fill and words. */
+data class ChoiceColors(val checked: Color, val onChecked: Color, val unchecked: Color, val onUnchecked: Color)
+
+/**
+ * The colours of a connected choice sitting [on] a card. On a neutral card the picked one is filled
+ * primary (Material's toggle button). On the accent card (primaryContainer) primary would vanish in
+ * light, where the two are one violet, so the picked one is filled onPrimaryContainer with the
+ * card's violet for its words, as the hero's Start, and the others sit in a shaded well.
+ */
+fun choiceColors(scheme: ColorScheme, on: Color): ChoiceColors = with(scheme) {
+    if (on == primaryContainer) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
+    else ChoiceColors(primary, onPrimary, on, onSurfaceVariant)
+}
+
+/**
+ * A filled button's fill and words on the accent card (primaryContainer): onPrimaryContainer with
+ * the card's violet for words, as the hero's Start. A primary button vanishes there in light,
+ * where primary and primaryContainer are one violet.
+ */
+fun accentButton(scheme: ColorScheme): Pair<Color, Color> = scheme.onPrimaryContainer to scheme.primaryContainer
+
+/** [accentButton] as a filled button's colours. */
+@Composable
+fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme).let { (fill, words) ->
+    ButtonDefaults.buttonColors(containerColor = fill, contentColor = words)
 }
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */

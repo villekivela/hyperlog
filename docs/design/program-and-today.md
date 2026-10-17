@@ -358,7 +358,7 @@ the future.
 - **The strip** is a HorizontalPager a week a page, from the week of the first finished session to
   the week of the last planned day, four weeks each way at least. A day is its narrow weekday
   letter (primary on today), its date in `figureMedium` in a 40 dp circle (primaryContainer when selected,
-  a 2 dp primary ring on today otherwise) and a 28 × 20 dp marker: secondaryContainer with the
+  a 2 dp primary ring on today otherwise) and a 28 × 20 dp marker: primary with the
   day's letter in labelMedium Bold when done (`check` for an ad-hoc session or a workout), a 1.5 dp
   primary outline with the letter when planned. Past days without a session have their dates at
   70 % onSurfaceVariant. Each day reads as one tab to TalkBack: `Sat 17 Oct, planned Day A`.
@@ -370,7 +370,7 @@ the future.
   in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
   **Start session** button in onPrimaryContainer across the card. It replaces the floating Start.
 - **Done** cards and **planned** cards are the same layout on the card tone: the letter's cookie
-  filled secondaryContainer (done) or outlined in primary (planned), the head in primary (`Done ·
+  filled primary with its letter in onPrimary (done) or outlined in primary (planned), the head in primary (`Done ·
   Sat 17 Oct · Kalliokoski`, `Planned · Wed 21 Oct · Week 7`). A done card's stats are the minutes
   taken and its button a tonal **Open session**; a planned card has no button. A done day lists
   its exercises with the sets as logged, filled RIR chips; on today `Next: Day B on Mon 19 Oct ›`
@@ -429,6 +429,15 @@ they parted.
   planned one reads `Nothing planned` with `Last planned: Day C on Wed 25 Nov ›`; with no training
   days that covers every date after the next day, which `Rest day` used to claim.
 - **The weekday toggles say `Mo Tu We Th Fr Sa Su`**, so Tuesday and Thursday never look alike.
+- **Done reads in light too.** Done markers and the done card's cookie were secondaryContainer,
+  `#E6DEFF` on the `#F0ECF7` screen (1.1:1, gone on the emulator in light). They are now filled
+  primary with the letter in onPrimary: the planned day's outline filled in, so done and planned
+  read as one pair in both modes (`doneFill`, `AccentContrastTest`).
+- **On the hero and other accent cards**, a filled button or the picked choice is
+  onPrimaryContainer (white) with violet words, like Start; see SPEC, theme. The selected choice
+  colours elsewhere (toggle buttons primary, filter chips primaryContainer) are one violet in light
+  and differ only in dark, where Material's own roles differ too (toggle buttons primary, chips
+  secondaryContainer, which Hyperlog already moved to primaryContainer): left to the owner.
 - Kept: Program's Next line has no date (issue 9). Program's "No dates" principle (#40) stands,
   and Program's training-days row sits right under it with Today one tap away.
 

@@ -723,7 +723,7 @@ private fun DayDoneBar(onFinish: () -> Unit) {
         SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
         Spacer(Modifier.width(16.dp))
         Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-        Button(onClick = onFinish) { Text(stringResource(R.string.session_finish)) }
+        Button(onClick = onFinish, colors = com.hyperlog.app.ui.theme.accentButtonColors()) { Text(stringResource(R.string.session_finish)) }
     }
 }
 

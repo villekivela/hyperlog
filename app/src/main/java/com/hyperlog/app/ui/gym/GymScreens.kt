@@ -328,6 +328,8 @@ private fun ProgramEquipmentCard(setup: com.hyperlog.app.gym.ProgramSetup, progr
                 listOf(stringResource(R.string.gym_program_kg), stringResource(R.string.gym_program_lb)),
                 if (lb) 1 else 0,
                 onSelect = { lb = it == 1 },
+                // On the accent card: the picked one in white (choiceColors).
+                color = cs.primaryContainer,
             )
             Text(
                 stringResource(R.string.gym_program_guess),
@@ -335,7 +337,7 @@ private fun ProgramEquipmentCard(setup: com.hyperlog.app.gym.ProgramSetup, progr
             )
         }
         androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
-            androidx.compose.material3.Button(onClick = { onAdd(chosen ?: if (lb) LadderSpec.LbPinStack else LadderSpec.DefaultPinStack) }) {
+            androidx.compose.material3.Button(onClick = { onAdd(chosen ?: if (lb) LadderSpec.LbPinStack else LadderSpec.DefaultPinStack) }, colors = com.hyperlog.app.ui.theme.accentButtonColors()) {
                 Text(stringResource(R.string.gym_program_add))
             }
         }

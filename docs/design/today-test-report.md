@@ -203,3 +203,11 @@ code changed. Checked on the emulator (AVD `hyperlog`, the phone's size and dens
 | 13 | **Fixed, no migration.** The export's time is kept in the existing `setting` table (`last_export`), and the Export row keeps showing `Saved Tue 13 Oct, 14:05`. `BackupsTest.theLastExportIsKeptForSettingsToShow` and `SettingsScreenTest.theLastExportStaysOnTheRowAfterwards`. Not yet seen after a real export on a device. |
 | 14 | **Kept** (no swipe on the day card), as asked. |
 | 15 | **Kept** (the minutes estimate), as asked. |
+
+### Light mode, found by the designer on the emulator (#58)
+
+| Finding | Outcome |
+|---|---|
+| The gym's setup card looked inverted in light: the picked "kg, with small" had no fill, "lb stacks" was white, and Add had no shape. In light, primary and primaryContainer are the same `#5B3DD0`. No render covered the card, so only the device showed it. | **Fixed.** On an accent card, the picked choice and filled buttons are onPrimaryContainer with violet words, and the other choices sit in a shaded well. The same fix covers Coach's Review button and the session's Finish session. `AccentContrastTest.aChoiceOnTheAccentCardShowsWhichIsPicked` and `AccentContrastTest.aFilledButtonOnTheAccentCardStandsOffIt`. |
+| Done markers and the done card's cookie barely showed in light (secondaryContainer on the screen, 1.1:1). | **Fixed.** They are now filled primary with an onPrimary letter. `AccentContrastTest.aDoneDaysFillStandsOffTheScreenAndItsCards`. |
+| Connected-group selection is light lilac in some places and deep violet in others (dark only). | **Owner question.** In light both are one violet. Material's own roles differ between toggle buttons and chips, so this is taste. |
