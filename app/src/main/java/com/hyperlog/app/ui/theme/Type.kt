@@ -51,9 +51,9 @@ private fun TextStyle.display(weight: FontWeight = FontWeight.SemiBold) = copy(
 )
 
 /**
- * Material's type scale with Space Grotesk for the large titles, Inter for the rest (its small
- * titles SemiBold) and tabular figures throughout, the expressive
- * emphasized styles included (Bold where the face is Space Grotesk).
+ * Material's type scale with Space Grotesk for the large titles, Inter for the rest (titleMedium
+ * and titleSmall SemiBold, Bold emphasized) and tabular figures throughout, the expressive emphasized styles
+ * included (Bold where the face is Space Grotesk).
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 internal val HyperlogTypography: Typography = Typography().run {
@@ -80,8 +80,8 @@ internal val HyperlogTypography: Typography = Typography().run {
         headlineMediumEmphasized = headlineMediumEmphasized.display(FontWeight.Bold),
         headlineSmallEmphasized = headlineSmallEmphasized.display(FontWeight.Bold),
         titleLargeEmphasized = titleLargeEmphasized.display(FontWeight.Bold),
-        titleMediumEmphasized = titleMediumEmphasized.inter(),
-        titleSmallEmphasized = titleSmallEmphasized.inter(),
+        titleMediumEmphasized = titleMediumEmphasized.inter(FontWeight.Bold),
+        titleSmallEmphasized = titleSmallEmphasized.inter(FontWeight.Bold),
         bodyLargeEmphasized = bodyLargeEmphasized.inter(),
         bodyMediumEmphasized = bodyMediumEmphasized.inter(),
         bodySmallEmphasized = bodySmallEmphasized.inter(),
@@ -91,9 +91,13 @@ internal val HyperlogTypography: Typography = Typography().run {
     )
 }
 
+/**
+ * A set table's kg or reps: Inter Medium at titleLarge's size. Untracked, since titleLarge's
+ * tracking is Space Grotesk's and titleMedium's would loosen the digits.
+ */
+internal val Typography.figureLarge: TextStyle get() = titleLarge.figure()
 
-/** A set table's kg or reps: Inter at titleLarge's size, so the numbers that matter read as Inter. */
-internal val Typography.figureLarge: TextStyle get() = titleLarge.inter(FontWeight.Medium).copy(letterSpacing = 0.sp)
+/** A long kg or reps value (`100 + 20`), a step down: Inter Medium at titleMedium's size. */
+internal val Typography.figureMedium: TextStyle get() = titleMedium.figure()
 
-/** A long kg or reps value (`100 + 20`), a step down: Inter at titleMedium's size. */
-internal val Typography.figureMedium: TextStyle get() = titleMedium.inter(FontWeight.Medium)
+private fun TextStyle.figure() = inter(FontWeight.Medium).copy(letterSpacing = 0.sp)

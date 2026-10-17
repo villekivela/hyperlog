@@ -38,10 +38,11 @@ configuration, iOS, web, any server.
   past exercise wraps to a second line at full size; only a name longer than two lines is cut off.
 - **Inter** (Regular, Medium, SemiBold and Bold, bundled as static fonts under the SIL Open Font
   License 1.1, `docs/licences/Inter-OFL.txt`) sets everything else: body, labels, titleMedium and
-  titleSmall (SemiBold), and the numbers that matter, the set table's kg and reps included (Inter
-  Medium at titleLarge's size, titleMedium's for a long value). Inter's tabular figures would
-  also widen the hyphen to a digit's width ("Ramp - in"), so the bundled fonts are patched to keep
-  the hyphen proportional (`scripts/inter-proportional-hyphen.py`); digits stay tabular.
+  titleSmall (SemiBold), and the set table's kg and reps (Inter Medium at titleLarge's size,
+  titleMedium's for a long value), which the owner wants in Inter as the numbers that matter most.
+  Inter's tabular figures would also widen the hyphen to a digit's width ("Ramp - in"), so the
+  bundled fonts are patched to keep the hyphen proportional
+  (`scripts/inter-proportional-hyphen.py`); digits stay tabular.
 - **Larger, rounder groups**: a segmented group's outer corners are 32 dp, its joins 8 dp and its
   rows 4 dp apart; a lone card is 32 dp. Every group and card draws through `Segment` and
   `CardShape`.

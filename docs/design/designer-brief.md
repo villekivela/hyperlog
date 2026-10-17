@@ -66,15 +66,16 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 
 **Decided: Hyperlog has its own theme** (#37), the same on every phone whatever the wallpaper or
 system style. The colours are Ink and violet (#50, `ui/theme/InkPalette.kt`), the look the owner
-picked on 2026-10-17 (look C, Week): surfaces, text and dividers carry a faint violet tint (white cards on a lilac-white screen in light, near-black ink in dark),
+picked on 2026-10-17 (look C, Week): surfaces, text and dividers carry a faint violet tint
+(white cards on a lilac-white screen in light, near-black ink in dark),
 and one violet accent marks only what you act on or what's selected, the Start button, the
 selected tab, the active set, chips and toggles that are on. secondaryContainer is a violet tint
 for selected things; tertiary follows primary; secondary and tertiaryContainer are tinted greys.
 The accent is never green, amber, red or plate blue, which belong to RIR, progression, plates and
 errors (`FixedColoursTest` keeps 30° of hue between them). Light and dark still follow the system.
 Space Grotesk, bundled, sets display, headline and titleLarge text (screen titles, the day's name,
-exercise names). Inter, bundled, sets body, labels, the smaller titles and the numbers, the set
-table's kg and reps included: the owner wants Inter "for important parts like numbers". Every
+exercise names). Inter, bundled, sets body, labels, the smaller titles and the set table's kg and
+reps: the owner wants Inter "for important parts like numbers". Every
 style in the type scale has tabular figures (`tnum`). Shapes are larger and rounder than before
 (32 dp outer corners, 8 dp joins, 4 dp gaps). The hierarchy still comes from tone and shape first,
 so the rules above hold as they are.
