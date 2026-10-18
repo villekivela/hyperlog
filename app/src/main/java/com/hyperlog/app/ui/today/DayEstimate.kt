@@ -24,7 +24,7 @@ internal object EstimateSeconds {
     const val PastSessions = 3
 }
 
-/** Bench, squat pattern, RDL and row: the lifts that get a full warm-up ramp. */
+/** Bench press, and the squat, hinge (RDL) and horizontal pull (row) patterns: the lifts that get a full warm-up ramp. */
 private fun Exercise.isMainLift() =
     pattern == MovementPattern.Squat || pattern == MovementPattern.Hinge || pattern == MovementPattern.HorizontalPull ||
         (pattern == MovementPattern.HorizontalPush && name.contains("bench press", ignoreCase = true))

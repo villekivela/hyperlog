@@ -55,7 +55,7 @@ class DeloadTagTest {
 
     @Test
     fun aPlannedDeloadDayIsTaggedToo() {
-        compose.setContent { HyperlogTheme { PlannedCard(program.plannedDay(Position(12, 2))!!, sat17.plusDays(4)) } }
+        compose.setContent { HyperlogTheme { PlannedCard(program.plannedDay(Position(12, 2))!!, sat17.plusDays(4), library = library.exercises, finished = emptyList()) } }
         compose.onNode(hasTestTag(DeloadTagTag), useUnmergedTree = true).assertTextEquals("Deload")
     }
 }

@@ -49,9 +49,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
-import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.session.RirText
@@ -439,8 +439,8 @@ internal fun HeroCard(
     day: PlannedDay,
     date: LocalDate?,
     onStart: () -> Unit,
-    library: List<Exercise> = emptyList(),
-    finished: List<PastSessionItem> = emptyList(),
+    library: List<Exercise>,
+    finished: List<PastSessionItem>,
 ) {
     val cs = MaterialTheme.colorScheme
     val week = stringResource(R.string.today_week_block, day.position.week, day.block.name)
@@ -513,8 +513,8 @@ internal fun PlannedCard(
     day: PlannedDay,
     date: LocalDate,
     last: Boolean = false,
-    library: List<Exercise> = emptyList(),
-    finished: List<PastSessionItem> = emptyList(),
+    library: List<Exercise>,
+    finished: List<PastSessionItem>,
 ) {
     val cs = MaterialTheme.colorScheme
     DayCard {

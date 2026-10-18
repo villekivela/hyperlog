@@ -23,7 +23,7 @@ class DayEstimateTest {
     private fun day(week: Int, index: Int) = program.plannedDay(Position(week, index))!!
     private fun minutes(day: PlannedDay, finished: List<PastSessionItem> = emptyList()) = aboutMinutes(day, library.exercises, finished)
 
-    private fun minutesSeconds(day: PlannedDay) = countedSeconds(day, library.exercises)
+    private fun countedSecondsOf(day: PlannedDay) = countedSeconds(day, library.exercises)
 
     private fun session(id: Long, dayIndex: Int, minutes: Int, startedAt: Long = id * 1_000_000_000) = PastSessionItem(
         id = id, startedAt = startedAt, finishedAt = startedAt + minutes * 60_000L, title = "Day", gym = null,
@@ -46,38 +46,38 @@ class DayEstimateTest {
     /** A made-up day over [slots], all isolation lifts, so each exercise warms up once. */
     private fun dayOf(vararg slots: PlannedSlot) = day(3, 0).copy(slots = slots.toList())
 
-    // One exercise: changeover 90 + warm-up 60 + work 45 per set (a 300 s rest is counted below).
+    // One exercise: changeover 90 + warm-up 60 + work 45 per set (the 3000 s rest after the day.s last set is not counted).
     @Test
     fun noRestIsCountedAfterTheDaysLastSet() {
-        val oneSet = minutesSeconds(dayOf(slot("a", 0, set(rest = 3000))))
+        val oneSet = countedSecondsOf(dayOf(slot("a", 0, set(rest = 3000))))
         assertEquals(90 + 60 + 45, oneSet)
     }
 
     @Test
     fun restIsCountedBetweenSetsAndBetweenExercises() {
-        assertEquals(90 + 60 + 2 * 45 + 100, minutesSeconds(dayOf(slot("a", 0, set(100), set(100)))))
-        assertEquals(2 * (90 + 60 + 45) + 100, minutesSeconds(dayOf(slot("a", 0, set(100)), slot("b", 1, set(100)))))
+        assertEquals(90 + 60 + 2 * 45 + 100, countedSecondsOf(dayOf(slot("a", 0, set(100), set(100)))))
+        assertEquals(2 * (90 + 60 + 45) + 100, countedSecondsOf(dayOf(slot("a", 0, set(100)), slot("b", 1, set(100)))))
     }
 
     @Test
     fun partnersOfASupersetHaveNoRestBetweenThemAndOneChangeover() {
         // A, B, then the pair's rest (the later partner's) once, before the next exercise.
         val pair = dayOf(slot("a", 0, set(60)), slot("b", 0, set(120)), slot("c", 1, set(90)))
-        assertEquals((90 + 60 + 45) + (60 + 45) + 120 + (90 + 60 + 45), minutesSeconds(pair))
+        assertEquals((90 + 60 + 45) + (60 + 45) + 120 + (90 + 60 + 45), countedSecondsOf(pair))
     }
 
     @Test
     fun aDropSetAddsItsDropsAndNoRestBeforeThem() {
-        val plain = minutesSeconds(dayOf(slot("a", 0, set(100), set(100))))
-        val drops = minutesSeconds(dayOf(slot("a", 0, set(100), set(100, Technique.Dropset(drops = 2)))))
+        val plain = countedSecondsOf(dayOf(slot("a", 0, set(100), set(100))))
+        val drops = countedSecondsOf(dayOf(slot("a", 0, set(100), set(100, Technique.Dropset(drops = 2)))))
         assertEquals(plain + 60, drops)
-        assertEquals(plain + 45, minutesSeconds(dayOf(slot("a", 0, set(100), set(100, Technique.MyoReps())))))
-        assertEquals(plain + 15, minutesSeconds(dayOf(slot("a", 0, set(100), set(100, Technique.LengthenedPartials())))))
+        assertEquals(plain + 45, countedSecondsOf(dayOf(slot("a", 0, set(100), set(100, Technique.MyoReps())))))
+        assertEquals(plain + 15, countedSecondsOf(dayOf(slot("a", 0, set(100), set(100, Technique.LengthenedPartials())))))
     }
 
     @Test
     fun aMainLiftWarmsUpThreeTimesAndAnIsolationExerciseOnce() {
-        val main = minutesSeconds(dayOf(slot("a", 0, set(0), exercise = "barbell_bench_press")))
+        val main = countedSecondsOf(dayOf(slot("a", 0, set(0), exercise = "barbell_bench_press")))
         assertEquals(90 + 3 * 60 + 45, main)
     }
 

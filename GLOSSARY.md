@@ -260,3 +260,10 @@ _Avoid_: Build (that is any APK, debug ones included)
 **Update check**:
 The once-a-day read of the latest release when the app opens; a newer one shows the update banner on Today.
 _Avoid_: Sync, auto-update (Android always asks before installing)
+
+**Changeover**:
+The time between finishing one exercise and starting the next: moving to the station, setting the weight and the seat. Counted in a day's minutes, once per superset.
+_Avoid_: Transition, setup
+
+**Main lift**:
+Bench press and the squat, hinge (RDL) and row patterns. They get the full warm-up ramp, and the day's minutes count three warm-up sets for them where other exercises get one.
