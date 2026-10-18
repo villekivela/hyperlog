@@ -236,6 +236,8 @@ fun TodayScreen(
     val finished = sessions.orEmpty()
     // The calendar: done sessions by date, and the program's coming days put on dates.
     val done = remember(finished) { finished.groupBy { it.date() }.mapValues { (_, s) -> s.sortedBy { it.startedAt } } }
+    // The sessions of this program's days, which a planned day's minutes come from.
+    val programSessions = remember(finished, program?.id) { finished.filter { it.programId == program?.id } }
     val trainedToday = done[today].orEmpty().isNotEmpty()
     val planned = remember(program, weekdayPlan.days, trainedToday) { PlannedDates.of(program, weekdayPlan.days, trainedToday) }
     val thisWeek = weekOf(today)
@@ -392,9 +394,9 @@ fun TodayScreen(
                 LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
                     item {
                         if (isToday) BannerColumn(banners)
-                        if (isNext) HeroCard(plannedOn, date = selected.takeIf { !isToday }, onStart = { start(Kind.Day) })
+                        if (isNext) HeroCard(plannedOn, date = selected.takeIf { !isToday }, onStart = { start(Kind.Day) }, library = library, finished = programSessions)
                         // With training days the last date planned is the program's last day.
-                        else PlannedCard(plannedOn, selected, last = weekdayPlan.days.isNotEmpty() && selected == planned.keys.last())
+                        else PlannedCard(plannedOn, selected, last = weekdayPlan.days.isNotEmpty() && selected == planned.keys.last(), library = library, finished = programSessions)
                         Spacer(Modifier.height(16.dp))
                     }
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
