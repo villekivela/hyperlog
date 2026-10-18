@@ -572,7 +572,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        label (`1`, `5a`) centred on its row, and **Ad-hoc session** as a text button after them.
        Start session starts the program's next day at the picked gym. While a session runs, the
        next day on a later date reads as a later planned day, without Start.
-     - **Minutes** (the hero card and planned days), to the nearest 5, from the owner's decisions
+     - **Minutes** (the hero card and planned days), to the nearest 5, set
        on #64; the numbers live in `EstimateSeconds` (`ui/today/DayEstimate.kt`) to tune after real
        sessions.
        1. **Past sessions first.** With finished sessions of the same program day (the same day

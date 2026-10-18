@@ -34,7 +34,7 @@ class DayEstimateTest {
     fun theOwnersDayAInRampInWithNoHistoryTakesAnHour() {
         val a = day(1, 0)
         val swapped = a.copy(slots = a.slots.map { if (it.exercise == "2_grip_lat_pulldown") it.copy(exercise = "cable_lat_pullover") else it })
-        assertEquals(7, swapped.slots.map { it.group }.distinct().size + 1)
+        assertEquals(7, swapped.slots.size)
         assertEquals(14, swapped.slots.sumOf { it.sets.size })
         assertTrue(minutes(swapped) in 55..65)
     }
