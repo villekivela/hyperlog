@@ -566,12 +566,25 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **The next day to train**, on whatever date it falls, is the hero card in primaryContainer:
        the day's letter in the 9-sided cookie, `Week 7 · Intensify` (`Next · Mon 19 Oct · Week 7`
        when it isn't today, like a later planned day's, so the line fits) over the name, its numbers (exercises, sets, about how many
-       minutes: each set's rest and about 45 s of work, to the nearest 5) and **Start session**
+       minutes, `~N minutes`, see **Minutes** below) and **Start session**
        across the card. Then each slot's exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`,
        technique symbols after; a Change's swap reads `In place of …` over the name), the slot
        label (`1`, `5a`) centred on its row, and **Ad-hoc session** as a text button after them.
        Start session starts the program's next day at the picked gym. While a session runs, the
        next day on a later date reads as a later planned day, without Start.
+     - **Minutes** (the hero card and planned days), to the nearest 5, from the owner's decisions
+       on #64; the numbers live in `EstimateSeconds` (`ui/today/DayEstimate.kt`) to tune after real
+       sessions.
+       1. **Past sessions first.** With finished sessions of the same program day (the same day
+          in the active program), the estimate is the median duration (`finishedAt − startedAt`)
+          of the latest 3 (of 1 or 2, the median of those). Other days' sessions and running
+          sessions don't count.
+       2. **Otherwise the whole session is counted:** each work set about 45 s; warm-ups about
+          60 s each, and the card has no weight to ramp from, so 3 for a main lift (bench, squat
+          pattern, RDL, row) and 1 for any other exercise; a changeover of about 90 s per
+          exercise, once per superset; techniques on their set: about 30 s per drop, 45 s for
+          myo-reps, 15 s for lengthened partials; and rest as the session gives it (none between
+          superset partners, none before drops, none after the day's last set).
      - **A day with finished sessions** has a card for each on the card tone: `Done · Sat 17 Oct ·
        Kalliokoski`, the letter, the name, the numbers (exercises, sets, minutes taken) and **Open
        session**, which opens it in History (Back comes back to Today). Then its exercises with

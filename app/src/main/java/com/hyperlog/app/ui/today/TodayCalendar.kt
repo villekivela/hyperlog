@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
+import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.session.RirText
@@ -167,10 +168,6 @@ internal fun programWeekOf(monday: LocalDate, planned: Map<LocalDate, PlannedDay
     return days.firstNotNullOfOrNull { planned[it]?.position?.week }
         ?: days.firstNotNullOfOrNull { d -> done[d]?.firstNotNullOfOrNull { it.position?.week } }
 }
-
-/** About how long a day takes: each set's rest and about 45 s of work, to the nearest 5 minutes. */
-internal fun aboutMinutes(day: PlannedDay): Int =
-    Math.round(day.slots.sumOf { s -> s.sets.sumOf { it.rest + 45 } } / 60.0 / 5).toInt() * 5
 
 /**
  * The calendar's head: the month and year of the week shown, **Today** once you've moved off
@@ -381,8 +378,8 @@ private fun Stats(exercises: Int, sets: Int, minutes: Int, estimate: Boolean, co
 
 /** A planned day's exercises, sets and about how many minutes. */
 @Composable
-private fun PlannedStats(day: PlannedDay, color: Color) =
-    Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day), estimate = true, color = color)
+private fun PlannedStats(day: PlannedDay, color: Color, library: List<Exercise>, finished: List<PastSessionItem>) =
+    Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day, library, finished), estimate = true, color = color)
 
 /** The letter, the head over the day's title, side by side at the top of a day's card. */
 @Composable
@@ -438,7 +435,13 @@ internal const val DeloadTagTag = "today-deload"
  * session across the card.
  */
 @Composable
-internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
+internal fun HeroCard(
+    day: PlannedDay,
+    date: LocalDate?,
+    onStart: () -> Unit,
+    library: List<Exercise> = emptyList(),
+    finished: List<PastSessionItem> = emptyList(),
+) {
     val cs = MaterialTheme.colorScheme
     val week = stringResource(R.string.today_week_block, day.position.week, day.block.name)
     Column(
@@ -455,7 +458,7 @@ internal fun HeroCard(day: PlannedDay, date: LocalDate?, onStart: () -> Unit) {
             deload = day.deload,
         )
         Spacer(Modifier.height(20.dp))
-        PlannedStats(day, cs.onPrimaryContainer)
+        PlannedStats(day, cs.onPrimaryContainer, library, finished)
         Spacer(Modifier.height(20.dp))
         Button(
             onClick = onStart,
@@ -506,7 +509,13 @@ internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
  * its letter outlined, its name and numbers. No Start.
  */
 @Composable
-internal fun PlannedCard(day: PlannedDay, date: LocalDate, last: Boolean = false) {
+internal fun PlannedCard(
+    day: PlannedDay,
+    date: LocalDate,
+    last: Boolean = false,
+    library: List<Exercise> = emptyList(),
+    finished: List<PastSessionItem> = emptyList(),
+) {
     val cs = MaterialTheme.colorScheme
     DayCard {
         // The program's last day says so in Planned's place, so the head stays one line.
@@ -519,7 +528,7 @@ internal fun PlannedCard(day: PlannedDay, date: LocalDate, last: Boolean = false
             deload = day.deload,
         )
         Spacer(Modifier.height(20.dp))
-        PlannedStats(day, cs.onSurface)
+        PlannedStats(day, cs.onSurface, library, finished)
     }
 }
 
