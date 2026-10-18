@@ -16,6 +16,7 @@ import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
@@ -144,7 +145,8 @@ class TodayCalendarTest {
         show(today.plusDays(1))
         compose.onNode(cell(today.plusDays(1), ", planned")).assertDoesNotExist()
         // The words, or the pencil alone when the month needs the room (CalendarHeadTest).
-        compose.onNode(hasText("Set your training days").or(hasContentDescription("Set your training days"))).performClick()
+        // On a Sunday tomorrow is another week's Monday, a rest day that offers the same prompt: take the head's.
+        compose.onAllNodes(hasText("Set your training days").or(hasContentDescription("Set your training days"))).onFirst().performClick()
         compose.waitFor("Training days")
         compose.waitFor("Done")
     }
