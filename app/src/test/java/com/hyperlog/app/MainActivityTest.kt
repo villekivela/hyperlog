@@ -123,7 +123,7 @@ class MainActivityTest {
         compose.waitFor("Today")
         compose.openTab("Settings")
         compose.click("Exercise library")
-        compose.waitFor("Search 176 exercises")
+        compose.waitFor("Search 213 exercises")
         compose.onNode(hasTestTag(NavigationBarTag)).assertDoesNotExist()
         compose.onNodeWithContentDescription("Back").performClick()
         compose.await(navItem("Settings").and(isSelected()))

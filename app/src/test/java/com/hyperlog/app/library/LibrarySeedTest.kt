@@ -15,8 +15,8 @@ class LibrarySeedTest {
 
     @Test
     fun holdsTheLegacyLibraryWithDuplicatesMerged() {
-        // 189 legacy exercises, 16 of them merged into others, and 3 added since.
-        assertEquals(176, seed.exercises.size)
+        // 189 legacy exercises, 16 of them merged into others, 3 added since and 37 from Nippard's tier lists.
+        assertEquals(213, seed.exercises.size)
         assertEquals(16, seed.merged.size)
         assertEquals("db_incline_press", seed.merged["incline_db_press"])
         assertEquals("triceps_pressdown", seed.merged["tricep_pushdown"])
@@ -117,8 +117,68 @@ class LibrarySeedTest {
     @Test
     fun everyVideoIsAYouTubeLink() {
         val videos = seed.exercises.mapNotNull { it.video }
-        assertEquals(140, videos.size)
+        assertEquals(177, videos.size)
         videos.forEach { assertNotNull(it, TechniqueVideo.parse(it)) }
         assertEquals(653, TechniqueVideo.parse(byId.getValue("cable_lateral_raise").video!!)!!.startSeconds)
+    }
+
+    @Test
+    fun holdsNippardsTierListExercises() {
+        listOf(
+            // Chest, back, shoulders
+            "machine_chest_press", "seated_cable_flye", "cable_crossover", "1_arm_cable_press_around", "dip",
+            "deficit_push_up", "db_guillotine_press", "lat_pulldown_wide_grip", "neutral_grip_lat_pulldown",
+            "1_arm_cable_pulldown", "meadows_row", "wide_grip_seated_cable_row", "1_arm_cable_lat_pull_around",
+            "deficit_pendlay_row", "1_arm_db_kroc_row", "db_pullover", "cable_lateral_raise", "cable_y_raise",
+            "behind_the_back_cable_lateral_raise", "reverse_pec_deck", "reverse_cable_crossover",
+            "standing_machine_lateral_raise", "1_arm_lean_in_db_lateral_raise", "1_arm_side_lying_db_lateral_raise",
+            // Arms, legs
+            "bayesian_cable_curl", "db_preacher_curl", "machine_preacher_curl", "preacher_hammer_curl", "lying_db_curl",
+            "overhead_cable_triceps_extension", "skull_crusher", "1_arm_katana_cable_triceps_extension",
+            "1_arm_overhead_db_triceps_extension", "db_skull_crusher", "smith_machine_jm_press", "hack_squat",
+            "pendulum_squat", "db_bulgarian_split_squat", "db_walking_lunge", "machine_hip_abduction",
+            "ffe_smith_machine_lunge", "1_leg_db_hip_thrust", "1_leg_cable_glute_kickback",
+            // Seven "no one does", and the top 25
+            "incline_db_y_raise", "dead_hang", "dragon_flag", "seated_cable_deadlift", "machine_lat_pullover", "db_shrug",
+            "pullup",
+        ).forEach { assertNotNull("$it is in the library", byId[it]) }
+        assertEquals("Incline DB Y-Raise", byId.getValue("incline_db_y_raise").name)
+        // One-sided ones say so in the name, so their sets split into left and right.
+        listOf("1_arm_db_kroc_row", "1_leg_db_hip_thrust", "1_leg_cable_glute_kickback", "ffe_smith_machine_lunge")
+            .forEach { assertTrue(it, byId.getValue(it).unilateral) }
+    }
+
+    @Test
+    fun namesPutModifiersThenTheImplementThenTheMovement() {
+        // Named machine stations and named lifts keep their short names (the owner's call, 2026-10-21).
+        val shortNames = setOf(
+            "Pec Deck", "Reverse Pec Deck", "1-Arm Reverse Pec Deck", "Leg Press", "1-Leg Leg Press",
+            "Leg Press Calf Press", "Leg Extension", "Lying Leg Curl", "Seated Leg Curl", "Hack Squat",
+            "Pendulum Squat", "Seated Calf Raise", "Standing Calf Raise", "Donkey Calf Raise", "Glute-Ham Raise",
+            "T-Bar Row", "Chest-Supported T-Bar Row", "Lat Pulldown", "Wide-Grip Lat Pulldown",
+            "Close-Grip Lat Pulldown", "Neutral-Grip Lat Pulldown", "2-Grip Lat Pulldown", "Triceps Pressdown",
+            "Deadlift", "Deficit Deadlift", "Sumo Deadlift", "Rack Pull", "Front Squat", "High-Bar Back Squat",
+            "Low-Bar Back Squat", "Pause Squat", "Pin Squat", "Zercher Squat", "Pendlay Row", "Deficit Pendlay Row",
+            "Meadows Row", "Floor Press", "Push Press", "Spoto Press", "Larsen Press", "Z-Press", "JM Press",
+            "Goblet Squat", "Inverse Zottman Curl", "Modified Zottman Curl", "45° Hyperextension",
+        )
+        val implement = mapOf(
+            Equipment.Barbell to "Barbell", Equipment.Dumbbell to "DB", Equipment.Machine to "Machine",
+            Equipment.Cable to "Cable", Equipment.SmithMachine to "Smith Machine", Equipment.EzBar to "EZ-Bar",
+            Equipment.TrapBar to "Trap Bar", Equipment.SafetyBar to "Safety Bar", Equipment.Plate to "Plate",
+            Equipment.WeightedBodyweight to "Weighted",
+        )
+        val modifiers = listOf(
+            "1-Arm", "1-Leg", "Incline", "Decline", "Seated", "Standing", "Lying", "Close-Grip", "Wide-Grip",
+            "Neutral-Grip", "Chest-Supported", "Bent-Over", "Side-Lying", "Lean-In", "Lean-Away",
+        )
+        seed.exercises.filter { it.name !in shortNames }.forEach { e ->
+            val word = implement[e.equipment] ?: return@forEach
+            assertTrue("${e.name} names its implement, $word", word in e.name)
+            val after = e.name.substringAfter(word)
+            modifiers.forEach { assertTrue("${e.name}: $it goes before $word", it !in after) }
+        }
+        assertEquals("Incline DB Press", byId.getValue("db_incline_press").name)
+        assertEquals("Machine Hip Abduction", byId.getValue("machine_hip_abduction").name)
     }
 }

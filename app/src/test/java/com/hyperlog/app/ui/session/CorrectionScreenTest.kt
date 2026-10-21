@@ -12,12 +12,14 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
 import com.hyperlog.app.key
@@ -59,6 +61,8 @@ class CorrectionScreenTest {
         compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
         compose.waitFor("Add exercise")
+        compose.onNode(hasSetTextAction()).performTextInput("barbell bench press")
+        compose.waitFor("Barbell Bench Press")
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.waitForDescription("Next")
         tap("2", "0", "5", "Next", "8", "RIR 2", "Log set")

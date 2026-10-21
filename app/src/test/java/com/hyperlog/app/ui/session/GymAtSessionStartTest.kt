@@ -83,7 +83,7 @@ class GymAtSessionStartTest {
         gymRow("Central").assertIsSelected()
         compose.onNodeWithText("Start").performClick()
         compose.waitFor("Add exercise")
-        compose.onNodeWithText("Barbell Bench Press").performClick()
+        addExercise("Barbell Bench Press")
         waitForPad()
 
         compose.onNodeWithText("Last exercise").performClick()

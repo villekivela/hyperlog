@@ -77,7 +77,7 @@ class MigrationTest {
         assertEquals(8, db.sessions().sets(2).single().fullReps)
 
         val all = library.exercises.first().associateBy { it.id }
-        assertEquals(176, all.size)
+        assertEquals(213, all.size)
         assertTrue("pull_up" !in all)
         val pullUp = all.getValue("pullup_wide_grip")
         assertEquals("Wide-Grip Pull-Up", pullUp.name)

@@ -44,7 +44,7 @@ segments; **Reject** and **Accept** sit on a surfaceContainerHighest strip round
  Week 2 · Day B — Hinge, close-grip bench…      ← day head (first of each day kind)
  1   B̶a̶r̶b̶e̶l̶l̶ ̶R̶D̶L̶                                ← removed, struck through
      Removed
- 2   Close-Grip Bench Press
+ 2   Close-Grip Barbell Bench Press
      2̶ ̶×̶ ̶6̶–̶8̶ ̶[̶2̶]̶  →  1 × 6–8 [2]              ← sets before → after
  3   In place of Chest-Supported Machine Row    ← labelMedium, as the session's swapped line
      Chest-Supported DB Row
