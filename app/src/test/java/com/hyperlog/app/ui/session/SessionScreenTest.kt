@@ -6,12 +6,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.hyperlog.app.FreshDatabaseRule
@@ -47,6 +49,8 @@ class SessionScreenTest {
         compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
         compose.waitFor("Add exercise")
+        compose.onNode(hasSetTextAction()).performTextInput("barbell bench press")
+        compose.waitFor("Barbell Bench Press")
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.await(hasContentDescription("Log set").or(hasContentDescription("Next")))
     }

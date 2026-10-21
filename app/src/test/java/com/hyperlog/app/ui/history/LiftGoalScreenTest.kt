@@ -90,6 +90,8 @@ class LiftGoalScreenTest {
         compose.waitFor("Start session")
         compose.onNodeWithText("Start session").performClick()
         compose.waitFor("Add exercise")
+        compose.onNode(hasSetTextAction()).performTextInput("barbell bench press")
+        compose.waitFor("Barbell Bench Press")
         compose.onNodeWithText("Barbell Bench Press").performClick()
         compose.waitForDescription("Back to the set")
 

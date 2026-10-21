@@ -19,6 +19,38 @@
  },
  "exercises": [
   {
+   "id": "1_arm_cable_lat_pull_around",
+   "name": "1-Arm Cable Lat Pull-Around",
+   "equipment": "cable",
+   "pattern": "vertical_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats"
+   ],
+   "secondary": [
+    "Biceps",
+    "Rear Delts",
+    "Teres Major"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=278",
+   "note": "Kneel side-on to a high cable, reach across your body and pull your elbow down to your hip."
+  },
+  {
+   "id": "1_arm_cable_press_around",
+   "name": "1-Arm Cable Press-Around",
+   "equipment": "cable",
+   "pattern": "chest_fly",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=733",
+   "note": "Back to the cable, wrap the handle around and across your body past the midline."
+  },
+  {
    "id": "1_arm_cable_pulldown",
    "name": "1-Arm Cable Pulldown",
    "equipment": "cable",
@@ -36,8 +68,40 @@
    "note": "Control the negative and feel your lats pulling apart. Full ROM!"
   },
   {
+   "id": "1_arm_db_kroc_row",
+   "name": "1-Arm DB Kroc Row",
+   "equipment": "dumbbell",
+   "pattern": "horizontal_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats"
+   ],
+   "secondary": [
+    "Traps",
+    "Rhomboids",
+    "Biceps",
+    "Rear Delts"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=477",
+   "note": "Heavy and for high reps, with some body English. Keep your lower back neutral."
+  },
+  {
+   "id": "1_arm_katana_cable_triceps_extension",
+   "name": "1-Arm Katana Cable Triceps Extension",
+   "equipment": "cable",
+   "pattern": "elbow_extension",
+   "grip": "low",
+   "muscles": [
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "secondary": [],
+   "video": "https://youtu.be/OpRMRhr0Ycc?t=295",
+   "note": "Cable low and to the side. Pull the handle up across your body and extend it overhead, stretching the long head."
+  },
+  {
    "id": "1_arm_lat_pull_in",
-   "name": "1-Arm Lat Pull-In",
+   "name": "1-Arm Cable Lat Pull-In",
    "equipment": "cable",
    "pattern": "vertical_pull",
    "grip": "high",
@@ -46,6 +110,50 @@
    ],
    "secondary": [],
    "video": "https://youtu.be/f2JDJV0AnyY?t=36"
+  },
+  {
+   "id": "1_arm_lean_away_db_lateral_raise",
+   "name": "1-Arm Lean-Away DB Lateral Raise",
+   "equipment": "dumbbell",
+   "pattern": "lateral_raise",
+   "grip": "low",
+   "muscles": [
+    "Side Delts"
+   ],
+   "secondary": [
+    "Traps"
+   ],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=178",
+   "note": "Hold a post and lean away from it so the dumbbell starts loaded across your body."
+  },
+  {
+   "id": "1_arm_lean_in_db_lateral_raise",
+   "name": "1-Arm Lean-In DB Lateral Raise",
+   "equipment": "dumbbell",
+   "pattern": "lateral_raise",
+   "grip": "low",
+   "muscles": [
+    "Side Delts"
+   ],
+   "secondary": [
+    "Traps"
+   ],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=163",
+   "note": "Hold a post and lean towards it so the dumbbell stays loaded at the top."
+  },
+  {
+   "id": "1_arm_overhead_db_triceps_extension",
+   "name": "1-Arm Overhead DB Triceps Extension",
+   "equipment": "dumbbell",
+   "pattern": "elbow_extension",
+   "grip": "low",
+   "muscles": [
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "secondary": [],
+   "video": "https://youtu.be/OpRMRhr0Ycc?t=390",
+   "note": "Lower the dumbbell behind your head until the triceps stretch, keeping your elbow pointed up."
   },
   {
    "id": "1_arm_reverse_pec_deck",
@@ -62,6 +170,49 @@
    ],
    "video": "https://youtu.be/WkI6IHmYORY",
    "note": "Sweep the weight out to create the largest semi-circle possible with your arm."
+  },
+  {
+   "id": "1_arm_side_lying_db_lateral_raise",
+   "name": "1-Arm Side-Lying DB Lateral Raise",
+   "equipment": "dumbbell",
+   "pattern": "lateral_raise",
+   "grip": "low",
+   "muscles": [
+    "Side Delts"
+   ],
+   "secondary": [],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=382",
+   "note": "Lie on your side on an incline bench and raise the dumbbell from in front of your hips."
+  },
+  {
+   "id": "1_leg_cable_glute_kickback",
+   "name": "1-Leg Cable Glute Kickback",
+   "equipment": "cable",
+   "pattern": "hip_thrust",
+   "grip": "none",
+   "muscles": [
+    "Glutes"
+   ],
+   "secondary": [
+    "Hamstrings"
+   ],
+   "video": "https://youtu.be/3ryh7PNhz3E?t=443",
+   "note": "A cuff on your ankle. Lean forward a little and kick back and slightly out, without arching your lower back."
+  },
+  {
+   "id": "1_leg_db_hip_thrust",
+   "name": "1-Leg DB Hip Thrust",
+   "equipment": "dumbbell",
+   "pattern": "hip_thrust",
+   "grip": "low",
+   "muscles": [
+    "Glutes"
+   ],
+   "secondary": [
+    "Hamstrings"
+   ],
+   "video": "https://youtu.be/3ryh7PNhz3E?t=261",
+   "note": "Upper back on a bench and the dumbbell on your working hip. Squeeze the glute hard at the top."
   },
   {
    "id": "2_grip_lat_pulldown",
@@ -209,6 +360,21 @@
    "note": "Slow, controlled reps!"
   },
   {
+   "id": "barbell_glute_bridge",
+   "name": "Barbell Glute Bridge",
+   "equipment": "barbell",
+   "pattern": "hip_thrust",
+   "grip": "none",
+   "muscles": [
+    "Glutes"
+   ],
+   "secondary": [
+    "Hamstrings"
+   ],
+   "video": "https://youtu.be/3ryh7PNhz3E?t=283",
+   "note": "Lie on the floor with the bar over your hips and drive them up. Squeeze your glutes at the top."
+  },
+  {
    "id": "barbell_hip_thrust",
    "name": "Barbell Hip Thrust",
    "equipment": "barbell",
@@ -226,7 +392,7 @@
   },
   {
    "id": "barbell_incline_press",
-   "name": "Barbell Incline Press",
+   "name": "Incline Barbell Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
    "grip": "high",
@@ -277,6 +443,25 @@
    "note": "Stick your glutes straight back as you lower the bar straight down, centered over the middle of your foot. Get a nice deep stretch at the bottom, but keep your spine neutral (don't round forward)."
   },
   {
+   "id": "barbell_row",
+   "name": "Barbell Row",
+   "equipment": "barbell",
+   "pattern": "horizontal_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats",
+    "Traps",
+    "Rhomboids"
+   ],
+   "secondary": [
+    "Biceps",
+    "Rear Delts",
+    "Teres Major"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=299",
+   "note": "Hinge to about 45° and pull the bar to your lower ribs without standing up into it."
+  },
+  {
    "id": "barbell_shrug",
    "name": "Barbell Shrug",
    "equipment": "barbell",
@@ -311,6 +496,23 @@
    "note": "Get as deep as you can without excessive back rounding."
   },
   {
+   "id": "barbell_upright_row",
+   "name": "Barbell Upright Row",
+   "equipment": "barbell",
+   "pattern": "lateral_raise",
+   "grip": "high",
+   "muscles": [
+    "Side Delts",
+    "Traps"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Biceps"
+   ],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=595",
+   "note": "Grip a little wider than your shoulders and lead with your elbows. Stop at chest height."
+  },
+  {
    "id": "bayesian_cable_curl",
    "name": "Bayesian Cable Curl",
    "equipment": "cable",
@@ -324,6 +526,19 @@
     "Forearm Extensors"
    ],
    "video": "https://youtu.be/acC5hLyjEDI"
+  },
+  {
+   "id": "behind_the_back_cable_lateral_raise",
+   "name": "Behind-the-Back Cable Lateral Raise",
+   "equipment": "cable",
+   "pattern": "lateral_raise",
+   "grip": "none",
+   "muscles": [
+    "Side Delts"
+   ],
+   "secondary": [],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=546",
+   "note": "A cuff on your wrist and the cable running behind your back. Raise your arm out, not up."
   },
   {
    "id": "bent_knee_dragon_flag",
@@ -374,6 +589,21 @@
    ],
    "video": "https://youtu.be/fOHouR0t9Cw",
    "note": "Neutral handles at chest height, standing in a split stance or on a bench. Press forward until the hands nearly meet, shoulder blades kept back."
+  },
+  {
+   "id": "cable_crossover",
+   "name": "Cable Crossover",
+   "equipment": "cable",
+   "pattern": "chest_fly",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=614",
+   "note": "Pulleys high, step forward and bring the handles together in front of your hips."
   },
   {
    "id": "cable_crunch",
@@ -706,7 +936,7 @@
   },
   {
    "id": "close_grip_bench_press",
-   "name": "Close-Grip Bench Press",
+   "name": "Close-Grip Barbell Bench Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
    "grip": "high",
@@ -857,6 +1087,23 @@
    "note": "Start with your weaker leg. Squat deep."
   },
   {
+   "id": "db_curtsy_lunge",
+   "name": "DB Curtsy Lunge",
+   "equipment": "dumbbell",
+   "pattern": "lunge",
+   "grip": "high",
+   "twoDumbbells": true,
+   "muscles": [
+    "Glutes"
+   ],
+   "secondary": [
+    "Quads",
+    "Adductors"
+   ],
+   "video": "https://youtu.be/3ryh7PNhz3E?t=630",
+   "note": "Step back and across behind your front leg, and sink into the front hip."
+  },
+  {
    "id": "db_flye",
    "name": "DB Flye",
    "equipment": "dumbbell",
@@ -891,6 +1138,24 @@
    "note": "Arc the dumbbell behind your head, constant tension on the triceps."
   },
   {
+   "id": "db_guillotine_press",
+   "name": "DB Guillotine Press",
+   "equipment": "dumbbell",
+   "pattern": "horizontal_push",
+   "grip": "high",
+   "twoDumbbells": true,
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=529",
+   "note": "Flare your elbows and lower the dumbbells towards your upper chest for a deep pec stretch."
+  },
+  {
    "id": "db_hammer_curl",
    "name": "DB Hammer Curl",
    "equipment": "dumbbell",
@@ -923,7 +1188,7 @@
   },
   {
    "id": "db_incline_press",
-   "name": "DB Incline Press",
+   "name": "Incline DB Press",
    "equipment": "dumbbell",
    "pattern": "horizontal_push",
    "grip": "high",
@@ -990,6 +1255,22 @@
    "note": "Keep your triceps firmly pinned against the pad as you curl. Smooth controlled reps."
   },
   {
+   "id": "db_pullover",
+   "name": "DB Pullover",
+   "equipment": "dumbbell",
+   "pattern": "vertical_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats"
+   ],
+   "secondary": [
+    "Teres Major",
+    "Chest"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=674",
+   "note": "Lower the dumbbell behind your head until you feel your lats stretch, then pull it back over your chest."
+  },
+  {
    "id": "db_romanian_deadlift",
    "name": "DB Romanian Deadlift",
    "equipment": "dumbbell",
@@ -1007,6 +1288,38 @@
    ],
    "video": "https://youtu.be/V5u2AP9wBwE",
    "note": "Maintain a neutral lower back, set your hips back, don't allow your spine to round."
+  },
+  {
+   "id": "db_shrug",
+   "name": "DB Shrug",
+   "equipment": "dumbbell",
+   "pattern": "shrug",
+   "grip": "high",
+   "twoDumbbells": true,
+   "muscles": [
+    "Traps"
+   ],
+   "secondary": [
+    "Forearm Flexors",
+    "Forearm Extensors"
+   ],
+   "video": "https://youtu.be/S6rqpxVGKZ4?t=74",
+   "note": "Shrug straight up towards your ears and pause at the top. Use straps if your grip goes first."
+  },
+  {
+   "id": "db_skull_crusher",
+   "name": "DB Skull Crusher",
+   "equipment": "dumbbell",
+   "pattern": "elbow_extension",
+   "grip": "low",
+   "twoDumbbells": true,
+   "muscles": [
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "secondary": [],
+   "video": "https://youtu.be/OpRMRhr0Ycc?t=453",
+   "note": "Lower the dumbbells beside your head with your elbows tucked."
   },
   {
    "id": "db_step_up",
@@ -1123,7 +1436,7 @@
   },
   {
    "id": "decline_bench_press",
-   "name": "Decline Bench Press",
+   "name": "Decline Barbell Bench Press",
    "equipment": "barbell",
    "pattern": "horizontal_push",
    "grip": "high",
@@ -1135,6 +1448,24 @@
     "Triceps Lateral Head",
     "Front Delts"
    ]
+  },
+  {
+   "id": "decline_db_press",
+   "name": "Decline DB Press",
+   "equipment": "dumbbell",
+   "pattern": "horizontal_push",
+   "grip": "high",
+   "twoDumbbells": true,
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=265",
+   "note": "Lower the dumbbells to your lower chest and press them back up over it."
   },
   {
    "id": "deficit_deadlift",
@@ -1153,6 +1484,59 @@
     "Upper Abs",
     "Lower Abs"
    ]
+  },
+  {
+   "id": "deficit_pendlay_row",
+   "name": "Deficit Pendlay Row",
+   "equipment": "barbell",
+   "pattern": "horizontal_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats",
+    "Traps",
+    "Rhomboids"
+   ],
+   "secondary": [
+    "Biceps",
+    "Rear Delts",
+    "Teres Major"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=378",
+   "note": "Stand on a plate so the bar starts lower. Reset it on the floor every rep."
+  },
+  {
+   "id": "deficit_push_up",
+   "name": "Deficit Push-Up",
+   "equipment": "bodyweight",
+   "pattern": "horizontal_push",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=405",
+   "note": "Hands on plates or handles so your chest sinks below your hands at the bottom."
+  },
+  {
+   "id": "dip",
+   "name": "Dip",
+   "equipment": "bodyweight",
+   "pattern": "vertical_push",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=308",
+   "note": "Lean your torso forward and sink until your shoulders are below your elbows."
   },
   {
    "id": "donkey_calf_raise",
@@ -1231,6 +1615,23 @@
    ],
    "video": "https://youtu.be/zX0KvQCLbac",
    "note": "Keep your triceps firmly pinned against the pad as you curl. Smooth controlled reps."
+  },
+  {
+   "id": "ffe_smith_machine_lunge",
+   "name": "Front-Foot-Elevated Smith Machine Lunge",
+   "equipment": "smith_machine",
+   "pattern": "lunge",
+   "grip": "low",
+   "muscles": [
+    "Glutes",
+    "Quads"
+   ],
+   "secondary": [
+    "Hamstrings",
+    "Adductors"
+   ],
+   "video": "https://youtu.be/3ryh7PNhz3E?t=623",
+   "note": "Front foot on a low step. Sink until your back knee nearly touches the floor."
   },
   {
    "id": "floor_press",
@@ -1481,6 +1882,22 @@
    "note": "Hammer curl on concentric, supinated curl (palms up) on the eccentric."
   },
   {
+   "id": "jm_press",
+   "name": "JM Press",
+   "equipment": "barbell",
+   "pattern": "elbow_extension",
+   "grip": "low",
+   "muscles": [
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "secondary": [
+    "Chest"
+   ],
+   "video": "https://youtu.be/OpRMRhr0Ycc?t=478",
+   "note": "Lower the bar towards your chin, letting your elbows travel forward, then press it back up."
+  },
+  {
    "id": "kelso_shrug",
    "name": "Machine Kelso Shrug",
    "equipment": "machine",
@@ -1623,6 +2040,23 @@
    "note": "One arm at a time from a low pulley. Press up and across to about eye level, finishing in front of the opposite shoulder."
   },
   {
+   "id": "lying_db_curl",
+   "name": "Lying DB Curl",
+   "equipment": "dumbbell",
+   "pattern": "elbow_flexion",
+   "grip": "high",
+   "twoDumbbells": true,
+   "muscles": [
+    "Biceps"
+   ],
+   "secondary": [
+    "Brachialis",
+    "Forearm Flexors"
+   ],
+   "video": "https://youtu.be/GNO4OtYoCYk?t=334",
+   "note": "Lie face up on a high bench and let your arms hang below it for a deep biceps stretch."
+  },
+  {
    "id": "lying_leg_curl",
    "name": "Lying Leg Curl",
    "equipment": "machine",
@@ -1670,7 +2104,7 @@
   },
   {
    "id": "machine_adduction",
-   "name": "Hip Adduction Machine",
+   "name": "Machine Hip Adduction",
    "equipment": "machine",
    "pattern": "hip_adduction",
    "grip": "none",
@@ -1714,7 +2148,7 @@
   },
   {
    "id": "machine_hip_abduction",
-   "name": "Hip Abduction Machine",
+   "name": "Machine Hip Abduction",
    "equipment": "machine",
    "pattern": "hip_abduction",
    "grip": "none",
@@ -1743,8 +2177,23 @@
    "note": "Squeeze your glutes hard at the top and control the weight on the way down."
   },
   {
+   "id": "machine_lat_pullover",
+   "name": "Machine Lat Pullover",
+   "equipment": "machine",
+   "pattern": "vertical_pull",
+   "grip": "none",
+   "muscles": [
+    "Lats"
+   ],
+   "secondary": [
+    "Teres Major"
+   ],
+   "video": "https://youtu.be/S6rqpxVGKZ4?t=38",
+   "note": "Let the pads take your arms up for a full lat stretch, then drive your elbows down to your sides."
+  },
+  {
    "id": "machine_lateral_raise",
-   "name": "Machine Lateral Raise",
+   "name": "Seated Machine Lateral Raise",
    "equipment": "machine",
    "pattern": "lateral_raise",
    "grip": "none",
@@ -1893,6 +2342,23 @@
    "note": "Hammer curl on the way up and supinated curl (palms up) on the way down."
   },
   {
+   "id": "neutral_grip_lat_pulldown",
+   "name": "Neutral-Grip Lat Pulldown",
+   "equipment": "cable",
+   "pattern": "vertical_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats"
+   ],
+   "secondary": [
+    "Biceps",
+    "Rear Delts",
+    "Teres Major"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=239",
+   "note": "Close neutral handle. Drive your elbows down to your sides."
+  },
+  {
    "id": "neutral_grip_pullup",
    "name": "Neutral-Grip Pull-Up",
    "equipment": "bodyweight",
@@ -2011,6 +2477,22 @@
    "note": "Initiate the movement by squeezing your shoulder blades together, pull to your lower chest, avoid using momentum."
   },
   {
+   "id": "pendulum_squat",
+   "name": "Pendulum Squat",
+   "equipment": "machine",
+   "pattern": "squat",
+   "grip": "none",
+   "muscles": [
+    "Quads"
+   ],
+   "secondary": [
+    "Glutes",
+    "Adductors"
+   ],
+   "video": "https://youtu.be/kIXcoivzGf8?t=307",
+   "note": "Sink as deep as the machine allows and keep your heels down."
+  },
+  {
    "id": "pin_squat_anderson",
    "name": "Pin Squat",
    "equipment": "barbell",
@@ -2081,6 +2563,23 @@
    "video": "https://youtu.be/sInGFVj-bJA"
   },
   {
+   "id": "pullup",
+   "name": "Pull-Up",
+   "equipment": "bodyweight",
+   "pattern": "vertical_pull",
+   "grip": "high",
+   "muscles": [
+    "Lats"
+   ],
+   "secondary": [
+    "Biceps",
+    "Rear Delts",
+    "Teres Major"
+   ],
+   "video": "https://youtu.be/S6rqpxVGKZ4?t=1172",
+   "note": "Overhand grip a little wider than your shoulders. Pull your elbows down and in."
+  },
+  {
    "id": "pullup_wide_grip",
    "name": "Wide-Grip Pull-Up",
    "equipment": "bodyweight",
@@ -2111,6 +2610,23 @@
     "Triceps Long Head",
     "Quads"
    ]
+  },
+  {
+   "id": "push_up",
+   "name": "Push-Up",
+   "equipment": "bodyweight",
+   "pattern": "horizontal_push",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts",
+    "Triceps Long Head",
+    "Triceps Lateral Head"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=352",
+   "note": "Hands a little wider than your shoulders, body in a straight line, chest to the floor."
   },
   {
    "id": "rack_pull_below_knee",
@@ -2174,6 +2690,22 @@
    "video": "https://youtu.be/aHS9tKzJXik"
   },
   {
+   "id": "reverse_pec_deck",
+   "name": "Reverse Pec Deck",
+   "equipment": "machine",
+   "pattern": "rear_delt_fly",
+   "grip": "low",
+   "muscles": [
+    "Rear Delts"
+   ],
+   "secondary": [
+    "Traps",
+    "Rhomboids"
+   ],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=626",
+   "note": "Sweep the handles out wide in an arc. Think about pushing them away, not squeezing your shoulder blades."
+  },
+  {
    "id": "roman_chair_crunch",
    "name": "Roman Chair Crunch",
    "equipment": "bodyweight",
@@ -2219,6 +2751,21 @@
     "Teres Major"
    ],
    "video": "https://youtu.be/FCe6PIQbB-s"
+  },
+  {
+   "id": "seated_cable_flye",
+   "name": "Seated Cable Flye",
+   "equipment": "cable",
+   "pattern": "chest_fly",
+   "grip": "low",
+   "muscles": [
+    "Chest"
+   ],
+   "secondary": [
+    "Front Delts"
+   ],
+   "video": "https://youtu.be/fGm-ef-4PVk?t=649",
+   "note": "Back on the pad, sweep the handles together in front of your chest. Let them pull your arms back for a deep stretch."
   },
   {
    "id": "seated_cable_kelso_shrug",
@@ -2287,7 +2834,7 @@
   },
   {
    "id": "seated_dip_machine",
-   "name": "Seated Dip Machine",
+   "name": "Seated Machine Dip",
    "equipment": "machine",
    "pattern": "vertical_push",
    "grip": "low",
@@ -2413,7 +2960,7 @@
   },
   {
    "id": "smith_machine_incline_press",
-   "name": "Smith Machine Incline Press",
+   "name": "Incline Smith Machine Press",
    "equipment": "smith_machine",
    "pattern": "horizontal_push",
    "grip": "low",
@@ -2480,7 +3027,7 @@
   },
   {
    "id": "smith_machine_seated_press",
-   "name": "Smith Machine Seated Press",
+   "name": "Seated Smith Machine Press",
    "equipment": "smith_machine",
    "pattern": "vertical_push",
    "grip": "low",
@@ -2604,6 +3151,21 @@
    "note": "Start with your elbows in front of you and palms facing in. Rotate the dumbbells so that your palms face forward as you press."
   },
   {
+   "id": "standing_machine_lateral_raise",
+   "name": "Standing Machine Lateral Raise",
+   "equipment": "machine",
+   "pattern": "lateral_raise",
+   "grip": "none",
+   "muscles": [
+    "Side Delts"
+   ],
+   "secondary": [
+    "Traps"
+   ],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=426",
+   "note": "Raise your arms out, not up. Let the machine take them across your body for the stretch."
+  },
+  {
    "id": "standing_plate_abduction",
    "name": "Standing Plate Hip Abduction",
    "equipment": "plate",
@@ -2670,6 +3232,23 @@
     "Forearm Flexors"
    ],
    "note": "Reset and brace every rep and lower under control."
+  },
+  {
+   "id": "super_rom_db_lateral_raise",
+   "name": "Super-ROM DB Lateral Raise",
+   "equipment": "dumbbell",
+   "pattern": "lateral_raise",
+   "grip": "low",
+   "twoDumbbells": true,
+   "muscles": [
+    "Side Delts"
+   ],
+   "secondary": [
+    "Traps",
+    "Front Delts"
+   ],
+   "video": "https://youtu.be/SgyUoY0IZ7A?t=193",
+   "note": "Raise the dumbbells out to the side and keep going until they meet overhead."
   },
   {
    "id": "t_bar_row",
@@ -2752,7 +3331,7 @@
   },
   {
    "id": "weighted_crunch",
-   "name": "Weighted Crunch",
+   "name": "Plate Crunch",
    "equipment": "plate",
    "pattern": "core_flexion",
    "grip": "low",
@@ -2796,6 +3375,24 @@
    ],
    "video": "https://youtu.be/Hdc7Mw6BIEE?t=99",
    "note": "Think about pulling your elbows \"down\" and \"in\"."
+  },
+  {
+   "id": "wide_grip_seated_cable_row",
+   "name": "Wide-Grip Seated Cable Row",
+   "equipment": "cable",
+   "pattern": "horizontal_pull",
+   "grip": "high",
+   "muscles": [
+    "Rhomboids",
+    "Traps",
+    "Rear Delts"
+   ],
+   "secondary": [
+    "Lats",
+    "Biceps"
+   ],
+   "video": "https://youtu.be/jLvqKgW-_G8?t=577",
+   "note": "Wide overhand bar. Pull your elbows out and back and squeeze your shoulder blades together."
   },
   {
    "id": "z_press",

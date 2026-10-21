@@ -1043,7 +1043,16 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   add, edit (name, equipment type, two dumbbells, movement pattern, grip demand, primary and
   secondary muscles, video link, note) and hide. Design: `docs/design/exercise-library.md`.
   - **Names carry the implement** ("DB Bench Press", "Smith Machine Squat"), so a name alone tells
-    exercises apart wherever it shows.
+    exercises apart wherever it shows. A name is modifiers, then the implement, then the movement:
+    "1-Arm Lean-In DB Lateral Raise", "Incline Smith Machine Press", "Seated Machine Dip". The
+    implement words are Barbell, DB, Machine, Cable, Smith Machine, EZ-Bar, Trap Bar, Safety Bar,
+    Plate and Weighted (bodyweight has none).
+    - **Short names** (the owner's call, 2026-10-21): a machine station named for itself ("Pec Deck",
+      "Leg Press", "Lat Pulldown", "Triceps Pressdown") and a named lift ("Deadlift", "Front Squat",
+      "Pendlay Row", "JM Press") leave the implement out. `LibrarySeedTest` lists them, so a new short
+      name is a decision, not a slip.
+    - **One side at a time** starts with `1-Arm` or `1-Leg` (lunges, split squats and step-ups say
+      it already), since that is how the app knows to split a set into left and right.
   - **Grip demand**: high when the hands hold the load (free-weight presses, curls, rows, pulls and
     hinges with a bar or dumbbells), low for handles that guide it (Smith, machines, cables), none
     when the hands do nothing. Free-weight presses are high because the hands hold and balance the
@@ -1463,6 +1472,16 @@ shared links), with a `merged` table of legacy id → kept id for anything that 
 id (the starting-weights import). Three cable exercises were added after the legacy library (v0.1.1):
 `cable_chest_press`, `low_to_high_cable_press` and `cable_rope_hammer_curl`. Every launch syncs the
 seed, so an update brings new exercises to an install already in use.
+
+Jeff Nippard's tier lists (chest, back, shoulders, biceps, triceps, quads, glutes; 2024–2025), his
+"7 Amazing Exercises No One Does" and "The Only 25 Exercises You Ever Need" are covered for every
+exercise ranked S, A or B: 37 were added, each with a video link to its spot in his ranking video,
+bringing the library to 213 exercises, 177 with videos. Left out: variations of one exercise the
+library already holds (rope or bar pressdown, face-away or facing Bayesian curl, barbell or EZ-bar
+skull crusher, flat-bench curl, diamond push-up), techniques that aren't exercises (21s, cheat and
+strict curls) and banded push-ups, since a band isn't equipment the app can load. Twelve names were
+changed to the naming rule, ids kept: `db_incline_press` is "Incline DB Press", `weighted_crunch`
+"Plate Crunch", `machine_hip_abduction` "Machine Hip Abduction".
 
 - **Equipment**: barbell, dumbbell, machine, cable, smith_machine, ez_bar, trap_bar, safety_bar,
   plate (a held plate), bodyweight, weighted_bodyweight (bodyweight plus a belt or held load).

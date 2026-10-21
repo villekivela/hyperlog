@@ -43,9 +43,9 @@ class LibraryScreenTest {
     private fun openLibrary() {
         compose.waitFor("Today")
         compose.openTab("Settings")
-        compose.waitFor("176 exercises")
+        compose.waitFor("213 exercises")
         compose.click("Exercise library")
-        compose.waitFor("Search 176 exercises")
+        compose.waitFor("Search 213 exercises")
     }
 
     private fun search(text: String) {
