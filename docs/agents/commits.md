@@ -1,0 +1,79 @@
+# Branches and commit messages
+
+## Branch names
+
+Work on a branch named for the change and the ticket it answers:
+
+```text
+<type>/<issue>-<summary>
+```
+
+Use the same types as the commit subject. Keep the summary imperative, lowercase, and hyphenated,
+and drop the issue number only when there is no ticket. Examples: `fix/108-follow-the-editor-theme`,
+`perf/70-step-the-sidebar-seam`.
+
+## Commit messages
+
+Use Conventional Commits for every new commit:
+
+```text
+<type>[optional scope][!]: <summary> [optional issue]
+```
+
+Allowed types are `feat`, `fix`, `test`, `refactor`, `docs`, `chore`, `build`, `ci`, `perf`, and
+`revert`.
+
+Keep the summary imperative and lowercase. Do not end it with a period. Keep the whole subject at 72
+characters or fewer. Put an issue reference at the end as `(#123)` when it helps connect the commit
+to a ticket.
+
+Examples:
+
+```text
+feat(tabs): add keyboard link hints (#6)
+fix: finish schema query before legacy migration
+test: cover space restoration after restart
+```
+
+CI checks every commit after `2732a75`. Earlier commits predate the convention and are left as they are.
+
+Merge commits are not checked. GitHub generates their subject, and the convention governs the
+commits an author writes.
+
+`commit-messages` is a required check, and it reads every commit on a branch, so one bad subject
+blocks the pull request even though the squash would discard it. Check each subject before
+committing, not after pushing:
+
+```sh
+scripts/check_commit_messages.sh --message "fix(ui): keep the divider off the page"
+```
+
+A pushed branch only gains commits: take `main` by merging `origin/main` into it, never by rebasing,
+so nothing needs a force push. A subject that is already pushed and fails the check is not exempted
+and not rewritten. Start a new branch from `origin/main`, `git merge --squash` the old one, commit
+once with a valid subject, and open a new pull request that names and closes the old one.
+
+## Merging
+
+Squash every pull request. One pull request is one commit on `main`, whatever it took to get there.
+
+The commits on a branch are a record of the work, including the parts that were wrong on the way.
+`main` is read by someone asking what changed, so a feature that took six attempts would arrive as
+six entries and a reader would have to work out that five of them repair the first. Squashing puts that
+history where it belongs, on the branch and in the pull request, and leaves `main` with the change
+itself.
+
+GitHub fills the squash commit's subject from the pull request title and appends ` (#123)` to it, so
+a title has 64 characters rather than the subject's 72, and it has to follow the convention above.
+The `PR title` workflow checks the title on every pull request, including after an edit, because
+CI's `commit-messages` job checks the branch's commits and a squash discards them. A title that is
+too long or written as a sentence fails there while it can still be edited, rather than on `main`,
+where it can only be exempted. Check one before opening a pull request:
+
+```sh
+scripts/check_commit_messages.sh --pr-title "fix(ui): keep the divider off the page"
+```
+
+The squash commit's body is the messages of the commits being squashed, so the prose written on the
+branch is the prose that lands. A description is free to be a review aid, with headings and
+checklists, because it is not what `main` keeps.
