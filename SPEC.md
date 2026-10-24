@@ -1193,7 +1193,7 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
     settings ("Check for updates", the dismissed update), and the Claude cost by month. Every table
     goes in row for row except the last update check, a cache of GitHub's answer, and the Claude
-    key, which never leaves the phone (it is in Keystore, not the database) (a test fails on a table that is neither in
+    key, which never leaves the phone (sealed with Keystore in `no_backup`, not the database) (a test fails on a table that is neither in
     the backup nor excluded with a reason).
   - **Settings → Export backup** saves one JSON file through the system's save dialog
     (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`, and keeps saying
@@ -1396,15 +1396,25 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
 
 ### With a Claude key
 
-- **Settings → Claude key**: a field that takes an Anthropic API key, checked once with a free
-  call (the models list) and saved encrypted with Android Keystore. It reads `Key ending …a1b2`
-  with **Remove**. The key is never shown again, never in a backup, a log or Auto Backup; a restore
-  keeps the phone's key, or none.
-- **The model** is Claude Opus 5.5 (`claude-opus-5-5`), with adaptive thinking and streaming, the
-  tools above with `tool_choice` auto, and the server-side refusal fallback. One client
+- **Settings → Claude key**: in a Coach group under the setup rows, a row that opens a field in
+  its card for an Anthropic API key (masked, with Cancel and Save), checked once with a free call
+  (the models list) and saved encrypted with Android Keystore, in a file in `no_backup`. While
+  the check runs the field reads "Checking the key…"; a refused key reads "Claude doesn't accept
+  this key." and no connection "Couldn't reach Claude. Try again.", and neither is saved. A key
+  that has hit its spend limit is still a good key and is saved. Then the row reads `Key ending
+  …a1b2` with **Remove**, which forgets it at once. The key is never shown again, never in a
+  backup, a log or Auto Backup; a restore keeps the phone's key, or none.
+- **The model** is Claude Opus 5.5 (`claude-opus-5-5`), with adaptive thinking at medium effort
+  and streaming, the tools above (`strict`) with `tool_choice` auto, and the server-side refusal
+  fallback (`fallbacks: "default"`), through the official Anthropic Java SDK. The context is the
+  system prompt, cached, and the conversation is cached up to its last turn; Claude's replies go
+  back unchanged, thinking included. One client
   (`coach/ClaudeClient.kt`) makes every call; no other code opens a connection but the update check.
 - **Cost.** Each reply's usage (input, cache writes and reads, output) is added up by month at the
-  model's prices, and Settings reads `This month: ≈ $2.40` under the key. The hard limit is the
+  model's prices, a refused reply's too, and Settings reads `This month: ≈ $2.40` under the key.
+  Opus 5.5 is $4 in, $5 a cache write (five-minute), $0.20 a cache read and $20 out per million
+  tokens; a reply that fell back is priced hop by hop at each model's own prices. The month's sum
+  is kept in `setting` as `coach_cost_<yyyy-MM>` in millionths of a dollar, and goes into backups. The hard limit is the
   monthly spend limit set in the Anthropic Console; the app has no cap of its own.
 - **Errors.** No connection, a timeout or an API error shows "Couldn't reach Claude." with **Try
   again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.

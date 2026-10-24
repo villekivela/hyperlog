@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
@@ -113,8 +114,9 @@ class UpdateBannerTest {
         compose.waitFor("Hyperlog 0.2.0 is available")
         compose.openTab("Settings")
         compose.waitFor("Check for updates")
-        compose.onNode(hasText("Check for updates")).assertIsOn()
-        compose.click("Check for updates")
+        // Under the Coach group, the switch starts below the navigation bar.
+        compose.onNode(hasText("Check for updates")).performScrollTo().assertIsOn().performClick()
+        compose.waitForIdle()
         compose.onNode(hasText("Check for updates")).assertIsOff()
         assertEquals(false, runBlocking { preferences.checkForUpdates() })
         compose.openTab("Today")

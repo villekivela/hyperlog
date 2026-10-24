@@ -27,11 +27,16 @@ Everything you made, as stored on the phone:
   missing.
 - **Exercise library**: the shipped exercises, your edits, hidden exercises and the ones you added.
 - **Starting weights** from the old app, **lift goals** and **bodyweight**.
-- **Settings**: "Check for updates" and the update banner you dismissed.
+- **Settings**: "Check for updates", the update banner you dismissed, and what the coach cost each
+  month (`coach_cost_2026-10`).
 
 Left out: the last update check (`update_check`), only a cache of GitHub's answer; a restore leaves
 it as it is. A test (`BackupTablesTest`) fails if a table is added to the database without being
 listed in the backup or excluded with a reason (`app/src/main/java/com/hyperlog/app/backup/BackupFormat.kt`).
+
+Never in a backup: the **Claude key**. It is a file in the app's `no_backup` folder, sealed with
+Android Keystore, so neither the manual file nor Auto Backup has it, and a restore keeps the
+phone's key, or none (`ClaudeKeysTest`).
 
 Not in a backup: things that aren't stored. That means words typed for Claude but not sent, a
 correction you started but didn't save, notification permission, and the rest alarm, which is set

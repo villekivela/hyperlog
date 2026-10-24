@@ -13,7 +13,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -32,7 +34,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.hyperlog.app.coach.CoachCost
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -50,6 +63,15 @@ import java.util.Locale
 /** Where the starting-weights import stands: how many exercises have one, and whether the last file was rejected. */
 data class StartingWeightsStatus(val count: Int, val invalid: Boolean)
 
+/** Where the Claude key's check stands: a key being entered is checked before it is saved. */
+enum class KeyCheck { Idle, Checking, Refused, Unreachable }
+
+/**
+ * The Claude key as Settings shows it: its last 4 characters ([ending], null with no key), this
+ * month's cost in millionths of a dollar, and the check of a key being entered.
+ */
+data class ClaudeKeyStatus(val ending: String? = null, val monthCost: Long = 0, val check: KeyCheck = KeyCheck.Idle)
+
 /** Where a backup export or restore stands, as Settings shows it. */
 sealed interface BackupState {
     data object Idle : BackupState
@@ -65,8 +87,9 @@ sealed interface BackupState {
 }
 
 /**
- * Settings: gyms and their equipment, the exercise library, backups, the one-off import of
- * starting weights from the old app, "Check for updates", and the installed version at the foot.
+ * Settings: gyms and their equipment, the exercise library, the one-off import of starting
+ * weights from the old app, the Claude key with this month's cost, backups, "Check for updates",
+ * and the installed version at the foot.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,8 +115,15 @@ fun SettingsScreen(
     checkedNow: com.hyperlog.app.update.UpdateViewModel.CheckedNow? = null,
     /** The installed versionName ("0.2.0"), shown at the foot; null shows none. */
     version: String? = null,
+    claudeKey: ClaudeKeyStatus = ClaudeKeyStatus(),
+    /** Checks a key typed in, then saves it. */
+    onSaveKey: (String) -> Unit = {},
+    onRemoveKey: () -> Unit = {},
+    /** The key dialog was closed: forget its check. */
+    onDismissKey: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
+    var enteringKey by rememberSaveable { mutableStateOf(false) }
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     // Rows sit in card groups; ListItem's own container steps aside for the card's.
     val row = Modifier
@@ -129,6 +159,39 @@ fun SettingsScreen(
                 row(
                     weightsTitle, weights, Symbol.History, onClick = onImportStartingWeights,
                     supportingColor = if (startingWeights.invalid) error else null,
+                )
+            }
+            // The Claude key, with this month's cost under it once there is one.
+            GroupHead(stringResource(R.string.settings_coach))
+            val keyTitle = stringResource(R.string.claude_key)
+            val keyLine = claudeKey.ending?.let { stringResource(R.string.claude_key_ending, it) } ?: stringResource(R.string.claude_key_about)
+            val removeLabel = stringResource(R.string.claude_key_remove)
+            val keyText = stringResource(R.string.claude_key_text)
+            SegmentedList {
+                if (claudeKey.ending == null && enteringKey) {
+                    item {
+                        SegmentedRow(keyTitle, keyText, Symbol.Key, supportingLines = 3)
+                        KeyEntry(
+                            check = claudeKey.check,
+                            onSave = onSaveKey,
+                            onCancel = {
+                                enteringKey = false
+                                onDismissKey()
+                            },
+                        )
+                    }
+                } else if (claudeKey.ending == null) {
+                    row(keyTitle, keyLine, Symbol.Key, onClick = { enteringKey = true })
+                } else {
+                    row(keyTitle, keyLine, Symbol.Key, trailing = { TextButton(onClick = onRemoveKey) { Text(removeLabel) } })
+                }
+            }
+            if (claudeKey.ending != null) {
+                Text(
+                    stringResource(R.string.claude_key_month, CoachCost.dollars(claudeKey.monthCost)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = muted,
+                    modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp),
                 )
             }
             // Backups are a group of their own, a card apart from the setup rows.
@@ -192,6 +255,8 @@ fun SettingsScreen(
             Spacer(Modifier.height(GroupGap))
         }
     }
+    // The field closes once the key is checked and saved.
+    LaunchedEffect(claudeKey.ending) { if (claudeKey.ending != null) enteringKey = false }
     if (backup is BackupState.Confirm) {
         AlertDialog(
             onDismissRequest = onDismissBackup,
@@ -201,6 +266,43 @@ fun SettingsScreen(
             confirmButton = { TextButton(onClick = onConfirmRestore) { Text(stringResource(R.string.backup_restore_confirm)) } },
             dismissButton = { TextButton(onClick = onDismissBackup) { Text(stringResource(R.string.backup_cancel)) } },
         )
+    }
+}
+
+/**
+ * The key's field, in its card under the row: the key is checked when saved, and a refused or
+ * unreachable check says so under the field. Text fields stay out of dialogs here, where
+ * Robolectric's tests can't type into them.
+ */
+@Composable
+private fun KeyEntry(check: KeyCheck, onSave: (String) -> Unit, onCancel: () -> Unit) {
+    // Held only while the field is open, never saved with the screen's state.
+    var typed by remember { mutableStateOf("") }
+    val checking = check == KeyCheck.Checking
+    Column(Modifier.fillMaxWidth().padding(start = 72.dp, end = 16.dp, bottom = 8.dp)) {
+        OutlinedTextField(
+            value = typed,
+            onValueChange = { typed = it },
+            label = { Text(stringResource(R.string.claude_key_field)) },
+            singleLine = true,
+            enabled = !checking,
+            isError = check == KeyCheck.Refused || check == KeyCheck.Unreachable,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
+            supportingText = when (check) {
+                KeyCheck.Idle -> null
+                KeyCheck.Checking -> { { Text(stringResource(R.string.claude_key_checking)) } }
+                KeyCheck.Refused -> { { Text(stringResource(R.string.claude_key_refused)) } }
+                KeyCheck.Unreachable -> { { Text(stringResource(R.string.claude_key_unreachable)) } }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onCancel) { Text(stringResource(R.string.claude_key_cancel)) }
+            TextButton(onClick = { onSave(typed.trim()) }, enabled = typed.isNotBlank() && !checking) {
+                Text(stringResource(R.string.claude_key_save))
+            }
+        }
     }
 }
 

@@ -2,7 +2,8 @@
 <!--
   Android Auto Backup on Android 12 and later (docs/backups.md). Everything the user made lives in
   the Room database (hyperlog.db with its -wal and -shm files), so that is what goes to the Google
-  account and to a new phone in a device-to-device transfer. Nothing else is stored.
+  account and to a new phone in a device-to-device transfer. The Claude key lives in no_backup,
+  which Android never backs up or transfers.
 -->
 <data-extraction-rules>
     <cloud-backup>

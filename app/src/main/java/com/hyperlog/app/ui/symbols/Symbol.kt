@@ -47,6 +47,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Flag(R.drawable.symbol_flag),
     History(R.drawable.symbol_history),
     Keep(R.drawable.symbol_keep),
+    Key(R.drawable.symbol_key),
     Keyboard(R.drawable.symbol_keyboard),
     KeyboardHide(R.drawable.symbol_keyboard_hide),
     List(R.drawable.symbol_list),

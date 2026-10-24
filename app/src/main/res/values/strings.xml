@@ -708,6 +708,20 @@
     <string name="update_downloading">Downloading…</string>
     <string name="update_failed">Couldn\'t download it. Tap to try again.</string>
     <string name="update_dismiss">Dismiss</string>
+    <!-- Settings → Claude key (SPEC, Coaching → With a Claude key). -->
+    <string name="settings_coach">Coach</string>
+    <string name="claude_key">Claude key</string>
+    <string name="claude_key_about">Ask Claude from the app with an API key</string>
+    <string name="claude_key_ending">Key ending …%1$s</string>
+    <string name="claude_key_remove">Remove</string>
+    <string name="claude_key_month">This month: %1$s</string>
+    <string name="claude_key_text">An Anthropic API key from the Anthropic Console. It stays on this phone, encrypted, and never goes into a backup.</string>
+    <string name="claude_key_field">API key</string>
+    <string name="claude_key_checking">Checking the key…</string>
+    <string name="claude_key_refused">Claude doesn\'t accept this key.</string>
+    <string name="claude_key_unreachable">Couldn\'t reach Claude. Try again.</string>
+    <string name="claude_key_save">Save</string>
+    <string name="claude_key_cancel">Cancel</string>
     <string name="settings_check_updates">Check for updates</string>
     <string name="settings_check_updates_about">Whenever you open the app</string>
     <string name="settings_check_now">Check for updates now</string>

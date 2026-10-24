@@ -58,6 +58,7 @@ import com.hyperlog.app.ui.settings.SettingsScreen
 import com.hyperlog.app.ui.settings.StartingWeightsViewModel
 import com.hyperlog.app.ui.settings.BackupState
 import com.hyperlog.app.ui.settings.BackupViewModel
+import com.hyperlog.app.ui.settings.ClaudeKeyViewModel
 import android.app.Activity
 import android.content.Intent
 import com.hyperlog.app.ui.theme.HyperlogTheme
@@ -92,12 +93,13 @@ class MainActivity : ComponentActivity() {
     private val history: HistoryViewModel by viewModels()
     private val backups: BackupViewModel by viewModels()
     private val updates: UpdateViewModel by viewModels()
+    private val claudeKey: ClaudeKeyViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey) }
         }
     }
 
@@ -203,6 +205,7 @@ private fun App(
     historyModel: HistoryViewModel,
     backupModel: BackupViewModel,
     updateModel: UpdateViewModel,
+    claudeKeyModel: ClaudeKeyViewModel,
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -280,6 +283,7 @@ private fun App(
     val update by updateModel.banner.collectAsStateWithLifecycle()
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
+    val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // A restored backup replaces everything the screens hold: start them again on its data.
@@ -564,6 +568,10 @@ private fun App(
             onCheckNow = updateModel::checkNow,
             checkedNow = checkedNow,
             version = BuildConfig.VERSION_NAME,
+            claudeKey = claudeKey,
+            onSaveKey = claudeKeyModel::save,
+            onRemoveKey = claudeKeyModel::remove,
+            onDismissKey = claudeKeyModel::dismiss,
         )
         else -> todayState.SaveableStateProvider("today") { TodayScreen(
             sessionRunning = running != null,
