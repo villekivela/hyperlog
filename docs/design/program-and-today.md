@@ -503,3 +503,69 @@ size and density, text at 115 %): `phone-dark-today-done`, `-today-no-training-d
 sheet, Day B's Barbell RDL) came from a session started on the emulator's copy of the data, which
 was then put back from a saved database.
 
+
+## Programs (#84)
+
+Program → ⋮ → Programs, the new program review's Save for later, and Coach's "Saved to your
+programs". The engineer built the first cut; this pass designs it.
+
+Principles:
+
+- **A list you read, actions you ask for.** Each row is a standard `SegmentedRow`: a symbol, the
+  title and one line. A row carries no buttons. Tapping it opens the program's sheet. The first
+  cut put Start, Run again and ⋮ on every row, which squeezed past dates onto a second line and
+  repeated "Run again" down the list.
+- **The symbol says where it stands**: `play_arrow` running, `flag` finished (the flag that
+  "Program finished" has on Program), `bookmark` saved (Save for later), `history` past. The
+  running row's circle is the accent (`primaryContainer`), because it is the selected program.
+  The others are `secondaryContainer`.
+- **One way to run, said once.** The sheet has one filled button: **Start program** (the same
+  words as the review's button) for a saved program, **Run again** for a past one or a finished
+  running one. Export and Delete are rows under it.
+- **Three actions on the review's strip, balanced.** Reject sits alone at the 24 dp text edge.
+  Save for later (tonal) and Start program (filled) sit together at the end, every label on one
+  line at font scale 1.15.
+- **Nothing hidden when nothing runs.** With no program running, Program has no ⋮. **Programs**
+  sits beside Import program under the starter offer (or under Import on the empty screen) while
+  the app holds any program.
+
+Tokens: rows as `SegmentedRow` (72 dp, 40 dp circle); sheet groups `Tones.sheetCard`; the sheet's
+button `ButtonDefaults.MediumContainerHeight`, full width at the 24 dp edges, with a 24 dp symbol
+(`play_arrow`, `replay`) and titleMedium; strip buttons 16 dp side padding; strip padding 12 dp
+start, 16 dp end.
+
+```
+ ←  Programs                          ───── (sheet) ─────────────
+                                        Scripted full body, 2 days
+ Running                                Claude · 4 weeks · 2 days a week
+ ╭────────────────────────────────╮     Saved 24 Oct
+ │ (▶) Hyperlog Full Body          │     Two full-body days a week: …
+ │     4 blocks · 12 weeks · Week 7│    ╭──────────────────────────╮
+ ╰────────────────────────────────╯     │   ▶  Start program        │
+ Saved                                  ╰──────────────────────────╯
+ ╭────────────────────────────────╮    ╭──────────────────────────╮
+ │ (🔖) Push pull legs, 5 days      │    │ (⬇) Export               │
+ │     2 blocks · 4 weeks · Saved 3 Oct  ├──────────────────────────┤
+ ├────────────────────────────────┤    │ (🗑) Delete               │
+ │ (🔖) Scripted full body, 2 days  │    ╰──────────────────────────╯
+ ╰────────────────────────────────╯
+ Past …                                Review strip:
+                                        Reject      [Save for later] [Start program]
+```
+
+States: running mid-program (sheet: "You're in week 7", Export only); running and finished (flag,
+"Program finished", sheet with Run again); saved (Start program, Export, Delete); past ("Ran
+1 Jun – 31 Aug": Run again, Export, Delete unless a session trained it); Replace and Delete
+dialogs; nothing running (Programs beside Import program); the review's strip; Coach's snackbar.
+
+Interaction: a row opens its sheet. Start program and Run again close it, then ask "Replace
+<title>?" while a program runs and start at once when none does. Delete closes it and asks
+"Delete <title>?". Export closes it and opens the system save dialog. The sheet is the one sheet
+on the page; Back closes it, then the page. The snackbar stays as it was: the app's other
+snackbars use the same default.
+
+Screens (phone at font scale 1.15, dark unless named light): `programs-list`,
+`programs-list-light`, `programs-sheet-saved`, `programs-sheet-saved-light`,
+`programs-sheet-running`, `programs-finished`, `programs-sheet-finished`, `programs-replace`,
+`programs-delete`, `programs-no-program`, `program-review-save`, `program-review-save-light`,
+`coach-saved-snackbar`.

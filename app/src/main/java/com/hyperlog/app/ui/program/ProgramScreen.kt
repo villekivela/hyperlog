@@ -148,6 +148,7 @@ fun ProgramScreen(
         return
     }
     val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
+    val openPrograms = { show(shown.copy(programsOpen = true)) }
     BackHandler { if (errors != null) onCloseErrors() else onBack() }
     Scaffold(
         modifier = modifier,
@@ -160,8 +161,8 @@ fun ProgramScreen(
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
                 actions = {
-                    // Saved programs are there to start with no program running too.
-                    if ((active != null || keptPrograms.isNotEmpty()) && errors == null) {
+                    // With no program running, Import and Programs are on the screen itself.
+                    if (active != null && errors == null) {
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -185,7 +186,7 @@ fun ProgramScreen(
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.programs_title)) },
                                     leadingIcon = { SymbolIcon(Symbol.List, null) },
-                                    onClick = { menu = false; show(shown.copy(programsOpen = true)) },
+                                    onClick = { menu = false; openPrograms() },
                                 )
                             }
                         }
@@ -199,8 +200,10 @@ fun ProgramScreen(
                 errors != null -> ImportErrors(errors, onClose = onCloseErrors, onRetry = onImport)
                 active == null && starter != null -> StarterOffer(starter, onRunStarter) {
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
+                    // Saved programs are there to start with no program running too.
+                    if (keptPrograms.isNotEmpty()) TextButton(onClick = openPrograms) { Text(stringResource(R.string.programs_title)) }
                 }
-                active == null -> NoProgram(onImport)
+                active == null -> NoProgram(onImport, openPrograms.takeIf { keptPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },
@@ -250,9 +253,10 @@ data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false, 
 }
 
 @Composable
-private fun NoProgram(onImport: () -> Unit) {
+private fun NoProgram(onImport: () -> Unit, onOpenPrograms: (() -> Unit)?) {
     EmptyState(Symbol.ViewTimeline, stringResource(R.string.today_empty_title), stringResource(R.string.program_none_body)) {
         Button(onClick = onImport) { Text(stringResource(R.string.program_import)) }
+        onOpenPrograms?.let { TextButton(onClick = it) { Text(stringResource(R.string.programs_title)) } }
     }
 }
 

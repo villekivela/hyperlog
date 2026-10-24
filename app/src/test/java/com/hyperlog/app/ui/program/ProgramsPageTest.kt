@@ -1,7 +1,7 @@
 package com.hyperlog.app.ui.program
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.hyperlog.app.click
@@ -25,7 +25,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Program → ⋮ → Programs (SPEC, Program → Programs): every program held, with Start, Run again, Export and Delete. */
+/** Program → ⋮ → Programs (SPEC, Program → Programs): every program held; a row's sheet has Start program, Run again, Export and Delete. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w410dp-h914dp")
 class ProgramsPageTest {
@@ -79,7 +79,9 @@ class ProgramsPageTest {
     @Test
     fun startAsksBeforeItReplacesTheRunningProgram() {
         show(listOf(saved, running))
-        compose.click("Start")
+        compose.click("Saved one")
+        compose.onNodeWithText("Saved 24 Oct").assertExists()
+        compose.click("Start program")
         compose.waitFor("Replace ${starter.title}?")
         assertEquals(emptyList<String>(), calls)
         compose.click("Replace")
@@ -89,6 +91,8 @@ class ProgramsPageTest {
     @Test
     fun runAgainAsksAndStartsAPastProgramAgain() {
         show(listOf(running, past))
+        compose.onAllNodesWithText(starter.title)[1].performClick()
+        compose.waitFor("Ran 1 Sep – 13 Oct")
         compose.click("Run again")
         compose.waitFor("Replace ${starter.title}?")
         compose.click("Replace")
@@ -98,14 +102,15 @@ class ProgramsPageTest {
     @Test
     fun withNothingRunningStartStartsAtOnce() {
         show(listOf(saved), active = null)
-        compose.click("Start")
+        compose.click("Saved one")
+        compose.click("Start program")
         assertEquals(listOf("start 4"), calls)
     }
 
     @Test
     fun deleteAsksAndRemovesASavedProgram() {
         show(listOf(saved, running))
-        compose.onAllNodesWithContentDescription("More for Saved one")[0].performClick()
+        compose.click("Saved one")
         compose.click("Delete")
         compose.waitFor("Delete Saved one?")
         assertEquals(emptyList<String>(), calls)
@@ -116,10 +121,31 @@ class ProgramsPageTest {
     @Test
     fun everyProgramExportsButOneWithSessionsCantBeDeleted() {
         show(listOf(running, past))
-        compose.onAllNodesWithContentDescription("More for ${starter.title}")[1].performClick()
+        compose.onAllNodesWithText(starter.title)[1].performClick()
         compose.waitFor("Export")
         compose.onNodeWithText("Delete").assertDoesNotExist()
         compose.click("Export")
         assertEquals(listOf("export 1"), calls)
+    }
+
+    @Test
+    fun theRunningProgramsSheetSaysWhereYouAreAndRunsAgainOnlyOnceFinished() {
+        show(listOf(running))
+        compose.click(starter.title)
+        compose.waitFor("You're in week 6")
+        compose.onNodeWithText("Run again").assertDoesNotExist()
+        compose.onNodeWithText("Delete").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFinishedRunningProgramRunsAgain() {
+        val finished = running.copy(status = KeptProgram.Status.Running(Position(starter.weeks + 1, 0), finished = true))
+        show(listOf(finished), active = ActiveProgram(3, starter, Position(starter.weeks + 1, 0)))
+        compose.onNodeWithText("Program finished", substring = true).assertExists()
+        compose.click(starter.title)
+        compose.click("Run again")
+        compose.waitFor("Replace ${starter.title}?")
+        compose.click("Replace")
+        assertEquals(listOf("again 3"), calls)
     }
 }

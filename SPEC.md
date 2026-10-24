@@ -912,19 +912,23 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
      instead. Past sessions are kept."
    - **Programs** (⋮ → Programs, owner 2026-10-24; `ui/program/ProgramsPage.kt`) lists every
-     program the app holds, newest first, under **Running**, **Saved** and **Past**, each with its
-     title, then its blocks and weeks and where it stands: `4 blocks · 12 weeks · Week 6` (or
-     "Program finished"), `Saved 24 Oct`, `1 Sep – 13 Oct` (started, replaced). The ⋮ is there with
-     no program running too, while the app holds any. The navigation bar is hidden on the page.
-     - **Saved**: a program saved for later from a review, never started. **Start** asks first
-       while a program runs, as import does ("Replace <title>?"), then runs it from week 1, day 1;
+     program the app holds, newest first, under **Running**, **Saved** and **Past**. Each row shows
+     a symbol for where it stands (running, finished, saved, past; the running one's in the accent),
+     its title, then its blocks and weeks and where it stands: `4 blocks · 12 weeks · Week 6` (or
+     "Program finished"), `Saved 24 Oct`, `1 Sep – 13 Oct` (started, replaced). A row opens the
+     program's sheet: its title, author, weeks and days a week, where it stands ("You're in week 6",
+     "Saved 24 Oct", "Ran 1 Sep – 13 Oct"), its description, then its one way to run as a button,
+     then Export and Delete. With no program running, Program has no ⋮: a **Programs** button sits
+     beside Import program while the app holds any program. The navigation bar is hidden on the page.
+     - **Saved**: a program saved for later from a review, never started. **Start program** asks
+       first while a program runs, as import does ("Replace <title>?"), then runs it from week 1, day 1;
        the one before stays as the record of its sessions. Its new exercises join the library then;
        if the library has gained one with the same id since, Program shows the problems as a
        rejected import and nothing starts.
      - **Past**: replaced runs. **Run again** (also on the running one once it is finished) asks the
        same way, then starts a fresh run from week 1, day 1, a new row on the list: the old run keeps
        its sessions, its Changes and its dates.
-     - Every program has **Export** in its ⋮, which writes its file as imported through the system
+     - Every program's sheet has **Export**, which writes its file as imported through the system
        save dialog (`hyperlog-full-body.json`). **Delete** asks first ("Delete <title>?") and is
        offered only for a program not running that no session trained.
      - Storage: the `program` table holds every program: a saved one has no `started_at` and keeps
@@ -1647,8 +1651,9 @@ back.
   kept."), then runs it from week 1, day 1, and goes to Today; the program before stays as the
   record of its sessions. If the library gained one of its new exercises since the review, nothing
   starts: Program shows the problem as a rejected import (`newExercises[0].id: the library already
-  has "barbell_drag_curl"`). **Save for later** (owner, 2026-10-24), beside Start program, keeps it
-  on the Programs list (Program, below) with its new exercises and leaves the program running alone:
+  has "barbell_drag_curl"`). **Save for later** (owner, 2026-10-24), beside Start program (Reject
+  at the strip's start, Save for later and Start program together at its end), keeps it on the
+  Programs list (Program, below) with its new exercises and leaves the program running alone:
   it asks nothing, ends the check-in, and Coach says "Saved to your programs" with a **Programs**
   action that opens the list. The new exercises wait with it and join the library only when it
   starts. **Reject** and Back step back in the check-in (Type my own open), × drops

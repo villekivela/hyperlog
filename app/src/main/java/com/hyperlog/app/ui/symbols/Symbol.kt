@@ -27,6 +27,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     ArrowUpward(R.drawable.symbol_arrow_upward),
     Backspace(R.drawable.symbol_backspace),
     Block(R.drawable.symbol_block),
+    Bookmark(R.drawable.symbol_bookmark),
     Cable(R.drawable.symbol_cable),
     Calculate(R.drawable.symbol_calculate),
     CalendarToday(R.drawable.symbol_calendar_today),

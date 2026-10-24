@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -67,6 +66,7 @@ class ProgramsAppTest {
     @Test
     fun runAgainStartsTheStarterProgramAfreshFromWeekOne() {
         openPrograms()
+        compose.click("Hyperlog Full Body")
         compose.click("Run again")
         compose.click("Replace")
         compose.waitFor("Hyperlog Full Body")
@@ -77,7 +77,7 @@ class ProgramsAppTest {
     @Test
     fun exportWritesTheProgramsFileWhereTheSaveDialogSays() {
         openPrograms()
-        compose.onAllNodesWithContentDescription("More for Hyperlog Full Body")[0].performClick()
+        compose.click("Hyperlog Full Body")
         compose.click("Export")
         val asked = shadowOf(compose.activity).nextStartedActivityForResult
         assertEquals(Intent.ACTION_CREATE_DOCUMENT, asked.intent.action)

@@ -660,11 +660,11 @@
     <string name="programs_saved_on">Saved %1$s</string>
     <string name="programs_ran">%1$s – %2$s</string>
     <string name="programs_started">Started %1$s</string>
-    <string name="programs_start">Start</string>
+    <string name="programs_sheet_week">You\'re in week %1$d</string>
+    <string name="programs_sheet_ran">Ran %1$s – %2$s</string>
     <string name="programs_run_again">Run again</string>
     <string name="programs_export">Export</string>
     <string name="programs_delete">Delete</string>
-    <string name="programs_more">More for %1$s</string>
     <string name="programs_delete_title">Delete %1$s?</string>
     <string name="programs_delete_body">It leaves your programs. Nothing was trained on it.</string>
     <plurals name="programs_blocks">
