@@ -95,8 +95,19 @@ class ProgramsPageTest {
         compose.waitFor("Ran 1 Sep – 13 Oct")
         compose.click("Run again")
         compose.waitFor("Replace ${starter.title}?")
+        // It isn't a new program: it starts again.
+        compose.onNodeWithText("You're in week 6 of ${starter.title}; ${starter.title} starts again at week 1, day 1 instead. Past sessions are kept.").assertExists()
         compose.click("Replace")
         assertEquals(listOf("again 1"), calls)
+    }
+
+    @Test
+    fun aRunOfOneDayReadsAsThatDay() {
+        val oneDay = KeptProgram(5, "One day", twoDays, TestPrograms.twoDays("One day"), KeptProgram.Status.Past(at("2026-10-25"), at("2026-10-25") + 3_600_000), trained = false)
+        show(listOf(running, oneDay))
+        compose.waitFor("1 block · 2 weeks · 25 Oct")
+        compose.click("One day")
+        compose.waitFor("Ran 25 Oct")
     }
 
     @Test

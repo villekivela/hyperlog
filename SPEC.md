@@ -912,7 +912,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
      instead. Past sessions are kept."
    - **Programs** (⋮ → Programs, owner 2026-10-24; `ui/program/ProgramsPage.kt`) lists every
-     program the app holds, newest first, under **Running**, **Saved** and **Past**. Each row shows
+     program the app holds under **Running**, **Saved** and **Past**, newest first (saved ones by
+     when they were saved, past runs by when they were replaced). Each row shows
      a symbol for where it stands (running, finished, saved, past; the running one's in the accent),
      its title, then its blocks and weeks and where it stands: `4 blocks · 12 weeks · Week 6` (or
      "Program finished"), `Saved 24 Oct`, `1 Sep – 13 Oct` (started, replaced). A row opens the
@@ -925,9 +926,12 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        the one before stays as the record of its sessions. Its new exercises join the library then;
        if the library has gained one with the same id since, Program shows the problems as a
        rejected import and nothing starts.
-     - **Past**: replaced runs. **Run again** (also on the running one once it is finished) asks the
-       same way, then starts a fresh run from week 1, day 1, a new row on the list: the old run keeps
-       its sessions, its Changes and its dates.
+     - **Past**: replaced runs, the last replaced first. **Run again** (also on the running one once
+       it is finished) asks the same way, saying the program starts again ("You're in week 6 of
+       Hyperlog Full Body; Push pull legs starts again at week 1, day 1 instead. Past sessions are
+       kept."), then starts a fresh run from week 1, day 1, a new row on the list: the old run keeps
+       its sessions, its Changes and its dates. A run that ended the day it started reads as that
+       day (`25 Oct`).
      - Every program's sheet has **Export**, which writes its file as imported through the system
        save dialog (`hyperlog-full-body.json`). **Delete** asks first ("Delete <title>?") and is
        offered only for a program not running that no session trained.

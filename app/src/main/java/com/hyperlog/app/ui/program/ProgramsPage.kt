@@ -122,11 +122,16 @@ fun ProgramsPage(
         AlertDialog(
             onDismissRequest = { replacing = null },
             title = { Text(interFigures(stringResource(R.string.program_replace_title, active.program.title))) },
-            // Replacing loses the position, so the question says where you are.
+            // Replacing loses the position, so the question says where you are; a program run again isn't new.
             text = {
+                val again = replaced.status !is KeptProgram.Status.Saved
                 Text(
-                    if (active.finished) stringResource(R.string.program_replace_body)
-                    else stringResource(R.string.program_replace_body_at, active.position.week, active.program.title),
+                    when {
+                        again && active.finished -> stringResource(R.string.program_run_again_body, replaced.title)
+                        again -> stringResource(R.string.program_run_again_body_at, active.position.week, active.program.title, replaced.title)
+                        active.finished -> stringResource(R.string.program_replace_body)
+                        else -> stringResource(R.string.program_replace_body_at, active.position.week, active.program.title)
+                    },
                 )
             },
             confirmButton = {
@@ -160,8 +165,13 @@ private fun size(p: KeptProgram): String =
 private fun status(p: KeptProgram): String = when (val s = p.status) {
     is KeptProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_week, s.position.week)
     is KeptProgram.Status.Saved -> stringResource(R.string.programs_saved_on, shortDate(dateOf(s.savedAt)))
-    is KeptProgram.Status.Past -> s.endedAt?.let { stringResource(R.string.programs_ran, shortDate(dateOf(s.startedAt)), shortDate(dateOf(it))) }
-        ?: stringResource(R.string.programs_started, shortDate(dateOf(s.startedAt)))
+    is KeptProgram.Status.Past -> s.endedAt?.let { ran(s.startedAt, it) } ?: stringResource(R.string.programs_started, shortDate(dateOf(s.startedAt)))
+}
+
+/** The days a run took: `1 Sep – 13 Oct`, or `25 Oct` for one that ended the day it started. */
+private fun ran(startedAt: Long, endedAt: Long): String {
+    val (from, to) = dateOf(startedAt) to dateOf(endedAt)
+    return if (from == to) shortDate(from) else "${shortDate(from)} – ${shortDate(to)}"
 }
 
 /** Where it stands on its sheet, which has no group head: `You're in week 7`, `Saved 24 Oct`, `Ran 1 Jun – 31 Aug`. */
@@ -169,8 +179,7 @@ private fun status(p: KeptProgram): String = when (val s = p.status) {
 private fun sheetStatus(p: KeptProgram): String = when (val s = p.status) {
     is KeptProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_sheet_week, s.position.week)
     is KeptProgram.Status.Saved -> status(p)
-    is KeptProgram.Status.Past -> s.endedAt?.let { stringResource(R.string.programs_sheet_ran, shortDate(dateOf(s.startedAt)), shortDate(dateOf(it))) }
-        ?: status(p)
+    is KeptProgram.Status.Past -> s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: status(p)
 }
 
 /** The row's symbol says where it stands too: running (finished: the flag Next shows), saved, past. */

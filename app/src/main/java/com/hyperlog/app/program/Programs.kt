@@ -112,7 +112,10 @@ class Programs(
         else changeDao.changesFlow(row.id).map { changes -> toActive(row, changes) }
     }
 
-    /** Every program held, newest first: the one running, those saved for later, and past runs. */
+    /**
+     * Every program held, newest first: the one running, then by when each was saved or replaced
+     * (those saved for later, and past runs).
+     */
     val kept: Flow<List<KeptProgram>> = kotlinx.coroutines.flow.combine(dao.allFlow(), dao.trainedFlow()) { rows, trained ->
         val ids = trained.toSet()
         rows.mapNotNull { row ->
@@ -123,6 +126,13 @@ class Programs(
                 else -> KeptProgram.Status.Past(row.startedAt, row.endedAt)
             }
             KeptProgram(row.id, row.title, program, row.source, status, row.id in ids)
+        }.sortedByDescending { kept ->
+            // A saved program started later keeps its row, so each is dated by what last happened to it.
+            when (val s = kept.status) {
+                is KeptProgram.Status.Running -> Long.MAX_VALUE
+                is KeptProgram.Status.Saved -> s.savedAt
+                is KeptProgram.Status.Past -> s.endedAt ?: s.startedAt
+            }
         }
     }
 

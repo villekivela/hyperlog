@@ -658,10 +658,11 @@
     <string name="programs_past">Past</string>
     <string name="programs_week">Week %1$d</string>
     <string name="programs_saved_on">Saved %1$s</string>
-    <string name="programs_ran">%1$s – %2$s</string>
     <string name="programs_started">Started %1$s</string>
     <string name="programs_sheet_week">You\'re in week %1$d</string>
-    <string name="programs_sheet_ran">Ran %1$s – %2$s</string>
+    <string name="programs_sheet_ran">Ran %1$s</string>
+    <string name="program_run_again_body">%1$s starts again at week 1, day 1. Past sessions are kept.</string>
+    <string name="program_run_again_body_at">You\'re in week %1$d of %2$s; %3$s starts again at week 1, day 1 instead. Past sessions are kept.</string>
     <string name="programs_run_again">Run again</string>
     <string name="programs_export">Export</string>
     <string name="programs_delete">Delete</string>

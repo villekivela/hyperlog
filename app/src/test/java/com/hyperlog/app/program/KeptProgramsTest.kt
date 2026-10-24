@@ -45,7 +45,7 @@ class KeptProgramsTest {
         val active = programs.active.first()!!
         assertEquals(listOf("Running", Position(1, 1)), listOf(active.program.title, active.position))
         assertEquals(
-            listOf("For later" to KeptProgram.Status.Saved(2_000L), "Running" to KeptProgram.Status.Running(Position(1, 1), finished = false)),
+            listOf("Running" to KeptProgram.Status.Running(Position(1, 1), finished = false), "For later" to KeptProgram.Status.Saved(2_000L)),
             programs.kept.first().map { it.title to it.status },
         )
     }
@@ -127,6 +127,20 @@ class KeptProgramsTest {
             programs.kept.first().map { it.title to it.status },
         )
         assertEquals(listOf(false, false, true), programs.kept.first().map { it.trained })
+    }
+
+    @Test
+    fun pastRunsListTheLastEndedFirst() = runTest {
+        programs.import(TestPrograms.twoDays("First"))
+        now = 2_000L
+        programs.save(TestPrograms.twoDays("Saved early"))
+        now = 3_000L
+        programs.import(TestPrograms.twoDays("Second"))
+        now = 4_000L
+        programs.start(programs.kept.first().single { it.title == "Saved early" }.id)
+        now = 5_000L
+        programs.import(TestPrograms.twoDays("Third"))
+        assertEquals(listOf("Third", "Saved early", "Second", "First"), programs.kept.first().map { it.title })
     }
 
     @Test
