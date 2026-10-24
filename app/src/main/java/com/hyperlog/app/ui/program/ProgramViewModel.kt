@@ -261,7 +261,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     private val _inForce = MutableStateFlow<Pair<Long, ChangeReview>?>(null)
 
-    /** A Change in force opened from its card on Coach, read-only, with its id for Revert; null when none is open. */
+    /** A Change in force opened from its card on Coach or its row on Program, read-only, with its id for Revert; null when none is open. */
     val inForce: StateFlow<Pair<Long, ChangeReview>?> = _inForce.asStateFlow()
 
     /** Opens the Change in force [id]: what it does from here on, with the other Changes applied. */

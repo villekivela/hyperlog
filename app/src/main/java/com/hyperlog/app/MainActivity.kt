@@ -329,7 +329,7 @@ private fun App(
         )
         return
     }
-    // A Change in force opened from its card on Coach: what it does, read-only, with Revert.
+    // A Change in force opened from its card on Coach or its row on Program: what it does, read-only, with Revert.
     inForce?.let { (id, r) ->
         ChangeReviewScreen(
             r, exercises.associate { it.id to it.name },
@@ -469,6 +469,7 @@ private fun App(
             onRunStarter = programModel::runStarter,
             onPropose = programModel::propose,
             onRevert = programModel::revert,
+            onOpenChange = programModel::openInForce,
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
             onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Program; screen = Screen.History },

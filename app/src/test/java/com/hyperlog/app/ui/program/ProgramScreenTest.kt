@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import com.hyperlog.app.onScreen
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -182,6 +183,34 @@ class ProgramScreenTest {
         compose.onNodeWithContentDescription("Revert").performClick()
         compose.onNodeWithText("Revert").performClick()
         assertEquals(1L, reverted)
+    }
+
+    @Test
+    fun tappingAChangeShowsItInFull() {
+        val program = program()
+        val long = "Hands need a week off grip work: the lateral raise comes out of the superset and the triceps stays"
+        fun record(id: Long, summary: String, reverted: Long? = null) = ChangeRecord(
+            AcceptedChange(id, ProgramActions.skipDay(summary), LocalDate.of(2026, 10, 13), Position(1, 0), Position(1, 1), "main"),
+            acceptedAt = 0, revertedAt = reverted,
+        )
+        val active = ActiveProgram(
+            1, program, Position(1, 1),
+            history = listOf(record(1, "Skip week 1 · Day A"), record(2, long, reverted = 1)),
+            today = LocalDate.of(2026, 10, 14),
+        )
+        var opened: Long? = null
+        compose.setContent {
+            HyperlogTheme { ProgramScreen(active, null, onImport = {}, onCloseErrors = {}, onBack = {}, onOpenChange = { opened = it }) }
+        }
+        compose.onNodeWithText("Changes · 1 in force").performClick()
+        // One in force opens what it does, as its card on Coach does.
+        compose.onNodeWithText("Skip week 1 · Day A").performClick()
+        assertEquals(1L, opened)
+        // One no longer in force has no diff to show: its summary in full, in a dialog.
+        compose.onNodeWithText(long).performClick()
+        compose.onNodeWithTag(ChangeDetailTag).assertIsDisplayed()
+        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithTag(ChangeDetailTag).assertDoesNotExist()
     }
 
     @Test
