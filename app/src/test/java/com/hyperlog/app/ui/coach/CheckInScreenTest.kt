@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.coach
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +89,7 @@ class CheckInScreenTest {
     private var attaching = 0
 
     /** The screen over a runner playing [model]. */
-    private fun show(model: FakeCoachModel, lowest: List<Pair<String, Double>> = emptyList(), attachNote: String? = null) {
+    private fun show(model: com.hyperlog.app.coach.CoachModel, lowest: List<Pair<String, Double>> = emptyList(), attachNote: String? = null, onRunner: (CheckInRunner) -> Unit = {}) {
         compose.setContent {
             HyperlogTheme {
                 val scope = rememberCoroutineScope()
@@ -96,6 +97,8 @@ class CheckInScreenTest {
                     CheckInRunner(scope, CheckInStore(File(folder.root, "check_in.json")), { model }, { CheckInWorld(program, ids) }, { CheckInFrame("Context", CoachTools.all(program)) })
                 }
                 val view by runner.state.collectAsState()
+                val progress by runner.progress.collectAsState()
+                LaunchedEffect(runner) { onRunner(runner) }
                 var inForce by remember { mutableStateOf(false) }
                 CheckInScreen(
                     view, plan,
@@ -103,7 +106,7 @@ class CheckInScreenTest {
                     onTellMeMore = runner::tellMeMore, onTryAgain = runner::tryAgain, lowest = lowest,
                     inForceOpen = inForce, onInForceOpen = { inForce = it },
                     onHowItsGoing = { runner.start(com.hyperlog.app.coach.CheckInContext.howItsGoing(it), com.hyperlog.app.coach.Opening.HowsItGoing) },
-                    onAttach = { attaching++ }, attachNote = attachNote,
+                    onAttach = { attaching++ }, attachNote = attachNote, progress = progress,
                 )
             }
         }
@@ -137,6 +140,40 @@ class CheckInScreenTest {
         compose.onNodeWithText("Couldn’t read that file.").assertExists()
         compose.click("Attach a spreadsheet, PDF or photo")
         assertEquals(1, attaching)
+    }
+
+    /** Claude that says it's writing [tool] after the step answered, and then waits. */
+    private class Writing(private val first: CoachReply, private val tool: String) : com.hyperlog.app.coach.CoachModel {
+        private var calls = 0
+        override suspend fun reply(request: com.hyperlog.app.coach.CoachRequest, progress: (com.hyperlog.app.coach.CoachProgress) -> Unit): CoachReply {
+            if (calls++ == 0) return first
+            progress(com.hyperlog.app.coach.CoachProgress.Thinking)
+            kotlinx.coroutines.delay(1_000)
+            progress(com.hyperlog.app.coach.CoachProgress.Writing(tool))
+            return kotlinx.coroutines.CompletableDeferred<CoachReply>().await()
+        }
+    }
+
+    @Test
+    fun whileClaudeRepliesTheStepSaysWhatItIsDoing() {
+        var runner: CheckInRunner? = null
+        show(Writing(ask("Do you have the program as a file?", "From my answers", "I'll describe it", attach = true), CoachTools.PROPOSE_PROGRAM), onRunner = { runner = it })
+        compose.click("New program")
+        compose.waitFor("Do you have the program as a file?")
+        runner!!.attach(com.hyperlog.app.coach.Attachment("Essentials.xlsx", com.hyperlog.app.coach.Attachment.TEXT, "## Sheet: Week 1".toByteArray()))
+        // Reading the file first, then writing the program.
+        compose.waitFor("Reading your spreadsheet…")
+        compose.mainClock.advanceTimeBy(1_500)
+        compose.waitFor("Writing the program…")
+    }
+
+    @Test
+    fun aReplyCutOffSaysSoAndOffersTryAgain() {
+        show(FakeCoachModel(FakeCoachModel.Turn.Fails(com.hyperlog.app.coach.CoachError.Dropped()), FakeCoachModel.Turn.Reply(CoachReply("Fine."))))
+        compose.click("Something hurts")
+        compose.waitFor("Claude’s reply was cut off.")
+        compose.click("Try again")
+        compose.waitFor("Fine.")
     }
 
     @Test

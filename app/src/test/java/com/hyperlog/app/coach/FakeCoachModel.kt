@@ -13,7 +13,7 @@ class FakeCoachModel(vararg turns: Turn) : CoachModel {
     private val script = ArrayDeque(turns.toList())
     val requests = mutableListOf<CoachRequest>()
 
-    override suspend fun reply(request: CoachRequest): CoachReply {
+    override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply {
         requests += request
         return when (val turn = script.removeFirstOrNull() ?: error("The script has no turn left for request ${requests.size}")) {
             is Turn.Reply -> turn.reply

@@ -1328,7 +1328,10 @@ any of the seven muscle groups (`MuscleGroup`), or none for a balanced full-body
 count groups** (owner, 2026-10-16): weekly sets per group are counted as History counts muscles
 (`History.weeklyGroupSets`), and among the groups trained in the last 4 weeks the three with the
 fewest sets this week carry the count, fewest first, ties in group order. It asks about four questions at most. While a call runs
-the screen shows "Thinking…". **Back** goes one step back, to change that answer, and Claude asks
+the screen says what Claude is doing, from its reply's stream (#75): "Reading your spreadsheet…",
+"Reading your PDF…" or "Looking at your photo…" while it reads a file just attached, then
+"Writing the program…", "Writing the Change…", "Writing the workout…" or "Writing the answer…" once
+it writes one, else "Thinking…". **Back** goes one step back, to change that answer, and Claude asks
 again from there. There is no step counter, since Claude doesn't know in advance how many it needs.
 
 - **How the steps read** (#73): each answer is a full-width row to tap; **Type my own** opens a
@@ -1366,6 +1369,17 @@ again from there. There is no step counter, since Claude doesn't know in advance
 A check-in is kept, step by step, while you're on other tabs or away from the app, until it ends.
 It is a file in `no_backup` (`check_in.json`), saved before each call, so one left while thinking
 asks again on coming back; a backup has none. Done, ×, Accept, Add to Today and Start program end it.
+
+**Calls go on while you're away** (owner, 2026-10-24, after a program's reply died when the app
+went to the background: Android cuts a backgrounded app's network). Every call runs in a foreground
+service (`dataSync`, `coach/CheckInService.kt`) with an ongoing, silent notification, "Claude is
+building your program…" for New program and "Claude is thinking…" otherwise, that opens the
+check-in; it goes when the reply comes. The runner saves the reply as always, so nothing is lost.
+A reply that lands while the app is away posts one notification that opens the check-in at that
+step: "Your program is ready", "Claude asked a question", "Claude answered", "Claude's reply is
+ready" (a Change or workout) or "Claude couldn't finish" (a failure or problems); the next call
+takes it down; opening it shows Coach even over a running session, which goes on as Leave leaves it. Notifications are asked for at the first check-in only, if not granted (Android 13+);
+without them the call still runs in the service and the check-in works the same.
 
 **Replies are checked before you see them.** A Change, workout or program from a tool goes
 through the same validators as a paste or an import. One with problems goes back to Claude as the
@@ -1475,8 +1489,14 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   tokens; a reply that fell back is priced hop by hop at each model's own prices. The month's sum
   is kept in `setting` as `coach_cost_<yyyy-MM>` in millionths of a dollar, and goes into backups. The hard limit is the
   monthly spend limit set in the Anthropic Console; the app has no cap of its own.
+- **Timeouts** (`ClaudeClient.TIMEOUT`): a connection within 30 s, packets at most 5 minutes apart
+  (a reply's stream sends pings while Claude thinks), and the whole reply within 45 minutes, room
+  for thinking and a 64k-token program. The SDK's own default caps a streamed reply at 10 minutes.
 - **Errors.** No connection, a timeout or an API error shows "Couldn't reach Claude." with **Try
-  again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.
+  again** on that step; nothing is lost. A reply whose stream breaks off once it began (the
+  connection dropped, or stalled past the timeout) reads "Claude's reply was cut off." ("The
+  connection dropped while Claude was answering. Nothing you answered is lost: Try again asks once
+  more.") with **Try again**. A key the API refuses says "Claude doesn't accept this key.
   Check it in Settings." (the whole sentence stays in the title: owner, 2026-10-24) and offers Ask
   Claude for this check-in. A spend limit reached says so, and
   offers Ask Claude. A refusal (after the fallback) reads "Claude declined to answer this one." with
@@ -1486,7 +1506,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   **Ask Claude** there shares Ask Claude's prompt with the check-in so far
   as the words (the gym answered, or Elsewhere, with it), and **Paste reply** becomes the step's
   filled button; a Change pasted back and accepted keeps the check-in, which then ends. Every failure is warned in Logcat (tag `ClaudeClient`) with the HTTP status, the
-  API's error type and its message, and a key being checked with its length and whether it holds
+  API's error type and its message, then each cause under it by class and message (`Reply failed:
+  Dropped, AnthropicIoException: Stream failed ← SocketTimeoutException: timeout`), and a key being checked with its length and whether it holds
   only key characters (`ClaudeKeySetup`); never the key or the headers that carry it.
 - **Testable without a key.** The client is behind one interface (`CoachModel`). Tests use a fake
   that plays scripted turns: questions, each kind of reply, a reply that fails validation and its

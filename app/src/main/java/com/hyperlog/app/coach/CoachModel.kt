@@ -10,8 +10,20 @@ import kotlinx.serialization.json.JsonObject
  * play scripted turns through a fake.
  */
 interface CoachModel {
-    /** Claude's next reply. Throws a [CoachError] when there is none. */
-    suspend fun reply(request: CoachRequest): CoachReply
+    /** Claude's next reply, telling [progress] what it is doing as it streams. Throws a [CoachError] when there is none. */
+    suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit = {}): CoachReply
+}
+
+/** What Claude is doing while a reply streams, for the step that waits on it. */
+sealed interface CoachProgress {
+    /** Thinking it through, before any words. */
+    data object Thinking : CoachProgress
+
+    /** Writing words. */
+    data object Answering : CoachProgress
+
+    /** Writing a call to [tool]: a question, or a Change, workout or program. */
+    data class Writing(val tool: String) : CoachProgress
 }
 
 /**
@@ -105,6 +117,9 @@ data class CoachUsage(
 sealed class CoachError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     /** No connection, a timeout, or an error on Anthropic's side: try again. */
     class NoConnection(cause: Throwable? = null) : CoachError("Couldn't reach Claude", cause)
+
+    /** The reply began but its stream broke off (the connection dropped, or stalled past the timeout): try again. */
+    class Dropped(cause: Throwable? = null) : CoachError("Claude's reply was cut off", cause)
 
     /** The API doesn't accept the key. */
     class KeyRefused(cause: Throwable? = null) : CoachError("Claude doesn't accept this key", cause)

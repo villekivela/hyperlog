@@ -95,12 +95,26 @@ class MainActivity : ComponentActivity() {
     private val claudeKey: ClaudeKeyViewModel by viewModels()
     private val checkIns: com.hyperlog.app.ui.coach.CheckInViewModel by viewModels()
 
+    /** Each tap on a check-in's notification, counted: Coach opens on it. */
+    private val openCheckIn = kotlinx.coroutines.flow.MutableStateFlow(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) opened(intent)
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, openCheckIn) }
         }
+    }
+
+    public override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        opened(intent)
+    }
+
+    /** A check-in's notification opens Coach, at the step the check-in is on. */
+    private fun opened(intent: Intent?) {
+        if (intent?.getBooleanExtra(com.hyperlog.app.coach.CheckInNotices.EXTRA_OPEN_CHECK_IN, false) == true) openCheckIn.value++
     }
 
     override fun onStart() {
@@ -118,18 +132,22 @@ class MainActivity : ComponentActivity() {
 
 /**
  * Asks once for notifications (Android 13+), so rest shows on the lock screen. Without them rest
- * still buzzes when it runs out.
+ * still buzzes when it runs out. With [once], it asks only the first time ever for that reason
+ * (a check-in's: its reply ready while you're away); everything works without them.
  */
 @Composable
-private fun AskForNotifications() {
+private fun AskForNotifications(once: String? = null) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
     val context = LocalContext.current
     var asked by rememberSaveable { mutableStateOf(false) }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     LaunchedEffect(Unit) {
         val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val prefs = context.getSharedPreferences("notifications", android.content.Context.MODE_PRIVATE)
+        if (once != null && prefs.getBoolean(once, false)) return@LaunchedEffect
         if (!asked && !granted) {
             asked = true
+            once?.let { prefs.edit().putBoolean(it, true).apply() }
             ask.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
@@ -207,6 +225,7 @@ private fun App(
     updateModel: UpdateViewModel,
     claudeKeyModel: ClaudeKeyViewModel,
     checkInModel: com.hyperlog.app.ui.coach.CheckInViewModel,
+    openCheckIn: kotlinx.coroutines.flow.StateFlow<Int> = kotlinx.coroutines.flow.MutableStateFlow(0),
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -315,6 +334,15 @@ private fun App(
     val noneInForce = program?.inForce.isNullOrEmpty()
     LaunchedEffect(noneInForce) { if (noneInForce) coachInForce = false }
     val checkInStep = checkIn?.step
+    val checkInProgress by checkInModel.progress.collectAsStateWithLifecycle()
+    // A check-in's notification opens Coach, where the check-in is; a running session goes on, left as Leave leaves it.
+    val openedCheckIn by openCheckIn.collectAsStateWithLifecycle()
+    LaunchedEffect(openedCheckIn) {
+        if (openedCheckIn > 0) {
+            left = true
+            screen = Screen.Coach
+        }
+    }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // A restored backup replaces everything the screens hold: start them again on its data.
@@ -350,6 +378,8 @@ private fun App(
     val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview ||
         checkInStep is com.hyperlog.app.coach.CheckInStep.ProgramReview
     if (running != null) AskForNotifications()
+    // Its notifications say when Claude's reply is ready while you're away; asked at the first check-in only.
+    if (checkIn != null) AskForNotifications(once = "check_in")
     // A Change under review covers whatever proposed it: the Program screen or the session.
     review?.let { r ->
         ChangeReviewScreen(
@@ -618,6 +648,7 @@ private fun App(
             onClose = { checkInModel.close(); programModel.closePasteErrors() },
             onTellMeMore = checkInModel::tellMeMore,
             onTryAgain = checkInModel::tryAgain,
+            progress = checkInProgress,
             lowest = lowest,
             inForceOpen = coachInForce,
             onInForceOpen = { coachInForce = it },

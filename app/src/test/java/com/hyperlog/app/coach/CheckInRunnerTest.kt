@@ -93,10 +93,50 @@ class CheckInRunnerTest {
     }
 
     @Test
+    fun aReplyThatLandsLaterIsKeptWithNoOneLooking() = runTest {
+        // Claude takes ten minutes; nothing watches the runner meanwhile, as when the app is away.
+        val slow = object : CoachModel {
+            override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply {
+                kotlinx.coroutines.delay(10 * 60_000L)
+                return CoachReply("Here's your program.")
+            }
+        }
+        val runner = runner(backgroundScope, slow)
+        runner.start(Tile.NewProgram)
+        runCurrent()
+        assertTrue(runner.thinking.value)
+        testScheduler.advanceTimeBy(10 * 60_000L + 1)
+        runCurrent()
+        assertFalse(runner.thinking.value)
+        // Kept as it came: the app finds it on coming back.
+        assertEquals("Here's your program.", CheckInStore(file).load()!!.turns.single().reply.text)
+    }
+
+    @Test
+    fun whileClaudeRepliesTheRunnerSaysWhatItIsDoing() = runTest {
+        val writing = object : CoachModel {
+            val reply = CompletableDeferred<CoachReply>()
+            override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply {
+                progress(CoachProgress.Thinking)
+                progress(CoachProgress.Writing(CoachTools.PROPOSE_PROGRAM))
+                return reply.await()
+            }
+        }
+        val runner = runner(backgroundScope, writing)
+        runner.start(Tile.NewProgram)
+        assertEquals(CheckInStep.Thinking, step(runner))
+        assertEquals(CoachProgress.Writing(CoachTools.PROPOSE_PROGRAM), runner.progress.value)
+        writing.reply.complete(CoachReply("Train as planned."))
+        assertEquals(CheckInStep.Words("Train as planned."), step(runner))
+        // The next call starts from nothing said yet.
+        assertNull(runner.progress.value)
+    }
+
+    @Test
     fun aCheckInLeftWhileThinkingAsksAgainOnComingBack() = runTest {
         val hanging = object : CoachModel {
             val reply = CompletableDeferred<CoachReply>()
-            override suspend fun reply(request: CoachRequest) = reply.await()
+            override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit) = reply.await()
         }
         val first = runner(backgroundScope, hanging)
         first.start(Tile.Tired)
@@ -112,7 +152,7 @@ class CheckInRunnerTest {
     fun closeDropsTheCheckInAndBackWhileThinkingStopsTheCall() = runTest {
         val hanging = object : CoachModel {
             var asked = 0
-            override suspend fun reply(request: CoachRequest): CoachReply {
+            override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply {
                 if (++asked == 1) return ask("Which hand?", "Left", "Right")
                 return CompletableDeferred<CoachReply>().await()
             }

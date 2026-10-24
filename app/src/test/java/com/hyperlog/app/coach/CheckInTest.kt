@@ -125,6 +125,16 @@ class CheckInTest {
     }
 
     @Test
+    fun aReplyCutOffMidStreamSaysSoAndTryAgainAsksOnceMore() = runTest {
+        val model = FakeCoachModel(FakeCoachModel.Turn.Fails(CoachError.Dropped()), FakeCoachModel.Turn.Reply(words("Use straps.")))
+        val coach = coach(model)
+        val dropped = coach.start(Tile.Hurts, frame)
+        assertEquals(CheckInStep.Failed(CheckInFailure.Dropped), coach.step(dropped))
+        assertEquals(CheckInStep.Words("Use straps."), coach.step(coach.tryAgain(dropped)))
+        assertEquals(model.requests[0].messages, model.requests[1].messages)
+    }
+
+    @Test
     fun aRequestTheApiTurnsDownIsNotNoConnection() = runTest {
         val coach = coach(FakeCoachModel(FakeCoachModel.Turn.Fails(CoachError.Rejected())))
         assertEquals(CheckInStep.Failed(CheckInFailure.Rejected), coach.step(coach.start(Tile.Hurts, frame)))

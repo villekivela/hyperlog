@@ -4,6 +4,7 @@ import android.util.Log
 import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.core.JsonValue
+import com.anthropic.core.Timeout
 import com.anthropic.core.jsonMapper
 import com.anthropic.errors.AnthropicException
 import com.anthropic.errors.AnthropicServiceException
@@ -31,6 +32,7 @@ import com.anthropic.models.beta.messages.BetaUsage
 import com.anthropic.models.beta.messages.MessageCreateParams
 import com.fasterxml.jackson.databind.JsonNode
 import java.io.IOException
+import java.time.Duration
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -53,10 +55,11 @@ import kotlinx.serialization.json.longOrNull
  * official Anthropic SDK. It reaches only `api.anthropic.com`; no other code in the app calls a
  * model, and only it and the update check open a connection. [baseUrl] is for tests' stand-in.
  */
-class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
+class ClaudeClient(apiKey: String, baseUrl: String = HOST, timeout: Timeout = TIMEOUT) : CoachModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.builder()
         .apiKey(apiKey)
         .baseUrl(baseUrl)
+        .timeout(timeout)
         .build()
 
     /** Checks the key with the models list, which costs nothing. Throws a [CoachError] if it fails. */
@@ -68,13 +71,28 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
      * and so is the conversation up to its last turn, so a check-in's later steps read both from
      * the cache.
      */
-    override suspend fun reply(request: CoachRequest): CoachReply = call("Reply") {
+    override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply = call("Reply") {
         val accumulator = BetaMessageAccumulator.create()
         client.beta().messages().createStreaming(params(request)).use { stream ->
             // The read blocks; a check-in that is left closes the stream to end it.
-            val closing = currentCoroutineContext()[Job]?.invokeOnCompletion { stream.close() }
+            val job = currentCoroutineContext()[Job]
+            val closing = job?.invokeOnCompletion { stream.close() }
             try {
-                stream.stream().forEach { accumulator.accumulate(it) }
+                stream.stream().forEach { event ->
+                    accumulator.accumulate(event)
+                    // Each block as it starts says what Claude is doing.
+                    event.contentBlockStart().map { it.contentBlock() }.ifPresent { block ->
+                        when {
+                            block.isThinking() || block.isRedactedThinking() -> progress(CoachProgress.Thinking)
+                            block.isText() -> progress(CoachProgress.Answering)
+                            block.isToolUse() -> progress(CoachProgress.Writing(block.asToolUse().name()))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // The reply had begun, so a break now is the stream's. A check-in left closes it on purpose: that stays a cancellation.
+                if (e is CancellationException || job?.isCancelled == true) throw e
+                throw CoachError.Dropped(e)
             } finally {
                 closing?.dispose()
             }
@@ -221,11 +239,20 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
         }
     }
 
-    /** `KeyRefused, HTTP 401 authentication_error: invalid x-api-key`, from the error and its cause. */
+    /**
+     * `KeyRefused, HTTP 401 authentication_error: invalid x-api-key`, from the error and its cause,
+     * then every cause under that by class and message (`← SocketTimeoutException: timeout`).
+     */
     private fun describe(error: CoachError): String {
         val name = error.javaClass.simpleName
         if (error is CoachError.Refused) return "$name (${error.category ?: "no category"})"
-        return when (val cause = error.cause) {
+        val chain = generateSequence(error.cause?.cause) { it.cause }.take(8)
+            .joinToString("") { " ← ${it.javaClass.simpleName}: ${it.message}" }
+        return head(error, name) + chain
+    }
+
+    private fun head(error: CoachError, name: String): String =
+        when (val cause = error.cause) {
             is AnthropicServiceException -> {
                 val body = runCatching { cause.body().convert(JsonNode::class.java)?.path("error") }.getOrNull()
                 val type = body?.path("type")?.asText().orEmpty().ifEmpty { cause.errorType().map { it.toString() }.orElse("no type") }
@@ -235,7 +262,6 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
             null -> name
             else -> "$name, ${cause.javaClass.simpleName}: ${cause.message}"
         }
-    }
 
     /**
      * A billing error, or the 400 the API answers once the Console's spend limit or the credit
@@ -249,6 +275,19 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
     }
 
     companion object {
+        /**
+         * How long a call may take: a connection in 30 s; then packets at most 5 minutes apart
+         * (while Claude thinks the stream sends pings every few seconds); and the whole reply,
+         * thinking and a 64k-token program, within 45 minutes. The SDK's own default would cap a
+         * streamed reply at 10 minutes.
+         */
+        val TIMEOUT: Timeout = Timeout.builder()
+            .connect(Duration.ofSeconds(30))
+            .read(Duration.ofMinutes(5))
+            .write(Duration.ofMinutes(2))
+            .request(Duration.ofMinutes(45))
+            .build()
+
         const val MODEL = "claude-opus-5-5"
         const val HOST = "https://api.anthropic.com"
 

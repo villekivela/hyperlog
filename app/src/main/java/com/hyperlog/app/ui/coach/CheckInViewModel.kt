@@ -124,6 +124,13 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
     val checkIn: StateFlow<CheckInView?> = runner.state
     val thinking: StateFlow<Boolean> = runner.thinking
 
+    /** What Claude is doing in the call under way, as its reply streams. */
+    val progress: StateFlow<com.hyperlog.app.coach.CoachProgress?> = runner.progress
+
+    /** Each call runs in a foreground service, so leaving the app doesn't cut it. */
+    @Suppress("unused")
+    private val keeper = com.hyperlog.app.coach.CheckInKeeper(application, viewModelScope, runner.thinking, runner.state)
+
     fun start(tile: Tile) {
         _draft.value = null
         runner.start(tile)

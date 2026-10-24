@@ -134,7 +134,7 @@ data class SavedCheckIn(val opening: String, val steps: List<Step>) {
 }
 
 @Serializable
-enum class CheckInFailure { NoConnection, KeyRefused, SpendLimit, Refused, Rejected }
+enum class CheckInFailure { NoConnection, Dropped, KeyRefused, SpendLimit, Refused, Rejected }
 
 /** What a check-in's screen shows. */
 sealed interface CheckInStep {
@@ -241,8 +241,11 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         }
     }
 
-    /** Calls Claude while the check-in waits for a reply, sending a reply's problems back until it's right or out of fixes. */
-    suspend fun run(checkIn: CheckIn): CheckIn {
+    /**
+     * Calls Claude while the check-in waits for a reply, sending a reply's problems back until it's
+     * right or out of fixes; [progress] hears what Claude is doing as each reply streams.
+     */
+    suspend fun run(checkIn: CheckIn, progress: (CoachProgress) -> Unit = {}): CheckIn {
         var current = checkIn
         while (true) {
             if (current.waiting) {
@@ -250,7 +253,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
                 val kept = withoutLostFiles(current)
                 if (kept != current) return kept
                 val reply = try {
-                    model.reply(CoachRequest(current.frame.context, current.frame.tools, current.messages))
+                    model.reply(CoachRequest(current.frame.context, current.frame.tools, current.messages), progress)
                 } catch (e: CoachError) {
                     return current.copy(failure = failure(e))
                 }
@@ -278,6 +281,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
 
     private fun failure(e: CoachError) = when (e) {
         is CoachError.NoConnection -> CheckInFailure.NoConnection
+        is CoachError.Dropped -> CheckInFailure.Dropped
         is CoachError.KeyRefused -> CheckInFailure.KeyRefused
         is CoachError.SpendLimit -> CheckInFailure.SpendLimit
         is CoachError.Refused -> CheckInFailure.Refused

@@ -26,6 +26,9 @@
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
         android:maxSdkVersion="32" />
+    <!-- A check-in's call keeps its connection while you're in another app (SPEC, Coaching → Check-in). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- A running rest comes back after a reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -68,6 +71,11 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+        <!-- A check-in's call, while Claude replies. -->
+        <service
+            android:name=".coach.CheckInService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!-- The downloaded update, readable by the installer it is handed to. -->
         <provider
             android:name="androidx.core.content.FileProvider"

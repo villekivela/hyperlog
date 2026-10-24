@@ -30,9 +30,20 @@ internal object BuildCoach {
 class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel {
     private var calls = 0
 
-    override suspend fun reply(request: CoachRequest): CoachReply {
-        // Long enough to see Thinking…, timed off the main thread as a call would be.
+    override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply {
+        // Long enough to see Thinking…, timed off the main thread as a call would be; then what it writes, as a stream says.
+        progress(CoachProgress.Thinking)
         withContext(Dispatchers.Default) { delay(THINKING_MS) }
+        val reply = scripted(request)
+        val call = reply.toolCalls.firstOrNull { it.name != CoachTools.ASK }
+        if (call != null || reply.toolCalls.isEmpty()) {
+            progress(if (call != null) CoachProgress.Writing(call.name) else CoachProgress.Answering)
+            withContext(Dispatchers.Default) { delay(WRITING_MS) }
+        }
+        return reply
+    }
+
+    private suspend fun scripted(request: CoachRequest): CoachReply {
         val world = world()
         val opening = (request.messages.first() as CoachMessage.User).text
         val tile = Tile.entries.firstOrNull { it.words == opening } ?: Tile.SomethingElse
@@ -189,6 +200,7 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
 
     private companion object {
         const val THINKING_MS = 900L
+        const val WRITING_MS = 900L
         const val DRAG_CURL = "Barbell Drag Curl"
         const val MORE = "A short night mostly costs you reps at the end of a set, not strength at the start. Keep the weights, cut a set, and sleep in tonight."
     }
