@@ -218,7 +218,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(23), file["database"])
+        assertEquals(JsonPrimitive(24), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -442,5 +442,15 @@ class BackupsTest {
             com.hyperlog.app.week.WeekdayPlans(phone).plan.first(),
         )
         assertEquals(listOf("Central"), Gyms(phone).gyms.first().map { it.name })
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase23RestoresItsChangesWithNoCheckIn() = runTest {
+        val file = javaClass.getResource("/backup/hyperlog-backup-db23.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val history = Programs(phone, clock = { now }).active.first()!!.history
+        assertEquals(listOf("Lighter bench", "Skip"), history.map { it.change.summary })
+        assertEquals(listOf(null, null), history.map { it.checkIn })
     }
 }

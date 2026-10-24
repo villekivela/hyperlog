@@ -534,6 +534,24 @@ class MigrationTest {
     }
 
     @Test
+    fun version23ChangesKeepNoCheckIn() = runTest {
+        val file = context.getDatabasePath("migration-test-23.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(23, file) { db ->
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, active, week, day_index) VALUES (1, 'P', '{}', 1, 1, 1, 0)")
+            db.execSQL(
+                "INSERT INTO plan_change (id, program_id, json, accepted_at, accepted_on, week_before, day_before, week_after, day_after) " +
+                    "VALUES (1, 1, '{}', 1, 20000, 1, 0, 1, 0)",
+            )
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(null, db.planChanges().change(1)!!.checkIn)
+        db.close()
+    }
+
+    @Test
     fun version22GymWeekdaysBecomeYourTrainingDaysEachWithItsGym() = runTest {
         val file = context.getDatabasePath("migration-test-22.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(22, file) { db ->

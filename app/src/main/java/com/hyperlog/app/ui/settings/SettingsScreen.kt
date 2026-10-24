@@ -121,6 +121,9 @@ fun SettingsScreen(
     onRemoveKey: () -> Unit = {},
     /** The key's field was closed: forget its check. */
     onDismissKey: () -> Unit = {},
+    /** The scripted coach's switch, offered in a debug build only; null hides it. */
+    scriptedCoach: Boolean? = null,
+    onScriptedCoach: (Boolean) -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var enteringKey by rememberSaveable { mutableStateOf(false) }
@@ -184,6 +187,17 @@ fun SettingsScreen(
                     row(keyTitle, keyLine, Symbol.Key, onClick = { enteringKey = true })
                 } else {
                     row(keyTitle, keyLine, Symbol.Key, trailing = { TextButton(onClick = onRemoveKey) { Text(removeLabel) } })
+                }
+                scriptedCoach?.let { on ->
+                    item {
+                        Box(Modifier.toggleable(on, role = Role.Switch, onValueChange = onScriptedCoach)) {
+                            SegmentedRow(
+                                stringResource(R.string.settings_scripted_coach), stringResource(R.string.settings_scripted_coach_body), Symbol.Sports,
+                                supportingLines = 2,
+                                trailing = { Switch(checked = on, onCheckedChange = null) },
+                            )
+                        }
+                    }
                 }
             }
             if (claudeKey.ending != null) {

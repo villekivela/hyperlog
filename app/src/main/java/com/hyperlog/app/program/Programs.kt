@@ -63,7 +63,13 @@ data class ActiveProgram(
 }
 
 /** An accepted Change as kept: when it was accepted, and reverted if it was. */
-data class ChangeRecord(val accepted: AcceptedChange, val acceptedAt: Long, val revertedAt: Long?) {
+data class ChangeRecord(
+    val accepted: AcceptedChange,
+    val acceptedAt: Long,
+    val revertedAt: Long?,
+    /** The check-in that made it; null for one pasted, or proposed in a session. */
+    val checkIn: com.hyperlog.app.coach.SavedCheckIn? = null,
+) {
     val id: Long get() = accepted.id
     val change: Change get() = accepted.change
 }
@@ -102,7 +108,7 @@ class Programs(
      * Accepts [change] for the running program: its position operations run, and its plan edits
      * apply to the sessions it covers. It is kept as history.
      */
-    suspend fun accept(change: Change) {
+    suspend fun accept(change: Change, checkIn: com.hyperlog.app.coach.SavedCheckIn? = null) {
         db.withTransaction {
             // The Changes it replaces end first, by the rules of Revert.
             change.replaces.sortedDescending().forEach { revertIn(it) }
@@ -115,7 +121,7 @@ class Programs(
                     acceptedOn = accepted.acceptedOn.toEpochDay(),
                     weekBefore = accepted.before.week, dayBefore = accepted.before.day,
                     weekAfter = accepted.after.week, dayAfter = accepted.after.day,
-                    blockId = accepted.blockId,
+                    blockId = accepted.blockId, checkIn = checkIn?.let(com.hyperlog.app.coach.SavedCheckIn::encode),
                 ),
             )
             if (accepted.after != accepted.before) dao.setPosition(row.id, accepted.after.week, accepted.after.day)
@@ -210,7 +216,7 @@ class Programs(
 
     private fun toActive(row: ProgramEntity, changes: List<PlanChangeEntity>): ActiveProgram? {
         val program = parsed.getOrPut(row.id) { stored(row) } ?: return null
-        val history = changes.mapNotNull { c -> c.toAccepted()?.let { ChangeRecord(it, c.acceptedAt, c.revertedAt) } }
+        val history = changes.mapNotNull { c -> c.toAccepted()?.let { ChangeRecord(it, c.acceptedAt, c.revertedAt, c.checkIn?.let(com.hyperlog.app.coach.SavedCheckIn::decode)) } }
         return ActiveProgram(row.id, program, Position(row.week, row.dayIndex), history, dateOf(clock()))
     }
 

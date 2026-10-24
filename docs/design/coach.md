@@ -209,6 +209,183 @@ Unchanged by the redesign:
 - Not at Harbour marks the exercise missing at the gym and swaps it straight away (or leaves it out of
   the session with nothing that fits).
 
+## Check-in (#73)
+
+With a Claude key, or the scripted coach in a debug build, Coach is the check-in (`SPEC.md`,
+Coaching → Check-in; ADR 0005): "What's going on?" over eight tiles, then Claude's questions one a
+screen, ending in words, a review, or ×. `ui/coach/CheckInScreen.kt`. Without either, the
+words-first screen above stays until #74.
+
+### Principles
+
+1. **One question a screen, and the question is the screen.** It is set large (headlineMedium,
+   Space Grotesk) at the top; its answers sit right under it, big enough to hit mid-set.
+2. **Tiles are tiles.** The eight situations are a 2 × 4 grid of square-ish cards, a symbol over a
+   name, so all eight show at once with a Change in force above them. A list of eight rows
+   pushed the last one below the fold.
+3. **Your words are marked.** Wherever a check-in is read back (the transcript under a Change), what
+   you said carries the `subdirectory_arrow_right` symbol; Claude's questions don't. No chat
+   bubbles: it's a record, not a conversation.
+4. **Waiting is the one moment of motion.** Thinking… is Material 3 Expressive's morphing loading
+   indicator, alone in the middle of the screen. Nothing else animates.
+5. **A failure says what to do next.** Each failure is a calm centred state (its symbol in the
+   cookie shape, a title, one line) with its way forward as the bottom strip's filled button.
+6. **The filled button is the next step**, at the end of the bottom strip, as on the rest of Coach.
+
+### Tokens
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Tile grid | 2 columns, 4 dp apart both ways, 12 dp from the screen edge; the group's four outer corners 32 dp, every other corner 8 dp (`segmentShape` applied to the grid) | The eight tiles, in SPEC's order, row by row |
+| Tile | Tones.card, 124 dp tall at least (so every row is the same height whether its names take one line or two), 16 dp padding; the 40 dp secondaryContainer circle top-left, the name titleMedium at the bottom, 8 dp under it, two lines | One situation; the whole tile taps |
+| In-force line | a lone `Segment` with `SegmentedRow`: `tune`, `1 change in force` over the newest summary, chevron | Opens Changes in force |
+| Question head | "What's going on?" headlineSmall on the 24 dp edge, the intro bodyMedium onSurfaceVariant, 16 dp to the tiles | Tiles step |
+| Question | headlineMedium, 24 dp edge, 8 dp under the bar, 24 dp over the answers | Claude's question |
+| Answer row | a segment of a group, 72 dp at least, titleMedium on the 24 dp edge, no symbol or chevron; a muscle group's mark joins it (`Back · 4 sets`), the mark in onSurfaceVariant at regular weight | One answer; tapping it sends it |
+| Type my own | a lone card 16 dp under the answers, 64 dp: `keyboard` 24 dp onSurfaceVariant at the 24 dp edge, "Type my own" bodyLarge onSurfaceVariant | Closed |
+| Own answer | the same card holds a borderless text field (placeholder "Your answer") and a 48 dp filled icon button, `arrow_upward`, "Send", at the end, 8 dp from the card's edge | Open; Send disabled while blank |
+| Thinking | `LoadingIndicator` 96 dp in primary, "Thinking…" bodyLarge onSurfaceVariant 16 dp under it, a little above the middle | While a call runs, and until a review opens |
+| Claude's words | a `SectionCard`, bodyLarge on the 24 dp edge, 16 dp top and bottom padding | The words ending |
+| Problems | a `SectionCard`: `warning` 24 dp and titleMedium in error, the line under it bodyMedium onSurfaceVariant, then each problem (path over message) | The reply Claude couldn't fix |
+| Failure | `ShapedSymbol` 72 dp (`cable` no connection, `key` key refused, `toll` spend limit, `block` declined), titleLarge, bodyMedium onSurfaceVariant, centred on the 24 dp edges, 48 dp under the bar | Each failure |
+| Transcript | in its card: "The check-in" labelLarge primary; Claude's questions bodyMedium onSurfaceVariant; your words bodyLarge after `subdirectory_arrow_right` 18 dp primary, 4 dp under the question; 12 dp between pairs | Under a Change in force, in Program → Changes' dialog |
+| Bottom strip | `BottomActions` (Tones.bar, 28 dp top corners) | Tell me more / **Done**; **Try again**; Ask Claude / **Try again**; **Ask Claude**; Ask Claude / **Paste reply** |
+
+### Wireframes
+
+```
+ Coach
+ ┌──────────────────────────────────────────────┐
+ │ (tune) 1 change in force                   › │ ← only while one is in force
+ │        Today only: leave out the last ex…    │
+ └──────────────────────────────────────────────┘
+ What's going on?
+ Claude asks what it needs. Nothing changes until you accept.
+ ╭─────────────────────╮ ┌─────────────────────╮
+ │ (✋)                │ │ (⏱)                 │
+ │                     │ │                     │
+ │ Something hurts     │ │ Short on time       │
+ └─────────────────────┘ └─────────────────────┘
+ ┌─────────────────────┐ ┌─────────────────────┐
+ │ (⌖)                 │ │ (bed)               │
+ │ Different gym       │ │ Tired or slept      │
+ │ or none             │ │ badly               │
+ └─────────────────────┘ └─────────────────────┘
+   … Change my program, Build me a workout,
+ ╰ New program ────────┘ └ Something else ─────╯ ← outer corners 32 dp, the rest 8 dp
+```
+
+```
+ ←  Something hurts                            ×
+ Does it hurt when you
+ press, or only when you
+ grip?                                           ← headlineMedium
+ ╭──────────────────────────────────────────────╮
+ │ Only gripping                                │ ← 72 dp, titleMedium
+ ├──────────────────────────────────────────────┤
+ │ Pressing too                                 │
+ ╰──────────────────────────────────────────────╯
+ ╭──────────────────────────────────────────────╮
+ │ ⌨  Type my own                               │ ← opens in place:
+ ╰──────────────────────────────────────────────╯   │ Your answer…                  (↑) │
+```
+
+```
+ ←  Tired or slept badly                       ×      ←  Tired or slept badly        ×
+                                                      ╭────────────────────────────────╮
+                                                      │ Train as planned, but stop     │
+                 ⬢  (morphing)                        │ each set a rep earlier than    │
+                 Thinking…                            │ written. …                     │
+                                                      ╰────────────────────────────────╯
+                                                      ╭────────────────────────────────╮
+                                                      │ Tell me more            [Done] │
+```
+
+```
+ ←  Tired or slept badly                       ×
+                  (cookie: key)
+       Claude doesn't accept this key.
+              Check it in Settings.
+   Or ask in the Claude app: this check-in goes
+       with it, and you paste the reply back.
+ ╭──────────────────────────────────────────────╮
+ │                                [Ask Claude]  │ ← then: Ask Claude   [Paste reply]
+```
+
+### States
+
+Screenshots in `screens/`, `dark-checkin-…` and `light-checkin-…`; the failures and problems are
+Robolectric renders from `CheckInRenders` (the scripted coach plays no failures), the rest from the
+emulator with the scripted coach.
+
+- Tiles, nothing in force (`checkin-01-tiles`); a Change in force above them
+  (`checkin-02-tiles-in-force`).
+- A question with its answers (`checkin-03-question`); Type my own open (`checkin-04-own`);
+  focus answers with their marks (`checkin-05-marks`).
+- Thinking (`checkin-06-thinking`).
+- Claude's words with Tell me more and Done (`checkin-07-words`).
+- The problems of a reply Claude couldn't fix, Try again (`checkin-08-problems`).
+- No connection (`checkin-09-no-connection`); key refused (`checkin-10-key-refused`); spend limit
+  (`checkin-11-spend-limit`); declined (`checkin-12-declined`); after Ask Claude, a bad paste's
+  problems under it (`checkin-13-bad-paste`).
+- Add to Today while a session runs: Today's snackbar (`checkin-17-added-mid-session`, dark).
+- Changes in force (`checkin-14-in-force`); a Change in force with the check-in that made it
+  (`checkin-15-transcript`).
+- The emulator shots are at font scale 1.15, the owner's; the tiles at 1.3 (`checkin-16-large-text`)
+  still fit with a Change in force, the last row just under the fold.
+
+### Interaction rules
+
+- A tile, an answer and Send each start a call at once: Thinking shows in their place. No
+  confirm step.
+- Type my own opens its card in place with the keyboard up; Send (or the keyboard's send key)
+  sends the trimmed words, and is disabled while they're blank. Its words are kept outside the
+  screen (`CheckInViewModel.draft`), so a half-typed answer survives a tab switch; they're cleared
+  when an answer goes or the check-in ends.
+- Back (or Reject) to a question you answered in your own words opens Type my own with them, the
+  cursor at the end, so a wrong guess from Claude is one edit away.
+- On a review from a check-in, × drops the check-in, as on every step (its label is "Close the
+  check-in"); Reject and Back step back to the question before.
+- Add to Today while a session runs lands on Today with a long snackbar, "Workout added. It's on
+  Today once this session ends.", since Today shows the running session's day
+  (`checkin-17-added-mid-session`).
+- The bar's title is the tile (or "How's it going?", "Easing back in"); Back is one step back;
+  × drops the check-in at any step.
+- The navigation bar hides while a check-in is under way, as in a session (owner, 2026-10-24),
+  and on the Changes in force page, a sub-screen; it shows on the tiles.
+- Reject on a review steps back with Type my own open, even on a question that didn't offer it,
+  so you can say what was wrong.
+- Tell me more adds a card: Claude's earlier words stay above in onSurfaceVariant, the new words
+  below in onSurface, scrolled into view.
+- After Ask Claude on a failure, Paste reply becomes the filled button and Ask Claude moves to the
+  text button; a bad paste shows its problems under the failure, scrolled into view.
+- Reverting the last Change in force closes the page: the tiles and the bar come back.
+
+### Pass notes (#73)
+
+- First build: eight full-width rows put Something else below the fold with a Change in force;
+  the answer rows carried chevrons (they send, they don't navigate); Type my own was a loose text
+  button and its field an outlined box under the group; Thinking was a small spinner; the words
+  and problems sat on the bare screen; failures were left-aligned text; the bar stayed on the
+  Changes in force page; How's it going? was titled "Check-in".
+- First pass: the grid; answers without chevrons; Type my own as its own card that opens in
+  place with a filled Send; the expressive loading indicator; words and problems in cards;
+  centred failures with their symbol; the bar hidden on Changes in force; the bar titled
+  How's it going? or Easing back in; the intro cut to one sentence a job.
+- Second pass: rows of tiles were uneven (one-line names shorter than two-line), so tiles got a
+  height that holds two lines; the marks went quieter than the answer; the own answer's text
+  moved onto the 24 dp edge; the strip's text button onto the 24 dp edge; the bad paste's
+  problems onto the card's edge; the bar came back when the last Change is reverted (it stayed
+  hidden).
+- Tester's report (`checkin-test-report.md`), fixed: × on a review now drops the check-in (it
+  stepped back, like Reject); typed answers survive a tab switch and come back on Back or Reject;
+  the scripted coach offers Type my own on the focus and "which exercise" questions (effort and
+  time stay fixed); Add to Today mid-session says where the workout went.
+- Owner's answers (2026-10-24): the bar hides during a check-in; Reject steps back with Type my own
+  open; the review doesn't show your answers (Back does); Tell me more adds a step under the
+  words; with more than 3 gyms Claude offers the 3 likeliest and Elsewhere, Type my own for the
+  rest; the key-refused title keeps "Check it in Settings".
+
 ## Pass notes
 
 - First pass on the phone: with two Changes in force, the starters wrapped to three rows and

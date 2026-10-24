@@ -1,5 +1,6 @@
 package com.hyperlog.app.coach
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -22,8 +23,13 @@ data class CoachRequest(
     val messages: List<CoachMessage>,
 )
 
-/** A tool Claude replies through. [inputSchema] is a JSON Schema object with `additionalProperties: false`. */
-data class CoachTool(val name: String, val description: String, val inputSchema: JsonObject)
+/**
+ * A tool Claude replies through. [inputSchema] is a JSON Schema object with `additionalProperties:
+ * false`. A [strict] tool's input always fits its schema; the API compiles strict schemas into one
+ * grammar per request, and refuses one too large, so only small tools are strict.
+ */
+@Serializable
+data class CoachTool(val name: String, val description: String, val inputSchema: JsonObject, val strict: Boolean = true)
 
 /** A turn of the check-in. */
 sealed interface CoachMessage {
@@ -37,27 +43,31 @@ sealed interface CoachMessage {
     data class Assistant(val reply: CoachReply) : CoachMessage
 }
 
+@Serializable
 data class ToolCall(val id: String, val name: String, val input: JsonObject)
 
 /** The answer to the call [callId]; [isError] when it hands Claude a reply's problems. */
+@Serializable
 data class ToolResult(val callId: String, val content: String, val isError: Boolean = false)
 
 /**
  * Claude's reply: its words, its tool calls, and what it cost. [original] is the client's own copy
- * of the reply (its thinking included), which goes back unchanged when the reply is in a later
- * request; a reply the client didn't make has none.
+ * of the reply as JSON (its thinking included), which goes back unchanged when the reply is in a
+ * later request, a check-in saved and read back too; a reply the client didn't make has none.
  */
+@Serializable
 data class CoachReply(
     val text: String,
     val toolCalls: List<ToolCall> = emptyList(),
     val usage: List<CoachUsage> = emptyList(),
-    val original: Any? = null,
+    val original: String? = null,
 )
 
 /**
  * Tokens one model read and wrote for a reply. A reply that fell back to another model after a
  * refusal has one for each model that ran.
  */
+@Serializable
 data class CoachUsage(
     val model: String,
     val input: Long = 0,
@@ -73,6 +83,9 @@ sealed class CoachError(message: String, cause: Throwable? = null) : Exception(m
 
     /** The API doesn't accept the key. */
     class KeyRefused(cause: Throwable? = null) : CoachError("Claude doesn't accept this key", cause)
+
+    /** The API turned the request down (a 4xx other than the key, the limit, a timeout or a rate limit): trying again won't help. */
+    class Rejected(cause: Throwable? = null) : CoachError("Claude couldn't take this request", cause)
 
     /** The month's spend limit set in the Anthropic Console is reached. */
     class SpendLimit(cause: Throwable? = null) : CoachError("The spend limit is reached", cause)

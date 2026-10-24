@@ -8,12 +8,14 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.assertButtonOrder
 import com.hyperlog.app.waitFor
+import com.hyperlog.app.click
 import com.hyperlog.app.waitGone
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -93,5 +95,30 @@ class ProgramChangesTest {
         compose.onNodeWithContentDescription("Back").performClick()
         compose.waitFor("Changes · none in force")
         compose.onAllNodesWithText("Week 3 · Day A", substring = true)[0].assertIsDisplayed()
+    }
+
+    @Test
+    fun theChangesPageShowsTheCheckInThatMadeAChange() {
+        programAtWeek(1)
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val made = com.hyperlog.app.coach.SavedCheckIn("Something hurts.", listOf(com.hyperlog.app.coach.SavedCheckIn.Step("Which hand?", "Left, only gripping")))
+        runBlocking {
+            com.hyperlog.app.ui.program.ProgramStore.get(context.applicationContext as android.app.Application)
+                .accept(com.hyperlog.app.coach.ChangeJson.decode("""{"summary":"Easier for the hand","scope":"rest_of_program","operations":[{"op":"adjust_rir","by":1}]}"""), made)
+        }
+        compose.waitFor("Changes · 1 in force")
+        compose.onNodeWithText("Changes · 1 in force").performClick()
+        compose.click("Easier for the hand")
+        // In force: what it does from today on, then the check-in.
+        compose.waitFor("Change in force")
+        compose.onNode(androidx.compose.ui.test.hasTestTag(ChangeDiffTag)).performScrollToNode(androidx.compose.ui.test.hasText("Left, only gripping"))
+        compose.onNodeWithText("Which hand?").assertIsDisplayed()
+        // Reverted: its summary, status and check-in in the dialog.
+        compose.onNodeWithText("Revert").performClick()
+        compose.onAllNodesWithText("Revert").let { it[it.fetchSemanticsNodes().size - 1] }.performClick()
+        compose.waitGone("Change in force")
+        compose.click("Easier for the hand")
+        compose.waitFor("Which hand?")
+        compose.onNodeWithText("Left, only gripping").assertIsDisplayed()
     }
 }

@@ -56,7 +56,8 @@ interface ProgramDao {
 /**
  * An accepted Change (SPEC, Coaching), kept as history: its JSON (deload weeks resolved), when it
  * was accepted, the position it moved from and to, and the block it was accepted in. A reverted
- * Change stays, marked [revertedAt].
+ * Change stays, marked [revertedAt]. [checkIn] is the check-in that made it, as JSON; null for one
+ * pasted or proposed in a session.
  */
 @Entity(
     tableName = "plan_change",
@@ -76,6 +77,7 @@ data class PlanChangeEntity(
     @ColumnInfo(name = "day_after") val dayAfter: Int,
     @ColumnInfo(name = "block_id") val blockId: String?,
     @ColumnInfo(name = "reverted_at") val revertedAt: Long? = null,
+    @ColumnInfo(name = "check_in") val checkIn: String? = null,
 )
 
 @Dao

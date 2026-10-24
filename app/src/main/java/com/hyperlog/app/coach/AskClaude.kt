@@ -62,7 +62,6 @@ object AskClaude {
         /** Build me a workout's options, while they're open; null when closed. */
         options: WorkoutOptions? = null,
     ): String = buildString {
-        val names = library.associate { it.id to it.name }
         if (plan == null) {
             appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
         } else {
@@ -95,6 +94,33 @@ object AskClaude {
             )
         }
         appendLine()
+        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays, weeklySets)
+        if (plan != null) {
+            appendLine()
+            append(ChangeFormat.text(plan))
+        }
+        appendLine()
+        append(WorkoutFormat.text(library))
+    }
+
+    /**
+     * What both ways of asking Claude tell it, built once (SPEC, What Claude is told): today and the
+     * days off, the [gym] (or [elsewhere]), the program with its Changes in force, the sessions, the
+     * weekly sets and the library.
+     */
+    internal fun StringBuilder.situation(
+        plan: ActiveProgram?,
+        sessions: List<PastSessionItem>,
+        library: List<Exercise>,
+        zone: ZoneId,
+        today: LocalDate,
+        gym: Gym?,
+        elsewhere: Boolean,
+        lastTrained: LocalDate?,
+        weekdays: Set<DayOfWeek>,
+        weeklySets: List<WeekSets>,
+    ) {
+        val names = library.associate { it.id to it.name }
         appendLine("Today is $today (${today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}).")
         appendLine(daysOff(lastTrained, today, weekdays))
         if (elsewhere) {
@@ -117,12 +143,6 @@ object AskClaude {
         }
         appendLine()
         library(plan?.program, library)
-        if (plan != null) {
-            appendLine()
-            append(ChangeFormat.text(plan))
-        }
-        appendLine()
-        append(WorkoutFormat.text(library))
     }
 
     /** Build me a workout's options: the effort as reps in reserve, the time, and the focus. */
@@ -158,7 +178,7 @@ object AskClaude {
     }
 
     /** The gym picked: its equipment by kind, its dumbbells and plates, and the exercises it has nothing for. */
-    private fun StringBuilder.gym(gym: Gym, names: Map<String, String>) {
+    internal fun StringBuilder.gym(gym: Gym, names: Map<String, String>) {
         appendLine("## Gym: ${gym.name}")
         appendLine("Where I'm training. Its equipment:")
         gym.sections().forEach { (kind, items) ->
@@ -273,10 +293,11 @@ object AskClaude {
         val changes = plan.inForce
         if (changes.isNotEmpty()) {
             appendLine()
-            appendLine("Changes in force (accepted earlier, newest first), each with its id and its operations as JSON:")
+            appendLine("Changes in force (accepted earlier, newest first), each with its id, its operations as JSON and the check-in that made it:")
             changes.forEach {
                 appendLine("- id ${it.id}: ${it.change.summary} (${scopeText(it.change.scope)}, accepted ${it.accepted.acceptedOn})")
                 appendLine("  operations: ${ChangeJson.format.encodeToString(ListSerializer(Operation.serializer()), it.change.operations)}")
+                it.checkIn?.let { made -> appendLine("  check-in: ${made.text().lines().joinToString(" / ")}") }
             }
         }
         val current = plan.position.week.coerceAtMost(program.weeks)
@@ -366,7 +387,7 @@ object ChangeFormat {
     )
 
     /** What each operation does, by its JSON name. Ranges come from the validator. */
-    private fun description(op: String, program: Program): String = with(ChangeValidator) {
+    internal fun description(op: String, program: Program): String = with(ChangeValidator) {
         when (op) {
             "swap" -> "The slot does that exercise instead (an alternative's own sets, else the slot's). Prefer the slot's alternatives."
             "remove" -> "The slot is left out."

@@ -47,6 +47,29 @@ class ClaudeClientLiveTest {
         assertTrue(reply.usage.sumOf { it.output } > 0)
     }
 
+    /**
+     * A whole check-in's first two calls with the app's own frame: the API compiles the strict
+     * schemas, Claude asks through ask, and its reply, thinking included, goes back with the answer.
+     */
+    @Test
+    fun aCheckInWithTheAppsToolsAsksAndGoesOn() = runTest(timeout = 5.minutes) {
+        assumeTrue("ANTHROPIC_API_KEY isn't set", key != null)
+        val library = com.hyperlog.app.library.LibrarySeed.parse(java.io.File("src/main/assets/exercises.json").readText())
+        val ids = library.exercises.map { it.id }.toSet()
+        val program = (com.hyperlog.app.program.ProgramParser.parse(
+            java.io.File("src/main/assets/${com.hyperlog.app.program.StarterProgram.ASSET}").readText(), ids, library.merged,
+        ) as com.hyperlog.app.program.ProgramParser.Result.Valid).program
+        val plan = com.hyperlog.app.program.ActiveProgram(1, program, com.hyperlog.app.program.Position(1, 1), today = java.time.LocalDate.now())
+        val frame = CheckInContext.frame(plan, emptyList(), library.exercises)
+        val coach = CheckInCoach(ClaudeClient(key!!), CheckInWorld(program, ids))
+        val checkIn = coach.start(Tile.Hurts, frame)
+        val first = coach.step(checkIn)
+        assertTrue(first.toString(), first is CheckInStep.Question)
+        val next = coach.answer(checkIn, (first as CheckInStep.Question).answers.first())
+        val step = coach.step(next)
+        assertTrue(step.toString(), step !is CheckInStep.Failed && step !is CheckInStep.Problems)
+    }
+
     @Test
     fun aRefusedKeySaysSo() = runTest(timeout = 1.minutes) {
         assumeTrue("ANTHROPIC_API_KEY isn't set", key != null)

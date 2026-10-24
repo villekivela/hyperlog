@@ -376,6 +376,10 @@ private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onOpen:
                     Text(interFigures(record.change.summary), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.height(8.dp))
                     Text(changeStatus(record, active.program, record.id in active.replaced), style = MaterialTheme.typography.bodyMedium)
+                    record.checkIn?.let { made ->
+                        Spacer(Modifier.height(16.dp))
+                        com.hyperlog.app.ui.coach.CheckInTranscript(made)
+                    }
                 }
             },
             confirmButton = { TextButton(onClick = { reading = null }) { Text(stringResource(R.string.change_close)) } },

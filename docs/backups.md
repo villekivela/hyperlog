@@ -16,7 +16,8 @@ before switching phones. Auto Backup is the safety net.
 
 Everything you made, as stored on the phone:
 
-- **Programs** with their position, and every **Change** accepted on them (reverted ones too).
+- **Programs** with their position, and every **Change** accepted on them (reverted ones too),
+  each with the check-in that made it.
 - **Workouts** from the coach: the one waiting on Today, and each one a session trained.
 - **Sessions**: finished ones with every set, drop, mini-set and hold, the edits made during them
   (swaps, added and removed sets, techniques), and **the running session** with the set half-typed on
@@ -27,8 +28,8 @@ Everything you made, as stored on the phone:
   missing.
 - **Exercise library**: the shipped exercises, your edits, hidden exercises and the ones you added.
 - **Starting weights** from the old app, **lift goals** and **bodyweight**.
-- **Settings**: "Check for updates", the update banner you dismissed, and what the coach cost each
-  month (`coach_cost_2026-10`).
+- **Settings**: "Check for updates", the update banner you dismissed, what the coach cost each
+  month (`coach_cost_2026-10`), and a debug build's scripted coach switch (`scripted_coach`).
 
 Left out: the last update check (`update_check`), only a cache of GitHub's answer; a restore leaves
 it as it is. A test (`BackupTablesTest`) fails if a table is added to the database without being
@@ -38,7 +39,8 @@ Never in a backup: the **Claude key**. It is a file in the app's `no_backup` fol
 Android Keystore, so neither the manual file nor Auto Backup has it, and a restore keeps the
 phone's key, or none (`ClaudeKeysTest`).
 
-Not in a backup: things that aren't stored. That means words typed for Claude but not sent, a
+Not in a backup: a check-in under way, a file in `no_backup` until it ends. Nor things that aren't
+stored. That means words typed for Claude but not sent, a
 correction you started but didn't save, notification permission, and the rest alarm, which is set
 again from the restored rest timer.
 
@@ -58,7 +60,7 @@ again from the restored rest timer.
 {
   "format": "hyperlog-backup",
   "version": 1,
-  "database": 23,
+  "database": 24,
   "exportedAt": 1791889500000,
   "tables": {
     "gym": [ { "id": 1, "name": "Central", "archived": 0, … } ],
@@ -86,7 +88,7 @@ The backup follows the database. When a ticket bumps the Room version:
 1. Bump `BackupFormat.DATABASE`; `BackupTablesTest` checks it matches.
 2. A new table goes into `BackupFormat.Tables` or `Excluded` with a reason.
 3. Backups from older versions must still restore: `BackupsTest` restores the kept file
-   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db22.json`). Add an upgrade step for older files
+   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db23.json`). Add an upgrade step for older files
    in `Backups` (new tables and new columns with defaults need none: list them in
    `BackupFormat.Added` under the version that added them, so an older file may lack them; a
    renamed or reshaped column needs a step), and keep a fixture for each version. A dropped
