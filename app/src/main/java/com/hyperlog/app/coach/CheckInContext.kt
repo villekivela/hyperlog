@@ -40,9 +40,12 @@ object CheckInContext {
         return CheckInFrame(context.trimEnd(), CoachTools.all(plan?.program))
     }
 
+    /** How's it going?'s opening starts with this, so the screen can title it. */
+    const val HOWS_IT_GOING = "How's it going with this Change?"
+
     /** How's it going?: the Change in force, with the check-in that made it. */
     fun howItsGoing(record: ChangeRecord): String = buildString {
-        append("How's it going with this Change? \"${record.change.summary}\" (id ${record.id}, accepted ${record.accepted.acceptedOn}).")
+        append("$HOWS_IT_GOING \"${record.change.summary}\" (id ${record.id}, accepted ${record.accepted.acceptedOn}).")
         record.checkIn?.let { append("\nThe check-in that made it:\n${it.text()}") }
     }
 

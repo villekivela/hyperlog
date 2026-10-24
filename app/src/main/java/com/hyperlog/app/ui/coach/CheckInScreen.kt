@@ -1,6 +1,38 @@
 package com.hyperlog.app.ui.coach
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.SectionCard
+import com.hyperlog.app.ui.theme.SegmentGap
+import com.hyperlog.app.ui.theme.ShapedSymbol
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,11 +51,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -66,6 +96,12 @@ import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
 
 private val Margin = 24.dp
+
+/** The bottom strip's padding: a text button first keeps its label on the 24 dp edge. */
+private val StripPadding = PaddingValues(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+
+/** Ease back in's words end so (`coach_ease_back_words`). */
+private const val EaseBackEnd = "Ease me back in."
 
 /** A tile on the first step: its label and symbol. */
 private data class TileLook(val label: Int, val symbol: Symbol)
@@ -155,7 +191,7 @@ private fun Tiles(program: ActiveProgram?, onTile: (Tile) -> Unit, onLeave: () -
             }
             Text(
                 stringResource(R.string.checkin_question),
-                Modifier.padding(horizontal = Margin),
+                Modifier.padding(horizontal = Margin).padding(top = 8.dp),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
@@ -164,14 +200,56 @@ private fun Tiles(program: ActiveProgram?, onTile: (Tile) -> Unit, onLeave: () -
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            val tiles = Tile.entries
-            tiles.forEachIndexed { i, tile ->
-                val look = Looks.getValue(tile)
-                Segment(i, tiles.size, onClick = { onTile(tile) }) {
-                    SegmentedRow(stringResource(look.label), symbol = look.symbol)
+            TileGrid(onTile)
+        }
+    }
+}
+
+/**
+ * The eight tiles as a 2 × 4 grid, in SPEC's order row by row: a symbol over a name on each, the
+ * group's outer corners large and the joins small, as a segmented list's.
+ */
+@Composable
+private fun TileGrid(onTile: (Tile) -> Unit) {
+    val tiles = Tile.entries
+    val rows = tiles.chunked(2)
+    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin), verticalArrangement = Arrangement.spacedBy(SegmentGap)) {
+        rows.forEachIndexed { r, pair ->
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(SegmentGap)) {
+                pair.forEachIndexed { c, tile ->
+                    val look = Looks.getValue(tile)
+                    val shape = RoundedCornerShape(
+                        topStart = if (r == 0 && c == 0) TileOuter else TileInner,
+                        topEnd = if (r == 0 && c == 1) TileOuter else TileInner,
+                        bottomStart = if (r == rows.lastIndex && c == 0) TileOuter else TileInner,
+                        bottomEnd = if (r == rows.lastIndex && c == 1) TileOuter else TileInner,
+                    )
+                    TileCard(stringResource(look.label), look.symbol, shape, Modifier.weight(1f).fillMaxHeight()) { onTile(tile) }
                 }
             }
         }
+    }
+}
+
+private val TileOuter = 32.dp
+private val TileInner = 8.dp
+
+@Composable
+private fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(
+        modifier.heightIn(min = 124.dp)
+            .clip(shape)
+            .background(Tones.card)
+            .clickable(onClick = onClick)
+            .semantics(mergeDescendants = true) { role = Role.Button }
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Box(Modifier.size(40.dp).clip(CircleShape).background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
+            SymbolIcon(symbol, null, Modifier.size(24.dp), tint = cs.onSecondaryContainer)
+        }
+        Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -245,7 +323,13 @@ private fun Step(
 ) {
     BackHandler(onBack = onBack)
     val step = view.step
-    val title = view.checkIn.tile?.let { stringResource(Looks.getValue(it).label) } ?: stringResource(R.string.checkin_title)
+    // The bar names what the check-in is about: the tile, How's it going? or Ease back in.
+    val opening = view.checkIn.opening
+    val title = view.checkIn.tile?.let { stringResource(Looks.getValue(it).label) } ?: when {
+        opening.startsWith(com.hyperlog.app.coach.CheckInContext.HOWS_IT_GOING) -> stringResource(R.string.checkin_title_hows_it_going)
+        opening.trimEnd().endsWith(EaseBackEnd) -> stringResource(R.string.checkin_title_ease_back)
+        else -> stringResource(R.string.checkin_title)
+    }
     /** Ask Claude was pressed for this failure: Paste reply is the next step. */
     var asked by rememberSaveable(view.checkIn.turns.size) { mutableStateOf(false) }
     Scaffold(
@@ -261,17 +345,17 @@ private fun Step(
         },
         bottomBar = {
             when (step) {
-                is CheckInStep.Words -> BottomActions {
+                is CheckInStep.Words -> BottomActions(padding = StripPadding) {
                     TextButton(onClick = onTellMeMore) { Text(stringResource(R.string.checkin_tell_me_more)) }
                     Spacer(Modifier.weight(1f))
                     Button(onClick = onClose) { Text(stringResource(R.string.checkin_done)) }
                 }
-                is CheckInStep.Problems -> BottomActions {
+                is CheckInStep.Problems -> BottomActions(padding = StripPadding) {
                     TextButton(onClick = onClose) { Text(stringResource(R.string.program_cancel)) }
                     Spacer(Modifier.weight(1f))
                     Button(onClick = onTryAgain) { Text(stringResource(R.string.checkin_try_again)) }
                 }
-                is CheckInStep.Failed -> BottomActions {
+                is CheckInStep.Failed -> BottomActions(padding = StripPadding) {
                     val handOff = step.failure != CheckInFailure.NoConnection
                     val retry = step.failure == CheckInFailure.NoConnection || step.failure == CheckInFailure.Refused
                     when {
@@ -304,119 +388,189 @@ private fun Step(
                 // A review shows over this screen; until it does, the step reads as thinking.
                 CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview -> Thinking()
                 is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size)
-                is CheckInStep.Words -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Margin, vertical = 8.dp)) {
-                    Text(step.text, style = MaterialTheme.typography.bodyLarge)
-                }
-                is CheckInStep.Problems -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Margin, vertical = 8.dp)) {
-                    Text(stringResource(R.string.checkin_problems_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
-                    Text(
-                        stringResource(R.string.checkin_problems_body),
-                        Modifier.padding(top = 4.dp, bottom = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    step.errors.forEach { Problem(it) }
-                }
-                is CheckInStep.Failed -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 8.dp)) {
-                    val (head, body) = when (step.failure) {
-                        CheckInFailure.NoConnection -> R.string.checkin_no_connection to R.string.checkin_no_connection_body
-                        CheckInFailure.KeyRefused -> R.string.checkin_key_refused to R.string.checkin_ask_claude_body
-                        CheckInFailure.SpendLimit -> R.string.checkin_spend_limit to R.string.checkin_spend_limit_body
-                        CheckInFailure.Refused -> R.string.checkin_refused to R.string.checkin_refused_body
+                is CheckInStep.Words -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
+                    SectionCard(padding = CardPadding) {
+                        Text(step.text, Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodyLarge)
                     }
-                    Text(stringResource(head), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        stringResource(body),
-                        Modifier.padding(horizontal = Margin).padding(top = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (step.failure == CheckInFailure.SpendLimit) {
+                }
+                is CheckInStep.Problems -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
+                    SectionCard(padding = CardPadding) {
+                        val cs = MaterialTheme.colorScheme
+                        Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            SymbolIcon(Symbol.Warning, null, Modifier.size(24.dp), tint = cs.error)
+                            Spacer(Modifier.width(12.dp))
+                            Text(stringResource(R.string.checkin_problems_title), style = MaterialTheme.typography.titleMedium, color = cs.error)
+                        }
                         Text(
-                            stringResource(R.string.checkin_ask_claude_body),
-                            Modifier.padding(horizontal = Margin).padding(top = 8.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            stringResource(R.string.checkin_problems_body),
+                            Modifier.padding(top = 4.dp, bottom = 4.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = cs.onSurfaceVariant,
                         )
+                        step.errors.forEach { Problem(it) }
                     }
-                    if (pasteErrors != null) PasteProblems(pasteErrors, onCopyProblems)
                 }
+                is CheckInStep.Failed -> Failure(step.failure, pasteErrors, onCopyProblems)
             }
         }
     }
 }
 
+/** Why a call has no reply, as a calm centred state; its way forward is the bottom strip. */
+@Composable
+private fun Failure(failure: CheckInFailure, pasteErrors: List<String>?, onCopyProblems: (List<String>) -> Unit) {
+    val (symbol, head, body) = when (failure) {
+        CheckInFailure.NoConnection -> Triple(Symbol.Cable, R.string.checkin_no_connection, R.string.checkin_no_connection_body)
+        CheckInFailure.KeyRefused -> Triple(Symbol.Key, R.string.checkin_key_refused, R.string.checkin_ask_claude_body)
+        CheckInFailure.SpendLimit -> Triple(Symbol.Toll, R.string.checkin_spend_limit, R.string.checkin_spend_limit_body)
+        CheckInFailure.Refused -> Triple(Symbol.Block, R.string.checkin_refused, R.string.checkin_refused_body)
+    }
+    val cs = MaterialTheme.colorScheme
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 48.dp, bottom = GroupGap),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ShapedSymbol(symbol)
+        Text(
+            stringResource(head),
+            Modifier.padding(horizontal = Margin).padding(top = 24.dp),
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            stringResource(body),
+            Modifier.padding(horizontal = Margin).padding(top = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = cs.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        if (failure == CheckInFailure.SpendLimit) {
+            Text(
+                stringResource(R.string.checkin_ask_claude_body),
+                Modifier.padding(horizontal = Margin).padding(top = 8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = cs.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+        if (pasteErrors != null) {
+            Spacer(Modifier.height(24.dp))
+            SectionCard(padding = 0.dp) {
+                Box(Modifier.padding(bottom = CardPadding)) { PasteProblems(pasteErrors, onCopyProblems, edge = CardPadding) }
+            }
+        }
+    }
+}
+
+/** Thinking…: the expressive loading indicator, alone a little above the middle. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Thinking() {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        CircularProgressIndicator()
+        LoadingIndicator(Modifier.size(96.dp), color = MaterialTheme.colorScheme.primary)
         Text(
             stringResource(R.string.checkin_thinking),
             Modifier.padding(top = 16.dp),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        // Optical centre: sit a little above the middle.
+        Spacer(Modifier.height(96.dp))
     }
 }
 
 /**
- * Claude's question over its answers to tap, and Type my own under them when Claude allows it. An
- * answer naming a muscle group behind this week carries its sets (`Back · 4 sets`).
+ * Claude's question, large, over its answers to tap, and Type my own under them when Claude allows
+ * it. An answer naming a muscle group behind this week carries its sets (`Back · 4 sets`).
  */
 @Composable
 private fun Question(step: CheckInStep.Question, lowest: List<Pair<String, Double>>, onAnswer: (String) -> Unit, key: Int) {
     var typing by rememberSaveable(key) { mutableStateOf(false) }
     var own by rememberSaveable(key) { mutableStateOf("") }
     val marks = lowest.toMap()
+    val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
-        Text(step.question, Modifier.padding(horizontal = Margin).padding(bottom = GroupGap), style = MaterialTheme.typography.headlineSmall)
+        Text(step.question, Modifier.padding(horizontal = Margin).padding(bottom = 24.dp), style = MaterialTheme.typography.headlineMedium)
         step.answers.forEachIndexed { i, answer ->
             val group = MuscleGroup.entries.firstOrNull { it.label.equals(answer, ignoreCase = true) }?.label
             val label = group?.let { g -> marks[g]?.let { stringResource(R.string.coach_focus_marked, answer, setsText(it)) } } ?: answer
             Segment(i, step.answers.size, onClick = { onAnswer(answer) }, modifier = Modifier.testTag(AnswerTag)) {
-                Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding + 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                    SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Box(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp), contentAlignment = Alignment.CenterStart) {
+                    // The mark reads quieter than the answer: `Back` and then ` · 4 sets` in onSurfaceVariant.
+                    val shown = if (label == answer || !label.startsWith(answer)) AnnotatedString(label) else buildAnnotatedString {
+                        append(answer)
+                        withStyle(SpanStyle(color = cs.onSurfaceVariant, fontWeight = FontWeight.Normal)) { append(label.removePrefix(answer)) }
+                    }
+                    Text(shown, style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
         if (step.own) {
+            Spacer(Modifier.height(GroupGap))
             if (!typing) {
-                TextButton(onClick = { typing = true }, modifier = Modifier.padding(start = Margin - 12.dp, top = 8.dp)) {
-                    SymbolIcon(Symbol.Keyboard, null, Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.checkin_own))
+                Segment(0, 1, onClick = { typing = true }) {
+                    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding), verticalAlignment = Alignment.CenterVertically) {
+                        SymbolIcon(Symbol.Keyboard, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
+                        Spacer(Modifier.width(16.dp))
+                        Text(stringResource(R.string.checkin_own), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+                    }
                 }
             } else {
                 val focus = remember { FocusRequester() }
                 LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
                 val send = { if (own.isNotBlank()) onAnswer(own.trim()) }
-                Row(Modifier.fillMaxWidth().padding(start = Margin, end = 12.dp, top = GroupGap), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        own, { own = it },
-                        Modifier.weight(1f).focusRequester(focus),
-                        label = { Text(stringResource(R.string.checkin_own_label)) },
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(onSend = { send() }),
-                    )
-                    IconButton(onClick = send, enabled = own.isNotBlank()) { SymbolIcon(Symbol.ArrowForward, stringResource(R.string.checkin_send)) }
+                Segment(0, 1) {
+                    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        TextField(
+                            own, { own = it },
+                            Modifier.weight(1f).offset(x = (-4).dp).focusRequester(focus),
+                            placeholder = { Text(stringResource(R.string.checkin_own_label)) },
+                            textStyle = MaterialTheme.typography.bodyLarge,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { send() }),
+                        )
+                        FilledIconButton(
+                            onClick = send,
+                            enabled = own.isNotBlank(),
+                            modifier = Modifier.size(48.dp),
+                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer),
+                        ) { SymbolIcon(Symbol.ArrowUpward, stringResource(R.string.checkin_send)) }
+                    }
                 }
             }
         }
     }
 }
 
-/** The check-in a Change keeps: what opened it, then each of Claude's questions over your answer. */
+/**
+ * The check-in a Change keeps: what opened it, then each of Claude's questions over your answer.
+ * Your words carry the reply arrow; Claude's questions don't.
+ */
 @Composable
 internal fun CheckInTranscript(made: com.hyperlog.app.coach.SavedCheckIn) {
     val cs = MaterialTheme.colorScheme
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column {
         Text(stringResource(R.string.checkin_transcript), style = MaterialTheme.typography.labelLarge, color = cs.primary)
-        Text(made.opening, style = MaterialTheme.typography.bodyMedium)
+        Yours(made.opening, Modifier.padding(top = 8.dp))
         made.steps.forEach { step ->
-            Text(step.question, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-            Text(step.answer, style = MaterialTheme.typography.bodyMedium)
+            Text(step.question, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            Yours(step.answer, Modifier.padding(top = 4.dp))
         }
+    }
+}
+
+/** Your words in a transcript, after the reply arrow. */
+@Composable
+private fun Yours(text: String, modifier: Modifier) {
+    Row(modifier) {
+        SymbolIcon(Symbol.SubdirectoryArrowRight, null, Modifier.padding(top = 2.dp, end = 8.dp).size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }
 

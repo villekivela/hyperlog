@@ -555,7 +555,7 @@
     <string name="coach_title">Coach</string>
     <!-- The check-in with Claude (SPEC, Coaching → Check-in). -->
     <string name="checkin_question">What’s going on?</string>
-    <string name="checkin_intro">Claude asks what it needs, then answers in words or with a change or a workout you review. Nothing changes until you accept.</string>
+    <string name="checkin_intro">Claude asks what it needs. Nothing changes until you accept.</string>
     <string name="checkin_tile_hurts">Something hurts</string>
     <string name="checkin_tile_short">Short on time</string>
     <string name="checkin_tile_gym">Different gym or none</string>

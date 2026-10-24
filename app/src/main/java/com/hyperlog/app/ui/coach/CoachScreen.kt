@@ -494,13 +494,13 @@ private fun BottomBar(
 
 /** The problems of a reply pasted back that Hyperlog can't use, with a button to copy them for Claude. */
 @Composable
-internal fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) {
+internal fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit, edge: androidx.compose.ui.unit.Dp = Margin) {
     val cs = MaterialTheme.colorScheme
     val copyProblem = AskClaude.copyProblem(errors)
     // A failed paste scrolls its problems into view.
     val problems = remember { BringIntoViewRequester() }
     LaunchedEffect(errors) { problems.bringIntoView() }
-    Column(Modifier.padding(horizontal = Margin).bringIntoViewRequester(problems)) {
+    Column(Modifier.padding(horizontal = edge).bringIntoViewRequester(problems)) {
         Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(R.string.coach_paste_failed),

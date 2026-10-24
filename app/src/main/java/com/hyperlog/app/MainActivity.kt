@@ -292,6 +292,9 @@ private fun App(
     val scriptedCoach by checkInModel.scripted.collectAsStateWithLifecycle()
     /** The Changes in force page on Coach is open. */
     var coachInForce by rememberSaveable { mutableStateOf(false) }
+    // Reverting the last one closes the page, so the tiles (and the bar) come back.
+    val noneInForce = program?.inForce.isNullOrEmpty()
+    LaunchedEffect(noneInForce) { if (noneInForce) coachInForce = false }
     val checkInStep = checkIn?.step
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -377,7 +380,9 @@ private fun App(
     val sessionShown = finished == null && running != null && !left
     // The navigation bar is for the five destinations themselves; a session or a sub-screen hides it.
     val tabShown = finished == null && !sessionShown && editing == null && when (screen) {
-        Screen.Today, Screen.Coach, Screen.Settings -> true
+        Screen.Today, Screen.Settings -> true
+        // Changes in force is a sub-screen; the check-in keeps the bar, so another tab can be checked mid-way.
+        Screen.Coach -> !(checkInAvailable && checkIn == null && coachInForce && !noneInForce)
         Screen.Program -> !programView.changesOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
