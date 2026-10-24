@@ -1107,26 +1107,33 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
 - **Records**: a logged work set that beats the exercise's earlier sets (the machine's, for
   machines and cables, ADR 0002) is a record, of one of two kinds:
   - an **estimate record**: its e1RM, counted as the estimate counts it (sets of 12 reps or fewer,
-    with an RIR, both dumbbells, bodyweight included), is above the best of every earlier set;
+    with an RIR, both dumbbells, bodyweight included), is above the best of every earlier set.
+    The RIR counts, so the same weight and reps further from failure is a record (90 × 5 @ 2 after
+    90 × 5 @ 1). A set of more than 12 reps makes no estimate record, though it can make a rep
+    record (owner, 2026-10-24);
   - a **rep record**: more full reps than any earlier set at the same weight, which was lifted
     before. A set that is both reads as an estimate record.
   - Warm-ups, deload sets, drops, mini-sets and partial reps never make a record, and an
     exercise's first session has nothing to beat.
   - **What it beats:** every earlier set of the exercise, in every session before this one (not
     only the twelve progression reads) and earlier in this session, so set 3 can beat set 1. Deload
-    sets still count as sets to beat. A weight kept past a weight check makes no record until a set
+    sets still count as sets to beat (owner, 2026-10-24). A weight kept past a weight check makes no record until a set
     near it confirms it. A rep record's weight is the weight as logged: one dumbbell's, or the load
-    on the belt; a split set counts its weaker side, as progression does. The estimate is counted
+    on the belt; a split set counts its weaker side, as progression does. A machine or cable logged
+    in a session with no gym has no machine to keep it apart, so those sessions share one history,
+    as last time does (owner, 2026-10-24). The estimate is counted
     with the Epley constant learned from the exercise's earlier sessions, so a later set never
     takes an earlier set's mark away.
   - **As the set logs**, its row takes a small mark, `Estimate record` or `Rep record`, kept on
     the set wherever it shows (the session, Session done, History). The mark is a trophy, the
     Material Symbol `trophy`, read by TalkBack as its name, in ink (never the accent, which marks
-    what you act on): a badge on the lower corner of the set's index circle in the set table, and
-    after the set's RIR chip in set text, in the text's colour. **Day done** and Session done
-    list the session's records, a row each: the trophy, the exercise, and under it the set and the
+    what you act on): a badge on the lower corner of the set's index circle in the set table, a
+    disc of full ink (onSurface) ringed in the row's surface with the trophy cut out of it, so it
+    reads in dark mode too; and after the set's RIR chip in set text, in the text's colour (owner,
+    2026-10-24). **Day done** and Session done list the session's records, a row each: the trophy, the exercise, and under it the set and the
     record (`92.5 × 5 [1] · Estimate record`), read by TalkBack as one line
-    (`Barbell bench press · 92.5 × 5 [1] · Estimate record`).
+    (`Barbell bench press · 92.5 × 5 [1] · Estimate record`). On Session done the Records card
+    comes before the exercise summaries (owner, 2026-10-24).
   - Records are worked out from the logged sets, never stored: correcting a set moves them.
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
   weighted bodyweight exercises.

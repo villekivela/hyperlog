@@ -78,7 +78,7 @@ Colour comes from Hyperlog's Ink and violet theme, light and dark:
 | Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
 | Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a set through its drops or mini-sets |
 | Technique set | tertiaryContainer circle and tall pill, onTertiaryContainer; the badge tertiary with its symbol in onTertiary |
-| Record set | a 16 dp onSurfaceVariant badge on the index circle's lower corner, its 12 dp `trophy` in surface |
+| Record set | a 16 dp onSurface disc on the index circle's lower corner, ringed 1.5 dp in surface, its 11 dp `trophy` cut out in surface |
 | Record mark in set text | `trophy` at 1.2 em after the RIR chip, in the text's own colour |
 | Check | outlineVariant ring to do, primary ring on the row a tap logs, filled primary with an onPrimary `check` when done |
 | Prefilled values and placeholders | outline |
@@ -290,8 +290,9 @@ in ink.
   `trophy` symbol, everywhere; the words `Estimate record` / `Rep record` say which kind, so the
   two kinds never rest on colour or shape. A record's list row reads like the exercise summaries
   under it.
-- *Set table.* The trophy sits in a 16 dp onSurfaceVariant badge on the index circle's lower
-  corner, the technique badge's sibling (that one is violet, on the upper corner), so a drop set
+- *Set table.* The trophy sits in a 16 dp disc of full ink (onSurface) on the index circle's lower
+  corner, ringed 1.5 dp in the row's surface so it stands off the grey circle; the owner asked for
+  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It is the technique badge's sibling (that one is violet, on the upper corner), so a drop set
   that is also a record carries both. It shows from the moment the set logs; correcting the set
   moves it.
 - *Set text* (Session done, History's past session, the session list): the trophy after the set's

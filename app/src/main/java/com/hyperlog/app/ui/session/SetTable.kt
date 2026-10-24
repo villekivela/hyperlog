@@ -625,6 +625,8 @@ private fun ActiveSubRow(
 /** The index column of the row whose circle reads [label] (`W`, the set number). */
 internal fun indexTag(label: String) = "index-$label"
 
+internal const val RecordBadgeTag = "record-badge"
+
 internal const val ActiveSubRowTag = "active-sub-row"
 internal const val ActiveWarmupTag = "active-warmup"
 
@@ -711,11 +713,13 @@ private fun RowScope.IndexCell(
                 ) { SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(12.dp), tint = cs.onTertiary) }
             }
             // The record's trophy on the lower corner, the technique's sibling: in ink, not the accent.
+            // A disc of full ink, ringed in the row's surface so it stands off the circle in dark too.
             record?.let {
                 Box(
-                    Modifier.offset(x = IndexSize - 14.dp, y = IndexSize / 2 - 2.dp).size(16.dp).clip(CircleShape).background(cs.onSurfaceVariant),
+                    Modifier.offset(x = IndexSize - 14.dp, y = IndexSize / 2 - 2.dp).size(16.dp).clip(CircleShape)
+                        .background(cs.onSurface).border(1.5.dp, cs.surface, CircleShape).testTag(RecordBadgeTag),
                     contentAlignment = Alignment.Center,
-                ) { RecordMark(it, Modifier.size(12.dp), tint = cs.surface) }
+                ) { RecordMark(it, Modifier.size(11.dp), tint = cs.surface) }
             }
         }
         plus?.let { add ->
