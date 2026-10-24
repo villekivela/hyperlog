@@ -610,7 +610,7 @@
     <string name="coach_how_its_going">Tell Claude how it’s going</string>
     <string name="coach_reply_ready">Claude’s reply is ready</string>
     <string name="coach_review_reply">Review</string>
-    <string name="checkin_ask_intro">Say what’s going on. Ask Claude shares it with your plan and recent sessions; talk it through in the Claude app, copy its reply, then paste it here.</string>
+    <string name="checkin_ask_intro">Ask Claude sends this with your plan and sessions. Copy its reply, then paste it here.</string>
     <string name="checkin_ask_step">Tell me more.</string>
     <string name="checkin_ask_hurts">Something hurts:\u0020</string>
     <string name="checkin_ask_short">I’m short on time today: I have 45 minutes.</string>

@@ -17,8 +17,8 @@ thing to fill in.
 
 1. **One thing to fill in.** The tile's sentence is already in the field, with the caret at its end;
    the field is focused on opening, so the keyboard is up and the sentence is ready to finish.
-2. **Say what it does, once.** One line under the bar: Ask Claude shares this with your plan and
-   recent sessions; talk it through in the Claude app, copy its reply, then paste it here.
+2. **Say what it does, once, in two lines.** Under the bar: Ask Claude sends this with your plan and
+   sessions; copy its reply, then paste it here. (The first pass said more and ran to four lines.)
 3. **The filled button is the next step.** Ask Claude until you've asked, then Paste reply, then
    Review when the reply is found.
 4. **A tile is a request.** Ask Claude is enabled with the words cleared, because the prompt quotes
@@ -39,9 +39,8 @@ thing to fill in.
 
 ```
  ←  Something hurts
- Say what's going on. Ask Claude shares it with your
- plan and recent sessions; talk it through in the
- Claude app, copy its reply, then paste it here.
+ Ask Claude sends this with your plan and
+ sessions. Copy its reply, then paste it here.
 
  ┌──────────────────────────────────────────────────┐
  │ In your words                                     │
@@ -60,7 +59,7 @@ the plain button.
 
 ### States
 
-Words with the sentence; asked; reply ready; a bad paste (`coach-06-bad-paste`); a reply copied
+Words with the sentence (`coach-03-words`); asked (`coach-04-asked`); reply ready (`coach-05-reply-ready`); reply ready; a bad paste (`coach-06-bad-paste`); a reply copied
 short (`coach-13-cut-off`); Ease back in (`coach-09-ease-back-in`).
 
 ### Interaction rules
