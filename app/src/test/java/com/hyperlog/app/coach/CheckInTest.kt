@@ -135,7 +135,8 @@ class CheckInTest {
         val model = FakeCoachModel.replies(words("Train as planned."), words("Ramp-in already eases effort."))
         val coach = coach(model)
         val more = coach.tellMeMore(coach.start(Tile.Tired, frame))
-        assertEquals(CheckInStep.Words("Ramp-in already eases effort."), coach.step(more))
+        // A new step after the words: the first answer stays, above the new one.
+        assertEquals(CheckInStep.Words("Ramp-in already eases effort.", earlier = listOf("Train as planned.")), coach.step(more))
         assertEquals(CoachMessage.User(CheckInCoach.TELL_ME_MORE), model.requests[1].messages.last())
         // Back from there shows the words before.
         assertEquals(CheckInStep.Words("Train as planned."), coach.step(coach.back(more)!!))

@@ -1305,8 +1305,9 @@ on?" with tiles: **Something hurts**, **Short on time**, **Different gym or none
 slept badly**, **Change my program**, **Build me a workout**, **New program** and **Something
 else**. **Change my program** is for edits meant to last (swap an exercise, add or drop one, more
 or fewer sets): Claude asks which exercise and why, and proposes a `rest_of_program` Change, which
-follows the slot into later blocks and stays revertible on the Changes page (owner, 2026-10-24). The tap costs no
-call. Above the tiles, while Changes are in force, one line, `2 changes in force`, opens them
+follows the slot into later blocks and stays revertible on the Changes page (owner, 2026-10-24). A
+tile is your first answer: tapping it starts the check-in, and Claude's first question is its
+first call. Above the tiles, while Changes are in force, one line, `2 changes in force`, opens them
 (below): the line reads the count over the newest one's summary. With no program running, the tiles that change the plan still go to Claude, which can
 only answer in words or with a workout or a program; Build me a workout and New program stay. A
 pasted Change then reads "No program is running, so there’s nothing for a Change to change." (one
@@ -1316,7 +1317,9 @@ week or shift the program.
 **Claude's steps.** After the first tile Claude asks what the situation needs, one question a
 screen, through its `ask` tool: the question, 2–4 answers and whether you may type your own.
 "Which hand, and does pressing hurt or only gripping?" for pain; the gym, with your gyms and
-**Elsewhere** as answers, only when the equipment matters; effort, time and focus only for a
+**Elsewhere** as answers, only when the equipment matters (with more than 3 gyms, the 3 likeliest,
+today's planned gym and those in recent sessions, and Elsewhere, with Type my own for the rest:
+owner, 2026-10-24; `ask`'s description and the context say so); effort, time and focus only for a
 workout, with the three least-trained muscle groups this week carrying their counts (`Back · 4
 sets`). Effort is Easy (3 RIR or more, no techniques), Normal (1–2 RIR) or Hard (0–1 RIR,
 techniques allowed); time is the whole session with warm-ups and rest, 45 min to 1 h 30; focus is
@@ -1336,7 +1339,13 @@ again from there. There is no step counter, since Claude doesn't know in advance
   it keeps no gym.
 - **Back** from Thinking stops the call and shows the step just answered; from a failed call
   too. Back from the first of Claude's steps is the tiles, and from the tiles it leaves Coach.
-  Reject (or Back) on a review is Back: the step before it shows again.
+  **Reject** (or Back) on a review is Back with **Type my own** open, even where Claude didn't offer
+  it, so you can say what was wrong (your own words, if you typed that answer; owner, 2026-10-24).
+  × on a review drops the check-in, as on every step.
+- **The navigation bar hides** while a check-in is under way, as it does in a session (owner,
+  2026-10-24); system Back and × lead out. It shows on the tiles again.
+- **The review doesn't show your answers** (owner, 2026-10-24): Back does, and the check-in shows
+  under the Change once accepted.
 - **One reply at a time.** Claude may make one call a reply; if it makes several, a proposal wins
   over a question, and the others go back as "Not shown: Hyperlog uses one question or reply at a
   time." An `ask` with fewer than 2 or more than 4 answers, or a blank question, is a reply with
@@ -1346,7 +1355,9 @@ again from there. There is no step counter, since Claude doesn't know in advance
 
 **The end** is one of:
 - **An answer in words**, when the plan can stand ("Ramp-in already eases effort. Use straps and
-  train as planned."), with **Done**, and **Tell me more** to go on.
+  train as planned."), with **Done**, and **Tell me more** to go on. Tell me more adds a step:
+  Claude's next words go in a card under the earlier ones, which stay (quieter), never in their
+  place (owner, 2026-10-24).
 - **A review**: a Change (**Accept**), a workout (**Add to Today**) or a program (**Start
   program**), each through its tool. The review is the one each already has.
 - **×**, at any step, which drops the check-in.
@@ -1460,7 +1471,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   monthly spend limit set in the Anthropic Console; the app has no cap of its own.
 - **Errors.** No connection, a timeout or an API error shows "Couldn't reach Claude." with **Try
   again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.
-  Check it in Settings." and offers Ask Claude for this check-in. A spend limit reached says so, and
+  Check it in Settings." (the whole sentence stays in the title: owner, 2026-10-24) and offers Ask
+  Claude for this check-in. A spend limit reached says so, and
   offers Ask Claude. A refusal (after the fallback) reads "Claude declined to answer this one." with
   Try again and Ask Claude. Any other 4xx (not the key, a spend limit, a timeout or a rate limit) is
   the request itself, never "Couldn't reach Claude": it reads "Claude couldn't take this request."

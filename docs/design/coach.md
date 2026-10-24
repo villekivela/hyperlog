@@ -249,7 +249,7 @@ words-first screen above stays until #74.
 | Problems | a `SectionCard`: `warning` 24 dp and titleMedium in error, the line under it bodyMedium onSurfaceVariant, then each problem (path over message) | The reply Claude couldn't fix |
 | Failure | `ShapedSymbol` 72 dp (`cable` no connection, `key` key refused, `toll` spend limit, `block` declined), titleLarge, bodyMedium onSurfaceVariant, centred on the 24 dp edges, 48 dp under the bar | Each failure |
 | Transcript | in its card: "The check-in" labelLarge primary; Claude's questions bodyMedium onSurfaceVariant; your words bodyLarge after `subdirectory_arrow_right` 18 dp primary, 4 dp under the question; 12 dp between pairs | Under a Change in force, in Program → Changes' dialog |
-| Bottom strip | `BottomActions` (Tones.bar, 28 dp top corners) | Tell me more / **Done**; Cancel / **Try again**; Ask Claude / **Try again**; **Ask Claude**; Ask Claude / **Paste reply** |
+| Bottom strip | `BottomActions` (Tones.bar, 28 dp top corners) | Tell me more / **Done**; **Try again**; Ask Claude / **Try again**; **Ask Claude**; Ask Claude / **Paste reply** |
 
 ### Wireframes
 
@@ -351,8 +351,12 @@ emulator with the scripted coach.
   (`checkin-17-added-mid-session`).
 - The bar's title is the tile (or "How's it going?", "Easing back in"); Back is one step back;
   × drops the check-in at any step.
-- The navigation bar stays through the check-in, so another tab can be checked and the check-in
-  is still there on return; it hides on the Changes in force page, a sub-screen.
+- The navigation bar hides while a check-in is under way, as in a session (owner, 2026-10-24),
+  and on the Changes in force page, a sub-screen; it shows on the tiles.
+- Reject on a review steps back with Type my own open, even on a question that didn't offer it,
+  so you can say what was wrong.
+- Tell me more adds a card: Claude's earlier words stay above in onSurfaceVariant, the new words
+  below in onSurface, scrolled into view.
 - After Ask Claude on a failure, Paste reply becomes the filled button and Ask Claude moves to the
   text button; a bad paste shows its problems under the failure, scrolled into view.
 - Reverting the last Change in force closes the page: the tiles and the bar come back.
@@ -376,9 +380,11 @@ emulator with the scripted coach.
 - Tester's report (`checkin-test-report.md`), fixed: × on a review now drops the check-in (it
   stepped back, like Reject); typed answers survive a tab switch and come back on Back or Reject;
   the scripted coach offers Type my own on the focus and "which exercise" questions (effort and
-  time stay fixed); Add to Today mid-session says where the workout went. Left for the owner:
-  what Reject should lead to, Tell me more replacing the first answer, the review not showing
-  your answers, and more gyms than an answer list holds.
+  time stay fixed); Add to Today mid-session says where the workout went.
+- Owner's answers (2026-10-24): the bar hides during a check-in; Reject steps back with Type my own
+  open; the review doesn't show your answers (Back does); Tell me more adds a step under the
+  words; with more than 3 gyms Claude offers the 3 likeliest and Elsewhere, Type my own for the
+  rest; the key-refused title keeps "Check it in Settings".
 
 ## Pass notes
 

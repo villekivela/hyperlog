@@ -133,7 +133,8 @@ enum class CheckInFailure { NoConnection, KeyRefused, SpendLimit, Refused, Rejec
 sealed interface CheckInStep {
     data object Thinking : CheckInStep
     data class Question(val question: String, val answers: List<String>, val own: Boolean) : CheckInStep
-    data class Words(val text: String) : CheckInStep
+    /** Claude's words; [earlier] are the words before them, oldest first, when you asked Tell me more. */
+    data class Words(val text: String, val earlier: List<String> = emptyList()) : CheckInStep
     data class ChangeReview(val change: Change) : CheckInStep
     data class WorkoutReview(val workout: Workout) : CheckInStep
     /** A reply still wrong after Claude's fixes: its problems, with Try again. */
@@ -192,6 +193,13 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         return checkIn.copy(turns = turns.dropLast(1) + turns.last().copy(answer = null), failure = null, fixes = 0)
     }
 
+    /** The words Tell me more went on from, oldest first: a new step after them, never in their place. */
+    private fun earlierWords(checkIn: CheckIn): List<String> =
+        checkIn.turns.dropLast(1).reversed()
+            .takeWhile { it.reply.toolCalls.isEmpty() && it.answer?.text == TELL_ME_MORE }
+            .map { it.reply.text.trim() }
+            .reversed()
+
     /** Try again: a failed call is made again; a reply's problems go back to Claude once more, with its fixes counted afresh. */
     suspend fun tryAgain(checkIn: CheckIn): CheckIn = run(retried(checkIn))
 
@@ -207,7 +215,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         checkIn.failure?.let { return CheckInStep.Failed(it) }
         if (checkIn.waiting) return CheckInStep.Thinking
         return when (val read = read(checkIn.turns.last().reply)) {
-            is Read.Valid -> read.step
+            is Read.Valid -> (read.step as? CheckInStep.Words)?.copy(earlier = earlierWords(checkIn)) ?: read.step
             is Read.Invalid -> CheckInStep.Problems(read.errors)
         }
     }

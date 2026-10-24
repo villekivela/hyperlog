@@ -109,4 +109,18 @@ class CheckInRunnerTest {
         assertNull(step(runner))
         assertNull(CheckInStore(file).load())
     }
+
+    @Test
+    fun aSlowDiskNeverHoldsUpAnAnswer() = runTest {
+        // The file's writes never finish: what shows, and the next call, don't wait for them.
+        val stalled = object : kotlinx.coroutines.CoroutineDispatcher() {
+            override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) = Unit
+        }
+        val model = FakeCoachModel.replies(ask("Which hand?", "Left", "Right"), ask("Does pressing hurt?", "Yes", "No"))
+        val runner = CheckInRunner(backgroundScope, CheckInStore(file), { model }, { CheckInWorld(program, ids) }, { frame }, io = stalled)
+        runner.start(Tile.Hurts)
+        assertEquals("Which hand?", (step(runner) as CheckInStep.Question).question)
+        runner.answer("Left")
+        assertEquals("Does pressing hurt?", (step(runner) as CheckInStep.Question).question)
+    }
 }

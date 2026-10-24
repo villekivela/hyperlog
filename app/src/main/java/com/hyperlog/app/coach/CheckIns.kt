@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -63,6 +64,16 @@ class CheckInRunner(
     private var current: CheckIn? = null
     private var call: Job? = null
 
+    /** A check-in to write; a new one each time, so each is written, the latest last. */
+    private class Write(val checkIn: CheckIn?)
+
+    private val writes = MutableStateFlow<Write?>(null)
+
+    init {
+        // One writer, in order: the screen and the next call never wait for the disk.
+        scope.launch(io) { writes.filterNotNull().collect { store.save(it.checkIn) } }
+    }
+
     /** Reads the check-in kept when the app last ran; one left while thinking asks again. */
     fun restore() {
         scope.launch {
@@ -108,7 +119,8 @@ class CheckInRunner(
     }
 
     private fun next(change: (CheckInCoach, CheckIn) -> CheckIn) {
-        if (call?.isActive == true) return
+        // One answer at a time: none while Claude thinks.
+        if (_thinking.value) return
         scope.launch {
             val checkIn = current ?: return@launch
             val coach = coach() ?: return@launch
@@ -121,13 +133,15 @@ class CheckInRunner(
 
     /** Calls Claude for [checkIn], saving each reply as it comes. */
     private fun ask(checkIn: CheckIn) {
+        _thinking.value = true
         call = scope.launch {
-            val coach = coach() ?: return@launch
-            _thinking.value = true
+            val job = coroutineContext[Job]
             try {
+                val coach = coach() ?: return@launch
                 save(coach.run(checkIn))
             } finally {
-                _thinking.value = false
+                // A call stopped by Back or × doesn't end the one that followed it.
+                if (call === job) _thinking.value = false
             }
         }
     }
@@ -142,7 +156,7 @@ class CheckInRunner(
 
     private suspend fun save(checkIn: CheckIn?) {
         show(checkIn)
-        withContext(io) { store.save(checkIn) }
+        writes.value = Write(checkIn)
     }
 
     private suspend fun show(checkIn: CheckIn?) {

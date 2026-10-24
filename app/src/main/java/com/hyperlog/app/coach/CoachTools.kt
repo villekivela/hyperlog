@@ -38,7 +38,8 @@ object CoachTools {
     fun ask() = CoachTool(
         ASK,
         "Ask me one question, shown on its own screen with 2 to 4 short answers to tap. Ask only what the situation needs, " +
-            "one question at a time, and at most four in a check-in.",
+            "one question at a time, and at most four in a check-in. Asking for a gym, offer at most 3 gyms and Elsewhere, " +
+            "and let me type my own when I have more.",
         obj(
             "question" to string("The question, one short sentence."),
             "answers" to array(string("An answer to tap, a few words."), "2 to 4 answers."),

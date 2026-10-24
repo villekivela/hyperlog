@@ -61,11 +61,21 @@ object CheckInContext {
             "- Ask through the ask tool: one question a screen, with 2 to 4 short answers to tap, and whether I may type my own. " +
                 "Ask only what the situation needs and what the information below doesn't already say, at most four questions in all.",
         )
-        val places = gyms.map { it.name } + CheckInCoach.ELSEWHERE
-        appendLine(
-            "- Ask which gym I'm at only when the equipment matters, with ${list(places)} as the answers. " +
-                "The answer comes with that gym's equipment.",
-        )
+        // Four answers at most: past three gyms, the likeliest three, and the rest typed (owner, 2026-10-24).
+        if (gyms.size <= MAX_GYM_ANSWERS) {
+            val places = gyms.map { it.name } + CheckInCoach.ELSEWHERE
+            appendLine(
+                "- Ask which gym I'm at only when the equipment matters, with ${list(places)} as the answers. " +
+                    "The answer comes with that gym's equipment.",
+            )
+        } else {
+            appendLine("- My gyms: ${list(gyms.map { it.name })}.")
+            appendLine(
+                "- Ask which gym I'm at only when the equipment matters: offer the $MAX_GYM_ANSWERS likeliest and Elsewhere, and let me " +
+                    "type my own for the rest (today's planned gym and those in my recent sessions are likeliest). Name gyms as written " +
+                    "here. The answer comes with that gym's equipment.",
+            )
+        }
         val marks = if (lowest.isEmpty()) "" else
             " Offer the groups behind this week first: ${lowest.joinToString { (g, n) -> "$g (${formatKg(n)} ${if (n == 1.0) "set" else "sets"})" }}."
         appendLine(
@@ -91,6 +101,9 @@ object CheckInContext {
         }
         append("- Hyperlog checks a reply before I see it. If the tool's result lists problems, fix them and propose again.")
     }
+
+    /** Gyms an `ask` offers besides Elsewhere, within its four answers. */
+    const val MAX_GYM_ANSWERS = 3
 
     private fun list(items: List<String>) = if (items.size == 1) items.single() else items.dropLast(1).joinToString() + " and " + items.last()
 }

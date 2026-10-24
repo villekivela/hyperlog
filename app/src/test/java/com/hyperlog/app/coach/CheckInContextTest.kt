@@ -55,6 +55,17 @@ class CheckInContextTest {
     }
 
     @Test
+    fun withMoreThanThreeGymsClaudeOffersTheLikeliestThreeAndElsewhere() {
+        val five = (1L..5L).map { Gym(it, "Gym $it", emptyList()) }
+        val context = CheckInContext.frame(plan, emptyList(), library.exercises, five, today = oct13).context
+        assertTrue(context, context.contains("My gyms: Gym 1, Gym 2, Gym 3, Gym 4 and Gym 5."))
+        assertTrue(context, context.contains("offer the 3 likeliest and Elsewhere, and let me type my own for the rest"))
+        // With three or fewer, all of them.
+        assertTrue(frame().context, frame().context.contains("Harbour, Itis and Elsewhere as the answers"))
+        assertTrue(CoachTools.ask().description, CoachTools.ask().description.contains("at most 3 gyms and Elsewhere"))
+    }
+
+    @Test
     fun aChangeInForceGoesWithTheCheckInThatMadeIt() {
         val context = frame().context
         assertTrue(context, context.contains("- id 3: No grip work for a week"))

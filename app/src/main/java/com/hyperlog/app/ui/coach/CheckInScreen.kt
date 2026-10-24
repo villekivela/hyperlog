@@ -397,9 +397,19 @@ private fun Step(
                 // A review shows over this screen; until it does, the step reads as thinking.
                 CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview -> Thinking()
                 is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size, draft, onDraft)
-                is CheckInStep.Words -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
-                    SectionCard(padding = CardPadding) {
-                        Text(step.text, Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodyLarge)
+                is CheckInStep.Words -> {
+                    // Tell me more adds a card under the words before; the newest comes into view.
+                    val scroll = rememberScrollState()
+                    LaunchedEffect(step.earlier.size) { scroll.animateScrollTo(scroll.maxValue) }
+                    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(top = 8.dp, bottom = GroupGap)) {
+                        (step.earlier + step.text).forEachIndexed { i, words ->
+                            SectionCard(Modifier.padding(top = if (i == 0) 0.dp else 8.dp), padding = CardPadding) {
+                                Text(
+                                    words, Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodyLarge,
+                                    color = if (i < step.earlier.size) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
                     }
                 }
                 is CheckInStep.Problems -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
@@ -526,7 +536,8 @@ private fun Question(
                 }
             }
         }
-        if (step.own) {
+        // Open after Reject even when Claude didn't offer it: that's where you say what was wrong.
+        if (step.own || typing) {
             Spacer(Modifier.height(GroupGap))
             if (!typing) {
                 Segment(0, 1, onClick = { setTyped("") }) {

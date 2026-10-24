@@ -21,6 +21,7 @@ import com.hyperlog.app.data.SettingEntity
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.openTab
+import com.hyperlog.app.navItem
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.StarterProgram
 import com.hyperlog.app.waitFor
@@ -141,9 +142,10 @@ class CheckInAppTest {
         compose.waitFor("What to focus on?")
         compose.click("Balanced full body")
         compose.waitFor("Workout for today")
-        // Reject is Back: the question before.
+        // Reject is Back, with Type my own open to say what was wrong.
         compose.click("Reject")
         compose.waitFor("What to focus on?")
+        compose.await(hasSetTextAction())
         compose.click("Balanced full body")
         compose.waitFor("Workout for today")
         // × drops the check-in, as on every step.
@@ -153,15 +155,16 @@ class CheckInAppTest {
     }
 
     @Test
-    fun yourOwnWordsSurviveATabSwitchAndComeBackOnBack() {
+    fun theBarHidesDuringACheckInAndYourOwnWordsComeBackOnBack() {
         compose.openTab("Coach")
         compose.click("Something hurts")
         compose.waitFor("Where does it hurt?")
+        // A check-in hides the navigation bar, as a session does.
+        compose.await(navItem("History")) { it == 0 }
         compose.click("Type my own")
         compose.onNode(hasSetTextAction()).performTextInput("Left wrist")
-        // Half typed, to History and back: still there.
-        compose.openTab("History")
-        compose.openTab("Coach")
+        // Half typed, the activity made again: still there.
+        compose.activityRule.scenario.recreate()
         compose.await(hasSetTextAction() and hasText("Left wrist"))
         compose.onNodeWithContentDescription("Send").performClick()
         compose.waitFor("Does it hurt when you press, or only when you grip?")
@@ -177,5 +180,6 @@ class CheckInAppTest {
         compose.onNode(hasSetTextAction()).assertDoesNotExist()
         compose.onNodeWithContentDescription("Close the check-in").performClick()
         compose.waitFor("What’s going on?")
+        compose.await(navItem("History"))
     }
 }

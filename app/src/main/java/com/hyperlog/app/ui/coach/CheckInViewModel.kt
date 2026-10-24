@@ -171,6 +171,12 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         runner.back()
     }
 
+    /** Reject on a review: the step before, with Type my own open (your own words, if you typed them) to say what was wrong. */
+    fun reject() {
+        _draft.value = checkIn.value?.checkIn?.let(CheckInCoach::ownAnswer).orEmpty()
+        runner.back()
+    }
+
     fun close() {
         _draft.value = null
         runner.close()

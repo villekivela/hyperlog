@@ -106,13 +106,17 @@ class CheckInScreenTest {
 
     @Test
     fun howItsGoingSendsTheCheckInThatMadeTheChange() {
-        val model = FakeCoachModel.replies(CoachReply("Glad the hand is better."))
+        val model = FakeCoachModel.replies(CoachReply("Glad the hand is better."), CoachReply("Keep the straps for two more weeks."))
         show(model)
         compose.click("1 change in force")
         compose.waitFor("No grip work for a week")
         compose.click("How’s it going?")
         compose.waitFor("Glad the hand is better.")
-        val opening = (model.requests.single().messages.first() as CoachMessage.User).text
+        // Tell me more adds Claude's next words under the first.
+        compose.click("Tell me more")
+        compose.waitFor("Keep the straps for two more weeks.")
+        compose.onNodeWithText("Glad the hand is better.").assertExists()
+        val opening = (model.requests.first().messages.first() as CoachMessage.User).text
         assertTrue(opening, opening.contains("\"No grip work for a week\" (id 3"))
         assertTrue(opening, opening.contains("The check-in that made it:\n> Something hurts.\nClaude: Which hand?\n> Left, only gripping"))
         // Done ends it: the tiles again.

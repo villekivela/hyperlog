@@ -344,7 +344,7 @@ private fun App(
                 if (screen == Screen.Coach) { screen = Screen.Today; showProgramDay = true }
             },
             // Reject is Back for a check-in: the step before shows again, to change its answer.
-            onReject = { programModel.reject(); if (reviewingCheckIn) checkInModel.back() },
+            onReject = { programModel.reject(); if (reviewingCheckIn) checkInModel.reject() },
             // × drops the check-in, as on every one of its steps.
             onClose = if (reviewingCheckIn) ({ programModel.reject(); checkInModel.close() }) else null,
         )
@@ -364,7 +364,7 @@ private fun App(
                 // Today shows the running session, not the workout: say where it went.
                 if (running != null) workoutAddedMidSession = true
             },
-            onReject = { programModel.rejectWorkout(); if (reviewingCheckIn) checkInModel.back() },
+            onReject = { programModel.rejectWorkout(); if (reviewingCheckIn) checkInModel.reject() },
             onClose = if (reviewingCheckIn) ({ programModel.rejectWorkout(); checkInModel.close() }) else null,
             replaces = todayWorkout?.workout?.name,
             gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workoutGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
@@ -389,8 +389,8 @@ private fun App(
     // The navigation bar is for the five destinations themselves; a session or a sub-screen hides it.
     val tabShown = finished == null && !sessionShown && editing == null && when (screen) {
         Screen.Today, Screen.Settings -> true
-        // Changes in force is a sub-screen; the check-in keeps the bar, so another tab can be checked mid-way.
-        Screen.Coach -> !(checkInAvailable && checkIn == null && coachInForce && !noneInForce)
+        // A check-in hides the bar, as a session does (owner, 2026-10-24); Changes in force is a sub-screen.
+        Screen.Coach -> !(checkInAvailable && (checkIn != null || (coachInForce && !noneInForce)))
         Screen.Program -> !programView.changesOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
