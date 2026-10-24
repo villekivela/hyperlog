@@ -259,6 +259,14 @@ private fun App(
     val exportBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let(backupModel::export)
     }
+    val keptPrograms by programModel.kept.collectAsStateWithLifecycle()
+    /** The program whose file Export is saving, until the save dialog answers. */
+    var exportingProgram by rememberSaveable { mutableStateOf<Long?>(null) }
+    val exportProgram = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val source = keptPrograms.firstOrNull { it.id == exportingProgram }?.source
+        exportingProgram = null
+        if (uri != null && source != null) programModel.export(source, uri)
+    }
     val pickRestore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(backupModel::pick)
     }
@@ -328,6 +336,8 @@ private fun App(
     val scriptedCoach by checkInModel.scripted.collectAsStateWithLifecycle()
     /** The Changes in force page on Coach is open. */
     var coachInForce by rememberSaveable { mutableStateOf(false) }
+    /** A new program was just saved for later: Coach says so once. */
+    var programSaved by rememberSaveable { mutableStateOf(false) }
     /** A workout was added while a session runs: Today says so once. */
     var workoutAddedMidSession by rememberSaveable { mutableStateOf(false) }
     // Reverting the last one closes the page, so the tiles (and the bar) come back.
@@ -452,6 +462,13 @@ private fun App(
             onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
             onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
             file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
+            // Save for later ends the check-in on Coach, which says where it went; the program running goes on.
+            onSave = {
+                programModel.saveProgram(
+                    saved = { closeAsk(); if (checkIn != null) checkInModel.close(); programSaved = true; screen = Screen.Coach },
+                    failed = { closeAsk(); if (checkIn != null) checkInModel.close(); programView = ProgramView(); screen = Screen.Program },
+                )
+            },
         )
         return
     }
@@ -474,7 +491,7 @@ private fun App(
         Screen.Today, Screen.Settings -> true
         // A check-in hides the bar, as a session does (owner, 2026-10-24); Changes in force is a sub-screen.
         Screen.Coach -> !(asking || (checkInAvailable && (checkIn != null)) || (coachInForce && !noneInForce))
-        Screen.Program -> !programView.changesOpen
+        Screen.Program -> !programView.changesOpen && !programView.programsOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
     }
@@ -606,6 +623,11 @@ private fun App(
             weekdayPlan = weekdayPlan,
             gyms = gyms,
             onWeekdayPlan = programModel::setWeekdayPlan,
+            keptPrograms = keptPrograms,
+            onStartKept = programModel::startKept,
+            onRunAgain = programModel::runAgain,
+            onExportKept = { exportingProgram = it.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(it.title)) },
+            onDeleteKept = programModel::deleteKept,
             )
         }
         screen == Screen.Coach && asking -> com.hyperlog.app.ui.coach.AskClaudeScreen(
@@ -654,6 +676,9 @@ private fun App(
             onInForceOpen = { coachInForce = it },
             onOpenChange = programModel::openInForce,
             onRevert = { programModel.revert(it); endAsk() },
+            savedNotice = programSaved,
+            onSavedNoticeShown = { programSaved = false },
+            onOpenPrograms = { programView = ProgramView(programsOpen = true); screen = Screen.Program },
             onHowItsGoing = {
                 if (checkInAvailable) checkInModel.howItsGoing(it)
                 else openAsk(com.hyperlog.app.coach.Opening.HowsItGoing, null, com.hyperlog.app.coach.CheckInContext.howItsGoing(it))

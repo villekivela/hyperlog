@@ -16,6 +16,7 @@ import com.hyperlog.app.MainActivity
 import com.hyperlog.app.await
 import com.hyperlog.app.click
 import com.hyperlog.app.coach.SavedCheckIn
+import com.hyperlog.app.coach.exercises
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.SettingEntity
 import com.hyperlog.app.library.ExerciseLibrary
@@ -144,6 +145,57 @@ class CheckInAppTest {
         assertEquals(com.hyperlog.app.program.Position(1, 0), active.position)
         // The program before stays, as the record of its sessions.
         assertEquals("Hyperlog Full Body", runBlocking { Programs(db).program(before)!!.title })
+    }
+
+    /** A new program built in a check-in, up to its review. */
+    private fun buildNewProgram() {
+        compose.openTab("Coach")
+        compose.click("New program")
+        compose.click("Build it from my answers")
+        compose.waitFor("How many days a week can you train?")
+        compose.click("3")
+        compose.waitFor("Start program")
+    }
+
+    @Test
+    fun saveForLaterEndsTheCheckInAndProgramsStartsItLaterWithItsNewExercise() {
+        val db = HyperlogDatabase.get(context)
+        fun inLibrary() = runBlocking { db.exercises().all().any { it.name == "Barbell Drag Curl" } }
+        buildNewProgram()
+        compose.click("Save for later")
+        compose.waitFor("Saved to your programs")
+        // The check-in ended, and the program running goes on.
+        compose.onNodeWithText("What’s going on?").assertExists()
+        assertEquals("Hyperlog Full Body", runBlocking { Programs(db).active.first()!!.program.title })
+        assertEquals(false, inLibrary())
+        compose.click("Programs")
+        compose.waitFor("Saved")
+        compose.click("Start")
+        compose.click("Replace")
+        compose.waitFor("Scripted full body, 2 days")
+        assertEquals("Scripted full body, 2 days", runBlocking { Programs(db).active.first()!!.program.title })
+        assertEquals(true, inLibrary())
+    }
+
+    @Test
+    fun aSavedProgramWhoseNewExerciseTheLibraryGainedSinceShowsTheProblemsAndStartsNothing() {
+        val db = HyperlogDatabase.get(context)
+        buildNewProgram()
+        compose.click("Save for later")
+        compose.waitFor("Saved to your programs")
+        val curl = runBlocking { Programs(db).kept.first().first().program.exercises() }.single { it.startsWith("barbell_drag_curl") }
+        runBlocking {
+            ExerciseLibrary(db).addNew(listOf(com.hyperlog.app.library.Exercise(curl, "My Drag Curl", com.hyperlog.app.library.Equipment.Barbell,
+                com.hyperlog.app.library.MovementPattern.ElbowFlexion, com.hyperlog.app.library.GripDemand.High, listOf("Biceps"))))
+        }
+        compose.openTab("Program")
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.click("Programs")
+        compose.click("Start")
+        compose.click("Replace")
+        compose.waitFor("Not imported")
+        compose.onNodeWithText("the library already has \"$curl\"", substring = true).assertExists()
+        assertEquals("Hyperlog Full Body", runBlocking { Programs(db).active.first()!!.program.title })
     }
 
     @Test

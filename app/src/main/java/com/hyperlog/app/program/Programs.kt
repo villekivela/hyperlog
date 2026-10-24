@@ -75,6 +75,23 @@ data class ChangeRecord(
 }
 
 /**
+ * A program on the Programs list (SPEC, Program → Programs), with what it is now and whether a
+ * session trained it ([trained]: it can't be deleted).
+ */
+data class KeptProgram(val id: Long, val title: String, val program: Program, val source: String, val status: Status, val trained: Boolean) {
+    sealed interface Status {
+        /** The one in progress, at [position]. */
+        data class Running(val position: Position, val finished: Boolean) : Status
+
+        /** Saved for later at [savedAt], never started. */
+        data class Saved(val savedAt: Long) : Status
+
+        /** Ran from [startedAt] until another replaced it at [endedAt]. */
+        data class Past(val startedAt: Long, val endedAt: Long?) : Status
+    }
+}
+
+/**
  * Imported programs. Importing goes through [ProgramParser]: a file with any problem is rejected
  * whole and changes nothing. One program runs at a time, as a sequence of days.
  */
@@ -93,6 +110,20 @@ class Programs(
     val active: Flow<ActiveProgram?> = dao.activeFlow().flatMapLatest { row ->
         if (row == null) flowOf(null)
         else changeDao.changesFlow(row.id).map { changes -> toActive(row, changes) }
+    }
+
+    /** Every program held, newest first: the one running, those saved for later, and past runs. */
+    val kept: Flow<List<KeptProgram>> = kotlinx.coroutines.flow.combine(dao.allFlow(), dao.trainedFlow()) { rows, trained ->
+        val ids = trained.toSet()
+        rows.mapNotNull { row ->
+            val program = parsed.getOrPut(row.id) { stored(row) } ?: return@mapNotNull null
+            val status = when {
+                row.active -> KeptProgram.Status.Running(Position(row.week, row.dayIndex), row.week > program.weeks)
+                row.startedAt == null -> KeptProgram.Status.Saved(row.importedAt)
+                else -> KeptProgram.Status.Past(row.startedAt, row.endedAt)
+            }
+            KeptProgram(row.id, row.title, program, row.source, status, row.id in ids)
+        }
     }
 
     /** The date [millis] falls on, here. */
@@ -184,21 +215,74 @@ class Programs(
      * library with it. Returns the parse result: on errors nothing is imported or added.
      */
     suspend fun import(json: String, newExercises: List<com.hyperlog.app.library.Exercise> = emptyList()): ProgramParser.Result {
-        val library = exerciseIds()
-        // The library may have gained one of them since the review.
-        val taken = newExercises.withIndex().filter { it.value.id in library }
-        if (taken.isNotEmpty()) return ProgramParser.Result.Invalid(taken.map { "newExercises[${it.index}].id: the library already has \"${it.value.id}\"" })
-        val ids = library + newExercises.map { it.id }
-        val result = withContext(Dispatchers.Default) { ProgramParser.parse(json, ids, merged) }
+        val result = check(json, newExercises)
         if (result is ProgramParser.Result.Valid) {
             db.withTransaction {
                 com.hyperlog.app.library.ExerciseLibrary(db).addNew(newExercises)
-                dao.deactivateAll()
-                val id = dao.insert(ProgramEntity(title = result.program.title, source = json, importedAt = clock()))
+                dao.deactivateAll(clock())
+                val id = dao.insert(ProgramEntity(title = result.program.title, source = json, importedAt = clock(), startedAt = clock()))
                 parsed[id] = result.program
             }
         }
         return result
+    }
+
+    /**
+     * Saves [json] for later, with the [newExercises] it adds to the library once it starts: the
+     * program running goes on. Checked as [import] checks it; on errors nothing is saved.
+     */
+    suspend fun save(json: String, newExercises: List<com.hyperlog.app.library.Exercise> = emptyList()): ProgramParser.Result {
+        val result = check(json, newExercises)
+        if (result is ProgramParser.Result.Valid) {
+            val id = dao.insert(
+                ProgramEntity(
+                    title = result.program.title, source = json, importedAt = clock(), active = false,
+                    newExercises = newExercises.takeIf { it.isNotEmpty() }?.let(com.hyperlog.app.coach.ProgramProposal::encodeExercises),
+                ),
+            )
+            parsed[id] = result.program
+        }
+        return result
+    }
+
+    /**
+     * Starts saved program [id] in place of the one running, from week 1, day 1, as an import
+     * does; its new exercises join the library. Checked again first: if the library has gained one
+     * of them since, the problems come back and nothing starts.
+     */
+    suspend fun start(id: Long): ProgramParser.Result? {
+        val row = dao.program(id)?.takeIf { it.startedAt == null } ?: return null
+        val newExercises = row.newExercises?.let(com.hyperlog.app.coach.ProgramProposal::decodeExercises).orEmpty()
+        val result = check(row.source, newExercises)
+        if (result is ProgramParser.Result.Valid) {
+            db.withTransaction {
+                com.hyperlog.app.library.ExerciseLibrary(db).addNew(newExercises)
+                dao.deactivateAll(clock())
+                dao.start(id, clock())
+            }
+        }
+        return result
+    }
+
+    /**
+     * Run again: program [id], one that has run, starts a fresh run from week 1, day 1, in place of
+     * the one running. The old run stays as it was, with its sessions and Changes.
+     */
+    suspend fun runAgain(id: Long): ProgramParser.Result? {
+        val row = dao.program(id)?.takeIf { it.startedAt != null } ?: return null
+        return import(row.source)
+    }
+
+    /** Deletes program [id], one not running that no session trained; false if it can't go. */
+    suspend fun delete(id: Long): Boolean = dao.delete(id) > 0
+
+    /** [json] checked against the library and [newExercises], which the library may have gained since the review. */
+    private suspend fun check(json: String, newExercises: List<com.hyperlog.app.library.Exercise>): ProgramParser.Result {
+        val library = exerciseIds()
+        val taken = newExercises.withIndex().filter { it.value.id in library }
+        if (taken.isNotEmpty()) return ProgramParser.Result.Invalid(taken.map { "newExercises[${it.index}].id: the library already has \"${it.value.id}\"" })
+        val ids = library + newExercises.map { it.id }
+        return withContext(Dispatchers.Default) { ProgramParser.parse(json, ids, merged) }
     }
 
     /** The program with [id] as imported, or null if it no longer reads (it always should). */

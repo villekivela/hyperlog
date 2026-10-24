@@ -874,8 +874,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      Changes, one row **Changes · 1 in force** ("Changes · none
      in force" once all are reverted or replaced) opens the Changes page with Revert (Coaching),
      a reverted one reading "Reverted 16 Oct". The navigation bar is hidden on that page.
-   - **The actions are Changes**, in ⋮ above Import program and Run Hyperlog Full Body (a divider
-     between) while the program runs: **Skip day** (`skip_day`), **Repeat week 5** (`repeat_week`,
+   - **The actions are Changes**, in ⋮ above Import program, Run Hyperlog Full Body and Programs (a
+     divider between) while the program runs: **Skip day** (`skip_day`), **Repeat week 5** (`repeat_week`,
      named for the week it repeats: the last one trained),
      **Deload week** (`deload_week` for the week you're in) and **Shift program** (`shift_program`,
      1–8 weeks later, picked by steps first). Each opens its diff, and applies only on Accept.
@@ -911,6 +911,25 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      and imports nothing. Importing over a program asks first ("Replace <title>?"), saying where
      you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
      instead. Past sessions are kept."
+   - **Programs** (⋮ → Programs, owner 2026-10-24; `ui/program/ProgramsPage.kt`) lists every
+     program the app holds, newest first, under **Running**, **Saved** and **Past**, each with its
+     title, then its blocks and weeks and where it stands: `4 blocks · 12 weeks · Week 6` (or
+     "Program finished"), `Saved 24 Oct`, `1 Sep – 13 Oct` (started, replaced). The ⋮ is there with
+     no program running too, while the app holds any. The navigation bar is hidden on the page.
+     - **Saved**: a program saved for later from a review, never started. **Start** asks first
+       while a program runs, as import does ("Replace <title>?"), then runs it from week 1, day 1;
+       the one before stays as the record of its sessions. Its new exercises join the library then;
+       if the library has gained one with the same id since, Program shows the problems as a
+       rejected import and nothing starts.
+     - **Past**: replaced runs. **Run again** (also on the running one once it is finished) asks the
+       same way, then starts a fresh run from week 1, day 1, a new row on the list: the old run keeps
+       its sessions, its Changes and its dates.
+     - Every program has **Export** in its ⋮, which writes its file as imported through the system
+       save dialog (`hyperlog-full-body.json`). **Delete** asks first ("Delete <title>?") and is
+       offered only for a program not running that no session trained.
+     - Storage: the `program` table holds every program: a saved one has no `started_at` and keeps
+       its `new_exercises` (as the reply's `newExercises`) until it starts; a replaced one has
+       `ended_at`.
    - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog
      Full Body with **Run this program**; Today keeps Start session (ad hoc) and Import a program
      beside it. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
@@ -1188,7 +1207,8 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     suggestions and why-lines stay per dumbbell, as logged, and come out the same since the
     estimate scales with the load. Volume is counted in sets, so it doesn't change.
 - **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
-  - A backup holds everything the app stores: programs and their Changes, workouts, every session (the
+  - A backup holds everything the app stores: programs (the one running, those saved for later
+    with their new exercises, and past runs) and their Changes, workouts, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
     settings ("Check for updates", the dismissed update), and the Claude cost by month. Every table
@@ -1627,7 +1647,11 @@ back.
   kept."), then runs it from week 1, day 1, and goes to Today; the program before stays as the
   record of its sessions. If the library gained one of its new exercises since the review, nothing
   starts: Program shows the problem as a rejected import (`newExercises[0].id: the library already
-  has "barbell_drag_curl"`). **Reject** and Back step back in the check-in (Type my own open), × drops
+  has "barbell_drag_curl"`). **Save for later** (owner, 2026-10-24), beside Start program, keeps it
+  on the Programs list (Program, below) with its new exercises and leaves the program running alone:
+  it asks nothing, ends the check-in, and Coach says "Saved to your programs" with a **Programs**
+  action that opens the list. The new exercises wait with it and join the library only when it
+  starts. **Reject** and Back step back in the check-in (Type my own open), × drops
   it, as on every review.
 - **Without a key**, Ask Claude's prompt carries the program format (`coach/ProgramFormat.kt`),
   built from the parser's fields and with an example the paste reads; you attach the file in the

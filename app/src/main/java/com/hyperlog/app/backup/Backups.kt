@@ -113,6 +113,8 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
                 // Upgrade steps for files from older databases, as their migrations did.
                 if (database < 18) com.hyperlog.app.data.Migration17To18.moveSharedDumbbells(sql)
                 if (database < 19) com.hyperlog.app.data.Migration18To19.moveSharedPlates(sql)
+                // Before v25 every program had started: none of them is saved for later.
+                if (database < 25) com.hyperlog.app.data.Migration24To25.fillRuns(sql)
             }
             Result.Restored
         } catch (_: android.database.SQLException) {

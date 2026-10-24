@@ -57,6 +57,11 @@ class BackupsTest {
               { "slots": [ { "id": "lateral", "exercise": "cable_lateral_raise", "sets": [ { "count": 2, "reps": "10-12", "rir": 0 } ] } ] } ] } ] } ] }
     """
 
+    private val yRaise = Exercise(
+        "kneeling_cable_y_raise", "Kneeling Cable Y-Raise", com.hyperlog.app.library.Equipment.Cable,
+        com.hyperlog.app.library.MovementPattern.LateralRaise, com.hyperlog.app.library.GripDemand.Low, listOf("Side Delts"), listOf("Traps"),
+    )
+
     /** A fresh install: an empty database with the shipped library synced, as the app starts. */
     private suspend fun freshInstall(): HyperlogDatabase =
         Room.inMemoryDatabaseBuilder(context, HyperlogDatabase::class.java).allowMainThreadQueries().build()
@@ -112,6 +117,8 @@ class BackupsTest {
         programs.accept(ChangeJson.decode("""{"summary":"Lighter bench","scope":"rest_of_program","operations":[{"op":"adjust_load","slot":"bench","percent":-10}]}"""))
         programs.accept(ChangeJson.decode("""{"summary":"Skip","scope":"rest_of_program","operations":[{"op":"skip_day"}]}"""))
         programs.revert(db.planChanges().changes(programs.active.first()!!.id).last().id)
+        // v25: a program saved for later, with the new exercise it brings.
+        programs.save(program.replace("Backup test", "Saved for later").replace("\"cable_lateral_raise\"", "\"kneeling_cable_y_raise\""), listOf(yRaise))
 
         val logger = SessionLogger(db, clock = { now }, programs = programs).also { it.load() }
         // A finished session.
@@ -218,7 +225,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(24), file["database"])
+        assertEquals(JsonPrimitive(25), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -452,5 +459,29 @@ class BackupsTest {
         val history = Programs(phone, clock = { now }).active.first()!!.history
         assertEquals(listOf("Lighter bench", "Skip"), history.map { it.change.summary })
         assertEquals(listOf(null, null), history.map { it.checkIn })
+    }
+
+    @Test
+    fun aSavedProgramComesBackFromABackupAndStartsWithItsNewExercise() = runTest {
+        val file = Backups(usedPhone(), clock = { now }).export()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val programs = Programs(phone, clock = { now })
+        val saved = programs.kept.first().single { it.status is com.hyperlog.app.program.KeptProgram.Status.Saved }
+        assertEquals("Saved for later", saved.title)
+        assertTrue(programs.start(saved.id) is com.hyperlog.app.program.ProgramParser.Result.Valid)
+        assertEquals("Saved for later", programs.active.first()!!.program.title)
+        assertEquals("Kneeling Cable Y-Raise", phone.exercises().all().single { it.id == yRaise.id }.name)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase24RestoresItsProgramAsRunningSinceItsImport() = runTest {
+        val file = javaClass.getResource("/backup/hyperlog-backup-db24.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val kept = Programs(phone, clock = { now }).kept.first()
+        assertEquals(listOf("Backup test"), kept.map { it.title })
+        assertEquals(com.hyperlog.app.program.KeptProgram.Status.Running(com.hyperlog.app.program.Position(2, 0), finished = false), kept.single().status)
+        assertEquals(1_760_000_000_000L, phone.programs().program(kept.single().id)!!.startedAt)
     }
 }

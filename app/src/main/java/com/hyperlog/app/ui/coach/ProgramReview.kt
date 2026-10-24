@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,7 +52,8 @@ internal const val ProgramReviewTag = "program-review"
  * A new program from Claude, before it runs (SPEC, Coaching → New program): its title and what it
  * is, each swap to a library exercise, the exercises it adds to the library, then the program as
  * Program shows it, block by block and week by week. Start program asks first when a program runs
- * ([running]), as import does; Reject, × and Back drop it.
+ * ([running]), as import does; Save for later keeps it on the Programs list and leaves the running
+ * one alone; Reject, × and Back drop it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +68,8 @@ fun ProgramReviewScreen(
     onClose: (() -> Unit)? = null,
     /** The file attached in the check-in that built it, if one was. */
     file: String? = null,
+    /** Save for later: kept on the Programs list, the running program untouched. */
+    onSave: () -> Unit = {},
 ) {
     BackHandler(onBack = onReject)
     var replacing by rememberSaveable { mutableStateOf(false) }
@@ -112,6 +116,8 @@ fun ProgramReviewScreen(
             BottomActions(padding = PaddingValues(16.dp)) {
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = onReject) { Text(stringResource(R.string.change_reject)) }
+                Spacer(Modifier.width(8.dp))
+                OutlinedButton(onClick = onSave) { Text(stringResource(R.string.program_review_save)) }
                 Spacer(Modifier.width(8.dp))
                 Button(onClick = { if (running != null) replacing = true else onStart() }) { Text(stringResource(R.string.program_review_start)) }
             }

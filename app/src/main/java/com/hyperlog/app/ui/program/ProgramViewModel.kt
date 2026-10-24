@@ -230,6 +230,49 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Save for later: the program under review goes on the Programs list with its new exercises,
+     * and the one running goes on; then [saved]. One the library no longer takes shows its
+     * problems as a rejected import does, and [failed] runs instead.
+     */
+    fun saveProgram(saved: () -> Unit, failed: () -> Unit) {
+        val proposal = _program.value ?: return
+        viewModelScope.launch {
+            val result = programs.save(proposal.source, proposal.newExercises)
+            _program.value = null
+            if (result is ProgramParser.Result.Invalid) {
+                _errors.value = result.errors
+                failed()
+            } else {
+                saved()
+            }
+        }
+    }
+
+    /** Every program held, newest first, for Program → Programs. */
+    val kept: StateFlow<List<com.hyperlog.app.program.KeptProgram>> = programs.kept.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Starts saved program [id] in place of the one running; a new exercise the library gained since shows its problems. */
+    fun startKept(id: Long) {
+        viewModelScope.launch { _errors.value = (programs.start(id) as? ProgramParser.Result.Invalid)?.errors }
+    }
+
+    /** Run again: program [id] runs afresh from week 1, day 1. */
+    fun runAgain(id: Long) {
+        viewModelScope.launch { _errors.value = (programs.runAgain(id) as? ProgramParser.Result.Invalid)?.errors }
+    }
+
+    fun deleteKept(id: Long) {
+        viewModelScope.launch { programs.delete(id) }
+    }
+
+    /** Writes [source], a program's file, to [uri], picked in the system save dialog. */
+    fun export(source: String, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { getApplication<Application>().contentResolver.openOutputStream(uri, "wt")?.use { it.write(source.toByteArray()) } }
+        }
+    }
+
     private val _workout = MutableStateFlow<com.hyperlog.app.coach.Workout?>(null)
 
     /** A workout from Claude waiting for Add to Today or Reject; null when none is. */

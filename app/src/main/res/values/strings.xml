@@ -650,6 +650,27 @@
     <string name="workout_replace">Replace</string>
     <string name="program_review_title">New program</string>
     <string name="program_review_start">Start program</string>
+    <string name="program_review_save">Save for later</string>
+    <string name="program_saved">Saved to your programs</string>
+    <string name="programs_title">Programs</string>
+    <string name="programs_running">Running</string>
+    <string name="programs_saved">Saved</string>
+    <string name="programs_past">Past</string>
+    <string name="programs_week">Week %1$d</string>
+    <string name="programs_saved_on">Saved %1$s</string>
+    <string name="programs_ran">%1$s – %2$s</string>
+    <string name="programs_started">Started %1$s</string>
+    <string name="programs_start">Start</string>
+    <string name="programs_run_again">Run again</string>
+    <string name="programs_export">Export</string>
+    <string name="programs_delete">Delete</string>
+    <string name="programs_more">More for %1$s</string>
+    <string name="programs_delete_title">Delete %1$s?</string>
+    <string name="programs_delete_body">It leaves your programs. Nothing was trained on it.</string>
+    <plurals name="programs_blocks">
+        <item quantity="one">%d block</item>
+        <item quantity="other">%d blocks</item>
+    </plurals>
     <string name="program_review_swaps">Swapped for your library</string>
     <string name="program_review_swap">%1$s → %2$s</string>
     <string name="program_review_new">New in your library</string>

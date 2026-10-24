@@ -4,7 +4,30 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23, Migration23To24)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23, Migration23To24, Migration24To25)
+
+/**
+ * v25: programs saved for later (SPEC, Program → Programs). A program gains when it started, when
+ * another replaced it, and a saved one's new exercises. Every program kept before had started when
+ * it was imported, and the one imported after it ended it.
+ */
+object Migration24To25 : Migration(24, 25) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE program ADD COLUMN started_at INTEGER")
+        db.execSQL("ALTER TABLE program ADD COLUMN ended_at INTEGER")
+        db.execSQL("ALTER TABLE program ADD COLUMN new_exercises TEXT")
+        fillRuns(db)
+    }
+
+    /** Dates the programs imported before v25 by their imports. Also run on a restored backup from before v25. */
+    fun fillRuns(db: SupportSQLiteDatabase) {
+        db.execSQL("UPDATE program SET started_at = imported_at WHERE started_at IS NULL")
+        db.execSQL(
+            "UPDATE program SET ended_at = (SELECT MIN(p.imported_at) FROM program p WHERE p.id > program.id) " +
+                "WHERE active = 0 AND ended_at IS NULL",
+        )
+    }
+}
 
 /** v24: an accepted Change keeps the check-in that made it (#73). Changes kept before have none. */
 object Migration23To24 : Migration(23, 24) {

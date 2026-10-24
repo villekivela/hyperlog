@@ -534,6 +534,26 @@ class MigrationTest {
     }
 
     @Test
+    fun version24ProgramsRanFromTheirImportUntilTheNextOneAndNoneIsSaved() = runTest {
+        val file = context.getDatabasePath("migration-test-24.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(24, file) { db ->
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, active, week, day_index) VALUES (1, 'Old', '{}', 1000, 0, 3, 1)")
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, active, week, day_index) VALUES (2, 'Older run ended', '{}', 2000, 0, 1, 0)")
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, active, week, day_index) VALUES (3, 'Now', '{}', 3000, 1, 2, 0)")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        assertEquals(
+            listOf(Triple(1000L, 2000L, null), Triple(2000L, 3000L, null), Triple(3000L, null, null)),
+            (1L..3L).map { id -> db.programs().program(id)!!.let { Triple(it.startedAt, it.endedAt, it.newExercises) } },
+        )
+        assertEquals(3L, db.programs().active()!!.id)
+        db.close()
+    }
+
+    @Test
     fun version23ChangesKeepNoCheckIn() = runTest {
         val file = context.getDatabasePath("migration-test-23.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(23, file) { db ->

@@ -57,6 +57,7 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramActions
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.program.KeptProgram
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
@@ -112,6 +113,12 @@ fun ProgramScreen(
     /** The gyms set up: with two or more, each training day can pick one. */
     gyms: List<Gym> = emptyList(),
     onWeekdayPlan: (WeekdayPlan) -> Unit = {},
+    /** Every program held, for ⋮ → Programs: the one running, those saved for later, past runs. */
+    keptPrograms: List<KeptProgram> = emptyList(),
+    onStartKept: (Long) -> Unit = {},
+    onRunAgain: (Long) -> Unit = {},
+    onExportKept: (KeptProgram) -> Unit = {},
+    onDeleteKept: (Long) -> Unit = {},
 ) {
     var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     val shown = view ?: kept
@@ -125,6 +132,16 @@ fun ProgramScreen(
         com.hyperlog.app.ui.theme.Sheet(onDismiss = { editingWeekdayPlan = false }) {
             WeekdayPlanSheetContent(weekdayPlan, gyms, onWeekdayPlan, onDone = { editingWeekdayPlan = false })
         }
+    }
+    if (shown.programsOpen && errors == null) {
+        val close = { show(shown.copy(programsOpen = false)) }
+        // Started, it is the program Program shows.
+        ProgramsPage(
+            keptPrograms, active,
+            onStart = { close(); onStartKept(it) }, onRunAgain = { close(); onRunAgain(it) },
+            onExport = onExportKept, onDelete = onDeleteKept, onBack = close, modifier = modifier,
+        )
+        return
     }
     if (shown.changesOpen && active != null && errors == null) {
         ChangesPage(active, onRevert, onOpenChange, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
@@ -143,12 +160,13 @@ fun ProgramScreen(
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
                 actions = {
-                    if (active != null && errors == null) {
+                    // Saved programs are there to start with no program running too.
+                    if ((active != null || keptPrograms.isNotEmpty()) && errors == null) {
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                 // The program actions are Changes: each opens its diff and applies only on Accept.
-                                if (active.next != null) {
+                                if (active?.next != null) {
                                     ProgramActionItems(active, onPropose, onShift = { shifting = true }, close = { menu = false })
                                     HorizontalDivider()
                                 }
@@ -157,13 +175,18 @@ fun ProgramScreen(
                                     leadingIcon = { SymbolIcon(Symbol.FileOpen, null) },
                                     onClick = { menu = false; import() },
                                 )
-                                if (starter != null) {
+                                if (starter != null && active != null) {
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.starter_run_named, starter.title)) },
                                         leadingIcon = { SymbolIcon(Symbol.ViewTimeline, null) },
                                         onClick = { menu = false; confirmReplace = Replacement.Starter },
                                     )
                                 }
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.programs_title)) },
+                                    leadingIcon = { SymbolIcon(Symbol.List, null) },
+                                    onClick = { menu = false; show(shown.copy(programsOpen = true)) },
+                                )
                             }
                         }
                     }
@@ -216,12 +239,12 @@ fun ProgramScreen(
 
 private enum class Replacement { File, Starter }
 
-/** What Program shows: the week picked (null for the week you're in) and whether the Changes page is open. */
-data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false) {
+/** What Program shows: the week picked (null for the week you're in) and whether the Changes or Programs page is open. */
+data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false, val programsOpen: Boolean = false) {
     companion object {
         val Saver = androidx.compose.runtime.saveable.listSaver<ProgramView, Any?>(
-            save = { listOf(it.week, it.changesOpen) },
-            restore = { ProgramView(it[0] as Int?, it[1] as Boolean) },
+            save = { listOf(it.week, it.changesOpen, it.programsOpen) },
+            restore = { ProgramView(it[0] as Int?, it[1] as Boolean, it[2] as Boolean) },
         )
     }
 }
