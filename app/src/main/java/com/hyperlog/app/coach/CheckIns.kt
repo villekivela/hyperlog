@@ -93,7 +93,7 @@ class CheckInRunner(
 
     fun answer(text: String) = next { coach, checkIn -> coach.answered(checkIn, text) }
 
-    /** Attach a PDF or photo: the file is the answer, kept in memory only. */
+    /** Attach a spreadsheet, PDF or photo: the file is the answer, kept in memory only. */
     fun attach(attachment: Attachment) = next { coach, checkIn -> coach.attached(checkIn, attachment) }
 
     fun tellMeMore() = next { coach, checkIn -> coach.toldMore(checkIn) }

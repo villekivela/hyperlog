@@ -101,8 +101,9 @@ object CheckInContext {
             )
         }
         appendLine(
-            "- For a new program, offer Attach a PDF or photo on a step (ask's attach) when I may have it as a file: a program PDF, " +
-                "a printed sheet, a whiteboard, a screenshot. Read the blocks, days, exercises, sets, rep ranges, reps in reserve and " +
+            "- For a new program, offer Attach a spreadsheet, PDF or photo on a step (ask's attach) when I may have it as a file: " +
+                "a program's spreadsheet (it comes as each sheet's CSV) or PDF, a printed sheet, a whiteboard, a screenshot. " +
+                "Read the blocks, days, exercises, sets, rep ranges, reps in reserve and " +
                 "techniques from it, and ask only what it doesn't settle; without a file, build from my answers. For an exercise " +
                 "the library lacks, use the closest library exercise and list the swap; add it as a new exercise only when nothing comes close.",
         )

@@ -127,9 +127,18 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
         return builder.build()
     }
 
-    /** A file, base64 as the API takes it; null once its bytes are gone (a check-in read back drops it before calling). */
+    /**
+     * A file as the API takes it: a spreadsheet's text as a plain-text document, a PDF and a photo
+     * base64; null once its bytes are gone (a check-in read back drops it before calling).
+     */
     private fun attachment(file: Attachment): BetaToolResultBlockParam.Content.Block? {
-        val data = file.data?.let { Base64.getEncoder().encodeToString(it) } ?: return null
+        val bytes = file.data ?: return null
+        if (file.mediaType == Attachment.TEXT) {
+            return BetaToolResultBlockParam.Content.Block.ofDocument(
+                BetaRequestDocumentBlock.builder().textSource(bytes.decodeToString()).title(file.name).build(),
+            )
+        }
+        val data = Base64.getEncoder().encodeToString(bytes)
         return if (file.pdf) {
             BetaToolResultBlockParam.Content.Block.ofDocument(
                 BetaRequestDocumentBlock.builder().source(BetaBase64PdfSource.builder().data(data).build()).title(file.name).build(),

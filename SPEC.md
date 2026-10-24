@@ -1316,7 +1316,7 @@ week or shift the program.
 
 **Claude's steps.** After the first tile Claude asks what the situation needs, one question a
 screen, through its `ask` tool: the question, 2–4 answers, whether you may type your own, and
-whether the step offers **Attach a PDF or photo** (New program, below).
+whether the step offers **Attach a spreadsheet, PDF or photo** (New program, below).
 "Which hand, and does pressing hurt or only gripping?" for pain; the gym, with your gyms and
 **Elsewhere** as answers, only when the equipment matters (with more than 3 gyms, the 3 likeliest,
 today's planned gym and those in recent sessions, and Elsewhere, with Type my own for the rest:
@@ -1498,7 +1498,7 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   builds its Changes, workouts and programs from the program and library, so they pass the
   validators: Something hurts and Short on time end in a Change, Change my program asks which and
   why and proposes a wrong slot first, to show the fix, then a `rest_of_program` swap; Different gym
-  and Build me a workout end in a workout; New program offers Attach a PDF or photo, asks the days
+  and Build me a workout end in a workout; New program offers Attach a spreadsheet, PDF or photo, asks the days
   a week, and proposes the program format's example with one swap (Seal Row) and one new exercise
   (Barbell Drag Curl); Tired and Something else end in words. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
 - **One host.** A test fails if code outside the client and the update check opens a connection,
@@ -1554,21 +1554,31 @@ back.
 
 **New program** builds a whole program in a check-in, from your answers or from a file (#75).
 
-- **Attach a PDF or photo** is a row under the answers of a step whose `ask` sets `attach`; Claude
-  offers it when you may have the program as a file: a program PDF (a Nippard one), a printed
-  sheet, a whiteboard, a screenshot of a spreadsheet. The system file picker opens for a PDF or an
-  image, and the file is your answer: it goes to Claude in the answer's tool result ("I attached
-  Nippard PPL.pdf.") as a document (a PDF) or an image (a photo), and the check-in keeps the file's
-  name as the answer. Claude reads the blocks, days, exercises, sets, rep ranges, RIR and
-  techniques, and asks only what the file doesn't settle ("The PDF has 5 days. You train 3: which
-  to merge?"). Without a file it builds from your answers.
-- **Sizes.** A PDF goes as it is, up to 23 MB: the API takes a 32 MB request, and base64 makes a
-  file a third larger. A larger one reads "That PDF is over 23 MB, more than Claude takes in one go.
-  Attach a smaller one, or photos of the pages that matter." as the Attach row's second line, its
-  paperclip turned into a warning. A photo goes as a JPEG turned upright, its long edge at most
-  2576 px (what Opus 5.5 reads). A file that isn't a PDF or an image, or doesn't read, says
-  "Couldn’t read that file. Attach a PDF or a photo." the same way. While it is read, "Reading the file…", the
-  paperclip turns into a loading indicator and the row takes no taps.
+- **Attach a spreadsheet, PDF or photo** is a row under the answers of a step whose `ask` sets
+  `attach`; Claude offers it when you may have the program as a file: its spreadsheet (a Nippard
+  one), a program PDF, a printed sheet, a whiteboard, a screenshot. The system file picker opens for
+  an .xlsx, a .csv, a PDF or an image, and the file is your answer: it goes to Claude in the
+  answer's tool result ("I attached Essentials.xlsx.") and the check-in keeps the file's name as the
+  answer. Claude reads the blocks, days, exercises, sets, rep ranges, RIR and techniques, and asks
+  only what the file doesn't settle ("The sheet has 5 days. You train 3: which to merge?"). Without
+  a file it builds from your answers.
+- **Spreadsheets** (owner, 2026-10-24: Nippard's programs come as Excel files). The API takes no
+  .xlsx, so the phone reads it (`coach/Spreadsheet.kt`, the zip's XML, no library) into one CSV
+  text a sheet, in the workbook's order under `## Sheet: <name>`, sent as a plain-text document
+  titled with the file's name. Cells read as Excel shows them: shared and rich text, numbers without
+  a float's noise (`1.0000000000000002` reads 1), percentages (`75%`), and dates in their own format,
+  so a range Excel saved as a date reads as typed (`2-3` and `8-9` in Nippard's sheets, format
+  `m-d`). A merged cell's value fills down its rows (a day's name labels each exercise) but not
+  across (a title is said once). Empty rows and columns, and empty sheets, are left out. A .csv
+  goes as its text. An old .xls, or a workbook with nothing in it, doesn't read.
+- **Sizes.** A PDF goes as it is (base64, as a document), up to 23 MB: the API takes a 32 MB
+  request, and base64 makes a file a third larger. A larger one is turned down before any call,
+  reading "This PDF is too big for Claude. Attach the program’s spreadsheet or photos of its pages
+  instead." as the Attach row's second line, its paperclip turned into a warning, and the check-in
+  goes on. A photo goes as a JPEG turned upright, its long edge at most 2576 px (what Opus 5.5
+  reads). A file that isn't one of these, or doesn't read, says "Couldn’t read that file. Attach a
+  spreadsheet (.xlsx or .csv), a PDF or a photo." the same way. While it is read, "Reading the
+  file…", the paperclip turns into a loading indicator and the row takes no taps.
 - **Not stored.** The file lives in memory only, while the app runs: the check-in's file in
   `no_backup` keeps its name and type, never its bytes. A check-in read back after the app was
   closed shows where it was (a review it reached still opens), but a call that would carry the file

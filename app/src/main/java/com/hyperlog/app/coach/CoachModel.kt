@@ -52,7 +52,7 @@ data class ToolCall(val id: String, val name: String, val input: JsonObject)
 data class ToolResult(val callId: String, val content: String, val isError: Boolean = false, val attachment: Attachment? = null)
 
 /**
- * A PDF or a photo attached as an answer (SPEC, Coaching → New program), sent to Claude as a
+ * A spreadsheet, a PDF or a photo attached as an answer (SPEC, Coaching → New program), sent to Claude as a
  * document or an image. It is never stored: a check-in saves its [name] and [mediaType], and
  * [data] lives only in memory while the app runs.
  */
@@ -69,6 +69,9 @@ data class Attachment(val name: String, val mediaType: String, @Transient val da
     companion object {
         const val PDF = "application/pdf"
         const val JPEG = "image/jpeg"
+
+        /** Text Claude reads as it is: a spreadsheet's sheets as CSV, or a CSV file. */
+        const val TEXT = "text/plain"
     }
 }
 

@@ -180,7 +180,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         return if (gym != null || elsewhere) answered.copy(gym = gym?.id, elsewhere = elsewhere) else answered
     }
 
-    /** Attach a PDF or photo, on a question that offers it: the file goes to Claude as the answer. */
+    /** Attach a spreadsheet, PDF or photo, on a question that offers it: the file goes to Claude as the answer. */
     suspend fun attach(checkIn: CheckIn, attachment: Attachment): CheckIn = run(attached(checkIn, attachment))
 
     /** [checkIn] with [attachment] as the answer to the question showing, before the call. */

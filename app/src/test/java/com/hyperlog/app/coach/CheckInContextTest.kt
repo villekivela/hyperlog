@@ -48,7 +48,7 @@ class CheckInContextTest {
         assertTrue(context, context.contains("rest_of_program"))
         // A new program: from answers or a file, with swaps for exercises the library lacks.
         assertTrue(context, context.contains("propose_program"))
-        assertTrue(context, context.contains("Attach a PDF or photo"))
+        assertTrue(context, context.contains("Attach a spreadsheet, PDF or photo"))
         assertTrue(context, context.contains("closest library exercise"))
         // The same situation as Ask Claude's, and the formats are the tools, not text.
         assertTrue(context, context.contains("Today is 2026-10-13 (Tuesday)."))

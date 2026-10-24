@@ -135,7 +135,7 @@ class CheckInScreenTest {
         compose.click("New program")
         compose.waitFor("Do you have the program as a file?")
         compose.onNodeWithText("Couldn’t read that file.").assertExists()
-        compose.click("Attach a PDF or photo")
+        compose.click("Attach a spreadsheet, PDF or photo")
         assertEquals(1, attaching)
     }
 
@@ -144,7 +144,7 @@ class CheckInScreenTest {
         show(FakeCoachModel.replies(ask("Which hand?", "Left", "Right")))
         compose.click("Something hurts")
         compose.waitFor("Which hand?")
-        compose.onNodeWithText("Attach a PDF or photo").assertDoesNotExist()
+        compose.onNodeWithText("Attach a spreadsheet, PDF or photo").assertDoesNotExist()
     }
 
     @Test

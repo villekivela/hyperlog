@@ -126,7 +126,7 @@ class CheckInAppTest {
         compose.openTab("Coach")
         compose.click("New program")
         compose.waitFor("Do you have the program as a file?")
-        compose.onNodeWithText("Attach a PDF or photo").assertExists()
+        compose.onNodeWithText("Attach a spreadsheet, PDF or photo").assertExists()
         compose.click("Build it from my answers")
         compose.waitFor("How many days a week can you train?")
         compose.click("3")

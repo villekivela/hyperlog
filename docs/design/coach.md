@@ -10,7 +10,7 @@ row, starter chips, Build me a workout's options) is gone with #74. The tokens o
 ## New program (#75)
 
 **New program** ends in a whole program (`SPEC.md`, Coaching → New program). Two surfaces are new:
-the step that offers **Attach a PDF or photo** (`Question` in `ui/coach/CheckInScreen.kt`) and the
+the step that offers **Attach a spreadsheet, PDF or photo** (`Question` in `ui/coach/CheckInScreen.kt`) and the
 program's review (`ui/coach/ProgramReview.kt`). Both extend the check-in above and the workout
 review; nothing new is invented for them.
 
@@ -36,7 +36,7 @@ review; nothing new is invented for them.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Attach | a lone card 16 dp under the answers, 64 dp at least, 12 dp vertical padding: `attach_file` 24 dp primary at the 24 dp edge, "Attach a PDF or photo" titleMedium, 16 dp after the symbol | Opens the system picker for a PDF or an image |
+| Attach | a lone card 16 dp under the answers, 64 dp at least, 12 dp vertical padding: `attach_file` 24 dp primary at the 24 dp edge, "Attach a spreadsheet, PDF or photo" titleMedium, 16 dp after the symbol | Opens the system picker for an .xlsx, a .csv, a PDF or an image |
 | Attach note | the card's second line, bodyMedium onSurfaceVariant, 4 dp under the title; with a note the symbol tops the title's line instead of centring | "Reading the file…", too large, unreadable |
 | Reading | `LoadingIndicator` 32 dp primary in the symbol's 24 dp box; the card isn't clickable | While the file is read |
 | Refused | `warning` 24 dp in error in the symbol's place; tapping attaches again | Too large, unreadable |
@@ -59,9 +59,9 @@ review; nothing new is invented for them.
  │ I'll describe it                             │
  ╰──────────────────────────────────────────────╯
  ╭──────────────────────────────────────────────╮
- │ ⚠  Attach a PDF or photo                     │ ← 📎 until a file is refused
- │     That PDF is over 23 MB, more than Claude │ ← the note, quiet; or
- │     takes in one go. Attach a smaller one, … │   ⬢ Reading the file…
+ │ ⚠  Attach a spreadsheet, PDF or photo        │ ← 📎 until a file is refused
+ │     This PDF is too big for Claude. Attach   │ ← the note, quiet; or
+ │     the program’s spreadsheet or photos of … │   ⬢ Reading the file…
  ╰──────────────────────────────────────────────╯
  ╭──────────────────────────────────────────────╮
  │ ⌨  Type my own                               │

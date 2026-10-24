@@ -228,7 +228,7 @@ private fun App(
         uri?.let(programModel::import)
     }
     val startingWeights by startingWeightsModel.status.collectAsStateWithLifecycle()
-    // Attach a PDF or photo, on a check-in's step that offers it.
+    // Attach a spreadsheet, PDF or photo, on a check-in's step that offers it.
     val pickAttachment = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(checkInModel::attach)
     }
@@ -639,7 +639,7 @@ private fun App(
             onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
             pasteErrors = pasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
-            onAttach = { pickAttachment.launch(arrayOf(com.hyperlog.app.coach.Attachment.PDF, "image/*")) },
+            onAttach = { pickAttachment.launch(com.hyperlog.app.coach.Attachments.PickerTypes) },
             // A check-in read back without its file asks for it again.
             attachNote = attachNote ?: checkIn?.checkIn?.lostFile?.let { context.getString(R.string.checkin_attach_again, it) },
         )

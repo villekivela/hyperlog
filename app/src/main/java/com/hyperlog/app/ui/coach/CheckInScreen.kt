@@ -162,7 +162,7 @@ fun CheckInScreen(
      */
     draft: String? = null,
     onDraft: ((String?) -> Unit)? = null,
-    /** Attach a PDF or photo, on a step that offers it: the caller opens the file picker. */
+    /** Attach a spreadsheet, PDF or photo, on a step that offers it: the caller opens the file picker. */
     onAttach: () -> Unit = {},
     /** What became of the file picked, under Attach: being read, or why it can't go. */
     attachNote: String? = null,

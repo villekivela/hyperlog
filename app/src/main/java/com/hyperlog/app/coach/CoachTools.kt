@@ -45,7 +45,7 @@ object CoachTools {
             "question" to string("The question, one short sentence."),
             "answers" to array(string("An answer to tap, a few words."), "2 to 4 answers."),
             "own" to bool("Whether I may type my own answer instead."),
-            "attach" to bool("Whether this step offers Attach a PDF or photo, for a program I have as a file: a PDF, a printed sheet, a screenshot. Only for a new program."),
+            "attach" to bool("Whether this step offers Attach a spreadsheet, PDF or photo, for a program I have as a file: a spreadsheet, a PDF, a printed sheet, a screenshot. Only for a new program."),
         ),
     )
 

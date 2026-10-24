@@ -16,9 +16,10 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * A file picked for Attach a PDF or photo (SPEC, Coaching → New program), made ready for Claude.
- * A PDF goes as it is, while the request can hold it; a photo goes as a JPEG no larger than Claude
- * reads, turned upright. Nothing is stored: the bytes live in memory only.
+ * A file picked for Attach (SPEC, Coaching → New program), made ready for Claude. A spreadsheet
+ * goes as its sheets' text (an .xlsx read here by [Spreadsheet], a .csv as it is); a PDF as it is,
+ * while the request can hold it; a photo as a JPEG no larger than Claude reads, turned upright.
+ * Nothing is stored: the bytes live in memory only.
  */
 object Attachments {
     /**
@@ -32,12 +33,15 @@ object Attachments {
 
     private const val JPEG_QUALITY = 85
 
+    /** An Excel workbook's type, as pickers give it. */
+    const val XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
     /** A picked file, ready to go or why it can't. */
     sealed interface Result {
         data class Ready(val attachment: Attachment) : Result
         /** A PDF over [MAX_PDF_BYTES]. */
         data object TooLarge : Result
-        /** Not a PDF or a photo, or one that doesn't read. */
+        /** Not a spreadsheet, a PDF or a photo, or one that doesn't read. */
         data object Unreadable : Result
     }
 
@@ -51,8 +55,22 @@ object Attachments {
         return runCatching { resolver.openInputStream(uri)?.use { prepare(name, resolver.getType(uri), it) } }.getOrNull() ?: Result.Unreadable
     }
 
-    /** [input] as Claude takes it: a PDF of [mediaType] up to [MAX_PDF_BYTES], or a photo of any image type. */
+    /** The most of a spreadsheet read: far more than any program's sheets. */
+    private const val MAX_SHEET_BYTES = 20 * 1024 * 1024
+
+    /**
+     * [input] as Claude takes it, by its [mediaType] or, when a picker gives none that says, its
+     * [name]: a spreadsheet as text, a PDF up to [MAX_PDF_BYTES], or a photo of any image type.
+     */
     fun prepare(name: String, mediaType: String?, input: InputStream): Result = when {
+        mediaType == XLSX || name.endsWith(".xlsx", ignoreCase = true) -> {
+            val sheets = Spreadsheet.sheets(input.readAtMost(MAX_SHEET_BYTES))
+            if (sheets.isEmpty()) Result.Unreadable else Result.Ready(Attachment(name, Attachment.TEXT, Spreadsheet.text(sheets).toByteArray()))
+        }
+        mediaType in CsvTypes || name.endsWith(".csv", ignoreCase = true) -> {
+            val text = input.readAtMost(MAX_SHEET_BYTES).decodeToString().removePrefix("\uFEFF").trim()
+            if (text.isEmpty()) Result.Unreadable else Result.Ready(Attachment(name, Attachment.TEXT, text.toByteArray()))
+        }
         mediaType == Attachment.PDF -> {
             // Read one byte past the limit at most, so a huge file is never all in memory.
             val bytes = input.readAtMost(MAX_PDF_BYTES + 1)
@@ -62,6 +80,12 @@ object Attachments {
             photo(input.readBytes())?.let { Result.Ready(Attachment(name, Attachment.JPEG, it)) } ?: Result.Unreadable
         else -> Result.Unreadable
     }
+
+    /** The types pickers give a CSV file. */
+    private val CsvTypes = setOf("text/csv", "text/comma-separated-values", "application/csv")
+
+    /** What the file picker offers: spreadsheets, PDFs and photos. */
+    val PickerTypes = arrayOf(XLSX, "text/csv", "text/comma-separated-values", "application/csv", Attachment.PDF, "image/*")
 
     /** The photo upright, its long edge at most [MAX_IMAGE_EDGE], as a JPEG; null if it doesn't decode. */
     private fun photo(bytes: ByteArray): ByteArray? {

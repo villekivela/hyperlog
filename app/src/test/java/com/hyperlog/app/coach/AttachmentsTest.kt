@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -11,7 +12,7 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.ByteArrayOutputStream
 
 /**
- * A file picked for Attach a PDF or photo (SPEC, Coaching → New program): a PDF goes as it is while
+ * A file picked for Attach a spreadsheet, PDF or photo (SPEC, Coaching → New program): a PDF goes as it is while
  * the request can hold it, a photo as a JPEG no larger than Claude reads.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -68,6 +69,39 @@ class AttachmentsTest {
     @org.robolectric.annotation.Config(sdk = [27])
     fun aPhotoIsTurnedUprightOnAnOlderAndroidToo() {
         assertEquals(listOf(300, 400), size(Attachments.prepare("Portrait.jpg", "image/jpeg", sideways().inputStream())))
+    }
+
+    /** A one-sheet workbook: a row of two shared strings. */
+    private fun workbook(): ByteArray = ByteArrayOutputStream().also { out ->
+        java.util.zip.ZipOutputStream(out).use { zip ->
+            listOf(
+                "xl/workbook.xml" to "<workbook><sheets><sheet name=\"Week 1\" sheetId=\"1\"/></sheets></workbook>",
+                "xl/sharedStrings.xml" to "<sst><si><t>Squat</t></si><si><t>4-6</t></si></sst>",
+                "xl/worksheets/sheet1.xml" to "<worksheet><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c><c r=\"B1\" t=\"s\"><v>1</v></c></row></sheetData></worksheet>",
+            ).forEach { (name, text) -> zip.putNextEntry(java.util.zip.ZipEntry(name)); zip.write(text.toByteArray()); zip.closeEntry() }
+        }
+    }.toByteArray()
+
+    @Test
+    fun aSpreadsheetGoesAsTheTextOfItsSheets() {
+        val read = Attachments.prepare("Essentials.xlsx", Attachments.XLSX, workbook().inputStream()) as Attachments.Result.Ready
+        assertEquals(Attachment("Essentials.xlsx", Attachment.TEXT), read.attachment.copy(data = null))
+        assertEquals("## Sheet: Week 1\nSquat,4-6", read.attachment.data!!.decodeToString())
+        // Some pickers give a workbook no type: its name says what it is.
+        assertTrue(Attachments.prepare("Essentials.xlsx", "application/octet-stream", workbook().inputStream()) is Attachments.Result.Ready)
+    }
+
+    @Test
+    fun aCsvGoesAsItsText() {
+        val csv = "\uFEFFExercise,Reps\nSquat,4-6\n"
+        val read = Attachments.prepare("Week 1.csv", "text/comma-separated-values", csv.byteInputStream()) as Attachments.Result.Ready
+        assertEquals(Attachment.TEXT, read.attachment.mediaType)
+        assertEquals("Exercise,Reps\nSquat,4-6", read.attachment.data!!.decodeToString())
+    }
+
+    @Test
+    fun anOldExcelFileIsUnreadable() {
+        assertEquals(Attachments.Result.Unreadable, Attachments.prepare("Essentials.xls", "application/vnd.ms-excel", byteArrayOf(-48, -49, 17, -32).inputStream()))
     }
 
     @Test

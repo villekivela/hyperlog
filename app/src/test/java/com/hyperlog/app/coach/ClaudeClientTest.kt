@@ -196,16 +196,17 @@ class ClaudeClientTest {
     }
 
     @Test
-    fun anAttachedPdfGoesAsADocumentAndAPhotoAsAnImageInTheAnswer() = runTest {
+    fun anAttachedPdfGoesAsADocumentAPhotoAsAnImageAndASpreadsheetAsTextInTheAnswer() = runTest {
         question()
         val reply = client.reply(request)
         val pdf = Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1, 2, 3))
         val photo = Attachment("Whiteboard.jpg", "image/jpeg", byteArrayOf(4, 5))
-        listOf(pdf, photo).forEach { file ->
+        val sheet = Attachment("Essentials.xlsx", Attachment.TEXT, "## Sheet: Week 1\nSquat,4-6".toByteArray())
+        listOf(pdf, photo, sheet).forEach { file ->
             question()
             client.reply(request.copy(messages = request.messages + CoachMessage.Assistant(reply) + CoachMessage.Results(listOf(ToolResult("toolu_1", "I attached ${file.name}.", attachment = file)))))
         }
-        val (document, image) = api.received.toList().takeLast(2).map {
+        val (document, image, text) = api.received.toList().takeLast(3).map {
             it.json["messages"]!!.jsonArray.last().jsonObject["content"]!!.jsonArray.single().jsonObject["content"]!!.jsonArray.map { b -> b.jsonObject }
         }
         assertEquals("I attached Nippard PPL.pdf.", document[0]["text"]!!.jsonPrimitive.content)
@@ -216,6 +217,11 @@ class ClaudeClientTest {
         assertEquals("image", image[1]["type"]!!.jsonPrimitive.content)
         val imageSource = image[1]["source"]!!.jsonObject
         assertEquals(listOf("base64", "image/jpeg", "BAU="), listOf("type", "media_type", "data").map { imageSource[it]!!.jsonPrimitive.content })
+        // A spreadsheet's sheets go as a plain-text document, under the file's name.
+        assertEquals("document", text[1]["type"]!!.jsonPrimitive.content)
+        assertEquals("Essentials.xlsx", text[1]["title"]!!.jsonPrimitive.content)
+        val textSource = text[1]["source"]!!.jsonObject
+        assertEquals(listOf("text", "text/plain", "## Sheet: Week 1\nSquat,4-6"), listOf("type", "media_type", "data").map { textSource[it]!!.jsonPrimitive.content })
     }
 
     @Test
