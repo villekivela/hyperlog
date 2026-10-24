@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-      The update check reads the latest release from GitHub and downloads its APK (SPEC,
-      Distribution). Nothing else uses the network, and the app makes no model calls (ADR 0001).
+      Two hosts (OneHostTest): the update check reads the latest release from GitHub and downloads
+      its APK (SPEC, Distribution), and with a Claude key the coach's one client calls
+      api.anthropic.com (ADR 0005). Nothing else uses the network.
     -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Handing the downloaded update to Android's installer. -->

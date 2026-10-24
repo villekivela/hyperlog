@@ -21,6 +21,17 @@ Settings                                           ← no back arrow: a tab; the
             173 exercises
 [history]   Starting weights from the old app
             80 exercises · tap to import again
+Coach                                              ← GroupHead, primary
+[key]       Claude key                            ← no key: tap opens the field in the card
+            Ask Claude from the app with an API key
+   or       Claude key
+            An Anthropic API key from the Anthropic Console. It stays …   (3 lines)
+            ┌ API key ••••••••••••••• ┐           ← masked; text at 72 dp
+            └ Checking the key… | Claude doesn't accept this key. | Couldn't reach Claude. Try again.
+                                   Cancel  Save
+   or       Claude key                    Remove  ← a saved key
+            Key ending …a1b2
+            This month: ≈ $2.40                   (bodySmall, onSurfaceVariant, at 84 dp)
                                                   16 dp
 [download]  Export backup
             Everything on this phone, in one file | Saved Tue 13 Oct, 14:05 | Couldn't save the file
@@ -37,6 +48,13 @@ Settings                                           ← no back arrow: a tab; the
 
 ## States and rules
 
+- **Claude key** (#72): a Coach group of its own, after the setup rows. The field opens in the
+  key's card, not a dialog (Robolectric's tests can't type into a text field in a dialog). Save
+  is off while the field is empty or the check runs; a refused or unreachable key turns the field
+  red with its reason under it and saves nothing. Once saved, the field closes and the row shows
+  the ending with Remove, which forgets the key at once (it can be pasted again), and the month's
+  cost sits under the card like the backups footnote.
+
 - **Export**: tap → the system save dialog with `hyperlog-backup-<date>.json` → `Saved <EEE d MMM, HH:mm>`,
   which stays on the row afterwards (the time is kept in `setting` as `last_export`, no migration,
   recorded once the file is saved, so a backup holds the export before it and a restore shows
@@ -50,6 +68,10 @@ Settings                                           ← no back arrow: a tab; the
   Turning it off hides any update banner on Today at once and stops the check (SPEC, Distribution).
 - The starting-weights row now says "the old app's backup" so it can't be mistaken for a Hyperlog
   backup.
+
+Claude key renders (`ClaudeKeyRenders`): `light-claude-key-none.png`, `light-claude-key-entering.png`,
+`light-claude-key-refused.png`, `light-claude-key-saved.png`, `dark-claude-key-refused.png`,
+`dark-claude-key-saved.png`. Not yet seen on the phone.
 
 Screens: `screens/settings.png` (phone, dark, Ink and violet: Settings as the fifth tab, retaken
 in #58), `library.png` (phone, dark: the exercise library under it, its back arrow and no bar),

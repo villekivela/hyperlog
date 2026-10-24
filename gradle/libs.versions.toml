@@ -15,6 +15,8 @@ coroutines = "1.11.0"
 serialization = "1.11.0"
 # NotificationCompat Live Update calls (setRequestPromotedOngoing) need core 1.17+.
 core = "1.18.0"
+# The coach's calls to Claude (ADR 0005). Kept on 2.x: 3.0 (2026-10-21) moves to a new API version.
+anthropic = "2.75.0"
 
 [libraries]
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "core" }
@@ -34,6 +36,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+anthropic-java = { module = "com.anthropic:anthropic-java", version.ref = "anthropic" }
 junit = { module = "junit:junit", version.ref = "junit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 

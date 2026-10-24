@@ -39,8 +39,9 @@ object BackupFormat {
         // Sessions, the running one with its pad draft and rest timer, their sets and session edits.
         "session", "session_exercise", "logged_set", "set_extension", "set_technique",
         "starting_weight", "bodyweight", "lift_goal",
-        // Preferences: "Check for updates", the update banner dismissed, and the last export's time
-        // (written after its file, so a backup holds the export before it).
+        // Preferences: "Check for updates", the update banner dismissed, the last export's time
+        // (written after its file, so a backup holds the export before it), and each month's coach
+        // cost. The Claude key isn't here: it stays on the phone, outside the database.
         "setting",
     )
 

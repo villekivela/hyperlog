@@ -72,7 +72,11 @@ android {
         // Robolectric runs Compose and resources in plain JVM unit tests.
         unitTests.isIncludeAndroidResources = true
         // Robolectric's SDK 36 sandbox reaches into JDK internals.
-        unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
+        unitTests.all {
+            it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
+            // The live Claude test runs only with a key, so a run with one isn't served from a run without.
+            it.inputs.property("anthropicApiKeySet", System.getenv("ANTHROPIC_API_KEY").isNullOrBlank().not())
+        }
     }
 }
 
@@ -93,6 +97,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.anthropic.java)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
