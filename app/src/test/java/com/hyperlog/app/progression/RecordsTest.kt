@@ -73,7 +73,8 @@ class RecordsTest {
     @Test
     fun aWeightKeptPastACheckIsNoRecordUntilConfirmed() {
         val history = listOf(session(set(80.0, 5)))
-        val today = Performance(listOf(WorkSet(set(100.0, 5), null, counts = false)))
+        // 80 × 7 would be both kinds, but its weight was kept past a check nothing has confirmed.
+        val today = Performance(listOf(WorkSet(set(80.0, 7), null, counts = false)))
         assertEquals(listOf(null), Records.of(history, today))
     }
 }
