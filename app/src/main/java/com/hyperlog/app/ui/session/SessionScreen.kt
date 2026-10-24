@@ -160,6 +160,7 @@ fun SessionScreen(
         when {
             session.correction != null -> actions.cancelCorrection()
             session.warmupEdit != null -> actions.closeWarmup()
+            session.pickedSet != null -> actions.closePickedSet()
             session.viewingId != null -> actions.closeView()
             else -> showLeave = true
         }
@@ -306,6 +307,9 @@ fun SessionScreen(
                             undoable = { session.undoable(current, it) },
                             onUndo = { actions.undo(current.id) },
                             onAddDrop = actions::addDrop,
+                            pickedSet = session.pickedSet,
+                            onPickSet = if (session.correctable) actions::pickSet else null,
+                            openIndex = session.openIndex,
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
@@ -344,6 +348,11 @@ fun SessionScreen(
                 val canConfirm = if (typed.field == Field.Weight) typed.weightKg != null else typed.full.toIntOrNull()?.let { it > 0 } == true && typed.weightKg != null
                 Pad(typed, current.ladder, null, actions, canConfirm = canConfirm, plates = current.plates, platesOnMachine = current.platesOnMachine, pinLoad = current.pinLoader(), top = nextRow,
                     warmup = warmupEdit.index to session.warmups.size)
+            } else if (current != null && session.pickedSet != null) {
+                // A later set picked to log out of order: typed and logged like the set to do.
+                val typed = session.pickedSet.entry
+                Pad(typed, current.ladder, session.weightCheck, actions, plates = current.plates, platesOnMachine = current.platesOnMachine, pinLoad = current.pinLoader(), top = nextRow,
+                    picked = true)
             } else if (current != null && entry != null) {
                 // A weight check always shows, even with the pad folded away.
                 val followUp = session.followUp
@@ -456,7 +465,7 @@ fun SessionScreen(
     }
     val optionsFor = setOptions
     if (optionsFor != null && current != null) {
-        val active = optionsFor == current.sets.size
+        val active = optionsFor == (session.pickedSet?.index ?: current.toDo)
         Sheet(onDismiss = { setOptions = null }) {
             SetSheet(
                 number = optionsFor + 1,

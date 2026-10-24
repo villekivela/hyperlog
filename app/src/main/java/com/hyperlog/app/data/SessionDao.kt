@@ -88,6 +88,10 @@ interface SessionDao {
     @Query("SELECT * FROM logged_set WHERE session_exercise_id = :sessionExerciseId ORDER BY position")
     suspend fun sets(sessionExerciseId: Long): List<LoggedSetEntity>
 
+    /** Set [index] of [sessionExerciseId] (its position); null while it isn't logged. */
+    @Query("SELECT * FROM logged_set WHERE session_exercise_id = :sessionExerciseId AND position = :index")
+    suspend fun setAt(sessionExerciseId: Long, index: Int): LoggedSetEntity?
+
     /** The sets of [exerciseId] from the latest other session in which any were logged. */
     @Query(
         """

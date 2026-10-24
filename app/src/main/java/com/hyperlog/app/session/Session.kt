@@ -65,6 +65,13 @@ data class SessionExercise(
     val pinPlates: List<Double> = emptyList(),
     /** The record each of [sets] makes, by index (SPEC, Records); null for none. */
     val records: List<Record?> = emptyList(),
+    /**
+     * Each of [sets]' set index, in the same order. A set logged out of order leaves the sets
+     * before it unlogged, so a logged set's index isn't always its place in [sets].
+     */
+    val setIndices: List<Int> = sets.indices.toList(),
+    /** Each of [lastTime]'s set index, in the same order: a set skipped last time leaves a gap. */
+    val lastTimeIndices: List<Int> = lastTime.indices.toList(),
 ) {
     /** Its sets with their records, as summaries show them. */
     val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records)
@@ -81,25 +88,53 @@ data class SessionExercise(
      */
     val platesOnMachine: Boolean get() = plates != null && exercise.equipment !in BarEquipment
 
+    /** The set to do: the first one not logged yet. */
+    val toDo: Int get() = firstUnlogged(setIndices)
+
+    /** Set [index] as logged; null while it isn't. */
+    fun setAt(index: Int): LoggedSet? = sets.getOrNull(setIndices.indexOf(index))
+
+    /** Last time's set [index]. */
+    fun lastTimeAt(index: Int): LoggedSet? = lastTime.getOrNull(lastTimeIndices.indexOf(index))
+
+    /** The record set [index] makes; null for none, or while it isn't logged. */
+    fun recordAt(index: Int): Record? = records.getOrNull(setIndices.indexOf(index))
+
+    /** The sets logged before set [index], in order. */
+    fun before(index: Int): List<LoggedSet> = before(sets, setIndices, index)
+
+    /** Set [index] can be tapped to log it out of order: a planned set, not logged, after the set to do. */
+    fun pickable(index: Int): Boolean = editable(index) && index > toDo
+
         /** Every planned set is logged. An ad-hoc exercise is never done. */
     val done: Boolean get() = prescription != null && sets.size >= prescription.size
 
     /** Planned set [index] can still change in the session: it is planned and not logged yet. */
-    fun editable(index: Int): Boolean = prescription != null && index >= sets.size && index < prescription.size
+    fun editable(index: Int): Boolean = prescription != null && setAt(index) == null && index < prescription.size
 
-    /** Planned set [index] can be taken out: one set always stays, and so does one that others back off from. */
-    fun removable(index: Int): Boolean = editable(index) && prescription!!.size > 1 && prescription.none { it.backoff?.from == index }
+    /**
+     * Planned set [index] can be taken out: one set always stays, and so does one that others back
+     * off from or one with a set logged after it.
+     */
+    fun removable(index: Int): Boolean =
+        editable(index) && prescription!!.size > 1 && prescription.none { it.backoff?.from == index } && setIndices.none { it > index }
 
     /**
      * Set [index]'s technique: what a logged set was done with, else the session's change to it,
      * else the program's.
      */
     fun techniqueAt(index: Int): Technique? = when {
-        index < sets.size -> sets[index].technique
+        index in setIndices -> setAt(index)!!.technique
         index in techniques -> techniques[index]
         else -> prescription?.getOrNull(index)?.technique
     }
 }
+
+/** The first set index not in [logged]: the set to do. */
+internal fun firstUnlogged(logged: Collection<Int>): Int = generateSequence(0) { it + 1 }.first { it !in logged }
+
+/** The [sets] logged before set [index], by their set [indices]. */
+internal fun <T> before(sets: List<T>, indices: List<Int>, index: Int): List<T> = sets.filterIndexed { i, _ -> indices[i] < index }
 
 /** The equipment loaded with plates on a bar: the barbell and the specialty bars. */
 private val BarEquipment = setOf(Equipment.Barbell, Equipment.EzBar, Equipment.TrapBar, Equipment.SafetyBar)
@@ -132,6 +167,8 @@ data class ActiveSession(
     val holdStartedAt: Long? = null,
     /** The open set's row, to add its drops, mini-sets or hold to. */
     internal val openSetId: Long? = null,
+    /** The open set's index in [current]; null when no set is open. */
+    val openIndex: Int? = null,
     /** A finished exercise opened from the session list, shown in place of [current]; null when none. */
     val viewingId: Long? = null,
     /** The logged row loaded into the pad to be corrected; null when none. [entry] stays the set to do. */
@@ -143,6 +180,8 @@ data class ActiveSession(
      * while a weight is being typed, so they don't follow each keystroke.
      */
     internal val rampEntry: SetEntry? = null,
+    /** A later, unlogged set tapped to log it out of order; null when the pad is on the set to do. [entry] stays the set to do. */
+    val pickedSet: PickedSet? = null,
     /** The set logged most recently in the session, by session exercise id and set index; null with none. Its check takes it back. */
     val latestSet: Pair<Long, Int>? = null,
 ) {
@@ -181,7 +220,7 @@ data class ActiveSession(
      */
     fun undoable(exercise: SessionExercise, index: Int): Boolean =
         latestSet == (exercise.id to index) && correction == null && warmupEdit == null &&
-            exercise.sets.getOrNull(index)?.extensions?.isEmpty() == true
+            exercise.setAt(index)?.extensions?.isEmpty() == true
 
     /** [current]'s superset partner, or null for straight sets. */
     val partner: SessionExercise? get() = current?.let { SessionOrder.partner(exercises, it) }
@@ -200,6 +239,9 @@ data class ActiveSession(
                 ?: exercises.drop(exercises.indexOf(current) + 1).firstOrNull { it.id !in group && !it.done }
         }
 }
+
+/** Set [index] of session exercise [sessionExerciseId], tapped to log it out of order, as typed so far. */
+data class PickedSet(val sessionExerciseId: Long, val index: Int, val entry: SetEntry)
 
 /** Warm-up [index] of session exercise [sessionExerciseId] on the pad, as typed so far. */
 data class WarmupEdit(val sessionExerciseId: Long, val index: Int, val entry: SetEntry)

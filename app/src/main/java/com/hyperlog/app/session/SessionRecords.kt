@@ -21,7 +21,7 @@ internal class SessionRecords(db: HyperlogDatabase, private val programs: Progra
     private val dao = db.sessions()
     private val bodyweights = Bodyweights(db)
 
-    /** The record each of [sets] makes, logged on [se] of [row] in a [deload] week or not. */
+    /** The record each of [sets] (in set order) makes, logged on [se] of [row] in a [deload] week or not. */
     suspend fun of(row: SessionEntity, se: SessionExerciseEntity, exercise: Exercise, sets: List<LoggedSet>, deload: Boolean): List<Record?> {
         if (sets.isEmpty()) return emptyList()
         val perMachine = exercise.equipment.perMachine
@@ -37,6 +37,10 @@ internal class SessionRecords(db: HyperlogDatabase, private val programs: Progra
         val history = earlier.groupBy { it.set.sessionExerciseId }.values.map { rows ->
             performance(rows.map { it.set.toLoggedSet(emptyList()) }, rows.first().startedAt, deload = false)
         }
-        return Records.of(history, performance(sets, row.startedAt, deload))
+        // In the order they were logged, so a set logged out of order never loses its mark to one logged after it.
+        val at = dao.sets(se.id).map { it.loggedAt }
+        val order = sets.indices.sortedBy { at.getOrNull(it) ?: 0L }
+        val marks = Records.of(history, performance(order.map(sets::get), row.startedAt, deload))
+        return sets.indices.map { marks[order.indexOf(it)] }
     }
 }

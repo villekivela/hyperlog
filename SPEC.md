@@ -652,7 +652,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        without its technique (on a finished exercise it brings the exercise back into the order).
        A set's circle in the index column opens its sheet (the session ⋮ has no set options): **Remove set**, and its target (fewest reps, most reps,
        RIR, by steps), as long as the set isn't logged. One set always stays, and so does one that
-       others back off from. Removing the active exercise's last set to do moves the session on.
+       others back off from, or one with a set logged after it. Removing the active exercise's last
+       set to do moves the session on. An edit keeps what was typed for the set to do; an untouched
+       prefill follows the new target.
      - **Exercises:** the session list row's ⋮ swaps, adds a set, moves the exercise up or down (a
        superset moves as a pair) and removes it (asking first; only with nothing logged). Added
        exercises are open-ended like ad-hoc ones (no slot, no target), in a program session too.
@@ -803,6 +805,33 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - The set to do is prefilled again from the correction if nothing was typed into it yet.
      - Rows can't be corrected while a drop set, myo-reps or hold is still open; finish it first.
      - A correction half typed isn't kept if the app is killed; the row keeps its logged values.
+   - **Out of order** (owner, 2026-10-24): tapping a later, unlogged set of a program exercise
+     makes it the active row, in this exercise and in later exercises of the session.
+     - The pad moves to it, prefilled as its row shows it: the weight planned for it (from the set
+       before it, the one being typed for the set to do, or its back-off) and its target RIR, else
+       the RIR of the set logged before it. The set to do steps back and keeps what was typed for it.
+     - Logging it logs it in its own place, out of order, and starts its rest (its own rest time,
+       in a superset too). The active row then goes back to the first unlogged set, so the skipped
+       set is still waiting. A drop, mini-set or hold still follows its own set, with no rest
+       before it, and rest starts once the set closes; the set to do is then prefilled afresh,
+       since the pad's entry was the drops'.
+     - Back, the hide key (`close`, "Back to the set") or a tap on the set to do returns the pad to
+       the first unlogged set without logging. So does a correction or a warm-up put on the pad.
+     - The check of a set logged out of order takes it back while it is the set logged last: it
+       goes back on the pad in its place and the set to do keeps its entry. A skipped set logged
+       after it is then the one logged last.
+     - A correction of a set logged out of order changes it in its own place. A record is judged
+       in the order sets were logged, so a set logged out of order keeps its mark when a skipped
+       set logged after it beats it.
+     - Progression reads a set against its own target. The suggestion and prefill of the set to do
+       come from the sets before it; a set logged out of order doesn't move them. A set left
+       skipped when the session finishes stays unlogged, and later sessions read the others
+       against their own targets.
+     - A planned set can't be taken out while a set after it is logged.
+     - Warm-ups are the exception: they are ticked in order, so typing a later warm-up and ✓ (or its
+       check) ticks it with the ones before it, as before (owner, 2026-10-24). Tapping a later work
+       set while a warm-up is on the pad works like any other.
+     - A picked set half typed isn't kept if the app is killed; the pad comes back on the set to do.
      - **Open** on a finished exercise in the session list shows its table in place of the current
        one, to look at or correct; the line at the bottom reads "Now <current exercise>" and goes
        back, as does Back. The session stays on its set and rest keeps running.

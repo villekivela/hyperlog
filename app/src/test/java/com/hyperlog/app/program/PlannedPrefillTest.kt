@@ -54,7 +54,7 @@ class PlannedPrefillTest {
 
     @Test
     fun upcomingBackOffsShowTheWeightWorkedOutFromTheTopSetBeingTyped() {
-        assertEquals(listOf(90.0, 90.0), (1..2).map { plannedWeight(it, bench, emptyList(), emptyList(), plates, activeKg = 100.0) })
-        assertEquals(85.0, plannedWeight(1, bench, listOf(LoggedSet(95.0, 5, 0, 1)), emptyList(), plates, activeKg = 85.0))
+        assertEquals(listOf(90.0, 90.0), (1..2).map { plannedWeight(it, bench, { null }, toDo = 0, emptyList(), plates, activeKg = 100.0) })
+        assertEquals(85.0, plannedWeight(1, bench, listOf(LoggedSet(95.0, 5, 0, 1))::getOrNull, toDo = 1, emptyList(), plates, activeKg = 85.0))
     }
 }

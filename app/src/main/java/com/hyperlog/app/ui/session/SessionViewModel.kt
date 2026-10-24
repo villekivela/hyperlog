@@ -52,6 +52,8 @@ interface PadActions {
     fun cancelCorrection()
     /** The pad's close key while a warm-up is on it: back to the set to do. */
     fun closeWarmup() {}
+    /** The pad's close key while a later set picked out of order is on it: back to the set to do, logging nothing. */
+    fun closePickedSet() {}
 }
 
 /** What the session screen can ask for. Each call is saved as soon as it is made. */
@@ -102,6 +104,8 @@ interface SessionActions : PadActions {
     fun logShown() {}
     /** Puts warm-up [index] on the pad to type its weight and reps. */
     fun editWarmup(index: Int) {}
+    /** Puts a later, unlogged set on the pad, to log it out of order. */
+    fun pickSet(index: Int) {}
     /** The check on the set logged last: takes it back. */
     fun undo(sessionExerciseId: Long) {}
     /** `+` at the foot of set [setIndex]'s tall pill: one more drop, before or during the set. */
@@ -223,6 +227,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun closeWarmup() = run { logger.closeWarmup() }
     override fun logShown() = run { logger.logShown() }
     override fun editWarmup(index: Int) = run { logger.editWarmup(index) }
+    override fun pickSet(index: Int) = run { logger.pickSet(index) }
+    override fun closePickedSet() = run { logger.closePickedSet() }
     override fun undo(sessionExerciseId: Long) = run { logger.undo(sessionExerciseId) }
     override fun addDrop(setIndex: Int) = run { logger.addDrop(setIndex) }
 

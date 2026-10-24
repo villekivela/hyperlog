@@ -97,7 +97,8 @@
     <!-- The pad's strip while a warm-up is typed. -->
     <string name="warmup_strip">Warm-up %1$d of %2$d</string>
     <string name="pad_tick_warmup">Tick warm-up</string>
-    <string name="pad_close_warmup">Back to the set</string>
+    <string name="pad_back_to_set">Back to the set</string>
+    <string name="pick_set">Do set %1$d now</string>
     <!-- The check column. -->
     <string name="check_log">Log set %1$d</string>
     <string name="check_logged">Set %1$d logged</string>
