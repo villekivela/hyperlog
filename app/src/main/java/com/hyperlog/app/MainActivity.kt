@@ -296,6 +296,8 @@ private fun App(
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
     val asking = askOpening != null && !checkInAvailable
+    // A key saved (or the scripted coach switched on) while Ask Claude is open: the wizard takes over, and its words go.
+    LaunchedEffect(checkInAvailable) { if (checkInAvailable && askOpening != null) { askOpening = null; askTile = null } }
     val checkIn by checkInModel.checkIn.collectAsStateWithLifecycle()
     val checkInDraft by checkInModel.draft.collectAsStateWithLifecycle()
     val scriptedCoach by checkInModel.scripted.collectAsStateWithLifecycle()

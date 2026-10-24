@@ -59,8 +59,6 @@ object AskClaude {
         lastTrained: LocalDate? = null,
         weekdays: Set<DayOfWeek> = emptySet(),
         weeklySets: List<WeekSets> = emptyList(),
-        /** Build me a workout's options, while they're open; null when closed. */
-        options: WorkoutOptions? = null,
         /** The check-in's tile, quoted before the [words]: what it is about, even when the words are cleared. */
         tile: Tile? = null,
     ): String = buildString {
@@ -73,10 +71,6 @@ object AskClaude {
         tile?.let { appendLine("> ${it.words}") }
         if (words.isNotBlank()) words.trim().lines().forEach { appendLine("> $it") }
         if (tile != null || words.isNotBlank()) appendLine()
-        options?.let {
-            options(it)
-            appendLine()
-        }
         if (plan == null) {
             appendLine(
                 "No program is running in Hyperlog: I train ad hoc, so there is no plan to change. Talk it through with me first if " +
@@ -144,23 +138,6 @@ object AskClaude {
         }
         appendLine()
         library(plan?.program, library)
-    }
-
-    /** Build me a workout's options: the effort as reps in reserve, the time, and the focus. */
-    private fun StringBuilder.options(options: WorkoutOptions) {
-        appendLine("Build me a workout for today:")
-        val effort = when (options.effort) {
-            WorkoutOptions.Effort.Easy -> "easy, 3 or more reps in reserve, no intensity techniques."
-            WorkoutOptions.Effort.Normal -> "normal, 1–2 reps in reserve."
-            WorkoutOptions.Effort.Hard -> "hard, 0–1 reps in reserve, intensity techniques allowed."
-        }
-        appendLine("- Effort: $effort")
-        appendLine("- Time: ${WorkoutOptions.timeText(options.minutes)} for the whole session, warm-ups and rest included.")
-        // A group goes by name with the muscles it covers; a marked muscle by its own name.
-        val focus = options.focus.joinToString("; ", postfix = ".") { picked ->
-            com.hyperlog.app.library.MuscleGroup.labelled(picked)?.let { "${it.label} (${it.muscles.joinToString()})" } ?: picked
-        }
-        appendLine("- Focus: " + if (options.focus.isEmpty()) "none, so a balanced full-body day." else focus)
     }
 
     private fun daysOff(lastTrained: LocalDate?, today: LocalDate, weekdays: Set<DayOfWeek>): String {

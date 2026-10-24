@@ -128,7 +128,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     /**
      * The prompt Ask Claude shares for [words], with the [gym] picked, the days off since
-     * [lastTrained], the weekly sets and Build me a workout's [options] (null while closed).
+     * [lastTrained], the weekly sets and the check-in's [tile].
      */
     suspend fun askClaudePrompt(
         words: String,
@@ -136,7 +136,6 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         elsewhere: Boolean,
         lastTrained: LocalDate?,
         weekdays: Set<DayOfWeek>,
-        options: com.hyperlog.app.coach.WorkoutOptions? = null,
         tile: com.hyperlog.app.coach.Tile? = null,
     ): String {
         _reply.value = null
@@ -148,7 +147,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         return withContext(Dispatchers.Default) {
             AskClaude.prompt(
                 words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays,
-                weeklySets = weeks, options = options, tile = tile,
+                weeklySets = weeks, tile = tile,
             )
         }
     }
