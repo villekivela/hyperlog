@@ -106,7 +106,9 @@ class ProgramsAppTest {
         // The system save dialog hands back this file.
         val file = File(compose.activity.cacheDir, "exported.json").also { it.writeText("old") }
         shadowOf(compose.activity).receiveResult(asked.intent, Activity.RESULT_OK, Intent().setData(Uri.fromFile(file)))
-        compose.waitUntil(5_000) { file.readText() != "old" }
-        assertEquals(StarterProgram.source(context), file.readText())
+        // The write empties the file first, so wait for the whole program, not for any change.
+        val source = StarterProgram.source(context)
+        runCatching { compose.waitUntil(5_000) { file.readText() == source } }
+        assertEquals(source, file.readText())
     }
 }
