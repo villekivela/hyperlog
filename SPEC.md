@@ -1315,7 +1315,8 @@ problem, with the copy button, for Claude). Once a program is finished a Change 
 week or shift the program.
 
 **Claude's steps.** After the first tile Claude asks what the situation needs, one question a
-screen, through its `ask` tool: the question, 2–4 answers and whether you may type your own.
+screen, through its `ask` tool: the question, 2–4 answers, whether you may type your own, and
+whether the step offers **Attach a PDF or photo** (New program, below).
 "Which hand, and does pressing hurt or only gripping?" for pain; the gym, with your gyms and
 **Elsewhere** as answers, only when the equipment matters (with more than 3 gyms, the 3 likeliest,
 today's planned gym and those in recent sessions, and Elsewhere, with Type my own for the rest:
@@ -1350,8 +1351,8 @@ again from there. There is no step counter, since Claude doesn't know in advance
   over a question, and the others go back as "Not shown: Hyperlog uses one question or reply at a
   time." An `ask` with fewer than 2 or more than 4 answers, or a blank question, is a reply with
   problems like any other.
-- **New program** goes to Claude too, but until #75 the check-in has no program tool: Claude
-  answers in words or with a workout.
+- **New program** goes to Claude too, and ends in a program through `propose_program` (New
+  program, below).
 
 **The end** is one of:
 - **An answer in words**, when the plan can stand ("Ramp-in already eases effort. Use straps and
@@ -1364,7 +1365,7 @@ again from there. There is no step counter, since Claude doesn't know in advance
 
 A check-in is kept, step by step, while you're on other tabs or away from the app, until it ends.
 It is a file in `no_backup` (`check_in.json`), saved before each call, so one left while thinking
-asks again on coming back; a backup has none. Done, ×, Accept and Add to Today end it.
+asks again on coming back; a backup has none. Done, ×, Accept, Add to Today and Start program end it.
 
 **Replies are checked before you see them.** A Change, workout or program from a tool goes
 through the same validators as a paste or an import. One with problems goes back to Claude as the
@@ -1427,14 +1428,16 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   `propose_change`, `propose_workout`, `propose_program`); in Ask Claude's prompt they are text and
   examples. Only `ask` is `strict` (owner's phone, 2026-10-24: the API refused the strict grammar of
   all three as "too large"); a proposal's input is checked by the validators, and the self-fix loop
-  sends its problems back. `CoachToolsTest` pins which tools are strict.
+  sends its problems back. `CoachToolsTest` pins which tools are strict. `propose_program` can never
+  be strict: a program's week overrides are maps keyed by week, which a strict schema can't hold.
 - **The schemas are lean** (#73; `coach/CoachTools.kt`). A strict request may carry 24 optional and 16
-  union-typed parameters in all, and no ranges; the proposals' schemas keep within those too, so
-  either could go strict again, and they leave optional only what the
+  union-typed parameters in all, and no ranges; the Change's and the workout's schemas keep within
+  those too, so either could go strict again, and they leave optional only what the
   serializer does and Claude can't fill in for it (`slot` on the load, RIR and technique
   operations, `technique`, `week`, `after`, `replaces`, a slot's `note`, a set line's
   `technique`); every operation's `reason` and every set line's `count`, `rir` and `rest` are
-  required. `reps` is a number or a range string. The validators check the ranges and ids. A test
+  required, in a program's set lines too. `reps` is a number or a range string. `ask`'s `attach`
+  is required, false but for a new program. The validators check the ranges and ids. A test
   holds the limits and checks that the replies the validators take fit the schemas.
 - **The check-in's context** (`coach/CheckInContext.kt`) opens with how a check-in goes (the
   `ask` tool, at most four questions, the gym only when the equipment matters with your gyms and
@@ -1489,10 +1492,12 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   by the tester. It is a switch in Settings' Coach group, kept in `setting` as `scripted_coach`
   (a release build has no switch and never reads it), and its code is in the debug source set
   (`app/src/debug/.../coach/ScriptedCoach.kt`; the release build's `BuildCoach` has none). It
-  builds its Changes and workouts from the program and library, so they pass the validators:
-  Something hurts and Short on time end in a Change, Change my program asks which and why and
-  proposes a wrong slot first, to show the fix, then a `rest_of_program` swap; Different gym and
-  Build me a workout end in a workout; Tired, New program and Something else in words. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
+  builds its Changes, workouts and programs from the program and library, so they pass the
+  validators: Something hurts and Short on time end in a Change, Change my program asks which and
+  why and proposes a wrong slot first, to show the fix, then a `rest_of_program` swap; Different gym
+  and Build me a workout end in a workout; New program offers Attach a PDF or photo, asks the days
+  a week, and proposes the program format's example with one swap (Seal Row) and one new exercise
+  (Barbell Drag Curl); Tired and Something else end in words. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
 - **One host.** A test fails if code outside the client and the update check opens a connection,
   or if the client calls any host but `api.anthropic.com`.
 
@@ -1527,9 +1532,8 @@ back.
 - **Paste reply** is then the filled button. It reads the clipboard: the first fenced block holding
   JSON, else the text from the first `{` to the last `}`, so Claude's whole reply can be copied. An
   object with `workout` is a workout, one with `program` a program (read as program import reads
-  it, each problem's path starting `program.`), anything else a Change. A valid Change or workout
-  opens its review; a program's review comes with New program (#75), and until then it is read and
-  nothing more. Otherwise the problems show as program import shows them (path over
+  it, each problem's path starting `program.`, with its swaps and new exercises), anything else a
+  Change. A valid Change, workout or program opens its review. Otherwise the problems show as program import shows them (path over
   message, "Not a reply Hyperlog can use", "N problems. Nothing changed. Copy them into your Claude
   chat, then paste the new reply.") with a copy button to hand them back to Claude, and nothing is
   applied. A problem with the copy, not the reply, shows one message and no copy button: a reply
@@ -1539,30 +1543,55 @@ back.
   again."
 - **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
   has focus again, which Android requires for reading the clipboard), the app reads the clipboard
-  once. If it holds a Change or workout that validates, a card reads "Claude's reply is ready" with a filled
+  once. If it holds a Change, workout or program that validates, a card reads "Claude's reply is ready" with a filled
   **Review**. Anything else is ignored quietly. Nothing opens by itself. Android shows its own toast
   when an app reads the clipboard.
 
 ### New program
 
-**New program** builds a whole program in a check-in, from your answers or from a file.
+**New program** builds a whole program in a check-in, from your answers or from a file (#75).
 
-- One of Claude's steps offers **Attach a PDF or photo**: a program PDF (a Nippard one), a printed
-  sheet, a whiteboard, a screenshot of a spreadsheet. It goes to Claude with the check-in (PDFs up
-  to 32 MB, as a document; photos as images) and is not stored. Claude reads the blocks, days,
-  exercises, sets, rep ranges, RIR and techniques, and asks only what the file doesn't settle ("The
-  PDF has 5 days. You train 3: which to merge?"). Without a file it builds from your answers.
-- The reply is a program file (`docs/program-format.md`) and validates as import does.
-- **Exercises the library doesn't have.** Claude uses the closest library exercise, and the review
-  lists each swap ("Deficit pendlay row → Barbell row"). Only when nothing comes close does the reply
-  add an exercise (`newExercises`: id, name, equipment, movement pattern, grip demand, primary and
-  secondary muscles, as the library editor requires); the review lists them under "New in your
-  library", and Start program saves them with the program.
-- **The review** shows the program as Program shows it (blocks, weeks, days) with its swaps and new
-  exercises. **Start program** asks first when a program runs, as import does ("Replace <title>?
-  You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1 instead. Past
-  sessions are kept.").
-- Without a key, Ask Claude takes a file through the Claude app: attach it there.
+- **Attach a PDF or photo** is a row under the answers of a step whose `ask` sets `attach`; Claude
+  offers it when you may have the program as a file: a program PDF (a Nippard one), a printed
+  sheet, a whiteboard, a screenshot of a spreadsheet. The system file picker opens for a PDF or an
+  image, and the file is your answer: it goes to Claude in the answer's tool result ("I attached
+  Nippard PPL.pdf.") as a document (a PDF) or an image (a photo), and the check-in keeps the file's
+  name as the answer. Claude reads the blocks, days, exercises, sets, rep ranges, RIR and
+  techniques, and asks only what the file doesn't settle ("The PDF has 5 days. You train 3: which
+  to merge?"). Without a file it builds from your answers.
+- **Sizes.** A PDF goes as it is, up to 23 MB: the API takes a 32 MB request, and base64 makes a
+  file a third larger. A larger one reads "That PDF is over 23 MB, more than Claude takes in one go.
+  Attach a smaller one, or photos of the pages that matter." under Attach. A photo goes as a JPEG
+  turned upright, its long edge at most 2576 px (what Opus 5.5 reads). A file that isn't a PDF or
+  an image, or doesn't read, says "Couldn’t read that file. Attach a PDF or a photo." While it is
+  read, "Reading the file…".
+- **Not stored.** The file lives in memory only, while the app runs: the check-in's file in
+  `no_backup` keeps its name and type, never its bytes. A check-in read back after the app was
+  closed goes back to the step that took the file, to attach it again (dropping the turns after it
+  keeps what Claude was sent before unchanged).
+- **The reply** is `propose_program`'s input, or pasted: `{ "program": <a program file
+  (docs/program-format.md)>, "swaps": [...], "newExercises": [...] }`. The program validates as
+  import does, its problems' paths under `program.`, and goes through the self-fix loop.
+- **Exercises the library doesn't have.** Claude uses the closest library exercise and lists each
+  swap as `{ "from": its name in the source, "to": a library id }`; the review lists them under
+  "Swapped for your library" ("Seal Row → 1-Arm DB Kroc Row"). Only when nothing comes close does
+  the reply add an exercise to `newExercises`: `id`, `name`, `equipment`, `pattern`, `grip`,
+  `muscles` (one primary at least) and `secondary`, by the library editor's rules and its keys. A
+  new exercise must be new to the library by id and by name (`newExercises[1].name: the library
+  already has "Seated Cable Row" (seated_cable_row): use it`), added once, and used by the program.
+  The review lists them under "New in your library" (name, then equipment and primary muscles), and
+  only Start program saves them, under their own ids, with the program.
+- **The review** (`ui/coach/ProgramReview.kt`), titled "New program": the title, author, weeks and
+  days a week, and description in a card; the swaps; the new exercises; then the program as Program
+  shows it (the blocks, the block's card with its weeks, and the picked week's days), from week 1.
+  **Start program** asks first when a program runs, as import does ("Replace <title>? You're in
+  week 6 of Hyperlog Full Body; the new program starts at week 1, day 1 instead. Past sessions are
+  kept."), then runs it from week 1, day 1, and goes to Today; the program before stays as the
+  record of its sessions. **Reject** and Back step back in the check-in (Type my own open), × drops
+  it, as on every review.
+- **Without a key**, Ask Claude's prompt carries the program format (`coach/ProgramFormat.kt`),
+  built from the parser's fields and with an example the paste reads; you attach the file in the
+  Claude app, and a pasted program opens the same review.
 
 Later, if syncing is ever wanted for its own sake: a custom MCP connector would let the Claude app
 read the plan and write a reply directly (ADR 0001).

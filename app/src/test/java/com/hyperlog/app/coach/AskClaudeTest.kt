@@ -41,8 +41,10 @@ class AskClaudeTest {
         assertFalse(text.contains("## Change format"))
         assertTrue(text, text.contains("## Workout format"))
         // Its example is a workout the paste takes, with no program running.
-        val example = text.substringAfter("## Workout format")
+        val example = text.substringAfter("## Workout format").substringBefore("## Program format")
         assertTrue(AskClaude.read(example, null, ids) is AskClaude.Reply.WorkoutReply)
+        // A new program can be built with no program running too.
+        assertTrue(AskClaude.read(text.substringAfter("## Program format"), null, ids) is AskClaude.Reply.ProgramReply)
         // The library still helps Claude name exercises.
         assertTrue(text, text.contains("  machine_chest_press: Machine Chest Press (machine, grip "))
     }
@@ -201,13 +203,18 @@ class AskClaudeTest {
     @Test
     fun withAProgramThePromptDescribesBothRepliesAndBothExamplesPaste() {
         val text = prompt()
-        assertTrue(text, text.contains("a Change or a workout"))
+        assertTrue(text, text.contains("a Change, a workout or a program"))
         assertTrue(text.contains("## Change format"))
         assertTrue(text.contains("## Workout format"))
         val change = text.substringAfter("## Change format").substringBefore("## Workout format")
         assertTrue(AskClaude.read(change, program, ids) is AskClaude.Reply.ChangeReply)
-        val workout = text.substringAfter("## Workout format")
+        val workout = text.substringAfter("## Workout format").substringBefore("## Program format")
         assertTrue(AskClaude.read(workout, program, ids) is AskClaude.Reply.WorkoutReply)
+        // The program format, generated from the parser's own rules, with an example the paste takes.
+        val format = text.substringAfter("## Program format")
+        assertTrue(format, format.contains("{\"format\": ${ProgramParser.FORMAT}, \"title\", \"author\"?, \"description\"?, \"blocks\": [...]}"))
+        assertTrue(format, format.contains("\"newExercises\""))
+        assertTrue(AskClaude.read(format, program, ids) is AskClaude.Reply.ProgramReply)
     }
 
     @Test
@@ -262,12 +269,28 @@ class AskClaudeTest {
         val file = File("src/main/assets/${StarterProgram.ASSET}").readText()
         val reply = "Here is the program:\n```json\n{ \"program\": $file }\n```"
         val read = AskClaude.read(reply, null, ids, merged = library.merged) as AskClaude.Reply.ProgramReply
-        assertEquals(program.title, read.program.title)
+        assertEquals(program.title, read.proposal.program.title)
         // It reads with a program running too, and a Change is still a Change.
         assertTrue(AskClaude.read(reply, program, ids, merged = library.merged) is AskClaude.Reply.ProgramReply)
         val bad = reply.replace("close_grip_bench_press", "close_grip_bench_pres")
         val invalid = AskClaude.read(bad, program, ids, merged = library.merged) as AskClaude.Reply.Invalid
         assertTrue(invalid.errors.toString(), invalid.errors.all { it.startsWith("program.") })
+    }
+
+    @Test
+    fun aPastedProgramCarriesItsSwapsAndNewExercisesWhichFollowTheLibraryEditorsRules() {
+        val file = File("src/main/assets/${StarterProgram.ASSET}").readText().replace("\"close_grip_bench_press\"", "\"close_grip_floor_press\"")
+        val added = """{"id": "close_grip_floor_press", "name": "Close-Grip Floor Press", "equipment": "barbell", "pattern": "horizontal_push",
+            "grip": "high", "muscles": ["Triceps Long Head", "Chest"], "secondary": []}"""
+        val reply = "```json\n{\"program\": $file, \"swaps\": [{\"from\": \"Pin Press\", \"to\": \"barbell_bench_press\"}], \"newExercises\": [$added]}\n```"
+        val names = library.exercises.associate { it.id to it.name }
+        val proposal = (AskClaude.read(reply, plan.program, ids, merged = library.merged, names = names) as AskClaude.Reply.ProgramReply).proposal
+        assertEquals(listOf(ProgramProposal.Swap("Pin Press", "barbell_bench_press")), proposal.swaps)
+        assertEquals(listOf("close_grip_floor_press"), proposal.newExercises.map { it.id })
+        // A new exercise the library has by name is turned down, with the library's id.
+        val taken = reply.replace("\"Close-Grip Floor Press\"", "\"Barbell Bench Press\"")
+        val errors = (AskClaude.read(taken, plan.program, ids, merged = library.merged, names = names) as AskClaude.Reply.Invalid).errors
+        assertEquals(listOf("newExercises[0].name: the library already has \"Barbell Bench Press\" (barbell_bench_press): use it"), errors)
     }
 
     @Test

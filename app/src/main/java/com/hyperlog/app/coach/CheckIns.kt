@@ -74,11 +74,15 @@ class CheckInRunner(
         scope.launch(io) { writes.filterNotNull().collect { store.save(it.checkIn) } }
     }
 
-    /** Reads the check-in kept when the app last ran; one left while thinking asks again. */
+    /**
+     * Reads the check-in kept when the app last ran; one left while thinking asks again. A file
+     * attached wasn't kept, so the step that took it shows again.
+     */
     fun restore() {
         scope.launch {
-            val kept = withContext(io) { store.load() } ?: return@launch
-            show(kept)
+            val stored = withContext(io) { store.load() } ?: return@launch
+            val kept = CheckInCoach.withoutLostFiles(stored)
+            if (kept != stored) save(kept) else show(kept)
             if (kept.waiting) ask(kept)
         }
     }
@@ -89,6 +93,9 @@ class CheckInRunner(
     fun start(opening: String, from: Opening) = begin { CheckIn(opening, null, frame(), from) }
 
     fun answer(text: String) = next { coach, checkIn -> coach.answered(checkIn, text) }
+
+    /** Attach a PDF or photo: the file is the answer, kept in memory only. */
+    fun attach(attachment: Attachment) = next { coach, checkIn -> coach.attached(checkIn, attachment) }
 
     fun tellMeMore() = next { coach, checkIn -> coach.toldMore(checkIn) }
 

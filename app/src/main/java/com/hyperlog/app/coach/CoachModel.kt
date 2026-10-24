@@ -1,6 +1,7 @@
 package com.hyperlog.app.coach
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -46,9 +47,23 @@ sealed interface CoachMessage {
 @Serializable
 data class ToolCall(val id: String, val name: String, val input: JsonObject)
 
-/** The answer to the call [callId]; [isError] when it hands Claude a reply's problems. */
+/** The answer to the call [callId]; [isError] when it hands Claude a reply's problems, [attachment] when a file is the answer. */
 @Serializable
-data class ToolResult(val callId: String, val content: String, val isError: Boolean = false)
+data class ToolResult(val callId: String, val content: String, val isError: Boolean = false, val attachment: Attachment? = null)
+
+/**
+ * A PDF or a photo attached as an answer (SPEC, Coaching → New program), sent to Claude as a
+ * document or an image. It is never stored: a check-in saves its [name] and [mediaType], and
+ * [data] lives only in memory while the app runs.
+ */
+@Serializable
+data class Attachment(val name: String, val mediaType: String, @Transient val data: ByteArray? = null) {
+    val pdf: Boolean get() = mediaType == PDF
+
+    companion object {
+        const val PDF = "application/pdf"
+    }
+}
 
 /**
  * Claude's reply: its words, its tool calls, and what it cost. [original] is the client's own copy

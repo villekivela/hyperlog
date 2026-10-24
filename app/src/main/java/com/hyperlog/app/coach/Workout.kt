@@ -100,6 +100,11 @@ object WorkoutJson {
  * lists and written by [WorkoutJson], so the paste accepts it.
  */
 object WorkoutFormat {
+    /** A set line, as a workout and a program file write it. */
+    val SET_LINE = "A set line is {\"count\"?: 1 to 10, \"reps\": 8 or \"8-10\", \"rir\"?: 0 to 10, \"rest\"?: seconds, 0 to 600 (120 when left out), " +
+        "\"technique\"?: {\"kind\": ${com.hyperlog.app.program.TechniqueKind.keys.joinToString { "\"$it\"" }}, ...}, " +
+        "\"backoff\"?: {\"from\": an earlier line's index, \"percent\": 1 to 50}}."
+
     fun text(library: List<Exercise>): String = buildString {
         appendLine("## Workout format")
         appendLine("A workout is one day for today, outside the program: Hyperlog shows it on Today, and training it doesn't move the program on.")
@@ -114,11 +119,7 @@ object WorkoutFormat {
             "  A slot is {\"id\": lowercase letters, digits and _, unique in the workout, \"exercise\": a library id, \"alternatives\"?: [ids], " +
                 "\"note\"?: a cue, \"sets\": [set lines]}.",
         )
-        appendLine(
-            "  A set line is {\"count\"?: 1 to 10, \"reps\": 8 or \"8-10\", \"rir\"?: 0 to 10, \"rest\"?: seconds, 0 to 600 (120 when left out), " +
-                "\"technique\"?: {\"kind\": ${com.hyperlog.app.program.TechniqueKind.keys.joinToString { "\"$it\"" }}, ...}, " +
-                "\"backoff\"?: {\"from\": an earlier line's index, \"percent\": 1 to 50}}.",
-        )
+        appendLine("  $SET_LINE")
         appendLine("  No week overrides and no weights: Hyperlog suggests the weights from my history.")
         appendLine("Unknown fields or exercises are rejected.")
         appendLine()

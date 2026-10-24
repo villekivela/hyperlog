@@ -132,11 +132,12 @@ enum class CheckInFailure { NoConnection, KeyRefused, SpendLimit, Refused, Rejec
 /** What a check-in's screen shows. */
 sealed interface CheckInStep {
     data object Thinking : CheckInStep
-    data class Question(val question: String, val answers: List<String>, val own: Boolean) : CheckInStep
+    data class Question(val question: String, val answers: List<String>, val own: Boolean, val attach: Boolean = false) : CheckInStep
     /** Claude's words; [earlier] are the words before them, oldest first, when you asked Tell me more. */
     data class Words(val text: String, val earlier: List<String> = emptyList()) : CheckInStep
     data class ChangeReview(val change: Change) : CheckInStep
     data class WorkoutReview(val workout: Workout) : CheckInStep
+    data class ProgramReview(val proposal: ProgramProposal) : CheckInStep
     /** A reply still wrong after Claude's fixes: its problems, with Try again. */
     data class Problems(val errors: List<String>) : CheckInStep
     data class Failed(val failure: CheckInFailure) : CheckInStep
@@ -170,6 +171,19 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         val results = turn.reply.toolCalls.map { if (it === call) ToolResult(it.id, content) else ToolResult(it.id, ONE_AT_A_TIME) }
         val answered = checkIn.answering(Answer(results, shown = text)).copy(fixes = 0)
         return if (gym != null || elsewhere) answered.copy(gym = gym?.id, elsewhere = elsewhere) else answered
+    }
+
+    /** Attach a PDF or photo, on a question that offers it: the file goes to Claude as the answer. */
+    suspend fun attach(checkIn: CheckIn, attachment: Attachment): CheckIn = run(attached(checkIn, attachment))
+
+    /** [checkIn] with [attachment] as the answer to the question showing, before the call. */
+    fun attached(checkIn: CheckIn, attachment: Attachment): CheckIn {
+        val turn = checkIn.turns.lastOrNull() ?: return checkIn
+        val call = turn.reply.toolCalls.firstOrNull { it.name == CoachTools.ASK } ?: return checkIn
+        val results = turn.reply.toolCalls.map {
+            if (it === call) ToolResult(it.id, "I attached ${attachment.name}.", attachment = attachment) else ToolResult(it.id, ONE_AT_A_TIME)
+        }
+        return checkIn.answering(Answer(results, shown = attachment.name)).copy(fixes = 0)
     }
 
     /** Tell me more, after an answer in words: Claude goes on. */
@@ -276,6 +290,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
             CoachTools.ASK -> ask(call.input)
             CoachTools.PROPOSE_CHANGE -> change(call.input)
             CoachTools.PROPOSE_WORKOUT -> workout(call.input)
+            CoachTools.PROPOSE_PROGRAM -> program(call.input)
             else -> Read.Invalid(listOf("${call.name}: no such tool"))
         }
     }
@@ -298,6 +313,12 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         }
     }
 
+    /** A new program, checked as import checks it, with its swaps and new exercises. */
+    private fun program(input: JsonObject): Read = when (val result = ProgramProposal.read(input, world.exercises, world.names, world.merged)) {
+        is ProgramProposal.Result.Valid -> Read.Valid(CheckInStep.ProgramReview(result.proposal))
+        is ProgramProposal.Result.Invalid -> Read.Invalid(result.errors)
+    }
+
     companion object {
         /**
          * The check-in as an accepted Change keeps it: the opening, then each of Claude's questions
@@ -318,6 +339,8 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
          */
         fun ownAnswer(checkIn: CheckIn): String? {
             val turn = checkIn.turns.lastOrNull { it.answer?.byYou == true } ?: return null
+            // A file attached isn't words to bring back.
+            if (turn.answer?.results.orEmpty().any { it.attachment != null }) return null
             val shown = turn.answer?.shown ?: return null
             val call = turn.reply.toolCalls.firstOrNull { it.name == CoachTools.ASK } ?: return null
             val question = (ask(call.input) as? Read.Valid)?.step as? CheckInStep.Question ?: return null
@@ -328,12 +351,25 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
             val question = (input["question"] as? JsonPrimitive)?.contentOrNull?.trim().orEmpty()
             val answers = (input["answers"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.trim() }
             val own = (input["own"] as? JsonPrimitive)?.booleanOrNull ?: true
+            val attach = (input["attach"] as? JsonPrimitive)?.booleanOrNull ?: false
             val errors = buildList {
                 if (question.isEmpty()) add("question: a question is required")
                 if (answers.size !in 2..4) add("answers: give 2 to 4 answers")
                 if (answers.any { it.isEmpty() }) add("answers: an answer is blank")
             }
-            return if (errors.isEmpty()) Read.Valid(CheckInStep.Question(question, answers, own)) else Read.Invalid(errors)
+            return if (errors.isEmpty()) Read.Valid(CheckInStep.Question(question, answers, own, attach)) else Read.Invalid(errors)
+        }
+
+        /**
+         * [checkIn] as it can go on after it was read back: a file attached is never stored, so
+         * from the first answer whose file is gone the check-in goes back to that step, to attach
+         * it again. Dropping the turns after it keeps what Claude was sent before unchanged.
+         */
+        fun withoutLostFiles(checkIn: CheckIn): CheckIn {
+            val lost = checkIn.turns.indexOfFirst { turn -> turn.answer?.results.orEmpty().any { it.attachment != null && it.attachment.data == null } }
+            if (lost < 0) return checkIn
+            val turns = checkIn.turns.take(lost + 1)
+            return checkIn.copy(turns = turns.dropLast(1) + turns.last().copy(answer = null), failure = null, fixes = 0)
         }
 
         /** What goes back to a call that wasn't the one used: one question or reply at a time. */

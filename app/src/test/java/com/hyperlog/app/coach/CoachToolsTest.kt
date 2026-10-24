@@ -54,9 +54,10 @@ class CoachToolsTest {
 
     @Test
     fun theSchemasAreStrictAndWithinTheApisLimits() {
-        assertEquals(listOf("ask", "propose_change", "propose_workout"), tools.map { it.name })
+        assertEquals(listOf("ask", "propose_change", "propose_workout", "propose_program"), tools.map { it.name })
         tools.forEach { tool ->
-            objects(tool.inputSchema).filter { (it["type"] as? JsonPrimitive)?.contentOrNull == "object" }.forEach { o ->
+            // A program's week overrides are a map, keyed by week: an object of values, not of properties.
+            objects(tool.inputSchema).filter { (it["type"] as? JsonPrimitive)?.contentOrNull == "object" && "properties" in it }.forEach { o ->
                 assertEquals(tool.name, JsonPrimitive(false), o["additionalProperties"])
                 val names = o.getValue("properties").jsonObject.keys
                 o.getValue("required").jsonArray.forEach { assertTrue(tool.name, it.jsonPrimitive.content in names) }
@@ -117,6 +118,26 @@ class CoachToolsTest {
         assertTrue(read.toString(), read is ProgramParser.WorkoutResult.Valid)
     }
 
+    @Test
+    fun aProgramAsTheSchemaHasItIsOneTheParserTakes() {
+        val schema = tools.single { it.name == CoachTools.PROPOSE_PROGRAM }.inputSchema
+        val names = library.exercises.associate { it.id to it.name }
+        // The format's own example, week overrides and all.
+        val file = ProgramFormat.example(library.exercises).toString()
+        val added = """{"id": "kneeling_cable_y_raise", "name": "Kneeling Cable Y-Raise", "equipment": "cable", "pattern": "lateral_raise",
+            "grip": "low", "muscles": ["Side Delts"], "secondary": []}"""
+        val reply = Json.parseToJsonElement(
+            """{"program": $file, "swaps": [{"from": "Deficit Snatch-Grip Row", "to": "barbell_row"}], "newExercises": []}""",
+        ).jsonObject
+        assertEquals(emptyList<String>(), fits(schema, reply))
+        val read = ProgramProposal.read(reply, ids, names, library.merged)
+        assertTrue(read.toString(), read is ProgramProposal.Result.Valid)
+        // A new exercise fits as the library editor has it.
+        val withNew = Json.parseToJsonElement("""{"program": $file, "swaps": [], "newExercises": [$added]}""")
+        assertEquals(emptyList<String>(), fits(schema, withNew))
+        assertTrue(fits(schema, Json.parseToJsonElement("""{"program": $file, "swaps": [], "newExercises": [${added.replace("cable", "kettlebell")}]}""")).isNotEmpty())
+    }
+
     /** The places [value] breaks [schema], for the keywords the tools use. */
     private fun fits(schema: JsonObject, value: JsonElement, path: String = "$"): List<String> {
         schema["anyOf"]?.let { options ->
@@ -127,6 +148,10 @@ class CoachToolsTest {
         return when (schema["type"]?.jsonPrimitive?.content) {
             "object" -> {
                 val o = value as? JsonObject ?: return listOf("$path: not an object")
+                // A map: every value fits the one schema.
+                schema["additionalProperties"]?.let { values ->
+                    if (values is JsonObject) return o.flatMap { (k, v) -> fits(values, v, "$path.$k") }
+                }
                 val properties = schema.getValue("properties").jsonObject
                 val required = schema.getValue("required").jsonArray.map { it.jsonPrimitive.content }
                 required.filter { it !in o }.map { "$path.$it: required" } +
@@ -136,6 +161,7 @@ class CoachToolsTest {
             "array" -> (value as? JsonArray)?.flatMapIndexed { i, v -> fits(schema.getValue("items").jsonObject, v, "$path[$i]") } ?: listOf("$path: not an array")
             "string" -> if ((value as? JsonPrimitive)?.isString == true) emptyList() else listOf("$path: not a string")
             "integer" -> if ((value as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull != null) emptyList() else listOf("$path: not an integer")
+            "null" -> if (value is kotlinx.serialization.json.JsonNull) emptyList() else listOf("$path: not null")
             "boolean" -> if ((value as? JsonPrimitive)?.takeIf { !it.isString }?.booleanOrNull != null) emptyList() else listOf("$path: not a boolean")
             else -> emptyList()
         }

@@ -45,7 +45,7 @@ class ScriptedCoachTest {
         assertEquals(
             mapOf(
                 Tile.Hurts to "ChangeReview", Tile.ShortOnTime to "ChangeReview", Tile.Gym to "WorkoutReview", Tile.Tired to "Words",
-                Tile.ChangeProgram to "ChangeReview", Tile.Workout to "WorkoutReview", Tile.NewProgram to "Words", Tile.SomethingElse to "Words",
+                Tile.ChangeProgram to "ChangeReview", Tile.Workout to "WorkoutReview", Tile.NewProgram to "ProgramReview", Tile.SomethingElse to "Words",
             ),
             ends,
         )
@@ -64,5 +64,21 @@ class ScriptedCoachTest {
     fun withNoProgramTheTilesThatChangeThePlanEndInWords() = runTest {
         assertTrue(play(Tile.Hurts, plan = null).first is CheckInStep.Words)
         assertTrue(play(Tile.Workout, plan = null).first is CheckInStep.WorkoutReview)
+        assertTrue(play(Tile.NewProgram, plan = null).first is CheckInStep.ProgramReview)
+    }
+
+    @Test
+    fun newProgramOffersAFileThenProposesAProgramWithASwapAndANewExercise() = runTest {
+        val scripted = BuildCoach.scripted { ScriptedWorld(plan, library.exercises, gyms, emptyList()) }!!
+        val coach = CheckInCoach(scripted, CheckInWorld(plan.program, ids, names = library.exercises.associate { it.id to it.name }))
+        val first = coach.start(Tile.NewProgram, CheckInContext.frame(plan, emptyList(), library.exercises, gyms))
+        assertTrue((coach.step(first) as CheckInStep.Question).attach)
+        // A file attached goes on to the next question, as one from the answers does.
+        val attached = coach.attach(first, Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1)))
+        val days = coach.step(attached) as CheckInStep.Question
+        val proposal = (coach.step(coach.answer(attached, days.answers.first())) as CheckInStep.ProgramReview).proposal
+        assertEquals(1, proposal.swaps.size)
+        assertEquals(1, proposal.newExercises.size)
+        assertTrue(proposal.newExercises.single().id !in ids)
     }
 }

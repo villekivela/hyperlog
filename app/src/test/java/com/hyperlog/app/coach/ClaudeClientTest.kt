@@ -196,6 +196,29 @@ class ClaudeClientTest {
     }
 
     @Test
+    fun anAttachedPdfGoesAsADocumentAndAPhotoAsAnImageInTheAnswer() = runTest {
+        question()
+        val reply = client.reply(request)
+        val pdf = Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1, 2, 3))
+        val photo = Attachment("Whiteboard.jpg", "image/jpeg", byteArrayOf(4, 5))
+        listOf(pdf, photo).forEach { file ->
+            question()
+            client.reply(request.copy(messages = request.messages + CoachMessage.Assistant(reply) + CoachMessage.Results(listOf(ToolResult("toolu_1", "I attached ${file.name}.", attachment = file)))))
+        }
+        val (document, image) = api.received.toList().takeLast(2).map {
+            it.json["messages"]!!.jsonArray.last().jsonObject["content"]!!.jsonArray.single().jsonObject["content"]!!.jsonArray.map { b -> b.jsonObject }
+        }
+        assertEquals("I attached Nippard PPL.pdf.", document[0]["text"]!!.jsonPrimitive.content)
+        assertEquals("document", document[1]["type"]!!.jsonPrimitive.content)
+        assertEquals("Nippard PPL.pdf", document[1]["title"]!!.jsonPrimitive.content)
+        val pdfSource = document[1]["source"]!!.jsonObject
+        assertEquals(listOf("base64", "application/pdf", "AQID"), listOf("type", "media_type", "data").map { pdfSource[it]!!.jsonPrimitive.content })
+        assertEquals("image", image[1]["type"]!!.jsonPrimitive.content)
+        val imageSource = image[1]["source"]!!.jsonObject
+        assertEquals(listOf("base64", "image/jpeg", "BAU="), listOf("type", "media_type", "data").map { imageSource[it]!!.jsonPrimitive.content })
+    }
+
+    @Test
     fun aRefusalIsTypedAndCarriesItsUsage() = runTest {
         api.stream(
             """{"type":"message_start","message":{"id":"msg_3","type":"message","role":"assistant","model":"claude-opus-5-5","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":2000,"output_tokens":0}}}""",

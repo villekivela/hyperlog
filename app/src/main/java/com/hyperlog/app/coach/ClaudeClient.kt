@@ -12,11 +12,14 @@ import com.anthropic.errors.UnauthorizedException
 import com.anthropic.helpers.BetaMessageAccumulator
 import com.anthropic.models.ErrorType
 import com.anthropic.models.beta.AnthropicBeta
+import com.anthropic.models.beta.messages.BetaBase64ImageSource
+import com.anthropic.models.beta.messages.BetaBase64PdfSource
 import com.anthropic.models.beta.messages.BetaCacheControlEphemeral
 import com.anthropic.models.beta.messages.BetaContentBlockParam
 import com.anthropic.models.beta.messages.BetaMessage
 import com.anthropic.models.beta.messages.BetaMessageParam
 import com.anthropic.models.beta.messages.BetaOutputConfig
+import com.anthropic.models.beta.messages.BetaRequestDocumentBlock
 import com.anthropic.models.beta.messages.BetaStopReason
 import com.anthropic.models.beta.messages.BetaTextBlockParam
 import com.anthropic.models.beta.messages.BetaThinkingConfigAdaptive
@@ -28,6 +31,7 @@ import com.anthropic.models.beta.messages.BetaUsage
 import com.anthropic.models.beta.messages.MessageCreateParams
 import com.fasterxml.jackson.databind.JsonNode
 import java.io.IOException
+import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -107,9 +111,11 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
             when (message) {
                 is CoachMessage.User -> builder.addMessage(user(listOf(BetaContentBlockParam.ofText(message.text))))
                 is CoachMessage.Results -> builder.addMessage(user(message.results.map { result ->
-                    BetaContentBlockParam.ofToolResult(
-                        BetaToolResultBlockParam.builder().toolUseId(result.callId).content(result.content).isError(result.isError).build(),
-                    )
+                    val block = BetaToolResultBlockParam.builder().toolUseId(result.callId).isError(result.isError)
+                    // A file attached goes with the answer's words: a PDF as a document, a photo as an image.
+                    val file = result.attachment?.let(::attachment)
+                    if (file == null) block.content(result.content) else block.contentOfBlocks(listOf(BetaToolResultBlockParam.Content.Block.ofText(result.content), file))
+                    BetaContentBlockParam.ofToolResult(block.build())
                 }))
                 // Claude's own reply goes back as it came, its thinking included, as the API requires.
                 is CoachMessage.Assistant -> when (val original = message.reply.original) {
@@ -119,6 +125,20 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
             }
         }
         return builder.build()
+    }
+
+    /** A file, base64 as the API takes it; null once its bytes are gone (a check-in read back drops it before calling). */
+    private fun attachment(file: Attachment): BetaToolResultBlockParam.Content.Block? {
+        val data = file.data?.let { Base64.getEncoder().encodeToString(it) } ?: return null
+        return if (file.pdf) {
+            BetaToolResultBlockParam.Content.Block.ofDocument(
+                BetaRequestDocumentBlock.builder().source(BetaBase64PdfSource.builder().data(data).build()).title(file.name).build(),
+            )
+        } else {
+            BetaToolResultBlockParam.Content.Block.ofImage(
+                BetaBase64ImageSource.builder().data(data).mediaType(BetaBase64ImageSource.MediaType.of(file.mediaType)).build(),
+            )
+        }
     }
 
     private fun user(content: List<BetaContentBlockParam>) =

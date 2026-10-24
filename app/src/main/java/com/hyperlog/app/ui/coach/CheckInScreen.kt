@@ -162,9 +162,13 @@ fun CheckInScreen(
      */
     draft: String? = null,
     onDraft: ((String?) -> Unit)? = null,
+    /** Attach a PDF or photo, on a step that offers it: the caller opens the file picker. */
+    onAttach: () -> Unit = {},
+    /** What became of the file picked, under Attach: being read, or why it can't go. */
+    attachNote: String? = null,
 ) {
     when {
-        view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems, draft, onDraft)
+        view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems, draft, onDraft, onAttach, attachNote)
         inForceOpen && program != null && program.inForce.isNotEmpty() -> InForcePage(
             program, onBack = { onInForceOpen(false) }, onOpenChange, onRevert, onHowItsGoing = { onInForceOpen(false); onHowItsGoing(it) }, modifier,
         )
@@ -330,6 +334,8 @@ private fun Step(
     onCopyProblems: (List<String>) -> Unit,
     draft: String?,
     onDraft: ((String?) -> Unit)?,
+    onAttach: () -> Unit,
+    attachNote: String?,
 ) {
     BackHandler(onBack = onBack)
     val step = view.step
@@ -395,8 +401,8 @@ private fun Step(
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (step) {
                 // A review shows over this screen; until it does, the step reads as thinking.
-                CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview -> Thinking()
-                is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size, draft, onDraft)
+                CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview, is CheckInStep.ProgramReview -> Thinking()
+                is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size, draft, onDraft, onAttach, attachNote)
                 is CheckInStep.Words -> {
                     // Tell me more adds a card under the words before; the newest comes into view.
                     val scroll = rememberScrollState()
@@ -511,6 +517,8 @@ private fun Question(
     key: Int,
     draft: String?,
     onDraft: ((String?) -> Unit)?,
+    onAttach: () -> Unit,
+    attachNote: String?,
 ) {
     var kept by rememberSaveable(key) { mutableStateOf<String?>(null) }
     // Type my own's words, null while it's closed: the caller's draft, or the screen's own.
@@ -534,6 +542,20 @@ private fun Question(
                     }
                     Text(shown, style = MaterialTheme.typography.titleMedium)
                 }
+            }
+        }
+        // A program you have as a file: a PDF, a printed sheet, a screenshot (New program).
+        if (step.attach) {
+            Spacer(Modifier.height(GroupGap))
+            Segment(0, 1, onClick = onAttach) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding), verticalAlignment = Alignment.CenterVertically) {
+                    SymbolIcon(Symbol.AttachFile, null, Modifier.size(24.dp), tint = cs.primary)
+                    Spacer(Modifier.width(16.dp))
+                    Text(stringResource(R.string.checkin_attach), style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            attachNote?.let {
+                Text(it, Modifier.padding(horizontal = Margin).padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             }
         }
         // Open after Reject even when Claude didn't offer it: that's where you say what was wrong.

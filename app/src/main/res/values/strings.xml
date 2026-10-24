@@ -629,6 +629,23 @@
     <string name="workout_replace_title">Replace today’s workout?</string>
     <string name="workout_replace_body">“%1$s” comes off Today.</string>
     <string name="workout_replace">Replace</string>
+    <string name="program_review_title">New program</string>
+    <string name="program_review_start">Start program</string>
+    <string name="program_review_swaps">Swapped for your library</string>
+    <string name="program_review_swap">%1$s → %2$s</string>
+    <string name="program_review_new">New in your library</string>
+    <plurals name="program_review_weeks">
+        <item quantity="one">%d week</item>
+        <item quantity="other">%d weeks</item>
+    </plurals>
+    <plurals name="program_review_days">
+        <item quantity="one">%d day a week</item>
+        <item quantity="other">%d days a week</item>
+    </plurals>
+    <string name="checkin_attach">Attach a PDF or photo</string>
+    <string name="checkin_attach_reading">Reading the file…</string>
+    <string name="checkin_attach_too_large">That PDF is over %1$d MB, more than Claude takes in one go. Attach a smaller one, or photos of the pages that matter.</string>
+    <string name="checkin_attach_unreadable">Couldn’t read that file. Attach a PDF or a photo.</string>
     <string name="today_workout">Workout</string>
     <string name="today_workout_start">Start</string>
     <string name="today_workout_remove">Remove</string>

@@ -228,6 +228,10 @@ private fun App(
         uri?.let(programModel::import)
     }
     val startingWeights by startingWeightsModel.status.collectAsStateWithLifecycle()
+    // Attach a PDF or photo, on a check-in's step that offers it.
+    val pickAttachment = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(checkInModel::attach)
+    }
     val pickBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(startingWeightsModel::import)
     }
@@ -277,6 +281,8 @@ private fun App(
     val waitingWorkouts by programModel.waiting.collectAsStateWithLifecycle()
     val lowest by programModel.lowest.collectAsStateWithLifecycle()
     val workoutReview by programModel.workout.collectAsStateWithLifecycle()
+    val programReview by programModel.program.collectAsStateWithLifecycle()
+    val attachNote by checkInModel.attachNote.collectAsStateWithLifecycle()
     val endAsk = { coachAsked = false; programModel.clearReply() }
     /** Opens Ask Claude with [words] to edit, for the [opening] and its [tile]. */
     val openAsk = { opening: com.hyperlog.app.coach.Opening, tile: com.hyperlog.app.coach.Tile?, words: String ->
@@ -335,10 +341,12 @@ private fun App(
         when (val step = checkInStep) {
             is com.hyperlog.app.coach.CheckInStep.ChangeReview -> programModel.propose(step.change)
             is com.hyperlog.app.coach.CheckInStep.WorkoutReview -> programModel.reviewWorkout(step.workout)
+            is com.hyperlog.app.coach.CheckInStep.ProgramReview -> programModel.reviewProgram(step.proposal)
             else -> Unit
         }
     }
-    val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview
+    val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview ||
+        checkInStep is com.hyperlog.app.coach.CheckInStep.ProgramReview
     if (running != null) AskForNotifications()
     // A Change under review covers whatever proposed it: the Program screen or the session.
     review?.let { r ->
@@ -391,6 +399,20 @@ private fun App(
             replaces = todayWorkout?.workout?.name,
             gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workoutGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
                 ?: context.getString(R.string.coach_elsewhere),
+        )
+        return
+    }
+    // A new program from Claude, before it runs.
+    programReview?.let { p ->
+        com.hyperlog.app.ui.coach.ProgramReviewScreen(
+            p, exercises.associate { it.id to it.name }, program,
+            // Start program goes to Today on the new program's first day, and the check-in ends.
+            onStart = {
+                programModel.startProgram(); closeAsk(); screen = Screen.Today
+                if (checkIn != null) checkInModel.close()
+            },
+            onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
+            onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
         )
         return
     }
@@ -608,6 +630,8 @@ private fun App(
             onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
             pasteErrors = pasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
+            onAttach = { pickAttachment.launch(arrayOf(com.hyperlog.app.coach.Attachment.PDF, "image/*")) },
+            attachNote = attachNote,
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         // A session opened from History or a trend goes back there, read again with any correction.

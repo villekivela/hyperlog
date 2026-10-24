@@ -152,7 +152,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Reads a reply pasted back from Claude: a Change's diff or a workout opens for review, or its problems show. */
+    /** Reads a reply pasted back from Claude: a Change's diff, a workout or a program opens for review, or its problems show. */
     fun paste(text: String) {
         viewModelScope.launch {
             when (val result = read(text)) {
@@ -164,14 +164,13 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     private val _reply = MutableStateFlow<AskClaude.Reply?>(null)
 
-    /** A valid Change or workout found on the clipboard on coming back from Claude, until reviewed or asked again. */
+    /** A valid Change, workout or program found on the clipboard on coming back from Claude, until reviewed or asked again. */
     val reply: StateFlow<AskClaude.Reply?> = _reply.asStateFlow()
 
     /** Reads the clipboard [text] quietly on return from Claude: a valid reply is kept for Review; anything else is ignored. */
     fun checkReply(text: String) {
         viewModelScope.launch {
-            // A program's review arrives with New program (#75): until then it isn't a reply to offer.
-            _reply.value = read(text).takeIf { it is AskClaude.Reply.ChangeReply || it is AskClaude.Reply.WorkoutReply }
+            _reply.value = read(text).takeIf { it !is AskClaude.Reply.Invalid }
         }
     }
 
@@ -191,9 +190,34 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         when (reply) {
             is AskClaude.Reply.ChangeReply -> propose(reply.change)
             is AskClaude.Reply.WorkoutReply -> _workout.value = reply.workout
-            // Its review arrives with New program (#75).
-            is AskClaude.Reply.ProgramReply, is AskClaude.Reply.Invalid -> Unit
+            is AskClaude.Reply.ProgramReply -> _program.value = reply.proposal
+            is AskClaude.Reply.Invalid -> Unit
         }
+    }
+
+    private val _program = MutableStateFlow<com.hyperlog.app.coach.ProgramProposal?>(null)
+
+    /** A new program from Claude waiting for Start program or Reject; null when none is. */
+    val program: StateFlow<com.hyperlog.app.coach.ProgramProposal?> = _program.asStateFlow()
+
+    /** Opens a new program from a check-in for review. */
+    fun reviewProgram(proposal: com.hyperlog.app.coach.ProgramProposal) {
+        _program.value = proposal
+    }
+
+    /** Drops the program under review; nothing changes. */
+    fun rejectProgram() {
+        _program.value = null
+    }
+
+    /**
+     * Start program: the program under review runs from week 1, day 1, as an import, and its new
+     * exercises join the library with it. The one running before stays as a record of its sessions.
+     */
+    fun startProgram() {
+        val proposal = _program.value ?: return
+        _program.value = null
+        viewModelScope.launch { programs.import(proposal.source, proposal.newExercises) }
     }
 
     private val _workout = MutableStateFlow<com.hyperlog.app.coach.Workout?>(null)
@@ -254,12 +278,14 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** [text] read as a Change for the running program or a workout. */
+    /** [text] read as a Change for the running program, a workout or a new program. */
     private suspend fun read(text: String): AskClaude.Reply {
         val active = programs.active.first()
-        val ids = HyperlogDatabase.get(getApplication()).exercises().all().map { it.id }.toSet()
+        val library = HyperlogDatabase.get(getApplication()).exercises().all()
         val inForce = active?.inForce.orEmpty().map { it.id }.toSet()
-        return withContext(Dispatchers.Default) { AskClaude.read(text, active?.program, ids, inForce) }
+        return withContext(Dispatchers.Default) {
+            AskClaude.read(text, active?.program, library.map { it.id }.toSet(), inForce, names = library.associate { it.id to it.name })
+        }
     }
 
     fun closePasteErrors() {

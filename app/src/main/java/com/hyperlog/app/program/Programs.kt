@@ -180,13 +180,15 @@ class Programs(
 
     /**
      * Imports [json] as the program to run, from its first day; the one running before stays as a
-     * record for its sessions. Returns the parse result: on errors nothing is imported.
+     * record for its sessions. [newExercises], a new program's from Claude, are added to the
+     * library with it. Returns the parse result: on errors nothing is imported or added.
      */
-    suspend fun import(json: String): ProgramParser.Result {
-        val ids = exerciseIds()
+    suspend fun import(json: String, newExercises: List<com.hyperlog.app.library.Exercise> = emptyList()): ProgramParser.Result {
+        val ids = exerciseIds() + newExercises.map { it.id }
         val result = withContext(Dispatchers.Default) { ProgramParser.parse(json, ids, merged) }
         if (result is ProgramParser.Result.Valid) {
             db.withTransaction {
+                com.hyperlog.app.library.ExerciseLibrary(db).addNew(newExercises)
                 dao.deactivateAll()
                 val id = dao.insert(ProgramEntity(title = result.program.title, source = json, importedAt = clock()))
                 parsed[id] = result.program

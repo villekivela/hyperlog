@@ -23,8 +23,9 @@ internal object BuildCoach {
  * The scripted coach (GLOSSARY; SPEC, With a Claude key → Testable without a key): canned
  * check-ins for every tile, with no key and no network, so the wizard can be tried on the phone
  * and by the tester. It answers like Claude through the same tools, from the program, library and
- * gyms of [world], so its Changes and workouts pass the validators. Change my program proposes a
- * wrong slot first, to show the fix.
+ * gyms of [world], so its Changes, workouts and programs pass the validators. Change my program
+ * proposes a wrong slot first, to show the fix; New program offers a file, then proposes a program
+ * with a swap and a new exercise.
  */
 class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel {
     private var calls = 0
@@ -99,8 +100,9 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
                 workout(world, "Built from your answers, with what's behind this week first."),
             )
             Tile.NewProgram -> listOf(
+                ask("Do you have the program as a file?", "Build it from my answers", "I'll describe it", attach = true),
                 ask("How many days a week can you train?", "2", "3", "4"),
-                words("A 3-day full body suits that. Import one from Program, or start the starter program there."),
+                program(world),
             )
             Tile.SomethingElse -> listOf(
                 ask("What's on your mind?", "My sessions run long", "I'm losing motivation"),
@@ -124,16 +126,53 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
         return call(CoachTools.PROPOSE_WORKOUT, Json.parseToJsonElement(WorkoutJson.encode(example)).jsonObject.getValue("workout").jsonObject)
     }
 
+    /**
+     * The format's example program from the library, with one swap (a seal row done as the row the
+     * library has) and one new exercise, a drag curl, as the curl's alternative.
+     */
+    private fun program(world: ScriptedWorld): CoachReply {
+        val file = ProgramFormat.example(world.library)
+        val taken = world.library.map { it.id }.toSet()
+        val drag = generateSequence(1) { it + 1 }.map { if (it == 1) "barbell_drag_curl" else "barbell_drag_curl_$it" }.first { it !in taken }
+        val curl = (file.toString().substringAfter("\"id\":\"curl\",\"exercise\":\"").substringBefore('"'))
+        val program = file.toString().replace(
+            "\"id\":\"curl\",\"exercise\":\"$curl\"",
+            "\"id\":\"curl\",\"exercise\":\"$curl\",\"alternatives\":[\"$drag\"]",
+        )
+        val row = file.toString().substringAfter("\"id\":\"row\",\"exercise\":\"").substringBefore('"')
+        return call(
+            CoachTools.PROPOSE_PROGRAM,
+            buildJsonObject {
+                put("program", Json.parseToJsonElement(program).jsonObject.let { JsonObject(it + ("title" to JsonPrimitive("Scripted full body, 2 days"))) })
+                putJsonArray("swaps") { add(buildJsonObject { put("from", "Seal Row"); put("to", row) }) }
+                putJsonArray("newExercises") {
+                    add(
+                        buildJsonObject {
+                            put("id", drag)
+                            put("name", "Barbell Drag Curl")
+                            put("equipment", "barbell")
+                            put("pattern", "elbow_flexion")
+                            put("grip", "high")
+                            putJsonArray("muscles") { add(JsonPrimitive("Biceps")) }
+                            putJsonArray("secondary") { add(JsonPrimitive("Brachialis")) }
+                        },
+                    )
+                }
+            },
+        )
+    }
+
     private fun change(change: Change) = call(CoachTools.PROPOSE_CHANGE, json(change))
 
     private fun json(change: Change) = Json.parseToJsonElement(ChangeJson.encode(change)).jsonObject
 
-    private fun ask(question: String, vararg answers: String, own: Boolean = true) = call(
+    private fun ask(question: String, vararg answers: String, own: Boolean = true, attach: Boolean = false) = call(
         CoachTools.ASK,
         buildJsonObject {
             put("question", question)
             putJsonArray("answers") { answers.forEach { add(JsonPrimitive(it)) } }
             put("own", own)
+            put("attach", attach)
         },
     )
 

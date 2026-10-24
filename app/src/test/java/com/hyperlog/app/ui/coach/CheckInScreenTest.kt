@@ -74,17 +74,21 @@ class CheckInScreenTest {
 
     private var calls = 0
 
-    private fun ask(question: String, vararg answers: String) = CoachReply(
+    private fun ask(question: String, vararg answers: String, attach: Boolean = false) = CoachReply(
         "",
         listOf(ToolCall("call-${++calls}", CoachTools.ASK, buildJsonObject {
             put("question", question)
             putJsonArray("answers") { answers.forEach { add(JsonPrimitive(it)) } }
             put("own", true)
+            put("attach", attach)
         })),
     )
 
+    /** Attach was tapped: the caller opens the file picker. */
+    private var attaching = 0
+
     /** The screen over a runner playing [model]. */
-    private fun show(model: FakeCoachModel, lowest: List<Pair<String, Double>> = emptyList()) {
+    private fun show(model: FakeCoachModel, lowest: List<Pair<String, Double>> = emptyList(), attachNote: String? = null) {
         compose.setContent {
             HyperlogTheme {
                 val scope = rememberCoroutineScope()
@@ -99,6 +103,7 @@ class CheckInScreenTest {
                     onTellMeMore = runner::tellMeMore, onTryAgain = runner::tryAgain, lowest = lowest,
                     inForceOpen = inForce, onInForceOpen = { inForce = it },
                     onHowItsGoing = { runner.start(com.hyperlog.app.coach.CheckInContext.howItsGoing(it), com.hyperlog.app.coach.Opening.HowsItGoing) },
+                    onAttach = { attaching++ }, attachNote = attachNote,
                 )
             }
         }
@@ -122,6 +127,24 @@ class CheckInScreenTest {
         // Done ends it: the tiles again.
         compose.click("Done")
         compose.waitFor("What’s going on?")
+    }
+
+    @Test
+    fun aStepThatOffersAFileHasAttachUnderItsAnswers() {
+        show(FakeCoachModel.replies(ask("Do you have the program as a file?", "Build it from my answers", "I'll describe it", attach = true)), attachNote = "Couldn’t read that file.")
+        compose.click("New program")
+        compose.waitFor("Do you have the program as a file?")
+        compose.onNodeWithText("Couldn’t read that file.").assertExists()
+        compose.click("Attach a PDF or photo")
+        assertEquals(1, attaching)
+    }
+
+    @Test
+    fun aStepThatDoesntOfferAFileHasNoAttach() {
+        show(FakeCoachModel.replies(ask("Which hand?", "Left", "Right")))
+        compose.click("Something hurts")
+        compose.waitFor("Which hand?")
+        compose.onNodeWithText("Attach a PDF or photo").assertDoesNotExist()
     }
 
     @Test

@@ -31,6 +31,7 @@ import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.openTab
 import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitGone
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -219,6 +220,34 @@ class AskClaudeAppTest {
         compose.onNodeWithText("Accept").performClick()
         compose.waitFor("Week 1 · Ramp-in")
         assertEquals(1, runBlocking { db.planChanges().changes(db.programs().active()!!.id).size })
+    }
+
+    /** A new program as Claude would paste it: the format's example, from the library. */
+    private fun newProgram(): String {
+        val library = com.hyperlog.app.library.LibrarySeed.fromAssets(context).exercises
+        return "Here it is:\n```json\n{\"program\": ${com.hyperlog.app.coach.ProgramFormat.example(library)}, \"swaps\": [], \"newExercises\": []}\n```"
+    }
+
+    @Test
+    fun newProgramAsksWithTheProgramFormatAndAPastedProgramOpensItsReviewAndStarts() {
+        runStarter()
+        openCoach("New program")
+        val prompt = ask()
+        assertTrue(prompt.contains("## Program format"))
+        // Back from Claude with the program on the clipboard: it's ready to review.
+        copy(newProgram())
+        awayAndBack()
+        compose.waitFor("Claude’s reply is ready")
+        compose.onNodeWithText("Review").performClick()
+        compose.waitFor("Full body, 2 days")
+        compose.onNodeWithText("Start program").performClick()
+        // A program runs: Start program asks first, as import does.
+        compose.waitFor("Replace Hyperlog Full Body?")
+        compose.onNodeWithText("Replace").performClick()
+        compose.waitGone("Start program")
+        val active = runBlocking { com.hyperlog.app.program.Programs(db).active.first()!! }
+        assertEquals("Full body, 2 days", active.program.title)
+        assertEquals(com.hyperlog.app.program.Position(1, 0), active.position)
     }
 
     @Test

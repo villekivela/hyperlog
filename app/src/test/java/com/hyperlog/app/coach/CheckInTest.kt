@@ -207,15 +207,74 @@ class CheckInTest {
         assertTrue(sent[1].isError && sent[1].content.contains("unknown slot"))
     }
 
+    /** A new program as propose_program sends it: the starter program's file, with one exercise renamed to [first]'s. */
+    private fun newProgram(first: String = "close_grip_bench_press") = buildJsonObject {
+        put("program", Json.parseToJsonElement(File("src/main/assets/${StarterProgram.ASSET}").readText().replace("close_grip_bench_press", first)))
+        putJsonArray("swaps") { add(buildJsonObject { put("from", "Close-Grip Floor Press"); put("to", "close_grip_bench_press") }) }
+        putJsonArray("newExercises") {}
+    }
+
+    @Test
+    fun aNewProgramEndsInItsReviewWithItsSwaps() = runTest {
+        val step = coach(FakeCoachModel.replies(call(CoachTools.PROPOSE_PROGRAM, newProgram()))).let { it.step(it.start(Tile.NewProgram, frame)) }
+        val proposal = (step as CheckInStep.ProgramReview).proposal
+        assertEquals(program.title, proposal.program.title)
+        assertEquals(listOf(ProgramProposal.Swap("Close-Grip Floor Press", "close_grip_bench_press")), proposal.swaps)
+    }
+
+    @Test
+    fun aNewProgramWithProblemsGoesBackToClaudeToFix() = runTest {
+        val model = FakeCoachModel.replies(call(CoachTools.PROPOSE_PROGRAM, newProgram("no_such_press")), call(CoachTools.PROPOSE_PROGRAM, newProgram()))
+        val coach = coach(model)
+        val checkIn = coach.start(Tile.NewProgram, frame)
+        assertTrue(coach.step(checkIn) is CheckInStep.ProgramReview)
+        val sent = (model.requests[1].messages.last() as CoachMessage.Results).results.single()
+        assertTrue(sent.isError)
+        assertTrue(sent.content, sent.content.lines().all { it.startsWith("program.blocks[") && it.endsWith("unknown exercise \"no_such_press\"") })
+    }
+
+    @Test
+    fun aStepCanOfferAttachAFileWhichGoesToClaudeAsTheAnswer() = runTest {
+        val model = FakeCoachModel.replies(ask("Build it from a file you have?", "From my answers", "From scratch", attach = true), words("Read it."))
+        val coach = coach(model)
+        val asked = coach.start(Tile.NewProgram, frame)
+        assertEquals(CheckInStep.Question("Build it from a file you have?", listOf("From my answers", "From scratch"), own = true, attach = true), coach.step(asked))
+        val file = Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1, 2, 3))
+        val attached = coach.attach(asked, file)
+        val sent = (model.requests[1].messages.last() as CoachMessage.Results).results.single()
+        assertEquals("I attached Nippard PPL.pdf.", sent.content)
+        assertEquals(file, sent.attachment)
+        // The check-in shows the file's name as the answer, and Back opens no words of yours.
+        assertEquals(SavedCheckIn.Step("Build it from a file you have?", "Nippard PPL.pdf"), CheckInCoach.saved(attached).steps.single())
+        assertEquals(null, CheckInCoach.ownAnswer(attached))
+    }
+
+    @Test
+    fun aFileIsntKeptSoACheckInReadBackWithoutItAsksForItAgain() = runTest {
+        val model = FakeCoachModel.replies(ask("Attach the program?", "From my answers", "From scratch", attach = true), ask("How many days?", "3", "4"))
+        val coach = coach(model)
+        val attached = coach.attach(coach.start(Tile.NewProgram, frame), Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1, 2, 3)))
+        // Saved and read back, the file's bytes are gone: the step that took it shows again.
+        val json = Json { ignoreUnknownKeys = true }
+        val read = json.decodeFromString(CheckIn.serializer(), json.encodeToString(CheckIn.serializer(), attached))
+        assertEquals(null, read.turns.first().answer!!.results.single().attachment!!.data)
+        val back = CheckInCoach.withoutLostFiles(read)
+        assertEquals("Attach the program?", (coach.step(back) as CheckInStep.Question).question)
+        assertEquals(1, back.turns.size)
+        // A check-in with its file still in memory is left as it is.
+        assertEquals(attached, CheckInCoach.withoutLostFiles(attached))
+    }
+
     /** Claude's calls, numbered in each test. */
     private var calls = 0
 
-    fun ask(question: String, vararg answers: String, own: Boolean = true) = CoachReply(
+    fun ask(question: String, vararg answers: String, own: Boolean = true, attach: Boolean = false) = CoachReply(
         text = "",
         toolCalls = listOf(ToolCall("call-${++calls}", CoachTools.ASK, buildJsonObject {
             put("question", question)
             putJsonArray("answers") { answers.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } }
             put("own", own)
+            put("attach", attach)
         })),
     )
 

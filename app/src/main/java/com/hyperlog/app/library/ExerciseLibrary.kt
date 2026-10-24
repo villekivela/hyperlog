@@ -41,6 +41,15 @@ class ExerciseLibrary(private val db: HyperlogDatabase) {
         id
     }
 
+    /**
+     * Adds [exercises] under their own ids, as a new program from Claude names them, each one
+     * already checked by the library editor's rules. Like an exercise added here, the seed leaves
+     * them alone.
+     */
+    suspend fun addNew(exercises: List<Exercise>) {
+        if (exercises.isNotEmpty()) dao.insert(exercises.map { it.copy(hidden = false).toEntity(edited = true) })
+    }
+
     /** Saves the edited fields of [exercise]. From now on the seed leaves it alone. */
     suspend fun update(exercise: Exercise) = db.withTransaction {
         val row = dao.get(exercise.id) ?: return@withTransaction

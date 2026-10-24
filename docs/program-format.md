@@ -115,6 +115,13 @@ above and no week overrides. `ProgramParser.workout` checks it with the same rul
 under `workout.` (`workout.groups[0].slots[0].exercise: unknown exercise "bb_row"`), and slot ids
 are unique within it.
 
+## New programs from the coach
+
+A new program from a check-in (`SPEC.md`, Coaching → New program) is a program file in this format
+inside `{ "program": …, "swaps": […], "newExercises": […] }`, checked with the same rules and
+paths under `program.`. `newExercises` may add library exercises the program uses; the program is
+checked against the library and them, and Start program saves them with it.
+
 ## Running a program
 
 The program runs as a sequence. Today shows the next day; finishing a session of it makes the day

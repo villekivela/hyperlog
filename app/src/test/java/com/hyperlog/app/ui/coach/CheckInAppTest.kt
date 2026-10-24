@@ -119,6 +119,34 @@ class CheckInAppTest {
     }
 
     @Test
+    fun newProgramEndsInItsReviewAndItsNewExerciseIsSavedOnlyOnStartProgram() {
+        val db = HyperlogDatabase.get(context)
+        val before = runBlocking { Programs(db).active.first()!!.id }
+        fun inLibrary() = runBlocking { db.exercises().all().any { it.name == "Barbell Drag Curl" } }
+        compose.openTab("Coach")
+        compose.click("New program")
+        compose.waitFor("Do you have the program as a file?")
+        compose.onNodeWithText("Attach a PDF or photo").assertExists()
+        compose.click("Build it from my answers")
+        compose.waitFor("How many days a week can you train?")
+        compose.click("3")
+        compose.waitFor("Start program")
+        compose.onNodeWithText("Seal Row", substring = true).assertExists()
+        // Reviewed, nothing is saved yet.
+        assertEquals(false, inLibrary())
+        compose.click("Start program")
+        compose.waitFor("Replace Hyperlog Full Body?")
+        compose.click("Replace")
+        compose.waitGone("Start program")
+        assertEquals(true, inLibrary())
+        val active = runBlocking { Programs(db).active.first()!! }
+        assertEquals("Scripted full body, 2 days", active.program.title)
+        assertEquals(com.hyperlog.app.program.Position(1, 0), active.position)
+        // The program before stays, as the record of its sessions.
+        assertEquals("Hyperlog Full Body", runBlocking { Programs(db).program(before)!!.title })
+    }
+
+    @Test
     fun theScriptedCoachIsASettingsSwitch() {
         compose.openTab("Settings")
         compose.click("Scripted coach")
