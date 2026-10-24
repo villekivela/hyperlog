@@ -18,6 +18,7 @@ import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.Programs
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import com.hyperlog.app.progression.Record
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -157,6 +158,18 @@ class HistoryTest {
         assertEquals(listOf("80 × 6 @ 1", "82.5 × 5 @ 1", "60 × 5 @ 4"), line.points.map { it.top.summary() })
         // Epley: 80 × (1 + 7/30) = 98.7, then 82.5 × (1 + 6/30) = 99, which the easy session keeps.
         assertEquals(listOf(98.67, 99.0, 99.0), line.points.map { (it.estimateKg!! * 100).roundToInt() / 100.0 })
+    }
+
+    @Test
+    fun aTrendMarksATopSetThatIsARecord() = runTest {
+        session(LocalDate.of(2026, 9, 28), "barbell_bench_press" to listOf(Logged(80.0, 5, 1), Logged(80.0, 6, 1)))
+        // 82.5 × 5 @ 1 beats 80 × 6 @ 1; the easy session beats nothing.
+        session(LocalDate.of(2026, 10, 1), "barbell_bench_press" to listOf(Logged(82.5, 5, 1), Logged(75.0, 7, 2)))
+        session(LocalDate.of(2026, 10, 5), "barbell_bench_press" to listOf(Logged(60.0, 5, 4)))
+
+        val points = history().trend("barbell_bench_press").lines.single().points
+
+        assertEquals(listOf(null, Record.Estimate, null), points.map { it.record })
     }
 
     @Test

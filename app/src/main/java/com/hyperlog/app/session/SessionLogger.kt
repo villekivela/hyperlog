@@ -85,6 +85,7 @@ class SessionLogger(
     private var checked: Pair<SetEntry, Long>? = null
     private val corrections = SetCorrections(db)
     private val stored = StoredSessions(db, gyms, programs)
+    private val records = SessionRecords(db, programs)
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
     private var viewingId: Long? = null
@@ -912,7 +913,7 @@ class SessionLogger(
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         _state.value = null
-        SessionSummary(session.id, session.startedAt, now, logged.map { ExerciseSummary(it.exercise.name, it.sets) })
+        SessionSummary(session.id, session.startedAt, now, logged.map { it.summary })
     }
 
     /**
@@ -1031,6 +1032,7 @@ class SessionLogger(
                 warmupsDone = se.warmupsDone,
                 typedWarmups = Warmups.decode(se.warmups).orEmpty(),
                 pinPlates = gym?.pinPlates.orEmpty(),
+                records = records.of(row, se, exercise, sets, deload = day?.deload == true),
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
@@ -1186,7 +1188,7 @@ private fun SessionExercise.reference(): Reference? =
  * [sets] as progression reads them: the main set only (the weaker side of a split set, and no
  * partials, drops or mini-sets), with its prescription and whether it counts.
  */
-private fun workSets(sets: List<LoggedSet>, plan: List<SetPrescription>?): List<WorkSet> {
+internal fun workSets(sets: List<LoggedSet>, plan: List<SetPrescription>?): List<WorkSet> {
     val counting = sets.counting()
     return sets.mapIndexed { i, set ->
         WorkSet(LoggedSet(set.weightKg, set.progressionReps, 0, set.rir, set.kept), plan?.getOrNull(i), counting[i])

@@ -47,7 +47,7 @@ data class PastSession(
     val shown: SessionExercise? get() = exercises.firstOrNull { it.id == shownId }
 
     val summary: SessionSummary
-        get() = SessionSummary(id, startedAt, finishedAt, exercises.map { ExerciseSummary(it.exercise.name, it.sets) })
+        get() = SessionSummary(id, startedAt, finishedAt, exercises.map { it.summary })
 }
 
 /**
@@ -65,6 +65,7 @@ class PastSessionEditor(
     private val gyms = Gyms(db)
     private val corrections = SetCorrections(db)
     private val stored = StoredSessions(db, gyms, programs)
+    private val records = SessionRecords(db, programs)
     private val mutex = Mutex()
     private val _state = MutableStateFlow<PastSession?>(null)
 
@@ -199,6 +200,7 @@ class PastSessionEditor(
                 slot = slot,
                 prescription = plan,
                 techniques = stored.techniques(se.id),
+                records = records.of(row, se, exercise, sets, deload = day?.deload == true),
             )
         }
         _state.value = PastSession(

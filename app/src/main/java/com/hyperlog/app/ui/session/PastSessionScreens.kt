@@ -131,7 +131,7 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
                 Text(e.name, style = MaterialTheme.typography.bodyLarge)
                 // Only the gaps between sets can wrap.
                 RirText(
-                    e.sets.joinToString("   ") { it.setText() },
+                    e.sets.withIndex().joinToString("   ") { (i, set) -> set.setText(e.records.getOrNull(i)) },
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                 )

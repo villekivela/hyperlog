@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.platform.LocalDensity
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
+import com.hyperlog.app.progression.Record
 
 // The RIR chip (SPEC, RIR chip): set text keeps `@ N` as its one source, and the UI draws each
 // `@ N` (or `@ N RIR`) as the number in a small chip of the fixed RIR scale. A target is outlined;
@@ -163,6 +166,20 @@ internal fun RirText(
     textAlign: TextAlign? = null,
 ) {
     val chips = mutableSetOf<RirChipKey>()
-    val annotated = buildAnnotatedString { appendRir(text, target, chips) }
-    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize))
+    val labels = Record.entries.associateWith { it.label() }
+    val annotated = buildAnnotatedString {
+        // A record's mark (RecordMark.kt) is drawn inline and read as its name.
+        var at = 0
+        text.forEachIndexed { i, c ->
+            val record = c.record() ?: return@forEachIndexed
+            appendRir(text.substring(at, i), target, chips)
+            appendInlineContent(record.inlineId(), labels.getValue(record))
+            at = i + 1
+        }
+        appendRir(text.substring(at), target, chips)
+    }
+    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize) + recordMarkContent(
+        // The mark is ink of the text it sits in, never the accent.
+        color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } },
+    ))
 }

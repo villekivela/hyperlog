@@ -17,6 +17,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Technique
+import com.hyperlog.app.progression.Record
 import com.hyperlog.app.progression.Suggestion
 
 /** One exercise in a session, with what has been logged and what was done last time. */
@@ -62,7 +63,12 @@ data class SessionExercise(
     val typedWarmups: Map<Int, WarmupSet> = emptyMap(),
     /** The session's gym's plates for the pin, for a [machine] that is a pin stack. */
     val pinPlates: List<Double> = emptyList(),
+    /** The record each of [sets] makes, by index (SPEC, Records); null for none. */
+    val records: List<Record?> = emptyList(),
 ) {
+    /** Its sets with their records, as summaries show them. */
+    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records)
+
     /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
     fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
 
@@ -198,6 +204,7 @@ data class ActiveSession(
 /** Warm-up [index] of session exercise [sessionExerciseId] on the pad, as typed so far. */
 data class WarmupEdit(val sessionExerciseId: Long, val index: Int, val entry: SetEntry)
 
-data class ExerciseSummary(val name: String, val sets: List<LoggedSet>)
+/** An exercise's sets in a session, with the record each makes ([SessionExercise.records]). */
+data class ExerciseSummary(val name: String, val sets: List<LoggedSet>, val records: List<Record?> = emptyList())
 
 data class SessionSummary(val sessionId: Long, val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)

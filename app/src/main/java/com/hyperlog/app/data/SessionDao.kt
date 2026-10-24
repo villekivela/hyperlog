@@ -2,6 +2,7 @@ package com.hyperlog.app.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -34,6 +35,12 @@ data class TrainedExercise(
     @ColumnInfo(name = "program_id") val programId: Long?,
     val week: Int?,
     @ColumnInfo(name = "day_index") val dayIndex: Int?,
+    @ColumnInfo(name = "started_at") val startedAt: Long,
+)
+
+/** A logged set of an exercise from an earlier session, with when that session started. */
+data class EarlierSet(
+    @Embedded val set: LoggedSetEntity,
     @ColumnInfo(name = "started_at") val startedAt: Long,
 )
 
@@ -222,4 +229,21 @@ interface SessionDao {
         """,
     )
     suspend fun lastTimeBefore(exerciseId: String, sessionId: Long, before: Long, anyItem: Boolean, itemId: Long?): List<LoggedSetEntity>
+
+    /**
+     * Every set of [exerciseId] logged in finished sessions that started before session [sessionId], which
+     * started at [before], oldest first. With [anyItem] false only those on equipment item [itemId]
+     * (ADR 0002). Records are measured against them.
+     */
+    @Query(
+        """
+        SELECT ls.*, s.started_at FROM logged_set ls
+        JOIN session_exercise se ON se.id = ls.session_exercise_id JOIN session s ON s.id = se.session_id
+        WHERE se.exercise_id = :exerciseId AND s.id != :sessionId AND s.finished_at IS NOT NULL
+          AND (s.started_at < :before OR (s.started_at = :before AND s.id < :sessionId))
+          AND (:anyItem OR se.equipment_item_id IS :itemId)
+        ORDER BY s.started_at, s.id, se.id, ls.position
+        """,
+    )
+    suspend fun setsBefore(exerciseId: String, sessionId: Long, before: Long, anyItem: Boolean, itemId: Long?): List<EarlierSet>
 }

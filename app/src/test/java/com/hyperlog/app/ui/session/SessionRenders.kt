@@ -199,6 +199,49 @@ class SessionRenders {
         File(out, "${if (dark) "dark" else "light"}-session-done-sets.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    // Records (#71): set 1 an estimate record, set 2 a rep record (one rep more than ever at 87.5).
+    private val recordSets = listOf(LoggedSet(100.0, 6, 0, 1), LoggedSet(87.5, 9, 0, 1), LoggedSet(87.5, 8, 0, 1))
+    private val recordMarks = listOf(com.hyperlog.app.progression.Record.Estimate, com.hyperlog.app.progression.Record.Reps, null)
+
+    @Test fun records() = both("session-records") {
+        val e = benchExercise(sets = recordSets.take(2), warmupsDone = 4).copy(records = recordMarks.take(2))
+        session(e, SessionExercise(2, curl, emptyList(), emptyList(), plates.ladder(), true), entry = SetEntry("87.5", "", "", 1, Field.Reps, partialMode = false, fresh = true))
+    }
+
+    @Test fun dayDoneRecords() = both("day-done-records") {
+        session(benchExercise(sets = recordSets, warmupsDone = 4).copy(records = recordMarks), entry = null)
+    }
+
+    private val recordSummary get() = run {
+        val start = java.time.LocalDateTime.of(2026, 10, 13, 10, 22).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        com.hyperlog.app.session.SessionSummary(
+            1, start, start + 52 * 60_000,
+            listOf(
+                com.hyperlog.app.session.ExerciseSummary(bench.name, recordSets, recordMarks),
+                com.hyperlog.app.session.ExerciseSummary(curl.name, listOf(LoggedSet(60.0, 12, 0, 2), LoggedSet(60.0, 10, 4, 0)), listOf(null, null)),
+            ),
+        )
+    }
+
+    private fun capture(name: String, content: @androidx.compose.runtime.Composable () -> Unit) {
+        assumeTrue(out != null)
+        val dark = System.getenv("DARK") == "1"
+        RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
+        compose.setContent { HyperlogTheme { content() } }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(out).mkdirs()
+        File(out, "${if (dark) "dark" else "light"}-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Test fun sessionDoneRecords() = capture("session-done-records") { SessionDoneScreen(recordSummary, onResume = {}, onClose = {}, onOpen = {}) }
+
+    @Test fun historyRecords() = capture("history-records") {
+        val start = recordSummary.startedAt
+        val e = benchExercise(sets = recordSets).copy(records = recordMarks)
+        PastSessionScreen(com.hyperlog.app.session.PastSession(1, start, start + 52 * 60_000, "Day A", "Harbour", listOf(e, SessionExercise(2, curl, listOf(LoggedSet(60.0, 12, 0, 2)), emptyList(), plates.ladder(), true))), onOpen = {}, onBack = {})
+    }
+
     /** The exercise sheet's prescription: each set's target RIR as an outlined chip (#46). */
     @Test fun exerciseSheet() {
         assumeTrue(out != null)

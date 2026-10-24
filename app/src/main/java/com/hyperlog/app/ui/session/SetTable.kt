@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
+import com.hyperlog.app.progression.Record
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
@@ -517,7 +518,8 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
     // Anything logged can be tapped and corrected.
     RowFrame(RowHeight, onClick = onClick, clickLabel = correct,
         modifier = if (onClick != null) Modifier.semantics { contentDescription = correct } else Modifier) {
-        IndexCell("${i + 1}", if (open) Tone.Active else if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight, bold = open)
+        IndexCell("${i + 1}", if (open) Tone.Active else if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight, bold = open,
+            record = table.current.records.getOrNull(i))
         LastCell(last)
         ValueText(formatKg(set.weightKg), ColKg, color)
         val reps = set.repsText()
@@ -623,6 +625,8 @@ private fun ActiveSubRow(
 /** The index column of the row whose circle reads [label] (`W`, the set number). */
 internal fun indexTag(label: String) = "index-$label"
 
+internal const val RecordBadgeTag = "record-badge"
+
 internal const val ActiveSubRowTag = "active-sub-row"
 internal const val ActiveWarmupTag = "active-warmup"
 
@@ -656,6 +660,8 @@ private fun RowScope.IndexCell(
     description: String? = null,
     plus: (() -> Unit)? = null,
     bold: Boolean = false,
+    /** The record the set makes, drawn as a badge on the circle's lower corner; null for none. */
+    record: Record? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val fill = when (tone) {
@@ -705,6 +711,15 @@ private fun RowScope.IndexCell(
                     Modifier.offset(x = IndexSize - 14.dp, y = -(IndexSize / 2) + 2.dp).size(16.dp).clip(CircleShape).background(cs.tertiary),
                     contentAlignment = Alignment.Center,
                 ) { SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(12.dp), tint = cs.onTertiary) }
+            }
+            // The record's trophy on the lower corner, the technique's sibling: in ink, not the accent.
+            // A disc of full ink, ringed in the row's surface so it stands off the circle in dark too.
+            record?.let {
+                Box(
+                    Modifier.offset(x = IndexSize - 14.dp, y = IndexSize / 2 - 2.dp).size(16.dp).clip(CircleShape)
+                        .background(cs.onSurface).border(1.5.dp, cs.surface, CircleShape).testTag(RecordBadgeTag),
+                    contentAlignment = Alignment.Center,
+                ) { RecordMark(it, Modifier.size(11.dp), tint = cs.surface) }
             }
         }
         plus?.let { add ->
