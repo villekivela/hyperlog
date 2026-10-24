@@ -655,7 +655,7 @@ private fun App(
             onEaseBack = { days ->
                 val words = context.getString(R.string.coach_ease_back_words, days)
                 // With Claude, a check-in whose first answer is the time off; without, the words to share.
-                if (checkInAvailable) checkInModel.start(words)
+                if (checkInAvailable) checkInModel.easeBackIn(words)
                 coachWords = TextFieldValue(words, TextRange(words.length))
                 programModel.closePasteErrors()
                 screen = Screen.Coach

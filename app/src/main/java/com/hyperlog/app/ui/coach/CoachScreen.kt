@@ -548,7 +548,7 @@ private val OptionHeadWidth = 56.dp
 
 /** The text of a muscle's sets this week: `0 sets`, `1 set`, `2.5 sets`. */
 @Composable
-private fun setsText(sets: Double): String {
+internal fun setsText(sets: Double): String {
     val n = com.hyperlog.app.domain.formatKg(sets)
     return if (sets == 1.0) stringResource(R.string.coach_focus_set, n) else stringResource(R.string.coach_focus_sets, n)
 }

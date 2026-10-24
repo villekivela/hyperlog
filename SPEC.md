@@ -1332,7 +1332,8 @@ again from there. There is no step counter, since Claude doesn't know in advance
   sets`): Claude is told the marked groups and names them as History does, and the app adds the
   count. An answer naming one of your gyms goes back to Claude with that gym's equipment, and is
   where a workout from the check-in starts; **Elsewhere** goes back with "I'm not at any of my
-  gyms. Ask what equipment is there if it matters", and a workout from it keeps no gym.
+  gyms. Ask what equipment is there if it matters, and plan only with that.", and a workout from
+  it keeps no gym.
 - **Back** from Thinking stops the call and shows the step just answered; from a failed call
   too. Back from the first of Claude's steps is the tiles, and from the tiles it leaves Coach.
   Reject (or Back) on a review is Back: the step before it shows again.
@@ -1369,8 +1370,8 @@ check-in that made it (its questions and your answers) with it. Tapping a card o
 Change does from today on, read-only and headed "Change in force": the days it still covers, slot
 by slot, with every other Change applied before and after, and the move of the position it made.
 Its one button is **Revert** (asking first); × and Back close it. A finished program has none.
-Under its summary it shows **The check-in** that made it: the opening, then each question over
-your answer. Program → Changes shows the same in a row's dialog. A Change pasted, or proposed from a
+Under its summary it shows **The check-in** that made it: the opening, then each of Claude's
+questions over your answer (Claude's words and Tell me more stay out). Program → Changes shows the same in a row's dialog. A Change pasted, or proposed from a
 session, has none. It is kept with the Change (`plan_change.check_in`, JSON) and goes into backups.
 
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program

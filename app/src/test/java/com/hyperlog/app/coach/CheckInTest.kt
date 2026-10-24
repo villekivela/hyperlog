@@ -185,6 +185,21 @@ class CheckInTest {
         )
     }
 
+    @Test
+    fun aProposalWinsOverAQuestionAndOnlyItsCallGetsItsProblems() = runTest {
+        val both = CoachReply(
+            "",
+            ask("Which hand?", "Left", "Right").toolCalls + call(CoachTools.PROPOSE_CHANGE, change("rows", "x")).toolCalls,
+        )
+        val model = FakeCoachModel.replies(both, words("Fine."))
+        val coach = coach(model)
+        coach.start(Tile.Hurts, frame)
+        val sent = (model.requests[1].messages.last() as CoachMessage.Results).results
+        assertEquals(listOf("call-1", "call-2"), sent.map { it.callId })
+        assertEquals(CheckInCoach.ONE_AT_A_TIME, sent[0].content)
+        assertTrue(sent[1].isError && sent[1].content.contains("unknown slot"))
+    }
+
     /** Claude's calls, numbered in each test. */
     private var calls = 0
 

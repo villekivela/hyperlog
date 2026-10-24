@@ -75,7 +75,7 @@ class CheckInRunner(
     fun start(tile: Tile) = begin { CheckIn(tile.words, tile, frame()) }
 
     /** Starts from your own first answer: Ease back in's, or How's it going's. */
-    fun start(opening: String) = begin { CheckIn(opening, null, frame()) }
+    fun start(opening: String, from: Opening) = begin { CheckIn(opening, null, frame(), from) }
 
     fun answer(text: String) = next { coach, checkIn -> coach.answered(checkIn, text) }
 

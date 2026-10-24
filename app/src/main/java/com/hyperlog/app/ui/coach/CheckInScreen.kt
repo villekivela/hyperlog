@@ -79,6 +79,7 @@ import com.hyperlog.app.R
 import com.hyperlog.app.coach.CheckInFailure
 import com.hyperlog.app.coach.CheckInStep
 import com.hyperlog.app.coach.CheckInView
+import com.hyperlog.app.coach.Opening
 import com.hyperlog.app.coach.Tile
 import com.hyperlog.app.library.MuscleGroup
 import com.hyperlog.app.program.ActiveProgram
@@ -101,8 +102,6 @@ private val Margin = 24.dp
 private val StripPadding = PaddingValues(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
 
 /** Ease back in's words end so (`coach_ease_back_words`). */
-private const val EaseBackEnd = "Ease me back in."
-
 /** A tile on the first step: its label and symbol. */
 private data class TileLook(val label: Int, val symbol: Symbol)
 
@@ -324,11 +323,10 @@ private fun Step(
     BackHandler(onBack = onBack)
     val step = view.step
     // The bar names what the check-in is about: the tile, How's it going? or Ease back in.
-    val opening = view.checkIn.opening
-    val title = view.checkIn.tile?.let { stringResource(Looks.getValue(it).label) } ?: when {
-        opening.startsWith(com.hyperlog.app.coach.CheckInContext.HOWS_IT_GOING) -> stringResource(R.string.checkin_title_hows_it_going)
-        opening.trimEnd().endsWith(EaseBackEnd) -> stringResource(R.string.checkin_title_ease_back)
-        else -> stringResource(R.string.checkin_title)
+    val title = view.checkIn.tile?.let { stringResource(Looks.getValue(it).label) } ?: when (view.checkIn.from) {
+        Opening.HowsItGoing -> stringResource(R.string.checkin_title_hows_it_going)
+        Opening.EaseBackIn -> stringResource(R.string.checkin_title_ease_back)
+        Opening.Tile -> stringResource(R.string.checkin_title)
     }
     /** Ask Claude was pressed for this failure: Paste reply is the next step. */
     var asked by rememberSaveable(view.checkIn.turns.size) { mutableStateOf(false) }
@@ -350,8 +348,8 @@ private fun Step(
                     Spacer(Modifier.weight(1f))
                     Button(onClick = onClose) { Text(stringResource(R.string.checkin_done)) }
                 }
+                // × in the bar drops it; Try again is the one thing to do here.
                 is CheckInStep.Problems -> BottomActions(padding = StripPadding) {
-                    TextButton(onClick = onClose) { Text(stringResource(R.string.program_cancel)) }
                     Spacer(Modifier.weight(1f))
                     Button(onClick = onTryAgain) { Text(stringResource(R.string.checkin_try_again)) }
                 }
@@ -490,7 +488,7 @@ private fun Question(step: CheckInStep.Question, lowest: List<Pair<String, Doubl
     val marks = lowest.toMap()
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
-        Text(step.question, Modifier.padding(horizontal = Margin).padding(bottom = 24.dp), style = MaterialTheme.typography.headlineMedium)
+        Text(interFigures(step.question), Modifier.padding(horizontal = Margin).padding(bottom = 24.dp), style = MaterialTheme.typography.headlineMedium)
         step.answers.forEachIndexed { i, answer ->
             val group = MuscleGroup.entries.firstOrNull { it.label.equals(answer, ignoreCase = true) }?.label
             val label = group?.let { g -> marks[g]?.let { stringResource(R.string.coach_focus_marked, answer, setsText(it)) } } ?: answer
@@ -569,14 +567,7 @@ internal fun CheckInTranscript(made: com.hyperlog.app.coach.SavedCheckIn) {
 @Composable
 private fun Yours(text: String, modifier: Modifier) {
     Row(modifier) {
-        SymbolIcon(Symbol.SubdirectoryArrowRight, null, Modifier.padding(top = 2.dp, end = 8.dp).size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        SymbolIcon(Symbol.SubdirectoryArrowRight, null, Modifier.padding(end = 8.dp).size(24.dp), tint = MaterialTheme.colorScheme.primary)
         Text(text, style = MaterialTheme.typography.bodyLarge)
     }
-}
-
-/** `0 sets`, `1 set`, `2.5 sets`. */
-@Composable
-private fun setsText(sets: Double): String {
-    val n = com.hyperlog.app.domain.formatKg(sets)
-    return if (sets == 1.0) stringResource(R.string.coach_focus_set, n) else stringResource(R.string.coach_focus_sets, n)
 }

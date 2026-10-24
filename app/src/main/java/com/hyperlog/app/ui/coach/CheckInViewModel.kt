@@ -21,6 +21,7 @@ import com.hyperlog.app.coach.ScriptedWorld
 import com.hyperlog.app.coach.Tile
 import com.hyperlog.app.coach.WorkoutOptions
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.data.SettingEntity
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.history.History
 import com.hyperlog.app.library.LibrarySeed
@@ -36,7 +37,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import com.hyperlog.app.data.SettingEntity
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
@@ -123,11 +123,11 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
 
     fun start(tile: Tile) = runner.start(tile)
 
-    /** Starts from your own first answer: Ease back in's sentence, or How's it going's. */
-    fun start(opening: String) = runner.start(opening)
+    /** Ease back in: a check-in whose first answer is the time off. */
+    fun easeBackIn(words: String) = runner.start(words, com.hyperlog.app.coach.Opening.EaseBackIn)
 
     /** How's it going? about a Change in force: it opens with the Change and the check-in that made it. */
-    fun howItsGoing(record: com.hyperlog.app.program.ChangeRecord) = runner.start(CheckInContext.howItsGoing(record))
+    fun howItsGoing(record: com.hyperlog.app.program.ChangeRecord) = runner.start(CheckInContext.howItsGoing(record), com.hyperlog.app.coach.Opening.HowsItGoing)
 
     fun answer(text: String) = runner.answer(text)
     fun tellMeMore() = runner.tellMeMore()

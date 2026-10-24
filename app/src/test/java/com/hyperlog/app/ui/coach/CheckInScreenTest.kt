@@ -97,7 +97,7 @@ class CheckInScreenTest {
                     onTile = runner::start, onAnswer = runner::answer, onLeave = {}, onBack = runner::back, onClose = runner::close,
                     onTellMeMore = runner::tellMeMore, onTryAgain = runner::tryAgain, lowest = lowest,
                     inForceOpen = inForce, onInForceOpen = { inForce = it },
-                    onHowItsGoing = { runner.start(com.hyperlog.app.coach.CheckInContext.howItsGoing(it)) },
+                    onHowItsGoing = { runner.start(com.hyperlog.app.coach.CheckInContext.howItsGoing(it), com.hyperlog.app.coach.Opening.HowsItGoing) },
                 )
             }
         }

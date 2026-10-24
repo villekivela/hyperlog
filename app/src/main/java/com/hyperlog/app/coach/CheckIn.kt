@@ -2,7 +2,6 @@ package com.hyperlog.app.coach
 
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.program.Program
-import kotlinx.serialization.json.put
 import com.hyperlog.app.program.ProgramParser
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -11,6 +10,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.put
 
 /** The first step's tiles (SPEC, Coaching → Check-in), each with the sentence Claude is told. */
 enum class Tile(val words: String) {
@@ -23,6 +23,10 @@ enum class Tile(val words: String) {
     NewProgram("I want a new program."),
     SomethingElse("Something else."),
 }
+
+/** What opened a check-in. */
+@Serializable
+enum class Opening { Tile, EaseBackIn, HowsItGoing }
 
 /**
  * What a check-in sends on every call, fixed when it starts so each call reads it from the cache:
@@ -39,6 +43,7 @@ data class CheckInWorld(
     val gyms: List<Gym> = emptyList(),
     /** Exercise id to name, for a gym's missing exercises. */
     val names: Map<String, String> = emptyMap(),
+    /** Legacy exercise id to the id kept, for hints in a workout's problems. */
     val merged: Map<String, String> = emptyMap(),
 )
 
@@ -52,6 +57,8 @@ data class CheckIn(
     val opening: String,
     val tile: Tile? = null,
     val frame: CheckInFrame,
+    /** What opened it, for its title: a tile, Ease back in or How's it going?. */
+    val from: Opening = Opening.Tile,
     val turns: List<Turn> = emptyList(),
     /** Why the last call has no reply; Try again calls again. */
     val failure: CheckInFailure? = null,
@@ -66,6 +73,9 @@ data class CheckIn(
         get() = listOf(CoachMessage.User(opening)) + turns.flatMap { turn ->
             listOfNotNull(CoachMessage.Assistant(turn.reply), turn.answer?.message)
         }
+
+    /** The last reply, answered with [answer]. */
+    fun answering(answer: Answer?): CheckIn = copy(turns = turns.dropLast(1) + turns.last().copy(answer = answer))
 
     /** A call is due: nothing has come back since the last answer, and it didn't fail. */
     val waiting: Boolean get() = failure == null && (turns.isEmpty() || turns.last().answer != null)
@@ -139,7 +149,7 @@ sealed interface CheckInStep {
 class CheckInCoach(private val model: CoachModel, private val world: CheckInWorld) {
     suspend fun start(tile: Tile, frame: CheckInFrame): CheckIn = run(CheckIn(tile.words, tile, frame))
 
-    suspend fun start(opening: String, frame: CheckInFrame): CheckIn = run(CheckIn(opening, null, frame))
+    suspend fun start(opening: String, frame: CheckInFrame, from: Opening = Opening.Tile): CheckIn = run(CheckIn(opening, null, frame, from))
 
     /** Answers the question showing with [text], one of its answers or your own words, and asks Claude on. */
     suspend fun answer(checkIn: CheckIn, text: String): CheckIn = run(answered(checkIn, text))
@@ -157,7 +167,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
             else -> text
         }
         val results = turn.reply.toolCalls.map { if (it === call) ToolResult(it.id, content) else ToolResult(it.id, ONE_AT_A_TIME) }
-        val answered = checkIn.copy(turns = checkIn.turns.dropLast(1) + turn.copy(answer = Answer(results, shown = text)), fixes = 0)
+        val answered = checkIn.answering(Answer(results, shown = text)).copy(fixes = 0)
         return if (gym != null || elsewhere) answered.copy(gym = gym?.id, elsewhere = elsewhere) else answered
     }
 
@@ -168,7 +178,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
     fun toldMore(checkIn: CheckIn): CheckIn {
         val turn = checkIn.turns.lastOrNull()?.takeIf { it.answer == null && it.reply.toolCalls.isEmpty() } ?: return checkIn
         val answer = Answer(text = TELL_ME_MORE, shown = TELL_ME_MORE)
-        return checkIn.copy(turns = checkIn.turns.dropLast(1) + turn.copy(answer = answer), fixes = 0)
+        return checkIn.answering(answer).copy(fixes = 0)
     }
 
     /**
@@ -227,9 +237,11 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         val answer = if (turn.reply.toolCalls.isEmpty()) {
             Answer(text = problems)
         } else {
-            Answer(turn.reply.toolCalls.map { ToolResult(it.id, problems, isError = true) })
+            // The call that was read gets the problems; any other, that only one is used.
+            val read = used(turn.reply)
+            Answer(turn.reply.toolCalls.map { if (it === read) ToolResult(it.id, problems, isError = true) else ToolResult(it.id, ONE_AT_A_TIME) })
         }
-        return checkIn.copy(turns = checkIn.turns.dropLast(1) + turn.copy(answer = answer))
+        return checkIn.answering(answer)
     }
 
     private fun failure(e: CoachError) = when (e) {
@@ -245,8 +257,11 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
     }
 
     /** A reply as a step: a proposal first, then a question; words when there is no call. */
+    /** The call a reply is read by: a proposal before a question. */
+    private fun used(reply: CoachReply): ToolCall? = reply.toolCalls.firstOrNull { it.name != CoachTools.ASK } ?: reply.toolCalls.firstOrNull()
+
     private fun read(reply: CoachReply): Read {
-        val call = reply.toolCalls.firstOrNull { it.name != CoachTools.ASK } ?: reply.toolCalls.firstOrNull()
+        val call = used(reply)
             ?: return if (reply.text.isBlank()) Read.Invalid(listOf(EMPTY)) else Read.Valid(CheckInStep.Words(reply.text.trim()))
         return when (call.name) {
             CoachTools.ASK -> ask(call.input)
@@ -275,17 +290,16 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
     }
 
     companion object {
-        /** The check-in as an accepted Change keeps it: the opening, then each step you answered with your answer. */
+        /**
+         * The check-in as an accepted Change keeps it: the opening, then each of Claude's questions
+         * with your answer. Claude's words and Tell me more aren't questions, so they stay out.
+         */
         fun saved(checkIn: CheckIn) = SavedCheckIn(
             checkIn.opening,
             checkIn.turns.mapNotNull { turn ->
                 val shown = turn.answer?.shown ?: return@mapNotNull null
-                val call = turn.reply.toolCalls.firstOrNull()
-                when {
-                    call == null -> SavedCheckIn.Step(turn.reply.text.trim(), shown)
-                    call.name == CoachTools.ASK -> ((ask(call.input) as? Read.Valid)?.step as? CheckInStep.Question)?.let { SavedCheckIn.Step(it.question, shown) }
-                    else -> null
-                }
+                val call = turn.reply.toolCalls.firstOrNull { it.name == CoachTools.ASK } ?: return@mapNotNull null
+                ((ask(call.input) as? Read.Valid)?.step as? CheckInStep.Question)?.let { SavedCheckIn.Step(it.question, shown) }
             },
         )
 
