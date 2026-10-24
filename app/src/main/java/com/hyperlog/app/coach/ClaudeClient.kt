@@ -3,7 +3,7 @@ package com.hyperlog.app.coach
 import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.core.JsonValue
-import com.anthropic.errors.AnthropicIoException
+import com.anthropic.errors.AnthropicException
 import com.anthropic.errors.AnthropicServiceException
 import com.anthropic.errors.PermissionDeniedException
 import com.anthropic.errors.UnauthorizedException
@@ -25,6 +25,7 @@ import com.anthropic.models.beta.messages.BetaToolUseBlockParam
 import com.anthropic.models.beta.messages.BetaUsage
 import com.anthropic.models.beta.messages.MessageCreateParams
 import com.fasterxml.jackson.databind.JsonNode
+import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -174,16 +175,18 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
             throw CoachError.KeyRefused(e)
         } catch (e: AnthropicServiceException) {
             throw if (spendLimit(e)) CoachError.SpendLimit(e) else CoachError.NoConnection(e)
-        } catch (e: AnthropicIoException) {
+        } catch (e: AnthropicException) {
+            // The connection, a timeout, or a reply the SDK couldn't read.
             throw CoachError.NoConnection(e)
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             throw CoachError.NoConnection(e)
         }
     }
 
     /**
      * A billing error, or the 400 the API answers once the Console's spend limit or the credit
-     * balance runs out.
+     * balance runs out. That 400 is an `invalid_request_error` like any other, so only its
+     * message tells it apart; if Anthropic rewords it, a spent key reads as no connection.
      */
     private fun spendLimit(e: AnthropicServiceException): Boolean {
         if (e.statusCode() == 402 || e.errorType().map { it.known() == ErrorType.Known.BILLING_ERROR }.orElse(false)) return true

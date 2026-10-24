@@ -31,22 +31,27 @@ class ClaudeKeySetup(private val keys: ClaudeKeys, cost: CoachCost, private val 
 
     suspend fun save(key: String) {
         checking.value = KeyCheck.Checking
-        checking.value = try {
+        try {
             check(key)
-            withContext(Dispatchers.IO) { keys.save(key) }
-            KeyCheck.Idle
-        } catch (_: CoachError.KeyRefused) {
-            KeyCheck.Refused
         } catch (_: CoachError.SpendLimit) {
             // The key is good; the Console's limit only stops check-ins until it resets.
+        } catch (_: CoachError.KeyRefused) {
+            checking.value = KeyCheck.Refused
+            return
+        } catch (_: CoachError) {
+            checking.value = KeyCheck.Unreachable
+            return
+        }
+        checking.value = try {
             withContext(Dispatchers.IO) { keys.save(key) }
             KeyCheck.Idle
-        } catch (_: CoachError) {
-            KeyCheck.Unreachable
+        } catch (_: Exception) {
+            // Keystore or the disk failed; nothing was saved.
+            KeyCheck.NotSaved
         }
     }
 
-    fun remove() = keys.remove()
+    suspend fun remove() = withContext(Dispatchers.IO) { keys.remove() }
 
     /** The field was closed: forget its check. */
     fun dismiss() {
@@ -59,13 +64,16 @@ class ClaudeKeyViewModel(application: Application) : AndroidViewModel(applicatio
         ClaudeClient(key).checkKey()
     }
 
-    val status: StateFlow<ClaudeKeyStatus> = setup.status.stateIn(viewModelScope, SharingStarted.Eagerly, ClaudeKeyStatus())
+    // While Settings shows it: coming back reads the month afresh, so a new month starts at nothing.
+    val status: StateFlow<ClaudeKeyStatus> = setup.status.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ClaudeKeyStatus())
 
     fun save(key: String) {
         viewModelScope.launch { setup.save(key) }
     }
 
-    fun remove() = setup.remove()
+    fun remove() {
+        viewModelScope.launch { setup.remove() }
+    }
 
     fun dismiss() = setup.dismiss()
 }

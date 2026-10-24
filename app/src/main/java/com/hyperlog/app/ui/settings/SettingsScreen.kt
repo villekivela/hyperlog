@@ -64,7 +64,7 @@ import java.util.Locale
 data class StartingWeightsStatus(val count: Int, val invalid: Boolean)
 
 /** Where the Claude key's check stands: a key being entered is checked before it is saved. */
-enum class KeyCheck { Idle, Checking, Refused, Unreachable }
+enum class KeyCheck { Idle, Checking, Refused, Unreachable, NotSaved }
 
 /**
  * The Claude key as Settings shows it: its last 4 characters ([ending], null with no key), this
@@ -119,7 +119,7 @@ fun SettingsScreen(
     /** Checks a key typed in, then saves it. */
     onSaveKey: (String) -> Unit = {},
     onRemoveKey: () -> Unit = {},
-    /** The key dialog was closed: forget its check. */
+    /** The key's field was closed: forget its check. */
     onDismissKey: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
@@ -286,7 +286,7 @@ private fun KeyEntry(check: KeyCheck, onSave: (String) -> Unit, onCancel: () -> 
             label = { Text(stringResource(R.string.claude_key_field)) },
             singleLine = true,
             enabled = !checking,
-            isError = check == KeyCheck.Refused || check == KeyCheck.Unreachable,
+            isError = check == KeyCheck.Refused || check == KeyCheck.Unreachable || check == KeyCheck.NotSaved,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
             supportingText = when (check) {
@@ -294,6 +294,7 @@ private fun KeyEntry(check: KeyCheck, onSave: (String) -> Unit, onCancel: () -> 
                 KeyCheck.Checking -> { { Text(stringResource(R.string.claude_key_checking)) } }
                 KeyCheck.Refused -> { { Text(stringResource(R.string.claude_key_refused)) } }
                 KeyCheck.Unreachable -> { { Text(stringResource(R.string.claude_key_unreachable)) } }
+                KeyCheck.NotSaved -> { { Text(stringResource(R.string.claude_key_not_saved)) } }
             },
             modifier = Modifier.fillMaxWidth(),
         )

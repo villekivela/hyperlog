@@ -64,6 +64,17 @@ class ClaudeKeySetupTest {
     }
 
     @Test
+    fun aKeyThatCantBeSealedSaysSoAndIsntKept() = runTest {
+        val broken = object : KeySeal {
+            override fun seal(plain: ByteArray): ByteArray = throw java.security.KeyStoreException("Keystore is locked")
+            override fun open(sealed: ByteArray) = sealed
+        }
+        val setup = ClaudeKeySetup(ClaudeKeys(ClaudeKeys.file(context), broken), CoachCost(db) { YearMonth.of(2026, 10) }) {}
+        setup.save("sk-ant-api03-test-a1b2")
+        assertEquals(ClaudeKeyStatus(check = KeyCheck.NotSaved), setup.status.first())
+    }
+
+    @Test
     fun noConnectionIsntSavedAndSaysToTryAgain() = runTest {
         answer = CoachError.NoConnection()
         setup.save("sk-ant-api03-test-a1b2")

@@ -28,7 +28,11 @@ class OneHostTest {
     )
 
     /** What opens a connection. java.net.URI and the URL encoders only handle text. */
-    private val network = Regex("""java\.net\.(?!URI\b|URLEncoder\b|URLDecoder\b)|javax\.net|okhttp|ktor|retrofit|volley|cronet""", RegexOption.IGNORE_CASE)
+    private val network = Regex(
+        """java\.net\.(?!URI\b|URLEncoder\b|URLDecoder\b)|javax\.net|android\.net\.http|HttpEngine|WebView|DownloadManager|""" +
+            """okhttp|ktor|retrofit|volley|cronet""",
+        RegexOption.IGNORE_CASE,
+    )
 
     @Test
     fun onlyTheClientUsesAnthropicsSdk() {

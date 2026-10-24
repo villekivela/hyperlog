@@ -6,10 +6,9 @@ import com.hyperlog.app.data.SettingEntity
 import java.time.YearMonth
 import java.util.Locale
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * What check-ins cost this month (SPEC, Coaching → With a Claude key, Cost): each reply's usage
@@ -18,10 +17,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
  * own sum; the Anthropic Console has the bill and the limit.
  */
 class CoachCost(private val db: HyperlogDatabase, private val month: () -> YearMonth = YearMonth::now) {
-    /** This month's cost so far, in millionths of a dollar. */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val thisMonth: Flow<Long> = flowOf(Unit).flatMapLatest {
-        db.settings().observe(key(month())).map { it?.toLongOrNull() ?: 0 }
+    /** This month's cost so far, in millionths of a dollar; the month is the one when collecting starts. */
+    val thisMonth: Flow<Long> = flow {
+        emitAll(db.settings().observe(key(month())).map { it?.toLongOrNull() ?: 0 })
     }
 
     suspend fun add(usage: List<CoachUsage>) {

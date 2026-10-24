@@ -1400,7 +1400,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   its card for an Anthropic API key (masked, with Cancel and Save), checked once with a free call
   (the models list) and saved encrypted with Android Keystore, in a file in `no_backup`. While
   the check runs the field reads "Checking the key…"; a refused key reads "Claude doesn't accept
-  this key." and no connection "Couldn't reach Claude. Try again.", and neither is saved. A key
+  this key." and no connection "Couldn't reach Claude. Try again.", and neither is saved; a key
+  Keystore can't seal reads "Couldn't save the key on this phone. Try again." A key
   that has hit its spend limit is still a good key and is saved. Then the row reads `Key ending
   …a1b2` with **Remove**, which forgets it at once. The key is never shown again, never in a
   backup, a log or Auto Backup; a restore keeps the phone's key, or none.
