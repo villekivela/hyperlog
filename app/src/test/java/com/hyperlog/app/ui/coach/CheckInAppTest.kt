@@ -122,9 +122,13 @@ class CheckInAppTest {
     fun theScriptedCoachIsASettingsSwitch() {
         compose.openTab("Settings")
         compose.click("Scripted coach")
-        // Off, with no key: Coach is Ask Claude's screen again.
+        // Off, with no key: the same tiles, and a tile opens Ask Claude's screen.
         compose.openTab("Coach")
+        compose.waitFor("Something else")
+        compose.click("Something else")
         compose.waitFor("In your words")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitFor("What’s going on?")
         compose.openTab("Settings")
         compose.click("Scripted coach")
         compose.openTab("Coach")

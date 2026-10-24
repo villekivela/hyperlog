@@ -105,9 +105,9 @@ private val StripPadding = PaddingValues(start = 12.dp, end = 16.dp, top = 16.dp
 
 /** Ease back in's words end so (`coach_ease_back_words`). */
 /** A tile on the first step: its label and symbol. */
-private data class TileLook(val label: Int, val symbol: Symbol)
+internal data class TileLook(val label: Int, val symbol: Symbol)
 
-private val Looks = mapOf(
+internal val TileLooks = mapOf(
     Tile.Hurts to TileLook(R.string.checkin_tile_hurts, Symbol.PanTool),
     Tile.ShortOnTime to TileLook(R.string.checkin_tile_short, Symbol.Timer),
     Tile.Gym to TileLook(R.string.checkin_tile_gym, Symbol.LocationOn),
@@ -225,7 +225,7 @@ private fun TileGrid(onTile: (Tile) -> Unit) {
         rows.forEachIndexed { r, pair ->
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(SegmentGap)) {
                 pair.forEachIndexed { c, tile ->
-                    val look = Looks.getValue(tile)
+                    val look = TileLooks.getValue(tile)
                     val shape = RoundedCornerShape(
                         topStart = if (r == 0 && c == 0) TileOuter else TileInner,
                         topEnd = if (r == 0 && c == 1) TileOuter else TileInner,
@@ -334,7 +334,7 @@ private fun Step(
     BackHandler(onBack = onBack)
     val step = view.step
     // The bar names what the check-in is about: the tile, How's it going? or Ease back in.
-    val title = view.checkIn.tile?.let { stringResource(Looks.getValue(it).label) } ?: when (view.checkIn.from) {
+    val title = view.checkIn.tile?.let { stringResource(TileLooks.getValue(it).label) } ?: when (view.checkIn.from) {
         Opening.HowsItGoing -> stringResource(R.string.checkin_title_hows_it_going)
         Opening.EaseBackIn -> stringResource(R.string.checkin_title_ease_back)
         Opening.Tile -> stringResource(R.string.checkin_title)

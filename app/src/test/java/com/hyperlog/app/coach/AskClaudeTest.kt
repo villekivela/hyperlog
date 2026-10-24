@@ -191,7 +191,7 @@ class AskClaudeTest {
         val unknownSlot = "```json\n{\"summary\": \"x\", \"scope\": \"rest_of_program\", \"operations\": [{\"op\": \"remove\", \"slot\": \"rows\"}]}\n```"
         assertEquals(AskClaude.Reply.Invalid(listOf("operations[0].slot: unknown slot \"rows\"")), AskClaude.read(unknownSlot, program, ids))
         assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.NOTHING_TO_READ)), AskClaude.read("Sounds good, rest up!", program, ids))
-        assertTrue(AskClaude.NOTHING_TO_READ.startsWith("No Change or workout found"))
+        assertTrue(AskClaude.NOTHING_TO_READ.startsWith("No Change, workout or program found"))
         // A reply copied short says so, once, and not to ask Claude.
         assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("Here you go: {\"summary\":\"Hands\",\"scope\":{\"from\":", program, ids))
         assertEquals(AskClaude.Reply.Invalid(listOf(AskClaude.CUT_OFF)), AskClaude.read("```json\n{\"summary\": \"Hands\", \"scope\": {\"from\": \"2026-10-13\", \"to\": \"2026-10-19\"}, \"operations\": [", program, ids))
@@ -208,29 +208,6 @@ class AskClaudeTest {
         assertTrue(AskClaude.read(change, program, ids) is AskClaude.Reply.ChangeReply)
         val workout = text.substringAfter("## Workout format")
         assertTrue(AskClaude.read(workout, program, ids) is AskClaude.Reply.WorkoutReply)
-    }
-
-    @Test
-    fun theWorkoutsOptionsGoInThePromptAndMakeAWholeRequest() {
-        val options = WorkoutOptions(WorkoutOptions.Effort.Hard, 75, listOf("Hamstrings", "Back"))
-        val text = AskClaude.prompt("", plan, emptyList(), library.exercises, options = options)
-        assertTrue(text, text.contains("Build me a workout for today:"))
-        assertTrue(text, text.contains("- Effort: hard, 0–1 reps in reserve, intensity techniques allowed."))
-        assertTrue(text, text.contains("- Time: 1 h 15 for the whole session, warm-ups and rest included."))
-        // A marked muscle by name; a group by name with the muscles it covers.
-        assertTrue(text, text.contains("- Focus: Hamstrings; Back (Lats, Teres Major, Traps, Rhomboids, Lower Back, Neck)."))
-        // No words: nothing quoted.
-        assertFalse(text, text.contains("> "))
-        val easy = AskClaude.prompt("Hotel gym.", plan, emptyList(), library.exercises, options = WorkoutOptions(WorkoutOptions.Effort.Easy))
-        assertTrue(easy, easy.contains("> Hotel gym."))
-        assertTrue(easy, easy.contains("- Effort: easy, 3 or more reps in reserve, no intensity techniques."))
-        assertTrue(easy, easy.contains("- Time: 1 h for the whole session"))
-        assertTrue(easy, easy.contains("- Focus: none, so a balanced full-body day."))
-        val normal = AskClaude.prompt("", null, emptyList(), library.exercises, options = WorkoutOptions(minutes = 45), today = oct13)
-        assertTrue(normal, normal.contains("- Effort: normal, 1–2 reps in reserve."))
-        assertTrue(normal, normal.contains("- Time: 45 min for the whole session"))
-        // Closed options say nothing.
-        assertFalse(prompt().contains("Build me a workout"))
     }
 
     @Test
@@ -278,5 +255,35 @@ class AskClaudeTest {
     @Test
     fun theTimesReadAsTheChipsDo() {
         assertEquals(listOf("45 min", "1 h", "1 h 15", "1 h 30"), WorkoutOptions.Times.map { WorkoutOptions.timeText(it) })
+    }
+
+    @Test
+    fun aPastedProgramReadsAsOneAndItsProblemsHavePaths() {
+        val file = File("src/main/assets/${StarterProgram.ASSET}").readText()
+        val reply = "Here is the program:\n```json\n{ \"program\": $file }\n```"
+        val read = AskClaude.read(reply, null, ids, merged = library.merged) as AskClaude.Reply.ProgramReply
+        assertEquals(program.title, read.program.title)
+        // It reads with a program running too, and a Change is still a Change.
+        assertTrue(AskClaude.read(reply, program, ids, merged = library.merged) is AskClaude.Reply.ProgramReply)
+        val bad = reply.replace("close_grip_bench_press", "close_grip_bench_pres")
+        val invalid = AskClaude.read(bad, program, ids, merged = library.merged) as AskClaude.Reply.Invalid
+        assertTrue(invalid.errors.toString(), invalid.errors.all { it.startsWith("program.") })
+    }
+
+    @Test
+    fun theTileIsQuotedUnlessTheWordsAlreadyStartWithItsSentence() {
+        fun quoted(tile: Tile, words: String) =
+            AskClaude.prompt(words, plan, emptyList(), library.exercises, tile = tile).contains("> ${tile.words}\n")
+        // The prefilled sentence says it already.
+        assertFalse(quoted(Tile.Hurts, "Something hurts: left elbow."))
+        assertFalse(quoted(Tile.ShortOnTime, "I’m short on time today: I have 45 minutes."))
+        assertFalse(quoted(Tile.Workout, "Build me a workout for today: "))
+        // Edited away, or a sentence that isn't the tile's, the tile says what the check-in is about.
+        assertTrue(quoted(Tile.Hurts, "Left elbow."))
+        assertTrue(quoted(Tile.ShortOnTime, ""))
+        assertTrue(quoted(Tile.Gym, "No gym today, only dumbbells at home."))
+        assertTrue(quoted(Tile.SomethingElse, ""))
+        val text = AskClaude.prompt("Something hurts: left elbow.", plan, emptyList(), library.exercises, tile = Tile.Hurts)
+        assertTrue(text, text.contains("> Something hurts: left elbow.\n"))
     }
 }
