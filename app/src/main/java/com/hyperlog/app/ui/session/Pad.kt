@@ -90,6 +90,8 @@ internal fun Pad(
     top: @Composable () -> Unit = {},
     /** A warm-up is on the pad, by index and count: no RIR, the hide key goes back to the set, ✓ ticks it. */
     warmup: Pair<Int, Int>? = null,
+    /** A later set picked to log out of order is on the pad: the hide key goes back to the set to do. */
+    picked: Boolean = false,
 ) {
     val onWeight = entry.field == Field.Weight
     val cs = MaterialTheme.colorScheme
@@ -160,6 +162,7 @@ internal fun Pad(
                     // A correction can only be saved or cancelled, so the hide key cancels it.
                     if (correction != null) SymbolKey(Symbol.Close, R.string.pad_cancel_correction) { actions.cancelCorrection() }
                     else if (warmup != null) SymbolKey(Symbol.Close, R.string.pad_close_warmup) { actions.closeWarmup() }
+                    else if (picked) SymbolKey(Symbol.Close, R.string.pad_close_warmup) { actions.closePickedSet() }
                     else SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
                     DigitKey(0, actions)
                     if (onWeight) TextKey(".", stringResource(R.string.pad_dot)) { actions.press(PadKey.Dot) } else Spacer(Modifier.weight(1f))

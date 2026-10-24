@@ -184,7 +184,8 @@ class PastSessionEditor(
         val gym = context.gym
         val day = context.day
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
-            val sets = stored.sets(se.id)
+            val rows = dao.sets(se.id)
+            val sets = stored.sets(rows)
             if (sets.isEmpty()) return@mapNotNull null
             val (exercise, machine, ladder, slot, plan) = context.exercise(se)
             // Last time as it was then: the session before this one (on the same machine for machines, ADR 0002).
@@ -201,6 +202,7 @@ class PastSessionEditor(
                 prescription = plan,
                 techniques = stored.techniques(se.id),
                 records = records.of(row, se, exercise, sets, deload = day?.deload == true),
+                positions = rows.map { it.position },
             )
         }
         _state.value = PastSession(

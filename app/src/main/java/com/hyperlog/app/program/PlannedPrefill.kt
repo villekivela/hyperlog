@@ -54,13 +54,27 @@ fun plannedWeight(
     lastTime: List<LoggedSet>,
     ladder: WeightLadder,
     activeKg: Double?,
+): Double? = plannedWeight(index, plan, logged::getOrNull, logged.size, lastTime, ladder, activeKg)
+
+/**
+ * [plannedWeight] with sets logged out of order: [logged] gives set index's logged set, or null
+ * while it isn't logged, and [activeKg] is being typed for set [toDo].
+ */
+fun plannedWeight(
+    index: Int,
+    plan: List<SetPrescription>,
+    logged: (Int) -> LoggedSet?,
+    toDo: Int,
+    lastTime: List<LoggedSet>,
+    ladder: WeightLadder,
+    activeKg: Double?,
 ): Double? {
-    logged.getOrNull(index)?.let { return it.weightKg }
-    if (index == logged.size && activeKg != null) return activeKg
+    logged(index)?.let { return it.weightKg }
+    if (index == toDo && activeKg != null) return activeKg
     val backoff = plan.getOrNull(index)?.backoff
     return when {
-        backoff != null -> plannedWeight(backoff.from, plan, logged, lastTime, ladder, activeKg)?.let { backoffWeight(it, backoff.percent, ladder) }
-        index > 0 -> plannedWeight(index - 1, plan, logged, lastTime, ladder, activeKg)
+        backoff != null -> plannedWeight(backoff.from, plan, logged, toDo, lastTime, ladder, activeKg)?.let { backoffWeight(it, backoff.percent, ladder) }
+        index > 0 -> plannedWeight(index - 1, plan, logged, toDo, lastTime, ladder, activeKg)
         else -> lastTime.firstOrNull()?.weightKg
     }
 }

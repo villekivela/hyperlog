@@ -200,6 +200,12 @@ not within a second of logging it (a stutter).
 becomes `close` (cancel). The set to do steps back to its upcoming look until the correction is
 saved or cancelled.
 
+**Set row, picked out of order.** A tap on a later, unlogged row ("Do set 3 now") makes it the
+active row: the active look, its planned weight and target RIR prefilled, the pad on it. The set to
+do steps back to its upcoming look, keeping what was typed for it, and a tap on it brings the pad
+back. The pad's hide key becomes `close` ("Back to the set"), as for a warm-up; Back does the same.
+✓ or the check logs it in its own row and starts its rest, and the pad goes back to the set to do.
+
 **Warm-up row.** A full 64 dp row: `W` circle, no Last and no plate drawing, kg and reps muted
 until ticked, onSurface after. Its check ticks it with the ones above it; on the last one ticked it
 takes the tick back. A tap on the row puts it on the pad (below).
@@ -516,12 +522,14 @@ session reads like the logging screen with nothing to do, so tapping a number is
 | Within 1 s of logging a set | Does nothing, so a double tap logs one set |
 | A warm-up's weight | (→) moves to its reps |
 | A warm-up's reps | Ticks it (kept as typed if changed); the next warm-up comes on the pad, after the last set 1. No rest |
+| A later set picked out of order | Logs it in its own row and starts its rest; the pad goes back to the set to do |
 
 **The check column does:**
 
 | Row | Check |
 | --- | --- |
 | The set to do | Logs it as shown and starts rest (✓ with the pad hidden); a warm-up on the pad steps back first |
+| A later set picked out of order | Logs it as shown in its own row and starts its rest; the pad goes back to the set to do |
 | The drop, mini-set or hold being done | Logs it as shown |
 | The set logged last in the session | Takes it back: deleted, its values on the pad, rest stopped |
 | A warm-up | Ticks it and those above; on the last ticked, takes the tick back |
