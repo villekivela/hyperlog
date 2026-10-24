@@ -55,7 +55,7 @@ internal class SetCorrections(private val db: HyperlogDatabase) {
 
     /** Set [set] of [sessionExerciseId], or its [extension], as the pad's entry; null if there is no such row. */
     suspend fun load(sessionExerciseId: Long, set: Int, extension: Int? = null): Correction? {
-        val row = row(sessionExerciseId, set) ?: return null
+        val row = dao.setAt(sessionExerciseId, set) ?: return null
         if (extension == null) {
             val entry = SetEntry(
                 weight = formatKg(row.weightKg),
@@ -79,22 +79,19 @@ internal class SetCorrections(private val db: HyperlogDatabase) {
      * one kept past a weight check; mini-sets and a hold follow the set's new weight.
      */
     suspend fun saveSet(correction: Correction, value: LoggedSet) = db.withTransaction {
-        val row = row(correction.sessionExerciseId, correction.set) ?: return@withTransaction
+        val row = dao.setAt(correction.sessionExerciseId, correction.set) ?: return@withTransaction
         dao.correctSet(row.id, value.weightKg, value.fullReps, value.partialReps, value.rir, value.rightReps)
         if (value.weightKg != row.weightKg) dao.moveSetWeight(row.id, value.weightKg)
     }
 
     /** A corrected weight kept past the weight check: it counts as kept until a set confirms it. */
     suspend fun keep(correction: Correction) {
-        val row = row(correction.sessionExerciseId, correction.set) ?: return
+        val row = dao.setAt(correction.sessionExerciseId, correction.set) ?: return
         dao.setKept(row.id)
     }
 
-    /** Set [set] of [sessionExerciseId] as stored, by its set index; null while it isn't logged. */
-    private suspend fun row(sessionExerciseId: Long, set: Int) = dao.sets(sessionExerciseId).firstOrNull { it.position == set }
-
     suspend fun saveExtension(correction: Correction, value: Extension) = db.withTransaction {
-        val row = row(correction.sessionExerciseId, correction.set) ?: return@withTransaction
+        val row = dao.setAt(correction.sessionExerciseId, correction.set) ?: return@withTransaction
         val ext = dao.extensions(row.id).getOrNull(correction.extension ?: return@withTransaction) ?: return@withTransaction
         dao.correctExtension(ext.id, value.weightKg, value.reps)
     }

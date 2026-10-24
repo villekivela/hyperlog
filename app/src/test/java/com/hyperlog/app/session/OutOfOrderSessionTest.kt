@@ -121,7 +121,7 @@ class OutOfOrderSessionTest {
         logger.log("25", 11, 3)
 
         val bench = logger.session.current!!
-        assertEquals(listOf(0, 2), bench.positions)
+        assertEquals(listOf(0, 2), bench.setIndices)
         assertEquals(25.0, bench.setAt(2)!!.weightKg, 0.0)
         assertEquals(11, bench.setAt(2)!!.fullReps)
         assertNull(bench.setAt(1))
@@ -164,7 +164,7 @@ class OutOfOrderSessionTest {
         logger.closePickedSet()
 
         assertNull(logger.session.pickedSet)
-        assertEquals(listOf(0), logger.session.current!!.positions)
+        assertEquals(listOf(0), logger.session.current!!.setIndices)
         assertEquals(toDo, logger.session.entry)
         // Typing goes to the set to do again.
         logger.focus(Field.Weight); logger.type("35")
@@ -187,7 +187,7 @@ class OutOfOrderSessionTest {
         now += 5_000
         logger.undo(bench.id)
 
-        assertEquals(listOf(0), logger.session.current!!.positions)
+        assertEquals(listOf(0), logger.session.current!!.setIndices)
         assertNull(logger.session.restEndsAt)
         // Back on the pad as it was logged, in its own place; the set to do keeps its entry.
         val picked = logger.session.pickedSet!!
@@ -207,7 +207,7 @@ class OutOfOrderSessionTest {
         logger.log("25", 11, 3)
         logger.log("27.5", 9, 2)
         val bench = logger.session.current!!
-        assertEquals(listOf(0, 1, 2), bench.positions)
+        assertEquals(listOf(0, 1, 2), bench.setIndices)
         assertEquals(true, logger.session.undoable(bench, 1))
         assertEquals(false, logger.session.undoable(bench, 2))
 
@@ -215,7 +215,7 @@ class OutOfOrderSessionTest {
         logger.undo(bench.id)
 
         val after = logger.session.current!!
-        assertEquals(listOf(0, 2), after.positions)
+        assertEquals(listOf(0, 2), after.setIndices)
         assertEquals(25.0, after.setAt(2)!!.weightKg, 0.0)
         assertNull(logger.session.pickedSet)
         assertEquals("27.5", logger.session.entry!!.weight)
@@ -245,7 +245,7 @@ class OutOfOrderSessionTest {
         assertNull(logger.session.correction)
         assertEquals(12, after.setAt(2)!!.fullReps)
         assertEquals(7, after.setAt(0)!!.fullReps)
-        assertEquals(listOf(0, 2), after.positions)
+        assertEquals(listOf(0, 2), after.setIndices)
     }
 
     @Test
@@ -370,5 +370,128 @@ class OutOfOrderSessionTest {
         assertEquals(2, next.set)
         assertEquals("8–10", next.reps)
         assertEquals(2, next.rir)
+    }
+
+    @Test
+    fun aSkippedSetsWeightIsCheckedAgainstTheSetBeforeItNotOneLoggedOutOfOrder() = runTest {
+        program(threeSets)
+        val logger = logger()
+        logger.startNext()
+        logger.log("40", 7, 1)
+        logger.pickSet(2)
+        logger.log("25", 11, 3)
+
+        // 40 is 1.6× set 3's 25, but set 2 comes after set 1's 40: no warning.
+        now += 60_000
+        logger.focus(Field.Weight); logger.type("40"); logger.tick()
+        logger.type("9"); logger.tick()
+
+        assertNull(logger.session.weightCheck)
+        assertEquals(40.0, logger.session.current!!.setAt(1)!!.weightKg, 0.0)
+    }
+
+    @Test
+    fun takingBackASetLoggedOutOfOrderFromAnotherExerciseLeavesThatExercisesEntry() = runTest {
+        program(threeSets, second = """[ { "count": 2, "reps": "12-15", "rir": 2 } ]""")
+        val logger = logger()
+        logger.startNext()
+        val bench = logger.session.current!!.id
+        logger.log("30", 7, 1)
+        logger.pickSet(2)
+        logger.log("25", 11, 3)
+        val raise = logger.session.exercises.first { it.id != bench }.id
+        logger.switchTo(raise)
+        logger.closeWarmup()
+        logger.focus(Field.Weight); logger.type("7.5")
+
+        now += 5_000
+        logger.undo(bench)
+
+        // The bench comes back with set 3 on the pad; its set to do starts from its own prefill.
+        assertEquals(bench, logger.session.currentId)
+        assertEquals(2, logger.session.pickedSet!!.index)
+        assertEquals("11", logger.session.pickedSet!!.entry.full)
+        assertEquals("", logger.session.entry!!.full)
+        assertEquals(2, logger.session.entry!!.rir)
+    }
+
+    @Test
+    fun lastTimeReadsASkippedSetAsAGap() = runTest {
+        program(threeSets)
+        val logger = logger()
+        logger.startNext()
+        logger.log("30", 7, 1)
+        logger.pickSet(2)
+        logger.log("25", 11, 3)
+        logger.finish()
+        now += 86_400_000L
+        logger.startNext()
+
+        val bench = logger.session.current!!
+        assertEquals(30.0, bench.lastTimeAt(0)!!.weightKg, 0.0)
+        assertNull(bench.lastTimeAt(1))
+        assertEquals(11, bench.lastTimeAt(2)!!.fullReps)
+    }
+
+    @Test
+    fun inASupersetAPickedSetTakesItsOwnRestAndTheRoundWaits() = runTest {
+        programs.import(
+            """
+            { "format": 1, "title": "T", "blocks": [ { "id": "b", "name": "B", "weekStart": 1, "weekEnd": 4, "days": [
+              { "id": "a", "name": "Day A", "groups": [
+                { "type": "superset", "slots": [
+                  { "id": "curl", "exercise": "db_bicep_curl", "sets": $threeSets },
+                  { "id": "french", "exercise": "db_french_press", "sets": [ { "count": 3, "reps": "8-10", "rir": 1, "rest": 60 } ] } ] } ] } ] } ] }
+            """,
+        )
+        val logger = logger()
+        logger.startNext()
+        val curl = logger.session.current!!.id
+        logger.log("12.5", 8, 1)
+        // Straight on to the French press, then back to the curl for round 2.
+        logger.log("15", 9, 1)
+        assertEquals(curl, logger.session.currentId)
+
+        logger.pickSet(2)
+        logger.log("10", 11, 3)
+
+        // The curl's set 3 rests its own 1:30, and round 2 is still the curl's set 2.
+        assertEquals(90_000L, logger.session.restTotalMs)
+        assertEquals(curl, logger.session.currentId)
+        assertEquals(1, logger.session.current!!.toDo)
+    }
+
+    @Test
+    fun aLaterExerciseOfTheSessionTakesPickedSetsToo() = runTest {
+        program(threeSets, second = """[ { "count": 3, "reps": "12-15", "rir": 2, "rest": 60 } ]""")
+        val logger = logger()
+        logger.startNext()
+        val raise = logger.session.exercises.last().id
+        logger.switchTo(raise)
+
+        logger.pickSet(1)
+        logger.log("7.5", 13, 2)
+
+        val after = logger.session.current!!
+        assertEquals(raise, after.id)
+        assertEquals(listOf(1), after.setIndices)
+        assertEquals(0, after.toDo)
+    }
+
+    @Test
+    fun addingASetKeepsTheWeightTypedForTheSetToDo() = runTest {
+        program(threeSets)
+        val logger = logger()
+        logger.startNext()
+        logger.closeWarmup()
+        logger.focus(Field.Weight); logger.type("32.5"); logger.tick()
+
+        logger.addSet(logger.session.current!!.id)
+
+        assertEquals(4, logger.session.current!!.prescription!!.size)
+        assertEquals("32.5", logger.session.entry!!.weight)
+        // So a set picked next is planned from it.
+        logger.pickSet(3)
+        assertEquals("32.5", logger.session.pickedSet!!.entry.weight)
     }
 }

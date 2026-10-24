@@ -47,12 +47,12 @@ class PickedSetScreenTest {
         SetPrescription(RepRange(10, 12), 3, 90),
     )
 
-    private fun session(sets: List<LoggedSet>, positions: List<Int>, picked: PickedSet? = null) = ActiveSession(
+    private fun session(sets: List<LoggedSet>, setIndices: List<Int>, picked: PickedSet? = null) = ActiveSession(
         id = 1, startedAt = 0,
         exercises = listOf(
             SessionExercise(
                 id = 1, exercise = bench, sets = sets, lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
-                prescription = plan, plates = DefaultPlates, positions = positions,
+                prescription = plan, plates = DefaultPlates, setIndices = setIndices,
             ),
         ),
         currentId = 1, entry = SetEntry("62.5", "9", "", 2, Field.Reps, partialMode = false, fresh = true), padVisible = true,
@@ -71,7 +71,7 @@ class PickedSetScreenTest {
 
     @Test
     fun aLaterSetsRowPutsItOnThePad() {
-        val actions = show(session(listOf(LoggedSet(60.0, 7, 0, 1)), positions = listOf(0)))
+        val actions = show(session(listOf(LoggedSet(60.0, 7, 0, 1)), setIndices = listOf(0)))
 
         compose.onNode(clickLabel("Do set 3 now")).performClick()
 
@@ -83,7 +83,7 @@ class PickedSetScreenTest {
     @Test
     fun thePickedSetIsTheActiveRowAndItsCloseKeyAndBackGoBackToTheSetToDo() {
         val picked = PickedSet(1, 2, SetEntry("55", "11", "", 3, Field.Reps, partialMode = false, fresh = true))
-        val actions = show(session(listOf(LoggedSet(60.0, 7, 0, 1)), positions = listOf(0), picked))
+        val actions = show(session(listOf(LoggedSet(60.0, 7, 0, 1)), setIndices = listOf(0), picked))
 
         // Set 3 is on the pad with its weight, and the set to do steps back: a tap brings the pad back to it.
         compose.onAllNodesWithText("55").assertCountEquals(1)
@@ -100,8 +100,18 @@ class PickedSetScreenTest {
     }
 
     @Test
+    fun theSteppedBackSetToDoKeepsItsTarget() {
+        val picked = PickedSet(1, 2, SetEntry("55", "11", "", 3, Field.Reps, partialMode = false, fresh = true))
+        val logged = session(listOf(LoggedSet(60.0, 7, 0, 1)), setIndices = listOf(0), picked)
+        show(logged.copy(entry = logged.entry!!.copy(full = "")))
+
+        // Set 2 waits with its rep range, as an upcoming row shows it.
+        compose.onAllNodesWithText("8–10").assertCountEquals(1)
+    }
+
+    @Test
     fun aSetLoggedOutOfOrderShowsInItsOwnRow() {
-        show(session(listOf(LoggedSet(60.0, 7, 0, 1), LoggedSet(50.0, 11, 0, 3)), positions = listOf(0, 2)))
+        show(session(listOf(LoggedSet(60.0, 7, 0, 1), LoggedSet(50.0, 11, 0, 3)), setIndices = listOf(0, 2)))
 
         compose.onAllNodes(hasContentDescription("Correct set 3")).assertCountEquals(1)
         compose.onAllNodes(hasContentDescription("Correct set 2")).assertCountEquals(0)

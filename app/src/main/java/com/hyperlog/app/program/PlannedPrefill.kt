@@ -44,21 +44,9 @@ fun plannedEntry(plan: List<SetPrescription>, logged: List<LoggedSet>, suggestio
 }
 
 /**
- * The weight set [index] of [plan] shows: logged, being typed ([activeKg], for the set after the
- * logged ones), or planned from the sets before it. Null when there is nothing to go on yet.
- */
-fun plannedWeight(
-    index: Int,
-    plan: List<SetPrescription>,
-    logged: List<LoggedSet>,
-    lastTime: List<LoggedSet>,
-    ladder: WeightLadder,
-    activeKg: Double?,
-): Double? = plannedWeight(index, plan, logged::getOrNull, logged.size, lastTime, ladder, activeKg)
-
-/**
- * [plannedWeight] with sets logged out of order: [logged] gives set index's logged set, or null
- * while it isn't logged, and [activeKg] is being typed for set [toDo].
+ * The weight set [index] of [plan] shows: logged ([logged] gives a set index's logged set, null
+ * while it isn't), being typed ([activeKg], for set [toDo]), or planned from the sets before it.
+ * Null when there is nothing to go on yet.
  */
 fun plannedWeight(
     index: Int,

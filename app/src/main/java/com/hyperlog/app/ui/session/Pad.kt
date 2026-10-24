@@ -161,8 +161,8 @@ internal fun Pad(
                 KeyRow {
                     // A correction can only be saved or cancelled, so the hide key cancels it.
                     if (correction != null) SymbolKey(Symbol.Close, R.string.pad_cancel_correction) { actions.cancelCorrection() }
-                    else if (warmup != null) SymbolKey(Symbol.Close, R.string.pad_close_warmup) { actions.closeWarmup() }
-                    else if (picked) SymbolKey(Symbol.Close, R.string.pad_close_warmup) { actions.closePickedSet() }
+                    else if (warmup != null) SymbolKey(Symbol.Close, R.string.pad_back_to_set) { actions.closeWarmup() }
+                    else if (picked) SymbolKey(Symbol.Close, R.string.pad_back_to_set) { actions.closePickedSet() }
                     else SymbolKey(Symbol.KeyboardHide, R.string.pad_hide) { actions.setPadVisible(false) }
                     DigitKey(0, actions)
                     if (onWeight) TextKey(".", stringResource(R.string.pad_dot)) { actions.press(PadKey.Dot) } else Spacer(Modifier.weight(1f))

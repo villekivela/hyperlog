@@ -339,7 +339,7 @@ class SessionLogger(
 
     /**
      * Writes [change]'s planned sets for [sessionExerciseId] as this session's own (null changes
-     * nothing). The active set is prefilled again from its new target, and once the exercise
+     * nothing). The active set, if nothing was typed into it, is prefilled again from its new target, and once the exercise
      * on screen has no sets left the session moves on, as after its last set.
      */
     private suspend fun editPlan(
@@ -350,10 +350,12 @@ class SessionLogger(
         val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return@locked
         val plan = exercise.prescription ?: return@locked
         val onScreen = session.currentId == sessionExerciseId && session.openSetId == null
+        // Only an untouched prefill is worked out again: what was typed for the set to do stays.
+        val prefilled = onScreen && untouched(session, sessionExerciseId)
         val edited = db.withTransaction {
             val sets = change(exercise, plan) ?: return@withTransaction false
             dao.setSets(sessionExerciseId, SetPrescriptionJson.encode(sets))
-            if (onScreen) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
+            if (prefilled) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
             true
         }
         if (!edited) return@locked
@@ -361,7 +363,7 @@ class SessionLogger(
         val after = _state.value ?: return@locked
         val current = after.current ?: return@locked
         if (onScreen && current.done && current.sets.isNotEmpty()) {
-            val step = SessionOrder.after(after.exercises, current.id, current.positions.max())
+            val step = SessionOrder.after(after.exercises, current.id, current.setIndices.max())
             if (step.exerciseId != current.id) {
                 dao.updateSession(dao.session(session.id)!!.copy(currentSessionExerciseId = step.exerciseId, entry = null))
                 reload()
@@ -633,7 +635,8 @@ class SessionLogger(
                     entry = entry.copy(partial = partials)
                     result = entry.toLoggedSet()?.let { SetEntry.Done.Log(it) } ?: result
                 }
-                val check = WeightCheck.of(result.set.weightKg, current.reference(), current.ladder, current.ladderKnown)
+                // Against the set before it: a set logged out of order comes after a skipped one.
+                val check = WeightCheck.of(result.set.weightKg, current.referenceBefore(index), current.ladder, current.ladderKnown)
                 val raised = checked
                 if (check != null) {
                     if (raised == null || raised.first != entry) {
@@ -823,7 +826,7 @@ class SessionLogger(
         val session = _state.value ?: return@locked
         val current = session.current ?: return@locked
         val plan = current.prescription ?: return@locked
-        if (session.correction != null || session.followUp != null || !current.editable(index) || index == current.toDo) return@locked
+        if (session.correction != null || session.followUp != null || !current.pickable(index)) return@locked
         // As its row shows it: the weight planned from the sets before it, and its target RIR.
         val kg = plannedWeight(index, plan, current::setAt, current.toDo, current.lastTime, current.ladder, session.entry?.weightKg)
         val entry = SetEntry(
@@ -831,7 +834,7 @@ class SessionLogger(
             rir = plan[index].rir ?: current.before(index).lastOrNull()?.rir,
             field = if (kg == null) Field.Weight else Field.Reps, partialMode = false, fresh = true,
         )
-        val picked = PickedSet(current.id, index, adjusted(current, entry))
+        val picked = PickedSet(current.id, index, forExercise(current, entry))
         pickedSet = picked
         warmupEdit = null
         checked = null
@@ -900,20 +903,25 @@ class SessionLogger(
         if (!session.undoable(exercise, index)) return@locked
         val now = clock()
         if (lastLoggedAt?.let { now - it < DOUBLE_TAP_MS } == true) return@locked
-        val row = dao.sets(exercise.id).firstOrNull { it.position == index } ?: return@locked
+        val row = dao.setAt(exercise.id, index) ?: return@locked
         val set = exercise.setAt(index)!!
         val entry = SetEntry(
             formatKg(set.weightKg), set.fullReps.toString(), if (set.partialReps > 0) set.partialReps.toString() else "",
             set.rir, Field.Reps, partialMode = false, fresh = true, right = set.rightReps?.toString(),
         )
         // A set logged out of order goes back on the pad in its own place; the set to do keeps its entry.
-        val later = exercise.prescription != null && index > exercise.toDo
+        val outOfOrder = exercise.prescription != null && index > exercise.toDo
         db.withTransaction {
             dao.deleteSet(row.id)
             val stored = dao.session(session.id)!!
             dao.updateSession(
                 stored.copy(
-                    entry = if (later && exercise.id == session.currentId) stored.entry else entry.toColumns(),
+                    // Out of order, the set to do keeps its entry, or is prefilled afresh when coming back from another exercise.
+                    entry = when {
+                        !outOfOrder -> entry.toColumns()
+                        exercise.id == session.currentId -> stored.entry
+                        else -> null
+                    },
                     restEndsAt = null, openSetId = null, breathing = false, holdStartedAt = null,
                     currentSessionExerciseId = exercise.id,
                 ),
@@ -922,7 +930,7 @@ class SessionLogger(
         viewingId = null
         checked = null
         warmupEdit = null
-        pickedSet = if (later) PickedSet(exercise.id, index, entry) else null
+        pickedSet = if (outOfOrder) PickedSet(exercise.id, index, entry) else null
         reload()
     }
 
@@ -1039,17 +1047,18 @@ class SessionLogger(
             val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted, exercise.implements)
             val judged = plan?.firstOrNull()?.let { Progression.judged(it, past.map { p -> p.second }, se.slotId) }
             // Machines and cables only compare with sets on the same machine (ADR 0002).
-            val lastTime = when {
+            val lastRows = when {
                 needsMachine -> emptyList()
                 judged != null -> dao.sets(past[judged].first)
                 perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
                 else -> dao.lastTime(se.exerciseId, row.id)
-            }.let { stored.sets(it) }
+            }
+            val lastTime = stored.sets(lastRows)
             val rows = dao.sets(se.id)
             val sets = stored.sets(rows)
             // Progression reads the sets before the set to do: a set logged out of order comes after it.
-            val toDo = generateSequence(0) { it + 1 }.first { i -> rows.none { it.position == i } }
-            val before = sets.filterIndexed { i, _ -> rows[i].position < toDo }
+            val indices = rows.map { it.position }
+            val before = before(sets, indices, firstUnlogged(indices))
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine && !needsLadder
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
@@ -1097,7 +1106,8 @@ class SessionLogger(
                 typedWarmups = Warmups.decode(se.warmups).orEmpty(),
                 pinPlates = gym?.pinPlates.orEmpty(),
                 records = records.of(row, se, exercise, sets, deload = day?.deload == true),
-                positions = rows.map { it.position },
+                setIndices = indices,
+                lastTimeIndices = lastRows.map { it.position },
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }
@@ -1108,7 +1118,7 @@ class SessionLogger(
         var entry = row.entry?.toEntry()
         if (followUp != null && current != null) {
             if (entry == null) {
-                entry = followUpEntry(followUp, openSet, current.lastTime.getOrNull(openIndex), current.ladder)
+                entry = followUpEntry(followUp, openSet, current.lastTimeAt(openIndex), current.ladder)
                 dao.updateSession(row.copy(entry = entry.toColumns()))
             }
         } else if (current?.needsMachine == true || current?.needsLadder == true || current?.done == true) {
@@ -1160,7 +1170,7 @@ class SessionLogger(
         // So does a picked set, while it is still a later, unlogged set and nothing else is on the pad.
         pickedSet = pickedSet?.takeIf { p ->
             p.sessionExerciseId == current?.id && correction == null && viewingId == null && warmupEdit == null && followUp == null &&
-                current.editable(p.index) && p.index != current.toDo
+                current.pickable(p.index)
         }
         _state.value = loaded.copy(warmupEdit = warmupEdit, pickedSet = pickedSet)
     }
@@ -1172,11 +1182,11 @@ class SessionLogger(
         else current.suggestion?.let { s ->
             SetEntry(formatKg(s.kg), "", "", startingWeights.get(current.exercise.id)?.rir, Field.Reps, partialMode = false, fresh = true)
         } ?: SetEntry.prefill(current.sets.countingSets().lastOrNull() ?: current.lastTime.countingSets().firstOrNull())
-        return adjusted(current, entry)
+        return forExercise(current, entry)
     }
 
     /** [entry] as [current]'s exercise needs it: a bodyweight exercise at 0 kg, a split set after a split one. */
-    private fun adjusted(current: SessionExercise, entry: SetEntry): SetEntry {
+    private fun forExercise(current: SessionExercise, entry: SetEntry): SetEntry {
         // A plain bodyweight exercise has no weight to type: it starts on the reps at 0 kg.
         val bodyweight = if (current.exercise.equipment == Equipment.Bodyweight && entry.weightKg == null) {
             entry.copy(weight = "0", field = if (entry.field == Field.Weight) Field.Reps else entry.field)
@@ -1254,24 +1264,21 @@ class SessionLogger(
 /** Weighted bodyweight: the body plus the load on the belt or held. */
 private val Exercise.weighted get() = equipment == Equipment.WeightedBodyweight
 
-/** What set [index]'s corrected weight is checked against: the last set before it that counts, or last time's first. */
+/** What set [index]'s weight, logged or corrected, is checked against: the last set before it that counts, or last time's first. */
 private fun SessionExercise.referenceBefore(index: Int): Reference? =
     before(index).countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
         ?: lastTime.countingSets().firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
 
-private fun SessionExercise.reference(): Reference? =
-    sets.countingSets().lastOrNull()?.let { Reference(it.weightKg, fromThisSession = true) }
-        ?: lastTime.countingSets().firstOrNull()?.let { Reference(it.weightKg, fromThisSession = false) }
 
 /**
  * [sets] as progression reads them: the main set only (the weaker side of a split set, and no
- * partials, drops or mini-sets), with its prescription (by its set index in [positions]) and
+ * partials, drops or mini-sets), with its prescription (by its set index in [setIndices]) and
  * whether it counts.
  */
-internal fun workSets(sets: List<LoggedSet>, plan: List<SetPrescription>?, positions: List<Int> = sets.indices.toList()): List<WorkSet> {
+internal fun workSets(sets: List<LoggedSet>, plan: List<SetPrescription>?, setIndices: List<Int> = sets.indices.toList()): List<WorkSet> {
     val counting = sets.counting()
     return sets.mapIndexed { i, set ->
-        WorkSet(LoggedSet(set.weightKg, set.progressionReps, 0, set.rir, set.kept), plan?.getOrNull(positions[i]), counting[i])
+        WorkSet(LoggedSet(set.weightKg, set.progressionReps, 0, set.rir, set.kept), plan?.getOrNull(setIndices[i]), counting[i])
     }
 }
 

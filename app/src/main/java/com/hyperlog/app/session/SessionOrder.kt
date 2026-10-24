@@ -18,7 +18,7 @@ internal object SessionOrder {
         val closed = exercises.first { it.id == closedId }
         // An ad-hoc exercise's sets are open-ended: it stays until another is picked.
         if (closed.prescription == null) return Step(closedId, rest = true)
-        val logged = exercises.associate { it.id to if (it.id == closedId) it.positions.toSet() + setIndex else it.positions.toSet() }
+        val logged = exercises.associate { it.id to if (it.id == closedId) it.setIndices.toSet() + setIndex else it.setIndices.toSet() }
         fun next(group: List<SessionExercise>) = firstLeft(group, logged)
         val group = group(exercises, closed)
         next(group)?.let { (exercise, index) ->

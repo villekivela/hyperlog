@@ -652,7 +652,9 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        without its technique (on a finished exercise it brings the exercise back into the order).
        A set's circle in the index column opens its sheet (the session ⋮ has no set options): **Remove set**, and its target (fewest reps, most reps,
        RIR, by steps), as long as the set isn't logged. One set always stays, and so does one that
-       others back off from. Removing the active exercise's last set to do moves the session on.
+       others back off from, or one with a set logged after it. Removing the active exercise's last
+       set to do moves the session on. An edit keeps what was typed for the set to do; an untouched
+       prefill follows the new target.
      - **Exercises:** the session list row's ⋮ swaps, adds a set, moves the exercise up or down (a
        superset moves as a pair) and removes it (asking first; only with nothing logged). Added
        exercises are open-ended like ad-hoc ones (no slot, no target), in a program session too.
@@ -811,7 +813,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - Logging it logs it in its own place, out of order, and starts its rest (its own rest time,
        in a superset too). The active row then goes back to the first unlogged set, so the skipped
        set is still waiting. A drop, mini-set or hold still follows its own set, with no rest
-       before it, and rest starts once the set closes.
+       before it, and rest starts once the set closes; the set to do is then prefilled afresh,
+       since the pad's entry was the drops'.
      - Back, the hide key (`close`, "Back to the set") or a tap on the set to do returns the pad to
        the first unlogged set without logging. So does a correction or a warm-up put on the pad.
      - The check of a set logged out of order takes it back while it is the set logged last: it

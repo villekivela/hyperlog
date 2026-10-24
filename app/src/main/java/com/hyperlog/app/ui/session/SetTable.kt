@@ -137,7 +137,7 @@ internal class TableState(
     /** While a row is corrected, a warm-up typed or a later set picked, the set to do steps back to its upcoming look. */
     val steppedBack: Boolean get() = correction != null || warmupEdit != null || picked != null
 
-    /** [pickedSet], when it is of this exercise. */
+    /** [pickedSet], when it is of the exercise on screen. */
     val picked: PickedSet? get() = pickedSet?.takeIf { it.sessionExerciseId == current.id }
 
     fun corrects(set: Int, extension: Int?): Boolean =
@@ -261,9 +261,9 @@ private fun buildPlanned(table: TableState, plan: List<SetPrescription>, add: Ad
     val entry = table.entry
     val toDo = current.toDo
     val picked = table.picked
-    for (i in 0 until maxOf(plan.size, (current.positions.maxOrNull() ?: -1) + 1)) {
+    for (i in 0 until maxOf(plan.size, (current.setIndices.maxOrNull() ?: -1) + 1)) {
         val target = plan.getOrNull(i)
-        val last = current.lastTime.getOrNull(i)
+        val last = current.lastTimeAt(i)
         val kg = plannedWeight(i, plan, current::setAt, toDo, current.lastTime, current.ladder, table.activeKg)
         val technique = current.techniqueAt(i)
         val subs = subRows(table, i, technique, plannedKg = kg)
@@ -277,7 +277,8 @@ private fun buildPlanned(table: TableState, plan: List<SetPrescription>, add: Ad
                 set != null -> DoneSetRow(i, last, set, table, technique, join)
                 picked?.index == i -> ActiveSetRow(i, last, picked.entry, table.weightFlagged, table, target, technique, join)
                 i == toDo && entry != null && table.followUp == null && table.steppedBack ->
-                    UpcomingSetRow(i, last, entry.weight, entry.repsText, target, technique, join, table, steppedBack = true)
+                    // It waits with what was typed for it, else its target's range.
+                    UpcomingSetRow(i, last, entry.weight, entry.repsText.ifEmpty { target?.reps?.toString().orEmpty() }, target, technique, join, table, steppedBack = true)
                 isActive -> ActiveSetRow(i, last, entry!!, table.weightFlagged, table, target, technique, join)
                 else -> {
                     // Targets are placeholders: the planned weight, the rep range and an outlined RIR chip.
@@ -339,7 +340,7 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
     val set = current.setAt(index)
     val open = table.isOpen(index)
     val logged = set?.extensions.orEmpty()
-    val lastTime = current.lastTime.getOrNull(index)?.extensions.orEmpty()
+    val lastTime = current.lastTimeAt(index)?.extensions.orEmpty()
     val out = mutableListOf<SubItem>()
     // `+` at the foot of a drop set, not started yet or under way, adds a drop.
     val plus = table.onAddDrop?.takeIf { technique is Technique.Dropset && ((set == null && current.editable(index)) || open) }?.let { { it(index) } }
@@ -485,10 +486,10 @@ private fun UpcomingSetRow(
         else -> null
     }
     // A later set still to do: a tap puts it on the pad, to log it out of order.
-    val pick = table.onPickSet?.takeIf { !steppedBack && table.correction == null && table.followUp == null && table.current.editable(i) && i != table.current.toDo }
+    val pick = table.onPickSet?.takeIf { !steppedBack && table.correction == null && table.followUp == null && table.current.pickable(i) }
     RowFrame(
         RowHeight, onClick = back ?: pick?.let { { it(i) } },
-        clickLabel = if (back != null) stringResource(R.string.pad_close_warmup) else stringResource(R.string.pick_set, i + 1),
+        clickLabel = if (back != null) stringResource(R.string.pad_back_to_set) else stringResource(R.string.pick_set, i + 1),
     ) {
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight,
             onClick = if (!steppedBack && table.current.editable(i) || table.current.prescription == null && !steppedBack) { { table.onSetOptions(i) } } else null,
