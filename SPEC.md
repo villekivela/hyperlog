@@ -1223,7 +1223,10 @@ the end of the block the Change was accepted in. A date range covers its first a
   trained since still count (the position moves back by the same number of days). Reverted ones
   stay in the list, struck through. A Change ended by another's `replaces` stays struck through
   too, reading "Replaced 18 Oct". One that only ended others has no Revert: it has nothing of its
-  own, and isn't in force. A running session follows an accept or revert at once.
+  own, and isn't in force. A row's summary shows two lines; tapping a row in force opens it as
+  tapping its card on Coach does (read-only, "Change in force", with Revert), and tapping any other
+  shows its summary in full and its status in a dialog, with Close. A running session follows an
+  accept or revert at once.
 - **Reorders stay in the session.** No operation moves a slot; the order is the program's.
 
 ### Words first, through Claude (uses your subscription, no API)

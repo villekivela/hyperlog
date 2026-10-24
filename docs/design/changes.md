@@ -31,7 +31,7 @@ segments; **Reject** and **Accept** sit on a surfaceContainerHighest strip round
 | Day head | 48 dp, labelLarge, 20 dp top | `Week 4 · Day A — Heavy bench…`, `Deload` at the right in tertiary |
 | Arrow | `arrow_forward` 18 dp, primary, 8 dp each side | between before and after |
 | Action chips | AssistChip, 8 dp gaps, flow to two rows | Skip day `skip_next`, Repeat week `replay`, Deload week `spa`, Shift program `more_time` |
-| Change row | 72 dp min; summary bodyLarge (2 lines), scope · date bodyMedium; `undo` IconButton | Program → Changes |
+| Change row | 72 dp min; summary bodyLarge (2 lines), scope · date bodyMedium; `undo` IconButton; the whole row taps | Program → Changes |
 
 ## Wireframes
 
@@ -87,5 +87,8 @@ segments; **Reject** and **Accept** sit on a surfaceContainerHighest strip round
   Accept and Reject return there. Back and × reject.
 - Accept applies at once: the Program screen, Today and a running session follow (the session
   re-reads its day; an untouched prefill follows a moved load).
+- A Change row on Program taps: one in force opens the read-only "Change in force" screen, as its
+  card on Coach does; a reverted, replaced or ended one opens a dialog with its summary in full,
+  its status line and Close.
 - "Keep edits for the block" sits in the session ⋮ above Finish, only while the session has edits
   it can keep; after Accept it goes, since the edits are now the plan.

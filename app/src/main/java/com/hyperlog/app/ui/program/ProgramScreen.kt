@@ -2,6 +2,7 @@ package com.hyperlog.app.ui.program
 
 import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.hyperlog.app.gym.Gym
@@ -92,6 +94,8 @@ fun ProgramScreen(
     onPropose: (Change) -> Unit = {},
     /** Reverts the accepted Change with this id. */
     onRevert: (Long) -> Unit = {},
+    /** Opens the Change in force with this id: what it does from today on, as from its card on Coach. */
+    onOpenChange: (Long) -> Unit = {},
     exerciseNames: Map<String, String> = emptyMap(),
     /** Finished sessions, so a done day shows what was logged. */
     sessions: List<PastSessionItem> = emptyList(),
@@ -123,7 +127,7 @@ fun ProgramScreen(
         }
     }
     if (shown.changesOpen && active != null && errors == null) {
-        ChangesPage(active, onRevert, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
+        ChangesPage(active, onRevert, onOpenChange, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
         return
     }
     val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
@@ -313,11 +317,18 @@ private fun ProgramHeader(title: String, author: String?, next: String?) {
     }
 }
 
-/** The Changes, newest first: Revert on each in force; reverted and replaced ones stay, struck through. */
+internal const val ChangeDetailTag = "change-detail"
+
+/**
+ * The Changes, newest first: Revert on each in force; reverted and replaced ones stay, struck
+ * through. Tapping one in force opens what it does; any other shows its summary in full.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onOpen: (Long) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
     var reverting by rememberSaveable { mutableStateOf<Long?>(null) }
+    var reading by rememberSaveable { mutableStateOf<Long?>(null) }
+    val inForce = active.inForce.map { it.id }.toSet()
     BackHandler(onBack = onBack)
     Scaffold(
         modifier = modifier,
@@ -334,7 +345,13 @@ private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onBack:
         LazyColumn(Modifier.fillMaxSize().padding(padding)) {
             item { Spacer(Modifier.height(8.dp)) }
             itemsIndexed(history, key = { _, it -> "change-${it.id}" }) { i, record ->
-                Segment(i, history.size) { ChangeRow(record, active.program, replaced = record.id in active.replaced, onRevert = { reverting = record.id }) }
+                Segment(i, history.size) {
+                    ChangeRow(
+                        record, active.program, replaced = record.id in active.replaced,
+                        onOpen = { if (record.id in inForce) onOpen(record.id) else reading = record.id },
+                        onRevert = { reverting = record.id },
+                    )
+                }
             }
             item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
         }
@@ -348,6 +365,20 @@ private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onBack:
                 TextButton(onClick = { reverting = null; onRevert(record.id) }) { Text(stringResource(R.string.program_change_revert)) }
             },
             dismissButton = { TextButton(onClick = { reverting = null }) { Text(stringResource(R.string.program_cancel)) } },
+        )
+    }
+    active.history.firstOrNull { it.id == reading }?.let { record ->
+        AlertDialog(
+            onDismissRequest = { reading = null },
+            modifier = Modifier.testTag(ChangeDetailTag),
+            text = {
+                Column {
+                    Text(interFigures(record.change.summary), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(Modifier.height(8.dp))
+                    Text(changeStatus(record, active.program, record.id in active.replaced), style = MaterialTheme.typography.bodyMedium)
+                }
+            },
+            confirmButton = { TextButton(onClick = { reading = null }) { Text(stringResource(R.string.change_close)) } },
         )
     }
 }
@@ -380,15 +411,23 @@ private fun SectionHead(text: String) {
     GroupHead(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** An accepted Change: its summary, period and day, with Revert while it is in force. */
+/** `Rest of Build · accepted 13 Oct`, `Reverted 18 Oct`, `Replaced 18 Oct`. */
 @Composable
-private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean, onRevert: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    val reverted = record.revertedAt != null
+private fun changeStatus(record: ChangeRecord, program: Program, replaced: Boolean): String {
     val revertedOn = record.revertedAt?.let { shortDate(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()) }
     val block = program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
+    return if (revertedOn != null && replaced) stringResource(R.string.program_change_replaced, revertedOn)
+    else if (revertedOn != null) stringResource(R.string.program_change_reverted, revertedOn)
+    else stringResource(R.string.program_change_accepted, scopeText(record.change.scope, block), shortDate(record.accepted.acceptedOn))
+}
+
+/** An accepted Change: its summary, period and day, with Revert while it is in force; tapping it opens it in full. */
+@Composable
+private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean, onOpen: () -> Unit, onRevert: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val reverted = record.revertedAt != null
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = CardPadding, end = 4.dp, top = 8.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().heightIn(min = 72.dp).clickable(onClick = onOpen).padding(start = CardPadding, end = 4.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -400,9 +439,7 @@ private fun ChangeRow(record: ChangeRecord, program: Program, replaced: Boolean,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                if (reverted && replaced) stringResource(R.string.program_change_replaced, revertedOn!!)
-                else if (reverted) stringResource(R.string.program_change_reverted, revertedOn!!)
-                else stringResource(R.string.program_change_accepted, scopeText(record.change.scope, block), shortDate(record.accepted.acceptedOn)),
+                changeStatus(record, program, replaced),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
             )
