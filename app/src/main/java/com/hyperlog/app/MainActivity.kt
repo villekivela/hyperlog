@@ -95,12 +95,26 @@ class MainActivity : ComponentActivity() {
     private val claudeKey: ClaudeKeyViewModel by viewModels()
     private val checkIns: com.hyperlog.app.ui.coach.CheckInViewModel by viewModels()
 
+    /** Each tap on a check-in's notification, counted: Coach opens on it. */
+    private val openCheckIn = kotlinx.coroutines.flow.MutableStateFlow(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) opened(intent)
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, openCheckIn) }
         }
+    }
+
+    public override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        opened(intent)
+    }
+
+    /** A check-in's notification opens Coach, at the step the check-in is on. */
+    private fun opened(intent: Intent?) {
+        if (intent?.getBooleanExtra(com.hyperlog.app.coach.CheckInNotices.EXTRA_OPEN_CHECK_IN, false) == true) openCheckIn.value++
     }
 
     override fun onStart() {
@@ -118,18 +132,22 @@ class MainActivity : ComponentActivity() {
 
 /**
  * Asks once for notifications (Android 13+), so rest shows on the lock screen. Without them rest
- * still buzzes when it runs out.
+ * still buzzes when it runs out. With [once], it asks only the first time ever for that reason
+ * (a check-in's: its reply ready while you're away); everything works without them.
  */
 @Composable
-private fun AskForNotifications() {
+private fun AskForNotifications(once: String? = null) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
     val context = LocalContext.current
     var asked by rememberSaveable { mutableStateOf(false) }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     LaunchedEffect(Unit) {
         val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val prefs = context.getSharedPreferences("notifications", android.content.Context.MODE_PRIVATE)
+        if (once != null && prefs.getBoolean(once, false)) return@LaunchedEffect
         if (!asked && !granted) {
             asked = true
+            once?.let { prefs.edit().putBoolean(it, true).apply() }
             ask.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
@@ -207,6 +225,7 @@ private fun App(
     updateModel: UpdateViewModel,
     claudeKeyModel: ClaudeKeyViewModel,
     checkInModel: com.hyperlog.app.ui.coach.CheckInViewModel,
+    openCheckIn: kotlinx.coroutines.flow.StateFlow<Int> = kotlinx.coroutines.flow.MutableStateFlow(0),
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -228,6 +247,10 @@ private fun App(
         uri?.let(programModel::import)
     }
     val startingWeights by startingWeightsModel.status.collectAsStateWithLifecycle()
+    // Attach a spreadsheet, PDF or photo, on a check-in's step that offers it.
+    val pickAttachment = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(checkInModel::attach)
+    }
     val pickBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(startingWeightsModel::import)
     }
@@ -277,6 +300,8 @@ private fun App(
     val waitingWorkouts by programModel.waiting.collectAsStateWithLifecycle()
     val lowest by programModel.lowest.collectAsStateWithLifecycle()
     val workoutReview by programModel.workout.collectAsStateWithLifecycle()
+    val programReview by programModel.program.collectAsStateWithLifecycle()
+    val attachNote by checkInModel.attachNote.collectAsStateWithLifecycle()
     val endAsk = { coachAsked = false; programModel.clearReply() }
     /** Opens Ask Claude with [words] to edit, for the [opening] and its [tile]. */
     val openAsk = { opening: com.hyperlog.app.coach.Opening, tile: com.hyperlog.app.coach.Tile?, words: String ->
@@ -309,6 +334,15 @@ private fun App(
     val noneInForce = program?.inForce.isNullOrEmpty()
     LaunchedEffect(noneInForce) { if (noneInForce) coachInForce = false }
     val checkInStep = checkIn?.step
+    val checkInProgress by checkInModel.progress.collectAsStateWithLifecycle()
+    // A check-in's notification opens Coach, where the check-in is; a running session goes on, left as Leave leaves it.
+    val openedCheckIn by openCheckIn.collectAsStateWithLifecycle()
+    LaunchedEffect(openedCheckIn) {
+        if (openedCheckIn > 0) {
+            left = true
+            screen = Screen.Coach
+        }
+    }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // A restored backup replaces everything the screens hold: start them again on its data.
@@ -330,16 +364,22 @@ private fun App(
     // The focus's marks count the sets trained so far this week.
     LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()
-    // A check-in's Change or workout opens its review, the one a paste opens.
-    LaunchedEffect(checkIn?.checkIn?.turns?.size, checkInStep?.let { it::class }) {
+    // A check-in's Change, workout or program opens its review, the one a paste opens, on Coach:
+    // one read back as the app starts waits there, rather than covering Today.
+    LaunchedEffect(checkIn?.checkIn?.turns?.size, checkInStep?.let { it::class }, screen == Screen.Coach) {
+        if (screen != Screen.Coach) return@LaunchedEffect
         when (val step = checkInStep) {
             is com.hyperlog.app.coach.CheckInStep.ChangeReview -> programModel.propose(step.change)
             is com.hyperlog.app.coach.CheckInStep.WorkoutReview -> programModel.reviewWorkout(step.workout)
+            is com.hyperlog.app.coach.CheckInStep.ProgramReview -> programModel.reviewProgram(step.proposal)
             else -> Unit
         }
     }
-    val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview
+    val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview ||
+        checkInStep is com.hyperlog.app.coach.CheckInStep.ProgramReview
     if (running != null) AskForNotifications()
+    // Its notifications say when Claude's reply is ready while you're away; asked at the first check-in only.
+    if (checkIn != null) AskForNotifications(once = "check_in")
     // A Change under review covers whatever proposed it: the Program screen or the session.
     review?.let { r ->
         ChangeReviewScreen(
@@ -391,6 +431,27 @@ private fun App(
             replaces = todayWorkout?.workout?.name,
             gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workoutGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
                 ?: context.getString(R.string.coach_elsewhere),
+        )
+        return
+    }
+    // A new program from Claude, before it runs.
+    programReview?.let { p ->
+        com.hyperlog.app.ui.coach.ProgramReviewScreen(
+            p, exercises.associate { it.id to it.name }, program,
+            // Start program goes to Today on the new program's first day, and the check-in ends;
+            // one the library no longer takes goes to Program, which shows its problems.
+            onStart = {
+                programModel.startProgram(
+                    started = {
+                        closeAsk(); screen = Screen.Today
+                        if (checkIn != null) checkInModel.close()
+                    },
+                    failed = { closeAsk(); if (checkIn != null) checkInModel.close(); programView = ProgramView(); screen = Screen.Program },
+                )
+            },
+            onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
+            onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
+            file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
         )
         return
     }
@@ -587,6 +648,7 @@ private fun App(
             onClose = { checkInModel.close(); programModel.closePasteErrors() },
             onTellMeMore = checkInModel::tellMeMore,
             onTryAgain = checkInModel::tryAgain,
+            progress = checkInProgress,
             lowest = lowest,
             inForceOpen = coachInForce,
             onInForceOpen = { coachInForce = it },
@@ -608,6 +670,9 @@ private fun App(
             onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
             pasteErrors = pasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
+            onAttach = { pickAttachment.launch(com.hyperlog.app.coach.Attachments.PickerTypes) },
+            // A check-in read back without its file asks for it again.
+            attachNote = attachNote ?: checkIn?.checkIn?.lostFile?.let { context.getString(R.string.checkin_attach_again, it) },
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         // A session opened from History or a trend goes back there, read again with any correction.

@@ -45,7 +45,7 @@ class ScriptedCoachTest {
         assertEquals(
             mapOf(
                 Tile.Hurts to "ChangeReview", Tile.ShortOnTime to "ChangeReview", Tile.Gym to "WorkoutReview", Tile.Tired to "Words",
-                Tile.ChangeProgram to "ChangeReview", Tile.Workout to "WorkoutReview", Tile.NewProgram to "Words", Tile.SomethingElse to "Words",
+                Tile.ChangeProgram to "ChangeReview", Tile.Workout to "WorkoutReview", Tile.NewProgram to "ProgramReview", Tile.SomethingElse to "Words",
             ),
             ends,
         )
@@ -64,5 +64,35 @@ class ScriptedCoachTest {
     fun withNoProgramTheTilesThatChangeThePlanEndInWords() = runTest {
         assertTrue(play(Tile.Hurts, plan = null).first is CheckInStep.Words)
         assertTrue(play(Tile.Workout, plan = null).first is CheckInStep.WorkoutReview)
+        assertTrue(play(Tile.NewProgram, plan = null).first is CheckInStep.ProgramReview)
+    }
+
+    @Test
+    fun newProgramOffersAFileThenProposesAProgramWithASwapAndANewExercise() = runTest {
+        val scripted = BuildCoach.scripted { ScriptedWorld(plan, library.exercises, gyms, emptyList()) }!!
+        val coach = CheckInCoach(scripted, CheckInWorld(plan.program, ids, names = library.exercises.associate { it.id to it.name }))
+        val first = coach.start(Tile.NewProgram, CheckInContext.frame(plan, emptyList(), library.exercises, gyms))
+        assertTrue((coach.step(first) as CheckInStep.Question).attach)
+        // A file attached goes on to the next question, as one from the answers does.
+        val attached = coach.attach(first, Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1)))
+        val days = coach.step(attached) as CheckInStep.Question
+        val proposal = (coach.step(coach.answer(attached, days.answers.first())) as CheckInStep.ProgramReview).proposal
+        assertEquals(1, proposal.swaps.size)
+        assertEquals(1, proposal.newExercises.size)
+        assertTrue(proposal.newExercises.single().id !in ids)
+    }
+
+    @Test
+    fun aSecondNewProgramUsesTheDragCurlTheFirstOneAdded() = runTest {
+        val drag = com.hyperlog.app.library.Exercise("barbell_drag_curl", "Barbell Drag Curl", com.hyperlog.app.library.Equipment.Barbell,
+            com.hyperlog.app.library.MovementPattern.ElbowFlexion, com.hyperlog.app.library.GripDemand.High, listOf("Biceps"))
+        val withDrag = library.exercises + drag
+        val scripted = BuildCoach.scripted { ScriptedWorld(plan, withDrag, gyms, emptyList()) }!!
+        val coach = CheckInCoach(scripted, CheckInWorld(plan.program, withDrag.map { it.id }.toSet(), names = withDrag.associate { it.id to it.name }))
+        var checkIn = coach.start(Tile.NewProgram, CheckInContext.frame(plan, emptyList(), withDrag, gyms))
+        repeat(2) { checkIn = coach.answer(checkIn, (coach.step(checkIn) as CheckInStep.Question).answers.first()) }
+        val proposal = (coach.step(checkIn) as CheckInStep.ProgramReview).proposal
+        assertEquals(emptyList<Any>(), proposal.newExercises)
+        assertTrue("barbell_drag_curl" in proposal.program.exercises())
     }
 }

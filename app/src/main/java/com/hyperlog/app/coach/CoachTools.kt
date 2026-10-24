@@ -21,8 +21,8 @@ import kotlinx.serialization.json.putJsonObject
 
 /**
  * The tools a check-in's Claude replies through (SPEC, Coaching → What Claude is told): `ask` for
- * a question, `propose_change` and `propose_workout` for a reply. Only `ask` is `strict`: the API
- * refused the proposals' strict grammar as too large, so their input is checked by the validators,
+ * a question, `propose_change`, `propose_workout` and `propose_program` for a reply. Only `ask` is
+ * `strict`: the API refused the proposals' strict grammar as too large, so their input is checked by the validators,
  * and the self-fix loop sends problems back. A Change's operations come from [Operation]'s serializer and their
  * descriptions from [ChangeFormat], so a new operation or field fails here until it is described.
  * The validators still check ranges and ids, which a strict schema can't hold.
@@ -31,9 +31,10 @@ object CoachTools {
     const val ASK = "ask"
     const val PROPOSE_CHANGE = "propose_change"
     const val PROPOSE_WORKOUT = "propose_workout"
+    const val PROPOSE_PROGRAM = "propose_program"
 
     /** Every tool; with no program running ([program] null) there is no plan to change, so no `propose_change`. */
-    fun all(program: Program?): List<CoachTool> = listOfNotNull(ask(), program?.let(::proposeChange), proposeWorkout())
+    fun all(program: Program?): List<CoachTool> = listOfNotNull(ask(), program?.let(::proposeChange), proposeWorkout(), proposeProgram())
 
     fun ask() = CoachTool(
         ASK,
@@ -44,6 +45,7 @@ object CoachTools {
             "question" to string("The question, one short sentence."),
             "answers" to array(string("An answer to tap, a few words."), "2 to 4 answers."),
             "own" to bool("Whether I may type my own answer instead."),
+            "attach" to bool("Whether this step offers Attach a spreadsheet, PDF or photo, for a program I have as a file: a spreadsheet, a PDF, a printed sheet, a screenshot. Only for a new program."),
         ),
     )
 
@@ -105,6 +107,147 @@ object CoachTools {
         ),
         strict = false,
     )
+
+    /**
+     * A new program: a program file as [com.hyperlog.app.program.ProgramParser] reads it, week
+     * overrides and all, with the swaps and new exercises of [ProgramProposal]. Week overrides are
+     * maps keyed by week, which a strict schema can't hold, so this one never goes strict.
+     */
+    fun proposeProgram() = CoachTool(
+        PROPOSE_PROGRAM,
+        "Propose a whole new program, which replaces the one I run from week 1, day 1; my past sessions are kept. Hyperlog checks it " +
+            "and shows it to me; nothing changes until I start it. Use library exercise ids: for an exercise the source names that " +
+            "the library lacks, use the closest one and list the swap; add a new exercise only when nothing comes close. No weights: " +
+            "Hyperlog suggests them from my history. If the result lists problems, fix them and propose again.",
+        obj(
+            "program" to programFile(),
+            "swaps" to array(
+                obj("from" to string("The exercise as the source names it."), "to" to string("The library exercise id used instead.")),
+                "Each exercise the source names that the library lacks, with the closest library exercise used instead. Empty when none.",
+            ),
+            "newExercises" to array(
+                obj(
+                    "id" to string("Lowercase letters, digits and _, new to the library."),
+                    "name" to string("Its name, with the implement (\"Cable Y-Raise\")."),
+                    "equipment" to choice(com.hyperlog.app.library.Equipment.entries.map { it.key }, "Its equipment."),
+                    "pattern" to choice(com.hyperlog.app.library.MovementPattern.entries.map { it.key }, "Its movement pattern."),
+                    "grip" to choice(com.hyperlog.app.library.GripDemand.entries.map { it.key }, "How hard it works the hands."),
+                    "muscles" to array(choice(com.hyperlog.app.library.Muscles, ""), "Primary muscles, at least one."),
+                    "secondary" to array(choice(com.hyperlog.app.library.Muscles, ""), "Secondary muscles."),
+                ),
+                "Exercises to add to my library, only when nothing there comes close. Usually empty.",
+            ),
+        ),
+        strict = false,
+    )
+
+    private fun programFile() = obj(
+        "format" to integer("Always ${com.hyperlog.app.program.ProgramParser.FORMAT}."),
+        "title" to string("The program's name."),
+        "author" to string("Who wrote it."),
+        "description" to string("What it is, in a sentence or two."),
+        "blocks" to array(
+            obj(
+                "id" to string("Lowercase letters, digits and _, unique in the program."),
+                "name" to string("The block's name (\"Ramp-in\", \"Build\")."),
+                "weekStart" to integer("Its first program week: 1 for the first block, else the week after the block before ends."),
+                "weekEnd" to integer("Its last program week."),
+                "weeks" to groupWeeks(),
+                "days" to array(
+                    obj(
+                        "id" to string("Lowercase letters, digits and _, unique in the block."),
+                        "name" to string("What Today shows (\"Day A — Heavy bench, squat\")."),
+                        "weeks" to groupWeeks(),
+                        "groups" to array(
+                            obj(
+                                "type" to choice(listOf("straight", "superset"), "straight has 1 slot; a superset 2, done alternately."),
+                                "slots" to array(
+                                    obj(
+                                        "id" to string("Lowercase letters, digits and _, unique in the block; the same id for the same place in other blocks."),
+                                        "exercise" to string("A library exercise id."),
+                                        "alternatives" to array(
+                                            buildJsonObject {
+                                                putJsonArray("anyOf") {
+                                                    add(string("A library exercise id."))
+                                                    add(obj("exercise" to string("A library exercise id."), "sets" to array(programSetLine(), "Its own set lines.")))
+                                                }
+                                            },
+                                            "Exercises allowed instead, in order of preference; each does the slot's sets unless it has its own.",
+                                        ),
+                                        "note" to string("The program's cue for the slot."),
+                                        "sets" to array(programSetLine(), "The set lines, in order: work sets only."),
+                                        optional = setOf("alternatives", "note"),
+                                    ),
+                                    "1 slot, or 2 for a superset.",
+                                ),
+                                optional = setOf("type"),
+                            ),
+                            "The exercises in order.",
+                        ),
+                        optional = setOf("weeks"),
+                    ),
+                    "The days, trained in order, once each a week.",
+                ),
+                optional = setOf("weeks"),
+            ),
+            "The blocks in order; weeks run from 1 with no gaps.",
+        ),
+        optional = setOf("author", "description"),
+    )
+
+    /** A program file's set line: [setLine]'s, and a back-off and week overrides. */
+    private fun programSetLine(): JsonObject {
+        val line = setLine(technique = true)
+        val properties = line.getValue("properties") as JsonObject
+        return buildJsonObject {
+            line.forEach { (key, value) ->
+                when (key) {
+                    "properties" -> putJsonObject("properties") {
+                        properties.forEach { (name, schema) -> put(name, schema) }
+                        put("backoff", obj("from" to integer("An earlier line's index, not a back-off itself."), "percent" to integer("Weight off that line's first set, 1 to 50.")))
+                        put("weeks", weeks(
+                            "Week overrides for this line",
+                            "count" to integer("Sets in those weeks; 0 removes the line."),
+                            "reps" to properties.getValue("reps") as JsonObject,
+                            "rir" to integer("Target reps in reserve in those weeks."),
+                            "rest" to integer("Rest in those weeks, in seconds."),
+                            "technique" to nullable(properties.getValue("technique") as JsonObject),
+                        ))
+                    }
+                    else -> put(key, value)
+                }
+            }
+        }
+    }
+
+    /** A day's or a block's week overrides, for every set in it. */
+    private fun groupWeeks() = weeks(
+        "Week overrides for every set in it",
+        "rir" to integer("The target reps in reserve in those weeks."),
+        "rirAdd" to integer("Reps in reserve added in those weeks, −5 to 5; not with rir."),
+        "technique" to typed("null", "null: no techniques in those weeks."),
+        "fewerSets" to integer("Sets removed from the end of every slot; one always stays."),
+        "deload" to bool("true: those weeks are a deload, which never lowers an estimate."),
+    )
+
+    /** Week overrides: keyed by a week ("3") or a range ("7-11") inside the block, each with only the fields it changes. */
+    private fun weeks(what: String, vararg fields: Pair<String, JsonObject>) = buildJsonObject {
+        put("type", "object")
+        put("description", "$what, keyed by a week (\"3\") or a range (\"7-11\") inside the block; ranges may not overlap.")
+        put("additionalProperties", obj(fields.toList(), optional = fields.map { it.first }.toSet()))
+    }
+
+    private fun nullable(schema: JsonObject) = buildJsonObject {
+        schema["description"]?.let { put("description", it) }
+        putJsonArray("anyOf") {
+            add(JsonObject(schema - "description"))
+            add(typed("null", "null removes it in those weeks."))
+        }
+    }
+
+    private fun choice(values: List<String>, description: String) = typed("string", description) {
+        putJsonArray("enum") { values.forEach { add(it) } }
+    }
 
     /** One schema for each operation, from its serializer: `op` and its fields, `reason` always. */
     @OptIn(ExperimentalSerializationApi::class)

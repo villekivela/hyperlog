@@ -7,6 +7,141 @@ Claude's reply pasted back as a Change, a workout or a program. The old words-fi
 row, starter chips, Build me a workout's options) is gone with #74. The tokens of
 `program-and-today.md` and `logging-screen.md` apply.
 
+## New program (#75)
+
+**New program** ends in a whole program (`SPEC.md`, Coaching → New program). Two surfaces are new:
+the step that offers **Attach a spreadsheet, PDF or photo** (`Question` in `ui/coach/CheckInScreen.kt`) and the
+program's review (`ui/coach/ProgramReview.kt`). Both extend the check-in above and the workout
+review; nothing new is invented for them.
+
+### Principles
+
+1. **The file is an answer.** Attach sits under Claude's answers as a lone card, the same 64 dp
+   shape as Type my own, but its words are titleMedium in onSurface like an answer's, and its
+   paperclip is primary: it's the one answer that hands Claude something.
+2. **What became of the file stays on its row.** "Reading the file…", a PDF too large and a file
+   that won't read are the card's second line, not loose text under it, so the note can't be read
+   as being about Type my own.
+3. **The symbol says what became of the file.** While the file is read the paperclip turns into
+   a small loading indicator (the check-in's one motion, at row size) and the card stops taking
+   taps; a file that can't go turns it into `warning` in error, as a reply's problems show, while
+   the line itself stays quiet: it holds the way forward, not an alarm.
+4. **The review reads like a program, top down.** What it is (the head card), what it does to your
+   library (swaps, then new exercises, each a labelled group), then the program as Program shows
+   it from week 1. The library groups come first because they're the part only this review shows.
+5. **The filled button is the next step**: Start program at the end of the bottom strip, Reject the
+   text button before it, as on every review.
+
+### Tokens
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Attach | a lone card 16 dp under the answers, 64 dp at least, 12 dp vertical padding: `attach_file` 24 dp primary at the 24 dp edge, "Attach a spreadsheet, PDF or photo" titleMedium, 16 dp after the symbol | Opens the system picker for an .xlsx, a .csv, a PDF or an image |
+| Attach note | the card's second line, bodyMedium onSurfaceVariant, 4 dp under the title; with a note the symbol tops the title's line instead of centring | "Reading the file…", too large, unreadable |
+| Reading | `LoadingIndicator` 32 dp primary in the symbol's 24 dp box; the card isn't clickable | While the file is read |
+| Refused | `warning` 24 dp in error in the symbol's place; tapping attaches again | Too large, unreadable |
+| Head card | `SectionCard`: the title headlineSmall, 4 dp, then one quiet line, `Jeff Nippard · 12 weeks · 5 days a week` labelLarge onSurfaceVariant (the author first when the file names one), 8 dp, the description bodyMedium onSurfaceVariant | What Claude built, as the workout review's head |
+| Swaps | `GroupHead` "Swapped for your library", then a `SegmentedRow` a swap: `swap_horiz` in its circle, `Seal Row → 1-Arm DB Kroc Row` | Each source exercise done as a library one |
+| New exercises | `GroupHead` "New in your library", then a `SegmentedRow` each: `library_add`, the name over `Barbell · Biceps` | Exercises Start program adds |
+| The program | 16 dp gap, then Program's `blockItems`: the blocks as a connected group, the block's card with its weeks, the picked week's days (the first day marked Next) | Read-only: rows don't open |
+| Bottom strip | `BottomActions`: Reject, **Start program** | Start asks first while a program runs |
+| Replace dialog | the import's `AlertDialog`: "Replace Hyperlog Full Body?", where you are, Cancel / Replace | Only while a program runs |
+
+### Wireframes
+
+```
+ ←  New program                                ×
+ Do you have the program
+ as a file?                                      ← headlineMedium
+ ╭──────────────────────────────────────────────╮
+ │ Build it from my answers                     │
+ ├──────────────────────────────────────────────┤
+ │ I'll describe it                             │
+ ╰──────────────────────────────────────────────╯
+ ╭──────────────────────────────────────────────╮
+ │ ⚠  Attach a spreadsheet, PDF or photo        │ ← 📎 until a file is refused
+ │     This PDF is too big for Claude. Attach   │ ← the note, quiet; or
+ │     the program’s spreadsheet or photos of … │   ⬢ Reading the file…
+ ╰──────────────────────────────────────────────╯
+ ╭──────────────────────────────────────────────╮
+ │ ⌨  Type my own                               │
+ ╰──────────────────────────────────────────────╯
+```
+
+```
+ ×  New program
+ ╭──────────────────────────────────────────────╮
+ │ Scripted full body, 2 days                   │ ← headlineSmall
+ │ Claude · 4 weeks · 2 days a week             │ ← labelLarge
+ │ Two full-body days a week: a squat or …      │
+ ╰──────────────────────────────────────────────╯
+ Swapped for your library                         ← GroupHead
+ ╭──────────────────────────────────────────────╮
+ │ (⇄) Seal Row → 1-Arm DB Kroc Row             │
+ ╰──────────────────────────────────────────────╯
+ New in your library
+ ╭──────────────────────────────────────────────╮
+ │ (+) Barbell Drag Curl                        │
+ │     Barbell · Biceps                         │
+ ╰──────────────────────────────────────────────╯
+ [ Ramp-in ][ Build ]                             ← connected group
+ ╭ Ramp-in · week 1 ─ (1) ──────────────────────╮
+ Week 1 · Day A — Squat, press, row        Next
+ ╭ 1  High-Bar Back Squat …                     ╮
+ ╭──────────────────────────────────────────────╮
+ │                       Reject [Start program] │
+```
+
+### States
+
+Screenshots in `screens/`, `light-coach-new-program-…` and `dark-coach-new-program-…`, from the
+emulator with the scripted coach at font scale 1.15.
+
+- The step offering Attach (`coach-new-program-attach`); a PDF too large
+  (`coach-new-program-too-large`); a file that won't read (`coach-new-program-unreadable`, light
+  only).
+- The review's top: head card, swaps, new exercises (`coach-new-program-review`); scrolled to the
+  program's days (`coach-new-program-days`); Replace while a program runs
+  (`coach-new-program-replace`).
+- "Reading the file…" is too quick to catch on the emulator with the bundled files; it's the same
+  row with the loading indicator for the paperclip.
+
+### Interaction rules
+
+- Attach opens the system picker for a PDF or an image; picking nothing leaves the step as it was.
+  A file that reads goes as the answer at once: Thinking shows, as after a tapped answer.
+- While the file is read the card doesn't take taps, so one file can't be sent twice.
+- A note stays until an answer goes, Back, or ×; attaching again replaces it.
+- The review's rows don't open anything: it's for reading. The block and week choices work, as on
+  Program, and start on week 1.
+- Start program asks first only while a program runs, then lands on Today. Reject and Back step
+  back in the check-in with Type my own open; × drops the check-in.
+
+### Pass notes (#75)
+
+- First build: the note sat as loose bodyMedium text under the Attach card, in onSurfaceVariant
+  for failures too, so a refused PDF read as a hint and floated between Attach and Type my own;
+  nothing moved while the file was read and the row could be tapped again; the scripted program
+  had no author or description, so the head card's full shape was never seen.
+- First pass: the note became the card's second line, in error for a refusal; the paperclip turns
+  into the loading indicator while reading and the card stops taking taps; the scripted program
+  got an author and a description.
+- Second pass: three lines of red for a too-large PDF shouted, so the note went back to
+  onSurfaceVariant and the refusal moved into the symbol (`warning` in error, the Problems card's
+  language); the symbol tops the title's line when the row has two. On the review, the author on
+  its own line read as a second grey caption over the weeks line, so the two became one line.
+
+### Tester's report (#75)
+
+`new-program-test-report.md`, fixed: a check-in read back without its file says so on the step
+that took it ("Attach Nippard-Upper-Lower.pdf again: Hyperlog doesn’t keep files.",
+`light-coach-new-program-attach-again`); a check-in's review read back as the app starts waits on
+Coach instead of covering Today; the review's head names the file it was built from
+(`light-coach-new-program-review-file`); the scripted coach reuses the drag curl a program before
+added. Left for the owner (decided before, as for every review): × drops the check-in without
+asking, and Reject steps back to the step answered last with Type my own open. Left for later: the
+report's minor items and spec gaps (several photos in one answer, starting partway through).
+
 ## Ask Claude, without a key (#74)
 
 `ui/coach/AskClaudeScreen.kt`. A step of the wizard in all but name: the bar names the tile (or

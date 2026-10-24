@@ -119,6 +119,63 @@ class CheckInAppTest {
     }
 
     @Test
+    fun newProgramEndsInItsReviewAndItsNewExerciseIsSavedOnlyOnStartProgram() {
+        val db = HyperlogDatabase.get(context)
+        val before = runBlocking { Programs(db).active.first()!!.id }
+        fun inLibrary() = runBlocking { db.exercises().all().any { it.name == "Barbell Drag Curl" } }
+        compose.openTab("Coach")
+        compose.click("New program")
+        compose.waitFor("Do you have the program as a file?")
+        compose.onNodeWithText("Attach a spreadsheet, PDF or photo").assertExists()
+        compose.click("Build it from my answers")
+        compose.waitFor("How many days a week can you train?")
+        compose.click("3")
+        compose.waitFor("Start program")
+        compose.onNodeWithText("Seal Row", substring = true).assertExists()
+        // Reviewed, nothing is saved yet.
+        assertEquals(false, inLibrary())
+        compose.click("Start program")
+        compose.waitFor("Replace Hyperlog Full Body?")
+        compose.click("Replace")
+        compose.waitGone("Start program")
+        assertEquals(true, inLibrary())
+        val active = runBlocking { Programs(db).active.first()!! }
+        assertEquals("Scripted full body, 2 days", active.program.title)
+        assertEquals(com.hyperlog.app.program.Position(1, 0), active.position)
+        // The program before stays, as the record of its sessions.
+        assertEquals("Hyperlog Full Body", runBlocking { Programs(db).program(before)!!.title })
+    }
+
+    @Test
+    fun aReplyThatComesWhileTheAppIsAwayIsNoticedAndItsNotificationOpensIt() {
+        compose.openTab("Coach")
+        compose.click("New program")
+        compose.waitFor("Do you have the program as a file?")
+        compose.click("Build it from my answers")
+        compose.waitFor("How many days a week can you train?")
+        compose.click("3")
+        try {
+            // The app goes away at once, while Claude writes (the saving itself: CheckInRunnerTest).
+            compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED)
+            val notifications = org.robolectric.Shadows.shadowOf(context.getSystemService(android.app.NotificationManager::class.java))
+            compose.waitUntil(15_000) {
+                org.robolectric.shadows.ShadowLooper.idleMainLooper()
+                notifications.allNotifications.any { it.extras.getString("android.title") == "Your program is ready" }
+            }
+            val open = org.robolectric.Shadows.shadowOf(notifications.allNotifications.single { it.extras.getString("android.title") == "Your program is ready" }.contentIntent).savedIntent
+            compose.activityRule.scenario.onActivity { it.onNewIntent(open) }
+            compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
+            compose.waitFor("Start program")
+        } finally {
+            // × ends it, as every check-in here ends: the file holding it would open the next test's Coach.
+            compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
+            compose.await(androidx.compose.ui.test.hasContentDescription("Close the check-in"))
+            compose.onNodeWithContentDescription("Close the check-in").performClick()
+            compose.waitFor("What’s going on?")
+        }
+    }
+
+    @Test
     fun theScriptedCoachIsASettingsSwitch() {
         compose.openTab("Settings")
         compose.click("Scripted coach")

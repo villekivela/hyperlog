@@ -63,9 +63,9 @@ class CoachCost(private val db: HyperlogDatabase, private val month: () -> YearM
 
 /** A [CoachModel] that adds each reply's usage to [cost], a refused one's too. */
 class MeteredCoach(private val model: CoachModel, private val cost: CoachCost) : CoachModel {
-    override suspend fun reply(request: CoachRequest): CoachReply {
+    override suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit): CoachReply {
         val reply = try {
-            model.reply(request)
+            model.reply(request, progress)
         } catch (refused: CoachError.Refused) {
             cost.add(refused.usage)
             throw refused

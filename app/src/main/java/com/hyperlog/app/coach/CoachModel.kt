@@ -1,6 +1,7 @@
 package com.hyperlog.app.coach
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -9,8 +10,20 @@ import kotlinx.serialization.json.JsonObject
  * play scripted turns through a fake.
  */
 interface CoachModel {
-    /** Claude's next reply. Throws a [CoachError] when there is none. */
-    suspend fun reply(request: CoachRequest): CoachReply
+    /** Claude's next reply, telling [progress] what it is doing as it streams. Throws a [CoachError] when there is none. */
+    suspend fun reply(request: CoachRequest, progress: (CoachProgress) -> Unit = {}): CoachReply
+}
+
+/** What Claude is doing while a reply streams, for the step that waits on it. */
+sealed interface CoachProgress {
+    /** Thinking it through, before any words. */
+    data object Thinking : CoachProgress
+
+    /** Writing words. */
+    data object Answering : CoachProgress
+
+    /** Writing a call to [tool]: a question, or a Change, workout or program. */
+    data class Writing(val tool: String) : CoachProgress
 }
 
 /**
@@ -46,9 +59,33 @@ sealed interface CoachMessage {
 @Serializable
 data class ToolCall(val id: String, val name: String, val input: JsonObject)
 
-/** The answer to the call [callId]; [isError] when it hands Claude a reply's problems. */
+/** The answer to the call [callId]; [isError] when it hands Claude a reply's problems, [attachment] when a file is the answer. */
 @Serializable
-data class ToolResult(val callId: String, val content: String, val isError: Boolean = false)
+data class ToolResult(val callId: String, val content: String, val isError: Boolean = false, val attachment: Attachment? = null)
+
+/**
+ * A spreadsheet, a PDF or a photo attached as an answer (SPEC, Coaching → New program), sent to Claude as a
+ * document or an image. It is never stored: a check-in saves its [name] and [mediaType], and
+ * [data] lives only in memory while the app runs.
+ */
+@Serializable
+data class Attachment(val name: String, val mediaType: String, @Transient val data: ByteArray? = null) {
+    val pdf: Boolean get() = mediaType == PDF
+
+    // Equal by the bytes, not the array: a check-in holding a file compares by what it sends.
+    override fun equals(other: Any?): Boolean =
+        other is Attachment && name == other.name && mediaType == other.mediaType && data.contentEquals(other.data)
+
+    override fun hashCode(): Int = (name.hashCode() * 31 + mediaType.hashCode()) * 31 + data.contentHashCode()
+
+    companion object {
+        const val PDF = "application/pdf"
+        const val JPEG = "image/jpeg"
+
+        /** Text Claude reads as it is: a spreadsheet's sheets as CSV, or a CSV file. */
+        const val TEXT = "text/plain"
+    }
+}
 
 /**
  * Claude's reply: its words, its tool calls, and what it cost. [original] is the client's own copy
@@ -80,6 +117,9 @@ data class CoachUsage(
 sealed class CoachError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     /** No connection, a timeout, or an error on Anthropic's side: try again. */
     class NoConnection(cause: Throwable? = null) : CoachError("Couldn't reach Claude", cause)
+
+    /** The reply began but its stream broke off (the connection dropped, or stalled past the timeout): try again. */
+    class Dropped(cause: Throwable? = null) : CoachError("Claude's reply was cut off", cause)
 
     /** The API doesn't accept the key. */
     class KeyRefused(cause: Throwable? = null) : CoachError("Claude doesn't accept this key", cause)

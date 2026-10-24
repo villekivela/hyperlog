@@ -124,6 +124,13 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
     val checkIn: StateFlow<CheckInView?> = runner.state
     val thinking: StateFlow<Boolean> = runner.thinking
 
+    /** What Claude is doing in the call under way, as its reply streams. */
+    val progress: StateFlow<com.hyperlog.app.coach.CoachProgress?> = runner.progress
+
+    /** Each call runs in a foreground service, so leaving the app doesn't cut it. */
+    @Suppress("unused")
+    private val keeper = com.hyperlog.app.coach.CheckInKeeper(application, viewModelScope, runner.thinking, runner.state)
+
     fun start(tile: Tile) {
         _draft.value = null
         runner.start(tile)
@@ -155,7 +162,28 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
 
     fun answer(text: String) {
         _draft.value = null
+        _attachNote.value = null
         runner.answer(text)
+    }
+
+    private val _attachNote = MutableStateFlow<String?>(null)
+
+    /** What became of the file picked for Attach a spreadsheet, PDF or photo, under Attach: being read, or why it can't go. */
+    val attachNote: StateFlow<String?> = _attachNote.asStateFlow()
+
+    /** Attach a spreadsheet, PDF or photo: the file at [uri] is read into memory, never stored, and goes to Claude as the answer. */
+    fun attach(uri: android.net.Uri) {
+        val app = getApplication<Application>()
+        _attachNote.value = app.getString(com.hyperlog.app.R.string.checkin_attach_reading)
+        viewModelScope.launch {
+            val read = withContext(Dispatchers.IO) { com.hyperlog.app.coach.Attachments.read(app.contentResolver, uri) }
+            _attachNote.value = when (read) {
+                is com.hyperlog.app.coach.Attachments.Result.Ready -> null.also { _draft.value = null; runner.attach(read.attachment) }
+                com.hyperlog.app.coach.Attachments.Result.TooLarge ->
+                    app.getString(com.hyperlog.app.R.string.checkin_attach_too_large)
+                com.hyperlog.app.coach.Attachments.Result.Unreadable -> app.getString(com.hyperlog.app.R.string.checkin_attach_unreadable)
+            }
+        }
     }
 
     fun tellMeMore() {
@@ -167,6 +195,7 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
 
     /** Back: a question you answered in your own words opens Type my own with them again. */
     fun back() {
+        _attachNote.value = null
         _draft.value = checkIn.value?.checkIn?.let(CheckInCoach::ownAnswer)
         runner.back()
     }
@@ -179,6 +208,7 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
 
     fun close() {
         _draft.value = null
+        _attachNote.value = null
         runner.close()
     }
 

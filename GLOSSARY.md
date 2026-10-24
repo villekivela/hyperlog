@@ -243,7 +243,7 @@ Days without training beyond the plan's own rest days: from the first day of the
 _Avoid_: Break, layoff
 
 **Swap**:
-Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a Change.
+Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a Change. In a new program from Claude, an exercise the source names that the library lacks, done as the closest library exercise.
 _Avoid_: Substitution
 
 **Workout**:

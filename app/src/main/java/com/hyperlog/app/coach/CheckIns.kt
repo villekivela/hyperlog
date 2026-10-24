@@ -61,6 +61,11 @@ class CheckInRunner(
     /** A call is under way. */
     val thinking: StateFlow<Boolean> = _thinking.asStateFlow()
 
+    private val _progress = MutableStateFlow<CoachProgress?>(null)
+
+    /** What Claude is doing in the call under way, as its reply streams; null before it says. */
+    val progress: StateFlow<CoachProgress?> = _progress.asStateFlow()
+
     private var current: CheckIn? = null
     private var call: Job? = null
 
@@ -74,7 +79,10 @@ class CheckInRunner(
         scope.launch(io) { writes.filterNotNull().collect { store.save(it.checkIn) } }
     }
 
-    /** Reads the check-in kept when the app last ran; one left while thinking asks again. */
+    /**
+     * Reads the check-in kept when the app last ran; one left while thinking asks again. A file
+     * attached wasn't kept: the next call goes back to the step that took it instead.
+     */
     fun restore() {
         scope.launch {
             val kept = withContext(io) { store.load() } ?: return@launch
@@ -89,6 +97,9 @@ class CheckInRunner(
     fun start(opening: String, from: Opening) = begin { CheckIn(opening, null, frame(), from) }
 
     fun answer(text: String) = next { coach, checkIn -> coach.answered(checkIn, text) }
+
+    /** Attach a spreadsheet, PDF or photo: the file is the answer, kept in memory only. */
+    fun attach(attachment: Attachment) = next { coach, checkIn -> coach.attached(checkIn, attachment) }
 
     fun tellMeMore() = next { coach, checkIn -> coach.toldMore(checkIn) }
 
@@ -134,14 +145,18 @@ class CheckInRunner(
     /** Calls Claude for [checkIn], saving each reply as it comes. */
     private fun ask(checkIn: CheckIn) {
         _thinking.value = true
+        _progress.value = null
         call = scope.launch {
             val job = coroutineContext[Job]
             try {
                 val coach = coach() ?: return@launch
-                save(coach.run(checkIn))
+                save(coach.run(checkIn) { if (call === job) _progress.value = it })
             } finally {
                 // A call stopped by Back or × doesn't end the one that followed it.
-                if (call === job) _thinking.value = false
+                if (call === job) {
+                    _thinking.value = false
+                    _progress.value = null
+                }
             }
         }
     }
@@ -150,6 +165,7 @@ class CheckInRunner(
         call?.cancel()
         call = null
         _thinking.value = false
+        _progress.value = null
     }
 
     private suspend fun coach(): CheckInCoach? = model()?.let { CheckInCoach(it, world()) }

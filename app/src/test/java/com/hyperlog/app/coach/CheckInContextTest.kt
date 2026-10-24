@@ -46,12 +46,16 @@ class CheckInContextTest {
         assertTrue(context, context.contains("Back (4 sets), Legs (0 sets), Core (0 sets)"))
         // Change my program proposes a lasting Change.
         assertTrue(context, context.contains("rest_of_program"))
+        // A new program: from answers or a file, with swaps for exercises the library lacks.
+        assertTrue(context, context.contains("propose_program"))
+        assertTrue(context, context.contains("Attach a spreadsheet, PDF or photo"))
+        assertTrue(context, context.contains("closest library exercise"))
         // The same situation as Ask Claude's, and the formats are the tools, not text.
         assertTrue(context, context.contains("Today is 2026-10-13 (Tuesday)."))
         assertTrue(context, context.contains("## Program: "))
         assertTrue(context, context.contains("## Exercise library"))
         assertFalse(context, context.contains("## Change format"))
-        assertEquals(listOf(CoachTools.ASK, CoachTools.PROPOSE_CHANGE, CoachTools.PROPOSE_WORKOUT), frame().tools.map { it.name })
+        assertEquals(listOf(CoachTools.ASK, CoachTools.PROPOSE_CHANGE, CoachTools.PROPOSE_WORKOUT, CoachTools.PROPOSE_PROGRAM), frame().tools.map { it.name })
     }
 
     @Test
@@ -85,7 +89,7 @@ class CheckInContextTest {
     @Test
     fun withNoProgramThereIsNoChangeToPropose() {
         val frame = frame(plan = null)
-        assertEquals(listOf(CoachTools.ASK, CoachTools.PROPOSE_WORKOUT), frame.tools.map { it.name })
+        assertEquals(listOf(CoachTools.ASK, CoachTools.PROPOSE_WORKOUT, CoachTools.PROPOSE_PROGRAM), frame.tools.map { it.name })
         assertTrue(frame.context, frame.context.contains("No program is running"))
     }
 

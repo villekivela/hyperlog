@@ -162,9 +162,15 @@ fun CheckInScreen(
      */
     draft: String? = null,
     onDraft: ((String?) -> Unit)? = null,
+    /** Attach a spreadsheet, PDF or photo, on a step that offers it: the caller opens the file picker. */
+    onAttach: () -> Unit = {},
+    /** What became of the file picked, under Attach: being read, or why it can't go. */
+    attachNote: String? = null,
+    /** What Claude is doing while it replies, as its reply streams. */
+    progress: com.hyperlog.app.coach.CoachProgress? = null,
 ) {
     when {
-        view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems, draft, onDraft)
+        view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems, draft, onDraft, onAttach, attachNote, progress)
         inForceOpen && program != null && program.inForce.isNotEmpty() -> InForcePage(
             program, onBack = { onInForceOpen(false) }, onOpenChange, onRevert, onHowItsGoing = { onInForceOpen(false); onHowItsGoing(it) }, modifier,
         )
@@ -330,6 +336,9 @@ private fun Step(
     onCopyProblems: (List<String>) -> Unit,
     draft: String?,
     onDraft: ((String?) -> Unit)?,
+    onAttach: () -> Unit,
+    attachNote: String?,
+    progress: com.hyperlog.app.coach.CoachProgress?,
 ) {
     BackHandler(onBack = onBack)
     val step = view.step
@@ -365,8 +374,8 @@ private fun Step(
                     Button(onClick = onTryAgain) { Text(stringResource(R.string.checkin_try_again)) }
                 }
                 is CheckInStep.Failed -> BottomActions(padding = StripPadding) {
-                    val handOff = step.failure != CheckInFailure.NoConnection
-                    val retry = step.failure == CheckInFailure.NoConnection || step.failure == CheckInFailure.Refused || step.failure == CheckInFailure.Rejected
+                    val handOff = step.failure != CheckInFailure.NoConnection && step.failure != CheckInFailure.Dropped
+                    val retry = step.failure == CheckInFailure.NoConnection || step.failure == CheckInFailure.Dropped || step.failure == CheckInFailure.Refused || step.failure == CheckInFailure.Rejected
                     when {
                         asked -> {
                             TextButton(onClick = onAskClaude) { Text(stringResource(R.string.coach_ask)) }
@@ -395,8 +404,9 @@ private fun Step(
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (step) {
                 // A review shows over this screen; until it does, the step reads as thinking.
-                CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview -> Thinking()
-                is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size, draft, onDraft)
+                CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview, is CheckInStep.ProgramReview ->
+                    Thinking(if (step == CheckInStep.Thinking) doing(view.checkIn, progress) else R.string.checkin_thinking)
+                is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size, draft, onDraft, onAttach, attachNote)
                 is CheckInStep.Words -> {
                     // Tell me more adds a card under the words before; the newest comes into view.
                     val scroll = rememberScrollState()
@@ -440,6 +450,7 @@ private fun Step(
 private fun Failure(failure: CheckInFailure, pasteErrors: List<String>?, onCopyProblems: (List<String>) -> Unit) {
     val (symbol, head, body) = when (failure) {
         CheckInFailure.NoConnection -> Triple(Symbol.Cable, R.string.checkin_no_connection, R.string.checkin_no_connection_body)
+        CheckInFailure.Dropped -> Triple(Symbol.Cable, R.string.checkin_dropped, R.string.checkin_dropped_body)
         CheckInFailure.KeyRefused -> Triple(Symbol.Key, R.string.checkin_key_refused, R.string.checkin_ask_claude_body)
         CheckInFailure.SpendLimit -> Triple(Symbol.Toll, R.string.checkin_spend_limit, R.string.checkin_spend_limit_body)
         CheckInFailure.Refused -> Triple(Symbol.Block, R.string.checkin_refused, R.string.checkin_refused_body)
@@ -485,11 +496,11 @@ private fun Failure(failure: CheckInFailure, pasteErrors: List<String>?, onCopyP
 /** Thinking…: the expressive loading indicator, alone a little above the middle. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Thinking() {
+private fun Thinking(doing: Int) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         LoadingIndicator(Modifier.size(96.dp), color = MaterialTheme.colorScheme.primary)
         Text(
-            stringResource(R.string.checkin_thinking),
+            stringResource(doing),
             Modifier.padding(top = 16.dp),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -500,9 +511,33 @@ private fun Thinking() {
 }
 
 /**
+ * What the step says while Claude replies, from its stream: what it writes once it writes, and
+ * before that the file it reads when the answer was one, else Thinking….
+ */
+private fun doing(checkIn: com.hyperlog.app.coach.CheckIn, progress: com.hyperlog.app.coach.CoachProgress?): Int {
+    when (progress) {
+        is com.hyperlog.app.coach.CoachProgress.Writing -> when (progress.tool) {
+            com.hyperlog.app.coach.CoachTools.PROPOSE_PROGRAM -> return R.string.checkin_doing_program
+            com.hyperlog.app.coach.CoachTools.PROPOSE_CHANGE -> return R.string.checkin_doing_change
+            com.hyperlog.app.coach.CoachTools.PROPOSE_WORKOUT -> return R.string.checkin_doing_workout
+        }
+        com.hyperlog.app.coach.CoachProgress.Answering -> return R.string.checkin_doing_words
+        else -> Unit
+    }
+    // The answer just sent carries a file: Claude is reading it.
+    val file = checkIn.turns.lastOrNull()?.answer?.results.orEmpty().firstNotNullOfOrNull { it.attachment } ?: return R.string.checkin_thinking
+    return when {
+        file.pdf -> R.string.checkin_doing_pdf
+        file.mediaType == com.hyperlog.app.coach.Attachment.TEXT -> R.string.checkin_doing_spreadsheet
+        else -> R.string.checkin_doing_photo
+    }
+}
+
+/**
  * Claude's question, large, over its answers to tap, and Type my own under them when Claude allows
  * it. An answer naming a muscle group behind this week carries its sets (`Back · 4 sets`).
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Question(
     step: CheckInStep.Question,
@@ -511,6 +546,8 @@ private fun Question(
     key: Int,
     draft: String?,
     onDraft: ((String?) -> Unit)?,
+    onAttach: () -> Unit,
+    attachNote: String?,
 ) {
     var kept by rememberSaveable(key) { mutableStateOf<String?>(null) }
     // Type my own's words, null while it's closed: the caller's draft, or the screen's own.
@@ -533,6 +570,35 @@ private fun Question(
                         withStyle(SpanStyle(color = cs.onSurfaceVariant, fontWeight = FontWeight.Normal)) { append(label.removePrefix(answer)) }
                     }
                     Text(shown, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
+        // A program you have as a file: a PDF, a printed sheet, a screenshot (New program).
+        if (step.attach) {
+            Spacer(Modifier.height(GroupGap))
+            // The note belongs to the row, so it's the row's second line. The symbol says what
+            // became of the file: the loading indicator while it's read (no taps then), `warning`
+            // in error when it can't go, as a reply's problems show.
+            val reading = attachNote == stringResource(R.string.checkin_attach_reading)
+            Segment(0, 1, onClick = if (reading) null else onAttach) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding, vertical = 12.dp),
+                    verticalAlignment = if (attachNote == null) Alignment.CenterVertically else Alignment.Top,
+                ) {
+                    Box(Modifier.padding(top = if (attachNote == null) 0.dp else 2.dp).size(24.dp), contentAlignment = Alignment.Center) {
+                        when {
+                            reading -> LoadingIndicator(Modifier.size(32.dp), color = cs.primary)
+                            attachNote != null -> SymbolIcon(Symbol.Warning, null, Modifier.size(24.dp), tint = cs.error)
+                            else -> SymbolIcon(Symbol.AttachFile, null, Modifier.size(24.dp), tint = cs.primary)
+                        }
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(stringResource(R.string.checkin_attach), style = MaterialTheme.typography.titleMedium)
+                        attachNote?.let {
+                            Text(it, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                        }
+                    }
                 }
             }
         }

@@ -86,8 +86,9 @@ object CheckInContext {
         )
         if (program) {
             appendLine(
-                "- End in words when the plan can stand, with no tool. Otherwise reply with one Change to my program (propose_change) " +
-                    "or one workout for today outside the program (propose_workout). Use only the slot, day and exercise ids listed here.",
+                "- End in words when the plan can stand, with no tool. Otherwise reply with one Change to my program (propose_change), " +
+                    "one workout for today outside the program (propose_workout) or a new program in its place (propose_program). " +
+                    "Use only the slot, day and exercise ids listed here.",
             )
             appendLine(
                 "- To change my program for good (swap an exercise, add or drop one, more or fewer sets), ask which exercise and why, " +
@@ -95,10 +96,17 @@ object CheckInContext {
             )
         } else {
             appendLine(
-                "- No program is running, so there is no plan to change. End in words, or with one workout for today " +
-                    "(propose_workout). Use only the exercise ids listed here.",
+                "- No program is running, so there is no plan to change. End in words, with one workout for today " +
+                    "(propose_workout), or with a new program (propose_program). Use only the exercise ids listed here.",
             )
         }
+        appendLine(
+            "- For a new program, offer Attach a spreadsheet, PDF or photo on a step (ask's attach) when I may have it as a file: " +
+                "a program's spreadsheet (it comes as each sheet's CSV) or PDF, a printed sheet, a whiteboard, a screenshot. " +
+                "Read the blocks, days, exercises, sets, rep ranges, reps in reserve and " +
+                "techniques from it, and ask only what it doesn't settle; without a file, build from my answers. For an exercise " +
+                "the library lacks, use the closest library exercise and list the swap; add it as a new exercise only when nothing comes close.",
+        )
         append("- Hyperlog checks a reply before I see it. If the tool's result lists problems, fix them and propose again.")
     }
 

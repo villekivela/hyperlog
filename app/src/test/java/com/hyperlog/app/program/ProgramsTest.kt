@@ -65,6 +65,42 @@ class ProgramsTest {
         assertEquals(Position(1, 0), active.position)
     }
 
+    private val yRaise = com.hyperlog.app.library.Exercise(
+        "kneeling_cable_y_raise", "Kneeling Cable Y-Raise", com.hyperlog.app.library.Equipment.Cable,
+        com.hyperlog.app.library.MovementPattern.LateralRaise, com.hyperlog.app.library.GripDemand.Low, listOf("Side Delts"), listOf("Traps"),
+    )
+
+    @Test
+    fun aNewProgramStartsWithItsNewExercisesAndTheOldOneStaysAsTheRecordOfItsSessions() = runTest {
+        programs.import(TestPrograms.twoDays("First"))
+        val first = programs.active.first()!!
+        programs.advance(first.id, Position(1, 0))
+        val result = programs.import(TestPrograms.twoDays("From Claude").replace("\"barbell_bench_press\"", "\"kneeling_cable_y_raise\""), listOf(yRaise))
+        assertTrue(result.toString(), result is ProgramParser.Result.Valid)
+        val active = programs.active.first()!!
+        assertEquals("From Claude", active.program.title)
+        assertEquals(Position(1, 0), active.position)
+        // The library has the new exercise, as the library editor would have saved it.
+        assertEquals(yRaise, ExerciseLibrary(db).exercises.first().single { it.id == yRaise.id })
+        // The program before still reads, for the sessions trained on it.
+        assertEquals("First", programs.program(first.id)!!.title)
+    }
+
+    @Test
+    fun aNewExerciseTheLibraryGainedSinceTheReviewStopsTheImport() = runTest {
+        ExerciseLibrary(db).addNew(listOf(yRaise))
+        val result = programs.import(TestPrograms.twoDays("From Claude").replace("\"barbell_bench_press\"", "\"kneeling_cable_y_raise\""), listOf(yRaise))
+        assertEquals(listOf("newExercises[0].id: the library already has \"kneeling_cable_y_raise\""), (result as ProgramParser.Result.Invalid).errors)
+        assertNull(programs.active.first())
+    }
+
+    @Test
+    fun aNewProgramThatDoesntImportSavesNoExercise() = runTest {
+        val result = programs.import(TestPrograms.twoDays("Broken").replace("\"barbell_bench_press\"", "\"bb_bench\""), listOf(yRaise))
+        assertTrue(result is ProgramParser.Result.Invalid)
+        assertTrue(ExerciseLibrary(db).exercises.first().none { it.id == yRaise.id })
+    }
+
     @Test
     fun finishingADayMovesThePositionOnAndTheLastDayFinishesTheProgram() = runTest {
         programs.import(TestPrograms.twoDays("First"))

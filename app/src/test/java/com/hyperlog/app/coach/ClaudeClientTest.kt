@@ -196,6 +196,86 @@ class ClaudeClientTest {
     }
 
     @Test
+    fun anAttachedPdfGoesAsADocumentAPhotoAsAnImageAndASpreadsheetAsTextInTheAnswer() = runTest {
+        question()
+        val reply = client.reply(request)
+        val pdf = Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1, 2, 3))
+        val photo = Attachment("Whiteboard.jpg", "image/jpeg", byteArrayOf(4, 5))
+        val sheet = Attachment("Essentials.xlsx", Attachment.TEXT, "## Sheet: Week 1\nSquat,4-6".toByteArray())
+        listOf(pdf, photo, sheet).forEach { file ->
+            question()
+            client.reply(request.copy(messages = request.messages + CoachMessage.Assistant(reply) + CoachMessage.Results(listOf(ToolResult("toolu_1", "I attached ${file.name}.", attachment = file)))))
+        }
+        val (document, image, text) = api.received.toList().takeLast(3).map {
+            it.json["messages"]!!.jsonArray.last().jsonObject["content"]!!.jsonArray.single().jsonObject["content"]!!.jsonArray.map { b -> b.jsonObject }
+        }
+        assertEquals("I attached Nippard PPL.pdf.", document[0]["text"]!!.jsonPrimitive.content)
+        assertEquals("document", document[1]["type"]!!.jsonPrimitive.content)
+        assertEquals("Nippard PPL.pdf", document[1]["title"]!!.jsonPrimitive.content)
+        val pdfSource = document[1]["source"]!!.jsonObject
+        assertEquals(listOf("base64", "application/pdf", "AQID"), listOf("type", "media_type", "data").map { pdfSource[it]!!.jsonPrimitive.content })
+        assertEquals("image", image[1]["type"]!!.jsonPrimitive.content)
+        val imageSource = image[1]["source"]!!.jsonObject
+        assertEquals(listOf("base64", "image/jpeg", "BAU="), listOf("type", "media_type", "data").map { imageSource[it]!!.jsonPrimitive.content })
+        // A spreadsheet's sheets go as a plain-text document, under the file's name.
+        assertEquals("document", text[1]["type"]!!.jsonPrimitive.content)
+        assertEquals("Essentials.xlsx", text[1]["title"]!!.jsonPrimitive.content)
+        val textSource = text[1]["source"]!!.jsonObject
+        assertEquals(listOf("text", "text/plain", "## Sheet: Week 1\nSquat,4-6"), listOf("type", "media_type", "data").map { textSource[it]!!.jsonPrimitive.content })
+    }
+
+    /** [question]'s events: thinking, then words, then the ask. */
+    private val questionEvents = listOf(
+        """{"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","model":"claude-opus-5-5","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":2000,"output_tokens":1}}}""",
+        """{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}""",
+        """{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig-1"}}""",
+        """{"type":"content_block_stop","index":0}""",
+        """{"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}""",
+        """{"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"One question first."}}""",
+        """{"type":"content_block_stop","index":1}""",
+        """{"type":"content_block_start","index":2,"content_block":{"type":"tool_use","id":"toolu_1","name":"ask","input":{}}}""",
+        """{"type":"content_block_delta","index":2,"delta":{"type":"input_json_delta","partial_json":"{\"question\":\"Which hand?\"}"}}""",
+        """{"type":"content_block_stop","index":2}""",
+        """{"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":1500}}""",
+        """{"type":"message_stop"}""",
+    )
+
+    /** Packets at most a second apart, so a test can stall past it. */
+    private val quick = com.anthropic.core.Timeout.builder()
+        .connect(java.time.Duration.ofSeconds(1)).read(java.time.Duration.ofSeconds(1)).write(java.time.Duration.ofSeconds(1))
+        .request(java.time.Duration.ofSeconds(20)).build()
+
+    @Test
+    fun aSlowReplyIsReadToItsEndAndSaysWhatClaudeIsDoing() = runTest {
+        // Three seconds in all, under a second between events.
+        api.slowStream(*questionEvents.toTypedArray(), gapMs = 250)
+        val progress = mutableListOf<CoachProgress>()
+        val reply = ClaudeClient(key, baseUrl = api.url, timeout = quick).reply(request) { progress += it }
+        assertEquals("One question first.", reply.text)
+        assertEquals(listOf(CoachProgress.Thinking, CoachProgress.Answering, CoachProgress.Writing(CoachTools.ASK)), progress)
+    }
+
+    @Test
+    fun aReplyThatStopsMidStreamIsDroppedAndItsWholeCauseIsLogged() = runTest {
+        api.slowStream(*questionEvents.toTypedArray(), stallAfter = 2, stallMs = 3_000)
+        fails<CoachError.Dropped> { ClaudeClient(key, baseUrl = api.url, timeout = quick).reply(request) }
+        val warning = warnings().single()
+        // The error, then each cause by class and message.
+        assertTrue(warning, warning.startsWith("Reply failed: Dropped"))
+        assertTrue(warning, warning.contains("SocketTimeoutException"))
+        assertFalse(warning, warning.contains(key))
+    }
+
+    @Test
+    fun theTimeoutsFitALongProgram() {
+        // Packets come every few seconds while Claude thinks (the stream's pings); a program reply
+        // of 64k tokens takes many minutes in all.
+        assertEquals(java.time.Duration.ofSeconds(30), ClaudeClient.TIMEOUT.connect())
+        assertEquals(java.time.Duration.ofMinutes(5), ClaudeClient.TIMEOUT.read())
+        assertEquals(java.time.Duration.ofMinutes(45), ClaudeClient.TIMEOUT.request())
+    }
+
+    @Test
     fun aRefusalIsTypedAndCarriesItsUsage() = runTest {
         api.stream(
             """{"type":"message_start","message":{"id":"msg_3","type":"message","role":"assistant","model":"claude-opus-5-5","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":2000,"output_tokens":0}}}""",

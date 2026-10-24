@@ -43,8 +43,9 @@ object AskClaude {
      * since [lastTrained] (by the [weekdays] plan when there is one), the [gym] picked with its
      * equipment and what's missing there, the program and where you are in it, the sessions of the
      * last [HISTORY_DAYS] days, the [weeklySets] of the last [SET_WEEKS] weeks, every visible
-     * library exercise, and the formats of a Change and a workout. Claude may answer in words alone.
-     * With no program running ([plan] null) there is no plan to change: words or a workout.
+     * library exercise, and the formats of a Change, a workout and a program. Claude may answer in
+     * words alone. With no program running ([plan] null) there is no plan to change: words, a
+     * workout or a program.
      */
     fun prompt(
         words: String,
@@ -75,18 +76,18 @@ object AskClaude {
         if (plan == null) {
             appendLine(
                 "No program is running in Hyperlog: I train ad hoc, so there is no plan to change. Talk it through with me first if " +
-                    "you need to know more. Advice for my next sessions can stay in words. When you build me a workout for today, " +
-                    "reply with exactly one fenced ```json block holding it in the workout format at the end, and nothing else in " +
-                    "that message. I'll paste it into Hyperlog, which checks it and shows it to me before it goes on Today. " +
+                    "you need to know more. Advice for my next sessions can stay in words. When you build me a workout for today or " +
+                    "a new program, reply with exactly one fenced ```json block holding it in its format at the end, and nothing else in " +
+                    "that message. I'll paste it into Hyperlog, which checks it and shows it to me before anything changes. " +
                     "Use only the exercise ids listed here.",
             )
         } else {
             appendLine(
                 "Talk it through with me first if you need to know more. If the plan can stand as it is, say so in words and " +
-                    "send no JSON. Otherwise reply with exactly one fenced ```json block holding a Change or a workout in the " +
+                    "send no JSON. Otherwise reply with exactly one fenced ```json block holding a Change, a workout or a program in the " +
                     "formats at the end, and nothing else in that message: a Change edits the program for a while, a workout is " +
-                    "one day for today outside the program. I'll paste it into Hyperlog, which checks it and shows it to me " +
-                    "before anything changes. Use only the slot, day and exercise ids listed here.",
+                    "one day for today outside the program, and a program replaces the one I run. I'll paste it into Hyperlog, which " +
+                    "checks it and shows it to me before anything changes. Use only the slot, day and exercise ids listed here.",
             )
         }
         appendLine()
@@ -97,6 +98,8 @@ object AskClaude {
         }
         appendLine()
         append(WorkoutFormat.text(library))
+        appendLine()
+        append(ProgramFormat.text(library))
     }
 
     /** Whether [words] already begin with [tile]'s sentence, without its full stop (`Something hurts: …`). */
@@ -204,15 +207,16 @@ object AskClaude {
     sealed interface Reply {
         data class ChangeReply(val change: Change) : Reply
         data class WorkoutReply(val workout: Workout) : Reply
-        data class ProgramReply(val program: Program) : Reply
+        data class ProgramReply(val proposal: ProgramProposal) : Reply
         data class Invalid(val errors: List<String>) : Reply
     }
 
     /**
      * Reads a pasted reply: Claude's whole reply or just its JSON. The fenced block is taken when
-     * there is one, else the outermost braces. An object with `program` is a program, checked as program
-     * import checks it; one with `workout` is a workout, checked as program import checks a day;
-     * anything else is a Change for [program], which must be running.
+     * there is one, else the outermost braces. An object with `program` is a new program, checked as
+     * program import checks it, with its swaps and new exercises (new by id and by [names]); one with
+     * `workout` is a workout, checked as program import checks a day; anything else is a Change for
+     * [program], which must be running.
      */
     fun read(
         pasted: String,
@@ -220,14 +224,15 @@ object AskClaude {
         exercises: Set<String>,
         inForce: Set<Long> = emptySet(),
         merged: Map<String, String> = emptyMap(),
+        names: Map<String, String> = emptyMap(),
     ): Reply {
         val json = extract(pasted) ?: return Reply.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
         val top = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(json) as? kotlinx.serialization.json.JsonObject }.getOrNull()
         val workout = top?.containsKey("workout") == true
         val result = when {
-            top?.containsKey("program") == true -> when (val read = com.hyperlog.app.program.ProgramParser.parse(top.getValue("program").toString(), exercises, merged)) {
-                is com.hyperlog.app.program.ProgramParser.Result.Valid -> Reply.ProgramReply(read.program)
-                is com.hyperlog.app.program.ProgramParser.Result.Invalid -> Reply.Invalid(read.errors.map { "program.$it" })
+            top?.containsKey("program") == true -> when (val read = ProgramProposal.read(top, exercises, names, merged)) {
+                is ProgramProposal.Result.Valid -> Reply.ProgramReply(read.proposal)
+                is ProgramProposal.Result.Invalid -> Reply.Invalid(read.errors)
             }
             workout -> when (val read = com.hyperlog.app.program.ProgramParser.workout(json, exercises, merged)) {
                 is com.hyperlog.app.program.ProgramParser.WorkoutResult.Valid -> Reply.WorkoutReply(read.workout)
