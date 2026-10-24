@@ -384,7 +384,13 @@ fun CoachScreen(
 
 /** A Change in force: its summary and how long it runs, with Revert and Tell Claude how it's going. */
 @Composable
-private fun InForce(record: ChangeRecord, program: ActiveProgram, onRevert: () -> Unit, onHowItsGoing: () -> Unit) {
+internal fun InForce(
+    record: ChangeRecord,
+    program: ActiveProgram,
+    onRevert: () -> Unit,
+    onHowItsGoing: () -> Unit,
+    howItsGoing: String = stringResource(R.string.coach_how_its_going),
+) {
     SegmentedRow(record.change.summary, runsText(record, program), Symbol.Tune)
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = CardPadding, bottom = CardPadding),
@@ -392,7 +398,7 @@ private fun InForce(record: ChangeRecord, program: ActiveProgram, onRevert: () -
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(onClick = onRevert) { Text(stringResource(R.string.program_change_revert)) }
-        FilledTonalButton(onClick = onHowItsGoing) { Text(stringResource(R.string.coach_how_its_going)) }
+        FilledTonalButton(onClick = onHowItsGoing) { Text(howItsGoing) }
     }
 }
 
@@ -400,7 +406,7 @@ private val WeekdayDayMonth = DateTimeFormatter.ofPattern("EEE d MMM", Locale.EN
 
 /** How long a Change in force runs: `Until Tue 27 Oct`, `Rest of Build`, `Rest of the program`. */
 @Composable
-private fun runsText(record: ChangeRecord, program: ActiveProgram): String = when (val scope = record.change.scope) {
+internal fun runsText(record: ChangeRecord, program: ActiveProgram): String = when (val scope = record.change.scope) {
     Scope.RestOfProgram -> stringResource(R.string.change_scope_program)
     Scope.RestOfBlock -> stringResource(
         R.string.change_scope_block,
@@ -488,7 +494,7 @@ private fun BottomBar(
 
 /** The problems of a reply pasted back that Hyperlog can't use, with a button to copy them for Claude. */
 @Composable
-private fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) {
+internal fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val copyProblem = AskClaude.copyProblem(errors)
     // A failed paste scrolls its problems into view.

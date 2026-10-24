@@ -83,6 +83,8 @@ data class ChangeReview(
     val blockName: String?,
     /** The summaries of the Changes in force it ends (its `replaces`). */
     val ends: List<String> = emptyList(),
+    /** The check-in that made a Change in force; null for one under review, or one pasted. */
+    val checkIn: com.hyperlog.app.coach.SavedCheckIn? = null,
 )
 
 internal const val ChangeDiffTag = "change-diff"
@@ -170,6 +172,10 @@ fun ChangeReviewScreen(
                         PositionRows(review.program, from, to, review.diff.daysLeft)
                     }
                 }
+            }
+            // Why it was made: the check-in, under what it is.
+            review.checkIn?.let { made ->
+                item { SectionCard(Modifier.padding(bottom = 8.dp)) { CheckInTranscript(made) } }
             }
             if (review.diff.next == null && review.diff.days.isEmpty()) {
                 item {

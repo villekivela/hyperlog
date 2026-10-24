@@ -94,12 +94,13 @@ class MainActivity : ComponentActivity() {
     private val backups: BackupViewModel by viewModels()
     private val updates: UpdateViewModel by viewModels()
     private val claudeKey: ClaudeKeyViewModel by viewModels()
+    private val checkIns: com.hyperlog.app.ui.coach.CheckInViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns) }
         }
     }
 
@@ -206,6 +207,7 @@ private fun App(
     backupModel: BackupViewModel,
     updateModel: UpdateViewModel,
     claudeKeyModel: ClaudeKeyViewModel,
+    checkInModel: com.hyperlog.app.ui.coach.CheckInViewModel,
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
     val session by sessions.session.collectAsStateWithLifecycle()
@@ -284,6 +286,13 @@ private fun App(
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
     val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
+    // With a Claude key, or the scripted coach, Coach is a check-in with Claude; without, Ask Claude's screen.
+    val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
+    val checkIn by checkInModel.checkIn.collectAsStateWithLifecycle()
+    val scriptedCoach by checkInModel.scripted.collectAsStateWithLifecycle()
+    /** The Changes in force page on Coach is open. */
+    var coachInForce by rememberSaveable { mutableStateOf(false) }
+    val checkInStep = checkIn?.step
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // A restored backup replaces everything the screens hold: start them again on its data.
@@ -305,30 +314,49 @@ private fun App(
     // The focus's marks count the sets trained so far this week.
     LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()
+    // A check-in's Change or workout opens its review, the one a paste opens.
+    LaunchedEffect(checkIn?.checkIn?.turns?.size, checkInStep?.let { it::class }) {
+        when (val step = checkInStep) {
+            is com.hyperlog.app.coach.CheckInStep.ChangeReview -> programModel.propose(step.change)
+            is com.hyperlog.app.coach.CheckInStep.WorkoutReview -> programModel.reviewWorkout(step.workout)
+            else -> Unit
+        }
+    }
+    val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview
     if (running != null) AskForNotifications()
     // A Change under review covers whatever proposed it: the Program screen or the session.
     review?.let { r ->
         ChangeReviewScreen(
             r, exercises.associate { it.id to it.name },
             // A coach's Change, once accepted, is the plan Today shows.
+            // An accepted Change keeps the check-in that made it, and the check-in ends.
             onAccept = {
-                programModel.accept(); endAsk()
+                // A Change from the check-in, or pasted back after it handed off; not one a session proposes.
+                val fromCheckIn = reviewingCheckIn || (checkInStep is com.hyperlog.app.coach.CheckInStep.Failed && screen == Screen.Coach && (running == null || left))
+                programModel.accept(if (fromCheckIn) checkInModel.saved() else null); endAsk()
+                if (fromCheckIn) checkInModel.close()
                 if (screen == Screen.Coach) { screen = Screen.Today; showProgramDay = true }
             },
-            onReject = programModel::reject,
+            // Reject is Back for a check-in: the step before shows again, to change its answer.
+            onReject = { programModel.reject(); if (reviewingCheckIn) checkInModel.back() },
         )
         return
     }
     // A workout's date is the program's today, or the phone's with no program.
     val todayWorkout = waitingWorkouts.firstOrNull { it.addedOn == (program?.today ?: java.time.LocalDate.now()) }
+    // A check-in's workout starts at the gym answered in it (none: Elsewhere); a pasted one at the gym picked on Coach.
+    val workoutGym = checkIn?.checkIn?.let { it.gym ?: if (it.elsewhere) null else coachGym } ?: coachGym
     // A workout from Claude, before it goes on Today.
     workoutReview?.let { w ->
         WorkoutReviewScreen(
             w, exercises.associate { it.id to it.name },
-            onAdd = { programModel.addWorkout(coachGym); endAsk(); screen = Screen.Today },
-            onReject = programModel::rejectWorkout,
+            onAdd = {
+                programModel.addWorkout(workoutGym); endAsk(); screen = Screen.Today
+                if (checkIn != null) checkInModel.close()
+            },
+            onReject = { programModel.rejectWorkout(); if (reviewingCheckIn) checkInModel.back() },
             replaces = todayWorkout?.workout?.name,
-            gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == coachGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
+            gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workoutGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
                 ?: context.getString(R.string.coach_elsewhere),
         )
         return
@@ -484,6 +512,34 @@ private fun App(
             onWeekdayPlan = programModel::setWeekdayPlan,
             )
         }
+        screen == Screen.Coach && checkInAvailable -> com.hyperlog.app.ui.coach.CheckInScreen(
+            checkIn, program,
+            onTile = checkInModel::start,
+            onAnswer = checkInModel::answer,
+            onLeave = { screen = Screen.Today },
+            onBack = checkInModel::back,
+            onClose = { checkInModel.close(); programModel.closePasteErrors() },
+            onTellMeMore = checkInModel::tellMeMore,
+            onTryAgain = checkInModel::tryAgain,
+            lowest = lowest,
+            inForceOpen = coachInForce,
+            onInForceOpen = { coachInForce = it },
+            onOpenChange = programModel::openInForce,
+            onRevert = { programModel.revert(it); endAsk() },
+            onHowItsGoing = checkInModel::howItsGoing,
+            // The key refused or the limit hit: this check-in goes to the Claude app, and its reply is pasted back.
+            onAskClaude = {
+                scope.launch {
+                    val words = checkInModel.saved()?.text().orEmpty()
+                    val gym = gyms.firstOrNull { it.id == checkIn?.checkIn?.gym }
+                    val prompt = programModel.askClaudePrompt(words, gym, checkIn?.checkIn?.elsewhere == true, lastTrained, weekdayPlan.days)
+                    context.startActivity(AskClaudeShare.intent(context, prompt))
+                }
+            },
+            onPaste = { programModel.paste(AskClaudeShare.clipboard(context)) },
+            pasteErrors = pasteErrors,
+            onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
+        )
         screen == Screen.Coach -> CoachScreen(
             program,
             words = coachWords,
@@ -569,6 +625,8 @@ private fun App(
             checkedNow = checkedNow,
             version = BuildConfig.VERSION_NAME,
             claudeKey = claudeKey,
+            scriptedCoach = scriptedCoach.takeIf { com.hyperlog.app.coach.BuildCoach.SCRIPTED },
+            onScriptedCoach = checkInModel::setScripted,
             onSaveKey = claudeKeyModel::save,
             onRemoveKey = claudeKeyModel::remove,
             onDismissKey = claudeKeyModel::dismiss,
@@ -591,6 +649,8 @@ private fun App(
             lastTrained = lastTrained,
             onEaseBack = { days ->
                 val words = context.getString(R.string.coach_ease_back_words, days)
+                // With Claude, a check-in whose first answer is the time off; without, the words to share.
+                if (checkInAvailable) checkInModel.start(words)
                 coachWords = TextFieldValue(words, TextRange(words.length))
                 programModel.closePasteErrors()
                 screen = Screen.Coach

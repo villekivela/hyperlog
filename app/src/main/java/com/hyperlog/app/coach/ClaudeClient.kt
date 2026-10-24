@@ -4,6 +4,7 @@ import android.util.Log
 import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.core.JsonValue
+import com.anthropic.core.jsonMapper
 import com.anthropic.errors.AnthropicException
 import com.anthropic.errors.AnthropicServiceException
 import com.anthropic.errors.PermissionDeniedException
@@ -85,7 +86,7 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
                 block.toolUse().map { ToolCall(it.id(), it.name(), json(it._input()).jsonObject) }.orElse(null)
             },
             usage = usage,
-            original = message,
+            original = jsonMapper().writeValueAsString(message),
         )
     }
 
@@ -112,8 +113,8 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
                 }))
                 // Claude's own reply goes back as it came, its thinking included, as the API requires.
                 is CoachMessage.Assistant -> when (val original = message.reply.original) {
-                    is BetaMessage -> builder.addMessage(original)
-                    else -> builder.addMessage(assistant(message.reply))
+                    null -> builder.addMessage(assistant(message.reply))
+                    else -> builder.addMessage(jsonMapper().readValue(original, BetaMessage::class.java))
                 }
             }
         }

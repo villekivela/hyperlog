@@ -11,7 +11,8 @@ import org.junit.Test
  * check (`update/`).
  */
 class OneHostTest {
-    private val sources = File("src/main/java").walk().filter { it.extension == "kt" }.toList()
+    /** The app's code, the debug build's own (the scripted coach) and the release build's included. */
+    private val sources = listOf("src/main/java", "src/debug/java", "src/release/java").flatMap { File(it).walk().filter { f -> f.extension == "kt" } }
     private val client = File("src/main/java/com/hyperlog/app/coach/ClaudeClient.kt")
 
     private fun File.isClient() = canonicalFile == client.canonicalFile

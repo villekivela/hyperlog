@@ -74,6 +74,15 @@ class ChangesTest {
     }
 
     @Test
+    fun anAcceptedChangeKeepsTheCheckInThatMadeIt() = runTest {
+        val checkIn = SavedCheckIn("Something hurts.", listOf(SavedCheckIn.Step("Which hand?", "Left, only gripping")))
+        programs.accept(change("""{"summary":"No rows","scope":"rest_of_program","operations":[{"op":"remove","slot":"row"}]}"""), checkIn)
+        assertEquals(checkIn, active().history.single().checkIn)
+        // Read back as the app starts again.
+        assertEquals(checkIn, Programs(db, clock = { now }).active.first()!!.history.single().checkIn)
+    }
+
+    @Test
     fun aTemporarySwapIsTrainedInsideItsScopeAndStopsAfterIt() = runTest {
         programs.accept(
             change(

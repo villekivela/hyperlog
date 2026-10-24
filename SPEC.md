@@ -1307,7 +1307,7 @@ else**. **Change my program** is for edits meant to last (swap an exercise, add 
 or fewer sets): Claude asks which exercise and why, and proposes a `rest_of_program` Change, which
 follows the slot into later blocks and stays revertible on the Changes page (owner, 2026-10-24). The tap costs no
 call. Above the tiles, while Changes are in force, one line, `2 changes in force`, opens them
-(below). With no program running, the tiles that change the plan still go to Claude, which can
+(below): the line reads the count over the newest one's summary. With no program running, the tiles that change the plan still go to Claude, which can
 only answer in words or with a workout or a program; Build me a workout and New program stay. A
 pasted Change then reads "No program is running, so there’s nothing for a Change to change." (one
 problem, with the copy button, for Claude). Once a program is finished a Change can still repeat a
@@ -1327,6 +1327,22 @@ fewest sets this week carry the count, fewest first, ties in group order. It ask
 the screen shows "Thinking…". **Back** goes one step back, to change that answer, and Claude asks
 again from there. There is no step counter, since Claude doesn't know in advance how many it needs.
 
+- **How the steps read** (#73): each answer is a full-width row to tap; **Type my own** opens a
+  field with Send. An answer that names a muscle group carries that group's mark (`Back · 4
+  sets`): Claude is told the marked groups and names them as History does, and the app adds the
+  count. An answer naming one of your gyms goes back to Claude with that gym's equipment, and is
+  where a workout from the check-in starts; **Elsewhere** goes back with "I'm not at any of my
+  gyms. Ask what equipment is there if it matters", and a workout from it keeps no gym.
+- **Back** from Thinking stops the call and shows the step just answered; from a failed call
+  too. Back from the first of Claude's steps is the tiles, and from the tiles it leaves Coach.
+  Reject (or Back) on a review is Back: the step before it shows again.
+- **One reply at a time.** Claude may make one call a reply; if it makes several, a proposal wins
+  over a question, and the others go back as "Not shown: Hyperlog uses one question or reply at a
+  time." An `ask` with fewer than 2 or more than 4 answers, or a blank question, is a reply with
+  problems like any other.
+- **New program** goes to Claude too, but until #75 the check-in has no program tool: Claude
+  answers in words or with a workout.
+
 **The end** is one of:
 - **An answer in words**, when the plan can stand ("Ramp-in already eases effort. Use straps and
   train as planned."), with **Done**, and **Tell me more** to go on.
@@ -1335,11 +1351,14 @@ again from there. There is no step counter, since Claude doesn't know in advance
 - **×**, at any step, which drops the check-in.
 
 A check-in is kept, step by step, while you're on other tabs or away from the app, until it ends.
+It is a file in `no_backup` (`check_in.json`), saved before each call, so one left while thinking
+asks again on coming back; a backup has none. Done, ×, Accept and Add to Today end it.
 
 **Replies are checked before you see them.** A Change, workout or program from a tool goes
 through the same validators as a paste or an import. One with problems goes back to Claude as the
 tool's error, paths and all, and Claude tries again, at most twice; then the problems show as
-Paste reply shows them, with **Try again** (a new call) and ×.
+Paste reply shows them, with **Try again** (a new call) and ×. Try again sends those problems
+once more and counts the two tries afresh.
 
 **Changes in force.** The `2 changes in force` line opens a page with one card for each accepted
 Change that covers today or a later day, newest first: its summary and how long it runs (`Until
@@ -1350,6 +1369,9 @@ check-in that made it (its questions and your answers) with it. Tapping a card o
 Change does from today on, read-only and headed "Change in force": the days it still covers, slot
 by slot, with every other Change applied before and after, and the move of the position it made.
 Its one button is **Revert** (asking first); × and Back close it. A finished program has none.
+Under its summary it shows **The check-in** that made it: the opening, then each question over
+your answer. Program → Changes shows the same in a row's dialog. A Change pasted, or proposed from a
+session, has none. It is kept with the Change (`plan_change.check_in`, JSON) and goes into backups.
 
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
 day the Change edited into view, its heading at the top. Start program goes to Today on the new
@@ -1391,6 +1413,20 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   ship without its description. Through the API the formats are the tools' input schemas (`ask`,
   `propose_change`, `propose_workout`, `propose_program`, `strict`); in Ask Claude's prompt they
   are text and examples.
+- **Strict schemas are lean** (#73; `coach/CoachTools.kt`). A request may carry 24 optional and 16
+  union-typed parameters in all, and no ranges, so the schemas leave optional only what the
+  serializer does and Claude can't fill in for it (`slot` on the load, RIR and technique
+  operations, `technique`, `week`, `after`, `replaces`, a slot's `note`, a set line's
+  `technique`); every operation's `reason` and every set line's `count`, `rir` and `rest` are
+  required. `reps` is a number or a range string. The validators check the ranges and ids. A test
+  holds the limits and checks that the replies the validators take fit the schemas.
+- **The check-in's context** (`coach/CheckInContext.kt`) opens with how a check-in goes (the
+  `ask` tool, at most four questions, the gym only when the equipment matters with your gyms and
+  Elsewhere as answers, the workout's effort, time and focus with the marked groups, Change my
+  program's `rest_of_program`, and that a reply's problems come back to fix), then the situation
+  Ask Claude's prompt carries, built by the same code (`AskClaude.situation`). A gym's equipment
+  comes with its answer, not in the context. **How's it going?** opens with the Change, its id and
+  the day it was accepted, then "The check-in that made it:" and that check-in.
 - **Caching.** Through the API the stable part (the formats, the library, the program) comes first
   and is cached, so the questions after the first read it from the cache.
 
@@ -1420,18 +1456,31 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
 - **Errors.** No connection, a timeout or an API error shows "Couldn't reach Claude." with **Try
   again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.
   Check it in Settings." and offers Ask Claude for this check-in. A spend limit reached says so, and
-  offers Ask Claude. Every failure is warned in Logcat (tag `ClaudeClient`) with the HTTP status, the
+  offers Ask Claude. A refusal (after the fallback) reads "Claude declined to answer this one." with
+  Try again and Ask Claude. **Ask Claude** there shares Ask Claude's prompt with the check-in so far
+  as the words (the gym answered, or Elsewhere, with it), and **Paste reply** becomes the step's
+  filled button; a Change pasted back and accepted keeps the check-in, which then ends. Every failure is warned in Logcat (tag `ClaudeClient`) with the HTTP status, the
   API's error type and its message, and a key being checked with its length and whether it holds
   only key characters (`ClaudeKeySetup`); never the key or the headers that carry it.
 - **Testable without a key.** The client is behind one interface (`CoachModel`). Tests use a fake
   that plays scripted turns: questions, each kind of reply, a reply that fails validation and its
   fix, a refusal and each error. **Scripted coach** (Settings, debug builds only) plays canned
   check-ins for every tile with no key and no network, so the wizard can be tried on the phone and
-  by the tester. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
+  by the tester. It is a switch in Settings' Coach group, kept in `setting` as `scripted_coach`
+  (a release build has no switch and never reads it), and its code is in the debug source set
+  (`app/src/debug/.../coach/ScriptedCoach.kt`; the release build's `BuildCoach` has none). It
+  builds its Changes and workouts from the program and library, so they pass the validators:
+  Something hurts and Short on time end in a Change, Change my program asks which and why and
+  proposes a wrong slot first, to show the fix, then a `rest_of_program` swap; Different gym and
+  Build me a workout end in a workout; Tired, New program and Something else in words. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
 - **One host.** A test fails if code outside the client and the update check opens a connection,
   or if the client calls any host but `api.anthropic.com`.
 
 ### Without a key: Ask Claude
+
+Until #74 rebuilds it inside the wizard, a phone without a key (and without the scripted coach)
+keeps the words-first Coach screen: the gym row, starters, Build me a workout's options and the
+words, then Ask Claude and Paste reply. With a key, Coach is the check-in above.
 
 The check-in opens on the same tiles. After a tile, one screen takes your words (a text field, 3
 lines at least, the tile's sentence in it to edit: `Something hurts: `, `I'm short on time today:

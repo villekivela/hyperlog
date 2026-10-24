@@ -109,11 +109,11 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Applies the Change under review and keeps it as history. */
-    fun accept() {
+    /** Applies the Change under review and keeps it as history, with the check-in that made it. */
+    fun accept(checkIn: com.hyperlog.app.coach.SavedCheckIn? = null) {
         val review = _review.value ?: return
         _review.value = null
-        viewModelScope.launch { programs.accept(review.change) }
+        viewModelScope.launch { programs.accept(review.change, checkIn) }
     }
 
     /** Drops the Change under review; nothing changes. */
@@ -199,6 +199,11 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** A workout from Claude waiting for Add to Today or Reject; null when none is. */
     val workout: StateFlow<com.hyperlog.app.coach.Workout?> = _workout.asStateFlow()
 
+    /** Opens a workout from a check-in for review. */
+    fun reviewWorkout(workout: com.hyperlog.app.coach.Workout) {
+        _workout.value = workout
+    }
+
     /** Drops the workout under review; nothing changes. */
     fun rejectWorkout() {
         _workout.value = null
@@ -273,7 +278,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
                 Changes.inForceDiff(active.program, active.position, active.today, active.changes, record.accepted)
             }
             val block = active.program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
-            _inForce.value = id to ChangeReview(record.change, diff, active.program, block)
+            _inForce.value = id to ChangeReview(record.change, diff, active.program, block, checkIn = record.checkIn)
         }
     }
 
