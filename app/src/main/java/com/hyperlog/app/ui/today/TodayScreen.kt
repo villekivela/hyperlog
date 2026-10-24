@@ -164,9 +164,20 @@ fun TodayScreen(
     selectedDay: Long? = null,
     onSelectDay: ((Long?) -> Unit)? = null,
     onProgramDayShown: () -> Unit = {},
+    /** A workout was just added while a session runs: say it waits until the session ends. */
+    workoutAddedNotice: Boolean = false,
+    onWorkoutAddedNoticeShown: () -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val snackScope = rememberCoroutineScope()
+    val addedText = stringResource(R.string.today_workout_added_mid_session)
+    LaunchedEffect(workoutAddedNotice) {
+        if (workoutAddedNotice) {
+            // In Today's own scope, so marking it shown doesn't cancel it.
+            snackScope.launch { snackbars.showSnackbar(addedText, duration = SnackbarDuration.Long) }
+            onWorkoutAddedNoticeShown()
+        }
+    }
     val removedText = stringResource(R.string.today_workout_removed)
     val undoText = stringResource(R.string.today_workout_undo)
     /** The kind of session the gym sheet is open for: null when closed. */

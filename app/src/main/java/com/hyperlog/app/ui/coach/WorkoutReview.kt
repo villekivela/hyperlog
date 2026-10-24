@@ -59,6 +59,8 @@ fun WorkoutReviewScreen(
     replaces: String? = null,
     /** Where it's for: `At Itis`, `Elsewhere`; null with no gyms set up. */
     gym: String? = null,
+    /** × on a check-in's review drops the check-in, where Reject and Back step back; null: × is Reject. */
+    onClose: (() -> Unit)? = null,
 ) {
     BackHandler(onBack = onReject)
     var replacing by rememberSaveable { mutableStateOf(false) }
@@ -82,7 +84,9 @@ fun WorkoutReviewScreen(
                 colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(R.string.workout_review_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onReject) { SymbolIcon(Symbol.Close, stringResource(R.string.change_reject)) }
+                    IconButton(onClick = onClose ?: onReject) {
+                        SymbolIcon(Symbol.Close, stringResource(if (onClose != null) R.string.checkin_close else R.string.change_reject))
+                    }
                 },
             )
         },

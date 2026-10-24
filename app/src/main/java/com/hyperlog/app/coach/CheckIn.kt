@@ -303,6 +303,18 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
             },
         )
 
+        /**
+         * The answer Back will open again, when you typed it yourself: the last answer you gave, if
+         * it went to a question and isn't one of its answers. Null for a tapped answer or Tell me more.
+         */
+        fun ownAnswer(checkIn: CheckIn): String? {
+            val turn = checkIn.turns.lastOrNull { it.answer?.byYou == true } ?: return null
+            val shown = turn.answer?.shown ?: return null
+            val call = turn.reply.toolCalls.firstOrNull { it.name == CoachTools.ASK } ?: return null
+            val question = (ask(call.input) as? Read.Valid)?.step as? CheckInStep.Question ?: return null
+            return shown.takeUnless { it in question.answers }
+        }
+
         private fun ask(input: JsonObject): Read {
             val question = (input["question"] as? JsonPrimitive)?.contentOrNull?.trim().orEmpty()
             val answers = (input["answers"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.trim() }

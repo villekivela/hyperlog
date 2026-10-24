@@ -328,6 +328,7 @@ emulator with the scripted coach.
 - No connection (`checkin-09-no-connection`); key refused (`checkin-10-key-refused`); spend limit
   (`checkin-11-spend-limit`); declined (`checkin-12-declined`); after Ask Claude, a bad paste's
   problems under it (`checkin-13-bad-paste`).
+- Add to Today while a session runs: Today's snackbar (`checkin-17-added-mid-session`, dark).
 - Changes in force (`checkin-14-in-force`); a Change in force with the check-in that made it
   (`checkin-15-transcript`).
 - The emulator shots are at font scale 1.15, the owner's; the tiles at 1.3 (`checkin-16-large-text`)
@@ -338,7 +339,16 @@ emulator with the scripted coach.
 - A tile, an answer and Send each start a call at once: Thinking shows in their place. No
   confirm step.
 - Type my own opens its card in place with the keyboard up; Send (or the keyboard's send key)
-  sends the trimmed words, and is disabled while they're blank. Back or another answer leaves it.
+  sends the trimmed words, and is disabled while they're blank. Its words are kept outside the
+  screen (`CheckInViewModel.draft`), so a half-typed answer survives a tab switch; they're cleared
+  when an answer goes or the check-in ends.
+- Back (or Reject) to a question you answered in your own words opens Type my own with them, the
+  cursor at the end, so a wrong guess from Claude is one edit away.
+- On a review from a check-in, × drops the check-in, as on every step (its label is "Close the
+  check-in"); Reject and Back step back to the question before.
+- Add to Today while a session runs lands on Today with a long snackbar, "Workout added. It's on
+  Today once this session ends.", since Today shows the running session's day
+  (`checkin-17-added-mid-session`).
 - The bar's title is the tile (or "How's it going?", "Easing back in"); Back is one step back;
   × drops the check-in at any step.
 - The navigation bar stays through the check-in, so another tab can be checked and the check-in
@@ -363,6 +373,12 @@ emulator with the scripted coach.
   moved onto the 24 dp edge; the strip's text button onto the 24 dp edge; the bad paste's
   problems onto the card's edge; the bar came back when the last Change is reverted (it stayed
   hidden).
+- Tester's report (`checkin-test-report.md`), fixed: × on a review now drops the check-in (it
+  stepped back, like Reject); typed answers survive a tab switch and come back on Back or Reject;
+  the scripted coach offers Type my own on the focus and "which exercise" questions (effort and
+  time stay fixed); Add to Today mid-session says where the workout went. Left for the owner:
+  what Reject should lead to, Tell me more replacing the first answer, the review not showing
+  your answers, and more gyms than an answer list holds.
 
 ## Pass notes
 

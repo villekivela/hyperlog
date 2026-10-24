@@ -570,6 +570,7 @@
     </plurals>
     <string name="checkin_in_force_title">Changes in force</string>
     <string name="checkin_hows_it_going">How’s it going?</string>
+    <string name="today_workout_added_mid_session">Workout added. It’s on Today once this session ends.</string>
     <string name="checkin_title">Check-in</string>
     <string name="checkin_title_hows_it_going">How’s it going?</string>
     <string name="checkin_title_ease_back">Easing back in</string>

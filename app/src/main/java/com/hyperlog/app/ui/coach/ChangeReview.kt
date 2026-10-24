@@ -107,6 +107,8 @@ fun ChangeReviewScreen(
      * Revert (asking first) in place of Accept; × and Back close it ([onReject]).
      */
     onRevert: (() -> Unit)? = null,
+    /** × on a check-in's review drops the check-in, where Reject and Back step back; null: × is Reject. */
+    onClose: (() -> Unit)? = null,
 ) {
     BackHandler(onBack = onReject)
     var reverting by rememberSaveable { mutableStateOf(false) }
@@ -129,8 +131,17 @@ fun ChangeReviewScreen(
                 colors = hyperlogTopBarColors(),
                 title = { Text(stringResource(if (onRevert != null) R.string.change_in_force_title else R.string.change_review_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onReject) {
-                        SymbolIcon(Symbol.Close, stringResource(if (onRevert != null) R.string.change_close else R.string.change_reject))
+                    IconButton(onClick = onClose ?: onReject) {
+                        SymbolIcon(
+                            Symbol.Close,
+                            stringResource(
+                                when {
+                                    onClose != null -> R.string.checkin_close
+                                    onRevert != null -> R.string.change_close
+                                    else -> R.string.change_reject
+                                },
+                            ),
+                        )
                     }
                 },
             )

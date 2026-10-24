@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.BuildCoach
+import com.hyperlog.app.coach.CheckInCoach
 import com.hyperlog.app.coach.CheckInContext
 import com.hyperlog.app.coach.CheckInFrame
 import com.hyperlog.app.coach.CheckInRunner
@@ -32,7 +33,9 @@ import com.hyperlog.app.week.WeekdayPlans
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -121,19 +124,57 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
     val checkIn: StateFlow<CheckInView?> = runner.state
     val thinking: StateFlow<Boolean> = runner.thinking
 
-    fun start(tile: Tile) = runner.start(tile)
+    fun start(tile: Tile) {
+        _draft.value = null
+        runner.start(tile)
+    }
 
     /** Ease back in: a check-in whose first answer is the time off. */
-    fun easeBackIn(words: String) = runner.start(words, com.hyperlog.app.coach.Opening.EaseBackIn)
+    fun easeBackIn(words: String) {
+        _draft.value = null
+        runner.start(words, com.hyperlog.app.coach.Opening.EaseBackIn)
+    }
 
     /** How's it going? about a Change in force: it opens with the Change and the check-in that made it. */
-    fun howItsGoing(record: com.hyperlog.app.program.ChangeRecord) = runner.start(CheckInContext.howItsGoing(record), com.hyperlog.app.coach.Opening.HowsItGoing)
+    fun howItsGoing(record: com.hyperlog.app.program.ChangeRecord) {
+        _draft.value = null
+        runner.start(CheckInContext.howItsGoing(record), com.hyperlog.app.coach.Opening.HowsItGoing)
+    }
 
-    fun answer(text: String) = runner.answer(text)
-    fun tellMeMore() = runner.tellMeMore()
+    private val _draft = MutableStateFlow<String?>(null)
+
+    /**
+     * Type my own's words while it's open (null: closed). Kept here so a half-typed answer survives
+     * a tab switch; cleared when an answer goes or the check-in ends.
+     */
+    val draft: StateFlow<String?> = _draft.asStateFlow()
+
+    fun draft(text: String?) {
+        _draft.value = text
+    }
+
+    fun answer(text: String) {
+        _draft.value = null
+        runner.answer(text)
+    }
+
+    fun tellMeMore() {
+        _draft.value = null
+        runner.tellMeMore()
+    }
+
     fun tryAgain() = runner.tryAgain()
-    fun back() = runner.back()
-    fun close() = runner.close()
+
+    /** Back: a question you answered in your own words opens Type my own with them again. */
+    fun back() {
+        _draft.value = checkIn.value?.checkIn?.let(CheckInCoach::ownAnswer)
+        runner.back()
+    }
+
+    fun close() {
+        _draft.value = null
+        runner.close()
+    }
 
     /** The check-in as an accepted Change keeps it. */
     fun saved(): SavedCheckIn? = checkIn.value?.checkIn?.let(com.hyperlog.app.coach.CheckInCoach::saved)

@@ -95,7 +95,7 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
             Tile.Workout -> listOf(
                 ask("How hard?", "Easy", "Normal", "Hard", own = false),
                 ask("How long, warm-ups and rest included?", "45 min", "1 h", "1 h 15", "1 h 30", own = false),
-                ask("What to focus on?", *(world.lowest.map { it.first }.ifEmpty { listOf("Back", "Legs") }.take(3) + "Balanced full body").toTypedArray(), own = false),
+                ask("What to focus on?", *(world.lowest.map { it.first }.ifEmpty { listOf("Back", "Legs") }.take(3) + "Balanced full body").toTypedArray(), own = true),
                 workout(world, "Built from your answers, with what's behind this week first."),
             )
             Tile.NewProgram -> listOf(

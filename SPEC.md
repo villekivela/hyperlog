@@ -1376,7 +1376,8 @@ session, has none. It is kept with the Change (`plan_change.check_in`, JSON) and
 
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
 day the Change edited into view, its heading at the top. Start program goes to Today on the new
-program's first day.
+program's first day. Add to Today while a session runs lands on Today, which still shows the session, with "Workout
+added. It’s on Today once this session ends."
 
 **Time off on Today.** Days off are counted from your training days (the weekday plan): whole
 days from the first planned day after the last finished session that went untrained (today isn't

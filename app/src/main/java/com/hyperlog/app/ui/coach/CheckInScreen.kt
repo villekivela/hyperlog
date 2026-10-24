@@ -23,6 +23,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -153,9 +155,16 @@ fun CheckInScreen(
     onPaste: () -> Unit = {},
     pasteErrors: List<String>? = null,
     onCopyProblems: (List<String>) -> Unit = {},
+    /**
+     * Type my own's words while it's open (null: closed), kept by the caller so they survive a tab
+     * switch and come back on Back to a question answered in your own words. Without [onDraft] the
+     * screen keeps its own.
+     */
+    draft: String? = null,
+    onDraft: ((String?) -> Unit)? = null,
 ) {
     when {
-        view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems)
+        view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems, draft, onDraft)
         inForceOpen && program != null && program.inForce.isNotEmpty() -> InForcePage(
             program, onBack = { onInForceOpen(false) }, onOpenChange, onRevert, onHowItsGoing = { onInForceOpen(false); onHowItsGoing(it) }, modifier,
         )
@@ -319,6 +328,8 @@ private fun Step(
     onPaste: () -> Unit,
     pasteErrors: List<String>?,
     onCopyProblems: (List<String>) -> Unit,
+    draft: String?,
+    onDraft: ((String?) -> Unit)?,
 ) {
     BackHandler(onBack = onBack)
     val step = view.step
@@ -385,7 +396,7 @@ private fun Step(
             when (step) {
                 // A review shows over this screen; until it does, the step reads as thinking.
                 CheckInStep.Thinking, is CheckInStep.ChangeReview, is CheckInStep.WorkoutReview -> Thinking()
-                is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size)
+                is CheckInStep.Question -> Question(step, lowest, onAnswer, key = view.checkIn.turns.size, draft, onDraft)
                 is CheckInStep.Words -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
                     SectionCard(padding = CardPadding) {
                         Text(step.text, Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodyLarge)
@@ -482,9 +493,20 @@ private fun Thinking() {
  * it. An answer naming a muscle group behind this week carries its sets (`Back · 4 sets`).
  */
 @Composable
-private fun Question(step: CheckInStep.Question, lowest: List<Pair<String, Double>>, onAnswer: (String) -> Unit, key: Int) {
-    var typing by rememberSaveable(key) { mutableStateOf(false) }
-    var own by rememberSaveable(key) { mutableStateOf("") }
+private fun Question(
+    step: CheckInStep.Question,
+    lowest: List<Pair<String, Double>>,
+    onAnswer: (String) -> Unit,
+    key: Int,
+    draft: String?,
+    onDraft: ((String?) -> Unit)?,
+) {
+    var kept by rememberSaveable(key) { mutableStateOf<String?>(null) }
+    // Type my own's words, null while it's closed: the caller's draft, or the screen's own.
+    val typed = if (onDraft != null) draft else kept
+    val setTyped: (String?) -> Unit = onDraft ?: { kept = it }
+    val typing = typed != null
+    val own = typed.orEmpty()
     val marks = lowest.toMap()
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
@@ -506,7 +528,7 @@ private fun Question(step: CheckInStep.Question, lowest: List<Pair<String, Doubl
         if (step.own) {
             Spacer(Modifier.height(GroupGap))
             if (!typing) {
-                Segment(0, 1, onClick = { typing = true }) {
+                Segment(0, 1, onClick = { setTyped("") }) {
                     Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding), verticalAlignment = Alignment.CenterVertically) {
                         SymbolIcon(Symbol.Keyboard, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
                         Spacer(Modifier.width(16.dp))
@@ -519,8 +541,10 @@ private fun Question(step: CheckInStep.Question, lowest: List<Pair<String, Doubl
                 val send = { if (own.isNotBlank()) onAnswer(own.trim()) }
                 Segment(0, 1) {
                     Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        // The cursor starts after words brought back, so they can be added to.
+                        var field by remember(key) { mutableStateOf(TextFieldValue(own, TextRange(own.length))) }
                         TextField(
-                            own, { own = it },
+                            field, { field = it; setTyped(it.text) },
                             Modifier.weight(1f).offset(x = (-4).dp).focusRequester(focus),
                             placeholder = { Text(stringResource(R.string.checkin_own_label)) },
                             textStyle = MaterialTheme.typography.bodyLarge,

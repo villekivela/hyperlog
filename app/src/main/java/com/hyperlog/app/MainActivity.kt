@@ -289,9 +289,12 @@ private fun App(
     // With a Claude key, or the scripted coach, Coach is a check-in with Claude; without, Ask Claude's screen.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
     val checkIn by checkInModel.checkIn.collectAsStateWithLifecycle()
+    val checkInDraft by checkInModel.draft.collectAsStateWithLifecycle()
     val scriptedCoach by checkInModel.scripted.collectAsStateWithLifecycle()
     /** The Changes in force page on Coach is open. */
     var coachInForce by rememberSaveable { mutableStateOf(false) }
+    /** A workout was added while a session runs: Today says so once. */
+    var workoutAddedMidSession by rememberSaveable { mutableStateOf(false) }
     // Reverting the last one closes the page, so the tiles (and the bar) come back.
     val noneInForce = program?.inForce.isNullOrEmpty()
     LaunchedEffect(noneInForce) { if (noneInForce) coachInForce = false }
@@ -342,6 +345,8 @@ private fun App(
             },
             // Reject is Back for a check-in: the step before shows again, to change its answer.
             onReject = { programModel.reject(); if (reviewingCheckIn) checkInModel.back() },
+            // × drops the check-in, as on every one of its steps.
+            onClose = if (reviewingCheckIn) ({ programModel.reject(); checkInModel.close() }) else null,
         )
         return
     }
@@ -356,8 +361,11 @@ private fun App(
             onAdd = {
                 programModel.addWorkout(workoutGym); endAsk(); screen = Screen.Today
                 if (checkIn != null) checkInModel.close()
+                // Today shows the running session, not the workout: say where it went.
+                if (running != null) workoutAddedMidSession = true
             },
             onReject = { programModel.rejectWorkout(); if (reviewingCheckIn) checkInModel.back() },
+            onClose = if (reviewingCheckIn) ({ programModel.rejectWorkout(); checkInModel.close() }) else null,
             replaces = todayWorkout?.workout?.name,
             gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workoutGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
                 ?: context.getString(R.string.coach_elsewhere),
@@ -521,6 +529,8 @@ private fun App(
             checkIn, program,
             onTile = checkInModel::start,
             onAnswer = checkInModel::answer,
+            draft = checkInDraft,
+            onDraft = checkInModel::draft,
             onLeave = { screen = Screen.Today },
             onBack = checkInModel::back,
             onClose = { checkInModel.close(); programModel.closePasteErrors() },
@@ -638,6 +648,8 @@ private fun App(
         )
         else -> todayState.SaveableStateProvider("today") { TodayScreen(
             sessionRunning = running != null,
+            workoutAddedNotice = workoutAddedMidSession,
+            onWorkoutAddedNoticeShown = { workoutAddedMidSession = false },
             onResume = { left = false },
             onStart = { gym, adHoc, swaps ->
                 left = false

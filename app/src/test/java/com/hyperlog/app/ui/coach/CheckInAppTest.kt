@@ -1,7 +1,11 @@
 package com.hyperlog.app.ui.coach
 
 import android.content.Context
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -123,6 +127,55 @@ class CheckInAppTest {
         compose.openTab("Settings")
         compose.click("Scripted coach")
         compose.openTab("Coach")
+        compose.waitFor("What’s going on?")
+    }
+
+    @Test
+    fun closeOnAReviewDropsTheCheckInWhereRejectStepsBack() {
+        compose.openTab("Coach")
+        compose.click("Build me a workout")
+        compose.waitFor("How hard?")
+        compose.click("Normal")
+        compose.waitFor("How long, warm-ups and rest included?")
+        compose.click("1 h")
+        compose.waitFor("What to focus on?")
+        compose.click("Balanced full body")
+        compose.waitFor("Workout for today")
+        // Reject is Back: the question before.
+        compose.click("Reject")
+        compose.waitFor("What to focus on?")
+        compose.click("Balanced full body")
+        compose.waitFor("Workout for today")
+        // × drops the check-in, as on every step.
+        compose.onNodeWithContentDescription("Close the check-in").performClick()
+        compose.waitFor("What’s going on?")
+        compose.onNodeWithText("Workout for today").assertDoesNotExist()
+    }
+
+    @Test
+    fun yourOwnWordsSurviveATabSwitchAndComeBackOnBack() {
+        compose.openTab("Coach")
+        compose.click("Something hurts")
+        compose.waitFor("Where does it hurt?")
+        compose.click("Type my own")
+        compose.onNode(hasSetTextAction()).performTextInput("Left wrist")
+        // Half typed, to History and back: still there.
+        compose.openTab("History")
+        compose.openTab("Coach")
+        compose.await(hasSetTextAction() and hasText("Left wrist"))
+        compose.onNodeWithContentDescription("Send").performClick()
+        compose.waitFor("Does it hurt when you press, or only when you grip?")
+        // Back to the question answered in your own words: Type my own opens with them.
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.waitFor("Where does it hurt?")
+        compose.await(hasSetTextAction() and hasText("Left wrist"))
+        // × ends it, and its words with it (the check-in file outlives the test).
+        compose.onNodeWithContentDescription("Close the check-in").performClick()
+        compose.waitFor("What’s going on?")
+        compose.click("Something hurts")
+        compose.waitFor("Where does it hurt?")
+        compose.onNode(hasSetTextAction()).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Close the check-in").performClick()
         compose.waitFor("What’s going on?")
     }
 }
