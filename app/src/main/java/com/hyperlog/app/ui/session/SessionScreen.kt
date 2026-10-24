@@ -724,7 +724,8 @@ private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
             .testTag(DayDoneTag),
     ) {
         if (records.isNotEmpty()) {
-            RecordLines(records, Modifier.padding(bottom = 16.dp), style = MaterialTheme.typography.bodyMedium, color = ink, tint = ink)
+            // A long list scrolls inside the strip, which never grows past the pad it replaces.
+            RecordLines(records, Modifier.padding(bottom = 20.dp).heightIn(max = 288.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)

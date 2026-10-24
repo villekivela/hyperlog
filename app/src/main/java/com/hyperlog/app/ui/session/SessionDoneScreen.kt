@@ -70,8 +70,8 @@ fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: ()
                     Segment(0, 1) {
                         Column(Modifier.fillMaxWidth().padding(CardPadding).testTag(RecordListTag)) {
                             Text(stringResource(R.string.records_title), style = MaterialTheme.typography.titleMedium)
-                            Spacer(Modifier.height(8.dp))
-                            RecordLines(records, style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.height(12.dp))
+                            RecordLines(records)
                         }
                     }
                     Spacer(Modifier.height(16.dp))

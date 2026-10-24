@@ -1120,9 +1120,12 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     with the exercise's learned Epley constant, over its history and this session.
   - **As the set logs**, its row takes a small mark, `Estimate record` or `Rep record`, kept on
     the set wherever it shows (the session, Session done, History). The mark is a trophy, the
-    Material Symbol `trophy`, read by TalkBack as its name: a badge on the set's index circle in the
-    set table, and after the set's RIR chip in set text. **Day done** and Session done
-    list the session's records (`Barbell bench press · 92.5 × 5 [1] · Estimate record`).
+    Material Symbol `trophy`, read by TalkBack as its name, in ink (never the accent, which marks
+    what you act on): a badge on the lower corner of the set's index circle in the set table, and
+    after the set's RIR chip in set text, in the text's colour. **Day done** and Session done
+    list the session's records, a row each: the trophy, the exercise, and under it the set and the
+    record (`92.5 × 5 [1] · Estimate record`), read by TalkBack as one line
+    (`Barbell bench press · 92.5 × 5 [1] · Estimate record`).
   - Records are worked out from the logged sets, never stored: correcting a set moves them.
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
   weighted bodyweight exercises.

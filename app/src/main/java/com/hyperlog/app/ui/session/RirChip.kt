@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.platform.LocalDensity
@@ -175,5 +176,8 @@ internal fun RirText(
         }
         appendRir(text.substring(at), target, chips)
     }
-    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize) + recordMarkContent())
+    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize) + recordMarkContent(
+        // The mark is ink of the text it sits in, never the accent.
+        color.takeOrElse { style.color.takeOrElse { androidx.compose.material3.LocalContentColor.current } },
+    ))
 }

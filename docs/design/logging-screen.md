@@ -78,6 +78,8 @@ Colour comes from Hyperlog's Ink and violet theme, light and dark:
 | Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
 | Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a set through its drops or mini-sets |
 | Technique set | tertiaryContainer circle and tall pill, onTertiaryContainer; the badge tertiary with its symbol in onTertiary |
+| Record set | a 16 dp onSurfaceVariant badge on the index circle's lower corner, its 12 dp `trophy` in surface |
+| Record mark in set text | `trophy` at 1.2 em after the RIR chip, in the text's own colour |
 | Check | outlineVariant ring to do, primary ring on the row a tap logs, filled primary with an onPrimary `check` when done |
 | Prefilled values and placeholders | outline |
 | Done values | onSurface |
@@ -90,7 +92,7 @@ Colour comes from Hyperlog's Ink and violet theme, light and dark:
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
 | Rest pill | primaryContainer, time left laid over it in onPrimaryContainer at 16%; surfaceContainerHighest after rest |
 | Breathing pill | tertiaryContainer |
-| Day done strip | primaryContainer, rounded 28 dp at the top |
+| Day done strip | primaryContainer, rounded 28 dp at the top; its records in onPrimaryContainer, the set line at 80% |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
 Two fixed scales sit outside the theme:
@@ -280,6 +282,44 @@ back returns to the summary.
 **Day done.** When every planned set is logged, the pad gives way to a primaryContainer strip
 rounded at the top: `check_circle`, "Day done", **Finish session**.
 
+**Records** (#71, SPEC Records). A record is good news, not a task, so its mark stays small and
+in ink.
+
+- *Principles.* The mark never takes the violet accent (that marks what you act on or what's
+  selected) nor green, amber, red or plate blue (RIR, progression, plates, errors). One shape, the
+  `trophy` symbol, everywhere; the words `Estimate record` / `Rep record` say which kind, so the
+  two kinds never rest on colour or shape. A record's list row reads like the exercise summaries
+  under it.
+- *Set table.* The trophy sits in a 16 dp onSurfaceVariant badge on the index circle's lower
+  corner, the technique badge's sibling (that one is violet, on the upper corner), so a drop set
+  that is also a record carries both. It shows from the moment the set logs; correcting the set
+  moves it.
+- *Set text* (Session done, History's past session, the session list): the trophy after the set's
+  RIR chip, in the text's colour, read by TalkBack as the record's name.
+- *Day done.* The records stand above the `check_circle` row in the strip, one row each:
+  the trophy (24 dp, in the check's column), the exercise in bodyLarge, and under it the set and
+  the record in bodyMedium (onPrimaryContainer at 80%); 12 dp between rows, 20 dp before Day
+  done. Past 288 dp the list scrolls inside the strip. No records, no list.
+- *Session done.* A `Records` card (titleMedium head) above the exercise summaries, with the same
+  rows in onSurface and onSurfaceVariant; no records, no card.
+- TalkBack reads a row as one line: `Barbell Bench Press · 92.5 × 5 1 RIR · Estimate record`.
+
+```
+ (1)ᵀ  97.5 × 6    100     6   ▐1▌   (✓)     ← ᵀ: the ink trophy badge, lower corner
+ ╭──────────────────────────────────────╮
+ │ Records                              │     ← Session done: a card above the summaries
+ │ 🏆  Barbell Bench Press               │
+ │     100 × 6 ▐1▌ · Estimate record     │
+ │ 🏆  Barbell Bench Press               │
+ │     87.5 × 9 ▐1▌ · Rep record         │
+ ╰──────────────────────────────────────╯
+ Barbell Bench Press                    ›
+ 100 × 6 ▐1▌🏆   87.5 × 9 ▐1▌🏆   87.5 × 8 ▐1▌   ← set text: the trophy after the chip
+```
+
+Screens: `light-` and `dark-session-records.png`, `-day-done-records.png`,
+`-session-done-records.png` (renders from `SessionRenders`).
+
 **Leave dialog.** Back on the session screen asks "Leave the session?", with "It keeps running.
 Everything logged is saved." (Stay / Leave). Every tap is saved, so Leave goes to Today, which
 offers **Resume session**. The app opens on a running session. Every dialog in the app orders its
@@ -300,7 +340,8 @@ buttons this way: the way out first, the action last, at the right.
   session?", "Exercises with nothing logged are left out. You can resume it from Session done."
   (Keep going / Finish), the same dialog shape as Leave. The session list ends with Add exercise and Finish
   session. Its other exercises have **Start**, because ad-hoc exercises are never "done".
-- **Session done** shows the start time and duration under the title, the summaries, and a
+- **Session done** shows the start time and duration under the title, the Records card when the
+  session made any, the summaries, and a
   filled **Done** at the bottom right that returns to Today (back does the same), with a text
   **Resume session** beside it that reopens the session as it was, for a finish by mistake. Its
   rows open the exercise's table to correct (ticket #15, below).

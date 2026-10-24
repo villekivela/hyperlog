@@ -710,11 +710,12 @@ private fun RowScope.IndexCell(
                     contentAlignment = Alignment.Center,
                 ) { SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(12.dp), tint = cs.onTertiary) }
             }
+            // The record's trophy on the lower corner, the technique's sibling: in ink, not the accent.
             record?.let {
                 Box(
-                    Modifier.offset(x = IndexSize - 14.dp, y = IndexSize / 2 - 2.dp).size(16.dp).clip(CircleShape).background(cs.primaryContainer),
+                    Modifier.offset(x = IndexSize - 14.dp, y = IndexSize / 2 - 2.dp).size(16.dp).clip(CircleShape).background(cs.onSurfaceVariant),
                     contentAlignment = Alignment.Center,
-                ) { RecordMark(it, Modifier.size(12.dp), tint = cs.onPrimaryContainer) }
+                ) { RecordMark(it, Modifier.size(12.dp), tint = cs.surface) }
             }
         }
         plus?.let { add ->

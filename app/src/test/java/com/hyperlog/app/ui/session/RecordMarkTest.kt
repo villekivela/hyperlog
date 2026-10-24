@@ -46,8 +46,8 @@ class RecordMarkTest {
     /** Set text as the screen writes it, with no break inside a set. */
     private val String.nb get() = replace(' ', '\u00A0')
 
-    /** Words in text or in a symbol's description. */
-    private fun says(words: String) = hasText(words, substring = true) or hasContentDescription(words, substring = true)
+    /** Words in text (where a record's name never breaks) or in a symbol's description. */
+    private fun says(words: String) = hasText(words, substring = true) or hasText(words.nb, substring = true) or hasContentDescription(words, substring = true)
 
     private fun count(matcher: SemanticsMatcher, n: Int) = compose.onAllNodes(matcher, useUnmergedTree = true).assertCountEquals(n)
 
