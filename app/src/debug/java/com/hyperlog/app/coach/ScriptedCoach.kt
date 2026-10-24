@@ -143,7 +143,12 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
         return call(
             CoachTools.PROPOSE_PROGRAM,
             buildJsonObject {
-                put("program", Json.parseToJsonElement(program).jsonObject.let { JsonObject(it + ("title" to JsonPrimitive("Scripted full body, 2 days"))) })
+                val head = mapOf(
+                    "title" to JsonPrimitive("Scripted full body, 2 days"),
+                    "author" to JsonPrimitive("Claude"),
+                    "description" to JsonPrimitive("Two full-body days a week: a squat or hinge, a press and a row, then arms."),
+                )
+                put("program", JsonObject(Json.parseToJsonElement(program).jsonObject + head))
                 putJsonArray("swaps") { add(buildJsonObject { put("from", "Seal Row"); put("to", row) }) }
                 putJsonArray("newExercises") {
                     add(

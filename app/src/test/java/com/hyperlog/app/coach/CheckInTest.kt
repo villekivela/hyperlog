@@ -250,19 +250,26 @@ class CheckInTest {
     }
 
     @Test
-    fun aFileIsntKeptSoACheckInReadBackWithoutItAsksForItAgain() = runTest {
-        val model = FakeCoachModel.replies(ask("Attach the program?", "From my answers", "From scratch", attach = true), ask("How many days?", "3", "4"))
+    fun aFileIsntKeptSoACheckInReadBackWithoutItAsksForItAgainBeforeTheNextCall() = runTest {
+        val model = FakeCoachModel.replies(ask("Attach the program?", "From my answers", "From scratch", attach = true), call(CoachTools.PROPOSE_PROGRAM, newProgram()))
         val coach = coach(model)
         val attached = coach.attach(coach.start(Tile.NewProgram, frame), Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1, 2, 3)))
-        // Saved and read back, the file's bytes are gone: the step that took it shows again.
+        // Saved and read back, the file's bytes are gone; the review it led to still shows.
         val json = Json { ignoreUnknownKeys = true }
         val read = json.decodeFromString(CheckIn.serializer(), json.encodeToString(CheckIn.serializer(), attached))
         assertEquals(null, read.turns.first().answer!!.results.single().attachment!!.data)
-        val back = CheckInCoach.withoutLostFiles(read)
+        assertTrue(coach.step(read) is CheckInStep.ProgramReview)
+        // A call that would carry it goes back to the step that took it instead, and Claude isn't asked.
+        val back = coach.run(read.copy(turns = read.turns.dropLast(1) + read.turns.last().copy(answer = Answer(text = "Fewer days."))))
         assertEquals("Attach the program?", (coach.step(back) as CheckInStep.Question).question)
         assertEquals(1, back.turns.size)
-        // A check-in with its file still in memory is left as it is.
-        assertEquals(attached, CheckInCoach.withoutLostFiles(attached))
+        assertEquals(2, model.requests.size)
+    }
+
+    @Test
+    fun anAttachmentIsEqualByItsBytes() {
+        assertEquals(Attachment("a.pdf", Attachment.PDF, byteArrayOf(1, 2)), Attachment("a.pdf", Attachment.PDF, byteArrayOf(1, 2)))
+        assertTrue(Attachment("a.pdf", Attachment.PDF, byteArrayOf(1)) != Attachment("a.pdf", Attachment.PDF, byteArrayOf(2)))
     }
 
     /** Claude's calls, numbered in each test. */

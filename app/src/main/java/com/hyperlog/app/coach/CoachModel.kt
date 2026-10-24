@@ -60,8 +60,15 @@ data class ToolResult(val callId: String, val content: String, val isError: Bool
 data class Attachment(val name: String, val mediaType: String, @Transient val data: ByteArray? = null) {
     val pdf: Boolean get() = mediaType == PDF
 
+    // Equal by the bytes, not the array: a check-in holding a file compares by what it sends.
+    override fun equals(other: Any?): Boolean =
+        other is Attachment && name == other.name && mediaType == other.mediaType && data.contentEquals(other.data)
+
+    override fun hashCode(): Int = (name.hashCode() * 31 + mediaType.hashCode()) * 31 + data.contentHashCode()
+
     companion object {
         const val PDF = "application/pdf"
+        const val JPEG = "image/jpeg"
     }
 }
 

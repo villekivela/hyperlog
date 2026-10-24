@@ -71,7 +71,7 @@ class CheckInRunnerTest {
     }
 
     @Test
-    fun aFileAttachedIsNeverStoredSoComingBackAsksForItAgain() = runTest {
+    fun aFileAttachedIsNeverStoredSoComingBackAsksForItAgainBeforeTheNextCall() = runTest {
         val first = runner(backgroundScope, FakeCoachModel.replies(ask("Have it as a file?", "From my answers", "From scratch"), ask("How many days?", "3", "4")))
         first.start(Tile.NewProgram)
         step(first)
@@ -81,10 +81,13 @@ class CheckInRunnerTest {
         // The file holds the check-in, never the file's bytes.
         assertFalse(file.readText().contains(java.util.Base64.getEncoder().encodeToString(pdf)))
         assertTrue(file.readText().contains("Nippard PPL.pdf"))
-        // The app starts again: the step that took the file shows, with no call.
+        // The app starts again: the step it was on shows, Claude's reply kept.
         val model = FakeCoachModel.replies()
         val again = runner(backgroundScope, model)
         again.restore()
+        assertEquals("How many days?", (step(again) as CheckInStep.Question).question)
+        // Answering would send the file Claude was sent before, which is gone: the step that took it shows instead, with no call.
+        again.answer("3")
         assertEquals("Have it as a file?", (step(again) as CheckInStep.Question).question)
         assertTrue(model.requests.isEmpty())
     }

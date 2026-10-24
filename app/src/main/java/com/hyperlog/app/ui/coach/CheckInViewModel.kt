@@ -171,10 +171,10 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val read = withContext(Dispatchers.IO) { com.hyperlog.app.coach.Attachments.read(app.contentResolver, uri) }
             _attachNote.value = when (read) {
-                is com.hyperlog.app.coach.Attachments.Read.Ready -> null.also { _draft.value = null; runner.attach(read.attachment) }
-                com.hyperlog.app.coach.Attachments.Read.TooLarge ->
+                is com.hyperlog.app.coach.Attachments.Result.Ready -> null.also { _draft.value = null; runner.attach(read.attachment) }
+                com.hyperlog.app.coach.Attachments.Result.TooLarge ->
                     app.getString(com.hyperlog.app.R.string.checkin_attach_too_large, com.hyperlog.app.coach.Attachments.MAX_PDF_BYTES / (1024 * 1024))
-                com.hyperlog.app.coach.Attachments.Read.Unreadable -> app.getString(com.hyperlog.app.R.string.checkin_attach_unreadable)
+                com.hyperlog.app.coach.Attachments.Result.Unreadable -> app.getString(com.hyperlog.app.R.string.checkin_attach_unreadable)
             }
         }
     }

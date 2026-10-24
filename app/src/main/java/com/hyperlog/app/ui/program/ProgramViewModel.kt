@@ -212,12 +212,22 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     /**
      * Start program: the program under review runs from week 1, day 1, as an import, and its new
-     * exercises join the library with it. The one running before stays as a record of its sessions.
+     * exercises join the library with it; then [started]. The one running before stays as a record
+     * of its sessions. One the library no longer takes (it gained one of the new exercises since)
+     * shows its problems as a rejected import does, and [failed] runs instead.
      */
-    fun startProgram() {
+    fun startProgram(started: () -> Unit, failed: () -> Unit) {
         val proposal = _program.value ?: return
-        _program.value = null
-        viewModelScope.launch { programs.import(proposal.source, proposal.newExercises) }
+        viewModelScope.launch {
+            val result = programs.import(proposal.source, proposal.newExercises)
+            _program.value = null
+            if (result is ProgramParser.Result.Invalid) {
+                _errors.value = result.errors
+                failed()
+            } else {
+                started()
+            }
+        }
     }
 
     private val _workout = MutableStateFlow<com.hyperlog.app.coach.Workout?>(null)

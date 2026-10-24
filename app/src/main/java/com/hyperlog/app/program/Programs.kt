@@ -184,7 +184,11 @@ class Programs(
      * library with it. Returns the parse result: on errors nothing is imported or added.
      */
     suspend fun import(json: String, newExercises: List<com.hyperlog.app.library.Exercise> = emptyList()): ProgramParser.Result {
-        val ids = exerciseIds() + newExercises.map { it.id }
+        val library = exerciseIds()
+        // The library may have gained one of them since the review.
+        val taken = newExercises.withIndex().filter { it.value.id in library }
+        if (taken.isNotEmpty()) return ProgramParser.Result.Invalid(taken.map { "newExercises[${it.index}].id: the library already has \"${it.value.id}\"" })
+        val ids = library + newExercises.map { it.id }
         val result = withContext(Dispatchers.Default) { ProgramParser.parse(json, ids, merged) }
         if (result is ProgramParser.Result.Valid) {
             db.withTransaction {

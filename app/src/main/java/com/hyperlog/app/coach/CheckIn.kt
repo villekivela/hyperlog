@@ -239,6 +239,9 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         var current = checkIn
         while (true) {
             if (current.waiting) {
+                // A file sent before is gone (the check-in was read back): attach it again before Claude is asked.
+                val kept = withoutLostFiles(current)
+                if (kept != current) return kept
                 val reply = try {
                     model.reply(CoachRequest(current.frame.context, current.frame.tools, current.messages))
                 } catch (e: CoachError) {
@@ -361,9 +364,9 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         }
 
         /**
-         * [checkIn] as it can go on after it was read back: a file attached is never stored, so
-         * from the first answer whose file is gone the check-in goes back to that step, to attach
-         * it again. Dropping the turns after it keeps what Claude was sent before unchanged.
+         * [checkIn] as a call can go on from it: a file attached is never stored, so once it was
+         * read back, from the first answer whose file is gone the check-in goes back to that step,
+         * to attach it again. Dropping the turns after it keeps what Claude was sent before unchanged.
          */
         fun withoutLostFiles(checkIn: CheckIn): CheckIn {
             val lost = checkIn.turns.indexOfFirst { turn -> turn.answer?.results.orEmpty().any { it.attachment != null && it.attachment.data == null } }

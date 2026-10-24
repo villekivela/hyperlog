@@ -87,6 +87,14 @@ class ProgramsTest {
     }
 
     @Test
+    fun aNewExerciseTheLibraryGainedSinceTheReviewStopsTheImport() = runTest {
+        ExerciseLibrary(db).addNew(listOf(yRaise))
+        val result = programs.import(TestPrograms.twoDays("From Claude").replace("\"barbell_bench_press\"", "\"kneeling_cable_y_raise\""), listOf(yRaise))
+        assertEquals(listOf("newExercises[0].id: the library already has \"kneeling_cable_y_raise\""), (result as ProgramParser.Result.Invalid).errors)
+        assertNull(programs.active.first())
+    }
+
+    @Test
     fun aNewProgramThatDoesntImportSavesNoExercise() = runTest {
         val result = programs.import(TestPrograms.twoDays("Broken").replace("\"barbell_bench_press\"", "\"bb_bench\""), listOf(yRaise))
         assertTrue(result is ProgramParser.Result.Invalid)

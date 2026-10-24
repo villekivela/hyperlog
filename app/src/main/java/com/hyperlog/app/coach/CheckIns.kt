@@ -76,13 +76,12 @@ class CheckInRunner(
 
     /**
      * Reads the check-in kept when the app last ran; one left while thinking asks again. A file
-     * attached wasn't kept, so the step that took it shows again.
+     * attached wasn't kept: the next call goes back to the step that took it instead.
      */
     fun restore() {
         scope.launch {
-            val stored = withContext(io) { store.load() } ?: return@launch
-            val kept = CheckInCoach.withoutLostFiles(stored)
-            if (kept != stored) save(kept) else show(kept)
+            val kept = withContext(io) { store.load() } ?: return@launch
+            show(kept)
             if (kept.waiting) ask(kept)
         }
     }

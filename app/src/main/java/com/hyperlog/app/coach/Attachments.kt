@@ -4,6 +4,8 @@ import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
@@ -30,33 +32,35 @@ object Attachments {
 
     private const val JPEG_QUALITY = 85
 
-    sealed interface Read {
-        data class Ready(val attachment: Attachment) : Read
+    /** A picked file, ready to go or why it can't. */
+    sealed interface Result {
+        data class Ready(val attachment: Attachment) : Result
         /** A PDF over [MAX_PDF_BYTES]. */
-        data object TooLarge : Read
+        data object TooLarge : Result
         /** Not a PDF or a photo, or one that doesn't read. */
-        data object Unreadable : Read
+        data object Unreadable : Result
     }
 
     /** Reads the file at [uri], with its name and type as the picker gives them. */
-    fun read(resolver: ContentResolver, uri: Uri): Read {
+    fun read(resolver: ContentResolver, uri: Uri): Result {
         val name = runCatching {
             resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
                 if (c.moveToFirst()) c.getString(0) else null
             }
         }.getOrNull() ?: uri.lastPathSegment ?: "File"
-        return runCatching { resolver.openInputStream(uri)?.use { prepare(name, resolver.getType(uri), it) } }.getOrNull() ?: Read.Unreadable
+        return runCatching { resolver.openInputStream(uri)?.use { prepare(name, resolver.getType(uri), it) } }.getOrNull() ?: Result.Unreadable
     }
 
     /** [input] as Claude takes it: a PDF of [mediaType] up to [MAX_PDF_BYTES], or a photo of any image type. */
-    fun prepare(name: String, mediaType: String?, input: InputStream): Read = when {
+    fun prepare(name: String, mediaType: String?, input: InputStream): Result = when {
         mediaType == Attachment.PDF -> {
             // Read one byte past the limit at most, so a huge file is never all in memory.
             val bytes = input.readAtMost(MAX_PDF_BYTES + 1)
-            if (bytes.size > MAX_PDF_BYTES) Read.TooLarge else Read.Ready(Attachment(name, Attachment.PDF, bytes))
+            if (bytes.size > MAX_PDF_BYTES) Result.TooLarge else Result.Ready(Attachment(name, Attachment.PDF, bytes))
         }
-        mediaType?.startsWith("image/") == true -> photo(input.readBytes())?.let { Read.Ready(Attachment(name, "image/jpeg", it)) } ?: Read.Unreadable
-        else -> Read.Unreadable
+        mediaType?.startsWith("image/") == true ->
+            photo(input.readBytes())?.let { Result.Ready(Attachment(name, Attachment.JPEG, it)) } ?: Result.Unreadable
+        else -> Result.Unreadable
     }
 
     /** The photo upright, its long edge at most [MAX_IMAGE_EDGE], as a JPEG; null if it doesn't decode. */
@@ -72,7 +76,7 @@ object Attachments {
             } else {
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { b ->
                     val (w, h) = fit(b.width, b.height)
-                    if (w == b.width) b else Bitmap.createScaledBitmap(b, w, h, true)
+                    upright(if (w == b.width) b else Bitmap.createScaledBitmap(b, w, h, true), bytes)
                 }
             }
         }.getOrNull() ?: return null
@@ -80,6 +84,17 @@ object Attachments {
             bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)
             out.toByteArray()
         }
+    }
+
+    /** [bitmap] turned as the photo's EXIF orientation says, which BitmapFactory leaves to the caller. */
+    private fun upright(bitmap: Bitmap, bytes: ByteArray): Bitmap {
+        val degrees = when (runCatching { ExifInterface(bytes.inputStream()).getAttributeInt(ExifInterface.TAG_ORIENTATION, 0) }.getOrDefault(0)) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> return bitmap
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, Matrix().apply { postRotate(degrees) }, true)
     }
 
     private fun InputStream.readAtMost(limit: Int): ByteArray {

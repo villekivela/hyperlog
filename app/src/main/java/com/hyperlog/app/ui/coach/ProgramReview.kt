@@ -120,13 +120,16 @@ fun ProgramReviewScreen(
             item(key = "head") {
                 SectionCard(Modifier.padding(top = 8.dp)) {
                     Text(interFigures(program.title), style = MaterialTheme.typography.headlineSmall)
-                    program.author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
                     Spacer(Modifier.height(4.dp))
+                    // Who wrote it and its size on one quiet line: `Jeff Nippard · 12 weeks · 5 days a week`.
                     val perWeek = program.blocks.first().days.size
                     Text(
                         interFigures(
-                            pluralStringResource(R.plurals.program_review_weeks, program.weeks, program.weeks) + " · " +
+                            listOfNotNull(
+                                program.author,
+                                pluralStringResource(R.plurals.program_review_weeks, program.weeks, program.weeks),
                                 pluralStringResource(R.plurals.program_review_days, perWeek, perWeek),
+                            ).joinToString(" · "),
                         ),
                         style = MaterialTheme.typography.labelLarge,
                         color = cs.onSurfaceVariant,

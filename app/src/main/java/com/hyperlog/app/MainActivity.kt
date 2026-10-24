@@ -406,10 +406,16 @@ private fun App(
     programReview?.let { p ->
         com.hyperlog.app.ui.coach.ProgramReviewScreen(
             p, exercises.associate { it.id to it.name }, program,
-            // Start program goes to Today on the new program's first day, and the check-in ends.
+            // Start program goes to Today on the new program's first day, and the check-in ends;
+            // one the library no longer takes goes to Program, which shows its problems.
             onStart = {
-                programModel.startProgram(); closeAsk(); screen = Screen.Today
-                if (checkIn != null) checkInModel.close()
+                programModel.startProgram(
+                    started = {
+                        closeAsk(); screen = Screen.Today
+                        if (checkIn != null) checkInModel.close()
+                    },
+                    failed = { closeAsk(); if (checkIn != null) checkInModel.close(); programView = ProgramView(); screen = Screen.Program },
+                )
             },
             onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
             onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,

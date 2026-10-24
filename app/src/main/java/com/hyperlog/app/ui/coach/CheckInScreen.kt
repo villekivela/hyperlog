@@ -509,6 +509,7 @@ private fun Thinking() {
  * Claude's question, large, over its answers to tap, and Type my own under them when Claude allows
  * it. An answer naming a muscle group behind this week carries its sets (`Back · 4 sets`).
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Question(
     step: CheckInStep.Question,
@@ -547,15 +548,30 @@ private fun Question(
         // A program you have as a file: a PDF, a printed sheet, a screenshot (New program).
         if (step.attach) {
             Spacer(Modifier.height(GroupGap))
-            Segment(0, 1, onClick = onAttach) {
-                Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding), verticalAlignment = Alignment.CenterVertically) {
-                    SymbolIcon(Symbol.AttachFile, null, Modifier.size(24.dp), tint = cs.primary)
+            // The note belongs to the row, so it's the row's second line. The symbol says what
+            // became of the file: the loading indicator while it's read (no taps then), `warning`
+            // in error when it can't go, as a reply's problems show.
+            val reading = attachNote == stringResource(R.string.checkin_attach_reading)
+            Segment(0, 1, onClick = if (reading) null else onAttach) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding, vertical = 12.dp),
+                    verticalAlignment = if (attachNote == null) Alignment.CenterVertically else Alignment.Top,
+                ) {
+                    Box(Modifier.padding(top = if (attachNote == null) 0.dp else 2.dp).size(24.dp), contentAlignment = Alignment.Center) {
+                        when {
+                            reading -> LoadingIndicator(Modifier.size(32.dp), color = cs.primary)
+                            attachNote != null -> SymbolIcon(Symbol.Warning, null, Modifier.size(24.dp), tint = cs.error)
+                            else -> SymbolIcon(Symbol.AttachFile, null, Modifier.size(24.dp), tint = cs.primary)
+                        }
+                    }
                     Spacer(Modifier.width(16.dp))
-                    Text(stringResource(R.string.checkin_attach), style = MaterialTheme.typography.titleMedium)
+                    Column {
+                        Text(stringResource(R.string.checkin_attach), style = MaterialTheme.typography.titleMedium)
+                        attachNote?.let {
+                            Text(it, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                        }
+                    }
                 }
-            }
-            attachNote?.let {
-                Text(it, Modifier.padding(horizontal = Margin).padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             }
         }
         // Open after Reject even when Claude didn't offer it: that's where you say what was wrong.

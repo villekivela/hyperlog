@@ -1561,14 +1561,17 @@ back.
   to merge?"). Without a file it builds from your answers.
 - **Sizes.** A PDF goes as it is, up to 23 MB: the API takes a 32 MB request, and base64 makes a
   file a third larger. A larger one reads "That PDF is over 23 MB, more than Claude takes in one go.
-  Attach a smaller one, or photos of the pages that matter." under Attach. A photo goes as a JPEG
-  turned upright, its long edge at most 2576 px (what Opus 5.5 reads). A file that isn't a PDF or
-  an image, or doesn't read, says "Couldn’t read that file. Attach a PDF or a photo." While it is
-  read, "Reading the file…".
+  Attach a smaller one, or photos of the pages that matter." as the Attach row's second line, its
+  paperclip turned into a warning. A photo goes as a JPEG turned upright, its long edge at most
+  2576 px (what Opus 5.5 reads). A file that isn't a PDF or an image, or doesn't read, says
+  "Couldn’t read that file. Attach a PDF or a photo." the same way. While it is read, "Reading the file…", the
+  paperclip turns into a loading indicator and the row takes no taps.
 - **Not stored.** The file lives in memory only, while the app runs: the check-in's file in
   `no_backup` keeps its name and type, never its bytes. A check-in read back after the app was
-  closed goes back to the step that took the file, to attach it again (dropping the turns after it
-  keeps what Claude was sent before unchanged).
+  closed shows where it was (a review it reached still opens), but a call that would carry the file
+  again (an answer, Back and a new answer, Try again) goes back to the step that took it instead,
+  with no call, to attach it again; dropping the turns after it keeps what Claude was sent before
+  unchanged.
 - **The reply** is `propose_program`'s input, or pasted: `{ "program": <a program file
   (docs/program-format.md)>, "swaps": [...], "newExercises": [...] }`. The program validates as
   import does, its problems' paths under `program.`, and goes through the self-fix loop.
@@ -1581,13 +1584,16 @@ back.
   already has "Seated Cable Row" (seated_cable_row): use it`), added once, and used by the program.
   The review lists them under "New in your library" (name, then equipment and primary muscles), and
   only Start program saves them, under their own ids, with the program.
-- **The review** (`ui/coach/ProgramReview.kt`), titled "New program": the title, author, weeks and
-  days a week, and description in a card; the swaps; the new exercises; then the program as Program
-  shows it (the blocks, the block's card with its weeks, and the picked week's days), from week 1.
+- **The review** (`ui/coach/ProgramReview.kt`), titled "New program": the title, then the author,
+  weeks and days a week on one line ("Jeff Nippard · 12 weeks · 5 days a week"), and the
+  description in a card; the swaps; the new exercises; then the program as Program shows it (the
+  blocks, the block's card with its weeks, and the picked week's days), from week 1.
   **Start program** asks first when a program runs, as import does ("Replace <title>? You're in
   week 6 of Hyperlog Full Body; the new program starts at week 1, day 1 instead. Past sessions are
   kept."), then runs it from week 1, day 1, and goes to Today; the program before stays as the
-  record of its sessions. **Reject** and Back step back in the check-in (Type my own open), × drops
+  record of its sessions. If the library gained one of its new exercises since the review, nothing
+  starts: Program shows the problem as a rejected import (`newExercises[0].id: the library already
+  has "barbell_drag_curl"`). **Reject** and Back step back in the check-in (Type my own open), × drops
   it, as on every review.
 - **Without a key**, Ask Claude's prompt carries the program format (`coach/ProgramFormat.kt`),
   built from the parser's fields and with an example the paste reads; you attach the file in the
