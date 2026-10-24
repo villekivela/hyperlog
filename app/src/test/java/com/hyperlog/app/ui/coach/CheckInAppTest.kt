@@ -184,7 +184,7 @@ class CheckInAppTest {
         buildNewProgram()
         compose.click("Save for later")
         compose.waitFor("Saved to your programs")
-        val curl = runBlocking { Programs(db).kept.first().first().program.exercises() }.single { it.startsWith("barbell_drag_curl") }
+        val curl = runBlocking { Programs(db).listed.first().single { it.status is com.hyperlog.app.program.ListedProgram.Status.Saved }.program.exercises() }.single { it.startsWith("barbell_drag_curl") }
         runBlocking {
             ExerciseLibrary(db).addNew(listOf(com.hyperlog.app.library.Exercise(curl, "My Drag Curl", com.hyperlog.app.library.Equipment.Barbell,
                 com.hyperlog.app.library.MovementPattern.ElbowFlexion, com.hyperlog.app.library.GripDemand.High, listOf("Biceps"))))

@@ -934,7 +934,7 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        day (`25 Oct`).
      - Every program's sheet has **Export**, which writes its file as imported through the system
        save dialog (`hyperlog-full-body.json`). **Delete** asks first ("Delete <title>?") and is
-       offered only for a program not running that no session trained.
+       offered only for a saved program: one that has run keeps its sessions and its Changes.
      - Storage: the `program` table holds every program: a saved one has no `started_at` and keeps
        its `new_exercises` (as the reply's `newExercises`) until it starts; a replaced one has
        `ended_at`.

@@ -17,7 +17,7 @@ import org.robolectric.RobolectricTestRunner
 
 /** The Programs list (SPEC, Program → Programs): programs saved for later, started, run again and deleted. */
 @RunWith(RobolectricTestRunner::class)
-class KeptProgramsTest {
+class ProgramsListTest {
     private lateinit var db: HyperlogDatabase
     private lateinit var programs: Programs
     private var now = 1_000L
@@ -45,8 +45,8 @@ class KeptProgramsTest {
         val active = programs.active.first()!!
         assertEquals(listOf("Running", Position(1, 1)), listOf(active.program.title, active.position))
         assertEquals(
-            listOf("Running" to KeptProgram.Status.Running(Position(1, 1), finished = false), "For later" to KeptProgram.Status.Saved(2_000L)),
-            programs.kept.first().map { it.title to it.status },
+            listOf("Running" to ListedProgram.Status.Running(Position(1, 1), finished = false), "For later" to ListedProgram.Status.Saved(2_000L)),
+            programs.listed.first().map { it.title to it.status },
         )
     }
 
@@ -68,7 +68,7 @@ class KeptProgramsTest {
         programs.save(withYRaise, listOf(yRaise))
         // Saved, its new exercise waits with it.
         assertEquals(false, inLibrary())
-        val saved = programs.kept.first().first { it.title == "With Y-raise" }
+        val saved = programs.listed.first().first { it.title == "With Y-raise" }
         now = 3_000L
         val result = programs.start(saved.id)
         assertTrue(result.toString(), result is ProgramParser.Result.Valid)
@@ -77,10 +77,10 @@ class KeptProgramsTest {
         assertEquals(yRaise, ExerciseLibrary(db).exercises.first().single { it.id == yRaise.id })
         assertEquals(
             listOf(
-                "With Y-raise" to KeptProgram.Status.Running(Position(1, 0), finished = false),
-                "Running" to KeptProgram.Status.Past(startedAt = 1_000L, endedAt = 3_000L),
+                "With Y-raise" to ListedProgram.Status.Running(Position(1, 0), finished = false),
+                "Running" to ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 3_000L),
             ),
-            programs.kept.first().map { it.title to it.status },
+            programs.listed.first().map { it.title to it.status },
         )
     }
 
@@ -89,11 +89,11 @@ class KeptProgramsTest {
         programs.import(TestPrograms.twoDays("Running"))
         programs.save(withYRaise, listOf(yRaise))
         ExerciseLibrary(db).addNew(listOf(yRaise.copy(name = "Y-Raise (mine)")))
-        val saved = programs.kept.first().first { it.title == "With Y-raise" }
+        val saved = programs.listed.first().first { it.title == "With Y-raise" }
         val result = programs.start(saved.id)
         assertEquals(listOf("newExercises[0].id: the library already has \"kneeling_cable_y_raise\""), (result as ProgramParser.Result.Invalid).errors)
         assertEquals("Running", programs.active.first()!!.program.title)
-        assertEquals(KeptProgram.Status.Saved(1_000L), programs.kept.first().first { it.id == saved.id }.status)
+        assertEquals(ListedProgram.Status.Saved(1_000L), programs.listed.first().first { it.id == saved.id }.status)
         assertEquals("Y-Raise (mine)", ExerciseLibrary(db).exercises.first().single { it.id == yRaise.id }.name)
     }
 
@@ -120,13 +120,12 @@ class KeptProgramsTest {
         assertEquals(first, db.sessions().session(session)!!.programId)
         assertEquals(
             listOf(
-                "First" to KeptProgram.Status.Running(Position(1, 0), finished = false),
-                "Second" to KeptProgram.Status.Past(startedAt = 2_000L, endedAt = 3_000L),
-                "First" to KeptProgram.Status.Past(startedAt = 1_000L, endedAt = 2_000L),
+                "First" to ListedProgram.Status.Running(Position(1, 0), finished = false),
+                "Second" to ListedProgram.Status.Past(startedAt = 2_000L, endedAt = 3_000L),
+                "First" to ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 2_000L),
             ),
-            programs.kept.first().map { it.title to it.status },
+            programs.listed.first().map { it.title to it.status },
         )
-        assertEquals(listOf(false, false, true), programs.kept.first().map { it.trained })
     }
 
     @Test
@@ -137,22 +136,27 @@ class KeptProgramsTest {
         now = 3_000L
         programs.import(TestPrograms.twoDays("Second"))
         now = 4_000L
-        programs.start(programs.kept.first().single { it.title == "Saved early" }.id)
+        programs.start(programs.listed.first().single { it.title == "Saved early" }.id)
         now = 5_000L
         programs.import(TestPrograms.twoDays("Third"))
-        assertEquals(listOf("Third", "Saved early", "Second", "First"), programs.kept.first().map { it.title })
+        assertEquals(listOf("Third", "Saved early", "Second", "First"), programs.listed.first().map { it.title })
     }
 
     @Test
-    fun deleteRemovesASavedProgramButNeverOneASessionTrained() = runTest {
+    fun deleteRemovesASavedProgramButNeverOneThatRan() = runTest {
         programs.import(TestPrograms.twoDays("First"))
         val first = programs.active.first()!!.id
         trained(first, Position(1, 0))
+        // A run nothing was trained on still keeps its Changes.
+        programs.import(TestPrograms.twoDays("Untrained"))
+        val untrained = programs.active.first()!!.id
+        programs.accept(com.hyperlog.app.coach.ProgramActions.skipDay("Skip"))
         programs.import(TestPrograms.twoDays("Second"))
         programs.save(TestPrograms.twoDays("Saved"))
-        val saved = programs.kept.first().first { it.title == "Saved" }.id
+        val saved = programs.listed.first().first { it.title == "Saved" }.id
         assertEquals(true, programs.delete(saved))
         assertEquals(false, programs.delete(first))
-        assertEquals(listOf("Second", "First"), programs.kept.first().map { it.title })
+        assertEquals(false, programs.delete(untrained))
+        assertEquals(listOf("Second", "Untrained", "First"), programs.listed.first().map { it.title })
     }
 }

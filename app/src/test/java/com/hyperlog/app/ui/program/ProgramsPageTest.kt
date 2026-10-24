@@ -7,7 +7,7 @@ import androidx.compose.ui.test.performClick
 import com.hyperlog.app.click
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.program.KeptProgram
+import com.hyperlog.app.program.ListedProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.StarterProgram
@@ -40,10 +40,10 @@ class ProgramsPageTest {
 
     private fun at(date: String) = LocalDate.parse(date).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-    private val running = KeptProgram(3, starter.title, starter, starterSource, KeptProgram.Status.Running(Position(6, 0), finished = false), trained = true)
-    private val saved = KeptProgram(4, "Saved one", twoDays, TestPrograms.twoDays("Saved one"), KeptProgram.Status.Saved(at("2026-10-24")), trained = false)
-    private val past = KeptProgram(
-        1, starter.title, starter, starterSource, KeptProgram.Status.Past(at("2026-09-01"), at("2026-10-13")), trained = true,
+    private val running = ListedProgram(3, starter.title, starter, starterSource, ListedProgram.Status.Running(Position(6, 0), finished = false))
+    private val saved = ListedProgram(4, "Saved one", twoDays, TestPrograms.twoDays("Saved one"), ListedProgram.Status.Saved(at("2026-10-24")))
+    private val past = ListedProgram(
+        1, starter.title, starter, starterSource, ListedProgram.Status.Past(at("2026-09-01"), at("2026-10-13")),
     )
 
     private val calls = mutableListOf<String>()
@@ -51,7 +51,7 @@ class ProgramsPageTest {
     @Before
     fun zone() = java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Europe/Helsinki"))
 
-    private fun show(kept: List<KeptProgram>, active: ActiveProgram? = ActiveProgram(3, starter, Position(6, 0))) = compose.setContent {
+    private fun show(kept: List<ListedProgram>, active: ActiveProgram? = ActiveProgram(3, starter, Position(6, 0))) = compose.setContent {
         HyperlogTheme {
             ProgramsPage(
                 kept, active,
@@ -103,7 +103,7 @@ class ProgramsPageTest {
 
     @Test
     fun aRunOfOneDayReadsAsThatDay() {
-        val oneDay = KeptProgram(5, "One day", twoDays, TestPrograms.twoDays("One day"), KeptProgram.Status.Past(at("2026-10-25"), at("2026-10-25") + 3_600_000), trained = false)
+        val oneDay = ListedProgram(5, "One day", twoDays, TestPrograms.twoDays("One day"), ListedProgram.Status.Past(at("2026-10-25"), at("2026-10-25") + 3_600_000))
         show(listOf(running, oneDay))
         compose.waitFor("1 block · 2 weeks · 25 Oct")
         compose.click("One day")
@@ -130,7 +130,7 @@ class ProgramsPageTest {
     }
 
     @Test
-    fun everyProgramExportsButOneWithSessionsCantBeDeleted() {
+    fun everyProgramExportsButOnlyASavedOneCanBeDeleted() {
         show(listOf(running, past))
         compose.onAllNodesWithText(starter.title)[1].performClick()
         compose.waitFor("Export")
@@ -150,7 +150,7 @@ class ProgramsPageTest {
 
     @Test
     fun aFinishedRunningProgramRunsAgain() {
-        val finished = running.copy(status = KeptProgram.Status.Running(Position(starter.weeks + 1, 0), finished = true))
+        val finished = running.copy(status = ListedProgram.Status.Running(Position(starter.weeks + 1, 0), finished = true))
         show(listOf(finished), active = ActiveProgram(3, starter, Position(starter.weeks + 1, 0)))
         compose.onNodeWithText("Program finished", substring = true).assertExists()
         compose.click(starter.title)

@@ -54,13 +54,6 @@ interface ProgramDao {
     @Query("SELECT * FROM program ORDER BY id DESC")
     fun allFlow(): Flow<List<ProgramEntity>>
 
-    /** The programs a session was trained on. */
-    @Query("SELECT DISTINCT program_id FROM session WHERE program_id IS NOT NULL")
-    fun trainedFlow(): Flow<List<Long>>
-
-    @Query("SELECT EXISTS (SELECT 1 FROM session WHERE program_id = :id)")
-    suspend fun trained(id: Long): Boolean
-
     /** The program running stops at [at], replaced. */
     @Query("UPDATE program SET active = 0, ended_at = :at WHERE active = 1")
     suspend fun deactivateAll(at: Long)
@@ -69,8 +62,8 @@ interface ProgramDao {
     @Query("UPDATE program SET active = 1, started_at = :at, week = 1, day_index = 0, new_exercises = NULL WHERE id = :id")
     suspend fun start(id: Long, at: Long)
 
-    /** Drops program [id] unless a session trained it. */
-    @Query("DELETE FROM program WHERE id = :id AND active = 0 AND NOT EXISTS (SELECT 1 FROM session s WHERE s.program_id = program.id)")
+    /** Drops program [id] if it is saved for later: one that has run keeps its sessions and Changes. */
+    @Query("DELETE FROM program WHERE id = :id AND started_at IS NULL")
     suspend fun delete(id: Long): Int
 
     /** Moves the position from [week]/[day] to the next day, only if [week]/[day] is still the next day. */

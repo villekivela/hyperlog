@@ -57,7 +57,7 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramActions
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
-import com.hyperlog.app.program.KeptProgram
+import com.hyperlog.app.program.ListedProgram
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
@@ -114,11 +114,11 @@ fun ProgramScreen(
     gyms: List<Gym> = emptyList(),
     onWeekdayPlan: (WeekdayPlan) -> Unit = {},
     /** Every program held, for ⋮ → Programs: the one running, those saved for later, past runs. */
-    keptPrograms: List<KeptProgram> = emptyList(),
-    onStartKept: (Long) -> Unit = {},
+    listedPrograms: List<ListedProgram> = emptyList(),
+    onStartSaved: (Long) -> Unit = {},
     onRunAgain: (Long) -> Unit = {},
-    onExportKept: (KeptProgram) -> Unit = {},
-    onDeleteKept: (Long) -> Unit = {},
+    onExportProgram: (ListedProgram) -> Unit = {},
+    onDeleteProgram: (Long) -> Unit = {},
 ) {
     var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     val shown = view ?: kept
@@ -137,9 +137,9 @@ fun ProgramScreen(
         val close = { show(shown.copy(programsOpen = false)) }
         // Started, it is the program Program shows.
         ProgramsPage(
-            keptPrograms, active,
-            onStart = { close(); onStartKept(it) }, onRunAgain = { close(); onRunAgain(it) },
-            onExport = onExportKept, onDelete = onDeleteKept, onBack = close, modifier = modifier,
+            listedPrograms, active,
+            onStart = { close(); onStartSaved(it) }, onRunAgain = { close(); onRunAgain(it) },
+            onExport = onExportProgram, onDelete = onDeleteProgram, onBack = close, modifier = modifier,
         )
         return
     }
@@ -167,7 +167,7 @@ fun ProgramScreen(
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                 // The program actions are Changes: each opens its diff and applies only on Accept.
-                                if (active?.next != null) {
+                                if (active.next != null) {
                                     ProgramActionItems(active, onPropose, onShift = { shifting = true }, close = { menu = false })
                                     HorizontalDivider()
                                 }
@@ -176,7 +176,7 @@ fun ProgramScreen(
                                     leadingIcon = { SymbolIcon(Symbol.FileOpen, null) },
                                     onClick = { menu = false; import() },
                                 )
-                                if (starter != null && active != null) {
+                                if (starter != null) {
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.starter_run_named, starter.title)) },
                                         leadingIcon = { SymbolIcon(Symbol.ViewTimeline, null) },
@@ -201,9 +201,9 @@ fun ProgramScreen(
                 active == null && starter != null -> StarterOffer(starter, onRunStarter) {
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
                     // Saved programs are there to start with no program running too.
-                    if (keptPrograms.isNotEmpty()) TextButton(onClick = openPrograms) { Text(stringResource(R.string.programs_title)) }
+                    if (listedPrograms.isNotEmpty()) TextButton(onClick = openPrograms) { Text(stringResource(R.string.programs_title)) }
                 }
-                active == null -> NoProgram(onImport, openPrograms.takeIf { keptPrograms.isNotEmpty() })
+                active == null -> NoProgram(onImport, openPrograms.takeIf { listedPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },

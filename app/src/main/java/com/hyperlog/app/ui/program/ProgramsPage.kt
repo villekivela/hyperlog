@@ -2,11 +2,11 @@ package com.hyperlog.app.ui.program
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,13 +28,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.program.KeptProgram
+import com.hyperlog.app.program.ListedProgram
 import com.hyperlog.app.ui.coach.shortDate
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -53,16 +53,16 @@ import java.time.ZoneId
  * Program → ⋮ → Programs (SPEC, Program → Programs): every program the app holds, newest first,
  * under Running, Saved and Past. A row opens the program's sheet: Start program (a saved one) or
  * Run again (one that has run), which ask first while a program runs ([active]) as import does;
- * Export for every program; Delete, which asks first, for one no session trained.
+ * Export for every program; Delete, which asks first, for a saved one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramsPage(
-    kept: List<KeptProgram>,
+    kept: List<ListedProgram>,
     active: ActiveProgram?,
     onStart: (Long) -> Unit,
     onRunAgain: (Long) -> Unit,
-    onExport: (KeptProgram) -> Unit,
+    onExport: (ListedProgram) -> Unit,
     onDelete: (Long) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -73,10 +73,9 @@ fun ProgramsPage(
     /** The program waiting for "Replace <title>?". */
     var replacing by rememberSaveable { mutableStateOf<Long?>(null) }
     var deleting by rememberSaveable { mutableStateOf<Long?>(null) }
-    val start = { p: KeptProgram ->
-        if (active != null) replacing = p.id
-        else if (p.status is KeptProgram.Status.Saved) onStart(p.id) else onRunAgain(p.id)
-    }
+    /** A saved program starts; one that has run, runs again. */
+    val run = { p: ListedProgram -> if (p.status is ListedProgram.Status.Saved) onStart(p.id) else onRunAgain(p.id) }
+    val start = { p: ListedProgram -> if (active != null) replacing = p.id else run(p) }
     Scaffold(
         modifier = modifier,
         containerColor = Tones.screen,
@@ -89,9 +88,9 @@ fun ProgramsPage(
         },
     ) { padding ->
         val sections = listOf(
-            R.string.programs_running to kept.filter { it.status is KeptProgram.Status.Running },
-            R.string.programs_saved to kept.filter { it.status is KeptProgram.Status.Saved },
-            R.string.programs_past to kept.filter { it.status is KeptProgram.Status.Past },
+            R.string.programs_running to kept.filter { it.status is ListedProgram.Status.Running },
+            R.string.programs_saved to kept.filter { it.status is ListedProgram.Status.Saved },
+            R.string.programs_past to kept.filter { it.status is ListedProgram.Status.Past },
         ).filter { it.second.isNotEmpty() }
         LazyColumn(Modifier.fillMaxSize().padding(padding)) {
             sections.forEach { (head, programs) ->
@@ -99,7 +98,7 @@ fun ProgramsPage(
                 programs.forEachIndexed { i, p ->
                     item(key = "program-${p.id}") {
                         Segment(i, programs.size, onClick = { open = p.id }) {
-                            SegmentedRow(p.title, "${size(p)} · ${status(p)}", symbol(p), selected = p.status is KeptProgram.Status.Running)
+                            SegmentedRow(p.title, "${size(p)} · ${status(p)}", symbol(p), selected = p.status is ListedProgram.Status.Running)
                         }
                     }
                 }
@@ -124,7 +123,7 @@ fun ProgramsPage(
             title = { Text(interFigures(stringResource(R.string.program_replace_title, active.program.title))) },
             // Replacing loses the position, so the question says where you are; a program run again isn't new.
             text = {
-                val again = replaced.status !is KeptProgram.Status.Saved
+                val again = replaced.status !is ListedProgram.Status.Saved
                 Text(
                     when {
                         again && active.finished -> stringResource(R.string.program_run_again_body, replaced.title)
@@ -137,7 +136,7 @@ fun ProgramsPage(
             confirmButton = {
                 TextButton(onClick = {
                     replacing = null
-                    if (replaced.status is KeptProgram.Status.Saved) onStart(replaced.id) else onRunAgain(replaced.id)
+                    run(replaced)
                 }) { Text(stringResource(R.string.program_replace)) }
             },
             dismissButton = { TextButton(onClick = { replacing = null }) { Text(stringResource(R.string.program_cancel)) } },
@@ -156,16 +155,16 @@ fun ProgramsPage(
 
 /** Its blocks and weeks: `4 blocks · 12 weeks`. */
 @Composable
-private fun size(p: KeptProgram): String =
+private fun size(p: ListedProgram): String =
     pluralStringResource(R.plurals.programs_blocks, p.program.blocks.size, p.program.blocks.size) + " · " +
         pluralStringResource(R.plurals.program_review_weeks, p.program.weeks, p.program.weeks)
 
 /** Where it stands: `Week 6` (or Program finished), `Saved 24 Oct`, `1 Sep – 13 Oct`. */
 @Composable
-private fun status(p: KeptProgram): String = when (val s = p.status) {
-    is KeptProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_week, s.position.week)
-    is KeptProgram.Status.Saved -> stringResource(R.string.programs_saved_on, shortDate(dateOf(s.savedAt)))
-    is KeptProgram.Status.Past -> s.endedAt?.let { ran(s.startedAt, it) } ?: stringResource(R.string.programs_started, shortDate(dateOf(s.startedAt)))
+private fun status(p: ListedProgram): String = when (val s = p.status) {
+    is ListedProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_week, s.position.week)
+    is ListedProgram.Status.Saved -> stringResource(R.string.programs_saved_on, shortDate(dateOf(s.savedAt)))
+    is ListedProgram.Status.Past -> s.endedAt?.let { ran(s.startedAt, it) } ?: stringResource(R.string.programs_started, shortDate(dateOf(s.startedAt)))
 }
 
 /** The days a run took: `1 Sep – 13 Oct`, or `25 Oct` for one that ended the day it started. */
@@ -176,17 +175,17 @@ private fun ran(startedAt: Long, endedAt: Long): String {
 
 /** Where it stands on its sheet, which has no group head: `You're in week 7`, `Saved 24 Oct`, `Ran 1 Jun – 31 Aug`. */
 @Composable
-private fun sheetStatus(p: KeptProgram): String = when (val s = p.status) {
-    is KeptProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_sheet_week, s.position.week)
-    is KeptProgram.Status.Saved -> status(p)
-    is KeptProgram.Status.Past -> s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: status(p)
+private fun sheetStatus(p: ListedProgram): String = when (val s = p.status) {
+    is ListedProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_sheet_week, s.position.week)
+    is ListedProgram.Status.Saved -> status(p)
+    is ListedProgram.Status.Past -> s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: status(p)
 }
 
 /** The row's symbol says where it stands too: running (finished: the flag Next shows), saved, past. */
-private fun symbol(p: KeptProgram): Symbol = when (val s = p.status) {
-    is KeptProgram.Status.Running -> if (s.finished) Symbol.Flag else Symbol.PlayArrow
-    is KeptProgram.Status.Saved -> Symbol.Bookmark
-    is KeptProgram.Status.Past -> Symbol.History
+private fun symbol(p: ListedProgram): Symbol = when (val s = p.status) {
+    is ListedProgram.Status.Running -> if (s.finished) Symbol.Flag else Symbol.PlayArrow
+    is ListedProgram.Status.Saved -> Symbol.Bookmark
+    is ListedProgram.Status.Past -> Symbol.History
 }
 
 /**
@@ -195,14 +194,14 @@ private fun symbol(p: KeptProgram): Symbol = when (val s = p.status) {
  * or the running one once finished) as the sheet's button, then Export and Delete as rows.
  */
 @Composable
-private fun ProgramSheet(p: KeptProgram, onStart: () -> Unit, onExport: () -> Unit, onDelete: () -> Unit) {
+private fun ProgramSheet(p: ListedProgram, onStart: () -> Unit, onExport: () -> Unit, onDelete: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val program = p.program
     val perWeek = program.blocks.first().days.size
     val run = when (val s = p.status) {
-        is KeptProgram.Status.Saved -> R.string.program_review_start to Symbol.PlayArrow
-        is KeptProgram.Status.Past -> R.string.programs_run_again to Symbol.Replay
-        is KeptProgram.Status.Running -> if (s.finished) R.string.programs_run_again to Symbol.Replay else null
+        is ListedProgram.Status.Saved -> R.string.program_review_start to Symbol.PlayArrow
+        is ListedProgram.Status.Past -> R.string.programs_run_again to Symbol.Replay
+        is ListedProgram.Status.Running -> if (s.finished) R.string.programs_run_again to Symbol.Replay else null
     }
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
         Column(Modifier.padding(horizontal = 24.dp)) {
@@ -244,7 +243,7 @@ private fun ProgramSheet(p: KeptProgram, onStart: () -> Unit, onExport: () -> Un
         val deleteLabel = stringResource(R.string.programs_delete)
         SegmentedList(color = Tones.sheetCard) {
             row(exportLabel, symbol = Symbol.Download, onClick = onExport)
-            if (p.status !is KeptProgram.Status.Running && !p.trained) row(deleteLabel, symbol = Symbol.Delete, onClick = onDelete)
+            if (p.status is ListedProgram.Status.Saved) row(deleteLabel, symbol = Symbol.Delete, onClick = onDelete)
         }
     }
 }

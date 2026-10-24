@@ -81,6 +81,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                 Backups.Result.Restored -> {
                     // A backup from an older app carries its library; the shipped one updates it as on any start.
                     ExerciseLibrary(db).sync(withContext(Dispatchers.IO) { LibrarySeed.fromAssets(app) })
+                    com.hyperlog.app.ui.program.ProgramStore.get(app).forget()
                     SessionRuntime.get(app).logger.restored()
                     _state.value = BackupState.Restored
                 }

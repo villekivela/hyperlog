@@ -74,11 +74,8 @@ data class ChangeRecord(
     val change: Change get() = accepted.change
 }
 
-/**
- * A program on the Programs list (SPEC, Program → Programs), with what it is now and whether a
- * session trained it ([trained]: it can't be deleted).
- */
-data class KeptProgram(val id: Long, val title: String, val program: Program, val source: String, val status: Status, val trained: Boolean) {
+/** A program on the Programs list (SPEC, Program → Programs), with what it is now. */
+data class ListedProgram(val id: Long, val title: String, val program: Program, val source: String, val status: Status) {
     sealed interface Status {
         /** The one in progress, at [position]. */
         data class Running(val position: Position, val finished: Boolean) : Status
@@ -116,22 +113,21 @@ class Programs(
      * Every program held, newest first: the one running, then by when each was saved or replaced
      * (those saved for later, and past runs).
      */
-    val kept: Flow<List<KeptProgram>> = kotlinx.coroutines.flow.combine(dao.allFlow(), dao.trainedFlow()) { rows, trained ->
-        val ids = trained.toSet()
+    val listed: Flow<List<ListedProgram>> = dao.allFlow().map { rows ->
         rows.mapNotNull { row ->
             val program = parsed.getOrPut(row.id) { stored(row) } ?: return@mapNotNull null
             val status = when {
-                row.active -> KeptProgram.Status.Running(Position(row.week, row.dayIndex), row.week > program.weeks)
-                row.startedAt == null -> KeptProgram.Status.Saved(row.importedAt)
-                else -> KeptProgram.Status.Past(row.startedAt, row.endedAt)
+                row.active -> ListedProgram.Status.Running(Position(row.week, row.dayIndex), row.week > program.weeks)
+                row.startedAt == null -> ListedProgram.Status.Saved(row.importedAt)
+                else -> ListedProgram.Status.Past(row.startedAt, row.endedAt)
             }
-            KeptProgram(row.id, row.title, program, row.source, status, row.id in ids)
-        }.sortedByDescending { kept ->
+            ListedProgram(row.id, row.title, program, row.source, status)
+        }.sortedByDescending { listed ->
             // A saved program started later keeps its row, so each is dated by what last happened to it.
-            when (val s = kept.status) {
-                is KeptProgram.Status.Running -> Long.MAX_VALUE
-                is KeptProgram.Status.Saved -> s.savedAt
-                is KeptProgram.Status.Past -> s.endedAt ?: s.startedAt
+            when (val s = listed.status) {
+                is ListedProgram.Status.Running -> Long.MAX_VALUE
+                is ListedProgram.Status.Saved -> s.savedAt
+                is ListedProgram.Status.Past -> s.endedAt ?: s.startedAt
             }
         }
     }
@@ -216,6 +212,12 @@ class Programs(
         return com.hyperlog.app.coach.Workout.stored(row.json).also { workouts[id] = it }
     }
 
+    /** Drops the programs and workouts read so far: a restored backup's rows reuse their ids. */
+    fun forget() {
+        parsed.clear()
+        workouts.clear()
+    }
+
     /** Workout [id] as a day to train. */
     suspend fun workoutDay(id: Long): PlannedDay? = workout(id)?.day()
 
@@ -283,7 +285,7 @@ class Programs(
         return import(row.source)
     }
 
-    /** Deletes program [id], one not running that no session trained; false if it can't go. */
+    /** Deletes saved program [id]; false for one that has run, which keeps its sessions and Changes. */
     suspend fun delete(id: Long): Boolean = dao.delete(id) > 0
 
     /** [json] checked against the library and [newExercises], which the library may have gained since the review. */

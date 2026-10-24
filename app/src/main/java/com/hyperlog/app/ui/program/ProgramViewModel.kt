@@ -237,7 +237,9 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
      */
     fun saveProgram(saved: () -> Unit, failed: () -> Unit) {
         val proposal = _program.value ?: return
-        viewModelScope.launch {
+        // A second tap while it saves would save it twice.
+        if (saving?.isActive == true) return
+        saving = viewModelScope.launch {
             val result = programs.save(proposal.source, proposal.newExercises)
             _program.value = null
             if (result is ProgramParser.Result.Invalid) {
@@ -249,11 +251,13 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private var saving: kotlinx.coroutines.Job? = null
+
     /** Every program held, newest first, for Program → Programs. */
-    val kept: StateFlow<List<com.hyperlog.app.program.KeptProgram>> = programs.kept.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val listed: StateFlow<List<com.hyperlog.app.program.ListedProgram>> = programs.listed.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** Starts saved program [id] in place of the one running; a new exercise the library gained since shows its problems. */
-    fun startKept(id: Long) {
+    fun startSaved(id: Long) {
         viewModelScope.launch { _errors.value = (programs.start(id) as? ProgramParser.Result.Invalid)?.errors }
     }
 
@@ -262,7 +266,8 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { _errors.value = (programs.runAgain(id) as? ProgramParser.Result.Invalid)?.errors }
     }
 
-    fun deleteKept(id: Long) {
+    /** Deletes saved program [id]; one that has run stays. */
+    fun deleteProgram(id: Long) {
         viewModelScope.launch { programs.delete(id) }
     }
 

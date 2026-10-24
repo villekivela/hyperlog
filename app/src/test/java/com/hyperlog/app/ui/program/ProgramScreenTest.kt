@@ -92,14 +92,14 @@ class ProgramScreenTest {
 
     @Test
     fun withNoProgramRunningSavedProgramsAreAButtonBesideImportNotAMenu() {
-        val saved = com.hyperlog.app.program.KeptProgram(
-            2, "Saved one", program("Saved one"), TestPrograms.twoDays("Saved one"), com.hyperlog.app.program.KeptProgram.Status.Saved(0), trained = false,
+        val saved = com.hyperlog.app.program.ListedProgram(
+            2, "Saved one", program("Saved one"), TestPrograms.twoDays("Saved one"), com.hyperlog.app.program.ListedProgram.Status.Saved(0),
         )
         compose.setContent {
             HyperlogTheme {
                 ProgramScreen(
                     active = null, errors = null, onImport = {}, onCloseErrors = {}, onBack = {},
-                    starter = program("Hyperlog Full Body"), keptPrograms = listOf(saved),
+                    starter = program("Hyperlog Full Body"), listedPrograms = listOf(saved),
                 )
             }
         }

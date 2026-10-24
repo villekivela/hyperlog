@@ -467,7 +467,7 @@ class BackupsTest {
         val phone = freshInstall()
         assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
         val programs = Programs(phone, clock = { now })
-        val saved = programs.kept.first().single { it.status is com.hyperlog.app.program.KeptProgram.Status.Saved }
+        val saved = programs.listed.first().single { it.status is com.hyperlog.app.program.ListedProgram.Status.Saved }
         assertEquals("Saved for later", saved.title)
         assertTrue(programs.start(saved.id) is com.hyperlog.app.program.ProgramParser.Result.Valid)
         assertEquals("Saved for later", programs.active.first()!!.program.title)
@@ -479,9 +479,9 @@ class BackupsTest {
         val file = javaClass.getResource("/backup/hyperlog-backup-db24.json")!!.readText()
         val phone = freshInstall()
         assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
-        val kept = Programs(phone, clock = { now }).kept.first()
+        val kept = Programs(phone, clock = { now }).listed.first()
         assertEquals(listOf("Backup test"), kept.map { it.title })
-        assertEquals(com.hyperlog.app.program.KeptProgram.Status.Running(com.hyperlog.app.program.Position(2, 0), finished = false), kept.single().status)
+        assertEquals(com.hyperlog.app.program.ListedProgram.Status.Running(com.hyperlog.app.program.Position(2, 0), finished = false), kept.single().status)
         assertEquals(1_760_000_000_000L, phone.programs().program(kept.single().id)!!.startedAt)
     }
 }

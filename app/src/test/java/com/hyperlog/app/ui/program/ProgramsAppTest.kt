@@ -75,6 +75,27 @@ class ProgramsAppTest {
     }
 
     @Test
+    fun twoQuickTapsOnSaveForLaterSaveTheProgramOnce() {
+        compose.waitFor("Today")
+        val db = HyperlogDatabase.get(context)
+        val library = runBlocking { db.exercises().all() }
+        val reply = """{"program": ${TestPrograms.twoDays("For later")}}"""
+        val proposal = (com.hyperlog.app.coach.ProgramProposal.read(
+            kotlinx.serialization.json.Json.parseToJsonElement(reply) as kotlinx.serialization.json.JsonObject,
+            library.map { it.id }.toSet(), library.associate { it.id to it.name },
+        ) as com.hyperlog.app.coach.ProgramProposal.Result.Valid).proposal
+        val model = androidx.lifecycle.ViewModelProvider(compose.activity)[ProgramViewModel::class.java]
+        var saved = 0
+        compose.runOnUiThread {
+            model.reviewProgram(proposal)
+            repeat(2) { model.saveProgram(saved = { saved++ }, failed = {}) }
+        }
+        compose.waitForIdle()
+        assertEquals(1, runBlocking { Programs(db).listed.first().count { it.title == "For later" } })
+        assertEquals(1, saved)
+    }
+
+    @Test
     fun exportWritesTheProgramsFileWhereTheSaveDialogSays() {
         openPrograms()
         compose.click("Hyperlog Full Body")

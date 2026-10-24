@@ -259,11 +259,11 @@ private fun App(
     val exportBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let(backupModel::export)
     }
-    val keptPrograms by programModel.kept.collectAsStateWithLifecycle()
+    val listedPrograms by programModel.listed.collectAsStateWithLifecycle()
     /** The program whose file Export is saving, until the save dialog answers. */
     var exportingProgram by rememberSaveable { mutableStateOf<Long?>(null) }
     val exportProgram = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val source = keptPrograms.firstOrNull { it.id == exportingProgram }?.source
+        val source = listedPrograms.firstOrNull { it.id == exportingProgram }?.source
         exportingProgram = null
         if (uri != null && source != null) programModel.export(source, uri)
     }
@@ -623,11 +623,11 @@ private fun App(
             weekdayPlan = weekdayPlan,
             gyms = gyms,
             onWeekdayPlan = programModel::setWeekdayPlan,
-            keptPrograms = keptPrograms,
-            onStartKept = programModel::startKept,
+            listedPrograms = listedPrograms,
+            onStartSaved = programModel::startSaved,
             onRunAgain = programModel::runAgain,
-            onExportKept = { exportingProgram = it.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(it.title)) },
-            onDeleteKept = programModel::deleteKept,
+            onExportProgram = { exportingProgram = it.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(it.title)) },
+            onDeleteProgram = programModel::deleteProgram,
             )
         }
         screen == Screen.Coach && asking -> com.hyperlog.app.ui.coach.AskClaudeScreen(

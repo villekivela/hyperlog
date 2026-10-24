@@ -667,7 +667,7 @@
     <string name="programs_export">Export</string>
     <string name="programs_delete">Delete</string>
     <string name="programs_delete_title">Delete %1$s?</string>
-    <string name="programs_delete_body">It leaves your programs. Nothing was trained on it.</string>
+    <string name="programs_delete_body">It leaves your programs. It was never started.</string>
     <plurals name="programs_blocks">
         <item quantity="one">%d block</item>
         <item quantity="other">%d blocks</item>
