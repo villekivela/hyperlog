@@ -68,7 +68,7 @@ class MainActivityTest {
         compose.onNode(navItem("Program")).performClick()
         compose.waitFor("Import program")
         compose.onNode(navItem("Coach")).performClick()
-        compose.waitFor("In your words")
+        compose.waitFor("What’s going on?")
         compose.onNode(navItem("History")).performClick()
         compose.waitFor("Sessions")
         compose.onNode(navItem("Today")).performClick()

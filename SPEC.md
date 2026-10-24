@@ -1300,7 +1300,7 @@ Every situation goes through Claude, which reads the program, the week you're in
 "Type my own" under them. With a **Claude key** (Settings) the app asks Claude itself; without one
 it hands off to the Claude app (**Ask Claude**, below). Nothing changes until you accept.
 
-**The first step** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`) asks "What's going
+**The first step** (`ui/coach/CheckInScreen.kt`; design: `docs/design/coach.md`) asks "What's going
 on?" with tiles: **Something hurts**, **Short on time**, **Different gym or none**, **Tired or
 slept badly**, **Change my program**, **Build me a workout**, **New program** and **Something
 else**. **Change my program** is for edits meant to last (swap an exercise, add or drop one, more
@@ -1498,21 +1498,37 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
 
 ### Without a key: Ask Claude
 
-Until #74 rebuilds it inside the wizard, a phone without a key (and without the scripted coach)
-keeps the words-first Coach screen: the gym row, starters, Build me a workout's options and the
-words, then Ask Claude and Paste reply. With a key, Coach is the check-in above.
+A phone without a key (and without the scripted coach) opens the check-in on the same tiles and
+then hands off (`ui/coach/AskClaudeScreen.kt`). The old words-first Coach screen, with its gym row,
+starters and Build me a workout's options, is gone: Claude asks for the gym and the workout's shape in
+the chat, as the wizard would.
 
-The check-in opens on the same tiles. After a tile, one screen takes your words (a text field, 3
-lines at least, the tile's sentence in it to edit: `Something hurts: `, `I'm short on time today:
-I have 45 minutes.`), then **Ask Claude** opens the Android share sheet with the prompt (What
-Claude is told) for the Claude app. You talk it through there as long as you like; Claude may answer
-in words alone, and the check-in doesn't treat the ask as unfinished. Otherwise Claude ends with
-one fenced JSON block holding a Change, a workout or a program; copy it and come back.
+After a tile, one screen takes your words: a text field (3 lines at least) with the tile's sentence in
+it to edit. The sentences are `Something hurts: `, `I'm short on time today: I have 45 minutes.`,
+`No gym today, only dumbbells at home.` (Different gym or none), `I slept badly last night.` (Tired
+or slept badly), `I want to change my program: `, `Build me a workout for today: `, `I want a new
+program: ` and, for Something else, nothing. The bar names the tile; the tab bar is hidden, as in
+the wizard, and Back returns to the tiles. **Ask Claude** opens the Android share sheet with the
+prompt (What Claude is told) for the Claude app. Ask Claude is enabled with a tile even when the
+words are cleared, because the prompt quotes the tile's own sentence (`Something hurts.`) before the
+words, so Claude knows what the check-in is about. You talk it through there as long as you like;
+Claude may answer in words alone, and the check-in doesn't treat the ask as unfinished. Otherwise
+Claude ends with one fenced JSON block holding a Change, a workout or a program; copy it and come
+back.
 
+- **Other ways in.** Ease back in on Today and **How's it going?** on a Change in force open the same
+  screen with their words in it (`I've had 11 days off. Ease me back in.`; the Change, its id and the
+  check-in that made it), titled "Easing back in" and "How's it going?".
+- **No gym row.** The prompt carries no gym's equipment: say where you train in your words, and
+  Claude asks in the chat. A workout pasted back starts at the usual gym, as the start sheet picks it.
+- **An accepted Change keeps the check-in:** the tile's sentence, with your words as its one answer
+  ("Tell me more."), shown with the Change as a wizard's is.
 - **Paste reply** is then the filled button. It reads the clipboard: the first fenced block holding
   JSON, else the text from the first `{` to the last `}`, so Claude's whole reply can be copied. An
-  object with `workout` is a workout, one with `program` a program, anything else a Change. A valid
-  one opens its review. Otherwise the problems show as program import shows them (path over
+  object with `workout` is a workout, one with `program` a program (read as program import reads
+  it, each problem's path starting `program.`), anything else a Change. A valid Change or workout
+  opens its review; a program's review comes with New program (#75), and until then it is read and
+  nothing more. Otherwise the problems show as program import shows them (path over
   message, "Not a reply Hyperlog can use", "N problems. Nothing changed. Copy them into your Claude
   chat, then paste the new reply.") with a copy button to hand them back to Claude, and nothing is
   applied. A problem with the copy, not the reply, shows one message and no copy button: a reply
@@ -1522,7 +1538,7 @@ one fenced JSON block holding a Change, a workout or a program; copy it and come
   again."
 - **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
   has focus again, which Android requires for reading the clipboard), the app reads the clipboard
-  once. If it holds a reply that validates, a card reads "Claude's reply is ready" with a filled
+  once. If it holds a Change or workout that validates, a card reads "Claude's reply is ready" with a filled
   **Review**. Anything else is ignored quietly. Nothing opens by itself. Android shows its own toast
   when an app reads the clipboard.
 

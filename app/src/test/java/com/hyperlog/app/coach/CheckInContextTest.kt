@@ -88,4 +88,15 @@ class CheckInContextTest {
         assertEquals(listOf(CoachTools.ASK, CoachTools.PROPOSE_WORKOUT), frame.tools.map { it.name })
         assertTrue(frame.context, frame.context.contains("No program is running"))
     }
+
+    @Test
+    fun theApiContextAndAskClaudesPromptHoldOneSituationBuiltOnce() {
+        val sessions = emptyList<com.hyperlog.app.session.PastSessionItem>()
+        val context = CheckInContext.frame(plan, sessions, library.exercises, today = oct13, lastTrained = oct13.minusDays(3)).context
+        val prompt = AskClaude.prompt("x", plan, sessions, library.exercises, today = oct13, lastTrained = oct13.minusDays(3))
+        val fromContext = context.substring(context.indexOf("Today is ")).trimEnd()
+        val fromPrompt = prompt.substring(prompt.indexOf("Today is "), prompt.indexOf("## Change format")).trimEnd()
+        assertTrue(fromContext.contains("## Program: "))
+        assertEquals(fromContext, fromPrompt)
+    }
 }

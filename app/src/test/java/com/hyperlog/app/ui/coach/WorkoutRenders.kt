@@ -12,8 +12,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import com.hyperlog.app.coach.Workout
 import com.hyperlog.app.coach.Workouts
 import com.hyperlog.app.domain.LoggedSet
@@ -94,37 +92,6 @@ class WorkoutRenders {
         File(out).mkdirs()
         File(out, "${if (dark) "dark" else "light"}-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
-
-    @Composable
-    private fun Coach(program: ActiveProgram? = plain, words: String = "", lowest: List<Pair<String, Double>> = this.lowest) {
-        var picked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Long?>(null) }
-        var options by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.hyperlog.app.coach.WorkoutOptions?>(null) }
-        CoachScreen(
-            program, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {},
-            gyms = gyms, usualGym = usual, lowest = lowest,
-            picked = picked, onPick = { picked = it }, options = options, onOptions = { options = it },
-        )
-    }
-
-    private val build = { compose.onNodeWithText("Build me a workout").performClick(); Unit }
-
-    @Test fun options() = render("coach-15-workout-options", before = build) { Coach() }
-
-    @Test fun optionsPicked() = render("coach-16-workout-focus", before = {
-        build()
-        compose.onNodeWithText("Hard").performClick()
-        compose.onNodeWithText("1 h 15").performClick()
-        compose.onNodeWithText("Elsewhere").performClick()
-        compose.onNodeWithText("Back · 4 sets").performScrollTo().performClick()
-        compose.onNodeWithText("Glutes").performScrollTo().performClick()
-    }) { Coach(words = "Hotel gym this week: dumbbells to 30 kg and a bench.") }
-
-    @Test fun elsewhereNeedsWords() = render("coach-19-elsewhere-needs-words", before = {
-        compose.onNodeWithText("Elsewhere").performClick()
-        build()
-    }) { Coach() }
-
-    @Test fun optionsNoProgram() = render("coach-17-workout-no-program", before = build) { Coach(program = null, lowest = emptyList()) }
 
     @Test fun review() = render("coach-18-workout-review") {
         WorkoutReviewScreen(hotel, names, onAdd = {}, onReject = {}, gym = "At Itis")

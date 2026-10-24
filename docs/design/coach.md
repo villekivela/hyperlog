@@ -1,207 +1,80 @@
 # Coach: design note
 
-The Coach screen is words first: what's going on, in your words, to the Claude app, and Claude's
-reply pasted back as a Change or a workout (`SPEC.md`, Coaching; ADR 0003). The rule screen of
-ticket #17 (five situations and Limits chips) is gone. The missing-equipment swaps on the start
-sheet stay, and are at the end of this note. The tokens of `program-and-today.md` and
-`logging-screen.md` apply.
+Coach is a check-in with Claude (`SPEC.md`, Coaching; ADRs 0003 and 0005). It opens on "What's
+going on?" over eight tiles. With a Claude key, a tile starts the wizard (the second half of this
+note). Without one, a tile opens **Ask Claude**: one screen for your words, then the Claude app, and
+Claude's reply pasted back as a Change, a workout or a program. The old words-first screen (gym
+row, starter chips, Build me a workout's options) is gone with #74. The tokens of
+`program-and-today.md` and `logging-screen.md` apply.
 
-The owner's review on 2026-10-15 found the old screen hard to read: it never said what it does,
-the Limits repeated the situations, Time off showed at 0 days, and Pain → Hands buried a list of
-six exercise chips. The redesign answers those, with the tokens of the designer
-pass below. The screens before it were dropped in #42; `screens/coach.png` is today's Coach on the
-phone (dark, Ink and violet, #58).
+## Ask Claude, without a key (#74)
 
-## Principles
+`ui/coach/AskClaudeScreen.kt`. A step of the wizard in all but name: the bar names the tile (or
+"How's it going?", "Easing back in") with Back, the tab bar is hidden, and the words are the one
+thing to fill in.
 
-1. **Say what it does.** One line under the title: tell Claude what's going on, and get back a
-   Change to your program or a workout. Nothing changes until you accept it.
-2. **What the coach already did comes first.** Changes in force are cards at the top, each with
-   Revert and Tell Claude how it's going.
-3. **One way in.** Words, with starter chips to start from. No form, no limits.
-4. **Options only where they mean something.** Effort, time and focus appear only for Build me a
-   workout, and they are a whole request: no words needed.
-5. **The filled button is the next step.** Ask Claude until you've asked, then Paste reply.
-6. **Swaps read as the session will.** "In place of …" over the new name, on Today, in the start
-   sheet and in the session, as in the review.
-7. **The gym learns what it lacks** the way it learns machines: on the go ("Not at Harbour"), undone
-   on the gym screen.
+### Principles
 
-## Tokens
+1. **One thing to fill in.** The tile's sentence is already in the field, with the caret at its end;
+   the field is focused on opening, so the keyboard is up and the sentence is ready to finish.
+2. **Say what it does, once.** One line under the bar: Ask Claude shares this with your plan and
+   recent sessions; talk it through in the Claude app, copy its reply, then paste it here.
+3. **The filled button is the next step.** Ask Claude until you've asked, then Paste reply, then
+   Review when the reply is found.
+4. **A tile is a request.** Ask Claude is enabled with the words cleared, because the prompt quotes
+   the tile, whose own sentence (`Something hurts.`) says what the check-in is about.
 
-The tokens of `program-and-today.md` and `logging-screen.md` hold; these are Coach's own.
+### Tokens
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Intro | bodyLarge, onSurfaceVariant, 24 dp edge, 8 dp under the bar, 16 dp over the first group | The one line under the title |
-| Change in force | segment of a `SegmentedList` (Tones.card), 32 dp outer corners | One per Change, newest first |
-| Change row | `SegmentedRow`: `tune` in the 40 dp secondaryContainer circle, summary bodyLarge (2 lines), how long it runs bodyMedium onSurfaceVariant | The Change |
-| Change card tap | the whole segment, "See what it changes" | Opens the Change in force, read-only |
-| Fold row | 56 dp segment, bodyLarge onSurfaceVariant on the 72 dp text column, `expand_more` at the end | `1 more in force` past two cards |
-| Change actions | 48 dp row, end-aligned, 12 dp from the segment's end, 8 dp between: **Revert** text button, **Tell Claude how it's going** tonal button | Under the Change row, in the same segment |
-| Composer | one `SectionCard` (Tones.card, 32 dp radius, 12 dp padding) | Gym, starters and the words, one thing to fill in |
-| Composer head | labelLarge, onSurfaceVariant, on the 24 dp edge, 16 dp before the gym chips on the same row | "Gym"; the row is left out with no gyms |
-| Gym chip | FilterChip, `selectedChipColors()`, `check` leading when picked, 8 dp apart | Single choice; **Elsewhere** last |
-| Starter chip | SuggestionChip, `add` leading, 8 dp apart, no head: the `add` says what it does. One row that scrolls sideways, running to the card's edges, so the chip cut off at the edge shows there's more | Puts a sentence into the words |
-| Words | OutlinedTextField, label "In your words", 3 lines at least, 16 dp over it | |
+| Intro | bodyLarge, onSurfaceVariant, 24 dp edge, 8 dp under the bar, 16 dp over the card | The one line under the title |
+| Words | `OutlinedTextField` in a `SectionCard` (Tones.card, 32 dp radius, 16 dp padding), label "In your words", 3 lines at least | The tile's sentence, to edit |
 | Bottom bar | Tones.bar strip, 28 dp top corners, 16 dp padding, through the gesture area | Paste reply, Ask Claude |
 | Next step | filled Button at the end of the bar; the other is a text button whose label sits on the 24 dp edge | Ask Claude, then Paste reply, then Review |
 | Reply ready | primaryContainer card, 16 dp radius, inside the bar over its buttons, 12 dp under the strip's top: `check_circle` 24 dp, titleMedium "Claude's reply is ready", filled **Review** | The one accent of the screen |
-| Row head | labelLarge onSurfaceVariant in a 56 dp column on the 24 dp edge | Gym, Effort, Time, Focus, so their choices start on one line |
-| Build me a workout | FilterChip, first in the starter row: `add` leading, `check` and primaryContainer when open | Opens the options; types nothing |
-| Effort, Time | `ConnectedChoice` (connected button group) on Tones.screen inside the card, 8 dp apart; Time with 8 dp content padding so `45 min` fits | Normal and 1 h picked |
-| Focus | FilterChips, 8 dp apart, wrapping: the seven groups, Chest, Back, Shoulders, Arms, Legs, Glutes, Core; the three behind this week carry their sets (`Back · 4 sets`) | Nothing picked |
-| Workout review | as a Change's: a SectionCard with the name (headlineSmall) and summary (bodyMedium onSurfaceVariant), then the groups as segments with Today's slot rows | "Workout for today", Reject and **Add to Today** |
-| Workout card (Today) | a segmented group 16 dp above the day's head: a secondaryContainer head segment ("Workout" labelLarge primary, the name headlineSmall, the summary bodyMedium, ⋮ at the end), one segment per group with Today's slot rows, and a 64 dp segment with **Start** at the end | Start tonal beside a program day, filled without one. The accent head is decided |
+| Paste problems | titleMedium error "Not a reply Hyperlog can use", count line, each problem as program import shows it, copy button for Claude | Under the card, scrolled into view |
 
-## Wireframes
+### Wireframe
 
 ```
- Coach                                              ⚙
- Tell Claude what's going on. It answers in words, or with a
- change you review first.
+ ←  Something hurts
+ Say what's going on. Ask Claude shares it with your
+ plan and recent sessions; talk it through in the
+ Claude app, copy its reply, then paste it here.
 
- ┌──────────────────────────────────────────────────┐ ← a Change in force (segment)
- │ (tune)  Hands need a week off grip work           │
- │         Until Tue 27 Oct                          │
- │                 Revert  [Tell Claude how it's going]│
+ ┌──────────────────────────────────────────────────┐
+ │ In your words                                     │
+ │ Something hurts: ▌                                │
+ │                                                  │
  └──────────────────────────────────────────────────┘
 
- ┌──────────────────────────────────────────────────┐ ← the composer card
- │ Gym  [✓ Harbour] [Itis]                           │
- │ [+ Something hurts] [+ Short on time today] [+ N ├→ scrolls sideways
- │ ┌ In your words ────────────────────────────────┐ │
- │ │ Left elbow aches on curls…                    │ │
- │ └───────────────────────────────────────────────┘ │
- └──────────────────────────────────────────────────┘
  ╭──────────────────────────────────────────────────╮
- │ ┌ ✓ Claude's reply is ready          [Review] ┐  │ ← after asking, when the clipboard holds one
- │ Paste reply                        Ask Claude    │   (then neither is filled)
+ │ Paste reply                        [Ask Claude]  │
  ╰──────────────────────────────────────────────────╯
 ```
 
-Before asking the bar reads `Paste reply   [Ask Claude]`; once asked, `Ask Claude   [Paste
-reply]`. The filled button always sits at the end, so the next step is always in the same place.
+Once asked the bar reads `Ask Claude   [Paste reply]`. Coming back from the Claude app with a reply
+that validates, a "Claude's reply is ready" card with **Review** sits above it and Paste reply is
+the plain button.
 
-```
- Gym     [✓ Harbour] [Itis] [Elsewhere]
- [✓ Build me a workout] [+ Something hurts] [+ Sho├→
- Effort  ( Easy |▐Normal▌| Hard )                     ← connected button groups
- Time    ( 45 min |▐1 h▌| 1 h 15 | 1 h 30 )
- Focus   [Chest] [Back · 4 sets] [Shoulders]
-         [Arms] [Legs · 0 sets] [Glutes] [Core · 0 sets] ← none picked: balanced full body
- ┌ In your words ─────────────────────────────────┐
-```
+### States
 
-```
- Today
- ┌────────────────────────────────────────────────┐ ← secondaryContainer head
- │ Workout                                      ⋮ │
- │ Hotel dumbbells, 45 min                        │
- │ Upper body with dumbbells only. Back first…    │
- │ ⌖ At Itis                                      │ ← or Elsewhere
- ├────────────────────────────────────────────────┤
- │ 1   Chest-Supported DB Row                     │
- │     3 × 8–12 [1]  ·  2:00 rest                 │
- └────────────────────────────────────────────────┘
- ┌────────────────────────────────────────────────┐ ← the program day, second
- │ Week 2 · Ramp-in                    (▶ Start)  │ ← tonal, beside its heading
- │ Day B — Hinge, close-grip bench, row           │
- ├────────────────────────────────────────────────┤
- │ 1   Barbell RDL …                              │
- └────────────────────────────────────────────────┘
- [Ad-hoc session                              ›]
-                                  [▶ Start workout] ← floating: starts the workout
-```
+Words with the sentence; asked; reply ready; a bad paste (`coach-06-bad-paste`); a reply copied
+short (`coach-13-cut-off`); Ease back in (`coach-09-ease-back-in`).
 
-With no program the card is followed by the **Ad-hoc session** row, in place of the empty state;
-Start workout floats as on any day.
+### Interaction rules
 
-```
- Start session
- ( ) Itis
- (•) Harbour
-     Usual on Tuesdays
- Not at Harbour · for this session
- [✓] In place of Leg Extension
-     Reverse Nordic
-     Lying Leg Curl: nothing here fits       ← no replacement: muted, no checkbox
-                                    [Start]
-```
+- Cleared words end the asked state: Ask Claude is filled again. Editing the words closes the paste
+  problems.
+- Back closes the screen to the tiles and drops the words; switching tabs keeps them (the tab bar is
+  hidden while it is open, so the way out is Back).
+- A reply found on return shows the card and hides the keyboard; nothing opens by itself.
+- A Change accepted from here lands on Today scrolled to the program day, and keeps the tile and your
+  words as its check-in.
 
-## States
+### The start sheet's missing-equipment swaps
 
-Issue #32 (this pass), with the screenshot of each in `screens/` as `light-<name>.png` and
-`dark-<name>.png`. They are Robolectric renders from `CoachRenders` (skipped unless asked for:
-`RENDERS=<dir> ./gradlew testDebugUnitTest --tests '*CoachRenders*'`, `DARK=1` for dark), since
-the phone was locked for most of the pass.
-
-- Coach: empty, nothing in force, Ask Claude disabled (`coach-01-empty`); a Change in force
-  (`coach-02-in-force`); words typed (`coach-03-words`); asked, Paste reply filled
-  (`coach-04-asked`); Claude's reply ready (`coach-05-reply-ready`); a bad paste with its problems
-  (`coach-06-bad-paste`); no program running, no Change cards and no Paste reply
-  (`coach-07-no-program`).
-- Review of a Change, headed "Change to your program" (`coach-08-review`); one that replaces a
-  Change in force, with "Ends: …" in a tertiaryContainer card above it
-  (`coach-14-review-replaces`).
-- A Change in force opened from its card, read-only, headed "Change in force", with Revert
-  (`coach-10-change-in-force`).
-- Three Changes in force: two cards and `1 more in force` (`coach-11-folded`).
-- Elsewhere picked (`coach-12-elsewhere`).
-- A reply copied short: one message, no count and no copy button (`coach-13-cut-off`).
-- Program → Changes: a replaced Change struck through, "Replaced 15 Oct"
-  (`program-change-replaced`).
-- Today: the time-off line with Ease back in (`today-time-off`), which opens Coach with the words
-  filled in (`coach-09-ease-back-in`).
-
-Issue #33 (workouts), Robolectric renders from `WorkoutRenders` (same switches as
-`CoachRenders`), since the phone stayed with the owner:
-
-- Build me a workout open with its defaults and the focus's three marks
-  and the seven groups (`coach-15-workout-options`); Hard, 1 h 15, Hamstrings, Back and Glutes
-  picked (`coach-16-workout-focus`); with no program, no marks yet and Paste reply back
-  (`coach-17-workout-no-program`, and `coach-07-no-program` with words).
-- A workout's review, "Workout for today" with Add to Today (`coach-18-workout-review`).
-- Today: the card above the program day (`today-workout`); with no program, above an Ad-hoc
-  session row (`today-workout-no-program`); Start's sheet at the gym picked on Coach, Itis, while
-  Harbour is the usual one (`today-workout-start`); the workout's session running, headed
-  "Workout" (`today-workout-running`); removed, with "Workout removed" and Undo
-  (`today-workout-removed`).
-- The workout's session, logging with last time, the suggestion and warm-ups
-  (`session-workout`), and History listing it under its name (`history-workout`).
-
-Unchanged by the redesign:
-
-- Start sheet: missing swaps for the gym picked (`start-01-missing`); another gym recomputes them.
-- Which machine?: **Not at Harbour** under Add machine (`machine-01-not-here`).
-- Gym screen: **Not here** list with × to undo (`gym-01-not-here`).
-
-## Interaction rules
-
-- A starter replaces the words only when they're empty; otherwise it's added on a new line.
-- Tell Claude how it's going starts the words with the Change and focuses the field.
-- The words, the gym, the workout's options and the asked state live outside the screen: they
-  survive a tab switch (to History to check the weekly sets) as well as the trip to the Claude
-  app (saved state).
-- Once asked, Paste reply stays the next step until the request ends: an accept, a revert, or
-  the words cleared.
-- Tapping a Change card opens it read-only; Revert there asks first, then goes back to Coach.
-- On return after asking, the clipboard is read once. A valid reply shows the ready bar; Review
-  opens it. Nothing opens by itself.
-- Editing the words clears a bad paste's problems; so does Back.
-- Accept or Add to Today goes to Today; Reject goes back to Coach as it was.
-- Build me a workout opens its options and types nothing, with the keyboard down; tapping it
-  again closes them and they leave the request. Ask Claude is enabled while they're open.
-- Add to Today asks first when a workout already waits today ("Replace today's workout?").
-- Start workout opens the start sheet with the workout's name under the title, at the gym picked
-  on Coach, or at **Elsewhere** (no gym) for a workout asked for there; Elsewhere is offered for
-  any workout. The program day's tonal Start opens it for the day. ⋮ → Remove takes the workout
-  off at once, with a long "Workout removed" snackbar whose Undo puts it back as it was. While
-  another session runs, Today shows that session and not the workout.
-- Finish on a session with nothing logged says it's dropped (and, for a workout, back on Today).
-- Changing the gym or the options after asking ends the asked state: Ask Claude is filled again.
-- With Elsewhere picked, Ask Claude waits for words; the field's supporting text reads "Say what
-  equipment is there, so Claude plans with it" (`coach-19-elsewhere-needs-words`).
 - Accepting a Change from Coach lands on Today scrolled to the program day when a workout is
   above it, so the screen shows what the Change edited.
 - Missing swaps start ticked; unticking one keeps the planned exercise for that session. Start
@@ -213,8 +86,8 @@ Unchanged by the redesign:
 
 With a Claude key, or the scripted coach in a debug build, Coach is the check-in (`SPEC.md`,
 Coaching → Check-in; ADR 0005): "What's going on?" over eight tiles, then Claude's questions one a
-screen, ending in words, a review, or ×. `ui/coach/CheckInScreen.kt`. Without either, the
-words-first screen above stays until #74.
+screen, ending in words, a review, or ×. `ui/coach/CheckInScreen.kt`. Without either, a tile opens
+Ask Claude above.
 
 ### Principles
 

@@ -61,6 +61,8 @@ object AskClaude {
         weeklySets: List<WeekSets> = emptyList(),
         /** Build me a workout's options, while they're open; null when closed. */
         options: WorkoutOptions? = null,
+        /** The check-in's tile, quoted before the [words]: what it is about, even when the words are cleared. */
+        tile: Tile? = null,
     ): String = buildString {
         if (plan == null) {
             appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
@@ -68,10 +70,9 @@ object AskClaude {
             appendLine("I train with Hyperlog, an app that runs my strength program and logs my sessions. Help me with this:")
         }
         appendLine()
-        if (words.isNotBlank()) {
-            words.trim().lines().forEach { appendLine("> $it") }
-            appendLine()
-        }
+        tile?.let { appendLine("> ${it.words}") }
+        if (words.isNotBlank()) words.trim().lines().forEach { appendLine("> $it") }
+        if (tile != null || words.isNotBlank()) appendLine()
         options?.let {
             options(it)
             appendLine()
@@ -219,13 +220,15 @@ object AskClaude {
     sealed interface Reply {
         data class ChangeReply(val change: Change) : Reply
         data class WorkoutReply(val workout: Workout) : Reply
+        data class ProgramReply(val program: Program) : Reply
         data class Invalid(val errors: List<String>) : Reply
     }
 
     /**
      * Reads a pasted reply: Claude's whole reply or just its JSON. The fenced block is taken when
-     * there is one, else the outermost braces. An object with `workout` is a workout, checked as
-     * program import checks a day; anything else is a Change for [program], which must be running.
+     * there is one, else the outermost braces. An object with `program` is a program, checked as program
+     * import checks it; one with `workout` is a workout, checked as program import checks a day;
+     * anything else is a Change for [program], which must be running.
      */
     fun read(
         pasted: String,
@@ -235,9 +238,13 @@ object AskClaude {
         merged: Map<String, String> = emptyMap(),
     ): Reply {
         val json = extract(pasted) ?: return Reply.Invalid(listOf(if ('{' in pasted) CUT_OFF else NOTHING_TO_READ))
-        val workout = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(json) as? kotlinx.serialization.json.JsonObject }
-            .getOrNull()?.containsKey("workout") == true
+        val top = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(json) as? kotlinx.serialization.json.JsonObject }.getOrNull()
+        val workout = top?.containsKey("workout") == true
         val result = when {
+            top?.containsKey("program") == true -> when (val read = com.hyperlog.app.program.ProgramParser.parse(top.getValue("program").toString(), exercises, merged)) {
+                is com.hyperlog.app.program.ProgramParser.Result.Valid -> Reply.ProgramReply(read.program)
+                is com.hyperlog.app.program.ProgramParser.Result.Invalid -> Reply.Invalid(read.errors.map { "program.$it" })
+            }
             workout -> when (val read = com.hyperlog.app.program.ProgramParser.workout(json, exercises, merged)) {
                 is com.hyperlog.app.program.ProgramParser.WorkoutResult.Valid -> Reply.WorkoutReply(read.workout)
                 is com.hyperlog.app.program.ProgramParser.WorkoutResult.Invalid -> Reply.Invalid(read.errors)
@@ -257,7 +264,7 @@ object AskClaude {
     }
 
     /** The message when the paste holds no JSON at all. */
-    const val NOTHING_TO_READ = "No Change or workout found in what you copied. Copy Claude's whole reply, with its JSON block, then paste again."
+    const val NOTHING_TO_READ = "No Change, workout or program found in what you copied. Copy Claude's whole reply, with its JSON block, then paste again."
 
     /** The message when the paste's JSON stops before its end. */
     const val CUT_OFF = "Claude's reply is cut off before its JSON ends. Copy the whole reply, then paste again."

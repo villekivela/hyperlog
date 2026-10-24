@@ -58,6 +58,8 @@ class CoachAfterRestartTest {
         compose.waitFor("Resume session")
 
         compose.openTab("Coach")
+        compose.waitFor("Something else")
+        compose.onNodeWithText("Something else").performClick()
         compose.waitFor("In your words")
         compose.onNode(hasSetTextAction()).performTextInput("Tired.")
         compose.onNodeWithText("Ask Claude").performClick()

@@ -87,28 +87,33 @@ class CoachRenders {
 
     @Composable
     private fun Coach(
-        program: ActiveProgram? = plain,
         words: String = "",
+        title: String = "Something hurts",
         replyReady: Boolean = false,
         errors: List<String>? = null,
     ) {
-        var picked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Long?>(null) }
-        CoachScreen(
-            program, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {},
-            gyms = gyms, usualGym = usual, replyReady = replyReady, pasteErrors = errors,
-            picked = picked, onPick = { picked = it },
+        AskClaudeScreen(
+            title, TextFieldValue(words, TextRange(words.length)), onWords = {}, onBack = {}, onAskClaude = {},
+            tileAsked = true, replyReady = replyReady, pasteErrors = errors,
+        )
+    }
+
+    @Composable
+    private fun AskedCoach() {
+        var asked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        AskClaudeScreen(
+            "Something hurts", TextFieldValue(typed, TextRange(typed.length)), onWords = {}, onBack = {}, onAskClaude = {},
+            tileAsked = true, asked = asked, onAskedChange = { asked = it },
         )
     }
 
     private val typed = "Left elbow aches on curls since Monday, about 3/10. Pressing is fine."
 
-    @Test fun empty() = render("coach-01-empty") { Coach() }
 
-    @Test fun inForce() = render("coach-02-in-force") { Coach(withChanges) }
 
     @Test fun words() = render("coach-03-words") { Coach(words = typed) }
 
-    @Test fun asked() = render("coach-04-asked", before = { compose.onNodeWithText("Ask Claude").performClick() }) { Coach(words = typed) }
+    @Test fun asked() = render("coach-04-asked", before = { compose.onNodeWithText("Ask Claude").performClick() }) { AskedCoach() }
 
     @Test fun replyReady() = render("coach-05-reply-ready", before = { compose.onNodeWithText("Ask Claude").performClick() }) {
         Coach(words = typed, replyReady = true)
@@ -118,14 +123,13 @@ class CoachRenders {
         Coach(words = typed, errors = listOf("operations[0].slot: unknown slot \"curls\"", "operations[1].percent: must be −50 to 50"))
     }
 
-    @Test fun noProgram() = render("coach-07-no-program") { Coach(program = null, words = "My knee hurts on lunges.") }
 
     @Test fun review() = render("coach-08-review") {
         val diff = Changes.diff(program, plain.position, today, emptyList(), elbow)
         ChangeReviewScreen(ChangeReview(elbow, diff, program, program.blockAt(1)!!.name), names, onAccept = {}, onReject = {})
     }
 
-    @Test fun easeBackIn() = render("coach-09-ease-back-in") { Coach(words = "I’ve had 11 days off. Ease me back in.") }
+    @Test fun easeBackIn() = render("coach-09-ease-back-in") { Coach(words = "I’ve had 11 days off. Ease me back in.", title = "Easing back in") }
 
     @Test fun todayTimeOff() = render("today-time-off") {
         TodayScreen(
@@ -142,13 +146,7 @@ class CoachRenders {
         ChangeReviewScreen(ChangeReview(hands, diff, program, null), names, onAccept = {}, onReject = {}, onRevert = {})
     }
 
-    @Test fun folded() = render("coach-11-folded") {
-        Coach(plain.copy(history = listOf(record(1, elbow), record(2, hands), record(3, lighter))))
-    }
 
-    @Test fun elsewhere() = render("coach-12-elsewhere", before = { compose.onNodeWithText("Elsewhere").performClick() }) {
-        Coach(words = "Hotel gym this week: dumbbells to 30 kg, a cable stack and a bench.")
-    }
 
     @Test fun cutOff() = render("coach-13-cut-off") {
         Coach(words = typed, errors = listOf(com.hyperlog.app.coach.AskClaude.CUT_OFF))
