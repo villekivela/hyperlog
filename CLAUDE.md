@@ -17,5 +17,7 @@ periodized program, log sessions, coach around real life.
   `docs/design/tester-brief.md`). The owner judges whole passes, so bring them taste questions only.
 - **The starter program** (low-volume high-intensity full body, a bench goal and a hand-pain
   coaching example) is in `docs/programs/full-body-3-day.md`.
-- **Coaching runs offline or through the user's Claude app.** The app makes no model calls (ADR
-  0001). The network is only for the in-app update check (`SPEC.md`, Distribution).
+- **Coaching is a check-in with Claude** (ADR 0005): through the API with the user's Claude key, or
+  handed off to the Claude app without one. The network is only for `api.anthropic.com` and the
+  in-app update check. Everything coach-related must be testable without a key: use the fake
+  `CoachModel` or the scripted coach, never a real key in tests.

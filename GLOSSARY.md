@@ -155,6 +155,16 @@ _Avoid_: 1RM, max
 The weight and target reps the app proposes for an upcoming set, with the reason shown.
 _Avoid_: Recommendation, prescription (that is the program's, not the app's)
 
+**Record**:
+A logged set that beats every earlier one of the exercise (of the machine, for machines and cables): an estimate record or a rep record. Warm-ups, deload sets and partial reps never make one.
+_Avoid_: PR (that is a pull request here), personal best, PB
+
+**Estimate record**:
+A set whose e1RM is above the exercise's best estimate so far.
+
+**Rep record**:
+A set with more full reps than ever at a weight already lifted for that exercise.
+
 **Lift goal**:
 A target value for one exercise's estimate, such as a 100 kg bench, optionally by a date.
 _Avoid_: Target (that's a set prescription's), PR goal
@@ -240,9 +250,21 @@ _Avoid_: Substitution
 A day Claude builds for one date, outside the program: groups, slots and set prescriptions like a program day's. Training it doesn't move the position.
 _Avoid_: One-off day, coach workout, ad-hoc session (that one has no prescription)
 
+**Check-in**:
+One run of the coach's wizard: a first tile ("Something hurts", "New program", …), then Claude's questions one a screen, each with a few answers to tap, ending in words with Done, a review, or ×. With a Claude key the app asks Claude itself; without one it hands off through Ask Claude. An accepted Change keeps the check-in that made it.
+_Avoid_: Chat, conversation, session (that is training)
+
 **Ask Claude**:
-The hand-off of your own words to the Claude app: a prompt shared through the share sheet, and Claude's reply, a Change or a workout, pasted back for review. It is the coach's only way in. Hyperlog makes no model calls.
+The check-in without a Claude key: a prompt shared through the share sheet to the Claude app, and Claude's reply, a Change, a workout or a program, pasted back for review.
 _Avoid_: AI coach, chat
+
+**Claude key**:
+The Anthropic API key typed in Settings. With it, check-ins call Claude from the app. It stays on the phone, encrypted, and never goes into a backup.
+_Avoid_: Token, credentials, API token
+
+**Scripted coach**:
+A debug-build setting that plays canned check-ins with no Claude key and no network, so the wizard can be tried and tested.
+_Avoid_: Mock coach, demo mode
 
 ## Data
 

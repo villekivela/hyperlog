@@ -8,8 +8,8 @@ into nutrition, VBT, a desktop editor and more. This one does three things.
 
 1. **Run the program.** Show today's prescription from where you are in the program.
 2. **Log the session** against that prescription.
-3. **Coach.** When you can't train as planned, talk it through with Claude and get back a
-   concrete change to the program or a workout, applied only after you accept it.
+3. **Coach.** When you can't train as planned, check in with Claude in a few taps and get back a
+   concrete change to the program, a workout or a new program, applied only after you accept it.
 
 Out of scope: nutrition, VBT, Health Connect, progress photos, body measurements, desktop
 configuration, iOS, web, any server.
@@ -65,7 +65,8 @@ configuration, iOS, web, any server.
   the app ships only the icons it uses (vector drawables or a subset font).
 - Room for storage. Everything lives on the device.
 - kotlinx.serialization for program files, backup import and coach changes.
-- The network is for the update check only (Distribution); no model calls (ADR 0001).
+- The network is for the update check (Distribution) and, with a Claude key, the coach's calls to
+  `api.anthropic.com` (Coaching, ADR 0005). Nothing else goes out.
 - Application ID `com.hyperlog.app`, debug builds `.dev`. A debug build is labelled **DEV Hyperlog** and has its own launcher icon, the logo on amber with a DEV badge (themed icon too), so it can never be mistaken for the real app. The launcher glyph spans about 46 dp of the 108 dp adaptive canvas at its tallest, inside the keyline and as large as other apps' icons, in the coloured and themed layers alike.
 
 ## Distribution
@@ -625,7 +626,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      moves on to the reps; on the reps it logs only once they are typed). Later sets
      follow the set before (its RIR), and their weight moves with the RIR gap. Rest after a set is the program's rest for it. After an
      exercise's last planned set the first exercise with sets left comes up. When every planned
-     set is logged, the pad gives way to **Day done** and Finish session.
+     set is logged, the pad gives way to **Day done** (with the session's records, if any) and
+     Finish session.
    - The **prescription sheet** (tap the exercise name) shows every set's target, technique or
      back-off rule, the rest, the slot note and the exercise's technique note.
    - **Edit on the fly:** add, remove, reorder or swap exercises; add or remove sets; change reps,
@@ -891,8 +893,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      doesn't move it twice. After the last day the program is finished.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see Coaching below. A destination of the navigation bar (`sports`), there at any
-   time: your words to the Claude app, and a Change or a workout pasted back. With no program
-   running only a workout can come back.
+   time: a check-in with Claude, ending in words, a Change, a workout or a new program. With no
+   program running no Change can come back.
 4. **History** — session list, per-exercise top set and e1RM trend, weekly sets per muscle.
    A destination of the navigation bar (`history`). Two tabs: **Sessions** (the default) and **Progress**.
    Design: `docs/design/history.md`.
@@ -937,8 +939,9 @@ height while it moves. It stops below the status bar; a list longer than that sc
 
 Settings is the navigation bar's fifth tab, a destination with no back arrow and no gear on any top
 bar; its sub-screens (Gyms and equipment, the exercise library) keep their back arrows to Settings.
-It holds gyms and their equipment, exercise library, export backup, restore
-from a backup, starting weights from the old app, and "Check for updates" (Distribution).
+It holds gyms and their equipment, exercise library, the Claude key and this month's cost
+(Coaching → With a Claude key), export backup, restore from a backup, starting weights from the
+old app, and "Check for updates" (Distribution). Debug builds add Scripted coach.
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that is not part of the
@@ -1101,6 +1104,18 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
     prescription. Reaching a goal changes nothing else.
   - Nothing in progression reads goals: the suggestions are the same with or without one (tested
     over the progression engine's inputs).
+- **Records**: a logged work set that beats the exercise's earlier sets (the machine's, for
+  machines and cables, ADR 0002) is a record, of one of two kinds:
+  - an **estimate record**: its e1RM, counted as the estimate counts it (sets of 12 reps or fewer,
+    with an RIR, both dumbbells, bodyweight included), is above the best of every earlier set;
+  - a **rep record**: more full reps than any earlier set at the same weight, which was lifted
+    before. A set that is both reads as an estimate record.
+  - Warm-ups, deload sets, drops, mini-sets and partial reps never make a record, and an
+    exercise's first session has nothing to beat.
+  - **As the set logs**, its row takes a small mark, `Estimate record` or `Rep record`, kept on
+    the set wherever it shows (the session, Session done, History). **Day done** and Session done
+    list the session's records (`Barbell bench press · 92.5 × 5 [1] · Estimate record`).
+  - Records are worked out from the logged sets, never stored: correcting a set moves them.
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
   weighted bodyweight exercises.
   - One value a day: logging again the same day replaces it. It is typed on the system keyboard
@@ -1128,8 +1143,9 @@ from a backup, starting weights from the old app, and "Check for updates" (Distr
   - A backup holds everything the app stores: programs and their Changes, workouts, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
-    settings ("Check for updates", the dismissed update). Every table goes in row for row except
-    the last update check, a cache of GitHub's answer (a test fails on a table that is neither in
+    settings ("Check for updates", the dismissed update), and the Claude cost by month. Every table
+    goes in row for row except the last update check, a cache of GitHub's answer, and the Claude
+    key, which never leaves the phone (it is in Keystore, not the database) (a test fails on a table that is neither in
     the backup nor excluded with a reason).
   - **Settings → Export backup** saves one JSON file through the system's save dialog
     (`hyperlog-backup-2026-10-13.json`), then reads `Saved Tue 13 Oct, 14:05`, and keeps saying
@@ -1229,92 +1245,64 @@ the end of the block the Change was accepted in. A date range covers its first a
   accept or revert at once.
 - **Reorders stay in the session.** No operation moves a slot; the order is the program's.
 
-### Words first, through Claude (uses your subscription, no API)
+### Check-in: a wizard with Claude (ADR 0005)
 
-The app makes no model calls. Anthropic's terms keep subscription credentials inside Anthropic's
-own apps, so Hyperlog hands off to the Claude app. There are no built-in rules: every situation
-goes through Claude, which reads the program, the week you're in and your sessions (ADR 0003).
+Every situation goes through Claude, which reads the program, the week you're in and your sessions
+(ADR 0003). A **check-in** is a wizard: one question a screen, a few big answers to tap, and
+"Type my own" under them. With a **Claude key** (Settings) the app asks Claude itself; without one
+it hands off to the Claude app (**Ask Claude**, below). Nothing changes until you accept.
 
-1. You say what's going on in your own words, and pick the gym.
-2. **Ask Claude** opens the Android share sheet with a prompt for the Claude app.
-3. You talk it through in Claude as long as you like. Claude may answer in words alone when the
-   plan can stand ("Ramp-in already eases effort. Use straps and train as planned."). Then nothing
-   comes back, and Coach doesn't treat the ask as unfinished.
-4. Otherwise Claude ends with one fenced JSON block holding a **Change** to the program or a
-   **workout** for today. Copy it and come back. Hyperlog validates it and opens its review.
-   Nothing changes until you accept.
+**The first step** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`) asks "What's going
+on?" with tiles: **Something hurts**, **Short on time**, **Different gym or none**, **Tired or
+slept badly**, **Build me a workout**, **New program** and **Something else**. The tap costs no
+call. Above the tiles, while Changes are in force, one line, `2 changes in force`, opens them
+(below). With no program running, the tiles that change the plan still go to Claude, which can
+only answer in words or with a workout or a program; Build me a workout and New program stay. A
+pasted Change then reads "No program is running, so there’s nothing for a Change to change." (one
+problem, with the copy button, for Claude). Once a program is finished a Change can still repeat a
+week or shift the program.
 
-**The screen** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`), top to bottom:
+**Claude's steps.** After the first tile Claude asks what the situation needs, one question a
+screen, through its `ask` tool: the question, 2–4 answers and whether you may type your own.
+"Which hand, and does pressing hurt or only gripping?" for pain; the gym, with your gyms and
+**Elsewhere** as answers, only when the equipment matters; effort, time and focus only for a
+workout, with the three least-trained muscle groups this week carrying their counts (`Back · 4
+sets`). Effort is Easy (3 RIR or more, no techniques), Normal (1–2 RIR) or Hard (0–1 RIR,
+techniques allowed); time is the whole session with warm-ups and rest, 45 min to 1 h 30; focus is
+any of the seven muscle groups (`MuscleGroup`), or none for a balanced full-body day. **Marks
+count groups** (owner, 2026-10-16): weekly sets per group are counted as History counts muscles
+(`History.weeklyGroupSets`), and among the groups trained in the last 4 weeks the three with the
+fewest sets this week carry the count, fewest first, ties in group order. It asks about four questions at most. While a call runs
+the screen shows "Thinking…". **Back** goes one step back, to change that answer, and Claude asks
+again from there. There is no step counter, since Claude doesn't know in advance how many it needs.
 
-- **Changes in force.** One card for each accepted Change that covers today or a later day, newest
-  first: its summary and how long it runs (`Until Tue 27 Oct`, `Until today`, `Thu 15 Oct – Thu 22
-  Oct` for one that starts later, `Rest of Build` while the block it was accepted in runs, `Rest of
-  the program`), with **Revert** (asking first, as on Program) and **Tell Claude how it's going**.
-  That one starts the words with the Change (`About "Hands need a week off grip work": `) and
-  focuses the text field. A finished program has none. Tapping a card opens what that Change does
-  from today on, read-only and headed "Change in force": the days it still covers, slot by slot,
-  with every other Change applied before and after, and the move of the position it made. Its one
-  button is **Revert** (asking first); × and Back close it. Past two cards, the rest fold into a
-  row, `1 more in force`, that opens them, so the words field stays in view.
-- **Gym.** The gyms as chips, the one the start sheet would pick preselected (the usual gym on
-  today's weekday), then **Elsewhere**, for a gym that isn't set up (a hotel, a friend's garage).
-  The prompt holds the gym's equipment and what's missing there; with Elsewhere it holds no
-  gym's equipment and tells Claude the equipment is in the words. With no gyms set up the row is
-  left out.
-- **Starters.** Chips that put an editable sentence into the words: "Something hurts" (`Something
-  hurts: `, for you to say where), "Short on time today" (`I'm short on time today: I have 45 minutes.`), "No gym,
-  dumbbells at home" (`No gym today, only dumbbells at home.`) and "Slept badly" (`I slept badly
-  last night.`). A starter fills empty words; otherwise its sentence goes on a new line. Either
-  way the field takes focus with the cursor at the end. **Build me a workout** comes first in the
-  row, so it shows without scrolling. It is a toggle that opens the workout's options (below) and
-  types nothing: the keyboard stays down, since the options are what to fill in. Tapping it again
-  closes them, and they leave the request.
-- **In your words.** A text field, 3 lines at least, kept while you're away in the Claude app.
-- **Bottom bar.** **Paste reply** and **Ask Claude**. The filled one is the next step, always at
-  the end of the bar: Ask Claude until you've asked, then Paste reply. Ask Claude is enabled once
-  there are words, or while the workout's options are open; with **Elsewhere** picked it needs
-  words, since they are the only equipment Claude gets, and the field says so under it ("Say what
-  equipment is there, so Claude plans with it"). Once asked, Paste reply stays the next step until
-  the request ends: an accept, an Add to Today, a revert, or the words cleared. Changing the gym or
-  the workout's options after asking makes a new request: Ask Claude is the next step again. With
-  no program running a workout can still come back, so Paste reply is always there.
-- **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
-  has focus again, which Android requires for reading the clipboard), the app reads the clipboard
-  once. If it holds a Change or a workout that validates, a card over the bottom bar's buttons
-  reads "Claude's reply is ready" with a filled **Review**, and neither button below is filled.
-  Anything else is ignored quietly. Nothing opens by itself. The card goes when Review opens the
-  reply or Ask Claude asks again. The keyboard closes, so Review is in view. Paste reply stays for
-  a reply copied later. Android shows its own toast when an app reads the clipboard.
+**The end** is one of:
+- **An answer in words**, when the plan can stand ("Ramp-in already eases effort. Use straps and
+  train as planned."), with **Done**, and **Tell me more** to go on.
+- **A review**: a Change (**Accept**), a workout (**Add to Today**) or a program (**Start
+  program**), each through its tool. The review is the one each already has.
+- **×**, at any step, which drops the check-in.
 
-**A workout's options**, shown under the starters while Build me a workout is picked:
+A check-in is kept, step by step, while you're on other tabs or away from the app, until it ends.
 
-- **Effort**: Easy, Normal (the default) or Hard. The prompt maps them: Easy is 3 RIR or more and
-  no techniques, Normal 1–2 RIR, Hard 0–1 RIR with techniques allowed.
-- **Time**: 45 min, 1 h (the default), 1 h 15 or 1 h 30, the whole session with warm-ups and rest.
-- **Focus**: seven muscle-group chips, any number: Chest, Back, Shoulders, Arms, Legs, Glutes,
-  Core (`MuscleGroup`; a test checks every muscle the library names has one). None picked means a
-  balanced full-body day; nothing is preselected. **Marks count groups** (owner, 2026-10-16):
-  weekly sets per group are counted as History counts muscles, a set counting 1 for each group
-  holding a primary muscle of its exercise and 0.5 for each other group holding a secondary one,
-  once per group however many of its muscles it works (`History.weeklyGroupSets`). Among the
-  groups trained in the last 4 weeks (this week and the 3 before), the three with the fewest sets
-  this week carry the count on their chip (`Back · 4 sets`), fewest first, ties in group order.
-  No muscle is marked on its own. The prompt sends a group by name with the muscles it covers
-  (`Back (Lats, Teres Major, Traps, …)`).
-- Words are optional here: gym, effort, time and focus are a whole request. Effort and Time are
-  connected button groups.
-- **Kept across tabs.** The gym chip and the options live with the words, outside the screen, so
-  switching to History to check the weekly sets and back keeps them all, as the trip to the Claude
-  app does.
+**Replies are checked before you see them.** A Change, workout or program from a tool goes
+through the same validators as a paste or an import. One with problems goes back to Claude as the
+tool's error, paths and all, and Claude tries again, at most twice; then the problems show as
+Paste reply shows them, with **Try again** (a new call) and ×.
 
-**With and without a program.** With a program running Claude may reply with either. Once it is
-finished, a Change can still repeat a week or shift the program. With no program only a workout
-comes back: the prompt says so and carries only the workout format, the intro reads "It answers in
-words or builds you a workout for today.", and a pasted Change reads "No program is running, so
-there’s nothing for a Change to change." (one problem, with the copy button, for Claude).
+**Changes in force.** The `2 changes in force` line opens a page with one card for each accepted
+Change that covers today or a later day, newest first: its summary and how long it runs (`Until
+Tue 27 Oct`, `Until today`, `Thu 15 Oct – Thu 22 Oct` for one that starts later, `Rest of Build`
+while the block it was accepted in runs, `Rest of the program`), with **Revert** (asking first,
+as on Program) and **How's it going?**. That one starts a check-in about the Change, sending the
+check-in that made it (its questions and your answers) with it. Tapping a card opens what that
+Change does from today on, read-only and headed "Change in force": the days it still covers, slot
+by slot, with every other Change applied before and after, and the move of the position it made.
+Its one button is **Revert** (asking first); × and Back close it. A finished program has none.
 
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
-day the Change edited into view, its heading at the top.
+day the Change edited into view, its heading at the top. Start program goes to Today on the new
+program's first day.
 
 **Time off on Today.** Days off are counted from your training days (the weekday plan): whole
 days from the first planned day after the last finished session that went untrained (today isn't
@@ -1322,53 +1310,112 @@ missed yet), so the plan's own rest days are not time off. Training Tuesdays onl
 the last session is 7 days off. With no weekday plan it counts the days since the last finished
 session. After more than 7 days off, Today shows `11 days since your last session` (the words
 always count from the last session) with **Ease back in**, until a Change or a workout is
-accepted that day. Ease back in opens Coach with the words "I've had 11 days off. Ease me back
-in." The prompt holds the count either way.
+accepted that day. Ease back in starts a check-in whose first answer is "I've had 11 days off.
+Ease me back in." The context holds the count either way.
 
-**How Ask Claude works** (`coach/AskClaude.kt`):
+### What Claude is told
 
-- **The prompt** is plain English text shared with `ACTION_SEND` through the system share sheet
-  (the user picks the Claude app). It holds, in order: your words quoted (none with no words),
-  and the workout's options when they're open (`Build me a workout for today:` with the effort
-  as reps in reserve, the time for the whole session, and the focus or "a balanced full-body
-  day"); the instruction to talk it through, then either answer in words when
-  the plan can stand or reply with exactly one fenced ```` ```json ```` block holding a Change or a
-  workout, using only the listed ids; today's date and the days off (the last finished session's
-  date and how long ago, and with a weekday plan the days off as Today counts them); the gym
-  picked, with its equipment by kind and each item's weights, its dumbbells and plates, and the
-  exercises missing there (or, with Elsewhere, that the equipment is in the words); the program's
-  title, the next day (week, day id, block) and days left; the Changes in force, newest first, each
-  with its id, summary, scope, the day it was accepted and its operations as JSON; every block with its days and slots (slot id,
-  exercise id and name, sets as planned in the block's first week or the current one,
-  alternatives, note); the finished sessions of the last 28 days (date, day, gym, each exercise's
-  sets as `80 × 5 [1]`); the weekly sets per muscle for this week and the 4 before it; every
-  visible library exercise, and any hidden one the program uses (id, name, equipment, movement
-  pattern, grip, primary muscles); and the two formats.
-- **The formats in the prompt are generated** from the code that reads them: operation names and
-  fields from the serializer, scopes from the scope serializer, ranges from the validators, an
-  example Change built for the running program (a swap to the next day's first alternative, +1
-  RIR, for a week) and an example workout built from the library, both of which the paste
-  accepts. With a Change in force, two more examples use its id: one that only ends it, and one
-  that replaces it with the example's operations. A new operation or field can't ship without its description.
-- **Paste reply** reads the clipboard. It takes the first fenced block holding JSON, else the
-  text from the first `{` to the last `}`, so Claude's whole reply can be copied. An object with
-  `workout` is a workout; anything else is read as a Change. A valid one opens its review.
-  Otherwise the problems show under the text field as program import shows them (path over
+The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.kt`), built once:
+
+- The check-in so far: the tile, Claude's questions and your answers, quoted; the instruction to
+  ask only what the situation needs, then answer in words when the plan can stand or reply with
+  one Change, workout or program, using only the listed ids; today's date and the days off (the
+  last finished session's date and how long ago, and with a weekday plan the days off as Today
+  counts them); the gym answered, with its equipment by kind and each item's weights, its
+  dumbbells and plates, and the exercises missing there (or, with Elsewhere, that the equipment is
+  in the words); the program's title, the next day (week, day id, block) and days left; the
+  Changes in force, newest first, each with its id, summary, scope, the day it was accepted, its
+  operations as JSON and its check-in; every block with its days and slots (slot id, exercise id
+  and name, sets as planned in the block's first week or the current one, alternatives, note); the
+  finished sessions of the last 28 days (date, day, gym, each exercise's sets as `80 × 5 [1]`); the
+  weekly sets per muscle for this week and the 4 before it; every visible library exercise, and any
+  hidden one the program uses (id, name, equipment, movement pattern, grip, primary muscles); and
+  the formats.
+- **The formats are generated** from the code that reads them: operation names and fields from the
+  serializer, scopes from the scope serializer, ranges from the validators, the program format from
+  the program parser, an example Change built for the running program (a swap to the next day's
+  first alternative, +1 RIR, for a week) and an example workout built from the library, both of
+  which the validators accept. With a Change in force, two more examples use its id: one that only
+  ends it, and one that replaces it with the example's operations. A new operation or field can't
+  ship without its description. Through the API the formats are the tools' input schemas (`ask`,
+  `propose_change`, `propose_workout`, `propose_program`, `strict`); in Ask Claude's prompt they
+  are text and examples.
+- **Caching.** Through the API the stable part (the formats, the library, the program) comes first
+  and is cached, so the questions after the first read it from the cache.
+
+### With a Claude key
+
+- **Settings → Claude key**: a field that takes an Anthropic API key, checked once with a free
+  call (the models list) and saved encrypted with Android Keystore. It reads `Key ending …a1b2`
+  with **Remove**. The key is never shown again, never in a backup, a log or Auto Backup; a restore
+  keeps the phone's key, or none.
+- **The model** is Claude Opus 5.5 (`claude-opus-5-5`), with adaptive thinking and streaming, the
+  tools above with `tool_choice` auto, and the server-side refusal fallback. One client
+  (`coach/ClaudeClient.kt`) makes every call; no other code opens a connection but the update check.
+- **Cost.** Each reply's usage (input, cache writes and reads, output) is added up by month at the
+  model's prices, and Settings reads `This month: ≈ $2.40` under the key. The hard limit is the
+  monthly spend limit set in the Anthropic Console; the app has no cap of its own.
+- **Errors.** No connection, a timeout or an API error shows "Couldn't reach Claude." with **Try
+  again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.
+  Check it in Settings." and offers Ask Claude for this check-in. A spend limit reached says so, and
+  offers Ask Claude.
+- **Testable without a key.** The client is behind one interface (`CoachModel`). Tests use a fake
+  that plays scripted turns: questions, each kind of reply, a reply that fails validation and its
+  fix, a refusal and each error. **Scripted coach** (Settings, debug builds only) plays canned
+  check-ins for every tile with no key and no network, so the wizard can be tried on the phone and
+  by the tester. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
+- **One host.** A test fails if code outside the client and the update check opens a connection,
+  or if the client calls any host but `api.anthropic.com`.
+
+### Without a key: Ask Claude
+
+The check-in opens on the same tiles. After a tile, one screen takes your words (a text field, 3
+lines at least, the tile's sentence in it to edit: `Something hurts: `, `I'm short on time today:
+I have 45 minutes.`), then **Ask Claude** opens the Android share sheet with the prompt (What
+Claude is told) for the Claude app. You talk it through there as long as you like; Claude may answer
+in words alone, and the check-in doesn't treat the ask as unfinished. Otherwise Claude ends with
+one fenced JSON block holding a Change, a workout or a program; copy it and come back.
+
+- **Paste reply** is then the filled button. It reads the clipboard: the first fenced block holding
+  JSON, else the text from the first `{` to the last `}`, so Claude's whole reply can be copied. An
+  object with `workout` is a workout, one with `program` a program, anything else a Change. A valid
+  one opens its review. Otherwise the problems show as program import shows them (path over
   message, "Not a reply Hyperlog can use", "N problems. Nothing changed. Copy them into your Claude
   chat, then paste the new reply.") with a copy button to hand them back to Claude, and nothing is
   applied. A problem with the copy, not the reply, shows one message and no copy button: a reply
-  with no JSON says "No Change or workout found in what you copied. Copy Claude's whole reply,
-  with its JSON block, then paste again.", and one whose JSON opens more braces than it closes says "Claude's reply is cut off before its JSON ends. Copy the
-  whole reply, then paste again."
-- **The review** says what came back. A Change's diff is headed "Change to your program" and
-  keeps **Accept**; a workout's is headed "Workout for today" and its button reads **Add
-  to Today**. Accept and Add to Today go to Today.
-- **No model calls.** A test fails if any source or dependency names a model SDK or host
-  (Anthropic, OpenAI, Gemini and the like), or if code outside the update check opens a connection.
+  with no JSON says "No Change, workout or program found in what you copied. Copy Claude's whole
+  reply, with its JSON block, then paste again.", and one whose JSON opens more braces than it
+  closes says "Claude's reply is cut off before its JSON ends. Copy the whole reply, then paste
+  again."
+- **Reply found.** Coming back to Hyperlog after asking (it went to the background, and its window
+  has focus again, which Android requires for reading the clipboard), the app reads the clipboard
+  once. If it holds a reply that validates, a card reads "Claude's reply is ready" with a filled
+  **Review**. Anything else is ignored quietly. Nothing opens by itself. Android shows its own toast
+  when an app reads the clipboard.
 
-Later, if the paste step gets annoying: a custom MCP connector would let the Claude app read the
-plan and write a pending reply directly. That needs a public HTTPS server holding the data, so it
-waits until syncing is wanted for its own sake (ADR 0001).
+### New program
+
+**New program** builds a whole program in a check-in, from your answers or from a file.
+
+- One of Claude's steps offers **Attach a PDF or photo**: a program PDF (a Nippard one), a printed
+  sheet, a whiteboard, a screenshot of a spreadsheet. It goes to Claude with the check-in (PDFs up
+  to 32 MB, as a document; photos as images) and is not stored. Claude reads the blocks, days,
+  exercises, sets, rep ranges, RIR and techniques, and asks only what the file doesn't settle ("The
+  PDF has 5 days. You train 3: which to merge?"). Without a file it builds from your answers.
+- The reply is a program file (`docs/program-format.md`) and validates as import does.
+- **Exercises the library doesn't have.** Claude uses the closest library exercise, and the review
+  lists each swap ("Deficit pendlay row → Barbell row"). Only when nothing comes close does the reply
+  add an exercise (`newExercises`: id, name, equipment, movement pattern, grip demand, primary and
+  secondary muscles, as the library editor requires); the review lists them under "New in your
+  library", and Start program saves them with the program.
+- **The review** shows the program as Program shows it (blocks, weeks, days) with its swaps and new
+  exercises. **Start program** asks first when a program runs, as import does ("Replace <title>?
+  You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1 instead. Past
+  sessions are kept.").
+- Without a key, Ask Claude takes a file through the Claude app: attach it there.
+
+Later, if syncing is ever wanted for its own sake: a custom MCP connector would let the Claude app
+read the plan and write a reply directly (ADR 0001).
 
 ### Workout
 
@@ -1393,7 +1440,7 @@ program at all.
 
 - `groups` are the program file's groups, slots and set lines (`docs/program-format.md`), without
   week overrides (`weeks` on a set line is an unknown field). Slot ids are unique within the day. `name` and `summary` must not be blank. The
-  paste validates it as import does, paths and all (`workout.groups[0].slots[0].exercise:
+  check-in validates it as import does, paths and all (`workout.groups[0].slots[0].exercise:
   unknown exercise "bb_row"`).
 - **The review** shows the name, the summary, where it's for (`At Itis`, or `Elsewhere`; nothing
   with no gyms set up) and the exercises as Today lists a day, each with its rest after its sets
@@ -1410,10 +1457,10 @@ program at all.
   added and is gone the next day if it wasn't started. Adding another replaces it, asking first
   ("Replace today's workout?"). ⋮ → Remove drops it at once, with a snackbar, "Workout removed"
   with **Undo**, for the long duration (a lifter looks up before tapping); Undo puts it back as
-  it was (its day and the gym picked on Coach).
+  it was (its day and the gym answered in the check-in).
 - **Elsewhere means no gym.** A workout asked for with Elsewhere keeps no gym. The start sheet for
   a workout names it under the title and offers **Elsewhere** ("No gym: the usual dumbbells and
-  plates") after the gyms, picked for such a workout; the gym picked on Coach otherwise (a gym
+  plates") after the gyms, picked for such a workout; the gym answered in the check-in otherwise (a gym
   since deleted reads as Elsewhere). Elsewhere starts the session without a gym, by the rules of a
   session with no gym: the usual dumbbell rack and plates, machines asked about without a gym, no
   missing-equipment swaps, and no gym on the session.
@@ -1516,3 +1563,8 @@ changed to the naming rule, ids kept: `db_incline_press` is "Incline DB Press", 
 7. Rule-based coach.
 8. Ask Claude handoff and paste.
 9. History.
+10. Records.
+11. Claude key, the API client and the month's cost.
+12. Check-in with a Claude key, and the scripted coach.
+13. Check-in without a key (Ask Claude in the wizard).
+14. New program in a check-in.

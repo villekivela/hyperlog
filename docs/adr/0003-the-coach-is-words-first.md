@@ -13,6 +13,7 @@ always has signal where the owner trains, which was the rules' only advantage.
 
 This replaces ADR 0001's "Offline rules cover the common situations without any model". The rest
 of ADR 0001 stands: no model calls from the app, and an MCP connector waits until syncing is wanted.
+ADR 0005 later lets the app call Claude itself, as a check-in, when it has a Claude key.
 
 ## Considered options
 
