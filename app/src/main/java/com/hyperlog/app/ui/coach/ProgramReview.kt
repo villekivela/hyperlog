@@ -64,6 +64,8 @@ fun ProgramReviewScreen(
     modifier: Modifier = Modifier,
     /** × on a check-in's review drops the check-in, where Reject and Back step back; null: × is Reject. */
     onClose: (() -> Unit)? = null,
+    /** The file attached in the check-in that built it, if one was. */
+    file: String? = null,
 ) {
     BackHandler(onBack = onReject)
     var replacing by rememberSaveable { mutableStateOf(false) }
@@ -134,6 +136,10 @@ fun ProgramReviewScreen(
                         style = MaterialTheme.typography.labelLarge,
                         color = cs.onSurfaceVariant,
                     )
+                    file?.let {
+                        Spacer(Modifier.height(4.dp))
+                        Text(stringResource(R.string.program_review_from, it), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                    }
                     program.description?.let {
                         Spacer(Modifier.height(8.dp))
                         Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)

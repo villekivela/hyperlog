@@ -131,6 +131,17 @@ emulator with the scripted coach at font scale 1.15.
   language); the symbol tops the title's line when the row has two. On the review, the author on
   its own line read as a second grey caption over the weeks line, so the two became one line.
 
+### Tester's report (#75)
+
+`new-program-test-report.md`, fixed: a check-in read back without its file says so on the step
+that took it ("Attach Nippard-Upper-Lower.pdf again: Hyperlog doesn’t keep files.",
+`light-coach-new-program-attach-again`); a check-in's review read back as the app starts waits on
+Coach instead of covering Today; the review's head names the file it was built from
+(`light-coach-new-program-review-file`); the scripted coach reuses the drag curl a program before
+added. Left for the owner (decided before, as for every review): × drops the check-in without
+asking, and Reject steps back to the step answered last with Type my own open. Left for later: the
+report's minor items and spec gaps (several photos in one answer, starting partway through).
+
 ## Ask Claude, without a key (#74)
 
 `ui/coach/AskClaudeScreen.kt`. A step of the wizard in all but name: the bar names the tile (or

@@ -634,6 +634,8 @@
     <string name="program_review_swaps">Swapped for your library</string>
     <string name="program_review_swap">%1$s → %2$s</string>
     <string name="program_review_new">New in your library</string>
+    <string name="program_review_from">From %1$s</string>
+    <string name="checkin_attach_again">Attach %1$s again: Hyperlog doesn’t keep files.</string>
     <plurals name="program_review_weeks">
         <item quantity="one">%d week</item>
         <item quantity="other">%d weeks</item>

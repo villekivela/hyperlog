@@ -81,4 +81,18 @@ class ScriptedCoachTest {
         assertEquals(1, proposal.newExercises.size)
         assertTrue(proposal.newExercises.single().id !in ids)
     }
+
+    @Test
+    fun aSecondNewProgramUsesTheDragCurlTheFirstOneAdded() = runTest {
+        val drag = com.hyperlog.app.library.Exercise("barbell_drag_curl", "Barbell Drag Curl", com.hyperlog.app.library.Equipment.Barbell,
+            com.hyperlog.app.library.MovementPattern.ElbowFlexion, com.hyperlog.app.library.GripDemand.High, listOf("Biceps"))
+        val withDrag = library.exercises + drag
+        val scripted = BuildCoach.scripted { ScriptedWorld(plan, withDrag, gyms, emptyList()) }!!
+        val coach = CheckInCoach(scripted, CheckInWorld(plan.program, withDrag.map { it.id }.toSet(), names = withDrag.associate { it.id to it.name }))
+        var checkIn = coach.start(Tile.NewProgram, CheckInContext.frame(plan, emptyList(), withDrag, gyms))
+        repeat(2) { checkIn = coach.answer(checkIn, (coach.step(checkIn) as CheckInStep.Question).answers.first()) }
+        val proposal = (coach.step(checkIn) as CheckInStep.ProgramReview).proposal
+        assertEquals(emptyList<Any>(), proposal.newExercises)
+        assertTrue("barbell_drag_curl" in proposal.program.exercises())
+    }
 }

@@ -53,9 +53,9 @@ class ProgramReviewTest {
     private var started = 0
     private var rejected = 0
 
-    private fun show(running: ActiveProgram?) = compose.setContent {
+    private fun show(running: ActiveProgram?, file: String? = null) = compose.setContent {
         HyperlogTheme {
-            ProgramReviewScreen(proposal, names, running, onStart = { started++ }, onReject = { rejected++ })
+            ProgramReviewScreen(proposal, names, running, onStart = { started++ }, onReject = { rejected++ }, file = file)
         }
     }
 
@@ -70,6 +70,12 @@ class ProgramReviewTest {
         // The blocks and the first week's days, as Program shows them.
         compose.onNodeWithText("Ramp-in").performScrollTo()
         compose.onNodeWithText("Day A — Squat, press, row", substring = true).performScrollTo()
+    }
+
+    @Test
+    fun aProgramFromAFileSaysWhichFile() {
+        show(running = null, file = "Nippard-Upper-Lower.pdf")
+        compose.waitFor("From Nippard-Upper-Lower.pdf")
     }
 
     @Test

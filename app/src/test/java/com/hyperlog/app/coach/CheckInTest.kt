@@ -246,6 +246,8 @@ class CheckInTest {
         assertEquals(file, sent.attachment)
         // The check-in shows the file's name as the answer, and Back opens no words of yours.
         assertEquals(SavedCheckIn.Step("Build it from a file you have?", "Nippard PPL.pdf"), CheckInCoach.saved(attached).steps.single())
+        // A program from it says which file.
+        assertEquals("Nippard PPL.pdf", attached.file)
         assertEquals(null, CheckInCoach.ownAnswer(attached))
     }
 
@@ -263,6 +265,9 @@ class CheckInTest {
         val back = coach.run(read.copy(turns = read.turns.dropLast(1) + read.turns.last().copy(answer = Answer(text = "Fewer days."))))
         assertEquals("Attach the program?", (coach.step(back) as CheckInStep.Question).question)
         assertEquals(1, back.turns.size)
+        // The step says why it's back: the file to attach again.
+        assertEquals("Nippard PPL.pdf", back.lostFile)
+        assertEquals(null, coach.attached(back, Attachment("Nippard PPL.pdf", Attachment.PDF, byteArrayOf(1))).lostFile)
         assertEquals(2, model.requests.size)
     }
 

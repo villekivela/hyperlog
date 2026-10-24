@@ -67,7 +67,14 @@ data class CheckIn(
     /** The gym answered (null: none, or [elsewhere]), where a workout from this check-in starts. */
     val gym: Long? = null,
     val elsewhere: Boolean = false,
+    /** The file to attach again: it was sent before, but a check-in read back doesn't have it. */
+    val lostFile: String? = null,
 ) {
+    /** The name of the file last attached, which a program from this check-in came from. */
+    val file: String?
+        get() = turns.lastOrNull { turn -> turn.answer?.results.orEmpty().any { it.attachment != null } }
+            ?.answer?.results?.firstNotNullOfOrNull { it.attachment?.name }
+
     /** The conversation so far, as Claude is sent it. */
     val messages: List<CoachMessage>
         get() = listOf(CoachMessage.User(opening)) + turns.flatMap { turn ->
@@ -183,7 +190,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         val results = turn.reply.toolCalls.map {
             if (it === call) ToolResult(it.id, "I attached ${attachment.name}.", attachment = attachment) else ToolResult(it.id, ONE_AT_A_TIME)
         }
-        return checkIn.answering(Answer(results, shown = attachment.name)).copy(fixes = 0)
+        return checkIn.answering(Answer(results, shown = attachment.name)).copy(fixes = 0, lostFile = null)
     }
 
     /** Tell me more, after an answer in words: Claude goes on. */
@@ -204,7 +211,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         val last = checkIn.turns.indexOfLast { it.answer?.byYou == true }
         if (last < 0) return null
         val turns = checkIn.turns.take(last + 1)
-        return checkIn.copy(turns = turns.dropLast(1) + turns.last().copy(answer = null), failure = null, fixes = 0)
+        return checkIn.copy(turns = turns.dropLast(1) + turns.last().copy(answer = null), failure = null, fixes = 0, lostFile = null)
     }
 
     /** The words Tell me more went on from, oldest first: a new step after them, never in their place. */
@@ -372,7 +379,8 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
             val lost = checkIn.turns.indexOfFirst { turn -> turn.answer?.results.orEmpty().any { it.attachment != null && it.attachment.data == null } }
             if (lost < 0) return checkIn
             val turns = checkIn.turns.take(lost + 1)
-            return checkIn.copy(turns = turns.dropLast(1) + turns.last().copy(answer = null), failure = null, fixes = 0)
+            val name = turns.last().answer?.results?.firstNotNullOfOrNull { it.attachment?.name }
+            return checkIn.copy(turns = turns.dropLast(1) + turns.last().copy(answer = null), failure = null, fixes = 0, lostFile = name)
         }
 
         /** What goes back to a call that wasn't the one used: one question or reply at a time. */

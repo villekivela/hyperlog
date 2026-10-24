@@ -336,8 +336,10 @@ private fun App(
     // The focus's marks count the sets trained so far this week.
     LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()
-    // A check-in's Change or workout opens its review, the one a paste opens.
-    LaunchedEffect(checkIn?.checkIn?.turns?.size, checkInStep?.let { it::class }) {
+    // A check-in's Change, workout or program opens its review, the one a paste opens, on Coach:
+    // one read back as the app starts waits there, rather than covering Today.
+    LaunchedEffect(checkIn?.checkIn?.turns?.size, checkInStep?.let { it::class }, screen == Screen.Coach) {
+        if (screen != Screen.Coach) return@LaunchedEffect
         when (val step = checkInStep) {
             is com.hyperlog.app.coach.CheckInStep.ChangeReview -> programModel.propose(step.change)
             is com.hyperlog.app.coach.CheckInStep.WorkoutReview -> programModel.reviewWorkout(step.workout)
@@ -419,6 +421,7 @@ private fun App(
             },
             onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
             onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
+            file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
         )
         return
     }
@@ -637,7 +640,8 @@ private fun App(
             pasteErrors = pasteErrors,
             onCopyProblems = { AskClaudeShare.copy(context, "Hyperlog", it.joinToString("\n")) },
             onAttach = { pickAttachment.launch(arrayOf(com.hyperlog.app.coach.Attachment.PDF, "image/*")) },
-            attachNote = attachNote,
+            // A check-in read back without its file asks for it again.
+            attachNote = attachNote ?: checkIn?.checkIn?.lostFile?.let { context.getString(R.string.checkin_attach_again, it) },
         )
         screen == Screen.History && pastSession?.shown != null -> PastExerciseScreen(pastSession!!, pastModel, onBack = { pastModel.show(null) })
         // A session opened from History or a trend goes back there, read again with any correction.

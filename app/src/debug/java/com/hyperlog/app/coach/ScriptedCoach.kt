@@ -132,8 +132,10 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
      */
     private fun program(world: ScriptedWorld): CoachReply {
         val file = ProgramFormat.example(world.library)
+        // A program started before added the drag curl: this one uses it.
+        val known = world.library.firstOrNull { it.name.equals(DRAG_CURL, ignoreCase = true) }
         val taken = world.library.map { it.id }.toSet()
-        val drag = generateSequence(1) { it + 1 }.map { if (it == 1) "barbell_drag_curl" else "barbell_drag_curl_$it" }.first { it !in taken }
+        val drag = known?.id ?: generateSequence(1) { it + 1 }.map { if (it == 1) "barbell_drag_curl" else "barbell_drag_curl_$it" }.first { it !in taken }
         val curl = (file.toString().substringAfter("\"id\":\"curl\",\"exercise\":\"").substringBefore('"'))
         val program = file.toString().replace(
             "\"id\":\"curl\",\"exercise\":\"$curl\"",
@@ -151,10 +153,10 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
                 put("program", JsonObject(Json.parseToJsonElement(program).jsonObject + head))
                 putJsonArray("swaps") { add(buildJsonObject { put("from", "Seal Row"); put("to", row) }) }
                 putJsonArray("newExercises") {
-                    add(
+                    if (known == null) add(
                         buildJsonObject {
                             put("id", drag)
-                            put("name", "Barbell Drag Curl")
+                            put("name", DRAG_CURL)
                             put("equipment", "barbell")
                             put("pattern", "elbow_flexion")
                             put("grip", "high")
@@ -187,6 +189,7 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
 
     private companion object {
         const val THINKING_MS = 900L
+        const val DRAG_CURL = "Barbell Drag Curl"
         const val MORE = "A short night mostly costs you reps at the end of a set, not strength at the start. Keep the weights, cut a set, and sleep in tonight."
     }
 }

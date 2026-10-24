@@ -1386,6 +1386,9 @@ Under its summary it shows **The check-in** that made it: the opening, then each
 questions over your answer (Claude's words and Tell me more stay out). Program → Changes shows the same in a row's dialog. A Change pasted, or proposed from a
 session, has none. It is kept with the Change (`plan_change.check_in`, JSON) and goes into backups.
 
+**A check-in's review opens on Coach** (tester, #75): one read back as the app starts waits there
+rather than covering Today, and opens when Coach does.
+
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
 day the Change edited into view, its heading at the top. Start program goes to Today on the new
 program's first day. Add to Today while a session runs lands on Today, which still shows the session, with "Workout
@@ -1570,8 +1573,8 @@ back.
   `no_backup` keeps its name and type, never its bytes. A check-in read back after the app was
   closed shows where it was (a review it reached still opens), but a call that would carry the file
   again (an answer, Back and a new answer, Try again) goes back to the step that took it instead,
-  with no call, to attach it again; dropping the turns after it keeps what Claude was sent before
-  unchanged.
+  with no call, to attach it again: its note reads "Attach Nippard PPL.pdf again: Hyperlog doesn’t
+  keep files." Dropping the turns after it keeps what Claude was sent before unchanged.
 - **The reply** is `propose_program`'s input, or pasted: `{ "program": <a program file
   (docs/program-format.md)>, "swaps": [...], "newExercises": [...] }`. The program validates as
   import does, its problems' paths under `program.`, and goes through the self-fix loop.
@@ -1585,8 +1588,8 @@ back.
   The review lists them under "New in your library" (name, then equipment and primary muscles), and
   only Start program saves them, under their own ids, with the program.
 - **The review** (`ui/coach/ProgramReview.kt`), titled "New program": the title, then the author,
-  weeks and days a week on one line ("Jeff Nippard · 12 weeks · 5 days a week"), and the
-  description in a card; the swaps; the new exercises; then the program as Program shows it (the
+  weeks and days a week on one line ("Jeff Nippard · 12 weeks · 5 days a week"), the file it was
+  built from (`From Nippard PPL.pdf`), and the description in a card; the swaps; the new exercises; then the program as Program shows it (the
   blocks, the block's card with its weeks, and the picked week's days), from week 1.
   **Start program** asks first when a program runs, as import does ("Replace <title>? You're in
   week 6 of Hyperlog Full Body; the new program starts at week 1, day 1 instead. Past sessions are
