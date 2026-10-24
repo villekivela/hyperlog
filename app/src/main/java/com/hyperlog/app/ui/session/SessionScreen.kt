@@ -99,7 +99,6 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
@@ -358,7 +357,7 @@ fun SessionScreen(
                 if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates, platesOnMachine = current.platesOnMachine, pinLoad = current.pinLoader(), top = nextRow)
                 else HiddenPad(entry, actions, canConfirm = canConfirm, top = nextRow)
             } else if (current != null && current.done && session.exercises.all { it.prescription == null || it.done }) {
-                DayDoneBar(recordsOf(session.exercises.map { ExerciseSummary(it.exercise.name, it.sets, it.records) }), onFinish = { showFinish = true })
+                DayDoneBar(recordsOf(session.exercises.map { it.summary }), onFinish = { showFinish = true })
             } else if (current != null) {
                 BottomRow(nextRow)
             } else {
@@ -725,7 +724,7 @@ private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
     ) {
         if (records.isNotEmpty()) {
             // A long list scrolls inside the strip, which never grows past the pad it replaces.
-            RecordLines(records, Modifier.padding(bottom = 20.dp).heightIn(max = 288.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
+            RecordLines(records, Modifier.padding(bottom = 20.dp).heightIn(max = 288.dp).verticalScroll(rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
@@ -1178,6 +1177,5 @@ private fun KeepScreenOn() {
         onDispose { view.keepScreenOn = false }
     }
 }
-
 
 internal const val DayDoneTag = "day-done"

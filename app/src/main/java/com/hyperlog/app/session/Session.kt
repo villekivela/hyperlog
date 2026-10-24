@@ -66,6 +66,9 @@ data class SessionExercise(
     /** The record each of [sets] makes, by index (SPEC, Records); null for none. */
     val records: List<Record?> = emptyList(),
 ) {
+    /** Its sets with their records, as summaries show them. */
+    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records)
+
     /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
     fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
 

@@ -27,7 +27,7 @@ internal class SessionRecords(db: HyperlogDatabase, private val programs: Progra
         val perMachine = exercise.equipment.perMachine
         val earlier = dao.setsBefore(se.exerciseId, row.id, row.startedAt, anyItem = !perMachine, itemId = se.equipmentItemId)
         val weighted = exercise.equipment == Equipment.WeightedBodyweight
-        val bodyweight = if (weighted) bodyweights.lookup() else { _ -> null }
+        val bodyweight = if (weighted) bodyweights.byDate() else { _ -> null }
         fun performance(sets: List<LoggedSet>, startedAt: Long, deload: Boolean) = Performance(
             workSets(sets, null),
             deload = deload,

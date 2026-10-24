@@ -28,10 +28,10 @@ class Bodyweights(db: HyperlogDatabase) {
     suspend fun latest(): Double? = dao.all().firstOrNull()?.kg
 
     /** The value logged on [date] or the latest before it, else the first one logged; null with none. */
-    suspend fun on(date: LocalDate): Double? = dao.all().let { rows -> rows.firstOrNull { it.day <= date.toEpochDay() } ?: rows.lastOrNull() }?.kg
+    suspend fun on(date: LocalDate): Double? = byDate()(date)
 
-    /** [on] for many dates, from one read of the log. */
-    suspend fun lookup(): (LocalDate) -> Double? {
+    /** [on] as a function of the date, for many dates from one read of the log. */
+    suspend fun byDate(): (LocalDate) -> Double? {
         val rows = dao.all()
         return { date -> (rows.firstOrNull { it.day <= date.toEpochDay() } ?: rows.lastOrNull())?.kg }
     }

@@ -913,7 +913,7 @@ class SessionLogger(
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         _state.value = null
-        SessionSummary(session.id, session.startedAt, now, logged.map { ExerciseSummary(it.exercise.name, it.sets, it.records) })
+        SessionSummary(session.id, session.startedAt, now, logged.map { it.summary })
     }
 
     /**

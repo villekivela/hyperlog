@@ -47,7 +47,7 @@ data class PastSession(
     val shown: SessionExercise? get() = exercises.firstOrNull { it.id == shownId }
 
     val summary: SessionSummary
-        get() = SessionSummary(id, startedAt, finishedAt, exercises.map { ExerciseSummary(it.exercise.name, it.sets, it.records) })
+        get() = SessionSummary(id, startedAt, finishedAt, exercises.map { it.summary })
 }
 
 /**

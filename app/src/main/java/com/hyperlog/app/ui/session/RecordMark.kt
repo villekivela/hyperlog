@@ -96,15 +96,16 @@ internal fun RecordLines(
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         records.forEach { r ->
-            val label = r.record.label()
-            val line = buildAnnotatedString { appendRir("${r.exercise} · ${r.set.setText()} · $label", target = false, chips = mutableSetOf()) }.text
+            val detail = "${r.set.setText()} · ${r.record.label()}"
+            // Read as one line, with each chip as "N RIR" as set text reads it.
+            val line = buildAnnotatedString { appendRir("${r.exercise} · $detail", target = false, chips = mutableSetOf()) }.text
             Row(Modifier.fillMaxWidth().clearAndSetSemantics { text = AnnotatedString(line) }, verticalAlignment = Alignment.Top) {
                 // 24 dp on the exercise's 24 sp line, in the column Day done's check uses.
                 RecordMark(r.record, Modifier.size(24.dp), tint = tint)
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text(r.exercise, style = MaterialTheme.typography.bodyLarge, color = color)
-                    RirText("${r.set.setText()} · $label", style = MaterialTheme.typography.bodyMedium, color = muted)
+                    RirText(detail, style = MaterialTheme.typography.bodyMedium, color = muted)
                 }
             }
         }
