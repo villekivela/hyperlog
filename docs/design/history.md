@@ -152,4 +152,6 @@ summary card under it. The bodyweight log's picked day is its secondaryContainer
 A past session's summary rows carry each record set's trophy after its RIR chip, in the set
 line's onSurfaceVariant, never the accent (see `logging-screen.md`, Records); the exercise's table
 puts it on the index circle's lower corner. TalkBack reads it as `Estimate record` or
-`Rep record`. Screens: `light-` and `dark-history-records.png`.
+`Rep record`. An exercise's trend does the same for each session's top set, in its row and in
+the readout above the chart, when that set is a record. Screens: `light-` and
+`dark-history-records.png`.

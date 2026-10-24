@@ -181,7 +181,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
     }
     val p = points[index]
     RirText(
-        listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.setText()}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
+        listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.setText(p.record)}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
             .joinToString(" · "),
         Modifier.padding(horizontal = Margin),
         style = MaterialTheme.typography.bodyMedium,
@@ -235,7 +235,7 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
         Text(long(p.date), Modifier.width(112.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         // Right-aligned, as on Program's done days, so the chips make one column to scan. A set too
         // long for the column loses its start, never its chip.
-        RirText(p.top.setText(), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.StartEllipsis, textAlign = TextAlign.End)
+        RirText(p.top.setText(p.record), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.StartEllipsis, textAlign = TextAlign.End)
         if (!trend.byReps) {
             Text(
                 p.estimateKg?.let { estimateText(it) } ?: "",

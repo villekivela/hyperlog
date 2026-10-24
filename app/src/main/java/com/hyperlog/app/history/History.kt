@@ -14,6 +14,8 @@ import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
+import com.hyperlog.app.progression.Record
+import com.hyperlog.app.progression.Records
 import com.hyperlog.app.progression.WorkSet
 import com.hyperlog.app.session.SessionLogger
 import com.hyperlog.app.session.toExtension
@@ -39,6 +41,8 @@ data class TrendPoint(
     val top: LoggedSet,
     /** The estimate after this session, as suggestions saw it; null with no set that gives one. */
     val estimateKg: Double?,
+    /** The record [top] made (SPEC, Records); null for none. */
+    val record: Record? = null,
 )
 
 /**
@@ -158,12 +162,13 @@ class History(
                 bodyweightKg = if (weighted) bodyweights.on(dateOf(row.startedAt)) ?: 0.0 else 0.0,
                 dumbbells = dumbbells,
             )
-            val top = sets.filterIndexed { i, _ -> counting[i] }
-                .maxWithOrNull(compareBy<LoggedSet> { it.weightKg }.thenBy { it.progressionReps })
+            val top = sets.withIndex().filter { counting[it.index] }
+                .maxWithOrNull(compareBy<IndexedValue<LoggedSet>> { it.value.weightKg }.thenBy { it.value.progressionReps })
                 ?: return@mapNotNull null
             // The estimate as suggestions read it: from the latest sessions up to this one.
             val estimate = Progression.estimate(performances.takeLast(SessionLogger.HISTORY_SESSIONS))
-            TrendPoint(row.sessionId, dateOf(row.startedAt), top, estimate?.kg)
+            val record = Records.of(performances.dropLast(1), performances.last())[top.index]
+            TrendPoint(row.sessionId, dateOf(row.startedAt), top.value, estimate?.kg, record)
         }
     }
 
