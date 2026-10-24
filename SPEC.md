@@ -1265,7 +1265,10 @@ it hands off to the Claude app (**Ask Claude**, below). Nothing changes until yo
 
 **The first step** (`ui/coach/CoachScreen.kt`; design: `docs/design/coach.md`) asks "What's going
 on?" with tiles: **Something hurts**, **Short on time**, **Different gym or none**, **Tired or
-slept badly**, **Build me a workout**, **New program** and **Something else**. The tap costs no
+slept badly**, **Change my program**, **Build me a workout**, **New program** and **Something
+else**. **Change my program** is for edits meant to last (swap an exercise, add or drop one, more
+or fewer sets): Claude asks which exercise and why, and proposes a `rest_of_program` Change, which
+follows the slot into later blocks and stays revertible on the Changes page (owner, 2026-10-24). The tap costs no
 call. Above the tiles, while Changes are in force, one line, `2 changes in force`, opens them
 (below). With no program running, the tiles that change the plan still go to Claude, which can
 only answer in words or with a workout or a program; Build me a workout and New program stay. A
