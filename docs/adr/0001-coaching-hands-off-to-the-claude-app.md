@@ -6,6 +6,9 @@ review. Hyperlog makes no model calls. Anthropic's terms keep subscription crede
 Anthropic's own apps, and pay-per-token API usage is unwanted. The coach has no
 offline rules any more: ADR 0003.
 
+Replaced by ADR 0005: with a Claude key the app calls the API itself, and this hand-off is the
+fallback without one.
+
 ## Considered options
 
 - **Claude API from the app**: smooth, but billed per token, and needs a key on the device or a
