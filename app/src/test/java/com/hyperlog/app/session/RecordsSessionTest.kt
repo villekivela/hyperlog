@@ -3,15 +3,19 @@ package com.hyperlog.app.session
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
+import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.Programs
+import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Record
+import com.hyperlog.app.progression.Records
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -109,6 +113,24 @@ class RecordsSessionTest {
         // 5.7 × 10 beats Hill's 5.7 × 8, though not Harbour's 5.7 × 12.
         val done = logger.session("cable_lateral_raise", "5.7" to 10, gymId = hill)
         assertEquals(listOf(Record.Estimate), done.exercises.single().records)
+    }
+
+    @Test
+    fun dropsMiniSetsAndTheStrongerSideNeverMakeARecord() {
+        val before = Performance(workSets(listOf(LoggedSet(80.0, 8, 0, 1)), null))
+        val today = Performance(
+            workSets(
+                listOf(
+                    // Its drop to 60 × 12 and three mini-sets are more work, not more reps at 80 kg.
+                    LoggedSet(80.0, 8, 0, 1, extensions = listOf(Extension(Extension.Kind.Drop, 60.0, 12))),
+                    LoggedSet(80.0, 8, 0, 1, extensions = List(3) { Extension(Extension.Kind.MiniSet, 80.0, 3) }),
+                    // 10 on the left, 8 on the right: the weaker side is 8.
+                    LoggedSet(80.0, 10, 0, 1, rightReps = 8),
+                ),
+                null,
+            ),
+        )
+        assertEquals(listOf<Record?>(null, null, null), Records.of(listOf(before), today))
     }
 
     @Test

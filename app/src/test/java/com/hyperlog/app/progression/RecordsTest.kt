@@ -52,6 +52,17 @@ class RecordsTest {
     }
 
     @Test
+    fun aLaterSetNeverTakesAnEarlierSetsMarkAway() {
+        val history = listOf(session(set(100.0, 5, rir = 0)))
+        // 110 × 2 beats 100 × 5 with Epley's 30. The two back-offs after it would teach a constant of
+        // about 20, under which it wouldn't: the constant is the one the session started with.
+        val first = session(set(110.0, 2, rir = 0))
+        assertEquals(listOf(Record.Estimate), Records.of(history, first))
+        val whole = session(set(110.0, 2, rir = 0), set(90.0, 7, rir = 0), set(80.0, 10, rir = 0))
+        assertEquals(listOf(Record.Estimate, null, null), Records.of(history, whole))
+    }
+
+    @Test
     fun anExercisesFirstSessionHasNothingToBeat() {
         // Set 2 beats set 1 on both counts, but nothing came before the session.
         assertEquals(listOf(null, null), Records.of(emptyList(), session(set(80.0, 5), set(85.0, 6))))

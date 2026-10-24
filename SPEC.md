@@ -1117,7 +1117,8 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     sets still count as sets to beat. A weight kept past a weight check makes no record until a set
     near it confirms it. A rep record's weight is the weight as logged: one dumbbell's, or the load
     on the belt; a split set counts its weaker side, as progression does. The estimate is counted
-    with the exercise's learned Epley constant, over its history and this session.
+    with the Epley constant learned from the exercise's earlier sessions, so a later set never
+    takes an earlier set's mark away.
   - **As the set logs**, its row takes a small mark, `Estimate record` or `Rep record`, kept on
     the set wherever it shows (the session, Session done, History). The mark is a trophy, the
     Material Symbol `trophy`, read by TalkBack as its name, in ink (never the accent, which marks
