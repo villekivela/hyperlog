@@ -1,5 +1,6 @@
 package com.hyperlog.app.coach
 
+import android.util.Log
 import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.core.JsonValue
@@ -54,7 +55,7 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
         .build()
 
     /** Checks the key with the models list, which costs nothing. Throws a [CoachError] if it fails. */
-    suspend fun checkKey() = call { client.models().list() }
+    suspend fun checkKey() = call("Key check") { client.models().list() }
 
     /**
      * Streams Claude's reply: Opus 5.5 with adaptive thinking at medium effort, the tools `strict`
@@ -62,7 +63,7 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
      * and so is the conversation up to its last turn, so a check-in's later steps read both from
      * the cache.
      */
-    override suspend fun reply(request: CoachRequest): CoachReply = call {
+    override suspend fun reply(request: CoachRequest): CoachReply = call("Reply") {
         val accumulator = BetaMessageAccumulator.create()
         client.beta().messages().createStreaming(params(request)).use { stream ->
             // The read blocks; a check-in that is left closes the stream to end it.
@@ -161,25 +162,43 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
         output = usage.outputTokens(),
     )
 
-    /** Runs [block] off the main thread, with the SDK's errors as [CoachError]s. */
-    private suspend fun <T> call(block: suspend () -> T): T = withContext(Dispatchers.IO) {
+    /**
+     * Runs [block] off the main thread, with the SDK's errors as [CoachError]s. Each failure is
+     * warned in Logcat under [TAG] with what the API said: the HTTP status, the error type and its
+     * message. Never the key, nor the headers that carry it.
+     */
+    private suspend fun <T> call(what: String, block: suspend () -> T): T = withContext(Dispatchers.IO) {
         try {
             block()
         } catch (e: CancellationException) {
             throw e
-        } catch (e: CoachError) {
-            throw e
-        } catch (e: UnauthorizedException) {
-            throw CoachError.KeyRefused(e)
-        } catch (e: PermissionDeniedException) {
-            throw CoachError.KeyRefused(e)
-        } catch (e: AnthropicServiceException) {
-            throw if (spendLimit(e)) CoachError.SpendLimit(e) else CoachError.NoConnection(e)
-        } catch (e: AnthropicException) {
-            // The connection, a timeout, or a reply the SDK couldn't read.
-            throw CoachError.NoConnection(e)
-        } catch (e: IOException) {
-            throw CoachError.NoConnection(e)
+        } catch (e: Exception) {
+            val error = when (e) {
+                is CoachError -> e
+                is UnauthorizedException, is PermissionDeniedException -> CoachError.KeyRefused(e)
+                is AnthropicServiceException -> if (spendLimit(e)) CoachError.SpendLimit(e) else CoachError.NoConnection(e)
+                // The connection, a timeout, or a reply the SDK couldn't read.
+                is AnthropicException, is IOException -> CoachError.NoConnection(e)
+                else -> throw e
+            }
+            Log.w(TAG, "$what failed: ${describe(error)}")
+            throw error
+        }
+    }
+
+    /** `KeyRefused, HTTP 401 authentication_error: invalid x-api-key`, from the error and its cause. */
+    private fun describe(error: CoachError): String {
+        val name = error.javaClass.simpleName
+        if (error is CoachError.Refused) return "$name (${error.category ?: "no category"})"
+        return when (val cause = error.cause) {
+            is AnthropicServiceException -> {
+                val body = runCatching { cause.body().convert(JsonNode::class.java)?.path("error") }.getOrNull()
+                val type = body?.path("type")?.asText().orEmpty().ifEmpty { cause.errorType().map { it.toString() }.orElse("no type") }
+                val message = body?.path("message")?.asText().orEmpty()
+                "$name, HTTP ${cause.statusCode()} $type: $message"
+            }
+            null -> name
+            else -> "$name, ${cause.javaClass.simpleName}: ${cause.message}"
         }
     }
 
@@ -197,6 +216,9 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
     companion object {
         const val MODEL = "claude-opus-5-5"
         const val HOST = "https://api.anthropic.com"
+
+        /** Logcat's tag for the client's warnings. */
+        const val TAG = "ClaudeClient"
 
         /** Room for thinking and a whole program; streaming keeps a long reply inside the timeout. */
         private const val MAX_TOKENS = 64_000L

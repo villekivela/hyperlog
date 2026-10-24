@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.settings
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.coach.ClaudeClient
@@ -31,6 +32,7 @@ class ClaudeKeySetup(private val keys: ClaudeKeys, cost: CoachCost, private val 
 
     suspend fun save(key: String) {
         checking.value = KeyCheck.Checking
+        Log.w(TAG, "Checking a key of ${key.length} characters: ${shape(key)}")
         try {
             check(key)
         } catch (_: CoachError.SpendLimit) {
@@ -52,6 +54,20 @@ class ClaudeKeySetup(private val keys: ClaudeKeys, cost: CoachCost, private val 
     }
 
     suspend fun remove() = withContext(Dispatchers.IO) { keys.remove() }
+
+    /**
+     * Whether [key] holds only the characters a key is made of, so a paste with a hidden character
+     * shows in Logcat. Never the key itself.
+     */
+    private fun shape(key: String): String {
+        val others = key.count { it !in KEY_CHARACTERS }
+        return if (others == 0) "only key characters" else "not only key characters ($others other)"
+    }
+
+    companion object {
+        const val TAG = "ClaudeKeySetup"
+        private val KEY_CHARACTERS = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-' + '_'
+    }
 
     /** The field was closed: forget its check. */
     fun dismiss() {

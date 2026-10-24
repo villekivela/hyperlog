@@ -11,14 +11,21 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowLog
 
 /**
  * The one client (SPEC, Coaching → With a Claude key), against [StandInApi]: the key check, the
- * request it makes, the reply it reads, and the typed errors.
+ * request it makes, the reply it reads, and the typed errors. On Robolectric, so the SDK runs with
+ * Android's classes and the warnings land in Logcat's stand-in.
  */
+@RunWith(RobolectricTestRunner::class)
 class ClaudeClientTest {
     private val api = StandInApi()
     private val key = "sk-ant-api03-test-a1b2"
@@ -46,12 +53,49 @@ class ClaudeClientTest {
         assertEquals("GET", sent.method)
         assertEquals("/v1/models", sent.path)
         assertEquals(key, sent.headers["x-api-key"])
+        assertEquals("2023-06-01", sent.headers["anthropic-version"])
+        // A bearer token beside the key makes the API refuse both.
+        assertNull(sent.headers["authorization"])
+    }
+
+    /** What the client warned in Logcat. */
+    private fun warnings() = ShadowLog.getLogsForTag(ClaudeClient.TAG).map { it.msg }
+
+    @Test
+    fun aKeyTheApiRefusesSaysSoAndLogsWhyWithoutTheKey() = runTest {
+        api.error(401, "authentication_error", "invalid x-api-key")
+        fails<CoachError.KeyRefused> { client.checkKey() }
+        val warning = warnings().single()
+        assertTrue(warning, warning.contains("KeyRefused"))
+        assertTrue(warning, warning.contains("HTTP 401"))
+        assertTrue(warning, warning.contains("authentication_error"))
+        assertTrue(warning, warning.contains("invalid x-api-key"))
+        assertFalse(warning, warning.contains(key))
+        assertFalse(warning, warning.contains("a1b2"))
     }
 
     @Test
-    fun aKeyTheApiRefusesSaysSo() = runTest {
-        api.error(401, "authentication_error", "invalid x-api-key")
+    fun aForbiddenKeyIsRefusedAndLogged() = runTest {
+        api.error(403, "permission_error", "Your API key does not have permission to use the specified resource.")
         fails<CoachError.KeyRefused> { client.checkKey() }
+        val warning = warnings().single()
+        assertTrue(warning, warning.contains("HTTP 403 permission_error: Your API key does not have permission"))
+    }
+
+    @Test
+    fun everyErrorIsLogged() = runTest {
+        api.error(400, "invalid_request_error", "Your credit balance is too low to access the Anthropic API.")
+        fails<CoachError.SpendLimit> { client.reply(request) }
+        api.error(400, "invalid_request_error", "messages: roles must alternate")
+        fails<CoachError.NoConnection> { client.reply(request) }
+        val closed = ServerSocket(0).use { it.localPort }
+        fails<CoachError.NoConnection> { ClaudeClient(key, baseUrl = "http://127.0.0.1:$closed").checkKey() }
+        val warnings = warnings()
+        assertEquals(warnings.toString(), 3, warnings.size)
+        assertTrue(warnings[0], warnings[0].contains("SpendLimit") && warnings[0].contains("credit balance is too low"))
+        assertTrue(warnings[1], warnings[1].contains("NoConnection") && warnings[1].contains("roles must alternate"))
+        assertTrue(warnings[2], warnings[2].contains("NoConnection"))
+        warnings.forEach { assertFalse(it, it.contains(key)) }
     }
 
     @Test
@@ -160,6 +204,7 @@ class ClaudeClientTest {
         )
         val refused = fails<CoachError.Refused> { client.reply(request) }
         assertEquals("cyber", refused.category)
+        assertTrue(warnings().single().contains("Refused (cyber)"))
         assertEquals(listOf(CoachUsage("claude-opus-5-5", input = 2_000)), refused.usage)
     }
 

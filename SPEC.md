@@ -1420,7 +1420,9 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
 - **Errors.** No connection, a timeout or an API error shows "Couldn't reach Claude." with **Try
   again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.
   Check it in Settings." and offers Ask Claude for this check-in. A spend limit reached says so, and
-  offers Ask Claude.
+  offers Ask Claude. Every failure is warned in Logcat (tag `ClaudeClient`) with the HTTP status, the
+  API's error type and its message, and a key being checked with its length and whether it holds
+  only key characters (`ClaudeKeySetup`); never the key or the headers that carry it.
 - **Testable without a key.** The client is behind one interface (`CoachModel`). Tests use a fake
   that plays scripted turns: questions, each kind of reply, a reply that fails validation and its
   fix, a refusal and each error. **Scripted coach** (Settings, debug builds only) plays canned

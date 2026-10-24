@@ -54,6 +54,14 @@ class ClaudeKeySetupTest {
     }
 
     @Test
+    fun aKeyWithAHiddenCharacterIsWarnedAboutByItsShapeOnly() = runTest {
+        answer = CoachError.KeyRefused()
+        setup.save("sk-ant-api03-test\u200b-a1b2")
+        val warning = org.robolectric.shadows.ShadowLog.getLogsForTag(ClaudeKeySetup.TAG).single().msg
+        assertEquals("Checking a key of 23 characters: not only key characters (1 other)", warning)
+    }
+
+    @Test
     fun aRefusedKeyIsntSavedAndSaysSo() = runTest {
         answer = CoachError.KeyRefused()
         setup.save("sk-ant-wrong")

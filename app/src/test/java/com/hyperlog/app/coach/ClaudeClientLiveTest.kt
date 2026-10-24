@@ -7,13 +7,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import kotlin.time.Duration.Companion.minutes
 
 /**
  * The one test that calls the real API (SPEC, Coaching → With a Claude key). It runs only with
  * `ANTHROPIC_API_KEY` set and is skipped otherwise, so no test or CI job needs a key. It costs a
- * cent or two.
+ * cent or two. On Robolectric, where the client's Logcat warnings work.
  */
+@RunWith(RobolectricTestRunner::class)
 class ClaudeClientLiveTest {
     private val key: String? = System.getenv("ANTHROPIC_API_KEY")?.takeIf { it.isNotBlank() }
 
