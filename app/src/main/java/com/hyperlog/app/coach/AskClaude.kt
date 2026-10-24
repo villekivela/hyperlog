@@ -68,7 +68,8 @@ object AskClaude {
             appendLine("I train with Hyperlog, an app that runs my strength program and logs my sessions. Help me with this:")
         }
         appendLine()
-        tile?.let { appendLine("> ${it.words}") }
+        // The tile is quoted unless the words already begin with its sentence (`Something hurts: …`).
+        tile?.takeUnless { startsWithTile(words, it) }?.let { appendLine("> ${it.words}") }
         if (words.isNotBlank()) words.trim().lines().forEach { appendLine("> $it") }
         if (tile != null || words.isNotBlank()) appendLine()
         if (plan == null) {
@@ -96,6 +97,12 @@ object AskClaude {
         }
         appendLine()
         append(WorkoutFormat.text(library))
+    }
+
+    /** Whether [words] already begin with [tile]'s sentence, without its full stop (`Something hurts: …`). */
+    private fun startsWithTile(words: String, tile: Tile): Boolean {
+        fun plain(text: String) = text.trim().replace('’', '\'').lowercase()
+        return plain(words).startsWith(plain(tile.words).removeSuffix("."))
     }
 
     /**

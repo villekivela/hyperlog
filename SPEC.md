@@ -1511,7 +1511,8 @@ program: ` and, for Something else, nothing. The bar names the tile; the tab bar
 the wizard, and Back returns to the tiles. **Ask Claude** opens the Android share sheet with the
 prompt (What Claude is told) for the Claude app. Ask Claude is enabled with a tile even when the
 words are cleared, because the prompt quotes the tile's own sentence (`Something hurts.`) before the
-words, so Claude knows what the check-in is about. You talk it through there as long as you like;
+words, so Claude knows what the check-in is about; when the words already begin with that sentence
+(`Something hurts: left elbow.`), it isn't quoted twice. You talk it through there as long as you like;
 Claude may answer in words alone, and the check-in doesn't treat the ask as unfinished. Otherwise
 Claude ends with one fenced JSON block holding a Change, a workout or a program; copy it and come
 back.

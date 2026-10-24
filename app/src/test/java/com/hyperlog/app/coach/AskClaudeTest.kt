@@ -271,11 +271,19 @@ class AskClaudeTest {
     }
 
     @Test
-    fun theTileGoesInThePromptBesideTheWords() {
+    fun theTileIsQuotedUnlessTheWordsAlreadyStartWithItsSentence() {
+        fun quoted(tile: Tile, words: String) =
+            AskClaude.prompt(words, plan, emptyList(), library.exercises, tile = tile).contains("> ${tile.words}\n")
+        // The prefilled sentence says it already.
+        assertFalse(quoted(Tile.Hurts, "Something hurts: left elbow."))
+        assertFalse(quoted(Tile.ShortOnTime, "I’m short on time today: I have 45 minutes."))
+        assertFalse(quoted(Tile.Workout, "Build me a workout for today: "))
+        // Edited away, or a sentence that isn't the tile's, the tile says what the check-in is about.
+        assertTrue(quoted(Tile.Hurts, "Left elbow."))
+        assertTrue(quoted(Tile.ShortOnTime, ""))
+        assertTrue(quoted(Tile.Gym, "No gym today, only dumbbells at home."))
+        assertTrue(quoted(Tile.SomethingElse, ""))
         val text = AskClaude.prompt("Something hurts: left elbow.", plan, emptyList(), library.exercises, tile = Tile.Hurts)
-        assertTrue(text, text.contains("> Something hurts.\n> Something hurts: left elbow."))
-        // Cleared words still say what the check-in is about.
-        val cleared = AskClaude.prompt("", plan, emptyList(), library.exercises, tile = Tile.ShortOnTime)
-        assertTrue(cleared, cleared.contains("> I'm short on time."))
+        assertTrue(text, text.contains("> Something hurts: left elbow.\n"))
     }
 }

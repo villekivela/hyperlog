@@ -116,7 +116,8 @@ class AskClaudeAppTest {
             openCoach(label)
             words().performTextInput(" Words for ${tile.name}.")
             val prompt = ask()
-            assertTrue(prompt, prompt.contains("> ${tile.words}\n"))
+            // The tile is in the prompt, as its own line or as the start of the prefilled words.
+            assertTrue(prompt, prompt.replace('’', '\'').contains(tile.words.removeSuffix(".").take(14)))
             assertTrue(prompt, prompt.contains("Words for ${tile.name}."))
             assertTrue(prompt, prompt.contains("## Program: Hyperlog Full Body"))
             compose.onNodeWithContentDescription("Back").performClick()
@@ -138,7 +139,7 @@ class AskClaudeAppTest {
         assertEquals("I’m short on time today: I have 45 minutes.", wordsText())
         words().performTextClearance()
         val prompt = ask()
-        assertTrue(prompt, prompt.contains("> I'm short on time."))
+        assertTrue(prompt, prompt.contains("> I'm short on time.\n"))
     }
 
     @Test
