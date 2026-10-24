@@ -127,7 +127,7 @@ data class SavedCheckIn(val opening: String, val steps: List<Step>) {
 }
 
 @Serializable
-enum class CheckInFailure { NoConnection, KeyRefused, SpendLimit, Refused }
+enum class CheckInFailure { NoConnection, KeyRefused, SpendLimit, Refused, Rejected }
 
 /** What a check-in's screen shows. */
 sealed interface CheckInStep {
@@ -249,6 +249,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
         is CoachError.KeyRefused -> CheckInFailure.KeyRefused
         is CoachError.SpendLimit -> CheckInFailure.SpendLimit
         is CoachError.Refused -> CheckInFailure.Refused
+        is CoachError.Rejected -> CheckInFailure.Rejected
     }
 
     private sealed interface Read {

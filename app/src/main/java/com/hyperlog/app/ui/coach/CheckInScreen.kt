@@ -366,7 +366,7 @@ private fun Step(
                 }
                 is CheckInStep.Failed -> BottomActions(padding = StripPadding) {
                     val handOff = step.failure != CheckInFailure.NoConnection
-                    val retry = step.failure == CheckInFailure.NoConnection || step.failure == CheckInFailure.Refused
+                    val retry = step.failure == CheckInFailure.NoConnection || step.failure == CheckInFailure.Refused || step.failure == CheckInFailure.Rejected
                     when {
                         asked -> {
                             TextButton(onClick = onAskClaude) { Text(stringResource(R.string.coach_ask)) }
@@ -433,6 +433,7 @@ private fun Failure(failure: CheckInFailure, pasteErrors: List<String>?, onCopyP
         CheckInFailure.KeyRefused -> Triple(Symbol.Key, R.string.checkin_key_refused, R.string.checkin_ask_claude_body)
         CheckInFailure.SpendLimit -> Triple(Symbol.Toll, R.string.checkin_spend_limit, R.string.checkin_spend_limit_body)
         CheckInFailure.Refused -> Triple(Symbol.Block, R.string.checkin_refused, R.string.checkin_refused_body)
+        CheckInFailure.Rejected -> Triple(Symbol.Warning, R.string.checkin_rejected, R.string.checkin_rejected_body)
     }
     val cs = MaterialTheme.colorScheme
     Column(

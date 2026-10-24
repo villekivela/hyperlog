@@ -125,6 +125,12 @@ class CheckInTest {
     }
 
     @Test
+    fun aRequestTheApiTurnsDownIsNotNoConnection() = runTest {
+        val coach = coach(FakeCoachModel(FakeCoachModel.Turn.Fails(CoachError.Rejected())))
+        assertEquals(CheckInStep.Failed(CheckInFailure.Rejected), coach.step(coach.start(Tile.Hurts, frame)))
+    }
+
+    @Test
     fun tellMeMoreGoesOnFromTheWordsAndDoneIsTheEnd() = runTest {
         val model = FakeCoachModel.replies(words("Train as planned."), words("Ramp-in already eases effort."))
         val coach = coach(model)

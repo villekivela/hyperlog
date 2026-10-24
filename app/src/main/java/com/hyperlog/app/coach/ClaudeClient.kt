@@ -136,7 +136,7 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
     private fun tool(tool: CoachTool): BetaTool {
         val schema = BetaTool.InputSchema.builder()
         tool.inputSchema.forEach { (name, value) -> if (name != "type") schema.putAdditionalProperty(name, value(value)) }
-        return BetaTool.builder().name(tool.name).description(tool.description).inputSchema(schema.build()).strict(true).build()
+        return BetaTool.builder().name(tool.name).description(tool.description).inputSchema(schema.build()).apply { if (tool.strict) strict(true) }.build()
     }
 
     /** Each model's tokens: one for each that ran when a refusal fell back, else the reply's. */
@@ -177,7 +177,12 @@ class ClaudeClient(apiKey: String, baseUrl: String = HOST) : CoachModel {
             val error = when (e) {
                 is CoachError -> e
                 is UnauthorizedException, is PermissionDeniedException -> CoachError.KeyRefused(e)
-                is AnthropicServiceException -> if (spendLimit(e)) CoachError.SpendLimit(e) else CoachError.NoConnection(e)
+                is AnthropicServiceException -> when {
+                    spendLimit(e) -> CoachError.SpendLimit(e)
+                    // A timeout or a rate limit may pass; any other 4xx is the request itself.
+                    e.statusCode() in 400..499 && e.statusCode() != 408 && e.statusCode() != 429 -> CoachError.Rejected(e)
+                    else -> CoachError.NoConnection(e)
+                }
                 // The connection, a timeout, or a reply the SDK couldn't read.
                 is AnthropicException, is IOException -> CoachError.NoConnection(e)
                 else -> throw e

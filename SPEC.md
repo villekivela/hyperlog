@@ -1413,10 +1413,13 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   which the validators accept. With a Change in force, two more examples use its id: one that only
   ends it, and one that replaces it with the example's operations. A new operation or field can't
   ship without its description. Through the API the formats are the tools' input schemas (`ask`,
-  `propose_change`, `propose_workout`, `propose_program`, `strict`); in Ask Claude's prompt they
-  are text and examples.
-- **Strict schemas are lean** (#73; `coach/CoachTools.kt`). A request may carry 24 optional and 16
-  union-typed parameters in all, and no ranges, so the schemas leave optional only what the
+  `propose_change`, `propose_workout`, `propose_program`); in Ask Claude's prompt they are text and
+  examples. Only `ask` is `strict` (owner's phone, 2026-10-24: the API refused the strict grammar of
+  all three as "too large"); a proposal's input is checked by the validators, and the self-fix loop
+  sends its problems back. `CoachToolsTest` pins which tools are strict.
+- **The schemas are lean** (#73; `coach/CoachTools.kt`). A strict request may carry 24 optional and 16
+  union-typed parameters in all, and no ranges; the proposals' schemas keep within those too, so
+  either could go strict again, and they leave optional only what the
   serializer does and Claude can't fill in for it (`slot` on the load, RIR and technique
   operations, `technique`, `week`, `after`, `replaces`, a slot's `note`, a set line's
   `technique`); every operation's `reason` and every set line's `count`, `rir` and `rest` are
@@ -1444,7 +1447,7 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   …a1b2` with **Remove**, which forgets it at once. The key is never shown again, never in a
   backup, a log or Auto Backup; a restore keeps the phone's key, or none.
 - **The model** is Claude Opus 5.5 (`claude-opus-5-5`), with adaptive thinking at medium effort
-  and streaming, the tools above (`strict`) with `tool_choice` auto, and the server-side refusal
+  and streaming, the tools above (`ask` strict) with `tool_choice` auto, and the server-side refusal
   fallback (`fallbacks: "default"`), through the official Anthropic Java SDK. The context is the
   system prompt, cached, and the conversation is cached up to its last turn; Claude's replies go
   back unchanged, thinking included. One client
@@ -1459,7 +1462,10 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   again** on that step; nothing is lost. A key the API refuses says "Claude doesn't accept this key.
   Check it in Settings." and offers Ask Claude for this check-in. A spend limit reached says so, and
   offers Ask Claude. A refusal (after the fallback) reads "Claude declined to answer this one." with
-  Try again and Ask Claude. **Ask Claude** there shares Ask Claude's prompt with the check-in so far
+  Try again and Ask Claude. Any other 4xx (not the key, a spend limit, a timeout or a rate limit) is
+  the request itself, never "Couldn't reach Claude": it reads "Claude couldn't take this request."
+  with Try again and Ask Claude, and the API's message goes to Logcat (`Rejected, HTTP 400 …`).
+  **Ask Claude** there shares Ask Claude's prompt with the check-in so far
   as the words (the gym answered, or Elsewhere, with it), and **Paste reply** becomes the step's
   filled button; a Change pasted back and accepted keeps the check-in, which then ends. Every failure is warned in Logcat (tag `ClaudeClient`) with the HTTP status, the
   API's error type and its message, and a key being checked with its length and whether it holds

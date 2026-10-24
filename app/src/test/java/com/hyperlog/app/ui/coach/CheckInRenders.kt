@@ -78,6 +78,8 @@ class CheckInRenders {
 
     @Test fun declined() = render("checkin-12-declined") { Step(CheckInStep.Failed(CheckInFailure.Refused)) }
 
+    @Test fun rejected() = render("checkin-18-rejected") { Step(CheckInStep.Failed(CheckInFailure.Rejected)) }
+
     @Test fun badPaste() = render("checkin-13-bad-paste") {
         Step(
             CheckInStep.Failed(CheckInFailure.KeyRefused),

@@ -46,6 +46,13 @@ class CoachToolsTest {
     }
 
     @Test
+    fun onlyAskIsStrict() {
+        // Strict proposals compiled to a grammar the API refused ("too large"); the validators and
+        // the self-fix loop check them instead.
+        assertEquals(listOf(CoachTools.ASK), tools.filter { it.strict }.map { it.name })
+    }
+
+    @Test
     fun theSchemasAreStrictAndWithinTheApisLimits() {
         assertEquals(listOf("ask", "propose_change", "propose_workout"), tools.map { it.name })
         tools.forEach { tool ->
@@ -61,10 +68,11 @@ class CoachToolsTest {
             }
         }
         // At most 20 strict tools, 24 optional parameters and 16 union-typed ones in a request.
-        val all = tools.flatMap { properties(it.inputSchema) }
+        val strict = tools.filter { it.strict }
+        val all = strict.flatMap { properties(it.inputSchema) }
         val optional = all.count { !it.third }
         val unions = all.count { (_, schema, _) -> "anyOf" in schema || schema["type"] is JsonArray } +
-            tools.flatMap { objects(it.inputSchema) }.count { "items" in it && "anyOf" in it.getValue("items").jsonObject }
+            strict.flatMap { objects(it.inputSchema) }.count { "items" in it && "anyOf" in it.getValue("items").jsonObject }
         assertTrue("$optional optional", optional <= 24)
         assertTrue("$unions unions", unions <= 16)
     }

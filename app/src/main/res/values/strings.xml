@@ -591,6 +591,8 @@
     <string name="checkin_key_refused">Claude doesn’t accept this key. Check it in Settings.</string>
     <string name="checkin_spend_limit">This month’s spend limit is reached.</string>
     <string name="checkin_spend_limit_body">The limit set in the Anthropic Console stops check-ins until it resets or you raise it.</string>
+    <string name="checkin_rejected">Claude couldn’t take this request.</string>
+    <string name="checkin_rejected_body">Try again, or put it in your own words in the Claude app. What Claude said is in the log.</string>
     <string name="checkin_refused">Claude declined to answer this one.</string>
     <string name="checkin_refused_body">Try again, or put it in your own words in the Claude app.</string>
     <string name="checkin_ask_claude_body">Or ask in the Claude app: this check-in goes with it, and you paste the reply back.</string>

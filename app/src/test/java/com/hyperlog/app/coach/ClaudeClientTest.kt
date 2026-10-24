@@ -87,13 +87,13 @@ class ClaudeClientTest {
         api.error(400, "invalid_request_error", "Your credit balance is too low to access the Anthropic API.")
         fails<CoachError.SpendLimit> { client.reply(request) }
         api.error(400, "invalid_request_error", "messages: roles must alternate")
-        fails<CoachError.NoConnection> { client.reply(request) }
+        fails<CoachError.Rejected> { client.reply(request) }
         val closed = ServerSocket(0).use { it.localPort }
         fails<CoachError.NoConnection> { ClaudeClient(key, baseUrl = "http://127.0.0.1:$closed").checkKey() }
         val warnings = warnings()
         assertEquals(warnings.toString(), 3, warnings.size)
         assertTrue(warnings[0], warnings[0].contains("SpendLimit") && warnings[0].contains("credit balance is too low"))
-        assertTrue(warnings[1], warnings[1].contains("NoConnection") && warnings[1].contains("roles must alternate"))
+        assertTrue(warnings[1], warnings[1].contains("Rejected") && warnings[1].contains("roles must alternate"))
         assertTrue(warnings[2], warnings[2].contains("NoConnection"))
         warnings.forEach { assertFalse(it, it.contains(key)) }
     }
@@ -209,7 +209,7 @@ class ClaudeClientTest {
     }
 
     @Test
-    fun aSpendLimitIsTypedAndOtherErrorsAreNoConnection() = runTest {
+    fun aSpendLimitIsTypedAndOtherRequestErrorsAreRejected() = runTest {
         api.error(400, "invalid_request_error", "You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC.")
         fails<CoachError.SpendLimit> { client.reply(request) }
         api.error(400, "invalid_request_error", "Your credit balance is too low to access the Anthropic API.")
@@ -217,6 +217,21 @@ class ClaudeClientTest {
         api.error(401, "authentication_error")
         fails<CoachError.KeyRefused> { client.reply(request) }
         api.error(400, "invalid_request_error", "messages: roles must alternate")
-        fails<CoachError.NoConnection> { client.reply(request) }
+        fails<CoachError.Rejected> { client.reply(request) }
+        // What the owner's phone met: a request the API turns down is never "Couldn't reach Claude".
+        api.error(400, "invalid_request_error", "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.")
+        fails<CoachError.Rejected> { client.reply(request) }
+        assertTrue(warnings().last(), warnings().last().contains("Rejected, HTTP 400 invalid_request_error: The compiled grammar is too large"))
+        api.error(404, "not_found_error", "model: claude-opus-5-5")
+        fails<CoachError.Rejected> { client.reply(request) }
+    }
+
+    @Test
+    fun aToolThatIsntStrictGoesWithoutStrict() = runTest {
+        question()
+        client.reply(request.copy(tools = listOf(ask, ask.copy(name = "propose_workout", strict = false))))
+        val tools = api.received.single().json["tools"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(true, tools[0]["strict"]!!.jsonPrimitive.boolean)
+        assertTrue(tools[1].toString(), tools[1]["strict"]?.jsonPrimitive?.boolean != true)
     }
 }

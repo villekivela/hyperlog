@@ -23,9 +23,13 @@ data class CoachRequest(
     val messages: List<CoachMessage>,
 )
 
-/** A tool Claude replies through. [inputSchema] is a JSON Schema object with `additionalProperties: false`. */
+/**
+ * A tool Claude replies through. [inputSchema] is a JSON Schema object with `additionalProperties:
+ * false`. A [strict] tool's input always fits its schema; the API compiles strict schemas into one
+ * grammar per request, and refuses one too large, so only small tools are strict.
+ */
 @Serializable
-data class CoachTool(val name: String, val description: String, val inputSchema: JsonObject)
+data class CoachTool(val name: String, val description: String, val inputSchema: JsonObject, val strict: Boolean = true)
 
 /** A turn of the check-in. */
 sealed interface CoachMessage {
@@ -79,6 +83,9 @@ sealed class CoachError(message: String, cause: Throwable? = null) : Exception(m
 
     /** The API doesn't accept the key. */
     class KeyRefused(cause: Throwable? = null) : CoachError("Claude doesn't accept this key", cause)
+
+    /** The API turned the request down (a 4xx other than the key, the limit, a timeout or a rate limit): trying again won't help. */
+    class Rejected(cause: Throwable? = null) : CoachError("Claude couldn't take this request", cause)
 
     /** The month's spend limit set in the Anthropic Console is reached. */
     class SpendLimit(cause: Throwable? = null) : CoachError("The spend limit is reached", cause)

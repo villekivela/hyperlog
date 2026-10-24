@@ -8,6 +8,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -140,6 +141,7 @@ class CheckInScreenTest {
         val model = FakeCoachModel(
             FakeCoachModel.Turn.Fails(CoachError.NoConnection()),
             FakeCoachModel.Turn.Fails(CoachError.KeyRefused()),
+            FakeCoachModel.Turn.Fails(CoachError.Rejected()),
         )
         show(model)
         compose.click("Tired or slept badly")
@@ -148,5 +150,11 @@ class CheckInScreenTest {
         compose.waitFor("Claude doesn’t accept this key. Check it in Settings.")
         compose.onNodeWithText("Ask Claude").assertExists()
         compose.onNodeWithText("Try again").assertDoesNotExist()
+        // A request the API turns down says so, with Try again and Ask Claude.
+        compose.onNodeWithContentDescription("Close the check-in").performClick()
+        compose.click("Something hurts")
+        compose.waitFor("Claude couldn’t take this request.")
+        compose.onNodeWithText("Ask Claude").assertExists()
+        compose.onNodeWithText("Try again").assertExists()
     }
 }

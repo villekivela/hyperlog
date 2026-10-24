@@ -20,9 +20,10 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * The tools a check-in's Claude replies through (SPEC, Coaching → What Claude is told), each
- * `strict`, so the API holds Claude to the schema: `ask` for a question, `propose_change` and
- * `propose_workout` for a reply. A Change's operations come from [Operation]'s serializer and their
+ * The tools a check-in's Claude replies through (SPEC, Coaching → What Claude is told): `ask` for
+ * a question, `propose_change` and `propose_workout` for a reply. Only `ask` is `strict`: the API
+ * refused the proposals' strict grammar as too large, so their input is checked by the validators,
+ * and the self-fix loop sends problems back. A Change's operations come from [Operation]'s serializer and their
  * descriptions from [ChangeFormat], so a new operation or field fails here until it is described.
  * The validators still check ranges and ids, which a strict schema can't hold.
  */
@@ -70,6 +71,7 @@ object CoachTools {
             "replaces" to array(integer("The id of a Change in force."), "Ids of Changes in force this one ends: accepting reverts them first."),
             optional = setOf("replaces"),
         ),
+        strict = false,
     )
 
     fun proposeWorkout() = CoachTool(
@@ -100,6 +102,7 @@ object CoachTools {
                 "The exercises in order.",
             ),
         ),
+        strict = false,
     )
 
     /** One schema for each operation, from its serializer: `op` and its fields, `reason` always. */
