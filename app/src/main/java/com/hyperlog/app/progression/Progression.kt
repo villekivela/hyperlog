@@ -310,6 +310,13 @@ object Progression {
         return if (previous.target?.reps == target.reps) previous.set.fullReps.coerceAtMost(target.reps.max) else target.reps.max
     }
 
+    /**
+     * [set]'s estimate as the estimate counts it, with Epley's constant [k]: null for a set that
+     * doesn't feed it (not counted, without an RIR, or past [MAX_ESTIMATE_REPS] reps).
+     */
+    fun estimateOf(set: WorkSet, p: Performance, k: Double): Double? =
+        if (set.rated && set.set.fullReps in 1..MAX_ESTIMATE_REPS) estimateFrom(set.set, k, p) else null
+
     private fun effective(s: LoggedSet) = s.fullReps + (s.rir ?: 0)
 
     private fun estimateFrom(s: LoggedSet, k: Double, p: Performance) = p.load(s.weightKg) * (1 + effective(s) / k)

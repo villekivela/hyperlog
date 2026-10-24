@@ -173,6 +173,9 @@
     <string name="leave_leave">Leave</string>
 
     <string name="done_title">Session done</string>
+    <string name="record_estimate">Estimate record</string>
+    <string name="record_reps">Rep record</string>
+    <string name="records_title">Records</string>
     <string name="done_when">Started %1$s, %2$d min</string>
     <string name="done_close">Done</string>
     <string name="finish_title">Finish the session?</string>

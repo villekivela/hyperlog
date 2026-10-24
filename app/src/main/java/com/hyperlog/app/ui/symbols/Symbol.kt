@@ -86,6 +86,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     TrendingFlat(R.drawable.symbol_trending_flat),
     TrendingUp(R.drawable.symbol_trending_up),
     Toll(R.drawable.symbol_toll),
+    Trophy(R.drawable.symbol_trophy),
     Tune(R.drawable.symbol_tune),
     Undo(R.drawable.symbol_undo),
     UnfoldLess(R.drawable.symbol_unfold_less),

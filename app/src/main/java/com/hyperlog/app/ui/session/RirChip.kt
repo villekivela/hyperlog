@@ -163,6 +163,17 @@ internal fun RirText(
     textAlign: TextAlign? = null,
 ) {
     val chips = mutableSetOf<RirChipKey>()
-    val annotated = buildAnnotatedString { appendRir(text, target, chips) }
-    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize))
+    val labels = com.hyperlog.app.progression.Record.entries.associateWith { it.label() }
+    val annotated = buildAnnotatedString {
+        // A record's mark (RecordMark.kt) is drawn inline and read as its name.
+        var at = 0
+        text.forEachIndexed { i, c ->
+            val record = c.record() ?: return@forEachIndexed
+            appendRir(text.substring(at, i), target, chips)
+            appendInlineContent(record.inlineId(), labels.getValue(record))
+            at = i + 1
+        }
+        appendRir(text.substring(at), target, chips)
+    }
+    Text(annotated, modifier, color = color, style = style, textAlign = textAlign, maxLines = maxLines, overflow = overflow, inlineContent = rirChipContent(chips, style.fontSize) + recordMarkContent())
 }

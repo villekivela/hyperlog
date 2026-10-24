@@ -99,6 +99,7 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
+import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
@@ -357,7 +358,7 @@ fun SessionScreen(
                 if (session.padVisible || session.weightCheck != null) Pad(entry, current.ladder, session.weightCheck, actions, followUp = followUp, holdRunning = holdRunning, canConfirm = canConfirm, plates = current.plates, platesOnMachine = current.platesOnMachine, pinLoad = current.pinLoader(), top = nextRow)
                 else HiddenPad(entry, actions, canConfirm = canConfirm, top = nextRow)
             } else if (current != null && current.done && session.exercises.all { it.prescription == null || it.done }) {
-                DayDoneBar(onFinish = { showFinish = true })
+                DayDoneBar(recordsOf(session.exercises.map { ExerciseSummary(it.exercise.name, it.sets, it.records) }), onFinish = { showFinish = true })
             } else if (current != null) {
                 BottomRow(nextRow)
             } else {
@@ -710,21 +711,27 @@ private fun StartingHintRow(set: String) {
     }
 }
 
-/** Every planned set is logged: the pad gives way to Finish session. */
+/** Every planned set is logged: the pad gives way to Finish session, under the session's [records]. */
 @Composable
-private fun DayDoneBar(onFinish: () -> Unit) {
-    Row(
+private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
+    val ink = MaterialTheme.colorScheme.onPrimaryContainer
+    Column(
         // Where the pad was: a primary-container strip, rounded at the top like a sheet.
         Modifier.fillMaxWidth()
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(MaterialTheme.colorScheme.primaryContainer).navigationBarsPadding()
-            .padding(start = Margin, end = 16.dp, top = 20.dp, bottom = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(start = Margin, end = 16.dp, top = 20.dp, bottom = 20.dp)
+            .testTag(DayDoneTag),
     ) {
-        SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-        Spacer(Modifier.width(16.dp))
-        Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-        Button(onClick = onFinish, colors = accentButtonColors()) { Text(stringResource(R.string.session_finish)) }
+        if (records.isNotEmpty()) {
+            RecordLines(records, Modifier.padding(bottom = 16.dp), style = MaterialTheme.typography.bodyMedium, color = ink, tint = ink)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
+            Spacer(Modifier.width(16.dp))
+            Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = ink)
+            Button(onClick = onFinish, colors = accentButtonColors()) { Text(stringResource(R.string.session_finish)) }
+        }
     }
 }
 
@@ -1171,3 +1178,5 @@ private fun KeepScreenOn() {
     }
 }
 
+
+internal const val DayDoneTag = "day-done"

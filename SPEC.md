@@ -1112,8 +1112,16 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     before. A set that is both reads as an estimate record.
   - Warm-ups, deload sets, drops, mini-sets and partial reps never make a record, and an
     exercise's first session has nothing to beat.
+  - **What it beats:** every earlier set of the exercise, in every session before this one (not
+    only the twelve progression reads) and earlier in this session, so set 3 can beat set 1. Deload
+    sets still count as sets to beat. A weight kept past a weight check makes no record until a set
+    near it confirms it. A rep record's weight is the weight as logged: one dumbbell's, or the load
+    on the belt; a split set counts its weaker side, as progression does. The estimate is counted
+    with the exercise's learned Epley constant, over its history and this session.
   - **As the set logs**, its row takes a small mark, `Estimate record` or `Rep record`, kept on
-    the set wherever it shows (the session, Session done, History). **Day done** and Session done
+    the set wherever it shows (the session, Session done, History). The mark is a trophy, the
+    Material Symbol `trophy`, read by TalkBack as its name: a badge on the set's index circle in the
+    set table, and after the set's RIR chip in set text. **Day done** and Session done
     list the session's records (`Barbell bench press · 92.5 × 5 [1] · Estimate record`).
   - Records are worked out from the logged sets, never stored: correcting a set moves them.
 - **Bodyweight**: a dated log with a small trend line on History; the latest value is used for
