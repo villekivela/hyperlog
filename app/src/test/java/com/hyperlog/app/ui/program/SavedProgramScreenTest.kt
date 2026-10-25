@@ -66,6 +66,8 @@ class SavedProgramScreenTest {
     fun itShowsTheProgramAsItWillRunWithItsNewExercisesAndNothingToChange() {
         show()
         compose.waitFor("Saved one")
+        // When it was saved, as its row on Programs says.
+        compose.onNodeWithText("Saved 24 Oct").assertExists()
         compose.onNodeWithText("New in your library").assertExists()
         // Under New in your library, and in its day.
         assertEquals(2, compose.onAllNodesWithText("Kneeling Cable Y-Raise").fetchSemanticsNodes().size)

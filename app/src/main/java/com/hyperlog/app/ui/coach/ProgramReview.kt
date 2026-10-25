@@ -118,16 +118,17 @@ fun ProgramReviewScreen(
                 }
             }
         },
-    ) { padding -> ProgramReviewList(proposal, exerciseNames, file, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag)) }
+    ) { padding -> ProgramReviewList(proposal, exerciseNames, file?.let { stringResource(R.string.program_review_from, it) }, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag)) }
 }
 
 /**
  * A program before it runs, as its review and a saved program's page show it: its title and what
  * it is in a card, each swap to a library exercise, the exercises it adds to the library, then the
- * program as Program shows it, block by block and week by week, from week 1.
+ * program as Program shows it, block by block and week by week, from week 1. [origin] is a quiet
+ * line under its size saying where it came from: `From program.json`, `Saved 24 Oct`.
  */
 @Composable
-internal fun ProgramReviewList(proposal: ProgramProposal, exerciseNames: Map<String, String>, file: String?, modifier: Modifier = Modifier) {
+internal fun ProgramReviewList(proposal: ProgramProposal, exerciseNames: Map<String, String>, origin: String?, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val program = proposal.program
     // The new exercises aren't in the library yet: their names come with the proposal.
@@ -157,9 +158,9 @@ internal fun ProgramReviewList(proposal: ProgramProposal, exerciseNames: Map<Str
                     style = MaterialTheme.typography.labelLarge,
                     color = cs.onSurfaceVariant,
                 )
-                file?.let {
+                origin?.let {
                     Spacer(Modifier.height(4.dp))
-                    Text(stringResource(R.string.program_review_from, it), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                    Text(it, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
                 }
                 program.description?.let {
                     Spacer(Modifier.height(8.dp))

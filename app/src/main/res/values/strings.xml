@@ -368,6 +368,7 @@
     <string name="program_block_week">%1$s · week %2$d</string>
     <string name="program_finished">Program finished</string>
     <string name="program_finished_body">Import the next one from Program, or train ad hoc.</string>
+    <string name="program_finished_body_saved">Start a saved program below, or train ad hoc.</string>
     <string name="program_replace_title">Replace %1$s?</string>
     <string name="program_replace_body">The new program starts at week 1, day 1. Past sessions are kept.</string>
     <string name="program_replace_body_at">You\'re in week %1$d of %2$s; the new program starts at week 1, day 1 instead. Past sessions are kept.</string>

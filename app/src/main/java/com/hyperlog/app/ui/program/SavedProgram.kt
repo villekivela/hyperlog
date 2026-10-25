@@ -1,10 +1,16 @@
 package com.hyperlog.app.ui.program
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -24,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.ProgramProposal
 import com.hyperlog.app.program.ActiveProgram
@@ -100,7 +107,10 @@ fun SavedProgramScreen(
                 }
             }
         },
-    ) { padding -> ProgramReviewList(proposal, exerciseNames, file = null, Modifier.fillMaxSize().padding(padding)) }
+    ) { padding ->
+        // When it was saved, as its row on Programs says: `Saved 24 Oct`.
+        ProgramReviewList(proposal, exerciseNames, origin = status(saved), Modifier.fillMaxSize().padding(padding))
+    }
     if (replacing && running != null) {
         AlertDialog(
             onDismissRequest = { replacing = false },
@@ -127,13 +137,31 @@ fun SavedProgramScreen(
     }
 }
 
-/** Today's offer while no program runs (SPEC, Today): the programs saved for later, each opening its page. */
+/**
+ * Today while no program runs, or the one running is finished (SPEC, Starter program): [main], the
+ * starter offer or the empty state, then "Your saved programs", each opening its page. The group
+ * sits at the bottom when everything fits, with [main] a little above the middle of the space over
+ * it; on a small screen or at a large font the whole screen scrolls, so neither is squeezed.
+ */
 @Composable
-fun SavedProgramsOffer(saved: List<ListedProgram>, onOpen: (Long) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier) {
-        GroupHead(stringResource(R.string.today_saved_programs))
-        saved.forEachIndexed { i, p ->
-            Segment(i, saved.size, onClick = { onOpen(p.id) }) { SegmentedRow(p.title, "${size(p)} · ${status(p)}", Symbol.Bookmark) }
+fun WithSavedPrograms(saved: List<ListedProgram>, onOpen: (Long) -> Unit, modifier: Modifier = Modifier, main: @Composable () -> Unit) {
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val viewport = maxHeight
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = viewport),
+            // Equal space over [main], under it and again over the group: it sits a third of the
+            // free space above the group, the optical centre the other empty states keep.
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Spacer(Modifier)
+            main()
+            Spacer(Modifier)
+            Column(Modifier.padding(bottom = 16.dp)) {
+                GroupHead(stringResource(R.string.today_saved_programs))
+                saved.forEachIndexed { i, p ->
+                    Segment(i, saved.size, onClick = { onOpen(p.id) }) { SegmentedRow(p.title, "${size(p)} · ${status(p)}", Symbol.Bookmark) }
+                }
+            }
         }
     }
 }

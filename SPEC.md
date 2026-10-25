@@ -928,8 +928,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      navigation bar is hidden on the page.
      - **Saved**: a program saved for later from a review, never started. Its page (owner,
        2026-10-25; `ui/program/SavedProgram.kt`), titled "Saved program", shows it read-only as its
-       review did (the card, the new exercises it brings, the program from week 1) with **Start
-       program** at the bottom and Export and Delete in ⋮; Back returns to where it was opened
+       review did (the card with when it was saved, `Saved 24 Oct`, the new exercises it brings,
+       the program from week 1) with **Start program** at the bottom and Export and Delete in ⋮; Back returns to where it was opened
        (Programs, or Today). Start program asks first while a program runs, as import does
        ("Replace <title>?"), then runs it from week 1, day 1, staying where the page was opened;
        the one before stays as the record of its sessions. Its new exercises join the library
@@ -961,8 +961,11 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog
      Full Body with **Run this program**; Today keeps Start session (ad hoc) and Import a program
      beside it. **Saved programs on Today** (owner, 2026-10-25): while no program runs, or the one
-     running is finished, Today lists the saved programs below its offer under "Your saved
-     programs", each row as on Programs, opening the saved program's page with Start program. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
+     running is finished, Today lists the saved programs below its offer (or "Program finished",
+     whose line then reads "Start a saved program below, or train ad hoc.") under "Your saved
+     programs", each row as on Programs, opening the saved program's page with Start program. The
+     group sits at the bottom of the screen, the offer centred above it; when they don't fit, the
+     screen scrolls. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
      program running. The starter is an ordinary program file in the app's assets
      (`programs/full-body-3-day.json`) and imports through the same validator.
    - **Position**: the program runs as a sequence. Finishing a session of the next day moves the
