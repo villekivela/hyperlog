@@ -230,6 +230,69 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Save for later: the program under review goes on the Programs list with its new exercises,
+     * and the one running goes on; then [saved]. One the library no longer takes shows its
+     * problems as a rejected import does, and [failed] runs instead.
+     */
+    fun saveProgram(saved: () -> Unit, failed: () -> Unit) {
+        val proposal = _program.value ?: return
+        // A second tap while it saves would save it twice.
+        if (saving?.isActive == true) return
+        saving = viewModelScope.launch {
+            val result = programs.save(proposal.source, proposal.newExercises)
+            _program.value = null
+            if (result is ProgramParser.Result.Invalid) {
+                _errors.value = result.errors
+                failed()
+            } else {
+                saved()
+            }
+        }
+    }
+
+    private var saving: kotlinx.coroutines.Job? = null
+
+    /** Every program held, newest first, for Program → Programs. */
+    val listed: StateFlow<List<com.hyperlog.app.program.ListedProgram>> = programs.listed.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * Starts saved program [id] in place of the one running, then [started]; a new exercise the
+     * library gained since shows its problems on Program, after [failed].
+     */
+    fun startSaved(id: Long, started: () -> Unit, failed: () -> Unit) {
+        viewModelScope.launch {
+            val result = programs.start(id)
+            _errors.value = (result as? ProgramParser.Result.Invalid)?.errors
+            if (result is ProgramParser.Result.Invalid) failed() else started()
+        }
+    }
+
+    /** Resume: program [id], replaced mid-way, picks up where it was. */
+    fun resume(id: Long) {
+        viewModelScope.launch { programs.resume(id) }
+    }
+
+    /** Run again: program [id] runs afresh from week 1, day 1. */
+    fun runAgain(id: Long) {
+        viewModelScope.launch { _errors.value = (programs.runAgain(id) as? ProgramParser.Result.Invalid)?.errors }
+    }
+
+    /** Deletes saved program [id]; one that has run stays. */
+    fun deleteProgram(id: Long) {
+        viewModelScope.launch { programs.delete(id) }
+    }
+
+    /** Writes program [id]'s file, with the exercises it adds to the shipped library, to [uri], picked in the system save dialog. */
+    fun export(id: Long, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            val shipped = com.hyperlog.app.library.LibrarySeed.fromAssets(app).exercises.map { it.id }.toSet()
+            val file = programs.exportFile(id, shipped) ?: return@launch
+            runCatching { app.contentResolver.openOutputStream(uri, "wt")?.use { it.write(file.toByteArray()) } }
+        }
+    }
+
     private val _workout = MutableStateFlow<com.hyperlog.app.coach.Workout?>(null)
 
     /** A workout from Claude waiting for Add to Today or Reject; null when none is. */

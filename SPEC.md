@@ -874,8 +874,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      Changes, one row **Changes · 1 in force** ("Changes · none
      in force" once all are reverted or replaced) opens the Changes page with Revert (Coaching),
      a reverted one reading "Reverted 16 Oct". The navigation bar is hidden on that page.
-   - **The actions are Changes**, in ⋮ above Import program and Run Hyperlog Full Body (a divider
-     between) while the program runs: **Skip day** (`skip_day`), **Repeat week 5** (`repeat_week`,
+   - **The actions are Changes**, in ⋮ above Import program, Run Hyperlog Full Body and Programs (a
+     divider between) while the program runs: **Skip day** (`skip_day`), **Repeat week 5** (`repeat_week`,
      named for the week it repeats: the last one trained),
      **Deload week** (`deload_week` for the week you're in) and **Shift program** (`shift_program`,
      1–8 weeks later, picked by steps first). Each opens its diff, and applies only on Accept.
@@ -908,13 +908,72 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      from it or a Change's review is up; choosing Program on the navigation bar opens it on where
      you are.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
-     and imports nothing. Importing over a program asks first ("Replace <title>?"), saying where
-     you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
+     and imports nothing. A file's `newExercises` (as Export writes them) join the library with
+     it: one the library has by id is the library's, and every other is checked by the library
+     editor's rules (`newExercises[0].name: the library already has "Barbell Bench Press"
+     (barbell_bench_press): use it`); only those the program uses are added. Importing over a
+     program asks first ("Replace <title>?"), saying where you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
      instead. Past sessions are kept."
+   - **Programs** (⋮ → Programs, owner 2026-10-24; `ui/program/ProgramsPage.kt`) lists every
+     program the app holds under **Running**, **Saved** and **Past**, newest first (saved ones by
+     when they were saved, past runs by when they were replaced). Each row shows
+     a symbol for where it stands (running, finished, saved, past; the running one's in the accent),
+     its title, then its blocks and weeks and where it stands: `4 blocks · 12 weeks · Week 6` (or
+     "Program finished"), `Saved 24 Oct`, `1 Sep – 13 Oct` (started, replaced). A saved program's
+     row opens its page (below); another's opens the program's sheet: its title, author, weeks and
+     days a week, where it stands ("You're in week 6", "Ran 1 Sep – 13 Oct", and for one replaced
+     mid-way "Ran 1 Sep – 13 Oct · Left in week 3"), its description, then its main way to run as a
+     button, then Run again (below Resume) and Export. With no program running, Program has no ⋮:
+     a **Programs** button sits beside Import program while the app holds any program. The
+     navigation bar is hidden on the page.
+     - **Saved**: a program saved for later from a review, never started. Its page (owner,
+       2026-10-25; `ui/program/SavedProgram.kt`), titled "Saved program", shows it read-only as its
+       review did (the card with when it was saved, `Saved 24 Oct`, the new exercises it brings,
+       the program from week 1, its days with plain labels and no Next, owner 2026-10-25) with
+       **Start program** at the bottom and Export and Delete in ⋮; Back returns to where it was
+       opened (Programs, or Today). Start program asks first while a program runs, as import does
+       ("Replace <title>?"), then runs it from week 1, day 1, staying where the page was opened;
+       the one before stays as the record of its sessions. Its new exercises join the library
+       then; if the library has gained one with the same id since, Program shows the problems as a
+       rejected import and nothing starts.
+     - **Past**: replaced runs, the last replaced first. **Run again** (also on the running one once
+       it is finished) asks the same way, saying the program starts again ("You're in week 6 of
+       Hyperlog Full Body; Push pull legs starts again at week 1, day 1 instead. Past sessions are
+       kept."), then starts a fresh run from week 1, day 1, a new row on the list: the old run keeps
+       its sessions, its Changes and its dates. A run that ended the day it started reads as that
+       day (`25 Oct`).
+     - **Resume** (owner, 2026-10-25): a past run replaced mid-way (moved past its first day, by a
+       session or a Change such as Skip day, and not finished) has Resume as its sheet's button,
+       Run again below it. It asks the same way ("You're in week
+       6 of Hyperlog Full Body; Push pull legs picks up at week 3, day 2 instead. Past sessions are
+       kept."), then that run goes on from the day it was left at, with its sessions and its
+       Changes: it is Running again, and the program it replaces is Past. Its dates read as one
+       run, from its first start to when it is replaced again. A run replaced before its first
+       session, or finished, has only Run again. Its row on Programs keeps the past symbol: Resume
+       on its sheet is enough (owner, 2026-10-25).
+     - **Export** (every program's sheet, a saved one's ⋮) writes its file as imported through the
+       system save dialog (`hyperlog-full-body.json`). A program that uses exercises the shipped
+       library doesn't have (a coach program's new exercises, or ones added in the library) carries
+       them as the file's `newExercises` (owner, 2026-10-25; `docs/program-format.md`), so it
+       imports on another phone; a saved one's waiting new exercises go with it too. Such a file is
+       written laid out afresh (the same program, indented two spaces); any other is byte for byte
+       as imported. **Delete**
+       asks first ("Delete <title>?") and is offered only for a saved program: one that has run
+       keeps its sessions and its Changes.
+     - Storage: the `program` table holds every program: a saved one has no `started_at` and keeps
+       its `new_exercises` (as the reply's `newExercises`) until it starts; a replaced one has
+       `ended_at`, cleared when it resumes. A file's `newExercises` aren't kept in its `source`:
+       they join the library on import.
    - **Starter program**: while no program runs (the first run), Today and Program offer Hyperlog
      Full Body with **Run this program**; Today keeps Start session (ad hoc) and Import a program
-     beside it. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
-     program running. The starter is an ordinary program file in the app's assets
+     beside it. **Saved programs on Today** (owner, 2026-10-25): while no program runs, or the one
+     running is finished (owner, 2026-10-25: both), Today lists the saved programs below its
+     offer (or "Program finished", whose line then reads "Start a saved program below, or train ad hoc.") under "Your saved
+     programs", each row as on Programs, opening the saved program's page with Start program. The
+     group sits at the bottom of the screen, the offer centred above it; when they don't fit, the
+     screen scrolls. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
+     program running; while the starter's last run was left mid-way it reads "Resume Hyperlog Full
+     Body" instead and resumes that run, asking as Resume does (Run again stays on Programs). The starter is an ordinary program file in the app's assets
      (`programs/full-body-3-day.json`) and imports through the same validator.
    - **Position**: the program runs as a sequence. Finishing a session of the next day moves the
      position to the day after it (the next day of the block, then the next week's first day); a
@@ -1188,7 +1247,8 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     suggestions and why-lines stay per dumbbell, as logged, and come out the same since the
     estimate scales with the load. Volume is counted in sets, so it doesn't change.
 - **Backups**: manual JSON export and restore, plus Android Auto Backup (`docs/backups.md`).
-  - A backup holds everything the app stores: programs and their Changes, workouts, every session (the
+  - A backup holds everything the app stores: programs (the one running, those saved for later
+    with their new exercises, and past runs) and their Changes, workouts, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
     settings ("Check for updates", the dismissed update), and the Claude cost by month. Every table
@@ -1627,7 +1687,12 @@ back.
   kept."), then runs it from week 1, day 1, and goes to Today; the program before stays as the
   record of its sessions. If the library gained one of its new exercises since the review, nothing
   starts: Program shows the problem as a rejected import (`newExercises[0].id: the library already
-  has "barbell_drag_curl"`). **Reject** and Back step back in the check-in (Type my own open), × drops
+  has "barbell_drag_curl"`). **Save for later** (owner, 2026-10-24), beside Start program (Reject
+  at the strip's start, Save for later and Start program together at its end), keeps it on the
+  Programs list (Program, below) with its new exercises and leaves the program running alone:
+  it asks nothing, ends the check-in, and Coach says "Saved to your programs" with a **Programs**
+  action that opens the list. The new exercises wait with it and join the library only when it
+  starts. **Reject** and Back step back in the check-in (Type my own open), × drops
   it, as on every review.
 - **Without a key**, Ask Claude's prompt carries the program format (`coach/ProgramFormat.kt`),
   built from the parser's fields and with an example the paste reads; you attach the file in the

@@ -259,6 +259,16 @@ private fun App(
     val exportBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let(backupModel::export)
     }
+    val listedPrograms by programModel.listed.collectAsStateWithLifecycle()
+    /** The saved program whose page is up, opened from Programs or Today. */
+    var savedOpen by rememberSaveable { mutableStateOf<Long?>(null) }
+    /** The program whose file Export is saving, until the save dialog answers. */
+    var exportingProgram by rememberSaveable { mutableStateOf<Long?>(null) }
+    val exportProgram = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val id = exportingProgram
+        exportingProgram = null
+        if (uri != null && id != null) programModel.export(id, uri)
+    }
     val pickRestore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(backupModel::pick)
     }
@@ -328,6 +338,8 @@ private fun App(
     val scriptedCoach by checkInModel.scripted.collectAsStateWithLifecycle()
     /** The Changes in force page on Coach is open. */
     var coachInForce by rememberSaveable { mutableStateOf(false) }
+    /** A new program was just saved for later: Coach says so once. */
+    var programSaved by rememberSaveable { mutableStateOf(false) }
     /** A workout was added while a session runs: Today says so once. */
     var workoutAddedMidSession by rememberSaveable { mutableStateOf(false) }
     // Reverting the last one closes the page, so the tiles (and the bar) come back.
@@ -452,6 +464,31 @@ private fun App(
             onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
             onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
             file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
+            // Save for later ends the check-in on Coach, which says where it went; the program running goes on.
+            onSave = {
+                programModel.saveProgram(
+                    saved = { closeAsk(); if (checkIn != null) checkInModel.close(); programSaved = true; screen = Screen.Coach },
+                    failed = { closeAsk(); if (checkIn != null) checkInModel.close(); programView = ProgramView(); screen = Screen.Program },
+                )
+            },
+        )
+        return
+    }
+    // A saved program's page, read-only with Start program; once started it's no longer saved, and the page goes.
+    listedPrograms.firstOrNull { it.id == savedOpen && it.status is com.hyperlog.app.program.ListedProgram.Status.Saved }?.let { p ->
+        com.hyperlog.app.ui.program.SavedProgramScreen(
+            p, exercises.associate { it.id to it.name }, program,
+            // Started, it runs where it was opened from (Today, or Programs); one the library no longer takes goes to Program.
+            onStart = {
+                programModel.startSaved(
+                    p.id,
+                    started = { savedOpen = null },
+                    failed = { savedOpen = null; programView = ProgramView(); screen = Screen.Program },
+                )
+            },
+            onExport = { exportingProgram = p.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(p.title)) },
+            onDelete = { savedOpen = null; programModel.deleteProgram(p.id) },
+            onBack = { savedOpen = null },
         )
         return
     }
@@ -474,7 +511,7 @@ private fun App(
         Screen.Today, Screen.Settings -> true
         // A check-in hides the bar, as a session does (owner, 2026-10-24); Changes in force is a sub-screen.
         Screen.Coach -> !(asking || (checkInAvailable && (checkIn != null)) || (coachInForce && !noneInForce))
-        Screen.Program -> !programView.changesOpen
+        Screen.Program -> !programView.changesOpen && !programView.programsOpen
         Screen.History -> pastSession == null && !bodyweightOpen && trend == null
         else -> false
     }
@@ -606,6 +643,11 @@ private fun App(
             weekdayPlan = weekdayPlan,
             gyms = gyms,
             onWeekdayPlan = programModel::setWeekdayPlan,
+            listedPrograms = listedPrograms,
+            onRunAgain = programModel::runAgain,
+            onResume = programModel::resume,
+            onOpenSaved = { savedOpen = it },
+            onExportProgram = { exportingProgram = it.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(it.title)) },
             )
         }
         screen == Screen.Coach && asking -> com.hyperlog.app.ui.coach.AskClaudeScreen(
@@ -654,6 +696,9 @@ private fun App(
             onInForceOpen = { coachInForce = it },
             onOpenChange = programModel::openInForce,
             onRevert = { programModel.revert(it); endAsk() },
+            savedNotice = programSaved,
+            onSavedNoticeShown = { programSaved = false },
+            onOpenPrograms = { programView = ProgramView(programsOpen = true); screen = Screen.Program },
             onHowItsGoing = {
                 if (checkInAvailable) checkInModel.howItsGoing(it)
                 else openAsk(com.hyperlog.app.coach.Opening.HowsItGoing, null, com.hyperlog.app.coach.CheckInContext.howItsGoing(it))
@@ -750,6 +795,8 @@ private fun App(
             onProgram = { screen = Screen.Program },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
+            savedPrograms = listedPrograms.filter { it.status is com.hyperlog.app.program.ListedProgram.Status.Saved },
+            onOpenSaved = { savedOpen = it },
             library = exercises,
             lastTrained = lastTrained,
             onEaseBack = { days ->

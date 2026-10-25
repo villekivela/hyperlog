@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.program.Program
@@ -34,7 +35,13 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  * screen's other ways forward as text buttons under it (docs/design/program-and-today.md).
  */
 @Composable
-fun StarterOffer(starter: Program, onRun: () -> Unit, modifier: Modifier = Modifier, others: @Composable RowScope.() -> Unit) {
+fun StarterOffer(
+    starter: Program,
+    onRun: () -> Unit,
+    modifier: Modifier = Modifier,
+    bottomSpace: Dp = 96.dp,
+    others: @Composable RowScope.() -> Unit,
+) {
     val cs = MaterialTheme.colorScheme
     // A hero card on the screen's tone: the shaped symbol, the program, and Run this program.
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
@@ -60,6 +67,6 @@ fun StarterOffer(starter: Program, onRun: () -> Unit, modifier: Modifier = Modif
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), content = others)
         // Optical centre: a little above the middle, as the other empty states.
-        Spacer(Modifier.height(96.dp))
+        Spacer(Modifier.height(bottomSpace))
     }
 }

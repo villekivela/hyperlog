@@ -52,10 +52,11 @@ class ProgramReviewTest {
 
     private var started = 0
     private var rejected = 0
+    private var saved = 0
 
     private fun show(running: ActiveProgram?, file: String? = null) = compose.setContent {
         HyperlogTheme {
-            ProgramReviewScreen(proposal, names, running, onStart = { started++ }, onReject = { rejected++ }, file = file)
+            ProgramReviewScreen(proposal, names, running, onStart = { started++ }, onReject = { rejected++ }, file = file, onSave = { saved++ })
         }
     }
 
@@ -94,6 +95,14 @@ class ProgramReviewTest {
         assertEquals(0, started)
         compose.click("Replace")
         assertEquals(1, started)
+    }
+
+    @Test
+    fun saveForLaterKeepsItWithoutAskingAndLeavesTheRunningProgram() {
+        show(running = ActiveProgram(1, starter, Position(6, 0)))
+        compose.click("Save for later")
+        compose.onNodeWithText("Replace ${starter.title}?").assertDoesNotExist()
+        assertEquals(listOf(1, 0, 0), listOf(saved, started, rejected))
     }
 
     @Test

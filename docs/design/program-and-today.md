@@ -503,3 +503,104 @@ size and density, text at 115 %): `phone-dark-today-done`, `-today-no-training-d
 sheet, Day B's Barbell RDL) came from a session started on the emulator's copy of the data, which
 was then put back from a saved database.
 
+
+## Programs (#84)
+
+Program → ⋮ → Programs, a saved program's page, the new program review's Save for later, Coach's
+"Saved to your programs", and the saved programs Today offers.
+
+Principles:
+
+- **A list you read, actions you ask for.** Each row is a standard `SegmentedRow`: a symbol, the
+  title and one line. A row carries no buttons. A saved program's row opens its page; another's
+  opens its sheet. The first cut put Start, Run again and ⋮ on every row, which squeezed past dates
+  onto a second line and repeated "Run again" down the list.
+- **The symbol says where it stands**: `play_arrow` running, `flag` finished (the flag that
+  "Program finished" has on Program), `bookmark` saved (Save for later), `history` past. The
+  running row's circle is the accent (`primaryContainer`), because it is the selected program.
+  The others are `secondaryContainer`.
+- **A saved program reads as its review did.** Its page is the review's list (`ProgramReviewList`)
+  under "Saved program", with the date it was saved as the card's quiet line where the review says
+  "From <file>": `Saved 24 Oct`, the same words as its row. Start program sits alone at the end of
+  the strip, where the review has it; Export and Delete are in ⋮, because neither is why you open
+  it.
+  Its days have plain labels ("Week 1 · Day A"), with no Next, since nothing runs yet.
+- **One way to run, said once.** A sheet has one filled button: **Resume** for a run replaced
+  mid-way, else **Run again** for a past one or a finished running one. Run again (under Resume)
+  and Export are rows below it. Where the run was left is on the sheet's status line ("Ran 1 Sep –
+  13 Oct · Left in week 3"); the dialog says the exact day ("picks up at week 3, day 2").
+- **Today offers, it doesn't crowd.** With no program running (or the running one finished), the
+  saved programs are a "Your saved programs" group at the bottom of Today, under the starter offer
+  or the empty state, which keep their look and sit centred above it. When both don't fit (a small
+  screen, a large font, many saved programs) the whole screen scrolls; nothing is squeezed.
+- **Nothing hidden when nothing runs.** With no program running, Program has no ⋮. **Programs**
+  sits beside Import program under the starter offer (or under Import on the empty screen) while
+  the app holds any program.
+
+Tokens: rows as `SegmentedRow` (72 dp, 40 dp circle); sheet groups `Tones.sheetCard`; the sheet's
+button `ButtonDefaults.MediumContainerHeight`, full width at the 24 dp edges, with a 24 dp symbol
+(`play_arrow` Resume, `replay` Run again) and titleMedium; strip buttons 16 dp side padding; strip
+padding 12 dp start, 16 dp end. Saved page: the review's card, its `Saved 24 Oct` line labelLarge
+`onSurfaceVariant`, `BottomActions` with Start program at the end. Today: the offer's own space
+under it drops from 96 dp to 8 dp (the group head's 24 dp top gives 32 dp at least); the group ends
+16 dp above the navigation bar; `Arrangement.SpaceBetween` over [space, offer, space, group] in a
+scrolling column at least the screen's height puts the offer a third of the free space above the
+group.
+
+```
+ ←  Programs                          ───── (sheet, past) ─────────
+                                        Strength block, 3 days
+ Running                                Hyperlog · 12 weeks · 3 days a week
+ ╭────────────────────────────────╮     Ran 1 Sep – 13 Oct · Left in week 3
+ │ (▶) Hyperlog Full Body          │     12 weeks, 3 days a week. …
+ │     4 blocks · 12 weeks · Week 7│    ╭──────────────────────────╮
+ ╰────────────────────────────────╯     │   ▶  Resume               │
+ Saved                                  ╰──────────────────────────╯
+ ╭────────────────────────────────╮    ╭──────────────────────────╮
+ │ (🔖) Scripted full body, 2 days  │    │ (↻) Run again            │
+ │     1 block · 4 weeks · Saved 24 Oct  ├──────────────────────────┤
+ ╰────────────────────────────────╯    │ (⬇) Export               │
+ Past                                   ╰──────────────────────────╯
+ ╭────────────────────────────────╮
+ │ (⟲) Strength block, 3 days      │   Review strip:
+ │     4 blocks · 12 weeks · 1 Sep – 13 Oct   Reject   [Save for later] [Start program]
+ ╰────────────────────────────────╯
+
+ ←  Saved program               ⋮      Today, no program running
+ ╭────────────────────────────────╮     Week calendar
+ │ Scripted full body, 2 days      │    ╭────────────────────────────╮
+ │ Claude · 4 weeks · 2 days a week│    │     (starter hero)          │
+ │ Saved 24 Oct                    │    │     Run this program        │
+ │ Two full-body days a week …     │    ╰────────────────────────────╯
+ ╰────────────────────────────────╯      Start session   Import a program
+  [ Main ]                                       (free space)
+  Main · weeks 1–4   [1] 2 3 4          Your saved programs
+  Week 1 · Day A                      ╭────────────────────────────╮
+  …                                    │ (🔖) Scripted full body, 2 days│
+ ╭────────────────────────────────╮    ├────────────────────────────┤
+ │                 [Start program] │    │ (🔖) Upper lower, 4 days     │
+ ╰────────────────────────────────╯    ╰────────────────────────────╯
+```
+
+States: running mid-program (sheet: "You're in week 7", Export only); running and finished (flag,
+"Program finished", sheet with Run again); saved (its page: Start program, ⋮ Export and Delete);
+past ("Ran 1 Jun – 31 Aug": Run again, Export); past, replaced mid-way (Resume, then Run again and
+Export); Replace, Resume and Delete dialogs; nothing running (Programs beside Import program);
+Today with saved programs under the starter offer, and under "Program finished" (its line becomes
+"Start a saved program below, or train ad hoc."); the review's strip; Coach's snackbar.
+
+Interaction: a saved row (on Programs or Today) opens its page; Back returns there. Start program
+asks "Replace <title>?" while a program runs and starts at once when none does, staying where the
+page was opened. Another row opens its sheet; Resume and Run again close it, then ask "Replace
+<title>?" while a program runs ("You're in week 7 of Hyperlog Full Body; Strength block, 3 days
+picks up at week 3, day 2 instead. Past sessions are kept.") and start at once when none does.
+Delete (saved page ⋮) asks "Delete <title>?". Export opens the system save dialog. The sheet is
+the one sheet on the page; Back closes it, then the page. The snackbar stays as it was: the app's
+other snackbars use the same default.
+
+Screens (phone at font scale 1.15, dark unless named light): `programs-list`,
+`programs-list-light`, `programs-saved-page`, `programs-saved-page-light`, `programs-saved-menu`,
+`programs-sheet-running`, `programs-finished`, `programs-sheet-finished`, `programs-sheet-resume`,
+`programs-resume-dialog`, `programs-replace`, `programs-delete`, `programs-no-program`,
+`today-saved-programs`, `today-saved-programs-light`, `today-saved-programs-finished`,
+`program-review-save`, `program-review-save-light`, `coach-saved-snackbar`.

@@ -123,6 +123,9 @@ fun TodayScreen(
     /** The starter program, offered while no program runs; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
+    /** The programs saved for later, offered with the starter while no program runs, each opening its page. */
+    savedPrograms: List<com.hyperlog.app.program.ListedProgram> = emptyList(),
+    onOpenSaved: (Long) -> Unit = {},
     /** The exercise library, for the swaps the coach proposes. */
     library: List<Exercise> = emptyList(),
     /** The day of the last session finished; null with none yet. */
@@ -418,30 +421,45 @@ fun TodayScreen(
             }
             isToday -> {
                 update?.let { UpdateBanner(it, onUpdate, onDismissUpdate, Modifier.padding(bottom = 8.dp)) }
-                if (program == null && starter != null && !sessionRunning) {
-                    StarterOffer(starter, onRunStarter, Modifier.weight(1f)) {
-                        TextButton(onClick = { start(Kind.AdHoc) }) { Text(stringResource(R.string.today_start_session)) }
-                        TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
-                    }
-                } else {
-                    val finished = program?.finished == true
-                    EmptyState(
-                        symbol = if (finished) Symbol.Flag else Symbol.FitnessCenter,
-                        title = stringResource(if (finished) R.string.program_finished else R.string.today_empty_title),
-                        body = stringResource(if (finished) R.string.program_finished_body else R.string.today_no_program_body),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Button(onClick = { start(Kind.AdHoc) }, contentPadding = ButtonDefaults.MediumContentPadding, modifier = Modifier.heightIn(min = ButtonDefaults.MediumContainerHeight)) {
-                            SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.MediumIconSize))
-                            Spacer(Modifier.width(8.dp))
-                            Text(startLabel, style = MaterialTheme.typography.titleMedium)
-                        }
-                        if (program == null && !sessionRunning) {
-                            Spacer(Modifier.height(8.dp))
+                val finished = program?.finished == true
+                // With no program running, or the one running finished, the saved ones are on offer.
+                val offerSaved = savedPrograms.isNotEmpty() && (program == null || finished) && !sessionRunning
+                // Over the saved programs the offer keeps its own space small: the group is under it.
+                val bottomSpace = if (offerSaved) 8.dp else 96.dp
+                val main: @Composable (Modifier) -> Unit = { mod ->
+                    if (program == null && starter != null && !sessionRunning) {
+                        StarterOffer(starter, onRunStarter, mod, bottomSpace) {
+                            TextButton(onClick = { start(Kind.AdHoc) }) { Text(stringResource(R.string.today_start_session)) }
                             TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
+                        }
+                    } else {
+                        EmptyState(
+                            symbol = if (finished) Symbol.Flag else Symbol.FitnessCenter,
+                            title = stringResource(if (finished) R.string.program_finished else R.string.today_empty_title),
+                            body = stringResource(
+                                when {
+                                    finished && offerSaved -> R.string.program_finished_body_saved
+                                    finished -> R.string.program_finished_body
+                                    else -> R.string.today_no_program_body
+                                },
+                            ),
+                            modifier = mod,
+                            bottomSpace = bottomSpace,
+                        ) {
+                            Button(onClick = { start(Kind.AdHoc) }, contentPadding = ButtonDefaults.MediumContentPadding, modifier = Modifier.heightIn(min = ButtonDefaults.MediumContainerHeight)) {
+                                SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.MediumIconSize))
+                                Spacer(Modifier.width(8.dp))
+                                Text(startLabel, style = MaterialTheme.typography.titleMedium)
+                            }
+                            if (program == null && !sessionRunning) {
+                                Spacer(Modifier.height(8.dp))
+                                TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
+                            }
                         }
                     }
                 }
+                if (offerSaved) com.hyperlog.app.ui.program.WithSavedPrograms(savedPrograms, onOpenSaved, Modifier.weight(1f)) { main(Modifier) }
+                else main(Modifier.weight(1f))
             }
             else -> LazyColumn(Modifier.weight(1f).fillMaxSize(), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
                 // Past the last planned day nothing is planned: it points back to that day. With no

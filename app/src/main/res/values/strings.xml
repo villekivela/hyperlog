@@ -359,6 +359,7 @@
     <string name="starter_label">Starter program</string>
     <string name="starter_run">Run this program</string>
     <string name="starter_run_named">Run %1$s</string>
+    <string name="starter_resume_named">Resume %1$s</string>
     <string name="program_none_body">A program is a JSON file. Claude can write one from a program you own.</string>
     <string name="program_next">Next</string>
     <!-- "Week 3 · Day A — Heavy bench" -->
@@ -368,6 +369,7 @@
     <string name="program_block_week">%1$s · week %2$d</string>
     <string name="program_finished">Program finished</string>
     <string name="program_finished_body">Import the next one from Program, or train ad hoc.</string>
+    <string name="program_finished_body_saved">Start a saved program below, or train ad hoc.</string>
     <string name="program_replace_title">Replace %1$s?</string>
     <string name="program_replace_body">The new program starts at week 1, day 1. Past sessions are kept.</string>
     <string name="program_replace_body_at">You\'re in week %1$d of %2$s; the new program starts at week 1, day 1 instead. Past sessions are kept.</string>
@@ -650,6 +652,34 @@
     <string name="workout_replace">Replace</string>
     <string name="program_review_title">New program</string>
     <string name="program_review_start">Start program</string>
+    <string name="program_review_save">Save for later</string>
+    <string name="program_saved">Saved to your programs</string>
+    <string name="programs_title">Programs</string>
+    <string name="programs_running">Running</string>
+    <string name="programs_saved">Saved</string>
+    <string name="programs_past">Past</string>
+    <string name="programs_week">Week %1$d</string>
+    <string name="programs_saved_on">Saved %1$s</string>
+    <string name="programs_started">Started %1$s</string>
+    <string name="programs_sheet_week">You\'re in week %1$d</string>
+    <string name="programs_sheet_ran">Ran %1$s</string>
+    <string name="program_run_again_body">%1$s starts again at week 1, day 1. Past sessions are kept.</string>
+    <string name="program_run_again_body_at">You\'re in week %1$d of %2$s; %3$s starts again at week 1, day 1 instead. Past sessions are kept.</string>
+    <string name="programs_run_again">Run again</string>
+    <string name="programs_resume">Resume</string>
+    <string name="programs_saved_title">Saved program</string>
+    <string name="today_saved_programs">Your saved programs</string>
+    <string name="programs_sheet_left">Left in week %1$d</string>
+    <string name="program_resume_body">%1$s picks up at week %2$d, day %3$d. Past sessions are kept.</string>
+    <string name="program_resume_body_at">You\'re in week %1$d of %2$s; %3$s picks up at week %4$d, day %5$d instead. Past sessions are kept.</string>
+    <string name="programs_export">Export</string>
+    <string name="programs_delete">Delete</string>
+    <string name="programs_delete_title">Delete %1$s?</string>
+    <string name="programs_delete_body">It leaves your programs. It was never started.</string>
+    <plurals name="programs_blocks">
+        <item quantity="one">%d block</item>
+        <item quantity="other">%d blocks</item>
+    </plurals>
     <string name="program_review_swaps">Swapped for your library</string>
     <string name="program_review_swap">%1$s → %2$s</string>
     <string name="program_review_new">New in your library</string>

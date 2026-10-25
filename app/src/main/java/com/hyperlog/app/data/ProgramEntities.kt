@@ -11,8 +11,10 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 /**
- * An imported program: the file as imported (it is parsed again when read) and its position.
- * One program is [active] at a time; importing another keeps the old row for its sessions.
+ * A program the app holds (SPEC, Program → Programs): the file as imported (it is parsed again when
+ * read) and its position. One program is [active] at a time; starting another keeps the old row for
+ * its sessions, [endedAt] set. A row never [startedAt] is a program saved for later, with the
+ * [newExercises] it adds to the library when it starts.
  */
 @Entity(tableName = "program")
 data class ProgramEntity(
@@ -26,6 +28,12 @@ data class ProgramEntity(
     /** The next day's index in its week's block. */
     @ColumnInfo(name = "day_index") val dayIndex: Int = 0,
     val active: Boolean = true,
+    /** When it started running; null for a program saved for later. */
+    @ColumnInfo(name = "started_at") val startedAt: Long? = null,
+    /** When another program replaced it; null while it runs or waits. */
+    @ColumnInfo(name = "ended_at") val endedAt: Long? = null,
+    /** A saved program's new exercises, as `newExercises` in Claude's reply; null with none. */
+    @ColumnInfo(name = "new_exercises") val newExercises: String? = null,
 )
 
 @Dao
@@ -42,8 +50,25 @@ interface ProgramDao {
     @Insert
     suspend fun insert(program: ProgramEntity): Long
 
-    @Query("UPDATE program SET active = 0 WHERE active = 1")
-    suspend fun deactivateAll()
+    /** Every program held, newest first. */
+    @Query("SELECT * FROM program ORDER BY id DESC")
+    fun allFlow(): Flow<List<ProgramEntity>>
+
+    /** The program running stops at [at], replaced. */
+    @Query("UPDATE program SET active = 0, ended_at = :at WHERE active = 1")
+    suspend fun deactivateAll(at: Long)
+
+    /** Saved program [id] starts at [at], from week 1, day 1; its new exercises are in the library by then. */
+    @Query("UPDATE program SET active = 1, started_at = :at, week = 1, day_index = 0, new_exercises = NULL WHERE id = :id")
+    suspend fun start(id: Long, at: Long)
+
+    /** Program [id], replaced, runs again from its position. */
+    @Query("UPDATE program SET active = 1, ended_at = NULL WHERE id = :id")
+    suspend fun resume(id: Long)
+
+    /** Drops program [id] if it is saved for later: one that has run keeps its sessions and Changes. */
+    @Query("DELETE FROM program WHERE id = :id AND started_at IS NULL")
+    suspend fun delete(id: Long): Int
 
     /** Moves the position from [week]/[day] to the next day, only if [week]/[day] is still the next day. */
     @Query("UPDATE program SET week = :nextWeek, day_index = :nextDay WHERE id = :id AND week = :week AND day_index = :day")

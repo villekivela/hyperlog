@@ -9,7 +9,7 @@ exercise "bb_row"`, and a file with any problem imports nothing.
 ## Shape
 
 ```
-program  { format: 1, title, author?, description?, blocks[] }
+program  { format: 1, title, author?, description?, blocks[], newExercises? }
 block    { id, name, weekStart, weekEnd, weeks?, days[] }
 day      { id, name, weeks?, groups[] }
 group    { type?: "straight" | "superset", slots[] }
@@ -27,6 +27,7 @@ Unknown fields are errors, so a typo can't be ignored silently.
 | `title` | yes | Shown on Today and the Program screen. |
 | `author`, `description` | no | Text. |
 | `blocks` | yes | The blocks in order. Weeks run from 1 with no gaps: the first block starts at week 1, and each block starts the week after the previous one ends. |
+| `newExercises` | no | Exercises the program uses that the shipped library doesn't have, as a coach reply's `newExercises`: `id`, `name`, `equipment`, `pattern`, `grip`, `muscles`, `secondary`. Export writes them; Import program adds those the program uses, skips one the library already has by id, and rejects one that clashes by name. Only Import program reads it: inside a coach reply the program has none (the reply's own `newExercises` holds them). |
 
 ### Block
 

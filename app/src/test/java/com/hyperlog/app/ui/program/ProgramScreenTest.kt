@@ -91,6 +91,25 @@ class ProgramScreenTest {
     }
 
     @Test
+    fun withNoProgramRunningSavedProgramsAreAButtonBesideImportNotAMenu() {
+        val saved = com.hyperlog.app.program.ListedProgram(
+            2, "Saved one", program("Saved one"), TestPrograms.twoDays("Saved one"), com.hyperlog.app.program.ListedProgram.Status.Saved(0),
+        )
+        compose.setContent {
+            HyperlogTheme {
+                ProgramScreen(
+                    active = null, errors = null, onImport = {}, onCloseErrors = {}, onBack = {},
+                    starter = program("Hyperlog Full Body"), listedPrograms = listOf(saved),
+                )
+            }
+        }
+        compose.onNodeWithText("Run this program").assertIsDisplayed()
+        compose.onNodeWithContentDescription("More").assertDoesNotExist()
+        compose.onNodeWithText("Programs").performClick()
+        compose.onNodeWithText("Saved one").assertIsDisplayed()
+    }
+
+    @Test
     fun withAProgramRunningTheStarterIsInTheMenuAndAsksBeforeReplacing() {
         val program = (ProgramParser.parse(TestPrograms.twoDays("Mine"), AnyId) as ProgramParser.Result.Valid).program
         val starter = program.copy(title = "Hyperlog Full Body")

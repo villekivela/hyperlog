@@ -48,7 +48,7 @@ class SegmentedListScope internal constructor() {
         titleColor: Color? = null,
         supportingLines: Int = 1,
         trailing: (@Composable () -> Unit)? = null,
-    ) = item(onClick) { SegmentedRow(title, supporting, symbol, supportingColor, titleColor, supportingLines, trailing) }
+    ) = item(onClick) { SegmentedRow(title, supporting, symbol, supportingColor, titleColor, supportingLines, trailing = trailing) }
 
     /** A row of its own layout, on the same tile. */
     fun item(onClick: (() -> Unit)? = null, onClickLabel: String? = null, content: @Composable ColumnScope.() -> Unit) {
@@ -77,7 +77,8 @@ val GroupGap = 16.dp
 
 /**
  * One row's content: a leading Material Symbol in a tonal circle (or its 40 dp column kept empty),
- * a title and one line of supporting text, and an optional trailing control.
+ * a title and one line of supporting text, and an optional trailing control. A [selected] row
+ * (the program running) fills its circle with the accent, primaryContainer.
  */
 @Composable
 fun SegmentedRow(
@@ -87,6 +88,7 @@ fun SegmentedRow(
     supportingColor: Color? = null,
     titleColor: Color? = null,
     supportingLines: Int = 1,
+    selected: Boolean = false,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -95,10 +97,11 @@ fun SegmentedRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(40.dp).clip(CircleShape).then(if (symbol != null) Modifier.background(cs.secondaryContainer) else Modifier),
+            Modifier.size(40.dp).clip(CircleShape)
+                .then(if (symbol != null) Modifier.background(if (selected) cs.primaryContainer else cs.secondaryContainer) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
-            if (symbol != null) SymbolIcon(symbol, null, Modifier.size(24.dp), tint = cs.onSecondaryContainer)
+            if (symbol != null) SymbolIcon(symbol, null, Modifier.size(24.dp), tint = if (selected) cs.onPrimaryContainer else cs.onSecondaryContainer)
         }
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {

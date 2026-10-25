@@ -57,6 +57,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -66,6 +70,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,6 +102,7 @@ import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
+import kotlinx.coroutines.launch
 
 private val Margin = 24.dp
 
@@ -168,24 +174,51 @@ fun CheckInScreen(
     attachNote: String? = null,
     /** What Claude is doing while it replies, as its reply streams. */
     progress: com.hyperlog.app.coach.CoachProgress? = null,
+    /** A new program was just saved for later: the tiles say so once, with a way to Programs. */
+    savedNotice: Boolean = false,
+    onSavedNoticeShown: () -> Unit = {},
+    onOpenPrograms: () -> Unit = {},
 ) {
     when {
         view != null -> Step(view, lowest, onAnswer, onBack, onClose, onTellMeMore, onTryAgain, modifier, onAskClaude, onPaste, pasteErrors, onCopyProblems, draft, onDraft, onAttach, attachNote, progress)
         inForceOpen && program != null && program.inForce.isNotEmpty() -> InForcePage(
             program, onBack = { onInForceOpen(false) }, onOpenChange, onRevert, onHowItsGoing = { onInForceOpen(false); onHowItsGoing(it) }, modifier,
         )
-        else -> Tiles(program, onTile, onLeave, onInForce = { onInForceOpen(true) }, modifier)
+        else -> Tiles(program, onTile, onLeave, onInForce = { onInForceOpen(true) }, modifier, savedNotice, onSavedNoticeShown, onOpenPrograms)
     }
 }
 
 /** The first step: "What's going on?" over the tiles, and the Changes in force in one line above them. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Tiles(program: ActiveProgram?, onTile: (Tile) -> Unit, onLeave: () -> Unit, onInForce: () -> Unit, modifier: Modifier) {
+private fun Tiles(
+    program: ActiveProgram?,
+    onTile: (Tile) -> Unit,
+    onLeave: () -> Unit,
+    onInForce: () -> Unit,
+    modifier: Modifier,
+    savedNotice: Boolean,
+    onSavedNoticeShown: () -> Unit,
+    onOpenPrograms: () -> Unit,
+) {
     BackHandler(onBack = onLeave)
+    val snackbars = remember { SnackbarHostState() }
+    val snackScope = rememberCoroutineScope()
+    val savedText = stringResource(R.string.program_saved)
+    val programsText = stringResource(R.string.programs_title)
+    LaunchedEffect(savedNotice) {
+        if (savedNotice) {
+            // In the tiles' own scope, so marking it shown doesn't cancel it.
+            snackScope.launch {
+                if (snackbars.showSnackbar(savedText, actionLabel = programsText, duration = SnackbarDuration.Long) == SnackbarResult.ActionPerformed) onOpenPrograms()
+            }
+            onSavedNoticeShown()
+        }
+    }
     Scaffold(
         modifier = modifier,
         containerColor = Tones.screen,
+        snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(colors = hyperlogTopBarColors(), title = { Text(stringResource(R.string.coach_title), Modifier.padding(start = 8.dp)) })
         },

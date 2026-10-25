@@ -88,13 +88,15 @@ The backup follows the database. When a ticket bumps the Room version:
 1. Bump `BackupFormat.DATABASE`; `BackupTablesTest` checks it matches.
 2. A new table goes into `BackupFormat.Tables` or `Excluded` with a reason.
 3. Backups from older versions must still restore: `BackupsTest` restores the kept file
-   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db23.json`). Add an upgrade step for older files
+   `app/src/test/resources/backup/hyperlog-backup-db14.json` and one for each later version (`-db16.json` to `-db24.json`). Add an upgrade step for older files
    in `Backups` (new tables and new columns with defaults need none: list them in
    `BackupFormat.Added` under the version that added them, so an older file may lack them; a
    renamed or reshaped column needs a step), and keep a fixture for each version. A dropped
    column needs a step that reads it out of an older file before the rows go in: a file from
    before v23 has each gym's `weekdays`, which become `weekday_plan` rows as the v23 migration
-   moves them (`Migration22To23.planFrom`).
+   moves them (`Migration22To23.planFrom`). A file from before v25 has no `started_at`: every
+   program in it had started, so `Migration24To25.fillRuns` dates the runs by their imports, as the
+   migration does, and none reads as saved.
 
 ## Android Auto Backup
 

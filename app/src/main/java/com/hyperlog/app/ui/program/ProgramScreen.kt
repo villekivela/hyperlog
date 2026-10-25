@@ -57,6 +57,7 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramActions
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.program.ListedProgram
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
@@ -112,6 +113,14 @@ fun ProgramScreen(
     /** The gyms set up: with two or more, each training day can pick one. */
     gyms: List<Gym> = emptyList(),
     onWeekdayPlan: (WeekdayPlan) -> Unit = {},
+    /** Every program held, for ⋮ → Programs: the one running, those saved for later, past runs. */
+    listedPrograms: List<ListedProgram> = emptyList(),
+    onRunAgain: (Long) -> Unit = {},
+    /** Resume: a program replaced mid-way picks up where it was. */
+    onResume: (Long) -> Unit = {},
+    /** Opens a saved program's page, read-only with Start program. */
+    onOpenSaved: (Long) -> Unit = {},
+    onExportProgram: (ListedProgram) -> Unit = {},
 ) {
     var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     val shown = view ?: kept
@@ -126,11 +135,25 @@ fun ProgramScreen(
             WeekdayPlanSheetContent(weekdayPlan, gyms, onWeekdayPlan, onDone = { editingWeekdayPlan = false })
         }
     }
+    if (shown.programsOpen && errors == null) {
+        val close = { show(shown.copy(programsOpen = false)) }
+        // Started, it is the program Program shows.
+        ProgramsPage(
+            listedPrograms, active,
+            onRunAgain = { close(); onRunAgain(it) }, onResume = { close(); onResume(it) }, onOpenSaved = onOpenSaved,
+            onExport = onExportProgram, onBack = close, modifier = modifier,
+        )
+        return
+    }
     if (shown.changesOpen && active != null && errors == null) {
         ChangesPage(active, onRevert, onOpenChange, onBack = { show(shown.copy(changesOpen = false)) }, modifier = modifier)
         return
     }
     val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
+    /** The starter's last run, if it was replaced mid-way: where it was left. */
+    val starterLeft = listedPrograms.firstOrNull { it.program == starter && it.status is ListedProgram.Status.Past }
+        ?.let { p -> (p.status as ListedProgram.Status.Past).resumeAt?.let { p to it } }
+    val openPrograms = { show(shown.copy(programsOpen = true)) }
     BackHandler { if (errors != null) onCloseErrors() else onBack() }
     Scaffold(
         modifier = modifier,
@@ -143,6 +166,7 @@ fun ProgramScreen(
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
                 actions = {
+                    // With no program running, Import and Programs are on the screen itself.
                     if (active != null && errors == null) {
                         Box {
                             IconButton(onClick = { menu = true }) { SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu)) }
@@ -158,12 +182,18 @@ fun ProgramScreen(
                                     onClick = { menu = false; import() },
                                 )
                                 if (starter != null) {
+                                    // A run of it left mid-way picks up again rather than starting over.
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.starter_run_named, starter.title)) },
+                                        text = { Text(stringResource(if (starterLeft != null) R.string.starter_resume_named else R.string.starter_run_named, starter.title)) },
                                         leadingIcon = { SymbolIcon(Symbol.ViewTimeline, null) },
-                                        onClick = { menu = false; confirmReplace = Replacement.Starter },
+                                        onClick = { menu = false; confirmReplace = if (starterLeft != null) Replacement.ResumeStarter else Replacement.Starter },
                                     )
                                 }
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.programs_title)) },
+                                    leadingIcon = { SymbolIcon(Symbol.List, null) },
+                                    onClick = { menu = false; openPrograms() },
+                                )
                             }
                         }
                     }
@@ -176,8 +206,10 @@ fun ProgramScreen(
                 errors != null -> ImportErrors(errors, onClose = onCloseErrors, onRetry = onImport)
                 active == null && starter != null -> StarterOffer(starter, onRunStarter) {
                     TextButton(onClick = onImport) { Text(stringResource(R.string.program_import)) }
+                    // Saved programs are there to start with no program running too.
+                    if (listedPrograms.isNotEmpty()) TextButton(onClick = openPrograms) { Text(stringResource(R.string.programs_title)) }
                 }
-                active == null -> NoProgram(onImport)
+                active == null -> NoProgram(onImport, openPrograms.takeIf { listedPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },
@@ -196,17 +228,26 @@ fun ProgramScreen(
         AlertDialog(
             onDismissRequest = { confirmReplace = null },
             title = { Text(interFigures(stringResource(R.string.program_replace_title, active.program.title))) },
-            // Replacing loses the position, so the question says where you are.
+            // Replacing loses the position, so the question says where you are, and where a resumed run picks up.
             text = {
+                val left = starterLeft?.takeIf { replacing == Replacement.ResumeStarter }
                 Text(
-                    if (active.finished) stringResource(R.string.program_replace_body)
-                    else stringResource(R.string.program_replace_body_at, active.position.week, active.program.title),
+                    when {
+                        left != null && active.finished -> stringResource(R.string.program_resume_body, left.first.title, left.second.week, left.second.day + 1)
+                        left != null -> stringResource(R.string.program_resume_body_at, active.position.week, active.program.title, left.first.title, left.second.week, left.second.day + 1)
+                        active.finished -> stringResource(R.string.program_replace_body)
+                        else -> stringResource(R.string.program_replace_body_at, active.position.week, active.program.title)
+                    },
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReplace = null
-                    if (replacing == Replacement.Starter) onRunStarter() else onImport()
+                    when (replacing) {
+                        Replacement.Starter -> onRunStarter()
+                        Replacement.ResumeStarter -> starterLeft?.let { onResume(it.first.id) }
+                        Replacement.File -> onImport()
+                    }
                 }) { Text(stringResource(R.string.program_replace)) }
             },
             dismissButton = { TextButton(onClick = { confirmReplace = null }) { Text(stringResource(R.string.program_cancel)) } },
@@ -214,22 +255,23 @@ fun ProgramScreen(
     }
 }
 
-private enum class Replacement { File, Starter }
+private enum class Replacement { File, Starter, ResumeStarter }
 
-/** What Program shows: the week picked (null for the week you're in) and whether the Changes page is open. */
-data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false) {
+/** What Program shows: the week picked (null for the week you're in) and whether the Changes or Programs page is open. */
+data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false, val programsOpen: Boolean = false) {
     companion object {
         val Saver = androidx.compose.runtime.saveable.listSaver<ProgramView, Any?>(
-            save = { listOf(it.week, it.changesOpen) },
-            restore = { ProgramView(it[0] as Int?, it[1] as Boolean) },
+            save = { listOf(it.week, it.changesOpen, it.programsOpen) },
+            restore = { ProgramView(it[0] as Int?, it[1] as Boolean, it[2] as Boolean) },
         )
     }
 }
 
 @Composable
-private fun NoProgram(onImport: () -> Unit) {
+private fun NoProgram(onImport: () -> Unit, onOpenPrograms: (() -> Unit)?) {
     EmptyState(Symbol.ViewTimeline, stringResource(R.string.today_empty_title), stringResource(R.string.program_none_body)) {
         Button(onClick = onImport) { Text(stringResource(R.string.program_import)) }
+        onOpenPrograms?.let { TextButton(onClick = it) { Text(stringResource(R.string.programs_title)) } }
     }
 }
 

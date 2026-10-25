@@ -235,6 +235,7 @@ fun EmptyState(
     title: String,
     body: String,
     modifier: Modifier = Modifier,
+    bottomSpace: Dp = 96.dp,
     actions: @Composable ColumnScope.() -> Unit = {},
 ) {
     Column(
@@ -250,7 +251,7 @@ fun EmptyState(
         Spacer(Modifier.height(32.dp))
         actions()
         // Optical centre: sit a little above the middle.
-        Spacer(Modifier.height(96.dp))
+        Spacer(Modifier.height(bottomSpace))
     }
 }
 

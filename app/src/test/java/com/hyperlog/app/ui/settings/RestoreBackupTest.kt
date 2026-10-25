@@ -61,6 +61,29 @@ class RestoreBackupTest {
     }
 
     @Test
+    fun aRestoredProgramReadsAsTheBackupHasItNotAsTheOneItReplaced() {
+        val app = compose.activity.application
+        val programs = com.hyperlog.app.ui.program.ProgramStore.get(app)
+        runBlocking {
+            com.hyperlog.app.library.ExerciseLibrary(HyperlogDatabase.get(app)).sync(com.hyperlog.app.library.LibrarySeed.fromAssets(app))
+            programs.import(com.hyperlog.app.program.TestPrograms.twoDays("On the phone before"))
+        }
+        val id = runBlocking { programs.active.first()!!.id }
+        assertEquals("On the phone before", runBlocking { programs.program(id)!!.title })
+        val file = File(compose.activity.cacheDir, "hyperlog-backup.json")
+        file.writeText(javaClass.getResource("/backup/hyperlog-backup-db24.json")!!.readText())
+        compose.waitFor("Today")
+        compose.openTab("Settings")
+        compose.waitFor("Restore from a backup")
+        ViewModelProvider(compose.activity)[BackupViewModel::class.java].pick(Uri.fromFile(file))
+        compose.waitFor("Replace everything on this phone?")
+        compose.onNodeWithText("Restore").performClick()
+        compose.waitUntil(5_000) { compose.activity.isFinishing }
+        // The backup's program has the same id.
+        assertEquals("Backup test", runBlocking { com.hyperlog.app.ui.program.ProgramStore.get(app).program(id)!!.title })
+    }
+
+    @Test
     fun exportWritesTheBackupToThePickedFile() {
         val file = File(compose.activity.cacheDir, "export.json")
         compose.waitFor("Today")
