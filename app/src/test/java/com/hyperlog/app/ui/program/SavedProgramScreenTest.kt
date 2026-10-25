@@ -73,6 +73,8 @@ class SavedProgramScreenTest {
         assertEquals(2, compose.onAllNodesWithText("Kneeling Cable Y-Raise").fetchSemanticsNodes().size)
         // The days as Program shows them, from week 1.
         compose.onNodeWithText("Week 1 · Day A", substring = true).performScrollTo().assertExists()
+        // Nothing is next until it starts: plain day labels (owner, 2026-10-25).
+        compose.onNodeWithText("Next").assertDoesNotExist()
         // Read-only: no review actions.
         compose.onNodeWithText("Reject").assertDoesNotExist()
         compose.onNodeWithText("Save for later").assertDoesNotExist()

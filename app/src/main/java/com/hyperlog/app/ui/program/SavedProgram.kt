@@ -109,7 +109,8 @@ fun SavedProgramScreen(
         },
     ) { padding ->
         // When it was saved, as its row on Programs says: `Saved 24 Oct`.
-        ProgramReviewList(proposal, exerciseNames, origin = listedStatus(saved), Modifier.fillMaxSize().padding(padding))
+        // Nothing is next until it starts: its days read plain.
+        ProgramReviewList(proposal, exerciseNames, origin = listedStatus(saved), Modifier.fillMaxSize().padding(padding), marksNext = false)
     }
     if (replacing && running != null) {
         AlertDialog(

@@ -33,6 +33,7 @@ import com.hyperlog.app.R
 import com.hyperlog.app.coach.ProgramProposal
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
+import com.hyperlog.app.ui.program.ProgramDay
 import com.hyperlog.app.ui.program.ProgramWeek
 import com.hyperlog.app.ui.program.blockItems
 import com.hyperlog.app.ui.symbols.Symbol
@@ -128,7 +129,14 @@ fun ProgramReviewScreen(
  * line under its size saying where it came from: `From program.json`, `Saved 24 Oct`.
  */
 @Composable
-internal fun ProgramReviewList(proposal: ProgramProposal, exerciseNames: Map<String, String>, origin: String?, modifier: Modifier = Modifier) {
+internal fun ProgramReviewList(
+    proposal: ProgramProposal,
+    exerciseNames: Map<String, String>,
+    origin: String?,
+    modifier: Modifier = Modifier,
+    /** Whether week 1, day 1 is headed Next, as the review heads it; a saved program's days read plain. */
+    marksNext: Boolean = true,
+) {
     val cs = MaterialTheme.colorScheme
     val program = proposal.program
     // The new exercises aren't in the library yet: their names come with the proposal.
@@ -137,7 +145,9 @@ internal fun ProgramReviewList(proposal: ProgramProposal, exerciseNames: Map<Str
     val fresh = remember(program) { ActiveProgram(0, program, Position(1, 0)) }
     var week by rememberSaveable(proposal) { mutableStateOf(1) }
     val block = program.blockAt(week) ?: program.blocks.first()
-    val days = remember(fresh, week) { ProgramWeek.days(fresh, week, emptyList()) }
+    val days = remember(fresh, week, marksNext) {
+        ProgramWeek.days(fresh, week, emptyList()).map { if (!marksNext && it is ProgramDay.Ahead) it.copy(next = false) else it }
+    }
     val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
     LazyColumn(modifier) {
         // What Claude built, in one card at the top, as a workout's review has.
