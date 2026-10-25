@@ -106,9 +106,14 @@ class ProgramsAppTest {
         // The system save dialog hands back this file.
         val file = File(compose.activity.cacheDir, "exported.json").also { it.writeText("old") }
         shadowOf(compose.activity).receiveResult(asked.intent, Activity.RESULT_OK, Intent().setData(Uri.fromFile(file)))
-        // The write empties the file first, so wait for the whole program, not for any change.
+        // The write empties the file first, so wait for the whole program, not for any change. It
+        // reads the program from the database, which runs on the main looper here: idle it meanwhile.
         val source = StarterProgram.source(context)
-        runCatching { compose.waitUntil(5_000) { file.readText() == source } }
+        val until = System.currentTimeMillis() + 5_000
+        while (file.readText() != source && System.currentTimeMillis() < until) {
+            compose.waitForIdle()
+            Thread.sleep(50)
+        }
         assertEquals(source, file.readText())
     }
 }

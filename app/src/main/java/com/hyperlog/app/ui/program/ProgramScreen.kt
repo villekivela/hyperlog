@@ -115,10 +115,12 @@ fun ProgramScreen(
     onWeekdayPlan: (WeekdayPlan) -> Unit = {},
     /** Every program held, for ⋮ → Programs: the one running, those saved for later, past runs. */
     listedPrograms: List<ListedProgram> = emptyList(),
-    onStartSaved: (Long) -> Unit = {},
     onRunAgain: (Long) -> Unit = {},
+    /** Resume: a program replaced mid-way picks up where it was. */
+    onResume: (Long) -> Unit = {},
+    /** Opens a saved program's page, read-only with Start program. */
+    onOpenSaved: (Long) -> Unit = {},
     onExportProgram: (ListedProgram) -> Unit = {},
-    onDeleteProgram: (Long) -> Unit = {},
 ) {
     var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     val shown = view ?: kept
@@ -138,8 +140,8 @@ fun ProgramScreen(
         // Started, it is the program Program shows.
         ProgramsPage(
             listedPrograms, active,
-            onStart = { close(); onStartSaved(it) }, onRunAgain = { close(); onRunAgain(it) },
-            onExport = onExportProgram, onDelete = onDeleteProgram, onBack = close, modifier = modifier,
+            onRunAgain = { close(); onRunAgain(it) }, onResume = { close(); onResume(it) }, onOpenSaved = onOpenSaved,
+            onExport = onExportProgram, onBack = close, modifier = modifier,
         )
         return
     }

@@ -123,6 +123,9 @@ fun TodayScreen(
     /** The starter program, offered while no program runs; null if unreadable. */
     starter: Program? = null,
     onRunStarter: () -> Unit = {},
+    /** The programs saved for later, offered with the starter while no program runs, each opening its page. */
+    savedPrograms: List<com.hyperlog.app.program.ListedProgram> = emptyList(),
+    onOpenSaved: (Long) -> Unit = {},
     /** The exercise library, for the swaps the coach proposes. */
     library: List<Exercise> = emptyList(),
     /** The day of the last session finished; null with none yet. */
@@ -423,6 +426,7 @@ fun TodayScreen(
                         TextButton(onClick = { start(Kind.AdHoc) }) { Text(stringResource(R.string.today_start_session)) }
                         TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
                     }
+                    if (savedPrograms.isNotEmpty()) com.hyperlog.app.ui.program.SavedProgramsOffer(savedPrograms, onOpenSaved, Modifier.padding(bottom = 16.dp))
                 } else {
                     val finished = program?.finished == true
                     EmptyState(
@@ -440,6 +444,10 @@ fun TodayScreen(
                             Spacer(Modifier.height(8.dp))
                             TextButton(onClick = onProgram) { Text(stringResource(R.string.program_import_short)) }
                         }
+                    }
+                    // A finished program runs no more: the saved ones are on offer.
+                    if (savedPrograms.isNotEmpty() && (program == null || finished) && !sessionRunning) {
+                        com.hyperlog.app.ui.program.SavedProgramsOffer(savedPrograms, onOpenSaved, Modifier.padding(bottom = 16.dp))
                     }
                 }
             }

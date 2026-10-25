@@ -51,31 +51,32 @@ import java.time.ZoneId
 
 /**
  * Program → ⋮ → Programs (SPEC, Program → Programs): every program the app holds, newest first,
- * under Running, Saved and Past. A row opens the program's sheet: Start program (a saved one) or
- * Run again (one that has run), which ask first while a program runs ([active]) as import does;
- * Export for every program; Delete, which asks first, for a saved one.
+ * under Running, Saved and Past. A saved one opens its own page ([onOpenSaved]); another's row
+ * opens its sheet: Resume (one replaced mid-way) and Run again (one that has run), which ask first
+ * while a program runs ([active]) as import does, and Export.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramsPage(
     kept: List<ListedProgram>,
     active: ActiveProgram?,
-    onStart: (Long) -> Unit,
     onRunAgain: (Long) -> Unit,
+    onResume: (Long) -> Unit,
+    onOpenSaved: (Long) -> Unit,
     onExport: (ListedProgram) -> Unit,
-    onDelete: (Long) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBack)
     /** The program whose sheet is up. */
     var open by rememberSaveable { mutableStateOf<Long?>(null) }
-    /** The program waiting for "Replace <title>?". */
+    /** The program waiting for "Replace <title>?", and whether it resumes or runs again. */
     var replacing by rememberSaveable { mutableStateOf<Long?>(null) }
-    var deleting by rememberSaveable { mutableStateOf<Long?>(null) }
-    /** A saved program starts; one that has run, runs again. */
-    val run = { p: ListedProgram -> if (p.status is ListedProgram.Status.Saved) onStart(p.id) else onRunAgain(p.id) }
-    val start = { p: ListedProgram -> if (active != null) replacing = p.id else run(p) }
+    var resuming by rememberSaveable { mutableStateOf(false) }
+    val run = { p: ListedProgram, resume: Boolean -> if (resume) onResume(p.id) else onRunAgain(p.id) }
+    val start = { p: ListedProgram, resume: Boolean ->
+        if (active != null) { replacing = p.id; resuming = resume } else run(p, resume)
+    }
     Scaffold(
         modifier = modifier,
         containerColor = Tones.screen,
@@ -97,7 +98,7 @@ fun ProgramsPage(
                 item(key = "head-$head") { GroupHead(stringResource(head)) }
                 programs.forEachIndexed { i, p ->
                     item(key = "program-${p.id}") {
-                        Segment(i, programs.size, onClick = { open = p.id }) {
+                        Segment(i, programs.size, onClick = { if (p.status is ListedProgram.Status.Saved) onOpenSaved(p.id) else open = p.id }) {
                             SegmentedRow(p.title, "${size(p)} · ${status(p)}", symbol(p), selected = p.status is ListedProgram.Status.Running)
                         }
                     }
@@ -110,9 +111,9 @@ fun ProgramsPage(
         Sheet(onDismiss = { open = null }) {
             ProgramSheet(
                 p,
-                onStart = { open = null; start(p) },
+                onRunAgain = { open = null; start(p, false) },
+                onResume = { open = null; start(p, true) },
                 onExport = { open = null; onExport(p) },
-                onDelete = { open = null; deleting = p.id },
             )
         }
     }
@@ -121,47 +122,38 @@ fun ProgramsPage(
         AlertDialog(
             onDismissRequest = { replacing = null },
             title = { Text(interFigures(stringResource(R.string.program_replace_title, active.program.title))) },
-            // Replacing loses the position, so the question says where you are; a program run again isn't new.
+            // Replacing loses the position, so the question says where you are, and where the other starts.
             text = {
-                val again = replaced.status !is ListedProgram.Status.Saved
+                val at = (replaced.status as? ListedProgram.Status.Past)?.resumeAt?.takeIf { resuming }
                 Text(
                     when {
-                        again && active.finished -> stringResource(R.string.program_run_again_body, replaced.title)
-                        again -> stringResource(R.string.program_run_again_body_at, active.position.week, active.program.title, replaced.title)
-                        active.finished -> stringResource(R.string.program_replace_body)
-                        else -> stringResource(R.string.program_replace_body_at, active.position.week, active.program.title)
+                        at != null && active.finished -> stringResource(R.string.program_resume_body, replaced.title, at.week, at.day + 1)
+                        at != null -> stringResource(R.string.program_resume_body_at, active.position.week, active.program.title, replaced.title, at.week, at.day + 1)
+                        active.finished -> stringResource(R.string.program_run_again_body, replaced.title)
+                        else -> stringResource(R.string.program_run_again_body_at, active.position.week, active.program.title, replaced.title)
                     },
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     replacing = null
-                    run(replaced)
+                    run(replaced, resuming)
                 }) { Text(stringResource(R.string.program_replace)) }
             },
             dismissButton = { TextButton(onClick = { replacing = null }) { Text(stringResource(R.string.program_cancel)) } },
-        )
-    }
-    kept.firstOrNull { it.id == deleting }?.let { p ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text(interFigures(stringResource(R.string.programs_delete_title, p.title))) },
-            text = { Text(stringResource(R.string.programs_delete_body)) },
-            confirmButton = { TextButton(onClick = { deleting = null; onDelete(p.id) }) { Text(stringResource(R.string.programs_delete)) } },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.program_cancel)) } },
         )
     }
 }
 
 /** Its blocks and weeks: `4 blocks · 12 weeks`. */
 @Composable
-private fun size(p: ListedProgram): String =
+internal fun size(p: ListedProgram): String =
     pluralStringResource(R.plurals.programs_blocks, p.program.blocks.size, p.program.blocks.size) + " · " +
         pluralStringResource(R.plurals.program_review_weeks, p.program.weeks, p.program.weeks)
 
 /** Where it stands: `Week 6` (or Program finished), `Saved 24 Oct`, `1 Sep – 13 Oct`. */
 @Composable
-private fun status(p: ListedProgram): String = when (val s = p.status) {
+internal fun status(p: ListedProgram): String = when (val s = p.status) {
     is ListedProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_week, s.position.week)
     is ListedProgram.Status.Saved -> stringResource(R.string.programs_saved_on, shortDate(dateOf(s.savedAt)))
     is ListedProgram.Status.Past -> s.endedAt?.let { ran(s.startedAt, it) } ?: stringResource(R.string.programs_started, shortDate(dateOf(s.startedAt)))
@@ -173,12 +165,18 @@ private fun ran(startedAt: Long, endedAt: Long): String {
     return if (from == to) shortDate(from) else "${shortDate(from)} – ${shortDate(to)}"
 }
 
-/** Where it stands on its sheet, which has no group head: `You're in week 7`, `Saved 24 Oct`, `Ran 1 Jun – 31 Aug`. */
+/**
+ * Where it stands on its sheet, which has no group head: `You're in week 7`, `Ran 1 Jun – 31 Aug`,
+ * and where one replaced mid-way was left: `Ran 1 Sep – 13 Oct · Left in week 3`.
+ */
 @Composable
 private fun sheetStatus(p: ListedProgram): String = when (val s = p.status) {
     is ListedProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_sheet_week, s.position.week)
     is ListedProgram.Status.Saved -> status(p)
-    is ListedProgram.Status.Past -> s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: status(p)
+    is ListedProgram.Status.Past -> listOfNotNull(
+        s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: status(p),
+        s.resumeAt?.let { stringResource(R.string.programs_sheet_left, it.week) },
+    ).joinToString(" · ")
 }
 
 /** The row's symbol says where it stands too: running (finished: the flag Next shows), saved, past. */
@@ -190,18 +188,20 @@ private fun symbol(p: ListedProgram): Symbol = when (val s = p.status) {
 
 /**
  * A program's sheet: its head as the review's (title, author, weeks and days a week, where it
- * stands, the description), its one way to run (Start program, or Run again for one that has run
- * or the running one once finished) as the sheet's button, then Export and Delete as rows.
+ * stands, the description), its main way to run as the sheet's button (Resume for one replaced
+ * mid-way, else Run again for one that has run or the running one once finished), then Run again
+ * (below Resume) and Export as rows.
  */
 @Composable
-private fun ProgramSheet(p: ListedProgram, onStart: () -> Unit, onExport: () -> Unit, onDelete: () -> Unit) {
+private fun ProgramSheet(p: ListedProgram, onRunAgain: () -> Unit, onResume: () -> Unit, onExport: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val program = p.program
     val perWeek = program.blocks.first().days.size
-    val run = when (val s = p.status) {
-        is ListedProgram.Status.Saved -> R.string.program_review_start to Symbol.PlayArrow
-        is ListedProgram.Status.Past -> R.string.programs_run_again to Symbol.Replay
-        is ListedProgram.Status.Running -> if (s.finished) R.string.programs_run_again to Symbol.Replay else null
+    val resumes = (p.status as? ListedProgram.Status.Past)?.resumeAt != null
+    val runsAgain = when (val s = p.status) {
+        is ListedProgram.Status.Saved -> false
+        is ListedProgram.Status.Past -> true
+        is ListedProgram.Status.Running -> s.finished
     }
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
         Column(Modifier.padding(horizontal = 24.dp)) {
@@ -224,10 +224,15 @@ private fun ProgramSheet(p: ListedProgram, onStart: () -> Unit, onExport: () -> 
                 Spacer(Modifier.height(8.dp))
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
             }
-            run?.let { (label, symbol) ->
+            val main = when {
+                resumes -> Triple(R.string.programs_resume, Symbol.PlayArrow, onResume)
+                runsAgain -> Triple(R.string.programs_run_again, Symbol.Replay, onRunAgain)
+                else -> null
+            }
+            main?.let { (label, symbol, onClick) ->
                 Spacer(Modifier.height(24.dp))
                 Button(
-                    onClick = onStart,
+                    onClick = onClick,
                     Modifier.fillMaxWidth().heightIn(min = ButtonDefaults.MediumContainerHeight),
                     contentPadding = ButtonDefaults.MediumContentPadding,
                 ) {
@@ -239,11 +244,11 @@ private fun ProgramSheet(p: ListedProgram, onStart: () -> Unit, onExport: () -> 
         }
         Spacer(Modifier.height(24.dp))
         // Read before the list: its builder isn't composable.
+        val runAgainLabel = stringResource(R.string.programs_run_again)
         val exportLabel = stringResource(R.string.programs_export)
-        val deleteLabel = stringResource(R.string.programs_delete)
         SegmentedList(color = Tones.sheetCard) {
+            if (resumes) row(runAgainLabel, symbol = Symbol.Replay, onClick = onRunAgain)
             row(exportLabel, symbol = Symbol.Download, onClick = onExport)
-            if (p.status is ListedProgram.Status.Saved) row(deleteLabel, symbol = Symbol.Delete, onClick = onDelete)
         }
     }
 }

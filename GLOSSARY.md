@@ -46,12 +46,16 @@ A work set after the top set at a lighter weight: the top set's weight minus a p
 _Avoid_: Drop (that's part of a drop set)
 
 **Saved program**:
-A program kept on the Programs list without starting it, by Save for later on a new program's review. It waits with the new exercises it brings; Start replaces the program running with it, from week 1, day 1.
+A program kept on the Programs list without starting it, by Save for later on a new program's review. It waits with the new exercises it brings, and its page shows it read-only; Start replaces the program running with it, from week 1, day 1.
 _Avoid_: Draft, queued program
 
 **Run again**:
 Starting a program that has run before afresh, from week 1, day 1, as a new run. The old run keeps its sessions and Changes.
 _Avoid_: Restart, reset (the old run isn't changed)
+
+**Resume (a program)**:
+Picking up a program replaced mid-way where it was left, the same run with its sessions and Changes, in place of the one running. Not Resume session, which reopens a finished session.
+_Avoid_: Continue, reactivate
 
 **Starter program**:
 The original program that ships with the app, Hyperlog Full Body, offered while no program runs.

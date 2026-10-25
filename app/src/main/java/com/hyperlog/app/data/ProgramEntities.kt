@@ -62,6 +62,10 @@ interface ProgramDao {
     @Query("UPDATE program SET active = 1, started_at = :at, week = 1, day_index = 0, new_exercises = NULL WHERE id = :id")
     suspend fun start(id: Long, at: Long)
 
+    /** Program [id], replaced, runs again from its position. */
+    @Query("UPDATE program SET active = 1, ended_at = NULL WHERE id = :id")
+    suspend fun resume(id: Long)
+
     /** Drops program [id] if it is saved for later: one that has run keeps its sessions and Changes. */
     @Query("DELETE FROM program WHERE id = :id AND started_at IS NULL")
     suspend fun delete(id: Long): Int

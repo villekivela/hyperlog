@@ -80,6 +80,17 @@ data class ProgramProposal(val program: Program, val source: String, val swaps: 
             },
         ).toString()
 
+        /**
+         * A program file's own `newExercises`, as Export writes them: one the library has by id
+         * ([exercises]) is the library's, and the rest are read as a reply's, by the library
+         * editor's rules, each problem into [errors].
+         */
+        fun fileExercises(file: JsonObject, exercises: Set<String>, names: Map<String, String>, errors: MutableList<String>): List<Exercise> =
+            list(file, "newExercises", errors).mapIndexedNotNull { i, el ->
+                val id = ((el as? JsonObject)?.get("id") as? JsonPrimitive)?.takeIf { it.isString }?.content
+                if (id in exercises) null else exercise(el, "newExercises[$i]", exercises, names, errors)
+            }
+
         /** The exercises [encodeExercises] wrote; checked when they were proposed, so read without the library. */
         fun decodeExercises(json: String): List<Exercise> {
             val errors = mutableListOf<String>()

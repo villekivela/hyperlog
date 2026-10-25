@@ -78,7 +78,7 @@ class ProgramsListTest {
         assertEquals(
             listOf(
                 "With Y-raise" to ListedProgram.Status.Running(Position(1, 0), finished = false),
-                "Running" to ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 3_000L),
+                "Running" to ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 3_000L, resumeAt = Position(1, 1)),
             ),
             programs.listed.first().map { it.title to it.status },
         )
@@ -93,7 +93,7 @@ class ProgramsListTest {
         val result = programs.start(saved.id)
         assertEquals(listOf("newExercises[0].id: the library already has \"kneeling_cable_y_raise\""), (result as ProgramParser.Result.Invalid).errors)
         assertEquals("Running", programs.active.first()!!.program.title)
-        assertEquals(ListedProgram.Status.Saved(1_000L), programs.listed.first().first { it.id == saved.id }.status)
+        assertEquals(ListedProgram.Status.Saved(1_000L, listOf(yRaise)), programs.listed.first().first { it.id == saved.id }.status)
         assertEquals("Y-Raise (mine)", ExerciseLibrary(db).exercises.first().single { it.id == yRaise.id }.name)
     }
 
@@ -122,10 +122,52 @@ class ProgramsListTest {
             listOf(
                 "First" to ListedProgram.Status.Running(Position(1, 0), finished = false),
                 "Second" to ListedProgram.Status.Past(startedAt = 2_000L, endedAt = 3_000L),
-                "First" to ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 2_000L),
+                "First" to ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 2_000L, resumeAt = Position(1, 1)),
             ),
             programs.listed.first().map { it.title to it.status },
         )
+    }
+
+    @Test
+    fun resumePicksAProgramReplacedMidWayUpWhereItWasWithItsChanges() = runTest {
+        programs.import(TestPrograms.twoDays("First"))
+        val first = programs.active.first()!!.id
+        programs.advance(first, Position(1, 0))
+        programs.accept(com.hyperlog.app.coach.ProgramActions.skipDay("Skip"))
+        now = 2_000L
+        programs.import(TestPrograms.twoDays("Second"))
+        assertEquals(
+            ListedProgram.Status.Past(startedAt = 1_000L, endedAt = 2_000L, resumeAt = Position(2, 0)),
+            programs.listed.first().single { it.id == first }.status,
+        )
+        now = 3_000L
+        assertEquals(true, programs.resume(first))
+        val active = programs.active.first()!!
+        assertEquals(listOf(first, Position(2, 0), 1), listOf(active.id, active.position, active.history.size))
+        assertEquals(
+            listOf(
+                "First" to ListedProgram.Status.Running(Position(2, 0), finished = false),
+                "Second" to ListedProgram.Status.Past(startedAt = 2_000L, endedAt = 3_000L),
+            ),
+            programs.listed.first().map { it.title to it.status },
+        )
+    }
+
+    @Test
+    fun onlyAProgramReplacedMidWayResumes() = runTest {
+        programs.import(TestPrograms.twoDays("Untrained"))
+        val untrained = programs.active.first()!!.id
+        programs.import(TestPrograms.twoDays("Finished"))
+        val finished = programs.active.first()!!
+        generateSequence(Position(1, 0)) { finished.program.next(it) }.forEach { programs.advance(finished.id, it) }
+        assertEquals(true, programs.active.first()!!.finished)
+        programs.import(TestPrograms.twoDays("Running"))
+        programs.save(TestPrograms.twoDays("Saved"))
+        val saved = programs.listed.first().single { it.title == "Saved" }.id
+        val running = programs.active.first()!!.id
+        listOf(untrained, finished.id, saved, running).forEach { assertEquals(false, programs.resume(it)) }
+        assertEquals(running, programs.active.first()!!.id)
+        assertEquals(ListedProgram.Status.Past(1_000L, 1_000L), programs.listed.first().single { it.id == untrained }.status)
     }
 
     @Test
@@ -158,5 +200,56 @@ class ProgramsListTest {
         assertEquals(false, programs.delete(first))
         assertEquals(false, programs.delete(untrained))
         assertEquals(listOf("Second", "Untrained", "First"), programs.listed.first().map { it.title })
+    }
+
+    private val shipped get() = LibrarySeed.fromAssets(ApplicationProvider.getApplicationContext()).exercises.map { it.id }.toSet()
+
+    /** Another phone: the shipped library only. */
+    private fun otherPhone(): HyperlogDatabase = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), HyperlogDatabase::class.java)
+        .allowMainThreadQueries().build()
+
+    @Test
+    fun anExportedProgramCarriesItsNewExercisesAndImportsOnAnotherPhoneWithThem() = runTest {
+        // One saved, its new exercise waiting with it; one started, its new exercise in the library.
+        programs.save(withYRaise.replace("With Y-raise", "Saved with Y-raise"), listOf(yRaise))
+        val saved = programs.listed.first().single { it.title == "Saved with Y-raise" }.id
+        programs.import(withYRaise, listOf(yRaise))
+        val started = programs.active.first()!!.id
+        val other = otherPhone()
+        try {
+            ExerciseLibrary(other).sync(LibrarySeed.fromAssets(ApplicationProvider.getApplicationContext()))
+            listOf(started, saved).forEach { id ->
+                val file = programs.exportFile(id, shipped)!!
+                val result = Programs(other).import(file)
+                assertTrue(result.toString(), result is ProgramParser.Result.Valid)
+                assertEquals(yRaise, ExerciseLibrary(other).exercises.first().single { it.id == yRaise.id })
+            }
+            // Back on this phone, which has it already, it imports as well.
+            val again = programs.import(programs.exportFile(started, shipped)!!)
+            assertTrue(again.toString(), again is ProgramParser.Result.Valid)
+        } finally {
+            other.close()
+        }
+    }
+
+    @Test
+    fun aProgramWithOnlyShippedExercisesExportsAsImported() = runTest {
+        val source = TestPrograms.twoDays("Plain")
+        programs.import(source)
+        assertEquals(source, programs.exportFile(programs.active.first()!!.id, shipped))
+    }
+
+    @Test
+    fun aFilesNewExercisesAreCheckedAsTheLibraryEditorChecksThem() = runTest {
+        // Named as the library's bench press, under an id of its own.
+        val file = withYRaise.trimEnd().removeSuffix("}") +
+            ""","newExercises":[{"id":"kneeling_cable_y_raise","name":"Barbell Bench Press","equipment":"cable","pattern":"lateral_raise","grip":"low","muscles":["Side Delts"],"secondary":[]}]}"""
+        val result = programs.import(file)
+        assertTrue(result.toString(), result is ProgramParser.Result.Invalid)
+        assertEquals(
+            listOf("newExercises[0].name: the library already has \"Barbell Bench Press\" (barbell_bench_press): use it"),
+            (result as ProgramParser.Result.Invalid).errors.filter { it.startsWith("newExercises") },
+        )
+        assertEquals(null, programs.active.first())
     }
 }

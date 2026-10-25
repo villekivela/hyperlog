@@ -664,6 +664,12 @@
     <string name="program_run_again_body">%1$s starts again at week 1, day 1. Past sessions are kept.</string>
     <string name="program_run_again_body_at">You\'re in week %1$d of %2$s; %3$s starts again at week 1, day 1 instead. Past sessions are kept.</string>
     <string name="programs_run_again">Run again</string>
+    <string name="programs_resume">Resume</string>
+    <string name="programs_saved_title">Saved program</string>
+    <string name="today_saved_programs">Your saved programs</string>
+    <string name="programs_sheet_left">Left in week %1$d</string>
+    <string name="program_resume_body">%1$s picks up at week %2$d, day %3$d. Past sessions are kept.</string>
+    <string name="program_resume_body_at">You\'re in week %1$d of %2$s; %3$s picks up at week %4$d, day %5$d instead. Past sessions are kept.</string>
     <string name="programs_export">Export</string>
     <string name="programs_delete">Delete</string>
     <string name="programs_delete_title">Delete %1$s?</string>

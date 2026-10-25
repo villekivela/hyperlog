@@ -25,7 +25,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Program → ⋮ → Programs (SPEC, Program → Programs): every program held; a row's sheet has Start program, Run again, Export and Delete. */
+/** Program → ⋮ → Programs (SPEC, Program → Programs): every program held; a saved one opens its page, another's sheet has Run again, Resume and Export. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w410dp-h914dp")
 class ProgramsPageTest {
@@ -55,10 +55,10 @@ class ProgramsPageTest {
         HyperlogTheme {
             ProgramsPage(
                 kept, active,
-                onStart = { calls += "start $it" },
                 onRunAgain = { calls += "again $it" },
+                onResume = { calls += "resume $it" },
+                onOpenSaved = { calls += "open $it" },
                 onExport = { calls += "export ${it.id}" },
-                onDelete = { calls += "delete $it" },
                 onBack = { calls += "back" },
             )
         }
@@ -74,18 +74,6 @@ class ProgramsPageTest {
         compose.onNodeWithText("$size · Week 6").assertExists()
         compose.onNodeWithText("1 block · 2 weeks · Saved 24 Oct").assertExists()
         compose.onNodeWithText("$size · 1 Sep – 13 Oct").assertExists()
-    }
-
-    @Test
-    fun startAsksBeforeItReplacesTheRunningProgram() {
-        show(listOf(saved, running))
-        compose.click("Saved one")
-        compose.onNodeWithText("Saved 24 Oct").assertExists()
-        compose.click("Start program")
-        compose.waitFor("Replace ${starter.title}?")
-        assertEquals(emptyList<String>(), calls)
-        compose.click("Replace")
-        assertEquals(listOf("start 4"), calls)
     }
 
     @Test
@@ -108,25 +96,6 @@ class ProgramsPageTest {
         compose.waitFor("1 block · 2 weeks · 25 Oct")
         compose.click("One day")
         compose.waitFor("Ran 25 Oct")
-    }
-
-    @Test
-    fun withNothingRunningStartStartsAtOnce() {
-        show(listOf(saved), active = null)
-        compose.click("Saved one")
-        compose.click("Start program")
-        assertEquals(listOf("start 4"), calls)
-    }
-
-    @Test
-    fun deleteAsksAndRemovesASavedProgram() {
-        show(listOf(saved, running))
-        compose.click("Saved one")
-        compose.click("Delete")
-        compose.waitFor("Delete Saved one?")
-        assertEquals(emptyList<String>(), calls)
-        compose.click("Delete")
-        assertEquals(listOf("delete 4"), calls)
     }
 
     @Test
@@ -158,5 +127,45 @@ class ProgramsPageTest {
         compose.waitFor("Replace ${starter.title}?")
         compose.click("Replace")
         assertEquals(listOf("again 3"), calls)
+    }
+
+    @Test
+    fun aSavedProgramOpensItsPage() {
+        show(listOf(saved, running))
+        compose.click("Saved one")
+        assertEquals(listOf("open 4"), calls)
+    }
+
+    private val leftMidWay = past.copy(status = ListedProgram.Status.Past(at("2026-09-01"), at("2026-10-13"), resumeAt = Position(3, 1)))
+
+    @Test
+    fun resumeAsksAndPicksAProgramReplacedMidWayUpWhereItWas() {
+        show(listOf(running, leftMidWay))
+        compose.onAllNodesWithText(starter.title)[1].performClick()
+        compose.waitFor("Ran 1 Sep – 13 Oct · Left in week 3")
+        // Run again is there too, below.
+        compose.onNodeWithText("Run again").assertExists()
+        compose.click("Resume")
+        compose.waitFor("Replace ${starter.title}?")
+        compose.onNodeWithText("You're in week 6 of ${starter.title}; ${starter.title} picks up at week 3, day 2 instead. Past sessions are kept.").assertExists()
+        assertEquals(emptyList<String>(), calls)
+        compose.click("Replace")
+        assertEquals(listOf("resume 1"), calls)
+    }
+
+    @Test
+    fun aProgramReplacedAtItsStartOrFinishedHasNoResume() {
+        show(listOf(running, past))
+        compose.onAllNodesWithText(starter.title)[1].performClick()
+        compose.waitFor("Run again")
+        compose.onNodeWithText("Resume").assertDoesNotExist()
+    }
+
+    @Test
+    fun withNothingRunningResumeResumesAtOnce() {
+        show(listOf(leftMidWay), active = null)
+        compose.click(starter.title)
+        compose.click("Resume")
+        assertEquals(listOf("resume 1"), calls)
     }
 }

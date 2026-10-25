@@ -256,9 +256,21 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** Every program held, newest first, for Program → Programs. */
     val listed: StateFlow<List<com.hyperlog.app.program.ListedProgram>> = programs.listed.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /** Starts saved program [id] in place of the one running; a new exercise the library gained since shows its problems. */
-    fun startSaved(id: Long) {
-        viewModelScope.launch { _errors.value = (programs.start(id) as? ProgramParser.Result.Invalid)?.errors }
+    /**
+     * Starts saved program [id] in place of the one running, then [started]; a new exercise the
+     * library gained since shows its problems on Program, after [failed].
+     */
+    fun startSaved(id: Long, started: () -> Unit, failed: () -> Unit) {
+        viewModelScope.launch {
+            val result = programs.start(id)
+            _errors.value = (result as? ProgramParser.Result.Invalid)?.errors
+            if (result is ProgramParser.Result.Invalid) failed() else started()
+        }
+    }
+
+    /** Resume: program [id], replaced mid-way, picks up where it was. */
+    fun resume(id: Long) {
+        viewModelScope.launch { programs.resume(id) }
     }
 
     /** Run again: program [id] runs afresh from week 1, day 1. */
@@ -271,10 +283,13 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { programs.delete(id) }
     }
 
-    /** Writes [source], a program's file, to [uri], picked in the system save dialog. */
-    fun export(source: String, uri: Uri) {
+    /** Writes program [id]'s file, with the exercises it adds to the shipped library, to [uri], picked in the system save dialog. */
+    fun export(id: Long, uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
-            runCatching { getApplication<Application>().contentResolver.openOutputStream(uri, "wt")?.use { it.write(source.toByteArray()) } }
+            val app = getApplication<Application>()
+            val shipped = com.hyperlog.app.library.LibrarySeed.fromAssets(app).exercises.map { it.id }.toSet()
+            val file = programs.exportFile(id, shipped) ?: return@launch
+            runCatching { app.contentResolver.openOutputStream(uri, "wt")?.use { it.write(file.toByteArray()) } }
         }
     }
 

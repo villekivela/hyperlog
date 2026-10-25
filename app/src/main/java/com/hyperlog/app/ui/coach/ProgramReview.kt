@@ -88,16 +88,6 @@ fun ProgramReviewScreen(
             dismissButton = { TextButton(onClick = { replacing = false }) { Text(stringResource(R.string.program_cancel)) } },
         )
     }
-    val cs = MaterialTheme.colorScheme
-    val program = proposal.program
-    // The new exercises aren't in the library yet: their names come with the proposal.
-    val names = remember(exerciseNames, proposal) { exerciseNames + proposal.newExercises.associate { it.id to it.name } }
-    // It reads as it will run: from week 1, day 1, with nothing trained yet.
-    val fresh = remember(program) { ActiveProgram(0, program, Position(1, 0)) }
-    var week by rememberSaveable(proposal) { mutableStateOf(1) }
-    val block = program.blockAt(week) ?: program.blocks.first()
-    val days = remember(fresh, week) { ProgramWeek.days(fresh, week, emptyList()) }
-    val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
     Scaffold(
         modifier = modifier,
         containerColor = Tones.screen,
@@ -128,62 +118,80 @@ fun ProgramReviewScreen(
                 }
             }
         },
-    ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag)) {
-            // What Claude built, in one card at the top, as a workout's review has.
-            item(key = "head") {
-                SectionCard(Modifier.padding(top = 8.dp)) {
-                    Text(interFigures(program.title), style = MaterialTheme.typography.headlineSmall)
+    ) { padding -> ProgramReviewList(proposal, exerciseNames, file, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag)) }
+}
+
+/**
+ * A program before it runs, as its review and a saved program's page show it: its title and what
+ * it is in a card, each swap to a library exercise, the exercises it adds to the library, then the
+ * program as Program shows it, block by block and week by week, from week 1.
+ */
+@Composable
+internal fun ProgramReviewList(proposal: ProgramProposal, exerciseNames: Map<String, String>, file: String?, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val program = proposal.program
+    // The new exercises aren't in the library yet: their names come with the proposal.
+    val names = remember(exerciseNames, proposal) { exerciseNames + proposal.newExercises.associate { it.id to it.name } }
+    // It reads as it will run: from week 1, day 1, with nothing trained yet.
+    val fresh = remember(program) { ActiveProgram(0, program, Position(1, 0)) }
+    var week by rememberSaveable(proposal) { mutableStateOf(1) }
+    val block = program.blockAt(week) ?: program.blocks.first()
+    val days = remember(fresh, week) { ProgramWeek.days(fresh, week, emptyList()) }
+    val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
+    LazyColumn(modifier) {
+        // What Claude built, in one card at the top, as a workout's review has.
+        item(key = "head") {
+            SectionCard(Modifier.padding(top = 8.dp)) {
+                Text(interFigures(program.title), style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.height(4.dp))
+                // Who wrote it and its size on one quiet line: `Jeff Nippard · 12 weeks · 5 days a week`.
+                val perWeek = program.blocks.first().days.size
+                Text(
+                    interFigures(
+                        listOfNotNull(
+                            program.author,
+                            pluralStringResource(R.plurals.program_review_weeks, program.weeks, program.weeks),
+                            pluralStringResource(R.plurals.program_review_days, perWeek, perWeek),
+                        ).joinToString(" · "),
+                    ),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = cs.onSurfaceVariant,
+                )
+                file?.let {
                     Spacer(Modifier.height(4.dp))
-                    // Who wrote it and its size on one quiet line: `Jeff Nippard · 12 weeks · 5 days a week`.
-                    val perWeek = program.blocks.first().days.size
-                    Text(
-                        interFigures(
-                            listOfNotNull(
-                                program.author,
-                                pluralStringResource(R.plurals.program_review_weeks, program.weeks, program.weeks),
-                                pluralStringResource(R.plurals.program_review_days, perWeek, perWeek),
-                            ).joinToString(" · "),
-                        ),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = cs.onSurfaceVariant,
-                    )
-                    file?.let {
-                        Spacer(Modifier.height(4.dp))
-                        Text(stringResource(R.string.program_review_from, it), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
-                    }
-                    program.description?.let {
-                        Spacer(Modifier.height(8.dp))
-                        Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                    }
+                    Text(stringResource(R.string.program_review_from, it), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                }
+                program.description?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
             }
-            if (proposal.swaps.isNotEmpty()) {
-                item(key = "swaps-head") { GroupHead(stringResource(R.string.program_review_swaps)) }
-                proposal.swaps.forEachIndexed { i, swap ->
-                    item(key = "swap-$i") {
-                        Segment(i, proposal.swaps.size) {
-                            SegmentedRow(stringResource(R.string.program_review_swap, swap.from, names[swap.to] ?: swap.to), symbol = Symbol.SwapHoriz)
-                        }
-                    }
-                }
-            }
-            if (proposal.newExercises.isNotEmpty()) {
-                item(key = "new-head") { GroupHead(stringResource(R.string.program_review_new)) }
-                proposal.newExercises.forEachIndexed { i, exercise ->
-                    item(key = "new-${exercise.id}") {
-                        Segment(i, proposal.newExercises.size) { SegmentedRow(exercise.name, exercise.summary, Symbol.LibraryAdd) }
-                    }
-                }
-            }
-            item(key = "gap") { Spacer(Modifier.height(16.dp)) }
-            blockItems(
-                program, block, fresh, comparison, week, days, names,
-                onBlock = { i -> week = program.blocks[i].weekStart },
-                onWeek = { week = it }, onOpenSession = {},
-            )
-            item(key = "end") { Spacer(Modifier.height(24.dp)) }
         }
+        if (proposal.swaps.isNotEmpty()) {
+            item(key = "swaps-head") { GroupHead(stringResource(R.string.program_review_swaps)) }
+            proposal.swaps.forEachIndexed { i, swap ->
+                item(key = "swap-$i") {
+                    Segment(i, proposal.swaps.size) {
+                        SegmentedRow(stringResource(R.string.program_review_swap, swap.from, names[swap.to] ?: swap.to), symbol = Symbol.SwapHoriz)
+                    }
+                }
+            }
+        }
+        if (proposal.newExercises.isNotEmpty()) {
+            item(key = "new-head") { GroupHead(stringResource(R.string.program_review_new)) }
+            proposal.newExercises.forEachIndexed { i, exercise ->
+                item(key = "new-${exercise.id}") {
+                    Segment(i, proposal.newExercises.size) { SegmentedRow(exercise.name, exercise.summary, Symbol.LibraryAdd) }
+                }
+            }
+        }
+        item(key = "gap") { Spacer(Modifier.height(16.dp)) }
+        blockItems(
+            program, block, fresh, comparison, week, days, names,
+            onBlock = { i -> week = program.blocks[i].weekStart },
+            onWeek = { week = it }, onOpenSession = {},
+        )
+        item(key = "end") { Spacer(Modifier.height(24.dp)) }
     }
 }
 

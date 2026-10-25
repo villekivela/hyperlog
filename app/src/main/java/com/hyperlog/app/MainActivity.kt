@@ -260,12 +260,14 @@ private fun App(
         uri?.let(backupModel::export)
     }
     val listedPrograms by programModel.listed.collectAsStateWithLifecycle()
+    /** The saved program whose page is up, opened from Programs or Today. */
+    var savedOpen by rememberSaveable { mutableStateOf<Long?>(null) }
     /** The program whose file Export is saving, until the save dialog answers. */
     var exportingProgram by rememberSaveable { mutableStateOf<Long?>(null) }
     val exportProgram = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val source = listedPrograms.firstOrNull { it.id == exportingProgram }?.source
+        val id = exportingProgram
         exportingProgram = null
-        if (uri != null && source != null) programModel.export(source, uri)
+        if (uri != null && id != null) programModel.export(id, uri)
     }
     val pickRestore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(backupModel::pick)
@@ -472,6 +474,24 @@ private fun App(
         )
         return
     }
+    // A saved program's page, read-only with Start program; once started it's no longer saved, and the page goes.
+    listedPrograms.firstOrNull { it.id == savedOpen && it.status is com.hyperlog.app.program.ListedProgram.Status.Saved }?.let { p ->
+        com.hyperlog.app.ui.program.SavedProgramScreen(
+            p, exercises.associate { it.id to it.name }, program,
+            // Started, it runs where it was opened from (Today, or Program); one the library no longer takes goes to Program.
+            onStart = {
+                programModel.startSaved(
+                    p.id,
+                    started = { savedOpen = null; programView = ProgramView() },
+                    failed = { savedOpen = null; programView = ProgramView(); screen = Screen.Program },
+                )
+            },
+            onExport = { exportingProgram = p.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(p.title)) },
+            onDelete = { savedOpen = null; programModel.deleteProgram(p.id) },
+            onBack = { savedOpen = null },
+        )
+        return
+    }
     // A Change in force opened from its card on Coach or its row on Program: what it does, read-only, with Revert.
     inForce?.let { (id, r) ->
         ChangeReviewScreen(
@@ -624,10 +644,10 @@ private fun App(
             gyms = gyms,
             onWeekdayPlan = programModel::setWeekdayPlan,
             listedPrograms = listedPrograms,
-            onStartSaved = programModel::startSaved,
             onRunAgain = programModel::runAgain,
+            onResume = programModel::resume,
+            onOpenSaved = { savedOpen = it },
             onExportProgram = { exportingProgram = it.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(it.title)) },
-            onDeleteProgram = programModel::deleteProgram,
             )
         }
         screen == Screen.Coach && asking -> com.hyperlog.app.ui.coach.AskClaudeScreen(
@@ -775,6 +795,8 @@ private fun App(
             onProgram = { screen = Screen.Program },
             starter = programModel.starter,
             onRunStarter = programModel::runStarter,
+            savedPrograms = listedPrograms.filter { it.status is com.hyperlog.app.program.ListedProgram.Status.Saved },
+            onOpenSaved = { savedOpen = it },
             library = exercises,
             lastTrained = lastTrained,
             onEaseBack = { days ->

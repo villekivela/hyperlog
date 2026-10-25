@@ -19,6 +19,11 @@ import com.hyperlog.app.coach.ChangeJson
 import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.data.PlanChangeEntity
+import com.hyperlog.app.coach.exercises
+import com.hyperlog.app.library.toExercise
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -80,11 +85,14 @@ data class ListedProgram(val id: Long, val title: String, val program: Program, 
         /** The one in progress, at [position]. */
         data class Running(val position: Position, val finished: Boolean) : Status
 
-        /** Saved for later at [savedAt], never started. */
-        data class Saved(val savedAt: Long) : Status
+        /** Saved for later at [savedAt], never started, with the [newExercises] it adds to the library when it starts. */
+        data class Saved(val savedAt: Long, val newExercises: List<com.hyperlog.app.library.Exercise> = emptyList()) : Status
 
-        /** Ran from [startedAt] until another replaced it at [endedAt]. */
-        data class Past(val startedAt: Long, val endedAt: Long?) : Status
+        /**
+         * Ran from [startedAt] until another replaced it at [endedAt]; [resumeAt], the day it was
+         * at, if it was replaced mid-way (trained into, not finished).
+         */
+        data class Past(val startedAt: Long, val endedAt: Long?, val resumeAt: Position? = null) : Status
     }
 }
 
@@ -118,8 +126,13 @@ class Programs(
             val program = parsed.getOrPut(row.id) { stored(row) } ?: return@mapNotNull null
             val status = when {
                 row.active -> ListedProgram.Status.Running(Position(row.week, row.dayIndex), row.week > program.weeks)
-                row.startedAt == null -> ListedProgram.Status.Saved(row.importedAt)
-                else -> ListedProgram.Status.Past(row.startedAt, row.endedAt)
+                row.startedAt == null -> ListedProgram.Status.Saved(
+                    row.importedAt, row.newExercises?.let(com.hyperlog.app.coach.ProgramProposal::decodeExercises).orEmpty(),
+                )
+                else -> {
+                    val at = Position(row.week, row.dayIndex)
+                    ListedProgram.Status.Past(row.startedAt, row.endedAt, at.takeIf { it != Position(1, 0) && row.week <= program.weeks })
+                }
             }
             ListedProgram(row.id, row.title, program, row.source, status)
         }.sortedByDescending { listed ->
@@ -227,12 +240,17 @@ class Programs(
      * library with it. Returns the parse result: on errors nothing is imported or added.
      */
     suspend fun import(json: String, newExercises: List<com.hyperlog.app.library.Exercise> = emptyList()): ProgramParser.Result {
-        val result = check(json, newExercises)
+        val file = split(json)
+        val result = check(file.source, newExercises + file.exercises).let { r ->
+            if (file.errors.isEmpty()) r else ProgramParser.Result.Invalid(file.errors + (r as? ProgramParser.Result.Invalid)?.errors.orEmpty())
+        }
         if (result is ProgramParser.Result.Valid) {
             db.withTransaction {
-                com.hyperlog.app.library.ExerciseLibrary(db).addNew(newExercises)
+                // A file's own new exercises join the library only if the program uses them.
+                val used = result.program.exercises()
+                com.hyperlog.app.library.ExerciseLibrary(db).addNew(newExercises + file.exercises.filter { it.id in used })
                 dao.deactivateAll(clock())
-                val id = dao.insert(ProgramEntity(title = result.program.title, source = json, importedAt = clock(), startedAt = clock()))
+                val id = dao.insert(ProgramEntity(title = result.program.title, source = file.source, importedAt = clock(), startedAt = clock()))
                 parsed[id] = result.program
             }
         }
@@ -283,6 +301,50 @@ class Programs(
     suspend fun runAgain(id: Long): ProgramParser.Result? {
         val row = dao.program(id)?.takeIf { it.startedAt != null } ?: return null
         return import(row.source)
+    }
+
+    /**
+     * Resume: program [id], replaced mid-way, runs again from the day it was at, in place of the
+     * one running, with its sessions and Changes. False for any other program.
+     */
+    suspend fun resume(id: Long): Boolean {
+        val listed = listed.first().firstOrNull { it.id == id }
+        if ((listed?.status as? ListedProgram.Status.Past)?.resumeAt == null) return false
+        db.withTransaction {
+            dao.deactivateAll(clock())
+            dao.resume(id)
+        }
+        return true
+    }
+
+    /**
+     * Program [id]'s file for Export: as imported, with `newExercises` for the exercises it uses
+     * that aren't in the [shipped] library (a saved one's waiting ones too), so it imports on
+     * another phone.
+     */
+    suspend fun exportFile(id: Long, shipped: Set<String>): String? {
+        val row = dao.program(id) ?: return null
+        val program = program(id) ?: return null
+        val waiting = row.newExercises?.let(com.hyperlog.app.coach.ProgramProposal::decodeExercises).orEmpty()
+        val library = db.exercises().all().associateBy { it.id }
+        val own = program.exercises().filter { it !in shipped }.mapNotNull { library[it]?.toExercise() }
+        val added = (waiting + own).distinctBy { it.id }
+        if (added.isEmpty()) return row.source
+        val root = Json.parseToJsonElement(row.source) as JsonObject
+        val exercises = Json.parseToJsonElement(com.hyperlog.app.coach.ProgramProposal.encodeExercises(added))
+        return PrettyJson.encodeToString(JsonElement.serializer(), JsonObject(root + ("newExercises" to exercises)))
+    }
+
+    /** A program file read for import: the program without its `newExercises`, and those the library doesn't have. */
+    private class ImportFile(val source: String, val exercises: List<com.hyperlog.app.library.Exercise>, val errors: List<String>)
+
+    private suspend fun split(json: String): ImportFile {
+        val root = runCatching { Json.parseToJsonElement(json) }.getOrNull() as? JsonObject
+        if (root == null || "newExercises" !in root) return ImportFile(json, emptyList(), emptyList())
+        val library = db.exercises().all()
+        val errors = mutableListOf<String>()
+        val exercises = com.hyperlog.app.coach.ProgramProposal.fileExercises(root, library.map { it.id }.toSet(), library.associate { it.id to it.name }, errors)
+        return ImportFile(JsonObject(root - "newExercises").toString(), exercises, errors)
     }
 
     /** Deletes saved program [id]; false for one that has run, which keeps its sessions and Changes. */
@@ -341,6 +403,8 @@ class Programs(
     private fun stored(row: ProgramEntity): Program? =
         (ProgramParser.parse(row.source, AnyExercise) as? ProgramParser.Result.Valid)?.program
 }
+
+private val PrettyJson = Json { prettyPrint = true }
 
 /** Accepts every exercise id, for programs already validated on import. */
 private object AnyExercise : Set<String> by emptySet() {
