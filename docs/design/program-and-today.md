@@ -524,6 +524,7 @@ Principles:
   "From <file>": `Saved 24 Oct`, the same words as its row. Start program sits alone at the end of
   the strip, where the review has it; Export and Delete are in ⋮, because neither is why you open
   it.
+  Its days have plain labels ("Week 1 · Day A"), with no Next, since nothing runs yet.
 - **One way to run, said once.** A sheet has one filled button: **Resume** for a run replaced
   mid-way, else **Run again** for a past one or a finished running one. Run again (under Resume)
   and Export are rows below it. Where the run was left is on the sheet's status line ("Ran 1 Sep –
@@ -574,7 +575,7 @@ group.
  ╰────────────────────────────────╯      Start session   Import a program
   [ Main ]                                       (free space)
   Main · weeks 1–4   [1] 2 3 4          Your saved programs
-  Week 1 · Day A              Next     ╭────────────────────────────╮
+  Week 1 · Day A                      ╭────────────────────────────╮
   …                                    │ (🔖) Scripted full body, 2 days│
  ╭────────────────────────────────╮    ├────────────────────────────┤
  │                 [Start program] │    │ (🔖) Upper lower, 4 days     │
