@@ -150,6 +150,9 @@ fun ProgramScreen(
         return
     }
     val import = { if (active != null) confirmReplace = Replacement.File else onImport() }
+    /** The starter's last run, if it was replaced mid-way: where it was left. */
+    val starterLeft = listedPrograms.firstOrNull { it.program == starter && it.status is ListedProgram.Status.Past }
+        ?.let { p -> (p.status as ListedProgram.Status.Past).resumeAt?.let { p to it } }
     val openPrograms = { show(shown.copy(programsOpen = true)) }
     BackHandler { if (errors != null) onCloseErrors() else onBack() }
     Scaffold(
@@ -179,10 +182,11 @@ fun ProgramScreen(
                                     onClick = { menu = false; import() },
                                 )
                                 if (starter != null) {
+                                    // A run of it left mid-way picks up again rather than starting over.
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.starter_run_named, starter.title)) },
+                                        text = { Text(stringResource(if (starterLeft != null) R.string.starter_resume_named else R.string.starter_run_named, starter.title)) },
                                         leadingIcon = { SymbolIcon(Symbol.ViewTimeline, null) },
-                                        onClick = { menu = false; confirmReplace = Replacement.Starter },
+                                        onClick = { menu = false; confirmReplace = if (starterLeft != null) Replacement.ResumeStarter else Replacement.Starter },
                                     )
                                 }
                                 DropdownMenuItem(
@@ -224,17 +228,26 @@ fun ProgramScreen(
         AlertDialog(
             onDismissRequest = { confirmReplace = null },
             title = { Text(interFigures(stringResource(R.string.program_replace_title, active.program.title))) },
-            // Replacing loses the position, so the question says where you are.
+            // Replacing loses the position, so the question says where you are, and where a resumed run picks up.
             text = {
+                val left = starterLeft?.takeIf { replacing == Replacement.ResumeStarter }
                 Text(
-                    if (active.finished) stringResource(R.string.program_replace_body)
-                    else stringResource(R.string.program_replace_body_at, active.position.week, active.program.title),
+                    when {
+                        left != null && active.finished -> stringResource(R.string.program_resume_body, left.first.title, left.second.week, left.second.day + 1)
+                        left != null -> stringResource(R.string.program_resume_body_at, active.position.week, active.program.title, left.first.title, left.second.week, left.second.day + 1)
+                        active.finished -> stringResource(R.string.program_replace_body)
+                        else -> stringResource(R.string.program_replace_body_at, active.position.week, active.program.title)
+                    },
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReplace = null
-                    if (replacing == Replacement.Starter) onRunStarter() else onImport()
+                    when (replacing) {
+                        Replacement.Starter -> onRunStarter()
+                        Replacement.ResumeStarter -> starterLeft?.let { onResume(it.first.id) }
+                        Replacement.File -> onImport()
+                    }
                 }) { Text(stringResource(R.string.program_replace)) }
             },
             dismissButton = { TextButton(onClick = { confirmReplace = null }) { Text(stringResource(R.string.program_cancel)) } },
@@ -242,7 +255,7 @@ fun ProgramScreen(
     }
 }
 
-private enum class Replacement { File, Starter }
+private enum class Replacement { File, Starter, ResumeStarter }
 
 /** What Program shows: the week picked (null for the week you're in) and whether the Changes or Programs page is open. */
 data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false, val programsOpen: Boolean = false) {

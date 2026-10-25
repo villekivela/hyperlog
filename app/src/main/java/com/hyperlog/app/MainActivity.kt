@@ -478,11 +478,11 @@ private fun App(
     listedPrograms.firstOrNull { it.id == savedOpen && it.status is com.hyperlog.app.program.ListedProgram.Status.Saved }?.let { p ->
         com.hyperlog.app.ui.program.SavedProgramScreen(
             p, exercises.associate { it.id to it.name }, program,
-            // Started, it runs where it was opened from (Today, or Program); one the library no longer takes goes to Program.
+            // Started, it runs where it was opened from (Today, or Programs); one the library no longer takes goes to Program.
             onStart = {
                 programModel.startSaved(
                     p.id,
-                    started = { savedOpen = null; programView = ProgramView() },
+                    started = { savedOpen = null },
                     failed = { savedOpen = null; programView = ProgramView(); screen = Screen.Program },
                 )
             },

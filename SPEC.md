@@ -909,10 +909,10 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      you are.
    - **Import program** picks a JSON file. A file with problems shows them all, path then message,
      and imports nothing. A file's `newExercises` (as Export writes them) join the library with
-     it: one the library has by id is the library's, the rest are checked by the library editor's
-     rules (`newExercises[0].name: the library already has "Barbell Bench Press"
-     (barbell_bench_press): use it`), and only those the program uses are added. Importing over a program asks first ("Replace <title>?"), saying where
-     you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
+     it: one the library has by id is the library's, and every other is checked by the library
+     editor's rules (`newExercises[0].name: the library already has "Barbell Bench Press"
+     (barbell_bench_press): use it`); only those the program uses are added. Importing over a
+     program asks first ("Replace <title>?"), saying where you are: "You're in week 6 of Hyperlog Full Body; the new program starts at week 1, day 1
      instead. Past sessions are kept."
    - **Programs** (⋮ → Programs, owner 2026-10-24; `ui/program/ProgramsPage.kt`) lists every
      program the app holds under **Running**, **Saved** and **Past**, newest first (saved ones by
@@ -929,8 +929,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      - **Saved**: a program saved for later from a review, never started. Its page (owner,
        2026-10-25; `ui/program/SavedProgram.kt`), titled "Saved program", shows it read-only as its
        review did (the card with when it was saved, `Saved 24 Oct`, the new exercises it brings,
-       the program from week 1) with **Start program** at the bottom and Export and Delete in ⋮; Back returns to where it was opened
-       (Programs, or Today). Start program asks first while a program runs, as import does
+       the program from week 1) with **Start program** at the bottom and Export and Delete in ⋮;
+       Back returns to where it was opened (Programs, or Today). Start program asks first while a program runs, as import does
        ("Replace <title>?"), then runs it from week 1, day 1, staying where the page was opened;
        the one before stays as the record of its sessions. Its new exercises join the library
        then; if the library has gained one with the same id since, Program shows the problems as a
@@ -941,17 +941,21 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        kept."), then starts a fresh run from week 1, day 1, a new row on the list: the old run keeps
        its sessions, its Changes and its dates. A run that ended the day it started reads as that
        day (`25 Oct`).
-     - **Resume** (owner, 2026-10-25): a past run replaced mid-way (trained into, not finished)
-       has Resume as its sheet's button, Run again below it. It asks the same way ("You're in week
+     - **Resume** (owner, 2026-10-25): a past run replaced mid-way (moved past its first day, by a
+       session or a Change such as Skip day, and not finished) has Resume as its sheet's button,
+       Run again below it. It asks the same way ("You're in week
        6 of Hyperlog Full Body; Push pull legs picks up at week 3, day 2 instead. Past sessions are
        kept."), then that run goes on from the day it was left at, with its sessions and its
-       Changes: it is Running again, and the program it replaces is Past. A run replaced before
-       its first session, or finished, has only Run again.
+       Changes: it is Running again, and the program it replaces is Past. Its dates read as one
+       run, from its first start to when it is replaced again. A run replaced before its first
+       session, or finished, has only Run again.
      - **Export** (every program's sheet, a saved one's ⋮) writes its file as imported through the
        system save dialog (`hyperlog-full-body.json`). A program that uses exercises the shipped
        library doesn't have (a coach program's new exercises, or ones added in the library) carries
        them as the file's `newExercises` (owner, 2026-10-25; `docs/program-format.md`), so it
-       imports on another phone; a saved one's waiting new exercises go with it too. **Delete**
+       imports on another phone; a saved one's waiting new exercises go with it too. Such a file is
+       written laid out afresh (the same program, indented two spaces); any other is byte for byte
+       as imported. **Delete**
        asks first ("Delete <title>?") and is offered only for a saved program: one that has run
        keeps its sessions and its Changes.
      - Storage: the `program` table holds every program: a saved one has no `started_at` and keeps
@@ -966,7 +970,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      programs", each row as on Programs, opening the saved program's page with Start program. The
      group sits at the bottom of the screen, the offer centred above it; when they don't fit, the
      screen scrolls. Program's ⋮ keeps "Run Hyperlog Full Body" later, asking before it replaces the
-     program running. The starter is an ordinary program file in the app's assets
+     program running; while the starter's last run was left mid-way it reads "Resume Hyperlog Full
+     Body" instead and resumes that run, asking as Resume does (Run again stays on Programs). The starter is an ordinary program file in the app's assets
      (`programs/full-body-3-day.json`) and imports through the same validator.
    - **Position**: the program runs as a sequence. Finishing a session of the next day moves the
      position to the day after it (the next day of the block, then the next week's first day); a

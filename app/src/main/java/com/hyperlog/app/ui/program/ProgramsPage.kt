@@ -99,7 +99,7 @@ fun ProgramsPage(
                 programs.forEachIndexed { i, p ->
                     item(key = "program-${p.id}") {
                         Segment(i, programs.size, onClick = { if (p.status is ListedProgram.Status.Saved) onOpenSaved(p.id) else open = p.id }) {
-                            SegmentedRow(p.title, "${size(p)} · ${status(p)}", symbol(p), selected = p.status is ListedProgram.Status.Running)
+                            SegmentedRow(p.title, "${listedSize(p)} · ${listedStatus(p)}", symbol(p), selected = p.status is ListedProgram.Status.Running)
                         }
                     }
                 }
@@ -147,13 +147,13 @@ fun ProgramsPage(
 
 /** Its blocks and weeks: `4 blocks · 12 weeks`. */
 @Composable
-internal fun size(p: ListedProgram): String =
+internal fun listedSize(p: ListedProgram): String =
     pluralStringResource(R.plurals.programs_blocks, p.program.blocks.size, p.program.blocks.size) + " · " +
         pluralStringResource(R.plurals.program_review_weeks, p.program.weeks, p.program.weeks)
 
 /** Where it stands: `Week 6` (or Program finished), `Saved 24 Oct`, `1 Sep – 13 Oct`. */
 @Composable
-internal fun status(p: ListedProgram): String = when (val s = p.status) {
+internal fun listedStatus(p: ListedProgram): String = when (val s = p.status) {
     is ListedProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_week, s.position.week)
     is ListedProgram.Status.Saved -> stringResource(R.string.programs_saved_on, shortDate(dateOf(s.savedAt)))
     is ListedProgram.Status.Past -> s.endedAt?.let { ran(s.startedAt, it) } ?: stringResource(R.string.programs_started, shortDate(dateOf(s.startedAt)))
@@ -172,9 +172,9 @@ private fun ran(startedAt: Long, endedAt: Long): String {
 @Composable
 private fun sheetStatus(p: ListedProgram): String = when (val s = p.status) {
     is ListedProgram.Status.Running -> if (s.finished) stringResource(R.string.program_finished) else stringResource(R.string.programs_sheet_week, s.position.week)
-    is ListedProgram.Status.Saved -> status(p)
+    is ListedProgram.Status.Saved -> listedStatus(p)
     is ListedProgram.Status.Past -> listOfNotNull(
-        s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: status(p),
+        s.endedAt?.let { stringResource(R.string.programs_sheet_ran, ran(s.startedAt, it)) } ?: listedStatus(p),
         s.resumeAt?.let { stringResource(R.string.programs_sheet_left, it.week) },
     ).joinToString(" · ")
 }

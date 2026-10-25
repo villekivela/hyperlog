@@ -109,7 +109,7 @@ fun SavedProgramScreen(
         },
     ) { padding ->
         // When it was saved, as its row on Programs says: `Saved 24 Oct`.
-        ProgramReviewList(proposal, exerciseNames, origin = status(saved), Modifier.fillMaxSize().padding(padding))
+        ProgramReviewList(proposal, exerciseNames, origin = listedStatus(saved), Modifier.fillMaxSize().padding(padding))
     }
     if (replacing && running != null) {
         AlertDialog(
@@ -159,7 +159,7 @@ fun WithSavedPrograms(saved: List<ListedProgram>, onOpen: (Long) -> Unit, modifi
             Column(Modifier.padding(bottom = 16.dp)) {
                 GroupHead(stringResource(R.string.today_saved_programs))
                 saved.forEachIndexed { i, p ->
-                    Segment(i, saved.size, onClick = { onOpen(p.id) }) { SegmentedRow(p.title, "${size(p)} · ${status(p)}", Symbol.Bookmark) }
+                    Segment(i, saved.size, onClick = { onOpen(p.id) }) { SegmentedRow(p.title, "${listedSize(p)} · ${listedStatus(p)}", Symbol.Bookmark) }
                 }
             }
         }

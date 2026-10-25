@@ -359,6 +359,7 @@
     <string name="starter_label">Starter program</string>
     <string name="starter_run">Run this program</string>
     <string name="starter_run_named">Run %1$s</string>
+    <string name="starter_resume_named">Resume %1$s</string>
     <string name="program_none_body">A program is a JSON file. Claude can write one from a program you own.</string>
     <string name="program_next">Next</string>
     <!-- "Week 3 · Day A — Heavy bench" -->

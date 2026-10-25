@@ -110,6 +110,43 @@ class SavedProgramsAppTest {
     }
 
     @Test
+    fun theStarterLeftMidWayResumesFromProgramsMenuRatherThanStartingOver() {
+        holds { p ->
+            p.import(com.hyperlog.app.program.StarterProgram.source(context))
+            p.advance(p.active.first()!!.id, Position(1, 0))
+            p.import(TestPrograms.twoDays("Second"))
+        }
+        compose.openTab("Program")
+        compose.waitFor("Second")
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.onNodeWithText("Run Hyperlog Full Body").assertDoesNotExist()
+        compose.click("Resume Hyperlog Full Body")
+        compose.waitFor("You're in week 1 of Second; Hyperlog Full Body picks up at week 1, day 2 instead. Past sessions are kept.")
+        compose.click("Replace")
+        compose.waitFor("Hyperlog Full Body")
+        assertEquals(listOf("Hyperlog Full Body", Position(1, 1)), active()!!.let { listOf(it.program.title, it.position) })
+    }
+
+    @Test
+    fun startingASavedProgramFromProgramsStaysOnTheList() {
+        holds { p ->
+            p.import(TestPrograms.twoDays("Current"))
+            p.save(TestPrograms.twoDays("For later"))
+        }
+        compose.openTab("Program")
+        compose.waitFor("Current")
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.click("Programs")
+        compose.click("For later")
+        compose.click("Start program")
+        compose.click("Replace")
+        // Back on the list, the started one now running and the one before past.
+        compose.waitFor("Past")
+        compose.onNodeWithText("Running").assertExists()
+        assertEquals("For later", active()!!.program.title)
+    }
+
+    @Test
     fun resumePicksAProgramReplacedMidWayUpWhereItWas() {
         holds { p ->
             p.import(TestPrograms.twoDays("First"))
