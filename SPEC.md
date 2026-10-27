@@ -587,8 +587,8 @@ the next day, whenever you train.
 each planned day with the training day it lands on, and never changes the day:
 
 - **Time.** When a day's `~N minutes` is more than 5 minutes over its training day's, the card
-  shows it in amber, `~58 min · Saturday has 48`, and tapping it starts a check-in whose first
-  answer is "Day C runs ~58 minutes but Saturday has 48." A training day without minutes is never
+  shows it in amber, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
+  answer is "Day C runs ~58 minutes but Saturday has 50." A training day without minutes is never
   checked.
 - **Equipment.** With a gym on its training day, a planned day's card counts the swaps that gym
   needs, `2 swaps at Harbour`, read from the start sheet's swaps. The start sheet handles them as
