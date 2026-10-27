@@ -31,6 +31,9 @@ class FitChipTest {
     @get:Rule
     val compose = createComposeRule()
 
+    /** The amber the spec names, the progression's weight-down mark: written out, so the chip can't drift with the constant. */
+    private val Amber = Color(0xFFE0A84E)
+
     private val fit = DayFit(TimeOver(58, 50, DayOfWeek.SATURDAY), null)
 
     /** WCAG contrast of two opaque colours, worked from the definition. */
@@ -56,16 +59,16 @@ class FitChipTest {
 
     @Test
     fun theChipIsAmberInLightAndDark() {
-        assertEquals(FitChipFill.toArgb(), chipPixel(night = false))
+        assertEquals(Amber.toArgb(), chipPixel(night = false))
     }
 
     @Test
     fun theChipIsAmberInDarkToo() {
-        assertEquals(FitChipFill.toArgb(), chipPixel(night = true))
+        assertEquals(Amber.toArgb(), chipPixel(night = true))
     }
 
     @Test
     fun itsInkReadsOnTheAmberAtFourAndAHalfToOne() {
-        assertTrue(contrast(FitChipInk, FitChipFill) >= 4.5)
+        assertTrue(contrast(FitChipInk, Amber) >= 4.5)
     }
 }
