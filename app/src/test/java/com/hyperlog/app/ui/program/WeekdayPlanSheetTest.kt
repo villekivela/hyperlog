@@ -8,6 +8,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.height
 import com.hyperlog.app.gym.Gym
@@ -59,8 +61,11 @@ class WeekdayPlanSheetTest {
         var plan = WeekdayPlan(mapOf(DayOfWeek.MONDAY to null, DayOfWeek.THURSDAY to null))
         compose.setContent { HyperlogTheme { WeekdayPlanSheetContent(plan, listOf(Gym(1, "Home", emptyList())), { plan = it }, {}) } }
         // One gym: the row holds only the day and its minutes, none set yet.
+        compose.onAllNodesWithText("No limit").assertCountEquals(2)
         compose.onNodeWithContentDescription("Minutes on Monday: no limit").performClick()
         compose.onNodeWithText("120 min").assertExists()
+        // The menu offers no limit first, by name.
+        compose.onAllNodesWithText("No limit").assertCountEquals(3)
         compose.onNodeWithText("60 min").performClick()
         assertEquals(mapOf(DayOfWeek.MONDAY to 60), plan.minutes)
         assertEquals(mapOf(DayOfWeek.MONDAY to null, DayOfWeek.THURSDAY to null), plan.gyms)

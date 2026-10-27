@@ -13,6 +13,7 @@ import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.today.date
 import com.hyperlog.app.week.Rotation
+import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.Turn
 import java.time.LocalDate
 
@@ -121,10 +122,16 @@ object ProgramWeek {
      * started, which reads as a sequence.
      */
     private fun rotated(active: ActiveProgram, rotation: Rotation, week: Int, sessions: List<PastSessionItem>): List<ProgramDay>? {
-        val missed = rotation.missed.filter { it.position.week == week }
-        val planned = rotation.planned.filter { it.position.week == week }
         // Every session of the week: with more training days than days, a day comes round twice.
         val done = sessions.filter { it.position!!.week == week }
+        // A week that ended with no session didn't count, and an easy week sits outside the
+        // program: the week shows the days of the pass that counts.
+        fun endedEmpty(date: LocalDate): Boolean {
+            val monday = Rotations.mondayOf(date)
+            return monday.plusDays(6) < active.today && done.none { Rotations.mondayOf(it.date()) == monday }
+        }
+        val missed = rotation.missed.filter { it.position.week == week && !it.easy && !endedEmpty(it.date) }
+        val planned = rotation.planned.filter { it.position.week == week && !it.easy }
         if (missed.isEmpty() && planned.isEmpty() && done.none { it.date() >= rotation.since }) return null
         val first = rotation.planned.firstOrNull()
         val dated = done.mapNotNull { s -> s.date().let { date -> active.dayOf(Turn(date, s.position!!))?.let { date to ProgramDay.Done(it, s) } } } +

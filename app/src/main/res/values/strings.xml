@@ -355,7 +355,7 @@
     <string name="weekday_plan_any_gym">Any gym</string>
     <string name="weekday_plan_minutes">%1$d min</string>
     <string name="weekday_plan_take_turns">%1$d days take turns</string>
-    <string name="weekday_plan_no_minutes">—</string>
+    <string name="weekday_plan_no_minutes">No limit</string>
     <string name="weekday_plan_no_limit">no limit</string>
     <string name="weekday_plan_minutes_on">Minutes on %1$s: %2$s</string>
     <string name="weekday_plan_gym_on">Gym on %1$s: %2$s</string>
@@ -431,6 +431,7 @@
     <string name="today_head_week">Week %1$d</string>
     <string name="today_deload">Deload</string>
     <string name="today_easy_week">Easy week</string>
+    <string name="today_easy_changes">One set fewer, 1 more RIR, no techniques</string>
     <string name="today_easy_head">Easy week · back after %1$d days</string>
     <string name="today_missed_head">Missed · %1$s · Week %2$d</string>
     <string name="today_cell_missed_day">Day %1$s, missed</string>

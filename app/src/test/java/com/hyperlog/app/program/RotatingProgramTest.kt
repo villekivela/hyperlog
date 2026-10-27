@@ -10,6 +10,7 @@ import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.week.WeekdayPlan
 import com.hyperlog.app.week.WeekdayPlans
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -158,5 +159,23 @@ class RotatingProgramTest {
         plans.set(WeekdayPlan(mapOf(MONDAY to null, THURSDAY to null, java.time.DayOfWeek.SUNDAY to null)))
         programs.accept(ProgramActions.shift("A week on", -1))
         assertEquals(listOf(LocalDate.of(2026, 10, 29)), programs.active.first()!!.rotation!!.missed.map { it.date })
+    }
+
+    @Test
+    fun theProgramRunningMovesOnToTheNewDayWhileTheAppStaysOpen() = runTest {
+        trainingDays()
+        val ticking = Programs(db, clock = { noon(today) }, tick = 10)
+        ticking.import(TestPrograms.twoDays("First"))
+        // Today on screen holds one collection open, as the app does.
+        val shown = kotlinx.coroutines.flow.MutableStateFlow<ActiveProgram?>(null)
+        val screen = launch(kotlinx.coroutines.Dispatchers.Default) { ticking.active.collect { shown.value = it } }
+        suspend fun until(date: LocalDate) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            kotlinx.coroutines.withTimeout(5_000) { shown.first { it?.today == date }!! }
+        }
+        until(LocalDate.of(2026, 10, 29))
+        // Overnight, with nothing written: the next day comes up by itself.
+        today = LocalDate.of(2026, 10, 31)
+        assertEquals(LocalDate.of(2026, 10, 31), until(today).rotation!!.planned.first().date)
+        screen.cancel()
     }
 }

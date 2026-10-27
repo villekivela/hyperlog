@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.delay
 import com.hyperlog.app.coach.Operation
 import com.hyperlog.app.data.MissedDayEntity
 import com.hyperlog.app.data.SessionStartRow
@@ -134,6 +138,8 @@ class Programs(
     private val clock: () -> Long = System::currentTimeMillis,
     /** Legacy id -> kept id, for hints in import errors. */
     private val merged: Map<String, String> = emptyMap(),
+    /** How often, in milliseconds, the program running checks whether the date has changed. */
+    private val tick: Long = 60_000,
 ) {
     private val dao = db.programs()
     private val parsed: MutableMap<Long, Program?> = java.util.Collections.synchronizedMap(mutableMapOf())
@@ -143,10 +149,21 @@ class Programs(
     @OptIn(ExperimentalCoroutinesApi::class)
     val active: Flow<ActiveProgram?> = dao.activeFlow().flatMapLatest { row ->
         if (row == null) flowOf(null)
-        else combine(changeDao.changesFlow(row.id), db.weekdayPlan().observe(), startsFlow(row), db.missedDays().flow(row.id)) { changes, plan, starts, missed ->
-            toActive(row, changes, plan.map { DayOfWeek.of(it.weekday) }.toSet(), starts, missed)
+        else combine(changeDao.changesFlow(row.id), db.weekdayPlan().observe(), startsFlow(row), db.missedDays().flow(row.id), dates) { changes, plan, starts, missed, today ->
+            toActive(row, changes, plan.map { DayOfWeek.of(it.weekday) }.toSet(), starts, missed, today)
         }
     }
+
+    /**
+     * Today's date, again whenever it changes: an app left open overnight reads the plan for the
+     * new day, so Start is there on a day planned for it.
+     */
+    private val dates: Flow<LocalDate> = flow {
+        while (true) {
+            emit(dateOf(clock()))
+            delay(tick)
+        }
+    }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     /** The sessions the rotation of [row] reads: those started since its anchor's week. */
     private fun startsFlow(row: ProgramEntity): Flow<List<SessionStartRow>> =
@@ -452,10 +469,9 @@ class Programs(
 
     private suspend fun exerciseIds() = db.exercises().all().map { it.id }.toSet()
 
-    private fun toActive(row: ProgramEntity, changes: List<PlanChangeEntity>, days: Set<DayOfWeek>, starts: List<SessionStartRow>, missed: List<MissedDayEntity>): ActiveProgram? {
+    private fun toActive(row: ProgramEntity, changes: List<PlanChangeEntity>, days: Set<DayOfWeek>, starts: List<SessionStartRow>, missed: List<MissedDayEntity>, today: LocalDate): ActiveProgram? {
         val program = parsed.getOrPut(row.id) { stored(row) } ?: return null
         val history = changes.mapNotNull { c -> c.toAccepted()?.let { ChangeRecord(it, c.acceptedAt, c.revertedAt, c.checkIn?.let(com.hyperlog.app.coach.SavedCheckIn::decode)) } }
-        val today = dateOf(clock())
         val rotation = rotation(row, program, history.filter { it.revertedAt == null }.map { it.accepted }, days, starts, today, missed)
         return ActiveProgram(row.id, program, rotation?.next ?: Position(row.week, row.dayIndex), history, today, rotation)
     }

@@ -537,6 +537,8 @@ the next day, whenever you train.
 - **A new block starts at its first day** on its first training day (owner, 2026-10-27): a day
   the rotation hadn't reached when the last block ended is dropped, so with four days on three a
   block whose last week trained D, A and B leaves C out, and the next block opens with its Day A.
+- **Today is the clock's date**, also with the app left open overnight: the plan, Start and the
+  missed days move on to the new day by themselves (tester, 2026-10-27).
 - **A missed day** is a training day whose date passes with no session started on it. Its day is
   used up: skipped, never moved, and nothing carries over, main lifts included (the program's
   weekly spread absorbs one miss). A session's start date is the one that counts, so a session
@@ -558,13 +560,15 @@ the next day, whenever you train.
   RIR one higher, no techniques, counted as a deload, so it never lowers the estimate. It sits
   outside the program: the program week after it is the one you stopped at. Today's and Program's
   day cards carry an `Easy week` tag (the `spa` symbol, as the Deload tag) and the hero reads
-  `Easy week · back after 16 days`. It applies without asking, like progression; the time-off line
+  `Easy week · back after 16 days`, with one line under its tag: `One set fewer, 1 more RIR, no
+  techniques` (owner, 2026-10-27). It applies without asking, like progression; the time-off line
   and Ease back in stay for talking it through (Coaching → Time off).
 - **Starting mid-week.** A program started (or run again, resumed or saved and started) on a
   Thursday begins at the first training day from that day; the days before it that week aren't
   missed.
 - **Turning training days on or off** keeps your place. Clearing every training day switches to the
-  sequence, its next day the one the rotation would have given next. Setting them again switches to
+  sequence, its next day the one the rotation would have given next; the sequence has no empty or
+  easy weeks, so an easy week under way ends with it (owner, 2026-10-27). Setting them again switches to
   the rotation from that day, with nothing missed before it. A training day moved to another weekday
   keeps its turn in the rotation.
 - **From before (database v26):** the program running when the rotation shipped keeps its week and
@@ -645,7 +649,8 @@ each planned day with the training day it lands on, and never changes the day:
        that hero, dated and without Start (owner, Q9), not the Rest day card; a missed day of this
        week that no later training day has used up shows under it as `Monday's Day A is missed ·
        Train it today`, a text button that starts that day. In an easy week the hero's line reads
-       `Easy week · back after 16 days`. While a session runs, the
+       `Easy week · back after 16 days`, and `One set fewer, 1 more RIR, no techniques` sits
+       under its Easy week tag. While a session runs, the
        next day on a later date reads as a later planned day, without Start.
      - **Minutes** (the hero card and planned days), to the nearest 5, set
        on #64; the numbers live in `EstimateSeconds` (`ui/today/DayEstimate.kt`) to tune after real
@@ -973,7 +978,8 @@ each planned day with the training day it lands on, and never changes the day:
      and is read for it, a date-ranged Change covering it when its date is in the range, and the
      fit (Domain → Training days and the rotation) shows under its heading. With four days on three
      training days a week lists the days its dates hold, so a program week shows the days the
-     rotation puts in it. **With no training days there are no dates**:
+     rotation puts in it. A week that ended with no session and an easy week aren't listed under
+     the program week: it shows the pass that counts, its missed days and the days to come. **With no training days there are no dates**:
      the next day is read for today, as Today shows it. A later day takes a date-ranged Change by
      the window the Change's card on Coach shows (its in-force diff): one week of program days per
      week of dates, counted from the later of the range's start and today, never more program days
@@ -1201,8 +1207,8 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     (TalkBack reads the full day and gym name; the menu lists full gym names). With several gyms, a
     day turned on names no gym until one is picked. With one gym there's no menu: a day turned on is
     at that gym, so it keeps it when a second gym is added.
-    **Minutes** (owner, 2026-10-27): every day that's on has a minutes menu at the row's end, `—`
-    (no limit, the default) then 30 to 120 in steps of 5, read as `60 min`; with one gym the row
+    **Minutes** (owner, 2026-10-27): every day that's on has a minutes menu at the row's end, `No limit`
+    (the default; owner, 2026-10-27) then 30 to 120 in steps of 5, read as `60 min`; with one gym the row
     holds only the day and its minutes. The fit reads them (Domain → Training days and the
     rotation).
     Each change applies at once; **Done** closes it.

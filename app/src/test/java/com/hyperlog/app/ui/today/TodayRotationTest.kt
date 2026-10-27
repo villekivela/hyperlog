@@ -35,8 +35,8 @@ class TodayRotationTest {
     private val days = setOf(MONDAY, THURSDAY, SATURDAY)
 
     /** The program rotating from Monday 26 Oct, seen on [today]. */
-    private fun at(today: LocalDate, sessions: List<SessionStart> = emptyList()): ActiveProgram {
-        val rotation = Rotations.of(program, RotationAnchor(LocalDate.of(2026, 10, 26), week = 1, day = 0), days, sessions, today)
+    private fun at(today: LocalDate, sessions: List<SessionStart> = emptyList(), emptyWeeks: Int = 0): ActiveProgram {
+        val rotation = Rotations.of(program, RotationAnchor(LocalDate.of(2026, 10, 26), week = 1, day = 0, emptyWeeks = emptyWeeks), days, sessions, today)
         return ActiveProgram(1, program, rotation.next, today = today, rotation = rotation)
     }
 
@@ -76,5 +76,12 @@ class TodayRotationTest {
         compose.onNode(hasContentDescription("Mon 26 Oct, Day A, missed")).performClick()
         compose.onNodeWithText("Missed · Mon 26 Oct · Week 1").assertIsDisplayed()
         compose.onNodeWithText("Start session").assertDoesNotExist()
+    }
+
+    @Test
+    fun inAnEasyWeekTheHeroSaysWhatItChangesUnderItsTag() {
+        show(at(LocalDate.of(2026, 10, 29), emptyWeeks = 2))
+        compose.onNodeWithText("Easy week").assertIsDisplayed()
+        compose.onNodeWithText("One set fewer, 1 more RIR, no techniques").assertIsDisplayed()
     }
 }

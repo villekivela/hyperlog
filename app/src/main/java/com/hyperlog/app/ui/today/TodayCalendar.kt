@@ -407,6 +407,8 @@ private fun CardHead(
     titleColor: Color,
     deload: Boolean = false,
     easy: Boolean = false,
+    /** A line under the tag saying what an easy week changes; the hero's alone. */
+    easyNote: Boolean = false,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (letter != null) {
@@ -419,6 +421,10 @@ private fun CardHead(
             if (deload) {
                 Spacer(Modifier.height(8.dp))
                 DeloadTag(if (easy) R.string.today_easy_week else R.string.today_deload)
+                if (easy && easyNote) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(stringResource(R.string.today_easy_changes), style = MaterialTheme.typography.bodyMedium, color = headColor)
+                }
             }
         }
     }
@@ -472,7 +478,7 @@ internal fun HeroCard(
             title = dayTitle(day.day.name),
             letterContainer = cs.onPrimaryContainer, letterContent = cs.primaryContainer,
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
-            deload = day.deload, easy = day.easy,
+            deload = day.deload, easy = day.easy, easyNote = true,
         )
         Spacer(Modifier.height(20.dp))
         PlannedStats(day, cs.onPrimaryContainer, library, finished)

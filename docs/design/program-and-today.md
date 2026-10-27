@@ -669,7 +669,7 @@ training-days row with `3 days take turns`, the missed day's head and the dated 
 Training days sheet with two gyms and minutes, its minutes menu, and both at 360 dp.
 
 Interaction: as SPEC. Train it today opens the start sheet for the missed day; a missed day on the
-strip selects like any day; the minutes menu lists `—` then 30–120 in fives, the picked one
+strip selects like any day; the minutes menu lists `No limit` then 30–120 in fives, the picked one
 ticked.
 
 Screens (emulator, the phone's 1280 × 2856 at 480 dpi, text at 115 %, dark unless named light;
