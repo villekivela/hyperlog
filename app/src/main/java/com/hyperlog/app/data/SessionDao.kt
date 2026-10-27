@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 /** An exercise done in an earlier session, and the program day that session trained (if any). */
 data class PastExercise(
@@ -69,6 +70,14 @@ interface SessionDao {
 
     @Insert
     suspend fun insertSession(session: SessionEntity): Long
+
+    /** When every session started since [since], running ones too, and the program day each trained. */
+    @Query("SELECT started_at, program_id, week, day_index FROM session WHERE started_at >= :since ORDER BY started_at")
+    fun startsFlow(since: Long): Flow<List<SessionStartRow>>
+
+    /** [startsFlow] as it is now. */
+    @Query("SELECT started_at, program_id, week, day_index FROM session WHERE started_at >= :since ORDER BY started_at")
+    suspend fun starts(since: Long): List<SessionStartRow>
 
     @Update
     suspend fun updateSession(session: SessionEntity)
@@ -251,3 +260,11 @@ interface SessionDao {
     )
     suspend fun setsBefore(exerciseId: String, sessionId: Long, before: Long, anyItem: Boolean, itemId: Long?): List<EarlierSet>
 }
+
+/** A session's start and the program day it trained, as the rotation reads it. */
+data class SessionStartRow(
+    @ColumnInfo(name = "started_at") val startedAt: Long,
+    @ColumnInfo(name = "program_id") val programId: Long?,
+    val week: Int?,
+    @ColumnInfo(name = "day_index") val dayIndex: Int?,
+)

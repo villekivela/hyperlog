@@ -272,7 +272,7 @@ object CoachTools {
      * The fields a schema leaves optional, as the serializer does; every other is required, since
      * a strict request allows few optional fields. `reason` is one Claude always gives.
      */
-    private val Optional = setOf("slot", "technique", "week", "after")
+    private val Optional = setOf("slot", "technique", "week", "after", "date")
 
     /** What each operation field is, by name; one not described fails. */
     private val Fields = mapOf(
@@ -286,6 +286,7 @@ object CoachTools {
         "technique" to "The technique to remove (${TechniqueKind.keys.joinToString()}); any when left out.",
         "week" to "The program week; the one I'm in when left out.",
         "weeks" to "Weeks, not 0: positive starts the rest later, negative earlier.",
+        "date" to "The training day to skip, YYYY-MM-DD; the next one when left out.",
         "reason" to "Why, in a few words.",
     )
 

@@ -350,9 +350,14 @@
         <item quantity="other">%1$d days a week · %2$s</item>
     </plurals>
     <string name="weekday_plan_title">Training days</string>
-    <string name="weekday_plan_body">Today plans your next sessions on these days and counts time off from them.</string>
-    <string name="weekday_plan_body_gyms">Today plans your next sessions on these days and counts time off from them. A session started on one picks its gym.</string>
+    <string name="weekday_plan_body">Your program’s days take turns on these days. A day you miss is skipped.</string>
+    <string name="weekday_plan_body_gyms">Your program’s days take turns on these days. A day you miss is skipped. A session started on one picks its gym.</string>
     <string name="weekday_plan_any_gym">Any gym</string>
+    <string name="weekday_plan_minutes">%1$d min</string>
+    <string name="weekday_plan_take_turns">%1$d days take turns</string>
+    <string name="weekday_plan_no_minutes">No limit</string>
+    <string name="weekday_plan_no_limit">no limit</string>
+    <string name="weekday_plan_minutes_on">Minutes on %1$s: %2$s</string>
     <string name="weekday_plan_gym_on">Gym on %1$s: %2$s</string>
     <string name="program_import">Import program</string>
     <string name="program_import_short">Import a program</string>
@@ -364,6 +369,7 @@
     <string name="program_next">Next</string>
     <!-- "Week 3 · Day A — Heavy bench" -->
     <string name="program_week_day">Week %1$d · %2$s</string>
+    <string name="program_week_date_day">Week %1$d · %2$s · %3$s</string>
     <!-- Block head: "Build · weeks 3–6" or "Deload · week 12" -->
     <string name="program_block_weeks">%1$s · weeks %2$d–%3$d</string>
     <string name="program_block_week">%1$s · week %2$d</string>
@@ -385,6 +391,7 @@
     <string name="program_unreadable">The file couldn\'t be read.</string>
     <string name="program_day_done_label">Done</string>
     <string name="program_day_skipped">Skipped</string>
+    <string name="program_day_missed">Missed · %1$s</string>
     <string name="program_from">From %1$s</string>
     <plurals name="program_from_more">
         <item quantity="one">%1$d more</item>
@@ -423,6 +430,13 @@
     <string name="today_calendar_today">Today</string>
     <string name="today_head_week">Week %1$d</string>
     <string name="today_deload">Deload</string>
+    <string name="today_easy_week">Easy week</string>
+    <string name="today_easy_changes">One set fewer, 1 more RIR, no techniques</string>
+    <string name="today_easy_head">Back after %1$d days</string>
+    <string name="today_missed_head">Missed · %1$s · Week %2$d</string>
+    <string name="today_cell_missed_day">Day %1$s, missed</string>
+    <string name="today_train_missed">%1$s’s Day %2$s is missed · Train it today</string>
+    <string name="today_week_again">No sessions last week · Week %1$d again</string>
     <string name="today_cell_done">done</string>
     <string name="today_cell_ad_hoc">ad-hoc session</string>
     <string name="today_cell_workout">workout</string>

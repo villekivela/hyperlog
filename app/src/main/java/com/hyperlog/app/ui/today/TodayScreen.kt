@@ -1,6 +1,15 @@
 package com.hyperlog.app.ui.today
 
 import com.hyperlog.app.ui.theme.interFigures
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.hyperlog.app.ui.theme.Group
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -78,6 +87,7 @@ import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
 import com.hyperlog.app.week.PlannedDates
+import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.foundation.pager.HorizontalPager
 import java.time.DayOfWeek
@@ -115,6 +125,8 @@ fun TodayScreen(
      */
     onStart: (gymId: Long?, adHoc: Boolean, swaps: Map<String, String>) -> Unit,
     modifier: Modifier = Modifier,
+    /** Starts this week's missed day today at the gym (Train it today), with its swaps. */
+    onTrainMissed: (gymId: Long?, swaps: Map<String, String>) -> Unit = { _, _ -> },
     gyms: List<Gym> = emptyList(),
     usualGym: UsualGym? = null,
     program: ActiveProgram? = null,
@@ -190,6 +202,7 @@ fun TodayScreen(
             Kind.Workout -> workout?.let { onStartWorkout(it.id, gym, swaps) }
             Kind.AdHoc -> onStart(gym, true, swaps)
             Kind.Day -> onStart(gym, false, swaps)
+            Kind.Missed -> onTrainMissed(gym, swaps)
         }
     }
     val start: (Kind) -> Unit = { kind ->
@@ -203,6 +216,9 @@ fun TodayScreen(
     // A running session keeps its day on Today, even resumed after finishing moved the program on.
     val next = runningDay?.takeIf { sessionRunning } ?: program?.next
     val workoutDay = remember(workout) { workout?.workout?.day() }
+    val rotation = program?.rotation
+    // This week's missed day, trained today when today has no training day.
+    val missedDay = remember(program) { rotation?.trainToday?.let { program.dayOf(it.copy(date = program.today)) } }
     if (kind != null && !sessionRunning) {
         Sheet(onDismiss = { picking = null }) {
             StartSheetContent(
@@ -211,6 +227,7 @@ fun TodayScreen(
                 day = when (kind) {
                     Kind.Day -> next
                     Kind.Workout -> workoutDay
+                    Kind.Missed -> missedDay
                     Kind.AdHoc -> null
                 },
                 library = library,
@@ -253,7 +270,12 @@ fun TodayScreen(
     // The sessions of this program's days, which a planned day's minutes come from.
     val programSessions = remember(finished, program?.id) { finished.filter { it.programId == program?.id } }
     val trainedToday = done[today].orEmpty().isNotEmpty()
-    val planned = remember(program, weekdayPlan.days, trainedToday) { PlannedDates.of(program, weekdayPlan.days, trainedToday) }
+    // With training days the rotation dates every coming day; without them only the next has a date.
+    val planned = remember(program, trainedToday) {
+        if (rotation != null) program.daysOf(rotation.planned)
+        else PlannedDates.of(program, emptySet(), trainedToday)
+    }
+    val missed = remember(program) { rotation?.let { program.daysOf(it.missed) }.orEmpty() }
     val thisWeek = weekOf(today)
     // Back to the week of the first finished session and on to the last planned day's, at least four weeks each way.
     val firstWeek = minOf(finished.minOfOrNull { weekOf(it.date()) } ?: thisWeek, thisWeek.minusWeeks(4))
@@ -289,13 +311,18 @@ fun TodayScreen(
     // A running session keeps today as it was, whatever else was done or planned for it.
     val runningToday = isToday && sessionRunning
     val doneOn = done[selected].orEmpty()
+    // Today with no training day shows the next day, dated and without Start.
     val plannedOn = planned[selected]
+        ?: planned.values.firstOrNull()?.takeIf { isToday && rotation != null && !runningToday && doneOn.isEmpty() }
+    val plannedDate = if (planned[selected] != null) selected else planned.keys.firstOrNull()
+    val missedOn = missed[selected]?.takeIf { doneOn.isEmpty() && plannedOn == null }
     // Each day keeps its scroll for each kind of list it shows, saved while Today is away (the
     // host keeps Today's saved state): Back returns to the same card, and a day that turns from
     // planned to done, or another day, opens at its top.
     val dayKind = when {
         !runningToday && doneOn.isNotEmpty() -> DayKind.Done
         plannedOn != null && !runningToday -> DayKind.Planned
+        missedOn != null -> DayKind.Missed
         else -> DayKind.Rest
     }
     // A saved value comes back whatever the inputs, so the day and kind are in the key itself.
@@ -317,6 +344,11 @@ fun TodayScreen(
     val banners: @Composable ColumnScope.() -> Unit = {
         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
         if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
+        // After an empty week, until the repeated week's first session.
+        val weekStarted = finished.any { weekOf(it.date()) == thisWeek }
+        if (rotation?.again == true && !weekStarted && !sessionRunning) {
+            planned.values.firstOrNull()?.let { AgainNotice(it.position.week) }
+        }
     }
     Scaffold(
         modifier = modifier,
@@ -339,13 +371,15 @@ fun TodayScreen(
         CalendarHead(
             shownWeek,
             week = programWeekOf(shownWeek, planned, done),
+            // An easy week sits outside the program, so the head names it instead of a week.
+            easy = (0..6L).any { planned[shownWeek.plusDays(it)]?.easy == true } || (shownWeek == Rotations.mondayOf(today) && rotation?.easy == true),
             showToday = !isToday || pager.currentPage != todayPage,
             onToday = { select(today) },
             noWeekdayPlan = weekdayPlan.days.isEmpty(),
             onWeekdayPlan = { editingWeekdayPlan = true },
         )
         HorizontalPager(pager, Modifier.fillMaxWidth().testTag(CalendarTag)) { page ->
-            WeekRow(firstWeek.plusWeeks(page.toLong()), today, selected, done, planned, onSelect = select)
+            WeekRow(firstWeek.plusWeeks(page.toLong()), today, selected, done, planned, onSelect = select, missed = missed)
         }
         Spacer(Modifier.height(8.dp))
         when {
@@ -370,7 +404,8 @@ fun TodayScreen(
                         }
                         WorkoutCard(workout!!, workoutDay!!, exerciseNames, gym = workoutGym, onRemove = removeWorkout)
                     }
-                    program?.next?.let { day ->
+                    // With training days, only a day planned on today is the program's card here.
+                    program?.next?.takeIf { rotation == null || rotation.planned.firstOrNull()?.date == today }?.let { day ->
                         item { ProgramDayCard(day, exerciseNames, onStart = { start(Kind.Day) }) }
                     }
                     item { AdHocRow(onAdHoc = { start(Kind.AdHoc) }) }
@@ -403,12 +438,25 @@ fun TodayScreen(
             plannedOn != null && !runningToday -> {
                 // The next day to train, on whatever date it falls, has Start; a later one is only a
                 // plan, and so is the next one while a session runs.
-                val isNext = selected == planned.keys.first() && !sessionRunning
+                val date = plannedDate ?: selected
+                val isNext = date == planned.keys.first() && !sessionRunning
                 val groups = groupsOf(plannedOn)
                 LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
                     item {
                         if (isToday) BannerColumn(banners)
-                        if (isNext) HeroCard(plannedOn, date = selected.takeIf { !isToday }, onStart = { start(Kind.Day) }, library = library, finished = programSessions)
+                        if (isNext) {
+                            HeroCard(
+                                plannedOn, date = date.takeIf { it != today },
+                                // Start is only for a day planned on today.
+                                onStart = { start(Kind.Day) }.takeIf { date == today },
+                                library = library, finished = programSessions,
+                                easyDays = daysOff?.takeIf { plannedOn.easy },
+                            )
+                            val missedTurn = rotation?.trainToday
+                            if (isToday && missedTurn != null && missedDay != null) {
+                                TrainMissedButton(missedTurn.date, missedDay, onClick = { start(Kind.Missed) })
+                            }
+                        }
                         // With training days the last date planned is the program's last day.
                         else PlannedCard(plannedOn, selected, last = weekdayPlan.days.isNotEmpty() && selected == planned.keys.last(), library = library, finished = programSessions)
                         Spacer(Modifier.height(16.dp))
@@ -416,7 +464,21 @@ fun TodayScreen(
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
                         Segment(i, groups.size) { SlotRows(group, exerciseNames) }
                     }
-                    if (isNext) item { AdHocButton { start(Kind.AdHoc) } }
+                    if (isNext && isToday) item { AdHocButton { start(Kind.AdHoc) } }
+                }
+            }
+            // A missed day keeps its plan, dimmed, with no Start.
+            missedOn != null -> {
+                val groups = groupsOf(missedOn)
+                LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+                    item {
+                        PlannedCard(missedOn, selected, library = library, finished = programSessions, missed = true)
+                        Spacer(Modifier.height(16.dp))
+                    }
+                    itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
+                        // The words dim, not the tiles, so the group keeps its shape on the screen.
+                        Segment(i, groups.size) { Column(Modifier.alpha(MissedAlpha)) { SlotRows(group, exerciseNames) } }
+                    }
                 }
             }
             isToday -> {
@@ -482,7 +544,45 @@ fun TodayScreen(
 internal const val TodayDayListTag = "today-day-list"
 
 /** The kinds of list a day picked shows, each with its own scroll. */
-private enum class DayKind { Done, Planned, Rest }
+private enum class DayKind { Done, Planned, Missed, Rest }
+
+/** How far a missed day's plan is dimmed. */
+internal const val MissedAlpha = 0.6f
+
+/**
+ * `Monday's Day A is missed · Train it today` under the hero, on a day with no training day: a
+ * text button that starts that day today.
+ */
+@Composable
+private fun TrainMissedButton(date: LocalDate, day: PlannedDay, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH)
+    val words = stringResource(R.string.today_train_missed, weekday, day.letter)
+    // What happened reads in the muted tone and the action in the accent, one button all the same.
+    val action = words.lastIndexOf(" · ").takeIf { it >= 0 }
+    val text = if (action == null) interFigures(words) else buildAnnotatedString {
+        withStyle(SpanStyle(color = cs.onSurfaceVariant)) { append(interFigures(words.substring(0, action + 3))) }
+        // The action never breaks: on a narrow screen it moves to the next line whole.
+        append(interFigures(words.substring(action + 3).replace(' ', '\u00A0')))
+    }
+    // Read with plain spaces, as one button.
+    val read = Modifier.clearAndSetSemantics {
+        this.text = AnnotatedString(words)
+        role = Role.Button
+        onClick { onClick(); true }
+    }
+    TextButton(onClick = onClick, Modifier.padding(horizontal = 12.dp).padding(top = 8.dp).then(read)) {
+        Text(text)
+    }
+}
+
+/** `No sessions last week · Week 7 again`, one line over the hero after an empty week. */
+@Composable
+private fun AgainNotice(week: Int) {
+    val cs = MaterialTheme.colorScheme
+    // Replay, not the time-off line's History: the two can stack, and this one says "again".
+    Banner(Symbol.Replay, stringResource(R.string.today_week_again, week), container = cs.surfaceContainerHigh, content = cs.onSurface)
+}
 
 /** The update and time-off banners, over today's day. */
 @Composable
@@ -569,7 +669,7 @@ private fun AdHocRow(onAdHoc: () -> Unit) {
 }
 
 /** What kind of session the start sheet is open for. */
-private enum class Kind { Day, AdHoc, Workout }
+private enum class Kind { Day, AdHoc, Workout, Missed }
 
 internal const val WorkoutCardTag = "today-workout"
 

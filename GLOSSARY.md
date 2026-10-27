@@ -89,6 +89,16 @@ The program's days in order over the training days: each training day takes the 
 days on three training days always fall on the same weekdays, and four on three go A B C, D A B.
 _Avoid_: Pinning, sequence (that is the order with no weekday plan)
 
+**Turn**:
+A training day's date with the program day the rotation gives it, trained, missed or to come.
+_Avoid_: Slot (a place in a day for an exercise), occurrence
+
+**Rotation anchor**:
+Where the rotation was last set, kept with the program: the date it counts from and the week and
+day the first training day from then takes. It moves when the program starts, resumes, a Change
+moves the position or the training days change; the days missed before it are kept.
+_Avoid_: Checkpoint, reset point
+
 **Program week**:
 A calendar week, Monday to Sunday, of the program running. A week with no session doesn't count,
 so the next one trains it again.

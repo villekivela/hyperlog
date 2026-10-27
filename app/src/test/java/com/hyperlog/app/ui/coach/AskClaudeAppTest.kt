@@ -351,7 +351,8 @@ class AskClaudeAppTest {
         compose.openTab("Program")
         compose.waitFor("Ramp-in · weeks 1–2", substring = true)
         compose.openTab("Today")
-        compose.waitFor("Start session")
+        // Today has no training day: the next one's day, dated.
+        compose.waitFor("Next · ", substring = true)
         assertTrue(compose.onAllNodes(hasText("since your last session", substring = true)).fetchSemanticsNodes().isEmpty())
 
         openCoach()

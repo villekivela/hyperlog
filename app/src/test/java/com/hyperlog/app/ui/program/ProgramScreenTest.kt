@@ -329,6 +329,19 @@ class ProgramScreenTest {
     private fun running() = ActiveProgram(1, program(), Position(1, 0), today = LocalDate.of(2026, 10, 14))
 
     @Test
+    fun aDayMissedAndToComeInTheSameWeekShowsBoth() {
+        // Two days on three training days go A B A: Monday's A missed, Saturday's A to come.
+        val days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY, DayOfWeek.SATURDAY)
+        val today = LocalDate.of(2026, 10, 30)
+        val rotation = com.hyperlog.app.week.Rotations.of(program(), com.hyperlog.app.week.RotationAnchor(LocalDate.of(2026, 10, 26), 1, 0), days, emptyList(), today)
+        val active = ActiveProgram(1, program(), rotation.next, today = today, rotation = rotation)
+        compose.setContent { HyperlogTheme { ProgramScreen(active, null, onImport = {}, onCloseErrors = {}, onBack = {}, weekdayPlan = WeekdayPlan(days.associateWith { null })) } }
+        compose.onNodeWithText("Missed · Mon 26 Oct", substring = true).assertExists()
+        compose.onNode(androidx.compose.ui.test.hasScrollToNodeAction())
+            .performScrollToNode(androidx.compose.ui.test.hasText("Week 1 · Sat 31 Oct", substring = true))
+    }
+
+    @Test
     fun withNoTrainingDaysProgramAsksForThem() {
         compose.setContent { HyperlogTheme { ProgramScreen(running(), null, onImport = {}, onCloseErrors = {}, onBack = {}) } }
         compose.onNodeWithText("Set your training days").assertIsDisplayed()
@@ -345,7 +358,8 @@ class ProgramScreenTest {
                 )
             }
         }
-        compose.onNodeWithText("3 days a week · Mon Wed Fri").performClick()
+        // Fewer training days than the program's week has days: they take turns.
+        compose.onNodeWithText("3 days a week · Mon Wed Fri", substring = true).performClick()
         compose.onNodeWithText("Training days").assertIsDisplayed()
         compose.onNodeWithContentDescription("Monday").assertIsOn()
         compose.onNodeWithContentDescription("Tuesday").assertIsOff().performClick()
@@ -356,7 +370,7 @@ class ProgramScreenTest {
         // With one gym every day is at it, so no day picks one.
         compose.onNodeWithContentDescription("Gym on Monday", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Done").performClick()
-        compose.onNodeWithText("3 days a week · Mon Tue Fri").assertIsDisplayed()
+        compose.onNodeWithText("3 days a week · Mon Tue Fri", substring = true).assertIsDisplayed()
     }
 
     @Test

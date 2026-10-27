@@ -144,10 +144,12 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         val library = db.exercises().all().map { it.toExercise() }
         val sessions = PastSessionEditor(db, programs).sessions()
         val weeks = History(db, programs).weeklySets(AskClaude.SET_WEEKS)
+        val weekdayPlan = weekdayPlans.current()
+        val gymNames = com.hyperlog.app.gym.Gyms(db).gyms.first().associate { it.id to it.name }
         return withContext(Dispatchers.Default) {
             AskClaude.prompt(
                 words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays,
-                weeklySets = weeks, tile = tile,
+                weeklySets = weeks, tile = tile, weekdayPlan = weekdayPlan, gymNames = gymNames,
             )
         }
     }

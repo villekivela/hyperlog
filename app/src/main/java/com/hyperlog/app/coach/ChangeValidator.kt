@@ -82,7 +82,10 @@ object ChangeValidator {
                     op.weeks == 0 -> add("$path.weeks: must not be 0")
                     kotlin.math.abs(op.weeks) > program.weeks -> add("$path.weeks: the program is ${program.weeks} weeks long")
                 }
-                is Operation.SkipDay, is Operation.RepeatWeek -> Unit
+                is Operation.SkipDay -> op.date?.let { date ->
+                    if (runCatching { java.time.LocalDate.parse(date) }.isFailure) add("$path.date: \"$date\" isn't a date (YYYY-MM-DD)")
+                }
+                is Operation.RepeatWeek -> Unit
             }
         }
     }

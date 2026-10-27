@@ -153,4 +153,57 @@ class ProgramWeekTest {
         val test = ProgramWeek.comparison(program, program.blocks.last())!!
         assertTrue(test.rule.second.deload)
     }
+
+    @Test
+    fun withTrainingDaysAWeekShowsItsDaysOnTheirDatesAndAMissedOneSaysSo() = runTest {
+        // Tuesday 13 Oct; the rotation runs from Monday, which was missed.
+        com.hyperlog.app.week.WeekdayPlans(db, clock = { now }).set(
+            com.hyperlog.app.week.WeekdayPlan(listOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.THURSDAY, java.time.DayOfWeek.SATURDAY).associateWith { null }),
+        )
+        db.programs().setRotation(active().id, LocalDate.of(2026, 10, 12).toEpochDay(), 6, 0, 0, 0)
+        val days = ProgramWeek.days(active(), 6, emptyList()).map { day ->
+            when (day) {
+                is ProgramDay.Missed -> "missed ${day.date} ${day.position.day}"
+                is ProgramDay.Ahead -> "ahead ${day.date} ${day.position.day}${if (day.next) " next" else ""}"
+                else -> day.toString()
+            }
+        }
+        assertEquals(listOf("missed 2026-10-12 0", "ahead 2026-10-15 1 next", "ahead 2026-10-17 2"), days)
+    }
+
+    @Test
+    fun aDayTrainedTwiceInAWeekShowsBothSessions() = runTest {
+        // Three days on four training days: week 6 trains A, B, C and A again.
+        com.hyperlog.app.week.WeekdayPlans(db, clock = { now }).set(
+            com.hyperlog.app.week.WeekdayPlan(listOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.THURSDAY, java.time.DayOfWeek.SATURDAY).associateWith { null }),
+        )
+        db.programs().setRotation(active().id, LocalDate.of(2026, 10, 12).toEpochDay(), 6, 0, 0, 0)
+        days(5)
+        val id = active().id
+        val sessions = listOf(12 to 0, 13 to 1, 15 to 2, 17 to 0).mapIndexed { i, (day, index) ->
+            val at = LocalDate.of(2026, 10, day).atTime(18, 0).atZone(zone).toInstant().toEpochMilli()
+            db.sessions().insertSession(com.hyperlog.app.data.SessionEntity(startedAt = at, finishedAt = at + 3_600_000, programId = id, week = 6, dayIndex = index))
+            com.hyperlog.app.session.PastSessionItem(i.toLong(), at, at + 3_600_000, "Day", null, emptyList(), id, Position(6, index))
+        }
+        val shown = ProgramWeek.days(active(), 6, sessions).map { (it as ProgramDay.Done).session.id }
+        assertEquals(listOf(0L, 1L, 2L, 3L), shown)
+    }
+
+    @Test
+    fun aWeekLeavesOutTheWeeksThatEndedEmptyAndTheEasyWeek() = runTest {
+        // Week 6 from Monday 12 Oct, then nothing: two empty weeks, and this one is easy.
+        com.hyperlog.app.week.WeekdayPlans(db, clock = { now }).set(
+            com.hyperlog.app.week.WeekdayPlan(listOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.THURSDAY, java.time.DayOfWeek.SATURDAY).associateWith { null }),
+        )
+        db.programs().setRotation(active().id, LocalDate.of(2026, 10, 12).toEpochDay(), 6, 0, 0, 0)
+        days(14)
+        val shown = ProgramWeek.days(active(), 6, emptyList()).map { day ->
+            when (day) {
+                is ProgramDay.Missed -> "missed ${day.date}"
+                is ProgramDay.Ahead -> "ahead ${day.date}"
+                else -> day.toString()
+            }
+        }
+        assertEquals(listOf("ahead 2026-11-02", "ahead 2026-11-05", "ahead 2026-11-07"), shown)
+    }
 }

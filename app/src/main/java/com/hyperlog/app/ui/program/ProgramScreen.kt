@@ -212,7 +212,9 @@ fun ProgramScreen(
                 active == null -> NoProgram(onImport, openPrograms.takeIf { listedPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
-                    onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },
+                    onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan),
+                    weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.days?.size),
+                    onOpenWeekdayPlan = { editingWeekdayPlan = true },
                 )
             }
         }
@@ -288,6 +290,8 @@ private fun ProgramWeeks(
     /** The weekday plan as a line, and what opens its sheet. */
     weekdayPlanLine: String,
     onOpenWeekdayPlan: () -> Unit,
+    /** `4 days take turns` under the line, when the training days and the program's days differ. */
+    weekdayPlanTurns: String? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
@@ -310,6 +314,7 @@ private fun ProgramWeeks(
                 item { ProgramHeader(program.title, program.author, nextDay) }
                 row(
                     title = weekdayPlanLine,
+                    supporting = weekdayPlanTurns,
                     symbol = Symbol.CalendarToday,
                     onClick = onOpenWeekdayPlan,
                     trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = chevron) },

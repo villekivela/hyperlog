@@ -19,7 +19,7 @@ object BackupFormat {
      * The Room schema version the tables follow. A backup from an older database needs an upgrade
      * step in [Backups] before it can be restored; a test fixture of each version keeps them working.
      */
-    const val DATABASE = 25
+    const val DATABASE = 26
 
     /** The oldest database version a backup can be restored from. */
     const val OLDEST_DATABASE = 14
@@ -30,11 +30,11 @@ object BackupFormat {
         "exercise",
         // Gyms, their equipment and ladders, the remembered machine and missing equipment per gym.
         "gym", "equipment_item", "shared_ladder", "gym_exercise_item", "gym_missing_exercise",
-        // Your training days, each with its gym.
+        // Your training days, each with its gym and minutes.
         "weekday_plan",
-        // Programs (the one running with its position, those saved for later, past runs), and the
-        // Changes accepted (and reverted) on them.
-        "program", "plan_change",
+        // Programs (the one running with its position, those saved for later, past runs), the
+        // Changes accepted (and reverted) on them, and the training days they missed.
+        "program", "plan_change", "missed_day",
         // Workouts from the coach: the one waiting on Today, and those sessions trained.
         "workout",
         // Sessions, the running one with its pad draft and rest timer, their sets and session edits.
@@ -62,6 +62,12 @@ object BackupFormat {
         23 to mapOf("weekday_plan" to emptySet()),
         24 to mapOf("plan_change" to setOf("check_in")),
         25 to mapOf("program" to setOf("started_at", "ended_at", "new_exercises")),
+        26 to mapOf(
+            "weekday_plan" to setOf("minutes"),
+            "session" to setOf("easy"),
+            "program" to setOf("rotation_from", "rotation_rollback", "rotation_empty_weeks"),
+            "missed_day" to emptySet(),
+        ),
     )
 
     /** The columns of [table] a file made at database version [database] may lack. */

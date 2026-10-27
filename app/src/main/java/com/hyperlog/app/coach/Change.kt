@@ -104,9 +104,12 @@ sealed interface Operation {
         val kind: com.hyperlog.app.program.TechniqueKind? get() = com.hyperlog.app.program.TechniqueKind.ofKey(technique)
     }
 
-    /** The next day is passed over. */
+    /**
+     * The next day is passed over. With training days, the training day on [date] (YYYY-MM-DD; the
+     * next one when null, filled in on accept) is missed ahead of time.
+     */
     @Serializable @SerialName("skip_day")
-    data class SkipDay(override val reason: String? = null) : Operation
+    data class SkipDay(val date: String? = null, override val reason: String? = null) : Operation
 
     /**
      * Program week [week] (the week you are in when null) is a deload: half its sets (rounded
@@ -122,7 +125,10 @@ sealed interface Operation {
     @Serializable @SerialName("shift_program")
     data class ShiftProgram(val weeks: Int, override val reason: String? = null) : Operation
 
-    /** The week of the last day trained runs again from its first day. */
+    /**
+     * The week of the last day trained runs again from its first day; with training days, the
+     * next calendar week trains this program week again.
+     */
     @Serializable @SerialName("repeat_week")
     data class RepeatWeek(override val reason: String? = null) : Operation
 

@@ -788,6 +788,10 @@ private fun App(
                 left = false
                 sessions.start(gym, adHoc, swaps)
             },
+            onTrainMissed = { gym, swaps ->
+                left = false
+                sessions.startMissed(gym, swaps)
+            },
             gyms = gyms,
             usualGym = usualGym,
             program = program,

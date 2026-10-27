@@ -194,8 +194,25 @@ data class PlannedDay(
     val slots: List<PlannedSlot>,
     /** A deload week for this day, as the program marks it; its sets never lower the estimate. */
     val deload: Boolean = false,
+    /** Trained in an easy week, outside the program (a deload too). */
+    val easy: Boolean = false,
 ) {
     fun slot(id: String?) = slots.firstOrNull { it.id == id }
+
+    /**
+     * This day in an easy week (SPEC, Training days and the rotation): each slot one set fewer (one
+     * always stays), its target RIR one higher, no techniques, and a deload. Unchanged unless [easy].
+     */
+    fun easyWeek(easy: Boolean = true): PlannedDay {
+        if (!easy) return this
+        fun List<SetPrescription>.eased() = take((size - 1).coerceAtLeast(1))
+            .map { set -> set.copy(rir = set.rir?.let { (it + 1).coerceAtMost(10) }, technique = null) }
+        return copy(
+            easy = true,
+            deload = true,
+            slots = slots.map { s -> s.copy(sets = s.sets.eased(), alternativeSets = s.alternativeSets.mapValues { it.value.eased() }) },
+        )
+    }
 }
 
 data class PlannedSlot(

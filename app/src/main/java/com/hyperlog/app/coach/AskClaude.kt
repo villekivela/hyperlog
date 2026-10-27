@@ -60,6 +60,9 @@ object AskClaude {
         lastTrained: LocalDate? = null,
         weekdays: Set<DayOfWeek> = emptySet(),
         weeklySets: List<WeekSets> = emptyList(),
+        /** Your training days, each with its gym (named by [gymNames]) and minutes. */
+        weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
+        gymNames: Map<Long, String> = emptyMap(),
         /** The check-in's tile, quoted before the [words]: what it is about, even when the words are cleared. */
         tile: Tile? = null,
     ): String = buildString {
@@ -91,7 +94,7 @@ object AskClaude {
             )
         }
         appendLine()
-        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays, weeklySets)
+        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gymNames)
         if (plan != null) {
             appendLine()
             append(ChangeFormat.text(plan))
@@ -124,10 +127,16 @@ object AskClaude {
         lastTrained: LocalDate?,
         weekdays: Set<DayOfWeek>,
         weeklySets: List<WeekSets>,
+        weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
+        gymNames: Map<Long, String> = emptyMap(),
     ) {
         val names = library.associate { it.id to it.name }
         appendLine("Today is $today (${today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}).")
         appendLine(daysOff(lastTrained, today, weekdays))
+        if (weekdayPlan.days.isNotEmpty()) {
+            appendLine()
+            weekdayPlan(weekdayPlan, gymNames)
+        }
         if (elsewhere) {
             appendLine()
             appendLine("## Gym: somewhere not set up in Hyperlog")
@@ -149,6 +158,45 @@ object AskClaude {
         appendLine()
         library(plan?.program, library)
     }
+
+    /** Your training days in weekday order, each with its gym and the minutes you have. */
+    private fun StringBuilder.weekdayPlan(plan: com.hyperlog.app.week.WeekdayPlan, gymNames: Map<Long, String>) {
+        appendLine("## Training days")
+        plan.days.sorted().forEach { day ->
+            val gym = plan.gyms[day]?.let(gymNames::get) ?: "any gym"
+            val minutes = plan.minutes[day]?.let { "$it minutes" } ?: "no time limit"
+            appendLine("- ${day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}: $gym, $minutes")
+        }
+    }
+
+    /** The program's days as the rotation puts them on the training days, and the training days missed lately. */
+    private fun StringBuilder.rotation(plan: ActiveProgram, rotation: com.hyperlog.app.week.Rotation) {
+        appendLine(
+            "The program runs on my training days: each training day takes the next day of the program, trained or missed. A missed " +
+                "day is skipped, never moved. A program week is a calendar week, Monday to Sunday.",
+        )
+        fun line(turn: com.hyperlog.app.week.Turn) =
+            "- ${turn.date} (${turn.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}): week ${turn.position.week}, " +
+                (plan.program.blockAt(turn.position.week)?.days?.getOrNull(turn.position.day)?.name ?: "")
+        when {
+            rotation.easy -> appendLine(
+                "This week is an easy week, after ${rotation.emptyWeeks} weeks with no session: each slot one set fewer, target RIR one " +
+                    "higher, no techniques, a deload outside the program. The program week after it is the one I stopped at.",
+            )
+            rotation.again -> appendLine("Last week had no session, so this week trains its program week again.")
+            rotation.repeated -> appendLine("A repeat_week accepted last week has this week train its program week again.")
+        }
+        appendLine("Coming days:")
+        rotation.planned.take(UPCOMING_TURNS).forEach { appendLine(line(it)) }
+        val missed = rotation.missed.filter { it.date >= plan.today.minusDays(HISTORY_DAYS) && it.date < plan.today }
+        if (missed.isNotEmpty()) {
+            appendLine("Missed training days in the last $HISTORY_DAYS days:")
+            missed.forEach { appendLine(line(it)) }
+        }
+    }
+
+    /** How many of the rotation's coming days the context lists. */
+    private const val UPCOMING_TURNS = 6
 
     private fun daysOff(lastTrained: LocalDate?, today: LocalDate, weekdays: Set<DayOfWeek>): String {
         val since = TimeOff.daysSince(lastTrained, today) ?: return "I haven't finished a session in Hyperlog yet."
@@ -284,7 +332,8 @@ object AskClaude {
                 "Next: week ${next.position.week} of ${program.weeks}, ${next.day.name} (day \"${next.day.id}\", block \"${next.block.name}\", " +
                     "weeks ${next.block.weekStart}–${next.block.weekEnd}). ${program.daysLeft(plan.position)} days left.",
             )
-            appendLine("The program runs as a sequence: the next day is whatever comes after the last one trained, whenever I train.")
+            plan.rotation?.let { rotation(plan, it) }
+                ?: appendLine("The program runs as a sequence: the next day is whatever comes after the last one trained, whenever I train.")
         }
         val changes = plan.inForce
         if (changes.isNotEmpty()) {
@@ -395,12 +444,14 @@ object ChangeFormat {
             "adjust_rir" -> "Target RIR moves by \"by\", ${signed(-MAX_RIR_STEP)} to $MAX_RIR_STEP and not 0 (+1 = one more rep in reserve). No slot: every slot."
             "remove_technique" -> "The slot's sets lose that intensity technique (${TechniqueKinds.joinToString()}), or any technique when " +
                 "\"technique\" is left out. No slot: every slot."
-            "skip_day" -> "The next day is passed over."
+            "skip_day" -> "With training days, the training day on \"date\" (the next one when left out) is missed ahead of time: its day " +
+                "is used up and the rotation moves on. Without them, the next day is passed over."
             "deload_week" -> "Program week \"week\" (1 to ${program.weeks}; the one I'm in when left out) is a deload: half its sets per slot " +
                 "(rounded up), RIR + 2, no techniques."
             "shift_program" -> "The rest of the plan starts \"weeks\" weeks later (not 0, at most ${program.weeks}): the position goes back that " +
                 "many weeks, so they are trained again. Negative moves it earlier, skipping weeks."
-            "repeat_week" -> "The week of the last day trained runs again from its first day."
+            "repeat_week" -> "The week of the last day trained runs again from its first day; with training days, the next calendar week " +
+                "trains this program week again."
             else -> error("Ask Claude has no description of operation \"$op\"")
         }
     }

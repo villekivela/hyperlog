@@ -82,4 +82,13 @@ class ChangeValidatorTest {
         assertTrue(errors("""{"summary":"x","scope":"rest_of_program","operations":[{"op":"fly"}]}""").single().contains("fly"))
         assertTrue(errors("not json").single().startsWith("not a Change"))
     }
+
+    @Test
+    fun aSkippedDayNamesADate() {
+        assertTrue(ChangeValidator.validate("""{"summary":"Away","scope":"rest_of_program","operations":[{"op":"skip_day","date":"2026-10-31"}]}""", program, exercises) is ChangeValidator.Result.Valid)
+        assertEquals(
+            listOf("operations[0].date: \"Saturday\" isn't a date (YYYY-MM-DD)"),
+            errors("""{"summary":"Away","scope":"rest_of_program","operations":[{"op":"skip_day","date":"Saturday"}]}"""),
+        )
+    }
 }
