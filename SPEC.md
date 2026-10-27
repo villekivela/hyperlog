@@ -559,9 +559,10 @@ the next day, whenever you train.
   week**: the days the rotation brings, each slot one set fewer (one always stays) and its target
   RIR one higher, no techniques, counted as a deload, so it never lowers the estimate. It sits
   outside the program: the program week after it is the one you stopped at. Today's and Program's
-  day cards carry an `Easy week` tag (the `spa` symbol, as the Deload tag) and the hero reads
-  `Easy week · back after 16 days`, with one line under its tag: `One set fewer, 1 more RIR, no
-  techniques` (owner, 2026-10-27). It applies without asking, like progression; the time-off line
+  day cards carry an `Easy week` tag (the `spa` symbol, as the Deload tag); the hero's top line
+  reads `Back after 16 days`, with one line under its tag: `One set fewer, 1 more RIR, no
+  techniques`, and the calendar's head reads `November 2026 · Easy week` in the week's place
+  (owner, 2026-10-27). It applies without asking, like progression; the time-off line
   and Ease back in stay for talking it through (Coaching → Time off).
 - **Starting mid-week.** A program started (or run again, resumed or saved and started) on a
   Thursday begins at the first training day from that day; the days before it that week aren't
@@ -605,7 +606,8 @@ each planned day with the training day it lands on, and never changes the day:
      - **The calendar** is a row of seven days, Monday to Sunday, under the month and year
        (`October 2026`, or `Oct – Nov 2026` for a week across two months) and the program week
        the calendar week stands for (`October 2026 · Week 7`, its figure in Inter): the week of
-       the first planned day in it, else of the first program session done in it. A week with
+       the first planned day in it, else of the first program session done in it; an easy week reads
+       `November 2026 · Easy week` (owner, 2026-10-27). A week with
        neither (outside the program, or with no program) shows the month alone. When the head
        doesn't fit, the pencil's words go first, then the month abbreviates (`Sep 2026 · Week
        12`), then the week goes; the month is cut only past all three. It swipes sideways a
@@ -651,9 +653,9 @@ each planned day with the training day it lands on, and never changes the day:
        no Start (`Next · Thu 29 Oct · Week 7`). **Today on a day with no training day** shows
        that hero, dated and without Start (owner, Q9), not the Rest day card; a missed day of this
        week that no later training day has used up shows under it as `Monday's Day A is missed ·
-       Train it today`, a text button that starts that day. In an easy week the hero's line reads
-       `Easy week · back after 16 days`, and `One set fewer, 1 more RIR, no techniques` sits
-       under its Easy week tag. While a session runs, the
+       Train it today`, a text button that starts that day. In an easy week the hero's top line reads
+       `Back after 16 days`, and `One set fewer, 1 more RIR, no techniques` sits under its Easy
+       week tag (owner, 2026-10-27). While a session runs, the
        next day on a later date reads as a later planned day, without Start.
      - **Minutes** (the hero card and planned days), to the nearest 5, set
        on #64; the numbers live in `EstimateSeconds` (`ui/today/DayEstimate.kt`) to tune after real
@@ -1605,7 +1607,8 @@ always count from the last session) with **Ease back in**, until a Change or a w
 accepted that day. Ease back in starts a check-in whose first answer is "I've had 11 days off.
 Ease me back in." The context holds the count either way. With training days, two empty weeks or
 more also bring the easy week by themselves (Domain → Training days and the rotation): the line
-then reads `16 days since your last session` over `Easy week` and Ease back in stays, for when you want
+then reads `16 days since your last session` alone, as it always does (owner, 2026-10-27: the
+easy week is said by the head, the hero and the tag), and Ease back in stays, for when you want
 more or less than the easy week gives.
 
 ### The coach line

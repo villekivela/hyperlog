@@ -87,6 +87,7 @@ import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
 import com.hyperlog.app.week.PlannedDates
+import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.foundation.pager.HorizontalPager
 import java.time.DayOfWeek
@@ -342,7 +343,7 @@ fun TodayScreen(
     val nextAfter = { date: LocalDate -> planned.entries.firstOrNull { it.key > date }?.toPair() }
     val banners: @Composable ColumnScope.() -> Unit = {
         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
-        if (easeBack) TimeOffBanner(daysOff!!, easy = rotation?.easy == true, onEaseBack = { onEaseBack(daysOff) })
+        if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
         // After an empty week, until the repeated week's first session.
         val weekStarted = finished.any { weekOf(it.date()) == thisWeek }
         if (rotation?.again == true && !weekStarted && !sessionRunning) {
@@ -370,6 +371,8 @@ fun TodayScreen(
         CalendarHead(
             shownWeek,
             week = programWeekOf(shownWeek, planned, done),
+            // An easy week sits outside the program, so the head names it instead of a week.
+            easy = (0..6L).any { planned[shownWeek.plusDays(it)]?.easy == true } || (shownWeek == Rotations.mondayOf(today) && rotation?.easy == true),
             showToday = !isToday || pager.currentPage != todayPage,
             onToday = { select(today) },
             noWeekdayPlan = weekdayPlan.days.isEmpty(),
@@ -765,13 +768,11 @@ private fun ProgramDayCard(day: PlannedDay, names: Map<String, String>, onStart:
  * Coach with "I've had 11 days off. Ease me back in." in the words.
  */
 @Composable
-private fun TimeOffBanner(days: Int, easy: Boolean, onEaseBack: () -> Unit) {
+private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Banner(
         Symbol.History,
         stringResource(R.string.coach_days_off, days),
-        // In an easy week the line says so under it, so the days and Ease back in keep their row.
-        body = if (easy) stringResource(R.string.today_easy_week) else null,
         container = cs.tertiaryContainer,
         content = cs.onTertiaryContainer,
     ) {

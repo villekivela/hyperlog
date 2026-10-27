@@ -4,6 +4,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.performClick
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ProgramParser
@@ -40,12 +42,13 @@ class TodayRotationTest {
         return ActiveProgram(1, program, rotation.next, today = today, rotation = rotation)
     }
 
-    private fun show(program: ActiveProgram, onTrainMissed: () -> Unit = {}) = compose.setContent {
+    private fun show(program: ActiveProgram, onTrainMissed: () -> Unit = {}, lastTrained: LocalDate? = null) = compose.setContent {
         HyperlogTheme {
             TodayScreen(
                 sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
                 program = program, weekdayPlan = WeekdayPlan(days.associateWith { null }),
                 onTrainMissed = { _, _ -> onTrainMissed() },
+                lastTrained = lastTrained,
             )
         }
     }
@@ -83,5 +86,15 @@ class TodayRotationTest {
         show(at(LocalDate.of(2026, 10, 29), emptyWeeks = 2))
         compose.onNodeWithText("Easy week").assertIsDisplayed()
         compose.onNodeWithText("One set fewer, 1 more RIR, no techniques").assertIsDisplayed()
+    }
+
+    @Test
+    fun anEasyWeekNamesItselfInTheHeadAndTheHeroCountsTheDaysBack() {
+        show(at(LocalDate.of(2026, 10, 29), emptyWeeks = 2), lastTrained = LocalDate.of(2026, 10, 13))
+        compose.onNodeWithText("Oct – Nov 2026 · Easy week").assertIsDisplayed()
+        compose.onNodeWithText("Back after 16 days").assertIsDisplayed()
+        // The time-off line keeps its days and Ease back in; Easy week is said once, on the tag.
+        compose.onNodeWithText("16 days since your last session").assertIsDisplayed()
+        compose.onAllNodesWithText("Easy week").assertCountEquals(1)
     }
 }

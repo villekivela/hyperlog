@@ -624,10 +624,9 @@ Principles:
 - **What happened, then what to do.** `Monday’s Day A is missed · Train it today` is one text
   button, its first half in `onSurfaceVariant` and the action in primary; the action never breaks
   (it moves to the next line whole on a 360 dp phone). TalkBack reads the words as written.
-- **One line each, then a second line, rather than three wrapped ones.** The time-off line in an
-  easy week puts `Easy week` under `16 days since your last session` (the banner's own body line),
-  so Ease back in keeps its row; Program's training-days row puts `3 days take turns` on the row's
-  supporting line. The words are the same; only the separator dot goes.
+- **One line each, then a second line, rather than three wrapped ones.** Program's training-days
+  row puts `3 days take turns` on the row's supporting line. (The time-off line in an easy week
+  no longer says `Easy week`: the head, the hero and the tag do; owner, 2026-10-27.) The words are the same; only the separator dot goes.
 - **Notices stack without looking alike.** `No sessions last week · Week 8 again` is a
   `surfaceContainerHigh` banner with the `replay` symbol; the time-off line keeps `history` on
   `tertiaryContainer`.
@@ -657,13 +656,14 @@ end.
  Easy week, Mon 9 Nov:                          Sat   Harbour F… ▾     45 min ▾
 ╭──────────────────────────────────╮
 │ ⟲  16 days since your last session  [Ease back in] │
-│    Easy week                     │
 ╰──────────────────────────────────╯
+ November 2026 · Easy week, and the hero: Back after 16 days / … / [spa Easy week]
+ One set fewer, 1 more RIR, no techniques
 ```
 
 States: today with no training day and a missed Monday (the hero dated, no Start, Train it today);
 the missed day picked; a week trained again (the notice over a hero with Start); an easy week (the
-time-off line, the hero's `Easy week · back after 16 days`, the tag with `One set fewer, 1 more RIR, no
+time-off line, the head's `November 2026 · Easy week`, the hero's `Back after 16 days`, the tag with `One set fewer, 1 more RIR, no
 techniques` under it in the head's tone (owner, 2026-10-27); the notice doesn't show, as
 the easy week isn't the program week again); a later planned day of the easy week; Program's
 training-days row with `3 days take turns`, the missed day's head and the dated heads; the

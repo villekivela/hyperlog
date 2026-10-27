@@ -187,10 +187,12 @@ internal fun CalendarHead(
     modifier: Modifier = Modifier,
     /** The program week of the week shown (programWeekOf); null outside the program. */
     week: Int? = null,
+    /** The week shown is an easy week, named in the week's place. */
+    easy: Boolean = false,
 ) {
     // What the head can say, longest first: the month and the week, the month abbreviated and the
     // week, then the month alone, cut only as a last resort.
-    val weekWords = week?.let { stringResource(R.string.today_head_week, it) }
+    val weekWords = if (easy) stringResource(R.string.today_easy_week) else week?.let { stringResource(R.string.today_head_week, it) }
     val lines = listOfNotNull(
         weekWords?.let { "${monthLine(monday)} · $it" },
         weekWords?.let { "${monthLine(monday, abbreviated = true)} · $it" },
@@ -452,7 +454,7 @@ internal const val DeloadTagTag = "today-deload"
 
 /**
  * The next day to train, in primary container: its letter in the cookie, `Week 7 · Intensify`
- * (`Next · Mon 19 Oct · Week 7` on another date; `Easy week · back after 16 days` in an easy week,
+ * (`Next · Mon 19 Oct · Week 7` on another date; `Back after 16 days` in an easy week,
  * [easyDays] off) over its title, its numbers, and Start session across the card. With no
  * [onStart] (a later date, with training days) there's no Start.
  */
