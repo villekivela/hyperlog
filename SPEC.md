@@ -521,6 +521,67 @@ available weights belong to a **machine at a gym**, not to an exercise.
 The old app's machine weights were wrong in both directions: suggestions that didn't exist on the
 stack, and slow entry of odd values. The ladder picker fixes both.
 
+### Training days and the rotation (ADR 0006)
+
+With training days set (Screens → Training days), the program's days take turns on them: the
+**rotation** (owner, 2026-10-27). Without training days the program runs as a sequence, as before:
+the next day, whenever you train.
+
+- **Each training day takes the next day** of the program, in order. Three days on three training
+  days always land on the same weekdays (A Mon, B Thu, C Sat); four days on three go `A B C`,
+  `D A B`, `C D A`; three days on four go `A B C A`, `B C A B`. The program is written for your
+  week, and the app checks the fit (below) but never rewrites a day.
+- **A program week is a calendar week**, Monday to Sunday, as weekly sets are. Week overrides,
+  deloads and blocks apply by calendar week, whichever days the rotation puts in it, so with four
+  days on three, week 7 trains D, A and B with week 7's prescriptions and C comes in week 8.
+- **A missed day** is a training day whose date passes with no session started on it. Its day is
+  used up: skipped, never moved, and nothing carries over, main lifts included (the program's
+  weekly spread absorbs one miss). A session's start date is the one that counts, so a session
+  started at 23:50 on Monday is Monday's, and nothing is decided at midnight while one runs.
+- **Any session uses up the training day.** A workout from Claude or an ad-hoc session on Monday
+  takes Monday: Monday's program day is used up, but Monday isn't missed or time off, and the week
+  isn't empty.
+- **Training a missed day on another day.** On a day with no training day, while this week's last
+  missed day is still unused by a later training day, Today offers it under the plan: `Monday's
+  Day A is missed · Train it today`. Starting it trains that day today at the gym picked (the start
+  sheet's swaps as ever), and the training day is no longer missed. Left alone, the miss stands.
+- **A week with no session** (with at least one training day in it) doesn't count: the next week
+  trains the same program week again, and the rotation picks up where it was, so next Monday is
+  the day the missed Monday would have been. Today says `No sessions last week · Week 7 again`.
+- **The easy week.** After two or more empty weeks in a row, the first week back is an **easy
+  week**: the days the rotation brings, each slot one set fewer (one always stays) and its target
+  RIR one higher, no techniques, counted as a deload, so it never lowers the estimate. It sits
+  outside the program: the program week after it is the one you stopped at. Today's and Program's
+  day cards carry an `Easy week` tag (the `spa` symbol, as the Deload tag) and the hero reads
+  `Easy week · back after 16 days`. It applies without asking, like progression; the time-off line
+  and Ease back in stay for talking it through (Coaching → Time off).
+- **Starting mid-week.** A program started (or run again, resumed or saved and started) on a
+  Thursday begins at the first training day from that day; the days before it that week aren't
+  missed.
+- **Turning training days on or off** keeps your place. Clearing every training day switches to the
+  sequence, its next day the one the rotation would have given next. Setting them again switches to
+  the rotation from that day, with nothing missed before it. A training day moved to another weekday
+  keeps its turn in the rotation.
+- **From before (database v26):** the program running when the rotation shipped keeps its week and
+  its next day: the calendar week of the update is that program week, the next training day from
+  that day takes the next day, and training days already past that week aren't missed. A restored
+  older backup gets the same step on the day it is restored. Nothing logged is reread.
+- **The coach operations** keep their names with the calendar's meaning (Coaching → What each one
+  does): `skip_day` makes the next training day (or the one on its `date`) missed ahead of time,
+  `repeat_week` trains this program week again next calendar week, and `shift_program` moves the
+  week number as before.
+
+**The fit.** A training day may carry the minutes you have (Training days sheet). The app compares
+each planned day with the training day it lands on, and never changes the day:
+
+- **Time.** When a day's `~N minutes` is more than 5 minutes over its training day's, the card
+  shows it in amber, `~58 min · Saturday has 48`, and tapping it starts a check-in whose first
+  answer is "Day C runs ~58 minutes but Saturday has 48." A training day without minutes is never
+  checked.
+- **Equipment.** With a gym on its training day, a planned day's card counts the swaps that gym
+  needs, `2 swaps at Harbour`, read from the start sheet's swaps. The start sheet handles them as
+  ever; the same swap three sessions in a row is a coach line (Coaching → The coach line).
+
 ## Screens
 
 1. **Today** — the next day's prescription. Start the session, log sets (weight, full + partial
@@ -556,22 +617,28 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        ad-hoc session; TalkBack names every one: `done Day C, workout, ad-hoc session`, a
        workout never called ad hoc), an outlined primary pill with the letter when a
        program day is planned for it, else nothing. Past days without a session have muted dates.
+       A **missed day** (Domain → Training days and the rotation) keeps its letter in a muted
+       outline, struck through; TalkBack reads `Day A, missed`.
        A day's letter is the one its name starts with (`Day A — …`), else its place in the week.
-     - **Planned dates.** The program runs as a sequence, so its dates are an estimate. The next
-       day goes on today, even when today isn't a training day (decided by the owner on #58:
-       Start is always for today), or on the next training day when a session was already
-       finished today (any session). Training days only place the later, estimated dates. Each following day goes on the next training day after that, to the
-       program's last day. **With no training days, only the next day is marked** (tomorrow when
-       a session was finished today). Each planned day is read for its date, with the Changes
-       covering it. A finished program plans nothing.
-     - **The next day to train**, on whatever date it falls, is the hero card in primaryContainer:
+     - **Planned dates.** With training days, the rotation dates every coming day: the next day
+       on the next training day from today (today itself while it is a training day with no
+       session yet), each following day on the training day after, to the program's last day,
+       a week with an easy week or a repeat in it counted as the rotation runs. Start is for a day
+       planned on today (owner, 2026-10-27, replacing #58's "Start is always for today").
+       **With no training days, the program is a sequence and only the next day is marked**: on
+       today, or tomorrow when a session was finished today. Each planned day is read for its
+       date, with the Changes covering it. A finished program plans nothing.
+     - **The next day to train** is the hero card in primaryContainer:
        the day's letter in the 9-sided cookie, `Week 7 · Intensify` (`Next · Mon 19 Oct · Week 7`
        when it isn't today, like a later planned day's, so the line fits) over the name, its numbers (exercises, sets, about how many
        minutes, `~N minutes`, see **Minutes** below) and **Start session**
        across the card. Then each slot's exercise with its sets (`1 × 4–6 [1] · 2 × 6–8 [1]`,
        technique symbols after; a Change's swap reads `In place of …` over the name), the slot
        label (`1`, `5a`) centred on its row, and **Ad-hoc session** as a text button after them.
-       Start session starts the program's next day at the picked gym. While a session runs, the
+       Start session starts the program's next day at the picked gym. On a later date the hero has
+       no Start (`Next · Thu 29 Oct · Week 7`); on a day with no training day, a missed day of this
+       week that no later training day has used up shows under it as `Monday's Day A is missed ·
+       Train it today`, a text button that starts that day. While a session runs, the
        next day on a later date reads as a later planned day, without Start.
      - **Minutes** (the hero card and planned days), to the nearest 5, set
        on #64; the numbers live in `EstimateSeconds` (`ui/today/DayEstimate.kt`) to tune after real
@@ -601,7 +668,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
        planned is the program's last day, and reads `Last day · Wed 25 Nov · Week 12`.
      - **A day with nothing** is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
        planned day. **Past the program's last planned day** it reads `Nothing planned`, with
-       `Last planned: Day C on Wed 25 Nov` selecting that day. **With no training days** only the
+       `Last planned: Day C on Wed 25 Nov` selecting that day. **A missed day**, picked, shows its
+       plan dimmed under `Missed · Mon 26 Oct · Week 7`, with no Start. **With no training days** only the
        next day has a date, so a later date reads `Not planned yet`, with `Next: Day B on Sun 18
        Oct` selecting the next day and **Set your training days** opening their sheet: the program
        goes on, it just isn't dated.
@@ -893,8 +961,13 @@ stack, and slow entry of odd values. The ladder picker fixes both.
    - **Days**: the picked week's days, each headed by its week and name (`Week 7 · Day A — …`). A day to come is in full, slot by
      slot as Today lists it, exactly as the session will prescribe it: the program's day with week
      and day overrides, deloads and the Changes covering it, through the same plan Today and the
-     session read. The next day is headed **Next**; a deload day **Deload** with the `spa` symbol. There are no dates.
-     The next day is read for today, as Today shows it. A later day takes a date-ranged Change by
+     session read. The next day is headed **Next**; a deload day **Deload** with the `spa` symbol.
+     With training days, a day to come carries its planned date (`Week 7 · Thu 29 Oct · Day B — …`)
+     and is read for it, a date-ranged Change covering it when its date is in the range, and the
+     fit (Domain → Training days and the rotation) shows under its heading. With four days on three
+     training days a week lists the days its dates hold, so a program week shows the days the
+     rotation puts in it. **With no training days there are no dates**:
+     the next day is read for today, as Today shows it. A later day takes a date-ranged Change by
      the window the Change's card on Coach shows (its in-force diff): one week of program days per
      week of dates, counted from the later of the range's start and today, never more program days
      than dates, starting at the next day. Other Changes cover it as they cover today. A day a
@@ -903,7 +976,8 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      program for it, the latest if a repeated week trained it twice) shows the date and each
      exercise's top set (the set itself, without its drops, mini-sets or hold), and opens that
      session in History; Back from it returns to Program. A day before the position with no
-     session was skipped: it shows its plan, dimmed, headed **Skipped**.
+     session was skipped: it shows its plan, dimmed, headed **Skipped**, or **Missed · Mon 26 Oct**
+     for a missed day.
    - **Program keeps where you were** (the week picked, the Changes page) while a session opened
      from it or a Change's review is up; choosing Program on the navigation bar opens it on where
      you are.
@@ -975,10 +1049,41 @@ stack, and slow entry of odd values. The ladder picker fixes both.
      program running; while the starter's last run was left mid-way it reads "Resume Hyperlog Full
      Body" instead and resumes that run, asking as Resume does (Run again stays on Programs). The starter is an ordinary program file in the app's assets
      (`programs/full-body-3-day.json`) and imports through the same validator.
-   - **Position**: the program runs as a sequence. Finishing a session of the next day moves the
+   - **Position**: with training days, the rotation sets it: the calendar week is the program
+     week, and each training day, trained or missed, moves the next day on (Domain → Training days
+     and the rotation). Without them the program runs as a sequence. Finishing a session of the next day moves the
      position to the day after it (the next day of the block, then the next week's first day); a
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
+   - **Block review** (owner, 2026-10-27; GLOSSARY Block review): one page on how a finished block
+     went, worked out from the log with no Claude call. A finished block's card on Program has
+     **Review**; Today shows `Build is done · See the review` while today is selected, until the
+     review is opened or the next block's first session starts. The next block starts as written
+     either way.
+     - **A block is finished** when the session of its last planned day is finished or its last
+       calendar week ends, whichever is first; without training days, when its last day is
+       finished.
+     - **Lifts**: each exercise trained at least twice in the block, its estimate before its first
+       session in the block → after its last (as suggestions read it then), deload and easy-week
+       sessions left out; biggest gain first, stalls and drops last. A machine exercise reads the
+       machine used most in the block, named (`Cable left · Harbour`, ADR 0002).
+     - **Turning up**: with training days, sessions done of the block's training days and the
+       missed days by day (`11 of 12 · Day A missed once`), and the weeks it took when a week
+       repeated or an easy week came (`8 weeks for 7 · week 4 again`); without them, days done
+       and the dates the block took.
+     - **Volume**: average weekly sets per muscle as done → as the block is written (its week
+       overrides, not Changes), then the Changes accepted during the block, one line
+       (`2 Changes: no grip work for a week, …`).
+     - **Records** set in the block; **bodyweight** start → end when it was logged in the block.
+     - **The goal**: each lift goal's estimate against it (`97 of 100 kg`); with a date, the
+       block's gain carried on in a straight line to it, marked as an estimate (`on pace for
+       1 Dec`, `4 kg short at this pace`).
+     - **Next**: what the next block changes, as its card's "From <block>" reads, then **Check in
+       about the next block**, a check-in whose first answer is "Build is done. Here's how it
+       went: look at it and the next block." with the review as text in the context.
+     - **Program review**: the last block's review has a column for the whole program beside the
+       block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). A past
+       program on Programs opens its program review.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see Coaching below. A destination of the navigation bar (`sports`), there at any
    time: a check-in with Claude, ending in words, a Change, a workout or a new program. With no
@@ -1066,18 +1171,21 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
   - **Text that leaves the app keeps `@ N`:** the Claude prompts (`@ N RIR` in the legend), backups,
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
-- **Scheduling**: the program runs as a sequence (next day is whatever comes next, whenever you
-  train). Optional training days (Training days, below) set the default gym, let Today notice
-  time off and place the program's coming days on Today's calendar. No reminders or notifications.
+- **Scheduling**: with training days (below), the program's days take turns on them, and a missed
+  day is skipped (Domain → Training days and the rotation, ADR 0006). Without them the program runs
+  as a sequence (next day is whatever comes next, whenever you train). Training days also set the
+  default gym and let Today notice time off. No reminders or notifications.
 - **Training days** (the weekday plan) are yours, kept once for the app, not per gym (ADR 0004):
-  the weekdays you train on, each with an optional gym (Mon = Kalliokoski, Wed = hotel).
+  the weekdays you train on, each with an optional gym and the minutes you have (Mon =
+  Kalliokoski, 60 min; Thu = Harbour, 75 min).
   - **Program shows them** as a row under its header card: `3 days a week · Mon Wed Fri` with a
-    `calendar_today` symbol, or `Set your training days` with none. The row opens the **Training
+    `calendar_today` symbol, or `Set your training days` with none. With fewer or more training days
+    than the program has days, the row adds `· 4 days take turns`, as the rotation does. The row opens the **Training
     days** sheet. **Today's calendar** has a pencil in its header that opens the same sheet, also
     with no program (Screens → Today).
-  - **The sheet** says what the days do (`Today plans your next sessions on these days and counts
-    time off from them`; with two or more gyms, `… and counts time off from them. A session
-    started on one picks its gym.`),
+  - **The sheet** says what the days do (`Your program's days take turns on these days. A day you
+    miss is skipped.`; with two or more gyms, `… A day you miss is skipped. A session started on
+    one picks its gym.`),
     then has the seven weekdays as round toggles labelled `Mo Tu We Th Fr Sa Su` (two letters,
     so no two read the same; TalkBack says the full name), Monday first, and, with two or more
     gyms, a row for each day that's on with its gym in a menu (the gyms, then **Any gym** for none
@@ -1086,6 +1194,10 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     (TalkBack reads the full day and gym name; the menu lists full gym names). With several gyms, a
     day turned on names no gym until one is picked. With one gym there's no menu: a day turned on is
     at that gym, so it keeps it when a second gym is added.
+    **Minutes** (owner, 2026-10-27): every day that's on has a minutes menu at the row's end, `—`
+    (no limit, the default) then 30 to 120 in steps of 5, read as `60 min`; with one gym the row
+    holds only the day and its minutes. The fit reads them (Domain → Training days and the
+    rotation).
     Each change applies at once; **Done** closes it.
   - With no training days, everything behaves as with no weekday plan: the usual gym comes from
     history, and time off counts the days since the last session.
@@ -1304,8 +1416,8 @@ its own operations. With `replaces`, `operations` may be empty, for a reply that
 { "summary": "Hands feel fine: back to the plan.", "scope": "rest_of_program", "replaces": [12], "operations": [] }
 ```
 
-**What each one does.** The program runs as a sequence, so a Change covers sessions by the date
-they are trained on. Plan edits apply, in order, to every day trained on a date in scope;
+**What each one does.** A Change covers sessions by the date they are trained on, the planned
+dates of the rotation with training days, else the dates the sequence is trained on. Plan edits apply, in order, to every day trained on a date in scope;
 position operations run once, when the Change is accepted.
 
 | Operation | JSON | Effect |
@@ -1317,10 +1429,10 @@ position operations run once, when the Change is accepted.
 | `adjust_load` | `slot`?, `percent` (−50…50) | Suggested weights move by the percent, to the nearest rung, on top of progression; the why-line ends "· 10% lighter for a Change". No slot: every slot. |
 | `adjust_rir` | `slot`?, `by` (−5…5) | Target RIR moves by `by` (+1 = one more in reserve), 0–10. No slot: every slot. |
 | `remove_technique` | `slot`?, `technique`? (`dropset`, `myo_reps`, `lengthened_partials`, `iso_hold`, `failure`) | The slot's sets lose that intensity technique (any technique when left out). No slot: every slot. |
-| `skip_day` | — | The next day is passed over. |
+| `skip_day` | `date`? | With training days, the training day on `date` (the next one when left out) is missed ahead of time: its day is used up and the rotation moves on ("I'm away Saturday"). Without them, the next day is passed over. |
 | `deload_week` | `week`? | That program week (the one you're in when left out) is a deload: half its sets per slot (rounded up), RIR + 2, no techniques, and it never lowers the estimate. |
 | `shift_program` | `weeks` (≠ 0) | The rest of the plan starts that many weeks later: the position goes back that many weeks (to week 1 at most), so they are trained again. Negative moves it earlier, skipping weeks. |
-| `repeat_week` | — | The week of the last day trained runs again from its first day. |
+| `repeat_week` | — | The week of the last day trained runs again from its first day; with training days, the next calendar week trains that program week again, the rotation going on. |
 | (`replaces`, on the Change) | ids | The Changes in force with those ids end on accept, as Revert ends them, before the operations apply. Not an operation, so it carries no `reason`. |
 
 Every operation may carry a `reason`. Slots are named by id; a block reusing an id means the same
@@ -1469,13 +1581,37 @@ program's first day. Add to Today while a session runs lands on Today, which sti
 added. It’s on Today once this session ends."
 
 **Time off on Today.** Days off are counted from your training days (the weekday plan): whole
-days from the first planned day after the last finished session that went untrained (today isn't
-missed yet), so the plan's own rest days are not time off. Training Tuesdays only, two weeks since
+days from the first training day after the last session that went untrained (today isn't
+missed yet), so the plan's own rest days are not time off; a missed day's date starts the count. Training Tuesdays only, two weeks since
 the last session is 7 days off. With no weekday plan it counts the days since the last finished
 session. After more than 7 days off, Today shows `11 days since your last session` (the words
 always count from the last session) with **Ease back in**, until a Change or a workout is
 accepted that day. Ease back in starts a check-in whose first answer is "I've had 11 days off.
-Ease me back in." The context holds the count either way.
+Ease me back in." The context holds the count either way. With training days, two empty weeks or
+more also bring the easy week by themselves (Domain → Training days and the rotation): the line
+then reads `16 days since your last session · Easy week` and Ease back in stays, for when you want
+more or less than the easy week gives.
+
+### The coach line
+
+The coach speaks first when the log shows a pattern a check-in should look at (owner, 2026-10-27).
+It only points: it proposes nothing itself, so ADR 0003 holds, and it needs no Claude key to show.
+
+- **The patterns**, in the order they show:
+  1. **The same day missed**: a program day missed 3 times in its last 4 turns of the rotation.
+     `Day A missed 3 of the last 4 weeks · Check in`.
+  2. **A stall**: an exercise's estimate flat or down over its last 3 sessions, deload and easy-week
+     sessions not counted. `Bench hasn't moved in 3 sessions · Check in`.
+  3. **Grinding**: an exercise's last 3 sessions each had a work set at 0 RIR where the target was 2
+     or more. `Leg press hit 0 RIR in 3 sessions running · Check in`.
+  4. **The same swap**: one slot swapped for the same exercise at the start sheet 3 sessions in a
+     row. `Incline press swapped at Harbour 3 times · Check in`.
+- **One line on Today**, above the hero card while today is selected, with ×; the first pattern in
+  order that isn't hidden. × hides that line until its pattern grows (the stall reaches 4 sessions,
+  the day is missed again) or ends and comes back. A line hides while a Change in force covers its
+  exercise or day.
+- **Check in** starts a check-in with the line as its first answer, as Ease back in does, and the
+  context carries the sessions behind it.
 
 ### What Claude is told
 
@@ -1485,7 +1621,9 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   ask only what the situation needs, then answer in words when the plan can stand or reply with
   one Change, workout or program, using only the listed ids; today's date and the days off (the
   last finished session's date and how long ago, and with a weekday plan the days off as Today
-  counts them); the gym answered, with its equipment by kind and each item's weights, its
+  counts them); the training days in weekday order with each one's gym and minutes, the program's
+  days as the rotation puts them on them, the missed days of the last 28 days and any easy week or
+  repeated week; the gym answered, with its equipment by kind and each item's weights, its
   dumbbells and plates, and the exercises missing there (or, with Elsewhere, that the equipment is
   in the words); the program's title, the next day (week, day id, block) and days left; the
   Changes in force, newest first, each with its id, summary, scope, the day it was accepted, its
@@ -1666,6 +1804,13 @@ back.
   again (an answer, Back and a new answer, Try again) goes back to the step that took it instead,
   with no call, to attach it again: its note reads "Attach Nippard PPL.pdf again: Hyperlog doesn’t
   keep files." Dropping the turns after it keeps what Claude was sent before unchanged.
+- **Written for your week** (owner, 2026-10-27, ADR 0006). The check-in's context carries the
+  training days, each with its gym, that gym's equipment and its minutes, and your lift goals.
+  Claude is told to write as many days as you have training days, each for the training day the
+  rotation puts it on (its equipment, within its minutes), unless you ask for another number, and
+  to name each day for its training day (`Day A — Mon · Heavy bench, squat, pulldown`). A file
+  with more days than training days is merged or taken in turns as you answer. The review shows the
+  fit under each day as Program does.
 - **The reply** is `propose_program`'s input, or pasted: `{ "program": <a program file
   (docs/program-format.md)>, "swaps": [...], "newExercises": [...] }`. The program validates as
   import does, its problems' paths under `program.`, and goes through the self-fix loop.
@@ -1852,3 +1997,8 @@ changed to the naming rule, ids kept: `db_incline_press` is "Incline DB Press", 
 12. Check-in with a Claude key, and the scripted coach.
 13. Check-in without a key (Ask Claude in the wizard).
 14. New program in a check-in.
+15. Training days with minutes, and the rotation: planned dates, missed days, empty and easy weeks,
+    the calendar-week program week, and the update for the program running (ADR 0006).
+16. The fit: minutes and swaps on planned days, and New program written for your week.
+17. The coach line.
+18. Block review and program review.

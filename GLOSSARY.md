@@ -57,6 +57,16 @@ _Avoid_: Restart, reset (the old run isn't changed)
 Picking up a program replaced mid-way where it was left, the same run with its sessions and Changes, in place of the one running. Not Resume session, which reopens a finished session.
 _Avoid_: Continue, reactivate
 
+**Block review**:
+One page on how a finished block went: each lift's estimate from start to end, sessions done
+against training days, weekly sets against the block as written, its Changes, records and the lift
+goal.
+_Avoid_: Recap, summary, report
+
+**Program review**:
+The last block's review, with the whole program beside it.
+_Avoid_: Program summary, final report
+
 **Starter program**:
 The original program that ships with the app, Hyperlog Full Body, offered while no program runs.
 _Avoid_: Default program, bundled program
@@ -65,10 +75,24 @@ _Avoid_: Default program, bundled program
 Where you are in a program: which program, which week, and which day comes next.
 
 **Planned date**:
-The date Today's calendar puts a coming day on: the next day on today (or the next training day
-once a session was finished today), each day after it on the next day of the weekday plan. An
-estimate, since the program runs as a sequence; with no weekday plan only the next day has one.
+The date a coming day is trained on: the training day the rotation puts it on. With no weekday plan
+the program runs as a sequence, and only the next day has one, today.
 _Avoid_: Scheduled date, due date
+
+**Missed day**:
+A training day whose date passed with no session started on it. Its day is used up and skipped,
+never moved.
+_Avoid_: Skipped day (Skip day is a Change), postponed day
+
+**Rotation**:
+The program's days in order over the training days: each training day takes the next day, so three
+days on three training days always fall on the same weekdays, and four on three go A B C, D A B.
+_Avoid_: Pinning, sequence (that is the order with no weekday plan)
+
+**Program week**:
+A calendar week, Monday to Sunday, of the program running. A week with no session doesn't count,
+so the next one trains it again.
+_Avoid_: Microcycle
 
 **Day letter**:
 The letter a day goes by on Today's calendar and cards: `A` from `Day A — …`, else its place in
@@ -210,10 +234,14 @@ _Avoid_: Plate set, shared plates
 _Avoid_: Machine (when you mean any equipment)
 
 **Weekday plan**:
-The weekdays you train on, each with an optional gym. Kept once for the app, not per gym. A day's
-gym is the one a session started that day picks; Time off counts from the days. "Training days"
-on screen only; in code and docs it is the weekday plan, since a program's days are days.
-_Avoid_: Schedule (the program runs as a sequence, not on dates), training days (in code)
+Your training days, kept once for the app, not per gym. "Training days" on screen; in code and
+docs it is the weekday plan, since a program's days are also days.
+_Avoid_: Schedule
+
+**Training day**:
+One weekday of the weekday plan, with an optional gym and the minutes you have, such as Mon at
+Harbour for 60 minutes. The program's days take turns on training days (Rotation).
+_Avoid_: Slot (that is a place in a day for an exercise), session window
 
 **Pin stack**:
 A selectorised machine's weight stack: the pin picks a plate, and add-ons go on top. Its ladder is every pin weight plus every combination of the add-ons.
@@ -253,6 +281,16 @@ _Avoid_: Supersedes, cancels, overrides
 **Time off**:
 Days without training beyond the plan's own rest days: from the first day of the weekday plan missed since the last session, or the days since it with no weekday plan. More than a week shows Today's time-off line.
 _Avoid_: Break, layoff
+
+**Easy week**:
+The week back after two or more weeks without a session: the days that come up, one set fewer each
+and one more RIR, counted as a deload and outside the program, which then picks up where it stopped.
+_Avoid_: Ease back in (that is the check-in), return week
+
+**Coach line**:
+The one line on Today that points at a pattern in the log (the same day missed, a stall, grinding,
+the same swap) with Check in. It proposes nothing itself.
+_Avoid_: Nudge, alert, notification
 
 **Swap**:
 Replacing a slot's exercise with an alternative or a matching exercise, for one session or as part of a Change. In a new program from Claude, an exercise the source names that the library lacks, done as the closest library exercise.
