@@ -125,10 +125,13 @@ checked against the library and them, and Start program saves them with it.
 
 ## Running a program
 
-The program runs as a sequence. Today shows the next day; finishing a session of it makes the day
-after the next one: the next day of the block, then the first day of the next week. Days are
-never tied to dates. Importing another program replaces the one running and starts it at week 1,
-day 1; past sessions are kept.
+With training days set in the app, the days take turns on them, in the file's order: each training
+day takes the next day, and a missed one is skipped (SPEC, Training days and the rotation). A file
+written for a week names each day for its training day (`Day A — Mon · …`), but nothing in the file
+ties a day to a weekday. Without training days the program runs as a sequence: Today shows the next
+day, and finishing a session of it makes the day after the next one (the next day of the block,
+then the first day of the next week). Importing another program replaces the one running and
+starts it at week 1, day 1; past sessions are kept.
 
 ## Example
 
