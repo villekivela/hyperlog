@@ -93,7 +93,7 @@ internal fun LazyListScope.blockItems(
         val dayFit = if (day is ProgramDay.Ahead) fit(day) else null
         if (dayFit != null && !dayFit.isEmpty) {
             item(key = "fit-$key") {
-                Box(Modifier.padding(horizontal = CardMargin + CardPadding)) {
+                Box(Modifier.padding(start = CardMargin + CardPadding, end = CardMargin + CardPadding, bottom = 8.dp)) {
                     FitLines(dayFit, stringResource(R.string.fit_day, day.day.letter), MaterialTheme.colorScheme.onSurfaceVariant, onFitTime)
                 }
             }

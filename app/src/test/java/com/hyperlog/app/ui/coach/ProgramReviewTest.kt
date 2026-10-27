@@ -95,6 +95,21 @@ class ProgramReviewTest {
     }
 
     @Test
+    fun aDayTheRotationBringsTwiceInTheWeekIsReadAtItsFirstTrainingDay() {
+        // Two days on three training days go A B A: Day A reads Monday's minutes, not Saturday's.
+        val plan = com.hyperlog.app.week.WeekdayPlan(
+            gyms = mapOf(java.time.DayOfWeek.MONDAY to null, java.time.DayOfWeek.THURSDAY to null, java.time.DayOfWeek.SATURDAY to null),
+            minutes = mapOf(java.time.DayOfWeek.MONDAY to 5),
+        )
+        compose.setContent {
+            HyperlogTheme {
+                ProgramReviewScreen(proposal, names, null, onStart = {}, onReject = {}, fit = ReviewFit(plan, emptyList(), library.exercises, java.time.LocalDate.of(2026, 10, 26)))
+            }
+        }
+        compose.onNodeWithText("· Monday has 5", substring = true).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun aProgramFromAFileSaysWhichFile() {
         show(running = null, file = "Nippard-Upper-Lower.pdf")
         compose.waitFor("From Nippard-Upper-Lower.pdf")

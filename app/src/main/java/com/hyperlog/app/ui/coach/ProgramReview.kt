@@ -239,7 +239,8 @@ class ReviewFit(val plan: WeekdayPlan, val gyms: List<Gym>, val library: List<Ex
     fun of(program: Program): (PlannedDay) -> DayFit {
         if (plan.days.isEmpty()) return { DayFit.None }
         val rotation = Rotations.of(program, RotationAnchor(today, week = 1, day = 0), plan.days, emptyList(), today)
-        val dates = rotation.planned.associate { it.position to it.date }
+        // A day the rotation brings twice (two days on three training days) is read at its first.
+        val dates = rotation.planned.reversed().associate { it.position to it.date }
         return { day ->
             dates[day.position]?.let { Fit.of(day, it, plan, gyms, library, aboutMinutes(day, library, emptyList())) } ?: DayFit.None
         }

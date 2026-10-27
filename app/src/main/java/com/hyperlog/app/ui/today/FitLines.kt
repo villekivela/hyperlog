@@ -1,8 +1,10 @@
 package com.hyperlog.app.ui.today
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
@@ -28,6 +30,11 @@ import java.util.Locale
 
 internal const val FitTimeTag = "fit-time"
 internal const val FitSwapsTag = "fit-swaps"
+internal const val FitChipTag = "fit-chip"
+
+/** The time line's chip (owner, 2026-10-27): the progression's weight-down amber behind dark ink, so it reads on every card in both themes. */
+internal val FitChipFill: Color = Direction.Down.color
+internal val FitChipInk = Color(0xFF1B1623)
 
 /** The words a weekday goes by in the fit lines: `Saturday`. */
 internal fun fullWeekday(day: DayOfWeek): String = day.getDisplayName(TextStyle.FULL, Locale.getDefault())
@@ -38,8 +45,8 @@ internal fun timeOverAnswer(day: String, over: TimeOver): String =
     stringResource(R.string.fit_time_answer, day, over.about, fullWeekday(over.weekday), over.has)
 
 /**
- * How a planned day fits its training day (SPEC, The fit), under its numbers: the time in amber
- * (the progression's weight-down amber), tappable when [onTime] is given, and the swaps muted
+ * How a planned day fits its training day (SPEC, The fit), under its numbers: the time as an amber
+ * chip with dark ink, tappable when [onTime] is given, and the swaps muted
  * under it. Each is left out when nothing is off. [day] is the day's own name (`Day C`).
  */
 @Composable
@@ -51,10 +58,13 @@ internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((Str
         if (time != null) {
             val words = stringResource(R.string.fit_time, time.about, fullWeekday(time.weekday), time.has)
             val answer = timeOverAnswer(day, time)
-            val amber = Direction.Down.color
-            val modifier = if (onTime != null) Modifier.clickable(role = Role.Button) { onTime(answer) } else Modifier
-            Box(modifier.testTag(FitTimeTag).heightIn(min = if (onTime != null) 48.dp else 24.dp).defaultMinSize(minWidth = 48.dp), contentAlignment = Alignment.CenterStart) {
-                Text(words, style = MaterialTheme.typography.bodyMedium, color = amber)
+            val tap = if (onTime != null) Modifier.clickable(role = Role.Button) { onTime(answer) }.heightIn(min = 48.dp) else Modifier.heightIn(min = 32.dp)
+            Box(tap.testTag(FitTimeTag), contentAlignment = Alignment.CenterStart) {
+                Text(
+                    words,
+                    Modifier.testTag(FitChipTag).clip(RoundedCornerShape(8.dp)).background(FitChipFill).padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelLarge, color = FitChipInk,
+                )
             }
         }
         if (swaps != null) {

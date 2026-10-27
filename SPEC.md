@@ -588,12 +588,13 @@ the next day, whenever you train.
 each planned day with the training day it lands on, and never changes the day:
 
 - **Time.** When a day's `~N minutes` is more than 5 minutes over its training day's, the card
-  shows it in amber, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
+  shows it as a chip, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
   answer is "Day C runs ~58 minutes but Saturday has 50." A training day without minutes is never
-  checked. The line is its own, under the card's numbers, in the amber of the progression's
-  weight-down mark (no colour of its own), on every card that has a date: Today's hero and planned
-  days, and Program's days with dates. It is a 48 dp tap target; with no Claude key the tap hands
-  the same words to Ask Claude to share.
+  checked. The chip is its own line under the card's numbers: the amber of the progression's
+  weight-down mark behind dark ink (owner, 2026-10-27; amber text alone read at 2.1 to 3.3:1 on
+  the hero and light cards, the chip's ink 8:1), the same on every card and in both themes, on
+  every card that has a date: Today's hero and planned days, and Program's days with dates. It is
+  a 48 dp tap target; with no Claude key the tap hands the same words to Ask Claude to share.
 - **Equipment.** With a gym on its training day, a planned day's card counts the swaps that gym
   needs, `2 swaps at Harbour`, read from the start sheet's swaps. The start sheet handles them as
   ever; the same swap three sessions in a row is a coach line (Coaching → The coach line). The line
