@@ -653,7 +653,7 @@ end.
 ╰──────────────────────────────────╯           Training days
  Monday’s Day A is missed · Train it today      Mon   Kalliokoski ▾    60 min ▾
  ╰──── onSurfaceVariant ────╯ ╰─ primary ─╯     Wed   Harbour F… ▾     75 min ▾
-                                                Fri   Kalliokoski ▾        — ▾
+                                                Fri   Kalliokoski ▾  No limit ▾
  Easy week, Mon 9 Nov:                          Sat   Harbour F… ▾     45 min ▾
 ╭──────────────────────────────────╮
 │ ⟲  16 days since your last session  [Ease back in] │
@@ -663,7 +663,8 @@ end.
 
 States: today with no training day and a missed Monday (the hero dated, no Start, Train it today);
 the missed day picked; a week trained again (the notice over a hero with Start); an easy week (the
-time-off line, the hero's `Easy week · back after 16 days`, the tag; the notice doesn't show, as
+time-off line, the hero's `Easy week · back after 16 days`, the tag with `One set fewer, 1 more RIR, no
+techniques` under it in the head's tone (owner, 2026-10-27); the notice doesn't show, as
 the easy week isn't the program week again); a later planned day of the easy week; Program's
 training-days row with `3 days take turns`, the missed day's head and the dated heads; the
 Training days sheet with two gyms and minutes, its minutes menu, and both at 360 dp.
