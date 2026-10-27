@@ -57,6 +57,16 @@ _Avoid_: Restart, reset (the old run isn't changed)
 Picking up a program replaced mid-way where it was left, the same run with its sessions and Changes, in place of the one running. Not Resume session, which reopens a finished session.
 _Avoid_: Continue, reactivate
 
+**Block review**:
+One page on how a finished block went: each lift's estimate from start to end, sessions done
+against training days, weekly sets against the block as written, its Changes, records and the lift
+goal.
+_Avoid_: Recap, summary, report
+
+**Program review**:
+The last block's review, with the whole program beside it.
+_Avoid_: Program summary, final report
+
 **Starter program**:
 The original program that ships with the app, Hyperlog Full Body, offered while no program runs.
 _Avoid_: Default program, bundled program

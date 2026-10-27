@@ -1055,6 +1055,35 @@ each planned day with the training day it lands on, and never changes the day:
      position to the day after it (the next day of the block, then the next week's first day); a
      session with nothing logged is discarded and moves nothing; finishing a resumed session again
      doesn't move it twice. After the last day the program is finished.
+   - **Block review** (owner, 2026-10-27; GLOSSARY Block review): one page on how a finished block
+     went, worked out from the log with no Claude call. A finished block's card on Program has
+     **Review**; Today shows `Build is done · See the review` while today is selected, until the
+     review is opened or the next block's first session starts. The next block starts as written
+     either way.
+     - **A block is finished** when the session of its last planned day is finished or its last
+       calendar week ends, whichever is first; without training days, when its last day is
+       finished.
+     - **Lifts**: each exercise trained at least twice in the block, its estimate before its first
+       session in the block → after its last (as suggestions read it then), deload and easy-week
+       sessions left out; biggest gain first, stalls and drops last. A machine exercise reads the
+       machine used most in the block, named (`Cable left · Harbour`, ADR 0002).
+     - **Turning up**: with training days, sessions done of the block's training days and the
+       missed days by day (`11 of 12 · Day A missed once`), and the weeks it took when a week
+       repeated or an easy week came (`8 weeks for 7 · week 4 again`); without them, days done
+       and the dates the block took.
+     - **Volume**: average weekly sets per muscle as done → as the block is written (its week
+       overrides, not Changes), then the Changes accepted during the block, one line
+       (`2 Changes: no grip work for a week, …`).
+     - **Records** set in the block; **bodyweight** start → end when it was logged in the block.
+     - **The goal**: each lift goal's estimate against it (`97 of 100 kg`); with a date, the
+       block's gain carried on in a straight line to it, marked as an estimate (`on pace for
+       1 Dec`, `4 kg short at this pace`).
+     - **Next**: what the next block changes, as its card's "From <block>" reads, then **Check in
+       about the next block**, a check-in whose first answer is "Build is done. Here's how it
+       went: look at it and the next block." with the review as text in the context.
+     - **Program review**: the last block's review has a column for the whole program beside the
+       block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). A past
+       program on Programs opens its program review.
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see Coaching below. A destination of the navigation bar (`sports`), there at any
    time: a check-in with Claude, ending in words, a Change, a workout or a new program. With no
@@ -1972,3 +2001,4 @@ changed to the naming rule, ids kept: `db_incline_press` is "Incline DB Press", 
     the calendar-week program week, and the update for the program running (ADR 0006).
 16. The fit: minutes and swaps on planned days, and New program written for your week.
 17. The coach line.
+18. Block review and program review.
