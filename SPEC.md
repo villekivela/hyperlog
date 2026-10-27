@@ -570,7 +570,10 @@ the next day, whenever you train.
   sequence, its next day the one the rotation would have given next; the sequence has no empty or
   easy weeks, so an easy week under way ends with it (owner, 2026-10-27). Setting them again switches to
   the rotation from that day, with nothing missed before it. A training day moved to another weekday
-  keeps its turn in the rotation.
+  keeps its turn in the rotation. Days changed when none of the new ones is left this week end the
+  week as it stands: trained, it moves on; empty, it's trained again (and counts towards an easy
+  week). A week trained again keeps saying so, and a missed day stays on offer as Train it today,
+  through any change of days or Change that sets the rotation again.
 - **From before (database v26):** the program running when the rotation shipped keeps its week and
   its next day: the calendar week of the update is that program week, the next training day from
   that day takes the next day, and training days already past that week aren't missed. A restored

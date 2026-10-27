@@ -20,7 +20,7 @@ object Migration25To26 : Migration(25, 26) {
         db.execSQL("ALTER TABLE program ADD COLUMN rotation_empty_weeks INTEGER NOT NULL DEFAULT 0")
         db.execSQL(
             "CREATE TABLE IF NOT EXISTS `missed_day` (`program_id` INTEGER NOT NULL, `date` INTEGER NOT NULL, `week` INTEGER NOT NULL, " +
-                "`day_index` INTEGER NOT NULL, PRIMARY KEY(`program_id`, `date`), " +
+                "`day_index` INTEGER NOT NULL, `next_training_day` INTEGER, PRIMARY KEY(`program_id`, `date`), " +
                 "FOREIGN KEY(`program_id`) REFERENCES `program`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         )
         rotateRunning(db, java.time.LocalDate.now())

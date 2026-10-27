@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 /**
  * A training day program [programId] missed on epoch day [date], with the day it used up, kept
  * when the rotation is set again from a later day (days moved, a Change moving the position, the
- * program replaced), which would otherwise no longer reach it (ADR 0006).
+ * program replaced), which would otherwise no longer reach it (ADR 0006). [nextTrainingDay] is the
+ * epoch day of the training day after it, once that came: until then it can still be trained.
  */
 @Entity(
     tableName = "missed_day",
@@ -24,6 +25,7 @@ data class MissedDayEntity(
     val date: Long,
     val week: Int,
     @ColumnInfo(name = "day_index") val dayIndex: Int,
+    @ColumnInfo(name = "next_training_day") val nextTrainingDay: Long? = null,
 )
 
 @Dao

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 26,
-    "identityHash": "ff5b92dc0fd4a96e9b4fb7c6924b8d60",
+    "identityHash": "9262a7e5f2d667eb7fcb6eb27b6074ba",
     "entities": [
       {
         "tableName": "exercise",
@@ -1425,7 +1425,7 @@
       },
       {
         "tableName": "missed_day",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`program_id` INTEGER NOT NULL, `date` INTEGER NOT NULL, `week` INTEGER NOT NULL, `day_index` INTEGER NOT NULL, PRIMARY KEY(`program_id`, `date`), FOREIGN KEY(`program_id`) REFERENCES `program`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`program_id` INTEGER NOT NULL, `date` INTEGER NOT NULL, `week` INTEGER NOT NULL, `day_index` INTEGER NOT NULL, `next_training_day` INTEGER, PRIMARY KEY(`program_id`, `date`), FOREIGN KEY(`program_id`) REFERENCES `program`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "programId",
@@ -1450,6 +1450,11 @@
             "columnName": "day_index",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "nextTrainingDay",
+            "columnName": "next_training_day",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -1476,7 +1481,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ff5b92dc0fd4a96e9b4fb7c6924b8d60')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9262a7e5f2d667eb7fcb6eb27b6074ba')"
     ]
   }
 }

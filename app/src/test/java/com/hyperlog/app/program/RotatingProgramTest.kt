@@ -178,4 +178,88 @@ class RotatingProgramTest {
         assertEquals(LocalDate.of(2026, 10, 31), until(today).rotation!!.planned.first().date)
         screen.cancel()
     }
+
+    private val monWedFri = WeekdayPlan(mapOf(MONDAY to null, java.time.DayOfWeek.WEDNESDAY to null, java.time.DayOfWeek.FRIDAY to null))
+
+    @Test
+    fun trainingDaysChangedAfterTheWeeksLastTrainingDayKeepTheWeeksResult() = runTest {
+        today = LocalDate.of(2026, 10, 26)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        // Week 1 trained in full, then on Saturday evening the days move to Mon Wed Fri.
+        trained(LocalDate.of(2026, 10, 26), Position(1, 0))
+        trained(LocalDate.of(2026, 10, 29), Position(1, 1))
+        today = LocalDate.of(2026, 10, 31)
+        trained(today, Position(1, 0))
+        val next = planned().first()
+        plans.set(monWedFri)
+        assertEquals("2.1 2026-11-02", next)
+        assertEquals(next, planned().first())
+    }
+
+    @Test
+    fun trainingDaysChangedOnAnEmptyWeeksWeekendStillCountItEmpty() = runTest {
+        today = LocalDate.of(2026, 10, 26)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        trained(today, Position(1, 0))
+        // Week 2 has no session; on its Saturday the days move to Mon Wed Fri, none left that week.
+        today = LocalDate.of(2026, 11, 7)
+        plans.set(monWedFri)
+        today = LocalDate.of(2026, 11, 9)
+        val rotation = programs.active.first()!!.rotation!!
+        assertEquals(true, rotation.again)
+        assertEquals(1, rotation.emptyWeeks)
+        assertEquals("2.1 2026-11-09", planned().first())
+    }
+
+    @Test
+    fun aMissedDayStaysOnOfferAfterTheTrainingDaysChangeAndTrainingItClearsIt() = runTest {
+        today = LocalDate.of(2026, 10, 26)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        // Monday missed; on Tuesday Saturday moves to Friday.
+        today = LocalDate.of(2026, 10, 27)
+        plans.set(WeekdayPlan(mapOf(MONDAY to null, THURSDAY to null, java.time.DayOfWeek.FRIDAY to null)))
+        val offered = programs.active.first()!!.rotation!!.trainToday!!
+        assertEquals(LocalDate.of(2026, 10, 26), offered.date)
+        trained(today, offered.position)
+        val rotation = programs.active.first()!!.rotation!!
+        assertNull(rotation.trainToday)
+        assertEquals(emptyList<Any>(), rotation.missed)
+    }
+
+    @Test
+    fun aWeekTrainedAgainKeepsSayingSoWhenTheTrainingDaysChangeMidWeek() = runTest {
+        today = LocalDate.of(2026, 10, 26)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        trained(today, Position(1, 0))
+        // Week 2 has no session, so the week of 9 Nov trains it again; on its Tuesday Saturday moves to Friday.
+        today = LocalDate.of(2026, 11, 10)
+        assertEquals(true, programs.active.first()!!.rotation!!.again)
+        plans.set(WeekdayPlan(mapOf(MONDAY to null, THURSDAY to null, java.time.DayOfWeek.FRIDAY to null)))
+        assertEquals(true, programs.active.first()!!.rotation!!.again)
+    }
+
+    @Test
+    fun aProgramStartedOnASundayStartsItsFirstWeekOnMonday() = runTest {
+        today = LocalDate.of(2026, 11, 1)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        // The week it started in has no training day left, so it doesn't count, trained or not.
+        assertEquals("1.0 2026-11-02", planned().first())
+        assertEquals(false, programs.active.first()!!.rotation!!.again)
+    }
+
+    @Test
+    fun aMissedDayStaysOnOfferAfterAChangeMovesThePosition() = runTest {
+        today = LocalDate.of(2026, 10, 26)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        // Monday missed; on Tuesday a Change shifts the program a week on.
+        today = LocalDate.of(2026, 10, 27)
+        programs.accept(ProgramActions.shift("A week on", -1))
+        assertEquals(LocalDate.of(2026, 10, 26), programs.active.first()!!.rotation!!.trainToday!!.date)
+    }
 }

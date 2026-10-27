@@ -20,6 +20,12 @@ data class SessionStart(val date: LocalDate, val position: Position? = null)
 data class Turn(val date: LocalDate, val position: Position, val easy: Boolean = false)
 
 /**
+ * A [turn] missed before the rotation was last set again, kept since it no longer reaches it, with
+ * the training day [after] it if that came first: until then it can still be trained.
+ */
+data class KeptMiss(val turn: Turn, val after: LocalDate? = null)
+
+/**
  * The rotation as it stands today: the days to come on their training days ([planned], from today
  * to the program's end), the training days [missed] (a day skipped ahead of time included), and
  * this week: whether it trains its program week [again] after an empty one, is an [easy] week, and
@@ -41,9 +47,27 @@ data class Rotation(
     val next: Position,
     /** The date the rotation counts from: days trained before it ran as a sequence. */
     val since: LocalDate = LocalDate.MIN,
+    /** The rotation set again from next Monday, this week done with the sessions it had. */
+    private val weekDone: RotationAnchor = anchor,
+    /** Each training day's date, missed or not, with the next one's. */
+    private val turnAfter: Map<LocalDate, LocalDate> = emptyMap(),
 ) {
     /** The coming training days' dates, in order. */
     val trainingDays: List<LocalDate> get() = planned.map { it.date }
+
+    /**
+     * The rotation set again on [days]: from today, or, when none of them is left this week, from
+     * next Monday with this week done, so it counts as trained or empty all the same.
+     */
+    fun anchorOn(days: Set<DayOfWeek>): RotationAnchor {
+        val sunday = Rotations.mondayOf(anchor.from).plusDays(6)
+        val left = generateSequence(anchor.from) { it.plusDays(1) }.takeWhile { it <= sunday }.any { it.dayOfWeek in days }
+        return if (left) anchor else weekDone
+    }
+
+    /** The days missed before [from], to keep when the rotation is set again from it. */
+    fun keptBefore(from: LocalDate): List<KeptMiss> =
+        missed.filter { it.date < from }.map { KeptMiss(it, turnAfter[it.date]?.takeIf { after -> after < anchor.from }) }
 }
 
 /**
@@ -56,7 +80,8 @@ object Rotations {
     /**
      * The rotation from [anchor] on [days] to [today], given every session started since the
      * anchor's week. [skips] are training days skipped ahead of time; a week in [repeats] (by its
-     * Monday) trains its program week again the week after.
+     * Monday) trains its program week again the week after. [kept] are the days missed before the
+     * anchor.
      */
     fun of(
         program: Program,
@@ -66,6 +91,7 @@ object Rotations {
         today: LocalDate,
         skips: Set<LocalDate> = emptySet(),
         repeats: Set<LocalDate> = emptySet(),
+        kept: List<KeptMiss> = emptyList(),
     ): Rotation {
         require(days.isNotEmpty()) { "Without training days the program runs as a sequence" }
         val planned = mutableListOf<Turn>()
@@ -74,65 +100,58 @@ object Rotations {
         val started = sessions.map { it.date }.toSet()
         // Today is passed once a session started on it.
         val cutoff = if (today in started) today.plusDays(1) else today
-        var week = anchor.week
-        var day = anchor.day
-        var rollback = anchor.rollbackDay
-        var empty = anchor.emptyWeeks
-        var again = false
-        var repeated = false
+        // A rotation set again part-way through a week keeps how that week began.
+        var place = Place(
+            anchor.week, anchor.day, anchor.rollbackDay, anchor.emptyWeeks,
+            again = anchor.emptyWeeks > 0,
+            repeated = anchor.emptyWeeks == 0 && mondayOf(anchor.from).minusWeeks(1) in repeats,
+        )
         var thisWeek: WeekState? = null
         var reset: RotationAnchor? = null
+        var weekDone: RotationAnchor? = null
         var monday = mondayOf(anchor.from)
-        while (week <= program.weeks) {
-            val block = program.blockAt(week)!!
-            val easy = empty >= 2
+        while (place.week <= program.weeks) {
+            val block = program.blockAt(place.week)!!
+            val easy = place.empty >= 2
             // An easy week sits outside the program: it isn't a week trained again.
-            if (monday == mondayOf(today)) thisWeek = WeekState(again && !easy, repeated && !easy, easy, empty)
+            if (monday == mondayOf(today)) thisWeek = WeekState(place.again && !easy, place.repeated && !easy, easy, place.empty)
             val dates = (0L..6L).map { monday.plusDays(it) }.filter { it.dayOfWeek in days && it >= anchor.from }
+            val sunday = monday.plusDays(6)
+            val trained = started.any { it in monday..sunday }
             if (monday == mondayOf(cutoff)) {
-                reset = RotationAnchor(maxOf(cutoff, anchor.from), week, (day + dates.count { it < cutoff }) % block.days.size, rollback, empty)
+                val passed = place.copy(day = place.day + dates.count { it < cutoff })
+                reset = RotationAnchor(maxOf(cutoff, anchor.from), place.week, passed.day % block.days.size, place.rollback, place.empty)
+                weekDone = passed.endWeek(program, trained, monday in repeats).anchor(program, monday.plusWeeks(1))
             }
             dates.forEach { date ->
-                val turn = Turn(date, Position(week, day % block.days.size), easy)
+                val turn = Turn(date, Position(place.week, place.day % block.days.size), easy)
                 when {
                     date < cutoff -> elapsed += turn
                     date in skips -> ahead += turn
                     else -> planned += turn
                 }
-                day++
+                place = place.copy(day = place.day + 1)
             }
             // A past week counts if it had a session; this week and later ones while a training day is left.
-            val sunday = monday.plusDays(6)
-            val counts = started.any { it in monday..sunday } || dates.any { it >= cutoff && it !in skips }
-            again = false
-            repeated = false
-            when {
-                dates.isEmpty() -> Unit
-                counts -> {
-                    // An easy week sits outside the program: the week after it is the one you stopped at.
-                    if (!easy && monday !in repeats) week++
-                    repeated = !easy && monday in repeats
-                    empty = 0
-                    // A new block starts at its first day; a day left over from the last one is dropped.
-                    if (program.blockAt(week)?.id != block.id) day = 0
-                }
-                else -> {
-                    day = rollback
-                    empty++
-                    again = true
-                }
-            }
-            rollback = day
+            val counts = trained || dates.any { it >= cutoff && it !in skips }
+            place = if (dates.isEmpty()) place.copy(rollback = place.day, again = false, repeated = false) else place.endWeek(program, counts, monday in repeats)
             monday = monday.plusWeeks(1)
         }
-        val turns = (elapsed + planned).sortedBy { it.date }
+        val keptTurns = kept.map { it.turn }.filter { it.date < anchor.from }
+        val turns = (keptTurns + elapsed + planned).sortedBy { it.date }
+        val turnAfter = turns.zipWithNext { a, b -> a.date to b.date }.toMap()
+        // A kept day's next training day may have come before the rotation was set again.
+        val until = turnAfter + kept.mapNotNull { k -> k.after?.let { k.turn.date to it } }
         // A missed day trained before the next training day came isn't missed.
-        val missed = elapsed.filterIndexed { i, turn ->
-            val until = turns.getOrNull(i + 1)?.date ?: LocalDate.MAX
-            turn.date !in started && sessions.none { it.position == turn.position && it.date > turn.date && it.date < until }
+        val missed = (keptTurns + elapsed).filter { turn ->
+            val next = until[turn.date] ?: LocalDate.MAX
+            turn.date !in started && sessions.none { it.position == turn.position && it.date > turn.date && it.date < next }
         }
-        val trainToday = elapsed.lastOrNull()?.takeIf { today.dayOfWeek !in days && it in missed && it.date >= mondayOf(today) }
-        val now = thisWeek ?: WeekState(again = false, repeated = false, easy = false, emptyWeeks = empty)
+        val trainToday = (keptTurns + elapsed).maxByOrNull { it.date }?.takeIf {
+            today.dayOfWeek !in days && it in missed && it.date >= mondayOf(today) && (until[it.date] ?: LocalDate.MAX) > today
+        }
+        val now = thisWeek ?: WeekState(again = false, repeated = false, easy = false, emptyWeeks = place.empty)
+        val anchorNow = reset ?: RotationAnchor(maxOf(cutoff, anchor.from), place.week, 0, 0, place.empty)
         return Rotation(
             planned = planned,
             missed = (missed + ahead).sortedBy { it.date },
@@ -141,9 +160,11 @@ object Rotations {
             repeated = now.repeated,
             easy = now.easy,
             emptyWeeks = now.emptyWeeks,
-            anchor = reset ?: RotationAnchor(maxOf(cutoff, anchor.from), week, 0, 0, empty),
+            anchor = anchorNow,
             next = planned.firstOrNull()?.position ?: Position(program.weeks + 1, 0),
             since = anchor.from,
+            weekDone = weekDone ?: anchorNow,
+            turnAfter = until,
         )
     }
 
@@ -152,4 +173,27 @@ object Rotations {
 
     /** This calendar week as the rotation reaches it. */
     private data class WeekState(val again: Boolean, val repeated: Boolean, val easy: Boolean, val emptyWeeks: Int)
+
+    /**
+     * Where the rotation stands: the program [week], the [day] the next training day takes, the
+     * [rollback] day the week started at, the [empty] weeks in a row before it, and whether it
+     * trains its week [again] or [repeated] by a `repeat_week`.
+     */
+    private data class Place(val week: Int, val day: Int, val rollback: Int, val empty: Int, val again: Boolean = false, val repeated: Boolean = false) {
+        /** The week ended: a week that [counts] moves on (a [repeat] or an easy week stays), an empty one starts again. */
+        fun endWeek(program: Program, counts: Boolean, repeat: Boolean): Place {
+            if (!counts) return Place(week, rollback, rollback, empty + 1, again = true)
+            val easy = empty >= 2
+            val next = if (easy || repeat) week else week + 1
+            // A new block starts at its first day; a day left over from the last one is dropped.
+            val day = if (program.blockAt(next)?.id != program.blockAt(week)?.id) 0 else day
+            return Place(next, day, day, 0, repeated = !easy && repeat)
+        }
+
+        /** The rotation set again from [from] at this place. */
+        fun anchor(program: Program, from: LocalDate): RotationAnchor {
+            val size = program.blockAt(week)?.days?.size ?: 1
+            return RotationAnchor(from, week, day % size, rollback % size, empty)
+        }
+    }
 }
