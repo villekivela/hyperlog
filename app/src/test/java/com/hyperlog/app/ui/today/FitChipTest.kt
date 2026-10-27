@@ -71,4 +71,22 @@ class FitChipTest {
     fun itsInkReadsOnTheAmberAtFourAndAHalfToOne() {
         assertTrue(contrast(FitChipInk, Amber) >= 4.5)
     }
+
+    @Test
+    fun aTappableChipEndsInAChevronAndAReadOnlyOneDoesNot() {
+        compose.setContent {
+            HyperlogTheme {
+                androidx.compose.foundation.layout.Column {
+                    FitLines(fit, "Day C", Color.Gray, onTime = {})
+                }
+            }
+        }
+        compose.onNodeWithTag(FitChevronTag, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aReadOnlyChipHasNoChevron() {
+        compose.setContent { HyperlogTheme { FitLines(fit, "Day C", Color.Gray) } }
+        compose.onNodeWithTag(FitChevronTag, useUnmergedTree = true).assertDoesNotExist()
+    }
 }

@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
@@ -22,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.ui.session.Direction
 import com.hyperlog.app.ui.session.color
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.week.DayFit
 import com.hyperlog.app.week.TimeOver
 import java.time.DayOfWeek
@@ -31,6 +35,7 @@ import java.util.Locale
 internal const val FitTimeTag = "fit-time"
 internal const val FitSwapsTag = "fit-swaps"
 internal const val FitChipTag = "fit-chip"
+internal const val FitChevronTag = "fit-chevron"
 
 /** The time line's chip (owner, 2026-10-27): the progression's weight-down amber behind dark ink, so it reads on every card in both themes. */
 internal val FitChipFill: Color = Direction.Down.color
@@ -60,11 +65,14 @@ internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((Str
             val answer = timeOverAnswer(day, time)
             val tap = if (onTime != null) Modifier.clickable(role = Role.Button) { onTime(answer) }.heightIn(min = 48.dp) else Modifier.heightIn(min = 32.dp)
             Box(tap.testTag(FitTimeTag), contentAlignment = Alignment.CenterStart) {
-                Text(
-                    words,
-                    Modifier.testTag(FitChipTag).clip(RoundedCornerShape(8.dp)).background(FitChipFill).padding(horizontal = 12.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelLarge, color = FitChipInk,
-                )
+                Row(
+                    Modifier.testTag(FitChipTag).clip(RoundedCornerShape(8.dp)).background(FitChipFill).padding(start = 12.dp, end = if (onTime != null) 8.dp else 12.dp, top = 4.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(words, style = MaterialTheme.typography.labelLarge, color = FitChipInk)
+                    // Like the Training days row, a chevron says it opens something.
+                    if (onTime != null) SymbolIcon(Symbol.ChevronRight, null, Modifier.size(20.dp).testTag(FitChevronTag), tint = FitChipInk)
+                }
             }
         }
         if (swaps != null) {

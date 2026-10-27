@@ -594,7 +594,8 @@ each planned day with the training day it lands on, and never changes the day:
   weight-down mark behind dark ink (owner, 2026-10-27; amber text alone read at 2.1 to 3.3:1 on
   the hero and light cards, the chip's ink 8:1), the same on every card and in both themes, on
   every card that has a date: Today's hero and planned days, and Program's days with dates. It is
-  a 48 dp tap target; with no Claude key the tap hands the same words to Ask Claude to share.
+  a 48 dp tap target ending in a chevron (`›`, in the ink, as the Training days row has; owner,
+  2026-10-27), which the review's read-only chip leaves out; with no Claude key the tap hands the same words to Ask Claude to share.
 - **Equipment.** With a gym on its training day, a planned day's card counts the swaps that gym
   needs, `2 swaps at Harbour`, read from the start sheet's swaps. The start sheet handles them as
   ever; the same swap three sessions in a row is a coach line (Coaching → The coach line). The line
