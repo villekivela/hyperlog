@@ -46,7 +46,7 @@ internal fun timeOverAnswer(day: String, over: TimeOver): String =
 internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((String) -> Unit)? = null) {
     val time = fit.time
     val swaps = fit.swaps
-    if (time == null && swaps == null) return
+    if (fit.isEmpty) return
     Column {
         if (time != null) {
             val words = stringResource(R.string.fit_time, time.about, fullWeekday(time.weekday), time.has)

@@ -400,11 +400,11 @@ private fun PlannedStats(
     color: Color,
     library: List<Exercise>,
     finished: List<PastSessionItem>,
-    fit: DayFit = DayFit(null, null),
+    fit: DayFit = DayFit.None,
     onFitTime: ((String) -> Unit)? = null,
 ) {
     Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day, library, finished), estimate = true, color = color)
-    if (fit.time != null || fit.swaps != null) {
+    if (!fit.isEmpty) {
         Spacer(Modifier.height(12.dp))
         FitLines(fit, stringResource(R.string.fit_day, day.letter), color.copy(alpha = 0.78f), onFitTime)
     }
@@ -479,7 +479,7 @@ internal fun HeroCard(
     library: List<Exercise>,
     finished: List<PastSessionItem>,
     easyDays: Int? = null,
-    fit: DayFit = DayFit(null, null),
+    fit: DayFit = DayFit.None,
     onFitTime: ((String) -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -558,7 +558,7 @@ internal fun PlannedCard(
     library: List<Exercise>,
     finished: List<PastSessionItem>,
     missed: Boolean = false,
-    fit: DayFit = DayFit(null, null),
+    fit: DayFit = DayFit.None,
     onFitTime: ((String) -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme

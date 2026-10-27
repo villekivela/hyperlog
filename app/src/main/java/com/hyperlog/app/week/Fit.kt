@@ -14,7 +14,13 @@ data class TimeOver(val about: Int, val has: Int, val weekday: DayOfWeek)
 data class SwapCount(val count: Int, val gym: String)
 
 /** How a planned day fits its training day: what is off, if anything. */
-data class DayFit(val time: TimeOver?, val swaps: SwapCount?)
+data class DayFit(val time: TimeOver?, val swaps: SwapCount?) {
+    val isEmpty: Boolean get() = time == null && swaps == null
+
+    companion object {
+        val None = DayFit(null, null)
+    }
+}
 
 /**
  * Each planned day against the training day it lands on (SPEC, Domain → Training days and the
@@ -31,7 +37,7 @@ object Fit {
      */
     fun of(day: PlannedDay, date: LocalDate, plan: WeekdayPlan, gyms: List<Gym>, library: List<Exercise>, about: Int): DayFit {
         val weekday = date.dayOfWeek
-        if (weekday !in plan.days) return DayFit(null, null)
+        if (weekday !in plan.days) return DayFit.None
         val has = plan.minutes[weekday]
         val time = if (has != null && about > has + SLACK) TimeOver(about, has, weekday) else null
         val gym = plan.gyms[weekday]?.let { id -> gyms.firstOrNull { it.id == id } }

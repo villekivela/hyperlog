@@ -81,7 +81,7 @@ internal fun LazyListScope.blockItems(
     onWeek: (Int) -> Unit,
     onOpenSession: (Long) -> Unit,
     /** How a day to come fits its training day, under its head. */
-    fit: (ProgramDay) -> DayFit = { DayFit(null, null) },
+    fit: (ProgramDay) -> DayFit = { DayFit.None },
     /** Tapping a day's time line; null leaves it as words. */
     onFitTime: ((String) -> Unit)? = null,
 ) {
@@ -91,7 +91,7 @@ internal fun LazyListScope.blockItems(
         val key = day.key
         item(key = "head-$key") { DayHead(day) }
         val dayFit = if (day is ProgramDay.Ahead) fit(day) else null
-        if (dayFit != null && (dayFit.time != null || dayFit.swaps != null)) {
+        if (dayFit != null && !dayFit.isEmpty) {
             item(key = "fit-$key") {
                 Box(Modifier.padding(horizontal = CardMargin + CardPadding)) {
                     FitLines(dayFit, stringResource(R.string.fit_day, day.day.letter), MaterialTheme.colorScheme.onSurfaceVariant, onFitTime)

@@ -217,7 +217,7 @@ internal fun ProgramReviewList(
             program, block, fresh, comparison, week, days, names,
             onBlock = { i -> week = program.blocks[i].weekStart },
             onWeek = { week = it }, onOpenSession = {},
-            fit = { day -> fitOf?.invoke(day.day) ?: DayFit(null, null) },
+            fit = { day -> fitOf?.invoke(day.day) ?: DayFit.None },
         )
         item(key = "end") { Spacer(Modifier.height(24.dp)) }
     }
@@ -237,11 +237,11 @@ class ReviewFit(val plan: WeekdayPlan, val gyms: List<Gym>, val library: List<Ex
      * doesn't reach, and nothing without training days.
      */
     fun of(program: Program): (PlannedDay) -> DayFit {
-        if (plan.days.isEmpty()) return { DayFit(null, null) }
+        if (plan.days.isEmpty()) return { DayFit.None }
         val rotation = Rotations.of(program, RotationAnchor(today, week = 1, day = 0), plan.days, emptyList(), today)
         val dates = rotation.planned.associate { it.position to it.date }
         return { day ->
-            dates[day.position]?.let { Fit.of(day, it, plan, gyms, library, aboutMinutes(day, library, emptyList())) } ?: DayFit(null, null)
+            dates[day.position]?.let { Fit.of(day, it, plan, gyms, library, aboutMinutes(day, library, emptyList())) } ?: DayFit.None
         }
     }
 }

@@ -209,6 +209,7 @@ fun ProgramScreen(
             )
         },
     ) { padding ->
+        val programSessions = remember(sessions, active?.id) { sessions.filter { it.programId == active?.id } }
         Box(Modifier.fillMaxSize().padding(padding)) {
             when {
                 errors != null -> ImportErrors(errors, onClose = onCloseErrors, onRetry = onImport)
@@ -223,7 +224,7 @@ fun ProgramScreen(
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan),
                     weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.days?.size),
                     onOpenWeekdayPlan = { editingWeekdayPlan = true },
-                    fit = { day -> day.date?.let { Fit.of(day.day, it, weekdayPlan, gyms, library, aboutMinutes(day.day, library, sessions.filter { s -> s.programId == active.id })) } },
+                    fit = { day -> day.date?.let { Fit.of(day.day, it, weekdayPlan, gyms, library, aboutMinutes(day.day, library, programSessions)) } },
                     onFitTime = onCheckInFit,
                 )
             }
@@ -345,7 +346,7 @@ private fun ProgramWeeks(
             program, block, active, comparison, week, days, names,
             onBlock = { i -> program.blocks[i].let { b -> onWeek(if (currentWeek in b.weekStart..b.weekEnd) currentWeek else b.weekStart) } },
             onWeek = onWeek, onOpenSession = onOpenSession,
-            fit = { day -> (day as? ProgramDay.Ahead)?.let(fit) ?: DayFit(null, null) }, onFitTime = onFitTime,
+            fit = { day -> (day as? ProgramDay.Ahead)?.let(fit) ?: DayFit.None }, onFitTime = onFitTime,
         )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
     }
