@@ -225,7 +225,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(25), file["database"])
+        assertEquals(JsonPrimitive(26), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -483,5 +483,17 @@ class BackupsTest {
         assertEquals(listOf("Backup test"), kept.map { it.title })
         assertEquals(com.hyperlog.app.program.ListedProgram.Status.Running(com.hyperlog.app.program.Position(2, 0), finished = false), kept.single().status)
         assertEquals(1_760_000_000_000L, phone.programs().program(kept.single().id)!!.startedAt)
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase25RotatesItsProgramFromTheDayItIsRestored() = runTest {
+        val file = javaClass.getResource("/backup/hyperlog-backup-db25.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val row = phone.programs().active()!!
+        // Its week and next day hold from the restore on: a session in it started that day, so from the day after.
+        val restoredOn = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+        assertEquals(Triple(restoredOn.plusDays(1).toEpochDay(), 2, 0), Triple(row.rotationFrom, row.week, row.dayIndex))
+        assertEquals(listOf(null, null), phone.weekdayPlan().all().map { it.minutes })
     }
 }

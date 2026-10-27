@@ -4,7 +4,40 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23, Migration23To24, Migration24To25)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23, Migration23To24, Migration24To25, Migration25To26)
+
+/**
+ * v26: the program's days take turns on training days (ADR 0006). Training days gain the minutes
+ * you have, sessions an easy week, and a program its rotation. The program running keeps its week
+ * and next day: the rotation starts from the update.
+ */
+object Migration25To26 : Migration(25, 26) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE weekday_plan ADD COLUMN minutes INTEGER")
+        db.execSQL("ALTER TABLE session ADD COLUMN easy INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE program ADD COLUMN rotation_from INTEGER")
+        db.execSQL("ALTER TABLE program ADD COLUMN rotation_rollback INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE program ADD COLUMN rotation_empty_weeks INTEGER NOT NULL DEFAULT 0")
+        rotateRunning(db, java.time.LocalDate.now())
+    }
+
+    /**
+     * With training days, the program running rotates from [today] (tomorrow once a session started
+     * today) at its week and next day, so no training day before is missed. Also run on a restored
+     * backup from before v26, on the day it is restored.
+     */
+    fun rotateRunning(db: SupportSQLiteDatabase, today: java.time.LocalDate) {
+        val hasDays = db.query("SELECT COUNT(*) FROM weekday_plan").use { it.moveToFirst() && it.getInt(0) > 0 }
+        if (!hasDays) return
+        val zone = java.time.ZoneId.systemDefault()
+        val start = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        val end = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        val trainedToday = db.query("SELECT COUNT(*) FROM session WHERE started_at >= ? AND started_at < ?", arrayOf<Any>(start, end))
+            .use { it.moveToFirst() && it.getInt(0) > 0 }
+        val from = (if (trainedToday) today.plusDays(1) else today).toEpochDay()
+        db.execSQL("UPDATE program SET rotation_from = ?, rotation_rollback = day_index, rotation_empty_weeks = 0 WHERE active = 1 AND rotation_from IS NULL", arrayOf<Any>(from))
+    }
+}
 
 /**
  * v25: programs saved for later (SPEC, Program → Programs). A program gains when it started, when

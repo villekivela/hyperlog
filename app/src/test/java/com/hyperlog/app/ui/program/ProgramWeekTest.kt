@@ -153,4 +153,21 @@ class ProgramWeekTest {
         val test = ProgramWeek.comparison(program, program.blocks.last())!!
         assertTrue(test.rule.second.deload)
     }
+
+    @Test
+    fun withTrainingDaysAWeekShowsItsDaysOnTheirDatesAndAMissedOneSaysSo() = runTest {
+        // Tuesday 13 Oct; the rotation runs from Monday, which was missed.
+        com.hyperlog.app.week.WeekdayPlans(db, clock = { now }).set(
+            com.hyperlog.app.week.WeekdayPlan(listOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.THURSDAY, java.time.DayOfWeek.SATURDAY).associateWith { null }),
+        )
+        db.programs().setRotation(active().id, LocalDate.of(2026, 10, 12).toEpochDay(), 6, 0, 0, 0)
+        val days = ProgramWeek.days(active(), 6, emptyList()).map { day ->
+            when (day) {
+                is ProgramDay.Missed -> "missed ${day.date} ${day.position.day}"
+                is ProgramDay.Ahead -> "ahead ${day.date} ${day.position.day}${if (day.next) " next" else ""}"
+                else -> day.toString()
+            }
+        }
+        assertEquals(listOf("missed 2026-10-12 0", "ahead 2026-10-15 1 next", "ahead 2026-10-17 2"), days)
+    }
 }

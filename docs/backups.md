@@ -16,13 +16,14 @@ before switching phones. Auto Backup is the safety net.
 
 Everything you made, as stored on the phone:
 
-- **Programs** with their position, and every **Change** accepted on them (reverted ones too),
+- **Programs** with their position (and, on training days, where the rotation was set), and every
+  **Change** accepted on them (reverted ones too),
   each with the check-in that made it.
 - **Workouts** from the coach: the one waiting on Today, and each one a session trained.
 - **Sessions**: finished ones with every set, drop, mini-set and hold, the edits made during them
   (swaps, added and removed sets, techniques), and **the running session** with the set half-typed on
   the pad, the exercise on screen and the rest timer.
-- **Training days** (the weekday plan), each with its gym.
+- **Training days** (the weekday plan), each with its gym and minutes.
 - **Gyms and equipment**: gyms, equipment and their weight ladders, the shared
   dumbbells and plates, the machine remembered for each exercise, and the exercises a gym is
   missing.

@@ -121,21 +121,23 @@ class TodayCalendarTest {
     }
 
     @Test
-    fun withTrainingDaysTheLaterDaysArePlannedOnThemAndSelectingOneShowsItsPlan() {
-        // Every weekday but today's: Day B goes on tomorrow's weekday at the earliest.
+    fun withTrainingDaysTheProgramStartsOnTheFirstOneAndTodayWithoutOneShowsItDated() {
+        // Every weekday but today's: the program starts tomorrow.
         val days = DayOfWeek.entries.filter { it != today.dayOfWeek }.toTypedArray()
         trainingDays(*days)
         importProgram()
         val tomorrow = today.plusDays(1)
-        show(tomorrow)
-        compose.await(cell(tomorrow, ", planned Day B"))
-        compose.onNode(cell(tomorrow)).performClick()
-        compose.waitFor("Planned · ${short(tomorrow)} · Week 1")
-        compose.onNodeWithText("Leg Extension").assertIsDisplayed()
+        // Today shows tomorrow's day, dated, with no Start: Start is for a day planned on today.
+        compose.waitFor("Next · ${short(tomorrow)} · Week 1")
         compose.onNodeWithText("Start session").assertDoesNotExist()
+        show(tomorrow)
+        compose.await(cell(tomorrow, ", planned Day A"))
+        compose.onNode(cell(tomorrow)).performClick()
+        compose.waitFor("Next · ${short(tomorrow)} · Week 1")
+        compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
         // Off today: the header offers the way back.
         compose.onNode(hasTestTag(TodayButtonTag)).performClick()
-        compose.waitFor("Week 1 · Main")
+        compose.waitFor("Next · ${short(tomorrow)} · Week 1")
     }
 
     @Test
@@ -168,7 +170,8 @@ class TodayCalendarTest {
         // block's name would wrap it onto a second line on the phone.
         compose.waitFor("Next · ${short(tomorrow)} · Week 1")
         compose.onNodeWithText("Leg Extension").assertIsDisplayed()
-        compose.onNodeWithText("Start session").assertIsDisplayed()
+        // Start is only for a day planned on today.
+        compose.onNodeWithText("Start session").assertDoesNotExist()
         compose.onNode(hasTestTag(TodayButtonTag)).performClick()
         compose.click("Open session")
         compose.waitFor("Barbell Bench Press")
@@ -206,12 +209,13 @@ class TodayCalendarTest {
         compose.waitForIdle()
         compose.await(cell(longAgo, ", done"))
         compose.onNode(hasTestTag(TodayButtonTag)).performClick()
-        compose.await(cell(today, ", planned Day A"))
         compose.onNode(hasTestTag(TodayButtonTag)).assertDoesNotExist()
-        // Four days left, on Mondays: the last is three Mondays after the first, inside the four weeks on.
-        val lastMonday = generateSequence(today.plusDays(1)) { it.plusDays(1) }.first { it.dayOfWeek == DayOfWeek.MONDAY }.plusWeeks(2)
-        show(lastMonday)
-        compose.await(cell(lastMonday, ", planned Day B"))
+        // One training day a week takes one day of each program week: Day A on the first Monday, Day B on the next.
+        val firstMonday = generateSequence(today) { it.plusDays(1) }.first { it.dayOfWeek == DayOfWeek.MONDAY }
+        show(firstMonday)
+        compose.await(cell(firstMonday, ", planned Day A"))
+        compose.onNode(hasTestTag(CalendarTag)).performTouchInput { swipeLeft() }
+        compose.await(cell(firstMonday.plusWeeks(1), ", planned Day B"))
     }
 
     @Test
@@ -267,8 +271,8 @@ class TodayCalendarTest {
     fun pastTheProgramsLastDayNothingIsPlannedAndTheLastDaySaysSo() {
         trainingDays(DayOfWeek.MONDAY)
         importProgram()
-        // Four days left, on Mondays: the last is three Mondays after the first.
-        val lastMonday = generateSequence(today.plusDays(1)) { it.plusDays(1) }.first { it.dayOfWeek == DayOfWeek.MONDAY }.plusWeeks(2)
+        // On Mondays alone each program week trains one day: the last is the second Monday.
+        val lastMonday = generateSequence(today) { it.plusDays(1) }.first { it.dayOfWeek == DayOfWeek.MONDAY }.plusWeeks(1)
         show(lastMonday)
         compose.onNode(cell(lastMonday)).performClick()
         compose.waitFor("Last day · ${short(lastMonday)} · Week 2")

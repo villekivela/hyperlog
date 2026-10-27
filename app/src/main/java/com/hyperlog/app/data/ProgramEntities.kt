@@ -23,9 +23,12 @@ data class ProgramEntity(
     /** The program file's JSON, as imported. */
     val source: String,
     @ColumnInfo(name = "imported_at") val importedAt: Long,
-    /** The next day's week, from 1; past the last week once the program is finished. */
+    /**
+     * The next day's week, from 1; past the last week once the program is finished. While it
+     * rotates on training days ([rotationFrom] set), the week the rotation was set at.
+     */
     val week: Int = 1,
-    /** The next day's index in its week's block. */
+    /** The next day's index in its week's block; while it rotates, the day the rotation was set at. */
     @ColumnInfo(name = "day_index") val dayIndex: Int = 0,
     val active: Boolean = true,
     /** When it started running; null for a program saved for later. */
@@ -34,6 +37,14 @@ data class ProgramEntity(
     @ColumnInfo(name = "ended_at") val endedAt: Long? = null,
     /** A saved program's new exercises, as `newExercises` in Claude's reply; null with none. */
     @ColumnInfo(name = "new_exercises") val newExercises: String? = null,
+    /**
+     * While it runs on training days, the epoch day the rotation was set from (ADR 0006), with
+     * [week] and [dayIndex]; null while it runs as a sequence. [rotationRollback] and
+     * [rotationEmptyWeeks] are the rest of the [com.hyperlog.app.week.RotationAnchor].
+     */
+    @ColumnInfo(name = "rotation_from") val rotationFrom: Long? = null,
+    @ColumnInfo(name = "rotation_rollback", defaultValue = "0") val rotationRollback: Int = 0,
+    @ColumnInfo(name = "rotation_empty_weeks", defaultValue = "0") val rotationEmptyWeeks: Int = 0,
 )
 
 @Dao
@@ -76,6 +87,13 @@ interface ProgramDao {
 
     @Query("UPDATE program SET week = :week, day_index = :day WHERE id = :id")
     suspend fun setPosition(id: Long, week: Int, day: Int)
+
+    /** Program [id] rotates on training days from epoch day [from], at [week] and [day]; null [from] runs it as a sequence from there. */
+    @Query(
+        "UPDATE program SET rotation_from = :from, week = :week, day_index = :day, rotation_rollback = :rollback, " +
+            "rotation_empty_weeks = :emptyWeeks WHERE id = :id",
+    )
+    suspend fun setRotation(id: Long, from: Long?, week: Int, day: Int, rollback: Int, emptyWeeks: Int)
 }
 
 /**

@@ -58,12 +58,24 @@ object Changes {
         return changes.filter { it.covers(written, date) }.fold(written) { day, c -> c.change.operations.fold(day, ::edit) }
     }
 
-    /** [change] accepted at [position] on [today]: its position operations run, and it is dated. */
-    fun accept(program: Program, position: Position, change: Change, today: LocalDate): AcceptedChange {
+    /**
+     * [change] accepted at [position] on [today]: its position operations run, and it is dated.
+     * With training days, [nextTrainingDay] is the next one: a `skip_day` names it unless it names
+     * another, and it and `repeat_week` leave the position to the rotation (ADR 0006).
+     */
+    fun accept(program: Program, position: Position, change: Change, today: LocalDate, nextTrainingDay: LocalDate? = null): AcceptedChange {
         val resolved = change.copy(
-            operations = change.operations.map { if (it is Operation.DeloadWeek && it.week == null) it.copy(week = position.week.coerceAtMost(program.weeks)) else it },
+            operations = change.operations.map {
+                when {
+                    it is Operation.DeloadWeek && it.week == null -> it.copy(week = position.week.coerceAtMost(program.weeks))
+                    it is Operation.SkipDay && it.date == null && nextTrainingDay != null -> it.copy(date = nextTrainingDay.toString())
+                    else -> it
+                }
+            },
         )
-        val after = resolved.operations.filter { it.movesPosition }.fold(position) { p, op -> move(program, p, op) }
+        val rotating = nextTrainingDay != null
+        val after = resolved.operations.filter { it.movesPosition && !(rotating && (it is Operation.SkipDay || it is Operation.RepeatWeek)) }
+            .fold(position) { p, op -> move(program, p, op) }
         return AcceptedChange(0, resolved, today, position, after, program.blockAt(position.week.coerceAtMost(program.weeks))?.id)
     }
 
@@ -81,11 +93,11 @@ object Changes {
      * What accepting [proposed] at [position] on [today] would change, on top of [changes]: the
      * days it covers from the position it leaves, the first of each day of each block.
      */
-    fun diff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, proposed: Change): ChangeDiff {
+    fun diff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, proposed: Change, nextTrainingDay: LocalDate? = null): ChangeDiff {
         // The Changes it replaces end first, as Revert would end them; the plan after has them gone.
         val (ended, kept) = changes.partition { it.id in proposed.replaces }
         val from = ending(program, position, ended)
-        val accepted = accept(program, from, proposed, today).copy(id = Long.MAX_VALUE)
+        val accepted = accept(program, from, proposed, today, nextTrainingDay).copy(id = Long.MAX_VALUE)
         val date = (proposed.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
         val window = when (val scope = proposed.scope) {
             is Scope.Dates -> {

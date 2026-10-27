@@ -11,6 +11,8 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.week.Rotation
+import com.hyperlog.app.week.Turn
 import java.time.LocalDate
 
 /** A day of a week as Program shows it, with the day as written or as it will be trained. */
@@ -22,13 +24,16 @@ sealed interface ProgramDay {
      * A day still to train, as the session will prescribe it ([Changes.dayAhead]). [endsOn] is the
      * end of a date-ranged Change on it, which the day may fall after.
      */
-    data class Ahead(override val day: PlannedDay, val next: Boolean, val endsOn: LocalDate?) : ProgramDay
+    data class Ahead(override val day: PlannedDay, val next: Boolean, val endsOn: LocalDate?, val date: LocalDate? = null) : ProgramDay
 
     /** A day trained: the session logged for it. */
     data class Done(override val day: PlannedDay, val session: PastSessionItem) : ProgramDay
 
     /** A day passed without a session, by a skip: what it prescribed, marked skipped. */
     data class Skipped(override val day: PlannedDay) : ProgramDay
+
+    /** A training day passed without a session, on [date]: its day used up (ADR 0006). */
+    data class Missed(override val day: PlannedDay, val date: LocalDate) : ProgramDay
 }
 
 /**
@@ -81,6 +86,7 @@ object ProgramWeek {
         // The latest session of each day of this program; a repeated week trains its days again.
         val trained = sessions.filter { it.programId == active.id && it.position != null }
             .sortedBy { it.startedAt }.associateBy { it.position!! }
+        active.rotation?.let { rotation -> rotated(active, rotation, week, trained)?.let { return it } }
         return block.days.indices.mapNotNull { i ->
             val position = Position(week, i)
             if (program.ordinal(position) < next) {
@@ -93,4 +99,24 @@ object ProgramWeek {
             ProgramDay.Ahead(day, program.ordinal(position) == next, endsOn)
         }
     }
+
+    /**
+     * With training days, the days [week]'s dates hold, by date: those trained, those missed and
+     * those to come, each read for its date. Null for a week the rotation hasn't reached, before it
+     * started, which reads as a sequence.
+     */
+    private fun rotated(active: ActiveProgram, rotation: Rotation, week: Int, trained: Map<Position, PastSessionItem>): List<ProgramDay>? {
+        val missed = rotation.missed.filter { it.position.week == week }
+        val planned = rotation.planned.filter { it.position.week == week }
+        val done = trained.filterKeys { it.week == week }.values.sortedBy { it.startedAt }
+        if (week < active.position.week && missed.isEmpty() && planned.isEmpty()) return null
+        if (week > active.position.week && planned.isEmpty()) return null
+        val first = rotation.planned.firstOrNull()
+        val dated = done.mapNotNull { s -> active.dayOf(Turn(dateOf(s.startedAt), s.position!!))?.let { dateOf(s.startedAt) to ProgramDay.Done(it, s) } } +
+            missed.mapNotNull { t -> active.dayOf(t)?.let { t.date to ProgramDay.Missed(it, t.date) } } +
+            planned.mapNotNull { t -> active.dayOf(t)?.let { t.date to ProgramDay.Ahead(it, t == first, null, t.date) } }
+        return dated.sortedBy { it.first }.map { it.second }
+    }
+
+    private fun dateOf(millis: Long): LocalDate = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
 }

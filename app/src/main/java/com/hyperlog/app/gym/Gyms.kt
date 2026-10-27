@@ -172,7 +172,7 @@ class Gyms(private val db: HyperlogDatabase) {
         val id = db.withTransaction {
             val id = addGym(file.name)
             if (file.usualDays.isNotEmpty()) {
-                weekdayPlans.set(WeekdayPlan(weekdayPlans.current().gyms + file.usualDays.associateWith { id }))
+                weekdayPlans.current().let { plan -> weekdayPlans.set(plan.copy(gyms = plan.gyms + file.usualDays.associateWith { id })) }
             }
             file.pinPlates?.let { setPinPlates(id, it) }
             file.plates?.let { setPlates(id, it) }

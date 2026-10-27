@@ -115,6 +115,11 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
                 if (database < 19) com.hyperlog.app.data.Migration18To19.moveSharedPlates(sql)
                 // Before v25 every program had started: none of them is saved for later.
                 if (database < 25) com.hyperlog.app.data.Migration24To25.fillRuns(sql)
+                // Before v26 a program ran as a sequence: the one running rotates from the day of the restore.
+                if (database < 26) {
+                    val today = java.time.Instant.ofEpochMilli(clock()).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                    com.hyperlog.app.data.Migration25To26.rotateRunning(sql, today)
+                }
             }
             Result.Restored
         } catch (_: android.database.SQLException) {

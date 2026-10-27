@@ -212,7 +212,7 @@ fun ProgramScreen(
                 active == null -> NoProgram(onImport, openPrograms.takeIf { listedPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
-                    onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan), onOpenWeekdayPlan = { editingWeekdayPlan = true },
+                    onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan, active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.days?.size), onOpenWeekdayPlan = { editingWeekdayPlan = true },
                 )
             }
         }

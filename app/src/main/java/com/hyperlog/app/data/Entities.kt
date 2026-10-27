@@ -68,6 +68,8 @@ data class SessionEntity(
     @ColumnInfo(name = "hold_started_at") val holdStartedAt: Long? = null,
     /** The workout this session trains, outside the program; null otherwise. */
     @ColumnInfo(name = "workout_id") val workoutId: Long? = null,
+    /** A program day trained in an easy week (SPEC, Training days and the rotation): lighter, and a deload. */
+    @ColumnInfo(defaultValue = "0") val easy: Boolean = false,
 )
 
 data class EntryColumns(

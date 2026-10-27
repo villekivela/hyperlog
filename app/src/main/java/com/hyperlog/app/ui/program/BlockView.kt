@@ -86,7 +86,7 @@ internal fun LazyListScope.blockItems(
             is ProgramDay.Done -> item(key = "done-${position.week}-${position.day}") {
                 Segment(0, 1, onClick = { onOpenSession(day.session.id) }) { DoneDay(day.session) }
             }
-            is ProgramDay.Ahead, is ProgramDay.Skipped -> {
+            is ProgramDay.Ahead, is ProgramDay.Skipped, is ProgramDay.Missed -> {
                 val planned = day.day
                 val ends = (day as? ProgramDay.Ahead)?.endsOn
                 val groups = planned.slots.groupBy { it.group }.values.toList()
@@ -95,7 +95,7 @@ internal fun LazyListScope.blockItems(
                     item(key = "ends-${position.week}-${position.day}") { Segment(0, count) { EndsLine(ends) } }
                 }
                 // A skipped day's plan is there to read, not to train: it sits back from the days to come.
-                val content = if (day is ProgramDay.Skipped) Modifier.alpha(SkippedAlpha) else Modifier
+                val content = if (day is ProgramDay.Skipped || day is ProgramDay.Missed) Modifier.alpha(SkippedAlpha) else Modifier
                 groups.forEachIndexed { i, group ->
                     item(key = "slots-${position.week}-${position.day}-$i") {
                         Segment(i + count - groups.size, count) { Column(content) { SlotRows(group, names) } }
@@ -287,7 +287,9 @@ private fun ComparedSlot(slot: SlotDiff, name: (String) -> String) {
 private fun DayHead(day: ProgramDay) {
     val cs = MaterialTheme.colorScheme
     // The week is in every head, so a day still says which week it is once the chips scroll away.
-    val name = stringResource(R.string.program_week_day, day.position.week, day.day.day.name)
+    val date = (day as? ProgramDay.Ahead)?.date
+    val name = if (date != null) stringResource(R.string.program_week_date_day, day.position.week, com.hyperlog.app.ui.today.shortDate(date), day.day.day.name)
+    else stringResource(R.string.program_week_day, day.position.week, day.day.day.name)
     val (state, color) = when (day) {
         is ProgramDay.Ahead -> when {
             day.next -> stringResource(R.string.program_next)
@@ -295,6 +297,7 @@ private fun DayHead(day: ProgramDay) {
             else -> null
         } to if (day.next) cs.primary else cs.tertiary
         is ProgramDay.Skipped -> stringResource(R.string.program_day_skipped) to cs.onSurfaceVariant
+        is ProgramDay.Missed -> stringResource(R.string.program_day_missed, com.hyperlog.app.ui.today.shortDate(day.date)) to cs.onSurfaceVariant
         is ProgramDay.Done -> stringResource(R.string.program_day_done_label) to cs.onSurfaceVariant
     }
     Row(

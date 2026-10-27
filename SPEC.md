@@ -534,6 +534,9 @@ the next day, whenever you train.
 - **A program week is a calendar week**, Monday to Sunday, as weekly sets are. Week overrides,
   deloads and blocks apply by calendar week, whichever days the rotation puts in it, so with four
   days on three, week 7 trains D, A and B with week 7's prescriptions and C comes in week 8.
+- **A new block starts at its first day** on its first training day (owner, 2026-10-27): a day
+  the rotation hadn't reached when the last block ended is dropped, so with four days on three a
+  block whose last week trained D, A and B leaves C out, and the next block opens with its Day A.
 - **A missed day** is a training day whose date passes with no session started on it. Its day is
   used up: skipped, never moved, and nothing carries over, main lifts included (the program's
   weekly spread absorbs one miss). A session's start date is the one that counts, so a session
@@ -547,7 +550,9 @@ the next day, whenever you train.
   sheet's swaps as ever), and the training day is no longer missed. Left alone, the miss stands.
 - **A week with no session** (with at least one training day in it) doesn't count: the next week
   trains the same program week again, and the rotation picks up where it was, so next Monday is
-  the day the missed Monday would have been. Today says `No sessions last week · Week 7 again`.
+  the day the missed Monday would have been. Today says `No sessions last week · Week 7 again`
+  in a one-line notice over the hero, like the time-off line, until the repeated week's first
+  session (owner, 2026-10-27); the hero keeps its own `Week 7 · Intensify`.
 - **The easy week.** After two or more empty weeks in a row, the first week back is an **easy
   week**: the days the rotation brings, each slot one set fewer (one always stays) and its target
   RIR one higher, no techniques, counted as a deload, so it never lowers the estimate. It sits
@@ -636,9 +641,11 @@ each planned day with the training day it lands on, and never changes the day:
        technique symbols after; a Change's swap reads `In place of …` over the name), the slot
        label (`1`, `5a`) centred on its row, and **Ad-hoc session** as a text button after them.
        Start session starts the program's next day at the picked gym. On a later date the hero has
-       no Start (`Next · Thu 29 Oct · Week 7`); on a day with no training day, a missed day of this
+       no Start (`Next · Thu 29 Oct · Week 7`). **Today on a day with no training day** shows
+       that hero, dated and without Start (owner, Q9), not the Rest day card; a missed day of this
        week that no later training day has used up shows under it as `Monday's Day A is missed ·
-       Train it today`, a text button that starts that day. While a session runs, the
+       Train it today`, a text button that starts that day. In an easy week the hero's line reads
+       `Easy week · back after 16 days`. While a session runs, the
        next day on a later date reads as a later planned day, without Start.
      - **Minutes** (the hero card and planned days), to the nearest 5, set
        on #64; the numbers live in `EstimateSeconds` (`ui/today/DayEstimate.kt`) to tune after real
@@ -666,7 +673,7 @@ each planned day with the training day it lands on, and never changes the day:
      - **A later planned day** reads `Planned · Wed 21 Oct · Week 7` with the letter outlined, its
        numbers and its planned exercises. It has no Start. With training days, the last date
        planned is the program's last day, and reads `Last day · Wed 25 Nov · Week 12`.
-     - **A day with nothing** is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
+     - **A day with nothing**, picked on another date than today, is `Rest day`, with `Next: Day B on Wed 21 Oct` selecting the next
        planned day. **Past the program's last planned day** it reads `Nothing planned`, with
        `Last planned: Day C on Wed 25 Nov` selecting that day. **A missed day**, picked, shows its
        plan dimmed under `Missed · Mon 26 Oct · Week 7`, with no Start. **With no training days** only the

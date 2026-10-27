@@ -46,6 +46,8 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -262,6 +264,8 @@ internal fun WeekRow(
     done: Map<LocalDate, List<PastSessionItem>>,
     planned: Map<LocalDate, PlannedDay>,
     onSelect: (LocalDate) -> Unit,
+    /** The training days missed, by date, each with the day it used up. */
+    missed: Map<LocalDate, PlannedDay> = emptyMap(),
 ) {
     val cs = MaterialTheme.colorScheme
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -270,6 +274,7 @@ internal fun WeekRow(
             val isToday = date == today
             val sessions = done[date].orEmpty()
             val plan = planned[date]
+            val miss = missed[date]?.takeIf { sessions.isEmpty() }
             val doneLetter = doneMarker(sessions)
             val names = doneNames(sessions).map { spoken(it) }
             val description = shortDate(date) + when {
@@ -278,6 +283,7 @@ internal fun WeekRow(
                     else stringResource(R.string.today_cell_done_list, names.joinToString(", "))
                 )
                 plan != null -> ", " + stringResource(R.string.today_cell_planned_day, plan.letter)
+                miss != null -> ", " + stringResource(R.string.today_cell_missed_day, miss.letter)
                 else -> ""
             }
             Column(
@@ -337,6 +343,13 @@ internal fun WeekRow(
                     plan != null -> Box(marker.border(1.5.dp, cs.primary, shape), contentAlignment = Alignment.Center) {
                         Text(plan.letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = cs.primary)
                     }
+                    // A missed day keeps its letter in a muted outline, struck through.
+                    miss != null -> Box(marker.border(1.5.dp, cs.outlineVariant, shape), contentAlignment = Alignment.Center) {
+                        Text(
+                            miss.letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium,
+                            color = cs.onSurfaceVariant, textDecoration = TextDecoration.LineThrough,
+                        )
+                    }
                     else -> Spacer(marker)
                 }
             }
@@ -392,6 +405,7 @@ private fun CardHead(
     headColor: Color,
     titleColor: Color,
     deload: Boolean = false,
+    easy: Boolean = false,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (letter != null) {
@@ -403,7 +417,7 @@ private fun CardHead(
             Text(interFigures(title), style = MaterialTheme.typography.titleLarge, color = titleColor)
             if (deload) {
                 Spacer(Modifier.height(8.dp))
-                DeloadTag()
+                DeloadTag(if (easy) R.string.today_easy_week else R.string.today_deload)
             }
         }
     }
@@ -414,7 +428,7 @@ private fun CardHead(
  * spa symbol and the word in onTertiaryContainer, 24 dp high on the 8 dp grid.
  */
 @Composable
-private fun DeloadTag() {
+private fun DeloadTag(words: Int = R.string.today_deload) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.height(24.dp).clip(RoundedCornerShape(8.dp)).background(cs.tertiaryContainer).padding(horizontal = 8.dp),
@@ -422,7 +436,7 @@ private fun DeloadTag() {
     ) {
         SymbolIcon(Symbol.Spa, null, Modifier.size(16.dp), tint = cs.onTertiaryContainer)
         Spacer(Modifier.width(4.dp))
-        Text(stringResource(R.string.today_deload), Modifier.testTag(DeloadTagTag), style = MaterialTheme.typography.labelMedium, color = cs.onTertiaryContainer)
+        Text(stringResource(words), Modifier.testTag(DeloadTagTag), style = MaterialTheme.typography.labelMedium, color = cs.onTertiaryContainer)
     }
 }
 
@@ -431,19 +445,21 @@ internal const val DeloadTagTag = "today-deload"
 
 /**
  * The next day to train, in primary container: its letter in the cookie, `Week 7 · Intensify`
- * (`Next · Mon 19 Oct · Week 7` on another date) over its title, its numbers, and Start
- * session across the card.
+ * (`Next · Mon 19 Oct · Week 7` on another date; `Easy week · back after 16 days` in an easy week,
+ * [easyDays] off) over its title, its numbers, and Start session across the card. With no
+ * [onStart] (a later date, with training days) there's no Start.
  */
 @Composable
 internal fun HeroCard(
     day: PlannedDay,
     date: LocalDate?,
-    onStart: () -> Unit,
+    onStart: (() -> Unit)?,
     library: List<Exercise>,
     finished: List<PastSessionItem>,
+    easyDays: Int? = null,
 ) {
     val cs = MaterialTheme.colorScheme
-    val week = stringResource(R.string.today_week_block, day.position.week, day.block.name)
+    val week = easyDays?.let { stringResource(R.string.today_easy_head, it) } ?: stringResource(R.string.today_week_block, day.position.week, day.block.name)
     Column(
         Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer)
             .padding(horizontal = CardPadding, vertical = 20.dp).testTag(HeroCardTag),
@@ -455,10 +471,11 @@ internal fun HeroCard(
             title = dayTitle(day.day.name),
             letterContainer = cs.onPrimaryContainer, letterContent = cs.primaryContainer,
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
-            deload = day.deload,
+            deload = day.deload, easy = day.easy,
         )
         Spacer(Modifier.height(20.dp))
         PlannedStats(day, cs.onPrimaryContainer, library, finished)
+        if (onStart == null) return@Column
         Spacer(Modifier.height(20.dp))
         Button(
             onClick = onStart,
@@ -506,7 +523,8 @@ internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
 
 /**
  * A later planned day: `Planned · Wed 21 Oct · Week 7` (`Last day · …` on the program's [last]),
- * its letter outlined, its name and numbers. No Start.
+ * its letter outlined, its name and numbers. No Start. A [missed] day reads `Missed · Mon 26 Oct ·
+ * Week 7`, dimmed.
  */
 @Composable
 internal fun PlannedCard(
@@ -515,20 +533,28 @@ internal fun PlannedCard(
     last: Boolean = false,
     library: List<Exercise>,
     finished: List<PastSessionItem>,
+    missed: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
+    val head = when {
+        missed -> R.string.today_missed_head
+        last -> R.string.today_last_day
+        else -> R.string.today_planned_head
+    }
     DayCard {
-        // The program's last day says so in Planned's place, so the head stays one line.
-        CardHead(
-            day.letter,
-            head = stringResource(if (last) R.string.today_last_day else R.string.today_planned_head, shortDate(date), day.position.week),
-            title = dayTitle(day.day.name),
-            letterContainer = null, letterContent = cs.primary,
-            headColor = cs.primary, titleColor = cs.onSurface,
-            deload = day.deload,
-        )
-        Spacer(Modifier.height(20.dp))
-        PlannedStats(day, cs.onSurface, library, finished)
+        Column(Modifier.alpha(if (missed) MissedAlpha else 1f)) {
+            // The program's last day says so in Planned's place, so the head stays one line.
+            CardHead(
+                day.letter,
+                head = stringResource(head, shortDate(date), day.position.week),
+                title = dayTitle(day.day.name),
+                letterContainer = null, letterContent = cs.primary,
+                headColor = cs.primary, titleColor = cs.onSurface,
+                deload = day.deload, easy = day.easy,
+            )
+            Spacer(Modifier.height(20.dp))
+            PlannedStats(day, cs.onSurface, library, finished)
+        }
     }
 }
 

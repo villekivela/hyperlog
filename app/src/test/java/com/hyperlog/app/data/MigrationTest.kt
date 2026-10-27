@@ -534,6 +534,28 @@ class MigrationTest {
     }
 
     @Test
+    fun version25TheProgramRunningRotatesFromTheUpdateKeepingItsWeekAndNextDay() = runTest {
+        val file = context.getDatabasePath("migration-test-25.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(25, file) { db ->
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, active, week, day_index, started_at, ended_at) VALUES (1, 'Old', '{}', 1000, 0, 3, 1, 1000, 2000)")
+            db.execSQL("INSERT INTO program (id, title, source, imported_at, active, week, day_index, started_at) VALUES (2, 'Now', '{}', 2000, 1, 7, 2, 2000)")
+            db.execSQL("INSERT INTO weekday_plan (weekday, gym_id) VALUES (1, NULL), (4, NULL), (6, NULL)")
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+        }
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val today = java.time.LocalDate.now().toEpochDay()
+        // The running program's week and next day hold from the update on; the one before stays a sequence.
+        assertEquals(listOf(Triple(null, 3, 1), Triple(today, 7, 2)), (1L..2L).map { id -> db.programs().program(id)!!.let { Triple(it.rotationFrom, it.week, it.dayIndex) } })
+        assertEquals(2, db.programs().program(2)!!.rotationRollback)
+        assertEquals(listOf(null, null, null), db.weekdayPlan().all().map { it.minutes })
+        assertEquals(false, db.sessions().session(1)!!.easy)
+        db.close()
+    }
+
+    @Test
     fun version24ProgramsRanFromTheirImportUntilTheNextOneAndNoneIsSaved() = runTest {
         val file = context.getDatabasePath("migration-test-24.db").also { it.parentFile!!.mkdirs(); it.delete() }
         createVersion(24, file) { db ->

@@ -8,6 +8,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import com.hyperlog.app.coach.Operation
+import com.hyperlog.app.data.SessionStartRow
+import com.hyperlog.app.week.Rotation
+import com.hyperlog.app.week.RotationAnchor
+import com.hyperlog.app.week.Rotations
+import com.hyperlog.app.week.SessionStart
+import com.hyperlog.app.week.Turn
+import java.time.DayOfWeek
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -33,7 +42,9 @@ import java.time.ZoneId
 
 /**
  * The program being run, where you are in it, and its Changes: [history] holds every accepted
- * one, oldest first, reverted ones included. [today] is the date the plan is read for.
+ * one, oldest first, reverted ones included. [today] is the date the plan is read for. With
+ * training days its days take turns on them: [rotation] (ADR 0006), whose next day is [position];
+ * null while it runs as a sequence.
  */
 data class ActiveProgram(
     val id: Long,
@@ -41,6 +52,7 @@ data class ActiveProgram(
     val position: Position,
     val history: List<ChangeRecord> = emptyList(),
     val today: LocalDate = LocalDate.now(),
+    val rotation: Rotation? = null,
 ) {
     /** Past the last day: every day has been trained. */
     val finished: Boolean get() = position.week > program.weeks
@@ -66,8 +78,18 @@ data class ActiveProgram(
     /** The ids of Changes ended by a later one's `replaces`. */
     val replaced: Set<Long> get() = history.flatMap { it.change.replaces }.toSet()
 
-    /** The day Today runs, with today's Changes; null once the program is finished. */
-    val next: PlannedDay? get() = if (finished) null else Changes.day(program, position, today, changes)
+    /**
+     * The day Today runs, with today's Changes, or with the rotation the next day on its date;
+     * null once the program is finished.
+     */
+    val next: PlannedDay? get() = when {
+        finished -> null
+        rotation != null -> rotation.planned.firstOrNull()?.let(::dayOf)
+        else -> Changes.day(program, position, today, changes)
+    }
+
+    /** [turn]'s day as trained on its date, with the Changes covering it, eased in an easy week. */
+    fun dayOf(turn: Turn): PlannedDay? = Changes.day(program, turn.position, turn.date, changes)?.let { if (turn.easy) it.easyWeek() else it }
 }
 
 /** An accepted Change as kept: when it was accepted, and reverted if it was. */
@@ -117,18 +139,30 @@ class Programs(
     @OptIn(ExperimentalCoroutinesApi::class)
     val active: Flow<ActiveProgram?> = dao.activeFlow().flatMapLatest { row ->
         if (row == null) flowOf(null)
-        else changeDao.changesFlow(row.id).map { changes -> toActive(row, changes) }
+        else combine(changeDao.changesFlow(row.id), db.weekdayPlan().observe(), startsFlow(row)) { changes, plan, starts ->
+            toActive(row, changes, plan.map { DayOfWeek.of(it.weekday) }.toSet(), starts)
+        }
     }
+
+    /** The sessions the rotation of [row] reads: those started since its anchor's week. */
+    private fun startsFlow(row: ProgramEntity): Flow<List<SessionStartRow>> =
+        row.rotationFrom?.let { db.sessions().startsFlow(sinceOf(it)) } ?: flowOf(emptyList())
+
+    /** The start of the week of epoch day [from], in millis. */
+    private fun sinceOf(from: Long): Long =
+        Rotations.mondayOf(LocalDate.ofEpochDay(from)).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
     /**
      * Every program held, newest first: the one running, then by when each was saved or replaced
      * (those saved for later, and past runs).
      */
-    val listed: Flow<List<ListedProgram>> = dao.allFlow().map { rows ->
+    val listed: Flow<List<ListedProgram>> = combine(dao.allFlow(), active) { rows, running ->
         rows.mapNotNull { row ->
             val program = parsed.getOrPut(row.id) { stored(row) } ?: return@mapNotNull null
             val status = when {
-                row.active -> ListedProgram.Status.Running(Position(row.week, row.dayIndex), row.week > program.weeks)
+                // On training days the rotation, not the row, knows the next day.
+                row.active -> (running?.takeIf { it.id == row.id }?.position ?: Position(row.week, row.dayIndex))
+                    .let { ListedProgram.Status.Running(it, it.week > program.weeks) }
                 row.startedAt == null -> ListedProgram.Status.Saved(
                     row.importedAt, row.waitingExercises(),
                 )
@@ -154,7 +188,8 @@ class Programs(
     /** What accepting [change] would do to the running program's plan; null with no program running. */
     suspend fun preview(change: Change): ChangeDiff? {
         val active = active.first() ?: return null
-        return withContext(Dispatchers.Default) { Changes.diff(active.program, active.position, dateOf(clock()), active.changes, change) }
+        val nextTrainingDay = active.rotation?.let { it.planned.firstOrNull()?.date ?: active.today }
+        return withContext(Dispatchers.Default) { Changes.diff(active.program, active.position, dateOf(clock()), active.changes, change, nextTrainingDay) }
     }
 
     /**
@@ -167,7 +202,10 @@ class Programs(
             change.replaces.sortedDescending().forEach { revertIn(it) }
             val row = dao.active() ?: return@withTransaction
             val program = program(row.id) ?: return@withTransaction
-            val accepted = Changes.accept(program, Position(row.week, row.dayIndex), change, dateOf(clock()))
+            val rotation = rotationOf(row)
+            val position = rotation?.next ?: Position(row.week, row.dayIndex)
+            val nextTrainingDay = rotation?.let { it.planned.firstOrNull()?.date ?: dateOf(clock()) }
+            val accepted = Changes.accept(program, position, change, dateOf(clock()), nextTrainingDay)
             changeDao.insert(
                 PlanChangeEntity(
                     programId = row.id, json = ChangeJson.encode(accepted.change), acceptedAt = clock(),
@@ -177,8 +215,15 @@ class Programs(
                     blockId = accepted.blockId, checkIn = checkIn?.let(com.hyperlog.app.coach.SavedCheckIn::encode),
                 ),
             )
-            if (accepted.after != accepted.before) dao.setPosition(row.id, accepted.after.week, accepted.after.day)
+            if (accepted.after != accepted.before) moveTo(row, rotation, accepted.after)
         }
+    }
+
+    /** Moves program [row]'s next day to [position]: with a [rotation], set again from today at it. */
+    private suspend fun moveTo(row: ProgramEntity, rotation: Rotation?, position: Position) {
+        if (rotation == null) return dao.setPosition(row.id, position.week, position.day)
+        val a = rotation.anchor
+        dao.setRotation(row.id, a.from.toEpochDay(), position.week, position.day, position.day, a.emptyWeeks)
     }
 
     /** Reverts the accepted Change [id]: its plan edits stop, and its move of the position is taken back. */
@@ -190,10 +235,12 @@ class Programs(
         val entity = changeDao.change(id) ?: return
         val row = dao.program(entity.programId) ?: return
         val program = program(row.id) ?: return
+        val rotation = rotationOf(row)
         if (changeDao.revert(id, clock()) == 0) return
         val accepted = entity.toAccepted() ?: return
-        val back = Changes.revert(program, Position(row.week, row.dayIndex), accepted)
-        dao.setPosition(row.id, back.week, back.day)
+        val current = rotation?.next ?: Position(row.week, row.dayIndex)
+        val back = Changes.revert(program, current, accepted)
+        if (back != current) moveTo(row, rotation, back)
     }
 
     /**
@@ -201,12 +248,12 @@ class Programs(
      * or, for a session finished at [asOf], those in force then (accepted by then and not yet
      * reverted), so a later Change never rewrites a past session.
      */
-    suspend fun plannedDay(id: Long, position: Position, date: LocalDate, asOf: Long? = null): PlannedDay? {
+    suspend fun plannedDay(id: Long, position: Position, date: LocalDate, asOf: Long? = null, easy: Boolean = false): PlannedDay? {
         val program = program(id) ?: return null
         val changes = changeDao.changes(id)
             .filter { c -> if (asOf == null) c.revertedAt == null else c.acceptedAt <= asOf && (c.revertedAt == null || c.revertedAt > asOf) }
             .mapNotNull { it.toAccepted() }
-        return Changes.day(program, position, date, changes)
+        return Changes.day(program, position, date, changes)?.let { if (easy) it.easyWeek() else it }
     }
 
     /**
@@ -216,7 +263,7 @@ class Programs(
     suspend fun plannedDay(row: SessionEntity): PlannedDay? {
         row.workoutId?.let { return workoutDay(it) }
         if (row.programId == null || row.week == null || row.dayIndex == null) return null
-        return plannedDay(row.programId, Position(row.week, row.dayIndex), dateOf(row.startedAt), asOf = row.finishedAt)
+        return plannedDay(row.programId, Position(row.week, row.dayIndex), dateOf(row.startedAt), asOf = row.finishedAt, easy = row.easy)
     }
 
     private val workouts: MutableMap<Long, com.hyperlog.app.coach.Workout?> = java.util.Collections.synchronizedMap(mutableMapOf())
@@ -252,9 +299,10 @@ class Programs(
                 // A file's own new exercises join the library only if the program uses them.
                 val used = result.program.exercises()
                 ExerciseLibrary(db).addNew((newExercises + file.exercises.filter { it.id in used }).distinctBy { it.id })
-                dao.deactivateAll(clock())
+                deactivate()
                 val id = dao.insert(ProgramEntity(title = result.program.title, source = file.source, importedAt = clock(), startedAt = clock()))
                 parsed[id] = result.program
+                rotateFromToday(id)
             }
         }
         return result
@@ -290,8 +338,9 @@ class Programs(
         if (result is ProgramParser.Result.Valid) {
             db.withTransaction {
                 ExerciseLibrary(db).addNew(newExercises)
-                dao.deactivateAll(clock())
+                deactivate()
                 dao.start(id, clock())
+                rotateFromToday(id)
             }
         }
         return result
@@ -314,8 +363,9 @@ class Programs(
         val listed = listed.first().firstOrNull { it.id == id }
         if ((listed?.status as? ListedProgram.Status.Past)?.resumeAt == null) return false
         db.withTransaction {
-            dao.deactivateAll(clock())
+            deactivate()
             dao.resume(id)
+            rotateFromToday(id)
         }
         return true
     }
@@ -374,6 +424,8 @@ class Programs(
      * day moves it, so finishing a resumed session again doesn't skip a day.
      */
     suspend fun advance(id: Long, from: Position) {
+        // On training days the rotation moves on by the calendar, not by sessions finished.
+        if (dao.program(id)?.rotationFrom != null) return
         val program = program(id) ?: return
         val next = program.next(from) ?: Position(program.weeks + 1, 0)
         dao.advance(id, from.week, from.day, next.week, next.day)
@@ -381,10 +433,72 @@ class Programs(
 
     private suspend fun exerciseIds() = db.exercises().all().map { it.id }.toSet()
 
-    private fun toActive(row: ProgramEntity, changes: List<PlanChangeEntity>): ActiveProgram? {
+    private fun toActive(row: ProgramEntity, changes: List<PlanChangeEntity>, days: Set<DayOfWeek>, starts: List<SessionStartRow>): ActiveProgram? {
         val program = parsed.getOrPut(row.id) { stored(row) } ?: return null
         val history = changes.mapNotNull { c -> c.toAccepted()?.let { ChangeRecord(it, c.acceptedAt, c.revertedAt, c.checkIn?.let(com.hyperlog.app.coach.SavedCheckIn::decode)) } }
-        return ActiveProgram(row.id, program, Position(row.week, row.dayIndex), history, dateOf(clock()))
+        val today = dateOf(clock())
+        val rotation = rotation(row, program, history.filter { it.revertedAt == null }.map { it.accepted }, days, starts, today)
+        return ActiveProgram(row.id, program, rotation?.next ?: Position(row.week, row.dayIndex), history, today, rotation)
+    }
+
+    /**
+     * Program [row]'s rotation on [days] today, given the sessions [starts] since its anchor's week
+     * and its Changes in force; null while it runs as a sequence or is finished.
+     */
+    private fun rotation(row: ProgramEntity, program: Program, changes: List<AcceptedChange>, days: Set<DayOfWeek>, starts: List<SessionStartRow>, today: LocalDate): Rotation? {
+        val from = row.rotationFrom ?: return null
+        if (days.isEmpty() || row.week > program.weeks) return null
+        val sessions = starts.map { s ->
+            SessionStart(dateOf(s.startedAt), if (s.programId == row.id && s.week != null && s.dayIndex != null) Position(s.week, s.dayIndex) else null)
+        }
+        val skips = changes.flatMap { c -> c.change.operations.filterIsInstance<Operation.SkipDay>().mapNotNull { op -> op.date?.let(LocalDate::parse) } }.toSet()
+        // A repeat_week accepted on training days leaves the position to the rotation.
+        val repeats = changes.filter { c -> c.before == c.after && c.change.operations.any { it is Operation.RepeatWeek } }.map { Rotations.mondayOf(it.acceptedOn) }.toSet()
+        val anchor = RotationAnchor(LocalDate.ofEpochDay(from), row.week, row.dayIndex, row.rotationRollback, row.rotationEmptyWeeks)
+        return Rotations.of(program, anchor, days, sessions, today, skips, repeats)
+    }
+
+    /** Program [row]'s rotation now, read from the database; null while it runs as a sequence. */
+    private suspend fun rotationOf(row: ProgramEntity, days: Set<DayOfWeek>? = null): Rotation? {
+        val from = row.rotationFrom ?: return null
+        val program = program(row.id) ?: return null
+        val changes = changeDao.changes(row.id).filter { it.revertedAt == null }.mapNotNull { it.toAccepted() }
+        val plan = days ?: db.weekdayPlan().all().map { DayOfWeek.of(it.weekday) }.toSet()
+        return rotation(row, program, changes, plan, db.sessions().starts(sinceOf(from)), dateOf(clock()))
+    }
+
+    /**
+     * Program [id] rotates on the training days from today, at its next day; tomorrow once a
+     * session started today. Nothing before is missed. Without training days it stays a sequence.
+     */
+    private suspend fun rotateFromToday(id: Long) {
+        if (db.weekdayPlan().all().isEmpty()) return
+        val row = dao.program(id) ?: return
+        val today = dateOf(clock())
+        val trainedToday = db.sessions().starts(today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()).any { dateOf(it.startedAt) == today }
+        val from = if (trainedToday) today.plusDays(1) else today
+        dao.setRotation(id, from.toEpochDay(), row.week, row.dayIndex, row.dayIndex, 0)
+    }
+
+    /** The program running stops, replaced: on training days, at the rotation's next day. */
+    private suspend fun deactivate() {
+        dao.active()?.let { row -> rotationOf(row)?.let { dao.setRotation(row.id, null, it.next.week, it.next.day, 0, 0) } }
+        dao.deactivateAll(clock())
+    }
+
+    /**
+     * The training days changed from [before] to [after]: the program running keeps its place.
+     * Cleared, it runs as a sequence from the rotation's next day; set or moved, the rotation is
+     * set again from today (ADR 0006).
+     */
+    suspend fun trainingDaysChanged(before: Set<DayOfWeek>, after: Set<DayOfWeek>) {
+        val row = dao.active() ?: return
+        val rotation = if (before.isEmpty()) null else rotationOf(row, before)
+        when {
+            rotation == null -> if (after.isNotEmpty()) rotateFromToday(row.id)
+            after.isEmpty() -> dao.setRotation(row.id, null, rotation.next.week, rotation.next.day, 0, 0)
+            else -> rotation.anchor.let { a -> dao.setRotation(row.id, a.from.toEpochDay(), a.week, a.day, a.rollbackDay, a.emptyWeeks) }
+        }
     }
 
     /** A kept Change; null only if its JSON no longer reads, which it always should. */

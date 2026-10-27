@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,19 +48,25 @@ import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
 
-/** Program's line for the weekday plan: `3 days a week · Mon Wed Fri`, or `Set your training days`. */
+/**
+ * Program's line for the weekday plan: `3 days a week · Mon Wed Fri`, or `Set your training days`.
+ * With fewer or more training days than the program's week has [days], `· 4 days take turns`.
+ */
 @Composable
-internal fun weekdayPlanLine(plan: WeekdayPlan): String =
-    if (plan.days.isEmpty()) stringResource(R.string.weekday_plan_none)
-    else pluralStringResource(
+internal fun weekdayPlanLine(plan: WeekdayPlan, days: Int? = null): String {
+    if (plan.days.isEmpty()) return stringResource(R.string.weekday_plan_none)
+    val line = pluralStringResource(
         R.plurals.weekday_plan_line, plan.days.size, plan.days.size,
         plan.days.sorted().joinToString(" ") { it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) },
     )
+    return if (days == null || days == plan.days.size) line else line + " · " + stringResource(R.string.weekday_plan_take_turns, days)
+}
 
 /**
  * The weekday plan's sheet, "Training days" on screen (SPEC, Training days): the seven weekdays as
- * toggles and, with two or more gyms, each day that's on with the gym it's at. A day turned on
- * with one gym is at it, so it keeps its gym when a second gym is added. Every change applies at once.
+ * toggles, then each day that's on with, given two or more gyms, the gym it's at, and the minutes
+ * you have. A day turned on with one gym is at it, so it keeps its gym when a second gym is added.
+ * Every change applies at once.
  */
 @Composable
 internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChange: (WeekdayPlan) -> Unit, onDone: () -> Unit) {
@@ -74,14 +81,18 @@ internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChang
             color = cs.onSurfaceVariant,
         )
         WeekdayToggles(plan.days, Modifier.padding(horizontal = 24.dp)) { day, on ->
-            onChange(WeekdayPlan(if (on) plan.gyms + (day to gyms.singleOrNull()?.id) else plan.gyms - day))
+            onChange(if (on) plan.copy(gyms = plan.gyms + (day to gyms.singleOrNull()?.id)) else WeekdayPlan(plan.gyms - day, plan.minutes - day))
         }
-        if (several && plan.days.isNotEmpty()) {
+        if (plan.days.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
             Group(color = Tones.sheetCard) {
                 plan.days.sorted().forEach { day ->
-                    DayGym(day, plan.gyms[day]?.let { id -> gyms.firstOrNull { it.id == id } }, gyms) { gym ->
-                        onChange(WeekdayPlan(plan.gyms + (day to gym)))
+                    DayRow(day, onMinutes = { onChange(plan.copy(minutes = if (it == null) plan.minutes - day else plan.minutes + (day to it))) }, minutes = plan.minutes[day]) {
+                        if (several) {
+                            DayGym(day, plan.gyms[day]?.let { id -> gyms.firstOrNull { it.id == id } }, gyms) { gym ->
+                                onChange(plan.copy(gyms = plan.gyms + (day to gym)))
+                            }
+                        }
                     }
                 }
             }
@@ -91,32 +102,59 @@ internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChang
     }
 }
 
-/** One training day and its gym: a menu of the gyms, and Any gym for none named. */
+/** One training day: its name, [gym] (the gym menu, with several gyms), and its minutes menu at the end. */
 @Composable
-private fun DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    val dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
-    val shortName = day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
-    val gymName = gym?.name ?: stringResource(R.string.weekday_plan_any_gym)
-    val described = stringResource(R.string.weekday_plan_gym_on, dayName, gymName)
+private fun DayRow(day: DayOfWeek, minutes: Int?, onMinutes: (Int?) -> Unit, gym: @Composable RowScope.() -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(shortName, Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1, softWrap = false)
-        // The gym takes what the day name leaves and ends in an ellipsis, so the arrow always shows.
-        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-            TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
-                Text(gymName, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.size(4.dp))
-                SymbolIcon(Symbol.ArrowDropDown, null)
+        Text(day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodyLarge, maxLines = 1, softWrap = false)
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) { gym() }
+        DayMinutes(day, minutes, onMinutes)
+    }
+}
+
+/** A training day's minutes: `—` for no limit, then 30 to 120 in fives, read as `60 min`. */
+@Composable
+private fun DayMinutes(day: DayOfWeek, minutes: Int?, onPick: (Int?) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    val label: @Composable (Int?) -> String = { m -> m?.let { stringResource(R.string.weekday_plan_minutes, it) } ?: stringResource(R.string.weekday_plan_no_minutes) }
+    val described = stringResource(R.string.weekday_plan_minutes_on, dayName, minutes?.let { stringResource(R.string.weekday_plan_minutes, it) } ?: stringResource(R.string.weekday_plan_no_limit))
+    Box {
+        TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
+            Text(label(minutes), maxLines = 1)
+            Spacer(Modifier.size(4.dp))
+            SymbolIcon(Symbol.ArrowDropDown, null)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            (listOf<Int?>(null) + WeekdayPlan.Minutes).forEach { m ->
+                DropdownMenuItem(text = { Text(label(m)) }, onClick = { open = false; onPick(m) })
             }
-            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                gyms.forEach { g ->
-                    DropdownMenuItem(text = { Text(g.name) }, onClick = { open = false; onPick(g.id) })
-                }
-                DropdownMenuItem(text = { Text(stringResource(R.string.weekday_plan_any_gym)) }, onClick = { open = false; onPick(null) })
+        }
+    }
+}
+
+/** A training day's gym: a menu of the gyms, and Any gym for none named. */
+@Composable
+private fun RowScope.DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: (Long?) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    val gymName = gym?.name ?: stringResource(R.string.weekday_plan_any_gym)
+    val described = stringResource(R.string.weekday_plan_gym_on, dayName, gymName)
+    // The gym takes what the day name leaves and ends in an ellipsis, so the arrow always shows.
+    Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
+        TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
+            Text(gymName, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.size(4.dp))
+            SymbolIcon(Symbol.ArrowDropDown, null)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            gyms.forEach { g ->
+                DropdownMenuItem(text = { Text(g.name) }, onClick = { open = false; onPick(g.id) })
             }
+            DropdownMenuItem(text = { Text(stringResource(R.string.weekday_plan_any_gym)) }, onClick = { open = false; onPick(null) })
         }
     }
 }

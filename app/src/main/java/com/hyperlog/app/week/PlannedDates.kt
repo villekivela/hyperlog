@@ -8,10 +8,10 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 /**
- * The program's coming days put on dates, for Today's calendar (SPEC, Today → Planned dates). The
- * program runs as a sequence, so the dates are an estimate: the next day goes on today, or on the
- * next training day when a session was already finished today, and each day after it on the next
- * training day after that. Each day is read for its date, with the Changes covering it.
+ * The coming days of a program run as a sequence put on dates (SPEC, Today → Planned dates): the
+ * next day goes on today, or on the next of [of]'s days when a session was already finished today,
+ * and each day after it on the next of them after that. Each day is read for its date, with the
+ * Changes covering it. With training days the rotation dates them instead ([Rotations]).
  */
 object PlannedDates {
     /**

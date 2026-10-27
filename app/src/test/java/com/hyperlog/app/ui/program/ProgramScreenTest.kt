@@ -345,7 +345,8 @@ class ProgramScreenTest {
                 )
             }
         }
-        compose.onNodeWithText("3 days a week · Mon Wed Fri").performClick()
+        // Fewer training days than the program's week has days: they take turns.
+        compose.onNodeWithText("3 days a week · Mon Wed Fri", substring = true).performClick()
         compose.onNodeWithText("Training days").assertIsDisplayed()
         compose.onNodeWithContentDescription("Monday").assertIsOn()
         compose.onNodeWithContentDescription("Tuesday").assertIsOff().performClick()
@@ -356,7 +357,7 @@ class ProgramScreenTest {
         // With one gym every day is at it, so no day picks one.
         compose.onNodeWithContentDescription("Gym on Monday", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Done").performClick()
-        compose.onNodeWithText("3 days a week · Mon Tue Fri").assertIsDisplayed()
+        compose.onNodeWithText("3 days a week · Mon Tue Fri", substring = true).assertIsDisplayed()
     }
 
     @Test

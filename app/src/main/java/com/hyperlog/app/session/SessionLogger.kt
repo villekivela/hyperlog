@@ -131,15 +131,19 @@ class SessionLogger(
      * Starts a session of [program]'s next day at [gymId]: its slots become the session's
      * exercises, in order, each with this week's sets. Does nothing if a session is running or the
      * program is finished. [swaps] (slot id -> exercise) swap slots for this session only, such
-     * as the missing-equipment swaps proposed when the gym was picked.
+     * as the missing-equipment swaps proposed when the gym was picked. With training days, [turn]
+     * trains another day of the rotation today: a missed one (Train it today).
      */
-    suspend fun startDay(program: ActiveProgram, gymId: Long?, swaps: Map<String, String> = emptyMap()) = locked {
+    suspend fun startDay(program: ActiveProgram, gymId: Long?, swaps: Map<String, String> = emptyMap(), turn: com.hyperlog.app.week.Turn? = null) = locked {
         if (program.finished || _state.value != null) return@locked
+        val position = turn?.position ?: program.position
+        // In an easy week the day is eased, and so is its session for good.
+        val easy = turn?.easy ?: program.rotation?.planned?.firstOrNull()?.easy ?: false
         // The day as trained today, with the Changes in force for today's date.
-        val day = programs.plannedDay(program.id, program.position, programs.dateOf(clock())) ?: return@locked
+        val day = programs.plannedDay(program.id, position, programs.dateOf(clock()), easy = easy) ?: return@locked
         startPlanned(
             day,
-            SessionEntity(startedAt = clock(), gymId = gymId, programId = program.id, week = day.position.week, dayIndex = day.position.day),
+            SessionEntity(startedAt = clock(), gymId = gymId, programId = program.id, week = day.position.week, dayIndex = day.position.day, easy = easy),
             swaps,
         )
     }

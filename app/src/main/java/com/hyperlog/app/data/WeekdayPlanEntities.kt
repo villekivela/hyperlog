@@ -11,7 +11,10 @@ import androidx.room.Query
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
-/** One weekday you train on (1 is Monday), and the gym you train at that day; null names none. */
+/**
+ * One weekday you train on (1 is Monday), the gym you train at that day (null names none) and the
+ * minutes you have (null: no limit).
+ */
 @Entity(
     tableName = "weekday_plan",
     foreignKeys = [ForeignKey(GymEntity::class, ["id"], ["gym_id"], onDelete = ForeignKey.SET_NULL)],
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 data class WeekdayPlanEntity(
     @PrimaryKey val weekday: Int,
     @ColumnInfo(name = "gym_id") val gymId: Long? = null,
+    val minutes: Int? = null,
 )
 
 @Dao
