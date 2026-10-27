@@ -31,6 +31,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -339,6 +340,28 @@ class ProgramScreenTest {
         compose.onNodeWithText("Missed · Mon 26 Oct", substring = true).assertExists()
         compose.onNode(androidx.compose.ui.test.hasScrollToNodeAction())
             .performScrollToNode(androidx.compose.ui.test.hasText("Week 1 · Sat 31 Oct", substring = true))
+    }
+
+    @Test
+    fun aDatedDayOverItsTrainingDaysMinutesShowsTheTimeLineAndTappingItStartsACheckIn() {
+        val days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY, DayOfWeek.SATURDAY)
+        val today = LocalDate.of(2026, 10, 26)
+        val rotation = com.hyperlog.app.week.Rotations.of(program(), com.hyperlog.app.week.RotationAnchor(today, 1, 0), days, emptyList(), today)
+        val active = ActiveProgram(1, program(), rotation.next, today = today, rotation = rotation)
+        val harbour = Gym(1, "Harbour", emptyList(), missing = setOf("barbell_bench_press"))
+        var answer: String? = null
+        compose.setContent {
+            HyperlogTheme {
+                ProgramScreen(
+                    active, null, onImport = {}, onCloseErrors = {}, onBack = {},
+                    weekdayPlan = WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.THURSDAY to null, DayOfWeek.SATURDAY to null), minutes = mapOf(DayOfWeek.MONDAY to 5)),
+                    gyms = listOf(harbour), onCheckInFit = { answer = it },
+                )
+            }
+        }
+        compose.onNodeWithText("1 swap at Harbour").assertIsDisplayed()
+        compose.onNodeWithText("· Monday has 5", substring = true).assertIsDisplayed().performClick()
+        assertTrue(answer, Regex("Day A runs ~\\d+ minutes but Monday has 5\\.").matches(answer.orEmpty()))
     }
 
     @Test

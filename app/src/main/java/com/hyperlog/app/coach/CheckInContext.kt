@@ -11,6 +11,10 @@ import com.hyperlog.app.session.PastSessionItem
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
+import com.hyperlog.app.history.LiftGoal
+import com.hyperlog.app.week.WeekdayPlan
 
 /**
  * What a check-in through the API tells Claude (SPEC, What Claude is told), as its frame: how a
@@ -33,15 +37,48 @@ object CheckInContext {
         weeklySets: List<WeekSets> = emptyList(),
         /** Your training days with their gyms and minutes. */
         weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
+        /** Your lift goals. */
+        goals: List<LiftGoal> = emptyList(),
     ): CheckInFrame {
         val context = buildString {
             appendLine(intro(plan != null, gyms, lowest))
             appendLine()
+            if (weekdayPlan.days.isNotEmpty() || goals.isNotEmpty()) {
+                forYourWeek(weekdayPlan, gyms, goals, library, today)
+                appendLine()
+            }
             with(AskClaude) {
                 situation(plan, sessions, library, zone, today, null, false, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gyms.associate { it.id to it.name })
             }
         }
         return CheckInFrame(context.trimEnd(), CoachTools.all(plan?.program))
+    }
+
+    /**
+     * What a new program is written for (SPEC, Coaching → New program → Written for your week): the
+     * training days, each gym's equipment once, and the lift goals. The days themselves, with their
+     * gym and minutes, follow in the situation.
+     */
+    private fun StringBuilder.forYourWeek(plan: WeekdayPlan, gyms: List<Gym>, goals: List<LiftGoal>, library: List<Exercise>, today: LocalDate) {
+        if (plan.days.isNotEmpty()) {
+            val first = generateSequence(today) { it.plusDays(1) }.first { it.dayOfWeek in plan.days }
+            appendLine("## A new program is written for my week")
+            appendLine(
+                "For a new program write as many days as I have training days (${plan.days.size}), unless I ask for another number, each " +
+                    "for the training day the rotation puts it on: its gym's equipment, within its minutes. Day A goes on the first " +
+                    "training day from today, ${first.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} $first, then each day on " +
+                    "the next training day. Name each day for its training day, like \"Day A — Mon · Heavy bench, squat, pulldown\".",
+            )
+            val names = library.associate { it.id to it.name }
+            plan.days.sorted().mapNotNull { plan.gyms[it] }.distinct().mapNotNull { id -> gyms.firstOrNull { it.id == id } }.forEach { gym ->
+                with(AskClaude) { gym(gym, names) }
+            }
+        }
+        if (goals.isNotEmpty()) {
+            appendLine("## My lift goals")
+            val names = library.associate { it.id to it.name }
+            goals.forEach { appendLine("- ${names[it.exerciseId] ?: it.exerciseId}: ${formatKg(it.kg)} kg${it.by?.let { d -> " by $d" }.orEmpty()}") }
+        }
     }
 
     /** How's it going?'s opening starts with this, so the screen can title it. */

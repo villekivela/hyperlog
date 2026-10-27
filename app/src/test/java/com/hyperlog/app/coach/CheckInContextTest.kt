@@ -103,4 +103,22 @@ class CheckInContextTest {
         assertTrue(fromContext.contains("## Program: "))
         assertEquals(fromContext, fromPrompt)
     }
+
+    @Test
+    fun aNewProgramIsWrittenForTheTrainingDaysTheirGymsEquipmentMinutesAndTheGoals() {
+        val bench = library.exercises.first { it.id == "barbell_bench_press" }
+        val harbour = Gym(1, "Harbour", listOf(com.hyperlog.app.gym.EquipmentItem(gymId = 1, name = "Smith machine", ladder = com.hyperlog.app.domain.LadderSpec.DefaultDumbbells)))
+        val days = com.hyperlog.app.week.WeekdayPlan(
+            gyms = mapOf(java.time.DayOfWeek.MONDAY to 1L, java.time.DayOfWeek.THURSDAY to null, java.time.DayOfWeek.SATURDAY to 1L),
+            minutes = mapOf(java.time.DayOfWeek.SATURDAY to 50),
+        )
+        val goals = listOf(com.hyperlog.app.history.LiftGoal(bench.id, 100.0, null))
+        val context = CheckInContext.frame(plan, emptyList(), library.exercises, listOf(harbour), today = oct13, weekdayPlan = days, goals = goals).context
+        assertTrue(context, "- Saturday: Harbour, 50 minutes" in context)
+        assertTrue(context, "Smith machine" in context)
+        assertTrue(context, "${bench.name}: 100 kg" in context)
+        assertTrue(context, "as many days as I have training days (3)" in context)
+        assertTrue(context, "Day A goes on the first training day from today, Thursday 2026-10-15" in context)
+        assertTrue(context, "Day A — Mon · Heavy bench, squat, pulldown" in context)
+    }
 }

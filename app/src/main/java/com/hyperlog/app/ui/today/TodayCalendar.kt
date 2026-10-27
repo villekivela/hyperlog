@@ -56,6 +56,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.week.DayFit
 import com.hyperlog.app.ui.session.RirText
 import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.symbols.Symbol
@@ -394,8 +395,20 @@ private fun Stats(exercises: Int, sets: Int, minutes: Int, estimate: Boolean, co
 
 /** A planned day's exercises, sets and about how many minutes. */
 @Composable
-private fun PlannedStats(day: PlannedDay, color: Color, library: List<Exercise>, finished: List<PastSessionItem>) =
+private fun PlannedStats(
+    day: PlannedDay,
+    color: Color,
+    library: List<Exercise>,
+    finished: List<PastSessionItem>,
+    fit: DayFit = DayFit(null, null),
+    onFitTime: ((String) -> Unit)? = null,
+) {
     Stats(day.slots.size, day.slots.sumOf { it.sets.size }, aboutMinutes(day, library, finished), estimate = true, color = color)
+    if (fit.time != null || fit.swaps != null) {
+        Spacer(Modifier.height(12.dp))
+        FitLines(fit, stringResource(R.string.fit_day, day.letter), color.copy(alpha = 0.78f), onFitTime)
+    }
+}
 
 /** The letter, the head over the day's title, side by side at the top of a day's card. */
 @Composable
@@ -466,6 +479,8 @@ internal fun HeroCard(
     library: List<Exercise>,
     finished: List<PastSessionItem>,
     easyDays: Int? = null,
+    fit: DayFit = DayFit(null, null),
+    onFitTime: ((String) -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val week = easyDays?.let { stringResource(R.string.today_easy_head, it) } ?: stringResource(R.string.today_week_block, day.position.week, day.block.name)
@@ -483,7 +498,7 @@ internal fun HeroCard(
             deload = day.deload, easy = day.easy, easyNote = true,
         )
         Spacer(Modifier.height(20.dp))
-        PlannedStats(day, cs.onPrimaryContainer, library, finished)
+        PlannedStats(day, cs.onPrimaryContainer, library, finished, fit, onFitTime)
         if (onStart == null) return@Column
         Spacer(Modifier.height(20.dp))
         Button(
@@ -543,6 +558,8 @@ internal fun PlannedCard(
     library: List<Exercise>,
     finished: List<PastSessionItem>,
     missed: Boolean = false,
+    fit: DayFit = DayFit(null, null),
+    onFitTime: ((String) -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val head = when {
@@ -563,7 +580,7 @@ internal fun PlannedCard(
                 deload = day.deload, easy = day.easy,
             )
             Spacer(Modifier.height(20.dp))
-            PlannedStats(day, cs.onSurface, library, finished)
+            PlannedStats(day, cs.onSurface, library, finished, fit, onFitTime)
         }
     }
 }

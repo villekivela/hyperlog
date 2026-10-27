@@ -101,10 +101,11 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         val library = library()
         val lastTrained = db.sessions().lastTrained()?.let(programs::dateOf)
         val weekdayPlan = WeekdayPlans(db).plan.first()
+        val goals = com.hyperlog.app.history.LiftGoals(db).all.first()
         return withContext(Dispatchers.Default) {
             CheckInContext.frame(
                 active, PastSessionEditor(db, programs).sessions(), library, Gyms(db).gyms.first(), lowest(),
-                lastTrained = lastTrained, weekdayPlan = weekdayPlan,
+                lastTrained = lastTrained, weekdayPlan = weekdayPlan, goals = goals,
                 weeklySets = History(db, programs).weeklySets(AskClaude.SET_WEEKS),
             )
         }
@@ -141,6 +142,12 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
     fun easeBackIn(words: String) {
         _draft.value = null
         runner.start(words, com.hyperlog.app.coach.Opening.EaseBackIn)
+    }
+
+    /** A day that doesn't fit its training day: a check-in whose first answer is [words]. */
+    fun fit(words: String) {
+        _draft.value = null
+        runner.start(words, com.hyperlog.app.coach.Opening.Tile)
     }
 
     /** How's it going? about a Change in force: it opens with the Change and the check-in that made it. */

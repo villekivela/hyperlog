@@ -466,6 +466,13 @@
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
     </plurals>
+    <string name="fit_time">~%1$d min · %2$s has %3$d</string>
+    <string name="fit_time_answer">%1$s runs ~%2$d minutes but %3$s has %4$d.</string>
+    <string name="fit_day">Day %1$s</string>
+    <plurals name="fit_swaps">
+        <item quantity="one">%1$d swap at %2$s</item>
+        <item quantity="other">%1$d swaps at %2$s</item>
+    </plurals>
     <string name="today_no_program_body">Import a program to train it day by day, or start an ad-hoc session.</string>
     <string name="col_target">Target</string>
     <string name="session_day_done">Day done</string>

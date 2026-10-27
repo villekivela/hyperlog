@@ -43,6 +43,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.ui.today.aboutMinutes
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.Fit
 import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
@@ -113,6 +117,10 @@ fun ProgramScreen(
     /** The gyms set up: with two or more, each training day can pick one. */
     gyms: List<Gym> = emptyList(),
     onWeekdayPlan: (WeekdayPlan) -> Unit = {},
+    /** The exercise library, which a day's minutes are counted with. */
+    library: List<Exercise> = emptyList(),
+    /** Starts a check-in whose first answer is the words given: a day that runs over its training day's minutes. */
+    onCheckInFit: (String) -> Unit = {},
     /** Every program held, for ⋮ → Programs: the one running, those saved for later, past runs. */
     listedPrograms: List<ListedProgram> = emptyList(),
     onRunAgain: (Long) -> Unit = {},
@@ -215,6 +223,8 @@ fun ProgramScreen(
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan),
                     weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.days?.size),
                     onOpenWeekdayPlan = { editingWeekdayPlan = true },
+                    fit = { day -> day.date?.let { Fit.of(day.day, it, weekdayPlan, gyms, library, aboutMinutes(day.day, library, sessions.filter { s -> s.programId == active.id })) } },
+                    onFitTime = onCheckInFit,
                 )
             }
         }
@@ -292,6 +302,8 @@ private fun ProgramWeeks(
     onOpenWeekdayPlan: () -> Unit,
     /** `4 days take turns` under the line, when the training days and the program's days differ. */
     weekdayPlanTurns: String? = null,
+    fit: (ProgramDay.Ahead) -> DayFit? = { null },
+    onFitTime: ((String) -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
@@ -333,6 +345,7 @@ private fun ProgramWeeks(
             program, block, active, comparison, week, days, names,
             onBlock = { i -> program.blocks[i].let { b -> onWeek(if (currentWeek in b.weekStart..b.weekEnd) currentWeek else b.weekStart) } },
             onWeek = onWeek, onOpenSession = onOpenSession,
+            fit = { day -> (day as? ProgramDay.Ahead)?.let(fit) ?: DayFit(null, null) }, onFitTime = onFitTime,
         )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
     }

@@ -86,6 +86,8 @@ import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.Fit
 import com.hyperlog.app.week.PlannedDates
 import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.WeekdayPlan
@@ -138,6 +140,8 @@ fun TodayScreen(
     /** The programs saved for later, offered with the starter while no program runs, each opening its page. */
     savedPrograms: List<com.hyperlog.app.program.ListedProgram> = emptyList(),
     onOpenSaved: (Long) -> Unit = {},
+    /** Starts a check-in whose first answer is the words given: a day that runs over its training day's minutes. */
+    onCheckInFit: (String) -> Unit = {},
     /** The exercise library, for the swaps the coach proposes. */
     library: List<Exercise> = emptyList(),
     /** The day of the last session finished; null with none yet. */
@@ -276,6 +280,7 @@ fun TodayScreen(
         else PlannedDates.of(program, emptySet(), trainedToday)
     }
     val missed = remember(program) { rotation?.let { program.daysOf(it.missed) }.orEmpty() }
+    val fitOf: (PlannedDay, LocalDate) -> DayFit = { day, date -> Fit.of(day, date, weekdayPlan, gyms, library, aboutMinutes(day, library, programSessions)) }
     val thisWeek = weekOf(today)
     // Back to the week of the first finished session and on to the last planned day's, at least four weeks each way.
     val firstWeek = minOf(finished.minOfOrNull { weekOf(it.date()) } ?: thisWeek, thisWeek.minusWeeks(4))
@@ -451,6 +456,7 @@ fun TodayScreen(
                                 onStart = { start(Kind.Day) }.takeIf { date == today },
                                 library = library, finished = programSessions,
                                 easyDays = daysOff?.takeIf { plannedOn.easy },
+                                fit = fitOf(plannedOn, date), onFitTime = onCheckInFit,
                             )
                             val missedTurn = rotation?.trainToday
                             if (isToday && missedTurn != null && missedDay != null) {
@@ -458,7 +464,7 @@ fun TodayScreen(
                             }
                         }
                         // With training days the last date planned is the program's last day.
-                        else PlannedCard(plannedOn, selected, last = weekdayPlan.days.isNotEmpty() && selected == planned.keys.last(), library = library, finished = programSessions)
+                        else PlannedCard(plannedOn, selected, last = weekdayPlan.days.isNotEmpty() && selected == planned.keys.last(), library = library, finished = programSessions, fit = fitOf(plannedOn, selected), onFitTime = onCheckInFit)
                         Spacer(Modifier.height(16.dp))
                     }
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->

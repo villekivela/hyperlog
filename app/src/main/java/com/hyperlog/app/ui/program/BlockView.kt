@@ -6,6 +6,7 @@ import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -57,7 +58,10 @@ import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.selectedChipColors
+import com.hyperlog.app.ui.today.FitLines
 import com.hyperlog.app.ui.today.SlotRows
+import com.hyperlog.app.ui.today.letter
+import com.hyperlog.app.week.DayFit
 import java.time.LocalDate
 
 /**
@@ -76,12 +80,24 @@ internal fun LazyListScope.blockItems(
     onBlock: (Int) -> Unit,
     onWeek: (Int) -> Unit,
     onOpenSession: (Long) -> Unit,
+    /** How a day to come fits its training day, under its head. */
+    fit: (ProgramDay) -> DayFit = { DayFit(null, null) },
+    /** Tapping a day's time line; null leaves it as words. */
+    onFitTime: ((String) -> Unit)? = null,
 ) {
     item(key = "blocks") { BlockChoice(program, program.blocks.indexOf(block), onBlock) }
     item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek) }
     days.forEach { day ->
         val key = day.key
         item(key = "head-$key") { DayHead(day) }
+        val dayFit = if (day is ProgramDay.Ahead) fit(day) else null
+        if (dayFit != null && (dayFit.time != null || dayFit.swaps != null)) {
+            item(key = "fit-$key") {
+                Box(Modifier.padding(horizontal = CardMargin + CardPadding)) {
+                    FitLines(dayFit, stringResource(R.string.fit_day, day.day.letter), MaterialTheme.colorScheme.onSurfaceVariant, onFitTime)
+                }
+            }
+        }
         when (day) {
             is ProgramDay.Done -> item(key = "done-$key") {
                 Segment(0, 1, onClick = { onOpenSession(day.session.id) }) { DoneDay(day.session) }

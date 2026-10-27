@@ -31,6 +31,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.ProgramProposal
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.program.PlannedDay
+import com.hyperlog.app.program.Program
+import com.hyperlog.app.ui.today.aboutMinutes
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.Fit
+import com.hyperlog.app.week.RotationAnchor
+import com.hyperlog.app.week.Rotations
+import com.hyperlog.app.week.WeekdayPlan
+import java.time.LocalDate
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.ui.program.ProgramDay
@@ -71,6 +82,8 @@ fun ProgramReviewScreen(
     file: String? = null,
     /** Save for later: kept on the Programs list, the running program untouched. */
     onSave: () -> Unit = {},
+    /** Your week, which each day's fit is read against; null shows none. */
+    fit: ReviewFit? = null,
 ) {
     BackHandler(onBack = onReject)
     var replacing by rememberSaveable { mutableStateOf(false) }
@@ -119,7 +132,7 @@ fun ProgramReviewScreen(
                 }
             }
         },
-    ) { padding -> ProgramReviewList(proposal, exerciseNames, file?.let { stringResource(R.string.program_review_from, it) }, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag)) }
+    ) { padding -> ProgramReviewList(proposal, exerciseNames, file?.let { stringResource(R.string.program_review_from, it) }, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag), fit = fit) }
 }
 
 /**
@@ -136,6 +149,8 @@ internal fun ProgramReviewList(
     modifier: Modifier = Modifier,
     /** Whether week 1, day 1 is headed Next, as the review heads it; a saved program's days read plain. */
     marksNext: Boolean = true,
+    /** Your week, which each day's fit is read against (SPEC, The fit); null shows none. */
+    fit: ReviewFit? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val program = proposal.program
@@ -149,6 +164,7 @@ internal fun ProgramReviewList(
         ProgramWeek.days(fresh, week, emptyList()).map { if (!marksNext && it is ProgramDay.Ahead) it.copy(next = false) else it }
     }
     val comparison = remember(program, block) { ProgramWeek.comparison(program, block) }
+    val fitOf = remember(program, fit) { fit?.of(program) }
     LazyColumn(modifier) {
         // What Claude built, in one card at the top, as a workout's review has.
         item(key = "head") {
@@ -201,6 +217,7 @@ internal fun ProgramReviewList(
             program, block, fresh, comparison, week, days, names,
             onBlock = { i -> week = program.blocks[i].weekStart },
             onWeek = { week = it }, onOpenSession = {},
+            fit = { day -> fitOf?.invoke(day.day) ?: DayFit(null, null) },
         )
         item(key = "end") { Spacer(Modifier.height(24.dp)) }
     }
@@ -208,3 +225,23 @@ internal fun ProgramReviewList(
 
 /** A strip button's padding: 16 dp a side, so three fit across the phone at its font scale. */
 private val StripButtonPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+
+/**
+ * Your week for a new program's review (SPEC, Coaching → New program → Written for your week): the
+ * training days, the gyms and the library, and [today], which the program would start from.
+ */
+class ReviewFit(val plan: WeekdayPlan, val gyms: List<Gym>, val library: List<Exercise>, val today: LocalDate) {
+    /**
+     * How each day of [program] fits the training day the rotation would put it on, started [today]:
+     * week 1's first day on the first training day from today. Nothing for a day the rotation
+     * doesn't reach, and nothing without training days.
+     */
+    fun of(program: Program): (PlannedDay) -> DayFit {
+        if (plan.days.isEmpty()) return { DayFit(null, null) }
+        val rotation = Rotations.of(program, RotationAnchor(today, week = 1, day = 0), plan.days, emptyList(), today)
+        val dates = rotation.planned.associate { it.position to it.date }
+        return { day ->
+            dates[day.position]?.let { Fit.of(day, it, plan, gyms, library, aboutMinutes(day, library, emptyList())) } ?: DayFit(null, null)
+        }
+    }
+}
