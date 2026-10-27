@@ -131,4 +131,32 @@ class RotatingProgramTest {
         programs.accept(ProgramActions.shift("A week on", -1))
         assertEquals(listOf("2.0 2026-10-29", "2.1 2026-10-31"), planned().take(2))
     }
+
+    @Test
+    fun twoSkippedDaysTakeTheNextTwoTrainingDaysAndADateWithNoneTakesTheOneAfterIt() = runTest {
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        trained(today, Position(1, 0))
+        programs.accept(com.hyperlog.app.coach.ChangeJson.decode(
+            """{"summary":"Away","scope":"rest_of_program","operations":[{"op":"skip_day"},{"op":"skip_day"}]}""",
+        ))
+        assertEquals(listOf(LocalDate.of(2026, 10, 31), LocalDate.of(2026, 11, 2)), programs.active.first()!!.rotation!!.missed.map { it.date })
+        // Friday has no training day: Saturday after it is skipped.
+        programs.revert(programs.active.first()!!.history.single().id)
+        programs.accept(com.hyperlog.app.coach.ChangeJson.decode(
+            """{"summary":"Away","scope":"rest_of_program","operations":[{"op":"skip_day","date":"2026-10-30"}]}""",
+        ))
+        assertEquals(listOf(LocalDate.of(2026, 10, 31)), programs.active.first()!!.rotation!!.missed.map { it.date })
+    }
+
+    @Test
+    fun missedDaysStayMissedWhenTheRotationIsSetAgain() = runTest {
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        // Thursday missed; on Friday Saturday moves to Sunday, then a Change shifts the program.
+        today = LocalDate.of(2026, 10, 30)
+        plans.set(WeekdayPlan(mapOf(MONDAY to null, THURSDAY to null, java.time.DayOfWeek.SUNDAY to null)))
+        programs.accept(ProgramActions.shift("A week on", -1))
+        assertEquals(listOf(LocalDate.of(2026, 10, 29)), programs.active.first()!!.rotation!!.missed.map { it.date })
+    }
 }

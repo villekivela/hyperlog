@@ -43,7 +43,9 @@ data class ProgramEntity(
      * [rotationEmptyWeeks] are the rest of the [com.hyperlog.app.week.RotationAnchor].
      */
     @ColumnInfo(name = "rotation_from") val rotationFrom: Long? = null,
+    /** The day the week after [rotationFrom]'s starts at if that week ends with no session. */
     @ColumnInfo(name = "rotation_rollback", defaultValue = "0") val rotationRollback: Int = 0,
+    /** The weeks with no session in a row before [rotationFrom]'s week. */
     @ColumnInfo(name = "rotation_empty_weeks", defaultValue = "0") val rotationEmptyWeeks: Int = 0,
 )
 

@@ -75,6 +75,7 @@ interface SessionDao {
     @Query("SELECT started_at, program_id, week, day_index FROM session WHERE started_at >= :since ORDER BY started_at")
     fun startsFlow(since: Long): Flow<List<SessionStartRow>>
 
+    /** [startsFlow] as it is now. */
     @Query("SELECT started_at, program_id, week, day_index FROM session WHERE started_at >= :since ORDER BY started_at")
     suspend fun starts(since: Long): List<SessionStartRow>
 

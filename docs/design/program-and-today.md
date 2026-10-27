@@ -604,3 +604,76 @@ Screens (phone at font scale 1.15, dark unless named light): `programs-list`,
 `programs-resume-dialog`, `programs-replace`, `programs-delete`, `programs-no-program`,
 `today-saved-programs`, `today-saved-programs-light`, `today-saved-programs-finished`,
 `program-review-save`, `program-review-save-light`, `coach-saved-snackbar`.
+
+
+## The rotation on Today and Program (#87)
+
+With training days the program's days take turns on them (SPEC, Domain → Training days and the
+rotation), so Today and Program gain dates, missed days, a week trained again and the easy week,
+and the Training days sheet gains minutes. The words and the rules are SPEC's; this is how they sit.
+
+Principles:
+
+- **The accent is for what you can still do.** A missed day gives up the violet: its marker's
+  outline is `outline` with the letter in `onSurfaceVariant`, struck through, and its card's
+  cookie and head are `onSurfaceVariant`. The planned days keep their violet outlines, so the strip
+  reads as "done, gone, to come" at a glance.
+- **Dim the words, not the tiles.** A missed day's plan sits back at 60 % (`MissedAlpha`), on the
+  content only, so its card and slot tiles keep their tone and shape on the screen. Dimming the
+  whole tile (the first cut) let the light screen show through and the group dissolved.
+- **What happened, then what to do.** `Monday’s Day A is missed · Train it today` is one text
+  button, its first half in `onSurfaceVariant` and the action in primary; the action never breaks
+  (it moves to the next line whole on a 360 dp phone). TalkBack reads the words as written.
+- **One line each, then a second line, rather than three wrapped ones.** The time-off line in an
+  easy week puts `Easy week` under `16 days since your last session` (the banner's own body line),
+  so Ease back in keeps its row; Program's training-days row puts `3 days take turns` on the row's
+  supporting line. The words are the same; only the separator dot goes.
+- **Notices stack without looking alike.** `No sessions last week · Week 8 again` is a
+  `surfaceContainerHigh` banner with the `replay` symbol; the time-off line keeps `history` on
+  `tertiaryContainer`.
+- **Menus line up.** In the Training days sheet the minutes menu is as wide as its widest choice
+  (`120 min`) and the day name as wide as `Wed`, so every row's gym and minutes start and end on
+  the same edges whatever is picked; the picked choice in either menu carries a `check`.
+
+Tokens: missed marker 28 × 20 dp, 1.5 dp `outline`, labelMedium Bold `onSurfaceVariant` with a
+line through; `MissedAlpha` 0.6 on content; Train it today a TextButton 8 dp under the hero, text
+on the 24 dp edge; notices 72 dp min, 8 dp apart, 8 dp over the hero; `Easy week` tag as Deload's
+(24 dp `tertiaryContainer` pill, `spa`, 8 dp under the title); sheet rows 56 dp, 16 dp start, 8 dp
+end.
+
+```
+ Oct – Nov 2026 · Week 8                ✎      Mon 26 picked:
+  M    T    W    T    F    S    S              ╭──────────────────────────────╮
+ 26  (27)  28   29   30   31    1              │ (A)  Missed · Mon 26 Oct · Wk 8│ ← muted, no accent
+ ⟦A̶⟧        [B]       [C]  [A]                  │      Heavy bench, squat, …    │
+╭──────────────────────────────────╮           │ 6 exercises  12 sets  ~55 min │ ← dimmed
+│ (B)  Next · Wed 28 Oct · Week 8  │           ╰──────────────────────────────╯
+│      Hinge, close-grip bench, row│            tiles at full tone, words at 60 %
+│ 7          11        ~55         │
+╰──────────────────────────────────╯           Training days
+ Monday’s Day A is missed · Train it today      Mon   Kalliokoski ▾    60 min ▾
+ ╰──── onSurfaceVariant ────╯ ╰─ primary ─╯     Wed   Harbour F… ▾     75 min ▾
+                                                Fri   Kalliokoski ▾        — ▾
+ Easy week, Mon 9 Nov:                          Sat   Harbour F… ▾     45 min ▾
+╭──────────────────────────────────╮
+│ ⟲  16 days since your last session  [Ease back in] │
+│    Easy week                     │
+╰──────────────────────────────────╯
+```
+
+States: today with no training day and a missed Monday (the hero dated, no Start, Train it today);
+the missed day picked; a week trained again (the notice over a hero with Start); an easy week (the
+time-off line, the hero's `Easy week · back after 16 days`, the tag; the notice doesn't show, as
+the easy week isn't the program week again); a later planned day of the easy week; Program's
+training-days row with `3 days take turns`, the missed day's head and the dated heads; the
+Training days sheet with two gyms and minutes, its minutes menu, and both at 360 dp.
+
+Interaction: as SPEC. Train it today opens the start sheet for the missed day; a missed day on the
+strip selects like any day; the minutes menu lists `—` then 30–120 in fives, the picked one
+ticked.
+
+Screens (emulator, the phone's 1280 × 2856 at 480 dpi, text at 115 %, dark unless named light;
+`-360` at a 360 dp width): `today-train-missed`, `-light`, `-360`; `today-missed-day`, `-light`;
+`today-week-again`; `today-easy-week`; `today-easy-week-planned`; `program-rotation-row`,
+`-light`; `program-rotation-week` (the missed day), `-light`; `program-rotation-dated`, `-light`;
+`training-days-minutes`, `-menu`, `-360`.

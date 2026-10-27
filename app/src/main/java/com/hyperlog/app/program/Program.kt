@@ -201,9 +201,10 @@ data class PlannedDay(
 
     /**
      * This day in an easy week (SPEC, Training days and the rotation): each slot one set fewer (one
-     * always stays), its target RIR one higher, no techniques, and a deload.
+     * always stays), its target RIR one higher, no techniques, and a deload. Unchanged unless [easy].
      */
-    fun easyWeek(): PlannedDay {
+    fun easyWeek(easy: Boolean = true): PlannedDay {
+        if (!easy) return this
         fun List<SetPrescription>.eased() = take((size - 1).coerceAtLeast(1))
             .map { set -> set.copy(rir = set.rir?.let { (it + 1).coerceAtMost(10) }, technique = null) }
         return copy(

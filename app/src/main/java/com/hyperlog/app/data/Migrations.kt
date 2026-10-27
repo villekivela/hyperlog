@@ -8,7 +8,7 @@ val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migrati
 
 /**
  * v26: the program's days take turns on training days (ADR 0006). Training days gain the minutes
- * you have, sessions an easy week, and a program its rotation. The program running keeps its week
+ * you have, sessions an easy week, and a program its rotation and the days it missed. The program running keeps its week
  * and next day: the rotation starts from the update.
  */
 object Migration25To26 : Migration(25, 26) {
@@ -18,6 +18,11 @@ object Migration25To26 : Migration(25, 26) {
         db.execSQL("ALTER TABLE program ADD COLUMN rotation_from INTEGER")
         db.execSQL("ALTER TABLE program ADD COLUMN rotation_rollback INTEGER NOT NULL DEFAULT 0")
         db.execSQL("ALTER TABLE program ADD COLUMN rotation_empty_weeks INTEGER NOT NULL DEFAULT 0")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `missed_day` (`program_id` INTEGER NOT NULL, `date` INTEGER NOT NULL, `week` INTEGER NOT NULL, " +
+                "`day_index` INTEGER NOT NULL, PRIMARY KEY(`program_id`, `date`), " +
+                "FOREIGN KEY(`program_id`) REFERENCES `program`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
         rotateRunning(db, java.time.LocalDate.now())
     }
 

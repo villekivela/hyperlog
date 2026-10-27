@@ -633,7 +633,6 @@
     <string name="settings_scripted_coach">Scripted coach</string>
     <string name="settings_scripted_coach_body">Canned check-ins for every tile, with no key and no network. Debug builds only.</string>
     <string name="coach_days_off">%1$d days since your last session</string>
-    <string name="coach_days_off_easy">%1$d days since your last session · Easy week</string>
     <string name="coach_ease_back">Ease back in</string>
     <string name="coach_words_label">In your words</string>
     <string name="coach_words_hint">Elbow aches on curls; the gym closes early on Fridays…</string>

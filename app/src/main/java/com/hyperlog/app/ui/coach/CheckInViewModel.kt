@@ -100,11 +100,11 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         val active = programs.active.first()
         val library = library()
         val lastTrained = db.sessions().lastTrained()?.let(programs::dateOf)
-        val training = WeekdayPlans(db).plan.first()
+        val weekdayPlan = WeekdayPlans(db).plan.first()
         return withContext(Dispatchers.Default) {
             CheckInContext.frame(
                 active, PastSessionEditor(db, programs).sessions(), library, Gyms(db).gyms.first(), lowest(),
-                lastTrained = lastTrained, training = training,
+                lastTrained = lastTrained, weekdayPlan = weekdayPlan,
                 weeklySets = History(db, programs).weeklySets(AskClaude.SET_WEEKS),
             )
         }

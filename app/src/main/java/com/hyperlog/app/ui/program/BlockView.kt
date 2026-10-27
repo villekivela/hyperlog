@@ -80,10 +80,10 @@ internal fun LazyListScope.blockItems(
     item(key = "blocks") { BlockChoice(program, program.blocks.indexOf(block), onBlock) }
     item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek) }
     days.forEach { day ->
-        val position = day.position
-        item(key = "head-${position.week}-${position.day}") { DayHead(day) }
+        val key = day.key
+        item(key = "head-$key") { DayHead(day) }
         when (day) {
-            is ProgramDay.Done -> item(key = "done-${position.week}-${position.day}") {
+            is ProgramDay.Done -> item(key = "done-$key") {
                 Segment(0, 1, onClick = { onOpenSession(day.session.id) }) { DoneDay(day.session) }
             }
             is ProgramDay.Ahead, is ProgramDay.Skipped, is ProgramDay.Missed -> {
@@ -92,12 +92,12 @@ internal fun LazyListScope.blockItems(
                 val groups = planned.slots.groupBy { it.group }.values.toList()
                 val count = groups.size + if (ends != null) 1 else 0
                 if (ends != null) {
-                    item(key = "ends-${position.week}-${position.day}") { Segment(0, count) { EndsLine(ends) } }
+                    item(key = "ends-$key") { Segment(0, count) { EndsLine(ends) } }
                 }
                 // A skipped day's plan is there to read, not to train: it sits back from the days to come.
-                val content = if (day is ProgramDay.Skipped || day is ProgramDay.Missed) Modifier.alpha(SkippedAlpha) else Modifier
+                val content = if (day.passed) Modifier.alpha(SkippedAlpha) else Modifier
                 groups.forEachIndexed { i, group ->
-                    item(key = "slots-${position.week}-${position.day}-$i") {
+                    item(key = "slots-$key-$i") {
                         Segment(i + count - groups.size, count) { Column(content) { SlotRows(group, names) } }
                     }
                 }
@@ -293,6 +293,7 @@ private fun DayHead(day: ProgramDay) {
     val (state, color) = when (day) {
         is ProgramDay.Ahead -> when {
             day.next -> stringResource(R.string.program_next)
+            day.day.easy -> stringResource(R.string.today_easy_week)
             day.day.deload -> stringResource(R.string.change_deload)
             else -> null
         } to if (day.next) cs.primary else cs.tertiary

@@ -1187,7 +1187,7 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
   Kalliokoski, 60 min; Thu = Harbour, 75 min).
   - **Program shows them** as a row under its header card: `3 days a week · Mon Wed Fri` with a
     `calendar_today` symbol, or `Set your training days` with none. With fewer or more training days
-    than the program has days, the row adds `· 4 days take turns`, as the rotation does. The row opens the **Training
+    than the program has days, the row's second line says `4 days take turns`, as the rotation does. The row opens the **Training
     days** sheet. **Today's calendar** has a pencil in its header that opens the same sheet, also
     with no program (Screens → Today).
   - **The sheet** says what the days do (`Your program's days take turns on these days. A day you
@@ -1596,7 +1596,7 @@ always count from the last session) with **Ease back in**, until a Change or a w
 accepted that day. Ease back in starts a check-in whose first answer is "I've had 11 days off.
 Ease me back in." The context holds the count either way. With training days, two empty weeks or
 more also bring the easy week by themselves (Domain → Training days and the rotation): the line
-then reads `16 days since your last session · Easy week` and Ease back in stays, for when you want
+then reads `16 days since your last session` over `Easy week` and Ease back in stays, for when you want
 more or less than the easy week gives.
 
 ### The coach line

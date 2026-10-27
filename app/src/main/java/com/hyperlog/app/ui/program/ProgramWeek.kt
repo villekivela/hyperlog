@@ -11,6 +11,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.ui.today.date
 import com.hyperlog.app.week.Rotation
 import com.hyperlog.app.week.Turn
 import java.time.LocalDate
@@ -19,6 +20,20 @@ import java.time.LocalDate
 sealed interface ProgramDay {
     val day: PlannedDay
     val position: Position get() = day.position
+
+    /** Passed without a session, skipped or missed: its plan is there to read, not to train. */
+    val passed: Boolean get() = this is Skipped || this is Missed
+
+    /**
+     * What tells this day from the others in its list: a week trained again holds the same day
+     * twice, missed and to come, so a dated day goes by its date and a trained one by its session.
+     */
+    val key: String get() = when (this) {
+        is Done -> "s${session.id}"
+        is Missed -> "m$date"
+        is Ahead -> date?.let { "a$it" } ?: "p${position.week}-${position.day}"
+        is Skipped -> "p${position.week}-${position.day}"
+    }
 
     /**
      * A day still to train, as the session will prescribe it ([Changes.dayAhead]). [endsOn] is the
@@ -84,9 +99,9 @@ object ProgramWeek {
         val block = program.blockAt(week) ?: return emptyList()
         val next = program.ordinal(active.position)
         // The latest session of each day of this program; a repeated week trains its days again.
-        val trained = sessions.filter { it.programId == active.id && it.position != null }
-            .sortedBy { it.startedAt }.associateBy { it.position!! }
-        active.rotation?.let { rotation -> rotated(active, rotation, week, trained)?.let { return it } }
+        val ofProgram = sessions.filter { it.programId == active.id && it.position != null }.sortedBy { it.startedAt }
+        active.rotation?.let { rotation -> rotated(active, rotation, week, ofProgram)?.let { return it } }
+        val trained = ofProgram.associateBy { it.position!! }
         return block.days.indices.mapNotNull { i ->
             val position = Position(week, i)
             if (program.ordinal(position) < next) {
@@ -105,18 +120,17 @@ object ProgramWeek {
      * those to come, each read for its date. Null for a week the rotation hasn't reached, before it
      * started, which reads as a sequence.
      */
-    private fun rotated(active: ActiveProgram, rotation: Rotation, week: Int, trained: Map<Position, PastSessionItem>): List<ProgramDay>? {
+    private fun rotated(active: ActiveProgram, rotation: Rotation, week: Int, sessions: List<PastSessionItem>): List<ProgramDay>? {
         val missed = rotation.missed.filter { it.position.week == week }
         val planned = rotation.planned.filter { it.position.week == week }
-        val done = trained.filterKeys { it.week == week }.values.sortedBy { it.startedAt }
-        if (week < active.position.week && missed.isEmpty() && planned.isEmpty()) return null
-        if (week > active.position.week && planned.isEmpty()) return null
+        // Every session of the week: with more training days than days, a day comes round twice.
+        val done = sessions.filter { it.position!!.week == week }
+        if (missed.isEmpty() && planned.isEmpty() && done.none { it.date() >= rotation.since }) return null
         val first = rotation.planned.firstOrNull()
-        val dated = done.mapNotNull { s -> active.dayOf(Turn(dateOf(s.startedAt), s.position!!))?.let { dateOf(s.startedAt) to ProgramDay.Done(it, s) } } +
+        val dated = done.mapNotNull { s -> s.date().let { date -> active.dayOf(Turn(date, s.position!!))?.let { date to ProgramDay.Done(it, s) } } } +
             missed.mapNotNull { t -> active.dayOf(t)?.let { t.date to ProgramDay.Missed(it, t.date) } } +
             planned.mapNotNull { t -> active.dayOf(t)?.let { t.date to ProgramDay.Ahead(it, t == first, null, t.date) } }
         return dated.sortedBy { it.first }.map { it.second }
     }
 
-    private fun dateOf(millis: Long): LocalDate = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
 }

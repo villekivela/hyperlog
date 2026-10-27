@@ -61,7 +61,7 @@ object AskClaude {
         weekdays: Set<DayOfWeek> = emptySet(),
         weeklySets: List<WeekSets> = emptyList(),
         /** Your training days, each with its gym (named by [gymNames]) and minutes. */
-        training: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
+        weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
         gymNames: Map<Long, String> = emptyMap(),
         /** The check-in's tile, quoted before the [words]: what it is about, even when the words are cleared. */
         tile: Tile? = null,
@@ -94,7 +94,7 @@ object AskClaude {
             )
         }
         appendLine()
-        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays.ifEmpty { training.days }, weeklySets, training, gymNames)
+        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gymNames)
         if (plan != null) {
             appendLine()
             append(ChangeFormat.text(plan))
@@ -127,15 +127,15 @@ object AskClaude {
         lastTrained: LocalDate?,
         weekdays: Set<DayOfWeek>,
         weeklySets: List<WeekSets>,
-        training: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
+        weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
         gymNames: Map<Long, String> = emptyMap(),
     ) {
         val names = library.associate { it.id to it.name }
         appendLine("Today is $today (${today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}).")
         appendLine(daysOff(lastTrained, today, weekdays))
-        if (training.days.isNotEmpty()) {
+        if (weekdayPlan.days.isNotEmpty()) {
             appendLine()
-            trainingDays(training, gymNames)
+            weekdayPlan(weekdayPlan, gymNames)
         }
         if (elsewhere) {
             appendLine()
@@ -160,11 +160,11 @@ object AskClaude {
     }
 
     /** Your training days in weekday order, each with its gym and the minutes you have. */
-    private fun StringBuilder.trainingDays(training: com.hyperlog.app.week.WeekdayPlan, gymNames: Map<Long, String>) {
+    private fun StringBuilder.weekdayPlan(plan: com.hyperlog.app.week.WeekdayPlan, gymNames: Map<Long, String>) {
         appendLine("## Training days")
-        training.days.sorted().forEach { day ->
-            val gym = training.gyms[day]?.let(gymNames::get) ?: "any gym"
-            val minutes = training.minutes[day]?.let { "$it minutes" } ?: "no time limit"
+        plan.days.sorted().forEach { day ->
+            val gym = plan.gyms[day]?.let(gymNames::get) ?: "any gym"
+            val minutes = plan.minutes[day]?.let { "$it minutes" } ?: "no time limit"
             appendLine("- ${day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}: $gym, $minutes")
         }
     }
@@ -175,22 +175,23 @@ object AskClaude {
             "The program runs on my training days: each training day takes the next day of the program, trained or missed. A missed " +
                 "day is skipped, never moved. A program week is a calendar week, Monday to Sunday.",
         )
-        fun turn(t: com.hyperlog.app.week.Turn) =
-            "- ${t.date} (${t.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}): week ${t.position.week}, " +
-                (plan.program.blockAt(t.position.week)?.days?.getOrNull(t.position.day)?.name ?: "")
+        fun line(turn: com.hyperlog.app.week.Turn) =
+            "- ${turn.date} (${turn.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}): week ${turn.position.week}, " +
+                (plan.program.blockAt(turn.position.week)?.days?.getOrNull(turn.position.day)?.name ?: "")
         when {
             rotation.easy -> appendLine(
                 "This week is an easy week, after ${rotation.emptyWeeks} weeks with no session: each slot one set fewer, target RIR one " +
                     "higher, no techniques, a deload outside the program. The program week after it is the one I stopped at.",
             )
             rotation.again -> appendLine("Last week had no session, so this week trains its program week again.")
+            rotation.repeated -> appendLine("A repeat_week accepted last week has this week train its program week again.")
         }
         appendLine("Coming days:")
-        rotation.planned.take(UPCOMING_TURNS).forEach { appendLine(turn(it)) }
+        rotation.planned.take(UPCOMING_TURNS).forEach { appendLine(line(it)) }
         val missed = rotation.missed.filter { it.date >= plan.today.minusDays(HISTORY_DAYS) && it.date < plan.today }
         if (missed.isNotEmpty()) {
             appendLine("Missed training days in the last $HISTORY_DAYS days:")
-            missed.forEach { appendLine(turn(it)) }
+            missed.forEach { appendLine(line(it)) }
         }
     }
 

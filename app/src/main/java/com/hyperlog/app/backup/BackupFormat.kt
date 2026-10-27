@@ -32,9 +32,9 @@ object BackupFormat {
         "gym", "equipment_item", "shared_ladder", "gym_exercise_item", "gym_missing_exercise",
         // Your training days, each with its gym and minutes.
         "weekday_plan",
-        // Programs (the one running with its position, those saved for later, past runs), and the
-        // Changes accepted (and reverted) on them.
-        "program", "plan_change",
+        // Programs (the one running with its position, those saved for later, past runs), the
+        // Changes accepted (and reverted) on them, and the training days they missed.
+        "program", "plan_change", "missed_day",
         // Workouts from the coach: the one waiting on Today, and those sessions trained.
         "workout",
         // Sessions, the running one with its pad draft and rest timer, their sets and session edits.
@@ -66,6 +66,7 @@ object BackupFormat {
             "weekday_plan" to setOf("minutes"),
             "session" to setOf("easy"),
             "program" to setOf("rotation_from", "rotation_rollback", "rotation_empty_weeks"),
+            "missed_day" to emptySet(),
         ),
     )
 

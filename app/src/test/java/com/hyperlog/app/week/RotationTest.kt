@@ -162,4 +162,30 @@ class RotationTest {
         assertEquals(RotationAnchor(LocalDate.of(2026, 10, 30), week = 1, day = 2, rollbackDay = 0, emptyWeeks = 0), trained.anchor)
         assertEquals(Position(1, 2), trained.next)
     }
+
+    @Test
+    fun anEasyWeekIsntAlsoAWeekAgain() {
+        val program = program("ABC")
+        val anchor = RotationAnchor(LocalDate.of(2026, 10, 12), week = 3, day = 0)
+        val trained = listOf(12, 15, 17).map { SessionStart(LocalDate.of(2026, 10, it)) }
+        val rotation = Rotations.of(program, anchor, monThuSat, trained, today = LocalDate.of(2026, 11, 2))
+        assertEquals(true, rotation.easy)
+        assertEquals(false, rotation.again)
+    }
+
+    @Test
+    fun aRepeatedWeekSaysSo() {
+        val program = program("ABC")
+        val rotation = Rotations.of(program, RotationAnchor(mon26, week = 1, day = 0), monThuSat, listOf(SessionStart(mon26)), today = LocalDate.of(2026, 11, 3), repeats = setOf(mon26))
+        assertEquals(true, rotation.repeated)
+        assertEquals(false, rotation.again)
+    }
+
+    @Test
+    fun aDaySkippedAheadButTrainedAnywayIsntMissed() {
+        val program = program("ABC")
+        val sat31 = LocalDate.of(2026, 10, 31)
+        val rotation = Rotations.of(program, RotationAnchor(mon26, week = 1, day = 0), monThuSat, listOf(SessionStart(sat31)), today = LocalDate.of(2026, 11, 1), skips = setOf(sat31))
+        assertEquals(listOf("1.A MON 26", "1.B THU 29"), rotation.missed.map { it.label(program) })
+    }
 }

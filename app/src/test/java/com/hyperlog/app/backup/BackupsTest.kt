@@ -117,6 +117,8 @@ class BackupsTest {
         programs.accept(ChangeJson.decode("""{"summary":"Lighter bench","scope":"rest_of_program","operations":[{"op":"adjust_load","slot":"bench","percent":-10}]}"""))
         programs.accept(ChangeJson.decode("""{"summary":"Skip","scope":"rest_of_program","operations":[{"op":"skip_day"}]}"""))
         programs.revert(db.planChanges().changes(programs.active.first()!!.id).last().id)
+        // v26: a training day missed before the rotation was last set.
+        db.missedDays().insert(listOf(com.hyperlog.app.data.MissedDayEntity(programs.active.first()!!.id, LocalDate.of(2026, 10, 5).toEpochDay(), 1, 0)))
         // v25: a program saved for later, with the new exercise it brings.
         programs.save(program.replace("Backup test", "Saved for later").replace("\"cable_lateral_raise\"", "\"kneeling_cable_y_raise\""), listOf(yRaise))
 

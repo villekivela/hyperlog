@@ -1,8 +1,15 @@
 package com.hyperlog.app.ui.today
 
 import com.hyperlog.app.ui.theme.interFigures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.hyperlog.app.ui.theme.Group
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -264,10 +271,10 @@ fun TodayScreen(
     val trainedToday = done[today].orEmpty().isNotEmpty()
     // With training days the rotation dates every coming day; without them only the next has a date.
     val planned = remember(program, trainedToday) {
-        if (rotation != null) rotation.planned.mapNotNull { turn -> program.dayOf(turn)?.let { turn.date to it } }.toMap()
+        if (rotation != null) program.daysOf(rotation.planned)
         else PlannedDates.of(program, emptySet(), trainedToday)
     }
-    val missed = remember(program) { rotation?.missed?.mapNotNull { turn -> program.dayOf(turn)?.let { turn.date to it } }?.toMap().orEmpty() }
+    val missed = remember(program) { rotation?.let { program.daysOf(it.missed) }.orEmpty() }
     val thisWeek = weekOf(today)
     // Back to the week of the first finished session and on to the last planned day's, at least four weeks each way.
     val firstWeek = minOf(finished.minOfOrNull { weekOf(it.date()) } ?: thisWeek, thisWeek.minusWeeks(4))
@@ -466,7 +473,8 @@ fun TodayScreen(
                         Spacer(Modifier.height(16.dp))
                     }
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
-                        Box(Modifier.alpha(MissedAlpha)) { Segment(i, groups.size) { SlotRows(group, exerciseNames) } }
+                        // The words dim, not the tiles, so the group keeps its shape on the screen.
+                        Segment(i, groups.size) { Column(Modifier.alpha(MissedAlpha)) { SlotRows(group, exerciseNames) } }
                     }
                 }
             }
@@ -544,9 +552,24 @@ internal const val MissedAlpha = 0.6f
  */
 @Composable
 private fun TrainMissedButton(date: LocalDate, day: PlannedDay, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
     val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH)
-    TextButton(onClick = onClick, Modifier.padding(horizontal = 12.dp).padding(top = 8.dp)) {
-        Text(interFigures(stringResource(R.string.today_train_missed, weekday, day.letter)))
+    val words = stringResource(R.string.today_train_missed, weekday, day.letter)
+    // What happened reads in the muted tone and the action in the accent, one button all the same.
+    val action = words.lastIndexOf(" · ").takeIf { it >= 0 }
+    val text = if (action == null) interFigures(words) else buildAnnotatedString {
+        withStyle(SpanStyle(color = cs.onSurfaceVariant)) { append(interFigures(words.substring(0, action + 3))) }
+        // The action never breaks: on a narrow screen it moves to the next line whole.
+        append(interFigures(words.substring(action + 3).replace(' ', '\u00A0')))
+    }
+    // Read with plain spaces, as one button.
+    val read = Modifier.clearAndSetSemantics {
+        this.text = AnnotatedString(words)
+        role = Role.Button
+        onClick { onClick(); true }
+    }
+    TextButton(onClick = onClick, Modifier.padding(horizontal = 12.dp).padding(top = 8.dp).then(read)) {
+        Text(text)
     }
 }
 
@@ -554,7 +577,8 @@ private fun TrainMissedButton(date: LocalDate, day: PlannedDay, onClick: () -> U
 @Composable
 private fun AgainNotice(week: Int) {
     val cs = MaterialTheme.colorScheme
-    Banner(Symbol.History, stringResource(R.string.today_week_again, week), container = cs.surfaceContainerHigh, content = cs.onSurface)
+    // Replay, not the time-off line's History: the two can stack, and this one says "again".
+    Banner(Symbol.Replay, stringResource(R.string.today_week_again, week), container = cs.surfaceContainerHigh, content = cs.onSurface)
 }
 
 /** The update and time-off banners, over today's day. */
@@ -745,7 +769,9 @@ private fun TimeOffBanner(days: Int, easy: Boolean, onEaseBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Banner(
         Symbol.History,
-        stringResource(if (easy) R.string.coach_days_off_easy else R.string.coach_days_off, days),
+        stringResource(R.string.coach_days_off, days),
+        // In an easy week the line says so under it, so the days and Ease back in keep their row.
+        body = if (easy) stringResource(R.string.today_easy_week) else null,
         container = cs.tertiaryContainer,
         content = cs.onTertiaryContainer,
     ) {

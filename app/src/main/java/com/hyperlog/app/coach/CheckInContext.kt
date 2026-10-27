@@ -32,13 +32,13 @@ object CheckInContext {
         weekdays: Set<DayOfWeek> = emptySet(),
         weeklySets: List<WeekSets> = emptyList(),
         /** Your training days with their gyms and minutes. */
-        training: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
+        weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
     ): CheckInFrame {
         val context = buildString {
             appendLine(intro(plan != null, gyms, lowest))
             appendLine()
             with(AskClaude) {
-                situation(plan, sessions, library, zone, today, null, false, lastTrained, weekdays.ifEmpty { training.days }, weeklySets, training, gyms.associate { it.id to it.name })
+                situation(plan, sessions, library, zone, today, null, false, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gyms.associate { it.id to it.name })
             }
         }
         return CheckInFrame(context.trimEnd(), CoachTools.all(plan?.program))

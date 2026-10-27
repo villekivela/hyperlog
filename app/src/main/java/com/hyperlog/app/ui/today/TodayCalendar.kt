@@ -77,7 +77,7 @@ import java.util.Locale
 // Today's calendar).
 
 /** The Monday of [date]'s week: the calendar's weeks run Monday to Sunday. */
-internal fun weekOf(date: LocalDate): LocalDate = date.minusDays(date.dayOfWeek.value - 1L)
+internal fun weekOf(date: LocalDate): LocalDate = com.hyperlog.app.week.Rotations.mondayOf(date)
 
 /** The day a finished session was started on. */
 internal fun PastSessionItem.date(): LocalDate = Instant.ofEpochMilli(startedAt).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -344,7 +344,8 @@ internal fun WeekRow(
                         Text(plan.letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = cs.primary)
                     }
                     // A missed day keeps its letter in a muted outline, struck through.
-                    miss != null -> Box(marker.border(1.5.dp, cs.outlineVariant, shape), contentAlignment = Alignment.Center) {
+                    // Outline, not outlineVariant: the variant all but vanishes on the light screen.
+                    miss != null -> Box(marker.border(1.5.dp, cs.outline, shape), contentAlignment = Alignment.Center) {
                         Text(
                             miss.letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium,
                             color = cs.onSurfaceVariant, textDecoration = TextDecoration.LineThrough,
@@ -548,8 +549,9 @@ internal fun PlannedCard(
                 day.letter,
                 head = stringResource(head, shortDate(date), day.position.week),
                 title = dayTitle(day.day.name),
-                letterContainer = null, letterContent = cs.primary,
-                headColor = cs.primary, titleColor = cs.onSurface,
+                // A missed day is nothing to act on, so it gives up the accent for the muted tone.
+                letterContainer = null, letterContent = if (missed) cs.onSurfaceVariant else cs.primary,
+                headColor = if (missed) cs.onSurfaceVariant else cs.primary, titleColor = cs.onSurface,
                 deload = day.deload, easy = day.easy,
             )
             Spacer(Modifier.height(20.dp))

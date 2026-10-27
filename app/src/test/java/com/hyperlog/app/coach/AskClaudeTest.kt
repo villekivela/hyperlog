@@ -91,13 +91,13 @@ class AskClaudeTest {
     @Test
     fun withTrainingDaysThePromptHoldsThemTheRotationAndTheMissedDays() {
         val days = mapOf(DayOfWeek.MONDAY to 7L, DayOfWeek.THURSDAY to null, DayOfWeek.SATURDAY to 7L)
-        val training = com.hyperlog.app.week.WeekdayPlan(days, minutes = mapOf(DayOfWeek.MONDAY to 60, DayOfWeek.SATURDAY to 45))
+        val weekdayPlan = com.hyperlog.app.week.WeekdayPlan(days, minutes = mapOf(DayOfWeek.MONDAY to 60, DayOfWeek.SATURDAY to 45))
         // Rotating from Monday 12 Oct, which was missed; today is Tuesday.
         val rotation = com.hyperlog.app.week.Rotations.of(
             program, com.hyperlog.app.week.RotationAnchor(oct13.minusDays(1), week = 1, day = 0), days.keys, emptyList(), oct13,
         )
         val rotating = plan.copy(position = rotation.next, rotation = rotation)
-        val text = AskClaude.prompt("x", rotating, emptyList(), library.exercises, training = training, gymNames = mapOf(7L to "Harbour"))
+        val text = AskClaude.prompt("x", rotating, emptyList(), library.exercises, weekdayPlan = weekdayPlan, gymNames = mapOf(7L to "Harbour"))
         val a = program.blockAt(1)!!.days[0].name
         val b = program.blockAt(1)!!.days[1].name
         assertTrue(text, text.contains("- Monday: Harbour, 60 minutes\n- Thursday: any gym, no time limit\n- Saturday: Harbour, 45 minutes\n"))

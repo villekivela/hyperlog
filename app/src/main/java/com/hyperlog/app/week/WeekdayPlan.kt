@@ -41,7 +41,7 @@ class WeekdayPlans(private val db: HyperlogDatabase, private val clock: () -> Lo
     suspend fun set(plan: WeekdayPlan) = db.withTransaction {
         val before = current().days
         dao.replace(plan.gyms.entries.sortedBy { it.key }.map { (day, gym) -> WeekdayPlanEntity(day.value, gym, plan.minutes[day]) })
-        if (plan.days != before) Programs(db, clock).trainingDaysChanged(before, plan.days)
+        if (plan.days != before) Programs(db, clock).weekdayPlanChanged(before, plan.days)
     }
 
     /** A gym deleted or archived: its days stay training days, naming no gym. */
