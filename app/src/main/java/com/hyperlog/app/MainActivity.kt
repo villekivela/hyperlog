@@ -325,6 +325,8 @@ private fun App(
     val closeAsk = { askOpening = null; askTile = null; endAsk(); programModel.closePasteErrors() }
     val inForce by programModel.inForce.collectAsStateWithLifecycle()
     val coachLine by programModel.coachLine.collectAsStateWithLifecycle()
+    val dueReview by programModel.dueReview.collectAsStateWithLifecycle()
+    val reviewPage by programModel.blockReview.collectAsStateWithLifecycle()
     // A session finished or corrected reads the list again, and the coach line with it.
     LaunchedEffect(pastSessions) { programModel.readCoachLine() }
     val update by updateModel.banner.collectAsStateWithLifecycle()
@@ -503,6 +505,16 @@ private fun App(
         )
         return
     }
+    // A finished block's review, from its card on Program, Today's line or a past program on Programs.
+    reviewPage?.let { page ->
+        com.hyperlog.app.ui.program.BlockReviewScreen(
+            page, exercises.associate { it.id to it.name },
+            onBack = programModel::closeReview,
+            onCheckIn = { programModel.closeReview(); checkInWords(it) },
+            onNewProgram = { programModel.closeReview(); checkInWords(it) },
+        )
+        return
+    }
     // A Change in force opened from its card on Coach or its row on Program: what it does, read-only, with Revert.
     inForce?.let { (id, r) ->
         ChangeReviewScreen(
@@ -661,6 +673,8 @@ private fun App(
             onResume = programModel::resume,
             onOpenSaved = { savedOpen = it },
             onExportProgram = { exportingProgram = it.id; exportProgram.launch(com.hyperlog.app.ui.program.programFileName(it.title)) },
+            onReview = { block -> program?.let { programModel.openReview(it.id, block) } },
+            onProgramReview = { id -> programModel.openReview(id, null) },
             )
         }
         screen == Screen.Coach && asking -> com.hyperlog.app.ui.coach.AskClaudeScreen(
@@ -828,6 +842,8 @@ private fun App(
             coachLine = coachLine,
             onCheckInLine = checkInWords,
             onHideCoachLine = programModel::hideCoachLine,
+            dueReview = dueReview,
+            onOpenReview = { programModel.openReview(it.programId, it.blockId) },
             weekdayPlan = weekdayPlan,
             onWeekdayPlan = programModel::setWeekdayPlan,
             sessions = pastSessions,

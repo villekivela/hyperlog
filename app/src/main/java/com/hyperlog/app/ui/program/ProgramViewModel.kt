@@ -74,6 +74,37 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { coachLines.hide(line, active.value) }
     }
 
+    private val reviews = com.hyperlog.app.program.BlockReviewReader(HyperlogDatabase.get(application), programs)
+
+    /** The finished block's review Today points at (SPEC, Program → Block review); null for none. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val dueReview: StateFlow<com.hyperlog.app.program.DueReview?> = combine(active, reviews.opened, logRead) { program, opened, _ -> program to opened }
+        .mapLatest { (program, opened) -> withContext(Dispatchers.IO) { reviews.due(program, opened) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val _blockReview = MutableStateFlow<com.hyperlog.app.program.ReviewPage?>(null)
+
+    /** The block review open, until Back. */
+    val blockReview: StateFlow<com.hyperlog.app.program.ReviewPage?> = _blockReview.asStateFlow()
+
+    /**
+     * Opens program [programId]'s review of block [blockId] (null: the last block it reached, as
+     * from Programs, with the whole program). The last block's is the program review. Opened, Today
+     * stops pointing at it.
+     */
+    fun openReview(programId: Long, blockId: String?) {
+        viewModelScope.launch {
+            val program = programs.program(programId) ?: return@launch
+            val page = withContext(Dispatchers.IO) { reviews.page(programId, blockId, whole = blockId == null || blockId == program.blocks.last().id) } ?: return@launch
+            reviews.open(programId, page.block.id)
+            _blockReview.value = page
+        }
+    }
+
+    fun closeReview() {
+        _blockReview.value = null
+    }
+
     private val _errors = MutableStateFlow<List<String>?>(null)
 
     /** The problems of the last file rejected, until closed. */

@@ -71,6 +71,7 @@ import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.gym.SessionSwap
 import com.hyperlog.app.history.TimeOff
 import com.hyperlog.app.coach.CoachLine
+import com.hyperlog.app.program.DueReview
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.coach.Workouts
@@ -194,6 +195,9 @@ fun TodayScreen(
     onCheckInLine: (String) -> Unit = {},
     /** Hides the coach line until its pattern grows. */
     onHideCoachLine: (CoachLine) -> Unit = {},
+    /** A finished block's review not yet opened (SPEC, Program → Block review); null for none. */
+    dueReview: DueReview? = null,
+    onOpenReview: (DueReview) -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val snackScope = rememberCoroutineScope()
@@ -357,6 +361,7 @@ fun TodayScreen(
     val banners: @Composable ColumnScope.() -> Unit = {
         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
         if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
+        if (dueReview != null && isToday && !sessionRunning) ReviewBanner(dueReview, program?.program?.title.orEmpty()) { onOpenReview(dueReview) }
         if (coachLine != null && !sessionRunning) CoachLineBanner(coachLine, exerciseNames, onCheckInLine, onHide = { onHideCoachLine(coachLine) })
         // After an empty week, until the repeated week's first session.
         val weekStarted = finished.any { weekOf(it.date()) == thisWeek }
@@ -498,6 +503,10 @@ fun TodayScreen(
             }
             isToday -> {
                 update?.let { UpdateBanner(it, onUpdate, onDismissUpdate, Modifier.padding(bottom = 8.dp)) }
+                // A finished program still points at its review.
+                if (dueReview != null && !sessionRunning) {
+                    ReviewBanner(dueReview, program?.program?.title.orEmpty(), Modifier.padding(bottom = 8.dp)) { onOpenReview(dueReview) }
+                }
                 val finished = program?.finished == true
                 // With no program running, or the one running finished, the saved ones are on offer.
                 val offerSaved = savedPrograms.isNotEmpty() && (program == null || finished) && !sessionRunning
@@ -817,6 +826,21 @@ private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheck
         TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
         IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
     }
+}
+
+/**
+ * `Build is done · See the review`, or once the program is finished `<title> is done`, in the
+ * coach line's style; a tap opens the review.
+ */
+@Composable
+private fun ReviewBanner(due: DueReview, title: String, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Banner(
+        Symbol.Flag, stringResource(R.string.review_due_block, if (due.programDone) title else due.blockName), modifier,
+        container = cs.surfaceContainerHighest, content = cs.onSurface,
+        titleStyle = MaterialTheme.typography.titleSmall.copy(lineBreak = LineBreak.Heading),
+        onClick = onOpen,
+    )
 }
 
 /** [line]'s words, its exercises named from [names]. */
