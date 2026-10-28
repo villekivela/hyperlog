@@ -87,9 +87,10 @@ class BlockReviewReader(private val db: HyperlogDatabase, private val programs: 
         val rows = dao.finishedSessions().reversed()
         val byId = rows.associateBy { it.id }
         val run = rows.filter { it.programId == id && it.workoutId == null && it.week != null && it.dayIndex != null }
-        val eased = run.associate { row ->
+        // Each session of the run: eased by the plan, and in a deload or an easy week.
+        val kinds = run.associate { row ->
             val day = programs.plannedDay(row)
-            row.id to (row.easy || day?.deload == true || day?.eased == true)
+            row.id to ((day?.eased == true) to (row.easy || day?.deload == true))
         }
         val history = History(db, programs, zone)
         val lines = history.exercises().flatMap { trend ->
@@ -98,9 +99,11 @@ class BlockReviewReader(private val db: HyperlogDatabase, private val programs: 
                     trend.exercise.id, line.machine,
                     line.points.map { p ->
                         val row = byId[p.sessionId]
+                        val kind = kinds[p.sessionId]
                         ReviewPoint(
-                            p.date, row?.week?.takeIf { row.id in eased }, eased[p.sessionId] == true, p.estimateKg,
+                            p.date, row?.week?.takeIf { kind != null }, kind?.first == true, p.estimateKg,
                             p.record?.let { ReviewRecord(it, p.top.weightKg, p.top.fullReps) },
+                            deload = kind?.second == true,
                         )
                     },
                 )

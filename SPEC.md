@@ -1105,7 +1105,9 @@ each planned day with the training day it lands on, and never changes the day:
        session in the block → after its last (as suggestions read it then), deload and easy-week
        sessions left out; biggest gain first, stalls and drops last. A machine exercise reads the
        machine used most in the block, named (`Cable left · Harbour`, ADR 0002). Weeks the plan
-       eases (`rirAdd` above 0, as Ramp-in) are left out too, as from a stall (owner, 2026-10-28).
+       eases (`rirAdd` above 0, as Ramp-in) are left out too, as from a stall (owner, 2026-10-28),
+       except in a block the plan eases in every week, as the starter's Ramp-in, which counts its
+       eased sessions; its deload and easy-week sessions stay out (owner, 2026-10-28).
        A row (owner, 2026-10-28): the name, the machine under it, and on the right
        `82.5 → 87.5 kg` with the gain `+5` in the accent; a stall reads `±0` and a drop `−2.5`,
        both muted. A lift first trained in the block starts from its estimate after its first

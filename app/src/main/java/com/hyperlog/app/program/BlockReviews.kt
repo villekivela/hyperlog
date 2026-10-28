@@ -11,10 +11,17 @@ import java.time.temporal.ChronoUnit
 
 /**
  * A session of an exercise as the review reads it: in program [week] of this run (null for a
- * session outside it), [eased] in a deload, an easy week or a week the plan eases, with the
- * estimate after it.
+ * session outside it), [eased] in a week the plan eases (as Ramp-in), [deload] in a deload or an
+ * easy week, with the estimate after it.
  */
-data class ReviewPoint(val date: LocalDate, val week: Int?, val eased: Boolean, val estimateKg: Double?, val record: ReviewRecord? = null)
+data class ReviewPoint(
+    val date: LocalDate,
+    val week: Int?,
+    val eased: Boolean,
+    val estimateKg: Double?,
+    val record: ReviewRecord? = null,
+    val deload: Boolean = false,
+)
 
 /** The top set of a session that made a record (SPEC, Records): [weightKg] × [reps]. */
 data class ReviewRecord(val kind: Record, val weightKg: Double, val reps: Int)
@@ -132,7 +139,7 @@ object BlockReviews {
     private fun review(log: ReviewLog, weeks: IntRange): Review {
         val blocks = log.program.blocks.filter { it.weekStart in weeks }.map { it.id }.toSet()
         val dates = dates(log, weeks)
-        val lifts = lifts(log.lines, weeks)
+        val lifts = lifts(log.lines, weeks, easedThroughout(log.program))
         return Review(
             lifts = lifts.map { it.change },
             turningUp = turningUp(log, weeks),
@@ -230,21 +237,31 @@ object BlockReviews {
     private fun mondayOf(date: LocalDate) = Rotations.mondayOf(date)
 
     /**
-     * Each exercise trained at least twice in [weeks], eased sessions left out: its estimate before
-     * the first (after it, for a lift new there) → after the last. A machine exercise reads the
-     * machine with the most of them, the one used last on a tie. Biggest gain first.
+     * The weeks of blocks the plan eases in every week (as Ramp-in): their eased sessions count,
+     * or the block would have no lifts.
      */
-    private fun lifts(lines: List<ReviewLine>, weeks: IntRange): List<Lift> =
+    private fun easedThroughout(program: Program): Set<Int> = program.blocks.filter { block ->
+        (block.weekStart..block.weekEnd).all { week -> block.days.indices.all { program.plannedDay(Position(week, it))?.eased == true } }
+    }.flatMap { it.weekStart..it.weekEnd }.toSet()
+
+    /**
+     * Each exercise trained at least twice in [weeks], deload and easy-week sessions left out, and
+     * eased ones outside the [eased] blocks' weeks: its estimate before the first (after it, for a
+     * lift new there) → after the last. A machine exercise reads the machine with the most of them,
+     * the one used last on a tie. Biggest gain first.
+     */
+    private fun lifts(lines: List<ReviewLine>, weeks: IntRange, eased: Set<Int>): List<Lift> =
         lines.groupBy { it.exercise }.values.mapNotNull { machines ->
-            val (line, counted) = machines.map { it to it.counted(weeks) }
+            val (line, counted) = machines.map { it to it.counted(weeks, eased) }
                 .maxWithOrNull(compareBy({ it.second.size }, { it.second.lastOrNull()?.date })) ?: return@mapNotNull null
             if (counted.size < 2) return@mapNotNull null
             val start = line.points.lastOrNull { it.estimateKg != null && it.date < counted.first().date }?.estimateKg ?: counted.first().estimateKg!!
             Lift(LiftChange(line.exercise, line.machine, start, counted.last().estimateKg!!), counted.first().date, counted.last().date)
         }.sortedByDescending { it.change.gainKg }
 
-    /** The sessions in [weeks] that count for a lift: with an estimate, not eased. */
-    private fun ReviewLine.counted(weeks: IntRange) = points.filter { it.estimateKg != null && it.week in weeks && !it.eased }
+    /** The sessions in [weeks] that count for a lift: with an estimate, no deload, eased only in an [eased] block's week. */
+    private fun ReviewLine.counted(weeks: IntRange, eased: Set<Int>) =
+        points.filter { it.estimateKg != null && it.week in weeks && !it.deload && (!it.eased || it.week in eased) }
 
     /**
      * The first answer of Check in about the next block, or with [newProgram] of New program. The

@@ -46,8 +46,8 @@ class BlockReviewsTest {
             program,
             lines = listOf(
                 ReviewLine("squat", points = listOf(point(0, 1, 120.0), point(1, 1, 123.0), point(3, 2, 118.0, eased = true))),
-                // Two sessions, one eased: trained once that counts.
-                ReviewLine("bench", points = listOf(point(0, 1, 100.0), point(2, 2, 104.0, eased = true))),
+                // Two sessions, one in a deload: trained once that counts.
+                ReviewLine("bench", points = listOf(point(0, 1, 100.0), point(2, 2, 104.0).copy(deload = true))),
             ),
         )
         assertEquals(listOf(LiftChange("squat", null, 120.0, 123.0)), BlockReviews.of(log, program.blocks[0]).lifts)
@@ -280,5 +280,22 @@ class BlockReviewsTest {
         // Stopped in week 3: Peak's week 4 isn't written for it.
         val log = ReviewLog(program, sessions = listOf(ReviewSession(monday, 1), ReviewSession(monday.plusWeeks(2), 3)), muscles = muscles)
         assertEquals(MuscleVolume("Chest", done = 0.0, written = (3 + 3 + 2) / 3.0), BlockReviews.program(log, program.blocks[1]).volume.single())
+    }
+
+    @Test
+    fun aBlockThePlanEasesThroughoutCountsItsEasedSessionsButNotADeload() {
+        // Build is a Ramp-in: +1 RIR in both its weeks.
+        val rampIn = program.blocks[0].copy(weeks = listOf(WeekOverride(WeekRange(1, 2), rirAdd = 1)))
+        val eased = program.copy(blocks = listOf(rampIn, program.blocks[1]))
+        val log = ReviewLog(
+            eased,
+            lines = listOf(
+                ReviewLine("squat", points = listOf(point(0, 1, 120.0, eased = true), point(1, 1, 122.0, eased = true), point(3, 2, 110.0, eased = true).copy(deload = true))),
+                // Peak isn't eased throughout: its eased session still stays out.
+                ReviewLine("bench", points = listOf(point(4, 3, 100.0), point(5, 3, 90.0, eased = true), point(6, 4, 103.0))),
+            ),
+        )
+        assertEquals(listOf(LiftChange("squat", null, 120.0, 122.0)), BlockReviews.of(log, rampIn).lifts)
+        assertEquals(listOf(LiftChange("bench", null, 100.0, 103.0)), BlockReviews.of(log, eased.blocks[1]).lifts)
     }
 }
