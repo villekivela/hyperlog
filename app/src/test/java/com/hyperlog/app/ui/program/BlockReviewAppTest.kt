@@ -20,6 +20,7 @@ import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitGone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -28,7 +29,6 @@ import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.io.File
 
 /** A finished block's review in the app, from Today's line to Check in (SPEC, Program → Block review). */
 @RunWith(RobolectricTestRunner::class)
@@ -59,14 +59,11 @@ class BlockReviewAppTest {
         compose.waitFor("Ramp-in review")
         compose.click("Check in about the next block")
         compose.waitGone("Ramp-in review")
-        // A check-in with the scripted coach, whose first answer is the review.
+        // A check-in with the scripted coach, the review in its context.
         compose.waitFor("What's on your mind?")
-        // The check-in is written off the main thread.
-        val store = com.hyperlog.app.coach.CheckInStore(File(context.noBackupFilesDir, "check_in.json"))
-        compose.waitUntil(10_000) { store.load() != null }
-        val opening = store.load()!!.opening
-        assertTrue(opening.startsWith("Ramp-in is done. Here's how it went: look at it and the next block."))
-        assertTrue("## How Ramp-in went (weeks 1–2)" in opening)
+        val kept = androidx.lifecycle.ViewModelProvider(compose.activity)[com.hyperlog.app.ui.coach.CheckInViewModel::class.java].checkIn.value!!.checkIn
+        assertEquals("Ramp-in is done. Here's how it went: look at it and the next block.", kept.opening)
+        assertTrue("## How Ramp-in went (weeks 1–2)" in kept.frame.context)
         // Opened, Today no longer points at it.
         compose.onNodeWithContentDescription("Close the check-in").performClick()
         compose.openTab("Today")

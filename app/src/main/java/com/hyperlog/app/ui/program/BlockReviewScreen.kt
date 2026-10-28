@@ -51,7 +51,6 @@ import com.hyperlog.app.ui.theme.SegmentedListScope
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
-import kotlin.math.abs
 
 /**
  * A finished block's review (SPEC, Program → Block review): its weeks and dates, then Lifts,
@@ -65,10 +64,10 @@ fun BlockReviewScreen(
     page: ReviewPage,
     names: Map<String, String>,
     onBack: () -> Unit,
-    /** Check in, with its first answer. */
-    onCheckIn: (String) -> Unit,
-    /** New program on the program review, with its first answer. */
-    onNewProgram: (String) -> Unit,
+    /** Check in, with its first answer and the review for the check-in's context. */
+    onCheckIn: (opening: String, context: String) -> Unit,
+    /** New program on the program review, with its first answer and the review for the check-in's context. */
+    onNewProgram: (opening: String, context: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBack)
@@ -76,6 +75,7 @@ fun BlockReviewScreen(
     val review = page.review
     val whole = page.whole
     val name = { id: String -> names[id] ?: id }
+    val context = { BlockReviews.context(page.program, block, review, whole, names) }
     Scaffold(
         modifier = modifier,
         containerColor = Tones.screen,
@@ -90,12 +90,12 @@ fun BlockReviewScreen(
             BottomActions {
                 Spacer(Modifier.weight(1f))
                 if (whole != null) {
-                    OutlinedButton(onClick = { onNewProgram(BlockReviews.text(page.program, block, review, whole, names, newProgram = true)) }) {
+                    OutlinedButton(onClick = { onNewProgram(BlockReviews.opening(page.program, block, newProgram = true), context()) }) {
                         Text(stringResource(R.string.review_new_program), maxLines = 1)
                     }
                     Spacer(Modifier.width(8.dp))
                 }
-                Button(onClick = { onCheckIn(BlockReviews.text(page.program, block, review, whole, names)) }) {
+                Button(onClick = { onCheckIn(BlockReviews.opening(page.program, block), context()) }) {
                     Text(stringResource(if (page.next != null) R.string.review_check_in_next else R.string.review_check_in), maxLines = 1)
                 }
             }
@@ -104,7 +104,7 @@ fun BlockReviewScreen(
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
             Column(Modifier.padding(horizontal = 24.dp)) {
                 Text(
-                    stringResource(R.string.review_title, if (whole != null) page.program.title else block.name),
+                    interFigures(stringResource(R.string.review_title, if (whole != null) page.program.title else block.name)),
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 val weeks = if (block.weekStart == block.weekEnd) stringResource(R.string.review_week, block.weekStart)
@@ -138,7 +138,8 @@ fun BlockReviewScreen(
 /** The two columns' heads, over the values on the right: the block and the program. */
 @Composable
 private fun Columns(block: String, program: String) {
-    Row(Modifier.fillMaxWidth().padding(start = 32.dp, end = 32.dp, top = 16.dp)) {
+    // Over the values: the card's margin and its row's padding in from the edge.
+    Row(Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 16.dp)) {
         Spacer(Modifier.weight(1f))
         listOf(block, program).forEach {
             Text(it, Modifier.width(ColumnWidth), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.End, maxLines = 1)
@@ -153,7 +154,7 @@ private fun Columns(block: String, program: String) {
 private fun SegmentedListScope.valueRow(title: String, supporting: String?, value: String?, program: String? = null, columns: Boolean = false, valueColor: Color? = null, programColor: Color? = null) =
     item {
         val cs = MaterialTheme.colorScheme
-        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(min = RowHeight).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 supporting?.let { Text(interFigures(it), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
@@ -169,19 +170,12 @@ private fun SegmentedListScope.valueRow(title: String, supporting: String?, valu
     }
 
 /** `+6`, `±0`, `−2.5`. */
-private fun gain(lift: LiftChange): String {
-    val kg = lift.gainKg
-    return when {
-        abs(kg) < SameKg -> "±0"
-        kg > 0 -> "+${formatKg(kg)}"
-        else -> "−${formatKg(-kg)}"
-    }
-}
+private fun gain(lift: LiftChange): String = BlockReviews.signedKg(lift.gainKg)
 
 /** A gain in the accent; a stall and a drop muted. */
 @Composable
 private fun gainColor(lift: LiftChange?): Color? =
-    lift?.let { if (it.gainKg >= SameKg) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant }
+    lift?.let { if (it.gainKg >= BlockReviews.SAME_KG) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant }
 
 /**
  * Each lift: its name, its machine under it, and its estimate before → after with the gain. On
@@ -204,7 +198,7 @@ private fun Lifts(review: Review, whole: Review?, name: (String) -> String) {
             rows.forEach { (l, kg, color) ->
                 item {
                     val cs = MaterialTheme.colorScheme
-                    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().heightIn(min = RowHeight).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(name(l.exercise), style = MaterialTheme.typography.bodyLarge)
                             l.machine?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
@@ -220,18 +214,20 @@ private fun Lifts(review: Review, whole: Review?, name: (String) -> String) {
         }
         return
     }
-    // The block's lifts first, in its order, then those only the program has.
-    val keys = (review.lifts + whole.lifts).map { it.exercise to it.machine }.distinct()
-    val rows = keys.map { key ->
-        val b = review.lifts.firstOrNull { it.exercise to it.machine == key }
-        val p = whole.lifts.firstOrNull { it.exercise to it.machine == key }
-        val under = listOfNotNull(key.second, b?.let(estimates)).joinToString(" · ")
-        listOf(name(key.first), under, b?.let(::gain), p?.let(::gain)) to (gainColor(b) to gainColor(p))
+    // One row a lift, the block's first in its order, then those only the program has; each column
+    // reads its own machine used most.
+    val rows = (review.lifts + whole.lifts).map { it.exercise }.distinct().map { exercise ->
+        val b = review.lifts.firstOrNull { it.exercise == exercise }
+        val p = whole.lifts.firstOrNull { it.exercise == exercise }
+        ColumnLift(name(exercise), listOfNotNull((b ?: p)?.machine, b?.let(estimates)).joinToString(" · "), b, p, gainColor(b), gainColor(p))
     }
     SegmentedList {
-        rows.forEach { (text, colors) -> valueRow(text[0]!!, text[1]?.takeIf { it.isNotEmpty() }, text[2], text[3], columns = true, valueColor = colors.first, programColor = colors.second) }
+        rows.forEach { r -> valueRow(r.name, r.under.ifEmpty { null }, r.block?.let(::gain), r.program?.let(::gain), columns = true, valueColor = r.blockColor, programColor = r.programColor) }
     }
 }
+
+/** A lift's row on the program review: its [name], what's [under] it, and its change in the [block] and the [program]. */
+private data class ColumnLift(val name: String, val under: String, val block: LiftChange?, val program: LiftChange?, val blockColor: Color?, val programColor: Color?)
 
 /** The training days trained and the weeks taken, or without training days the days done and their dates. */
 @Composable
@@ -255,14 +251,14 @@ private fun TurningUpSection(block: TurningUp?, program: TurningUp?, columns: Bo
                 val days = stringResource(R.string.review_training_days)
                 val done = stringResource(R.string.review_n_of, block.done, block.of) to p?.let { stringResource(R.string.review_n_of, it.done, it.of) }
                 val weeksTitle = stringResource(R.string.review_weeks_taken)
-                val weeks = stringResource(R.string.review_n_for, block.weeks, block.written) to p?.let { stringResource(R.string.review_n_for, it.weeks, it.written) }
+                val weeks = stringResource(R.string.review_n_planned, block.weeks, block.written) to p?.let { stringResource(R.string.review_n_planned, it.weeks, it.written) }
                 SegmentedList {
                     valueRow(days, missed, done.first, done.second, columns = true)
                     if (showWeeks) valueRow(weeksTitle, extra, weeks.first, weeks.second, columns = true)
                 }
             } else {
                 val done = stringResource(R.string.review_done_of, block.done, block.of)
-                val weeks = stringResource(R.string.review_weeks_for, block.weeks, block.written)
+                val weeks = stringResource(R.string.review_took, block.weeks, block.written)
                 SegmentedList {
                     row(done, missed)
                     if (showWeeks) row(weeks, extra)
@@ -284,16 +280,19 @@ private fun TurningUpSection(block: TurningUp?, program: TurningUp?, columns: Bo
 /** Average weekly sets per muscle, done → as written, then the Changes accepted in the block. */
 @Composable
 private fun Volume(review: Review, whole: Review?) {
-    if (review.volume.isEmpty() && review.changes.isEmpty()) return
+    if (review.volume.isEmpty() && review.changes.isEmpty() && whole?.volume.isNullOrEmpty()) return
     GroupHead(stringResource(R.string.review_volume))
     val context = LocalContext.current
-    val rows = review.volume.map { v ->
-        val p = whole?.volume?.firstOrNull { it.muscle == v.muscle }
-        val done = { d: Double, w: Double -> context.getString(R.string.review_sets, BlockReviews.formatSets(d), BlockReviews.formatSets(w)) }
+    val sets = { d: Double, w: Double -> context.getString(R.string.review_sets, BlockReviews.formatSets(d), BlockReviews.formatSets(w)) }
+    // On the program review a muscle only the program worked has its row too.
+    val muscles = (review.volume.map { it.muscle } + whole?.volume.orEmpty().map { it.muscle }).distinct()
+    val rows = muscles.map { m ->
+        val b = review.volume.firstOrNull { it.muscle == m }
+        val p = whole?.volume?.firstOrNull { it.muscle == m }
         Triple(
-            v.muscle,
-            done(v.done, v.written) to stringResource(R.string.review_sets_a_week, BlockReviews.formatSets(v.done), BlockReviews.formatSets(v.written)),
-            p?.let { done(it.done, it.written) },
+            m,
+            b?.let { sets(it.done, it.written) } to b?.let { context.getString(R.string.review_sets_a_week, BlockReviews.formatSets(it.done), BlockReviews.formatSets(it.written)) },
+            p?.let { sets(it.done, it.written) },
         )
     }
     val changes = review.changes.takeIf { it.isNotEmpty() }?.let { pluralStringResource(R.plurals.review_changes, it.size, it.size, it.joinToString(", ")) }
@@ -328,7 +327,7 @@ private fun Records(review: Review, whole: Review?, name: (String) -> String) {
 @Composable
 private fun ColumnScope.RecordRow(title: String, set: String, kind: String) {
     val cs = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = RowHeight).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(interFigures(set), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
@@ -341,16 +340,18 @@ private fun ColumnScope.RecordRow(title: String, set: String, kind: String) {
 /** Bodyweight start → end, with the program's under it on the program review. */
 @Composable
 private fun Bodyweight(block: Pair<Double, Double>?, program: Pair<Double, Double>?) {
-    block ?: return
+    if (block == null && program == null) return
     GroupHead(stringResource(R.string.review_bodyweight))
     val context = LocalContext.current
     val kg = { (from, to): Pair<Double, Double> -> context.getString(R.string.review_estimate_kg, formatKg(from), formatKg(to)) }
-    val title = kg(block)
-    val under = program?.let { stringResource(R.string.review_program_line, kg(it)) }
+    val programLine = program?.let { stringResource(R.string.review_program_line, kg(it)) }
+    // Logged only in earlier blocks, the program's line is all there is.
+    val title = block?.let(kg) ?: programLine!!
+    val under = programLine.takeIf { block != null }
     SegmentedList { row(title, under) }
 }
 
-/** Each lift goal: the estimate against it, and with a date the pace, an estimate. */
+/** Each lift goal: the estimate against it, and with a date the pace. */
 @Composable
 private fun Goals(goals: List<GoalStanding>, program: List<GoalStanding>?, name: (String) -> String) {
     if (goals.isEmpty()) return
@@ -365,7 +366,7 @@ private fun Goals(goals: List<GoalStanding>, program: List<GoalStanding>?, name:
     SegmentedList {
         rows.forEach { (title, lines) ->
             item {
-                Column(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Column(Modifier.fillMaxWidth().heightIn(min = RowHeight).padding(horizontal = 16.dp, vertical = 12.dp)) {
                     Text(title, style = MaterialTheme.typography.bodyLarge)
                     lines.forEach { Text(interFigures(it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
@@ -374,7 +375,7 @@ private fun Goals(goals: List<GoalStanding>, program: List<GoalStanding>?, name:
     }
 }
 
-/** `On pace for 2 Sep · an estimate`, `4 kg short at this pace · an estimate`, `Reached`; null without a date. */
+/** `On pace for 2 Sep`, `4 kg short at this pace`, `Reached`; null without a date. */
 @Composable
 private fun pace(g: GoalStanding): String? = when (val p = g.pace) {
     is GoalPace.OnPace -> stringResource(R.string.review_goal_on_pace, shortDate(p.date))
@@ -384,5 +385,5 @@ private fun pace(g: GoalStanding): String? = when (val p = g.pace) {
 
 private val ColumnWidth = 80.dp
 
-/** Kilos this close are the same: rounding is never a gain. */
-private const val SameKg = 0.001
+/** A row's height at least, as the standard row's. */
+private val RowHeight = 72.dp

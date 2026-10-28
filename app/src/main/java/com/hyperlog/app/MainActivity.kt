@@ -301,6 +301,8 @@ private fun App(
     /** What opened Ask Claude, the check-in without a key (null: closed), and its tile, if one did. */
     var askOpening by rememberSaveable { mutableStateOf<com.hyperlog.app.coach.Opening?>(null) }
     var askTile by rememberSaveable { mutableStateOf<com.hyperlog.app.coach.Tile?>(null) }
+    /** A block review for Claude to read with the situation, when one opened Ask Claude. */
+    var askContext by rememberSaveable { mutableStateOf<String?>(null) }
     /** The words for Claude: kept across tabs. */
     var askWords by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     /** Ask Claude was pressed for the words; an accept, a revert or cleared words end it. */
@@ -317,12 +319,13 @@ private fun App(
     val openAsk = { opening: com.hyperlog.app.coach.Opening, tile: com.hyperlog.app.coach.Tile?, words: String ->
         askOpening = opening
         askTile = tile
+        askContext = null
         askWords = TextFieldValue(words, TextRange(words.length))
         endAsk()
         programModel.closePasteErrors()
     }
     /** Back, or done: the tiles again. */
-    val closeAsk = { askOpening = null; askTile = null; endAsk(); programModel.closePasteErrors() }
+    val closeAsk = { askOpening = null; askTile = null; askContext = null; endAsk(); programModel.closePasteErrors() }
     val inForce by programModel.inForce.collectAsStateWithLifecycle()
     val coachLine by programModel.coachLine.collectAsStateWithLifecycle()
     val dueReview by programModel.dueReview.collectAsStateWithLifecycle()
@@ -339,6 +342,14 @@ private fun App(
     val checkInWords = { words: String ->
         if (checkInAvailable) checkInModel.fit(words)
         else openAsk(com.hyperlog.app.coach.Opening.Tile, null, words)
+        programModel.closePasteErrors()
+        screen = Screen.Coach
+    }
+    // Check in or New program on a block review: its first answer, with the review in the check-in's context.
+    val checkInReview = { opening: String, review: String ->
+        if (checkInAvailable) checkInModel.review(opening, review)
+        else { openAsk(com.hyperlog.app.coach.Opening.Tile, null, opening); askContext = review }
+        programModel.closeReview()
         programModel.closePasteErrors()
         screen = Screen.Coach
     }
@@ -510,8 +521,8 @@ private fun App(
         com.hyperlog.app.ui.program.BlockReviewScreen(
             page, exercises.associate { it.id to it.name },
             onBack = programModel::closeReview,
-            onCheckIn = { programModel.closeReview(); checkInWords(it) },
-            onNewProgram = { programModel.closeReview(); checkInWords(it) },
+            onCheckIn = checkInReview,
+            onNewProgram = checkInReview,
         )
         return
     }
@@ -691,7 +702,7 @@ private fun App(
             onAskedChange = { if (it) coachAsked = true else endAsk() },
             onAskClaude = { words ->
                 scope.launch {
-                    val prompt = programModel.askClaudePrompt(words, null, false, lastTrained, weekdayPlan.days, tile = askTile)
+                    val prompt = programModel.askClaudePrompt(words, null, false, lastTrained, weekdayPlan.days, tile = askTile, context = askContext)
                     context.startActivity(AskClaudeShare.intent(context, prompt))
                 }
             },

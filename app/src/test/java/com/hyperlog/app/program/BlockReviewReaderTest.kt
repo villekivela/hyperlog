@@ -66,7 +66,7 @@ class BlockReviewReaderTest {
 
     private suspend fun moveTo(week: Int) = db.programs().setPosition(active().id, week, 0)
 
-    private suspend fun review() = reader.page(active().id, "one", whole = false)!!.review
+    private suspend fun review() = reader.page(active().id, "one", withProgram = false)!!.review
 
     @Test
     fun aSessionInAWeekThePlanEasesIsLeftOutOfTheLifts() = runTest {
@@ -123,7 +123,7 @@ class BlockReviewReaderTest {
     fun aFinishedProgramsReviewIsTheProgramReview() = runTest {
         moveTo(5)
         assertEquals(DueReview(active().id, "two", "Two", programDone = true), reader.due(active(), reader.opened.first()))
-        val page = reader.page(active().id, "two", whole = true)!!
+        val page = reader.page(active().id, "two", withProgram = true)!!
         assertEquals("two", page.block.id)
         assertEquals(true, page.whole != null)
     }
@@ -143,11 +143,21 @@ class BlockReviewReaderTest {
     }
 
     @Test
-    fun aProgramReplacedMidWayReviewsTheLastBlockItReached() = runTest {
+    fun aProgramReplacedMidWayReviewsTheLastBlockItTrained() = runTest {
+        dayA(today.minusDays(7), week = 2, kg = 82.5)
+        // Replaced at the first day of block two, untrained: block one is the last it reached.
         moveTo(3)
         val id = active().id
         check(programs.import(PROGRAM) is ProgramParser.Result.Valid)
-        val page = reader.page(id, blockId = null, whole = true)!!
-        assertEquals("two", page.block.id)
+        assertEquals("one", reader.page(id, blockId = null, withProgram = true)!!.block.id)
+    }
+
+    @Test
+    fun aProgramReplacedInABlockItTrainedReviewsThatBlock() = runTest {
+        moveTo(3)
+        val id = active().id
+        dayA(today.minusDays(2), week = 3, kg = 85.0)
+        check(programs.import(PROGRAM) is ProgramParser.Result.Valid)
+        assertEquals("two", reader.page(id, blockId = null, withProgram = true)!!.block.id)
     }
 }

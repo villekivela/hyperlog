@@ -5,6 +5,7 @@ import com.hyperlog.app.history.Bodyweight
 import com.hyperlog.app.history.LiftGoal
 import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.progression.Record
+import com.hyperlog.app.week.Rotations
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -112,8 +113,14 @@ object BlockReviews {
     /** How [block] went. */
     fun of(log: ReviewLog, block: Block): Review = review(log, block.weekStart..block.weekEnd)
 
-    /** How the program went up to the end of [block]: the program review's column beside it. */
-    fun program(log: ReviewLog, block: Block): Review = review(log, 1..block.weekEnd)
+    /**
+     * How the program went up to the end of [block], as far as it ran: the program review's column
+     * beside it. Its written volume counts only the weeks it reached.
+     */
+    fun program(log: ReviewLog, block: Block): Review {
+        val reached = (log.turns.map { it.week } + log.sessions.map { it.week }).filter { it <= block.weekEnd }.maxOrNull() ?: block.weekEnd
+        return review(log, 1..reached)
+    }
 
     /**
      * [program]'s blocks finished with the next day at [position]: those it is past. On training
@@ -164,8 +171,8 @@ object BlockReviews {
     /** A lift's [change] over its counted sessions [from] the first [to] the last. */
     private data class Lift(val change: LiftChange, val from: LocalDate, val to: LocalDate)
 
-    /** Kilos this close are the same: rounding never moves a date. */
-    private const val SAME_KG = 0.001
+    /** Kilos this close are the same: rounding is never a gain, and never moves a date. */
+    const val SAME_KG = 0.001
 
     /** From the first turn or session in [weeks] to the last; null with none. */
     private fun dates(log: ReviewLog, weeks: IntRange): ClosedRange<LocalDate>? {
@@ -220,7 +227,7 @@ object BlockReviews {
         )
     }
 
-    private fun mondayOf(date: LocalDate) = com.hyperlog.app.week.Rotations.mondayOf(date)
+    private fun mondayOf(date: LocalDate) = Rotations.mondayOf(date)
 
     /**
      * Each exercise trained at least twice in [weeks], eased sessions left out: its estimate before
@@ -240,16 +247,18 @@ object BlockReviews {
     private fun ReviewLine.counted(weeks: IntRange) = points.filter { it.estimateKg != null && it.week in weeks && !it.eased }
 
     /**
-     * Check in about the next block's first answer (or, [newProgram], New program's): the opening,
-     * then [review] of [block] as text, and on the program review the [whole] program beside it.
-     * Exercises are named from [names].
+     * The first answer of Check in about the next block, or with [newProgram] of New program. The
+     * review goes in the check-in's context ([context]), not in the answer.
      */
-    fun text(program: Program, block: Block, review: Review, whole: Review?, names: Map<String, String>, newProgram: Boolean = false): String = buildString {
-        appendLine(
-            if (newProgram) "${program.title} is done. Here's how it went: I want a new program for what comes next."
-            else "${block.name} is done. Here's how it went: look at it and the next block.",
-        )
-        appendLine()
+    fun opening(program: Program, block: Block, newProgram: Boolean = false): String =
+        if (newProgram) "${program.title} is done. I want a new program for what comes next."
+        else "${block.name} is done. Here's how it went: look at it and the next block."
+
+    /**
+     * [review] of [block] as text for the check-in's context, the [whole] program after it on the
+     * program review, then the next block. Exercises are named from [names].
+     */
+    fun context(program: Program, block: Block, review: Review, whole: Review?, names: Map<String, String>): String = buildString {
         section("How ${block.name} went", block.weekStart..block.weekEnd, review, names)
         whole?.let { appendLine(); section("How the whole program went", 1..block.weekEnd, it, names) }
         program.blocks.getOrNull(program.blocks.indexOf(block) + 1)?.let { appendLine("Next block: ${it.name}") }
@@ -261,13 +270,7 @@ object BlockReviews {
         if (review.lifts.isNotEmpty()) {
             appendLine("Lifts, estimate before → after:")
             review.lifts.forEach { l ->
-                val gain = l.gainKg
-                val signed = when {
-                    kotlin.math.abs(gain) < SAME_KG -> "±0"
-                    gain > 0 -> "+${formatKg(gain)}"
-                    else -> "−${formatKg(-gain)}"
-                }
-                appendLine("- ${name(l.exercise)}${l.machine?.let { " ($it)" }.orEmpty()}: ${formatKg(l.startKg)} → ${formatKg(l.endKg)} kg ($signed)")
+                appendLine("- ${name(l.exercise)}${l.machine?.let { " ($it)" }.orEmpty()}: ${formatKg(l.startKg)} → ${formatKg(l.endKg)} kg (${signedKg(l.gainKg)})")
             }
         }
         when (val t = review.turningUp) {
@@ -276,7 +279,7 @@ object BlockReviews {
                 val extra = t.again.map { "week $it again" } + List(t.easyWeeks) { "an easy week" }
                 appendLine(
                     "Turning up: ${t.done} of ${t.of} training days" + (if (missed.isEmpty()) "" else "; $missed") +
-                        (if (t.weeks == t.written && extra.isEmpty()) "" else "; ${t.weeks} weeks for ${t.written}" + (if (extra.isEmpty()) "" else ": ${extra.joinToString(", ")}")),
+                        (if (t.weeks == t.written && extra.isEmpty()) "" else "; took ${t.weeks} weeks, planned ${t.written}" + (if (extra.isEmpty()) "" else ": ${extra.joinToString(", ")}")),
                 )
             }
             is TurningUp.InSequence -> appendLine("Turning up: ${t.days} days done, ${t.from} to ${t.to}")
@@ -302,6 +305,13 @@ object BlockReviews {
                 appendLine("- ${name(g.goal.exerciseId)}: ${formatKg(g.estimateKg)} of ${formatKg(g.goal.kg)} kg${g.goal.by?.let { " by $it" }.orEmpty()}$pace")
             }
         }
+    }
+
+    /** A gain in kilos: `+6`, `±0`, `−2.5`. */
+    fun signedKg(kg: Double): String = when {
+        kotlin.math.abs(kg) < SAME_KG -> "±0"
+        kg > 0 -> "+${formatKg(kg)}"
+        else -> "−${formatKg(-kg)}"
     }
 
     /** Average sets to the half: `2.5`, `3`. */

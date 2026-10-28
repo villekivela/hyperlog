@@ -69,7 +69,7 @@ class BlockReviewScreenTest {
         dates = monday..monday.plusDays(27),
     )
 
-    private fun show(page: ReviewPage, checkIn: (String) -> Unit = {}, newProgram: (String) -> Unit = {}) = compose.setContent {
+    private fun show(page: ReviewPage, checkIn: (String, String) -> Unit = { _, _ -> }, newProgram: (String, String) -> Unit = { _, _ -> }) = compose.setContent {
         HyperlogTheme { BlockReviewScreen(page, names, onBack = {}, onCheckIn = checkIn, onNewProgram = newProgram) }
     }
 
@@ -85,35 +85,45 @@ class BlockReviewScreenTest {
         seen("Cable left · Harbour"); seen("±0")
         seen("100 → 97.5 kg"); seen("−2.5")
         seen("11 of 12 training days"); seen("Day A missed once")
-        seen("5 weeks for 4"); seen("Week 3 again")
+        seen("Took 5 weeks, planned 4"); seen("Week 3 again")
         seen("9.5 → 10 sets a week")
         seen("2 Changes: No grip work for a week, Lighter bench")
         seen("110 kg × 6 · 12 Aug"); seen("Estimate record")
         seen("82 → 81.5 kg")
-        seen("126 of 140 kg by 12 Sep"); seen("On pace for 2 Sep · an estimate")
+        seen("126 of 140 kg by 12 Sep"); seen("On pace for 2 Sep")
         seen("From Build")
     }
 
     @Test
-    fun checkInAboutTheNextBlockOpensWithTheReview() {
-        var words: String? = null
-        show(ReviewPage(1, program, program.blocks[0], review, null, program.blocks[1]), checkIn = { words = it })
+    fun checkInAboutTheNextBlockOpensWithTheReviewInItsContext() {
+        var opened: Pair<String, String>? = null
+        show(ReviewPage(1, program, program.blocks[0], review, null, program.blocks[1]), checkIn = { o, c -> opened = o to c })
         compose.click("Check in about the next block")
-        assertTrue(words!!.startsWith("Build is done. Here's how it went: look at it and the next block."))
-        assertTrue("Hack Squat: 120 → 126 kg (+6)" in words!!)
+        assertEquals("Build is done. Here's how it went: look at it and the next block.", opened!!.first)
+        assertTrue("Hack Squat: 120 → 126 kg (+6)" in opened!!.second)
     }
 
     @Test
     fun theProgramReviewHasAColumnForTheWholeProgramAndNewProgram() {
         val whole = review.copy(lifts = listOf(LiftChange("hack_squat", null, 100.0, 126.0)), bodyweight = 84.0 to 81.5)
-        var words: String? = null
-        show(ReviewPage(1, program, program.blocks[1], review, whole, null), newProgram = { words = it })
+        var opened: Pair<String, String>? = null
+        show(ReviewPage(1, program, program.blocks[1], review, whole, null), newProgram = { o, c -> opened = o to c })
         compose.onNodeWithText("Hyperlog Full Body review").assertExists()
         seen("Peak")
         assertEquals(true, compose.onAllNodesWithText("Program").fetchSemanticsNodes().isNotEmpty())
         seen("+26")
         seen("Program: 84 → 81.5 kg")
         compose.click("New program")
-        assertTrue(words!!.startsWith("Hyperlog Full Body is done. Here's how it went: I want a new program for what comes next."))
+        assertEquals("Hyperlog Full Body is done. I want a new program for what comes next.", opened!!.first)
+        assertTrue("## How the whole program went" in opened!!.second)
+    }
+
+    @Test
+    fun aLiftIsOneRowOnTheProgramReviewWhicheverMachineEachColumnUsedMost() {
+        val block = review.copy(lifts = listOf(LiftChange("seated_cable_row", "Cable left · Harbour", 70.0, 72.0)))
+        val whole = review.copy(lifts = listOf(LiftChange("seated_cable_row", "Cable right · Itis", 60.0, 66.0)))
+        show(ReviewPage(1, program, program.blocks[1], block, whole, null))
+        assertEquals(1, compose.onAllNodesWithText("Seated Cable Row").fetchSemanticsNodes().size)
+        seen("+2"); seen("+6")
     }
 }

@@ -93,8 +93,13 @@ class CheckInRunner(
 
     fun start(tile: Tile) = begin { CheckIn(tile.words, tile, frame()) }
 
-    /** Starts from your own first answer: Ease back in's, or How's it going's. */
-    fun start(opening: String, from: Opening) = begin { CheckIn(opening, null, frame(), from) }
+    /**
+     * Starts from your own first answer: Ease back in's, or How's it going's. [context], as a block
+     * review's, goes after the frame's, for Claude to read with it.
+     */
+    fun start(opening: String, from: Opening, context: String? = null) = begin {
+        CheckIn(opening, null, frame().let { f -> if (context == null) f else f.copy(context = "${f.context}\n\n$context") }, from)
+    }
 
     fun answer(text: String) = next { coach, checkIn -> coach.answered(checkIn, text) }
 

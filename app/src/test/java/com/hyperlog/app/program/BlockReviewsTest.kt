@@ -229,7 +229,7 @@ class BlockReviewsTest {
     }
 
     @Test
-    fun checkInAboutTheNextBlockOpensWithTheReviewAsText() {
+    fun checkInAboutTheNextBlockHasTheReviewAsTextInItsContext() {
         val review = Review(
             lifts = listOf(LiftChange("squat", null, 120.0, 126.0), LiftChange("cable_row", "Cable left · Harbour", 70.0, 70.0)),
             turningUp = TurningUp.OnTrainingDays(5, 8, listOf("Day B" to 2, "Day A" to 1), weeks = 4, written = 2, again = listOf(1), easyWeeks = 1),
@@ -242,13 +242,11 @@ class BlockReviewsTest {
         val names = mapOf("squat" to "Hack Squat", "cable_row" to "Seated Cable Row")
         assertEquals(
             """
-            Build is done. Here's how it went: look at it and the next block.
-
             ## How Build went (weeks 1–2)
             Lifts, estimate before → after:
             - Hack Squat: 120 → 126 kg (+6)
             - Seated Cable Row (Cable left · Harbour): 70 → 70 kg (±0)
-            Turning up: 5 of 8 training days; Day B missed 2 times, Day A missed once; 4 weeks for 2: week 1 again, an easy week
+            Turning up: 5 of 8 training days; Day B missed 2 times, Day A missed once; took 4 weeks, planned 2: week 1 again, an easy week
             Weekly sets, done → as written:
             - Chest: 2.5 → 3
             Changes accepted: Lighter bench
@@ -258,8 +256,9 @@ class BlockReviewsTest {
             - Hack Squat: 126 of 140 kg by 2026-09-12; on pace for 2026-09-02 at this block's rate (an estimate)
             Next block: Peak
             """.trimIndent(),
-            BlockReviews.text(program, program.blocks[0], review, null, names),
+            BlockReviews.context(program, program.blocks[0], review, null, names),
         )
+        assertEquals("Build is done. Here's how it went: look at it and the next block.", BlockReviews.opening(program, program.blocks[0]))
     }
 
     @Test
@@ -269,10 +268,17 @@ class BlockReviewsTest {
     }
 
     @Test
-    fun newProgramOpensWithTheProgramDoneAndTheReview() {
+    fun newProgramOpensWithTheProgramDoneAndHasTheWholeProgramInItsContext() {
         val review = BlockReviews.of(ReviewLog(program), program.blocks[1])
-        val text = BlockReviews.text(program, program.blocks[1], review, review, emptyMap(), newProgram = true)
-        assertEquals("Hyperlog is done. Here's how it went: I want a new program for what comes next.", text.lines().first())
-        assertEquals(true, "## How the whole program went (weeks 1–4)" in text)
+        assertEquals("Hyperlog is done. I want a new program for what comes next.", BlockReviews.opening(program, program.blocks[1], newProgram = true))
+        assertEquals(true, "## How the whole program went (weeks 1–4)" in BlockReviews.context(program, program.blocks[1], review, review, emptyMap()))
+    }
+
+    @Test
+    fun theProgramColumnsWrittenVolumeCountsOnlyTheWeeksTheProgramReached() {
+        val muscles = mapOf("bench" to mapOf("Chest" to 1.0))
+        // Stopped in week 3: Peak's week 4 isn't written for it.
+        val log = ReviewLog(program, sessions = listOf(ReviewSession(monday, 1), ReviewSession(monday.plusWeeks(2), 3)), muscles = muscles)
+        assertEquals(MuscleVolume("Chest", done = 0.0, written = (3 + 3 + 2) / 3.0), BlockReviews.program(log, program.blocks[1]).volume.single())
     }
 }

@@ -83,6 +83,13 @@ class AskClaudeTest {
     }
 
     @Test
+    fun aBlockReviewGoesWithTheSituationNotInTheWords() {
+        val text = AskClaude.prompt("Build is done.", plan = null, sessions = emptyList(), library = library.exercises, context = "## How Build went (weeks 1–4)")
+        assertTrue(text.indexOf("## How Build went (weeks 1–4)") > text.indexOf("> Build is done."))
+        assertTrue("> ## How Build went" !in text)
+    }
+
+    @Test
     fun claudeMayAnswerInWordsAlone() {
         val text = prompt()
         assertTrue(text, text.contains("If the plan can stand as it is, say so in words and send no JSON."))

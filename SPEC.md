@@ -1109,24 +1109,29 @@ each planned day with the training day it lands on, and never changes the day:
        A row (owner, 2026-10-28): the name, the machine under it, and on the right
        `82.5 → 87.5 kg` with the gain `+5` in the accent; a stall reads `±0` and a drop `−2.5`,
        both muted. A lift first trained in the block starts from its estimate after its first
-       session there (owner, 2026-10-28).
+       session there (owner, 2026-10-28), its first counted one when eased sessions came first.
+       Estimates are per machine (ADR 0002), so a machine exercise needs two counted sessions on
+       the machine used most.
      - **Turning up**: with training days, sessions done of the block's training days and the
        missed days by day (`11 of 12 · Day A missed once`), and the weeks it took when a week
-       repeated or an easy week came (`8 weeks for 7 · week 4 again`); without them, days done
-       and the dates the block took.
+       repeated or an easy week came (`Took 8 weeks, planned 7`, with `Week 4 again · an easy
+       week` under it; owner, 2026-10-28); without them, days done and the dates the block took
+       (`12 days`, `3 Aug – 30 Aug`). Every turn of the block's weeks counts, the missed days of a
+       week trained again and an easy week's included.
      - **Volume**: average weekly sets per muscle as done → as the block is written (its week
        overrides, not Changes), then the Changes accepted during the block, one line
        (`2 Changes: no grip work for a week, …`). A row: `Chest  9.5 → 10 sets a week`.
      - **Records** set in the block; **bodyweight** start → end when it was logged in the block.
      - **The goal**: each lift goal's estimate against it (`97 of 100 kg`); with a date, the
-       block's gain carried on in a straight line to it, marked as an estimate (`on pace for
-       1 Dec`, `4 kg short at this pace`). The rate is the lift's gain over the days from its
+       block's gain carried on in a straight line to it (`On pace for 1 Dec`, `4 kg short at this
+       pace`; no "estimate" mark, owner 2026-10-28). The rate is the lift's gain over the days from its
        first counted session in the block to its last; a goal reached reads `Reached`, and one
        whose lift didn't gain is short by what's left. A goal whose lift wasn't trained twice reads
        the latest estimate, without a pace.
      - **Next**: what the next block changes, as its card's "From <block>" reads, then **Check in
        about the next block**, a check-in whose first answer is "Build is done. Here's how it
-       went: look at it and the next block." with the review as text in the context.
+       went: look at it and the next block." with the review as text in the context: after the
+       check-in's own context through the API, after the situation in Ask Claude's prompt.
      - **Program review**: the last block's review has a column for the whole program beside the
        block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). A past
        program on Programs opens its program review. Lifts, Turning up, Volume and Records get
@@ -1137,8 +1142,11 @@ each planned day with the training day it lands on, and never changes the day:
        headline is the program's (`Hyperlog Full Body review`), the block's name first in the line
        under it; Records add a `Records set` row with each column's count; on the program review
        Lifts show each gain in its column, the block's estimates under the name. New program
-       starts a check-in whose first answer is "Hyperlog Full Body is done. Here's how it went: I
-       want a new program for what comes next." with the review. Empty sections are left out,
+       starts a check-in whose first answer is "Hyperlog Full Body is done. I want a new program
+       for what comes next." with the review in its context as Check in's (owner, 2026-10-28). On
+       the program review a lift is one row whichever machine each column used most, and the
+       program's column counts written sets only over the weeks the program reached. A program
+       replaced mid-way reviews the last block it trained. Empty sections are left out,
        except Lifts ("No lift trained twice outside a deload").
    - Design: `docs/design/program-and-today.md`; Changes and their diff: `docs/design/changes.md`.
 3. **Coach** — see Coaching below. A destination of the navigation bar (`sports`), there at any

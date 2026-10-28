@@ -62,21 +62,22 @@ class BlockReviewReader(private val db: HyperlogDatabase, private val programs: 
     }
 
     /**
-     * Program [programId]'s review of block [blockId] (null: the last block it reached), with the
-     * [whole] program beside it; null with no such block.
+     * Program [programId]'s review of block [blockId] (null: the last block it trained, else the
+     * one it was at), with the whole program beside it [withProgram]; null with no such block.
      */
-    suspend fun page(programId: Long, blockId: String?, whole: Boolean): ReviewPage? {
+    suspend fun page(programId: Long, blockId: String?, withProgram: Boolean): ReviewPage? {
         val program = programs.program(programId) ?: return null
+        val log = log(programId, program)
         val block = if (blockId != null) program.blocks.firstOrNull { it.id == blockId } ?: return null
         else {
             // On training days the rotation, not the row, knows where the program running is.
-            val week = programs.active.first()?.takeIf { it.id == programId }?.position?.week ?: db.programs().program(programId)?.week ?: return null
+            val week = log.sessions.maxOfOrNull { it.week }
+                ?: programs.active.first()?.takeIf { it.id == programId }?.position?.week ?: db.programs().program(programId)?.week ?: return null
             program.blockAt(week.coerceAtMost(program.weeks)) ?: return null
         }
-        val log = log(programId, program)
         return ReviewPage(
             programId, program, block, BlockReviews.of(log, block),
-            if (whole) BlockReviews.program(log, block) else null,
+            if (withProgram) BlockReviews.program(log, block) else null,
             program.blocks.getOrNull(program.blocks.indexOf(block) + 1),
         )
     }

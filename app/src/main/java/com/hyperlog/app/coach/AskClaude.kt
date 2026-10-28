@@ -65,6 +65,8 @@ object AskClaude {
         gymNames: Map<Long, String> = emptyMap(),
         /** The check-in's tile, quoted before the [words]: what it is about, even when the words are cleared. */
         tile: Tile? = null,
+        /** More for Claude to read with the situation, as a block review. */
+        context: String? = null,
     ): String = buildString {
         if (plan == null) {
             appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
@@ -95,6 +97,7 @@ object AskClaude {
         }
         appendLine()
         situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gymNames)
+        context?.let { appendLine(); appendLine(it) }
         if (plan != null) {
             appendLine()
             append(ChangeFormat.text(plan))

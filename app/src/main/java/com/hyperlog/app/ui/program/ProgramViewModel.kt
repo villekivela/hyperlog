@@ -95,7 +95,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     fun openReview(programId: Long, blockId: String?) {
         viewModelScope.launch {
             val program = programs.program(programId) ?: return@launch
-            val page = withContext(Dispatchers.IO) { reviews.page(programId, blockId, whole = blockId == null || blockId == program.blocks.last().id) } ?: return@launch
+            val page = withContext(Dispatchers.IO) { reviews.page(programId, blockId, withProgram = blockId == null || blockId == program.blocks.last().id) } ?: return@launch
             reviews.open(programId, page.block.id)
             _blockReview.value = page
         }
@@ -194,6 +194,8 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         lastTrained: LocalDate?,
         weekdays: Set<DayOfWeek>,
         tile: com.hyperlog.app.coach.Tile? = null,
+        /** A block review's, for Claude to read with the situation. */
+        context: String? = null,
     ): String {
         _reply.value = null
         val active = programs.active.first()
@@ -206,7 +208,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         return withContext(Dispatchers.Default) {
             AskClaude.prompt(
                 words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays,
-                weeklySets = weeks, tile = tile, weekdayPlan = weekdayPlan, gymNames = gymNames,
+                weeklySets = weeks, tile = tile, weekdayPlan = weekdayPlan, gymNames = gymNames, context = context,
             )
         }
     }
