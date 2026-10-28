@@ -69,6 +69,7 @@ import com.hyperlog.app.R
 import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.gym.SessionSwap
 import com.hyperlog.app.history.TimeOff
+import com.hyperlog.app.coach.CoachLine
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
 import com.hyperlog.app.coach.Workouts
@@ -186,6 +187,12 @@ fun TodayScreen(
     /** A workout was just added while a session runs: say it waits until the session ends. */
     workoutAddedNotice: Boolean = false,
     onWorkoutAddedNoticeShown: () -> Unit = {},
+    /** The coach line: a pattern in the log, over today's day; null for none. */
+    coachLine: CoachLine? = null,
+    /** Starts a check-in whose first answer is the coach line's words. */
+    onCheckInLine: (String) -> Unit = {},
+    /** Hides the coach line until its pattern grows. */
+    onHideCoachLine: (CoachLine) -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val snackScope = rememberCoroutineScope()
@@ -349,6 +356,7 @@ fun TodayScreen(
     val banners: @Composable ColumnScope.() -> Unit = {
         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
         if (easeBack) TimeOffBanner(daysOff!!, onEaseBack = { onEaseBack(daysOff) })
+        if (coachLine != null && !sessionRunning) CoachLineBanner(coachLine, exerciseNames, onCheckInLine, onHide = { onHideCoachLine(coachLine) })
         // After an empty week, until the repeated week's first session.
         val weekStarted = finished.any { weekOf(it.date()) == thisWeek }
         if (rotation?.again == true && !weekStarted && !sessionRunning) {
@@ -787,6 +795,37 @@ private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = cs.tertiary, contentColor = cs.onTertiary),
         ) { Text(stringResource(R.string.coach_ease_back)) }
         Spacer(Modifier.width(8.dp))
+    }
+}
+
+/**
+ * The coach line: `Bench press hasn't moved in 3 sessions` with **Check in** and ×, a neutral
+ * banner, quieter than time off. Check in starts a check-in whose first answer is the line.
+ */
+@Composable
+private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheckIn: (String) -> Unit, onHide: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val words = coachLineText(line, names)
+    val answer = stringResource(R.string.coach_line_answer, words)
+    Banner(Symbol.Insights, words, container = cs.surfaceContainerHigh, content = cs.onSurface) {
+        TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
+        IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
+    }
+}
+
+/** [line]'s words, its exercises named from [names]. */
+@Composable
+private fun coachLineText(line: CoachLine, names: Map<String, String>): String {
+    fun name(id: String) = names[id] ?: id
+    return when (line) {
+        is CoachLine.DayMissed ->
+            if (line.missed == line.of) stringResource(R.string.coach_line_missed_all, line.name, line.of)
+            else stringResource(R.string.coach_line_missed, line.name, line.missed, line.of)
+        is CoachLine.Stall -> stringResource(R.string.coach_line_stall, name(line.exercise), line.sessions)
+        is CoachLine.Grinding -> stringResource(R.string.coach_line_grinding, name(line.exercise), line.sessions)
+        is CoachLine.SameSwap ->
+            if (line.gym != null) stringResource(R.string.coach_line_swap_at, name(line.exercise), line.gym, line.sessions)
+            else stringResource(R.string.coach_line_swap, name(line.exercise), line.sessions)
     }
 }
 

@@ -340,6 +340,29 @@ class AskClaudeAppTest {
     }
 
     @Test
+    fun theCoachLinesCheckInOpensCoachWithTheLineFilledIn() {
+        runStarter()
+        // Bench at 80 × 8 four times in the last two weeks: three sessions without gain.
+        runBlocking {
+            listOf(12L, 9L, 6L, 3L).forEach { ago ->
+                val at = System.currentTimeMillis() - ago * DAY
+                val id = db.sessions().insertSession(SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
+                val bench = db.sessions().insertSessionExercise(com.hyperlog.app.data.SessionExerciseEntity(sessionId = id, exerciseId = "barbell_bench_press", position = 0))
+                db.sessions().insertSet(com.hyperlog.app.data.LoggedSetEntity(sessionExerciseId = bench, position = 0, weightKg = 80.0, fullReps = 8, partialReps = 0, rir = 2, loggedAt = at))
+            }
+        }
+        // Today reads the sessions again when it shows.
+        compose.openTab("Program")
+        compose.waitFor("Ramp-in · weeks 1–2", substring = true)
+        compose.openTab("Today")
+        compose.waitFor("Barbell Bench Press hasn't moved in 3 sessions")
+        compose.onNodeWithText("Check in").performClick()
+
+        compose.waitFor("In your words")
+        assertEquals("Barbell Bench Press hasn't moved in 3 sessions.", wordsText())
+    }
+
+    @Test
     fun yourTrainingDaysCountTimeOffWithNoGymSetUp() {
         runStarter()
         // Nine days since the last session, but you train only on the weekday two days ago: 2 days off.

@@ -144,7 +144,7 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         runner.start(words, com.hyperlog.app.coach.Opening.EaseBackIn)
     }
 
-    /** A day that doesn't fit its training day: a check-in whose first answer is [words]. */
+    /** A check-in whose first answer is [words]: a day that doesn't fit its training day, or the coach line. */
     fun fit(words: String) {
         _draft.value = null
         runner.start(words, com.hyperlog.app.coach.Opening.Tile)
