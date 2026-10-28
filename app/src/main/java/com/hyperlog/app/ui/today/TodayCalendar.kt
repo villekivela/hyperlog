@@ -56,7 +56,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
-import com.hyperlog.app.today.RestMode
+import com.hyperlog.app.today.RestDay
 import com.hyperlog.app.session.date
 import com.hyperlog.app.week.DayFit
 import com.hyperlog.app.week.FitAsk
@@ -578,12 +578,12 @@ internal fun PlannedCard(
  * with the program going on undated the way to set the training days ([onWeekdayPlan]).
  */
 @Composable
-internal fun RestCard(date: LocalDate, mode: RestMode, onNext: (LocalDate) -> Unit, onWeekdayPlan: () -> Unit = {}) {
+internal fun RestCard(date: LocalDate, mode: RestDay, onNext: (LocalDate) -> Unit, onWeekdayPlan: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val (title, link) = when (mode) {
-        is RestMode.Rest -> R.string.today_rest_day to mode.next
-        is RestMode.AfterProgram -> R.string.today_nothing_planned to mode.last
-        is RestMode.Undated -> R.string.today_not_planned_yet to mode.next
+        is RestDay.Next -> R.string.today_rest_day to mode.next
+        is RestDay.AfterProgram -> R.string.today_nothing_planned to mode.last
+        is RestDay.Undated -> R.string.today_not_planned_yet to mode.next
     }
     // The link's 48 dp row already holds 14 dp under its words: 8 dp more matches the 20 dp on top.
     DayCard(bottom = if (link != null) 8.dp else 20.dp) {
@@ -591,9 +591,9 @@ internal fun RestCard(date: LocalDate, mode: RestMode, onNext: (LocalDate) -> Un
         Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
         link?.let { (d, day) ->
             Spacer(Modifier.height(8.dp))
-            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = mode is RestMode.AfterProgram)
+            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = mode is RestDay.AfterProgram)
         }
-        if (mode is RestMode.Undated) {
+        if (mode is RestDay.Undated) {
             TextButton(onClick = onWeekdayPlan, contentPadding = PaddingValues(0.dp)) {
                 SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))

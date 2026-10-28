@@ -5,6 +5,7 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
+import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TestPrograms
@@ -59,8 +60,11 @@ class TodayStateTest {
         lastTrained: LocalDate? = null,
         workout: Boolean = false,
         running: Boolean = false,
-        runningDay: com.hyperlog.app.program.PlannedDay? = null,
-    ) = TodayState(program, sessions, plan, lastTrained, workout, running, runningDay, selected)
+        runningDay: PlannedDay? = null,
+    ) = TodayState(
+        program, sessions, plan, lastTrained,
+        workout = workout, sessionRunning = running, runningDay = runningDay, selected = selected, today = program?.today ?: thu,
+    )
 
     // The day's kind and the day shown
 
@@ -105,7 +109,7 @@ class TodayStateTest {
     @Test
     fun aDayWithNothingIsARestDay() {
         val wednesday = state(rotating(tue), selected = wed)
-        assertEquals(DayKind.Rest, wednesday.kind)
+        assertEquals(DayKind.RestDay, wednesday.kind)
         assertNull(wednesday.day)
     }
 
@@ -119,7 +123,7 @@ class TodayStateTest {
 
     @Test
     fun aSessionRunningAdHocWithoutAProgramLeavesTodayEmpty() {
-        assertEquals(DayKind.Rest, state(null, running = true).kind)
+        assertEquals(DayKind.RestDay, state(null, running = true).kind)
     }
 
     @Test
@@ -137,24 +141,24 @@ class TodayStateTest {
     @Test
     fun startIsOnlyForTheNextDayPlannedOnToday() {
         val thursday = state(rotating(thu))
-        assertTrue(thursday.next)
-        assertTrue(thursday.start)
+        assertTrue(thursday.isNext)
+        assertTrue(thursday.offersStart)
         // On a day with no training day the next day is shown first, without Start.
         val tuesday = state(rotating(tue))
-        assertTrue(tuesday.next)
-        assertFalse(tuesday.start)
+        assertTrue(tuesday.isNext)
+        assertFalse(tuesday.offersStart)
         // A later day is only a plan.
         val saturday = state(rotating(thu), selected = sat)
-        assertFalse(saturday.next)
-        assertFalse(saturday.start)
+        assertFalse(saturday.isNext)
+        assertFalse(saturday.offersStart)
     }
 
     @Test
     fun whileASessionRunsTheNextDayOnALaterDateIsOnlyAPlan() {
         val thursday = state(rotating(tue), selected = thu, running = true)
         assertEquals(DayKind.Planned, thursday.kind)
-        assertFalse(thursday.next)
-        assertFalse(thursday.start)
+        assertFalse(thursday.isNext)
+        assertFalse(thursday.offersStart)
     }
 
     @Test
@@ -171,9 +175,9 @@ class TodayStateTest {
     fun withTrainingDaysTheLastDatePlannedIsTheProgramsLastDay() {
         // The program's turns on Mondays, Thursdays and Saturdays run to Saturday 7 Nov.
         val lastDay = LocalDate.of(2026, 11, 7)
-        assertTrue(state(rotating(thu), selected = lastDay).last)
-        assertFalse(state(rotating(thu), selected = LocalDate.of(2026, 11, 2)).last)
-        assertFalse(state(rotating(thu), selected = lastDay, plan = WeekdayPlan.None).last)
+        assertTrue(state(rotating(thu), selected = lastDay).isLastDay)
+        assertFalse(state(rotating(thu), selected = LocalDate.of(2026, 11, 2)).isLastDay)
+        assertFalse(state(rotating(thu), selected = lastDay, plan = WeekdayPlan.None).isLastDay)
     }
 
     // Time off
@@ -197,14 +201,15 @@ class TodayStateTest {
     @Test
     fun easingBackInIsNotOfferedWhileASessionRunsAWorkoutWaitsOrAChangeWasMadeToday() {
         val off = thu.minusDays(10)
-        assertNull(state(sequence(thu), lastTrained = off, running = true).easeBack)
-        assertNull(state(sequence(thu), lastTrained = off, workout = true).easeBack)
+        assertEquals(10, state(sequence(thu), plan = WeekdayPlan.None, lastTrained = off).easeBack)
+        assertNull(state(sequence(thu), plan = WeekdayPlan.None, lastTrained = off, running = true).easeBack)
+        assertNull(state(sequence(thu), plan = WeekdayPlan.None, lastTrained = off, workout = true).easeBack)
         val change = AcceptedChange(1, Change("Ease back in", Scope.RestOfProgram, emptyList()), thu, Position(1, 0), Position(1, 0), null)
         val changed = sequence(thu).copy(history = listOf(ChangeRecord(change, 0, null)))
-        assertNull(state(changed, lastTrained = off).easeBack)
+        assertNull(state(changed, plan = WeekdayPlan.None, lastTrained = off).easeBack)
         // Nor with no program, or a finished one.
-        assertNull(state(null, lastTrained = off).easeBack)
-        assertNull(state(sequence(thu, Position(3, 0)), lastTrained = off).easeBack)
+        assertNull(state(null, plan = WeekdayPlan.None, lastTrained = off).easeBack)
+        assertNull(state(sequence(thu, Position(3, 0)), plan = WeekdayPlan.None, lastTrained = off).easeBack)
     }
 
     @Test
@@ -235,22 +240,22 @@ class TodayStateTest {
 
     @Test
     fun aRestDayPointsToTheNextDay() {
-        val rest = state(rotating(tue), selected = wed).rest as RestMode.Rest
+        val rest = state(rotating(tue), selected = wed).restDay as RestDay.Next
         assertEquals(thu, rest.next?.first)
     }
 
     @Test
     fun pastTheProgramsLastDayNothingIsPlannedAndItPointsBackToThatDay() {
-        val after = state(rotating(thu), selected = LocalDate.of(2026, 11, 8)).rest as RestMode.AfterProgram
+        val after = state(rotating(thu), selected = LocalDate.of(2026, 11, 8)).restDay as RestDay.AfterProgram
         assertEquals(LocalDate.of(2026, 11, 7), after.last.first)
         // A sequence on its last day has nothing after it either.
-        val last = state(sequence(thu, Position(2, 1)), selected = sat, plan = WeekdayPlan.None).rest
-        assertEquals(thu, (last as RestMode.AfterProgram).last.first)
+        val last = state(sequence(thu, Position(2, 1)), selected = sat, plan = WeekdayPlan.None).restDay
+        assertEquals(thu, (last as RestDay.AfterProgram).last.first)
     }
 
     @Test
     fun withNoTrainingDaysALaterDateIsTheProgramGoingOnUndated() {
-        val later = state(sequence(thu), selected = sat, plan = WeekdayPlan.None).rest as RestMode.Undated
+        val later = state(sequence(thu), selected = sat, plan = WeekdayPlan.None).restDay as RestDay.Undated
         assertEquals(thu, later.next.first)
     }
 
@@ -273,5 +278,9 @@ class TodayStateTest {
         assertTrue(easy.easyWeek(mon))
         assertFalse(easy.easyWeek(LocalDate.of(2026, 11, 2)))
         assertFalse(state(rotating(thu)).easyWeek(mon))
+        // Seen the Sunday before, the week ahead is easy by its days.
+        assertTrue(state(rotating(LocalDate.of(2026, 10, 25), emptyWeeks = 2)).easyWeek(mon))
+        // On its Sunday, with none of its days left to come, this week is easy all the same.
+        assertTrue(state(rotating(LocalDate.of(2026, 11, 1), emptyWeeks = 2)).easyWeek(mon))
     }
 }

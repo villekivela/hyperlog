@@ -88,7 +88,6 @@ import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.today.DayKind
-import com.hyperlog.app.today.RestMode
 import com.hyperlog.app.today.TodayState
 import com.hyperlog.app.session.date
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
@@ -243,7 +242,10 @@ fun TodayScreen(
     val loaded = sessions != null
     val finished = sessions.orEmpty()
     val state = remember(program, finished, weekdayPlan, lastTrained, workout != null, sessionRunning, runningDay, selected, today) {
-        TodayState(program, finished, weekdayPlan, lastTrained, workout != null, sessionRunning, runningDay, selected, today)
+        TodayState(
+            program, finished, weekdayPlan, lastTrained,
+            workout = workout != null, sessionRunning = sessionRunning, runningDay = runningDay, selected = selected, today = today,
+        )
     }
     val workoutDay = remember(workout) { workout?.workout?.day() }
     if (kind != null && !sessionRunning) {
@@ -254,7 +256,7 @@ fun TodayScreen(
                 day = when (kind) {
                     Kind.Day -> state.nextDay
                     Kind.Workout -> workoutDay
-                    Kind.Missed -> state.trainMissed?.day
+                    Kind.Missed -> program?.trainToday?.day
                     Kind.AdHoc -> null
                 },
                 library = library,
@@ -425,10 +427,10 @@ fun TodayScreen(
                 LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
                     item {
                         if (isToday) BannerColumn(banners)
-                        if (state.next) {
+                        if (state.isNext) {
                             HeroCard(
                                 day, date = date.takeIf { it != today },
-                                onStart = { start(Kind.Day) }.takeIf { state.start },
+                                onStart = { start(Kind.Day) }.takeIf { state.offersStart },
                                 library = library, finished = programSessions,
                                 easyDays = state.backAfter,
                                 fit = fitOf(day, date), onFitTime = onCheckInFit,
@@ -437,13 +439,13 @@ fun TodayScreen(
                                 TrainMissedButton(missed.date, missed.day, onClick = { start(Kind.Missed) })
                             }
                         }
-                        else PlannedCard(day, selected, last = state.last, library = library, finished = programSessions, fit = fitOf(day, selected), onFitTime = onCheckInFit)
+                        else PlannedCard(day, selected, last = state.isLastDay, library = library, finished = programSessions, fit = fitOf(day, selected), onFitTime = onCheckInFit)
                         Spacer(Modifier.height(16.dp))
                     }
                     itemsIndexed(groups, key = { _, g -> g.first().id }) { i, group ->
                         Segment(i, groups.size) { SlotRows(group, exerciseNames) }
                     }
-                    if (state.next && isToday) item { AdHocButton { start(Kind.AdHoc) } }
+                    if (state.isNext && isToday) item { AdHocButton { start(Kind.AdHoc) } }
                 }
             }
             // A missed day keeps its plan, dimmed, with no Start.
@@ -507,7 +509,7 @@ fun TodayScreen(
                 else main(Modifier.weight(1f))
             }
             else -> LazyColumn(Modifier.weight(1f).fillMaxSize(), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
-                item { RestCard(selected, state.rest ?: RestMode.Rest(null), select, onWeekdayPlan = { editingWeekdayPlan = true }) }
+                item { RestCard(selected, state.restDay, select, onWeekdayPlan = { editingWeekdayPlan = true }) }
             }
         }
       }

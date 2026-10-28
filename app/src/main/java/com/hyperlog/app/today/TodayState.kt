@@ -12,7 +12,7 @@ import com.hyperlog.app.week.WeekdayPlan
 import java.time.LocalDate
 
 /** The kinds of day Today shows for the date picked, each with its own list. */
-enum class DayKind { Running, Done, Planned, Missed, Rest }
+enum class DayKind { Running, Done, Planned, Missed, RestDay }
 
 /**
  * What Today shows for [selected] (SPEC, Today): the day's kind and the day shown, whether Start is
@@ -29,16 +29,16 @@ class TodayState(
     sessionRunning: Boolean,
     runningDay: PlannedDay?,
     val selected: LocalDate,
-    val today: LocalDate = program?.today ?: LocalDate.now(),
+    val today: LocalDate,
 ) {
     /** The finished sessions by date, each day's in the order they started. */
     val done: Map<LocalDate, List<PastSessionItem>> = sessions.groupBy { it.date() }.mapValues { (_, s) -> s.sortedBy { it.startedAt } }
 
     /** The turns to come by date: with training days the rotation dates every one, without them only the next. */
-    val planned: Map<LocalDate, PlannedDay> = program?.turns.orEmpty().filter { it.status == Turn.Status.Ahead }.associate { it.date to it.day }
+    val planned: Map<LocalDate, PlannedDay> = turns(Turn.Status.Ahead)
 
     /** The turns missed by date. */
-    val missed: Map<LocalDate, PlannedDay> = program?.turns.orEmpty().filter { it.status == Turn.Status.Missed }.associate { it.date to it.day }
+    val missed: Map<LocalDate, PlannedDay> = turns(Turn.Status.Missed)
 
     /** The day Start (or Resume) opens: the running session's, even after finishing moved the program on, else the next. */
     val nextDay: PlannedDay? = runningDay?.takeIf { sessionRunning } ?: program?.next?.day
@@ -51,8 +51,10 @@ class TodayState(
     /** The sessions finished on [selected]. */
     val doneOn: List<PastSessionItem> = done[selected].orEmpty()
 
-    // Today with no training day shows the next day, dated. (A sequence's next day is on today
-    // unless a session was done today.)
+    /**
+     * The day planned on [selected]; on today with no training day, the next day, dated. (A
+     * sequence's next day is on today unless a session was done today.)
+     */
     private val plannedOn = planned[selected]
         ?: planned.values.firstOrNull()?.takeIf { selected == today && !runningToday && doneOn.isEmpty() }
 
@@ -63,7 +65,7 @@ class TodayState(
         !runningToday && doneOn.isNotEmpty() -> DayKind.Done
         plannedOn != null && !runningToday -> DayKind.Planned
         missedOn != null -> DayKind.Missed
-        else -> DayKind.Rest
+        else -> DayKind.RestDay
     }
 
     /** The program day shown: the running session's, the one planned or the one missed; null otherwise. */
@@ -85,16 +87,16 @@ class TodayState(
      * [day] is the next to train, on whatever date it falls, shown first; a later one is only a plan,
      * and so is the next one while a session runs.
      */
-    val next: Boolean = kind == DayKind.Planned && date == planned.keys.first() && !sessionRunning
+    val isNext: Boolean = kind == DayKind.Planned && date == planned.keys.first() && !sessionRunning
 
     /** Start is offered on [day]: only on the next day, planned on today. */
-    val start: Boolean = next && date == today
+    val offersStart: Boolean = isNext && date == today
 
     /** This week's missed day, on offer under the next day on today when today has no training day. */
-    val trainMissed: Turn? = program?.trainToday?.takeIf { next && selected == today }
+    val trainMissed: Turn? = program?.trainToday?.takeIf { isNext && selected == today }
 
     /** With training days the last date planned is the program's last day. */
-    val last: Boolean = kind == DayKind.Planned && weekdayPlan.days.isNotEmpty() && selected == planned.keys.last()
+    val isLastDay: Boolean = kind == DayKind.Planned && weekdayPlan.days.isNotEmpty() && selected == planned.keys.last()
 
     /** The whole days since the last session; the time-off words count these, whatever the weekday plan. */
     private val daysSince = TimeOff.daysSince(lastTrained, today)
@@ -106,11 +108,11 @@ class TodayState(
      */
     val easeBack: Int? = daysSince?.takeIf {
         program?.next != null && !sessionRunning && !workout &&
-            TimeOff.isTimeOff(TimeOff.daysOff(lastTrained, today, weekdayPlan.days)) && program.changes.none { it.acceptedOn == program.today }
+            TimeOff.isTimeOff(TimeOff.daysOff(lastTrained, today, weekdayPlan.days)) && !program.changedToday
     }
 
     /** The days since the last session, counted on the next day when it's in an easy week; null otherwise. */
-    val backAfter: Int? = daysSince?.takeIf { next && day?.easy == true }
+    val backAfter: Int? = daysSince?.takeIf { isNext && day?.easy == true }
 
     /**
      * The program week trained again after a week with no session, named over today's day until
@@ -124,18 +126,18 @@ class TodayState(
     fun nextAfter(date: LocalDate): Pair<LocalDate, PlannedDay>? = planned.entries.firstOrNull { it.key > date }?.toPair()
 
     /**
-     * What a rest day says: the next day after it; past the last planned day, that day. With no
-     * training days only the next day has a date, so a later one is the program going on undated.
-     * Null on a day with something to show.
+     * What [selected] says as a rest day: the next day after it; past the last planned day, that
+     * day. With no training days only the next day has a date, so a later one is the program going
+     * on undated.
      */
-    val rest: RestMode? = if (kind != DayKind.Rest) null else nextAfter(selected)?.let { RestMode.Rest(it) }
+    val restDay: RestDay = nextAfter(selected)?.let { RestDay.Next(it) }
         ?: planned.entries.lastOrNull()?.takeIf { it.key < selected }?.toPair()?.let { last ->
             // How many days the program has left if every weekday were a training day: more than
             // are planned means it goes on past the dates shown.
             val daysLeft = program?.let { it.program.daysLeft(it.position) } ?: 0
-            if (weekdayPlan.days.isEmpty() && daysLeft > planned.size) RestMode.Undated(last) else RestMode.AfterProgram(last)
+            if (weekdayPlan.days.isEmpty() && daysLeft > planned.size) RestDay.Undated(last) else RestDay.AfterProgram(last)
         }
-        ?: RestMode.Rest(null)
+        ?: RestDay.Next(null)
 
     /**
      * The program week the calendar week from [monday] stands for: the week of its first planned
@@ -151,16 +153,19 @@ class TodayState(
     /** The calendar week from [monday] is an easy week: one of its days is, or it's this week and this week is. */
     fun easyWeek(monday: LocalDate): Boolean =
         (0..6L).any { planned[monday.plusDays(it)]?.easy == true } || (monday == Rotations.mondayOf(today) && program?.easyWeek == true)
+
+    private fun turns(status: Turn.Status): Map<LocalDate, PlannedDay> =
+        program?.turns.orEmpty().filter { it.status == status }.associate { it.date to it.day }
 }
 
 /** What a day with nothing planned or done says. */
-sealed interface RestMode {
+sealed interface RestDay {
     /** `Rest day`, and the next session to select ([next] null past it). */
-    data class Rest(val next: Pair<LocalDate, PlannedDay>?) : RestMode
+    data class Next(val next: Pair<LocalDate, PlannedDay>?) : RestDay
 
     /** Past the program's last planned day: `Nothing planned`, pointing back to [last]. */
-    data class AfterProgram(val last: Pair<LocalDate, PlannedDay>) : RestMode
+    data class AfterProgram(val last: Pair<LocalDate, PlannedDay>) : RestDay
 
     /** The program goes on but only its [next] day has a date (no training days): `Not planned yet`. */
-    data class Undated(val next: Pair<LocalDate, PlannedDay>) : RestMode
+    data class Undated(val next: Pair<LocalDate, PlannedDay>) : RestDay
 }

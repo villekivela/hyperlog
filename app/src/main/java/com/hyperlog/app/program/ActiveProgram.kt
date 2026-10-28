@@ -66,6 +66,9 @@ data class ActiveProgram(
             }
         }.sortedWith(compareByDescending<ChangeRecord> { it.acceptedAt }.thenByDescending { it.id })
 
+    /** A Change in force was accepted today. */
+    val changedToday: Boolean get() = changes.any { it.acceptedOn == today }
+
     /** The ids of Changes ended by a later one's `replaces`. */
     val replaced: Set<Long> get() = history.flatMap { it.change.replaces }.toSet()
 
