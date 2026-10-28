@@ -13,6 +13,7 @@ import com.hyperlog.app.week.RotationAnchor
 import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.WeekdayPlan
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +37,7 @@ class TodayFitTest {
     private val monday = LocalDate.of(2026, 10, 26)
     private val harbour = Gym(1, "Harbour", emptyList(), missing = ids)
 
-    private fun show(plan: WeekdayPlan, onCheckIn: (String) -> Unit = {}) = compose.setContent {
+    private fun show(plan: WeekdayPlan, onCheckIn: (com.hyperlog.app.week.FitAsk) -> Unit = {}) = compose.setContent {
         val rotation = Rotations.of(program, RotationAnchor(LocalDate.of(2026, 10, 26), week = 1, day = 0), plan.days, emptyList(), monday)
         HyperlogTheme {
             TodayScreen(
@@ -49,10 +50,15 @@ class TodayFitTest {
 
     @Test
     fun aDayOverItsTrainingDaysMinutesShowsAnAmberLineThatStartsACheckIn() {
-        var answer: String? = null
-        show(WeekdayPlan(gyms = mapOf(MONDAY to null, THURSDAY to null, SATURDAY to null), minutes = mapOf(MONDAY to 5)), onCheckIn = { answer = it })
+        var ask: com.hyperlog.app.week.FitAsk? = null
+        show(WeekdayPlan(gyms = mapOf(MONDAY to null, THURSDAY to null, SATURDAY to null), minutes = mapOf(MONDAY to 5)), onCheckIn = { ask = it })
         compose.onNodeWithText("· Monday has 5", substring = true).assertIsDisplayed().performClick()
-        assertTrue(answer, Regex("Day A runs ~\\d+ minutes but Monday has 5\\.").matches(answer.orEmpty()))
+        val answer = ask!!.words
+        assertTrue(answer, Regex("Day A runs ~\\d+ minutes but Monday has 5\\.").matches(answer))
+        // It hands on the day it was on: its last slot, on its planned date.
+        assertEquals("lateral", ask!!.slot)
+        // The day to train today has no date of its own.
+        assertNull(ask!!.date)
     }
 
     @Test

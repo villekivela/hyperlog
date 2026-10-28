@@ -33,7 +33,7 @@ class TodayCoachLineTest {
     private val monday = LocalDate.of(2026, 10, 26)
     private val names = mapOf("barbell_bench_press" to "Bench press", "leg_extension" to "Leg extension", "cable_lateral_raise" to "Cable lateral raise")
 
-    private fun show(line: CoachLine?, selected: LocalDate? = null, onCheckIn: (String) -> Unit = {}, onHide: (CoachLine) -> Unit = {}) = compose.setContent {
+    private fun show(line: CoachLine?, selected: LocalDate? = null, onCheckIn: (String, CoachLine) -> Unit = { _, _ -> }, onHide: (CoachLine) -> Unit = {}) = compose.setContent {
         HyperlogTheme {
             TodayScreen(
                 sessionRunning = false, onResume = {}, onStart = { _, _, _ -> },
@@ -48,10 +48,12 @@ class TodayCoachLineTest {
     @Test
     fun checkInStartsACheckInWithTheLineAsItsFirstAnswer() {
         var answer: String? = null
-        show(CoachLine.Stall("barbell_bench_press", sessions = 3, last = monday), onCheckIn = { answer = it })
+        var handed: CoachLine? = null
+        show(CoachLine.Stall("barbell_bench_press", sessions = 3, last = monday), onCheckIn = { words, line -> answer = words; handed = line })
         compose.onNodeWithText("Bench press hasn't moved in 3 sessions").assertIsDisplayed()
         compose.onNodeWithText("Check in").performClick()
         assertEquals("Bench press hasn't moved in 3 sessions.", answer)
+        assertEquals(CoachLine.Stall("barbell_bench_press", sessions = 3, last = monday), handed)
     }
 
     @Test

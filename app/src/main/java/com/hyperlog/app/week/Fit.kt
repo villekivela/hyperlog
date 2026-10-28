@@ -10,6 +10,12 @@ import java.time.LocalDate
 /** A planned day that runs [about] minutes on a training day that has [has]. */
 data class TimeOver(val about: Int, val has: Int, val weekday: DayOfWeek)
 
+/**
+ * What a fit chip's tap starts a check-in with: its first answer [words], and the day it was on,
+ * its last [slot] and planned [date] (null for today's day, which the hero card shows without one), for the scripted coach.
+ */
+data class FitAsk(val words: String, val slot: String?, val date: LocalDate?)
+
 /** The swaps [count] a planned day needs at [gym], the start sheet's list. */
 data class SwapCount(val count: Int, val gym: String)
 

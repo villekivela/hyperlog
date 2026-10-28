@@ -142,6 +142,12 @@ class BlockReviewScreenTest {
     }
 
     @Test
+    fun aBlockReviewAndAProgramReviewStartDifferentKindsOfCheckIn() {
+        assertEquals(com.hyperlog.app.coach.Opening.BlockReview, ReviewPage(1, program, program.blocks[0], review, null, program.blocks[1]).checkInKind)
+        assertEquals(com.hyperlog.app.coach.Opening.ProgramReview, ReviewPage(1, program, program.blocks[1], review, review, null).checkInKind)
+    }
+
+    @Test
     fun checkInOnTheProgramReviewIsCheckInAboutWhatComesNext() {
         var opened: String? = null
         // A program replaced mid-way: its program review has a next block, still Check in.

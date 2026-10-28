@@ -46,6 +46,7 @@ import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.ui.today.aboutMinutes
 import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.FitAsk
 import com.hyperlog.app.week.Fit
 import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -120,7 +121,7 @@ fun ProgramScreen(
     /** The exercise library, which a day's minutes are counted with. */
     library: List<Exercise> = emptyList(),
     /** Starts a check-in whose first answer is the words given: a day that runs over its training day's minutes. */
-    onCheckInFit: (String) -> Unit = {},
+    onCheckInFit: (FitAsk) -> Unit = {},
     /** Every program held, for ⋮ → Programs: the one running, those saved for later, past runs. */
     listedPrograms: List<ListedProgram> = emptyList(),
     onRunAgain: (Long) -> Unit = {},
@@ -310,7 +311,7 @@ private fun ProgramWeeks(
     /** `4 days take turns` under the line, when the training days and the program's days differ. */
     weekdayPlanTurns: String? = null,
     fit: (ProgramDay.Ahead) -> DayFit? = { null },
-    onFitTime: ((String) -> Unit)? = null,
+    onFitTime: ((FitAsk) -> Unit)? = null,
     onReview: (String) -> Unit = {},
 ) {
     val cs = MaterialTheme.colorScheme

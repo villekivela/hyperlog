@@ -95,4 +95,74 @@ class ScriptedCoachTest {
         assertEquals(emptyList<Any>(), proposal.newExercises)
         assertTrue("barbell_drag_curl" in proposal.program.exercises())
     }
+
+    /** Opens a check-in of [kind] and plays it to its end, tapping the first answer; the check-in is returned with its end. */
+    private suspend fun playKind(opening: String, kind: Opening, about: About? = null): Pair<CheckIn, CheckInStep> {
+        val scripted = BuildCoach.scripted { ScriptedWorld(plan, library.exercises, gyms, listOf("Back" to 4.0)) }!!
+        val coach = CheckInCoach(scripted, CheckInWorld(plan.program, ids, gyms = gyms, names = library.exercises.associate { it.id to it.name }))
+        var checkIn = coach.start(opening, CheckInContext.frame(plan, emptyList(), library.exercises, gyms), kind, about)
+        repeat(6) {
+            val step = coach.step(checkIn) as? CheckInStep.Question ?: return checkIn to coach.step(checkIn)
+            checkIn = coach.answer(checkIn, step.answers.first())
+        }
+        error("$kind asks on and on")
+    }
+
+    private fun change(played: Pair<CheckIn, CheckInStep>): Change {
+        // A Change that passed the validators the first time needed no fix round.
+        assertEquals(0, played.first.fixes)
+        return (played.second as CheckInStep.ChangeReview).change
+    }
+
+    @Test
+    fun aFitCheckInDropsTheLastExerciseOfTheDayTheChipWasOnForItsDate() = runTest {
+        val change = change(playKind("Day B runs ~58 minutes but Saturday has 50.", Opening.Fit, About(slot = "curl", date = "2026-10-17")))
+        assertEquals(Scope.Dates(LocalDate.of(2026, 10, 17), LocalDate.of(2026, 10, 17)), change.scope)
+        assertEquals(listOf<Operation>(Operation.Remove("curl", reason = "short on time")), change.operations)
+    }
+
+    @Test
+    fun aStallSwapsTheSlotForItsFirstAlternative() = runTest {
+        val change = change(playKind("Bench press hasn't moved in 3 sessions.", Opening.CoachLine, About(pattern = LinePattern.Stall, exercise = "barbell_bench_press")))
+        assertEquals(Scope.RestOfProgram, change.scope)
+        assertEquals(listOf<Operation>(Operation.Swap("bench", "smith_machine_bench_press", reason = "stalled")), change.operations)
+    }
+
+    @Test
+    fun grindingAddsARepInReserveOnThatExercise() = runTest {
+        val change = change(playKind("Bench press has been ground out.", Opening.CoachLine, About(pattern = LinePattern.Grinding, exercise = "barbell_bench_press")))
+        assertEquals(Scope.RestOfBlock, change.scope)
+        assertEquals(listOf<Operation>(Operation.AdjustRir("bench", 1, reason = "grinding")), change.operations)
+    }
+
+    @Test
+    fun theSameSwapBecomesARestOfProgramSwapToTheExerciseSwappedIn() = runTest {
+        val change = change(playKind("Rows swapped 3 times.", Opening.CoachLine, About(pattern = LinePattern.SameSwap, slot = "row", exercise = "chest_supported_machine_row", swappedFor = "seated_cable_row")))
+        assertEquals(Scope.RestOfProgram, change.scope)
+        assertEquals(listOf<Operation>(Operation.Swap("row", "seated_cable_row", reason = "you keep choosing it")), change.operations)
+    }
+
+    @Test
+    fun aMissedDayEndsInWordsAboutItsTrainingDay() = runTest {
+        val end = playKind("Day A missed.", Opening.CoachLine, About(pattern = LinePattern.DayMissed, dayName = "Day A", missed = 3, of = 4)).second
+        assertEquals(
+            "Day A missed 3 of its last 4 turns. Check its training day still works for you, or change your training days.",
+            (end as CheckInStep.Words).text,
+        )
+    }
+
+    @Test
+    fun theReviewsEndInWordsThatNameTheirParts() = runTest {
+        listOf(Opening.BlockReview, Opening.ProgramReview).forEach { kind ->
+            val words = (playKind("Build is done.", kind).second as CheckInStep.Words).text
+            listOf("lifts", "turning up", "volume").forEach { assertTrue("$kind: $words", it in words) }
+        }
+    }
+
+    @Test
+    fun newProgramFromAProgramReviewPlaysNewProgramsScript() = runTest {
+        val (checkIn, end) = playKind("Full body is done. I want a new program for what comes next.", Opening.NewProgramReview)
+        assertTrue(end is CheckInStep.ProgramReview)
+        assertEquals(2, checkIn.turns.count { it.reply.toolCalls.any { call -> call.name == CoachTools.ASK } })
+    }
 }

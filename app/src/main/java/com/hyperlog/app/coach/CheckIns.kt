@@ -97,8 +97,8 @@ class CheckInRunner(
      * Starts from your own first answer: Ease back in's, or How's it going's. [context], as a block
      * review's, goes after the frame's, for Claude to read with it.
      */
-    fun start(opening: String, from: Opening, context: String? = null) = begin {
-        CheckIn(opening, null, frame().let { f -> if (context == null) f else f.copy(context = "${f.context}\n\n$context") }, from)
+    fun start(opening: String, from: Opening, context: String? = null, about: About? = null) = begin {
+        CheckIn(opening, null, frame().let { f -> if (context == null) f else f.copy(context = "${f.context}\n\n$context") }, from, about)
     }
 
     fun answer(text: String) = next { coach, checkIn -> coach.answered(checkIn, text) }

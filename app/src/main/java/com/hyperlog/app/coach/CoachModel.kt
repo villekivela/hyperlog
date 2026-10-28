@@ -34,6 +34,10 @@ data class CoachRequest(
     val context: String,
     val tools: List<CoachTool>,
     val messages: List<CoachMessage>,
+    /** What opened the check-in, which only the scripted coach reads: it is never sent to Claude. */
+    val tile: Tile? = null,
+    val from: Opening = Opening.Tile,
+    val about: About? = null,
 )
 
 /**

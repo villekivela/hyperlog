@@ -1808,7 +1808,18 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   why and proposes a wrong slot first, to show the fix, then a `rest_of_program` swap; Different gym
   and Build me a workout end in a workout; New program offers Attach a spreadsheet, PDF or photo, asks the days
   a week, and proposes the program format's example with one swap (Seal Row) and one new exercise
-  (Barbell Drag Curl); Tired and Something else end in words. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
+  (Barbell Drag Curl); Tired and Something else end in words. It picks its script by the check-in's
+  **kind**, not by its opening's words (a check-in keeps what opened it: a tile, Ease back in,
+  How's it going?, the day's fit, the coach line, a block review, a program review, or New program
+  on a program review; older check-ins read back as they were, and the kind is not shown in History
+  or Changes). The day's fit plays Short on time's ending: a `dates` Change that drops the last
+  exercise of the day the chip was on, for its planned date. The coach line plays by its pattern: a
+  stall is a `rest_of_program` swap of the exercise's slot to its first alternative; grinding is
+  `adjust_rir` +1 on that exercise's slot for the rest of the block; a missed day ends in words
+  (`Day A missed 3 of its last 4 turns. Check its training day still works for you, or change your
+  training days.`); the same swap is a `rest_of_program` swap to the exercise swapped in. A block
+  review and a program review end in words that name the lifts, turning up and volume; New program
+  on a program review plays New program's script. One live test calls the API and runs only when `ANTHROPIC_API_KEY` is set.
 - **One host.** A test fails if code outside the client and the update check opens a connection,
   or if the client calls any host but `api.anthropic.com`.
 

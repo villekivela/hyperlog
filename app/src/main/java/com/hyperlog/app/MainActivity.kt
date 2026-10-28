@@ -339,16 +339,22 @@ private fun App(
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
     // A check-in whose first answer is given words (a day over its training day's minutes, the coach line): with Claude, the wizard; without, the words to share.
-    val checkInWords = { words: String ->
-        if (checkInAvailable) checkInModel.fit(words)
-        else openAsk(com.hyperlog.app.coach.Opening.Tile, null, words)
+    val checkInFit = { ask: com.hyperlog.app.week.FitAsk ->
+        if (checkInAvailable) checkInModel.fit(ask)
+        else openAsk(com.hyperlog.app.coach.Opening.Fit, null, ask.words)
+        programModel.closePasteErrors()
+        screen = Screen.Coach
+    }
+    val checkInLine = { words: String, line: com.hyperlog.app.coach.CoachLine ->
+        if (checkInAvailable) checkInModel.coachLine(words, line)
+        else openAsk(com.hyperlog.app.coach.Opening.CoachLine, null, words)
         programModel.closePasteErrors()
         screen = Screen.Coach
     }
     // Check in or New program on a block review: its first answer, with the review in the check-in's context.
-    val checkInReview = { opening: String, review: String ->
-        if (checkInAvailable) checkInModel.review(opening, review)
-        else { openAsk(com.hyperlog.app.coach.Opening.Tile, null, opening); askContext = review }
+    val checkInReview = { kind: com.hyperlog.app.coach.Opening, opening: String, review: String ->
+        if (checkInAvailable) checkInModel.review(opening, review, kind)
+        else { openAsk(kind, null, opening); askContext = review }
         programModel.closeReview()
         programModel.closePasteErrors()
         screen = Screen.Coach
@@ -521,8 +527,10 @@ private fun App(
         com.hyperlog.app.ui.program.BlockReviewScreen(
             page, exercises.associate { it.id to it.name },
             onBack = programModel::closeReview,
-            onCheckIn = checkInReview,
-            onNewProgram = checkInReview,
+            onCheckIn = { opening, review ->
+                checkInReview(page.checkInKind, opening, review)
+            },
+            onNewProgram = { opening, review -> checkInReview(com.hyperlog.app.coach.Opening.NewProgramReview, opening, review) },
         )
         return
     }
@@ -677,7 +685,7 @@ private fun App(
             weekdayPlan = weekdayPlan,
             gyms = gyms,
             library = exercises,
-            onCheckInFit = checkInWords,
+            onCheckInFit = checkInFit,
             onWeekdayPlan = programModel::setWeekdayPlan,
             listedPrograms = listedPrograms,
             onRunAgain = programModel::runAgain,
@@ -849,9 +857,9 @@ private fun App(
                 programModel.closePasteErrors()
                 screen = Screen.Coach
             },
-            onCheckInFit = checkInWords,
+            onCheckInFit = checkInFit,
             coachLine = coachLine,
-            onCheckInLine = checkInWords,
+            onCheckInLine = checkInLine,
             onHideCoachLine = programModel::hideCoachLine,
             dueReview = dueReview,
             onOpenReview = { programModel.openReview(it.programId, it.blockId) },

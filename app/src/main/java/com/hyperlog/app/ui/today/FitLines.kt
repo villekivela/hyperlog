@@ -27,8 +27,10 @@ import com.hyperlog.app.ui.session.color
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.FitAsk
 import com.hyperlog.app.week.TimeOver
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -52,10 +54,11 @@ internal fun timeOverAnswer(day: String, over: TimeOver): String =
 /**
  * How a planned day fits its training day (SPEC, The fit), under its numbers: the time as an amber
  * chip with dark ink, tappable when [onTime] is given, and the swaps muted
- * under it. Each is left out when nothing is off. [day] is the day's own name (`Day C`).
+ * under it. Each is left out when nothing is off. [day] is the day's own name (`Day C`); a tap
+ * hands on its [last] slot and planned [date].
  */
 @Composable
-internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((String) -> Unit)? = null) {
+internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((FitAsk) -> Unit)? = null, last: String? = null, date: LocalDate? = null) {
     val time = fit.time
     val swaps = fit.swaps
     if (fit.isEmpty) return
@@ -63,7 +66,7 @@ internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((Str
         if (time != null) {
             val words = stringResource(R.string.fit_time, time.about, fullWeekday(time.weekday), time.has)
             val answer = timeOverAnswer(day, time)
-            val tap = if (onTime != null) Modifier.clickable(role = Role.Button) { onTime(answer) }.heightIn(min = 48.dp) else Modifier.heightIn(min = 32.dp)
+            val tap = if (onTime != null) Modifier.clickable(role = Role.Button) { onTime(FitAsk(answer, last, date)) }.heightIn(min = 48.dp) else Modifier.heightIn(min = 32.dp)
             Box(tap.testTag(FitTimeTag), contentAlignment = Alignment.CenterStart) {
                 Row(
                     Modifier.testTag(FitChipTag).clip(RoundedCornerShape(8.dp)).background(FitChipFill).padding(start = 12.dp, end = if (onTime != null) 8.dp else 12.dp, top = 4.dp, bottom = 4.dp),
