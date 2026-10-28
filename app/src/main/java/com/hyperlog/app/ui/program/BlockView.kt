@@ -25,6 +25,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,7 @@ import com.hyperlog.app.coach.SlotDiff
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Block
+import com.hyperlog.app.program.BlockReviews
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.shortDate
@@ -84,9 +86,12 @@ internal fun LazyListScope.blockItems(
     fit: (ProgramDay) -> DayFit = { DayFit.None },
     /** Tapping a day's time line; null leaves it as words. */
     onFitTime: ((String) -> Unit)? = null,
+    /** Review on a finished block's card, with its id. */
+    onReview: (String) -> Unit = {},
 ) {
     item(key = "blocks") { BlockChoice(program, program.blocks.indexOf(block), onBlock) }
-    item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek) }
+    val finished = block in BlockReviews.finished(program, active.position)
+    item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek, onReview = if (finished) ({ onReview(block.id) }) else null) }
     days.forEach { day ->
         val key = day.key
         item(key = "head-$key") { DayHead(day) }
@@ -159,23 +164,25 @@ private const val ComparedShown = 3
 private const val ComparedFolded = 5
 
 /**
- * The block: its name and weeks, what changed from the block before (each slot that differs,
- * before → after), and a chip per week, done weeks ticked.
+ * The block: its name and weeks, with Review once it's finished ([onReview]), what changed from
+ * the block before (each slot that differs, before → after), and a chip per week, done weeks ticked.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComparison?, week: Int, names: Map<String, String>, onWeek: (Int) -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    val name = { id: String -> names[id] ?: id }
+private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComparison?, week: Int, names: Map<String, String>, onWeek: (Int) -> Unit, onReview: (() -> Unit)?) {
     SectionCard(Modifier.padding(top = 16.dp)) {
         Column(Modifier.padding(vertical = 4.dp)) {
-            Text(
-                interFigures(
-                    if (block.weekStart == block.weekEnd) stringResource(R.string.program_block_week, block.name, block.weekStart)
-                    else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd),
-                ),
-                style = MaterialTheme.typography.titleLarge,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    interFigures(
+                        if (block.weekStart == block.weekEnd) stringResource(R.string.program_block_week, block.name, block.weekStart)
+                        else stringResource(R.string.program_block_weeks, block.name, block.weekStart, block.weekEnd),
+                    ),
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                onReview?.let { TextButton(onClick = it) { Text(stringResource(R.string.review_open)) } }
+            }
             // The weeks first, so changing week never means scrolling past the comparison.
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -194,48 +201,61 @@ private fun BlockCard(block: Block, active: ActiveProgram, comparison: BlockComp
             }
             if (comparison != null) {
                 Spacer(Modifier.height(16.dp))
-                Text(stringResource(R.string.program_from, comparison.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
-                // A block-wide change is said once, for every set; the slots below are those written differently.
-                val rule = ruleText(comparison.rule.first, comparison.rule.second)
-                rule.forEach { RirText(it, Modifier.padding(top = 8.dp), target = true, style = MaterialTheme.typography.bodyLarge) }
-                // A block written afresh differs in every slot, so a long comparison folds after its first few.
-                val total = comparison.days.sumOf { it.slots.size }
-                var open by rememberSaveable(block.id) { mutableStateOf(false) }
-                var budget = if (open || total <= ComparedFolded) total else ComparedShown
-                val several = comparison.days.size > 1
-                comparison.days.forEach { day ->
-                    if (budget <= 0) return@forEach
-                    if (several) {
-                        Text(
-                            day.day.name.substringBefore(" — "),
-                            Modifier.padding(top = 16.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = cs.onSurfaceVariant,
-                        )
-                    }
-                    day.slots.take(budget).forEach { ComparedSlot(it, name) }
-                    budget -= day.slots.size
-                }
-                if (total > ComparedFolded) {
-                    val label = if (open) stringResource(R.string.program_from_fewer) else pluralStringResource(R.plurals.program_from_more, total - ComparedShown, total - ComparedShown)
-                    Row(
-                        Modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 48.dp).clickable { open = !open },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(label, style = MaterialTheme.typography.labelLarge, color = cs.primary)
-                        Spacer(Modifier.width(4.dp))
-                        SymbolIcon(if (open) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(20.dp), tint = cs.primary)
-                    }
-                }
-                if (comparison.days.isEmpty()) {
-                    Text(
-                        stringResource(if (rule.isEmpty()) R.string.program_from_same else R.string.program_from_otherwise, comparison.previous.name),
-                        Modifier.padding(top = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = cs.onSurfaceVariant,
-                    )
-                }
+                ComparisonLines(block, comparison, names)
             }
+        }
+    }
+}
+
+/**
+ * What [block] changes from the block before, as its card reads it: `From Build`, the block-wide
+ * change, then each slot written differently, a long comparison folded after its first few.
+ */
+@Composable
+internal fun ComparisonLines(block: Block, comparison: BlockComparison, names: Map<String, String>) {
+    val cs = MaterialTheme.colorScheme
+    val name = { id: String -> names[id] ?: id }
+    Column {
+        Text(stringResource(R.string.program_from, comparison.previous.name), style = MaterialTheme.typography.labelLarge, color = cs.primary)
+        // A block-wide change is said once, for every set; the slots below are those written differently.
+        val rule = ruleText(comparison.rule.first, comparison.rule.second)
+        rule.forEach { RirText(it, Modifier.padding(top = 8.dp), target = true, style = MaterialTheme.typography.bodyLarge) }
+        // A block written afresh differs in every slot, so a long comparison folds after its first few.
+        val total = comparison.days.sumOf { it.slots.size }
+        var open by rememberSaveable(block.id) { mutableStateOf(false) }
+        var budget = if (open || total <= ComparedFolded) total else ComparedShown
+        val several = comparison.days.size > 1
+        comparison.days.forEach { day ->
+            if (budget <= 0) return@forEach
+            if (several) {
+                Text(
+                    day.day.name.substringBefore(" — "),
+                    Modifier.padding(top = 16.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = cs.onSurfaceVariant,
+                )
+            }
+            day.slots.take(budget).forEach { ComparedSlot(it, name) }
+            budget -= day.slots.size
+        }
+        if (total > ComparedFolded) {
+            val label = if (open) stringResource(R.string.program_from_fewer) else pluralStringResource(R.plurals.program_from_more, total - ComparedShown, total - ComparedShown)
+            Row(
+                Modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 48.dp).clickable { open = !open },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(label, style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                Spacer(Modifier.width(4.dp))
+                SymbolIcon(if (open) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(20.dp), tint = cs.primary)
+            }
+        }
+        if (comparison.days.isEmpty()) {
+            Text(
+                stringResource(if (rule.isEmpty()) R.string.program_from_same else R.string.program_from_otherwise, comparison.previous.name),
+                Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = cs.onSurfaceVariant,
+            )
         }
     }
 }

@@ -678,3 +678,78 @@ Screens (emulator, the phone's 1280 × 2856 at 480 dpi, text at 115 %, dark unle
 `today-week-again`; `today-easy-week`; `today-easy-week-planned`; `program-rotation-row`,
 `-light`; `program-rotation-week` (the missed day), `-light`; `program-rotation-dated`, `-light`;
 `training-days-minutes`, `-menu`, `-360`.
+
+## Block review (#91)
+
+The page that says how a finished block went (SPEC, Program → Block review), its entry points
+(Review on a finished block's card, Today's `<Block> is done · See the review`, Program review on a
+past program's sheet) and the program review with its second column. The words and placements are
+the owner's (2026-10-28); this pass sets the rows, the columns and the spacing.
+
+Principles:
+
+- **One left edge.** Every row is the review's own row (`ReviewRow`): no symbol, so no empty
+  40 dp column; titles start 16 dp inside the tile, as on Volume, in every section.
+- **Numbers on the right, words on the left.** Values end at the tile's 16 dp padding; a lift's
+  gain sits under its kg; a record's kind sits where a value would.
+- **Good news in the accent, the rest muted.** A gain, `Reached` and `On pace for` are primary;
+  a stall, a drop, `short at this pace` and a missing value (`–`) are onSurfaceVariant.
+- **Columns you can always read.** On the program review the heads (the block, `Program`) stay
+  under the top bar once scrolled past, so the two numbers on a Volume row 1,200 dp down still
+  have their names.
+- **Calm length.** Volume shows its first 6 muscles past 8, with `15 more muscles ⌄` at the end of
+  its group, as a block card's From list folds; one-line rows are 56 dp, not 72.
+
+Tokens (in addition to the above):
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Review row | 72 dp min with a line under the title, 56 dp with none; 16 dp padding | every row on the page |
+| Value column | 88 dp, 12 dp apart, end-aligned, bodyLarge | the program review's block and Program values |
+| Column heads | labelLarge onSurfaceVariant, up to two lines, bottom-aligned, 28 dp from the edge | over the values; pinned on `surfaceContainer` with 8 dp above |
+| Gain / pace | titleSmall, primary or onSurfaceVariant | `+5`, `±0`, `Reached`, `On pace for 2 Sep` |
+| Volume fold | folds past 8 rows to 6; labelLarge primary + `expand_more` 20 dp, 56 dp row | `15 more muscles` / `Fewer` |
+
+```
+←                                          ←          Deload +            ← pinned once
+Build review                                            test   Program       scrolled past
+Weeks 3–6 · 17 Aug – 11 Sep                ╭──────────────────────────╮
+Lifts                                      │ Leg Press        –   +14.75│
+╭──────────────────────────────────╮       ╰──────────────────────────╯
+│ Incline DB Press   71.75 → 80 kg │        Volume
+│ Cable left · Harbour       +8.25 │       ╭──────────────────────────╮
+╰──────────────────────────────────╯       │ Chest      5 → 5  7.5 → 8│
+ Turning up                                ╰──────────────────────────╯
+╭──────────────────────────────────╮       ╭──────────────────────────╮
+│ 9 of 12 training days            │       │ 15 more muscles ⌄        │
+│ Day B missed twice · Day A miss… │       ╰──────────────────────────╯
+╰──────────────────────────────────╯        Goal
+ Volume                                    ╭──────────────────────────╮
+╭──────────────────────────────────╮       │ Barbell Bench Press      │
+│ Chest       6.5 → 8.5 sets a week│ 56 dp │ 119.58 of 100 kg by 15 Jan│
+╰──────────────────────────────────╯       │ Reached          primary │
+ Records                                   │ Program: Reached         │
+╭──────────────────────────────────╮       ╰──────────────────────────╯
+│ Hack Squat       Estimate record │
+│ 41.25 kg × 10 · 19 Oct           │
+╰──────────────────────────────────╯
+▔▔▔▔▔▔▔▔ [Check in about the next block]   ▔▔▔▔ [New program] [Check in]
+```
+
+States: a block with lifts (Build); a block whose lifts all stalled or none trained twice (`No lift
+trained twice outside a deload` as the one row of Lifts); missed days running to two lines; the
+weeks row when a week repeated or an easy week came; Volume folded and open; Changes as the last
+row of Volume, up to three lines; records; bodyweight alone, or with `Program:` under it; a goal
+reached, on pace or short; the program review at the top (heads in the page) and scrolled (heads
+pinned), its block column `–` for lifts the last block didn't train twice; Today's line for a block
+and for the program; the card's Review.
+
+Interaction: as SPEC. The Volume fold toggles in place and survives rotation; the pinned heads are
+a copy left out of the semantics tree, so a screen reader reads the page's heads once. Back and the
+top bar's arrow close the page.
+
+Screens (emulator, 1280 × 2856 at 480 dpi, text at 115 %, `-light` and `-dark`):
+`block-review-ramp-in`, `block-review-ramp-in-volume` (the fold), `block-review-build`,
+`block-review-program` (heads in the page), `block-review-program-columns` (heads pinned),
+`block-review-card`, `block-review-today` (Ramp-in), `block-review-today-program`. Neither
+fixture holds a past program, so the Programs sheet's Program review isn't shown.

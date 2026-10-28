@@ -865,4 +865,58 @@
         <item quantity="one">%1$d weight</item>
         <item quantity="other">%1$d weights</item>
     </plurals>
+    <!-- Block review (SPEC, Program → Block review) -->
+    <string name="review_title">%1$s review</string>
+    <string name="review_open">Review</string>
+    <string name="programs_review">Program review</string>
+    <string name="review_weeks">Weeks %1$d–%2$d</string>
+    <string name="review_week">Week %1$d</string>
+    <string name="review_lifts">Lifts</string>
+    <string name="review_no_lifts">No lift trained twice outside a deload</string>
+    <string name="review_turning_up">Turning up</string>
+    <string name="review_volume">Volume</string>
+    <string name="review_records">Records</string>
+    <string name="review_records_set">Records set</string>
+    <string name="review_bodyweight">Bodyweight</string>
+    <string name="review_goal">Goal</string>
+    <string name="review_next">Next</string>
+    <string name="review_program">Program</string>
+    <string name="review_estimate_kg">%1$s → %2$s kg</string>
+    <string name="review_program_line">Program: %1$s</string>
+    <string name="review_done_of">%1$d of %2$d training days</string>
+    <string name="review_took">Took %1$d weeks, planned %2$d</string>
+    <string name="review_week_again">Week %1$d again</string>
+    <string name="review_easy_week">an easy week</string>
+    <string name="review_days">%1$d days</string>
+    <string name="review_dates">%1$s – %2$s</string>
+    <string name="review_training_days">Training days</string>
+    <string name="review_weeks_taken">Weeks taken / planned</string>
+    <string name="review_n_of">%1$d of %2$d</string>
+    <string name="review_n_planned">%1$d / %2$d</string>
+    <string name="review_sets">%1$s → %2$s</string>
+    <string name="review_sets_a_week">%1$s → %2$s sets a week</string>
+    <plurals name="review_volume_more">
+        <item quantity="one">%1$d more muscle</item>
+        <item quantity="other">%1$d more muscles</item>
+    </plurals>
+    <string name="review_volume_fewer">Fewer</string>
+    <string name="review_record_set">%1$s kg × %2$d · %3$s</string>
+    <string name="review_record_estimate">Estimate record</string>
+    <string name="review_record_reps">Rep record</string>
+    <string name="review_goal_of">%1$s of %2$s kg</string>
+    <string name="review_goal_of_by">%1$s of %2$s kg by %3$s</string>
+    <string name="review_goal_on_pace">On pace for %1$s</string>
+    <string name="review_goal_short">%1$s kg short at this pace</string>
+    <string name="review_goal_reached">Reached</string>
+    <string name="review_check_in_next">Check in about the next block</string>
+    <string name="review_check_in">Check in</string>
+    <string name="review_new_program">New program</string>
+    <string name="review_due_block">%1$s is done · See the review</string>
+    <string name="review_missed_once">%1$s missed once</string>
+    <string name="review_missed_twice">%1$s missed twice</string>
+    <string name="review_missed_times">%1$s missed %2$d times</string>
+    <plurals name="review_changes">
+        <item quantity="one">%1$d Change: %2$s</item>
+        <item quantity="other">%1$d Changes: %2$s</item>
+    </plurals>
 </resources>

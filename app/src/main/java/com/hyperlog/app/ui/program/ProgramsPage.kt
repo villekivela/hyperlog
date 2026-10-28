@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -66,6 +67,8 @@ fun ProgramsPage(
     onExport: (ListedProgram) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Program review on a past program's sheet: opens the review of program with this id. */
+    onProgramReview: (Long) -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     /** The program whose sheet is up. */
@@ -114,6 +117,7 @@ fun ProgramsPage(
                 onRunAgain = { open = null; start(p, false) },
                 onResume = { open = null; start(p, true) },
                 onExport = { open = null; onExport(p) },
+                onProgramReview = { open = null; onProgramReview(p.id) },
             )
         }
     }
@@ -189,11 +193,11 @@ private fun symbol(p: ListedProgram): Symbol = when (val s = p.status) {
 /**
  * A program's sheet: its head as the review's (title, author, weeks and days a week, where it
  * stands, the description), its main way to run as the sheet's button (Resume for one replaced
- * mid-way, else Run again for one that has run or the running one once finished), then Run again
- * (below Resume) and Export as rows.
+ * mid-way, else Run again for one that has run or the running one once finished), with Program
+ * review above it for a past one, then Run again (below Resume) and Export as rows.
  */
 @Composable
-private fun ProgramSheet(p: ListedProgram, onRunAgain: () -> Unit, onResume: () -> Unit, onExport: () -> Unit) {
+private fun ProgramSheet(p: ListedProgram, onRunAgain: () -> Unit, onResume: () -> Unit, onExport: () -> Unit, onProgramReview: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val program = p.program
     val perWeek = program.blocks.first().days.size
@@ -229,8 +233,20 @@ private fun ProgramSheet(p: ListedProgram, onRunAgain: () -> Unit, onResume: () 
                 runsAgain -> Triple(R.string.programs_run_again, Symbol.Replay, onRunAgain)
                 else -> null
             }
-            main?.let { (label, symbol, onClick) ->
+            if (p.status is ListedProgram.Status.Past) {
                 Spacer(Modifier.height(24.dp))
+                OutlinedButton(
+                    onClick = onProgramReview,
+                    Modifier.fillMaxWidth().heightIn(min = ButtonDefaults.MediumContainerHeight),
+                    contentPadding = ButtonDefaults.MediumContentPadding,
+                ) {
+                    SymbolIcon(Symbol.Flag, null, Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.programs_review), style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            main?.let { (label, symbol, onClick) ->
+                Spacer(Modifier.height(if (p.status is ListedProgram.Status.Past) 8.dp else 24.dp))
                 Button(
                     onClick = onClick,
                     Modifier.fillMaxWidth().heightIn(min = ButtonDefaults.MediumContainerHeight),

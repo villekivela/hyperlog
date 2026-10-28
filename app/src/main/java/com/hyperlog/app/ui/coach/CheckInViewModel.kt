@@ -150,6 +150,12 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         runner.start(words, com.hyperlog.app.coach.Opening.Tile)
     }
 
+    /** Check in or New program on a block review: a check-in whose first answer is [opening], with the review in its [context]. */
+    fun review(opening: String, context: String) {
+        _draft.value = null
+        runner.start(opening, com.hyperlog.app.coach.Opening.Tile, context)
+    }
+
     /** How's it going? about a Change in force: it opens with the Change and the check-in that made it. */
     fun howItsGoing(record: com.hyperlog.app.program.ChangeRecord) {
         _draft.value = null

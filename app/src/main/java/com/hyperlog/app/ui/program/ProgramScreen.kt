@@ -129,6 +129,10 @@ fun ProgramScreen(
     /** Opens a saved program's page, read-only with Start program. */
     onOpenSaved: (Long) -> Unit = {},
     onExportProgram: (ListedProgram) -> Unit = {},
+    /** Review on a finished block's card: opens the review of the block with this id. */
+    onReview: (String) -> Unit = {},
+    /** Program review on a past program's sheet on Programs, with its id. */
+    onProgramReview: (Long) -> Unit = {},
 ) {
     var kept by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     val shown = view ?: kept
@@ -150,6 +154,7 @@ fun ProgramScreen(
             listedPrograms, active,
             onRunAgain = { close(); onRunAgain(it) }, onResume = { close(); onResume(it) }, onOpenSaved = onOpenSaved,
             onExport = onExportProgram, onBack = close, modifier = modifier,
+            onProgramReview = onProgramReview,
         )
         return
     }
@@ -226,6 +231,7 @@ fun ProgramScreen(
                     onOpenWeekdayPlan = { editingWeekdayPlan = true },
                     fit = { day -> day.date?.let { Fit.of(day.day, it, weekdayPlan, gyms, library, aboutMinutes(day.day, library, programSessions)) } },
                     onFitTime = onCheckInFit,
+                    onReview = onReview,
                 )
             }
         }
@@ -305,6 +311,7 @@ private fun ProgramWeeks(
     weekdayPlanTurns: String? = null,
     fit: (ProgramDay.Ahead) -> DayFit? = { null },
     onFitTime: ((String) -> Unit)? = null,
+    onReview: (String) -> Unit = {},
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
@@ -347,6 +354,7 @@ private fun ProgramWeeks(
             onBlock = { i -> program.blocks[i].let { b -> onWeek(if (currentWeek in b.weekStart..b.weekEnd) currentWeek else b.weekStart) } },
             onWeek = onWeek, onOpenSession = onOpenSession,
             fit = { day -> (day as? ProgramDay.Ahead)?.let(fit) ?: DayFit.None }, onFitTime = onFitTime,
+            onReview = onReview,
         )
         item { Spacer(Modifier.navigationBarsPadding().height(24.dp)) }
     }
