@@ -330,6 +330,13 @@ private fun App(
     val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
+    // A day that runs over its training day's minutes: with Claude, a check-in whose first answer is the fit; without, the words to share.
+    val checkInFit = { words: String ->
+        if (checkInAvailable) checkInModel.fit(words)
+        else openAsk(com.hyperlog.app.coach.Opening.Tile, null, words)
+        programModel.closePasteErrors()
+        screen = Screen.Coach
+    }
     val asking = askOpening != null && !checkInAvailable
     // A key saved (or the scripted coach switched on) while Ask Claude is open: the wizard takes over, and its words go.
     LaunchedEffect(checkInAvailable) { if (checkInAvailable && askOpening != null) { askOpening = null; askTile = null } }
@@ -464,6 +471,7 @@ private fun App(
             onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
             onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
             file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
+            fit = com.hyperlog.app.ui.coach.ReviewFit(weekdayPlan, gyms, exercises, java.time.LocalDate.now()),
             // Save for later ends the check-in on Coach, which says where it went; the program running goes on.
             onSave = {
                 programModel.saveProgram(
@@ -642,6 +650,8 @@ private fun App(
             onView = { programView = it },
             weekdayPlan = weekdayPlan,
             gyms = gyms,
+            library = exercises,
+            onCheckInFit = checkInFit,
             onWeekdayPlan = programModel::setWeekdayPlan,
             listedPrograms = listedPrograms,
             onRunAgain = programModel::runAgain,
@@ -811,6 +821,7 @@ private fun App(
                 programModel.closePasteErrors()
                 screen = Screen.Coach
             },
+            onCheckInFit = checkInFit,
             weekdayPlan = weekdayPlan,
             onWeekdayPlan = programModel::setWeekdayPlan,
             sessions = pastSessions,

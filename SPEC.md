@@ -588,12 +588,20 @@ the next day, whenever you train.
 each planned day with the training day it lands on, and never changes the day:
 
 - **Time.** When a day's `~N minutes` is more than 5 minutes over its training day's, the card
-  shows it in amber, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
+  shows it as a chip, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
   answer is "Day C runs ~58 minutes but Saturday has 50." A training day without minutes is never
-  checked.
+  checked. The chip is its own line under the card's numbers: the amber of the progression's
+  weight-down mark behind dark ink (owner, 2026-10-27; amber text alone read at 2.1 to 3.3:1 on
+  the hero and light cards, the chip's ink 8:1), the same on every card and in both themes, on
+  every card that has a date: Today's hero and planned days, and Program's days with dates. It is
+  a 48 dp tap target ending in a chevron (`›`, in the ink, as the Training days row has; owner,
+  2026-10-27), which the review's read-only chip leaves out; with no Claude key the tap hands the same words to Ask Claude to share.
 - **Equipment.** With a gym on its training day, a planned day's card counts the swaps that gym
   needs, `2 swaps at Harbour`, read from the start sheet's swaps. The start sheet handles them as
-  ever; the same swap three sessions in a row is a coach line (Coaching → The coach line).
+  ever; the same swap three sessions in a row is a coach line (Coaching → The coach line). The line
+  is muted, under the time line (or the numbers), counts every slot the start sheet lists, also
+  those nothing fits, and is left out at 0, and for a training day with no gym named.
+- A day on a date that is no training day, or with no training days at all, has no fit.
 
 ## Screens
 
@@ -1829,7 +1837,10 @@ back.
   rotation puts it on (its equipment, within its minutes), unless you ask for another number, and
   to name each day for its training day (`Day A — Mon · Heavy bench, squat, pulldown`). A file
   with more days than training days is merged or taken in turns as you answer. The review shows the
-  fit under each day as Program does.
+  fit under each day as Program does (the same two lines, not tappable), reading the days as the
+  rotation would put them from today: Day A on the first training day from today. The context also
+  says so, with each training day's gym equipment once and the goals as `Barbell Bench Press: 100
+  kg by 2026-12-01`.
 - **The reply** is `propose_program`'s input, or pasted: `{ "program": <a program file
   (docs/program-format.md)>, "swaps": [...], "newExercises": [...] }`. The program validates as
   import does, its problems' paths under `program.`, and goes through the self-fix loop.

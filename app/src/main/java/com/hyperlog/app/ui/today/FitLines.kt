@@ -1,0 +1,84 @@
+package com.hyperlog.app.ui.today
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import com.hyperlog.app.R
+import com.hyperlog.app.ui.session.Direction
+import com.hyperlog.app.ui.session.color
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.TimeOver
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.util.Locale
+
+internal const val FitTimeTag = "fit-time"
+internal const val FitSwapsTag = "fit-swaps"
+internal const val FitChipTag = "fit-chip"
+internal const val FitChevronTag = "fit-chevron"
+
+/** The time line's chip (owner, 2026-10-27): the progression's weight-down amber behind dark ink, so it reads on every card in both themes. */
+internal val FitChipFill: Color = Direction.Down.color
+internal val FitChipInk = Color(0xFF1B1623)
+
+/** The words a weekday goes by in the fit lines: `Saturday`. */
+internal fun fullWeekday(day: DayOfWeek): String = day.getDisplayName(TextStyle.FULL, Locale.getDefault())
+
+/** The first answer of the check-in a time line starts: `Day C runs ~58 minutes but Saturday has 50.` */
+@Composable
+internal fun timeOverAnswer(day: String, over: TimeOver): String =
+    stringResource(R.string.fit_time_answer, day, over.about, fullWeekday(over.weekday), over.has)
+
+/**
+ * How a planned day fits its training day (SPEC, The fit), under its numbers: the time as an amber
+ * chip with dark ink, tappable when [onTime] is given, and the swaps muted
+ * under it. Each is left out when nothing is off. [day] is the day's own name (`Day C`).
+ */
+@Composable
+internal fun FitLines(fit: DayFit, day: String, mutedColor: Color, onTime: ((String) -> Unit)? = null) {
+    val time = fit.time
+    val swaps = fit.swaps
+    if (fit.isEmpty) return
+    Column {
+        if (time != null) {
+            val words = stringResource(R.string.fit_time, time.about, fullWeekday(time.weekday), time.has)
+            val answer = timeOverAnswer(day, time)
+            val tap = if (onTime != null) Modifier.clickable(role = Role.Button) { onTime(answer) }.heightIn(min = 48.dp) else Modifier.heightIn(min = 32.dp)
+            Box(tap.testTag(FitTimeTag), contentAlignment = Alignment.CenterStart) {
+                Row(
+                    Modifier.testTag(FitChipTag).clip(RoundedCornerShape(8.dp)).background(FitChipFill).padding(start = 12.dp, end = if (onTime != null) 8.dp else 12.dp, top = 4.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(words, style = MaterialTheme.typography.labelLarge, color = FitChipInk)
+                    // Like the Training days row, a chevron says it opens something.
+                    if (onTime != null) SymbolIcon(Symbol.ChevronRight, null, Modifier.size(20.dp).testTag(FitChevronTag), tint = FitChipInk)
+                }
+            }
+        }
+        if (swaps != null) {
+            Box(Modifier.testTag(FitSwapsTag).heightIn(min = 24.dp), contentAlignment = Alignment.CenterStart) {
+                Text(pluralStringResource(R.plurals.fit_swaps, swaps.count, swaps.count, swaps.gym), style = MaterialTheme.typography.bodyMedium, color = mutedColor)
+            }
+        }
+    }
+}

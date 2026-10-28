@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.coach
 
+import androidx.compose.ui.test.assertHasNoClickAction
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
@@ -71,6 +73,40 @@ class ProgramReviewTest {
         // The blocks and the first week's days, as Program shows them.
         compose.onNodeWithText("Ramp-in").performScrollTo()
         compose.onNodeWithText("Day A — Squat, press, row", substring = true).performScrollTo()
+    }
+
+    @Test
+    fun theReviewShowsTheFitUnderEachDayButItIsNotATap() {
+        val plan = com.hyperlog.app.week.WeekdayPlan(
+            gyms = mapOf(java.time.DayOfWeek.MONDAY to 1L, java.time.DayOfWeek.THURSDAY to null),
+            minutes = mapOf(java.time.DayOfWeek.MONDAY to 5),
+        )
+        val gym = com.hyperlog.app.gym.Gym(1, "Harbour", emptyList(), missing = setOf(proposal.program.blocks.first().days.first().groups.first().slots.first().exercise))
+        compose.setContent {
+            HyperlogTheme {
+                ProgramReviewScreen(
+                    proposal, names, null, onStart = {}, onReject = {},
+                    fit = ReviewFit(plan, listOf(gym), library.exercises, java.time.LocalDate.of(2026, 10, 26)),
+                )
+            }
+        }
+        compose.onNodeWithText("· Monday has 5", substring = true).performScrollTo().assertIsDisplayed().assertHasNoClickAction()
+        compose.onNodeWithText("1 swap at Harbour").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun aDayTheRotationBringsTwiceInTheWeekIsReadAtItsFirstTrainingDay() {
+        // Two days on three training days go A B A: Day A reads Monday's minutes, not Saturday's.
+        val plan = com.hyperlog.app.week.WeekdayPlan(
+            gyms = mapOf(java.time.DayOfWeek.MONDAY to null, java.time.DayOfWeek.THURSDAY to null, java.time.DayOfWeek.SATURDAY to null),
+            minutes = mapOf(java.time.DayOfWeek.MONDAY to 5),
+        )
+        compose.setContent {
+            HyperlogTheme {
+                ProgramReviewScreen(proposal, names, null, onStart = {}, onReject = {}, fit = ReviewFit(plan, emptyList(), library.exercises, java.time.LocalDate.of(2026, 10, 26)))
+            }
+        }
+        compose.onNodeWithText("· Monday has 5", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test
