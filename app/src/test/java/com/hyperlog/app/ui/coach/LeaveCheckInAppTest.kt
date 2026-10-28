@@ -167,7 +167,7 @@ class LeaveCheckInAppTest {
             val db = HyperlogDatabase.get(context)
             db.programs().setPosition(Programs(db).active.first()!!.id, LAST_WEEK + 1, 0)
         }
-        compose.click("is done · See the review", substring = true)
+        compose.click("Hyperlog Full Body is done · See the review")
         compose.waitFor("Hyperlog Full Body review")
         compose.onNode(hasText("New program") and hasClickAction()).performClick()
         compose.click("Build it from my answers")
