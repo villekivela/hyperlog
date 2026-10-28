@@ -71,8 +71,17 @@ if [[ -n "$baseline" ]] && ! git merge-base --is-ancestor "$baseline" "$head"; t
     exit 2
 fi
 
+# Commits whose subjects fail the check but can't be rewritten on main.
+# #101's squash subject ran past 72 characters with a second reference, "(#98) (#101)".
+readonly exempt_commits=(
+    8dda7febb5bc3873889cc1d0a7cc6f19170e0f82
+)
+
 status=0
 while IFS=$'\t' read -r commit subject; do
+    if [[ " ${exempt_commits[*]} " == *" $commit "* ]]; then
+        continue
+    fi
     if ! check_subject "$subject"; then
         echo "invalid commit subject in ${commit:0:12}: $subject" >&2
         status=1

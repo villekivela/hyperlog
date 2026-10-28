@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.program
 
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -109,7 +110,8 @@ class BlockReviewScreenTest {
         var opened: Pair<String, String>? = null
         show(ReviewPage(1, program, program.blocks[1], review, whole, null), newProgram = { o, c -> opened = o to c })
         compose.onNodeWithText("Hyperlog Full Body review").assertExists()
-        seen("Peak")
+        compose.onNode(hasText("Peak", substring = true)).assertExists()
+        seen("Last block")
         assertEquals(true, compose.onAllNodesWithText("Program").fetchSemanticsNodes().isNotEmpty())
         seen("+26")
         seen("Program: 84 → 81.5 kg")
