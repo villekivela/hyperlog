@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.coach
 
 import android.content.Context
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.hasContentDescription
@@ -160,6 +161,23 @@ class LeaveCheckInAppTest {
     }
 
     @Test
+    fun closingTheProgramFromAProgramReviewsNewProgramGoesBackToTheReview() {
+        // The whole program done: Today points at its program review.
+        runBlocking {
+            val db = HyperlogDatabase.get(context)
+            db.programs().setPosition(Programs(db).active.first()!!.id, LAST_WEEK + 1, 0)
+        }
+        compose.click("is done · See the review", substring = true)
+        compose.waitFor("Hyperlog Full Body review")
+        compose.onNode(hasText("New program") and hasClickAction()).performClick()
+        compose.click("Build it from my answers")
+        compose.click("3")
+        compose.waitFor("Start program")
+        compose.onNodeWithContentDescription("Close the check-in").performClick()
+        compose.waitFor("Hyperlog Full Body review")
+    }
+
+    @Test
     fun closingEaseBackInGoesBackToToday() {
         runBlocking { HyperlogDatabase.get(context).sessions().insertSession(SessionEntity(startedAt = System.currentTimeMillis() - 11 * DAY, finishedAt = System.currentTimeMillis() - 11 * DAY + 3_600_000)) }
         // Today reads the last session again when it shows.
@@ -198,5 +216,8 @@ class LeaveCheckInAppTest {
 
     private companion object {
         const val DAY = 86_400_000L
+
+        /** The starter program's last week. */
+        const val LAST_WEEK = 12
     }
 }

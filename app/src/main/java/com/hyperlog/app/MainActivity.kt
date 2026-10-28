@@ -351,6 +351,7 @@ private fun App(
     /** Where the check-in under way started, when not on Coach; leaving it goes back there. */
     var checkInFrom by rememberSaveable(stateSaver = CheckInFrom.Saver) { mutableStateOf<CheckInFrom?>(null) }
     // A check-in left mid-way, by going to another screen, keeps running on Coach and ends there.
+    // (toCoach sets it in the same step as Coach shows, so this never sees it before Coach does.)
     LaunchedEffect(screen) { if (screen != Screen.Coach) checkInFrom = null }
     /** × or Done on a check-in, or Back on Ask Claude: where it started, its review open again; Coach for one from Coach. */
     val leaveCheckIn = {
@@ -360,30 +361,30 @@ private fun App(
         }
         checkInFrom = null
     }
+    /** A check-in, or Ask Claude, opened from the screen showing (and [review], when one is open over it): Coach shows it. */
+    val toCoach = { review: com.hyperlog.app.program.ReviewPage? ->
+        programModel.closePasteErrors()
+        // A program review opens again as the last block reached (null), as Programs opens it.
+        checkInFrom = CheckInFrom(screen, review?.programId, review?.block?.id?.takeIf { review.whole == null })
+        screen = Screen.Coach
+    }
     // A check-in whose first answer is given words (a day over its training day's minutes, the coach line): with Claude, the wizard; without, the words to share.
     val checkInFit = { ask: com.hyperlog.app.week.FitAsk ->
         if (checkInAvailable) checkInModel.fit(ask)
         else openAsk(com.hyperlog.app.coach.Opening.Fit, null, ask.words)
-        programModel.closePasteErrors()
-        checkInFrom = CheckInFrom(screen)
-        screen = Screen.Coach
+        toCoach(null)
     }
     val checkInLine = { words: String, line: com.hyperlog.app.coach.CoachLine ->
         if (checkInAvailable) checkInModel.coachLine(words, line)
         else openAsk(com.hyperlog.app.coach.Opening.CoachLine, null, words)
-        programModel.closePasteErrors()
-        checkInFrom = CheckInFrom(screen)
-        screen = Screen.Coach
+        toCoach(null)
     }
     // Check in or New program on a block review: its first answer, with the review in the check-in's context.
     val checkInReview = { page: com.hyperlog.app.program.ReviewPage, kind: com.hyperlog.app.coach.Opening, opening: String, review: String ->
         if (checkInAvailable) checkInModel.review(opening, review, kind)
         else { openAsk(kind, null, opening); askContext = review }
         programModel.closeReview()
-        programModel.closePasteErrors()
-        // A program review opens again as the last block reached (null), as Programs opens it.
-        checkInFrom = CheckInFrom(screen, page.programId, page.block.id.takeIf { page.whole == null })
-        screen = Screen.Coach
+        toCoach(page)
     }
     val asking = askOpening != null && !checkInAvailable
     // A key saved (or the scripted coach switched on) while Ask Claude is open: the wizard takes over, and its words go.
@@ -494,7 +495,7 @@ private fun App(
                 if (running != null) workoutAddedMidSession = true
             },
             onReject = { programModel.rejectWorkout(); if (reviewingCheckIn) checkInModel.reject() },
-            onClose = if (reviewingCheckIn) ({ programModel.rejectWorkout(); checkInModel.close() }) else null,
+            onClose = if (reviewingCheckIn) ({ programModel.rejectWorkout(); checkInModel.close(); leaveCheckIn() }) else null,
             replaces = todayWorkout?.workout?.name,
             gym = if (gyms.isEmpty()) null else gyms.firstOrNull { it.id == workoutGym }?.name?.let { context.getString(R.string.today_workout_at, it) }
                 ?: context.getString(R.string.coach_elsewhere),
@@ -517,13 +518,13 @@ private fun App(
                 )
             },
             onReject = { programModel.rejectProgram(); if (reviewingCheckIn) checkInModel.reject() },
-            onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close() }) else null,
+            onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close(); leaveCheckIn() }) else null,
             file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
             fit = com.hyperlog.app.ui.coach.ReviewFit(weekdayPlan, gyms, exercises, java.time.LocalDate.now()),
             // Save for later ends the check-in on Coach, which says where it went; the program running goes on.
             onSave = {
                 programModel.saveProgram(
-                    saved = { closeAsk(); if (checkIn != null) checkInModel.close(); programSaved = true; screen = Screen.Coach },
+                    saved = { closeAsk(); if (checkIn != null) checkInModel.close(); programSaved = true; checkInFrom = null; screen = Screen.Coach },
                     failed = { closeAsk(); if (checkIn != null) checkInModel.close(); programView = ProgramView(); screen = Screen.Program },
                 )
             },
@@ -883,9 +884,7 @@ private fun App(
                 // With Claude, a check-in whose first answer is the time off; without, the words to share.
                 if (checkInAvailable) checkInModel.easeBackIn(words)
                 else openAsk(com.hyperlog.app.coach.Opening.EaseBackIn, null, words)
-                programModel.closePasteErrors()
-                checkInFrom = CheckInFrom(Screen.Today)
-                screen = Screen.Coach
+                toCoach(null)
             },
             onCheckInFit = checkInFit,
             coachLine = coachLine,
