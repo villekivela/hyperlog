@@ -189,7 +189,8 @@ object BlockReviews {
 
     /**
      * Each muscle's sets: those done in [weeks] over the calendar weeks they took, against the
-     * program's [weeks] as written (with their week overrides, not Changes), in body order.
+     * program's [weeks] as written (with their week overrides, not Changes), the one furthest under
+     * as written first, then in body order.
      */
     private fun volume(log: ReviewLog, weeks: IntRange): List<MuscleVolume> {
         val taken = weeksTaken(log, weeks)
@@ -203,7 +204,7 @@ object BlockReviews {
         }
         return (done.keys + written.keys).sortedBy { m -> Muscles.indexOf(m).let { if (it < 0) Int.MAX_VALUE else it } }.map { m ->
             MuscleVolume(m, if (taken == 0) 0.0 else (done[m] ?: 0.0) / taken, (written[m] ?: 0.0) / weeks.count())
-        }
+        }.sortedBy { it.done - it.written }
     }
 
     /** The calendar weeks [weeks] took: from the first turn or session in them to the last. */

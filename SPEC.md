@@ -1123,7 +1123,8 @@ each planned day with the training day it lands on, and never changes the day:
        week trained again and an easy week's included.
      - **Volume**: average weekly sets per muscle as done → as the block is written (its week
        overrides, not Changes), then the Changes accepted during the block, one line
-       (`2 Changes: no grip work for a week, …`). A row: `Chest  9.5 → 10 sets a week`. Past 8
+       (`2 Changes: no grip work for a week, …`). A row: `Chest  9.5 → 10 sets a week`, the muscle
+       furthest under its written sets first, then in body order (owner, 2026-10-28). Past 8
        muscles the list shows its first 6 and `15 more muscles` to open the rest.
      - **Records** set in the block; **bodyweight** start → end when it was logged in the block.
      - **The goal**: each lift goal's estimate against it (`97 of 100 kg`); with a date, the

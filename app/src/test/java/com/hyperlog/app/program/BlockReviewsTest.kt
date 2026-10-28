@@ -104,7 +104,7 @@ class BlockReviewsTest {
     private val muscles = mapOf("bench" to mapOf("Chest" to 1.0, "Triceps Long Head" to 0.5), "squat" to mapOf("Quads" to 1.0, "Glutes" to 0.5))
 
     @Test
-    fun volumeIsTheAverageWeekDoneAgainstTheBlockAsWrittenWithItsWeekOverridesInBodyOrder() {
+    fun volumeIsTheAverageWeekDoneAgainstTheBlockAsWrittenWithItsWeekOverridesFurthestUnderFirst() {
         // Build's week 2 has a set fewer of everything.
         val build = program.blocks[0].copy(weeks = listOf(WeekOverride(WeekRange(2, 2), fewerSets = 1)))
         val written = program.copy(blocks = listOf(build, program.blocks[1]))
@@ -120,10 +120,11 @@ class BlockReviewsTest {
         )
         assertEquals(
             listOf(
+                // A set under as written, then half a set under, then the muscles on plan, in body order.
+                MuscleVolume("Quads", done = 1.5, written = 2.5),
+                MuscleVolume("Glutes", done = 0.75, written = 1.25),
                 MuscleVolume("Chest", done = 2.5, written = 2.5),
                 MuscleVolume("Triceps Long Head", done = 1.25, written = 1.25),
-                MuscleVolume("Glutes", done = 0.75, written = 1.25),
-                MuscleVolume("Quads", done = 1.5, written = 2.5),
             ),
             BlockReviews.of(log, build).volume,
         )

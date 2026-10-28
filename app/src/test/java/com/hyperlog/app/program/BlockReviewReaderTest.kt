@@ -98,7 +98,7 @@ class BlockReviewReaderTest {
         programs.accept(com.hyperlog.app.coach.Change("No grip work for a week", com.hyperlog.app.coach.Scope.RestOfBlock, emptyList()))
         val review = review()
         // One set of bench a week, as written: two days of the block, the second not trained.
-        assertEquals(MuscleVolume("Chest", done = 1.0, written = 1.0), review.volume.first())
+        assertEquals(MuscleVolume("Chest", done = 1.0, written = 1.0), review.volume.single { it.muscle == "Chest" })
         assertEquals(listOf("No grip work for a week"), review.changes)
         assertEquals(TurningUp.InSequence(2, today.minusDays(14), today.minusDays(7)), review.turningUp)
     }
