@@ -90,7 +90,7 @@ class ChangesTest {
                    "operations":[{"op":"swap","slot":"row","exercise":"chest_supported_db_row"}]}""",
             ),
         )
-        assertEquals("chest_supported_db_row", active().next!!.slots[1].exercise)
+        assertEquals("chest_supported_db_row", active().next!!.day.slots[1].exercise)
         val logger = SessionLogger(db, clock = { now }, programs = programs).also { it.load() }
         logger.startDay(active(), null)
         assertEquals("chest_supported_db_row", logger.state.value!!.exercises[1].exercise.id)
@@ -98,7 +98,7 @@ class ChangesTest {
 
         days(7)
         db.programs().setPosition(active().id, 2, 0)
-        assertEquals("seated_cable_row", active().next!!.slots[1].exercise)
+        assertEquals("seated_cable_row", active().next!!.day.slots[1].exercise)
         logger.startDay(active(), null)
         assertEquals("seated_cable_row", logger.state.value!!.exercises[1].exercise.id)
     }
@@ -134,7 +134,7 @@ class ChangesTest {
             change("""{"summary":"Chest-supported rows","scope":"rest_of_program","replaces":[$id],"operations":[{"op":"swap","slot":"row","exercise":"chest_supported_db_row"}]}"""),
         )
         val after = active()
-        assertEquals("chest_supported_db_row", after.next!!.slots[1].exercise)
+        assertEquals("chest_supported_db_row", after.next!!.day.slots[1].exercise)
         assertEquals(listOf("Chest-supported rows"), after.inForce.map { it.change.summary })
         assertEquals(setOf(id), after.replaced)
     }
@@ -150,7 +150,7 @@ class ChangesTest {
         )
         val changed = active()
         assertEquals(Position(1, 1), changed.position)
-        assertEquals(listOf("hack_squat"), changed.next!!.slots.map { it.exercise })
+        assertEquals(listOf("hack_squat"), changed.next!!.day.slots.map { it.exercise })
 
         programs.revert(changed.history.single().id)
         val reverted = active()

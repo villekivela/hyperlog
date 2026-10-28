@@ -125,7 +125,7 @@ class CoachRenders {
 
 
     @Test fun review() = render("coach-08-review") {
-        val diff = Changes.diff(program, plain.position, today, emptyList(), elbow)
+        val diff = plain.diff(elbow)
         ChangeReviewScreen(ChangeReview(elbow, diff, program, program.blockAt(1)!!.name), names, onAccept = {}, onReject = {})
     }
 
@@ -141,8 +141,8 @@ class CoachRenders {
     private val lighter = Change("Lighter close-grip bench", Scope.RestOfProgram, listOf(Operation.AdjustLoad("close_grip_bench", -10, "elbow")))
 
     @Test fun changeInForce() = render("coach-10-change-in-force") {
-        val record = record(2, hands).accepted
-        val diff = Changes.inForceDiff(program, plain.position, today, listOf(record), record)
+        val record = record(2, hands)
+        val diff = plain.copy(history = listOf(record)).inForceDiff(record.accepted)
         ChangeReviewScreen(ChangeReview(hands, diff, program, null), names, onAccept = {}, onReject = {}, onRevert = {})
     }
 
@@ -155,7 +155,7 @@ class CoachRenders {
     @Test fun reviewReplaces() = render("coach-14-review-replaces") {
         val withHands = plain.copy(history = listOf(record(2, hands)))
         val replacing = Change("Hands are worse: no grip work at all for two weeks", Scope.Dates(today, today.plusDays(13)), listOf(Operation.Remove("row"), Operation.Swap("bench", "smith_machine_bench_press")), replaces = listOf(2))
-        val diff = Changes.diff(program, withHands.position, today, withHands.changes, replacing)
+        val diff = withHands.diff(replacing)
         ChangeReviewScreen(ChangeReview(replacing, diff, program, null, ends = listOf(hands.summary)), names, onAccept = {}, onReject = {})
     }
 

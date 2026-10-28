@@ -1,5 +1,6 @@
 package com.hyperlog.app.coach
 
+import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.program.ProgramParser
@@ -16,7 +17,7 @@ class PlanTest {
     private val oct13: LocalDate = LocalDate.of(2026, 10, 13)
 
     private fun accepted(json: String, at: Position = Position(1, 0), on: LocalDate = oct13, id: Long = 1) =
-        Changes.accept(program, at, ChangeJson.decode(json), on).copy(id = id)
+        ActiveProgram(1, program, at, today = on).accept(ChangeJson.decode(json)).copy(id = id)
 
     private fun exercises(position: Position, date: LocalDate, changes: List<AcceptedChange>) =
         Changes.day(program, position, date, changes)!!.slots.map { it.exercise }
@@ -104,7 +105,7 @@ class PlanTest {
     @Test
     fun theDiffShowsTheMovedPositionAndTheChangedSlots() {
         val shift = ChangeJson.decode("""{"summary":"x","scope":"rest_of_program","operations":[{"op":"shift_program","weeks":1}]}""")
-        val diff = Changes.diff(program, Position(2, 0), oct13, emptyList(), shift)
+        val diff = ActiveProgram(1, program, Position(2, 0), today = oct13).diff(shift)
         assertEquals(Position(2, 0) to Position(1, 0), diff.next)
         assertEquals(4 to 6, diff.daysLeft)
         assertTrue(diff.days.isEmpty())
@@ -112,7 +113,7 @@ class PlanTest {
         val swap = ChangeJson.decode(
             """{"summary":"x","scope":{"from":"2026-10-13","to":"2026-10-19"},"operations":[{"op":"swap","slot":"row","exercise":"chest_supported_db_row"}]}""",
         )
-        val swapped = Changes.diff(program, Position(1, 0), oct13, emptyList(), swap)
+        val swapped = ActiveProgram(1, program, Position(1, 0), today = oct13).diff(swap)
         assertNull(swapped.next)
         assertEquals(listOf("Day A"), swapped.days.map { it.day.day.name })
         val slot = swapped.days.single().slots.single()

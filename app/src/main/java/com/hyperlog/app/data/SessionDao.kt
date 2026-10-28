@@ -219,6 +219,10 @@ interface SessionDao {
     @Query("SELECT MAX(started_at) FROM session WHERE finished_at IS NOT NULL")
     suspend fun lastTrained(): Long?
 
+    /** [lastTrained], again whenever it changes. */
+    @Query("SELECT MAX(started_at) FROM session WHERE finished_at IS NOT NULL")
+    fun lastTrainedFlow(): Flow<Long?>
+
     /** Every finished session, newest first. */
     @Query("SELECT * FROM session WHERE finished_at IS NOT NULL ORDER BY started_at DESC, id DESC")
     suspend fun finishedSessions(): List<SessionEntity>

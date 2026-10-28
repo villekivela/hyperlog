@@ -228,7 +228,7 @@ fun ProgramScreen(
                 else -> ProgramWeeks(
                     active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan),
-                    weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.days?.size),
+                    weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.week)?.days?.size),
                     onOpenWeekdayPlan = { editingWeekdayPlan = true },
                     fit = { day -> day.date?.let { Fit.of(day.day, it, weekdayPlan, gyms, library, aboutMinutes(day.day, library, programSessions)) } },
                     onFitTime = onCheckInFit,
@@ -316,9 +316,9 @@ private fun ProgramWeeks(
 ) {
     val cs = MaterialTheme.colorScheme
     val program = active.program
-    val next = active.next
+    val next = active.next?.day
     // It opens on the block and week you're in; past the end, on the last.
-    val currentWeek = active.position.week.coerceAtMost(program.weeks)
+    val currentWeek = active.week
     val week = picked?.takeIf { it in 1..program.weeks } ?: currentWeek
     val block = program.blockAt(week) ?: program.blocks.last()
     val days = remember(active, week, sessions) { ProgramWeek.days(active, week, sessions) }
@@ -464,7 +464,7 @@ private fun ChangesPage(active: ActiveProgram, onRevert: (Long) -> Unit, onOpen:
 @Composable
 private fun ProgramActionItems(active: ActiveProgram, onPropose: (Change) -> Unit, onShift: () -> Unit, close: () -> Unit) {
     val position = active.position
-    val next = active.next ?: return
+    val next = active.next?.day ?: return
     val skip = stringResource(R.string.program_skip_summary, position.week, next.day.name)
     val repeat = stringResource(R.string.program_repeat_summary, ProgramActions.repeatedWeek(position))
     val deload = stringResource(R.string.program_deload_summary, position.week)

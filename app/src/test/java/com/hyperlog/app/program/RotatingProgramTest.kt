@@ -262,4 +262,23 @@ class RotatingProgramTest {
         programs.accept(ProgramActions.shift("A week on", -1))
         assertEquals(LocalDate.of(2026, 10, 26), programs.active.first()!!.rotation!!.trainToday!!.date)
     }
+
+    @Test
+    fun startingTodaysDayStartsTheTurnTodayShowsInAnEasyWeekToo() = runTest {
+        today = LocalDate.of(2026, 10, 26)
+        trainingDays()
+        programs.import(TestPrograms.twoDays("First"))
+        trained(today, Position(1, 0))
+        // Two weeks with no session: the week of 16 Nov is an easy week.
+        today = LocalDate.of(2026, 11, 16)
+        val shown = programs.active.first()!!
+        val turn = shown.next!!
+        assertEquals(today, turn.date)
+        assertEquals(true, turn.day.easy)
+        val logger = com.hyperlog.app.session.SessionLogger(db, clock = { noon(today) }, programs = programs).also { it.load() }
+        logger.startDay(shown, gymId = null)
+        val session = db.sessions().runningSession()!!
+        assertEquals(true, session.easy)
+        assertEquals(turn.day, programs.plannedDay(session))
+    }
 }
