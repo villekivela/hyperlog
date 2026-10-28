@@ -86,6 +86,7 @@ class SessionLogger(
     private var checked: Pair<SetEntry, Long>? = null
     private val corrections = SetCorrections(db)
     private val stored = StoredSessions(db, gyms, programs)
+    private val exerciseHistory = ExerciseHistory(db, programs)
     private val records = SessionRecords(db, programs)
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
@@ -1046,12 +1047,12 @@ class SessionLogger(
             val needsLadder = perMachine && machine?.state == LadderState.Unconfirmed && dao.sets(se.id).isEmpty()
             // A planned exercise's last time is the session progression judges (same slot and rep
             // range), so the Last column, the prefill and the why-line name the same sets.
-            val past = if (plan == null || needsMachine) emptyList() else history(se.exerciseId, row.id, perMachine, machine?.id, exercise.weighted, exercise.implements)
-            val judged = plan?.firstOrNull()?.let { Progression.judged(it, past.map { p -> p.second }, se.slotId) }
+            val past = if (plan == null || needsMachine) emptyList() else exerciseHistory.of(exercise, machine?.id, before = row, last = HISTORY_SESSIONS)
+            val judged = plan?.firstOrNull()?.let { Progression.judged(it, past.map { it.performance }, se.slotId) }
             // Machines and cables only compare with sets on the same machine (ADR 0002).
             val lastRows = when {
                 needsMachine -> emptyList()
-                judged != null -> dao.sets(past[judged].first)
+                judged != null -> dao.sets(past[judged].sessionExerciseId)
                 perMachine -> dao.lastTimeOn(se.exerciseId, row.id, machine?.id)
                 else -> dao.lastTime(se.exerciseId, row.id)
             }
@@ -1078,7 +1079,7 @@ class SessionLogger(
                         slot = se.slotId,
                         dumbbells = exercise.implements,
                     ),
-                    past.map { it.second },
+                    past.map { it.performance },
                     ladder.ladder,
                 ) ?: start?.takeIf { sets.isEmpty() }?.suggestion(plan.first(), ladder.ladder)
             }?.let { s -> slot?.loadPercent?.takeIf { it != 0 }?.let { s.adjusted(it, ladder.ladder) } ?: s }
@@ -1217,30 +1218,6 @@ class SessionLogger(
         }
         return SetEntry(formatKg(kg), reps.toString(), "", null, Field.Reps, partialMode = false, fresh = true)
     }
-
-    /**
-     * The exercise's past sessions (on [itemId] for machines), oldest first: each one's session
-     * exercise id, and its performance with the slot it filled, the
-     * prescription it was done under, whether its week was a deload and, for a [weighted]
-     * bodyweight exercise, the bodyweight of the day.
-     */
-    private suspend fun history(exerciseId: String, sessionId: Long, perMachine: Boolean, itemId: Long?, weighted: Boolean, dumbbells: Int): List<Pair<Long, Performance>> =
-        dao.history(exerciseId, sessionId, anyItem = !perMachine, itemId = itemId, limit = HISTORY_SESSIONS).reversed().map { past ->
-            val day = when {
-                past.workoutId != null -> programs.workoutDay(past.workoutId)
-                past.programId == null || past.week == null || past.dayIndex == null -> null
-                else -> programs.plannedDay(past.programId, Position(past.week, past.dayIndex), programs.dateOf(past.startedAt), asOf = past.finishedAt)
-            }
-            val plan = past.sets?.let(SetPrescriptionJson::decode) ?: day?.slot(past.slotId)?.setsFor(exerciseId)
-            val rows = dao.sets(past.id)
-            past.id to Performance(
-                workSets(stored.sets(rows), plan, rows.map { it.position }),
-                deload = day?.deload == true,
-                bodyweightKg = if (weighted) bodyweights.on(programs.dateOf(past.startedAt)) ?: 0.0 else 0.0,
-                slot = past.slotId,
-                dumbbells = dumbbells,
-            )
-        }
 
     private suspend fun <T> locked(block: suspend () -> T): T = mutex.withLock { block() }
 

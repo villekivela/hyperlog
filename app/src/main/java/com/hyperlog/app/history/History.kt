@@ -1,25 +1,19 @@
 package com.hyperlog.app.history
 
 import com.hyperlog.app.data.HyperlogDatabase
-import com.hyperlog.app.data.TrainedExercise
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.gym.Gyms
-import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.library.MuscleGroup
 import com.hyperlog.app.library.toExercise
-import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
-import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
 import com.hyperlog.app.progression.Record
 import com.hyperlog.app.progression.Records
-import com.hyperlog.app.progression.WorkSet
+import com.hyperlog.app.session.ExerciseHistory
 import com.hyperlog.app.session.SessionLogger
-import com.hyperlog.app.session.toExtension
-import com.hyperlog.app.session.toLoggedSet
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -74,7 +68,7 @@ class History(
     private val today: () -> LocalDate = { LocalDate.now(zone) },
 ) {
     private val dao = db.sessions()
-    private val bodyweights = Bodyweights(db)
+    private val exerciseHistory = ExerciseHistory(db, programs)
     private val liftGoals = LiftGoals(db)
 
     /**
@@ -141,40 +135,28 @@ class History(
         val groups = if (perMachine) done.groupBy { it.equipmentItemId } else mapOf(null to done)
         val lines = groups.entries
             .sortedByDescending { (_, rows) -> rows.last().startedAt }
-            .map { (itemId, rows) -> TrendLine(itemId?.let { machines[it] }, itemId, points(rows, weighted = exercise.equipment == Equipment.WeightedBodyweight, dumbbells = exercise.implements)) }
+            .map { (itemId, rows) -> TrendLine(itemId?.let { machines[it] }, itemId, points(exercise, itemId)) }
         return ExerciseTrend(exercise, lines, goal = liftGoals.of(exerciseId)?.takeIf { exercise.takesGoal })
     }
 
     /**
-     * Each session's top set and the estimate after it, from [rows] oldest first. A [weighted]
-     * bodyweight exercise adds the bodyweight of the day to the weight logged; a two-dumbbell one
-     * counts both [dumbbells].
+     * Each session's top set and the estimate after it, from [exercise]'s history on [itemId]
+     * (null for any).
      */
-    private suspend fun points(rows: List<TrainedExercise>, weighted: Boolean, dumbbells: Int): List<TrendPoint> {
-        val performances = mutableListOf<Performance>()
-        return rows.mapNotNull { row ->
-            val sets = dao.sets(row.id).map { it.toLoggedSet(dao.extensions(it.id).map { e -> e.toExtension() }) }
-            val counting = sets.counting()
-            performances += Performance(
-                // The main set only, as progression reads it.
-                sets.mapIndexed { i, s -> WorkSet(LoggedSet(s.weightKg, s.progressionReps, 0, s.rir, s.kept), null, counting[i]) },
-                deload = deload(row),
-                bodyweightKg = if (weighted) bodyweights.on(dateOf(row.startedAt)) ?: 0.0 else 0.0,
-                dumbbells = dumbbells,
-            )
-            val top = sets.withIndex().filter { counting[it.index] }
+    private suspend fun points(exercise: Exercise, itemId: Long?): List<TrendPoint> {
+        val past = exerciseHistory.of(exercise, itemId)
+        val performances = past.map { it.performance }
+        return past.mapIndexedNotNull { i, session ->
+            val counting = session.logged.counting()
+            val top = session.logged.withIndex().filter { counting[it.index] }
                 .maxWithOrNull(compareBy<IndexedValue<LoggedSet>> { it.value.weightKg }.thenBy { it.value.progressionReps })
-                ?: return@mapNotNull null
+                ?: return@mapIndexedNotNull null
+            val upTo = performances.subList(0, i + 1)
             // The estimate as suggestions read it: from the latest sessions up to this one.
-            val estimate = Progression.estimate(performances.takeLast(SessionLogger.HISTORY_SESSIONS))
-            val record = Records.of(performances.dropLast(1), performances.last())[top.index]
-            TrendPoint(row.sessionId, dateOf(row.startedAt), top.value, estimate?.kg, record)
+            val estimate = Progression.estimate(upTo.takeLast(SessionLogger.HISTORY_SESSIONS))
+            val record = Records.of(upTo.dropLast(1), upTo.last())[top.index]
+            TrendPoint(session.sessionId, dateOf(session.startedAt), top.value, estimate?.kg, record)
         }
-    }
-
-    private suspend fun deload(row: TrainedExercise): Boolean {
-        if (row.programId == null || row.week == null || row.dayIndex == null) return false
-        return programs.plannedDay(row.programId, Position(row.week, row.dayIndex), programs.dateOf(row.startedAt))?.deload == true
     }
 
     private fun dateOf(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZone(zone).toLocalDate()
