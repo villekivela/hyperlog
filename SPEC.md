@@ -1132,7 +1132,13 @@ each planned day with the training day it lands on, and never changes the day:
        block's gain carried on in a straight line to it (`On pace for 1 Dec`, `4 kg short at this
        pace`; no "estimate" mark, owner 2026-10-28). The rate is the lift's gain over the days from its
        first counted session in the block to its last; a goal reached reads `Reached`, and one
-       whose lift didn't gain is short by what's left. The estimate is the latest by the block's end
+       whose lift didn't gain is short by what's left. A block meant to hold, not build, shows no
+       pace (owner, 2026-10-28): one eased in every week (as Ramp-in) or a deload in every week
+       reads only `115 of 125 kg by 12 Sep`, while a normal block that didn't gain still reads
+       short, a real stall. The program review's whole-program line (`Program: On pace for 2 Sep`)
+       takes its pace from the program's gain, from the lift's first counted session in the
+       program to its last, also when the last block is a deload. The check-in's context follows
+       the page. The estimate is the latest by the block's end
        (a deload's test set included), so a block and its program agree; a goal whose lift wasn't
        trained twice has no pace.
      - **Next**: what the next block changes, as its card's "From <block>" reads, then **Check in
