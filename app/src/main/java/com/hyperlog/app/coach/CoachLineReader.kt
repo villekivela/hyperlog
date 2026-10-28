@@ -89,7 +89,7 @@ class CoachLineReader(private val db: HyperlogDatabase, private val programs: Pr
             // `Day A`, without the title after it.
             return DayTurn(date, day.id, day.name.substringBefore(" — "), missed)
         }
-        val missed = active.rotation?.missed.orEmpty().filter { it.date < today }.mapNotNull { turn(it.date, it.position, missed = true) }
+        val missed = active.turns.filter { it.status == com.hyperlog.app.program.Turn.Status.Missed && it.date < today }.mapNotNull { turn(it.date, it.position, missed = true) }
         val trained = rows.filter { it.programId == active.id && it.workoutId == null }.mapNotNull { row ->
             val week = row.week ?: return@mapNotNull null
             val day = row.dayIndex ?: return@mapNotNull null

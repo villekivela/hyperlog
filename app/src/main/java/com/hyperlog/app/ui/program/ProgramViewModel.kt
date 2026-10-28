@@ -160,7 +160,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val active = programs.active.first() ?: return@launch
             val diff = programs.preview(change) ?: return@launch
-            val block = active.program.blockAt(active.position.week.coerceAtMost(active.program.weeks))?.name
+            val block = active.program.blockAt(active.week)?.name
             val ends = active.history.filter { it.id in change.replaces }.map { it.change.summary }
             _review.value = ChangeReview(change, diff, active.program, block, ends)
         }
@@ -437,7 +437,7 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
             val active = programs.active.first() ?: return@launch
             val record = active.inForce.firstOrNull { it.id == id } ?: return@launch
             val diff = withContext(Dispatchers.Default) {
-                Changes.inForceDiff(active.program, active.position, active.today, active.changes, record.accepted)
+                active.inForceDiff(record.accepted)
             }
             val block = active.program.blocks.firstOrNull { it.id == record.accepted.blockId }?.name
             _inForce.value = id to ChangeReview(record.change, diff, active.program, block, checkIn = record.checkIn)

@@ -286,7 +286,7 @@ Principles:
 - **Past weeks are what happened.** A done day shows its date and top sets and opens the session.
   A skipped day shows its plan, headed Skipped.
 - **No dates.** The next day reads as Today shows it. A later day takes a date-ranged Change by
-  the window its in-force diff shows (`Changes.dayAhead`), and says when the Change ends.
+  the window its in-force diff shows (`ActiveProgram.undated`), and says when the Change ends.
 - **The actions live in ⋮.** The header holds only the title and Next. Your training days are one
   row under it (`3 days a week · Mon Wed Fri`, or `Set your training days`) that opens their sheet
   (#52, ADR 0004); Changes are one row that opens their own page.

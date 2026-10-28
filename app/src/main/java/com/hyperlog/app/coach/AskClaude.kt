@@ -178,7 +178,7 @@ object AskClaude {
             "The program runs on my training days: each training day takes the next day of the program, trained or missed. A missed " +
                 "day is skipped, never moved. A program week is a calendar week, Monday to Sunday.",
         )
-        fun line(turn: com.hyperlog.app.week.Turn) =
+        fun line(turn: com.hyperlog.app.program.Turn) =
             "- ${turn.date} (${turn.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}): week ${turn.position.week}, " +
                 (plan.program.blockAt(turn.position.week)?.days?.getOrNull(turn.position.day)?.name ?: "")
         when {
@@ -190,8 +190,8 @@ object AskClaude {
             rotation.repeated -> appendLine("A repeat_week accepted last week has this week train its program week again.")
         }
         appendLine("Coming days:")
-        rotation.planned.take(UPCOMING_TURNS).forEach { appendLine(line(it)) }
-        val missed = rotation.missed.filter { it.date >= plan.today.minusDays(HISTORY_DAYS) && it.date < plan.today }
+        plan.turns.filter { it.status == com.hyperlog.app.program.Turn.Status.Ahead }.take(UPCOMING_TURNS).forEach { appendLine(line(it)) }
+        val missed = plan.turns.filter { it.status == com.hyperlog.app.program.Turn.Status.Missed && it.date >= plan.today.minusDays(HISTORY_DAYS) && it.date < plan.today }
         if (missed.isNotEmpty()) {
             appendLine("Missed training days in the last $HISTORY_DAYS days:")
             missed.forEach { appendLine(line(it)) }
@@ -327,7 +327,7 @@ object AskClaude {
     private fun StringBuilder.program(plan: ActiveProgram, names: Map<String, String>) {
         val program = plan.program
         appendLine("## Program: ${program.title}")
-        val next = plan.next
+        val next = plan.next?.day
         if (next == null) {
             appendLine("Finished: every day has been trained.")
         } else {
@@ -348,7 +348,7 @@ object AskClaude {
                 it.checkIn?.let { made -> appendLine("  check-in: ${made.text().lines().joinToString(" / ")}") }
             }
         }
-        val current = plan.position.week.coerceAtMost(program.weeks)
+        val current = plan.week
         program.blocks.forEach { block ->
             val week = if (current in block.weekStart..block.weekEnd) current else block.weekStart
             appendLine()
@@ -516,7 +516,7 @@ object ChangeFormat {
      * slot with an alternative swapped for it, and one more rep in reserve everywhere, for a week.
      */
     fun example(plan: ActiveProgram): Change {
-        val day = plan.next ?: plan.program.plannedDay(Position(1, 0))
+        val day = plan.next?.day ?: plan.program.plannedDay(Position(1, 0))
         val swap = day?.slots?.firstOrNull { it.alternatives.isNotEmpty() }
         val operations = listOfNotNull(
             swap?.let { Operation.Swap(it.id, it.alternatives.first(), reason = "example") },

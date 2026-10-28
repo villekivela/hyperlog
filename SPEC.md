@@ -1530,8 +1530,12 @@ the end of the block the Change was accepted in. A date range covers its first a
 - **The diff** shows the summary and the scope, then where the next day moves and how many days
   are left (before → after), then the first day of each kind in the block it edits (each day
   of each block once), slot by slot: swapped (`In place of …`), removed (struck through), added
-  (`+`), sets before → after, and a moved load. A date range looks one week of days ahead per week
-  of dates, and never more program days than dates (a one-day range shows one day); `rest_of_block` to the end of the block; `rest_of_program` to the end. Nothing changes
+  (`+`), sets before → after, and a moved load. With training days each day is the one the
+  rotation puts on its date, read for that date, so a date range shows the days on its dates, as
+  Today shows them (owner, 2026-10-28). With no training days there are no dates past the next day:
+  a date range looks one week of days ahead per week of dates, counted from the later of its
+  start and today, and never more program days than dates (a one-day range shows one day).
+  `rest_of_block` runs to the end of the block; `rest_of_program` to the end. Nothing changes
   until **Accept**; **Reject**, × and Back drop it. A Change with `replaces` lists what it ends
   above the diff ("Ends: Hands need a week off grip work"), and its diff compares the plan as it
   is with the plan once those have ended and it applies; one Accept does both.
@@ -1649,6 +1653,7 @@ as on Program) and **How's it going?**. That one starts a check-in about the Cha
 check-in that made it (its questions and your answers) with it. Tapping a card opens what that
 Change does from today on, read-only and headed "Change in force": the days it still covers, slot
 by slot, with every other Change applied before and after, and the move of the position it made.
+With training days each day is on its date from the rotation, as in the review and on Today.
 Its one button is **Revert** (asking first); × and Back close it. A finished program has none.
 Under its summary it shows **The check-in** that made it: the opening, then each of Claude's
 questions over your answer (Claude's words and Tell me more stay out). Program → Changes shows the same in a row's dialog. A Change pasted, or proposed from a

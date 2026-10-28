@@ -34,7 +34,7 @@ class RotationTest {
     /** The planned turns as `"week.letter weekday-date"`, for reading at a glance. */
     private fun Rotation.plan(program: Program, take: Int = 9) = planned.take(take).map { it.label(program) }
 
-    private fun Turn.label(program: Program) = "${position.week}.${program.blockAt(position.week)!!.days[position.day].id.uppercase()} ${date.dayOfWeek.name.take(3)} ${date.dayOfMonth}"
+    private fun RotationTurn.label(program: Program) = "${position.week}.${program.blockAt(position.week)!!.days[position.day].id.uppercase()} ${date.dayOfWeek.name.take(3)} ${date.dayOfMonth}"
 
     @Test
     fun threeDaysOnThreeTrainingDaysAlwaysLandOnTheSameWeekdays() {
@@ -99,7 +99,7 @@ class RotationTest {
         val program = program("ABC")
         val tue27 = LocalDate.of(2026, 10, 27)
         val rotation = Rotations.of(program, RotationAnchor(mon26, week = 1, day = 0), monThuSat, listOf(SessionStart(tue27, Position(1, 0))), today = tue27)
-        assertEquals(emptyList<Turn>(), rotation.missed)
+        assertEquals(emptyList<RotationTurn>(), rotation.missed)
         assertEquals(null, rotation.trainToday)
         assertEquals(listOf("1.B THU 29"), rotation.plan(program, take = 1))
     }

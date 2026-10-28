@@ -56,7 +56,7 @@ class MissingEquipmentTest {
     fun pickingAGymWithoutALegExtensionSwapsItForThatSessionOnly() = runTest {
         gyms.markMissing(gymId, "leg_extension")
         val gym = gyms.gym(gymId)!!
-        val swaps = MissingSwaps.forDay(active().next!!, seed.exercises, gym.missing)
+        val swaps = MissingSwaps.forDay(active().next!!.day, seed.exercises, gym.missing)
         assertEquals(listOf(SessionSwap("leg_extension", "leg_extension", "reverse_nordic")), swaps)
 
         val logger = logger()

@@ -6,7 +6,6 @@ import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 /**
  * A Change as accepted: the day it was accepted, the position it moved (the same twice when it
@@ -55,36 +54,11 @@ object Changes {
      */
     fun day(program: Program, position: Position, date: LocalDate, changes: List<AcceptedChange>): PlannedDay? {
         val written = program.plannedDay(position) ?: return null
-        return changes.filter { it.covers(written, date) }.fold(written) { day, c -> c.change.operations.fold(day, ::edit) }
+        return edited(written, changes.filter { it.covers(written, date) })
     }
 
-    /**
-     * [change] accepted at [position] on [today]: its position operations run, and it is dated.
-     * With training days, [trainingDays] are the coming ones, in order: each `skip_day` names the
-     * next one not yet skipped, on or after its own date when it has one, and it and `repeat_week`
-     * leave the position to the rotation (ADR 0006).
-     */
-    fun accept(program: Program, position: Position, change: Change, today: LocalDate, trainingDays: List<LocalDate>? = null): AcceptedChange {
-        val skipped = mutableSetOf<LocalDate>()
-        val resolved = change.copy(
-            operations = change.operations.map {
-                when {
-                    it is Operation.DeloadWeek && it.week == null -> it.copy(week = position.week.coerceAtMost(program.weeks))
-                    it is Operation.SkipDay && trainingDays != null -> {
-                        val wanted = it.date?.let { d -> runCatching { LocalDate.parse(d) }.getOrNull() }
-                        val date = trainingDays.firstOrNull { d -> (wanted == null || d >= wanted) && d !in skipped } ?: wanted ?: today
-                        skipped += date
-                        it.copy(date = date.toString())
-                    }
-                    else -> it
-                }
-            },
-        )
-        val rotating = trainingDays != null
-        val after = resolved.operations.filter { it.movesPosition && !(rotating && (it is Operation.SkipDay || it is Operation.RepeatWeek)) }
-            .fold(position) { p, op -> move(program, p, op) }
-        return AcceptedChange(0, resolved, today, position, after, program.blockAt(position.week.coerceAtMost(program.weeks))?.id)
-    }
+    /** [day] with the plan edits of [changes], oldest first, whatever their scope. */
+    fun edited(day: PlannedDay, changes: List<AcceptedChange>): PlannedDay = changes.fold(day) { d, c -> c.change.operations.fold(d, ::edit) }
 
     /**
      * The position once [accepted] is reverted, from [current]: its move is taken back, and days
@@ -96,114 +70,12 @@ object Changes {
         return program.positionAt(program.ordinal(current) - moved)
     }
 
-    /**
-     * What accepting [proposed] at [position] on [today] would change, on top of [changes]: the
-     * days it covers from the position it leaves, the first of each day of each block.
-     */
-    fun diff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, proposed: Change, trainingDays: List<LocalDate>? = null): ChangeDiff {
-        // The Changes it replaces end first, as Revert would end them; the plan after has them gone.
-        val (ended, kept) = changes.partition { it.id in proposed.replaces }
-        val from = ending(program, position, ended)
-        val accepted = accept(program, from, proposed, today, trainingDays).copy(id = Long.MAX_VALUE)
-        val date = (proposed.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
-        val window = when (val scope = proposed.scope) {
-            is Scope.Dates -> {
-                // One week of program days per week of dates, and never more days than dates.
-                val dates = ChronoUnit.DAYS.between(scope.from, scope.to).toInt() + 1
-                val weeks = (dates + 6) / 7
-                val perWeek = program.blockAt(accepted.after.week)?.days?.size ?: 0
-                generateSequence(accepted.after) { program.next(it) }.take(minOf(dates, weeks * perWeek))
-            }
-            Scope.RestOfBlock -> generateSequence(accepted.after) { program.next(it) }
-                .takeWhile { program.blockAt(it.week)?.id == accepted.blockId }
-            Scope.RestOfProgram -> generateSequence(accepted.after) { program.next(it) }
-        }.filter { it.week <= program.weeks }
-        val seen = mutableSetOf<Pair<String, String>>()
-        val days = window.mapNotNull { p ->
-            val before = day(program, p, date, changes) ?: return@mapNotNull null
-            val after = day(program, p, date, kept + accepted) ?: return@mapNotNull null
-            val key = before.block.id to before.day.id
-            if (key in seen) return@mapNotNull null
-            val slots = slotDiffs(before, after)
-            if (slots.isEmpty() && before.deload == after.deload) return@mapNotNull null
-            seen += key
-            DayDiff(after, slots)
-        }.toList()
-        val moved = accepted.after != position
-        return ChangeDiff(
-            next = if (moved) position to accepted.after else null,
-            daysLeft = if (moved) program.daysLeft(position) to program.daysLeft(accepted.after) else null,
-            days = days,
-        )
-    }
-
     /** Where [position] goes once [ended] are reverted, newest first, as Revert takes each back. */
     fun ending(program: Program, position: Position, ended: List<AcceptedChange>): Position =
         ended.sortedByDescending { it.id }.fold(position) { p, c -> revert(program, p, c) }
 
-    /**
-     * What [record], a Change in force, does from [position] on [today]: the days it still covers,
-     * each with every other Change in [changes] applied before and after, and the move of the
-     * position it made when it was accepted.
-     */
-    fun inForceDiff(program: Program, position: Position, today: LocalDate, changes: List<AcceptedChange>, record: AcceptedChange): ChangeDiff {
-        val others = changes.filter { it.id != record.id }
-        val date = (record.change.scope as? Scope.Dates)?.from?.takeIf { it > today } ?: today
-        val window = when (val scope = record.change.scope) {
-            is Scope.Dates -> generateSequence(position) { program.next(it) }.take(datesWindow(program, position, today, scope))
-            Scope.RestOfBlock -> generateSequence(position) { program.next(it) }.takeWhile { program.blockAt(it.week)?.id == record.blockId }
-            Scope.RestOfProgram -> generateSequence(position) { program.next(it) }
-        }.filter { it.week <= program.weeks }
-        val seen = mutableSetOf<Pair<String, String>>()
-        val days = window.mapNotNull { p ->
-            val before = day(program, p, date, others) ?: return@mapNotNull null
-            val after = day(program, p, date, others + record) ?: return@mapNotNull null
-            val key = before.block.id to before.day.id
-            if (key in seen) return@mapNotNull null
-            val slots = slotDiffs(before, after)
-            if (slots.isEmpty() && before.deload == after.deload) return@mapNotNull null
-            seen += key
-            DayDiff(after, slots)
-        }.toList()
-        val moved = record.after != record.before
-        return ChangeDiff(
-            next = if (moved) record.before to record.after else null,
-            daysLeft = if (moved) program.daysLeft(record.before) to program.daysLeft(record.after) else null,
-            days = days,
-        )
-    }
-
-    /**
-     * How many program days from [next] a date range still covers on [today]: one week of program
-     * days per week of dates from the later of its start and today, and never more days than dates.
-     */
-    private fun datesWindow(program: Program, next: Position, today: LocalDate, scope: Scope.Dates): Int {
-        val from = scope.from.takeIf { it > today } ?: today
-        val dates = ChronoUnit.DAYS.between(from, scope.to).toInt() + 1
-        val perWeek = program.blockAt(next.week)?.days?.size ?: 0
-        return minOf(dates, ((dates + 6) / 7) * perWeek).coerceAtLeast(0)
-    }
-
-    /**
-     * The day at [position], at or after the next one at [next], as Program shows it without
-     * dates: the next day as trained [today], as Today shows it; a later one with the Changes in
-     * [changes] that cover it as the in-force diff reads them, a date range by [datesWindow].
-     * Returns the day and the date-ranged Changes on it.
-     */
-    fun dayAhead(program: Program, next: Position, position: Position, today: LocalDate, changes: List<AcceptedChange>): Pair<PlannedDay, List<AcceptedChange>>? {
-        val written = program.plannedDay(position) ?: return null
-        val ahead = program.ordinal(position) - program.ordinal(next)
-        val covering = changes.filter { c ->
-            when (val scope = c.change.scope) {
-                is Scope.Dates -> if (ahead == 0) c.covers(written, today) else ahead < datesWindow(program, next, today, scope)
-                else -> c.covers(written, today)
-            }
-        }
-        val day = covering.fold(written) { day, c -> c.change.operations.fold(day, ::edit) }
-        return day to covering.filter { it.change.scope is Scope.Dates }
-    }
-
-    private fun slotDiffs(before: PlannedDay, after: PlannedDay): List<SlotDiff> {
+    /** The slots [after] holds differently from [before], in the day's order: removed ones where they were. */
+    internal fun slotDiffs(before: PlannedDay, after: PlannedDay): List<SlotDiff> {
         val old = before.slots.associateBy { it.id }
         val new = after.slots.associateBy { it.id }
         val changed = after.slots.mapNotNull { s ->
@@ -216,7 +88,8 @@ object Changes {
         return (changed + removed).sortedBy { order.indexOf((it.after ?: it.before)!!.id) }
     }
 
-    private fun move(program: Program, p: Position, op: Operation): Position = when (op) {
+    /** Where [op] moves the next day at [p], when it moves it. */
+    internal fun move(program: Program, p: Position, op: Operation): Position = when (op) {
         is Operation.SkipDay -> program.positionAt(program.ordinal(p) + 1)
         is Operation.ShiftProgram -> {
             val week = p.week - op.weeks

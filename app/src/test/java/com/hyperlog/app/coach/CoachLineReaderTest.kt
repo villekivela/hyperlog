@@ -12,7 +12,7 @@ import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.week.Rotation
 import com.hyperlog.app.week.RotationAnchor
-import com.hyperlog.app.week.Turn
+import com.hyperlog.app.week.RotationTurn
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -109,7 +109,7 @@ class CoachLineReaderTest {
     fun aDayMissedComesFromTheRotationAndTheSessionsOfTheDay() = runTest {
         val mondays = (4 downTo 1).map { today.minusWeeks(it.toLong()).with(java.time.DayOfWeek.MONDAY) }
         dayA(mondays[1], kg = 80.0)
-        val missed = listOf(mondays[0], mondays[2], mondays[3]).map { Turn(it, Position(1, 0)) }
+        val missed = listOf(mondays[0], mondays[2], mondays[3]).map { RotationTurn(it, Position(1, 0)) }
         val rotation = Rotation(emptyList(), missed, null, again = false, easy = false, emptyWeeks = 0, anchor = RotationAnchor(mondays[0], 1, 0), next = Position(1, 0))
         val line = reader.shown(active().copy(rotation = rotation, today = today), hidden = emptySet())
         // Named by its letter, without its title.

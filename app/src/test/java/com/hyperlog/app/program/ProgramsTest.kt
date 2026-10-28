@@ -40,7 +40,7 @@ class ProgramsTest {
         val active = programs.active.first()!!
         assertEquals("First", active.program.title)
         assertEquals(Position(1, 0), active.position)
-        assertEquals("Day A", active.next!!.day.name)
+        assertEquals("Day A", active.next!!.day.day.name)
     }
 
     @Test

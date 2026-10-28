@@ -161,7 +161,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     /** Starts a session of this week's missed day at [gymId], today (Train it today). */
     fun startMissed(gymId: Long?, swaps: Map<String, String> = emptyMap()) = run {
         val program = programs.active.first() ?: return@run
-        program.rotation?.trainToday?.let { logger.startDay(program, gymId, swaps, turn = it) }
+        program.trainToday?.let { logger.startDay(program, gymId, swaps, turn = it) }
     }
 
     /** Starts a session of the workout [workoutId] at [gymId], with [swaps] for what the gym lacks. */

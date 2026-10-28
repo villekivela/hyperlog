@@ -16,14 +16,17 @@ data class RotationAnchor(val from: LocalDate, val week: Int, val day: Int, val 
 /** A session as the rotation reads it: the date it started, and the day of this program it trained (null for any other). */
 data class SessionStart(val date: LocalDate, val position: Position? = null)
 
-/** A training day and the program day the rotation gives it; [easy] in an easy week. */
-data class Turn(val date: LocalDate, val position: Position, val easy: Boolean = false)
+/**
+ * A training day and the program day the rotation gives it; [easy] in an easy week. The rotation's
+ * own record: the program running hands each out resolved, as a Turn.
+ */
+data class RotationTurn(val date: LocalDate, val position: Position, val easy: Boolean = false)
 
 /**
  * A [turn] missed before the rotation was last set again, kept since it no longer reaches it, with
  * the training day [after] it if that came first: until then it can still be trained.
  */
-data class KeptMiss(val turn: Turn, val after: LocalDate? = null)
+data class KeptMiss(val turn: RotationTurn, val after: LocalDate? = null)
 
 /**
  * The rotation as it stands today: the days to come on their training days ([planned], from today
@@ -32,10 +35,10 @@ data class KeptMiss(val turn: Turn, val after: LocalDate? = null)
  * the [emptyWeeks] in a row before it.
  */
 data class Rotation(
-    val planned: List<Turn>,
-    val missed: List<Turn>,
+    val planned: List<RotationTurn>,
+    val missed: List<RotationTurn>,
     /** This week's last missed day, while today has no training day and no later one came. */
-    val trainToday: Turn?,
+    val trainToday: RotationTurn?,
     val again: Boolean,
     /** This week trains its program week again, by a `repeat_week`. */
     val repeated: Boolean = false,
@@ -51,7 +54,21 @@ data class Rotation(
     private val weekDone: RotationAnchor = anchor,
     /** Each training day's date, missed or not, with the next one's. */
     private val turnAfter: Map<LocalDate, LocalDate> = emptyMap(),
+    /** What it was read from, to set it again somewhere else. */
+    private val read: Read? = null,
 ) {
+    /** What [Rotations.of] read a rotation from, beside its anchor and the days it kept. */
+    data class Read(val program: Program, val days: Set<DayOfWeek>, val sessions: List<SessionStart>, val today: LocalDate, val skips: Set<LocalDate>, val repeats: Set<LocalDate>)
+
+    /** The rotation set again from today at [position], as a Change moving the position sets it. */
+    fun anchorAt(position: Position): RotationAnchor = anchor.copy(week = position.week, day = position.day, rollbackDay = position.day)
+
+    /** The rotation as it would read set again at [position] ([anchorAt]); itself when it can't be read again. */
+    fun movedTo(position: Position): Rotation {
+        val read = read ?: return this
+        return Rotations.of(read.program, anchorAt(position), read.days, read.sessions, read.today, read.skips, read.repeats)
+    }
+
     /** The coming training days' dates, in order. */
     val trainingDays: List<LocalDate> get() = planned.map { it.date }
 
@@ -94,9 +111,9 @@ object Rotations {
         kept: List<KeptMiss> = emptyList(),
     ): Rotation {
         require(days.isNotEmpty()) { "Without training days the program runs as a sequence" }
-        val planned = mutableListOf<Turn>()
-        val elapsed = mutableListOf<Turn>()
-        val ahead = mutableListOf<Turn>()
+        val planned = mutableListOf<RotationTurn>()
+        val elapsed = mutableListOf<RotationTurn>()
+        val ahead = mutableListOf<RotationTurn>()
         val started = sessions.map { it.date }.toSet()
         // Today is passed once a session started on it.
         val cutoff = if (today in started) today.plusDays(1) else today
@@ -124,7 +141,7 @@ object Rotations {
                 weekDone = passed.endWeek(program, trained, monday in repeats).anchor(program, monday.plusWeeks(1))
             }
             dates.forEach { date ->
-                val turn = Turn(date, Position(place.week, place.day % block.days.size), easy)
+                val turn = RotationTurn(date, Position(place.week, place.day % block.days.size), easy)
                 when {
                     date < cutoff -> elapsed += turn
                     date in skips -> ahead += turn
@@ -165,6 +182,7 @@ object Rotations {
             since = anchor.from,
             weekDone = weekDone ?: anchorNow,
             turnAfter = until,
+            read = Rotation.Read(program, days, sessions, today, skips, repeats),
         )
     }
 

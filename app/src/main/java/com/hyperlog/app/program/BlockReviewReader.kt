@@ -76,8 +76,9 @@ class BlockReviewReader(private val db: HyperlogDatabase, private val programs: 
         else {
             // On training days the rotation, not the row, knows where the program running is.
             val week = log.sessions.maxOfOrNull { it.week }
-                ?: programs.active.first()?.takeIf { it.id == programId }?.position?.week ?: db.programs().program(programId)?.week ?: return null
-            program.blockAt(week.coerceAtMost(program.weeks)) ?: return null
+                ?: programs.active.first()?.takeIf { it.id == programId }?.week ?: db.programs().program(programId)?.week ?: return null
+            // A finished run's row is past its last week.
+            program.blockAt(week) ?: program.blocks.last().takeIf { week > program.weeks } ?: return null
         }
         return ReviewPage(
             programId, program, block, BlockReviews.of(log, block),
@@ -140,7 +141,7 @@ class BlockReviewReader(private val db: HyperlogDatabase, private val programs: 
      */
     private suspend fun turns(id: Long, program: Program, run: List<SessionEntity>): List<ReviewTurn> {
         val active = programs.active.first()?.takeIf { it.id == id }
-        val missed = active?.rotation?.missed?.filter { it.date < active.today }?.map { Triple(it.date, it.position, it.easy) }
+        val missed = active?.turns?.filter { it.status == Turn.Status.Missed && it.date < active.today }?.map { Triple(it.date, it.position, it.day.easy) }
             ?: db.missedDays().all(id).map { Triple(LocalDate.ofEpochDay(it.date), Position(it.week, it.dayIndex), false) }
         if (missed.isEmpty() && active?.rotation == null) return emptyList()
         fun name(position: Position) = program.blockAt(position.week)?.days?.getOrNull(position.day)?.name?.substringBefore(" — ")

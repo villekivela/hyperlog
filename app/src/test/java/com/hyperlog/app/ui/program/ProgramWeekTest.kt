@@ -101,7 +101,7 @@ class ProgramWeekTest {
         assertEquals("barbell_rdl", ProgramWeek.days(active, 7, emptyList()).ahead(1).day.slot("rdl")!!.exercise)
         // As the Change's card on Coach shows it.
         val record = active.inForce.single().accepted
-        val diff = com.hyperlog.app.coach.Changes.inForceDiff(active.program, active.position, active.today, active.changes, record)
+        val diff = active.inForceDiff(record)
         assertEquals(listOf(Position(6, 1)), diff.days.map { it.day.position })
     }
 

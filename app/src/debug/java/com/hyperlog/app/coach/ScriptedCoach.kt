@@ -103,7 +103,7 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
 
     private fun script(tile: Tile, world: ScriptedWorld, answers: List<String>): List<CoachReply> {
         val plan = world.plan
-        val next = plan?.next ?: plan?.program?.plannedDay(Position(1, 0))
+        val next = plan?.next?.day ?: plan?.program?.plannedDay(Position(1, 0))
         return when (tile) {
             Tile.Hurts -> listOf(
                 ask("Where does it hurt?", "Hands or wrists", "Elbow", "Shoulder", "Knee"),
@@ -171,7 +171,7 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
     /** The reply after its problems came back: Change my program's swap, the right way. */
     private fun fixed(tile: Tile, world: ScriptedWorld): CoachReply {
         val plan = world.plan ?: return words("Sorry, that didn't work.")
-        val day = plan.next ?: plan.program.plannedDay(Position(1, 0))
+        val day = plan.next?.day ?: plan.program.plannedDay(Position(1, 0))
         val slot = day?.slots?.firstOrNull { it.alternatives.isNotEmpty() }
             ?: return words("Nothing in this program has an alternative to swap to. Keep it, and tell me more if it hurts.")
         val summary = if (tile == Tile.ChangeProgram) "For good: ${slot.alternatives.first()} in place of ${slot.exercise}." else "Swap for good."
