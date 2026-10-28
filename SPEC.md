@@ -1146,7 +1146,9 @@ each planned day with the training day it lands on, and never changes the day:
        went and the next block." (owner, 2026-10-28) with the review as text in the context: after the
        check-in's own context through the API, after the situation in Ask Claude's prompt.
      - **Program review**: the last block's review has a column for the whole program beside the
-       block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). There the button reads
+       block's, headed **Last block** and **Program** in every section, so the header stays on one
+       line whatever the block is called (the block's name stays in the line under the title; owner,
+       2026-10-28), and **New program** beside Check in ("Hyperlog Full Body is done…"). There the button reads
        **Check in** and its first answer is "Hyperlog Full Body is done. Look at how it went and what
        comes next." (owner, 2026-10-28). A past
        program on Programs opens its program review. Lifts, Turning up, Volume and Records get

@@ -750,6 +750,7 @@ top bar's arrow close the page.
 
 Screens (emulator, 1280 × 2856 at 480 dpi, text at 115 %, `-light` and `-dark`):
 `block-review-ramp-in`, `block-review-ramp-in-volume` (the fold), `block-review-build`,
-`block-review-program` (heads in the page), `block-review-program-columns` (heads pinned),
+`block-review-program` (heads in the page; re-rendered on Robolectric at 412 × 915 dp with a block
+called Deload + test, heads `Last block` and `Program`), `block-review-program-columns` (heads pinned),
 `block-review-card`, `block-review-today` (Ramp-in), `block-review-today-program`. Neither
 fixture holds a past program, so the Programs sheet's Program review isn't shown.

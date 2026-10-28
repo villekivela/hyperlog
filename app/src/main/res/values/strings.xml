@@ -880,6 +880,7 @@
     <string name="review_bodyweight">Bodyweight</string>
     <string name="review_goal">Goal</string>
     <string name="review_next">Next</string>
+    <string name="review_last_block">Last block</string>
     <string name="review_program">Program</string>
     <string name="review_estimate_kg">%1$s → %2$s kg</string>
     <string name="review_program_line">Program: %1$s</string>

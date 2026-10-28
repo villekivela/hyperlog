@@ -136,7 +136,7 @@ fun BlockReviewScreen(
                     )
                 }
                 if (whole != null) {
-                    Columns(block.name, stringResource(R.string.review_program), Modifier.onGloballyPositioned { headsAt = it.positionInParent().y.toInt() })
+                    Columns(stringResource(R.string.review_last_block), stringResource(R.string.review_program), Modifier.onGloballyPositioned { headsAt = it.positionInParent().y.toInt() })
                 }
                 Lifts(review, whole, name)
                 TurningUpSection(review.turningUp, whole?.turningUp, whole != null)
@@ -154,7 +154,7 @@ fun BlockReviewScreen(
             }
             if (whole != null && scroll.value > headsAt) {
                 // The page's own heads stay the ones read out.
-                Columns(block.name, stringResource(R.string.review_program), Modifier.background(Tones.screen).clearAndSetSemantics {}, top = 8.dp)
+                Columns(stringResource(R.string.review_last_block), stringResource(R.string.review_program), Modifier.background(Tones.screen).clearAndSetSemantics {}, top = 8.dp)
             }
         }
     }
