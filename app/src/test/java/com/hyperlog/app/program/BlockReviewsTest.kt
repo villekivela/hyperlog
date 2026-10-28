@@ -254,7 +254,7 @@ class BlockReviewsTest {
             Records: Hack Squat 110 kg × 6 on 2026-08-12
             Bodyweight: 82 → 81.5 kg
             Lift goals:
-            - Hack Squat: 126 of 140 kg by 2026-09-12; on pace for 2026-09-02 at this block's rate (an estimate)
+            - Hack Squat: 126 of 140 kg by 2026-09-12; on pace for 2026-09-02 at this pace (an estimate)
             Next block: Peak
             """.trimIndent(),
             BlockReviews.context(program, program.blocks[0], review, null, names),
@@ -336,5 +336,37 @@ class BlockReviewsTest {
         val squat = LiftGoal("squat", 140.0, by = null)
         val log = ReviewLog(program, lines = listOf(ReviewLine("squat", points = listOf(point(1, 1, 120.0), point(3, 2, 123.0)))), goals = listOf(squat))
         assertEquals(listOf(GoalStanding(squat, 123.0, null)), BlockReviews.of(log, program.blocks[0]).goals)
+    }
+
+    @Test
+    fun aBlockEasedThroughoutOrADeloadBlockHasNoPaceButANormalOneWithoutGainReadsShort() {
+        val rampIn = program.blocks[0].copy(weeks = listOf(WeekOverride(WeekRange(1, 2), rirAdd = 1)))
+        val deload = program.blocks[1].copy(weeks = listOf(WeekOverride(WeekRange(3, 4), deload = true)))
+        val bench = LiftGoal("bench", 125.0, by = monday.plusDays(60))
+        val log = ReviewLog(
+            program.copy(blocks = listOf(rampIn, deload)),
+            lines = listOf(ReviewLine("bench", points = listOf(point(0, 1, 100.0, eased = true), point(2, 2, 104.0, eased = true), point(4, 3, 104.0).copy(deload = true), point(6, 4, 104.0).copy(deload = true)))),
+            goals = listOf(bench),
+        )
+        assertEquals(GoalStanding(bench, 104.0, null), BlockReviews.of(log, rampIn).goals.single())
+        assertEquals(GoalStanding(bench, 104.0, null), BlockReviews.of(log, deload).goals.single())
+        // A normal block that didn't gain is a real stall.
+        val stalled = log.copy(program = program, lines = listOf(ReviewLine("bench", points = listOf(point(0, 1, 100.0), point(2, 2, 100.0)))))
+        assertEquals(GoalPace.Short(25.0), BlockReviews.of(stalled, program.blocks[0]).goals.single().pace)
+    }
+
+    @Test
+    fun theProgramColumnHasAPaceFromTheProgramsGainEvenWithADeloadLast() {
+        val deload = program.blocks[1].copy(weeks = listOf(WeekOverride(WeekRange(3, 4), deload = true)))
+        val withDeload = program.copy(blocks = listOf(program.blocks[0], deload))
+        val bench = LiftGoal("bench", 110.0, by = monday.plusDays(60))
+        val log = ReviewLog(
+            withDeload,
+            // A third of a kilo a day over 12 days: 4 kg; 6 kg more takes 18 days.
+            lines = listOf(ReviewLine("bench", points = listOf(point(0, 1, 100.0), point(4, 2, 104.0), point(6, 3, 104.0).copy(deload = true), point(8, 4, 104.0).copy(deload = true)))),
+            goals = listOf(bench),
+        )
+        assertEquals(null, BlockReviews.of(log, deload).goals.single().pace)
+        assertEquals(GoalPace.OnPace(monday.plusDays(12 + 18)), BlockReviews.program(log, deload).goals.single().pace)
     }
 }

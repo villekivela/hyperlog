@@ -118,7 +118,7 @@ data class Review(
 /** Block reviews, worked out from the log with no Claude call. */
 object BlockReviews {
     /** How [block] went. */
-    fun of(log: ReviewLog, block: Block): Review = review(log, block.weekStart..block.weekEnd)
+    fun of(log: ReviewLog, block: Block): Review = review(log, block.weekStart..block.weekEnd, paced = !flatByDesign(log.program, block))
 
     /**
      * How the program went up to the end of [block], as far as it ran: the program review's column
@@ -126,7 +126,7 @@ object BlockReviews {
      */
     fun program(log: ReviewLog, block: Block): Review {
         val reached = (log.turns.map { it.week } + log.sessions.map { it.week }).filter { it <= block.weekEnd }.maxOrNull() ?: block.weekEnd
-        return review(log, 1..reached)
+        return review(log, 1..reached, paced = true)
     }
 
     /**
@@ -136,7 +136,7 @@ object BlockReviews {
      */
     fun finished(program: Program, position: Position): List<Block> = program.blocks.filter { it.weekEnd < position.week }
 
-    private fun review(log: ReviewLog, weeks: IntRange): Review {
+    private fun review(log: ReviewLog, weeks: IntRange, paced: Boolean): Review {
         val blocks = log.program.blocks.filter { it.weekStart in weeks }.map { it.id }.toSet()
         val dates = dates(log, weeks)
         val lifts = lifts(log.lines, weeks, easedThroughout(log.program))
@@ -149,23 +149,23 @@ object BlockReviews {
                 .sortedBy { it.date },
             bodyweight = dates?.let { span -> log.bodyweights.filter { it.date in span }.sortedBy { it.date }.takeIf { it.isNotEmpty() } }
                 ?.let { it.first().kg to it.last().kg },
-            goals = log.goals.mapNotNull { goal -> standing(goal, log.lines, lifts, dates) },
+            goals = log.goals.mapNotNull { goal -> standing(goal, log.lines, lifts, dates, paced) },
             dates = dates,
         )
     }
 
     /**
      * [goal] against its exercise's estimate at the end of [dates], the latest there is, a deload's
-     * test set included, so a block and the program agree. With a date, its lift's gain over its
-     * counted sessions carried on to it.
+     * test set included, so a block and the program agree. With a date, and when the review is
+     * [paced], its lift's gain over its counted sessions carried on to it.
      */
-    private fun standing(goal: LiftGoal, lines: List<ReviewLine>, lifts: List<Lift>, dates: ClosedRange<LocalDate>?): GoalStanding? {
+    private fun standing(goal: LiftGoal, lines: List<ReviewLine>, lifts: List<Lift>, dates: ClosedRange<LocalDate>?, paced: Boolean): GoalStanding? {
         val lift = lifts.firstOrNull { it.change.exercise == goal.exerciseId }
         val estimate = lines.filter { it.exercise == goal.exerciseId }.flatMap { it.points }
             .filter { it.estimateKg != null && (dates == null || it.date <= dates.endInclusive) }.maxByOrNull { it.date }?.estimateKg
             ?: return null
         val by = goal.by
-        if (by == null || lift == null || estimate >= goal.kg) return GoalStanding(goal, estimate, null)
+        if (!paced || by == null || lift == null || estimate >= goal.kg) return GoalStanding(goal, estimate, null)
         val days = ChronoUnit.DAYS.between(lift.from, lift.to)
         val perDay = if (days > 0) lift.change.gainKg / days else 0.0
         if (perDay <= 0 || by <= lift.to) return GoalStanding(goal, estimate, GoalPace.Short(goal.kg - estimate))
@@ -236,6 +236,11 @@ object BlockReviews {
     }
 
     private fun mondayOf(date: LocalDate) = Rotations.mondayOf(date)
+
+    /** A block meant to hold, not build: eased in every week (as Ramp-in) or a deload in every week. */
+    private fun flatByDesign(program: Program, block: Block): Boolean = (block.weekStart..block.weekEnd).all { week ->
+        block.days.indices.all { program.plannedDay(Position(week, it))?.let { d -> d.eased || d.deload } == true }
+    }
 
     /**
      * The weeks of blocks the plan eases in every week (as Ramp-in): their eased sessions count,
@@ -319,8 +324,8 @@ object BlockReviews {
             appendLine("Lift goals:")
             review.goals.forEach { g ->
                 val pace = when (val p = g.pace) {
-                    is GoalPace.OnPace -> "; on pace for ${p.date} at this block's rate (an estimate)"
-                    is GoalPace.Short -> "; ${formatKg(roundHalf(p.kg))} kg short at this block's rate (an estimate)"
+                    is GoalPace.OnPace -> "; on pace for ${p.date} at this pace (an estimate)"
+                    is GoalPace.Short -> "; ${formatKg(roundHalf(p.kg))} kg short at this pace (an estimate)"
                     null -> ""
                 }
                 appendLine("- ${name(g.goal.exerciseId)}: ${formatKg(g.estimateKg)} of ${formatKg(g.goal.kg)} kg${g.goal.by?.let { " by $it" }.orEmpty()}$pace")
