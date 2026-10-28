@@ -1,7 +1,6 @@
 package com.hyperlog.app.history
 
 import com.hyperlog.app.data.HyperlogDatabase
-import com.hyperlog.app.data.TrainedExercise
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.gym.Gyms

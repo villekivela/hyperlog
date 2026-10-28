@@ -64,13 +64,13 @@ class ExerciseHistoryTest {
     private suspend fun exercise(id: String): Exercise = db.exercises().get(id)!!.toExercise()
 
     /** A set of [kg] × [reps] @ [rir]. */
-    private data class Set(val kg: Double, val reps: Int, val rir: Int)
+    private data class Sample(val kg: Double, val reps: Int, val rir: Int)
 
     /** A finished session of the program's week [week] on day [at] (days since the epoch) with [exerciseId] done as [sets]. */
     private suspend fun trained(
         week: Int,
         at: Long,
-        vararg sets: Set = arrayOf(Set(60.0, 8, 2)),
+        vararg sets: Sample = arrayOf(Sample(60.0, 8, 2)),
         exerciseId: String = "barbell_bench_press",
         itemId: Long? = null,
     ): Long {
@@ -132,8 +132,8 @@ class ExerciseHistoryTest {
         val bodyweights = Bodyweights(db)
         bodyweights.log(LocalDate.ofEpochDay(20_000), 80.0)
         bodyweights.log(LocalDate.ofEpochDay(20_003), 79.0)
-        trained(week = 1, at = 19_990, Set(10.0, 8, 1), exerciseId = "weighted_pullup")
-        trained(week = 1, at = 20_005, Set(12.0, 8, 1), exerciseId = "weighted_pullup")
+        trained(week = 1, at = 19_990, Sample(10.0, 8, 1), exerciseId = "weighted_pullup")
+        trained(week = 1, at = 20_005, Sample(12.0, 8, 1), exerciseId = "weighted_pullup")
 
         val past = history().of(exercise("weighted_pullup"), itemId = null)
 
@@ -144,7 +144,7 @@ class ExerciseHistoryTest {
 
     @Test
     fun aSessionReadsTheMainSetOnly() = runTest {
-        val session = trained(week = 1, at = 20_000, Set(60.0, 8, 2))
+        val session = trained(week = 1, at = 20_000, Sample(60.0, 8, 2))
         val set = db.sessions().sets(db.sessions().sessionExercises(session).single().id).single()
         db.sessions().insertExtension(SetExtensionEntity(loggedSetId = set.id, position = 0, kind = "Drop", weightKg = 40.0, reps = 6))
 
@@ -168,10 +168,10 @@ class ExerciseHistoryTest {
     @Test
     fun aRecordBadgeAndTheTrendsRecordAgreeAfterADeloadWeek() = runTest {
         // Two normal weeks teach a constant of 30 (one pair of sets); the deload week would teach 40.
-        trained(week = 1, at = 20_000, Set(100.0, 5, 1), Set(80.0, 10, 1))
-        trained(week = 4, at = 20_007, Set(50.0, 5, 1), Set(47.5, 9, 1), Set(48.75, 7, 1))
+        trained(week = 1, at = 20_000, Sample(100.0, 5, 1), Sample(80.0, 10, 1))
+        trained(week = 4, at = 20_007, Sample(50.0, 5, 1), Sample(47.5, 9, 1), Sample(48.75, 7, 1))
         // 85 × 12 @ 1 beats 100 × 5 @ 1 at 30 (121.8 against 120) and not at 40 (112.6 against 115).
-        val last = trained(week = 1, at = 20_014, Set(85.0, 12, 1))
+        val last = trained(week = 1, at = 20_014, Sample(85.0, 12, 1))
         val row = db.sessions().session(last)!!
         val se = db.sessions().sessionExercises(last).single()
         val sets = stored().sets(se.id)
@@ -185,9 +185,9 @@ class ExerciseHistoryTest {
 
     @Test
     fun aChangeAcceptedAfterwardsLeavesATrendsRecordsAsTheyWere() = runTest {
-        trained(week = 1, at = 20_000, Set(100.0, 5, 1), Set(80.0, 10, 1))
-        val middle = trained(week = 2, at = 20_007, Set(50.0, 5, 1), Set(47.5, 9, 1), Set(48.75, 7, 1))
-        trained(week = 3, at = 20_014, Set(85.0, 12, 1))
+        trained(week = 1, at = 20_000, Sample(100.0, 5, 1), Sample(80.0, 10, 1))
+        val middle = trained(week = 2, at = 20_007, Sample(50.0, 5, 1), Sample(47.5, 9, 1), Sample(48.75, 7, 1))
+        trained(week = 3, at = 20_014, Sample(85.0, 12, 1))
         val before = History(db, programs).trend("barbell_bench_press").lines.single().points.map { it.record }
         val day = programs.dateOf(db.sessions().session(middle)!!.startedAt)
         now = 30_000L * 86_400_000L
