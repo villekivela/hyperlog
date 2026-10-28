@@ -112,7 +112,6 @@ class BlockReviewScreenTest {
         compose.onNodeWithText("Hyperlog Full Body review").assertExists()
         compose.onNode(hasText("Peak", substring = true)).assertExists()
         seen("Last block")
-        assertEquals(true, compose.onAllNodesWithText("Last block").fetchSemanticsNodes().isNotEmpty())
         assertEquals(true, compose.onAllNodesWithText("Program").fetchSemanticsNodes().isNotEmpty())
         seen("+26")
         seen("Program: 84 → 81.5 kg")
