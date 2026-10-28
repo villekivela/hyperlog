@@ -1147,7 +1147,8 @@ each planned day with the training day it lands on, and never changes the day:
        last block it reached, with the program as far as it ran (owner, 2026-10-28). Its
        headline is the program's (`Hyperlog Full Body review`), the block's name first in the line
        under it; Records add a `Records set` row with each column's count; on the program review
-       Lifts show each gain in its column, the block's estimates under the name. New program
+       Lifts show each gain in its column, the block's estimates under the name (the program's for a
+       lift the block didn't count, as a deload's). New program
        starts a check-in whose first answer is "Hyperlog Full Body is done. I want a new program
        for what comes next." with the review in its context as Check in's (owner, 2026-10-28). On
        the program review a lift is one row whichever machine each column used most, and the

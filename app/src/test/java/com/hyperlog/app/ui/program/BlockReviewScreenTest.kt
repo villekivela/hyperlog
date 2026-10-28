@@ -132,4 +132,12 @@ class BlockReviewScreenTest {
         show(ReviewPage(1, program, program.blocks[0], review.copy(lifts = listOf(LiftChange("hack_squat", null, 109.29, 112.04))), null, program.blocks[1]))
         seen("109.5 → 112 kg"); seen("+2.5")
     }
+
+    @Test
+    fun onTheProgramReviewALiftTheBlockDidntCountReadsTheProgramsEstimates() {
+        val block = review.copy(lifts = emptyList())
+        val whole = review.copy(lifts = listOf(LiftChange("hack_squat", null, 115.0, 121.5)))
+        show(ReviewPage(1, program, program.blocks[1], block, whole, null))
+        seen("115 → 121.5 kg"); seen("+6.5")
+    }
 }

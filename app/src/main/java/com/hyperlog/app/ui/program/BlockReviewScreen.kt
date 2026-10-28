@@ -280,7 +280,8 @@ private fun Lifts(review: Review, whole: Review?, name: (String) -> String) {
     val rows = (review.lifts + whole.lifts).map { it.exercise }.distinct().map { exercise ->
         val b = review.lifts.firstOrNull { it.exercise == exercise }
         val p = whole.lifts.firstOrNull { it.exercise == exercise }
-        ColumnLift(name(exercise), listOfNotNull((b ?: p)?.machine, b?.let(estimates)).joinToString(" · "), b, p, gainColor(b), gainColor(p))
+        // Under the name, the block's estimates, or the program's for a lift the block didn't count.
+        ColumnLift(name(exercise), listOfNotNull((b ?: p)?.machine, (b ?: p)?.let(estimates)).joinToString(" · "), b, p, gainColor(b), gainColor(p))
     }
     SegmentedList {
         rows.forEach { r -> valueRow(r.name, r.under.ifEmpty { null }, r.block?.let(::gain), r.program?.let(::gain), columns = true, valueColor = r.blockColor, programColor = r.programColor) }
