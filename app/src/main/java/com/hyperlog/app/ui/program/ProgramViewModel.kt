@@ -8,6 +8,8 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.Changes
+import com.hyperlog.app.coach.CoachLine
+import com.hyperlog.app.coach.CoachLineReader
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.History
 import com.hyperlog.app.library.toExercise
@@ -22,6 +24,9 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.StarterProgram
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +51,27 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
 
     fun setWeekdayPlan(plan: WeekdayPlan) {
         viewModelScope.launch { weekdayPlans.set(plan) }
+    }
+
+    private val coachLines = CoachLineReader(HyperlogDatabase.get(application), programs)
+
+    /** Counts each new read of the log: the coach line is read again after it. */
+    private val logRead = MutableStateFlow(0)
+
+    /** The coach line Today shows (SPEC, Coaching → The coach line); null for none. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val coachLine: StateFlow<CoachLine?> = combine(active, coachLines.hidden, logRead) { program, hidden, _ -> program to hidden }
+        .mapLatest { (program, hidden) -> withContext(Dispatchers.IO) { coachLines.shown(program, hidden) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** The finished sessions were read again (one finished or was corrected): so is the coach line. */
+    fun readCoachLine() {
+        logRead.value++
+    }
+
+    /** × on the coach line: hidden until its pattern grows. */
+    fun hideCoachLine(line: CoachLine) {
+        viewModelScope.launch { coachLines.hide(line, active.value) }
     }
 
     private val _errors = MutableStateFlow<List<String>?>(null)

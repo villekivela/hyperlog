@@ -42,7 +42,7 @@ data class Program(val title: String, val author: String?, val blocks: List<Bloc
                 )
             }
         }
-        return PlannedDay(position, block, day, slots, deload = overrides.any { it.deload })
+        return PlannedDay(position, block, day, slots, deload = overrides.any { it.deload }, eased = overrides.any { it.rirAdd > 0 })
     }
 }
 
@@ -196,6 +196,8 @@ data class PlannedDay(
     val deload: Boolean = false,
     /** Trained in an easy week, outside the program (a deload too). */
     val easy: Boolean = false,
+    /** A week the plan eases, its RIR raised (`rirAdd` above 0, as Ramp-in). */
+    val eased: Boolean = false,
 ) {
     fun slot(id: String?) = slots.firstOrNull { it.id == id }
 

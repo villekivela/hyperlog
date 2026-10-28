@@ -1625,20 +1625,34 @@ The coach speaks first when the log shows a pattern a check-in should look at (o
 It only points: it proposes nothing itself, so ADR 0003 holds, and it needs no Claude key to show.
 
 - **The patterns**, in the order they show:
-  1. **The same day missed**: a program day missed 3 times in its last 4 turns of the rotation.
-     `Day A missed 3 of the last 4 weeks · Check in`.
-  2. **A stall**: an exercise's estimate flat or down over its last 3 sessions, deload and easy-week
-     sessions not counted. `Bench hasn't moved in 3 sessions · Check in`.
+  1. **The same day missed**: a program day missed 3 times in its last 4 turns: the training days
+     the rotation gave it, missed or trained (a missed day trained later that week counts as
+     trained). Turns, not weeks, since a day doesn't come every week with fewer training days than
+     program days (owner, 2026-10-28). `Day A missed 3 of its last 4 turns · Check in`; all 4,
+     `Day A missed its last 4 turns`.
+  2. **A stall**: an exercise's estimate (on each machine, for machines) no higher after each of
+     its last 3 sessions than before them. Deload and easy-week sessions aren't counted, nor those in
+     a week the plan eases (`rirAdd` above 0, as Ramp-in; owner, 2026-10-28). `Bench hasn't moved
+     in 3 sessions · Check in`.
   3. **Grinding**: an exercise's last 3 sessions each had a work set at 0 RIR where the target was 2
      or more. `Leg press hit 0 RIR in 3 sessions running · Check in`.
-  4. **The same swap**: one slot swapped for the same exercise at the start sheet 3 sessions in a
-     row. `Incline press swapped at Harbour 3 times · Check in`.
-- **One line on Today**, above the hero card while today is selected, with ×; the first pattern in
-  order that isn't hidden. × hides that line until its pattern grows (the stall reaches 4 sessions,
-  the day is missed again) or ends and comes back. A line hides while a Change in force covers its
-  exercise or day.
-- **Check in** starts a check-in with the line as its first answer, as Ease back in does, and the
-  context carries the sessions behind it.
+  4. **The same swap**: one slot of the running program done as the same other exercise 3 sessions
+     in a row, swapped at the start sheet or in the session, at whatever gym. `Incline press
+     swapped 3 times running · Check in`; the line never names the gym (owner, 2026-10-28).
+  A pattern whose last session (or missed day) is more than 4 weeks old shows no line. Within a
+  pattern, the latest comes first.
+- **One line on Today**, above the hero card while today is selected and no session runs, with ×;
+  the first pattern in order that isn't hidden. It is a quiet banner on `surfaceContainerHighest` with
+  `onSurface` ink (the `insights` symbol, the line, **Check in** and ×; owner, 2026-10-28), below
+  the update and time-off banners. × hides
+  that line until its pattern grows (the stall reaches 4 sessions, the day is missed again) or
+  ends and comes back: it is kept as the pattern and its latest session or missed day. A line
+  hides while a Change in force covers it: a day by an edit to one of its slots, an `add` to it, a
+  deload or a move of the position; an exercise by an edit to its slot, a swap to it, an `add` of
+  it, an edit of every slot, or a deload; a swap by an edit to its slot.
+- **Check in** starts a check-in with the line as its first answer (`Bench hasn't moved in 3
+  sessions.`), as Ease back in does; with no Claude key the same words open Ask Claude, as the fit's
+  chip does. The context carries the finished sessions of the last 28 days, the sessions behind it.
 
 ### What Claude is told
 

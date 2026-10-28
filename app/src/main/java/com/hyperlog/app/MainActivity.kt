@@ -324,14 +324,17 @@ private fun App(
     /** Back, or done: the tiles again. */
     val closeAsk = { askOpening = null; askTile = null; endAsk(); programModel.closePasteErrors() }
     val inForce by programModel.inForce.collectAsStateWithLifecycle()
+    val coachLine by programModel.coachLine.collectAsStateWithLifecycle()
+    // A session finished or corrected reads the list again, and the coach line with it.
+    LaunchedEffect(pastSessions) { programModel.readCoachLine() }
     val update by updateModel.banner.collectAsStateWithLifecycle()
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
     val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
-    // A day that runs over its training day's minutes: with Claude, a check-in whose first answer is the fit; without, the words to share.
-    val checkInFit = { words: String ->
+    // A check-in whose first answer is given words (a day over its training day's minutes, the coach line): with Claude, the wizard; without, the words to share.
+    val checkInWords = { words: String ->
         if (checkInAvailable) checkInModel.fit(words)
         else openAsk(com.hyperlog.app.coach.Opening.Tile, null, words)
         programModel.closePasteErrors()
@@ -651,7 +654,7 @@ private fun App(
             weekdayPlan = weekdayPlan,
             gyms = gyms,
             library = exercises,
-            onCheckInFit = checkInFit,
+            onCheckInFit = checkInWords,
             onWeekdayPlan = programModel::setWeekdayPlan,
             listedPrograms = listedPrograms,
             onRunAgain = programModel::runAgain,
@@ -821,7 +824,10 @@ private fun App(
                 programModel.closePasteErrors()
                 screen = Screen.Coach
             },
-            onCheckInFit = checkInFit,
+            onCheckInFit = checkInWords,
+            coachLine = coachLine,
+            onCheckInLine = checkInWords,
+            onHideCoachLine = programModel::hideCoachLine,
             weekdayPlan = weekdayPlan,
             onWeekdayPlan = programModel::setWeekdayPlan,
             sessions = pastSessions,

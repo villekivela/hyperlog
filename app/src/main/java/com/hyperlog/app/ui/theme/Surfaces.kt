@@ -43,6 +43,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ButtonColors
@@ -188,6 +189,7 @@ fun Banner(
     container: Color = MaterialTheme.colorScheme.primaryContainer,
     content: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     onClick: (() -> Unit)? = null,
+    titleStyle: TextStyle = MaterialTheme.typography.titleSmall,
     end: (@Composable RowScope.() -> Unit)? = null,
 ) {
     CompositionLocalProvider(LocalContentColor provides content) {
@@ -204,7 +206,7 @@ fun Banner(
             SymbolIcon(symbol, null, Modifier.size(24.dp))
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(title, style = MaterialTheme.typography.titleSmall)
+                Text(title, style = titleStyle)
                 body?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = bodyColor ?: content.copy(alpha = 0.8f)) }
             }
             end?.invoke(this)

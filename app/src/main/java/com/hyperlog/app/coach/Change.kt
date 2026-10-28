@@ -134,6 +134,21 @@ sealed interface Operation {
 
     /** Changes the position, once, when accepted. */
     val movesPosition: Boolean get() = this is SkipDay || this is ShiftProgram || this is RepeatWeek
+
+    /** The slot it edits; null for one that names none (every slot, a day or the position). */
+    val editsSlot: String?
+        get() = when (this) {
+            is Swap -> slot
+            is Remove -> slot
+            is AdjustSets -> slot
+            is AdjustLoad -> slot
+            is AdjustRir -> slot
+            is RemoveTechnique -> slot
+            else -> null
+        }
+
+    /** Edits every slot: an adjustment that names no slot. */
+    val everySlot: Boolean get() = editsSlot == null && (this is AdjustLoad || this is AdjustRir || this is RemoveTechnique)
 }
 
 /** A set line of an added exercise, as in a program file: `{"count": 3, "reps": "8-12", "rir": 2}`. */
