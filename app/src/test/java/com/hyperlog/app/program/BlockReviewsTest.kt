@@ -259,7 +259,7 @@ class BlockReviewsTest {
             """.trimIndent(),
             BlockReviews.context(program, program.blocks[0], review, null, names),
         )
-        assertEquals("Build is done. Here's how it went: look at it and the next block.", BlockReviews.opening(program, program.blocks[0]))
+        assertEquals("Build is done. Look at how it went and the next block.", BlockReviews.opening(program, program.blocks[0]))
     }
 
     @Test

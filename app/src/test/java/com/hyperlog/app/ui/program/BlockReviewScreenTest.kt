@@ -99,7 +99,7 @@ class BlockReviewScreenTest {
         var opened: Pair<String, String>? = null
         show(ReviewPage(1, program, program.blocks[0], review, null, program.blocks[1]), checkIn = { o, c -> opened = o to c })
         compose.click("Check in about the next block")
-        assertEquals("Build is done. Here's how it went: look at it and the next block.", opened!!.first)
+        assertEquals("Build is done. Look at how it went and the next block.", opened!!.first)
         assertTrue("Hack Squat: 120 → 126 kg (+6)" in opened!!.second)
     }
 

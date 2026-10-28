@@ -270,7 +270,7 @@ object BlockReviews {
      */
     fun opening(program: Program, block: Block, newProgram: Boolean = false): String =
         if (newProgram) "${program.title} is done. I want a new program for what comes next."
-        else "${block.name} is done. Here's how it went: look at it and the next block."
+        else "${block.name} is done. Look at how it went and the next block."
 
     /**
      * [review] of [block] as text for the check-in's context, the [whole] program after it on the

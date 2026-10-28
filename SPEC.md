@@ -1135,8 +1135,8 @@ each planned day with the training day it lands on, and never changes the day:
        (a deload's test set included), so a block and its program agree; a goal whose lift wasn't
        trained twice has no pace.
      - **Next**: what the next block changes, as its card's "From <block>" reads, then **Check in
-       about the next block**, a check-in whose first answer is "Build is done. Here's how it
-       went: look at it and the next block." with the review as text in the context: after the
+       about the next block**, a check-in whose first answer is "Build is done. Look at how it
+       went and the next block." (owner, 2026-10-28) with the review as text in the context: after the
        check-in's own context through the API, after the situation in Ask Claude's prompt.
      - **Program review**: the last block's review has a column for the whole program beside the
        block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). A past
