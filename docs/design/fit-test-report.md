@@ -29,3 +29,30 @@ Screens: `light-fit-today-cards.png`, `dark-fit-today-cards.png` (the hero and a
   wrong in the words the check-in opens with: good. On the hero it pushes Start session down by
   about 80 dp, which is tolerable.
 - A day with both lines shows the chip, then the swaps, which reads as most to least urgent.
+
+## On the owner's phone (2026-10-28)
+
+The PR #93 debug build (`com.hyperlog.app.dev`, 1280 × 2856 at 480 dpi, unlocked, the app's own dark
+theme; the app has no theme toggle of its own, so light stayed on the renders above and the system
+setting was left alone). The dev data was copied off first and restored byte for byte after
+(`sha256` equal); the Claude key was never used, the Scripted coach ran the check-ins. Training days
+set to Mon 30 min, Thu no limit, Sat 35 min, then Thu 30 min; two exercises (and later High-Bar Back
+Squat) marked missing at the only gym, all in the dev data that was put back.
+
+| Criterion | What the phone showed | Screenshot |
+| --- | --- | --- |
+| Time chip on a planned card, ending in a chevron | `~45 min · Saturday has 35 ›`, amber with dark ink, a 48 dp target | `screens/phone/dark-fit-today-card.png` |
+| Training day without minutes is never checked | Thursday with no limit: no chip on the hero, only the swaps line | `screens/phone/dark-fit-hero-swaps-only.png` |
+| Chip on the hero, with the muted swap line below | `~50 min · Thursday has 30 ›`, then `2 swaps at Kalliokoski`; the chip is legible on the purple | `screens/phone/dark-fit-hero.png` |
+| Tapping it starts a check-in | Hero and card chips both opened Check-in; the saved opening read `Day A runs ~50 minutes but Thursday has 30.` and `Day B runs ~45 minutes but Saturday has 35.` The scripted coach ignores the opening and plays its first canned question, so no reply to it was seen | `screens/phone/dark-fit-checkin-opened.png` |
+| Program's dated days | Under the day heading: the chip, then the swaps line | `screens/phone/dark-fit-program.png` |
+| New program review | `1 swap at Kalliokoski` under Day A, read-only, no chevron. Day A is under the 35 minutes of Thursday on this data, so the review showed no time chip; its chip is covered by the render and `ProgramReviewTest` | `screens/phone/dark-fit-review.png` |
+
+Findings:
+
+- Nothing needed fixing: the chip and the lines sit where the renders put them, and the chevron
+  reads as a button.
+- A gym with no exercise marked missing shows no swap line, so the lines only appear after a gym has
+  learned what it lacks ("Not at <gym>"); a first look at a fresh install shows the chip alone.
+- The check-in context for the day's fit carried the training days and the lift goal
+  (`Barbell Bench Press: 110 kg`), read from the saved check-in.
