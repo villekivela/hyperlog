@@ -233,7 +233,6 @@ fun TodayScreen(
     // A running session keeps its day on Today, even resumed after finishing moved the program on.
     val next = runningDay?.takeIf { sessionRunning } ?: program?.next?.day
     val workoutDay = remember(workout) { workout?.workout?.day() }
-    val rotation = program?.rotation
     // This week's missed day, trained today when today has no training day.
     val missedTurn = program?.trainToday
     if (kind != null && !sessionRunning) {
@@ -363,7 +362,7 @@ fun TodayScreen(
         if (coachLine != null && !sessionRunning) CoachLineBanner(coachLine, exerciseNames, onCheckInLine, onHide = { onHideCoachLine(coachLine) })
         // After an empty week, until the repeated week's first session.
         val weekStarted = finished.any { weekOf(it.date()) == thisWeek }
-        if (rotation?.again == true && !weekStarted && !sessionRunning) {
+        if (program?.again == true && !weekStarted && !sessionRunning) {
             planned.values.firstOrNull()?.let { AgainNotice(it.position.week) }
         }
     }
@@ -389,7 +388,7 @@ fun TodayScreen(
             shownWeek,
             week = programWeekOf(shownWeek, planned, done),
             // An easy week sits outside the program, so the head names it instead of a week.
-            easy = (0..6L).any { planned[shownWeek.plusDays(it)]?.easy == true } || (shownWeek == Rotations.mondayOf(today) && rotation?.easy == true),
+            easy = (0..6L).any { planned[shownWeek.plusDays(it)]?.easy == true } || (shownWeek == Rotations.mondayOf(today) && program?.easyWeek == true),
             showToday = !isToday || pager.currentPage != todayPage,
             onToday = { select(today) },
             noWeekdayPlan = weekdayPlan.days.isEmpty(),

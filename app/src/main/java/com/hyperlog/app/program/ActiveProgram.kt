@@ -83,6 +83,21 @@ data class ActiveProgram(
         }
     }
 
+    /** Whether its days take turns on training days (ADR 0006), not running as a sequence. */
+    val rotates: Boolean get() = rotation != null
+
+    /** This week trains its program week again, after one with no session. */
+    val again: Boolean get() = rotation?.again == true
+
+    /** This week trains its program week again, by a `repeat_week`. */
+    val repeated: Boolean get() = rotation?.repeated == true
+
+    /** This week is an easy week, after [emptyWeeks] weeks with no session in a row. */
+    val easyWeek: Boolean get() = rotation?.easy == true
+
+    /** The weeks with no session in a row before this one. */
+    val emptyWeeks: Int get() = rotation?.emptyWeeks ?: 0
+
     /** The next turn to train, on whatever date it falls; null once the program is finished. */
     val next: Turn? get() = turns.firstOrNull { it.status == Turn.Status.Ahead }
 
@@ -93,8 +108,11 @@ data class ActiveProgram(
     val trainToday: Turn?
         get() = rotation?.trainToday?.let { turn -> resolved(turn.copy(date = today), Turn.Status.Missed)?.copy(date = turn.date) }
 
-    private fun resolved(turn: RotationTurn, status: Turn.Status): Turn? =
-        Changes.day(program, turn.position, turn.date, changes)?.easyWeek(turn.easy)?.let { Turn(turn.date, it, status) }
+    private fun resolved(turn: RotationTurn, status: Turn.Status): Turn? = dayOf(turn, changes)?.let { Turn(turn.date, it, status) }
+
+    /** [turn]'s day as trained on its date with [changes], eased in an easy week. */
+    private fun dayOf(turn: RotationTurn, changes: List<AcceptedChange>): PlannedDay? =
+        Changes.day(program, turn.position, turn.date, changes)?.easyWeek(turn.easy)
 
     /**
      * The turns Program shows in [week], whose sessions of this program started on [trained]: those
@@ -170,12 +188,7 @@ data class ActiveProgram(
         val from = movedTo(Changes.ending(program, position, ended.map { it.accepted }))
         val accepted = from.accept(proposed).copy(id = Long.MAX_VALUE)
         val after = from.movedTo(accepted.after)
-        val moved = accepted.after != position
-        return ChangeDiff(
-            next = if (moved) position to accepted.after else null,
-            daysLeft = if (moved) program.daysLeft(position) to program.daysLeft(accepted.after) else null,
-            days = after.dayDiffs(accepted, before = changes, after = kept.map { it.accepted } + accepted),
-        )
+        return changeDiff(position, accepted.after, after.dayDiffs(accepted, before = changes, after = kept.map { it.accepted } + accepted))
     }
 
     /**
@@ -185,11 +198,16 @@ data class ActiveProgram(
      */
     fun inForceDiff(record: AcceptedChange): ChangeDiff {
         val others = changes.filter { it.id != record.id }
-        val moved = record.after != record.before
+        return changeDiff(record.before, record.after, dayDiffs(record, before = others, after = others + record))
+    }
+
+    /** A diff of [days] whose next day moves [from] → [to], when it moves. */
+    private fun changeDiff(from: Position, to: Position, days: List<DayDiff>): ChangeDiff {
+        val moved = to != from
         return ChangeDiff(
-            next = if (moved) record.before to record.after else null,
-            daysLeft = if (moved) program.daysLeft(record.before) to program.daysLeft(record.after) else null,
-            days = dayDiffs(record, before = others, after = others + record),
+            next = if (moved) from to to else null,
+            daysLeft = if (moved) program.daysLeft(from) to program.daysLeft(to) else null,
+            days = days,
         )
     }
 
@@ -217,8 +235,8 @@ data class ActiveProgram(
             .takeWhile { scope != Scope.RestOfBlock || program.blockAt(it.position.week)?.id == change.blockId }
             .filter { it.position.week <= program.weeks }
             .mapNotNull { turn ->
-                val was = Changes.day(program, turn.position, turn.date, before)?.easyWeek(turn.easy) ?: return@mapNotNull null
-                val now = Changes.day(program, turn.position, turn.date, after)?.easyWeek(turn.easy) ?: return@mapNotNull null
+                val was = dayOf(turn, before) ?: return@mapNotNull null
+                val now = dayOf(turn, after) ?: return@mapNotNull null
                 val key = was.block.id to was.day.id
                 if (key in seen) return@mapNotNull null
                 val slots = Changes.slotDiffs(was, now)

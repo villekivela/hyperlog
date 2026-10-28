@@ -90,7 +90,8 @@ days on three training days always fall on the same weekdays, and four on three 
 _Avoid_: Pinning, sequence (that is the order with no weekday plan)
 
 **Turn**:
-A date with the program day it trains, trained, missed or to come: a training day the rotation gives a day, or, with no weekday plan, the next day on its one planned date.
+A date with the program day it trains, trained, missed or to come: a training day the rotation
+gives a day, or, with no weekday plan, the next day on its one planned date.
 _Avoid_: Slot (a place in a day for an exercise), occurrence
 
 **Rotation anchor**:

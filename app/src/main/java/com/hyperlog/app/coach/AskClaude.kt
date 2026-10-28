@@ -11,6 +11,7 @@ import java.time.DayOfWeek
 import java.time.format.TextStyle
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.Turn
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
@@ -173,25 +174,25 @@ object AskClaude {
     }
 
     /** The program's days as the rotation puts them on the training days, and the training days missed lately. */
-    private fun StringBuilder.rotation(plan: ActiveProgram, rotation: com.hyperlog.app.week.Rotation) {
+    private fun StringBuilder.rotation(plan: ActiveProgram) {
         appendLine(
             "The program runs on my training days: each training day takes the next day of the program, trained or missed. A missed " +
                 "day is skipped, never moved. A program week is a calendar week, Monday to Sunday.",
         )
-        fun line(turn: com.hyperlog.app.program.Turn) =
+        fun line(turn: Turn) =
             "- ${turn.date} (${turn.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}): week ${turn.position.week}, " +
                 (plan.program.blockAt(turn.position.week)?.days?.getOrNull(turn.position.day)?.name ?: "")
         when {
-            rotation.easy -> appendLine(
-                "This week is an easy week, after ${rotation.emptyWeeks} weeks with no session: each slot one set fewer, target RIR one " +
+            plan.easyWeek -> appendLine(
+                "This week is an easy week, after ${plan.emptyWeeks} weeks with no session: each slot one set fewer, target RIR one " +
                     "higher, no techniques, a deload outside the program. The program week after it is the one I stopped at.",
             )
-            rotation.again -> appendLine("Last week had no session, so this week trains its program week again.")
-            rotation.repeated -> appendLine("A repeat_week accepted last week has this week train its program week again.")
+            plan.again -> appendLine("Last week had no session, so this week trains its program week again.")
+            plan.repeated -> appendLine("A repeat_week accepted last week has this week train its program week again.")
         }
         appendLine("Coming days:")
-        plan.turns.filter { it.status == com.hyperlog.app.program.Turn.Status.Ahead }.take(UPCOMING_TURNS).forEach { appendLine(line(it)) }
-        val missed = plan.turns.filter { it.status == com.hyperlog.app.program.Turn.Status.Missed && it.date >= plan.today.minusDays(HISTORY_DAYS) && it.date < plan.today }
+        plan.turns.filter { it.status == Turn.Status.Ahead }.take(UPCOMING_TURNS).forEach { appendLine(line(it)) }
+        val missed = plan.turns.filter { it.status == Turn.Status.Missed && it.date >= plan.today.minusDays(HISTORY_DAYS) && it.date < plan.today }
         if (missed.isNotEmpty()) {
             appendLine("Missed training days in the last $HISTORY_DAYS days:")
             missed.forEach { appendLine(line(it)) }
@@ -335,8 +336,8 @@ object AskClaude {
                 "Next: week ${next.position.week} of ${program.weeks}, ${next.day.name} (day \"${next.day.id}\", block \"${next.block.name}\", " +
                     "weeks ${next.block.weekStart}–${next.block.weekEnd}). ${program.daysLeft(plan.position)} days left.",
             )
-            plan.rotation?.let { rotation(plan, it) }
-                ?: appendLine("The program runs as a sequence: the next day is whatever comes after the last one trained, whenever I train.")
+            if (plan.rotates) rotation(plan)
+            else appendLine("The program runs as a sequence: the next day is whatever comes after the last one trained, whenever I train.")
         }
         val changes = plan.inForce
         if (changes.isNotEmpty()) {

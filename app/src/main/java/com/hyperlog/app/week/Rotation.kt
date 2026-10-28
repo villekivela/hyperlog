@@ -54,19 +54,22 @@ data class Rotation(
     private val weekDone: RotationAnchor = anchor,
     /** Each training day's date, missed or not, with the next one's. */
     private val turnAfter: Map<LocalDate, LocalDate> = emptyMap(),
-    /** What it was read from, to set it again somewhere else. */
-    private val read: Read? = null,
+    /** What it was worked out from, to work it out again set somewhere else. */
+    private val inputs: Inputs? = null,
 ) {
-    /** What [Rotations.of] read a rotation from, beside its anchor and the days it kept. */
-    data class Read(val program: Program, val days: Set<DayOfWeek>, val sessions: List<SessionStart>, val today: LocalDate, val skips: Set<LocalDate>, val repeats: Set<LocalDate>)
+    /** What [Rotations.of] works a rotation out from, beside its anchor and the days it kept. */
+    data class Inputs(val program: Program, val days: Set<DayOfWeek>, val sessions: List<SessionStart>, val today: LocalDate, val skips: Set<LocalDate>, val repeats: Set<LocalDate>)
 
     /** The rotation set again from today at [position], as a Change moving the position sets it. */
     fun anchorAt(position: Position): RotationAnchor = anchor.copy(week = position.week, day = position.day, rollbackDay = position.day)
 
-    /** The rotation as it would read set again at [position] ([anchorAt]); itself when it can't be read again. */
+    /**
+     * The days to come as they would run set again at [position] ([anchorAt]), for a Change's
+     * review: the days kept from before aren't carried over. Itself when made by hand, without [inputs].
+     */
     fun movedTo(position: Position): Rotation {
-        val read = read ?: return this
-        return Rotations.of(read.program, anchorAt(position), read.days, read.sessions, read.today, read.skips, read.repeats)
+        val inputs = inputs ?: return this
+        return Rotations.of(inputs.program, anchorAt(position), inputs.days, inputs.sessions, inputs.today, inputs.skips, inputs.repeats)
     }
 
     /** The coming training days' dates, in order. */
@@ -182,7 +185,7 @@ object Rotations {
             since = anchor.from,
             weekDone = weekDone ?: anchorNow,
             turnAfter = until,
-            read = Rotation.Read(program, days, sessions, today, skips, repeats),
+            inputs = Rotation.Inputs(program, days, sessions, today, skips, repeats),
         )
     }
 
