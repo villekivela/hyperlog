@@ -29,7 +29,11 @@ data class ReviewPage(
     val review: Review,
     val whole: Review?,
     val next: Block?,
-)
+) {
+    /** The kind of check-in Check in starts from this page. */
+    val checkInKind: com.hyperlog.app.coach.Opening
+        get() = if (whole != null) com.hyperlog.app.coach.Opening.ProgramReview else com.hyperlog.app.coach.Opening.BlockReview
+}
 
 /**
  * Reads block reviews from the stored log (SPEC, Program → Block review), and keeps which ones

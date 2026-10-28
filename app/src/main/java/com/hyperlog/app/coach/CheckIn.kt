@@ -24,9 +24,45 @@ enum class Tile(val words: String) {
     SomethingElse("Something else."),
 }
 
-/** What opened a check-in. */
+/**
+ * What opened a check-in, its kind (SPEC, Coaching → Check-in). It is only stored, and the
+ * scripted coach picks its script by it; the title and the history don't read it yet.
+ */
 @Serializable
-enum class Opening { Tile, EaseBackIn, HowsItGoing }
+enum class Opening {
+    Tile, EaseBackIn, HowsItGoing,
+    /** A planned day's fit chip (about: the day's last slot and date). */
+    Fit,
+    /** The coach line (about: its pattern and what it names). */
+    CoachLine,
+    /** Check in about the next block. */
+    BlockReview,
+    /** Check in on the program review. */
+    ProgramReview,
+    /** New program on the program review. */
+    NewProgramReview,
+}
+
+/** The coach line's patterns, as a check-in keeps them. */
+@Serializable
+enum class LinePattern { DayMissed, Stall, Grinding, SameSwap }
+
+/**
+ * What a kind of check-in names, kept with it: a [Opening.Fit]'s day (its last [slot], planned on
+ * [date]) or a [Opening.CoachLine]'s [pattern] with its [exercise], [slot], what it was
+ * [swappedFor], or a missed day ([dayName] [missed] of its last [of] turns).
+ */
+@Serializable
+data class About(
+    val slot: String? = null,
+    val date: String? = null,
+    val pattern: LinePattern? = null,
+    val exercise: String? = null,
+    val swappedFor: String? = null,
+    val dayName: String? = null,
+    val missed: Int? = null,
+    val of: Int? = null,
+)
 
 /**
  * What a check-in sends on every call, fixed when it starts so each call reads it from the cache:
@@ -59,6 +95,8 @@ data class CheckIn(
     val frame: CheckInFrame,
     /** What opened it, for its title: a tile, Ease back in or How's it going?. */
     val from: Opening = Opening.Tile,
+    /** What the kind names, for the fit and the coach line. */
+    val about: About? = null,
     val turns: List<Turn> = emptyList(),
     /** Why the last call has no reply; Try again calls again. */
     val failure: CheckInFailure? = null,
@@ -158,7 +196,8 @@ sealed interface CheckInStep {
 class CheckInCoach(private val model: CoachModel, private val world: CheckInWorld) {
     suspend fun start(tile: Tile, frame: CheckInFrame): CheckIn = run(CheckIn(tile.words, tile, frame))
 
-    suspend fun start(opening: String, frame: CheckInFrame, from: Opening = Opening.Tile): CheckIn = run(CheckIn(opening, null, frame, from))
+    suspend fun start(opening: String, frame: CheckInFrame, from: Opening = Opening.Tile, about: About? = null): CheckIn =
+        run(CheckIn(opening, null, frame, from, about))
 
     /** Answers the question showing with [text], one of its answers or your own words, and asks Claude on. */
     suspend fun answer(checkIn: CheckIn, text: String): CheckIn = run(answered(checkIn, text))
@@ -253,7 +292,7 @@ class CheckInCoach(private val model: CoachModel, private val world: CheckInWorl
                 val kept = withoutLostFiles(current)
                 if (kept != current) return kept
                 val reply = try {
-                    model.reply(CoachRequest(current.frame.context, current.frame.tools, current.messages), progress)
+                    model.reply(CoachRequest(current.frame.context, current.frame.tools, current.messages, current.tile, current.from, current.about), progress)
                 } catch (e: CoachError) {
                     return current.copy(failure = failure(e))
                 }

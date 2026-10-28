@@ -66,6 +66,14 @@ sealed interface CoachLine {
 
 /** The coach line's patterns, found in the log. It only points: nothing here changes the plan (ADR 0003). */
 object CoachLines {
+    /** What a check-in from [line] keeps of it (the pattern and what it names), for the scripted coach. */
+    fun about(line: CoachLine): About = when (line) {
+        is CoachLine.DayMissed -> About(pattern = LinePattern.DayMissed, dayName = line.name, missed = line.missed, of = line.of)
+        is CoachLine.Stall -> About(pattern = LinePattern.Stall, exercise = line.exercise)
+        is CoachLine.Grinding -> About(pattern = LinePattern.Grinding, exercise = line.exercise)
+        is CoachLine.SameSwap -> About(pattern = LinePattern.SameSwap, slot = line.slot, exercise = line.exercise, swappedFor = line.swappedFor)
+    }
+
     /** Every pattern in [log], in the order they show: days missed, then stalls, grinding and swaps. */
     fun of(log: CoachLog): List<CoachLine> =
         (missedDays(log.turns) + stalls(log.sessions) + grinding(log.sessions) + swaps(log.sessions)).filter { it.last >= log.since }

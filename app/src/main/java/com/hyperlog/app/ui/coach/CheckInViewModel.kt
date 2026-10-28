@@ -144,16 +144,22 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         runner.start(words, com.hyperlog.app.coach.Opening.EaseBackIn)
     }
 
-    /** A check-in whose first answer is [words]: a day that doesn't fit its training day, or the coach line. */
-    fun fit(words: String) {
+    /** A check-in whose first answer is [ask]'s words: a day that doesn't fit its training day. */
+    fun fit(ask: com.hyperlog.app.week.FitAsk) {
         _draft.value = null
-        runner.start(words, com.hyperlog.app.coach.Opening.Tile)
+        runner.start(ask.words, com.hyperlog.app.coach.Opening.Fit, about = com.hyperlog.app.coach.About(slot = ask.slot, date = ask.date?.toString()))
     }
 
-    /** Check in or New program on a block review: a check-in whose first answer is [opening], with the review in its [context]. */
-    fun review(opening: String, context: String) {
+    /** A check-in whose first answer is the coach [line]'s [words]. */
+    fun coachLine(words: String, line: com.hyperlog.app.coach.CoachLine) {
         _draft.value = null
-        runner.start(opening, com.hyperlog.app.coach.Opening.Tile, context)
+        runner.start(words, com.hyperlog.app.coach.Opening.CoachLine, about = com.hyperlog.app.coach.CoachLines.about(line))
+    }
+
+    /** Check in or New program on a block review: a check-in of [kind] whose first answer is [opening], with the review in its [context]. */
+    fun review(opening: String, context: String, kind: com.hyperlog.app.coach.Opening) {
+        _draft.value = null
+        runner.start(opening, kind, context)
     }
 
     /** How's it going? about a Change in force: it opens with the Change and the check-in that made it. */

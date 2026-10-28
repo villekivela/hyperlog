@@ -64,6 +64,7 @@ import com.hyperlog.app.ui.today.FitLines
 import com.hyperlog.app.ui.today.SlotRows
 import com.hyperlog.app.ui.today.letter
 import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.FitAsk
 import java.time.LocalDate
 
 /**
@@ -85,7 +86,7 @@ internal fun LazyListScope.blockItems(
     /** How a day to come fits its training day, under its head. */
     fit: (ProgramDay) -> DayFit = { DayFit.None },
     /** Tapping a day's time line; null leaves it as words. */
-    onFitTime: ((String) -> Unit)? = null,
+    onFitTime: ((FitAsk) -> Unit)? = null,
     /** Review on a finished block's card, with its id. */
     onReview: (String) -> Unit = {},
 ) {
@@ -99,7 +100,7 @@ internal fun LazyListScope.blockItems(
         if (dayFit != null && !dayFit.isEmpty) {
             item(key = "fit-$key") {
                 Box(Modifier.padding(start = CardMargin + CardPadding, end = CardMargin + CardPadding, bottom = 8.dp)) {
-                    FitLines(dayFit, stringResource(R.string.fit_day, day.day.letter), MaterialTheme.colorScheme.onSurfaceVariant, onFitTime)
+                    FitLines(dayFit, stringResource(R.string.fit_day, day.day.letter), MaterialTheme.colorScheme.onSurfaceVariant, onFitTime, day.day.slots.lastOrNull()?.id, (day as? ProgramDay.Ahead)?.date)
                 }
             }
         }

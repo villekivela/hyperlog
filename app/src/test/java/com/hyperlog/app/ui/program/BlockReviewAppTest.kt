@@ -60,7 +60,7 @@ class BlockReviewAppTest {
         compose.click("Check in about the next block")
         compose.waitGone("Ramp-in review")
         // A check-in with the scripted coach, the review in its context.
-        compose.waitFor("What's on your mind?")
+        compose.waitFor("Your lifts moved", substring = true)
         val kept = androidx.lifecycle.ViewModelProvider(compose.activity)[com.hyperlog.app.ui.coach.CheckInViewModel::class.java].checkIn.value!!.checkIn
         assertEquals("Ramp-in is done. Look at how it went and the next block.", kept.opening)
         assertTrue("## How Ramp-in went (weeks 1–2)" in kept.frame.context)

@@ -379,7 +379,7 @@ private fun Step(
     val title = view.checkIn.tile?.let { stringResource(TileLooks.getValue(it).label) } ?: when (view.checkIn.from) {
         Opening.HowsItGoing -> stringResource(R.string.checkin_title_hows_it_going)
         Opening.EaseBackIn -> stringResource(R.string.checkin_title_ease_back)
-        Opening.Tile -> stringResource(R.string.checkin_title)
+        else -> stringResource(R.string.checkin_title)
     }
     /** Ask Claude was pressed for this failure: Paste reply is the next step. */
     var asked by rememberSaveable(view.checkIn.turns.size) { mutableStateOf(false) }

@@ -350,18 +350,22 @@ class ProgramScreenTest {
         val active = ActiveProgram(1, program(), rotation.next, today = today, rotation = rotation)
         val harbour = Gym(1, "Harbour", emptyList(), missing = setOf("barbell_bench_press"))
         var answer: String? = null
+        var asked: com.hyperlog.app.week.FitAsk? = null
         compose.setContent {
             HyperlogTheme {
                 ProgramScreen(
                     active, null, onImport = {}, onCloseErrors = {}, onBack = {},
                     weekdayPlan = WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.THURSDAY to null, DayOfWeek.SATURDAY to null), minutes = mapOf(DayOfWeek.MONDAY to 5)),
-                    gyms = listOf(harbour), onCheckInFit = { answer = it },
+                    gyms = listOf(harbour), onCheckInFit = { answer = it.words; asked = it },
                 )
             }
         }
         compose.onNodeWithText("1 swap at Harbour").assertIsDisplayed()
         compose.onNodeWithText("· Monday has 5", substring = true).assertIsDisplayed().performClick()
         assertTrue(answer, Regex("Day A runs ~\\d+ minutes but Monday has 5\\.").matches(answer.orEmpty()))
+        // The Program page's chip hands on the day's last slot and its planned date.
+        assertTrue(asked!!.slot != null)
+        assertEquals(DayOfWeek.MONDAY, asked!!.date?.dayOfWeek)
     }
 
     @Test

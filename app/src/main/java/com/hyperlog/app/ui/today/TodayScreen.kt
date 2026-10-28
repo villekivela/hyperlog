@@ -90,6 +90,7 @@ import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
 import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.FitAsk
 import com.hyperlog.app.week.Fit
 import com.hyperlog.app.week.PlannedDates
 import com.hyperlog.app.week.Rotations
@@ -144,7 +145,7 @@ fun TodayScreen(
     savedPrograms: List<com.hyperlog.app.program.ListedProgram> = emptyList(),
     onOpenSaved: (Long) -> Unit = {},
     /** Starts a check-in whose first answer is the words given: a day that runs over its training day's minutes. */
-    onCheckInFit: (String) -> Unit = {},
+    onCheckInFit: (FitAsk) -> Unit = {},
     /** The exercise library, for the swaps the coach proposes. */
     library: List<Exercise> = emptyList(),
     /** The day of the last session finished; null with none yet. */
@@ -192,7 +193,7 @@ fun TodayScreen(
     /** The coach line: a pattern in the log, over today's day; null for none. */
     coachLine: CoachLine? = null,
     /** Starts a check-in whose first answer is the coach line's words. */
-    onCheckInLine: (String) -> Unit = {},
+    onCheckInLine: (String, CoachLine) -> Unit = { _, _ -> },
     /** Hides the coach line until its pattern grows. */
     onHideCoachLine: (CoachLine) -> Unit = {},
     /** A finished block's review not yet opened (SPEC, Program → Block review); null for none. */
@@ -813,7 +814,7 @@ private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
  * banner, quieter than time off. Check in starts a check-in whose first answer is the line.
  */
 @Composable
-private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheckIn: (String) -> Unit, onHide: () -> Unit) {
+private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheckIn: (String, CoachLine) -> Unit, onHide: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val words = coachLineText(line, names)
     val answer = stringResource(R.string.coach_line_answer, words)
@@ -823,7 +824,7 @@ private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheck
         container = cs.surfaceContainerHighest, content = cs.onSurface,
         titleStyle = MaterialTheme.typography.titleSmall.copy(lineBreak = LineBreak.Heading),
     ) {
-        TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
+        TextButton(onClick = { onCheckIn(answer, line) }) { Text(stringResource(R.string.coach_line_check_in)) }
         IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
     }
 }

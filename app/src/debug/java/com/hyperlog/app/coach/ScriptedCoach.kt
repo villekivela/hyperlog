@@ -1,6 +1,7 @@
 package com.hyperlog.app.coach
 
 import com.hyperlog.app.program.Position
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -45,14 +46,59 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
 
     private suspend fun scripted(request: CoachRequest): CoachReply {
         val world = world()
-        val opening = (request.messages.first() as CoachMessage.User).text
-        val tile = Tile.entries.firstOrNull { it.words == opening } ?: Tile.SomethingElse
+        // The kind picks the script, not the opening's words.
+        val tile = if (request.from == Opening.NewProgramReview) Tile.NewProgram else request.tile ?: Tile.SomethingElse
         val step = request.messages.count { it is CoachMessage.Assistant }
         val last = request.messages.last()
         if (last is CoachMessage.Results && last.results.any { it.isError }) return fixed(tile, world)
         if (last is CoachMessage.User && last.text == CheckInCoach.TELL_ME_MORE) return words(MORE)
         val answers = request.messages.filterIsInstance<CoachMessage.Results>().map { it.results.first().content.lineSequence().first() }
-        return script(tile, world, answers).getOrElse(step) { words("That's all I have. Train as planned.") }
+        return (kindScript(request, world) ?: script(tile, world, answers)).getOrElse(step) { words("That's all I have. Train as planned.") }
+    }
+
+    /** The script of a check-in that a tile didn't open: the day's fit, the coach line or a review; null for a tile. */
+    private fun kindScript(request: CoachRequest, world: ScriptedWorld): List<CoachReply>? {
+        val about = request.about
+        return when (request.from) {
+            Opening.Fit -> listOf(fitChange(world, about))
+            Opening.CoachLine -> listOf(lineReply(world, about))
+            Opening.BlockReview -> listOf(words(BLOCK_REVIEW))
+            Opening.ProgramReview -> listOf(words(PROGRAM_REVIEW))
+            else -> null
+        }
+    }
+
+    /** Short on time's ending for the flagged day: its last exercise left out on its planned date. */
+    private fun fitChange(world: ScriptedWorld, about: About?): CoachReply {
+        val plan = world.plan
+        val slot = about?.slot
+        if (plan == null || slot == null) return words("Do the first two exercises and stop there. Short sessions still count.")
+        val date = about.date?.let { LocalDate.parse(it) } ?: plan.today
+        return change(Change("That day only: leave out the last exercise to fit the time.", Scope.Dates(date, date), listOf(Operation.Remove(slot, reason = "short on time"))))
+    }
+
+    private fun lineReply(world: ScriptedWorld, about: About?): CoachReply {
+        val slots = world.plan?.program?.blocks.orEmpty().flatMap { it.days }.flatMap { d -> d.groups.flatMap { it.slots } }
+        val exercise = about?.exercise
+        val names = world.library.associate { it.id to it.name }
+        fun name(id: String?) = names[id] ?: id.orEmpty()
+        // The first slot of the exercise that has an alternative to move to.
+        val slot = slots.firstOrNull { it.exercise == exercise && it.alternatives.isNotEmpty() }
+        return when (about?.pattern) {
+            LinePattern.Stall ->
+                if (slot == null) words(NO_ALTERNATIVE)
+                else slot.alternatives.first().exercise.let { to -> change(Change("For good: ${name(to)} in place of ${name(slot.exercise)}.", Scope.RestOfProgram, listOf(Operation.Swap(slot.id, to, reason = "stalled")))) }
+            LinePattern.Grinding ->
+                slots.firstOrNull { it.exercise == exercise }?.let {
+                    change(Change("For this block: one more rep in reserve on ${name(it.exercise)}.", Scope.RestOfBlock, listOf(Operation.AdjustRir(it.id, 1, reason = "grinding"))))
+                } ?: words(NO_ALTERNATIVE)
+            LinePattern.SameSwap ->
+                if (about.slot == null || about.swappedFor == null) words(NO_ALTERNATIVE)
+                else change(Change("For good: ${name(about.swappedFor)} in place of ${name(about.exercise)}.", Scope.RestOfProgram, listOf(Operation.Swap(about.slot, about.swappedFor, reason = "you keep choosing it"))))
+            LinePattern.DayMissed ->
+                words("${about.dayName} missed ${about.missed} of its last ${about.of} turns. Check its training day still works for you, or change your training days.")
+            null -> words(NO_ALTERNATIVE)
+        }
     }
 
     private fun script(tile: Tile, world: ScriptedWorld, answers: List<String>): List<CoachReply> {
@@ -201,6 +247,9 @@ class ScriptedCoach(private val world: suspend () -> ScriptedWorld) : CoachModel
     private companion object {
         const val THINKING_MS = 900L
         const val WRITING_MS = 900L
+        const val NO_ALTERNATIVE = "Nothing in this program has an alternative to move to. Keep it as it is, and tell me more if it bothers you."
+        const val BLOCK_REVIEW = "Your lifts moved, your turning up was steady, and your volume held. Keep the next block as written and watch the lifts that stalled."
+        const val PROGRAM_REVIEW = "Your lifts moved, your turning up was steady, and your volume held across the program. Next, keep what worked: the lifts that moved, the days you reliably trained and the volume you recovered from."
         const val DRAG_CURL = "Barbell Drag Curl"
         const val MORE = "A short night mostly costs you reps at the end of a set, not strength at the start. Keep the weights, cut a set, and sleep in tonight."
     }
