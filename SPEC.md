@@ -1110,7 +1110,8 @@ each planned day with the training day it lands on, and never changes the day:
        eased sessions; its deload and easy-week sessions stay out (owner, 2026-10-28).
        A row (owner, 2026-10-28): the name, the machine under it, and on the right
        `82.5 → 87.5 kg` with the gain `+5` in the accent; a stall reads `±0` and a drop `−2.5`,
-       both muted. A lift first trained in the block starts from its estimate after its first
+       both muted. Estimates read to the half kilo, and the gain is between them as shown. A lift
+       first trained in the block starts from its estimate after its first
        session there (owner, 2026-10-28), its first counted one when eased sessions came first.
        Estimates are per machine (ADR 0002), so a machine exercise needs two counted sessions on
        the machine used most.
@@ -1122,7 +1123,8 @@ each planned day with the training day it lands on, and never changes the day:
        week trained again and an easy week's included.
      - **Volume**: average weekly sets per muscle as done → as the block is written (its week
        overrides, not Changes), then the Changes accepted during the block, one line
-       (`2 Changes: no grip work for a week, …`). A row: `Chest  9.5 → 10 sets a week`.
+       (`2 Changes: no grip work for a week, …`). A row: `Chest  9.5 → 10 sets a week`. Past 8
+       muscles the list shows its first 6 and `15 more muscles` to open the rest.
      - **Records** set in the block; **bodyweight** start → end when it was logged in the block.
      - **The goal**: each lift goal's estimate against it (`97 of 100 kg`); with a date, the
        block's gain carried on in a straight line to it (`On pace for 1 Dec`, `4 kg short at this

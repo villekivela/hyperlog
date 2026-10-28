@@ -895,6 +895,11 @@
     <string name="review_n_planned">%1$d / %2$d</string>
     <string name="review_sets">%1$s → %2$s</string>
     <string name="review_sets_a_week">%1$s → %2$s sets a week</string>
+    <plurals name="review_volume_more">
+        <item quantity="one">%1$d more muscle</item>
+        <item quantity="other">%1$d more muscles</item>
+    </plurals>
+    <string name="review_volume_fewer">Fewer</string>
     <string name="review_record_set">%1$s kg × %2$d · %3$s</string>
     <string name="review_record_estimate">Estimate record</string>
     <string name="review_record_reps">Rep record</string>

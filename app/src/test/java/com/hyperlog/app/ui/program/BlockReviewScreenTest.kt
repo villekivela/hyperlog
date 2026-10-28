@@ -126,4 +126,10 @@ class BlockReviewScreenTest {
         assertEquals(1, compose.onAllNodesWithText("Seated Cable Row").fetchSemanticsNodes().size)
         seen("+2"); seen("+6")
     }
+
+    @Test
+    fun estimatesReadToTheHalfKiloAndTheGainBetweenThem() {
+        show(ReviewPage(1, program, program.blocks[0], review.copy(lifts = listOf(LiftChange("hack_squat", null, 109.29, 112.04))), null, program.blocks[1]))
+        seen("109.5 → 112 kg"); seen("+2.5")
+    }
 }
