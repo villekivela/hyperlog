@@ -249,7 +249,7 @@ object BlockReviews {
      * Each exercise trained at least twice in [weeks], deload and easy-week sessions left out, and
      * eased ones outside the [eased] blocks' weeks: its estimate before the first (after it, for a
      * lift new there) → after the last. A machine exercise reads the machine with the most of them,
-     * the one used last on a tie. Biggest gain first.
+     * the one used last on a tie. Biggest gain first, as a share of where it started.
      */
     private fun lifts(lines: List<ReviewLine>, weeks: IntRange, eased: Set<Int>): List<Lift> =
         lines.groupBy { it.exercise }.values.mapNotNull { machines ->
@@ -258,19 +258,22 @@ object BlockReviews {
             if (counted.size < 2) return@mapNotNull null
             val start = line.points.lastOrNull { it.estimateKg != null && it.date < counted.first().date }?.estimateKg ?: counted.first().estimateKg!!
             Lift(LiftChange(line.exercise, line.machine, start, counted.last().estimateKg!!), counted.first().date, counted.last().date)
-        }.sortedByDescending { it.change.gainKg }
+        }.sortedByDescending { it.change.gainKg / it.change.startKg }
 
     /** The sessions in [weeks] that count for a lift: with an estimate, no deload, eased only in an [eased] block's week. */
     private fun ReviewLine.counted(weeks: IntRange, eased: Set<Int>) =
         points.filter { it.estimateKg != null && it.week in weeks && !it.deload && (!it.eased || it.week in eased) }
 
     /**
-     * The first answer of Check in about the next block, or with [newProgram] of New program. The
-     * review goes in the check-in's context ([context]), not in the answer.
+     * The first answer of Check in about the next block, on the [programReview] of Check in, or with
+     * [newProgram] of New program. The review goes in the check-in's context ([context]), not in
+     * the answer.
      */
-    fun opening(program: Program, block: Block, newProgram: Boolean = false): String =
-        if (newProgram) "${program.title} is done. I want a new program for what comes next."
-        else "${block.name} is done. Look at how it went and the next block."
+    fun opening(program: Program, block: Block, newProgram: Boolean = false, programReview: Boolean = false): String = when {
+        newProgram -> "${program.title} is done. I want a new program for what comes next."
+        programReview -> "${program.title} is done. Look at how it went and what comes next."
+        else -> "${block.name} is done. Look at how it went and the next block."
+    }
 
     /**
      * [review] of [block] as text for the check-in's context, the [whole] program after it on the

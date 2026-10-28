@@ -140,4 +140,13 @@ class BlockReviewScreenTest {
         show(ReviewPage(1, program, program.blocks[1], block, whole, null))
         seen("115 → 121.5 kg"); seen("+6.5")
     }
+
+    @Test
+    fun checkInOnTheProgramReviewIsCheckInAboutWhatComesNext() {
+        var opened: String? = null
+        // A program replaced mid-way: its program review has a next block, still Check in.
+        show(ReviewPage(1, program, program.blocks[0], review, review, program.blocks[1]), checkIn = { o, _ -> opened = o })
+        compose.click("Check in")
+        assertEquals("Hyperlog Full Body is done. Look at how it went and what comes next.", opened)
+    }
 }

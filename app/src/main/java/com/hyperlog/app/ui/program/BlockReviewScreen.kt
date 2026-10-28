@@ -109,8 +109,8 @@ fun BlockReviewScreen(
                     }
                     Spacer(Modifier.width(8.dp))
                 }
-                Button(onClick = { onCheckIn(BlockReviews.opening(page.program, block), context()) }) {
-                    Text(stringResource(if (page.next != null) R.string.review_check_in_next else R.string.review_check_in), maxLines = 1)
+                Button(onClick = { onCheckIn(BlockReviews.opening(page.program, block, programReview = whole != null), context()) }) {
+                    Text(stringResource(if (page.next != null && whole == null) R.string.review_check_in_next else R.string.review_check_in), maxLines = 1)
                 }
             }
         },

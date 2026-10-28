@@ -312,4 +312,22 @@ class BlockReviewsTest {
         assertEquals(GoalStanding(bench, 104.5, null), BlockReviews.of(log, program.blocks[1]).goals.single())
         assertEquals(GoalStanding(bench, 104.5, null), BlockReviews.program(log, program.blocks[1]).goals.single())
     }
+
+    @Test
+    fun checkInOnTheProgramReviewOpensWithTheProgramDone() {
+        assertEquals("Hyperlog is done. Look at how it went and what comes next.", BlockReviews.opening(program, program.blocks[1], programReview = true))
+    }
+
+    @Test
+    fun liftsRankByGainAsAPercentOfTheirStart() {
+        val log = ReviewLog(
+            program,
+            lines = listOf(
+                // 5 kg on 200 is 2.5%; 2 kg on 20 is 10%.
+                ReviewLine("squat", points = listOf(point(0, 1, 200.0), point(2, 2, 205.0))),
+                ReviewLine("raise", points = listOf(point(1, 1, 20.0), point(3, 2, 22.0))),
+            ),
+        )
+        assertEquals(listOf("raise", "squat"), BlockReviews.of(log, program.blocks[0]).lifts.map { it.exercise })
+    }
 }

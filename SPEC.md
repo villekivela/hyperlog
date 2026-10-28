@@ -1103,7 +1103,8 @@ each planned day with the training day it lands on, and never changes the day:
        the `setting` row `block_review_opened`.
      - **Lifts**: each exercise trained at least twice in the block, its estimate before its first
        session in the block → after its last (as suggestions read it then), deload and easy-week
-       sessions left out; biggest gain first, stalls and drops last. A machine exercise reads the
+       sessions left out; biggest gain first, as a percent of the start estimate (still read in kg;
+       owner, 2026-10-28), stalls and drops last. A machine exercise reads the
        machine used most in the block, named (`Cable left · Harbour`, ADR 0002). Weeks the plan
        eases (`rirAdd` above 0, as Ramp-in) are left out too, as from a stall (owner, 2026-10-28),
        except in a block the plan eases in every week, as the starter's Ramp-in, which counts its
@@ -1139,7 +1140,9 @@ each planned day with the training day it lands on, and never changes the day:
        went and the next block." (owner, 2026-10-28) with the review as text in the context: after the
        check-in's own context through the API, after the situation in Ask Claude's prompt.
      - **Program review**: the last block's review has a column for the whole program beside the
-       block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). A past
+       block's, and **New program** beside Check in ("Hyperlog Full Body is done…"). There the button reads
+       **Check in** and its first answer is "Hyperlog Full Body is done. Look at how it went and what
+       comes next." (owner, 2026-10-28). A past
        program on Programs opens its program review. Lifts, Turning up, Volume and Records get
        two right-aligned columns headed by the block's name and "Program"; Bodyweight and the
        goal get a second line (`Program: 81 → 79 kg`) (owner, 2026-10-28). A past program's sheet
