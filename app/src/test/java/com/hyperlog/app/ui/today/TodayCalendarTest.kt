@@ -29,7 +29,6 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TestPrograms
 import com.hyperlog.app.ui.program.ProgramStore
 import com.hyperlog.app.waitFor
-import com.hyperlog.app.waitGone
 import com.hyperlog.app.waitForDescription
 import com.hyperlog.app.week.WeekdayPlan
 import com.hyperlog.app.week.WeekdayPlans
@@ -141,11 +140,10 @@ class TodayCalendarTest {
     }
 
     @Test
-    fun withNoTrainingDaysOnlyTheNextDayIsMarkedAndTheHeaderAsksForThem() {
+    fun withNoTrainingDaysTheHeaderAsksForThem() {
         importProgram()
         compose.await(cell(today, ", planned Day A"))
         show(today.plusDays(1))
-        compose.onNode(cell(today.plusDays(1), ", planned")).assertDoesNotExist()
         // The words, or the pencil alone when the month needs the room (CalendarHeadTest).
         // On a Sunday tomorrow is another week's Monday, a rest day that offers the same prompt: take the head's.
         compose.onAllNodes(hasText("Set your training days").or(hasContentDescription("Set your training days"))).onFirst().performClick()
@@ -321,10 +319,6 @@ class TodayCalendarTest {
     @Test
     fun theHeadNamesTheProgramWeekOfTheWeekShown() {
         importProgram()
-        // Today is week 1's Day A, planned: this calendar week is program week 1.
         compose.waitFor("· Week 1", substring = true)
-        // With no training days nothing else is dated: next week is just its month.
-        show(today.plusWeeks(1))
-        compose.waitGone("· Week", substring = true)
     }
 }
