@@ -330,4 +330,11 @@ class BlockReviewsTest {
         )
         assertEquals(listOf("raise", "squat"), BlockReviews.of(log, program.blocks[0]).lifts.map { it.exercise })
     }
+
+    @Test
+    fun aGoalWithoutADateHasNoPaceEvenForALiftThatGained() {
+        val squat = LiftGoal("squat", 140.0, by = null)
+        val log = ReviewLog(program, lines = listOf(ReviewLine("squat", points = listOf(point(1, 1, 120.0), point(3, 2, 123.0)))), goals = listOf(squat))
+        assertEquals(listOf(GoalStanding(squat, 123.0, null)), BlockReviews.of(log, program.blocks[0]).goals)
+    }
 }
