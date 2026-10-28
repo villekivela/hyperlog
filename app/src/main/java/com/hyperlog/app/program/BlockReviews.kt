@@ -155,14 +155,14 @@ object BlockReviews {
     }
 
     /**
-     * [goal] against its exercise's estimate at the end of [dates]: its lift's in [lifts], else the
-     * latest before. With a date, the lift's gain over its sessions carried on to it.
+     * [goal] against its exercise's estimate at the end of [dates], the latest there is, a deload's
+     * test set included, so a block and the program agree. With a date, its lift's gain over its
+     * counted sessions carried on to it.
      */
     private fun standing(goal: LiftGoal, lines: List<ReviewLine>, lifts: List<Lift>, dates: ClosedRange<LocalDate>?): GoalStanding? {
         val lift = lifts.firstOrNull { it.change.exercise == goal.exerciseId }
-        val estimate = lift?.change?.endKg
-            ?: lines.filter { it.exercise == goal.exerciseId }.flatMap { it.points }
-                .filter { it.estimateKg != null && (dates == null || it.date <= dates.endInclusive) }.maxByOrNull { it.date }?.estimateKg
+        val estimate = lines.filter { it.exercise == goal.exerciseId }.flatMap { it.points }
+            .filter { it.estimateKg != null && (dates == null || it.date <= dates.endInclusive) }.maxByOrNull { it.date }?.estimateKg
             ?: return null
         val by = goal.by
         if (by == null || lift == null || estimate >= goal.kg) return GoalStanding(goal, estimate, null)

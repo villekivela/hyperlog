@@ -1131,8 +1131,9 @@ each planned day with the training day it lands on, and never changes the day:
        block's gain carried on in a straight line to it (`On pace for 1 Dec`, `4 kg short at this
        pace`; no "estimate" mark, owner 2026-10-28). The rate is the lift's gain over the days from its
        first counted session in the block to its last; a goal reached reads `Reached`, and one
-       whose lift didn't gain is short by what's left. A goal whose lift wasn't trained twice reads
-       the latest estimate, without a pace.
+       whose lift didn't gain is short by what's left. The estimate is the latest by the block's end
+       (a deload's test set included), so a block and its program agree; a goal whose lift wasn't
+       trained twice has no pace.
      - **Next**: what the next block changes, as its card's "From <block>" reads, then **Check in
        about the next block**, a check-in whose first answer is "Build is done. Here's how it
        went: look at it and the next block." with the review as text in the context: after the

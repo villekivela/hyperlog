@@ -299,4 +299,17 @@ class BlockReviewsTest {
         assertEquals(listOf(LiftChange("squat", null, 120.0, 122.0)), BlockReviews.of(log, rampIn).lifts)
         assertEquals(listOf(LiftChange("bench", null, 100.0, 103.0)), BlockReviews.of(log, eased.blocks[1]).lifts)
     }
+
+    @Test
+    fun aGoalReadsTheLatestEstimateEvenFromADeloadSoTheBlockAndTheProgramAgree() {
+        val bench = LiftGoal("bench", 104.0, by = monday.plusDays(60))
+        val log = ReviewLog(
+            program,
+            lines = listOf(ReviewLine("bench", points = listOf(point(0, 3, 100.0), point(2, 3, 102.0), point(4, 4, 104.5).copy(deload = true)))),
+            goals = listOf(bench),
+        )
+        // The deload's test set is the latest estimate: the goal is reached in both columns.
+        assertEquals(GoalStanding(bench, 104.5, null), BlockReviews.of(log, program.blocks[1]).goals.single())
+        assertEquals(GoalStanding(bench, 104.5, null), BlockReviews.program(log, program.blocks[1]).goals.single())
+    }
 }
