@@ -5,7 +5,6 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.hyperlog.app.openTab
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
@@ -64,9 +63,10 @@ class BlockReviewAppTest {
         val kept = androidx.lifecycle.ViewModelProvider(compose.activity)[com.hyperlog.app.ui.coach.CheckInViewModel::class.java].checkIn.value!!.checkIn
         assertEquals("Ramp-in is done. Look at how it went and the next block.", kept.opening)
         assertTrue("## How Ramp-in went (weeks 1–2)" in kept.frame.context)
-        // Opened, Today no longer points at it.
+        // × goes back to the review; Back from it to Today, which no longer points at it.
         compose.onNodeWithContentDescription("Close the check-in").performClick()
-        compose.openTab("Today")
+        compose.waitFor("Ramp-in review")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitFor("Week 3", substring = true)
         compose.onNodeWithText("Ramp-in is done · See the review").assertDoesNotExist()
     }
