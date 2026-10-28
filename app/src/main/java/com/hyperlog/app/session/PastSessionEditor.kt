@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 /** A finished session as a list shows it: when, which day and gym, and what was logged. */
 data class PastSessionItem(
@@ -29,6 +32,9 @@ data class PastSessionItem(
     val programId: Long? = null,
     val position: Position? = null,
 )
+
+/** The day a finished session was started on. */
+fun PastSessionItem.date(): LocalDate = Instant.ofEpochMilli(startedAt).atZone(ZoneId.systemDefault()).toLocalDate()
 
 /** A finished session opened to look at or correct. */
 data class PastSession(

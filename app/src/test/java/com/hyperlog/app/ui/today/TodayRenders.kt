@@ -22,6 +22,7 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.StarterProgram
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.session.date
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.week.WeekdayPlan
 import org.junit.Assume.assumeTrue

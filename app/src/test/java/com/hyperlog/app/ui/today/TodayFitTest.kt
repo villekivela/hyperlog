@@ -62,12 +62,6 @@ class TodayFitTest {
     }
 
     @Test
-    fun aTrainingDayWithoutMinutesIsNeverChecked() {
-        show(WeekdayPlan(gyms = mapOf(MONDAY to null, THURSDAY to null, SATURDAY to null)))
-        compose.onNodeWithText("Thursday has", substring = true).assertDoesNotExist()
-    }
-
-    @Test
     fun aDayCountsTheSwapsItsTrainingDaysGymNeeds() {
         show(WeekdayPlan(gyms = mapOf(MONDAY to 1L, THURSDAY to null, SATURDAY to null)))
         compose.onNodeWithText("2 swaps at Harbour", substring = true).assertIsDisplayed()

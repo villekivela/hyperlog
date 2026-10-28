@@ -11,7 +11,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
-import com.hyperlog.app.ui.today.date
+import com.hyperlog.app.session.date
 import com.hyperlog.app.program.Turn
 import java.time.LocalDate
 

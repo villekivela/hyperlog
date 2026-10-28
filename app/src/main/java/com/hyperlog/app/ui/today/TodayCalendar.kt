@@ -56,6 +56,8 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.today.RestDay
+import com.hyperlog.app.session.date
 import com.hyperlog.app.week.DayFit
 import com.hyperlog.app.week.FitAsk
 import com.hyperlog.app.ui.session.RirText
@@ -69,9 +71,7 @@ import com.hyperlog.app.ui.theme.figureHeadline
 import com.hyperlog.app.ui.theme.figureMedium
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.interFigures
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -80,9 +80,6 @@ import java.util.Locale
 
 /** The Monday of [date]'s week: the calendar's weeks run Monday to Sunday. */
 internal fun weekOf(date: LocalDate): LocalDate = com.hyperlog.app.week.Rotations.mondayOf(date)
-
-/** The day a finished session was started on. */
-internal fun PastSessionItem.date(): LocalDate = Instant.ofEpochMilli(startedAt).atZone(ZoneId.systemDefault()).toLocalDate()
 
 /** `Sat 17 Oct`. */
 internal fun shortDate(date: LocalDate): String =
@@ -163,17 +160,6 @@ private fun spoken(name: DoneName): String = when (name) {
 }
 
 /**
- * The program week a calendar week from [monday] stands for: the week of its first planned day,
- * else of its first program session done; null when it has neither (outside the program, or no
- * program).
- */
-internal fun programWeekOf(monday: LocalDate, planned: Map<LocalDate, PlannedDay>, done: Map<LocalDate, List<PastSessionItem>>): Int? {
-    val days = (0..6L).map { monday.plusDays(it) }
-    return days.firstNotNullOfOrNull { planned[it]?.position?.week }
-        ?: days.firstNotNullOfOrNull { d -> done[d]?.firstNotNullOfOrNull { it.position?.week } }
-}
-
-/**
  * The calendar's head: the month and year of the week shown, **Today** once you've moved off
  * today, and the pencil to the weekday plan's sheet (`Set your training days` with none set).
  * The month is never cut short: when the words don't fit beside it (larger text, a long month),
@@ -187,7 +173,7 @@ internal fun CalendarHead(
     noWeekdayPlan: Boolean,
     onWeekdayPlan: () -> Unit,
     modifier: Modifier = Modifier,
-    /** The program week of the week shown (programWeekOf); null outside the program. */
+    /** The program week of the week shown (TodayState.programWeek); null outside the program. */
     week: Int? = null,
     /** The week shown is an easy week, named in the week's place. */
     easy: Boolean = false,
@@ -587,26 +573,17 @@ internal fun PlannedCard(
     }
 }
 
-/** What a day with nothing on it says beyond its date. */
-internal sealed interface RestMode {
-    /** `Rest day`, and the next session to select ([next] null past it). */
-    data class Rest(val next: Pair<LocalDate, PlannedDay>?) : RestMode
-
-    /** Past the program's last planned day: `Nothing planned`, pointing back to [last]. */
-    data class AfterProgram(val last: Pair<LocalDate, PlannedDay>) : RestMode
-
-    /** The program goes on but only its [next] day has a date (no training days): `Not planned yet`. */
-    data class Undated(val next: Pair<LocalDate, PlannedDay>, val onWeekdayPlan: () -> Unit) : RestMode
-}
-
-/** A day with nothing on it: its date, then what [mode] says, with a link to the day it names. */
+/**
+ * A day with nothing on it: its date, then what [mode] says, with a link to the day it names, and
+ * with the program going on undated the way to set the training days ([onWeekdayPlan]).
+ */
 @Composable
-internal fun RestCard(date: LocalDate, mode: RestMode, onNext: (LocalDate) -> Unit) {
+internal fun RestCard(date: LocalDate, mode: RestDay, onNext: (LocalDate) -> Unit, onWeekdayPlan: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val (title, link) = when (mode) {
-        is RestMode.Rest -> R.string.today_rest_day to mode.next
-        is RestMode.AfterProgram -> R.string.today_nothing_planned to mode.last
-        is RestMode.Undated -> R.string.today_not_planned_yet to mode.next
+        is RestDay.Next -> R.string.today_rest_day to mode.next
+        is RestDay.AfterProgram -> R.string.today_nothing_planned to mode.last
+        is RestDay.Undated -> R.string.today_not_planned_yet to mode.next
     }
     // The link's 48 dp row already holds 14 dp under its words: 8 dp more matches the 20 dp on top.
     DayCard(bottom = if (link != null) 8.dp else 20.dp) {
@@ -614,10 +591,10 @@ internal fun RestCard(date: LocalDate, mode: RestMode, onNext: (LocalDate) -> Un
         Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
         link?.let { (d, day) ->
             Spacer(Modifier.height(8.dp))
-            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = mode is RestMode.AfterProgram)
+            NextLink(d, day, onNext, padding = PaddingValues(0.dp), last = mode is RestDay.AfterProgram)
         }
-        if (mode is RestMode.Undated) {
-            TextButton(onClick = mode.onWeekdayPlan, contentPadding = PaddingValues(0.dp)) {
+        if (mode is RestDay.Undated) {
+            TextButton(onClick = onWeekdayPlan, contentPadding = PaddingValues(0.dp)) {
                 SymbolIcon(Symbol.Edit, null, Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.weekday_plan_none))
