@@ -3,7 +3,7 @@
 Rendered on Robolectric at the phone's size (412 × 915 dp, xxhdpi), light and dark, by
 `FitRenders` (`RENDERS=docs/design/screens ./gradlew testDebugUnitTest --tests '*FitRenders*'`, `DARK=1` for dark).
 The emulator came up, but a seeded program with training days, minutes and a gym is easier to
-reach in a render than by tapping through the sheets. Not tried on the owner's phone yet.
+reach in a render than by tapping through the sheets. Tried on the owner's phone: see the last section.
 
 Screens: `light-fit-today-cards.png`, `dark-fit-today-cards.png` (the hero and a planned card),
 `light-fit-program.png`, `dark-fit-program.png` (a dated day), `light-fit-review.png`,
@@ -23,8 +23,8 @@ Screens: `light-fit-today-cards.png`, `dark-fit-today-cards.png` (the hero and a
 
 ## Tester
 
-- The chip doesn't look tappable: nothing says it opens a check-in. Left as the spec has it; a
-  taste question for the owner (a trailing chevron or an `ask` symbol would say it).
+- The chip doesn't look tappable: nothing says it opens a check-in. A taste question for the
+  owner, who chose a trailing chevron; it is built.
 - On the planned card the line sits under the numbers where the eye is already, and says what is
   wrong in the words the check-in opens with: good. On the hero it pushes Start session down by
   about 80 dp, which is tolerable.
