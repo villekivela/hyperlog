@@ -197,6 +197,9 @@ _Avoid_: RIR badge, RIR pill
 The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR. It drives suggestions.
 _Avoid_: 1RM, max
 
+**Exercise history**:
+An exercise's past sessions as progression reads them: per machine for machines and cables, deload as of each session, bodyweight on its date, the main set only. Suggestions, records and trends all read it.
+
 **Suggestion**:
 The weight and target reps the app proposes for an upcoming set, with the reason shown.
 _Avoid_: Recommendation, prescription (that is the program's, not the app's)

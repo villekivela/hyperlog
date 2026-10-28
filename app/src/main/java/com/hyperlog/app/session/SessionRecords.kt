@@ -20,27 +20,17 @@ import com.hyperlog.app.progression.Records
 internal class SessionRecords(db: HyperlogDatabase, private val programs: Programs) {
     private val dao = db.sessions()
     private val bodyweights = Bodyweights(db)
+    private val exerciseHistory = ExerciseHistory(db, programs)
 
     /** The record each of [sets] (in set order) makes, logged on [se] of [row] in a [deload] week or not. */
     suspend fun of(row: SessionEntity, se: SessionExerciseEntity, exercise: Exercise, sets: List<LoggedSet>, deload: Boolean): List<Record?> {
         if (sets.isEmpty()) return emptyList()
-        val perMachine = exercise.equipment.perMachine
-        val earlier = dao.setsBefore(se.exerciseId, row.id, row.startedAt, anyItem = !perMachine, itemId = se.equipmentItemId)
-        val weighted = exercise.equipment == Equipment.WeightedBodyweight
-        val bodyweight = if (weighted) bodyweights.byDate() else { _ -> null }
-        fun performance(sets: List<LoggedSet>, startedAt: Long, deload: Boolean) = Performance(
-            workSets(sets, null),
-            deload = deload,
-            bodyweightKg = bodyweight(programs.dateOf(startedAt)) ?: 0.0,
-            dumbbells = exercise.implements,
-        )
-        val history = earlier.groupBy { it.set.sessionExerciseId }.values.map { rows ->
-            performance(rows.map { it.set.toLoggedSet(emptyList()) }, rows.first().startedAt, deload = false)
-        }
+        val history = exerciseHistory.of(exercise, se.equipmentItemId, before = row).map { it.performance }
+        val bodyweight = if (exercise.equipment == Equipment.WeightedBodyweight) bodyweights.on(programs.dateOf(row.startedAt)) ?: 0.0 else 0.0
         // In the order they were logged, so a set logged out of order never loses its mark to one logged after it.
         val at = dao.sets(se.id).map { it.loggedAt }
         val order = sets.indices.sortedBy { at.getOrNull(it) ?: 0L }
-        val marks = Records.of(history, performance(order.map(sets::get), row.startedAt, deload))
+        val marks = Records.of(history, Performance(workSets(order.map(sets::get), null), deload = deload, bodyweightKg = bodyweight, dumbbells = exercise.implements))
         return sets.indices.map { marks[order.indexOf(it)] }
     }
 }

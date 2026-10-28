@@ -2,7 +2,6 @@ package com.hyperlog.app.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
-import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -12,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 /** An exercise done in an earlier session, and the program day that session trained (if any). */
 data class PastExercise(
     val id: Long,
+    @ColumnInfo(name = "session_id") val sessionId: Long,
     @ColumnInfo(name = "slot_id") val slotId: String?,
     @ColumnInfo(name = "program_id") val programId: Long?,
     val week: Int?,
@@ -36,12 +36,6 @@ data class TrainedExercise(
     @ColumnInfo(name = "program_id") val programId: Long?,
     val week: Int?,
     @ColumnInfo(name = "day_index") val dayIndex: Int?,
-    @ColumnInfo(name = "started_at") val startedAt: Long,
-)
-
-/** A logged set of an exercise from an earlier session, with when that session started. */
-data class EarlierSet(
-    @Embedded val set: LoggedSetEntity,
     @ColumnInfo(name = "started_at") val startedAt: Long,
 )
 
@@ -132,20 +126,23 @@ interface SessionDao {
     suspend fun lastTimeOn(exerciseId: String, sessionId: Long, itemId: Long?): List<LoggedSetEntity>
 
     /**
-     * The latest [limit] other sessions with sets of [exerciseId], newest first, with the program
-     * day each trained. With [anyItem] false only those on equipment item [itemId] (ADR 0002).
+     * The latest [limit] finished sessions with sets of [exerciseId], newest first, with the program
+     * day each trained. With [anyItem] false only those on equipment item [itemId] (ADR 0002). With
+     * [before] only those that started before it: session [beforeId], which started then, and the
+     * ones before that.
      */
     @Query(
         """
-        SELECT se.id, se.slot_id, s.program_id, s.week, s.day_index, se.sets, s.started_at, s.finished_at, s.workout_id
+        SELECT se.id, se.session_id, se.slot_id, s.program_id, s.week, s.day_index, se.sets, s.started_at, s.finished_at, s.workout_id
         FROM session_exercise se JOIN session s ON s.id = se.session_id
-        WHERE se.exercise_id = :exerciseId AND se.session_id != :sessionId
+        WHERE se.exercise_id = :exerciseId AND s.finished_at IS NOT NULL AND se.removed = 0
           AND (:anyItem OR se.equipment_item_id IS :itemId)
+          AND (:before IS NULL OR s.started_at < :before OR (s.started_at = :before AND s.id < :beforeId))
           AND EXISTS (SELECT 1 FROM logged_set x WHERE x.session_exercise_id = se.id)
-        ORDER BY s.started_at DESC, se.id DESC LIMIT :limit
+        ORDER BY s.started_at DESC, s.id DESC, se.id DESC LIMIT :limit
         """,
     )
-    suspend fun history(exerciseId: String, sessionId: Long, anyItem: Boolean, itemId: Long?, limit: Int): List<PastExercise>
+    suspend fun history(exerciseId: String, anyItem: Boolean, itemId: Long?, before: Long?, beforeId: Long?, limit: Int): List<PastExercise>
 
     /** The technique logged set [id] is done with, as [com.hyperlog.app.program.TechniqueJson]. */
     @Query("UPDATE logged_set SET technique = :technique WHERE id = :id")
@@ -242,23 +239,6 @@ interface SessionDao {
         """,
     )
     suspend fun lastTimeBefore(exerciseId: String, sessionId: Long, before: Long, anyItem: Boolean, itemId: Long?): List<LoggedSetEntity>
-
-    /**
-     * Every set of [exerciseId] logged in finished sessions that started before session [sessionId], which
-     * started at [before], oldest first. With [anyItem] false only those on equipment item [itemId]
-     * (ADR 0002). Records are measured against them.
-     */
-    @Query(
-        """
-        SELECT ls.*, s.started_at FROM logged_set ls
-        JOIN session_exercise se ON se.id = ls.session_exercise_id JOIN session s ON s.id = se.session_id
-        WHERE se.exercise_id = :exerciseId AND s.id != :sessionId AND s.finished_at IS NOT NULL
-          AND (s.started_at < :before OR (s.started_at = :before AND s.id < :sessionId))
-          AND (:anyItem OR se.equipment_item_id IS :itemId)
-        ORDER BY s.started_at, s.id, se.id, ls.position
-        """,
-    )
-    suspend fun setsBefore(exerciseId: String, sessionId: Long, before: Long, anyItem: Boolean, itemId: Long?): List<EarlierSet>
 }
 
 /** A session's start and the program day it trained, as the rotation reads it. */
