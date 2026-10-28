@@ -10,9 +10,6 @@ import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.coach.CoachLine
 import com.hyperlog.app.coach.CoachLineReader
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.mapLatest
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.History
 import com.hyperlog.app.library.toExercise
@@ -27,6 +24,9 @@ import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.StarterProgram
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

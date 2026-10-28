@@ -808,13 +808,14 @@ private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheck
     val cs = MaterialTheme.colorScheme
     val words = coachLineText(line, names)
     val answer = stringResource(R.string.coach_line_answer, words)
-    // Balanced breaks: a long line wraps into even lines instead of leaving `times` or `turns` alone.
-    val type = MaterialTheme.typography
-    MaterialTheme(typography = type.copy(titleSmall = type.titleSmall.copy(lineBreak = LineBreak.Heading))) {
-        Banner(Symbol.Insights, words, container = cs.surfaceContainerHighest, content = cs.onSurface) {
-            TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
-            IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
-        }
+    // Balanced breaks: a long line wraps into even lines instead of leaving `turns` alone.
+    Banner(
+        Symbol.Insights, words,
+        container = cs.surfaceContainerHighest, content = cs.onSurface,
+        titleStyle = MaterialTheme.typography.titleSmall.copy(lineBreak = LineBreak.Heading),
+    ) {
+        TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
+        IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
     }
 }
 

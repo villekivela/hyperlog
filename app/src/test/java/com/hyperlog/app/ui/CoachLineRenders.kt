@@ -71,18 +71,18 @@ class CoachLineRenders {
     }
 
     @Test
-    fun stall() = today(CoachLine.Stall("barbell_bench_press", sessions = 3, last = 1))
+    fun stall() = today(CoachLine.Stall("barbell_bench_press", sessions = 3, last = monday))
 
     @Test
     fun dayMissed() = today(CoachLine.DayMissed("a", "Day A", missed = 3, of = 4, last = monday))
 
     @Test
-    fun grinding() = today(CoachLine.Grinding("leg_press", sessions = 3, last = 1))
+    fun grinding() = today(CoachLine.Grinding("leg_press", sessions = 3, last = monday))
 
     @Test
-    fun sameSwap() = today(CoachLine.SameSwap("a2", "incline_machine_press", "machine_chest_press", sessions = 3, last = 1))
+    fun sameSwap() = today(CoachLine.SameSwap("a2", "incline_machine_press", "machine_chest_press", sessions = 3, last = monday))
 
     /** Under the time-off banner, the louder of the two. */
     @Test
-    fun underTimeOff() = today(CoachLine.Stall("barbell_bench_press", sessions = 4, last = 1), lastTrained = monday.minusDays(11))
+    fun underTimeOff() = today(CoachLine.Stall("barbell_bench_press", sessions = 4, last = monday), lastTrained = monday.minusDays(11))
 }

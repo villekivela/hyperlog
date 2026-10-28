@@ -1631,8 +1631,9 @@ It only points: it proposes nothing itself, so ADR 0003 holds, and it needs no C
      program days (owner, 2026-10-28). `Day A missed 3 of its last 4 turns · Check in`; all 4,
      `Day A missed its last 4 turns`.
   2. **A stall**: an exercise's estimate (on each machine, for machines) no higher after each of
-     its last 3 sessions than before them, deload and easy-week sessions not counted. `Bench
-     hasn't moved in 3 sessions · Check in`.
+     its last 3 sessions than before them. Deload and easy-week sessions aren't counted, nor those in
+     a week the plan eases (`rirAdd` above 0, as Ramp-in; owner, 2026-10-28). `Bench hasn't moved
+     in 3 sessions · Check in`.
   3. **Grinding**: an exercise's last 3 sessions each had a work set at 0 RIR where the target was 2
      or more. `Leg press hit 0 RIR in 3 sessions running · Check in`.
   4. **The same swap**: one slot of the running program done as the same other exercise 3 sessions

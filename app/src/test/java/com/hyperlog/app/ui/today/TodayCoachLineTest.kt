@@ -48,7 +48,7 @@ class TodayCoachLineTest {
     @Test
     fun checkInStartsACheckInWithTheLineAsItsFirstAnswer() {
         var answer: String? = null
-        show(CoachLine.Stall("barbell_bench_press", sessions = 3, last = 1), onCheckIn = { answer = it })
+        show(CoachLine.Stall("barbell_bench_press", sessions = 3, last = monday), onCheckIn = { answer = it })
         compose.onNodeWithText("Bench press hasn't moved in 3 sessions").assertIsDisplayed()
         compose.onNodeWithText("Check in").performClick()
         assertEquals("Bench press hasn't moved in 3 sessions.", answer)
@@ -69,16 +69,16 @@ class TodayCoachLineTest {
         compose.onNodeWithText("Day A missed 3 of its last 4 turns").assertIsDisplayed()
         line = CoachLine.DayMissed("a", "Day A", missed = 4, of = 4, last = monday)
         compose.onNodeWithText("Day A missed its last 4 turns").assertIsDisplayed()
-        line = CoachLine.Grinding("leg_extension", sessions = 3, last = 1)
+        line = CoachLine.Grinding("leg_extension", sessions = 3, last = monday)
         compose.onNodeWithText("Leg extension hit 0 RIR in 3 sessions running").assertIsDisplayed()
-        line = CoachLine.SameSwap("s1", "barbell_bench_press", "smith_machine_bench_press", sessions = 3, last = 1)
+        line = CoachLine.SameSwap("s1", "barbell_bench_press", "smith_machine_bench_press", sessions = 3, last = monday)
         compose.onNodeWithText("Bench press swapped 3 times running").assertIsDisplayed()
     }
 
     @Test
     fun theCrossHidesTheLine() {
         var hidden: CoachLine? = null
-        val line = CoachLine.Grinding("leg_extension", sessions = 3, last = 1)
+        val line = CoachLine.Grinding("leg_extension", sessions = 3, last = monday)
         show(line, onHide = { hidden = it })
         compose.onNodeWithContentDescription("Hide this line").performClick()
         assertEquals(line, hidden)
@@ -86,7 +86,7 @@ class TodayCoachLineTest {
 
     @Test
     fun theLineShowsOnlyWhileTodayIsSelected() {
-        show(CoachLine.Grinding("leg_extension", sessions = 3, last = 1), selected = monday.plusDays(2))
+        show(CoachLine.Grinding("leg_extension", sessions = 3, last = monday), selected = monday.plusDays(2))
         compose.onNodeWithText("Leg extension hit 0 RIR in 3 sessions running").assertDoesNotExist()
     }
 }

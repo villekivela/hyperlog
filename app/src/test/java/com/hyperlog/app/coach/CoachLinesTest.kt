@@ -29,15 +29,18 @@ class CoachLinesTest {
         assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(turns = dayA(true, true, false, true, false))))
     }
 
-    /** Bench sessions a few days apart, oldest first, each with the estimate after it; ids from 1. */
+    /** Session [n]'s date (from 1), sessions 3 days apart. */
+    private fun on(n: Int) = monday.plusDays(3L * (n - 1))
+
+    /** Bench sessions a few days apart, oldest first, each with the estimate after it. */
     private fun bench(vararg estimates: Double, eased: Set<Int> = emptySet()) = estimates.mapIndexed { i, kg ->
-        LoggedSession(i + 1L, monday.plusDays(3L * i), eased = i + 1 in eased, exercises = listOf(LoggedExercise("bench", estimateKg = kg)))
+        LoggedSession(on(i + 1), eased = i + 1 in eased, exercises = listOf(LoggedExercise("bench", estimateKg = kg)))
     }
 
     @Test
     fun anEstimateFlatOrDownOverThreeSessionsIsAStall() {
         val lines = CoachLines.of(CoachLog(sessions = bench(100.0, 102.5, 102.5, 101.0, 102.5)))
-        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = 5)), lines)
+        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = on(5))), lines)
     }
 
     @Test
@@ -48,7 +51,7 @@ class CoachLinesTest {
     @Test
     fun aStallGrowsWithEachSessionWithoutGain() {
         val lines = CoachLines.of(CoachLog(sessions = bench(100.0, 100.0, 100.0, 100.0, 100.0)))
-        assertEquals(listOf(CoachLine.Stall("bench", sessions = 4, last = 5)), lines)
+        assertEquals(listOf(CoachLine.Stall("bench", sessions = 4, last = on(5))), lines)
     }
 
     @Test
@@ -56,7 +59,7 @@ class CoachLinesTest {
         // Moving up a weight dips the estimate; two sessions under it are no stall yet.
         assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = bench(127.0, 123.0, 126.0))))
         // Noise around a flat estimate is three sessions without beating it.
-        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = 4)), CoachLines.of(CoachLog(sessions = bench(127.0, 125.0, 127.0, 125.0))))
+        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = on(4))), CoachLines.of(CoachLog(sessions = bench(127.0, 125.0, 127.0, 125.0))))
     }
 
     @Test
@@ -67,18 +70,18 @@ class CoachLinesTest {
         assertEquals(emptyList<CoachLine>(), CoachLines.of(eased))
         // Skipped, not breaking the run: the third counted session after them makes it a stall.
         val more = CoachLog(sessions = bench(100.0, 102.5, 102.5, 90.0, 102.5, 102.5, eased = setOf(4)))
-        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = 6)), CoachLines.of(more))
+        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = on(6))), CoachLines.of(more))
     }
 
-    /** Leg press sessions, oldest first, each one set as `rir to target`; ids from 1. */
+    /** Leg press sessions, oldest first, each one set as `rir to target`. */
     private fun legPress(vararg sets: Pair<Int?, Int?>) = sets.mapIndexed { i, (rir, target) ->
-        LoggedSession(i + 1L, monday.plusDays(3L * i), eased = false, exercises = listOf(LoggedExercise("leg-press", sets = listOf(RirSet(2, 2), RirSet(rir, target)))))
+        LoggedSession(on(i + 1), eased = false, exercises = listOf(LoggedExercise("leg-press", sets = listOf(RirSet(2, 2), RirSet(rir, target)))))
     }
 
     @Test
     fun aSetAtZeroRirWhereTheTargetWasTwoInEachOfTheLastThreeSessionsIsGrinding() {
         val lines = CoachLines.of(CoachLog(sessions = legPress(1 to 2, 0 to 2, 0 to 3, 0 to 2)))
-        assertEquals(listOf(CoachLine.Grinding("leg-press", sessions = 3, last = 4)), lines)
+        assertEquals(listOf(CoachLine.Grinding("leg-press", sessions = 3, last = on(4))), lines)
     }
 
     @Test
@@ -89,16 +92,16 @@ class CoachLinesTest {
         assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = legPress(0 to null, 0 to 2, 0 to 2))))
     }
 
-    /** Sessions with slot "a2" (incline press) done as each exercise given; ids from 1. */
+    /** Sessions with slot "a2" (incline press) done as each exercise given. */
     private fun slotA2(vararg done: String) = done.mapIndexed { i, exercise ->
         val swapped = exercise != "incline-press"
-        LoggedSession(i + 1L, monday.plusDays(3L * i), eased = false, exercises = listOf(LoggedExercise(exercise, slot = "a2", inPlaceOf = "incline-press".takeIf { swapped })))
+        LoggedSession(on(i + 1), eased = false, exercises = listOf(LoggedExercise(exercise, slot = "a2", inPlaceOf = "incline-press".takeIf { swapped })))
     }
 
     @Test
     fun theSameSwapThreeSessionsInARowIsALine() {
         val lines = CoachLines.of(CoachLog(sessions = slotA2("incline-press", "incline-db", "incline-db", "incline-db")))
-        assertEquals(listOf(CoachLine.SameSwap("a2", "incline-press", "incline-db", sessions = 3, last = 4)), lines)
+        assertEquals(listOf(CoachLine.SameSwap("a2", "incline-press", "incline-db", sessions = 3, last = on(4))), lines)
     }
 
     @Test
@@ -124,9 +127,9 @@ class CoachLinesTest {
     )
 
     private val missed = CoachLine.DayMissed("a", "Day A", missed = 3, of = 4, last = monday)
-    private val stall = CoachLine.Stall("bench", sessions = 3, last = 5)
-    private val grinding = CoachLine.Grinding("leg-press", sessions = 3, last = 5)
-    private val swap = CoachLine.SameSwap("a2", "incline-press", "incline-db", sessions = 3, last = 5)
+    private val stall = CoachLine.Stall("bench", sessions = 3, last = on(5))
+    private val grinding = CoachLine.Grinding("leg-press", sessions = 3, last = on(5))
+    private val swap = CoachLine.SameSwap("a2", "incline-press", "incline-db", sessions = 3, last = on(5))
     private val all = listOf(missed, stall, grinding, swap)
 
     private fun change(vararg operations: Operation) = Change("A change", Scope.RestOfProgram, operations.toList())
@@ -142,7 +145,7 @@ class CoachLinesTest {
     fun aHiddenLineComesBackWhenItsPatternGrows() {
         val hidden = setOf(stall.key)
         assertNull(CoachLines.shown(listOf(stall), hidden, emptyList(), program))
-        val grown = stall.copy(sessions = 4, last = 6)
+        val grown = stall.copy(sessions = 4, last = on(6))
         assertEquals(grown, CoachLines.shown(listOf(grown), hidden, emptyList(), program))
         // Missed again, the day's line is new too.
         val again = missed.copy(missed = 4, last = monday.plusWeeks(1))

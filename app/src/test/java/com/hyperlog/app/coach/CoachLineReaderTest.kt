@@ -57,9 +57,9 @@ class CoachLineReaderTest {
      * A finished session of Day A on [date]: bench at [kg] × 8 at [rir], and the row slot done as
      * [row], 30 kg lighter.
      */
-    private suspend fun dayA(date: LocalDate, kg: Double, rir: Int = 2, row: String = "seated_cable_row", easy: Boolean = false, gymId: Long? = null) {
+    private suspend fun dayA(date: LocalDate, kg: Double, rir: Int = 2, row: String = "seated_cable_row", easy: Boolean = false, gymId: Long? = null, week: Int = 2) {
         val dao = db.sessions()
-        val id = dao.insertSession(SessionEntity(startedAt = millis(date), finishedAt = millis(date) + 3_600_000, programId = active().id, week = 1, dayIndex = 0, easy = easy, gymId = gymId))
+        val id = dao.insertSession(SessionEntity(startedAt = millis(date), finishedAt = millis(date) + 3_600_000, programId = active().id, week = week, dayIndex = 0, easy = easy, gymId = gymId))
         val bench = dao.insertSessionExercise(SessionExerciseEntity(sessionId = id, exerciseId = "barbell_bench_press", position = 0, slotId = "bench"))
         dao.insertSet(LoggedSetEntity(sessionExerciseId = bench, position = 0, weightKg = kg, fullReps = 8, partialReps = 0, rir = rir, loggedAt = millis(date)))
         val rowId = dao.insertSessionExercise(SessionExerciseEntity(sessionId = id, exerciseId = row, position = 1, slotId = "row"))
@@ -86,6 +86,18 @@ class CoachLineReaderTest {
     }
 
     @Test
+    fun aSessionInAWeekThePlanEasesIsNotCountedInAStall() = runTest {
+        // Week 1 is a Ramp-in (+1 RIR).
+        dayA(today.minusDays(12), kg = 80.0)
+        dayA(today.minusDays(9), kg = 80.0)
+        dayA(today.minusDays(6), kg = 80.0, week = 1)
+        dayA(today.minusDays(3), kg = 80.0)
+        assertNull(reader.shown(active(), hidden = emptySet()))
+        dayA(today.minusDays(1), kg = 80.0)
+        assertEquals(CoachLine.Stall::class, reader.shown(active(), hidden = emptySet())!!::class)
+    }
+
+    @Test
     fun aSlotDoneAsAnotherExerciseThanThePlanIsASwap() = runTest {
         val gym = com.hyperlog.app.gym.Gyms(db).addGym("Harbour")
         (0..2).forEach { dayA(today.minusDays(9L - 3 * it), kg = 80.0 + 2.5 * it, row = "chest_supported_db_row", gymId = gym) }
@@ -100,6 +112,7 @@ class CoachLineReaderTest {
         val missed = listOf(mondays[0], mondays[2], mondays[3]).map { Turn(it, Position(1, 0)) }
         val rotation = Rotation(emptyList(), missed, null, again = false, easy = false, emptyWeeks = 0, anchor = RotationAnchor(mondays[0], 1, 0), next = Position(1, 0))
         val line = reader.shown(active().copy(rotation = rotation, today = today), hidden = emptySet())
+        // Named by its letter, without its title.
         assertEquals(CoachLine.DayMissed("a", "Day A", missed = 3, of = 4, last = mondays[3]), line)
     }
 
@@ -121,8 +134,8 @@ class CoachLineReaderTest {
     private companion object {
         val PROGRAM = """
             { "format": 1, "title": "Lines", "blocks": [
-              { "id": "one", "name": "One", "weekStart": 1, "weekEnd": 8, "days": [
-                { "id": "a", "name": "Day A", "groups": [
+              { "id": "one", "name": "One", "weekStart": 1, "weekEnd": 8, "weeks": {"1": {"rirAdd": 1}}, "days": [
+                { "id": "a", "name": "Day A — Heavy bench", "groups": [
                   { "slots": [ { "id": "bench", "exercise": "barbell_bench_press", "sets": [ { "count": 1, "reps": 8, "rir": 2 } ] } ] },
                   { "slots": [ { "id": "row", "exercise": "seated_cable_row", "sets": [ { "count": 1, "reps": "8-10", "rir": 2 } ] } ] } ] },
                 { "id": "b", "name": "Day B", "groups": [
