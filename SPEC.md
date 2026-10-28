@@ -1408,7 +1408,9 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     takes an earlier set's mark away. Records learn the constant as suggestions and trends do:
     past deload sessions are skipped, and a past session is a deload as of that session, never
     as the program is now, so a Change accepted afterwards never turns it into one. A set's
-    record badge and the record on the exercise's trend are the same record (owner, 2026-10-28). Suggestions, records and trends all read finished sessions with the exercise still in them, never a running one or an exercise taken out.
+    record badge and the record on the exercise's trend are the same record (owner, 2026-10-28).
+    Suggestions, records and trends all read finished sessions with the exercise still in them,
+    never a running one or an exercise taken out.
   - **As the set logs**, its row takes a small mark, `Estimate record` or `Rep record`, kept on
     the set wherever it shows (the session, Session done, History). The mark is a trophy, the
     Material Symbol `trophy`, read by TalkBack as its name, in ink (never the accent, which marks
