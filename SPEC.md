@@ -1649,6 +1649,14 @@ session, has none. It is kept with the Change (`plan_change.check_in`, JSON) and
 **A check-in's review opens on Coach** (tester, #75): one read back as the app starts waits there
 rather than covering Today, and opens when Coach does.
 
+**Leaving a check-in** (owner, 2026-10-28, #97). × on any step or review, or Done on an answer in
+words, goes back to where the check-in started: Today for the fit chip, the coach line and Ease back
+in; Program for a fit chip on Program; the review page (block or program review) for Check in or New
+program on a review, with Back from it going where the review was opened from. Ask Claude, without a
+key, does the same when it's closed. A check-in started from Coach's own tiles, or How's it going?
+on Changes in force, ends on Coach. One left mid-way, by going to another screen, keeps running on
+Coach and ends there. Accept, Add to Today, Start program and Save for later go where they always do.
+
 **After an accept.** Accept goes to Today. With a workout first on Today, Today scrolls the program
 day the Change edited into view, its heading at the top. Start program goes to Today on the new
 program's first day. Add to Today while a session runs lands on Today, which still shows the session, with "Workout
@@ -1835,7 +1843,8 @@ it to edit. The sentences are `Something hurts: `, `I'm short on time today: I h
 `No gym today, only dumbbells at home.` (Different gym or none), `I slept badly last night.` (Tired
 or slept badly), `I want to change my program: `, `Build me a workout for today: `, `I want a new
 program: ` and, for Something else, nothing. The bar names the tile; the tab bar is hidden, as in
-the wizard, and Back returns to the tiles. **Ask Claude** opens the Android share sheet with the
+the wizard, and Back returns to the tiles; Ask Claude opened from Today, Program or a review closes back
+there instead, as a check-in does (Leaving a check-in). **Ask Claude** opens the Android share sheet with the
 prompt (What Claude is told) for the Claude app. Ask Claude is enabled with a tile even when the
 words are cleared, because the prompt quotes the tile's own sentence (`Something hurts.`) before the
 words, so Claude knows what the check-in is about; when the words already begin with that sentence
