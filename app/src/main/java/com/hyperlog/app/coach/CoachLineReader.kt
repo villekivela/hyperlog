@@ -8,7 +8,6 @@ import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.SetPrescriptionJson
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
@@ -63,14 +62,12 @@ class CoachLineReader(private val db: HyperlogDatabase, private val programs: Pr
         val estimates = history.exercises().flatMap { trend ->
             trend.lines.flatMap { line -> line.points.map { (it.sessionId to trend.exercise.id) to (line.itemId to it.estimateKg) } }
         }.toMap()
-        val gyms = db.gyms().observeGyms().first().associate { it.id to it.name }
         val sessions = dao.finishedSessions().reversed().map { row ->
             val day = programs.plannedDay(row)
             val ownSlots = row.programId != null && row.programId == active?.id
             LoggedSession(
                 id = row.id,
                 date = dateOf(row.startedAt),
-                gym = row.gymId?.let(gyms::get),
                 eased = row.easy || day?.deload == true,
                 exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
                     val sets = dao.sets(se.id).takeIf { it.isNotEmpty() } ?: return@mapNotNull null

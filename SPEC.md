@@ -1627,16 +1627,17 @@ It only points: it proposes nothing itself, so ADR 0003 holds, and it needs no C
 - **The patterns**, in the order they show:
   1. **The same day missed**: a program day missed 3 times in its last 4 turns: the training days
      the rotation gave it, missed or trained (a missed day trained later that week counts as
-     trained). `Day A missed 3 of its last 4 turns · Check in`; all 4, `Day A missed its last 4
-     turns`.
+     trained). Turns, not weeks, since a day doesn't come every week with fewer training days than
+     program days (owner, 2026-10-28). `Day A missed 3 of its last 4 turns · Check in`; all 4,
+     `Day A missed its last 4 turns`.
   2. **A stall**: an exercise's estimate (on each machine, for machines) no higher after each of
      its last 3 sessions than before them, deload and easy-week sessions not counted. `Bench
      hasn't moved in 3 sessions · Check in`.
   3. **Grinding**: an exercise's last 3 sessions each had a work set at 0 RIR where the target was 2
      or more. `Leg press hit 0 RIR in 3 sessions running · Check in`.
   4. **The same swap**: one slot of the running program done as the same other exercise 3 sessions
-     in a row, swapped at the start sheet or in the session. `Incline press swapped at Harbour 3
-     times · Check in`; at different gyms, `Incline press swapped 3 times running`.
+     in a row, swapped at the start sheet or in the session, at whatever gym. `Incline press
+     swapped 3 times running · Check in`; the line never names the gym (owner, 2026-10-28).
   A pattern whose last session (or missed day) is more than 4 weeks old shows no line. Within a
   pattern, the latest comes first.
 - **One line on Today**, above the hero card while today is selected and no session runs, with ×;

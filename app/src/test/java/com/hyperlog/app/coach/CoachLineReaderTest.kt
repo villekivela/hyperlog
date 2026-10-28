@@ -90,7 +90,7 @@ class CoachLineReaderTest {
         val gym = com.hyperlog.app.gym.Gyms(db).addGym("Harbour")
         (0..2).forEach { dayA(today.minusDays(9L - 3 * it), kg = 80.0 + 2.5 * it, row = "chest_supported_db_row", gymId = gym) }
         val line = reader.shown(active(), hidden = emptySet()) as CoachLine.SameSwap
-        assertEquals(CoachLine.SameSwap("row", "seated_cable_row", "chest_supported_db_row", "Harbour", 3, line.last), line)
+        assertEquals(CoachLine.SameSwap("row", "seated_cable_row", "chest_supported_db_row", 3, line.last), line)
     }
 
     @Test

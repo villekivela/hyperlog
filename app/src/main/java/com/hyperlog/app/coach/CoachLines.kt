@@ -10,7 +10,7 @@ data class DayTurn(val date: LocalDate, val day: String, val name: String, val m
  * A finished session as the coach line reads it: [eased] for a deload or an easy week, which
  * aren't counted in a stall.
  */
-data class LoggedSession(val id: Long, val date: LocalDate, val gym: String?, val eased: Boolean, val exercises: List<LoggedExercise>)
+data class LoggedSession(val id: Long, val date: LocalDate, val eased: Boolean, val exercises: List<LoggedExercise>)
 
 /**
  * An exercise of a [LoggedSession]: on [machine] for machines (ADR 0002), with the estimate after
@@ -54,11 +54,8 @@ sealed interface CoachLine {
     /** [exercise]'s last [sessions] sessions each had a work set at 0 RIR where the target was 2 or more. */
     data class Grinding(val exercise: String, val sessions: Int, val last: Long) : CoachLine
 
-    /**
-     * [slot]'s [exercise] swapped for [swappedFor] in its last [sessions] sessions, all at [gym]
-     * (null for different gyms, or none).
-     */
-    data class SameSwap(val slot: String, val exercise: String, val swappedFor: String, val gym: String?, val sessions: Int, val last: Long) : CoachLine
+    /** [slot]'s [exercise] swapped for [swappedFor] in its last [sessions] sessions, at whatever gym. */
+    data class SameSwap(val slot: String, val exercise: String, val swappedFor: String, val sessions: Int, val last: Long) : CoachLine
 }
 
 /** The coach line's patterns, found in the log. It only points: nothing here changes the plan (ADR 0003). */
@@ -115,8 +112,7 @@ object CoachLines {
                 val planned = latest.inPlaceOf ?: return@mapNotNull null
                 val run = done.takeLastWhile { (_, e) -> e.inPlaceOf == planned && e.exercise == latest.exercise }
                 if (run.size < SWAPS) return@mapNotNull null
-                val gym = run.map { it.first.gym }.distinct().singleOrNull()
-                CoachLine.SameSwap(slot, planned, latest.exercise, gym, run.size, run.last().first.id)
+                CoachLine.SameSwap(slot, planned, latest.exercise, run.size, run.last().first.id)
             }
             .sortedByDescending { it.last }
 

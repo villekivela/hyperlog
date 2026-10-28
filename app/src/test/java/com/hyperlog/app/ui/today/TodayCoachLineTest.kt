@@ -71,10 +71,8 @@ class TodayCoachLineTest {
         compose.onNodeWithText("Day A missed its last 4 turns").assertIsDisplayed()
         line = CoachLine.Grinding("leg_extension", sessions = 3, last = 1)
         compose.onNodeWithText("Leg extension hit 0 RIR in 3 sessions running").assertIsDisplayed()
-        line = CoachLine.SameSwap("s1", "barbell_bench_press", "smith_machine_bench_press", "Harbour", sessions = 3, last = 1)
-        compose.onNodeWithText("Bench press swapped at Harbour 3 times").assertIsDisplayed()
-        line = CoachLine.SameSwap("s1", "barbell_bench_press", "smith_machine_bench_press", null, sessions = 4, last = 1)
-        compose.onNodeWithText("Bench press swapped 4 times running").assertIsDisplayed()
+        line = CoachLine.SameSwap("s1", "barbell_bench_press", "smith_machine_bench_press", sessions = 3, last = 1)
+        compose.onNodeWithText("Bench press swapped 3 times running").assertIsDisplayed()
     }
 
     @Test

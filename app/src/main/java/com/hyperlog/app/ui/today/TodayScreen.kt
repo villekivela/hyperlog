@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -807,9 +808,13 @@ private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheck
     val cs = MaterialTheme.colorScheme
     val words = coachLineText(line, names)
     val answer = stringResource(R.string.coach_line_answer, words)
-    Banner(Symbol.Insights, words, container = cs.surfaceContainerHigh, content = cs.onSurface) {
-        TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
-        IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
+    // Balanced breaks: a long line wraps into even lines instead of leaving `times` or `turns` alone.
+    val type = MaterialTheme.typography
+    MaterialTheme(typography = type.copy(titleSmall = type.titleSmall.copy(lineBreak = LineBreak.Heading))) {
+        Banner(Symbol.Insights, words, container = cs.surfaceContainerHighest, content = cs.onSurface) {
+            TextButton(onClick = { onCheckIn(answer) }) { Text(stringResource(R.string.coach_line_check_in)) }
+            IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
+        }
     }
 }
 
@@ -823,9 +828,7 @@ private fun coachLineText(line: CoachLine, names: Map<String, String>): String {
             else stringResource(R.string.coach_line_missed, line.name, line.missed, line.of)
         is CoachLine.Stall -> stringResource(R.string.coach_line_stall, name(line.exercise), line.sessions)
         is CoachLine.Grinding -> stringResource(R.string.coach_line_grinding, name(line.exercise), line.sessions)
-        is CoachLine.SameSwap ->
-            if (line.gym != null) stringResource(R.string.coach_line_swap_at, name(line.exercise), line.gym, line.sessions)
-            else stringResource(R.string.coach_line_swap, name(line.exercise), line.sessions)
+        is CoachLine.SameSwap -> stringResource(R.string.coach_line_swap, name(line.exercise), line.sessions)
     }
 }
 

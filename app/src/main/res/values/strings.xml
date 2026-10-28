@@ -647,7 +647,6 @@
     <string name="coach_line_missed_all">%1$s missed its last %2$d turns</string>
     <string name="coach_line_stall">%1$s hasn\'t moved in %2$d sessions</string>
     <string name="coach_line_grinding">%1$s hit 0 RIR in %2$d sessions running</string>
-    <string name="coach_line_swap_at">%1$s swapped at %2$s %3$d times</string>
     <string name="coach_line_swap">%1$s swapped %2$d times running</string>
     <string name="coach_line_answer">%1$s.</string>
     <string name="coach_line_check_in">Check in</string>

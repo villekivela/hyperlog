@@ -80,7 +80,7 @@ class CoachLineRenders {
     fun grinding() = today(CoachLine.Grinding("leg_press", sessions = 3, last = 1))
 
     @Test
-    fun sameSwap() = today(CoachLine.SameSwap("a2", "incline_machine_press", "machine_chest_press", "Kalliokoski", sessions = 3, last = 1))
+    fun sameSwap() = today(CoachLine.SameSwap("a2", "incline_machine_press", "machine_chest_press", sessions = 3, last = 1))
 
     /** Under the time-off banner, the louder of the two. */
     @Test

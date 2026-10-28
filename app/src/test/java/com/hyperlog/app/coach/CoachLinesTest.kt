@@ -31,7 +31,7 @@ class CoachLinesTest {
 
     /** Bench sessions a few days apart, oldest first, each with the estimate after it; ids from 1. */
     private fun bench(vararg estimates: Double, eased: Set<Int> = emptySet()) = estimates.mapIndexed { i, kg ->
-        LoggedSession(i + 1L, monday.plusDays(3L * i), gym = null, eased = i + 1 in eased, exercises = listOf(LoggedExercise("bench", estimateKg = kg)))
+        LoggedSession(i + 1L, monday.plusDays(3L * i), eased = i + 1 in eased, exercises = listOf(LoggedExercise("bench", estimateKg = kg)))
     }
 
     @Test
@@ -52,6 +52,14 @@ class CoachLinesTest {
     }
 
     @Test
+    fun aStallIsMeasuredFromTheEstimateBeforeTheSessions() {
+        // Moving up a weight dips the estimate; two sessions under it are no stall yet.
+        assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = bench(127.0, 123.0, 126.0))))
+        // Noise around a flat estimate is three sessions without beating it.
+        assertEquals(listOf(CoachLine.Stall("bench", sessions = 3, last = 4)), CoachLines.of(CoachLog(sessions = bench(127.0, 125.0, 127.0, 125.0))))
+    }
+
+    @Test
     fun deloadAndEasyWeekSessionsAreNotCountedInAStall() {
         // Sessions 3 and 4 are a deload and an easy week: counted, they'd make three sessions without
         // gain after session 2; left out, one follows it.
@@ -64,7 +72,7 @@ class CoachLinesTest {
 
     /** Leg press sessions, oldest first, each one set as `rir to target`; ids from 1. */
     private fun legPress(vararg sets: Pair<Int?, Int?>) = sets.mapIndexed { i, (rir, target) ->
-        LoggedSession(i + 1L, monday.plusDays(3L * i), gym = null, eased = false, exercises = listOf(LoggedExercise("leg-press", sets = listOf(RirSet(2, 2), RirSet(rir, target)))))
+        LoggedSession(i + 1L, monday.plusDays(3L * i), eased = false, exercises = listOf(LoggedExercise("leg-press", sets = listOf(RirSet(2, 2), RirSet(rir, target)))))
     }
 
     @Test
@@ -81,28 +89,22 @@ class CoachLinesTest {
         assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = legPress(0 to null, 0 to 2, 0 to 2))))
     }
 
-    /** Sessions with slot "a2" (incline press) done as each exercise given, at each gym; ids from 1. */
-    private fun slotA2(vararg done: Pair<String, String?>) = done.mapIndexed { i, (exercise, gym) ->
+    /** Sessions with slot "a2" (incline press) done as each exercise given; ids from 1. */
+    private fun slotA2(vararg done: String) = done.mapIndexed { i, exercise ->
         val swapped = exercise != "incline-press"
-        LoggedSession(i + 1L, monday.plusDays(3L * i), gym, eased = false, exercises = listOf(LoggedExercise(exercise, slot = "a2", inPlaceOf = "incline-press".takeIf { swapped })))
+        LoggedSession(i + 1L, monday.plusDays(3L * i), eased = false, exercises = listOf(LoggedExercise(exercise, slot = "a2", inPlaceOf = "incline-press".takeIf { swapped })))
     }
 
     @Test
     fun theSameSwapThreeSessionsInARowIsALine() {
-        val lines = CoachLines.of(CoachLog(sessions = slotA2("incline-press" to "Harbour", "incline-db" to "Harbour", "incline-db" to "Harbour", "incline-db" to "Harbour")))
-        assertEquals(listOf(CoachLine.SameSwap("a2", "incline-press", "incline-db", gym = "Harbour", sessions = 3, last = 4)), lines)
+        val lines = CoachLines.of(CoachLog(sessions = slotA2("incline-press", "incline-db", "incline-db", "incline-db")))
+        assertEquals(listOf(CoachLine.SameSwap("a2", "incline-press", "incline-db", sessions = 3, last = 4)), lines)
     }
 
     @Test
     fun twoOfTheSameSwapOrDifferentSwapsAreNot() {
-        assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = slotA2("incline-db" to "Harbour", "incline-press" to "Harbour", "incline-db" to "Harbour", "incline-db" to "Harbour"))))
-        assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = slotA2("incline-smith" to "Harbour", "incline-db" to "Harbour", "incline-db" to "Harbour"))))
-    }
-
-    @Test
-    fun theSameSwapAtDifferentGymsNamesNone() {
-        val lines = CoachLines.of(CoachLog(sessions = slotA2("incline-db" to "Harbour", "incline-db" to "Basic", "incline-db" to "Harbour")))
-        assertEquals(listOf(CoachLine.SameSwap("a2", "incline-press", "incline-db", gym = null, sessions = 3, last = 3)), lines)
+        assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = slotA2("incline-db", "incline-press", "incline-db", "incline-db"))))
+        assertEquals(emptyList<CoachLine>(), CoachLines.of(CoachLog(sessions = slotA2("incline-smith", "incline-db", "incline-db"))))
     }
 
     private fun slot(id: String, exercise: String) = Slot(id, exercise, emptyList(), null, emptyList())
@@ -124,7 +126,7 @@ class CoachLinesTest {
     private val missed = CoachLine.DayMissed("a", "Day A", missed = 3, of = 4, last = monday)
     private val stall = CoachLine.Stall("bench", sessions = 3, last = 5)
     private val grinding = CoachLine.Grinding("leg-press", sessions = 3, last = 5)
-    private val swap = CoachLine.SameSwap("a2", "incline-press", "incline-db", "Harbour", sessions = 3, last = 5)
+    private val swap = CoachLine.SameSwap("a2", "incline-press", "incline-db", sessions = 3, last = 5)
     private val all = listOf(missed, stall, grinding, swap)
 
     private fun change(vararg operations: Operation) = Change("A change", Scope.RestOfProgram, operations.toList())
