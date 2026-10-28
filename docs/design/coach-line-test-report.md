@@ -127,3 +127,23 @@ The problems are in when it fires and how it comes back, not in how it looks.
 - **Drops and myo-rep minis:** grinding reads the logged set's own RIR only; drops and minis are
   extensions of the set and never count.
 - **Undo on ×, naming the target, one set versus two:** left for the owner's next pass.
+
+## On the owner's phone (2026-10-28)
+
+The PR #94 debug build (`com.hyperlog.app.dev`, 1280 × 2856 at 480 dpi, unlocked, the system's
+dark theme, left as it was). The dev data was copied off first and restored byte for byte after
+(`sha256` of every file equal). The saved Claude key was taken off the phone for the try and put
+back with the rest, so no key was used; the Scripted coach ran the check-in. The dev data showed no
+line by itself, so three ad-hoc sessions (20, 23 and 26 Oct) repeating the last bench and hack
+squat sets were added to a copy of it, which went away with the restore.
+
+| Criterion | What the phone showed | Screenshot |
+| --- | --- | --- |
+| One line over the hero, today only | `Barbell Bench Press hasn't moved in 3 sessions` with Check in and ×, over Day A's hero; the line wraps to three balanced lines at the phone's text size | `screens/phone/dark-coach-line.png` |
+| One at a time, in order; × hides it | × took the bench line away and the next, `Hack Squat hasn't moved in 3 sessions`, took its place. After the app was stopped and started again the bench line stayed hidden | `screens/phone/dark-coach-line-after-hide.png` |
+| Check in starts a check-in with the line as its first answer | Check-in opened; the saved opening read `Hack Squat hasn't moved in 3 sessions.` and its context listed the hack squat sessions behind it. The scripted coach plays its canned first question, as it ignores the opening | `screens/phone/dark-coach-line-checkin.png` |
+| Only while today is selected | Thursday picked: no line | `screens/phone/dark-coach-line-other-day.png` |
+
+Findings: nothing needed fixing. The line reads as a note over the day and Start session stays well
+above the fold. A Change in force hiding the line wasn't tried on the phone (the scripted coach's
+Changes edit other slots); `CoachLinesTest.aChangeInForceHidesTheLineOfItsExerciseOrDay` covers it.

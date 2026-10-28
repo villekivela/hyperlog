@@ -1642,8 +1642,9 @@ It only points: it proposes nothing itself, so ADR 0003 holds, and it needs no C
   A pattern whose last session (or missed day) is more than 4 weeks old shows no line. Within a
   pattern, the latest comes first.
 - **One line on Today**, above the hero card while today is selected and no session runs, with ×;
-  the first pattern in order that isn't hidden. It is a quiet banner in the neutral surface (the
-  `insights` symbol, the line, **Check in** and ×), below the update and time-off banners. × hides
+  the first pattern in order that isn't hidden. It is a quiet banner on `surfaceContainerHighest` with
+  `onSurface` ink (the `insights` symbol, the line, **Check in** and ×; owner, 2026-10-28), below
+  the update and time-off banners. × hides
   that line until its pattern grows (the stall reaches 4 sessions, the day is missed again) or
   ends and comes back: it is kept as the pattern and its latest session or missed day. A line
   hides while a Change in force covers it: a day by an edit to one of its slots, an `add` to it, a
