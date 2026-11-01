@@ -728,6 +728,26 @@ each planned day with the training day it lands on, and never changes the day:
      Finish session.
    - The **prescription sheet** (tap the exercise name) shows every set's target, technique or
      back-off rule, the rest, the slot note and the exercise's technique note.
+   - **Bench angle** (owner, 2026-11-01, #115; the prototype is on `prototype/bench-angle`): an
+     exercise with **Adjustable bench** has a row above its sets: the bench symbol, `Bench`, and a
+     cell under kg with the angle. Until it's set this session, the cell shows last time's angle as
+     a muted placeholder: the latest session's angle for that exercise, at any gym (none, empty).
+     Setting it is optional.
+     - Tapping the row opens a sheet: a padded bench side on, its backrest at the angle with the
+       phone lying on it and last time's backrest as a faint outline behind; the angle in large
+       figures; how far it is from last time (`From the phone · 11° over 30°`, `On target, 30°`); a
+       dot on a ±15° line, last time at its centre tick; and a keypad (digits, ⌫, ✓).
+     - The angle comes live from the phone laid on the backrest (the gravity sensor, else the
+       accelerometer, smoothed) until a key is typed; then it is the typed angle, and the picture
+       shows it. ✓ takes what shows. Whole degrees, 0–90, from flat: a decline reads its tilt, and
+       its name says it's a decline. A phone with neither sensor offers typing alone.
+     - Within 3° of last time the number, the backrest and the dot turn green (the trend scale's
+       up colour). Adjustable benches step 10–15° between notches, so 3° tells the same notch from
+       the next while allowing for the pad giving, the phone's camera bump and the floor.
+     - It can be set again any time in the session, and a swapped-in exercise has its own. It never
+       changes a suggestion: progression reads the sets alone.
+     - The phone reads against gravity, not the seat, so a sloped floor shifts every reading.
+       Measuring the seat first to cancel it is left out until real use asks for it.
    - **Edit on the fly:** add, remove, reorder or swap exercises; add or remove sets; change reps,
      RIR or technique. Edits apply to this session only, with an optional "keep for the rest of the
      block" that saves them as a Change (the Changes ticket). The next session of the day has the
@@ -1326,15 +1346,15 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     finished, so a Change accepted or reverted later doesn't touch them.
   - History's Sessions tab lists finished sessions (Screens → History). A session opens on its
     summary (date, start time, duration, gym), and an exercise on its table, where logged rows are
-    corrected exactly as during a session. Back returns to History.
+    corrected exactly as during a session, its bench angle row too. Back returns to History.
   - Corrections change values only: a past session's exercises and sets can't be added, removed or
     swapped. Last time in a past session's table is the session before it.
   - Suggestions read the corrected sets from then on, including a session running at the time:
     its suggestion and last time are worked out again, with the set to do's prefill if untouched.
 - **English only.**
 - **Exercise library** is editable on the phone (Settings → Exercise library): browse and search,
-  add, edit (name, equipment type, two dumbbells, movement pattern, grip demand, primary and
-  secondary muscles, video link, note) and hide. Design: `docs/design/exercise-library.md`.
+  add, edit (name, equipment type, two dumbbells, adjustable bench, movement pattern, grip demand,
+  primary and secondary muscles, video link, note) and hide. Design: `docs/design/exercise-library.md`.
   - **Names carry the implement** ("DB Bench Press", "Smith Machine Squat"), so a name alone tells
     exercises apart wherever it shows. A name is modifiers, then the implement, then the movement:
     "1-Arm Lean-In DB Lateral Raise", "Incline Smith Machine Press", "Seated Machine Dip". The
@@ -1350,6 +1370,14 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     hinges with a bar or dumbbells), low for handles that guide it (Smith, machines, cables), none
     when the hands do nothing. Free-weight presses are high because the hands hold and balance the
     whole load, which is what sore hands notice.
+  - **Adjustable bench** (owner, 2026-11-01, #115): set on an exercise done on a bench whose
+    backrest is set to an angle, so its sessions keep the bench angle (Screens → Today, Bench
+    angle). A switch in the editor, like Two dumbbells. The shipped library sets it on the incline,
+    decline and seated free-weight and Smith presses (Incline DB Press, Seated DB Shoulder Press,
+    Decline Barbell Bench Press…), Chest-Supported and Incline Chest-Supported DB Row, Incline DB
+    Y-Raise, Incline DB Kelso Shrug and Incline DB Curl. Not on a flat bench (always 0°), a bench
+    used as a prop (split squats, hip thrusts, step-ups) or a machine's own seat. The name can't
+    tell: Seated DB Shoulder Press is on a bench, Seated Cable Row isn't.
   - An exercise needs a name, equipment, a movement pattern, a grip demand and at least one primary
     muscle before it can be saved, because the coach's swaps rely on them. The video link must be a
     YouTube link.
@@ -1752,7 +1780,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   Changes in force, newest first, each with its id, summary, scope, the day it was accepted, its
   operations as JSON and its check-in; every block with its days and slots (slot id, exercise id
   and name, sets as planned in the block's first week or the current one, alternatives, note); the
-  finished sessions of the last 28 days (date, day, gym, each exercise's sets as `80 × 5 [1]`); the
+  finished sessions of the last 28 days (date, day, gym, each exercise's sets as `80 × 5 [1]`, and
+  its bench angle when set, `Incline DB Press at 32°`); the
   weekly sets per muscle for this week and the 4 before it; every visible library exercise, and any
   hidden one the program uses (id, name, equipment, movement pattern, grip, primary muscles); and
   the formats.
