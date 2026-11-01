@@ -23,6 +23,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -40,6 +44,7 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.BottomActions
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.Sheet
 import com.hyperlog.app.ui.theme.ShapedSymbol
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.cardBehind
@@ -129,7 +134,8 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(e.name, style = MaterialTheme.typography.bodyLarge)
+                // An adjustable-bench exercise names the angle it was done at.
+                Text(e.name + (e.benchAngle?.let { " · $it°" } ?: ""), style = MaterialTheme.typography.bodyLarge)
                 // Only the gaps between sets can wrap.
                 RirText(
                     e.sets.withIndex().joinToString("   ") { (i, set) -> set.setText(e.records.getOrNull(i)) },
@@ -201,6 +207,7 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
 fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val shown = session.shown ?: return
     val correction = session.correction
+    var correctingBenchAngle by rememberSaveable { mutableStateOf(false) }
     BackHandler { if (correction != null) actions.cancelCorrection() else onBack() }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxSize()) {
@@ -217,6 +224,7 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                         actions = actions, onSetOptions = {},
                         correction = correction,
                         onCorrect = { set, ext -> actions.correct(shown.id, set, ext) },
+                        onBenchAngle = { correctingBenchAngle = true },
                     ),
                     Modifier.weight(1f),
                 )
@@ -229,6 +237,16 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
             } else {
                 BottomRow { NextLine(label = null, name = stringResource(R.string.past_summary), onClick = onBack, symbol = Symbol.ChevronRight, description = stringResource(R.string.past_summary)) }
             }
+        }
+    }
+    // A past session's angle is corrected by typing: the phone isn't on that bench now.
+    if (correctingBenchAngle) {
+        Sheet(onDismiss = { correctingBenchAngle = false }) {
+            BenchAngleSheetFor(
+                shown.exercise.name, last = shown.lastBenchAngle, angle = shown.benchAngle, inSession = false,
+                onSave = { actions.setBenchAngle(shown.id, it); correctingBenchAngle = false },
+                onClose = { correctingBenchAngle = false },
+            )
         }
     }
 }

@@ -36,6 +36,7 @@ private class SeedExercise(
     val video: String? = null,
     val note: String? = null,
     val twoDumbbells: Boolean = false,
+    val adjustableBench: Boolean = false,
 ) {
     fun toExercise() = Exercise(
         id = id,
@@ -48,5 +49,6 @@ private class SeedExercise(
         video = video,
         note = note,
         twoDumbbells = twoDumbbells,
+        adjustableBench = adjustableBench,
     )
 }

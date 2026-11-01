@@ -99,6 +99,7 @@ fun ExerciseEditor(
     var video by rememberSaveable(stored) { mutableStateOf(exercise?.video.orEmpty()) }
     var note by rememberSaveable(stored) { mutableStateOf(exercise?.note.orEmpty()) }
     var twoDumbbells by rememberSaveable(stored) { mutableStateOf(exercise?.twoDumbbells ?: false) }
+    var adjustableBench by rememberSaveable(stored) { mutableStateOf(exercise?.adjustableBench ?: false) }
     var askDiscard by remember { mutableStateOf(false) }
 
     val videoOk = video.isBlank() || TechniqueVideo.parse(video) != null
@@ -107,13 +108,15 @@ fun ExerciseEditor(
             id = exercise?.id.orEmpty(), name = name.trim(), equipment = equipment!!, pattern = pattern!!, grip = grip!!,
             muscles = muscles, secondary = secondary, video = video.trim().ifEmpty { null }, note = note.trim().ifEmpty { null },
             hidden = exercise?.hidden ?: false, twoDumbbells = twoDumbbells && equipment == Equipment.Dumbbell,
+            adjustableBench = adjustableBench && equipment != Equipment.Machine,
         )
     } else {
         null
     }
     val dirty = name != exercise?.name.orEmpty() || equipment != exercise?.equipment || pattern != exercise?.pattern ||
         grip != exercise?.grip || muscles != exercise?.muscles.orEmpty() || secondary != exercise?.secondary.orEmpty() ||
-        video != exercise?.video.orEmpty() || note != exercise?.note.orEmpty() || twoDumbbells != (exercise?.twoDumbbells ?: false)
+        video != exercise?.video.orEmpty() || note != exercise?.note.orEmpty() || twoDumbbells != (exercise?.twoDumbbells ?: false) ||
+        adjustableBench != (exercise?.adjustableBench ?: false)
     val close = { if (dirty) askDiscard = true else onClose() }
     BackHandler(onBack = close)
 
@@ -170,24 +173,12 @@ fun ExerciseEditor(
 
             if (equipment == Equipment.Dumbbell) {
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    Modifier.fillMaxWidth()
-                        .toggleable(twoDumbbells, role = Role.Switch, onValueChange = { twoDumbbells = it })
-                        .heightIn(min = 72.dp)
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.editor_two_dumbbells), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            stringResource(R.string.editor_two_dumbbells_body),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    Switch(checked = twoDumbbells, onCheckedChange = null)
-                }
+                SwitchRow(stringResource(R.string.editor_two_dumbbells), stringResource(R.string.editor_two_dumbbells_body), twoDumbbells) { twoDumbbells = it }
+            }
+            // A machine's seat is its own, not a bench (SPEC, Adjustable bench).
+            if (equipment != null && equipment != Equipment.Machine) {
+                if (equipment != Equipment.Dumbbell) Spacer(Modifier.height(8.dp))
+                SwitchRow(stringResource(R.string.editor_adjustable_bench), stringResource(R.string.editor_adjustable_bench_body), adjustableBench) { adjustableBench = it }
             }
 
             Section(stringResource(R.string.editor_pattern)) { PatternField(pattern) { pattern = it } }
@@ -336,5 +327,24 @@ private fun MuscleChips(chosen: List<String>, available: List<String>, onChange:
                 }
             }
         }
+    }
+}
+
+/** A setting of the exercise as a whole row: its name and what it does, and a switch at the end. */
+@Composable
+private fun SwitchRow(title: String, body: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .toggleable(checked, role = Role.Switch, onValueChange = onChange)
+            .heightIn(min = 72.dp)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.width(16.dp))
+        Switch(checked = checked, onCheckedChange = null)
     }
 }

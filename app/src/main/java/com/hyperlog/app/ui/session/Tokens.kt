@@ -78,7 +78,7 @@ internal fun rirColor(rir: Int): Color = when {
 internal fun isDarkSurface(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
 /** Which way a suggestion moves the weight, for the why-line's symbol. */
-internal enum class Direction { Up, Flat, Down }
+internal enum class Direction { Up, Flat, Down; companion object }
 
 /** The fixed trend scale, like RIR's: calm green up, neutral for the same weight, amber down (a deload is no failure, so never red). */
 internal val Direction.color: Color
@@ -87,6 +87,12 @@ internal val Direction.color: Color
         Direction.Flat -> Color(0xFF9AA1A9)
         Direction.Down -> Color(0xFFE0A84E)
     }
+
+/**
+ * The up colour darkened to 3:1 on a light sheet, as the RIR scale is in light mode: the bench
+ * angle's large figures on target read faint in the plain one.
+ */
+internal val Direction.Companion.upOnLight: Color get() = Color(0xFF3D8A57)
 
 internal val Direction.symbol: com.hyperlog.app.ui.symbols.Symbol
     get() = when (this) {

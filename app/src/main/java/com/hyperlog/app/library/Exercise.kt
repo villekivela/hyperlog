@@ -24,6 +24,11 @@ data class Exercise(
      * the weight twice (SPEC, Dumbbells); false for anything held as one.
      */
     val twoDumbbells: Boolean = false,
+    /**
+     * Done on a bench whose backrest is set to an angle, so its sessions keep the bench angle
+     * (SPEC, Adjustable bench). The name can't tell: a seated DB press is on one, a seated cable row isn't.
+     */
+    val adjustableBench: Boolean = false,
 ) {
     /**
      * Loaded with plates rather than a stack: a Smith machine, or a machine named for one that

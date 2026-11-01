@@ -49,6 +49,7 @@ Screens: `screens/library.png`, `exercise-editor.png` (phone, dark, Ink and viol
  Equipment
  (Barbell)(Dumbbell)(✓ Machine)(Cable)…       ← filter chips, the selected one checked
  Two dumbbells                          (●)   ← a switch row, dumbbell exercises only
+ Adjustable bench                       (○)   ← the same row, any equipment but a machine
  One in each hand: the estimate counts both…
  Movement pattern
  [ Chest fly                       ▾ ]       ← a field-wide menu of the 24 patterns, current one checked

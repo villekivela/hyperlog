@@ -17,7 +17,7 @@ import androidx.room.RoomDatabase
         SettingEntity::class, UpdateCheckEntity::class, WorkoutEntity::class, WeekdayPlanEntity::class,
         MissedDayEntity::class,
     ],
-    version = 26,
+    version = 27,
 )
 abstract class HyperlogDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao

@@ -150,6 +150,8 @@ fun SessionScreen(
     var setOptions by rememberSaveable { mutableStateOf<Int?>(null) }
     /** The session exercise being swapped, and the one asked about before it's removed. */
     var swapping by rememberSaveable { mutableStateOf<Long?>(null) }
+    /** The exercise whose bench angle sheet is open. */
+    var benchFor by rememberSaveable { mutableStateOf<Long?>(null) }
     var removing by rememberSaveable { mutableStateOf<Long?>(null) }
     val offered = exercises.filter { !it.hidden }
     val now = rememberNow()
@@ -257,6 +259,7 @@ fun SessionScreen(
                             onCorrect = { set, ext -> actions.correct(viewing.id, set, ext) },
                             undoable = { session.undoable(viewing, it) },
                             onUndo = { actions.undo(viewing.id) },
+                            onBenchAngle = { benchFor = viewing.id },
                         ),
                         Modifier.weight(1f),
                     )
@@ -312,6 +315,7 @@ fun SessionScreen(
                             pickedSet = session.pickedSet,
                             onPickSet = if (session.correctable) actions::pickSet else null,
                             openIndex = session.openIndex,
+                            onBenchAngle = { benchFor = current.id },
                         )
                         SetTable(table, Modifier.weight(1f))
                     }
@@ -484,6 +488,15 @@ fun SessionScreen(
     session.exercises.firstOrNull { it.id == swapping }?.let { swapped ->
         Sheet(onDismiss = { swapping = null }) {
             SwapPicker(swapped, exercises, onPick = { actions.swap(swapped.id, it); swapping = null })
+        }
+    }
+    session.exercises.firstOrNull { it.id == benchFor }?.let { benched ->
+        Sheet(onDismiss = { benchFor = null }) {
+            BenchAngleSheetFor(
+                benched.exercise.name, last = benched.lastBenchAngle, angle = benched.benchAngle, inSession = true,
+                onSave = { actions.setBenchAngle(benched.id, it); benchFor = null },
+                onClose = { benchFor = null },
+            )
         }
     }
     session.exercises.firstOrNull { it.id == removing }?.let { removed ->

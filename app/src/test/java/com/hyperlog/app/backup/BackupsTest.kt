@@ -93,6 +93,9 @@ class BackupsTest {
         val bench = db.exercises().all().first { it.id == "barbell_bench_press" }
         library.update(bench.toExercise().copy(note = "Feet planted, my cue"))
         library.setHidden("pec_deck", true)
+        // v27: an exercise added on the phone, done on an adjustable bench.
+        library.add(Exercise("", "Incline Landmine Press", com.hyperlog.app.library.Equipment.Barbell,
+            com.hyperlog.app.library.MovementPattern.VerticalPush, com.hyperlog.app.library.GripDemand.Low, listOf("Front Delts"), adjustableBench = true))
 
         val gyms = Gyms(db)
         val gym = gyms.addGym("Central")
@@ -133,6 +136,8 @@ class BackupsTest {
         val hotel = com.hyperlog.app.coach.WorkoutFormat.example(db.exercises().all().map { it.toExercise() })
         now += 86_400_000L
         logger.startWorkout(workouts.add(hotel, gym), gym)
+        // v27: a bench angle on the workout's first exercise.
+        db.openHelper.writableDatabase.execSQL("UPDATE session_exercise SET bench_angle = 32 WHERE id = (SELECT MAX(id) FROM session_exercise)")
         logger.log("30", 10, 1)
         logger.finish()
         workouts.add(hotel.copy(name = "Legs at home"), null)
@@ -227,7 +232,7 @@ class BackupsTest {
         val file = Json.parseToJsonElement(Backups(usedPhone(), clock = { now }).export()).jsonObject
         assertEquals(JsonPrimitive("hyperlog-backup"), file["format"])
         assertEquals(JsonPrimitive(1), file["version"])
-        assertEquals(JsonPrimitive(26), file["database"])
+        assertEquals(JsonPrimitive(27), file["database"])
         assertEquals(JsonPrimitive(now), file["exportedAt"])
         assertEquals(BackupFormat.Tables.toSet(), (file["tables"] as JsonObject).keys)
     }
@@ -497,5 +502,18 @@ class BackupsTest {
         val restoredOn = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
         assertEquals(Triple(restoredOn.plusDays(1).toEpochDay(), 2, 0), Triple(row.rotationFrom, row.week, row.dayIndex))
         assertEquals(listOf(null, null), phone.weekdayPlan().all().map { it.minutes })
+    }
+
+    @Test
+    fun aBackupKeptFromDatabase26MarksTheShippedAdjustableBenchExercises() = runTest {
+        val file = javaClass.getResource("/backup/hyperlog-backup-db26.json")!!.readText()
+        val phone = freshInstall()
+        assertEquals(Backups.Result.Restored, Backups(phone, clock = { now }).restore(file))
+        val byId = phone.exercises().all().associateBy { it.id }
+        assertEquals(true, byId.getValue("db_incline_press").adjustableBench)
+        assertEquals(false, byId.getValue("barbell_bench_press").adjustableBench)
+        val sessionExercises = phone.sessions().finishedSessions().flatMap { phone.sessions().sessionExercises(it.id) }
+        assertTrue(sessionExercises.isNotEmpty())
+        assertTrue(sessionExercises.all { it.benchAngle == null })
     }
 }

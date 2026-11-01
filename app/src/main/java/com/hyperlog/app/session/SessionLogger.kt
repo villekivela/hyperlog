@@ -9,6 +9,7 @@ import com.hyperlog.app.data.SessionEntity
 import com.hyperlog.app.data.SessionExerciseEntity
 import com.hyperlog.app.data.SetExtensionEntity
 import com.hyperlog.app.data.SetTechniqueEntity
+import com.hyperlog.app.domain.BenchAngle
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
@@ -311,6 +312,17 @@ class SessionLogger(
             rememberMachine(sessionExerciseId, session.gym?.id, exerciseId)
             if (session.currentId == sessionExerciseId) dao.updateSession(dao.session(session.id)!!.copy(entry = null))
         }
+        reload()
+    }
+
+    /**
+     * Sets the bench angle [sessionExerciseId] is done at, whole degrees from flat (SPEC, Bench
+     * angle). Only an adjustable-bench exercise has one; it can be set again any time in the session.
+     */
+    suspend fun setBenchAngle(sessionExerciseId: Long, angle: Int) = locked {
+        val exercise = _state.value?.exercises?.firstOrNull { it.id == sessionExerciseId } ?: return@locked
+        if (!exercise.exercise.adjustableBench || !BenchAngle.valid(angle)) return@locked
+        dao.setBenchAngle(sessionExerciseId, angle)
         reload()
     }
 
@@ -1111,6 +1123,8 @@ class SessionLogger(
                 records = records.of(row, se, exercise, sets, deload = day?.deload == true),
                 setIndices = indices,
                 lastTimeIndices = lastRows.map { it.position },
+                benchAngle = se.benchAngle.takeIf { exercise.adjustableBench },
+                lastBenchAngle = if (exercise.adjustableBench) dao.lastBenchAngle(se.exerciseId, before = row.startedAt) else null,
             )
         }
         val current = exercises.firstOrNull { it.id == row.currentSessionExerciseId }

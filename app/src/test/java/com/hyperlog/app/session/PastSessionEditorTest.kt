@@ -97,6 +97,35 @@ class PastSessionEditorTest {
     }
 
     @Test
+    fun aPastSessionsBenchAngleIsCorrectedAndReadAgainstTheSessionBeforeIt() = runTest {
+        val logger = logger()
+        suspend fun inclineAt(angle: Int): Long {
+            logger.start()
+            logger.addExercise("db_incline_press")
+            logger.setBenchAngle(logger.state.value!!.current!!.id, angle)
+            logger.log("25", 10, 2)
+            return logger.finish()!!.sessionId.also { now += 86_400_000L }
+        }
+        inclineAt(30)
+        val second = inclineAt(40)
+
+        val editor = PastSessionEditor(db, programs)
+        editor.open(second)
+        val incline = editor.state.value!!.exercises.single()
+        assertEquals(40, incline.benchAngle)
+        assertEquals(30, incline.lastBenchAngle)
+
+        editor.setBenchAngle(incline.id, 35)
+        assertEquals(35, editor.state.value!!.exercises.single().benchAngle)
+        // The session list, which the check-in reads, carries it too.
+        assertEquals(35, editor.sessions().first { it.id == second }.exercises.single().benchAngle)
+
+        logger.start()
+        logger.addExercise("db_incline_press")
+        assertEquals(35, logger.state.value!!.current!!.lastBenchAngle)
+    }
+
+    @Test
     fun aPastSessionKeepsThePlanItWasDoneUnder() = runTest {
         // Found on the phone: a Change accepted after a session rewrote that session's targets.
         val week1 = logger().weekOne()

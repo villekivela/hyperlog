@@ -17,6 +17,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.hyperlog.app.library.toExercise
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
@@ -627,6 +628,36 @@ class MigrationTest {
         assertEquals(before, counts { q -> db.openHelper.writableDatabase.query(q).use { it.moveToFirst(); it.getInt(0) } })
         assertEquals(listOf("Central"), Gyms(db).gyms.first().map { it.name })
         db.openHelper.writableDatabase.query("PRAGMA foreign_key_check").use { assertEquals(0, it.count) }
+        db.close()
+    }
+
+    @Test
+    fun version26MarksTheShippedAdjustableBenchExercisesEditedOrNotAndSessionsHaveNoBenchAngle() = runTest {
+        val file = context.getDatabasePath("migration-test-26.db").also { it.parentFile!!.mkdirs(); it.delete() }
+        createVersion(26, file) { db ->
+            db.execSQL(
+                "INSERT INTO exercise (id, name, equipment, movement_pattern, grip, muscles, secondary_muscles, hidden, edited) VALUES " +
+                    "('db_incline_press', 'Incline DB Press', 'Dumbbell', 'HorizontalPush', 'High', 'Chest', '', 0, 1), " +
+                    "('seated_db_shoulder_press', 'Seated DB Shoulder Press', 'Dumbbell', 'VerticalPush', 'High', 'Front Delts', '', 0, 0), " +
+                    "('db_bench_press', 'DB Bench Press', 'Dumbbell', 'HorizontalPush', 'High', 'Chest', '', 0, 0), " +
+                    // A shipped one edited into a machine on the phone: its seat is its own.
+                    "('smith_machine_seated_press', 'Seated Shoulder Press Machine', 'Machine', 'VerticalPush', 'Low', 'Front Delts', '', 0, 1)",
+            )
+            db.execSQL("INSERT INTO session (id, started_at, finished_at, rest_total_ms, pad_visible) VALUES (1, 1000, 2000, 0, 1)")
+            db.execSQL("INSERT INTO session_exercise (id, session_id, exercise_id, position) VALUES (1, 1, 'db_incline_press', 0)")
+        }
+
+        // Room checks the migrated tables against the v27 schema when it opens.
+        val db = Room.databaseBuilder(context, HyperlogDatabase::class.java, file.absolutePath)
+            .addMigrations(*Migrations)
+            .allowMainThreadQueries()
+            .build()
+        val byId = db.exercises().all().associateBy { it.id }
+        assertEquals(true, byId.getValue("db_incline_press").adjustableBench)
+        assertEquals(true, byId.getValue("seated_db_shoulder_press").adjustableBench)
+        assertEquals(false, byId.getValue("db_bench_press").adjustableBench)
+        assertEquals(null, db.sessions().sessionExercises(1).single().benchAngle)
+        assertEquals(false, byId.getValue("smith_machine_seated_press").toExercise().adjustableBench)
         db.close()
     }
 

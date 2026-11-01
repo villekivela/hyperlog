@@ -731,19 +731,32 @@ each planned day with the training day it lands on, and never changes the day:
    - **Bench angle** (owner, 2026-11-01, #115; the prototype is on `prototype/bench-angle`): an
      exercise with **Adjustable bench** has a row above its sets: the bench symbol, `Bench`, and a
      cell under kg with the angle. Until it's set this session, the cell shows last time's angle as
-     a muted placeholder: the latest session's angle for that exercise, at any gym (none, empty).
-     Setting it is optional.
+     a muted placeholder: the latest session that set one for that exercise, at any gym. With no
+     angle ever, the cell reads `Set`. Setting it is optional.
      - Tapping the row opens a sheet: a padded bench side on, its backrest at the angle with the
-       phone lying on it and last time's backrest as a faint outline behind; the angle in large
-       figures; how far it is from last time (`From the phone · 11° over 30°`, `On target, 30°`); a
-       dot on a ±15° line, last time at its centre tick; and a keypad (digits, ⌫, ✓).
+       phone lying on it and the target's backrest as a faint dashed outline behind; the angle in
+       large figures; how far it is from the target, large enough to read from the pin (`11° over
+       30°`, `On target, 30°`; with no angle yet, the target alone: `Last time 30°`), and under it
+       where the angle comes from (`From the phone`, `Typed`, `Waiting for the sensor`, `Type the
+       angle`); a dot on a ±15° line, the target at its centre tick with the ±3° around it tinted;
+       and the logging pad's keys in its grid: digits, ⌫ where the pad has it, − and + (one
+       degree), × (close without saving) and ✓.
+     - **The target** is last time's angle until one is set this session; from then on it is the
+       angle set today, and the sheet says so (`2° over 30° set today`, `30° set today`), so a
+       bench that slipped shows by how much. A past session's sheet (History) compares with the
+       session before it.
      - The angle comes live from the phone laid on the backrest (the gravity sensor, else the
        accelerometer, smoothed) until a key is typed; then it is the typed angle, and the picture
-       shows it. ✓ takes what shows. Whole degrees, 0–90, from flat: a decline reads its tilt, and
-       its name says it's a decline. A phone with neither sensor offers typing alone.
-     - Within 3° of last time the number, the backrest and the dot turn green (the trend scale's
-       up colour). Adjustable benches step 10–15° between notches, so 3° tells the same notch from
-       the next while allowing for the pad giving, the phone's camera bump and the floor.
+       shows it. − and + step what shows (typed, else the live reading, else the angle set, else
+       the target) and keep it in 0–90; the result counts as typed. ✓ takes what shows. Whole
+       degrees, 0–90, from flat: a decline reads its tilt, and its name says it's a decline. A
+       phone with neither sensor offers typing alone. A typed angle past 90 stays on screen in the
+       error colour with `Up to 90°`, the backrest drawn at 90, and ✓ is dimmed until there is an
+       angle to save.
+     - Within 3° of the target the number, the line under it, the backrest and the dot turn green
+       (the trend scale's up colour, darkened in light mode to 3:1 as the RIR scale is). Adjustable
+       benches step 10–15° between notches, so 3° tells the same notch from the next while allowing
+       for the pad giving, the phone's camera bump and the floor.
      - It can be set again any time in the session, and a swapped-in exercise has its own. It never
        changes a suggestion: progression reads the sets alone.
      - The phone reads against gravity, not the seat, so a sloped floor shifts every reading.
@@ -1346,7 +1359,9 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     finished, so a Change accepted or reverted later doesn't touch them.
   - History's Sessions tab lists finished sessions (Screens → History). A session opens on its
     summary (date, start time, duration, gym), and an exercise on its table, where logged rows are
-    corrected exactly as during a session, its bench angle row too. Back returns to History.
+    corrected exactly as during a session, its bench angle row too (typed: the phone isn't on that
+    bench now). The summary names an adjustable-bench exercise's angle, `Incline DB Press · 32°`,
+    as Session done does. Back returns to History.
   - Corrections change values only: a past session's exercises and sets can't be added, removed or
     swapped. Last time in a past session's table is the session before it.
   - Suggestions read the corrected sets from then on, including a session running at the time:
@@ -1372,7 +1387,8 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     whole load, which is what sore hands notice.
   - **Adjustable bench** (owner, 2026-11-01, #115): set on an exercise done on a bench whose
     backrest is set to an angle, so its sessions keep the bench angle (Screens → Today, Bench
-    angle). A switch in the editor, like Two dumbbells. The shipped library sets it on the incline,
+    angle). A switch in the editor, like Two dumbbells, for any equipment but a machine, whose
+    seat is its own. The shipped library sets it on the incline,
     decline and seated free-weight and Smith presses (Incline DB Press, Seated DB Shoulder Press,
     Decline Barbell Bench Press…), Chest-Supported and Incline Chest-Supported DB Row, Incline DB
     Y-Raise, Incline DB Kelso Shrug and Incline DB Curl. Not on a flat bench (always 0°), a bench

@@ -1,7 +1,9 @@
 package com.hyperlog.app.session
 
+import com.hyperlog.app.data.ExerciseEntity
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.SessionEntity
+import com.hyperlog.app.domain.BenchAngle
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.SetEntry
@@ -80,14 +82,16 @@ class PastSessionEditor(
 
     /** Every finished session, newest first. */
     suspend fun sessions(): List<PastSessionItem> {
-        val library = db.exercises().all().associate { it.id to it.name }
+        val library = db.exercises().all().associateBy { it.id }
         return dao.finishedSessions().map { row -> item(row, library) }
     }
 
-    private suspend fun item(row: SessionEntity, library: Map<String, String>): PastSessionItem {
+    private suspend fun item(row: SessionEntity, library: Map<String, ExerciseEntity>): PastSessionItem {
         val exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
             val sets = stored.sets(se.id)
-            if (sets.isEmpty()) null else ExerciseSummary(library[se.exerciseId] ?: se.exerciseId, sets)
+            val exercise = library[se.exerciseId]
+            if (sets.isEmpty()) null
+            else ExerciseSummary(exercise?.name ?: se.exerciseId, sets, benchAngle = se.benchAngle.takeIf { exercise?.adjustableBench == true })
         }
         return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises,
             programId = row.programId.takeIf { row.workoutId == null },
@@ -169,6 +173,19 @@ class PastSessionEditor(
         if (saved) onChanged()
     }
 
+    /** Corrects the bench angle [sessionExerciseId] was done at, as during the session. */
+    suspend fun setBenchAngle(sessionExerciseId: Long, angle: Int) {
+        val saved = mutex.withLock {
+            val session = _state.value ?: return
+            val exercise = session.exercises.firstOrNull { it.id == sessionExerciseId } ?: return
+            if (!exercise.exercise.adjustableBench || !BenchAngle.valid(angle)) return
+            dao.setBenchAngle(sessionExerciseId, angle)
+            load(session.id, session.shownId)
+            true
+        }
+        if (saved) onChanged()
+    }
+
     private suspend fun edit(change: (SetEntry, WeightLadder) -> SetEntry) = locked {
         val session = _state.value ?: return@locked
         val correction = session.correction ?: return@locked
@@ -211,6 +228,8 @@ class PastSessionEditor(
                 records = records.of(row, se, exercise, sets, deload = day?.deload == true),
                 setIndices = rows.map { it.position },
                 lastTimeIndices = lastRows.map { it.position },
+                benchAngle = se.benchAngle.takeIf { exercise.adjustableBench },
+                lastBenchAngle = if (exercise.adjustableBench) dao.lastBenchAngle(se.exerciseId, before = row.startedAt) else null,
             )
         }
         _state.value = PastSession(

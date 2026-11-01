@@ -72,6 +72,58 @@ class SessionLoggerTest {
     }
 
     @Test
+    fun anAdjustableBenchExerciseKeepsItsBenchAngleAndTheNextSessionAtAnyGymReadsItAsLastTime() = runTest {
+        val gyms = Gyms(db)
+        val central = gyms.addGym("Central")
+        val hotel = gyms.addGym("Hotel")
+        val logger = logger()
+        logger.start(central)
+        logger.addExercise("db_incline_press")
+        assertNull(logger.session.current!!.lastBenchAngle)
+
+        logger.setBenchAngle(logger.session.current!!.id, 32)
+        assertEquals(32, logger.session.current!!.benchAngle)
+        logger.type("25"); logger.done()
+        logger.type("10"); logger.done()
+        logger.finish()
+
+        now += 86_400_000
+        logger.start(hotel)
+        logger.addExercise("db_incline_press")
+        val next = logger.session.current!!
+        assertNull(next.benchAngle)
+        assertEquals(32, next.lastBenchAngle)
+    }
+
+    @Test
+    fun onlyAnAdjustableBenchExerciseTakesABenchAngleAndOnlyUpToNinety() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("db_bench_press")
+        logger.setBenchAngle(logger.session.current!!.id, 30)
+        assertNull(logger.session.current!!.benchAngle)
+
+        logger.addExercise("db_incline_press")
+        val incline = logger.session.exercises.first { it.exercise.id == "db_incline_press" }.id
+        logger.setBenchAngle(incline, 95)
+        assertNull(logger.session.exercises.first { it.id == incline }.benchAngle)
+        logger.setBenchAngle(incline, 30)
+        logger.setBenchAngle(incline, 45)
+        assertEquals(45, logger.session.exercises.first { it.id == incline }.benchAngle)
+    }
+
+    @Test
+    fun aSwappedInExerciseHasItsOwnBenchAngle() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("db_incline_press")
+        val id = logger.session.current!!.id
+        logger.setBenchAngle(id, 30)
+        logger.swap(id, "seated_db_shoulder_press")
+        assertNull(logger.session.current!!.benchAngle)
+    }
+
+    @Test
     fun aPlainBodyweightExerciseStartsOnRepsAtNoWeightAndLogs() = runTest {
         // Found on the phone: Reverse Nordic's ✓ stayed disabled until a weight above 0 was typed.
         val logger = logger()

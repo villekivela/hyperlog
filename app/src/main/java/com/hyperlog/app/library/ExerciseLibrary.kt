@@ -74,6 +74,8 @@ fun ExerciseEntity.toExercise() = Exercise(
     note = note,
     hidden = hidden,
     twoDumbbells = twoDumbbells,
+    // A machine's seat is its own, even for a shipped exercise the migration marked before it was edited into one.
+    adjustableBench = adjustableBench && Equipment.valueOf(equipment) != Equipment.Machine,
 )
 
 private fun Exercise.toEntity(hidden: Boolean = this.hidden, edited: Boolean = false) = ExerciseEntity(
@@ -89,4 +91,5 @@ private fun Exercise.toEntity(hidden: Boolean = this.hidden, edited: Boolean = f
     hidden = hidden,
     edited = edited,
     twoDumbbells = twoDumbbells && equipment == Equipment.Dumbbell,
+    adjustableBench = adjustableBench && equipment != Equipment.Machine,
 )

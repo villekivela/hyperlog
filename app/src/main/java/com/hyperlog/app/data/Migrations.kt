@@ -4,7 +4,32 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Every schema change since v1, in order. Each one is frozen once released. */
-val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23, Migration23To24, Migration24To25, Migration25To26)
+val Migrations: Array<Migration> = arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9, Migration9To10, Migration10To11, Migration11To12, Migration12To13, Migration13To14, Migration14To15, Migration15To16, Migration16To17, Migration17To18, Migration18To19, Migration19To20, Migration20To21, Migration21To22, Migration22To23, Migration23To24, Migration24To25, Migration25To26, Migration26To27)
+
+/**
+ * v27: the bench angle (#115). Exercises on an adjustable bench say so, and a session's exercise
+ * keeps the angle it was done at. The shipped ones are marked here too, edited on the phone or not.
+ */
+object Migration26To27 : Migration(26, 27) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE exercise ADD COLUMN adjustable_bench INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE session_exercise ADD COLUMN bench_angle INTEGER")
+        markAdjustableBench(db)
+    }
+
+    /** Marks the shipped adjustable-bench exercises. Also run on a restored backup from before v27. */
+    fun markAdjustableBench(db: SupportSQLiteDatabase) {
+        val ids = AdjustableBench.joinToString(",") { "'$it'" }
+        db.execSQL("UPDATE exercise SET adjustable_bench = 1 WHERE id IN ($ids)")
+    }
+
+    /** The shipped library's adjustable-bench exercises when v27 came. */
+    private val AdjustableBench = listOf(
+        "arnold_press_seated", "barbell_incline_press", "chest_supported_db_row", "db_incline_curl", "db_incline_press",
+        "decline_bench_press", "decline_db_press", "incline_chest_supported_db_row", "incline_db_kelso_shrug", "incline_db_y_raise",
+        "seated_db_shoulder_press", "seated_overhead_press_barbell", "smith_machine_incline_press", "smith_machine_seated_press",
+    )
+}
 
 /**
  * v26: the program's days take turns on training days (ADR 0006). Training days gain the minutes

@@ -390,7 +390,7 @@ object AskClaude {
         if (recent.isEmpty()) appendLine("None.")
         recent.forEach { (session, date) ->
             appendLine("$date ${date.format(Weekday)}: ${session.title ?: "ad-hoc session"}${session.gym?.let { " at $it" } ?: ""}")
-            session.exercises.forEach { e -> appendLine("  ${e.name}: ${e.sets.joinToString(", ") { it.summary() }}") }
+            session.exercises.forEach { e -> appendLine("  ${e.name}${e.benchAngle?.let { " at $it°" } ?: ""}: ${e.sets.joinToString(", ") { it.summary() }}") }
         }
     }
 

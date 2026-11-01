@@ -501,6 +501,109 @@ session reads like the logging screen with nothing to do, so tapping a number is
   session's summary under a top app bar (date · start · duration · gym) → the exercise table as
   in Session done.
 
+**Bench angle** (built in #115; SPEC, Today → Bench angle). The owner picked the layout from
+the prototype (`prototype/bench-angle`, variant F): a row of the table, a keypad sheet, a padded
+bench, an off-target dot, green within 3°. The second pass (the tester's report,
+`bench-angle-test-report.md`, and the owner's calls) gave it the pad's whole grid, today's angle as
+the target once set, and a gap you can read from the pin.
+
+Principles:
+
+1. **A setting in the table's own words.** The row is drawn like a warm-up row: an index circle,
+   a label, a cell under kg. Nothing new to learn, and it sits first because the bench is set
+   before the warm-ups.
+2. **The target is a ghost.** Last time's angle, or today's once set: a muted placeholder in the
+   cell, and in the sheet the dashed backrest, the centre tick and the tinted ±3°.
+3. **The bench is the one memorable thing.** A side-on drawing of the real object, hinge fixed,
+   the backrest swinging about it with the phone lying on it, always drawn. Everything around it
+   stays quiet.
+4. **Read from the pin.** The angle and its gap from the target are the two big lines; where the
+   angle comes from is the small one.
+5. **One colour means one thing.** Green only for on target (the trend scale's up colour), red only
+   for an angle past 90°. Over and under have no colour: the words and the dot's side say which.
+6. **Typing is the logging pad.** The same grid, keys, sizes, Inter digits and tap feedback, so a
+   thumb that knows the pad knows this.
+
+Tokens:
+
+| Part | Value |
+| --- | --- |
+| Row | 64 dp, like a set; a 32 dp surfaceContainerHighest circle with `airline_seat_recline_normal` 20 dp in onSurfaceVariant; `Bench` in bodyLarge |
+| Cell | The table's cell: 48 dp, 4 dp inside the kg column, 12 dp radius, 1 dp outline, value `figureLarge` at Normal weight; set onSurface, last time outline; with no angle ever `Set` in labelLarge onSurfaceVariant |
+| Sheet title | headlineSmall `Bench angle` at the 28 dp text edge, the exercise under it in bodyMedium onSurfaceVariant |
+| Drawing | 248 × 144 dp, centred: pads 14 dp thick (backrest 104 dp, seat 64 dp) in surfaceContainerHighest; frame 4 dp in onSurfaceVariant (beam, two feet, upright); the backrest and phone 2 dp in the ink, held at 0–90 whatever is typed; the target's backrest 1.5 dp dashed (6 on, 4 off) in outline |
+| Angle | `figureDisplay`, 8 dp under the drawing; `–` with no angle |
+| Gap | `figureLarge` (Inter Medium 22 sp) right under the angle: onSurface off target, the green on target, onSurfaceVariant for the target alone |
+| Source | bodyMedium onSurfaceVariant (error when past 90°), 4 dp under the gap |
+| Off-target line | 248 × 24 dp, 16 dp under the source: a 4 dp outlineVariant track for ±15°, the ±3° zone an 8 dp pill of the green at 35%, a 2 × 16 dp onSurfaceVariant tick for the target, an 8 dp dot in the ink; hidden with no target |
+| Keypad | The pad's grid and `Key`s, 8 dp from the sheet's edges like the pad's, 24 dp under the line: 4 columns, 56 dp keys, 4 dp gaps, 12 dp radius, surfaceContainerHighest, 24 sp Inter digits; ✓ primary, surfaceContainerHigh with an outline check while there is nothing to save |
+| Ink | onSurface; within 3° the on-target green (`#5FAE7A` in dark; `#3D8A57` in light, 3.9:1 on the sheet, as the RIR scale darkens for daylight); error for a typed angle past 90° |
+
+```
+          Last        kg    Reps   RIR
+ (⑂)  Bench          ┌───┐                         ← (⑂) the bench symbol on a grey circle
+                     │30°│                           muted: last time's; full ink once set;
+                     └───┘                           `Set` with no angle ever
+ (W)                  14      8            ○
+ (W)                  20      5            ○
+ (①)     30 × 8     ┏━━━┓  ┌───┐  [1]      ◯
+
+╭──────────────────────────────────────────╮
+│                  ───                     │     ← drag handle
+│ Bench angle                              │     ← headlineSmall at 28 dp
+│ Incline DB Press                         │
+│                                          │
+│         ╲╲  ▬                            │     ← backrest at the angle, the phone on it;
+│        ╱ ╲╲ ▬                            │       the target's backrest dashed behind
+│          ╲╲▁▁▁ ▭▭▭▭▭▭                    │     ← seat
+│        ▄▁▁▁▁▁▁▁▁┃▁▁▁▁▄                   │     ← beam, feet, upright
+│                41°                       │     ← figureDisplay, green within 3°
+│        11° over 30° set today            │     ← the gap, figureLarge
+│            From the phone                │     ← the source, bodyMedium
+│      ────────░░│░░──────●───             │     ← ±15°; ░ the ±3° zone, │ the target
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐              │
+│ │ 1  │ │ 2  │ │ 3  │ │ ⌫  │              │
+│ │ 4  │ │ 5  │ │ 6  │ │ −  │              │     ← − and + step a degree
+│ │ 7  │ │ 8  │ │ 9  │ │ +  │              │
+│ │ ×  │ │ 0  │        │▐✓▌ │              │     ← × closes unsaved, ✓ saves what shows
+│ └────┘ └────┘ └────┘ └────┘              │
+╰──────────────────────────────────────────╯
+```
+
+States:
+
+| State | Angle | Gap | Source | Picture and line |
+| --- | --- | --- | --- | --- |
+| Waiting for the sensor | `–` | `Last time 30°` or `30° set today`, muted | `Waiting for the sensor` | The target dashed; no dot; ✓ dimmed |
+| Live, off target | `41°` | `11° over 30°` | `From the phone` | Backrest at 41°, the dot right of the tick |
+| Live or typed, on target | `32°` green | `On target, 30°` green | `From the phone`, `Typed` | Backrest, phone and dot green, the dot in the zone |
+| Set today, reopened | the live reading | `4° under 30° set today` | `From the phone` | Today's 30° is the dashed backrest and the tick |
+| Typed past 90 | `95°` red | the target, muted | `Up to 90°` red | Backrest held at 90° in red, the dot at the right end; ✓ dimmed |
+| No target (first time) | the angle | none | `From the phone` or `Typed` | No ghost, no line |
+| No sensor, or a History correction | the angle set, else `–` | against the session before | `Type the angle` until typed | Typing only |
+
+Interaction rules:
+
+- A tap anywhere on the row opens the sheet (TalkBack: "Bench angle, 32°", "Bench angle not set,
+  last time 30°" or "Bench angle not set", action "Set the bench angle").
+- The live reading fills the number until the first key. Digits type, two at most; ⌫ steps back,
+  and with nothing typed the live reading returns. − and + step what shows by one degree within
+  0–90 (typed, else the live reading, else the angle set, else the target), and the result counts
+  as typed.
+- ✓ saves what shows and closes the sheet; ×, a swipe down or Back close it unsaved. With no angle
+  ✓ does nothing and reads "Save, once there is an angle".
+- Once an angle is set this session it is the target: reopening the sheet compares the phone with
+  it. History's past exercise compares with the session before and is typed only.
+- The angle, gap and source are one TalkBack node ("41°, 11° over 30°, From the phone"); the
+  drawing and the line are left out, since the words carry them.
+
+Screens (`screens/bench-angle-*.png`): `row-last-time`, `row-set` and `row-empty` (renders, light
+and dark); `sheet-phone-over`, `sheet-phone-on-target`, `sheet-typed-on-target`,
+`sheet-too-steep`, `sheet-waiting`, `sheet-first-time`, `sheet-today` and `sheet-today-waiting`
+(renders, light and dark); `phone-sheet`, `phone-sheet-today` and `phone-row-first-time` (the
+phone, dark). The renders come from `BenchAngleRenders`: `RENDERS=<dir> ./gradlew
+testDebugUnitTest --tests '*BenchAngleRenders*'`, with `DARK=1` for dark.
+
 ## Interaction rules
 
 **✓ does:**

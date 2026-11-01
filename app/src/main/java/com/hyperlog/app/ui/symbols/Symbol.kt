@@ -17,6 +17,7 @@ import com.hyperlog.app.R
 enum class Symbol(@param:DrawableRes val drawable: Int) {
     Add(R.drawable.symbol_add),
     AirlineSeatFlat(R.drawable.symbol_airline_seat_flat),
+    AirlineSeatReclineNormal(R.drawable.symbol_airline_seat_recline_normal),
     Air(R.drawable.symbol_air),
     AttachFile(R.drawable.symbol_attach_file),
     Album(R.drawable.symbol_album),
