@@ -322,15 +322,15 @@ data class ChoiceColors(val checked: Color, val onChecked: Color, val unchecked:
 
 /**
  * The colours of a connected choice on [card], or on the accent card when [onAccent]. On a
- * neutral card the picked one is filled primaryContainer, the deep violet of the selected day,
+ * neutral card the picked one is filled primaryContainer, the accent of the selected day,
  * tab and Start (the owner's call, #58). On the accent card (primaryContainer) that fill would
- * vanish, so the picked one is filled onPrimaryContainer with the card's violet for its words, as
+ * vanish, so the picked one is filled onPrimaryContainer with the card's accent for its words, as
  * the hero's Start, and the others sit in a shaded well.
  */
 fun choiceColors(scheme: ColorScheme, card: Color, onAccent: Boolean): ChoiceColors = with(scheme) {
     if (onAccent) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
-    // In dark the deep violet is only 2.9:1 on a card, so the others sit in a well a tone below
-    // the screen (3.4:1 to the picked one); in light they're the white card.
+    // In dark the others sit in a well a tone below the screen, so the near-white pick stands
+    // well off them; in light they're the white card.
     else ChoiceColors(primaryContainer, onPrimaryContainer, if (surface.luminance() < 0.5f) surfaceContainerLowest else card, onSurfaceVariant)
 }
 
@@ -343,8 +343,8 @@ fun connectedChoiceColors(card: Color = Tones.card, onAccent: Boolean = false): 
 
 /**
  * A filled button's fill and words on the accent card (primaryContainer): onPrimaryContainer with
- * the card's violet for words, as the hero's Start. A primary button vanishes there in light,
- * where primary and primaryContainer are one violet.
+ * the card's accent for words, as the hero's Start. A primary button vanishes there in light,
+ * where primary and primaryContainer are one near-black.
  */
 fun accentButton(scheme: ColorScheme): AccentButton = AccentButton(scheme.onPrimaryContainer, scheme.primaryContainer)
 

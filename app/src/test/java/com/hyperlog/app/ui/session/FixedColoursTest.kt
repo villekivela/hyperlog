@@ -2,16 +2,16 @@ package com.hyperlog.app.ui.session
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
-import com.hyperlog.app.ui.theme.InkDark
-import com.hyperlog.app.ui.theme.InkLight
+import com.hyperlog.app.ui.theme.GraphiteDark
+import com.hyperlog.app.ui.theme.GraphiteLight
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.abs
 
 /**
  * The colours that don't follow the theme (RIR, progression, plates, errors) must never pass for
- * the accent: each hue keeps 30° from every accent fill. Near-greys (a 5 kg plate, the flat trend)
- * carry no hue to confuse.
+ * the accent: each hue keeps 30° from every accent fill. Near-greys (a 5 kg plate, the flat trend,
+ * Graphite's neutral accent) carry no hue to confuse.
  */
 class FixedColoursTest {
     private val fixed: List<Pair<String, Color>> = buildList {
@@ -26,15 +26,15 @@ class FixedColoursTest {
         }
         Direction.entries.forEach { add("trend $it" to it.color) }
         listOf(25.0, 20.0, 15.0, 10.0, 5.0, 1.25).forEach { add("$it kg plate" to plateColor(it)) }
-        listOf(InkLight, InkDark).forEach { add("error" to it.error); add("errorContainer" to it.errorContainer) }
+        listOf(GraphiteLight, GraphiteDark).forEach { add("error" to it.error); add("errorContainer" to it.errorContainer) }
     }
 
     private fun accents(s: ColorScheme) = listOf(s.primary, s.primaryContainer, s.secondaryContainer)
 
     @Test
     fun noFixedColourSharesTheAccentsHue() {
-        for (scheme in listOf(InkLight, InkDark)) {
-            for (accent in accents(scheme)) {
+        for (scheme in listOf(GraphiteLight, GraphiteDark)) {
+            for (accent in accents(scheme).filter { chroma(it) >= 0.15f }) {
                 fixed.filter { chroma(it.second) >= 0.15f }.forEach { (name, c) ->
                     val apart = abs(hue(c) - hue(accent)).let { minOf(it, 360 - it) }
                     assertTrue("$name $c is $apart° from accent $accent", apart >= 30f)

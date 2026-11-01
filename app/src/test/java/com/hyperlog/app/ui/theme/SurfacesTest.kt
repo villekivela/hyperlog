@@ -5,7 +5,7 @@ import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Ink and violet's larger, rounder groups (#50): 32 dp outside, 8 dp joins, 4 dp apart. */
+/** Hyperlog's larger, rounder groups (#50): 32 dp outside, 8 dp joins, 4 dp apart. */
 class SurfacesTest {
     @Test
     fun aLoneCardRoundsThirtyTwo() = assertEquals(RoundedCornerShape(32.dp), CardShape)

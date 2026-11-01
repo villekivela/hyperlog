@@ -40,34 +40,41 @@ class HyperlogThemeTest {
     }
 
     @Test
-    fun lightIsInkAndViolet() {
+    fun lightIsGraphite() {
         val scheme = themed().first
-        assertEquals(Color(0xFF5B3DD0), scheme.primary)
-        assertEquals(Color(0xFF5B3DD0), scheme.primaryContainer)
-        assertEquals(Color(0xFFFBF9FE), scheme.surface)
-        assertEquals(Color(0xFFF0ECF7), scheme.surfaceContainer)
+        assertEquals(Color(0xFF1C1C1F), scheme.primary)
+        assertEquals(Color(0xFF1C1C1F), scheme.primaryContainer)
+        assertEquals(Color(0xFFFAFAFB), scheme.surface)
+        assertEquals(Color(0xFFEEEEF0), scheme.surfaceContainer)
         assertEquals(Color.White, scheme.surfaceBright)
-        assertEquals(Color(0xFFE6DEFF), scheme.secondaryContainer)
+        assertEquals(Color(0xFFE2E2E6), scheme.secondaryContainer)
     }
 
     @Test
     @Config(qualifiers = "night")
-    fun darkIsInkAndViolet() {
+    fun darkIsGraphite() {
         val scheme = themed().first
-        assertEquals(Color(0xFFC4B1FF), scheme.primary)
-        assertEquals(Color(0xFF6A4CE0), scheme.primaryContainer)
-        assertEquals(Color(0xFF14111B), scheme.surface)
-        assertEquals(Color(0xFF18141F), scheme.surfaceContainer)
-        assertEquals(Color(0xFF241E2F), scheme.surfaceBright)
-        assertEquals(Color(0xFF3A2C66), scheme.secondaryContainer)
+        assertEquals(Color(0xFFF2F2F4), scheme.primary)
+        assertEquals(Color(0xFFE9E9EC), scheme.primaryContainer)
+        assertEquals(Color(0xFF121214), scheme.surface)
+        assertEquals(Color(0xFF151517), scheme.surfaceContainer)
+        assertEquals(Color(0xFF232326), scheme.surfaceBright)
+        assertEquals(Color(0xFF44444A), scheme.secondaryContainer)
     }
 
     @Test
-    fun lightSurfacesTextAndDividersCarryAFaintVioletTint() = assertFaintViolet(themed().first)
+    fun lightSurfacesTextAndDividersAreCoolNeutrals() = assertCoolNeutral(themed().first)
 
     @Test
     @Config(qualifiers = "night")
-    fun darkSurfacesTextAndDividersCarryAFaintVioletTint() = assertFaintViolet(themed().first)
+    fun darkSurfacesTextAndDividersAreCoolNeutrals() = assertCoolNeutral(themed().first)
+
+    @Test
+    fun lightAccentHasNoHue() = assertNoHue(themed().first)
+
+    @Test
+    @Config(qualifiers = "night")
+    fun darkAccentHasNoHue() = assertNoHue(themed().first)
 
     @Test
     fun lightTertiaryIsTheAccentNotASecondHue() {
@@ -97,11 +104,10 @@ class HyperlogThemeTest {
     fun darkTextOnAccentReads() = assertTextContrast(themed().first)
 
     /**
-     * Surfaces, text, dividers and secondary lean violet (blue the strongest channel, red over
-     * green) but only faintly: no channel more than 40 from another, so nothing reads as an accent.
-     * White (light mode's cards) is the one untinted surface.
+     * Surfaces, text, dividers and secondary are greys with a faint cool bias (blue the strongest
+     * channel) and no more: no channel more than 8 from another, so nothing reads as a colour.
      */
-    private fun assertFaintViolet(s: ColorScheme) {
+    private fun assertCoolNeutral(s: ColorScheme) {
         listOf(
             "background" to s.background, "surface" to s.surface, "surfaceDim" to s.surfaceDim,
             "surfaceBright" to s.surfaceBright, "surfaceVariant" to s.surfaceVariant,
@@ -114,8 +120,16 @@ class HyperlogThemeTest {
             "tertiaryContainer" to s.tertiaryContainer, "onTertiaryContainer" to s.onTertiaryContainer,
         ).filter { it.second != Color.White }.forEach { (name, c) ->
             val (r, g, b) = listOf(c.red, c.green, c.blue).map { (it * 255).toInt() }
-            assertTrue("$name $c isn't violet", b >= r && r >= g && b > g)
-            assertTrue("$name $c is more than a tint", b - g <= 40)
+            assertTrue("$name $c isn't cool", b >= r && b >= g)
+            assertTrue("$name $c is more than a bias", maxOf(r, g, b) - minOf(r, g, b) <= 8)
+        }
+    }
+
+    /** Graphite's accent is near-black or near-white: primary, primaryContainer and secondaryContainer carry no hue. */
+    private fun assertNoHue(s: ColorScheme) {
+        listOf("primary" to s.primary, "primaryContainer" to s.primaryContainer, "secondaryContainer" to s.secondaryContainer).forEach { (name, c) ->
+            val (r, g, b) = listOf(c.red, c.green, c.blue).map { (it * 255).toInt() }
+            assertTrue("$name $c has a hue", maxOf(r, g, b) - minOf(r, g, b) <= 8)
         }
     }
 
@@ -159,8 +173,8 @@ class HyperlogThemeTest {
 
     @Test
     @Config(sdk = [30])
-    fun phonesBeforeAndroidTwelveGetTheSameInkAndViolet() {
-        assertEquals(InkLight.primary, themed().first.primary)
+    fun phonesBeforeAndroidTwelveGetTheSameGraphite() {
+        assertEquals(GraphiteLight.primary, themed().first.primary)
     }
 
     @Test

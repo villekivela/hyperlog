@@ -55,7 +55,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   item.
 - **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
   (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
-- **Hyperlog's own theme:** Ink and violet, light and dark, through the whole tree; nothing hard-codes
+- **Hyperlog's own theme:** Graphite, light and dark, through the whole tree; nothing hard-codes
   a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a tinted badge = logged, the number in the chip's colour).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
@@ -66,14 +66,15 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   involved can all be read from the screen at a glance.
 
 **Decided: Hyperlog has its own theme** (#37), the same on every phone whatever the wallpaper or
-system style. The colours are Ink and violet (#50, `ui/theme/InkPalette.kt`), the look the owner
-picked on 2026-10-17 (look C, Week): surfaces, text and dividers carry a faint violet tint
-(white cards on a lilac-white screen in light, near-black ink in dark),
-and one violet accent marks only what you act on or what's selected, the Start button, the
-selected tab, the active set, chips and toggles that are on. secondaryContainer is a violet tint
-for selected things; tertiary follows primary; secondary and tertiaryContainer are tinted greys.
-The accent is never green, amber, red or plate blue, which belong to RIR, progression, plates and
-errors (`FixedColoursTest` keeps 30° of hue between them). Light and dark still follow the system.
+system style. The colours are Graphite (#111, `ui/theme/GraphitePalette.kt`), the look the owner
+picked on 2026-11-01 over #50's Ink and violet: surfaces, text and dividers are greys with a
+faint cool bias (white cards on a pale grey screen in light, charcoal in dark), and an accent with
+no hue, near-black in light and near-white in dark, marks only what you act on or what's
+selected, the Start button, the selected tab, the active set, chips and toggles that are on.
+secondaryContainer is a grey a step off the cards for selected things; tertiary follows primary;
+secondary and tertiaryContainer are greys. So the only colour on screen belongs to RIR,
+progression, plates and errors; a coloured accent would need 30° of hue from each of them
+(`FixedColoursTest`). Light and dark still follow the system.
 Space Grotesk, bundled, sets the words of display, headline and titleLarge text (screen titles,
 the day's name, exercise names). Inter, bundled, sets body, labels, the smaller titles and every
 number. The owner's rule: **words in titles are Space Grotesk, numbers are always Inter**. A
