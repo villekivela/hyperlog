@@ -313,10 +313,16 @@ fun SessionScreen(
                             onPickSet = if (session.correctable) actions::pickSet else null,
                             openIndex = session.openIndex,
                         )
+                        // PROTOTYPE (#115): B's setup card before the first set, C's row above the table.
+                        if (BenchProto.adjustable(current.exercise)) {
+                            if (BenchProto.variant == "B" && current.sets.isEmpty() && BenchProto.set[current.exercise.id] == null) BenchCardB(current.exercise)
+                            if (BenchProto.variant in setOf("E", "F", "G")) BenchRowC(current.exercise)
+                        }
                         SetTable(table, Modifier.weight(1f))
                     }
                 }
             }
+            BenchProtoSwitcher(Modifier.align(Alignment.BottomCenter))
           }
             // Next is the pad's top row, and stays at the bottom as the same row when the pad is hidden or gone.
             val nextRow: @Composable () -> Unit = when {
@@ -590,15 +596,21 @@ private fun Header(
     // What the slot is: a superset's partner, a swap's planned exercise, as outlined chips.
     val partner = SessionOrder.partner(session.exercises, exercise)
     val superset = partner?.let { p -> exercise.slot?.let { p to stringResource(R.string.chip_superset, it.label, p.exercise.name) } }
-    if (superset != null || swappedFrom != null) {
+    val benchA = BenchProto.variant == "A" && BenchProto.adjustable(exercise.exercise)
+    if (superset != null || swappedFrom != null || benchA) {
         Row(
             Modifier.fillMaxWidth().padding(start = Margin, end = Margin, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             superset?.let { (p, text) -> HeaderChip(null, text, Modifier.weight(1f, fill = false), onClick = onPartner?.let { go -> { go(p.id) } }) }
             swappedFrom?.let { HeaderChip(Symbol.SwapHoriz, stringResource(R.string.chip_swapped, it), Modifier.weight(1f, fill = false), onClick = onSwap) }
+            if (benchA) BenchChipA(exercise.exercise)
         }
     }
+    // PROTOTYPE (#115), B: the quiet line once the setup card is answered or a set is logged.
+    if (BenchProto.variant == "B" && BenchProto.adjustable(exercise.exercise) &&
+        (BenchProto.set[exercise.exercise.id] != null || exercise.sets.isNotEmpty())
+    ) BenchLineB(exercise.exercise)
     why?.let { SuggestionLine(it, from = exercise.sets.lastOrNull()?.weightKg) }
     }
 }
