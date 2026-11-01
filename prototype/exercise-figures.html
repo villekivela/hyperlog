@@ -99,8 +99,8 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
       <button class="seg" id="ex-rdl" data-ex="rdl">RDL</button>
     </div>
     <div class="row" role="group" aria-label="Body"><span>Body</span>
-      <button class="seg" id="body-smooth" data-body="smooth">Smooth</button>
       <button class="seg" id="body-detailed" data-body="detailed">Detailed</button>
+      <button class="seg" id="body-smooth" data-body="smooth">Smooth</button>
     </div>
     <div class="row" role="group" aria-label="Motion"><span>Motion</span>
       <button class="seg" id="mo-loop" data-mo="loop">Loop</button>
@@ -325,7 +325,7 @@ function buildRig(gltf, key) {
     // the hand and forearm twist so the knuckles run along the bar, thumb toward the middle
     const across = dirTo('pinky_01_' + k, 'index_01_' + k);
     Object.assign(rest['lowerarm_' + k], { dir: dirTo('lowerarm_' + k, 'hand_' + k), sec: () => across });
-    Object.assign(rest['hand_' + k], { dir: dirTo('hand_' + k, 'middle_01_' + k), sec: () => across });
+    Object.assign(rest['hand_' + k], { dir: dirTo('hand_' + k, 'middle_01_' + k), sec: () => across, across });
   }
   // measure the model so the poses use its proportions
   const len = (a, c) => dirTo(a, c).length();
@@ -333,15 +333,16 @@ function buildRig(gltf, key) {
   const shMid = rest.upperarm_l.p.clone().add(rest.upperarm_r.p).multiplyScalar(0.5);
   Object.assign(L, {
     thigh: len('thigh_l', 'calf_l'), shin: len('calf_l', 'foot_l'), up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
-    palm: len('hand_l', 'middle_01_l') * 0.9, trunk: shMid.y - hipMid.y, hipW: Math.abs(rest.thigh_l.p.x), shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
+    palm: len('hand_l', 'middle_01_l') * 0.9, gripAlong: len('hand_l', 'middle_01_l') * 0.8, gripOff: 0.03, trunk: shMid.y - hipMid.y, hipW: Math.abs(rest.thigh_l.p.x), shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
   });
   // curl the fingers round the bar: each joint turned toward the palm
-  const curls = [];
+  const curls = [], palms = {};
   for (const k of ['l', 'r']) {
     const s = side('hand_' + k), hand = rest['hand_' + k].p;
     const fd = rest['middle_01_' + k].p.clone().sub(hand).normalize();
     const th = rest['thumb_01_' + k].p.clone().sub(hand); th.addScaledVector(fd, -th.dot(fd));
     const palm = fd.clone().cross(th).normalize().multiplyScalar(s);
+    palms[k] = palm;
     for (const f of ['index', 'middle', 'ring', 'pinky', 'thumb']) {
       [70, 75, 55].forEach((deg, i) => {
         const n = `${f}_0${i + 1}_${k}`; if (!bones[n]) return;
@@ -360,7 +361,7 @@ function buildRig(gltf, key) {
   mesh.parent.add(hull);
   const colors = new Float32Array(mesh.geometry.attributes.position.count * 3);
   mesh.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  rigs[key] = { ready: true, root, mesh, hull, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls };
+  rigs[key] = { ready: true, root, mesh, hull, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
   mesh.castShadow = true; mesh.frustumCulled = hull.frustumCulled = false;
   showBody();
 }
@@ -388,13 +389,21 @@ function poseRig(P) {
     aim('calf_' + k, n2, n1.clone().cross(leg.pole));
     const t = rad(P.toeOut) * s, toe = V(Math.sin(t), -0.35, Math.cos(t));
     aim('foot_' + k, toe, toe.clone().cross(UP));
-    // arm: from the shoulder joint to the palm on the bar, elbow toward its pole
+    // arm: the bar lies across the palm at the base of the fingers, so the wrist sits short of it
+    // along the fingers and off it on the back-of-hand side; the forearm sets both, so iterate
     const sh = wpos(bones['upperarm_' + k]);
     const grip = P.bar.clone().addScaledVector(X, s * P.grip);
-    const arm = ik(sh, grip, L.up, L.fore + L.palm, P.armPole(s));
+    const inward = X.clone().multiplyScalar(-s), hr = rest['hand_' + k];
+    const handRest = frame(hr.dir, hr.across).invert();
+    let wrist = grip.clone(), arm;
+    for (let it = 0; it < 4; it++) {
+      arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
+      const fingers = arm.end.clone().sub(arm.mid).normalize();
+      const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
+      wrist = grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff);
+    }
     const a1 = arm.mid.clone().sub(sh), a2 = arm.end.clone().sub(arm.mid);
     aim('upperarm_' + k, a1, a1.clone().cross(arm.pole));
-    const inward = X.clone().multiplyScalar(-s);
     aim('lowerarm_' + k, a2, inward);
     aim('hand_' + k, a2, inward);
   }
@@ -477,7 +486,7 @@ function applyStyle() {
 
 // ---------- camera, motion, input ----------
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state = { vi: 0, ex: 'squat', body: 'smooth', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
+const state = { vi: 0, ex: 'squat', body: 'detailed', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
