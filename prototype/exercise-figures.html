@@ -5,7 +5,8 @@
 <style>
 /* PROTOTYPE, throwaway. Question: how could a low-detail 3D figure look in Hyperlog's exercise sheet?
    One phone-width exercise sheet in the Graphite theme, four figure styles switched from the bar at the
-   bottom (← → keys too). The figure is built from primitives, posed by code, so nothing is licensed. */
+   bottom (← → keys too). The figure is Quaternius's Universal Base Characters male (CC0), stripped to
+   its body mesh and skeleton (figure.glb), its bones posed by code; the barbell and bench are primitives. */
 :root {
   /* Graphite light (app/src/main/java/com/hyperlog/app/ui/theme/GraphitePalette.kt) */
   --surface: #FAFAFB; --on-surface: #19191B; --on-surface-variant: #5C5C62;
@@ -77,11 +78,11 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 </style>
 
 <div class="wrap">
-  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet. The figure is built from simple shapes and posed by code, so nothing here is licensed. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
+  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet: Quaternius's CC0 base character with its face, hair and textures stripped, posed by code. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
 
   <section class="sheet" aria-label="Exercise sheet">
     <div class="handle"></div>
-    <div class="stage" id="stage"><span class="stage-hint">drag to turn</span></div>
+    <div class="stage" id="stage"><span class="stage-hint" id="stage-hint">loading figure…</span></div>
     <h1 id="ex-name">Barbell Back Squat</h1>
     <p class="meta" id="ex-meta">Barbell · Quads, Glutes, Hamstrings</p>
     <p class="note" id="ex-note"></p>
@@ -116,6 +117,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 (() => {
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -125,85 +127,60 @@ const ease = t => t * t * (3 - 2 * t);
 const X = V(1, 0, 0);
 
 const EXERCISES = {
-  squat: { name: 'Barbell Back Squat', meta: 'Barbell · Quads, Glutes, Hamstrings', note: 'Get as deep as you can without excessive back rounding.', video: 'https://youtu.be/UGwmUJkTIx8', label: 'Technique video', work: ['thigh', 'pelvis'], frame: { target: V(0, 0.9, 0), half: 1.0 }, view: [62, 8], timing: [0.7, 1.5, 0.25, 1.1] },
-  bench: { name: 'Barbell Bench Press', meta: 'Barbell · Chest', note: 'Control the eccentric: 2–3 seconds down.', video: null, label: 'Search technique videos', work: ['chest', 'shoulder', 'upperarm'], frame: { target: V(0, 0.55, -0.12), half: 0.92 }, view: [76, 24], timing: [0.7, 1.8, 0.2, 1.0] },
-  rdl: { name: 'Barbell RDL', meta: 'Barbell · Hamstrings', note: 'Stick your glutes straight back as you lower the bar straight down, centered over the middle of your foot. Get a nice deep stretch at the bottom, but keep your spine neutral.', video: 'https://youtu.be/xbnan2iNh-Q', label: 'Technique video', work: ['thigh', 'pelvis'], frame: { target: V(0, 0.88, 0.05), half: 0.98 }, view: [66, 8], timing: [0.7, 1.7, 0.3, 1.2] },
+  squat: { name: 'Barbell Back Squat', meta: 'Barbell · Quads, Glutes, Hamstrings', note: 'Get as deep as you can without excessive back rounding.', video: 'https://youtu.be/UGwmUJkTIx8', label: 'Technique video', work: ['thigh_l', 'thigh_r', 'pelvis'], frame: { target: V(0, 0.92, 0), half: 1.02 }, view: [62, 8], timing: [0.7, 1.5, 0.25, 1.1] },
+  bench: { name: 'Barbell Bench Press', meta: 'Barbell · Chest', note: 'Control the eccentric: 2–3 seconds down.', video: null, label: 'Search technique videos', work: ['spine_03', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r'], frame: { target: V(0, 0.55, 0.05), half: 0.98 }, view: [58, 32], timing: [0.7, 1.8, 0.2, 1.0] },
+  rdl: { name: 'Barbell RDL', meta: 'Barbell · Hamstrings', note: 'Stick your glutes straight back as you lower the bar straight down, centered over the middle of your foot. Get a nice deep stretch at the bottom, but keep your spine neutral.', video: 'https://youtu.be/xbnan2iNh-Q', label: 'Technique video', work: ['thigh_l', 'thigh_r', 'pelvis'], frame: { target: V(0, 0.9, 0.05), half: 1.0 }, view: [66, 8], timing: [0.7, 1.7, 0.3, 1.2] },
 };
 const VARIANTS = [
   { key: 'line', name: 'Line', sub: 'outline only, flat' },
-  { key: 'silhouette', name: 'Silhouette', sub: 'two-tone, near and far side' },
+  { key: 'silhouette', name: 'Silhouette', sub: 'flat, one tone' },
   { key: 'toon', name: 'Toon', sub: 'three-step shading, outlined' },
   { key: 'clay', name: 'Clay', sub: 'soft light and shadow' },
 ];
 
-// ---------- kinematics ----------
-const L = { thigh: 0.44, shin: 0.43, up: 0.30, fore: 0.29, trunk: 0.48, ankleY: 0.085 };
-
-function ik(A, T, l1, l2, pole) {
-  const d0 = T.clone().sub(A); let d = d0.length(); const dir = d0.divideScalar(d || 1);
-  d = Math.min(d, l1 + l2 - 1e-4); d = Math.max(d, Math.abs(l1 - l2) + 1e-4);
-  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
-  const p = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir))).normalize();
-  return { mid: A.clone().addScaledVector(dir, a).addScaledVector(p, h), end: A.clone().addScaledVector(dir, d) };
-}
+// ---------- poses: targets for the rig, in metres, the figure facing +z ----------
+// Segment lengths are measured from the model when it loads.
+const L = { thigh: 0.44, shin: 0.43, up: 0.3, fore: 0.27, palm: 0.08, trunk: 0.5, hipW: 0.09, shW: 0.18, ankleY: 0.09 };
 const trunkUp = c => V(0, Math.cos(c), Math.sin(c));
 const fwdOf = u => X.clone().cross(u).normalize();
-function foot(ankle, s, out) {
-  const t = rad(out);
-  return { heel: ankle.clone().add(V(0, -0.05, -0.06)), toe: ankle.clone().add(V(s * Math.sin(t) * 0.17, -0.058, Math.cos(t) * 0.17)) };
-}
-function legs(P, hipC, u, ankles, out, kneePole) {
-  for (const [k, s] of [['L', -1], ['R', 1]]) {
-    const hip = hipC.clone().addScaledVector(X, s * 0.095);
-    const ankle = ankles[k];
-    const r = ik(hip, ankle, L.thigh, L.shin, kneePole(s));
-    P['hip' + k] = hip; P['knee' + k] = r.mid; P['ankle' + k] = r.end;
-    Object.assign(P, Object.fromEntries(Object.entries(foot(ankle, s, out)).map(([n, v]) => [n + k, v])));
-  }
-}
-function arms(P, grip, armPole) {
-  for (const [k, s] of [['L', -1], ['R', 1]]) {
-    const sh = P.shC.clone().addScaledVector(X, s * 0.18);
-    const hand = P.bar.clone().addScaledVector(X, s * grip);
-    const r = ik(sh, hand, L.up, L.fore, armPole(s));
-    P['sh' + k] = sh; P['el' + k] = r.mid; P['wr' + k] = r.end;
-  }
-}
 
 function poseSquat(d) {
-  const a = rad(36) * d, b = rad(96) * d, k = 0.997;
+  const a = rad(36) * d, b = rad(96) * d, k = 0.995;
   const kz = L.shin * k * Math.sin(a), ky = L.ankleY + L.shin * k * Math.cos(a);
   const hipC = V(0, ky + L.thigh * k * Math.cos(b), kz - L.thigh * k * Math.sin(b));
-  const barAt = c => { const u = trunkUp(c), f = fwdOf(u); return hipC.clone().addScaledVector(u, L.trunk + 0.03).addScaledVector(f, -0.045); };
+  const barAt = c => { const u = trunkUp(c), f = fwdOf(u); return hipC.clone().addScaledVector(u, L.trunk + 0.06).addScaledVector(f, -0.07); };
   let lo = -0.4, hi = 1.4; // lean until the bar sits over midfoot
   for (let i = 0; i < 32; i++) { const m = (lo + hi) / 2; if (barAt(m).z > 0.04) hi = m; else lo = m; }
   const c = (lo + hi) / 2, u = trunkUp(c), f = fwdOf(u);
-  const P = { hipC, u, bar: barAt(c), shC: hipC.clone().addScaledVector(u, L.trunk), headDir: u.clone().add(V(0, 0.45, 0.1)).normalize() };
-  legs(P, hipC, u, { L: V(-0.17, L.ankleY, 0), R: V(0.17, L.ankleY, 0) }, 18, s => V(s * 0.45, 0, 1).normalize());
-  arms(P, 0.44, s => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, s * 0.3).normalize());
-  return P;
+  return {
+    hipC, u, bar: barAt(c), headDir: u.clone().add(V(0, 0.5, 0.1)).normalize(),
+    ankles: [V(-0.17, L.ankleY, 0), V(0.17, L.ankleY, 0)], toeOut: 18, kneePole: s => V(s * 0.45, 0, 1).normalize(),
+    grip: 0.4, armPole: s => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, s * 0.3).normalize(),
+  };
 }
 function poseBench(d) {
   const e = ease(d);
-  const hipC = V(0, 0.535, 0.3), u = V(0, 0.07, -1).normalize(), f = fwdOf(u);
-  const top = V(0, 1.1, -0.16), bottom = V(0, 0.69, -0.03);
-  const bar = V(0, lerp(top.y, bottom.y, e), lerp(top.z, bottom.z, Math.pow(e, 1.6)));
-  const P = { hipC, u, bar, shC: hipC.clone().addScaledVector(u, L.trunk), headDir: u.clone().add(V(0, -0.3, 0)).normalize(), bench: true };
-  legs(P, hipC, u, { L: V(-0.3, L.ankleY, 0.8), R: V(0.3, L.ankleY, 0.8) }, 25, s => V(s * 0.5, 1, 0.4).normalize());
-  arms(P, 0.41, s => V(s * 0.9, -1, 0.7).normalize());
-  return P;
+  const hipC = V(0, 0.56, 0.3), u = V(0, 0.08, -1).normalize();
+  const top = V(0, 1.12, -0.16), bottom = V(0, 0.72, -0.02);
+  return {
+    hipC, u, bench: true, headDir: u.clone().add(V(0, -0.25, 0)).normalize(),
+    bar: V(0, lerp(top.y, bottom.y, e), lerp(top.z, bottom.z, Math.pow(e, 1.6))),
+    ankles: [V(-0.3, L.ankleY, 0.8), V(0.3, L.ankleY, 0.8)], toeOut: 25, kneePole: s => V(s * 0.5, 1, 0.4).normalize(),
+    grip: 0.4, armPole: s => V(s * 0.9, -1, 0.7).normalize(),
+  };
 }
 function poseRdl(d) {
   const e = ease(d), a = rad(2 + 2 * e), b = rad(8 + 18 * e), c = rad(4 + 70 * e);
   const kz = L.shin * Math.sin(a), ky = L.ankleY + L.shin * Math.cos(a);
   const hipC = V(0, ky + L.thigh * Math.cos(b), kz - L.thigh * Math.sin(b));
-  const u = trunkUp(c), shC = hipC.clone().addScaledVector(u, L.trunk);
-  const reach = 0.575, barZ = 0.095, dx = 0.07, dz = shC.z - barZ;
-  const bar = V(0, shC.y - Math.sqrt(Math.max(0, reach * reach - dz * dz - dx * dx)), barZ);
-  const P = { hipC, u, bar, shC, headDir: u.clone().add(V(0, 0.15, 0)).normalize() };
-  legs(P, hipC, u, { L: V(-0.12, L.ankleY, 0), R: V(0.12, L.ankleY, 0) }, 6, () => V(0, 0, 1));
-  arms(P, 0.25, s => V(s * 0.3, 0, -1).normalize());
-  return P;
+  const u = trunkUp(c), f = fwdOf(u), shC = hipC.clone().addScaledVector(u, L.trunk);
+  const reach = (L.up + L.fore + L.palm) * 0.97, barZ = 0.1, dx = 0.25 - L.shW, dz = shC.z - barZ;
+  return {
+    hipC, u, headDir: u.clone().add(V(0, 0.15, 0)).normalize(),
+    bar: V(0, shC.y - Math.sqrt(Math.max(0, reach * reach - dz * dz - dx * dx)), barZ),
+    ankles: [V(-0.12, L.ankleY, 0), V(0.12, L.ankleY, 0)], toeOut: 6, kneePole: () => V(0, 0, 1),
+    grip: 0.25, armPole: s => V(s * 0.4, 0, -1).normalize(),
+  };
 }
 const POSES = { squat: poseSquat, bench: poseBench, rdl: poseRdl };
 
@@ -223,28 +200,24 @@ Object.assign(sun.shadow.camera, { left: -1.6, right: 1.6, top: 1.6, bottom: -1.
 sun.shadow.radius = 6; sun.shadow.bias = -0.0005;
 scene.add(hemi, sun);
 
-const OUT = 0.0115; // outline width, metres
+const OUT = 0.011; // outline width, metres
 const parts = [];
 function addPart(geo, hullGeo, opts) {
   const mesh = new THREE.Mesh(geo); mesh.castShadow = true;
   const hull = new THREE.Mesh(hullGeo);
   scene.add(mesh, hull);
-  const p = Object.assign({ mesh, hull, tag: null, side: 0, gear: null }, opts);
+  const p = Object.assign({ mesh, hull }, opts);
   parts.push(p); return p;
 }
-const cyl = (r1, r2) => new THREE.CylinderGeometry(r2, r1, 1, 24, 1, true); // r1 at A, r2 at B
-const sph = r => new THREE.SphereGeometry(r, 28, 18);
-function seg(r1, r2, opts) { return addPart(cyl(r1, r2), cyl(r1 + OUT, r2 + OUT), Object.assign({ kind: 'seg' }, opts)); }
-function ball(r, opts) { return addPart(sph(r), sph(r + OUT), Object.assign({ kind: 'ball', r }, opts)); }
-function ell(rx, ry, rz, opts) { return addPart(sph(1), sph(1), Object.assign({ kind: 'ell', radii: [rx, ry, rz] }, opts)); }
-function boxPart(w, h, dpt, opts) { return addPart(new THREE.BoxGeometry(w, h, dpt), new THREE.BoxGeometry(w + 2 * OUT, h + 2 * OUT, dpt + 2 * OUT), Object.assign({ kind: 'box' }, opts)); }
+const cyl = r => new THREE.CylinderGeometry(r, r, 1, 24, 1, true);
+function seg(r, opts) { return addPart(cyl(r), cyl(r + OUT), opts); }
+function boxPart(w, h, dpt, opts) { return addPart(new THREE.BoxGeometry(w, h, dpt), new THREE.BoxGeometry(w + 2 * OUT, h + 2 * OUT, dpt + 2 * OUT), opts); }
 function plate(r, t, opts) {
   const g = new THREE.CylinderGeometry(r, r, t, 48); g.rotateZ(Math.PI / 2);
   const h = new THREE.CylinderGeometry(r + OUT, r + OUT, t + 2 * OUT, 48); h.rotateZ(Math.PI / 2);
-  return addPart(g, h, Object.assign({ kind: 'fixed' }, opts));
+  return addPart(g, h, opts);
 }
-
-const UP = V(0, 1, 0), tmpM = new THREE.Matrix4();
+const UP = V(0, 1, 0);
 function placeSeg(p, A, B) {
   const d = B.clone().sub(A), len = d.length() || 1e-4;
   for (const m of [p.mesh, p.hull]) {
@@ -253,50 +226,16 @@ function placeSeg(p, A, B) {
     m.scale.set(1, len, 1);
   }
 }
-function placeBall(p, C) { p.mesh.position.copy(C); p.hull.position.copy(C); }
-function placeEll(p, C, x, u) {
-  const f = x.clone().cross(u).normalize();
-  tmpM.makeBasis(x, u, f);
-  const [rx, ry, rz] = p.radii;
-  for (const m of [p.mesh, p.hull]) { m.position.copy(C); m.quaternion.setFromRotationMatrix(tmpM); }
-  p.mesh.scale.set(rx, ry, rz); p.hull.scale.set(rx + OUT, ry + OUT, rz + OUT);
-}
 function placeAt(p, C) { p.mesh.position.copy(C); p.hull.position.copy(C); }
 
-// body
-const B = {
-  pelvis: ell(0.165, 0.12, 0.11, { tag: 'pelvis' }),
-  abdomen: seg(0.115, 0.13, { tag: 'trunk' }),
-  ribs: ell(0.165, 0.185, 0.115, { tag: 'chest' }),
-  neck: seg(0.045, 0.042, { tag: 'trunk' }),
-  head: ell(0.085, 0.112, 0.097, { tag: 'head' }),
-};
-for (const k of ['L', 'R']) {
-  const s = k === 'L' ? -1 : 1;
-  Object.assign(B, {
-    ['thigh' + k]: seg(0.078, 0.052, { tag: 'thigh', side: s }),
-    ['knee' + k]: ball(0.052, { tag: 'knee', side: s }),
-    ['shin' + k]: seg(0.052, 0.034, { tag: 'shin', side: s }),
-    ['ankle' + k]: ball(0.035, { tag: 'shin', side: s }),
-    ['foot' + k]: seg(0.036, 0.03, { tag: 'foot', side: s }),
-    ['heel' + k]: ball(0.036, { tag: 'foot', side: s }),
-    ['toe' + k]: ball(0.03, { tag: 'foot', side: s }),
-    ['delt' + k]: ball(0.062, { tag: 'shoulder', side: s }),
-    ['upper' + k]: seg(0.05, 0.038, { tag: 'upperarm', side: s }),
-    ['elbow' + k]: ball(0.038, { tag: 'upperarm', side: s }),
-    ['fore' + k]: seg(0.038, 0.028, { tag: 'forearm', side: s }),
-    ['hand' + k]: ball(0.036, { tag: 'forearm', side: s }),
-  });
-}
 // barbell: shaft, sleeves, collars, a 20 and a 10 a side
-const G = { shaft: seg(0.014, 0.014, { gear: 'bar' }) };
-for (const k of ['L', 'R']) {
-  const s = k === 'L' ? -1 : 1;
+const G = { shaft: seg(0.014, { gear: 'bar' }) };
+for (const s of [-1, 1]) {
   Object.assign(G, {
-    ['sleeve' + k]: seg(0.025, 0.025, { gear: 'bar', side: s }),
-    ['collar' + k]: plate(0.038, 0.03, { gear: 'bar', side: s }),
-    ['p20' + k]: plate(0.225, 0.052, { gear: 'plate', side: s }),
-    ['p10' + k]: plate(0.17, 0.038, { gear: 'plate', side: s }),
+    ['sleeve' + s]: seg(0.025, { gear: 'bar' }),
+    ['collar' + s]: plate(0.038, 0.03, { gear: 'bar' }),
+    ['p20' + s]: plate(0.225, 0.052, { gear: 'plate' }),
+    ['p10' + s]: plate(0.17, 0.038, { gear: 'plate' }),
   });
 }
 // flat bench, only shown for the bench press
@@ -310,41 +249,145 @@ const BENCH = [
 ];
 BENCH.forEach(([p, c]) => placeAt(p, c));
 
-// ground: a soft contact shadow for flat styles, a shadow-catching plane for clay
 const contact = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.07, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.001; scene.add(contact);
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.ShadowMaterial({ opacity: 0.16 }));
 floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
-function pose(P) {
-  const x = X, u = P.u;
-  placeEll(B.pelvis, P.hipC.clone().addScaledVector(u, 0.045), x, u);
-  placeSeg(B.abdomen, P.hipC.clone().addScaledVector(u, 0.1), P.hipC.clone().addScaledVector(u, 0.27));
-  placeEll(B.ribs, P.hipC.clone().addScaledVector(u, 0.32), x, u);
-  const neckBase = P.hipC.clone().addScaledVector(u, L.trunk - 0.01);
-  const neckTop = neckBase.clone().addScaledVector(P.headDir, 0.085);
-  placeSeg(B.neck, neckBase, neckTop);
-  placeEll(B.head, neckTop.clone().addScaledVector(P.headDir, 0.095), x, P.headDir);
-  for (const k of ['L', 'R']) {
-    placeSeg(B['thigh' + k], P['hip' + k], P['knee' + k]);
-    placeBall(B['knee' + k], P['knee' + k]);
-    placeSeg(B['shin' + k], P['knee' + k], P['ankle' + k]);
-    placeBall(B['ankle' + k], P['ankle' + k]);
-    placeSeg(B['foot' + k], P['heel' + k], P['toe' + k]);
-    placeBall(B['heel' + k], P['heel' + k]); placeBall(B['toe' + k], P['toe' + k]);
-    placeBall(B['delt' + k], P['sh' + k]);
-    placeSeg(B['upper' + k], P['sh' + k], P['el' + k]);
-    placeBall(B['elbow' + k], P['el' + k]);
-    placeSeg(B['fore' + k], P['el' + k], P['wr' + k]);
-    placeBall(B['hand' + k], P['wr' + k]);
-    const s = k === 'L' ? -1 : 1, at = o => P.bar.clone().addScaledVector(X, s * o);
-    placeSeg(G['sleeve' + k], at(0.7), at(1.08));
-    placeAt(G['collar' + k], at(0.705));
-    placeAt(G['p20' + k], at(0.75));
-    placeAt(G['p10' + k], at(0.805));
+function placeBarbell(P) {
+  for (const s of [-1, 1]) {
+    const at = o => P.bar.clone().addScaledVector(X, s * o);
+    placeSeg(G['sleeve' + s], at(0.7), at(1.08));
+    placeAt(G['collar' + s], at(0.705));
+    placeAt(G['p20' + s], at(0.75));
+    placeAt(G['p10' + s], at(0.805));
   }
   placeSeg(G.shaft, P.bar.clone().addScaledVector(X, -0.7), P.bar.clone().addScaledVector(X, 0.7));
   BENCH.forEach(([p]) => { p.mesh.visible = !!P.bench; p.hull.visible = !!P.bench && state.variant.hull; });
+}
+
+// ---------- the rig: aim each bone at its target from the bind pose ----------
+const rig = { ready: false };
+const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion();
+const wpos = b => b.getWorldPosition(new THREE.Vector3());
+const wquat = b => b.getWorldQuaternion(new THREE.Quaternion());
+// orientation of a frame whose first axis is `primary`, second as close to `secondary` as it can be
+function frame(primary, secondary) {
+  const x = primary.clone().normalize();
+  const y = secondary.clone().addScaledVector(x, -secondary.dot(x)).normalize();
+  tmpM.makeBasis(x, y, x.clone().cross(y));
+  return new THREE.Quaternion().setFromRotationMatrix(tmpM);
+}
+function ik(A, T, l1, l2, pole) {
+  const d0 = T.clone().sub(A); let d = d0.length(); const dir = d0.divideScalar(d || 1);
+  d = Math.min(d, l1 + l2 - 1e-4); d = Math.max(d, Math.abs(l1 - l2) + 1e-4);
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  const p = pole.clone().addScaledVector(dir, -pole.dot(dir)).normalize();
+  return { mid: A.clone().addScaledVector(dir, a).addScaledVector(p, h), end: A.clone().addScaledVector(dir, d), pole: p };
+}
+function setWorldQuat(bone, q) {
+  bone.quaternion.copy(wquat(bone.parent).invert().multiply(q));
+  bone.updateMatrixWorld(true);
+}
+// turn a bone by the rotation that takes its rest frame to the target frame
+function aim(name, primary, secondary) {
+  const b = rig.bones[name], r = rig.rest[name];
+  const delta = frame(primary, secondary).multiply(frame(r.dir, r.sec(r.dir)).invert());
+  setWorldQuat(b, delta.multiply(r.wq.clone()));
+}
+
+function buildRig(gltf) {
+  const root = gltf.scene;
+  let mesh = null;
+  root.traverse(o => { if (o.isSkinnedMesh) mesh = o; });
+  scene.add(root);
+  root.updateMatrixWorld(true);
+  const bones = {}; mesh.skeleton.bones.forEach(b => { bones[b.name] = b; });
+  const rest = {};
+  for (const [name, b] of Object.entries(bones)) rest[name] = { lq: b.quaternion.clone(), wq: wquat(b), p: wpos(b) };
+  const dirTo = (a, c) => rest[c].p.clone().sub(rest[a].p);
+  const lat = () => X.clone();
+  const legSec = (s, dir) => dir.clone().cross(V(0, 0, 1)); // knee forward in the bind pose
+  const armSec = (s, dir) => dir.clone().cross(V(0, 0, -1)); // elbow back in the bind pose
+  const side = n => Math.sign(rest[n].p.x) || 1;
+  for (const [a, c] of [['pelvis', 'spine_01'], ['spine_01', 'spine_02'], ['spine_02', 'spine_03'], ['spine_03', 'neck_01'], ['neck_01', 'Head']]) Object.assign(rest[a], { dir: dirTo(a, c), sec: lat });
+  for (const k of ['l', 'r']) {
+    Object.assign(rest['thigh_' + k], { dir: dirTo('thigh_' + k, 'calf_' + k), sec: d => legSec(0, d) });
+    Object.assign(rest['calf_' + k], { dir: dirTo('calf_' + k, 'foot_' + k), sec: d => legSec(0, d) });
+    Object.assign(rest['foot_' + k], { dir: dirTo('foot_' + k, 'ball_' + k), sec: d => d.clone().cross(UP) });
+    Object.assign(rest['upperarm_' + k], { dir: dirTo('upperarm_' + k, 'lowerarm_' + k), sec: d => armSec(0, d) });
+    Object.assign(rest['lowerarm_' + k], { dir: dirTo('lowerarm_' + k, 'hand_' + k), sec: d => armSec(0, d) });
+  }
+  // measure the model so the poses use its proportions
+  const len = (a, c) => dirTo(a, c).length();
+  const hipMid = rest.thigh_l.p.clone().add(rest.thigh_r.p).multiplyScalar(0.5);
+  const shMid = rest.upperarm_l.p.clone().add(rest.upperarm_r.p).multiplyScalar(0.5);
+  Object.assign(L, {
+    thigh: len('thigh_l', 'calf_l'), shin: len('calf_l', 'foot_l'), up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
+    palm: len('hand_l', 'middle_01_l') * 0.9, trunk: shMid.y - hipMid.y, hipW: Math.abs(rest.thigh_l.p.x), shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
+  });
+  // curl the fingers round the bar: each joint turned toward the palm
+  const curls = [];
+  for (const k of ['l', 'r']) {
+    const s = side('hand_' + k), hand = rest['hand_' + k].p;
+    const fd = rest['middle_01_' + k].p.clone().sub(hand).normalize();
+    const th = rest['thumb_01_' + k].p.clone().sub(hand); th.addScaledVector(fd, -th.dot(fd));
+    const palm = fd.clone().cross(th).normalize().multiplyScalar(s);
+    for (const f of ['index', 'middle', 'ring', 'pinky', 'thumb']) {
+      [70, 75, 55].forEach((deg, i) => {
+        const n = `${f}_0${i + 1}_${k}`; if (!bones[n]) return;
+        const child = bones[`${f}_0${i + 2}_${k}`] || bones[`${f}_04_leaf_${k}`];
+        const dir = child ? rest[child.name].p.clone().sub(rest[n].p).normalize() : fd;
+        const axis = dir.clone().cross(palm).normalize();
+        const turn = new THREE.Quaternion().setFromAxisAngle(axis, rad(f === 'thumb' ? deg * 0.5 : deg));
+        const local = rest[n].wq.clone().invert().multiply(turn).multiply(rest[n].wq);
+        curls.push([bones[n], rest[n].lq.clone().multiply(local)]);
+      });
+    }
+  }
+  // the outline: the same skinned mesh drawn again, back faces only, pushed out along its normals
+  const hull = new THREE.SkinnedMesh(mesh.geometry, new THREE.MeshBasicMaterial());
+  hull.bind(mesh.skeleton, mesh.bindMatrix);
+  mesh.parent.add(hull);
+  const colors = new Float32Array(mesh.geometry.attributes.position.count * 3);
+  mesh.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  Object.assign(rig, { ready: true, root, mesh, hull, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls });
+  mesh.castShadow = true; mesh.frustumCulled = hull.frustumCulled = false;
+  document.getElementById('stage-hint').textContent = 'drag to turn';
+  applyStyle();
+}
+
+function poseRig(P) {
+  const { bones, rest } = rig;
+  for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
+  for (const [b, q] of rig.curls) b.quaternion.copy(q);
+  rig.root.updateMatrixWorld(true);
+  // trunk: the spine rigid along u, the pelvis placed so the hip joints land on hipC
+  const pelvisDelta = frame(P.u, X).multiply(frame(rest.pelvis.dir, X).invert());
+  const pelvisWorld = P.hipC.clone().sub(rig.pelvisToHips.clone().applyQuaternion(pelvisDelta));
+  bones.pelvis.position.copy(bones.pelvis.parent.worldToLocal(pelvisWorld));
+  bones.pelvis.updateMatrixWorld(true);
+  aim('pelvis', P.u, X);
+  for (const n of ['spine_01', 'spine_02', 'spine_03']) aim(n, P.u, X);
+  aim('neck_01', P.headDir, X);
+  for (const k of ['l', 'r']) {
+    const s = Math.sign(rest['thigh_' + k].p.x) || 1, i = s < 0 ? 0 : 1;
+    // leg: from the hip joint to the ankle target, knee toward its pole
+    const hip = wpos(bones['thigh_' + k]);
+    const leg = ik(hip, P.ankles[i], L.thigh, L.shin, P.kneePole(s));
+    const n1 = leg.mid.clone().sub(hip), n2 = leg.end.clone().sub(leg.mid);
+    aim('thigh_' + k, n1, n1.clone().cross(leg.pole));
+    aim('calf_' + k, n2, n1.clone().cross(leg.pole));
+    const t = rad(P.toeOut) * s, toe = V(Math.sin(t), -0.35, Math.cos(t));
+    aim('foot_' + k, toe, toe.clone().cross(UP));
+    // arm: from the shoulder joint to the palm on the bar, elbow toward its pole
+    const sh = wpos(bones['upperarm_' + k]);
+    const grip = P.bar.clone().addScaledVector(X, s * P.grip);
+    const arm = ik(sh, grip, L.up, L.fore + L.palm, P.armPole(s));
+    const a1 = arm.mid.clone().sub(sh), a2 = arm.end.clone().sub(arm.mid);
+    aim('upperarm_' + k, a1, a1.clone().cross(arm.pole));
+    aim('lowerarm_' + k, a2, a1.clone().cross(arm.pole));
+  }
 }
 
 // ---------- styles ----------
@@ -361,6 +404,28 @@ const STYLE = {
   toon: { hull: true, camera: 'persp', light: true },
   clay: { hull: false, camera: 'persp', light: true },
 };
+function outlineMaterial(color) {
+  const m = new THREE.MeshBasicMaterial({ color, side: THREE.BackSide, skinning: true });
+  m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n transformed += normal * ${OUT.toFixed(4)};`); };
+  return m;
+}
+// tint the vertices the worked bones carry, blended by their skin weights
+function paintBody(base, work) {
+  const g = rig.mesh.geometry, idx = g.attributes.skinIndex, wt = g.attributes.skinWeight, col = g.attributes.color;
+  const names = rig.mesh.skeleton.bones.map(b => b.name);
+  const worked = new Set(state.muscles ? EXERCISES[state.ex].work.map(n => names.indexOf(n)) : []);
+  const c = new THREE.Color();
+  const get = (attr, v) => [attr.getX(v), attr.getY(v), attr.getZ(v), attr.getW(v)];
+  for (let v = 0; v < idx.count; v++) {
+    const bi = get(idx, v), bw = get(wt, v);
+    let w = 0;
+    for (let j = 0; j < 4; j++) if (worked.has(bi[j])) w += bw[j];
+    const t = Math.min(1, Math.max(0, (w - 0.3) / 0.4));
+    c.copy(base).lerp(work, t * t * (3 - 2 * t));
+    col.setXYZ(v, c.r, c.g, c.b);
+  }
+  col.needsUpdate = true;
+}
 
 function applyStyle() {
   const key = VARIANTS[state.vi].key, st = STYLE[key];
@@ -369,51 +434,40 @@ function applyStyle() {
   const ink = c('--fig-ink'), paper = c('--fig-paper'), far = c('--fig-far'), body = c('--fig-body');
   const gear = c('--fig-gear'), plateC = c('--fig-plate'), work = c('--fig-work'), workFar = c('--fig-work-far');
   renderer.setClearColor(c('--fig-stage'));
-  const worked = p => state.muscles && p.tag && EXERCISES[state.ex].work.includes(p.tag);
   const hullMat = new THREE.MeshBasicMaterial({ color: ink, side: THREE.BackSide });
   for (const p of parts) {
-    const isGear = !!p.gear;
     let mat;
-    if (key === 'line') {
-      const fill = worked(p) ? workFar : paper;
-      mat = new THREE.MeshBasicMaterial({ color: isGear && p.gear === 'plate' ? paper : fill });
-    } else if (key === 'silhouette') {
-      if (isGear) {
-        const col = p.gear === 'plate' ? plateC : p.gear === 'bench' || p.gear === 'frame' ? far : gear;
-        mat = new THREE.MeshBasicMaterial({ color: col, transparent: p.gear === 'plate', opacity: p.gear === 'plate' ? 0.45 : 1, depthWrite: p.gear !== 'plate' });
-      } else mat = new THREE.MeshBasicMaterial({ color: worked(p) ? work : ink });
+    if (key === 'line') mat = new THREE.MeshBasicMaterial({ color: paper });
+    else if (key === 'silhouette') {
+      const col = p.gear === 'plate' ? plateC : p.gear === 'bench' || p.gear === 'frame' ? far : gear;
+      mat = new THREE.MeshBasicMaterial({ color: col, transparent: p.gear === 'plate', opacity: p.gear === 'plate' ? 0.45 : 1, depthWrite: p.gear !== 'plate' });
     } else {
-      const col = isGear ? (p.gear === 'plate' ? plateC : p.gear === 'frame' ? gear : p.gear === 'bench' ? far : gear) : worked(p) ? work : body;
+      const col = p.gear === 'plate' ? plateC : p.gear === 'bench' ? far : gear;
       mat = key === 'toon'
         ? new THREE.MeshToonMaterial({ color: col, gradientMap: RAMP })
-        : new THREE.MeshStandardMaterial({ color: col, roughness: isGear && p.gear === 'bar' ? 0.35 : 0.85, metalness: isGear && p.gear === 'bar' ? 0.6 : 0 });
+        : new THREE.MeshStandardMaterial({ color: col, roughness: p.gear === 'bar' ? 0.35 : 0.85, metalness: p.gear === 'bar' ? 0.6 : 0 });
     }
-    p.mesh.material = mat; p.mesh.userData.farSide = p.side;
-    p.hull.material = hullMat; p.hull.visible = st.hull;
+    p.mesh.material = mat; p.hull.material = hullMat; p.hull.visible = st.hull;
     p.mesh.castShadow = key === 'clay';
+  }
+  if (rig.ready) {
+    const opts = { color: 0xffffff, vertexColors: true, skinning: true };
+    rig.mesh.material = key === 'line' || key === 'silhouette' ? new THREE.MeshBasicMaterial(opts)
+      : key === 'toon' ? new THREE.MeshToonMaterial(Object.assign(opts, { gradientMap: RAMP }))
+      : new THREE.MeshStandardMaterial(Object.assign(opts, { roughness: 0.8 }));
+    paintBody(key === 'line' ? paper : key === 'silhouette' ? ink : body, key === 'line' ? workFar : work);
+    rig.hull.material = outlineMaterial(ink); rig.hull.visible = st.hull;
+    rig.mesh.castShadow = key === 'clay';
   }
   hemi.visible = sun.visible = st.light;
   floor.visible = key === 'clay';
   contact.visible = key !== 'clay';
-  state.colors = { ink, far, work, workFar };
   resize();
-}
-// silhouette: far-side limbs a lighter tone, so crossing limbs stay readable
-function shadeSides() {
-  if (VARIANTS[state.vi].key !== 'silhouette') return;
-  const camX = Math.sin(rad(state.az));
-  const { ink, far, work, workFar } = state.colors;
-  for (const p of parts) {
-    if (p.gear || !p.side) continue;
-    const isFar = p.side * camX < 0;
-    const isWork = state.muscles && EXERCISES[state.ex].work.includes(p.tag);
-    p.mesh.material.color.copy(isWork ? (isFar ? workFar : work) : (isFar ? far : ink));
-  }
 }
 
 // ---------- camera, motion, input ----------
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state = { vi: 0, ex: 'squat', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line, colors: null };
+const state = { vi: 0, ex: 'squat', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
@@ -440,17 +494,15 @@ function phase(now) {
   if (m < h + down + hb) return 1;
   return 1 - ease((m - h - down - hb) / up);
 }
-function frame(now) {
+function tick(now) {
   const P = POSES[state.ex](phase(now));
-  pose(P);
-  const ex = EXERCISES[state.ex];
+  placeBarbell(P);
+  if (rig.ready) poseRig(P);
   contact.scale.set(state.ex === 'bench' ? 0.42 : 0.55, state.ex === 'bench' ? 0.85 : 0.4, 1);
-  contact.position.set(0, 0.001, state.ex === 'bench' ? 0.0 : 0.02);
-  shadeSides();
   const cam = state.variant.camera === 'ortho' ? ortho : persp;
   placeCamera(cam);
   renderer.render(scene, cam);
-  requestAnimationFrame(frame);
+  requestAnimationFrame(tick);
 }
 
 let drag = null, lastTap = 0;
@@ -501,6 +553,7 @@ new MutationObserver(applyStyle).observe(document.documentElement, { attributes:
 
 state.vi = fromHash();
 syncUi();
-requestAnimationFrame(frame);
+new THREE.GLTFLoader().load('figure.glb', buildRig, undefined, e => { document.getElementById('stage-hint').textContent = 'figure failed to load'; console.error(e); });
+requestAnimationFrame(tick);
 })();
 </script>
