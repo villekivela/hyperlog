@@ -20,7 +20,6 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,8 +29,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * A logged RIR on the logging screen is the badge History shows: a white number on #D14237,
- * #9D6B1C or #447E79, in light and dark (#46).
+ * A logged RIR on the logging screen is the badge History shows: a soft tint of its colour with the
+ * number in that colour, a step darker in light and lighter in dark (#46).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
@@ -42,7 +41,7 @@ class LoggedRirColourTest {
 
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"))
 
-    /** The fill at the left edge of the one logged chip in the set table, with set 1 logged at [rir], and its number's colour. */
+    /** The fill just inside the edge of the one logged chip in the set table, with set 1 logged at [rir], and its number's colour. */
     private fun loggedChip(rir: Int, dark: Boolean): Pair<Color, Color> {
         RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
         val top = SetPrescription(RepRange(4, 6), 1, 180)
@@ -57,28 +56,34 @@ class LoggedRirColourTest {
         )
         compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench), Noop, onLeave = {}) } }
         val chip = compose.onNode(hasTestTag(RirChipLoggedTag) and !onRirPad, useUnmergedTree = true).captureToImage().toPixelMap()
-        // The number is the chip's lightest pixel.
-        val number = (0 until chip.width).flatMap { x -> (0 until chip.height).map { y -> chip[x, y] } }.maxBy { it.luminance() }
-        return chip[3, chip.height / 2] to number
+        // The edge is 1 dp (3 px); the number is the pixel furthest in luminance from the fill.
+        val fill = chip[6, chip.height / 2]
+        val number = (0 until chip.width).flatMap { x -> (0 until chip.height).map { y -> chip[x, y] } }
+            .maxBy { kotlin.math.abs(it.luminance() - fill.luminance()) }
+        return fill to number
     }
 
-    private fun assertBadge(expected: Long, rir: Int) {
-        for (dark in listOf(false, true)) {
-            val (fill, number) = loggedChip(rir, dark)
-            val want = Color(expected)
-            assertEquals("RIR $rir (dark=$dark) red", want.red, fill.red, 0.02f)
-            assertEquals("RIR $rir (dark=$dark) green", want.green, fill.green, 0.02f)
-            assertEquals("RIR $rir (dark=$dark) blue", want.blue, fill.blue, 0.02f)
-            assertTrue("RIR $rir (dark=$dark) number is white, was $number", number.red > 0.95f && number.green > 0.95f && number.blue > 0.95f)
+    private fun assertColour(what: String, want: Color, was: Color, tolerance: Float) {
+        assertEquals("$what red", want.red, was.red, tolerance)
+        assertEquals("$what green", want.green, was.green, tolerance)
+        assertEquals("$what blue", want.blue, was.blue, tolerance)
+    }
+
+    private fun assertBadge(rir: Int, light: Pair<Long, Long>, dark: Pair<Long, Long>) {
+        for ((isDark, colours) in listOf(false to light, true to dark)) {
+            val (fill, number) = loggedChip(rir, isDark)
+            assertColour("RIR $rir (dark=$isDark) fill", Color(colours.first), fill, 0.02f)
+            // Antialiasing softens the number a little.
+            assertColour("RIR $rir (dark=$isDark) number", Color(colours.second), number, 0.05f)
         }
     }
 
     @Test
-    fun aLoggedZeroIsTheHotBadge() = assertBadge(0xFFD14237, 0)
+    fun aLoggedZeroIsTheHotBadge() = assertBadge(0, light = 0xFFFAE9E8 to 0xFFA52F26, dark = 0xFF482C38 to 0xFFE4918B)
 
     @Test
-    fun aLoggedTwoIsTheWarmBadge() = assertBadge(0xFF9D6B1C, 2)
+    fun aLoggedTwoIsTheWarmBadge() = assertBadge(2, light = 0xFFFBF3E6 to 0xFF7D5516, dark = 0xFF4A3A35 to 0xFFE1AA52)
 
     @Test
-    fun aLoggedThreeIsTheCalmBadge() = assertBadge(0xFF447E79, 3)
+    fun aLoggedThreeIsTheCalmBadge() = assertBadge(3, light = 0xFFEAF4F3 to 0xFF366460, dark = 0xFF323B47 to 0xFF7FBAB5)
 }
