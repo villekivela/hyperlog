@@ -65,6 +65,8 @@ import com.hyperlog.app.ui.theme.SegmentedListScope
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.CardPadding
 
 /**
  * A finished block's review (SPEC, Program → Block review): its weeks and dates, then Lifts,
@@ -120,7 +122,7 @@ fun BlockReviewScreen(
         var headsAt by remember { mutableIntStateOf(Int.MAX_VALUE) }
         Box(Modifier.fillMaxSize().padding(padding)) {
             Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(bottom = 16.dp)) {
-                Column(Modifier.padding(horizontal = 24.dp)) {
+                Column(Modifier.padding(horizontal = TextEdge)) {
                     Text(
                         interFigures(stringResource(R.string.review_title, if (whole != null) page.program.title else block.name)),
                         style = MaterialTheme.typography.headlineMedium,
@@ -164,7 +166,7 @@ fun BlockReviewScreen(
 @Composable
 private fun Columns(block: String, program: String, modifier: Modifier = Modifier, top: Dp = 16.dp) {
     // Over the values: the card's margin and its row's padding in from the edge.
-    Row(modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = top, bottom = 4.dp), verticalAlignment = Alignment.Bottom) {
+    Row(modifier.fillMaxWidth().padding(start = TextEdge, end = TextEdge, top = top, bottom = 4.dp), verticalAlignment = Alignment.Bottom) {
         Spacer(Modifier.weight(1f))
         listOf(block, program).forEach {
             Text(
@@ -193,7 +195,7 @@ private fun ReviewRow(
     supportingColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     end: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    Row(Modifier.fillMaxWidth().heightIn(min = minHeight).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = minHeight).padding(horizontal = CardPadding, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(interFigures(title), style = MaterialTheme.typography.bodyLarge)
             supporting?.let { Text(interFigures(it), style = MaterialTheme.typography.bodyMedium, color = supportingColor, maxLines = lines, overflow = TextOverflow.Ellipsis) }
@@ -371,7 +373,7 @@ private fun Volume(review: Review, whole: Review?) {
         if (folds) {
             item(onClick = { open = !open }) {
                 val cs = MaterialTheme.colorScheme
-                Row(Modifier.fillMaxWidth().heightIn(min = OneLineHeight).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().heightIn(min = OneLineHeight).padding(horizontal = CardPadding), verticalAlignment = Alignment.CenterVertically) {
                     Text(toggle, style = MaterialTheme.typography.labelLarge, color = cs.primary)
                     Spacer(Modifier.width(4.dp))
                     SymbolIcon(if (open) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(20.dp), tint = cs.primary)
@@ -432,7 +434,7 @@ private fun Goals(goals: List<GoalStanding>, program: List<GoalStanding>?, name:
         rows.forEach { r ->
             item {
                 val cs = MaterialTheme.colorScheme
-                Column(Modifier.fillMaxWidth().heightIn(min = RowHeight).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.Center) {
+                Column(Modifier.fillMaxWidth().heightIn(min = RowHeight).padding(horizontal = CardPadding, vertical = 12.dp), verticalArrangement = Arrangement.Center) {
                     Text(r.name, style = MaterialTheme.typography.bodyLarge)
                     Text(interFigures(r.of), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     r.pace?.let { Text(interFigures(it), style = MaterialTheme.typography.titleSmall, color = r.paceColor) }

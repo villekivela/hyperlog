@@ -51,13 +51,13 @@ import com.hyperlog.app.domain.StackReading
 import com.hyperlog.app.domain.WeightUnit
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardShape
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import com.hyperlog.app.ui.theme.TextEdge
 
 /** The ways to describe a weight ladder exactly (SPEC, Gyms and equipment). */
 enum class LadderKind(val label: Int) {
@@ -209,7 +209,7 @@ fun LadderEditor(
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()).imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = Margin),
+                .verticalScroll(rememberScrollState()).padding(horizontal = TextEdge),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             intro?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }

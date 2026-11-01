@@ -48,9 +48,10 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.search
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.CardMargin
 
 const val LibraryListTag = "library-list"
 
@@ -98,7 +99,7 @@ fun LibraryScreen(
                 query,
                 onChange = onQuery,
                 placeholder = stringResource(R.string.library_search, exercises.count { !it.hidden }),
-                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                modifier = Modifier.padding(horizontal = CardMargin).padding(bottom = 8.dp),
             )
             val listState = rememberLazyListState()
             // Each new query starts from its best match.
@@ -113,7 +114,7 @@ fun LibraryScreen(
                     item {
                         Text(
                             stringResource(R.string.library_none_found, query.trim()),
-                            Modifier.padding(horizontal = Margin, vertical = 16.dp),
+                            Modifier.padding(horizontal = TextEdge, vertical = 16.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -123,7 +124,7 @@ fun LibraryScreen(
                     item(key = "hidden-label") {
                         Text(
                             stringResource(R.string.library_hidden),
-                            Modifier.padding(start = Margin, end = Margin, top = 24.dp, bottom = 8.dp),
+                            Modifier.padding(start = TextEdge, end = TextEdge, top = 24.dp, bottom = 8.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

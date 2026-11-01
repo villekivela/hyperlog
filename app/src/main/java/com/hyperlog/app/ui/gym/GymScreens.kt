@@ -63,6 +63,7 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import androidx.compose.material3.Button
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * Every gym, then the bars all gyms share: the barbell and the EZ, trap and safety bars, each
@@ -260,7 +261,7 @@ fun GymScreen(
                     stringResource(R.string.gym_missing_body, gym.name),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                    modifier = Modifier.padding(start = 84.dp, end = TextEdge, top = 8.dp, bottom = 24.dp),
                 )
             }
             // Clears the extended FAB, so the last row can scroll out from under it.
@@ -532,7 +533,7 @@ private fun AddRow(label: String, symbol: Symbol = Symbol.Add, onClick: () -> Un
 
 @Composable
 internal fun SectionLabel(text: String) {
-    // A group's head over its card, at the 24 dp edge, in primary.
+    // A group's head over its card, at the TextEdge, in primary.
     GroupHead(text)
 }
 

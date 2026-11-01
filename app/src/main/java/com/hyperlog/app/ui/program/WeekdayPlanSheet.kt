@@ -49,6 +49,8 @@ import com.hyperlog.app.week.WeekdayPlan
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.CardPadding
 
 /** Program's line for the weekday plan: `3 days a week · Mon Wed Fri`, or `Set your training days`. */
 @Composable
@@ -79,14 +81,14 @@ internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChang
     val cs = MaterialTheme.colorScheme
     val several = gyms.size >= 2
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
-        Text(stringResource(R.string.weekday_plan_title), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.weekday_plan_title), Modifier.padding(horizontal = TextEdge), style = MaterialTheme.typography.headlineSmall)
         Text(
             stringResource(if (several) R.string.weekday_plan_body_gyms else R.string.weekday_plan_body),
-            Modifier.padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 16.dp),
+            Modifier.padding(horizontal = TextEdge).padding(top = 4.dp, bottom = 16.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,
         )
-        WeekdayToggles(plan.days, Modifier.padding(horizontal = 24.dp)) { day, on ->
+        WeekdayToggles(plan.days, Modifier.padding(horizontal = TextEdge)) { day, on ->
             onChange(if (on) plan.copy(gyms = plan.gyms + (day to gyms.singleOrNull()?.id)) else WeekdayPlan(plan.gyms - day, plan.minutes - day))
         }
         if (plan.days.isNotEmpty()) {
@@ -104,7 +106,7 @@ internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChang
             }
         }
         Spacer(Modifier.height(16.dp))
-        TextButton(onClick = onDone, Modifier.align(Alignment.End).padding(end = 16.dp)) { Text(stringResource(R.string.done_close)) }
+        TextButton(onClick = onDone, Modifier.align(Alignment.End).padding(end = TextEdge - 12.dp)) { Text(stringResource(R.string.done_close)) }
     }
 }
 
@@ -112,7 +114,7 @@ internal fun WeekdayPlanSheetContent(plan: WeekdayPlan, gyms: List<Gym>, onChang
 @Composable
 private fun DayRow(day: DayOfWeek, minutes: Int?, onMinutes: (Int?) -> Unit, gym: @Composable RowScope.() -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // As wide as the widest day name, so every row's gym gets the same room.

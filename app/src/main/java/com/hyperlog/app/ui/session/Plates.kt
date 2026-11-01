@@ -111,8 +111,8 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
         Spacer(Modifier.width(if (compact) 8.dp else 16.dp))
         // A warm-up row's legend is one line, so the row keeps its 48 dp.
         val legendRow: @Composable (@Composable () -> Unit) -> Unit = { items ->
-            if (compact) Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) { items() }
-            else FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) { items() }
+            if (compact) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { items() }
+            else FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { items() }
         }
         legendRow {
             if (side == null && totalKg != null) {
@@ -122,7 +122,7 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
             legend(side.orEmpty()).forEach { (kg, n) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     PlateSwatch(kg, if (compact) 8.dp else 12.dp)
-                    Spacer(Modifier.width(if (compact) 3.dp else 6.dp))
+                    Spacer(Modifier.width(if (compact) 4.dp else 8.dp))
                     // Compact, a single plate is its weight alone: `20`, `2×20`.
                     Text(if (compact && n == 1) formatKg(kg) else if (compact) "$n×${formatKg(kg)}" else "$n × ${formatKg(kg)}", style = text, color = cs.onSurface, maxLines = 1, softWrap = false)
                 }
@@ -131,7 +131,7 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
             if (plates.baseKg > 0 && !compact) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (machine) MachineSwatch(12.dp) else BarSwatch(12.dp)
-                    Spacer(Modifier.width(if (compact) 4.dp else 6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(formatKg(plates.baseKg), style = text, color = cs.onSurfaceVariant)
                 }
             }

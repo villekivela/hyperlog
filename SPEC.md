@@ -42,6 +42,10 @@ configuration, iOS, web, any server.
   picked sit in a shaded well: in light primary and primaryContainer are one near-black, so a
   primary button there would vanish (#58). Everything that marks a state keeps 3:1 on what it sits
   on (`AccentContrastTest`).
+- **Spacing** is an 8 dp grid with 4 dp half steps. Every card pads an even 16 dp inside its 12 dp
+  margin, so content starts on one 28 dp edge: text in cards, a row's symbol, titles, section heads
+  and sheet titles (the owner's call, 2026-11-01, #113). The session screen keeps a 24 dp margin for
+  its flat set table.
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
   1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets the words of display, headline and titleLarge
   text: screen titles, the day's name and exercise names. A long exercise name at the top of a session or a

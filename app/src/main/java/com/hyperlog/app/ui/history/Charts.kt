@@ -42,13 +42,13 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.domain.formatKg
-import com.hyperlog.app.ui.session.Margin
 import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
+import com.hyperlog.app.ui.theme.TextEdge
 
 // Charts (docs/design/history.md): thin marks on hairline grids, one accent (primary), ink for
 // everything else. Each chart has its table in the rows under it, so nothing is read by touch alone.
@@ -202,7 +202,7 @@ fun WeekSets(sets: Map<String, Double>) {
         val longest = sets.keys.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
         // 8 dp between the longest name and its bar.
         val fit = with(density) { longest.toDp() } + 8.dp
-        val column = (ceil(fit.value / 8f) * 8f).dp.coerceIn(128.dp, (maxWidth - Margin * 2) / 2)
+        val column = (ceil(fit.value / 8f) * 8f).dp.coerceIn(128.dp, (maxWidth - TextEdge * 2) / 2)
         val widest = sets.values.maxOf { measurer.measure(formatSets(it), valueStyle, maxLines = 1).size.width }
         val values = with(density) { widest.toDp() }
         Column { sets.forEach { (muscle, count) -> SetsBar(muscle, count, most, labelWidth = column, valueWidth = values) } }
@@ -227,7 +227,7 @@ fun SetsBar(
 ) {
     val cs = MaterialTheme.colorScheme
     Row(
-        modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = Margin),
+        modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = TextEdge),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(muscle, Modifier.width(labelWidth), style = MaterialTheme.typography.bodyMedium)

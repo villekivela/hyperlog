@@ -74,6 +74,7 @@ import com.hyperlog.app.ui.theme.interFigures
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import com.hyperlog.app.ui.theme.TextEdge
 
 // Today's calendar of weeks and the cards for the day picked on it (SPEC, Today; design note,
 // Today's calendar).
@@ -205,7 +206,7 @@ internal fun CalendarHead(
             }
         }
     }
-    SubcomposeLayout(modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 24.dp, end = 8.dp)) { constraints ->
+    SubcomposeLayout(modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = TextEdge, end = 8.dp)) { constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         // Each line's width, measured unseen.
         val widths = lines.mapIndexed { i, line ->
@@ -473,9 +474,9 @@ internal fun HeroCard(
     val cs = MaterialTheme.colorScheme
     val week = easyDays?.let { stringResource(R.string.today_easy_head, it) } ?: stringResource(R.string.today_week_block, day.position.week, day.block.name)
     Column(
-        // An even 16 dp all round (owner, 2026-11-01), so Start sits as far from the sides as from the bottom.
+        // An even CardPadding all round, so Start sits as far from the sides as from the bottom.
         Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer)
-            .padding(HeroPadding).testTag(HeroCardTag),
+            .padding(CardPadding).testTag(HeroCardTag),
     ) {
         CardHead(
             day.letter,
@@ -486,10 +487,10 @@ internal fun HeroCard(
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
             deload = day.deload, easy = day.easy, easyNote = true,
         )
-        Spacer(Modifier.height(HeroPadding))
+        Spacer(Modifier.height(CardPadding))
         PlannedStats(day, cs.onPrimaryContainer, library, finished, fit, onFitTime, date)
         if (onStart == null) return@Column
-        Spacer(Modifier.height(HeroPadding))
+        Spacer(Modifier.height(CardPadding))
         Button(
             onClick = onStart,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
@@ -502,12 +503,10 @@ internal fun HeroCard(
     }
 }
 
-private val HeroPadding = 16.dp
-
-/** A card on the card tone, its text on the 24 dp edge. */
+/** A card on the card tone, padded evenly like the hero, its text on the [TextEdge]. */
 @Composable
-private fun DayCard(bottom: Dp = 20.dp, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).padding(start = CardPadding, end = CardPadding, top = 20.dp, bottom = bottom)) { content() }
+private fun DayCard(bottom: Dp = CardPadding, content: @Composable () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(Tones.card).padding(start = CardPadding, end = CardPadding, top = CardPadding, bottom = bottom)) { content() }
 }
 
 /**
@@ -527,10 +526,10 @@ internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
             letterContainer = doneColors.fill, letterContent = doneColors.letter,
             headColor = cs.primary, titleColor = cs.onSurface,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(CardPadding))
         val minutes = ((session.finishedAt - session.startedAt) / 60_000).toInt()
         Stats(session.exercises.size, session.exercises.sumOf { it.sets.size }, minutes, estimate = false, color = cs.onSurface)
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(CardPadding))
         FilledTonalButton(onClick = onOpen, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.today_open_session)) }
     }
 }
@@ -569,7 +568,7 @@ internal fun PlannedCard(
                 headColor = if (missed) cs.onSurfaceVariant else cs.primary, titleColor = cs.onSurface,
                 deload = day.deload, easy = day.easy,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(CardPadding))
             PlannedStats(day, cs.onSurface, library, finished, fit, onFitTime, date)
         }
     }
@@ -587,8 +586,8 @@ internal fun RestCard(date: LocalDate, mode: RestDay, onNext: (LocalDate) -> Uni
         is RestDay.AfterProgram -> R.string.today_nothing_planned to mode.last
         is RestDay.Undated -> R.string.today_not_planned_yet to mode.next
     }
-    // The link's 48 dp row already holds 14 dp under its words: 8 dp more matches the 20 dp on top.
-    DayCard(bottom = if (link != null) 8.dp else 20.dp) {
+    // The link's 48 dp row already holds 12 dp under its words: 4 dp more matches the 16 dp on top.
+    DayCard(bottom = if (link != null) 4.dp else CardPadding) {
         Text(interFigures(shortDate(date)), style = MaterialTheme.typography.labelLarge, color = cs.primary)
         Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
         link?.let { (d, day) ->

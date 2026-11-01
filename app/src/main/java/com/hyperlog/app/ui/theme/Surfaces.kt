@@ -83,9 +83,12 @@ object Tones {
         @Composable @ReadOnlyComposable get() = MaterialTheme.colorScheme.surfaceContainerHighest
 }
 
-/** A card's or a group's distance from the screen edge; its content adds the same, for the 24 dp text edge. */
+/** A card's or a group's distance from the screen edge. */
 val CardMargin = 12.dp
-val CardPadding = 12.dp
+/** A card's padding, even all round: its content starts at the [TextEdge]. */
+val CardPadding = 16.dp
+/** Where a screen's content starts: text in cards, and titles, heads and intros outside them (owner, 2026-11-01, #113). */
+val TextEdge = CardMargin + CardPadding
 private val Outer = 32.dp
 private val Inner = 8.dp
 
@@ -106,7 +109,7 @@ fun segmentShape(index: Int, count: Int) = RoundedCornerShape(
 /**
  * Row [index] of a group of [count] rows: a card segment [CardMargin] in from the edges, rows
  * [SegmentGap] apart. Its content lays out from the segment's edge; add [CardPadding] for the
- * 24 dp text edge.
+ * [TextEdge].
  */
 @Composable
 fun Segment(
@@ -131,7 +134,7 @@ fun Segment(
 
 /**
  * Draws a card behind full-width content, [inset] in from each side: for sections whose rows
- * already keep the 24 dp text edge themselves (History's Progress, a trend's head).
+ * already keep the [TextEdge] themselves (History's Progress, a trend's head).
  */
 fun Modifier.cardBehind(color: Color, shape: Shape = CardShape, inset: Dp = CardMargin): Modifier = drawBehind {
     val i = inset.toPx()
@@ -163,12 +166,12 @@ fun SectionCard(
     )
 }
 
-/** A group's head: labelLarge in primary at the 24 dp edge, over the group it names. */
+/** A group's head: labelLarge in primary at the [TextEdge], over the group it names. */
 @Composable
 fun GroupHead(text: String, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
     Text(
         text,
-        modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
+        modifier.fillMaxWidth().padding(start = TextEdge, end = TextEdge, top = 24.dp, bottom = 8.dp),
         style = MaterialTheme.typography.labelLarge,
         color = color,
     )
@@ -200,7 +203,7 @@ fun Banner(
                 .background(container)
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .heightIn(min = 72.dp)
-                .padding(start = CardPadding + 4.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
+                .padding(start = CardPadding, end = 4.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SymbolIcon(symbol, null, Modifier.size(24.dp))

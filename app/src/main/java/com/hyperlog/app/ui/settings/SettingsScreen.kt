@@ -59,6 +59,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.hyperlog.app.ui.theme.TextEdge
 
 /** Where the starting-weights import stands: how many exercises have one, and whether the last file was rejected. */
 data class StartingWeightsStatus(val count: Int, val invalid: Boolean)
@@ -138,8 +139,8 @@ fun SettingsScreen(
             TopAppBar(
                 colors = hyperlogTopBarColors(),
                 // A destination of the navigation bar: no back arrow (back goes to Today). The bar sets
-                // titles 16 dp in; the screen's text edge is 24 dp.
-                title = { Text(stringResource(R.string.settings), Modifier.padding(start = 8.dp)) },
+                // titles 16 dp in; the screen's text edge is TextEdge.
+                title = { Text(stringResource(R.string.settings), Modifier.padding(start = TextEdge - 16.dp)) },
             )
         },
     ) { padding ->
@@ -205,7 +206,7 @@ fun SettingsScreen(
                     stringResource(R.string.claude_key_month, CoachCost.dollars(claudeKey.monthCost)),
                     style = MaterialTheme.typography.bodySmall,
                     color = muted,
-                    modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp),
+                    modifier = Modifier.padding(start = 84.dp, end = TextEdge, top = 8.dp),
                 )
             }
             // Backups are a group of their own, a card apart from the setup rows.
@@ -228,7 +229,7 @@ fun SettingsScreen(
                 stringResource(R.string.backup_auto),
                 style = MaterialTheme.typography.bodySmall,
                 color = muted,
-                modifier = Modifier.padding(start = 84.dp, end = 24.dp, top = 8.dp, bottom = GroupGap),
+                modifier = Modifier.padding(start = 84.dp, end = TextEdge, top = 8.dp, bottom = GroupGap),
             )
             // Updates come last: a switch, read when the app comes to the foreground, and a check now.
             val checkNowTitle = stringResource(R.string.settings_check_now)
@@ -263,7 +264,7 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = muted,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = GroupGap),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = TextEdge).padding(top = GroupGap),
                 )
             }
             Spacer(Modifier.height(GroupGap))

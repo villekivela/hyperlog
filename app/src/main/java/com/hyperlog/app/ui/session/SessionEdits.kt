@@ -52,6 +52,8 @@ import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.CardMargin
 
 // Editing the session on the fly (SPEC, Today → Edit on the fly; docs/design/logging-screen.md,
 // Edit on the fly). Every edit is for this session only.
@@ -73,7 +75,7 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
     Column(Modifier.fillMaxWidth()) {
         Text(
             interFigures(stringResource(R.string.edit_swap_title, exercise.exercise.name)),
-            Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 16.dp),
+            Modifier.padding(start = TextEdge, end = TextEdge, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -82,7 +84,7 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
             query,
             onChange = { query = it },
             placeholder = stringResource(R.string.session_search),
-            modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+            modifier = Modifier.padding(horizontal = CardMargin).padding(bottom = 8.dp),
         )
         val listState = rememberLazyListState()
         LaunchedEffect(query) { listState.scrollToItem(0) }
@@ -110,7 +112,7 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
 private fun SectionHead(text: String) {
     Text(
         text,
-        Modifier.fillMaxWidth().padding(start = Margin, end = Margin, top = 16.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(start = TextEdge, end = TextEdge, top = 16.dp, bottom = 8.dp),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

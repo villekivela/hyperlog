@@ -262,7 +262,7 @@ up (`+0:12`) in a muted container until the next set is logged. Before a myo min
 15 s breathing countdown with an `air` symbol. Tapping it during rest opens the rest sheet:
 −15, the time, +15, End rest.
 
-**Sheets** (modal bottom sheets, surfaceContainerLow, 24 dp text edge). Their rows sit in
+**Sheets** (modal bottom sheets, surfaceContainerLow, 28 dp text edge). Their rows sit in
 surfaceContainerHighest groups 12 dp in, with the picked or current row in secondaryContainer
 (the session list's exercise on screen, the set sheet's technique, the start sheet's gym); the
 prescription's plan, the machine row and the set sheet's target steppers are cards too.
@@ -341,7 +341,7 @@ buttons this way: the way out first, the action last, at the right.
   dash, because a dash next to the − key reads as minus. The weight strip stays empty until a
   weight is typed, so the pad keeps its height.
 - The empty session opens on the **Add exercise** list (headlineSmall title, 56 dp rows at the
-  24 dp margin). The same list opens as a sheet from ⋮ or the session list.
+  28 dp edge). The same list opens as a sheet from ⋮ or the session list.
 - The exercise name opens the exercise sheet: equipment and muscles, the library note and the
   technique video (see `exercise-library.md`). The Add exercise list has a search field.
 - ⋮ holds Add exercise and, below a divider, Finish session. Finish asks first: "Finish the

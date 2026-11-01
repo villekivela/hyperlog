@@ -111,6 +111,7 @@ import java.time.LocalDate
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * Today: a calendar of weeks, done and planned sessions marked, and the day picked on it below:
@@ -605,7 +606,7 @@ private fun NextDay(
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
         item {
             Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
-            Column(Modifier.padding(horizontal = 24.dp).padding(top = 8.dp, bottom = 16.dp)) {
+            Column(Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp)) {
                 Text(
                     if (isWorkout) stringResource(R.string.today_workout) else stringResource(R.string.today_week_block, day.position.week, day.block.name),
                     style = MaterialTheme.typography.labelLarge,
@@ -839,13 +840,13 @@ internal fun StartSheetContent(
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp).selectableGroup()) {
             Text(
                 stringResource(R.string.start_title),
-                Modifier.padding(horizontal = 24.dp).padding(bottom = if (what == null) 8.dp else 0.dp),
+                Modifier.padding(horizontal = TextEdge).padding(bottom = if (what == null) 8.dp else 0.dp),
                 style = MaterialTheme.typography.headlineSmall,
             )
             what?.let {
                 Text(
                     it,
-                    Modifier.padding(horizontal = 24.dp).padding(bottom = 8.dp),
+                    Modifier.padding(horizontal = TextEdge).padding(bottom = 8.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -905,7 +906,7 @@ internal fun StartSheetContent(
             }
             Spacer(Modifier.height(16.dp))
             val swaps = missing.filter { it.replacement != null && it.slot !in declined }.associate { it.slot to it.replacement!! }
-            Button(onClick = { onStart(if (away) null else gym?.id, swaps) }, Modifier.align(Alignment.End).padding(end = 16.dp).heightIn(min = ButtonDefaults.MediumContainerHeight), contentPadding = ButtonDefaults.MediumContentPadding) {
+            Button(onClick = { onStart(if (away) null else gym?.id, swaps) }, Modifier.align(Alignment.End).padding(end = TextEdge).heightIn(min = ButtonDefaults.MediumContainerHeight), contentPadding = ButtonDefaults.MediumContentPadding) {
                 Text(stringResource(R.string.start_start))
             }
         }
@@ -921,7 +922,7 @@ private fun MissingSwaps(gym: String, swaps: List<SessionSwap>, names: Map<Strin
     val cs = MaterialTheme.colorScheme
     Text(
         stringResource(R.string.start_missing, gym),
-        Modifier.padding(horizontal = 24.dp).padding(top = 16.dp, bottom = 4.dp),
+        Modifier.padding(horizontal = TextEdge).padding(top = 16.dp, bottom = 4.dp),
         style = MaterialTheme.typography.labelLarge,
         color = cs.onSurfaceVariant,
     )
@@ -931,7 +932,7 @@ private fun MissingSwaps(gym: String, swaps: List<SessionSwap>, names: Map<Strin
         if (to == null) {
             Text(
                 stringResource(R.string.start_missing_none, from),
-                Modifier.padding(start = 64.dp, end = 24.dp).heightIn(min = 48.dp).padding(vertical = 12.dp),
+                Modifier.padding(start = 64.dp, end = TextEdge).heightIn(min = 48.dp).padding(vertical = 12.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
             )
@@ -941,7 +942,7 @@ private fun MissingSwaps(gym: String, swaps: List<SessionSwap>, names: Map<Strin
                 Modifier.fillMaxWidth()
                     .toggleable(on, role = Role.Checkbox, onValueChange = { onToggle(swap.slot) })
                     .heightIn(min = 56.dp)
-                    .padding(start = 12.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
+                    .padding(start = 12.dp, end = TextEdge, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Checkbox(checked = on, onCheckedChange = null, Modifier.size(48.dp))

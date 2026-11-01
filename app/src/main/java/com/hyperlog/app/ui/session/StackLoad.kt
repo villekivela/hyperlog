@@ -54,20 +54,20 @@ internal fun StackLoad(load: PinLoad?, typedKg: Double?, modifier: Modifier = Mo
     Row(modifier.testTag(StackLoadTag).clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         StackDrawing(load, muted = load == null && typedKg != null, height = 40.dp)
         Spacer(Modifier.width(16.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (load == null) {
                 if (typedKg != null) Text(stringResource(R.string.stack_not_on), style = text, color = cs.onSurfaceVariant)
                 return@FlowRow
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PinSwatch(12.dp)
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.stack_pin, formatKg(load.pin)), style = text, color = cs.onSurface, maxLines = 1, softWrap = false)
             }
             if (load.builtIn.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AddOnSwatch(12.dp)
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         pluralStringResource(R.plurals.stack_add_ons, load.builtIn.size, load.builtIn.size),
                         style = text, color = cs.onSurface, maxLines = 1, softWrap = false,
@@ -77,7 +77,7 @@ internal fun StackLoad(load: PinLoad?, typedKg: Double?, modifier: Modifier = Mo
             load.onPin.groupingBy { it }.eachCount().toList().sortedByDescending { it.first }.forEach { (kg, n) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     PlateSwatchSmall(kg, 12.dp)
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text("$n × ${formatKg(kg)}", style = text, color = cs.onSurface, maxLines = 1, softWrap = false)
                 }
             }

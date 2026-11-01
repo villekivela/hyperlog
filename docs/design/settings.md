@@ -1,6 +1,6 @@
 # Settings
 
-The fifth tab of the navigation bar: a destination with no back arrow, its title at the 24 dp text edge. Back goes to Today. The bar hides on its sub-screens (Gyms and equipment, the exercise library), whose back arrows return here. Backups (#21) join it as a group of two rows.
+The fifth tab of the navigation bar: a destination with no back arrow, its title at the 28 dp text edge. Back goes to Today. The bar hides on its sub-screens (Gyms and equipment, the exercise library), whose back arrows return here. Backups (#21) join it as a group of two rows.
 
 ## Principles
 
@@ -9,7 +9,7 @@ The fifth tab of the navigation bar: a destination with no back arrow, its title
 - Each row says what it holds or what it last did in its supporting line; errors replace that
   line in `error`, never a snackbar or toast.
 - Anything that replaces data asks first, in a dialog naming what will be replaced.
-- Symbols sit in the 24 dp margin column; text lines up at 64 dp (ListItem's 16 dp inset + 8 dp).
+- Symbols sit in the 28 dp margin column; text lines up at 64 dp (ListItem's 16 dp inset + 8 dp).
 
 ## Layout
 

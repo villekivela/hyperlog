@@ -8,7 +8,7 @@ Screens: `screens/library.png`, `exercise-editor.png` (phone, dark, Ink and viol
 ## Principles
 
 1. **A segmented list.** One segment per exercise: the name, then one muted line (equipment and
-   primary muscles). Rows sit on the 24 dp margin with no containers.
+   primary muscles). Rows sit on the 28 dp margin with no containers.
 2. **Search comes first.** A pill-shaped search field sits under the title, before the list. Text
    uses the system keyboard; the in-app pad is for numbers only.
 3. **Hidden is quiet, not gone.** Hidden exercises are listed last under a "Hidden" label, in
@@ -23,7 +23,7 @@ Screens: `screens/library.png`, `exercise-editor.png` (phone, dark, Ink and viol
 | Token | Value | Use |
 | --- | --- | --- |
 | Margin | 24 dp | Left edge of names, labels and fields |
-| Search field | 56 dp, full radius, 16 dp side inset | surfaceContainerLowest (a well, as the system's search fields), no indicator line; its text lines up with the 24 dp column inside the pill |
+| Search field | 56 dp, full radius, 12 dp side inset (the cards' margin) | surfaceContainerLowest (a well, as the system's search fields), no indicator line; its text lines up with the 24 dp column inside the pill |
 | Library row | 72 dp min | Name bodyLarge onSurface; summary bodyMedium onSurfaceVariant |
 | Hidden row | both lines in `outline` | Under a labelLarge "Hidden" label, 24 dp above it |
 | Editor section | labelLarge onSurfaceVariant label, 8 dp to its control, 24 dp between sections | |

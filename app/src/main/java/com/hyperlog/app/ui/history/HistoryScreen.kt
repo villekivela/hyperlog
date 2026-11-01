@@ -45,7 +45,6 @@ import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.WeekSets
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.session.PastSessionItem
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.session.SessionList
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -69,6 +68,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.CardMargin
 
 // History (SPEC, Screens → History; docs/design/history.md): Sessions and Progress.
 
@@ -115,13 +116,13 @@ fun HistoryScreen(
             Column {
                 TopAppBar(
                     colors = hyperlogTopBarColors(),
-                    // The bar sets titles 16 dp in; the screen's text edge is 24 dp.
-                title = { Text(stringResource(R.string.history_title), Modifier.padding(start = 8.dp)) },
+                    // The bar sets titles 16 dp in; the screen's text edge is TextEdge.
+                title = { Text(stringResource(R.string.history_title), Modifier.padding(start = TextEdge - 16.dp)) },
                     // A destination of the navigation bar: no back arrow (back goes to Today).
                 )
                 // Sessions | Progress as a connected button group, the expressive segmented control.
                 Row(
-                    Modifier.fillMaxWidth().background(Tones.screen).padding(horizontal = 16.dp, vertical = 4.dp),
+                    Modifier.fillMaxWidth().background(Tones.screen).padding(horizontal = CardMargin, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                 ) {
                     val labels = listOf(R.string.history_sessions, R.string.history_progress)
@@ -212,7 +213,7 @@ internal fun BodyweightSummary(bodyweights: List<Bodyweight>, onClick: (() -> Un
         return
     }
     Column(Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
-        Row(Modifier.padding(horizontal = Margin), verticalAlignment = Alignment.Bottom) {
+        Row(Modifier.padding(horizontal = TextEdge), verticalAlignment = Alignment.Bottom) {
             Text(stringResource(R.string.weight_kg, formatKg(latest.kg)), style = MaterialTheme.typography.figureHeadline)
             Spacer(Modifier.weight(1f))
             Text(short(latest.date), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
@@ -226,7 +227,7 @@ internal fun BodyweightSummary(bodyweights: List<Bodyweight>, onClick: (() -> Un
                 dots = recent.map { null },
                 selected = recent.size - 1,
                 onSelect = { onClick?.invoke() },
-                modifier = Modifier.padding(start = Margin, end = 8.dp),
+                modifier = Modifier.padding(start = TextEdge, end = 8.dp),
                 height = chartHeight,
                 axis = false,
                 ticks = false,
@@ -269,7 +270,7 @@ private fun ExerciseRow(trend: ExerciseTrend) {
 
 @Composable
 internal fun SectionHead(text: String, actions: @Composable () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = Margin, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = TextEdge, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
         actions()
     }
@@ -279,7 +280,7 @@ internal fun SectionHead(text: String, actions: @Composable () -> Unit = {}) {
 internal fun Muted(text: String) {
     Text(
         text,
-        Modifier.padding(horizontal = Margin, vertical = 8.dp),
+        Modifier.padding(horizontal = TextEdge, vertical = 8.dp),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -293,7 +294,7 @@ internal fun Muted(text: String) {
 internal fun LogBodyweight(latest: Double?, onSave: (Double) -> Unit, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
     val kg = text.replace(',', '.').toDoubleOrNull()?.takeIf { it in 20.0..400.0 }
-    Row(Modifier.fillMaxWidth().padding(start = Margin, end = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(start = TextEdge, end = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },

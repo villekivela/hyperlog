@@ -45,8 +45,8 @@ No render covered this card, so only the device showed it.
 | --- | --- | --- |
 | List row | ListItem, 8 dp extra inset | Name bodyLarge; preview bodyMedium + tnum, onSurfaceVariant |
 | Text column | 64 dp | Names, add-row labels and the "Shared by every gym" label line up |
-| Section label | labelLarge primary at 24 dp, 24 dp above, 8 dp below, over its card | "Shared by every gym" |
-| Editor fields | OutlinedTextField, 24 dp margin, 16 dp between | Start / Step / Weights share a row, 8 dp gaps |
+| Section label | labelLarge primary at 28 dp, 24 dp above, 8 dp below, over its card | "Shared by every gym" |
+| Editor fields | OutlinedTextField, 28 dp margin, 16 dp between | Start / Step / Weights share a row, 8 dp gaps |
 | Preview | titleMedium + tnum, then bodySmall count | `outline` "Fill in the fields…" while incomplete |
 | Check reason | labelLarge `error`, warning symbol 20 dp | Left 1.5 parts of the strip |
 | Check offers | 40 dp pill, 1 dp outlineVariant border | Three, one part each |
@@ -133,11 +133,11 @@ No render covered this card, so only the device showed it.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Start sheet title | headlineSmall, 24 dp margin | As the Add exercise list |
+| Start sheet title | headlineSmall, 28 dp margin | As the Add exercise list |
 | Gym row | 56 dp min, RadioButton in a 48 dp box at 12 dp, name bodyLarge at 64 dp | Reason line bodyMedium onSurfaceVariant |
-| Start | Filled button, right edge 24 dp | |
-| "Which machine?" | titleLarge at 24 dp, 8 dp below the header; bodyMedium onSurfaceVariant line under it | |
-| Machine row | 72 dp min, 12 dp vertical padding, 24 dp margin | Name bodyLarge, weights bodyMedium + tnum |
+| Start | Filled button, right edge 28 dp | |
+| "Which machine?" | titleLarge at 28 dp, 8 dp below the header; bodyMedium onSurfaceVariant line under it | |
+| Machine row | 72 dp min, 12 dp vertical padding, 28 dp margin | Name bodyLarge, weights bodyMedium + tnum |
 | Day toggle | 40 dp circle; on: primary fill, onPrimary letter; off: 1 dp outlineVariant ring, onSurfaceVariant letter | First at the 64 dp text column, spread to 16 dp from the edge |
 | Machine line | `location_on` 20 dp, 16 dp gap, bodyLarge, text button Change | Exercise sheet, under the summary |
 

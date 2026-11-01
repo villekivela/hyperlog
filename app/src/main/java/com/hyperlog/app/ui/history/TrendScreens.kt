@@ -59,10 +59,10 @@ import com.hyperlog.app.history.TrendPoint
 import com.hyperlog.app.history.takesGoal
 import java.time.LocalDate
 import com.hyperlog.app.library.Equipment
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlin.math.roundToInt
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * An exercise's top sets and estimate over time (docs/design/history.md): the figure, the chart
@@ -121,7 +121,7 @@ fun ExerciseTrendScreen(
                         if (n > 0) Spacer(Modifier.height(16.dp))
                         Text(
                             line.machine ?: stringResource(R.string.history_machine_unknown),
-                            Modifier.padding(horizontal = Margin, vertical = 8.dp),
+                            Modifier.padding(horizontal = TextEdge, vertical = 8.dp),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
@@ -163,7 +163,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
                 else -> R.string.history_estimate
             },
         ),
-        Modifier.padding(horizontal = Margin),
+        Modifier.padding(horizontal = TextEdge),
         style = MaterialTheme.typography.labelLarge,
         color = cs.onSurfaceVariant,
     )
@@ -171,23 +171,23 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
     if (goal == null) {
         Text(
             points.last().let(value)?.let { figure(it, byReps) } ?: "–",
-            Modifier.padding(horizontal = Margin),
+            Modifier.padding(horizontal = TextEdge),
             style = MaterialTheme.typography.figureHeadline,
         )
     } else {
         val estimate = points.lastOrNull { it.estimateKg != null }?.estimateKg
-        GoalFigure(estimate, goal, MaterialTheme.typography.figureHeadline, Modifier.padding(horizontal = Margin))
-        GoalStatusRow(estimate, goal, Modifier.clickable(onClick = onGoal).padding(horizontal = Margin))
+        GoalFigure(estimate, goal, MaterialTheme.typography.figureHeadline, Modifier.padding(horizontal = TextEdge))
+        GoalStatusRow(estimate, goal, Modifier.clickable(onClick = onGoal).padding(horizontal = TextEdge))
     }
     val p = points[index]
     RirText(
         listOfNotNull(long(p.date), "${stringResource(R.string.history_top_set).lowercase()} ${p.top.setText(p.record)}", value(p)?.takeIf { !byReps }?.let { stringResource(R.string.weight_kg, estimateText(it)) })
             .joinToString(" · "),
-        Modifier.padding(horizontal = Margin),
+        Modifier.padding(horizontal = TextEdge),
         style = MaterialTheme.typography.bodyMedium,
         color = cs.onSurfaceVariant,
     )
-    note?.let { Text(it, Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary) }
+    note?.let { Text(it, Modifier.padding(horizontal = TextEdge), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary) }
     Spacer(Modifier.height(8.dp))
     TrendChart(
         dates = points.map { it.date },
@@ -195,7 +195,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
         dots = points.map { if (dotsShown) it.top.weightKg else null },
         selected = index,
         onSelect = { selected = it },
-        modifier = Modifier.padding(start = Margin, end = 8.dp),
+        modifier = Modifier.padding(start = TextEdge, end = 8.dp),
         goal = trend.goal?.kg,
         goalLabel = trend.goal?.let { goalLabel(it) },
         description = stringResource(R.string.history_trend_chart, trend.exercise.name),
@@ -208,7 +208,7 @@ private fun LineChart(trend: ExerciseTrend, line: TrendLine, note: String?, onGo
 @Composable
 private fun Legend() {
     val cs = MaterialTheme.colorScheme
-    Row(Modifier.padding(horizontal = Margin, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.padding(horizontal = TextEdge, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Canvas(Modifier.size(16.dp, 8.dp)) {
             drawLine(cs.primary, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
         }
@@ -315,8 +315,8 @@ private fun BodyweightChart(days: List<Bodyweight>, index: Int, onSelect: (Int) 
         return
     }
     Column(Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.weight_kg, formatKg(days.last().kg)), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.figureHeadline)
-        Row(Modifier.fillMaxWidth().padding(start = Margin, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.weight_kg, formatKg(days.last().kg)), Modifier.padding(horizontal = TextEdge), style = MaterialTheme.typography.figureHeadline)
+        Row(Modifier.fillMaxWidth().padding(start = TextEdge, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "${long(days[index].date)} · ${stringResource(R.string.weight_kg, formatKg(days[index].kg))}",
                 Modifier.weight(1f),
@@ -334,7 +334,7 @@ private fun BodyweightChart(days: List<Bodyweight>, index: Int, onSelect: (Int) 
             dots = days.map { null },
             selected = index,
             onSelect = onSelect,
-            modifier = Modifier.padding(start = Margin, end = 8.dp),
+            modifier = Modifier.padding(start = TextEdge, end = 8.dp),
             description = stringResource(R.string.history_trend_chart, stringResource(R.string.history_bodyweight)),
         )
         Spacer(Modifier.height(16.dp))

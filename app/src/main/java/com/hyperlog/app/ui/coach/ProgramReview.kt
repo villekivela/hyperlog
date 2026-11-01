@@ -118,7 +118,7 @@ fun ProgramReviewScreen(
         },
         bottomBar = {
             // Three actions: Reject on its own at the text edge (12 dp in, the button's own 12 dp
-            // for the 24 dp edge), Save for later and Start program together at the end. Narrower
+            // for the TextEdge), Save for later and Start program together at the end. Narrower
             // padding keeps each label on one line at the phone's font scale.
             BottomActions(padding = PaddingValues(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)) {
                 TextButton(onClick = onReject) { Text(stringResource(R.string.change_reject), maxLines = 1) }

@@ -90,7 +90,7 @@ private fun TimerPill(
     val filled = fraction.coerceIn(0f, 1f)
     val inside = @Composable {
         Row(
-            Modifier.drawBehind { drawRect(fill, size = Size(size.width * filled, size.height)) }.height(48.dp).padding(start = 16.dp, end = 20.dp),
+            Modifier.drawBehind { drawRect(fill, size = Size(size.width * filled, size.height)) }.height(48.dp).padding(start = 16.dp, end = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SymbolIcon(symbol, description, Modifier.width(20.dp))
