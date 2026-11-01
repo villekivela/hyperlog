@@ -78,7 +78,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 </style>
 
 <div class="wrap">
-  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet: Quaternius's CC0 base character with its face, hair and textures stripped, posed by code. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
+  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet: Quaternius's CC0 base character with its face, hair and textures stripped, posed by code. Smooth irons out its muscles and face. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
 
   <section class="sheet" aria-label="Exercise sheet">
     <div class="handle"></div>
@@ -97,6 +97,10 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
       <button class="seg" id="ex-squat" data-ex="squat">Squat</button>
       <button class="seg" id="ex-bench" data-ex="bench">Bench</button>
       <button class="seg" id="ex-rdl" data-ex="rdl">RDL</button>
+    </div>
+    <div class="row" role="group" aria-label="Body"><span>Body</span>
+      <button class="seg" id="body-smooth" data-body="smooth">Smooth</button>
+      <button class="seg" id="body-detailed" data-body="detailed">Detailed</button>
     </div>
     <div class="row" role="group" aria-label="Motion"><span>Motion</span>
       <button class="seg" id="mo-loop" data-mo="loop">Loop</button>
@@ -119,6 +123,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
+const FIGURES = { detailed: 'figure.glb', smooth: 'figure-smooth.glb' };
 (() => {
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const rad = d => d * Math.PI / 180;
@@ -267,7 +272,8 @@ function placeBarbell(P) {
 }
 
 // ---------- the rig: aim each bone at its target from the bind pose ----------
-const rig = { ready: false };
+let rig = { ready: false };
+const rigs = {};
 const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion();
 const wpos = b => b.getWorldPosition(new THREE.Vector3());
 const wquat = b => b.getWorldQuaternion(new THREE.Quaternion());
@@ -296,7 +302,7 @@ function aim(name, primary, secondary) {
   setWorldQuat(b, delta.multiply(r.wq.clone()));
 }
 
-function buildRig(gltf) {
+function buildRig(gltf, key) {
   const root = gltf.scene;
   let mesh = null;
   root.traverse(o => { if (o.isSkinnedMesh) mesh = o; });
@@ -316,7 +322,10 @@ function buildRig(gltf) {
     Object.assign(rest['calf_' + k], { dir: dirTo('calf_' + k, 'foot_' + k), sec: d => legSec(0, d) });
     Object.assign(rest['foot_' + k], { dir: dirTo('foot_' + k, 'ball_' + k), sec: d => d.clone().cross(UP) });
     Object.assign(rest['upperarm_' + k], { dir: dirTo('upperarm_' + k, 'lowerarm_' + k), sec: d => armSec(0, d) });
-    Object.assign(rest['lowerarm_' + k], { dir: dirTo('lowerarm_' + k, 'hand_' + k), sec: d => armSec(0, d) });
+    // the hand and forearm twist so the knuckles run along the bar, thumb toward the middle
+    const across = dirTo('pinky_01_' + k, 'index_01_' + k);
+    Object.assign(rest['lowerarm_' + k], { dir: dirTo('lowerarm_' + k, 'hand_' + k), sec: () => across });
+    Object.assign(rest['hand_' + k], { dir: dirTo('hand_' + k, 'middle_01_' + k), sec: () => across });
   }
   // measure the model so the poses use its proportions
   const len = (a, c) => dirTo(a, c).length();
@@ -351,10 +360,9 @@ function buildRig(gltf) {
   mesh.parent.add(hull);
   const colors = new Float32Array(mesh.geometry.attributes.position.count * 3);
   mesh.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  Object.assign(rig, { ready: true, root, mesh, hull, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls });
+  rigs[key] = { ready: true, root, mesh, hull, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls };
   mesh.castShadow = true; mesh.frustumCulled = hull.frustumCulled = false;
-  document.getElementById('stage-hint').textContent = 'drag to turn';
-  applyStyle();
+  showBody();
 }
 
 function poseRig(P) {
@@ -386,7 +394,9 @@ function poseRig(P) {
     const arm = ik(sh, grip, L.up, L.fore + L.palm, P.armPole(s));
     const a1 = arm.mid.clone().sub(sh), a2 = arm.end.clone().sub(arm.mid);
     aim('upperarm_' + k, a1, a1.clone().cross(arm.pole));
-    aim('lowerarm_' + k, a2, a1.clone().cross(arm.pole));
+    const inward = X.clone().multiplyScalar(-s);
+    aim('lowerarm_' + k, a2, inward);
+    aim('hand_' + k, a2, inward);
   }
 }
 
@@ -467,7 +477,7 @@ function applyStyle() {
 
 // ---------- camera, motion, input ----------
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state = { vi: 0, ex: 'squat', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
+const state = { vi: 0, ex: 'squat', body: 'smooth', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
@@ -512,6 +522,13 @@ stage.addEventListener('pointermove', e => { if (!drag) return; state.az = drag.
 stage.addEventListener('pointerup', () => { drag = null; });
 stage.addEventListener('pointercancel', () => { drag = null; });
 
+function showBody() {
+  for (const [k, r] of Object.entries(rigs)) r.root.visible = k === state.body;
+  if (!rigs[state.body]) return;
+  rig = rigs[state.body];
+  document.getElementById('stage-hint').textContent = 'drag to turn';
+  applyStyle();
+}
 function syncUi() {
   const ex = EXERCISES[state.ex];
   document.getElementById('ex-name').textContent = ex.name;
@@ -524,6 +541,7 @@ function syncUi() {
   document.querySelectorAll('[data-ex]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ex === state.ex));
   document.querySelectorAll('[data-mo]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mo === state.motion));
   document.querySelectorAll('[data-mu]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.mu === 'on') === state.muscles));
+  document.querySelectorAll('[data-body]').forEach(b => b.setAttribute('aria-pressed', b.dataset.body === state.body));
   const v = VARIANTS[state.vi];
   document.getElementById('variant-label').innerHTML = `${'ABCD'[state.vi]} · ${v.name}<small>${v.sub}</small>`;
   applyStyle();
@@ -531,6 +549,7 @@ function syncUi() {
 document.querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => { state.ex = b.dataset.ex; [state.az, state.el] = EXERCISES[state.ex].view; state.t0 = performance.now(); syncUi(); }));
 document.querySelectorAll('[data-mo]').forEach(b => b.addEventListener('click', () => { state.motion = b.dataset.mo; state.t0 = performance.now(); syncUi(); }));
 document.querySelectorAll('[data-mu]').forEach(b => b.addEventListener('click', () => { state.muscles = b.dataset.mu === 'on'; syncUi(); }));
+document.querySelectorAll('[data-body]').forEach(b => b.addEventListener('click', () => { state.body = b.dataset.body; syncUi(); showBody(); }));
 
 function setVariant(i) {
   state.vi = (i + VARIANTS.length) % VARIANTS.length;
@@ -553,7 +572,8 @@ new MutationObserver(applyStyle).observe(document.documentElement, { attributes:
 
 state.vi = fromHash();
 syncUi();
-new THREE.GLTFLoader().load('figure.glb', buildRig, undefined, e => { document.getElementById('stage-hint').textContent = 'figure failed to load'; console.error(e); });
+const failed = e => { document.getElementById('stage-hint').textContent = 'figure failed to load'; console.error(e); };
+for (const [key, url] of Object.entries(FIGURES)) new THREE.GLTFLoader().load(url, g => buildRig(g, key), undefined, failed);
 requestAnimationFrame(tick);
 })();
 </script>
