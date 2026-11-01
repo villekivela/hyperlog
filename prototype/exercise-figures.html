@@ -1,0 +1,506 @@
+<title>Exercise Figures</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* PROTOTYPE, throwaway. Question: how could a low-detail 3D figure look in Hyperlog's exercise sheet?
+   One phone-width exercise sheet in the Graphite theme, four figure styles switched from the bar at the
+   bottom (← → keys too). The figure is built from primitives, posed by code, so nothing is licensed. */
+:root {
+  /* Graphite light (app/src/main/java/com/hyperlog/app/ui/theme/GraphitePalette.kt) */
+  --surface: #FAFAFB; --on-surface: #19191B; --on-surface-variant: #5C5C62;
+  --container-low: #F5F5F7; --container: #EEEEF0; --container-high: #E9E9EC; --container-highest: #E4E4E8;
+  --secondary-container: #E2E2E6; --on-secondary-container: #19191B;
+  --outline: #85858C; --outline-variant: #D4D4D9; --primary: #1C1C1F; --on-primary: #FFFFFF;
+  /* figure tokens; --fig-work is a placeholder colour, the app has no muscle colour yet */
+  --fig-stage: #EEEEF0; --fig-paper: #F7F7F9; --fig-ink: #1C1C1F; --fig-far: #9A9AA2;
+  --fig-body: #D2D2D8; --fig-gear: #5C5C62; --fig-plate: #3A3A40; --fig-work: #D08A2E; --fig-work-far: #E7B97A;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --surface: #121214; --on-surface: #EDEDEF; --on-surface-variant: #A3A3A8;
+  --container-low: #1B1B1E; --container: #151517; --container-high: #1F1F22; --container-highest: #2E2E33;
+  --secondary-container: #44444A; --on-secondary-container: #F2F2F4;
+  --outline: #6E6E75; --outline-variant: #38383D; --primary: #F2F2F4; --on-primary: #141416;
+  --fig-stage: #232326; --fig-paper: #26262A; --fig-ink: #EDEDEF; --fig-far: #707078;
+  --fig-body: #6A6A72; --fig-gear: #A3A3A8; --fig-plate: #C8C8CE; --fig-work: #E9A54E; --fig-work-far: #8F6A3A;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --surface: #121214; --on-surface: #EDEDEF; --on-surface-variant: #A3A3A8;
+  --container-low: #1B1B1E; --container: #151517; --container-high: #1F1F22; --container-highest: #2E2E33;
+  --secondary-container: #44444A; --on-secondary-container: #F2F2F4;
+  --outline: #6E6E75; --outline-variant: #38383D; --primary: #F2F2F4; --on-primary: #141416;
+  --fig-stage: #232326; --fig-paper: #26262A; --fig-ink: #EDEDEF; --fig-far: #707078;
+  --fig-body: #6A6A72; --fig-gear: #A3A3A8; --fig-plate: #C8C8CE; --fig-work: #E9A54E; --fig-work-far: #8F6A3A;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--surface); color: var(--on-surface); font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 112px;
+}
+.wrap { max-width: 412px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.proto-note { font-size: 13px; line-height: 1.45; color: var(--on-surface-variant); margin: 0; }
+.proto-note b { color: var(--on-surface); font-weight: 600; }
+
+/* the exercise sheet, as the app draws it (28 dp top corners, 24 dp margin) */
+.sheet { background: var(--container-low); border-radius: 28px; padding: 12px 24px 28px; display: flex; flex-direction: column; gap: 16px; }
+.handle { width: 32px; height: 4px; border-radius: 2px; background: var(--outline); opacity: .5; align-self: center; margin-bottom: 4px; }
+.stage { position: relative; aspect-ratio: 4 / 3.4; max-width: 100%; border-radius: 20px; overflow: hidden; background: var(--fig-stage); touch-action: none; cursor: grab; }
+.stage:active { cursor: grabbing; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.stage-hint { position: absolute; right: 12px; bottom: 10px; font-size: 11px; color: var(--on-surface-variant); opacity: .8; pointer-events: none; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 32px; margin: 0; text-wrap: balance; }
+.meta { font-size: 14px; color: var(--on-surface-variant); margin: -12px 0 0; }
+.note { font-size: 14px; line-height: 20px; margin: 0; }
+.tonal { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 24px 0 16px; border-radius: 24px; border: 0; background: var(--secondary-container); color: var(--on-secondary-container); font: 500 14px var(--font-body); text-decoration: none; }
+.tonal svg { width: 20px; height: 20px; fill: currentColor; }
+
+/* prototype controls, deliberately not app-styled */
+.controls { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px dashed var(--outline); border-radius: 12px; }
+.controls h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--on-surface-variant); margin: 0; font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.row > span { font-size: 13px; color: var(--on-surface-variant); width: 72px; }
+.seg { font: 500 13px var(--font-body); padding: 7px 12px; border-radius: 8px; border: 1px solid var(--outline-variant); background: transparent; color: var(--on-surface); cursor: pointer; }
+.seg[aria-pressed="true"] { background: var(--on-surface); color: var(--surface); border-color: var(--on-surface); }
+.seg:focus-visible, .bar button:focus-visible { outline: 2px solid var(--fig-work); outline-offset: 2px; }
+
+/* floating variant switcher */
+.bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 999px; background: #0B0B0C; color: #F2F2F4; box-shadow: 0 6px 24px rgba(0,0,0,.28); z-index: 5; }
+.bar button { width: 40px; height: 40px; border-radius: 50%; border: 0; background: #2A2A2E; color: inherit; font-size: 18px; cursor: pointer; }
+.bar .label { min-width: 150px; text-align: center; font: 600 14px var(--font-body); }
+.bar .label small { display: block; font-weight: 400; font-size: 11px; opacity: .65; }
+</style>
+
+<div class="wrap">
+  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet. The figure is built from simple shapes and posed by code, so nothing here is licensed. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
+
+  <section class="sheet" aria-label="Exercise sheet">
+    <div class="handle"></div>
+    <div class="stage" id="stage"><span class="stage-hint">drag to turn</span></div>
+    <h1 id="ex-name">Barbell Back Squat</h1>
+    <p class="meta" id="ex-meta">Barbell · Quads, Glutes, Hamstrings</p>
+    <p class="note" id="ex-note"></p>
+    <a class="tonal" id="ex-video" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Technique video</span>
+    </a>
+  </section>
+
+  <section class="controls" aria-label="Prototype controls">
+    <h2>Prototype controls</h2>
+    <div class="row" role="group" aria-label="Exercise"><span>Exercise</span>
+      <button class="seg" id="ex-squat" data-ex="squat">Squat</button>
+      <button class="seg" id="ex-bench" data-ex="bench">Bench</button>
+      <button class="seg" id="ex-rdl" data-ex="rdl">RDL</button>
+    </div>
+    <div class="row" role="group" aria-label="Motion"><span>Motion</span>
+      <button class="seg" id="mo-loop" data-mo="loop">Loop</button>
+      <button class="seg" id="mo-two" data-mo="two">Two frames</button>
+      <button class="seg" id="mo-still" data-mo="still">Still</button>
+    </div>
+    <div class="row" role="group" aria-label="Muscles"><span>Muscles</span>
+      <button class="seg" id="mu-on" data-mu="on">Highlight</button>
+      <button class="seg" id="mu-off" data-mu="off">Plain</button>
+    </div>
+  </section>
+</div>
+
+<nav class="bar" aria-label="Figure style">
+  <button id="prev" aria-label="Previous style">←</button>
+  <div class="label" id="variant-label">A · Line</div>
+  <button id="next" aria-label="Next style">→</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const rad = d => d * Math.PI / 180;
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t * t * (3 - 2 * t);
+const X = V(1, 0, 0);
+
+const EXERCISES = {
+  squat: { name: 'Barbell Back Squat', meta: 'Barbell · Quads, Glutes, Hamstrings', note: 'Get as deep as you can without excessive back rounding.', video: 'https://youtu.be/UGwmUJkTIx8', label: 'Technique video', work: ['thigh', 'pelvis'], frame: { target: V(0, 0.9, 0), half: 1.0 }, view: [62, 8], timing: [0.7, 1.5, 0.25, 1.1] },
+  bench: { name: 'Barbell Bench Press', meta: 'Barbell · Chest', note: 'Control the eccentric: 2–3 seconds down.', video: null, label: 'Search technique videos', work: ['chest', 'shoulder', 'upperarm'], frame: { target: V(0, 0.55, -0.12), half: 0.92 }, view: [76, 24], timing: [0.7, 1.8, 0.2, 1.0] },
+  rdl: { name: 'Barbell RDL', meta: 'Barbell · Hamstrings', note: 'Stick your glutes straight back as you lower the bar straight down, centered over the middle of your foot. Get a nice deep stretch at the bottom, but keep your spine neutral.', video: 'https://youtu.be/xbnan2iNh-Q', label: 'Technique video', work: ['thigh', 'pelvis'], frame: { target: V(0, 0.88, 0.05), half: 0.98 }, view: [66, 8], timing: [0.7, 1.7, 0.3, 1.2] },
+};
+const VARIANTS = [
+  { key: 'line', name: 'Line', sub: 'outline only, flat' },
+  { key: 'silhouette', name: 'Silhouette', sub: 'two-tone, near and far side' },
+  { key: 'toon', name: 'Toon', sub: 'three-step shading, outlined' },
+  { key: 'clay', name: 'Clay', sub: 'soft light and shadow' },
+];
+
+// ---------- kinematics ----------
+const L = { thigh: 0.44, shin: 0.43, up: 0.30, fore: 0.29, trunk: 0.48, ankleY: 0.085 };
+
+function ik(A, T, l1, l2, pole) {
+  const d0 = T.clone().sub(A); let d = d0.length(); const dir = d0.divideScalar(d || 1);
+  d = Math.min(d, l1 + l2 - 1e-4); d = Math.max(d, Math.abs(l1 - l2) + 1e-4);
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  const p = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir))).normalize();
+  return { mid: A.clone().addScaledVector(dir, a).addScaledVector(p, h), end: A.clone().addScaledVector(dir, d) };
+}
+const trunkUp = c => V(0, Math.cos(c), Math.sin(c));
+const fwdOf = u => X.clone().cross(u).normalize();
+function foot(ankle, s, out) {
+  const t = rad(out);
+  return { heel: ankle.clone().add(V(0, -0.05, -0.06)), toe: ankle.clone().add(V(s * Math.sin(t) * 0.17, -0.058, Math.cos(t) * 0.17)) };
+}
+function legs(P, hipC, u, ankles, out, kneePole) {
+  for (const [k, s] of [['L', -1], ['R', 1]]) {
+    const hip = hipC.clone().addScaledVector(X, s * 0.095);
+    const ankle = ankles[k];
+    const r = ik(hip, ankle, L.thigh, L.shin, kneePole(s));
+    P['hip' + k] = hip; P['knee' + k] = r.mid; P['ankle' + k] = r.end;
+    Object.assign(P, Object.fromEntries(Object.entries(foot(ankle, s, out)).map(([n, v]) => [n + k, v])));
+  }
+}
+function arms(P, grip, armPole) {
+  for (const [k, s] of [['L', -1], ['R', 1]]) {
+    const sh = P.shC.clone().addScaledVector(X, s * 0.18);
+    const hand = P.bar.clone().addScaledVector(X, s * grip);
+    const r = ik(sh, hand, L.up, L.fore, armPole(s));
+    P['sh' + k] = sh; P['el' + k] = r.mid; P['wr' + k] = r.end;
+  }
+}
+
+function poseSquat(d) {
+  const a = rad(36) * d, b = rad(96) * d, k = 0.997;
+  const kz = L.shin * k * Math.sin(a), ky = L.ankleY + L.shin * k * Math.cos(a);
+  const hipC = V(0, ky + L.thigh * k * Math.cos(b), kz - L.thigh * k * Math.sin(b));
+  const barAt = c => { const u = trunkUp(c), f = fwdOf(u); return hipC.clone().addScaledVector(u, L.trunk + 0.03).addScaledVector(f, -0.045); };
+  let lo = -0.4, hi = 1.4; // lean until the bar sits over midfoot
+  for (let i = 0; i < 32; i++) { const m = (lo + hi) / 2; if (barAt(m).z > 0.04) hi = m; else lo = m; }
+  const c = (lo + hi) / 2, u = trunkUp(c), f = fwdOf(u);
+  const P = { hipC, u, bar: barAt(c), shC: hipC.clone().addScaledVector(u, L.trunk), headDir: u.clone().add(V(0, 0.45, 0.1)).normalize() };
+  legs(P, hipC, u, { L: V(-0.17, L.ankleY, 0), R: V(0.17, L.ankleY, 0) }, 18, s => V(s * 0.45, 0, 1).normalize());
+  arms(P, 0.44, s => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, s * 0.3).normalize());
+  return P;
+}
+function poseBench(d) {
+  const e = ease(d);
+  const hipC = V(0, 0.535, 0.3), u = V(0, 0.07, -1).normalize(), f = fwdOf(u);
+  const top = V(0, 1.1, -0.16), bottom = V(0, 0.69, -0.03);
+  const bar = V(0, lerp(top.y, bottom.y, e), lerp(top.z, bottom.z, Math.pow(e, 1.6)));
+  const P = { hipC, u, bar, shC: hipC.clone().addScaledVector(u, L.trunk), headDir: u.clone().add(V(0, -0.3, 0)).normalize(), bench: true };
+  legs(P, hipC, u, { L: V(-0.3, L.ankleY, 0.8), R: V(0.3, L.ankleY, 0.8) }, 25, s => V(s * 0.5, 1, 0.4).normalize());
+  arms(P, 0.41, s => V(s * 0.9, -1, 0.7).normalize());
+  return P;
+}
+function poseRdl(d) {
+  const e = ease(d), a = rad(2 + 2 * e), b = rad(8 + 18 * e), c = rad(4 + 70 * e);
+  const kz = L.shin * Math.sin(a), ky = L.ankleY + L.shin * Math.cos(a);
+  const hipC = V(0, ky + L.thigh * Math.cos(b), kz - L.thigh * Math.sin(b));
+  const u = trunkUp(c), shC = hipC.clone().addScaledVector(u, L.trunk);
+  const reach = 0.575, barZ = 0.095, dx = 0.07, dz = shC.z - barZ;
+  const bar = V(0, shC.y - Math.sqrt(Math.max(0, reach * reach - dz * dz - dx * dx)), barZ);
+  const P = { hipC, u, bar, shC, headDir: u.clone().add(V(0, 0.15, 0)).normalize() };
+  legs(P, hipC, u, { L: V(-0.12, L.ankleY, 0), R: V(0.12, L.ankleY, 0) }, 6, () => V(0, 0, 1));
+  arms(P, 0.25, s => V(s * 0.3, 0, -1).normalize());
+  return P;
+}
+const POSES = { squat: poseSquat, bench: poseBench, rdl: poseRdl };
+
+// ---------- scene ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 50);
+const persp = new THREE.PerspectiveCamera(26, 1, 0.05, 50);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x777780, 0.75);
+const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+sun.position.set(2.2, 4, 2.6); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow.camera, { left: -1.6, right: 1.6, top: 1.6, bottom: -1.6, near: 0.5, far: 10 });
+sun.shadow.radius = 6; sun.shadow.bias = -0.0005;
+scene.add(hemi, sun);
+
+const OUT = 0.0115; // outline width, metres
+const parts = [];
+function addPart(geo, hullGeo, opts) {
+  const mesh = new THREE.Mesh(geo); mesh.castShadow = true;
+  const hull = new THREE.Mesh(hullGeo);
+  scene.add(mesh, hull);
+  const p = Object.assign({ mesh, hull, tag: null, side: 0, gear: null }, opts);
+  parts.push(p); return p;
+}
+const cyl = (r1, r2) => new THREE.CylinderGeometry(r2, r1, 1, 24, 1, true); // r1 at A, r2 at B
+const sph = r => new THREE.SphereGeometry(r, 28, 18);
+function seg(r1, r2, opts) { return addPart(cyl(r1, r2), cyl(r1 + OUT, r2 + OUT), Object.assign({ kind: 'seg' }, opts)); }
+function ball(r, opts) { return addPart(sph(r), sph(r + OUT), Object.assign({ kind: 'ball', r }, opts)); }
+function ell(rx, ry, rz, opts) { return addPart(sph(1), sph(1), Object.assign({ kind: 'ell', radii: [rx, ry, rz] }, opts)); }
+function boxPart(w, h, dpt, opts) { return addPart(new THREE.BoxGeometry(w, h, dpt), new THREE.BoxGeometry(w + 2 * OUT, h + 2 * OUT, dpt + 2 * OUT), Object.assign({ kind: 'box' }, opts)); }
+function plate(r, t, opts) {
+  const g = new THREE.CylinderGeometry(r, r, t, 48); g.rotateZ(Math.PI / 2);
+  const h = new THREE.CylinderGeometry(r + OUT, r + OUT, t + 2 * OUT, 48); h.rotateZ(Math.PI / 2);
+  return addPart(g, h, Object.assign({ kind: 'fixed' }, opts));
+}
+
+const UP = V(0, 1, 0), tmpM = new THREE.Matrix4();
+function placeSeg(p, A, B) {
+  const d = B.clone().sub(A), len = d.length() || 1e-4;
+  for (const m of [p.mesh, p.hull]) {
+    m.position.copy(A).addScaledVector(d, 0.5);
+    m.quaternion.setFromUnitVectors(UP, d.clone().divideScalar(len));
+    m.scale.set(1, len, 1);
+  }
+}
+function placeBall(p, C) { p.mesh.position.copy(C); p.hull.position.copy(C); }
+function placeEll(p, C, x, u) {
+  const f = x.clone().cross(u).normalize();
+  tmpM.makeBasis(x, u, f);
+  const [rx, ry, rz] = p.radii;
+  for (const m of [p.mesh, p.hull]) { m.position.copy(C); m.quaternion.setFromRotationMatrix(tmpM); }
+  p.mesh.scale.set(rx, ry, rz); p.hull.scale.set(rx + OUT, ry + OUT, rz + OUT);
+}
+function placeAt(p, C) { p.mesh.position.copy(C); p.hull.position.copy(C); }
+
+// body
+const B = {
+  pelvis: ell(0.165, 0.12, 0.11, { tag: 'pelvis' }),
+  abdomen: seg(0.115, 0.13, { tag: 'trunk' }),
+  ribs: ell(0.165, 0.185, 0.115, { tag: 'chest' }),
+  neck: seg(0.045, 0.042, { tag: 'trunk' }),
+  head: ell(0.085, 0.112, 0.097, { tag: 'head' }),
+};
+for (const k of ['L', 'R']) {
+  const s = k === 'L' ? -1 : 1;
+  Object.assign(B, {
+    ['thigh' + k]: seg(0.078, 0.052, { tag: 'thigh', side: s }),
+    ['knee' + k]: ball(0.052, { tag: 'knee', side: s }),
+    ['shin' + k]: seg(0.052, 0.034, { tag: 'shin', side: s }),
+    ['ankle' + k]: ball(0.035, { tag: 'shin', side: s }),
+    ['foot' + k]: seg(0.036, 0.03, { tag: 'foot', side: s }),
+    ['heel' + k]: ball(0.036, { tag: 'foot', side: s }),
+    ['toe' + k]: ball(0.03, { tag: 'foot', side: s }),
+    ['delt' + k]: ball(0.062, { tag: 'shoulder', side: s }),
+    ['upper' + k]: seg(0.05, 0.038, { tag: 'upperarm', side: s }),
+    ['elbow' + k]: ball(0.038, { tag: 'upperarm', side: s }),
+    ['fore' + k]: seg(0.038, 0.028, { tag: 'forearm', side: s }),
+    ['hand' + k]: ball(0.036, { tag: 'forearm', side: s }),
+  });
+}
+// barbell: shaft, sleeves, collars, a 20 and a 10 a side
+const G = { shaft: seg(0.014, 0.014, { gear: 'bar' }) };
+for (const k of ['L', 'R']) {
+  const s = k === 'L' ? -1 : 1;
+  Object.assign(G, {
+    ['sleeve' + k]: seg(0.025, 0.025, { gear: 'bar', side: s }),
+    ['collar' + k]: plate(0.038, 0.03, { gear: 'bar', side: s }),
+    ['p20' + k]: plate(0.225, 0.052, { gear: 'plate', side: s }),
+    ['p10' + k]: plate(0.17, 0.038, { gear: 'plate', side: s }),
+  });
+}
+// flat bench, only shown for the bench press
+const BENCH = [
+  [boxPart(0.29, 0.065, 1.2, { gear: 'bench' }), V(0, 0.41, -0.15)],
+  [boxPart(0.07, 0.36, 0.07, { gear: 'frame' }), V(0, 0.2, -0.62)],
+  [boxPart(0.07, 0.36, 0.07, { gear: 'frame' }), V(0, 0.2, 0.32)],
+  [boxPart(0.42, 0.05, 0.07, { gear: 'frame' }), V(0, 0.025, -0.62)],
+  [boxPart(0.42, 0.05, 0.07, { gear: 'frame' }), V(0, 0.025, 0.32)],
+  [boxPart(0.06, 0.05, 0.96, { gear: 'frame' }), V(0, 0.07, -0.15)],
+];
+BENCH.forEach(([p, c]) => placeAt(p, c));
+
+// ground: a soft contact shadow for flat styles, a shadow-catching plane for clay
+const contact = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.07, depthWrite: false }));
+contact.rotation.x = -Math.PI / 2; contact.position.y = 0.001; scene.add(contact);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.ShadowMaterial({ opacity: 0.16 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+function pose(P) {
+  const x = X, u = P.u;
+  placeEll(B.pelvis, P.hipC.clone().addScaledVector(u, 0.045), x, u);
+  placeSeg(B.abdomen, P.hipC.clone().addScaledVector(u, 0.1), P.hipC.clone().addScaledVector(u, 0.27));
+  placeEll(B.ribs, P.hipC.clone().addScaledVector(u, 0.32), x, u);
+  const neckBase = P.hipC.clone().addScaledVector(u, L.trunk - 0.01);
+  const neckTop = neckBase.clone().addScaledVector(P.headDir, 0.085);
+  placeSeg(B.neck, neckBase, neckTop);
+  placeEll(B.head, neckTop.clone().addScaledVector(P.headDir, 0.095), x, P.headDir);
+  for (const k of ['L', 'R']) {
+    placeSeg(B['thigh' + k], P['hip' + k], P['knee' + k]);
+    placeBall(B['knee' + k], P['knee' + k]);
+    placeSeg(B['shin' + k], P['knee' + k], P['ankle' + k]);
+    placeBall(B['ankle' + k], P['ankle' + k]);
+    placeSeg(B['foot' + k], P['heel' + k], P['toe' + k]);
+    placeBall(B['heel' + k], P['heel' + k]); placeBall(B['toe' + k], P['toe' + k]);
+    placeBall(B['delt' + k], P['sh' + k]);
+    placeSeg(B['upper' + k], P['sh' + k], P['el' + k]);
+    placeBall(B['elbow' + k], P['el' + k]);
+    placeSeg(B['fore' + k], P['el' + k], P['wr' + k]);
+    placeBall(B['hand' + k], P['wr' + k]);
+    const s = k === 'L' ? -1 : 1, at = o => P.bar.clone().addScaledVector(X, s * o);
+    placeSeg(G['sleeve' + k], at(0.7), at(1.08));
+    placeAt(G['collar' + k], at(0.705));
+    placeAt(G['p20' + k], at(0.75));
+    placeAt(G['p10' + k], at(0.805));
+  }
+  placeSeg(G.shaft, P.bar.clone().addScaledVector(X, -0.7), P.bar.clone().addScaledVector(X, 0.7));
+  BENCH.forEach(([p]) => { p.mesh.visible = !!P.bench; p.hull.visible = !!P.bench && state.variant.hull; });
+}
+
+// ---------- styles ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function toonRamp() {
+  const data = new Uint8Array([120, 120, 120, 255, 200, 200, 200, 255, 255, 255, 255, 255]);
+  const t = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t;
+}
+const RAMP = toonRamp();
+const STYLE = {
+  line: { hull: true, camera: 'ortho', light: false },
+  silhouette: { hull: false, camera: 'ortho', light: false },
+  toon: { hull: true, camera: 'persp', light: true },
+  clay: { hull: false, camera: 'persp', light: true },
+};
+
+function applyStyle() {
+  const key = VARIANTS[state.vi].key, st = STYLE[key];
+  state.variant = st;
+  const c = n => new THREE.Color(css(n));
+  const ink = c('--fig-ink'), paper = c('--fig-paper'), far = c('--fig-far'), body = c('--fig-body');
+  const gear = c('--fig-gear'), plateC = c('--fig-plate'), work = c('--fig-work'), workFar = c('--fig-work-far');
+  renderer.setClearColor(c('--fig-stage'));
+  const worked = p => state.muscles && p.tag && EXERCISES[state.ex].work.includes(p.tag);
+  const hullMat = new THREE.MeshBasicMaterial({ color: ink, side: THREE.BackSide });
+  for (const p of parts) {
+    const isGear = !!p.gear;
+    let mat;
+    if (key === 'line') {
+      const fill = worked(p) ? workFar : paper;
+      mat = new THREE.MeshBasicMaterial({ color: isGear && p.gear === 'plate' ? paper : fill });
+    } else if (key === 'silhouette') {
+      if (isGear) {
+        const col = p.gear === 'plate' ? plateC : p.gear === 'bench' || p.gear === 'frame' ? far : gear;
+        mat = new THREE.MeshBasicMaterial({ color: col, transparent: p.gear === 'plate', opacity: p.gear === 'plate' ? 0.45 : 1, depthWrite: p.gear !== 'plate' });
+      } else mat = new THREE.MeshBasicMaterial({ color: worked(p) ? work : ink });
+    } else {
+      const col = isGear ? (p.gear === 'plate' ? plateC : p.gear === 'frame' ? gear : p.gear === 'bench' ? far : gear) : worked(p) ? work : body;
+      mat = key === 'toon'
+        ? new THREE.MeshToonMaterial({ color: col, gradientMap: RAMP })
+        : new THREE.MeshStandardMaterial({ color: col, roughness: isGear && p.gear === 'bar' ? 0.35 : 0.85, metalness: isGear && p.gear === 'bar' ? 0.6 : 0 });
+    }
+    p.mesh.material = mat; p.mesh.userData.farSide = p.side;
+    p.hull.material = hullMat; p.hull.visible = st.hull;
+    p.mesh.castShadow = key === 'clay';
+  }
+  hemi.visible = sun.visible = st.light;
+  floor.visible = key === 'clay';
+  contact.visible = key !== 'clay';
+  state.colors = { ink, far, work, workFar };
+  resize();
+}
+// silhouette: far-side limbs a lighter tone, so crossing limbs stay readable
+function shadeSides() {
+  if (VARIANTS[state.vi].key !== 'silhouette') return;
+  const camX = Math.sin(rad(state.az));
+  const { ink, far, work, workFar } = state.colors;
+  for (const p of parts) {
+    if (p.gear || !p.side) continue;
+    const isFar = p.side * camX < 0;
+    const isWork = state.muscles && EXERCISES[state.ex].work.includes(p.tag);
+    p.mesh.material.color.copy(isWork ? (isFar ? workFar : work) : (isFar ? far : ink));
+  }
+}
+
+// ---------- camera, motion, input ----------
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const state = { vi: 0, ex: 'squat', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line, colors: null };
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  const asp = w / h, fr = EXERCISES[state.ex].frame;
+  Object.assign(ortho, { left: -fr.half * asp, right: fr.half * asp, top: fr.half, bottom: -fr.half }); ortho.updateProjectionMatrix();
+  persp.aspect = asp; persp.updateProjectionMatrix();
+}
+function placeCamera(cam) {
+  const fr = EXERCISES[state.ex].frame;
+  const dist = cam.isPerspectiveCamera ? fr.half / Math.tan(rad(persp.fov / 2)) : 8;
+  const az = rad(state.az), el = rad(state.el);
+  cam.position.set(fr.target.x + dist * Math.cos(el) * Math.sin(az), fr.target.y + dist * Math.sin(el), fr.target.z + dist * Math.cos(el) * Math.cos(az));
+  cam.lookAt(fr.target);
+}
+function phase(now) {
+  const ex = EXERCISES[state.ex];
+  if (state.motion === 'still') return 1;
+  const t = (now - state.t0) / 1000;
+  if (state.motion === 'two') return Math.floor(t / 1.2) % 2;
+  const [h, down, hb, up] = ex.timing, total = h + down + hb + up, m = t % total;
+  if (m < h) return 0;
+  if (m < h + down) return ease((m - h) / down);
+  if (m < h + down + hb) return 1;
+  return 1 - ease((m - h - down - hb) / up);
+}
+function frame(now) {
+  const P = POSES[state.ex](phase(now));
+  pose(P);
+  const ex = EXERCISES[state.ex];
+  contact.scale.set(state.ex === 'bench' ? 0.42 : 0.55, state.ex === 'bench' ? 0.85 : 0.4, 1);
+  contact.position.set(0, 0.001, state.ex === 'bench' ? 0.0 : 0.02);
+  shadeSides();
+  const cam = state.variant.camera === 'ortho' ? ortho : persp;
+  placeCamera(cam);
+  renderer.render(scene, cam);
+  requestAnimationFrame(frame);
+}
+
+let drag = null, lastTap = 0;
+stage.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, az: state.az, el: state.el }; stage.setPointerCapture(e.pointerId);
+  const now = performance.now(); if (now - lastTap < 300) [state.az, state.el] = EXERCISES[state.ex].view; lastTap = now; });
+stage.addEventListener('pointermove', e => { if (!drag) return; state.az = drag.az - (e.clientX - drag.x) * 0.5; state.el = Math.max(-4, Math.min(45, drag.el + (e.clientY - drag.y) * 0.25)); });
+stage.addEventListener('pointerup', () => { drag = null; });
+stage.addEventListener('pointercancel', () => { drag = null; });
+
+function syncUi() {
+  const ex = EXERCISES[state.ex];
+  document.getElementById('ex-name').textContent = ex.name;
+  document.getElementById('ex-meta').textContent = ex.meta;
+  document.getElementById('ex-note').textContent = ex.note;
+  const a = document.getElementById('ex-video');
+  a.href = ex.video || 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ex.name + ' technique');
+  a.querySelector('span').textContent = ex.label;
+  a.querySelector('svg').innerHTML = ex.video ? '<path d="M8 5v14l11-7z"/>' : '<path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"/>';
+  document.querySelectorAll('[data-ex]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ex === state.ex));
+  document.querySelectorAll('[data-mo]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mo === state.motion));
+  document.querySelectorAll('[data-mu]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.mu === 'on') === state.muscles));
+  const v = VARIANTS[state.vi];
+  document.getElementById('variant-label').innerHTML = `${'ABCD'[state.vi]} · ${v.name}<small>${v.sub}</small>`;
+  applyStyle();
+}
+document.querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => { state.ex = b.dataset.ex; [state.az, state.el] = EXERCISES[state.ex].view; state.t0 = performance.now(); syncUi(); }));
+document.querySelectorAll('[data-mo]').forEach(b => b.addEventListener('click', () => { state.motion = b.dataset.mo; state.t0 = performance.now(); syncUi(); }));
+document.querySelectorAll('[data-mu]').forEach(b => b.addEventListener('click', () => { state.muscles = b.dataset.mu === 'on'; syncUi(); }));
+
+function setVariant(i) {
+  state.vi = (i + VARIANTS.length) % VARIANTS.length;
+  const hash = '#' + VARIANTS[state.vi].key;
+  if (location.hash !== hash) history.replaceState(null, '', hash);
+  syncUi();
+}
+function fromHash() { const i = VARIANTS.findIndex(v => '#' + v.key === location.hash); return i < 0 ? 0 : i; }
+document.getElementById('prev').addEventListener('click', () => setVariant(state.vi - 1));
+document.getElementById('next').addEventListener('click', () => setVariant(state.vi + 1));
+addEventListener('keydown', e => {
+  if (e.target.closest('input, textarea, [contenteditable]')) return;
+  if (e.key === 'ArrowLeft') setVariant(state.vi - 1);
+  if (e.key === 'ArrowRight') setVariant(state.vi + 1);
+});
+addEventListener('hashchange', () => { state.vi = fromHash(); syncUi(); });
+new ResizeObserver(resize).observe(stage);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyStyle);
+new MutationObserver(applyStyle).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+state.vi = fromHash();
+syncUi();
+requestAnimationFrame(frame);
+})();
+</script>
