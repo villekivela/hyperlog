@@ -56,7 +56,7 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
 - **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
   (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
 - **Hyperlog's own theme:** Ink and violet, light and dark, through the whole tree; nothing hard-codes
-  a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a solid fill = logged).
+  a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a tinted badge = logged, the number in the chip's colour).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
 - **Plates are drawn, never written out**: one component, a drawing of one side of the bar with a

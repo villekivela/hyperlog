@@ -18,7 +18,11 @@ class FixedColoursTest {
         for (rir in 0..4) {
             add("RIR $rir" to rirColor(rir))
             add("RIR $rir chip" to rirChipColor(rir, dark = false))
-            add("RIR $rir badge" to rirBadgeColor(rir))
+            for (dark in listOf(false, true)) {
+                add("RIR $rir number" to rirNumberColor(rir, dark))
+                add("RIR $rir badge" to rirBadgeColor(rir, dark))
+                add("RIR $rir badge edge" to rirBadgeEdge(rir, dark))
+            }
         }
         Direction.entries.forEach { add("trend $it" to it.color) }
         listOf(25.0, 20.0, 15.0, 10.0, 5.0, 1.25).forEach { add("$it kg plate" to plateColor(it)) }
