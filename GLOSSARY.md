@@ -121,6 +121,9 @@ What an exercise's movement does, such as vertical pull or knee flexion. Swaps l
 **Grip demand**:
 How hard an exercise works the hands: high, low or none. The coach's prompt shares it, so Claude can keep sore hands off grip work.
 
+**Adjustable bench**:
+An exercise done on a bench whose backrest is set to an angle, such as an incline DB press or a seated DB shoulder press. Its sessions keep the bench angle. Not a flat bench, a bench used as a prop, or a machine's own seat.
+
 **Technique note**:
 An exercise's own cue on how to do it, kept in the library. A program's slot note is the program's cue for that slot.
 _Avoid_: Tip, instruction
@@ -136,6 +139,10 @@ _Avoid_: Workout (that's the plan, not the record), log, entry
 
 **Logged set**:
 One set as it was done: weight, full reps, partial reps and RIR, plus any drops or mini-sets.
+
+**Bench angle**:
+The backrest's angle from flat, in whole degrees, that an adjustable-bench exercise was done at in a session. Measured with the phone laid on the backrest, or typed. Last time's angle is the target; progression ignores it.
+_Avoid_: Incline (that's one kind of exercise), seat angle
 
 **Warm-up set**:
 A lighter set before the work sets, generated from the first work set's weight. It doesn't count toward volume or progression.
