@@ -35,12 +35,12 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.history.LiftGoal
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import com.hyperlog.app.ui.theme.TextEdge
 
 // Lift goals (docs/design/history.md, Lift goals): the estimate leads, the goal follows it in ink.
 
@@ -109,7 +109,7 @@ internal fun GoalEditor(
     var picking by rememberSaveable { mutableStateOf(false) }
     val kg = text.replace(',', '.').toDoubleOrNull()?.takeIf { it in 1.0..1000.0 }
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().padding(start = Margin, end = 8.dp, bottom = 16.dp)) {
+    Column(Modifier.fillMaxWidth().padding(start = TextEdge, end = 8.dp, bottom = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = text,

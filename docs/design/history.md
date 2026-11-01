@@ -2,7 +2,7 @@
 
 Ticket #19 brings History: the session list (taking over #15's Past sessions), each exercise's top
 sets and estimate over time, weekly sets per muscle, and the bodyweight log. It extends
-`logging-screen.md` (tokens, type, the 24 dp text edge) and `program-and-today.md`. Screens:
+`logging-screen.md` (tokens, type), the 28 dp text edge in `designer-brief.md` and `program-and-today.md`. Screens:
 `history-progress.png`, `history-progress-exercises.png`, `past-exercise.png` (phone, dark;
 `phone-light-*` versions and `phone-dark-past-session.png` from the emulator). A past session's
 day name is its headline (headlineSmall, two lines at most) under a top bar holding only Back,

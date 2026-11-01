@@ -119,6 +119,8 @@ import com.hyperlog.app.ui.program.techniqueText
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlinx.coroutines.delay
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.CardMargin
 
 /**
  * The logging screen (docs/design/logging-screen.md): one exercise at a time as set rows, the
@@ -728,12 +730,12 @@ private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
         Modifier.fillMaxWidth()
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(MaterialTheme.colorScheme.primaryContainer).navigationBarsPadding()
-            .padding(start = Margin, end = 16.dp, top = 20.dp, bottom = 20.dp)
+            .padding(start = Margin, end = 16.dp, top = 24.dp, bottom = 24.dp)
             .testTag(DayDoneTag),
     ) {
         if (records.isNotEmpty()) {
             // A long list scrolls inside the strip, which never grows past the pad it replaces.
-            RecordLines(records, Modifier.padding(bottom = 20.dp).heightIn(max = 288.dp).verticalScroll(rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
+            RecordLines(records, Modifier.padding(bottom = 16.dp).heightIn(max = 288.dp).verticalScroll(rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
@@ -947,14 +949,14 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
     Column(modifier.fillMaxWidth()) {
         Text(
             interFigures(title),
-            Modifier.padding(start = Margin, end = Margin, top = 16.dp, bottom = 16.dp),
+            Modifier.padding(start = TextEdge, end = TextEdge, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
         )
         SearchField(
             query,
             onChange = { query = it },
             placeholder = stringResource(R.string.session_search),
-            modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+            modifier = Modifier.padding(horizontal = CardMargin).padding(bottom = 8.dp),
         )
         val listState = rememberLazyListState()
         LaunchedEffect(query) { listState.scrollToItem(0) }

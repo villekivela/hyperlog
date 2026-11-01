@@ -120,7 +120,7 @@ time-off line:
 
 ```
  Today                               ▦  ⚙
- [system_update]  Hyperlog 0.2.0 is available   ✕   ← symbol in primary at the 24 dp margin;
+ [system_update]  Hyperlog 0.2.0 is available   ✕   ← symbol in primary at the 28 dp margin;
                   Tap to update                       bodyLarge over bodyMedium (onSurfaceVariant)
  Week 3 · Build
 ```
@@ -204,7 +204,7 @@ technique note with `sticky_note_2`; **Technique video**.
 
 **Why-line (#8).** Under the exercise name, above the column heads: why the active set's weight
 is what progression suggests. One bodyMedium line in onSurfaceVariant, two at most, ellipsized;
-start at the 24 dp margin, 8 dp below it. It leads with an 18 dp symbol in a 20 dp box aligned to
+start at the 28 dp margin, 8 dp below it. It leads with an 18 dp symbol in a 20 dp box aligned to
 the first line: `trending_up` (primary) for a rung up or a heavier next set, `trending_flat` for
 same weight, `trending_down` for a step down. An estimated weight (`calculate`) and "progress isn't
 possible" (`block`) are tertiary, symbol and text, so the one weight to check stands out. A set
@@ -302,7 +302,7 @@ Layout (build pass):
 - **Header, training days and Changes are one segmented group**: the title card on top, the
   training days row (`calendar_today`) and the Changes row joined under it (4 dp joins), 16 dp
   above the block group. The Training days sheet: title, one line on what the days do, the seven
-  round toggles across the sheet's 24 dp text edges, and, with two or more gyms, a
+  round toggles across the sheet's 28 dp text edges, and, with two or more gyms, a
   `surfaceContainerHighest` group with a row per day that's on (the day, then its gym as a text
   button with a menu: the gyms, then Any gym), then Done. **Next** is primary here as on the day head,
   so the one word means the same everywhere; the day sits in a 56 dp column, and "Program
@@ -539,7 +539,7 @@ Principles:
   the app holds any program.
 
 Tokens: rows as `SegmentedRow` (72 dp, 40 dp circle); sheet groups `Tones.sheetCard`; the sheet's
-button `ButtonDefaults.MediumContainerHeight`, full width at the 24 dp edges, with a 24 dp symbol
+button `ButtonDefaults.MediumContainerHeight`, full width at the 28 dp edges, with a 24 dp symbol
 (`play_arrow` Resume, `replay` Run again) and titleMedium; strip buttons 16 dp side padding; strip
 padding 12 dp start, 16 dp end. Saved page: the review's card, its `Saved 24 Oct` line labelLarge
 `onSurfaceVariant`, `BottomActions` with Start program at the end. Today: the offer's own space
@@ -637,7 +637,7 @@ Principles:
 
 Tokens: missed marker 28 × 20 dp, 1.5 dp `outline`, labelMedium Bold `onSurfaceVariant` with a
 line through; `MissedAlpha` 0.6 on content; Train it today a TextButton 8 dp under the hero, text
-on the 24 dp edge; notices 72 dp min, 8 dp apart, 8 dp over the hero; `Easy week` tag as Deload's
+on the 28 dp edge; notices 72 dp min, 8 dp apart, 8 dp over the hero; `Easy week` tag as Deload's
 (24 dp `tertiaryContainer` pill, `spa`, 8 dp under the title); sheet rows 56 dp, 16 dp start, 8 dp
 end.
 

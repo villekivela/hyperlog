@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.CardPadding
 
 // The grouped list of Android 16's Settings, shared by every list screen (Today's exercises,
 // Settings, Gyms and equipment, the library, Program, past sessions): each row its own tile,
@@ -93,7 +94,7 @@ fun SegmentedRow(
 ) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = CardPadding, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(

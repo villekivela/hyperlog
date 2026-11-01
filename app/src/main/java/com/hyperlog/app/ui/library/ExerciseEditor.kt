@@ -69,9 +69,9 @@ import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.library.TechniqueVideo
-import com.hyperlog.app.ui.session.Margin
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * Adds or edits one exercise: every field on one page. Save is enabled once the exercise has a
@@ -139,7 +139,7 @@ fun ExerciseEditor(
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()).imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = Margin),
+                .verticalScroll(rememberScrollState()).padding(horizontal = TextEdge),
         ) {
             OutlinedTextField(
                 name,
@@ -246,7 +246,7 @@ fun ExerciseEditor(
                     )
                     Spacer(Modifier.height(8.dp))
                 }
-                // The text button's own padding would push its label off the 24 dp edge.
+                // The text button's own padding would push its label off the TextEdge.
                 TextButton(onClick = { onSetHidden(!exercise.hidden) }, Modifier.offset(x = (-12).dp)) {
                     SymbolIcon(if (exercise.hidden) Symbol.Visibility else Symbol.VisibilityOff, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))

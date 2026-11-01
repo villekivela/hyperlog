@@ -103,11 +103,10 @@ import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
 import kotlinx.coroutines.launch
+import com.hyperlog.app.ui.theme.TextEdge
 
-private val Margin = 24.dp
-
-/** The bottom strip's padding: a text button first keeps its label on the 24 dp edge. */
-private val StripPadding = PaddingValues(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+/** The bottom strip's padding: a text button first keeps its label on the [TextEdge]. */
+private val StripPadding = PaddingValues(start = TextEdge - 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
 
 /** Ease back in's words end so (`coach_ease_back_words`). */
 /** A tile on the first step: its label and symbol. */
@@ -220,7 +219,7 @@ private fun Tiles(
         containerColor = Tones.screen,
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
-            TopAppBar(colors = hyperlogTopBarColors(), title = { Text(stringResource(R.string.coach_title), Modifier.padding(start = 8.dp)) })
+            TopAppBar(colors = hyperlogTopBarColors(), title = { Text(stringResource(R.string.coach_title), Modifier.padding(start = TextEdge - 16.dp)) })
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = GroupGap)) {
@@ -238,12 +237,12 @@ private fun Tiles(
             }
             Text(
                 stringResource(R.string.checkin_question),
-                Modifier.padding(horizontal = Margin).padding(top = 8.dp),
+                Modifier.padding(horizontal = TextEdge).padding(top = 8.dp),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
                 stringResource(R.string.checkin_intro),
-                Modifier.padding(horizontal = Margin).padding(top = 4.dp, bottom = GroupGap),
+                Modifier.padding(horizontal = TextEdge).padding(top = 4.dp, bottom = GroupGap),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -280,17 +279,19 @@ private fun TileGrid(onTile: (Tile) -> Unit) {
 
 private val TileOuter = 32.dp
 private val TileInner = 8.dp
+private val TileHeight = 136.dp
 
 @Composable
 private fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(
-        modifier.heightIn(min = 124.dp)
+        // One height for every tile, two lines of label included, so the grid stays even.
+        modifier.heightIn(min = TileHeight)
             .clip(shape)
             .background(Tones.card)
             .clickable(onClick = onClick)
             .semantics(mergeDescendants = true) { role = Role.Button }
-            .padding(16.dp),
+            .padding(CardPadding),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Box(Modifier.size(40.dp).clip(CircleShape).background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
@@ -497,13 +498,13 @@ private fun Failure(failure: CheckInFailure, pasteErrors: List<String>?, onCopyP
         ShapedSymbol(symbol)
         Text(
             stringResource(head),
-            Modifier.padding(horizontal = Margin).padding(top = 24.dp),
+            Modifier.padding(horizontal = TextEdge).padding(top = 24.dp),
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
         )
         Text(
             stringResource(body),
-            Modifier.padding(horizontal = Margin).padding(top = 8.dp),
+            Modifier.padding(horizontal = TextEdge).padding(top = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -511,7 +512,7 @@ private fun Failure(failure: CheckInFailure, pasteErrors: List<String>?, onCopyP
         if (failure == CheckInFailure.SpendLimit) {
             Text(
                 stringResource(R.string.checkin_ask_claude_body),
-                Modifier.padding(horizontal = Margin).padding(top = 8.dp),
+                Modifier.padding(horizontal = TextEdge).padding(top = 8.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -591,7 +592,7 @@ private fun Question(
     val marks = lowest.toMap()
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = GroupGap)) {
-        Text(interFigures(step.question), Modifier.padding(horizontal = Margin).padding(bottom = 24.dp), style = MaterialTheme.typography.headlineMedium)
+        Text(interFigures(step.question), Modifier.padding(horizontal = TextEdge).padding(bottom = 24.dp), style = MaterialTheme.typography.headlineMedium)
         step.answers.forEachIndexed { i, answer ->
             val group = MuscleGroup.entries.firstOrNull { it.label.equals(answer, ignoreCase = true) }?.label
             val label = group?.let { g -> marks[g]?.let { stringResource(R.string.coach_focus_marked, answer, setsText(it)) } } ?: answer

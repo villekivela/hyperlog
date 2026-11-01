@@ -71,8 +71,7 @@ import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
-private val Margin = 24.dp
+import com.hyperlog.app.ui.theme.TextEdge
 
 /** The words a tile puts in Ask Claude's field to edit. */
 internal val TileAskWords = mapOf(
@@ -187,7 +186,7 @@ fun AskClaudeScreen(
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = GroupGap)) {
             Text(
                 stringResource(R.string.checkin_ask_intro),
-                Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = GroupGap),
+                Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = GroupGap),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -218,7 +217,7 @@ internal fun InForce(
 ) {
     SegmentedRow(record.change.summary, runsText(record, program), Symbol.Tune)
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = CardPadding, bottom = CardPadding),
+        Modifier.fillMaxWidth().padding(start = CardPadding, end = CardPadding, bottom = CardPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -285,8 +284,8 @@ private fun BottomBar(
             }
         }
         Row(
-            // A text button's label, not its edge, lines up with the 24 dp margin.
-            Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = Margin - 12.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            // A text button's label, not its edge, lines up with the TextEdge.
+            Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = TextEdge - 12.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val ask = @Composable { Text(stringResource(R.string.coach_ask)) }
@@ -319,7 +318,7 @@ private fun BottomBar(
 
 /** The problems of a reply pasted back that Hyperlog can't use, with a button to copy them for Claude. */
 @Composable
-internal fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit, edge: androidx.compose.ui.unit.Dp = Margin) {
+internal fun PasteProblems(errors: List<String>, onCopy: (List<String>) -> Unit, edge: androidx.compose.ui.unit.Dp = TextEdge) {
     val cs = MaterialTheme.colorScheme
     val copyProblem = AskClaude.copyProblem(errors)
     // A failed paste scrolls its problems into view.

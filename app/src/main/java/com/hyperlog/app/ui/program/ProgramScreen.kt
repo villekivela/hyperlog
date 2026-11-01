@@ -76,8 +76,7 @@ import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-
-private val Margin = 24.dp
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * The program: its blocks and weeks, with where you are. The program runs as a sequence, so
@@ -175,8 +174,8 @@ fun ProgramScreen(
         topBar = {
             TopAppBar(
                 colors = hyperlogTopBarColors(),
-                // The bar sets titles 16 dp in; the screen's text edge is 24 dp.
-                title = { Text(stringResource(R.string.program_title), Modifier.padding(start = 8.dp)) },
+                // The bar sets titles 16 dp in; the screen's text edge is TextEdge.
+                title = { Text(stringResource(R.string.program_title), Modifier.padding(start = TextEdge - 16.dp)) },
                 // A destination of the navigation bar: no back arrow (back goes to Today); a rejected
                 // file's problems close with their own button.
                 actions = {
@@ -587,7 +586,7 @@ internal fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: ()
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             item {
-                Column(Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 16.dp)) {
+                Column(Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp)) {
                     Text(stringResource(R.string.program_not_imported), style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -597,7 +596,7 @@ internal fun ImportErrors(errors: List<String>, onClose: () -> Unit, onRetry: ()
                     )
                 }
             }
-            items(errors) { error -> Problem(error, Modifier.padding(horizontal = Margin)) }
+            items(errors) { error -> Problem(error, Modifier.padding(horizontal = TextEdge)) }
         }
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 16.dp),

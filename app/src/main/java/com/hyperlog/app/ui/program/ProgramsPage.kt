@@ -49,6 +49,7 @@ import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
 import java.time.Instant
 import java.time.ZoneId
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * Program → ⋮ → Programs (SPEC, Program → Programs): every program the app holds, newest first,
@@ -208,7 +209,7 @@ private fun ProgramSheet(p: ListedProgram, onRunAgain: () -> Unit, onResume: () 
         is ListedProgram.Status.Running -> s.finished
     }
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
-        Column(Modifier.padding(horizontal = 24.dp)) {
+        Column(Modifier.padding(horizontal = TextEdge)) {
             Text(interFigures(p.title), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(4.dp))
             Text(

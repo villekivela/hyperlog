@@ -38,6 +38,7 @@ import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
+import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * The end of a session: every exercise with its sets, `25 × 10 @ 2`. With [onOpen] an exercise
@@ -51,8 +52,8 @@ fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: ()
         Column(Modifier.statusBarsPadding()) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) {
                 // The end of a session is the one moment worth a flourish: the shaped check.
-                ShapedSymbol(Symbol.CheckCircle, Modifier.padding(horizontal = Margin).padding(top = 8.dp, bottom = 16.dp), size = 64.dp)
-                Text(stringResource(R.string.done_title), Modifier.padding(horizontal = Margin), style = MaterialTheme.typography.headlineMedium)
+                ShapedSymbol(Symbol.CheckCircle, Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp), size = 64.dp)
+                Text(stringResource(R.string.done_title), Modifier.padding(horizontal = TextEdge), style = MaterialTheme.typography.headlineMedium)
                 val minutes = ((summary.finishedAt - summary.startedAt) / 60_000.0).roundToInt()
                 Text(
                     stringResource(
@@ -60,7 +61,7 @@ fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: ()
                         DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(summary.startedAt)),
                         minutes,
                     ),
-                    Modifier.padding(horizontal = Margin),
+                    Modifier.padding(horizontal = TextEdge),
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                 )

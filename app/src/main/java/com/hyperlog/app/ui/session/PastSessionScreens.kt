@@ -53,6 +53,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.hyperlog.app.ui.theme.TextEdge
 
 // Past sessions (SPEC, Past sessions are editable): the list, a session's summary, and an
 // exercise's table where any logged row can be corrected. History (#19) hosts the list.
@@ -73,7 +74,7 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
             item {
                 Text(
                     stringResource(R.string.past_empty),
-                    Modifier.padding(horizontal = Margin, vertical = 16.dp),
+                    Modifier.padding(horizontal = TextEdge, vertical = 16.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     color = cs.onSurfaceVariant,
                 )
@@ -123,8 +124,8 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
         Segment(i, exercises.size, onClick = onOpen?.let { { it(i) } }) {
         Row(
             Modifier.fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .padding(start = CardPadding, end = 12.dp, top = 10.dp, bottom = 10.dp),
+                .heightIn(min = 72.dp)
+                .padding(start = CardPadding, end = 12.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -167,7 +168,7 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
             item {
                 Text(
                     interFigures(session.title ?: stringResource(R.string.past_ad_hoc)),
-                    Modifier.padding(horizontal = Margin).padding(bottom = 8.dp).semantics { heading() },
+                    Modifier.padding(horizontal = TextEdge).padding(bottom = 8.dp).semantics { heading() },
                     style = MaterialTheme.typography.headlineSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -179,7 +180,7 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
                         stringResource(R.string.past_minutes, ((session.finishedAt - session.startedAt) / 60_000.0).roundToInt()),
                         session.gym,
                     ).joinToString(" · "),
-                    Modifier.padding(horizontal = Margin),
+                    Modifier.padding(horizontal = TextEdge),
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
                 )

@@ -69,8 +69,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.hyperlog.app.ui.theme.TextEdge
 
-private val Margin = 24.dp
 private val LabelColumn = 40.dp
 private val HeadColumn = 56.dp
 
@@ -192,7 +192,7 @@ fun ChangeReviewScreen(
                 item {
                     Text(
                         stringResource(R.string.change_nothing),
-                        Modifier.padding(horizontal = Margin, vertical = 8.dp),
+                        Modifier.padding(horizontal = TextEdge, vertical = 8.dp),
                         style = MaterialTheme.typography.bodyLarge,
                         color = cs.onSurfaceVariant,
                     )
@@ -272,7 +272,7 @@ private fun DayHead(day: DayDiff) {
     val cs = MaterialTheme.colorScheme
     val head = stringResource(R.string.change_day_head, day.day.position.week, day.day.day.name)
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = Margin).padding(top = 24.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = TextEdge).padding(top = 24.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Text(

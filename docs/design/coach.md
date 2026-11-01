@@ -36,7 +36,7 @@ review; nothing new is invented for them.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Attach | a lone card 16 dp under the answers, 64 dp at least, 12 dp vertical padding: `attach_file` 24 dp primary at the 24 dp edge, "Attach a spreadsheet, PDF or photo" titleMedium, 16 dp after the symbol | Opens the system picker for an .xlsx, a .csv, a PDF or an image |
+| Attach | a lone card 16 dp under the answers, 64 dp at least, 12 dp vertical padding: `attach_file` 24 dp primary at the 28 dp edge, "Attach a spreadsheet, PDF or photo" titleMedium, 16 dp after the symbol | Opens the system picker for an .xlsx, a .csv, a PDF or an image |
 | Attach note | the card's second line, bodyMedium onSurfaceVariant, 4 dp under the title; with a note the symbol tops the title's line instead of centring | "Reading the file…", too large, unreadable |
 | Reading | `LoadingIndicator` 32 dp primary in the symbol's 24 dp box; the card isn't clickable | While the file is read |
 | Refused | `warning` 24 dp in error in the symbol's place; tapping attaches again | Too large, unreadable |
@@ -163,10 +163,10 @@ thing to fill in.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Intro | bodyLarge, onSurfaceVariant, 24 dp edge, 8 dp under the bar, 16 dp over the card | The one line under the title |
+| Intro | bodyLarge, onSurfaceVariant, 28 dp edge, 8 dp under the bar, 16 dp over the card | The one line under the title |
 | Words | `OutlinedTextField` in a `SectionCard` (Tones.card, 32 dp radius, 16 dp padding), label "In your words", 3 lines at least | The tile's sentence, to edit |
 | Bottom bar | Tones.bar strip, 28 dp top corners, 16 dp padding, through the gesture area | Paste reply, Ask Claude |
-| Next step | filled Button at the end of the bar; the other is a text button whose label sits on the 24 dp edge | Ask Claude, then Paste reply, then Review |
+| Next step | filled Button at the end of the bar; the other is a text button whose label sits on the 28 dp edge | Ask Claude, then Paste reply, then Review |
 | Reply ready | primaryContainer card, 16 dp radius, inside the bar over its buttons, 12 dp under the strip's top: `check_circle` 24 dp, titleMedium "Claude's reply is ready", filled **Review** | The one accent of the screen |
 | Paste problems | titleMedium error "Not a reply Hyperlog can use", count line, each problem as program import shows it, copy button for Claude | Under the card, scrolled into view |
 
@@ -244,17 +244,17 @@ Ask Claude above.
 | Token | Value | Use |
 | --- | --- | --- |
 | Tile grid | 2 columns, 4 dp apart both ways, 12 dp from the screen edge; the group's four outer corners 32 dp, every other corner 8 dp (`segmentShape` applied to the grid) | The eight tiles, in SPEC's order, row by row |
-| Tile | Tones.card, 124 dp tall at least (so every row is the same height whether its names take one line or two), 16 dp padding; the 40 dp secondaryContainer circle top-left, the name titleMedium at the bottom, 8 dp under it, two lines | One situation; the whole tile taps |
+| Tile | Tones.card, 136 dp tall at least (so every row is the same height whether its names take one line or two), 16 dp padding (`CardPadding`); the 40 dp secondaryContainer circle top-left, the name titleMedium at the bottom, 8 dp under it, two lines | One situation; the whole tile taps |
 | In-force line | a lone `Segment` with `SegmentedRow`: `tune`, `1 change in force` over the newest summary, chevron | Opens Changes in force |
-| Question head | "What's going on?" headlineSmall on the 24 dp edge, the intro bodyMedium onSurfaceVariant, 16 dp to the tiles | Tiles step |
-| Question | headlineMedium, 24 dp edge, 8 dp under the bar, 24 dp over the answers | Claude's question |
-| Answer row | a segment of a group, 72 dp at least, titleMedium on the 24 dp edge, no symbol or chevron; a muscle group's mark joins it (`Back · 4 sets`), the mark in onSurfaceVariant at regular weight | One answer; tapping it sends it |
-| Type my own | a lone card 16 dp under the answers, 64 dp: `keyboard` 24 dp onSurfaceVariant at the 24 dp edge, "Type my own" bodyLarge onSurfaceVariant | Closed |
+| Question head | "What's going on?" headlineSmall on the 28 dp edge, the intro bodyMedium onSurfaceVariant, 16 dp to the tiles | Tiles step |
+| Question | headlineMedium, 28 dp edge, 8 dp under the bar, 24 dp over the answers | Claude's question |
+| Answer row | a segment of a group, 72 dp at least, titleMedium on the 28 dp edge, no symbol or chevron; a muscle group's mark joins it (`Back · 4 sets`), the mark in onSurfaceVariant at regular weight | One answer; tapping it sends it |
+| Type my own | a lone card 16 dp under the answers, 64 dp: `keyboard` 24 dp onSurfaceVariant at the 28 dp edge, "Type my own" bodyLarge onSurfaceVariant | Closed |
 | Own answer | the same card holds a borderless text field (placeholder "Your answer") and a 48 dp filled icon button, `arrow_upward`, "Send", at the end, 8 dp from the card's edge | Open; Send disabled while blank |
 | Thinking | `LoadingIndicator` 96 dp in primary, "Thinking…" bodyLarge onSurfaceVariant 16 dp under it, a little above the middle | While a call runs, and until a review opens |
-| Claude's words | a `SectionCard`, bodyLarge on the 24 dp edge, 16 dp top and bottom padding | The words ending |
+| Claude's words | a `SectionCard`, bodyLarge on the 28 dp edge, 16 dp top and bottom padding | The words ending |
 | Problems | a `SectionCard`: `warning` 24 dp and titleMedium in error, the line under it bodyMedium onSurfaceVariant, then each problem (path over message) | The reply Claude couldn't fix |
-| Failure | `ShapedSymbol` 72 dp (`cable` no connection, `key` key refused, `toll` spend limit, `block` declined), titleLarge, bodyMedium onSurfaceVariant, centred on the 24 dp edges, 48 dp under the bar | Each failure |
+| Failure | `ShapedSymbol` 72 dp (`cable` no connection, `key` key refused, `toll` spend limit, `block` declined), titleLarge, bodyMedium onSurfaceVariant, centred on the 28 dp edges, 48 dp under the bar | Each failure |
 | Transcript | in its card: "The check-in" labelLarge primary; Claude's questions bodyMedium onSurfaceVariant; your words bodyLarge after `subdirectory_arrow_right` 18 dp primary, 4 dp under the question; 12 dp between pairs | Under a Change in force, in Program → Changes' dialog |
 | Bottom strip | `BottomActions` (Tones.bar, 28 dp top corners) | Tell me more / **Done**; **Try again**; Ask Claude / **Try again**; **Ask Claude**; Ask Claude / **Paste reply** |
 

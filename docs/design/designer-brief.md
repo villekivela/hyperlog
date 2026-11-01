@@ -53,8 +53,12 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   don't change it.
 - **Material Symbols (Rounded)** for every symbol; the filled style only for a selected navigation
   item.
-- **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Text keeps a 24 dp edge
-  (12 dp card margin plus 12 dp card padding). Columns, baselines and left edges align.
+- **An 8 dp grid** with 4 dp half steps for all spacing, sizes and radii. Every card pads an even
+  16 dp (`CardPadding`) inside its 12 dp margin, so content starts on one 28 dp edge (`TextEdge`):
+  text in cards, a row's symbol circle, top bar titles, section heads, intros and sheet titles
+  (owner, 2026-11-01, #113). A text button's label, not its edge, sits on it; a filled button's
+  edge does. The session screen alone keeps a 24 dp margin for its flat set table. Columns,
+  baselines and left edges align.
 - **Hyperlog's own theme:** Graphite, light and dark, through the whole tree; nothing hard-codes
   a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a tinted badge = logged, the number in the chip's colour).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
