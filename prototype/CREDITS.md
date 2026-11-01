@@ -9,5 +9,9 @@ python3 slim_gltf.py "Superhero_Male_FullBody.gltf" "Sphere.005_Retopology.004" 
 python3 slim_gltf.py "Superhero_Male_FullBody.gltf" "Sphere.005_Retopology.004" figure-smooth.glb 100
 ```
 
-`figure-smooth.glb` is the same body after 100 Taubin smoothing passes, which iron out the muscles
-and the face.
+`figure-lowpoly.glb` is `figure.glb` cut to 722 triangles with gltfpack 1.3.0, which keeps the
+skin weights:
+
+```sh
+gltfpack -i figure.glb -o figure-lowpoly.glb -si 0.06 -sp -sa -noq -kn
+```

@@ -78,7 +78,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 </style>
 
 <div class="wrap">
-  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet: Quaternius's CC0 base character with its face, hair and textures stripped, posed by code. Smooth irons out its muscles and face. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
+  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet: Quaternius's CC0 base character with its face, hair and textures stripped, posed by code. Low-poly is the same body cut to about 720 triangles and flat-shaded, so the fingers merge into mittens. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
 
   <section class="sheet" aria-label="Exercise sheet">
     <div class="handle"></div>
@@ -99,8 +99,8 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
       <button class="seg" id="ex-rdl" data-ex="rdl">RDL</button>
     </div>
     <div class="row" role="group" aria-label="Body"><span>Body</span>
+      <button class="seg" id="body-lowpoly" data-body="lowpoly">Low-poly</button>
       <button class="seg" id="body-detailed" data-body="detailed">Detailed</button>
-      <button class="seg" id="body-smooth" data-body="smooth">Smooth</button>
     </div>
     <div class="row" role="group" aria-label="Motion"><span>Motion</span>
       <button class="seg" id="mo-loop" data-mo="loop">Loop</button>
@@ -123,7 +123,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-const FIGURES = { detailed: 'figure.glb', smooth: 'figure-smooth.glb' };
+const FIGURES = { detailed: 'figure.glb', lowpoly: 'figure-lowpoly.glb' };
 (() => {
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const rad = d => d * Math.PI / 180;
@@ -470,7 +470,7 @@ function applyStyle() {
     p.mesh.castShadow = key === 'clay';
   }
   if (rig.ready) {
-    const opts = { color: 0xffffff, vertexColors: true, skinning: true };
+    const opts = { color: 0xffffff, vertexColors: true, skinning: true, flatShading: state.body === 'lowpoly' };
     rig.mesh.material = key === 'line' || key === 'silhouette' ? new THREE.MeshBasicMaterial(opts)
       : key === 'toon' ? new THREE.MeshToonMaterial(Object.assign(opts, { gradientMap: RAMP }))
       : new THREE.MeshStandardMaterial(Object.assign(opts, { roughness: 0.8 }));
@@ -486,7 +486,7 @@ function applyStyle() {
 
 // ---------- camera, motion, input ----------
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state = { vi: 0, ex: 'squat', body: 'detailed', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
+const state = { vi: 0, ex: 'squat', body: 'lowpoly', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
