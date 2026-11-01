@@ -5,8 +5,9 @@
 <style>
 /* PROTOTYPE, throwaway. Question: how could a low-detail 3D figure look in Hyperlog's exercise sheet?
    One phone-width exercise sheet in the Graphite theme, four figure styles switched from the bar at the
-   bottom (← → keys too). The figure is Quaternius's Universal Base Characters male (CC0), stripped to
-   its body mesh and skeleton (figure.glb), its bones posed by code; the barbell and bench are primitives. */
+   bottom (← → keys too). The figures are Quaternius's CC0 mannequin (figure-mannequin.glb) and base
+   character (figure.glb), stripped to mesh and skeleton, their bones posed by code; the barbell and
+   bench are primitives. */
 :root {
   /* Graphite light (app/src/main/java/com/hyperlog/app/ui/theme/GraphitePalette.kt) */
   --surface: #FAFAFB; --on-surface: #19191B; --on-surface-variant: #5C5C62;
@@ -78,7 +79,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 </style>
 
 <div class="wrap">
-  <p class="proto-note"><b>Prototype.</b> A low-detail figure in the exercise sheet: Quaternius's CC0 base character with its face, hair and textures stripped, posed by code. Low-poly is the same body cut to about 720 triangles and flat-shaded, so the fingers merge into mittens. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
+  <p class="proto-note"><b>Prototype.</b> A figure in the exercise sheet, posed by code. Mannequin is the jointed mannequin from Quaternius's Universal Animation Library; Superhero is the base character from his Universal Base Characters (both CC0); Mannequiny is GDQuest's mannequin (CC BY 4.0). All are stripped of textures. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
 
   <section class="sheet" aria-label="Exercise sheet">
     <div class="handle"></div>
@@ -99,8 +100,9 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
       <button class="seg" id="ex-rdl" data-ex="rdl">RDL</button>
     </div>
     <div class="row" role="group" aria-label="Body"><span>Body</span>
-      <button class="seg" id="body-lowpoly" data-body="lowpoly">Low-poly</button>
-      <button class="seg" id="body-detailed" data-body="detailed">Detailed</button>
+      <button class="seg" id="body-mannequin" data-body="mannequin">Mannequin</button>
+      <button class="seg" id="body-detailed" data-body="detailed">Superhero</button>
+      <button class="seg" id="body-mannequiny" data-body="mannequiny">Mannequiny</button>
     </div>
     <div class="row" role="group" aria-label="Motion"><span>Motion</span>
       <button class="seg" id="mo-loop" data-mo="loop">Loop</button>
@@ -123,7 +125,8 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-const FIGURES = { detailed: 'figure.glb', lowpoly: 'figure-lowpoly.glb' };
+const THUMB = [80, 40, 40]; // degrees: swing to the palm, then the two bends
+const FIGURES = { mannequin: 'figure-mannequin.glb', detailed: 'figure.glb', mannequiny: 'figure-mannequiny.glb' };
 (() => {
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const rad = d => d * Math.PI / 180;
@@ -302,13 +305,20 @@ function aim(name, primary, secondary) {
   setWorldQuat(b, delta.multiply(r.wq.clone()));
 }
 
+// one naming for every rig: Unreal's (thigh_l, Head). Blender-style names (thigh.l, head) map onto it;
+// three.js drops the dot on load, so thigh.l arrives as thighl
+const boneName = n => /^head$/i.test(n) ? 'Head'
+  : n.replace(/^(thigh|calf|foot|ball|clavicle|upperarm|lowerarm|hand|(?:thumb|index|middle|ring|pinky)_0\d)\.?(l|r)$/, '$1_$2');
+const SPINE = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'Head'];
 function buildRig(gltf, key) {
   const root = gltf.scene;
-  let mesh = null;
-  root.traverse(o => { if (o.isSkinnedMesh) mesh = o; });
-  scene.add(root);
+  const meshes = [];
+  root.traverse(o => { if (o.isSkinnedMesh) meshes.push(o); });
+  root.visible = false; scene.add(root);
+  // measure from the bind pose, whatever pose the file was saved in
+  meshes[0].skeleton.pose();
   root.updateMatrixWorld(true);
-  const bones = {}; mesh.skeleton.bones.forEach(b => { bones[b.name] = b; });
+  const bones = {}; meshes[0].skeleton.bones.forEach(b => { bones[boneName(b.name)] = b; });
   const rest = {};
   for (const [name, b] of Object.entries(bones)) rest[name] = { lq: b.quaternion.clone(), wq: wquat(b), p: wpos(b) };
   const dirTo = (a, c) => rest[c].p.clone().sub(rest[a].p);
@@ -316,14 +326,15 @@ function buildRig(gltf, key) {
   const legSec = (s, dir) => dir.clone().cross(V(0, 0, 1)); // knee forward in the bind pose
   const armSec = (s, dir) => dir.clone().cross(V(0, 0, -1)); // elbow back in the bind pose
   const side = n => Math.sign(rest[n].p.x) || 1;
-  for (const [a, c] of [['pelvis', 'spine_01'], ['spine_01', 'spine_02'], ['spine_02', 'spine_03'], ['spine_03', 'neck_01'], ['neck_01', 'Head']]) Object.assign(rest[a], { dir: dirTo(a, c), sec: lat });
+  const spine = SPINE.filter(n => bones[n]);
+  spine.slice(0, -1).forEach((a, i) => Object.assign(rest[a], { dir: dirTo(a, spine[i + 1]), sec: lat }));
   for (const k of ['l', 'r']) {
     Object.assign(rest['thigh_' + k], { dir: dirTo('thigh_' + k, 'calf_' + k), sec: d => legSec(0, d) });
     Object.assign(rest['calf_' + k], { dir: dirTo('calf_' + k, 'foot_' + k), sec: d => legSec(0, d) });
     Object.assign(rest['foot_' + k], { dir: dirTo('foot_' + k, 'ball_' + k), sec: d => d.clone().cross(UP) });
     Object.assign(rest['upperarm_' + k], { dir: dirTo('upperarm_' + k, 'lowerarm_' + k), sec: d => armSec(0, d) });
     // the hand and forearm twist so the knuckles run along the bar, thumb toward the middle
-    const across = dirTo('pinky_01_' + k, 'index_01_' + k);
+    const across = dirTo((bones['pinky_01_' + k] ? 'pinky_01_' : 'ring_01_') + k, 'index_01_' + k);
     Object.assign(rest['lowerarm_' + k], { dir: dirTo('lowerarm_' + k, 'hand_' + k), sec: () => across });
     Object.assign(rest['hand_' + k], { dir: dirTo('hand_' + k, 'middle_01_' + k), sec: () => across, across });
   }
@@ -347,22 +358,27 @@ function buildRig(gltf, key) {
       [70, 75, 55].forEach((deg, i) => {
         const n = `${f}_0${i + 1}_${k}`; if (!bones[n]) return;
         const child = bones[`${f}_0${i + 2}_${k}`] || bones[`${f}_04_leaf_${k}`];
-        const dir = child ? rest[child.name].p.clone().sub(rest[n].p).normalize() : fd;
-        const axis = dir.clone().cross(palm).normalize();
-        const turn = new THREE.Quaternion().setFromAxisAngle(axis, rad(f === 'thumb' ? deg * 0.5 : deg));
+        const dir = child ? rest[boneName(child.name)].p.clone().sub(rest[n].p).normalize() : fd;
+        // the thumb first swings across to the palm side, then bends round the bar
+        const thumb = f === 'thumb', oppose = thumb && i === 0;
+        const axis = oppose ? th.clone().normalize().cross(palm).normalize() : dir.clone().cross(palm).normalize();
+        const turn = new THREE.Quaternion().setFromAxisAngle(axis, rad(thumb ? THUMB[i] : deg));
         const local = rest[n].wq.clone().invert().multiply(turn).multiply(rest[n].wq);
         curls.push([bones[n], rest[n].lq.clone().multiply(local)]);
       });
     }
   }
-  // the outline: the same skinned mesh drawn again, back faces only, pushed out along its normals
-  const hull = new THREE.SkinnedMesh(mesh.geometry, new THREE.MeshBasicMaterial());
-  hull.bind(mesh.skeleton, mesh.bindMatrix);
-  mesh.parent.add(hull);
-  const colors = new Float32Array(mesh.geometry.attributes.position.count * 3);
-  mesh.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  rigs[key] = { ready: true, root, mesh, hull, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
-  mesh.castShadow = true; mesh.frustumCulled = hull.frustumCulled = false;
+  // the outline: each skinned part drawn again, back faces only, pushed out along its normals.
+  // A part after the first (the mannequin's joint rings) is drawn a shade darker.
+  const skins = meshes.map((mesh, i) => {
+    const hull = new THREE.SkinnedMesh(mesh.geometry, new THREE.MeshBasicMaterial());
+    hull.bind(mesh.skeleton, mesh.bindMatrix);
+    mesh.parent.add(hull);
+    mesh.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(mesh.geometry.attributes.position.count * 3), 3));
+    mesh.castShadow = true; mesh.frustumCulled = hull.frustumCulled = false;
+    return { mesh, hull, joint: i > 0 };
+  });
+  rigs[key] = { ready: true, root, skins, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
   showBody();
 }
 
@@ -377,7 +393,7 @@ function poseRig(P) {
   bones.pelvis.position.copy(bones.pelvis.parent.worldToLocal(pelvisWorld));
   bones.pelvis.updateMatrixWorld(true);
   aim('pelvis', P.u, X);
-  for (const n of ['spine_01', 'spine_02', 'spine_03']) aim(n, P.u, X);
+  for (const n of ['spine_01', 'spine_02', 'spine_03']) if (bones[n]) aim(n, P.u, X);
   aim('neck_01', P.headDir, X);
   for (const k of ['l', 'r']) {
     const s = Math.sign(rest['thigh_' + k].p.x) || 1, i = s < 0 ? 0 : 1;
@@ -429,10 +445,11 @@ function outlineMaterial(color) {
   return m;
 }
 // tint the vertices the worked bones carry, blended by their skin weights
-function paintBody(base, work) {
-  const g = rig.mesh.geometry, idx = g.attributes.skinIndex, wt = g.attributes.skinWeight, col = g.attributes.color;
-  const names = rig.mesh.skeleton.bones.map(b => b.name);
-  const worked = new Set(state.muscles ? EXERCISES[state.ex].work.map(n => names.indexOf(n)) : []);
+function paintBody(mesh, base, work) {
+  const g = mesh.geometry, idx = g.attributes.skinIndex, wt = g.attributes.skinWeight, col = g.attributes.color;
+  const names = mesh.skeleton.bones.map(b => boneName(b.name));
+  const upper = names.includes('spine_03') ? 'spine_03' : 'spine_02'; // a rig with a shorter spine
+  const worked = new Set(state.muscles ? EXERCISES[state.ex].work.map(n => names.indexOf(n === 'spine_03' ? upper : n)) : []);
   const c = new THREE.Color();
   const get = (attr, v) => [attr.getX(v), attr.getY(v), attr.getZ(v), attr.getW(v)];
   for (let v = 0; v < idx.count; v++) {
@@ -471,12 +488,18 @@ function applyStyle() {
   }
   if (rig.ready) {
     const opts = { color: 0xffffff, vertexColors: true, skinning: true, flatShading: state.body === 'lowpoly' };
-    rig.mesh.material = key === 'line' || key === 'silhouette' ? new THREE.MeshBasicMaterial(opts)
+    const bodyMat = key === 'line' || key === 'silhouette' ? new THREE.MeshBasicMaterial(opts)
       : key === 'toon' ? new THREE.MeshToonMaterial(Object.assign(opts, { gradientMap: RAMP }))
       : new THREE.MeshStandardMaterial(Object.assign(opts, { roughness: 0.8 }));
-    paintBody(key === 'line' ? paper : key === 'silhouette' ? ink : body, key === 'line' ? workFar : work);
-    rig.hull.material = outlineMaterial(ink); rig.hull.visible = st.hull;
-    rig.mesh.castShadow = key === 'clay';
+    const base = key === 'line' ? paper : key === 'silhouette' ? ink : body;
+    const hullMat = outlineMaterial(ink);
+    for (const { mesh, hull, joint } of rig.skins) {
+      mesh.material = bodyMat;
+      const shade = joint && key !== 'line' && key !== 'silhouette' ? base.clone().lerp(ink, 0.18) : base;
+      paintBody(mesh, shade, key === 'line' ? workFar : work);
+      hull.material = hullMat; hull.visible = st.hull;
+      mesh.castShadow = key === 'clay';
+    }
   }
   hemi.visible = sun.visible = st.light;
   floor.visible = key === 'clay';
@@ -486,7 +509,7 @@ function applyStyle() {
 
 // ---------- camera, motion, input ----------
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state = { vi: 0, ex: 'squat', body: 'lowpoly', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
+const state = { vi: 0, ex: 'squat', body: 'mannequin', motion: reduced ? 'still' : 'loop', muscles: true, az: 62, el: 8, t0: performance.now(), variant: STYLE.line };
 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;

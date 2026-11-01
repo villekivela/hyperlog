@@ -1,9 +1,14 @@
 # Keep one skinned mesh (POSITION, NORMAL, JOINTS_0, WEIGHTS_0) and its skeleton; write a GLB.
-# An optional fourth argument smooths the bind-pose surface that many Taubin passes.
+# Every primitive of the mesh is kept, its index in extras.part. An optional fourth argument
+# smooths the first primitive's bind-pose surface that many Taubin passes.
 import json, struct, sys, array, math
 src, mesh_name, out = sys.argv[1], sys.argv[2], sys.argv[3]
 passes = int(sys.argv[4]) if len(sys.argv) > 4 else 0
-j = json.load(open(src)); binb = open(src.rsplit('.', 1)[0] + '.bin', 'rb').read()
+if src.endswith('.glb'):
+    raw = open(src, 'rb').read(); jl = struct.unpack('<I', raw[12:16])[0]
+    j = json.loads(raw[20:20 + jl]); binb = raw[20 + jl + 8:]
+else:
+    j = json.load(open(src)); binb = open(src.rsplit('.', 1)[0] + '.bin', 'rb').read()
 acc, bvs = j['accessors'], j['bufferViews']
 new_acc, new_bv, blob = [], [], bytearray()
 def take(i):
@@ -19,9 +24,12 @@ def take(i):
     a['bufferView'] = len(new_bv) - 1; a.pop('byteOffset', None)
     new_acc.append(a); return len(new_acc) - 1
 mi = next(k for k, m in enumerate(j['meshes']) if m['name'] == mesh_name)
-prim = j['meshes'][mi]['primitives'][0]
-attrs = {k: take(v) for k, v in prim['attributes'].items() if k in ('POSITION', 'NORMAL', 'JOINTS_0', 'WEIGHTS_0')}
-mesh = {'name': 'body', 'primitives': [{'attributes': attrs, 'indices': take(prim['indices'])}]}
+prims = []
+for k, prim in enumerate(j['meshes'][mi]['primitives']):
+    attrs = {a: take(v) for a, v in prim['attributes'].items() if a in ('POSITION', 'NORMAL', 'JOINTS_0', 'WEIGHTS_0')}
+    prims.append({'attributes': attrs, 'indices': take(prim['indices']), 'extras': {'part': k}})
+mesh = {'name': 'body', 'primitives': prims}
+attrs = prims[0]['attributes']
 
 def view(i, code):
     a = new_acc[i]; bv = new_bv[a['bufferView']]
@@ -29,8 +37,8 @@ def view(i, code):
 
 if passes:
     pos, nrm = view(attrs['POSITION'], 'f'), view(attrs['NORMAL'], 'f')
-    ia = new_acc[mesh['primitives'][0]['indices']]
-    tri = view(mesh['primitives'][0]['indices'], {5123: 'H', 5125: 'I'}[ia['componentType']])
+    ia = new_acc[prims[0]['indices']]
+    tri = view(prims[0]['indices'], {5123: 'H', 5125: 'I'}[ia['componentType']])
     n = len(pos) // 3
     # weld the copies UV seams split, so the surface smooths as one piece
     key = {}; weld = [key.setdefault((round(pos[3*v], 5), round(pos[3*v+1], 5), round(pos[3*v+2], 5)), len(key)) for v in range(n)]
