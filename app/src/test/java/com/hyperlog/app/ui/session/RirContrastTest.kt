@@ -40,37 +40,34 @@ class RirContrastTest {
     }
 
     @Test
-    fun aLoggedChipsNumberIsWhite() {
-        // The owner's call (#43): a solid badge, a white number on the darker shade, in both modes.
-        assertEquals(Color.White, RirBadgeNumber)
-    }
-
-    @Test
-    fun aBadgesWhiteNumberReadsAtFourAndAHalfToOne() {
+    fun aChipsNumberReadsAtFourAndAHalfToOneOnEveryNeutralSurface() {
         for (rir in 0..10) {
-            val ratio = contrast(Color.White, rirBadgeColor(rir))
-            assertTrue("RIR $rir number is $ratio:1", ratio >= 4.5f)
-        }
-    }
-
-    @Test
-    fun aBadgeKeepsThreeToOneOnEveryLightSurface() {
-        for (rir in 0..10) {
-            neutralLight.forEach { surface ->
-                val ratio = contrast(rirBadgeColor(rir), surface)
-                assertTrue("RIR $rir badge on $surface is $ratio:1", ratio >= 3f)
+            for (dark in listOf(false, true)) {
+                (if (dark) neutralDark else neutralLight).forEach { surface ->
+                    val ratio = contrast(rirNumberColor(rir, dark), surface)
+                    assertTrue("RIR $rir number (dark=$dark) on $surface is $ratio:1", ratio >= 4.5f)
+                }
             }
         }
     }
 
     @Test
-    fun aBadgeKeepsItsHue() {
-        // Darkened only as far as white needs: still recognisably hot, warm and calm.
+    fun aBadgesNumberReadsAtFourAndAHalfToOneOnItsFill() {
+        for (rir in 0..10) {
+            for (dark in listOf(false, true)) {
+                val ratio = contrast(rirNumberColor(rir, dark), rirBadgeColor(rir, dark))
+                assertTrue("RIR $rir number (dark=$dark) on its badge is $ratio:1", ratio >= 4.5f)
+            }
+        }
+    }
+
+    @Test
+    fun aNumberKeepsItsHue() {
+        // Darker in light and lighter in dark, but still recognisably hot, warm and calm.
         for (rir in listOf(0, 1, 3)) {
-            val outline = rirChipColor(rir, dark = false)
-            val badge = rirBadgeColor(rir)
-            assertEquals("RIR $rir hue", hue(outline), hue(badge), 4f)
-            assertTrue("RIR $rir is darker", badge.luminance() < outline.luminance())
+            for (dark in listOf(false, true)) {
+                assertEquals("RIR $rir hue (dark=$dark)", hue(rirColor(rir)), hue(rirNumberColor(rir, dark)), 4f)
+            }
         }
     }
 

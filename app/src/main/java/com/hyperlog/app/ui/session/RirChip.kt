@@ -12,7 +12,6 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,8 +38,8 @@ import androidx.compose.ui.unit.sp
 import com.hyperlog.app.progression.Record
 
 // The RIR chip (SPEC, RIR chip): set text keeps `@ N` as its one source, and the UI draws each
-// `@ N` (or `@ N RIR`) as the number in a small chip of the fixed RIR scale. A target is outlined;
-// a logged set is a solid badge. The logging screen draws the same chip on its own ([RirChip]).
+// `@ N` (or `@ N RIR`) as the number, in its colour, in a small chip of the fixed RIR scale. A
+// target is outlined; a logged set is a tinted badge with a thin edge. The logging screen draws the same chip on its own ([RirChip]).
 
 internal const val RirChipTargetTag = "rir-chip-target"
 internal const val RirChipLoggedTag = "rir-chip-logged"
@@ -68,17 +67,46 @@ internal fun rirChipColor(rir: Int, dark: Boolean): Color = when {
 }
 
 /**
- * A logged chip's fill, the same in light and dark: a solid badge. Each is the outline's light-mode
- * shade darkened, keeping its hue, just far enough for [RirBadgeNumber] to keep 4.5:1.
+ * A chip's number, target and logged alike: its hue, darker in light mode and lighter in dark, so
+ * it keeps 4.5:1 on its badge and on every neutral surface.
  */
-internal fun rirBadgeColor(rir: Int): Color = when {
-    rir <= 0 -> Color(0xFFD14237)
-    rir <= 2 -> Color(0xFF9D6B1C)
-    else -> Color(0xFF447E79)
+internal fun rirNumberColor(rir: Int, dark: Boolean): Color = when {
+    dark -> when {
+        rir <= 0 -> Color(0xFFE4918B)
+        rir <= 2 -> Color(0xFFE1AA52)
+        else -> Color(0xFF7FBAB5)
+    }
+    rir <= 0 -> Color(0xFFA52F26)
+    rir <= 2 -> Color(0xFF7D5516)
+    else -> Color(0xFF366460)
 }
 
-/** A logged chip's number. */
-internal val RirBadgeNumber = Color.White
+/**
+ * A logged chip's fill: a soft tint of [rirColor], opaque so it reads the same on any surface (14%
+ * on the light card, 20% on the dark one). Its edge, [rirBadgeEdge], keeps it a chip on its card.
+ */
+internal fun rirBadgeColor(rir: Int, dark: Boolean): Color = when {
+    dark -> when {
+        rir <= 0 -> Color(0xFF482C38)
+        rir <= 2 -> Color(0xFF4A3A35)
+        else -> Color(0xFF323B47)
+    }
+    rir <= 0 -> Color(0xFFFAE9E8)
+    rir <= 2 -> Color(0xFFFBF3E6)
+    else -> Color(0xFFEAF4F3)
+}
+
+/** A logged chip's 1 dp edge: the outline's colour at 55% over the fill. */
+internal fun rirBadgeEdge(rir: Int, dark: Boolean): Color = when {
+    dark -> when {
+        rir <= 0 -> Color(0xFF984B4B)
+        rir <= 2 -> Color(0xFF9C7643)
+        else -> Color(0xFF517B7D)
+    }
+    rir <= 0 -> Color(0xFFE69791)
+    rir <= 2 -> Color(0xFFCEAD78)
+    else -> Color(0xFF92B9B5)
+}
 
 /**
  * Appends [text] with each `@ N` as a chip, a target if [target] or if the word before it is
@@ -125,7 +153,10 @@ private fun chipTag(target: Boolean) = if (target) RirChipTargetTag else RirChip
 private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String, modifier: Modifier) {
     val dark = isDarkSurface()
     Box(
-        modifier.then(if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape) else Modifier.background(rirBadgeColor(rir), RirChipShape)),
+        modifier.then(
+            if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape)
+            else Modifier.background(rirBadgeColor(rir, dark), RirChipShape).border(1.dp, rirBadgeEdge(rir, dark), RirChipShape),
+        ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -133,7 +164,7 @@ private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String
             fontSize = fontSize,
             lineHeight = fontSize,
             fontWeight = FontWeight.SemiBold,
-            color = if (target) MaterialTheme.colorScheme.onSurface else RirBadgeNumber,
+            color = rirNumberColor(rir, dark),
             maxLines = 1,
         )
     }
