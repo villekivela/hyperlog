@@ -19,28 +19,29 @@ configuration, iOS, web, any server.
 - Kotlin, Jetpack Compose, Material 3. Android only. minSdk 26, targetSdk 36, compileSdk 37 (current Compose needs it).
 - **Material 3 Expressive** (the current Compose Material 3 expressive components, shapes and
   motion).
-- **Hyperlog's own theme**: Ink and violet (#50), the same on every phone, with no dynamic colour.
-  Surfaces, text and dividers carry a faint violet tint: in light mode the surface is `#FBF9FE`,
-  screens `#F0ECF7`, cards white, containers `#F7F4FB` to `#E4DEEE`, text `#1B1623` and muted text
-  `#5E5570`; in dark the surface is near-black ink `#14111B`, screens `#18141F`, cards `#241E2F`,
-  containers `#1C1724` to `#2E2640`, text `#ECE6F5` and muted text `#A9A0BA`. One violet accent
-  marks only what you act on or what's selected: primary and primaryContainer (`#5B3DD0` light;
-  `#C4B1FF` and `#6A4CE0` dark, so the Start button stands off the dark surfaces), and a violet
-  tint in secondaryContainer (`#E6DEFF` light, `#3A2C66` dark) for the selected tab and chips that
-  are on. **Every connected button group picks in primaryContainer** with onPrimaryContainer
-  words, the deep violet of the selected calendar day, the selected tab and Start (decided by
-  the owner on #58; in light it is the same violet as primary). In dark that fill is 2.9:1 on a
-  card, so the choices not picked sit in a `surfaceContainerLowest` well (3.4:1 to the picked
-  one); in light they are the white card. Tertiary follows primary; secondary and tertiaryContainer (advice cards, technique pills)
-  stay tinted greys. The RIR, progression, plate and error colours stay fixed, and every one keeps
-  at least 30° of hue from the accent, so the accent is never green, amber, red or plate blue. The
-  lightest-but-one container stops at `#E4DEEE` so the hot RIR chip keeps 3:1 on it. Light and dark
-  follow the system setting; there is no in-app theme picker. **On the accent** (a
-  primaryContainer card or strip: the hero, the gym's setup card, Claude's reply, Day done), a
-  filled button or a picked choice is onPrimaryContainer with the card's violet for its words, as
-  the hero's Start, and the choices not picked sit in a shaded well: in light primary and
-  primaryContainer are one violet, so a primary button there would vanish (#58). Everything that
-  marks a state keeps 3:1 on what it sits on (`AccentContrastTest`).
+- **Hyperlog's own theme**: Graphite (the owner's call, 2026-11-01, #111, replacing #50's Ink and
+  violet), the same on every phone, with no dynamic colour. Surfaces, text and dividers are greys
+  with only a faint cool bias: in light mode the surface is `#FAFAFB`, screens `#EEEEF0`, cards
+  white, containers `#F5F5F7` to `#E4E4E8`, text `#19191B` and muted text `#5C5C62`; in dark the
+  surface is charcoal `#121214`, screens `#151517`, cards `#232326`, containers `#1B1B1E` to
+  `#2E2E33`, text `#EDEDEF` and muted text `#A3A3A8`. **The accent has no hue**: near-black in
+  light and near-white in dark, so RIR, plates, the trend and errors are the only colour on
+  screen. It marks only what you act on or what's selected: primary and primaryContainer
+  (`#1C1C1F` light; `#F2F2F4` and `#E9E9EC` dark), and secondaryContainer, a grey a step off the
+  cards (`#E2E2E6` light, `#44444A` dark), for the selected tab and chips that are on. **Every
+  connected button group picks in primaryContainer** with onPrimaryContainer words, the accent of
+  the selected calendar day, the selected tab and Start (decided by the owner on #58; in light it
+  is the same near-black as primary). In dark the choices not picked sit in a
+  `surfaceContainerLowest` well; in light they are the white card. Tertiary follows primary;
+  secondary and tertiaryContainer (advice cards, technique pills) are greys of their own step. The
+  RIR, progression, plate and error colours stay fixed; a coloured accent would have to keep 30° of
+  hue from each of them, and a neutral one never competes. Light and dark follow the system
+  setting; there is no in-app theme picker. **On the accent** (a primaryContainer card or strip:
+  the hero, the gym's setup card, Claude's reply, Day done), a filled button or a picked choice is
+  onPrimaryContainer with the card's accent for its words, as the hero's Start, and the choices not
+  picked sit in a shaded well: in light primary and primaryContainer are one near-black, so a
+  primary button there would vanish (#58). Everything that marks a state keeps 3:1 on what it sits
+  on (`AccentContrastTest`).
 - **Space Grotesk** (SemiBold and Bold, bundled as static fonts under the SIL Open Font License
   1.1, `docs/licences/SpaceGrotesk-OFL.txt`) sets the words of display, headline and titleLarge
   text: screen titles, the day's name and exercise names. A long exercise name at the top of a session or a
@@ -1235,7 +1236,7 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
   kept, just far enough for 4.5:1 (hot `#D14237`, warm `#9D6B1C`, calm `#447E79`). It keeps 3:1 on every light surface; in
   dark mode the white number carries it, since the fill's edge drops to about 2.8:1 on the lightest
   container. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
-  0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the violet accent or a
+  0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the accent or a
   button. A set's parts and its chip are joined by no-break spaces, so a line wraps only between
   sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads
   each one once, as "1 RIR"; the number is always there, so colour is never the only sign. The chip

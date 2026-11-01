@@ -381,11 +381,12 @@ the future.
   primary outline with the letter when planned. Past days without a session have their dates at
   70 % onSurfaceVariant. Each day reads as one tab to TalkBack: `Sat 17 Oct, planned Day A`.
 - **The hero** (the next day to train, today or later; only a plan while a session runs) is a 32 dp
-  primaryContainer card, its text on the 24 dp edge (#58: see "Tester fixes" for markers, Next
-  and the program's end): the
+  primaryContainer card with an even 16 dp inside it and 16 dp between its parts (owner,
+  2026-11-01: Start sits as far from the sides as from the bottom), so its text is on a 28 dp edge
+  (#58: see "Tester fixes" for markers, Next and the program's end): the
   letter in a 64 dp `Cookie9Sided` filled onPrimaryContainer, the head (`Week 7 · Intensify`,
   `Next · Mon 19 Oct · Week 7` on another date, as a planned card names it) at 80 % over the name after its letter
-  in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a medium
+  in titleLarge, the stats (`figureHeadline` over bodySmall labels) and a 48 dp
   **Start session** button in onPrimaryContainer across the card. It replaces the floating Start.
 - **Done** cards and **planned** cards are the same layout on the card tone: the letter's cookie
   filled primary with its letter in onPrimary (done) or outlined in primary (planned), the head in primary (`Done ·
@@ -481,8 +482,8 @@ they parted.
   primary with the letter in onPrimary: the planned day's outline filled in, so done and planned
   read as one pair in both modes (`doneFill`, `AccentContrastTest`).
 - **On the hero and other accent cards**, a filled button or the picked choice is
-  onPrimaryContainer (white) with violet words, like Start; see SPEC, theme. The selected choice
-  colours elsewhere (toggle buttons primary, filter chips primaryContainer) are one violet in light
+  onPrimaryContainer with the card's accent for its words, like Start; see SPEC, theme. The selected choice
+  colours elsewhere (toggle buttons primary, filter chips primaryContainer) are one near-black in light
   and differ only in dark, where Material's own roles differ too (toggle buttons primary, chips
   secondaryContainer, which Hyperlog already moved to primaryContainer): left to the owner.
 - Kept: Program's Next line has no date (issue 9). Program's "No dates" principle (#40) stands,
@@ -614,9 +615,9 @@ and the Training days sheet gains minutes. The words and the rules are SPEC's; t
 
 Principles:
 
-- **The accent is for what you can still do.** A missed day gives up the violet: its marker's
+- **The accent is for what you can still do.** A missed day gives up the accent: its marker's
   outline is `outline` with the letter in `onSurfaceVariant`, struck through, and its card's
-  cookie and head are `onSurfaceVariant`. The planned days keep their violet outlines, so the strip
+  cookie and head are `onSurfaceVariant`. The planned days keep their accent outlines, so the strip
   reads as "done, gone, to come" at a glance.
 - **Dim the words, not the tiles.** A missed day's plan sits back at 60 % (`MissedAlpha`), on the
   content only, so its card and slot tiles keep their tone and shape on the screen. Dimming the

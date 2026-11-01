@@ -41,7 +41,7 @@ internal const val FitChevronTag = "fit-chevron"
 
 /** The time line's chip (owner, 2026-10-27): the progression's weight-down amber behind dark ink, so it reads on every card in both themes. */
 internal val FitChipFill: Color = Direction.Down.color
-internal val FitChipInk = Color(0xFF1B1623)
+internal val FitChipInk = Color(0xFF19191B)
 
 /** The words a weekday goes by in the fit lines: `Saturday`. */
 internal fun fullWeekday(day: DayOfWeek): String = day.getDisplayName(TextStyle.FULL, Locale.getDefault())

@@ -111,7 +111,7 @@ internal val PlannedDay.letter: String get() = dayLetter(day.name, position.day)
 
 /**
  * A done day's fill (the strip's marker, the done card's cookie) and its letter: solid primary,
- * the planned day's outline filled in. secondaryContainer was a lilac on lilac in light (1.1:1).
+ * the planned day's outline filled in. secondaryContainer is too close to the screen's tone to read.
  */
 internal fun doneFill(scheme: ColorScheme): DoneColors = DoneColors(scheme.primary, scheme.onPrimary)
 
@@ -473,8 +473,9 @@ internal fun HeroCard(
     val cs = MaterialTheme.colorScheme
     val week = easyDays?.let { stringResource(R.string.today_easy_head, it) } ?: stringResource(R.string.today_week_block, day.position.week, day.block.name)
     Column(
+        // An even 16 dp all round (owner, 2026-11-01), so Start sits as far from the sides as from the bottom.
         Modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer)
-            .padding(horizontal = CardPadding, vertical = 20.dp).testTag(HeroCardTag),
+            .padding(HeroPadding).testTag(HeroCardTag),
     ) {
         CardHead(
             day.letter,
@@ -485,22 +486,23 @@ internal fun HeroCard(
             headColor = cs.onPrimaryContainer.copy(alpha = 0.8f), titleColor = cs.onPrimaryContainer,
             deload = day.deload, easy = day.easy, easyNote = true,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(HeroPadding))
         PlannedStats(day, cs.onPrimaryContainer, library, finished, fit, onFitTime, date)
         if (onStart == null) return@Column
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(HeroPadding))
         Button(
             onClick = onStart,
-            modifier = Modifier.fillMaxWidth().heightIn(min = ButtonDefaults.MediumContainerHeight),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             colors = ButtonDefaults.buttonColors(containerColor = cs.onPrimaryContainer, contentColor = cs.primaryContainer),
-            contentPadding = ButtonDefaults.MediumContentPadding,
         ) {
-            SymbolIcon(Symbol.PlayArrow, null, Modifier.size(ButtonDefaults.MediumIconSize))
+            SymbolIcon(Symbol.PlayArrow, null, Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.today_start_session), style = MaterialTheme.typography.titleMedium)
         }
     }
 }
+
+private val HeroPadding = 16.dp
 
 /** A card on the card tone, its text on the 24 dp edge. */
 @Composable

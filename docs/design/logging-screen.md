@@ -69,7 +69,7 @@ headlineSmall and titleLarge, Inter for the rest and for every number):
 | Last time | bodyMedium |
 | Keys | 24 sp |
 
-Colour comes from Hyperlog's Ink and violet theme, light and dark:
+Colour comes from Hyperlog's Graphite theme, light and dark:
 
 | Role | Colour |
 | --- | --- |
@@ -291,7 +291,7 @@ rounded at the top: `check_circle`, "Day done", **Finish session**.
 **Records** (#71, SPEC Records). A record is good news, not a task, so its mark stays small and
 in ink.
 
-- *Principles.* The mark never takes the violet accent (that marks what you act on or what's
+- *Principles.* The mark never takes the accent (that marks what you act on or what's
   selected) nor green, amber, red or plate blue (RIR, progression, plates, errors). One shape, the
   `trophy` symbol, everywhere; the words `Estimate record` / `Rep record` say which kind, so the
   two kinds never rest on colour or shape. A record's list row reads like the exercise summaries
