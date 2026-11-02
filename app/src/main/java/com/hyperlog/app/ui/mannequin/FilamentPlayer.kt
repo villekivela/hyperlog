@@ -34,6 +34,19 @@ import kotlin.math.tan
 private const val FieldOfView = 26.0
 
 /**
+ * The key light's place, kept relative to the camera so every turn is lit alike: this far round
+ * to the camera's left, in degrees, and this high. Lit from the side, the clay shows its form; a
+ * light from the camera's own direction flattens it.
+ */
+private const val KeyTurn = 55.0
+private const val KeyHeight = 50.0
+private const val KeyIntensity = 2.8f
+
+/** The sky's irradiance, 2-band SH: the even part, and how much brighter from above than below. */
+private const val SkyBase = 0.36f
+private const val SkyTilt = 0.26f
+
+/**
  * Plays a mannequin clip with Filament, in a [TextureView] that lets the stage's own colour show
  * through. One engine per stage, released with it. The clip's one animation is the rep's lowering;
  * [RepTimeline] plays it forward and back.
@@ -91,15 +104,16 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         filamentView.setShadowingEnabled(true)
         // Exposure 1: a light's intensity is the brightness it gives.
         camera.setExposure(1f)
-        // Clay: a soft sun from above, front and right, and a hemisphere of sky over a grey floor.
+        // Clay: a key light high on the camera's left (placed with the camera), and a hemisphere of
+        // sky over a grey floor that fills the shade.
         LightManager.Builder(LightManager.Type.DIRECTIONAL)
-            .direction(-2.2f, -4f, -2.6f)
-            .intensity(2.4f)
+            .direction(0f, -1f, 0f)
+            .intensity(KeyIntensity)
             .castShadows(true)
             .build(engine, sun)
         scene.addEntity(sun)
         sky = IndirectLight.Builder()
-            .irradiance(2, floatArrayOf(0.44f, 0.44f, 0.45f, 0.31f, 0.31f, 0.30f, 0f, 0f, 0f, 0f, 0f, 0f))
+            .irradiance(2, floatArrayOf(SkyBase, SkyBase, SkyBase + 0.01f, SkyTilt, SkyTilt, SkyTilt - 0.01f, 0f, 0f, 0f, 0f, 0f, 0f))
             .intensity(1f)
             .build(engine)
         scene.indirectLight = sky
@@ -187,6 +201,10 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
                 "joint" -> c.joint
                 "bar" -> c.bar
                 "plate" -> c.plate
+                "shadow" -> {
+                    m.setParameter("baseColorFactor", Colors.RgbaType.SRGB, 0f, 0f, 0f, c.shadow)
+                    return@forEach
+                }
                 else -> return@forEach
             }
             m.setParameter("baseColorFactor", Colors.RgbaType.SRGB, colour.red, colour.green, colour.blue, 1f)
@@ -224,6 +242,13 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             x + distance * cos(el) * sin(az), y + distance * sin(el), z + distance * cos(el) * cos(az),
             x, y, z,
             0.0, 1.0, 0.0,
+        )
+        // The key light travels from its place toward the stage.
+        val keyAz = az - Math.toRadians(KeyTurn)
+        val keyEl = Math.toRadians(KeyHeight)
+        engine.lightManager.setDirection(
+            engine.lightManager.getInstance(sun),
+            (-cos(keyEl) * sin(keyAz)).toFloat(), (-sin(keyEl)).toFloat(), (-cos(keyEl) * cos(keyAz)).toFloat(),
         )
     }
 

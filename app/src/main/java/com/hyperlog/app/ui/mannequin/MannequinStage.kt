@@ -42,6 +42,12 @@ import java.nio.ByteOrder
 
 internal const val MannequinStageTag = "mannequin"
 
+/**
+ * The stage's width to its height. At the cards' margin in the sheet this keeps the height (and so
+ * the mannequin's size) of the 4:3.4 stage the prototype drew inside the text margin.
+ */
+private const val StageAspect = 5f / 4f
+
 /** How far a horizontal drag turns the mannequin, in degrees per dp. */
 private const val DegreesPerDp = 0.5f
 
@@ -84,11 +90,20 @@ internal fun interface MannequinPlayers {
 /** Makes the stage's player: Filament, unless a test provides another. */
 internal val LocalMannequinPlayers = staticCompositionLocalOf<MannequinPlayers> { MannequinPlayers(::FilamentPlayer) }
 
-/** The clay mannequin's colours, from the Graphite theme. */
-internal data class MannequinColours(val body: Color, val joint: Color, val bar: Color, val plate: Color) {
+/**
+ * The clay mannequin's colours, greys of the Graphite theme (docs/design/exercise-library.md,
+ * Mannequin). The body is the subject, so it holds the most contrast with the stage; the joint
+ * rings are a step darker than it, and the equipment sits apart from both: dark iron in light,
+ * a muted mid grey in dark, below the body. [shadow] is the floor shadow's strength.
+ */
+internal data class MannequinColours(val body: Color, val joint: Color, val bar: Color, val plate: Color, val shadow: Float) {
     companion object {
-        val Light = MannequinColours(body = Color(0xFFD2D2D8), joint = Color(0xFFB1B1B7), bar = Color(0xFF5C5C62), plate = Color(0xFF3A3A40))
-        val Dark = MannequinColours(body = Color(0xFF6A6A72), joint = Color(0xFF828288), bar = Color(0xFFA3A3A8), plate = Color(0xFFC8C8CE))
+        val Light = MannequinColours(
+            body = Color(0xFFBABAC1), joint = Color(0xFF9A9AA1), bar = Color(0xFF5C5C62), plate = Color(0xFF48484E), shadow = 0.65f,
+        )
+        val Dark = MannequinColours(
+            body = Color(0xFF9A9AA2), joint = Color(0xFF7C7C84), bar = Color(0xFF85858C), plate = Color(0xFF55555C), shadow = 1f,
+        )
     }
 }
 
@@ -125,7 +140,7 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) 
         modifier
             .testTag(MannequinStageTag)
             .fillMaxWidth()
-            .aspectRatio(4f / 3.4f)
+            .aspectRatio(StageAspect)
             .clip(CardShape)
             .background(Tones.sheetCard)
             // Only horizontal drags: a vertical one goes on to the sheet, which closes on it.

@@ -42,7 +42,7 @@ backward and holds again.
 
 ```json
 { "clips": { "barbell_squat": { "clip": "barbell_squat.glb", "equipment": "barbell",
-  "camera": { "target": [0, 0.92, 0], "half": 1.02, "azimuth": 62, "elevation": 8 } } } }
+  "camera": { "target": [0, 0.87, 0], "half": 1.02, "azimuth": 62, "elevation": 8 } } } }
 ```
 
 `target` is the point the stage's camera looks at (metres, y up, the mannequin facing +z), `half`

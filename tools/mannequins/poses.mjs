@@ -21,6 +21,6 @@ export const POSES = {
     // the trunk's line, in metres. It sits about 7 cm behind the shoulder joints.
     bar: { up: 0.02, back: 0.17 },
     grip: 0.4,
-    camera: { target: [0, 0.92, 0], half: 1.02, azimuth: 62, elevation: 8 },
+    camera: { target: [0, 0.87, 0], half: 1.02, azimuth: 62, elevation: 8 },
   },
 };

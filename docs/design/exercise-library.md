@@ -99,6 +99,93 @@ Screens: `screens/library.png`, `exercise-editor.png` (phone, dark, Ink and viol
   task, so Back returns to the session (tester report 6, M2). Without a Custom Tabs browser it
   opens the YouTube app, else any browser.
 
+## Mannequin
+
+The clay mannequin at the top of the exercise sheet (SPEC, Technique videos → The mannequin), and
+the debug gallery that pages through every clip. Screens: `screens/mannequin-sheet-light.png`,
+`-sheet-dark.png`, `-sheet-turned-dark.png`, `-sheet-still-dark.png` (animations removed: held at
+the bottom), `mannequin-gallery-dark.png` (emulator, #122).
+
+### Principles
+
+1. **A cue, not a lesson.** The stage is the sheet's first card and the eye lands on it, but it
+   keeps the size the owner approved in the prototype; the name and the note follow at once.
+2. **A card of the sheet.** The stage is a card on the sheet like the machine row and the
+   prescription: `sheetCard` tone, 32 dp corners, 12 dp from the sheet's edges. The text stays on
+   the sheet's 24 dp edge below it.
+3. **The body is the subject.** It holds the most contrast with the stage; the joint rings are a
+   step darker than the body, and the equipment sits apart from it without outshining it.
+4. **Clay shows its form.** A key light from the side of the camera models the body; a light from
+   the camera's direction flattens it into a cut-out. The key moves with the camera, so every turn
+   is lit alike.
+5. **Grounded.** A soft floor shadow sits under the feet, stronger in dark, where black barely
+   shows on charcoal.
+
+### Tokens
+
+| Token | Light | Dark | Use |
+| --- | --- | --- | --- |
+| Stage | `surfaceContainerHighest` #E4E4E8 | #2E2E33 | `Tones.sheetCard`, `CardShape`, 5:4, 12 dp in from the sheet's edges |
+| Body | #BABAC1 | #9A9AA2 | the mannequin's shell |
+| Joint | #9A9AA1 | #7C7C84 | the rings between its pieces, a step under the body |
+| Bar | #5C5C62 | #85858C | bar and sleeves |
+| Plate | #48484E | #55555C | plates: dark iron in light, a muted grey under the body in dark |
+| Floor shadow | 65 % | 100 % | of the baked shadow (black, 45 % at its centre, gone at the rim) |
+| Key light | 2.8, casts shadows | same | 55° round to the camera's left, 50° up, turning with the camera |
+| Sky | SH 0.36 + 0.26 · up | same | a hemisphere: bright above, dim below, filling the shade |
+| Lens | 26° vertical | same | linear tone mapping, exposure 1 |
+| Framing (squat) | target (0, 0.87, 0), half 1.02 m, 62° turn, 8° tilt | same | in `poses.mjs`; the plates' top and the feet sit about 8 % in from the stage's edges |
+| Stage → name | 16 dp | | |
+
+The stage's 5:4 at the cards' margin has the height of the prototype's 4:3.4 at the text margin, so
+the mannequin is the size the owner approved; the stage gains air at its sides.
+
+### Layout
+
+```
+ ──────── (handle)
+╭──────────────────────────────────────╮   ← 12 dp from the sheet's edge
+│                                      │     sheetCard, 32 dp corners, 5:4
+│            ◯══╪══◯   (bar)           │
+│              ( )                     │     key light from the camera's left
+│              /|\                     │
+│              / \                     │
+│            ░░░░░░░   (floor shadow)  │
+╰──────────────────────────────────────╯
+                                             16 dp
+ Barbell Back Squat                          ← 24 dp text edge, headlineSmall
+ Barbell · Quads, Glutes, Hamstrings
+ …the rest of the sheet
+
+ Debug gallery (Settings → Debug → Mannequin gallery), on surfaceContainer:
+ ←  Mannequin gallery
+╭──────────────────────────────────────╮   ← the stage as in the sheet, 12 dp in
+│              (clip)                  │
+╰──────────────────────────────────────╯
+ Barbell Back Squat                          ← 28 dp text edge
+ 1 of 1
+   (swipe below the stage for the next clip)
+```
+
+### Component states
+
+- **Loading:** the empty stage, then the mannequin fades in over 300 ms once its first frame is
+  drawn.
+- **Playing:** one rep in a loop, lowering, hold, lifting, hold.
+- **Turned:** a horizontal drag turns it (0.5° a dp); the light turns with the view. A double-tap
+  returns to the clip's opening turn.
+- **Still** (animations removed): held at the bottom of the rep, drawn only when something changes.
+- **Light and dark:** the colours above, swapped with the theme while the sheet is open.
+
+### Interaction rules
+
+- A vertical drag on the stage goes on to the sheet; only a horizontal one turns the mannequin.
+- The sheet doesn't scroll, so a downward drag anywhere on it, the stage included, closes it. A
+  scrolling sheet doesn't pass the drag on to the sheet once at its top (the exercise picker
+  doesn't either), so a scroll here would take that away. The stage takes about a third of the
+  screen; a planned exercise with a goal, a long note and many sets could outgrow it.
+- In the gallery a swipe on the stage turns the clip; a swipe below it pages.
+
 ## Critique log
 
 - **Pass 1** (phone): a video symbol on 138 of 173 rows was noise, not state: removed. The title
@@ -113,3 +200,17 @@ Screens: `screens/library.png`, `exercise-editor.png` (phone, dark, Ink and viol
 
 Expressive pass: the screen sits on surfaceContainer, each exercise a segment; the editor's grip
 demand is a connected button group and its chips pick in primaryContainer.
+
+- **Mannequin pass** (emulator, #122): the light body (#D2D2D8) was lit from almost the camera's
+  own direction (the sun 22° off the view) to a near-white cut-out on a near-white stage: the key
+  now comes 55° to the camera's left and turns with it, the sky is a little dimmer so the shade
+  models the form, and the body is a step darker (#BABAC1). The dark plates (#C8C8CE) were the
+  brightest thing on the stage, brighter than the body: now a muted #55555C under a lighter body
+  (#9A9AA2), and the joint rings sit a step under the body in both themes, as they didn't in dark.
+  The floor shadow barely showed in either theme: darker at its centre, at full strength in dark.
+  The stage sat inside the text margin, narrower than the sheet's other cards: it now runs to the
+  cards' margin at 5:4, the same height as before. The feet sat 6 % above the stage's bottom edge,
+  crowding their shadow: the camera now looks 5 cm lower. Pass 2 softened the light plates (#3A3A40 → #48484E), which
+  outweighed the body, and checked the turned, still and gallery states. A scroll added to the
+  sheet for long content was taken out again: it stopped a downward drag on the stage from
+  closing the sheet.

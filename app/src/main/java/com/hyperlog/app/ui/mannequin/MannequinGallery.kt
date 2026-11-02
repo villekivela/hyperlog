@@ -23,6 +23,7 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.mannequin.Mannequins
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -53,13 +54,20 @@ internal fun MannequinGallery(mannequins: Mannequins?, exercises: List<Exercise>
         val pager = rememberPagerState { clips.size }
         HorizontalPager(pager, Modifier.fillMaxSize().padding(padding)) { page ->
             val clip = clips[page]
-            Column(Modifier.fillMaxSize().padding(horizontal = TextEdge).padding(top = 8.dp)) {
-                MannequinStage(clip)
+            // Each page is laid out as the top of the exercise's sheet: the stage a card at the
+            // cards' margin, the name under it on the text edge.
+            Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
+                MannequinStage(clip, Modifier.padding(horizontal = CardMargin))
                 Spacer(Modifier.height(16.dp))
-                Text(interFigures(names[clip.exerciseId] ?: clip.exerciseId), style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    interFigures(names[clip.exerciseId] ?: clip.exerciseId),
+                    Modifier.padding(horizontal = TextEdge),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     stringResource(R.string.mannequin_gallery_page, page + 1, clips.size),
+                    Modifier.padding(horizontal = TextEdge),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

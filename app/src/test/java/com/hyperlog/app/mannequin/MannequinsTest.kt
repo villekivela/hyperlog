@@ -17,7 +17,7 @@ class MannequinsTest {
     fun theSquatPlaysItsClip() {
         val clip = mannequins.clipFor(squat)!!
         assertEquals("mannequins/barbell_squat.glb", clip.asset)
-        assertEquals(StageCamera(target = listOf(0f, 0.92f, 0f), half = 1.02f, azimuth = 62f, elevation = 8f), clip.camera)
+        assertEquals(StageCamera(target = listOf(0f, 0.87f, 0f), half = 1.02f, azimuth = 62f, elevation = 8f), clip.camera)
     }
 
     @Test

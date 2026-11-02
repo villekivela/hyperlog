@@ -5,10 +5,10 @@
 import * as THREE from 'three';
 
 export const MATERIALS = {
-  body: () => new THREE.MeshStandardMaterial({ name: 'body', color: 0xd2d2d8, roughness: 0.8 }),
-  joint: () => new THREE.MeshStandardMaterial({ name: 'joint', color: 0xb1b1b7, roughness: 0.8 }),
+  body: () => new THREE.MeshStandardMaterial({ name: 'body', color: 0xbabac1, roughness: 0.8 }),
+  joint: () => new THREE.MeshStandardMaterial({ name: 'joint', color: 0x9a9aa1, roughness: 0.8 }),
   bar: () => new THREE.MeshStandardMaterial({ name: 'bar', color: 0x5c5c62, roughness: 0.35 }),
-  plate: () => new THREE.MeshStandardMaterial({ name: 'plate', color: 0x3a3a40, roughness: 0.85 }),
+  plate: () => new THREE.MeshStandardMaterial({ name: 'plate', color: 0x48484e, roughness: 0.85 }),
 };
 
 /** A cylinder along x, from `from` to `to`. */
@@ -41,7 +41,7 @@ export function barbell() {
  * A soft shadow on the floor: an ellipse `width` by `depth` metres, darkest in the middle and
  * gone at the rim, drawn unlit with its alpha in the vertex colours.
  */
-export function floorShadow(width, depth, darkest = 0.16) {
+export function floorShadow(width, depth, darkest = 0.45) {
   const rings = 8;
   const segments = 48;
   const position = [0, 0, 0];
