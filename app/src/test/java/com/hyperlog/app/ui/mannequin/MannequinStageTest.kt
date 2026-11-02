@@ -67,13 +67,17 @@ class MannequinStageTest {
     private class FakePlayer(context: Context) : MannequinPlayer {
         override val view = View(context)
         var loaded: Pair<Int, StageCamera>? = null
+        var resources: Map<String, Int>? = null
         var turned = 0f
         var resets = 0
         var playing = false
         var still: Boolean? = null
         var released = false
         override var onShown: () -> Unit = {}
-        override fun load(glb: ByteBuffer, camera: StageCamera) { loaded = glb.remaining() to camera }
+        override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera) {
+            loaded = glb.remaining() to camera
+            this.resources = resources.mapValues { it.value.remaining() }
+        }
         override fun play(still: Boolean) { playing = true; this.still = still }
         override fun pause() { playing = false }
         override fun turn(degrees: Float) { turned += degrees }
@@ -108,6 +112,8 @@ class MannequinStageTest {
         compose.waitUntil { players.single().loaded != null }
         val glb = context.assets.open("mannequins/barbell_squat.glb").use { it.readBytes().size }
         assertEquals(glb to mannequins.clipFor(squat)!!.camera, players.single().loaded)
+        val shared = context.assets.open("mannequins/mannequin.bin").use { it.readBytes().size }
+        assertEquals(mapOf("mannequin.bin" to shared), players.single().resources)
         assertTrue(players.single().playing)
         assertEquals(false, players.single().still)
     }
@@ -117,6 +123,19 @@ class MannequinStageTest {
         sheet(null)
         compose.onAllNodesWithTag(MannequinStageTag).assertCountEquals(0)
         assertTrue(players.isEmpty())
+    }
+
+    @Test
+    fun whereTheRendererCantStartTheSheetShowsAsWithoutAClip() {
+        // As on the JVM, where Filament's native library isn't there.
+        val missing = MannequinPlayers { throw UnsatisfiedLinkError("no filament-jni in java.library.path") }
+        compose.setContent {
+            CompositionLocalProvider(LocalMannequinPlayers provides missing, LocalLifecycleOwner provides lifecycle) {
+                HyperlogTheme { ExerciseSheet(squat, machine = null, onChangeMachine = null, mannequin = mannequins.clipFor(squat)) }
+            }
+        }
+        compose.onNodeWithText("Barbell Back Squat").assertIsDisplayed()
+        compose.onAllNodesWithTag(MannequinStageTag).assertCountEquals(0)
     }
 
     @Test

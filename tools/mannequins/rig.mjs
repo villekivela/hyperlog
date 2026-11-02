@@ -8,7 +8,7 @@ export const rad = (d) => (d * Math.PI) / 180;
 export const X = V(1, 0, 0);
 export const UP = V(0, 1, 0);
 
-const wpos = (b) => b.getWorldPosition(new THREE.Vector3());
+export const wpos = (b) => b.getWorldPosition(new THREE.Vector3());
 const wquat = (b) => b.getWorldQuaternion(new THREE.Quaternion());
 
 /** The orientation of a frame whose first axis is `primary` and second as close to `secondary` as it can be. */
@@ -92,11 +92,14 @@ export function buildRig(root) {
       }
     }
   }
+  const footRest = dirTo('foot_l', 'ball_l');
   const dims = {
     thigh: len('thigh_l', 'calf_l'), shin: len('calf_l', 'foot_l'),
     up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
     gripAlong: palmLength * 0.8, gripOff: 0.03,
     trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
+    // How far the foot pitches down from the ankle to the ball, standing flat.
+    footPitch: Math.atan2(-footRest.y, Math.hypot(footRest.x, footRest.z)),
     // How far the middle of the sole is in front of the ankle joint.
     midfoot: (heel + toe) / 2 - rest.foot_l.p.z,
   };
@@ -123,12 +126,45 @@ export function buildRig(root) {
       });
     }
   }
-  return { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
+  const rig = { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
+  // Where the shoulders' middle sits from the hips' with the spine straightened upright, as poses
+  // straighten it: up the spine, and behind it. The bind pose's spine curves, so it isn't the same.
+  for (const n of SPINE.slice(0, 4)) aim(rig, n, UP, X);
+  root.updateMatrixWorld(true);
+  const shoulders = between(rig, 'upperarm_l', 'upperarm_r').sub(between(rig, 'thigh_l', 'thigh_r'));
+  Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z });
+  for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
+  root.updateMatrixWorld(true);
+  return rig;
+}
+
+/** The point halfway between bones `a` and `b`, where they are now. */
+export const between = (rig, a, b) => wpos(rig.bones[a]).add(wpos(rig.bones[b])).multiplyScalar(0.5);
+
+/** Which side a bone of side `k` ('l' or 'r') is on: -1 for -x, 1 for +x. */
+export const sideOf = (rig, k) => Math.sign(rig.rest['thigh_' + k].p.x) || 1;
+
+/** Where the hand on side `s` holds: its own handle, or the bar `grip` metres either side of the middle. */
+export const gripTarget = (P, s) => (P.hand ? P.hand(s) : P.bar.clone().addScaledVector(X, s * P.grip));
+
+/** The way the knuckles run along the grip: along the bar toward the middle, or the handle's own way. */
+const acrossOf = (P, s) => (P.across ? P.across(s) : X.clone().multiplyScalar(-s));
+
+/** The world rotation that takes bone `name` from its bind pose to where it is now. */
+export const turnOf = (rig, name) => wquat(rig.bones[name]).multiply(rig.rest[name].wq.clone().invert());
+
+/** Where the hand on side `k` holds now: the point across the palm at the base of the fingers. */
+export function heldAt(rig, k) {
+  const { bones, dims: L } = rig;
+  const wrist = wpos(bones['hand_' + k]);
+  const fingers = wpos(bones['middle_01_' + k]).sub(wrist).normalize();
+  const palm = rig.palms[k].clone().applyQuaternion(turnOf(rig, 'hand_' + k));
+  return wrist.addScaledVector(fingers, L.gripAlong).addScaledVector(palm, L.gripOff);
 }
 
 /**
  * Poses the rig from a pose frame: the hip centre and trunk direction, the head's direction, the
- * ankles, knee and elbow poles, and the bar the hands hold.
+ * ankles, the feet's way, knee and elbow poles, and where the hands hold.
  */
 export function poseRig(rig, P) {
   const { bones, rest, dims: L } = rig;
@@ -143,7 +179,7 @@ export function poseRig(rig, P) {
   for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.u, X);
   aim(rig, 'neck_01', P.headDir, X);
   for (const k of ['l', 'r']) {
-    const s = Math.sign(rest['thigh_' + k].p.x) || 1;
+    const s = sideOf(rig, k);
     const i = s < 0 ? 0 : 1;
     // The leg, from the hip joint to the ankle, the knee toward its pole.
     const hip = wpos(bones['thigh_' + k]);
@@ -152,14 +188,17 @@ export function poseRig(rig, P) {
     const n2 = leg.end.clone().sub(leg.mid);
     aim(rig, 'thigh_' + k, n1, n1.clone().cross(leg.pole));
     aim(rig, 'calf_' + k, n2, n1.clone().cross(leg.pole));
-    const t = rad(P.toeOut) * s;
-    const toe = V(Math.sin(t), -0.35, Math.cos(t));
-    aim(rig, 'foot_' + k, toe, toe.clone().cross(UP));
+    // The foot flat on what it stands on, the sole as in the bind pose: heading along the floor,
+    // turned out, or along the plate it's on.
+    const t = rad(P.toeOut ?? 0) * s;
+    const { heading, top } = P.foot ? P.foot(s) : { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
+    const toe = heading.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(top, -Math.sin(L.footPitch));
+    aim(rig, 'foot_' + k, toe, toe.clone().cross(top));
     // The arm: the bar lies across the palm at the base of the fingers, so the wrist sits short of
     // it along the fingers and off it on the back of the hand. The forearm sets both, so iterate.
     const sh = wpos(bones['upperarm_' + k]);
-    const grip = P.bar.clone().addScaledVector(X, s * P.grip);
-    const inward = X.clone().multiplyScalar(-s);
+    const grip = gripTarget(P, s);
+    const inward = acrossOf(P, s);
     const hr = rest['hand_' + k];
     const handRest = frame(hr.dir, hr.across).invert();
     let wrist = grip.clone();

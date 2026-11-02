@@ -14,3 +14,6 @@
   CC0 asks for no credit; Hyperlog gives it anyway, here and in `docs/licences/Quaternius-UAL-CC0.txt`.
 - [three.js](https://threejs.org) (MIT) loads, poses and exports the clips. It is a tool
   dependency only and doesn't ship in the app.
+- [MediaPipe](https://github.com/google-ai-edge/mediapipe) Pose Landmarker (Apache 2.0) finds the
+  lifter in a clip for `trace`. It, its model and the clips stay on the machine that traces; only
+  the angles it gives are committed, and nothing of it ships in the app.
