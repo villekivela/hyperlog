@@ -530,6 +530,7 @@ function weightStack(at, M, { rodTop, toward }) {
   }
   const headY = base + n * step + 0.025;
   const head = pad(0.28, 0.05, 0.12, M.plate, V(at.x, headY, at.z), { soft: 0.006 });
+  head.userData.stack = true;
   const stem = part(rodGeometry(0.007, 12), M.metal);
   const pin = part(rodGeometry(0.005, 10), M.metal);
   const knob = part(shape('knob', () => { const g = new THREE.SphereGeometry(0.016, 14, 10); g.deleteAttribute('uv'); return g; }), M.vinyl);
@@ -736,7 +737,7 @@ function legPress({ seat = [0.5, 0.04], pad: behind = 0.2 } = {}) {
  * A seated chest press: the seat and back pad (its face `pad` metres behind the spine), a column
  * behind with a boom out to the pivot, and two levers hung from it, swinging the handles through
  * their arc. Behind the column a weight stack in its frame, its cable over a pulley to the column,
- * rises as the levers swing forward. `P.pivot`, `P.handle(s)` and `P.swing` (the levers' angle,
+ * rests with the handles back at the chest and rises as the levers swing forward. `P.pivot`, `P.handle(s)` and `P.swing` (the levers' angle,
  * radians from hanging straight down) place them.
  */
 function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
@@ -776,7 +777,7 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
   ]);
   return {
     group: g,
-    place(P, P0) {
+    place(P, P0, P1) {
       backRest.fit(P0);
       const top = P.pivot.y + 0.05;
       span(column, V(0, 0.07, rear), V(0, top + 0.04, rear));
@@ -791,7 +792,7 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
         span(l.grip, h.clone().setX(s * out), h.clone().setX(s * (Math.abs(h.x) - 0.1)));
         span(l.sleeve, h.clone().setX(s * (out - 0.04)), h.clone().setX(s * (Math.abs(h.x) - 0.08)));
       });
-      const lift = 0.5 * (P0.swing - P.swing);
+      const lift = 0.5 * Math.abs(P.swing - P1.swing);
       weights.lift(lift);
       span(drop, V(0, wheel.y, stackZ), weights.top(lift));
     },
