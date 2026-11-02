@@ -1426,9 +1426,9 @@ gallery (Technique videos).
     same Custom Tab as the videos. The app calls no API and stores nothing; adding a link in the
     library editor brings back the video button.
 - **The mannequin** (owner, 2026-11-02, #120): at the top of the exercise's prescription sheet,
-  above the note and the video button, a faceless figure does the movement in a loop, with plain
+  above the note and the video button, a faceless mannequin does the movement in a loop, with plain
   generic equipment around it. It is a quick cue for which movement this is, not form instruction.
-  It is the Quaternius Universal Animation Library mannequin (CC0), drawn in Clay: perspective, soft
+  It is the Quaternius Universal Animation Library mannequin (CC0), drawn in a clay style (as in the prototype): perspective, soft
   light, a floor shadow and the Graphite colours. No muscle tint.
   - **Behaviour:** it plays a loop of one rep on its own, with no pause. A horizontal drag turns it;
     a vertical drag stays with the sheet. A double-tap resets the view. With animations removed it
@@ -1449,7 +1449,7 @@ gallery (Technique videos).
     `tools/mannequins/`, which bakes a `.glb` clip per exercise and a `mannequins.json` index of
     each exercise's tempo and typical angle. The clips and the index are committed and shipped
     with the app; the phone poses nothing live. CI re-bakes them and fails on any difference.
-  - **Debug builds:** a gallery under Settings → Debug swipes through every clip.
+  - **Debug builds:** a gallery in Settings swipes through every clip.
   - **Checking:** the logic (which clip, which angle, the tempo phases) is tested in the JVM
     behind a seam; the pixels are checked by the owner, not by screenshot tests.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
