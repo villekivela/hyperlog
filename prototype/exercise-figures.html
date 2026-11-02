@@ -589,7 +589,7 @@ function setVariant(i) {
   if (location.hash !== hash) history.replaceState(null, '', hash);
   syncUi();
 }
-function fromHash() { const i = VARIANTS.findIndex(v => '#' + v.key === location.hash); return i < 0 ? 0 : i; }
+function fromHash() { const i = VARIANTS.findIndex(v => '#' + v.key === location.hash); return i < 0 ? VARIANTS.findIndex(v => v.key === 'clay') : i; }
 document.getElementById('prev').addEventListener('click', () => setVariant(state.vi - 1));
 document.getElementById('next').addEventListener('click', () => setVariant(state.vi + 1));
 addEventListener('keydown', e => {
