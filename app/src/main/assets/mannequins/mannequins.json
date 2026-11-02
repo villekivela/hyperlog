@@ -20,7 +20,9 @@
         "top": 0.7
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_barbell.bin",
+        "kit_bench.bin"
       ]
     },
     "barbell_rdl": {
@@ -43,7 +45,8 @@
         "top": 0.7
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_barbell.bin"
       ]
     },
     "barbell_squat": {
@@ -66,7 +69,8 @@
         "top": 0.7
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_barbell.bin"
       ]
     },
     "close_grip_lat_pulldown": {
@@ -89,7 +93,8 @@
         "top": 0.5
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_cable_tower.bin"
       ]
     },
     "db_incline_press": {
@@ -112,7 +117,9 @@
         "top": 0.7
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_bench.bin",
+        "kit_dumbbells.bin"
       ],
       "bench": {
         "typical": 30,
@@ -222,7 +229,8 @@
         "top": 0.5
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_cable_tower.bin"
       ]
     },
     "leg_press": {
@@ -245,7 +253,8 @@
         "top": 0.6
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_leg_press.bin"
       ]
     },
     "machine_chest_press": {
@@ -268,7 +277,8 @@
         "top": 0.6
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_chest_press.bin"
       ]
     },
     "triceps_pressdown": {
@@ -291,7 +301,8 @@
         "top": 0.5
       },
       "resources": [
-        "mannequin.bin"
+        "mannequin.bin",
+        "kit_cable_tower.bin"
       ]
     }
   }

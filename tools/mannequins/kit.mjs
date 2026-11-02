@@ -436,7 +436,10 @@ export function buildKit(entry) {
     if (!KITS[name]) throw new Error(`No kit "${name}"`);
     if (!allowed.includes(name)) throw new Error(`Kit "${name}" isn't ${entry.equipment} equipment`);
     // An adjustable bench stands at the angle the pose is prepared at.
-    return KITS[name](name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle } : options);
+    const kit = KITS[name](name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle } : options);
+    // The bake shares the parts under this node with every clip in the same kit.
+    kit.group.userData.kit = name;
+    return kit;
   });
   const g = new THREE.Group();
   g.name = 'kit';

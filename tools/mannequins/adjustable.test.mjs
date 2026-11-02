@@ -49,7 +49,7 @@ test('an adjustable-bench pose bakes a clip per angle and a typical angle into t
 test('each clip stands its bench back at its own angle, turning about the hinge the index gives', async () => {
   const { bench } = index[ID];
   for (const a of ANGLES) {
-    const gltf = await loadClip(path.join(out, bench.clips[a].clip), [path.join(out, 'mannequin.bin')]);
+    const gltf = await loadClip(path.join(out, bench.clips[a].clip), index[ID].resources.map((r) => path.join(out, r)));
     const back = gltf.scene.getObjectByName('bench_back');
     assert.ok(back, `${a}°: no bench_back`);
     const turned = new THREE.Euler().setFromQuaternion(back.quaternion);

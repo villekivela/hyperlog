@@ -15,7 +15,7 @@ import { tempoOf } from './tempo.mjs';
 import { prepare, benchAngles } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkPose } from './checks.mjs';
-import { shareBody } from './glb.mjs';
+import { shareParts } from './glb.mjs';
 import { benchHinge } from './kit.mjs';
 import { POSES } from './poses.mjs';
 
@@ -49,6 +49,9 @@ const clipName = (id, angle) => (angle === undefined ? id : `${id}_${angle}`);
 
 /** The file the clips share their mannequin's mesh and skin from. */
 export const SHARED = 'mannequin.bin';
+
+/** The file the clips posed in kit `name` share its parts from. */
+export const kitFile = (name) => `kit_${name}.bin`;
 
 /** Bakes one entry, at `angle` if it has an adjustable bench: its .glb's bytes, the mannequin still in it, and the index entry. */
 async function bake(id, poses, angle) {
@@ -95,7 +98,7 @@ async function bake(id, poses, angle) {
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip] });
   return {
     glb: Buffer.from(glb),
-    entry: { clip: `${clipName(id, angle)}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, tempo: tempoOf(entry), resources: [SHARED] },
+    entry: { clip: `${clipName(id, angle)}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, tempo: tempoOf(entry), resources: [SHARED, ...Object.keys(entry.kit ?? {}).sort().map(kitFile)] },
   };
 }
 
@@ -115,9 +118,9 @@ export async function bakeAll(out = CLIPS, { poses = POSES } = {}) {
   // A clip per exercise, or per bench angle for an adjustable bench.
   const baked = [];
   for (const id of ids) for (const angle of benchAngles(id) ?? [undefined]) baked.push([clipName(id, angle), id, angle, await bake(id, poses, angle)]);
-  const { clips, shared } = shareBody(baked.map(([name, , , b]) => [name, b.glb]), SHARED);
+  const { clips, shared } = shareParts(baked.map(([name, , , b]) => [name, b.glb]), { body: SHARED, kit: kitFile });
   await mkdir(out, { recursive: true });
-  await writeFile(path.join(out, SHARED), shared);
+  for (const [uri, bytes] of Object.entries(shared)) await writeFile(path.join(out, uri), bytes);
   const index = {};
   for (const id of ids) {
     const mine = baked.filter(([, i]) => i === id);
