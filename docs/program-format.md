@@ -39,7 +39,7 @@ Every field is optional, and one left out follows the standing training targets.
 | Field | Values |
 | --- | --- |
 | `goal` | `"hypertrophy"`, `"strength"` or `"both"` |
-| `volume` | `"8-14"`: work sets per muscle a week, a range like a set line's `reps`, each end 1–40, the low end not above the high |
+| `volume` | `"14-20"`: work sets per muscle a week, a range like a set line's `reps`, each end 1–40, the low end not above the high |
 | `acrossBlock` | `"steady"` or `"rising"` |
 | `frequency` | `"1"`, `"2"`, `"2-3"` or `"3+"`: times a week each muscle is trained |
 | `failure` | `"isolation_and_machines"`, `"never"` or `"any"` |
@@ -48,7 +48,7 @@ Every field is optional, and one left out follows the standing training targets.
 
 ```json
 "focus": ["Chest"],
-"targets": { "volume": "8-14" }
+"targets": { "volume": "14-20" }
 ```
 
 ### Block

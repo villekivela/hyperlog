@@ -1846,7 +1846,7 @@ research note names its sources.
   | Training target | Choices | Default |
   | --- | --- | --- |
   | Goal | Hypertrophy, Strength, or Both | Hypertrophy. The lift goals sit on top of any of them. |
-  | Volume | Weekly sets per muscle, a range: Low (4–8), Moderate (8–14), High (14–20), or Custom (each end 1–40, the low end not above the high) | 6–10, its own choice, "Hyperlog's default" |
+  | Volume | Weekly sets per muscle, a range: Low (4–8), Moderate (8–14), High (14–20), or Custom (each end 1–40, the low end not above the high) | Moderate (8–14) |
   | Across a block | **Steady**: the same sets every week but a deload. **Rising**: a block's first week starts near the bottom of the range, each week adds sets toward the top, and the block ends in a deload. | Steady |
   | Frequency | Each muscle 1, 2, 2–3 or 3+ times a week | 2–3 |
   | How hard | One rule, shown and not chosen: the last set of an exercise at 0–1 RIR, earlier sets at 1–2 RIR | Fixed |
@@ -1854,6 +1854,9 @@ research note names its sources.
   | Calibration | On or off | On |
   | Rep ranges | Compounds and isolation, each a range of reps (each end 1–30) | Compounds 5–10, isolation 8–15 |
 
+  - **Moderate is the default volume** (owner, 2026-11-02, on #137, replacing #130's 6–10), the
+    nearest choice to what the research finds grows muscle. The starter program keeps its own
+    6–8 sets, its low-volume style; you set your own in the wizard.
   - **Isolation and machines only** means isolation exercises and compounds on a machine, a cable
     or a Smith machine. A free-weight compound (barbell or dumbbell) stops at 1 RIR.
   - **Calibration** keeps logged RIR honest. In each block's last week, unless that week is a
@@ -1918,16 +1921,16 @@ toward maintenance. Claude writes the focus into the program's `focus`
 workout's focus, which picks the groups of one day.
 
 - **The raised range** for a focused group's muscles runs from the top of the range to half as
-  much again, rounded: 10–15 for the default 6–10.
+  much again, rounded: 14–21 for the default 8–14.
 - **The maintenance range** for the other muscles runs from half the range's bottom, rounded up,
-  to its bottom: 3–6 for the default 6–10.
+  to its bottom: 4–8 for the default 8–14.
 - Both are judgment calls the research note backs as far as it can; neither is a setting, and
   neither changes with age. Claude has the age band and can write more for an older lifter.
 
 **Changes and workouts** keep the training style's intensity and failure rules. When a Change
 takes a muscle's weekly sets out of its range (the raised range or the maintenance range in a
-program with a focus), Claude says so in the Change's summary ("Quads drop to 4 sets a week,
-under your 6–10."). The Change's review marks it too (New program → Sets per muscle), and nothing
+program with a focus), Claude says so in the Change's summary ("Quads drop to 6 sets a week,
+under your 8–14."). The Change's review marks it too (New program → Sets per muscle), and nothing
 is blocked.
 
 ### What Claude is told
@@ -1959,7 +1962,7 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   ```text
   ## My training style
   - Goal: hypertrophy, with my lift goals on top
-  - Volume: 6–10 work sets per muscle a week, steady across a block
+  - Volume: 8–14 work sets per muscle a week, steady across a block
   - Frequency: each muscle 2–3 times a week
   - How hard: last set 0–1 RIR, earlier sets 1–2 RIR
   - Failure: isolation exercises and machine, cable and Smith machine compounds only
@@ -1977,8 +1980,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   ```
 
   An About me field left empty is left out, and so is the heading when all are. With a program
-  running, its lines add `Program focus: Chest, Shoulders (their muscles 10–15 sets a week, the
-  rest 3–6)` and any training target of its own (`Volume for this program: 8–14`). The
+  running, its lines add `Program focus: Chest, Shoulders (their muscles 14–21 sets a week, the
+  rest 4–8)` and any training target of its own (`Volume for this program: 14–20`). The
   instructions tell Claude to write new programs, Changes and workouts by the style, to treat the
   training targets as standing unless you ask otherwise for one program, to keep the intensity
   and failure rules in Changes and workouts, and to say when a Change takes a muscle out of its
@@ -2210,7 +2213,7 @@ back.
   starts. **Reject** and Back step back in the check-in (Type my own open), × drops
   it, as on every review.
 - **Sets per muscle** (owner, 2026-11-02, #130). The review lists each muscle's weekly sets as
-  the program is written, against its range: `Quads  12 sets a week · 10–15`. The muscles are
+  the program is written, against its range: `Quads  16 sets a week · 14–21`. The muscles are
   those a program exercise has as a primary muscle, in body order; one only trained as a
   secondary muscle isn't measured. They are counted as the context's weekly sets per muscle
   count them (History → Weekly sets per muscle), over the program's first week that isn't eased
