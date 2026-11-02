@@ -476,6 +476,10 @@ private fun App(
     // The focus's marks count the sets trained so far this week.
     LaunchedEffect(screen == Screen.Coach) { if (screen == Screen.Coach) programModel.refreshLowest() }
     val review by programModel.review.collectAsStateWithLifecycle()
+    // A Change's review counts sets per muscle by the library, against the standing volume.
+    LaunchedEffect(exercises, trainingStyle?.targets?.volume) {
+        programModel.countSetsBy(exercises, (trainingStyle?.targets ?: com.hyperlog.app.coach.TrainingTargets()).volume)
+    }
     // A check-in's Change, workout or program opens its review, the one a paste opens, on Coach:
     // one read back as the app starts waits there, rather than covering Today.
     LaunchedEffect(checkIn?.checkIn?.turns?.size, checkInStep?.let { it::class }, screen == Screen.Coach) {
@@ -586,6 +590,10 @@ private fun App(
             onClose = if (reviewingCheckIn) ({ programModel.rejectProgram(); checkInModel.close(); leaveCheckIn() }) else null,
             file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
             fit = com.hyperlog.app.ui.coach.ReviewFit(weekdayPlan, gyms, exercises, java.time.LocalDate.now()),
+            // Its exercises that the library doesn't have yet count too: they come with the proposal.
+            volume = trainingStyle?.let { style ->
+                com.hyperlog.app.coach.ProgramVolume.of(p.program, (exercises + p.newExercises).associateBy { it.id }, style.targets.volume)
+            }.orEmpty(),
             // Save for later ends the check-in on Coach, which says where it went; the program running goes on.
             onSave = {
                 programModel.saveProgram(

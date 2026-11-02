@@ -204,6 +204,24 @@ data class ActiveProgram(
         return changeDiff(record.before, record.after, dayDiffs(record, before = others, after = others + record))
     }
 
+    /**
+     * The days of the week of the next day once [proposed] applies, as they stand before and after
+     * it (SPEC, Sets per muscle): the Changes in force, then those and [proposed] with the ones it
+     * replaces gone. A Change over dates is read as if it covered the week. Null once the program
+     * has finished.
+     */
+    fun weekWith(proposed: Change): Pair<List<PlannedDay>, List<PlannedDay>>? {
+        val (ended, kept) = history.filter { it.revertedAt == null }.partition { it.id in proposed.replaces }
+        val from = movedTo(Changes.ending(program, position, ended.map { it.accepted }))
+        val accepted = from.accept(proposed).copy(id = Long.MAX_VALUE)
+        val week = accepted.after.week
+        val block = program.blockAt(week) ?: return null
+        fun days(changes: List<AcceptedChange>) = block.days.indices.mapNotNull { program.plannedDay(Position(week, it)) }.map { day ->
+            Changes.edited(day, changes.filter { it.change.scope != Scope.RestOfBlock || it.blockId == day.block.id })
+        }
+        return days(changes) to days(kept.map { it.accepted } + accepted)
+    }
+
     /** A diff of [days] whose next day moves [from] → [to], when it moves. */
     private fun changeDiff(from: Position, to: Position, days: List<DayDiff>): ChangeDiff {
         val moved = to != from

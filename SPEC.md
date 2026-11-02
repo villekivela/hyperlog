@@ -2304,7 +2304,10 @@ back.
   alone), and nothing is blocked: Start program and Save for later work as before. Past 8
   muscles the list shows its first 6 and `15 more muscles` to open the rest, as the block review
   does. A Change's review shows the same list for the plan once it applies, each count before →
-  after, when it changes any muscle's sets. This is New program's review, not the program review
+  after, when it changes any muscle's sets: for the week of the next day once the Change applies (the
+  plan with the Changes in force, then with this one and without those it ends), a Change over dates
+  read as if it covered that week, and a muscle the Change leaves alone left out. With every week
+  eased or a deload, the first week is counted. This is New program's review, not the program review
   of a finished program (Program).
 - **Without a key**, Ask Claude's prompt carries the program format (`coach/ProgramFormat.kt`),
   built from the parser's fields and with an example the paste reads; you attach the file in the

@@ -85,6 +85,8 @@ data class ChangeReview(
     val ends: List<String> = emptyList(),
     /** The check-in that made a Change in force; null for one under review, or one pasted. */
     val checkIn: com.hyperlog.app.coach.SavedCheckIn? = null,
+    /** The plan's sets per muscle once it applies, each before → after; null when it changes none. */
+    val volume: com.hyperlog.app.coach.ChangeVolume? = null,
 )
 
 internal const val ChangeDiffTag = "change-diff"
@@ -188,6 +190,7 @@ fun ChangeReviewScreen(
             review.checkIn?.let { made ->
                 item { SectionCard(Modifier.padding(bottom = 8.dp)) { CheckInTranscript(made) } }
             }
+            review.volume?.let { volume -> item(key = "volume") { SetsPerMuscle(volume.rows, volume.before) } }
             if (review.diff.next == null && review.diff.days.isEmpty()) {
                 item {
                     Text(
