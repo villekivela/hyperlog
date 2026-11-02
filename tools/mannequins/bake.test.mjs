@@ -20,7 +20,7 @@ test('the squat bakes a clip of its lowering and an index entry', async () => {
   assert.deepEqual(index.clips.barbell_squat, {
     clip: 'barbell_squat.glb',
     equipment: 'barbell',
-    camera: { target: [0, 0.87, 0], half: 1.02, azimuth: 62, elevation: 8 },
+    camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   });
 
   const gltf = await read(path.join(out, 'barbell_squat.glb'));

@@ -54,8 +54,8 @@ internal fun MannequinGallery(mannequins: Mannequins?, exercises: List<Exercise>
         val pager = rememberPagerState { clips.size }
         HorizontalPager(pager, Modifier.fillMaxSize().padding(padding)) { page ->
             val clip = clips[page]
-            // Each page is laid out as the top of the exercise's sheet: the stage a card at the
-            // cards' margin, the name under it on the text edge.
+            // The stage a card at the cards' margin, as in the exercise's sheet; the name under it on
+            // the screen's text edge.
             Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
                 MannequinStage(clip, Modifier.padding(horizontal = CardMargin))
                 Spacer(Modifier.height(16.dp))

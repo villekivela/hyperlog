@@ -7,12 +7,16 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -31,7 +35,10 @@ import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.mannequin.MannequinClip
 import com.hyperlog.app.mannequin.Mannequins
 import com.hyperlog.app.mannequin.StageCamera
+import com.hyperlog.app.program.RepRange
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.ui.session.ExerciseSheet
+import com.hyperlog.app.ui.theme.ClayColours
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.nio.ByteBuffer
 
 /**
@@ -70,7 +78,7 @@ class MannequinStageTest {
         override fun pause() { playing = false }
         override fun turn(degrees: Float) { turned += degrees }
         override fun resetView() { resets++ }
-        override fun colours(colours: MannequinColours) {}
+        override fun setColours(colours: ClayColours) {}
         override fun release() { released = true }
     }
 
@@ -128,6 +136,39 @@ class MannequinStageTest {
         assertTrue("the sheet takes the vertical drag", sheetDragged > 0f)
         compose.onNodeWithTag(MannequinStageTag).performTouchInput { swipeRight() }
         assertTrue("a drag to the right turns it", players.single().turned > 0f)
+    }
+
+    private val longPlan = List(8) { SetPrescription(RepRange(6, 8), 2, 180) }
+
+    @Test
+    fun aSheetTallerThanTheRoomScrollsToItsVideoButton() {
+        compose.setContent {
+            CompositionLocalProvider(LocalMannequinPlayers provides factory, LocalLifecycleOwner provides lifecycle) {
+                HyperlogTheme {
+                    Box(Modifier.height(600.dp)) {
+                        ExerciseSheet(squat, machine = null, onChangeMachine = null, plan = longPlan, mannequin = mannequins.clipFor(squat))
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText("Technique video").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h914dp")
+    fun aSheetThatFitsLeavesAVerticalDragToTheSheet() {
+        var sheetDragged = 0f
+        compose.setContent {
+            CompositionLocalProvider(LocalMannequinPlayers provides factory, LocalLifecycleOwner provides lifecycle) {
+                HyperlogTheme {
+                    Box(Modifier.draggable(rememberDraggableState { sheetDragged += it }, Orientation.Vertical)) {
+                        ExerciseSheet(squat, machine = null, onChangeMachine = null, mannequin = mannequins.clipFor(squat))
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText("Barbell Back Squat").performTouchInput { swipeDown() }
+        assertTrue("the sheet takes the drag", sheetDragged > 0f)
     }
 
     @Test

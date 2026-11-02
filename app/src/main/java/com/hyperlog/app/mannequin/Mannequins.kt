@@ -36,15 +36,15 @@ class Mannequins(val clips: List<MannequinClip>) {
     }
 }
 
-/** One exercise's baked clip: the `.glb` asset, the equipment its pose is in, and how the stage frames it. */
-data class MannequinClip(val exerciseId: String, val asset: String, val equipment: Equipment, val camera: StageCamera)
+/** One exercise's baked clip: its `.glb` in the app's assets, the equipment its pose is in, and how the stage frames it. */
+data class MannequinClip(val exerciseId: String, val file: String, val equipment: Equipment, val camera: StageCamera)
 
 /**
  * Where the stage's camera looks ([target], x y z in metres), half the height it shows at the
- * target, and the turn and tilt it opens on, in degrees.
+ * target ([halfHeight], metres), and the turn and tilt it opens on, in degrees.
  */
 @Serializable
-data class StageCamera(val target: List<Float>, val half: Float, val azimuth: Float, val elevation: Float)
+data class StageCamera(val target: List<Float>, val halfHeight: Float, val azimuth: Float, val elevation: Float)
 
 @Serializable
 private class IndexFile(val clips: Map<String, IndexEntry>)

@@ -16,6 +16,7 @@ import com.hyperlog.app.mannequin.Mannequins
 import com.hyperlog.app.mannequin.StageCamera
 import com.hyperlog.app.ui.settings.SettingsScreen
 import com.hyperlog.app.ui.settings.StartingWeightsStatus
+import com.hyperlog.app.ui.theme.ClayColours
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -43,7 +44,7 @@ class MannequinGalleryTest {
             override fun pause() {}
             override fun turn(degrees: Float) {}
             override fun resetView() {}
-            override fun colours(colours: MannequinColours) {}
+            override fun setColours(colours: ClayColours) {}
             override fun release() {}
         }
     }

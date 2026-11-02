@@ -1016,8 +1016,10 @@ internal fun ExerciseSheet(
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
-    // It doesn't scroll, so a vertical drag anywhere on it, the mannequin's stage included, moves the sheet.
-    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp).navigationBarsPadding()) {
+    // It scrolls only when it's taller than the room: a scroll takes vertical drags for itself, and
+    // while everything fits a drag anywhere on it, the mannequin's stage included, moves the sheet.
+    val scroll = rememberScrollState()
+    Column(Modifier.fillMaxWidth().verticalScroll(scroll, enabled = scroll.maxValue > 0).padding(bottom = 24.dp).navigationBarsPadding()) {
         mannequin?.let {
             // A card of the sheet, out to the cards' margin like the machine row's and the prescription's.
             com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin))

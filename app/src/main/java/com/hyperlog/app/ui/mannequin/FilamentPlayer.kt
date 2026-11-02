@@ -25,6 +25,7 @@ import com.google.android.filament.gltfio.ResourceLoader
 import com.google.android.filament.gltfio.UbershaderProvider
 import com.hyperlog.app.mannequin.RepTimeline
 import com.hyperlog.app.mannequin.StageCamera
+import com.hyperlog.app.ui.theme.ClayColours
 import java.nio.ByteBuffer
 import kotlin.math.cos
 import kotlin.math.sin
@@ -78,7 +79,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     private var stage: StageCamera? = null
     private var azimuth = 0f
     private var aspect = 1.0
-    private var colours: MannequinColours? = null
+    private var colours: ClayColours? = null
     private var playing = false
     private var still = false
     private var startNanos = 0L
@@ -144,6 +145,12 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
 
     override fun load(glb: ByteBuffer, camera: StageCamera) {
         val loaded = assetLoader.createAsset(glb) ?: return
+        // Another clip replaces the one before, and fades in again.
+        asset?.let {
+            scene.removeEntities(it.entities)
+            assetLoader.destroyAsset(it)
+        }
+        shown = false
         resourceLoader.loadResources(loaded)
         loaded.releaseSourceData()
         scene.addEntities(loaded.entities)
@@ -187,7 +194,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         dirty = true
     }
 
-    override fun colours(colours: MannequinColours) {
+    override fun setColours(colours: ClayColours) {
         this.colours = colours
         applyColours()
         dirty = true
@@ -233,7 +240,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     }
 
     private fun placeCamera(stage: StageCamera) {
-        val distance = stage.half / tan(Math.toRadians(FieldOfView / 2))
+        val distance = stage.halfHeight / tan(Math.toRadians(FieldOfView / 2))
         val az = Math.toRadians(azimuth.toDouble())
         val el = Math.toRadians(stage.elevation.toDouble())
         val (x, y, z) = stage.target.map(Float::toDouble)

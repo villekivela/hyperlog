@@ -34,6 +34,7 @@ import com.hyperlog.app.mannequin.Mannequins
 import com.hyperlog.app.mannequin.StageCamera
 import com.hyperlog.app.ui.session.isDarkSurface
 import com.hyperlog.app.ui.theme.CardShape
+import com.hyperlog.app.ui.theme.ClayColours
 import com.hyperlog.app.ui.theme.Tones
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -77,7 +78,7 @@ internal interface MannequinPlayer {
     /** Back to the turn the clip opens on. */
     fun resetView()
 
-    fun colours(colours: MannequinColours)
+    fun setColours(colours: ClayColours)
 
     /** Releases the engine. The player is not used again. */
     fun release()
@@ -89,23 +90,6 @@ internal fun interface MannequinPlayers {
 
 /** Makes the stage's player: Filament, unless a test provides another. */
 internal val LocalMannequinPlayers = staticCompositionLocalOf<MannequinPlayers> { MannequinPlayers(::FilamentPlayer) }
-
-/**
- * The clay mannequin's colours, greys of the Graphite theme (docs/design/exercise-library.md,
- * Mannequin). The body is the subject, so it holds the most contrast with the stage; the joint
- * rings are a step darker than it, and the equipment sits apart from both: dark iron in light,
- * a muted mid grey in dark, below the body. [shadow] is the floor shadow's strength.
- */
-internal data class MannequinColours(val body: Color, val joint: Color, val bar: Color, val plate: Color, val shadow: Float) {
-    companion object {
-        val Light = MannequinColours(
-            body = Color(0xFFBABAC1), joint = Color(0xFF9A9AA1), bar = Color(0xFF5C5C62), plate = Color(0xFF48484E), shadow = 0.65f,
-        )
-        val Dark = MannequinColours(
-            body = Color(0xFF9A9AA2), joint = Color(0xFF7C7C84), bar = Color(0xFF85858C), plate = Color(0xFF55555C), shadow = 1f,
-        )
-    }
-}
 
 /**
  * The exercise's mannequin doing one rep in a loop, on a stage the width of the sheet. A
@@ -123,15 +107,15 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) 
     val still = remember { animationsRemoved(context) }
     var shown by remember(player, clip) { mutableStateOf(false) }
     val alpha by animateFloatAsState(if (shown) 1f else 0f, tween(durationMillis = 300), label = "mannequin")
-    val colours = if (isDarkSurface()) MannequinColours.Dark else MannequinColours.Light
+    val colours = if (isDarkSurface()) ClayColours.Dark else ClayColours.Light
     LaunchedEffect(player, clip) {
         player.onShown = { shown = true }
-        val bytes = withContext(Dispatchers.IO) { context.assets.open(clip.asset).use { it.readBytes() } }
+        val bytes = withContext(Dispatchers.IO) { context.assets.open(clip.file).use { it.readBytes() } }
         val glb = ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).put(bytes)
         glb.flip()
         player.load(glb, clip.camera)
     }
-    LaunchedEffect(player, colours) { player.colours(colours) }
+    LaunchedEffect(player, colours) { player.setColours(colours) }
     LifecycleResumeEffect(player, still) {
         player.play(still)
         onPauseOrDispose { player.pause() }

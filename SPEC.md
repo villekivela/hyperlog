@@ -1430,6 +1430,9 @@ gallery (Technique videos).
   generic equipment around it. It is a quick cue for which movement this is, not form instruction.
   It is the Quaternius Universal Animation Library mannequin (CC0), drawn in a clay style:
   perspective, soft light, a floor shadow and the Graphite colours. No muscle tint.
+  - **The stage** is a card of the sheet, out to the cards' margin, 5:4, in the sheet's card
+    tone; the name and the rest of the sheet follow under it. The sheet scrolls only when it is
+    taller than the room, so while it fits, a vertical drag on the stage moves the sheet.
   - **Behaviour:** it plays a loop of one rep on its own, with no pause. A horizontal drag turns it;
     a vertical drag stays with the sheet. A double-tap resets the view. With animations removed it
     holds still at the bottom of the rep. While the clip loads, the stage's background shows, then
@@ -1447,7 +1450,9 @@ gallery (Technique videos).
     baked at 15° steps from 0° to 75°, and the bench is turned to the exact angle.
   - **Made offline:** poses are short data entries (with `like:` for variants) in the tool under
     `tools/mannequins/`, which bakes a `.glb` clip per exercise and a `mannequins.json` index of
-    each exercise's tempo and typical angle. The clips and the index are committed and shipped
+    each exercise's equipment, the stage's framing for it (where the camera looks, how much it
+    shows, the turn and tilt it opens on), its tempo and its typical angle. A clip plays only for
+    an exercise with its pose's equipment. The clips and the index are committed and shipped
     with the app; the phone poses nothing live. CI re-bakes them and fails on any difference.
   - **Debug builds:** a gallery in Settings swipes through every clip.
   - **Checking:** the logic (which clip, which angle, the tempo phases) is tested in the JVM
