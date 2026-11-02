@@ -145,6 +145,8 @@ fun SessionScreen(
     var showPicker by rememberSaveable { mutableStateOf(false) }
     var showRest by rememberSaveable { mutableStateOf(false) }
     var showDetails by rememberSaveable { mutableStateOf(false) }
+    // Read with the screen, so the prescription sheet opens at its full height with its mannequin.
+    val mannequins = com.hyperlog.app.ui.mannequin.rememberMannequins()
     var showFinish by rememberSaveable { mutableStateOf(false) }
     /** The set whose options sheet is open, by index; null when closed. */
     var setOptions by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -466,6 +468,7 @@ fun SessionScreen(
                 // The full reason for the weight, and the old app's set for a machine, live here rather than on the screen.
                 why = current.suggestion?.takeIf { !current.done }?.let { s -> s.why?.let { it to s.direction(current.sets.lastOrNull()?.weightKg) } },
                 startingHint = current.startingHint,
+                mannequin = mannequins?.clipFor(current.exercise),
             )
         }
     }
@@ -992,7 +995,8 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
 /**
  * The exercise's prescription sheet. An ad-hoc session has no prescription, so it shows what
  * the library knows: equipment and muscles, the technique note and the technique video, or a
- * YouTube search for the technique when the exercise has none.
+ * YouTube search for the technique when the exercise has none. An exercise with a mannequin plays
+ * it at the top.
  */
 @Composable
 internal fun ExerciseSheet(
@@ -1007,10 +1011,16 @@ internal fun ExerciseSheet(
     why: Pair<String, Direction>? = null,
     /** A machine's set from the old app (`45 kg × 12 @ 1 RIR, 12 Sep`); null with none. */
     startingHint: String? = null,
+    /** The exercise's mannequin, played at the top; null for an exercise without one. */
+    mannequin: com.hyperlog.app.mannequin.MannequinClip? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     Column(Modifier.fillMaxWidth().padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding()) {
+        mannequin?.let {
+            com.hyperlog.app.ui.mannequin.MannequinStage(it)
+            Spacer(Modifier.height(16.dp))
+        }
         Text(interFigures(exercise.name), style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(4.dp))
         Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)

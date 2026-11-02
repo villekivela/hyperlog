@@ -886,6 +886,10 @@
     <string name="settings_check_now">Check for updates now</string>
     <string name="settings_version">Hyperlog %1$s</string>
     <string name="settings_check_now_about">Ask GitHub for the latest version</string>
+    <string name="settings_debug">Debug</string>
+    <string name="settings_mannequin_gallery_body">Swipe through every clip</string>
+    <string name="mannequin_gallery">Mannequin gallery</string>
+    <string name="mannequin_gallery_page">%1$d of %2$d</string>
     <string name="settings_check_now_checking">Checking…</string>
     <string name="settings_check_now_found">A newer version is ready: see Today</string>
     <string name="settings_check_now_none">No newer version, or no connection</string>

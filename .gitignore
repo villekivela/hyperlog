@@ -16,3 +16,6 @@ local.properties
 
 # Agent worktrees made by Claude Code
 .claude/worktrees/
+
+# The mannequin tool's npm packages
+node_modules/

@@ -67,7 +67,9 @@ When the phone isn't free, an emulator stands in for it: the same screen, 1280 Ã
 - **Install:** `~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk 'emulator' 'system-images;android-36;google_apis;x86_64'`.
 - **Create the AVD:** `avdmanager create avd -n hyperlog -k 'system-images;android-36;google_apis;x86_64' -d pixel_9_pro_xl`,
   then set `hw.lcd.width=1280` and `hw.lcd.height=2856` in `~/.android/avd/hyperlog.avd/config.ini`.
-- **Start it headless:** `~/Android/Sdk/emulator/emulator -avd hyperlog -no-window -no-audio -gpu swiftshader_indirect`.
+- **Start it headless:** `~/Android/Sdk/emulator/emulator -avd hyperlog -no-window -no-audio -gpu swangle_indirect`.
+  The mannequin's renderer (Filament) needs ANGLE's OpenGL ES 3.1: on `-gpu swiftshader_indirect`
+  (OpenGL ES 3.0) its shaders fail to link and the app aborts when a mannequin opens.
   It comes up as `emulator-5554`.
 - **With the phone attached too**, set `ANDROID_SERIAL=emulator-5554` (or `adb -s emulator-5554`)
   for every command, so nothing reaches the phone.
@@ -81,6 +83,12 @@ When the phone isn't free, an emulator stands in for it: the same screen, 1280 Ã
   An older database migrates on the next launch, as it would on the phone.
 - The emulator's settings are yours to change: `adb shell settings put system font_scale 1.15`
   matches the phone's text size, and `adb shell cmd uimode night yes|no` switches dark and light.
+
+## The mannequin's clips
+
+The clips the prescription sheet plays are baked offline by `tools/mannequins/` (Node and
+three.js, see its README) and committed under `app/src/main/assets/mannequins/`. Debug builds list
+them in Settings â†’ Debug â†’ Mannequin gallery.
 
 ## UI work: designer and tester
 
