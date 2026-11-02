@@ -17,6 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -59,14 +62,18 @@ internal fun SetsPerMuscle(rows: List<MuscleVolume>, before: Map<String, Double>
     val lines = shown.map { row ->
         val sets = BlockReviews.formatSets(row.sets)
         val was = before?.let { BlockReviews.formatSets(it[row.muscle] ?: 0.0) }
+        val one = sets == "1"
         val supporting = when (was) {
-            null -> context.getString(R.string.sets_per_muscle_line, sets, row.range.toString())
-            else -> context.getString(R.string.sets_per_muscle_change, was, sets, row.range.toString())
+            null -> context.getString(if (one) R.string.sets_per_muscle_line_one else R.string.sets_per_muscle_line, sets, row.range.toString())
+            else -> context.getString(if (one) R.string.sets_per_muscle_change_one else R.string.sets_per_muscle_change, was, sets, row.range.toString())
         }
-        val mark = listOfNotNull(
-            if (row.focused) focus else null,
-            when (row.status) { VolumeStatus.Under -> under; VolumeStatus.Over -> over; VolumeStatus.Within -> null },
-        ).joinToString(" · ")
+        val flag = when (row.status) { VolumeStatus.Under -> under; VolumeStatus.Over -> over; VolumeStatus.Within -> null }
+        // Focus is a fact about the muscle, in the accent; under and over are the warning, in the error colour.
+        val mark = buildAnnotatedString {
+            if (row.focused) withStyle(SpanStyle(color = cs.primary)) { append(focus) }
+            if (row.focused && flag != null) append(" · ")
+            if (flag != null) withStyle(SpanStyle(color = cs.error)) { append(flag) }
+        }
         Triple(row, supporting, mark)
     }
     val toggle = if (open) stringResource(R.string.review_volume_fewer)
@@ -76,10 +83,10 @@ internal fun SetsPerMuscle(rows: List<MuscleVolume>, before: Map<String, Double>
             item {
                 SegmentedRow(
                     row.muscle, supporting,
+                    symbol = when (row.status) { VolumeStatus.Under -> Symbol.ArrowDownward; VolumeStatus.Over -> Symbol.ArrowUpward; VolumeStatus.Within -> Symbol.Check },
                     supportingColor = if (row.status == VolumeStatus.Within) null else cs.error,
-                    trailing = if (mark.isEmpty()) null else ({
-                        Text(mark, style = MaterialTheme.typography.labelLarge, color = if (row.status == VolumeStatus.Within) cs.primary else cs.error)
-                    }),
+                    supportingLines = 2,
+                    trailing = if (mark.isEmpty()) null else ({ Text(mark, style = MaterialTheme.typography.labelLarge) }),
                 )
             }
         }

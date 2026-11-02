@@ -1042,6 +1042,8 @@
     <string name="sets_per_muscle">Sets per muscle</string>
     <string name="sets_per_muscle_line">%1$s sets a week · %2$s</string>
     <string name="sets_per_muscle_change">%1$s → %2$s sets a week · %3$s</string>
+    <string name="sets_per_muscle_line_one">%1$s set a week · %2$s</string>
+    <string name="sets_per_muscle_change_one">%1$s → %2$s set a week · %3$s</string>
     <string name="sets_per_muscle_focus">Focus</string>
     <string name="sets_per_muscle_under">under</string>
     <string name="sets_per_muscle_over">over</string>
