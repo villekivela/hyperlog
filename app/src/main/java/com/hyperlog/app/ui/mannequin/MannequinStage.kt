@@ -63,8 +63,11 @@ internal interface MannequinPlayer {
     /** Called once the loaded clip's first frame is on screen. */
     var onShown: () -> Unit
 
-    /** Loads a clip's `.glb` (a direct buffer) and frames the stage on [camera]. */
-    fun load(glb: ByteBuffer, camera: StageCamera)
+    /**
+     * Loads a clip's `.glb` (a direct buffer), with the files it reads by name ([resources], each a
+     * direct buffer), and frames the stage on [camera].
+     */
+    fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera)
 
     /** Draws frames, looping the rep; [still] holds it at the bottom instead. */
     fun play(still: Boolean)
@@ -117,10 +120,10 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) 
     val colours = if (isDarkSurface()) ClayColours.Dark else ClayColours.Light
     LaunchedEffect(player, clip) {
         player.onShown = { shown = true }
-        val bytes = withContext(Dispatchers.IO) { context.assets.open(clip.file).use { it.readBytes() } }
-        val glb = ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).put(bytes)
-        glb.flip()
-        player.load(glb, clip.camera)
+        val (glb, resources) = withContext(Dispatchers.IO) {
+            context.readAsset(clip.file) to clip.resources.mapValues { (_, file) -> context.readAsset(file) }
+        }
+        player.load(glb, resources, clip.camera)
     }
     LaunchedEffect(player, colours) { player.setColours(colours) }
     LifecycleResumeEffect(player, still) {
@@ -145,6 +148,12 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) 
     ) {
         AndroidView({ player.view }, Modifier.matchParentSize().graphicsLayer { this.alpha = alpha })
     }
+}
+
+/** An asset's bytes in a direct buffer, as Filament reads them. */
+private fun Context.readAsset(file: String): ByteBuffer {
+    val bytes = assets.open(file).use { it.readBytes() }
+    return ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).put(bytes).apply { flip() }
 }
 
 /** The shipped clips, read from the assets once the caller is first composed; null until then. */

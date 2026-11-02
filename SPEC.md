@@ -1452,9 +1452,11 @@ gallery (Technique videos).
   - **Made offline:** poses are short data entries (with `like:` for variants) in the tool under
     `tools/mannequins/`, which bakes a `.glb` clip per exercise and a `mannequins.json` index of
     each exercise's equipment, the stage's framing for it (where the camera looks, how much it
-    shows, the turn and tilt it opens on), its tempo and its typical angle. A clip plays only for
-    an exercise with its pose's equipment. The clips and the index are committed and shipped
-    with the app; the phone poses nothing live. CI re-bakes them and fails on any difference.
+    shows, the turn and tilt it opens on), its tempo and its typical angle. The mannequin's mesh and
+    skin are baked once, into a file every clip reads (#123), so a clip holds only its equipment and
+    its animation. A clip plays only for an exercise with its pose's equipment. The clips and the
+    index are committed and shipped with the app; the phone poses nothing live. CI re-bakes them and
+    fails on any difference.
   - **Generic equipment** (#123): each kind in the library has a generic kit (barbell, dumbbells, a
     flat or adjustable bench, a cable tower with its pulley and stack, and the machines by kind: the
     leg press's sled, the chest press's levers), or is listed as missing in the tool. Stacks, sleds

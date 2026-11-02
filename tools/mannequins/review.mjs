@@ -33,8 +33,21 @@ const batchOf = (name) => {
   return ids;
 };
 
-/** A clip's fingerprint, which a verdict names. */
-const hashOf = async (file) => createHash('sha256').update(await readFile(file)).digest('hex').slice(0, 16);
+/** The files the clip `id` reads, its own first, from the index in `clips`. */
+async function filesOf(clips, id) {
+  const index = JSON.parse(await readFile(path.join(clips, 'mannequins.json'), 'utf8'));
+  const entry = index.clips[id];
+  return [entry.clip, ...(entry.resources ?? [])].map((f) => path.join(clips, f));
+}
+
+/** A clip's fingerprint, which a verdict names: its own file and the mannequin it shares. */
+async function hashOf(files) {
+  const hash = createHash('sha256');
+  for (const f of files) hash.update(await readFile(f));
+  return hash.digest('hex').slice(0, 16);
+}
+
+const dataUri = async (type, file) => `data:${type};base64,${(await readFile(file)).toString('base64')}`;
 
 /** Builds the batch's review page into `out`/index.html, its clips in it: the page is published alone. */
 export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 'review', 'out', batch) } = {}) {
@@ -43,19 +56,21 @@ export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 
   const names = Object.fromEntries(library.exercises.map((e) => [e.id, e.name]));
   await mkdir(out, { recursive: true });
   const exercises = [];
+  // Each file the clips read by name is in the page once, however many clips share it.
+  const resources = {};
   for (const id of ids) {
     const entry = prepare(id);
     const { checks } = await checkPose(id);
-    const file = path.join(clips, `${id}.glb`);
-    const clip = `data:model/gltf-binary;base64,${(await readFile(file)).toString('base64')}`;
+    const [file, ...shared] = await filesOf(clips, id);
+    for (const f of shared) resources[path.basename(f)] ??= await dataUri('application/octet-stream', f);
     exercises.push({
-      id, name: names[id] ?? id, equipment: entry.equipment, clip,
-      hash: await hashOf(file), camera: entry.camera, traced: Boolean(entry.trace), checks,
+      id, name: names[id] ?? id, equipment: entry.equipment, clip: await dataUri('model/gltf-binary', file),
+      hash: await hashOf([file, ...shared]), camera: entry.camera, traced: Boolean(entry.trace), checks,
     });
   }
   const template = await readFile(path.join(HERE, 'review', 'page.html'), 'utf8');
   // The data sits in the page as JSON; `<` is escaped so nothing in it can close the script.
-  const data = JSON.stringify({ batch, exercises }).replace(/</g, '\\u003c');
+  const data = JSON.stringify({ batch, resources, exercises }).replace(/</g, '\\u003c');
   await writeFile(path.join(out, 'index.html'), template.replace('/*BATCH*/{}', data));
   return out;
 }
@@ -76,7 +91,7 @@ export async function batchStatus(batch, verdicts, { clips = CLIPS } = {}) {
   const exercises = [];
   for (const id of batchOf(batch)) {
     const v = verdicts[id];
-    const now = await hashOf(path.join(clips, `${id}.glb`));
+    const now = await hashOf(await filesOf(clips, id));
     exercises.push({ id, state: stateOf(v, now), note: v?.note ?? '' });
   }
   return { done: exercises.every((e) => e.state === 'ok'), exercises };

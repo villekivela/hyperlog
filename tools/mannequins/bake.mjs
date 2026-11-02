@@ -1,8 +1,9 @@
 // Bakes each pose entry into a clip the phone plays: the mannequin, its equipment and the floor
 // shadow in one .glb, with one animation of the rep's lowering, from the top (0 s) to the bottom
-// (1 s). The phone plays it forward, holds, and plays it backward. `mannequins.json` indexes the
-// clips by exercise id. Every pose is checked first (checks.mjs), and if any fails, nothing is
-// written.
+// (1 s). The phone plays it forward, holds, and plays it backward. The mannequin's mesh and skin
+// are the same in every clip, so they are written once, to `mannequin.bin`, which each clip reads
+// by URI (glb.mjs). `mannequins.json` indexes the clips by exercise id. Every pose is checked
+// first (checks.mjs), and if any fails, nothing is written.
 //
 //   node bake.mjs [out-dir]     (default: app/src/main/assets/mannequins)
 import { writeFile, mkdir } from 'node:fs/promises';
@@ -13,6 +14,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkPose } from './checks.mjs';
+import { shareBody } from './glb.mjs';
 import { POSES } from './poses.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -38,12 +40,10 @@ async function mustPass(id, poses) {
   }
 }
 
-/** Bakes one entry, once it passes its checks: the .glb's bytes and the index entry. */
-export async function bakeOne(id, { poses = POSES } = {}) {
-  await mustPass(id, poses);
-  return bake(id, poses);
-}
+/** The file the clips share their mannequin's mesh and skin from. */
+export const SHARED = 'mannequin.bin';
 
+/** Bakes one entry: its .glb's bytes, the mannequin still in it, and the index entry. */
 async function bake(id, poses) {
   const entry = prepare(id, poses);
   const { scene, rig, kit, pose } = await buildStage(entry);
@@ -88,22 +88,25 @@ async function bake(id, poses) {
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip] });
   return {
     glb: Buffer.from(glb),
-    entry: { clip: `${id}.glb`, equipment: entry.equipment, camera: { ...entry.camera } },
+    entry: { clip: `${id}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, resources: [SHARED] },
   };
 }
 
-/** Bakes every entry into `out`: one .glb each and mannequins.json. A pose that fails its checks stops it before anything is written. */
+/**
+ * Bakes every entry into `out`: one .glb each, the mannequin they share and mannequins.json. A
+ * pose that fails its checks stops it before anything is written.
+ */
 export async function bakeAll(out = CLIPS, { poses = POSES } = {}) {
   const ids = Object.keys(poses).sort();
   for (const id of ids) await mustPass(id, poses);
   const baked = [];
   for (const id of ids) baked.push([id, await bake(id, poses)]);
+  const { clips, shared } = shareBody(baked.map(([id, b]) => [id, b.glb]), SHARED);
   await mkdir(out, { recursive: true });
+  await writeFile(path.join(out, SHARED), shared);
   const index = {};
-  for (const [id, { glb, entry }] of baked) {
-    await writeFile(path.join(out, entry.clip), glb);
-    index[id] = entry;
-  }
+  baked.forEach(([id, { entry }], i) => { index[id] = entry; });
+  for (const [id, glb] of clips) await writeFile(path.join(out, index[id].clip), glb);
   await writeFile(path.join(out, 'mannequins.json'), JSON.stringify({ clips: index }, null, 2) + '\n');
   return index;
 }

@@ -145,7 +145,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         uiHelper.attachTo(view)
     }
 
-    override fun load(glb: ByteBuffer, camera: StageCamera) {
+    override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera) {
         val loaded = assetLoader.createAsset(glb) ?: return
         // Another clip replaces the one before, and fades in again.
         asset?.let {
@@ -153,7 +153,10 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             assetLoader.destroyAsset(it)
         }
         shown = false
+        // The clip reads the mannequin's mesh and skin from a file it shares with every other clip.
+        resources.forEach { (name, data) -> resourceLoader.addResourceData(name, data) }
         resourceLoader.loadResources(loaded)
+        resourceLoader.evictResourceData()
         loaded.releaseSourceData()
         scene.addEntities(loaded.entities)
         val renderables = engine.renderableManager

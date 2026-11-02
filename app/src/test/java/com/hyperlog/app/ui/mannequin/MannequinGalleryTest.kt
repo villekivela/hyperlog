@@ -39,7 +39,7 @@ class MannequinGalleryTest {
         object : MannequinPlayer {
             override val view = View(c)
             override var onShown: () -> Unit = {}
-            override fun load(glb: ByteBuffer, camera: StageCamera) { loaded += glb.remaining() }
+            override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera) { loaded += glb.remaining() }
             override fun play(still: Boolean) {}
             override fun pause() {}
             override fun turn(degrees: Float) {}

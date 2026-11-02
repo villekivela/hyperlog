@@ -17,6 +17,8 @@ class MannequinsTest {
     fun theSquatPlaysItsClip() {
         val clip = mannequins.clipFor(squat)!!
         assertEquals("mannequins/barbell_squat.glb", clip.file)
+        // The mannequin's mesh and skin are shared by every clip, which reads them by name.
+        assertEquals(mapOf("mannequin.bin" to "mannequins/mannequin.bin"), clip.resources)
         assertEquals(StageCamera(target = listOf(0f, 0.87f, 0f), halfHeight = 1.02f, azimuth = 62f, elevation = 8f), clip.camera)
     }
 

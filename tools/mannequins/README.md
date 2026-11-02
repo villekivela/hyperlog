@@ -216,7 +216,8 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 - `stage.mjs`: a pose's scene, posed at any point of the rep; the checks and the bake both use it.
 - `checks.mjs`: the checks.
 - `bake.mjs`: samples the lowering (31 frames, 0 s at the top to 1 s at the bottom) into one
-  animation, `lowering`, and writes the files.
+  animation, `lowering`, and writes the files. `glb.mjs` moves the shared mannequin into
+  `mannequin.bin`.
 - `trace.mjs` and `trace/landmarks.py`: tracing a pose from footage. `traces/`: the traced angles.
 - `review.mjs` and `review/page.html`: the review page and the batches. `review/<batch>.json`: each
   batch's verdicts.
@@ -230,9 +231,18 @@ or stretches (a cable is a rod scaled along its length). A bone or part that doe
 at its pose at the top. The phone plays the lowering forward, holds, plays it backward and holds
 again.
 
+The mannequin's mesh and skin are the same in every clip, so they are baked once, into
+`mannequin.bin`. Each clip's glTF reads that buffer by URI, and holds only its own kit, shadow and
+animation (`glb.mjs`). The bake checks every clip's mannequin is byte for byte the same before it
+shares it. The phone hands `mannequin.bin` to gltfio's `ResourceLoader` (`addResourceData`) before
+loading a clip; the review page and the tests resolve it the same way.
+
 `mannequins.json`:
 
 ```json
 { "clips": { "barbell_squat": { "clip": "barbell_squat.glb", "equipment": "barbell",
-  "camera": { "target": [0, 0.87, 0], "halfHeight": 1.02, "azimuth": 62, "elevation": 8 } } } }
+  "camera": { "target": [0, 0.87, 0], "halfHeight": 1.02, "azimuth": 62, "elevation": 8 },
+  "resources": ["mannequin.bin"] } } }
 ```
+
+`resources` names the files a clip reads by URI, beside it in `assets/mannequins/`.
