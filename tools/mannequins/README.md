@@ -196,8 +196,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
   toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
   `twin`, a stirrup in each hand, each on its own column's cable, or the far one's with `crossed`.
-  Its stack rests where the cable is drawn least, at whichever end of the rep that is, so it rises
-  through a raise or a flye whose top is the hands' far point. A kit's `place(P, top, bottom)` gets
+  Its stack is lowest where the cable is drawn least, at whichever end of the rep that is, so it
+  rises through a raise or a flye whose top is the hands' far point, and even there it is held 6 cm
+  off its rest (`HELD`), as a working stack is; the leg machines' stacks are held the same way. A kit's `place(P, top, bottom)` gets
   both ends of the rep for that.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
   `straight_bar`, `v_handle` or `handles` (two stirrups `spread` metres either side of the middle,

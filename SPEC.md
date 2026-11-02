@@ -1511,8 +1511,10 @@ gallery (Technique videos).
     and levers move with the rep. The starter program's batch (#127) adds a cable column, one or a
     pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
-    row, the machine pulldown and the preacher curl. Every stack rests where the working muscle is
-    longest, at the stretch, and rises as it works; a column's rests where its cable is drawn least.
+    row, the machine pulldown and the preacher curl. Every stack is lowest where the working muscle
+    is longest, at the stretch, and rises as it works. A working stack is never fully down at the
+    stretch (owner, via the coordinator, 2026-11-03): the cable columns' and the leg machines' stacks
+    stay a few centimetres off their rest all through the rep, as only before the first rep they sit.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

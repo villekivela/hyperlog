@@ -564,6 +564,12 @@ function stackFrame(z, top, M) {
   ];
 }
 
+/**
+ * How far a working stack is held off its rest at the stretch: only before the first rep does it sit
+ * down (the cable columns and the leg machines).
+ */
+const HELD = 0.06;
+
 /** A shaped tube along a smooth path through `points`. */
 function bent(key, points, radius, material, opts) {
   const g = shape(key, () => soften(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3), 16, radius, 12, false)));
@@ -925,7 +931,7 @@ function cableColumn({ at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'han
       }
       const hooks = hooksAt(P);
       hooks.forEach(({ c, s, hook }, i) => {
-        const lift = Math.max(0, hook.distanceTo(c.exit) - rests[i]);
+        const lift = HELD + Math.max(0, hook.distanceTo(c.exit) - rests[i]);
         c.set(hook, lift);
         span(cables[columns.indexOf(c)], hook, c.exit);
         if (handles) {
@@ -1012,6 +1018,9 @@ function kneeLever(M, side, { down, behind }) {
   };
 }
 
+/** How far a seated curl's thigh pad tips toward the knees, in degrees, to lie along the thighs. */
+const THIGH_TAPER = 10;
+
 /**
  * A leg extension or, with `curl`, a seated leg curl: a seat and back pad (its face `pad` behind
  * the spine), handles beside the seat, and a lever turning about the knees with a roller on the
@@ -1055,13 +1064,15 @@ function legExtension({ seat = [0.5, 0], pad: behind = 0.12, curl = false } = {}
       span(sidePost, V(side, 0.07, pivot.z + 0.25), pivot);
       if (curl) {
         // Over the thighs, a hand's breadth back from the knees.
-        const above = P0.knee.clone().addScaledVector(P0.thigh, -0.14).addScaledVector(P0.kneeUp, 0.13);
+        const above = P0.knee.clone().addScaledVector(P0.thigh, -0.14).addScaledVector(P0.kneeUp, 0.125);
         thighPad.position.copy(above);
-        thighPad.quaternion.setFromUnitVectors(UP, P0.kneeUp);
+        // Tipped toward the knees, along the thighs' taper.
+        thighPad.quaternion.setFromUnitVectors(UP, P0.kneeUp).multiply(new THREE.Quaternion().setFromAxisAngle(X, rad(THIGH_TAPER)));
         span(thighPost, above.clone().setX(side), V(side, 0.07, above.z));
       }
-      // The stack rests at the stretch, the bottom of the rep, and rises as the knees work.
-      const lift = 0.22 * P.shin.angleTo(P1.shin);
+      // The stack is held just off its rest at the stretch, the bottom of the rep, and rises as the
+      // knees work.
+      const lift = HELD + 0.22 * P.shin.angleTo(P1.shin);
       weights.lift(lift);
       span(drop, V(0, wheel.y, stackZ), weights.top(lift));
       // Out to the side over the wheel, clear of the body, and down to the hub.
