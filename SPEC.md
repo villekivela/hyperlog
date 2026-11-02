@@ -1508,7 +1508,11 @@ gallery (Technique videos).
     slider for each number of its pose entry, and the levers its movement offers that the entry
     leaves at the default (shoulder lift, elbow flare, arch). The page poses the body live with the
     tool's own code, bundled into it, looping or held at the top or the bottom, with the automatic
-    checks re-run on what it shows. OK saves the tuned values with the verdict (`verdicts/<id>`,
+    checks re-run on what it shows. With the rep held at the top or the bottom, dots on the body
+    (the hands, elbows, feet, hips and chest, where the entry has numbers for them) can be dragged:
+    the rig re-solves the limb live, and each drag is saved as the same pose numbers the sliders
+    set (the bar and the grip width, the elbow flare, the feet, `body.hip`, the trunk's lean or the
+    arch). OK saves the tuned values with the verdict (`verdicts/<id>`,
     as JSON text); `review status` lists them, and `review apply <batch>` writes them into
     `poses.mjs` (comments kept), re-bakes, and gives each its OK for the new clip.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the

@@ -220,7 +220,10 @@ Each card has a **Tune** panel: a slider for each number of the exercise's pose 
 levers its movement offers that the entry leaves at the default), the body posed live in place of
 the clip with the tool's own modules (`bundle.mjs` bundles them, and `tune.mjs` says which numbers
 are sliders), the rep looping or held at the top or the bottom, and the automatic checks re-run on
-what it shows. OK saves what was tuned, as `{ path: value }` in `verdicts/<id>.tuned` (JSON text;
+what it shows. Held at the top or the bottom, it also shows **drag handles** (`handles.mjs`): dots on
+the hands, elbows, feet, hips and chest, where the entry has numbers for them. A drag is saved as
+those same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
+`body.arch`), so the sliders follow it and the rig re-solves the limb. OK saves what was tuned, as `{ path: value }` in `verdicts/<id>.tuned` (JSON text;
 a point is saved whole, `top.bar`). `npm run review -- status <batch>` lists them as `tuned`, and
 `npm run review -- apply <batch>` puts them into `poses.mjs` as text (`patch.mjs`, so the comments
 stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; write the same
@@ -237,7 +240,7 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 ## Files
 
 - `render.mjs`: PNGs of a pose, with no GPU.
-- `bundle.mjs`, `tune.mjs`, `patch.mjs`: the review page's Tune panel: the modules it runs, its sliders, and `review apply`'s text patch.
+- `bundle.mjs`, `tune.mjs`, `handles.mjs`, `patch.mjs`: the review page's Tune panel: the modules it runs, its sliders, its drag handles, and `review apply`'s text patch.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses

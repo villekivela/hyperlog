@@ -219,6 +219,13 @@ function stage(e, canvas, holder) {
   let clipScene = null;
   let live = null;
   let show = 'loop';
+  // Drag handles (the Tune panel): dots on the body that, dragged, set the pose numbers.
+  const markers = new THREE.Group();
+  scene.add(markers);
+  const dot = new THREE.SphereGeometry(1, 16, 12);
+  let handles = [];
+  let onDrag = () => {};
+  let dragging = null;
   const place = () => {
     const a = THREE.MathUtils.degToRad(azimuth);
     const el = THREE.MathUtils.degToRad(e.camera.elevation);
@@ -266,19 +273,56 @@ function stage(e, canvas, holder) {
     const along = show === 'top' ? 0 : show === 'bottom' ? 1 : at(seconds);
     if (live) live.pose(Math.min(along, 1));
     else if (mixer) mixer.setTime(Math.min(along, 0.9999) * duration);
+    for (const m of markers.children) m.scale.setScalar(camera.position.distanceTo(m.position) * 0.016);
     renderer.render(scene, camera);
   };
 
   // A sideways drag turns it; the page keeps vertical drags. A double-tap resets the view.
   let from = null;
-  holder.addEventListener('pointerdown', (ev) => { from = ev.clientX; holder.setPointerCapture(ev.pointerId); });
+  const ray = new THREE.Raycaster();
+  const pointer = (ev) => {
+    const r = canvas.getBoundingClientRect();
+    return new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  };
+  holder.addEventListener('pointerdown', (ev) => {
+    holder.setPointerCapture(ev.pointerId);
+    if (handles.length) {
+      const r = canvas.getBoundingClientRect();
+      let best = null;
+      let nearest = 28;
+      for (const h of handles) {
+        const p = h.at.clone().project(camera);
+        const d = Math.hypot(((p.x + 1) / 2) * r.width - (ev.clientX - r.left), ((1 - p.y) / 2) * r.height - (ev.clientY - r.top));
+        if (d < nearest) { nearest = d; best = h; }
+      }
+      if (best) {
+        const normal = camera.getWorldDirection(new THREE.Vector3());
+        dragging = { id: best.id, plane: new THREE.Plane().setFromNormalAndCoplanarPoint(normal, best.at) };
+        holder.querySelector('.hint').textContent = `dragging the ${best.label}`;
+        ev.preventDefault();
+        return;
+      }
+    }
+    from = ev.clientX;
+  });
   holder.addEventListener('pointermove', (ev) => {
+    if (dragging) {
+      ray.setFromCamera(pointer(ev), camera);
+      const point = ray.ray.intersectPlane(dragging.plane, new THREE.Vector3());
+      const h = handles.find((x) => x.id === dragging.id);
+      if (point && h) onDrag(h, point);
+      return;
+    }
     if (from === null) return;
     azimuth -= (ev.clientX - from) * 0.5;
     from = ev.clientX;
     place();
   });
-  const end = () => { from = null; };
+  const end = () => {
+    from = null;
+    if (dragging) holder.querySelector('.hint').textContent = 'drag the dots to pose, or turn it';
+    dragging = null;
+  };
   holder.addEventListener('pointerup', end);
   holder.addEventListener('pointercancel', end);
   holder.addEventListener('dblclick', () => { azimuth = e.camera.azimuth; place(); });
@@ -295,7 +339,26 @@ function stage(e, canvas, holder) {
     }
     if (clipScene) clipScene.visible = !live;
   };
-  return { draw, colour, setLive, setShow: (v) => { show = v; } };
+  // The handles, and what a drag of one does with the point it was dragged to.
+  const setHandles = (list, drag) => {
+    handles = list;
+    onDrag = drag;
+    markers.clear();
+    for (const h of list) {
+      const m = new THREE.Mesh(dot, new THREE.MeshBasicMaterial({ color: 0xff7a1a, depthTest: false, transparent: true, opacity: 0.92 }));
+      m.renderOrder = 10;
+      m.position.copy(h.at);
+      markers.add(m);
+    }
+    holder.querySelector('.hint').textContent = list.length ? 'drag the dots to pose, or turn it' : 'drag to turn';
+    // Where each dot is on the page, for whoever tests the page.
+    const r = canvas.getBoundingClientRect();
+    holder.dataset.handles = JSON.stringify(Object.fromEntries(list.map((h) => {
+      const p = h.at.clone().project(camera);
+      return [h.id, [Math.round(r.left + ((p.x + 1) / 2) * r.width), Math.round(r.top + ((1 - p.y) / 2) * r.height)]];
+    })));
+  };
+  return { draw, colour, setLive, setHandles, setShow: (v) => { show = v; } };
 }
 
 /** The check results as the list shows them: a dot, the check, and the worst of it. */
@@ -364,6 +427,7 @@ function tuning(e, node, card, s) {
       const stage = await tune.buildStage(entry, body);
       s.setLive(stage);
       built = { entry, stage };
+      handles();
       checkSoon();
     } catch (err) {
       count.textContent = `Can't pose this: ${err.message}`;
@@ -373,21 +437,36 @@ function tuning(e, node, card, s) {
     }
   };
 
+  // A value goes in at its path, or comes out again when it is what the entry already had.
+  const put = (path, value) => {
+    if (same(value, tune.baseAt(e.entry, path))) delete tuned[path]; else tuned[path] = value;
+  };
+  const soon = () => {
+    paint();
+    if (!frame) frame = requestAnimationFrame(() => { frame = 0; rebuild(); });
+  };
   const change = (path, v) => {
     const m = path.match(/^(.*)\.(\d+)$/);
     if (m) {
       const [, parent, i] = m;
-      const base = tune.baseAt(e.entry, parent);
-      const next = JSON.parse(JSON.stringify(tuned[parent] ?? base));
+      const next = JSON.parse(JSON.stringify(tuned[parent] ?? tune.baseAt(e.entry, parent)));
       next[Number(i)] = v;
-      if (same(next, base)) delete tuned[parent]; else tuned[parent] = next;
-    } else if (v === tune.baseAt(e.entry, path)) {
-      delete tuned[path];
+      put(parent, next);
     } else {
-      tuned[path] = v;
+      put(path, v);
     }
-    paint();
-    if (!frame) frame = requestAnimationFrame(() => { frame = 0; rebuild(); });
+    soon();
+  };
+  // The handles of the body held at the top or the bottom; a drag sets the same numbers the sliders do.
+  let showing = 'loop';
+  const handles = () => {
+    if (showing === 'loop' || !built) { s.setHandles([], () => {}); return; }
+    const d = showing === 'top' ? 0 : 1;
+    const P = built.stage.pose(d);
+    s.setHandles(tune.handlesAt(built.entry, built.stage, P, d), (h, point) => {
+      for (const [path, value] of Object.entries(h.drag(point))) put(path, value);
+      soon();
+    });
   };
 
   const make = () => {
@@ -425,6 +504,7 @@ function tuning(e, node, card, s) {
     opened = false;
     clearTimeout(timer);
     s.setLive(null);
+    s.setHandles([], () => {});
     fillChecks(list, e.checks);
     panel.hidden = true;
     button.setAttribute('aria-expanded', 'false');
@@ -442,6 +522,8 @@ function tuning(e, node, card, s) {
   for (const b of panel.querySelectorAll('[data-show]')) {
     b.addEventListener('click', () => {
       s.setShow(b.dataset.show);
+      showing = b.dataset.show;
+      handles();
       for (const o of panel.querySelectorAll('[data-show]')) o.setAttribute('aria-pressed', String(o === b));
     });
   }

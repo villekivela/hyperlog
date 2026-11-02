@@ -9,7 +9,7 @@ import path from 'node:path';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /** The modules, in no particular order: each is run when something first asks for it. */
-const MODULES = ['angles', 'rig', 'kit', 'motions', 'poses', 'entries', 'stage', 'checks', 'tune'];
+const MODULES = ['angles', 'rig', 'kit', 'motions', 'poses', 'entries', 'stage', 'checks', 'tune', 'handles'];
 
 /** What the modules ask for that isn't one of them. */
 const EXTERNALS = `{
