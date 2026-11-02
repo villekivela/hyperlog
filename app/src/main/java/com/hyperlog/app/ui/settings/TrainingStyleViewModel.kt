@@ -36,5 +36,5 @@ class TrainingStyleViewModel(application: Application) : AndroidViewModel(applic
     }
 
     /** Back to default: the edited text goes, and the app's is read again. */
-    fun defaultHowITrain() = setHowITrain("")
+    fun resetHowITrain() = setHowITrain("")
 }

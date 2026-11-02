@@ -153,7 +153,7 @@ object AskClaude {
             gym(it, names)
         }
         appendLine()
-        with(TrainingStyleText) { trainingStyle(style, names) }
+        with(TrainingStyleText) { trainingStyle(style, names, plan?.program) }
         if (plan != null) {
             appendLine()
             program(plan, names, style.targets)

@@ -1,5 +1,7 @@
 package com.hyperlog.app.coach
 
+import kotlin.math.roundToInt
+
 /**
  * How you like to train, carried by every check-in (SPEC, Coaching → Training style): the
  * [targets], [aboutMe], and How I train's text ([howITrain]: the edited one, else the app's default).
@@ -13,6 +15,12 @@ data class TrainingStyle(
 /** A range of whole numbers, written `8-14` in files and `8–14` in text. */
 data class NumberRange(val low: Int, val high: Int) {
     val key: String get() = "$low-$high"
+
+    /** As weekly sets, the raised range (GLOSSARY): from the top to half as much again, rounded. */
+    fun raised() = NumberRange(high, (high * 1.5).roundToInt())
+
+    /** As weekly sets, the maintenance range (GLOSSARY): from half the bottom, rounded up, to the bottom. */
+    fun maintenance() = NumberRange((low + 1) / 2, low)
 
     override fun toString() = "$low–$high"
 }
@@ -84,3 +92,24 @@ data class AboutMe(
     val favour: List<String> = emptyList(),
     val anythingElse: String? = null,
 )
+
+/**
+ * A program's own training targets (`targets` in docs/program-format.md): each one left out
+ * (null) follows the standing training targets.
+ */
+data class ProgramTrainingTargets(
+    val goal: TrainingGoal? = null,
+    val volume: NumberRange? = null,
+    val acrossBlock: AcrossBlock? = null,
+    val frequency: Frequency? = null,
+    val failure: FailureRule? = null,
+    val calibration: Boolean? = null,
+    val compound: NumberRange? = null,
+    val isolation: NumberRange? = null,
+) {
+    /** These over [standing]: the training targets the program is written for. */
+    fun over(standing: TrainingTargets) = TrainingTargets(
+        goal ?: standing.goal, volume ?: standing.volume, acrossBlock ?: standing.acrossBlock, frequency ?: standing.frequency,
+        failure ?: standing.failure, calibration ?: standing.calibration, compound ?: standing.compound, isolation ?: standing.isolation,
+    )
+}

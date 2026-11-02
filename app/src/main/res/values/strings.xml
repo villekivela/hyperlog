@@ -922,6 +922,7 @@
     <string name="how_i_train_discard">Discard</string>
     <string name="how_i_train_unsaved">How I train isn’t saved</string>
     <string name="how_i_train_default">Back to default</string>
+    <string name="how_i_train_cancel">Cancel</string>
     <string name="how_i_train_default_title">Back to the default?</string>
     <string name="how_i_train_default_text">Your own words are replaced by Hyperlog’s default text.</string>
     <string name="about_me">About me</string>

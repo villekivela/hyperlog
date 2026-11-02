@@ -12,27 +12,6 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * A program's own training targets (`targets` in docs/program-format.md): each one left out
- * (null) follows the standing training targets.
- */
-data class ProgramTrainingTargets(
-    val goal: TrainingGoal? = null,
-    val volume: NumberRange? = null,
-    val acrossBlock: AcrossBlock? = null,
-    val frequency: Frequency? = null,
-    val failure: FailureRule? = null,
-    val calibration: Boolean? = null,
-    val compound: NumberRange? = null,
-    val isolation: NumberRange? = null,
-) {
-    /** These over [standing]: the training targets the program is written for. */
-    fun over(standing: TrainingTargets) = TrainingTargets(
-        goal ?: standing.goal, volume ?: standing.volume, acrossBlock ?: standing.acrossBlock, frequency ?: standing.frequency,
-        failure ?: standing.failure, calibration ?: standing.calibration, compound ?: standing.compound, isolation ?: standing.isolation,
-    )
-}
-
-/**
  * The training style as it is kept (`training_style` in `setting`: the training targets and About
  * me) and a program's `targets`, read by one reader. Kept JSON is read leniently, a bad field
  * falling back to its default; a program file reports each problem with its path.
@@ -44,7 +23,11 @@ object TrainingStyleJson {
     /** A rep range's ends. */
     val REPS = 1..30
 
-    fun encode(targets: TrainingTargets, aboutMe: AboutMe): String = buildJsonObject {
+    /** What the `training_style` row holds. */
+    data class Kept(val targets: TrainingTargets = TrainingTargets(), val aboutMe: AboutMe = AboutMe())
+
+    fun encode(kept: Kept): String = buildJsonObject {
+        val (targets, aboutMe) = kept
         putJsonObject("targets") {
             put("goal", targets.goal.key)
             put("volume", targets.volume.key)
@@ -71,11 +54,11 @@ object TrainingStyleJson {
     }.toString()
 
     /** The kept training targets and About me; nothing kept, or anything unreadable, is the default. */
-    fun decode(text: String?): Pair<TrainingTargets, AboutMe> {
-        val root = text?.let { runCatching { Json.parseToJsonElement(it) as? JsonObject }.getOrNull() } ?: return TrainingTargets() to AboutMe()
+    fun decode(text: String?): Kept {
+        val root = text?.let { runCatching { Json.parseToJsonElement(it) as? JsonObject }.getOrNull() } ?: return Kept()
         val ignore: (String, String) -> Unit = { _, _ -> }
         val targets = (root["targets"] as? JsonObject)?.let { targets(it, "targets", ignore).over(TrainingTargets()) } ?: TrainingTargets()
-        return targets to ((root["aboutMe"] as? JsonObject)?.let(::aboutMe) ?: AboutMe())
+        return Kept(targets, (root["aboutMe"] as? JsonObject)?.let(::aboutMe) ?: AboutMe())
     }
 
     private fun aboutMe(o: JsonObject): AboutMe {
@@ -133,11 +116,9 @@ object TrainingStyleJson {
         )
     }
 
-    private val Range = Regex("""(\d+)\s*-\s*(\d+)""")
-
     private fun range(o: JsonObject, key: String, path: String, ends: IntRange, error: (String, String) -> Unit): NumberRange? {
         val el = o[key] ?: return null
-        val match = (el as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.let(Range::matchEntire)
+        val match = (el as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.let(com.hyperlog.app.program.RangeText::matchEntire)
         val range = match?.let { NumberRange(it.groupValues[1].toInt(), it.groupValues[2].toInt()) }
         if (range == null || range.low !in ends || range.high !in ends || range.low > range.high) {
             error("$path.$key", "must be a range like \"8-14\", each end ${ends.first}–${ends.last}, the low end not above the high")
@@ -146,7 +127,8 @@ object TrainingStyleJson {
         return range
     }
 
-    private fun or(items: List<String>) = items.dropLast(1).joinToString() + " or " + items.last()
+    /** `a, b or c`. */
+    fun or(items: List<String>) = if (items.size == 1) items.single() else items.dropLast(1).joinToString() + " or " + items.last()
 
     private fun JsonArray?.orEmpty(): List<JsonElement> = this ?: emptyList()
 }

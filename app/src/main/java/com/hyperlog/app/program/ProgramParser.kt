@@ -63,7 +63,8 @@ object ProgramParser {
 }
 
 private val Id = Regex("[a-z0-9_]+")
-private val Range = Regex("""(\d+)\s*-\s*(\d+)""")
+/** A range as files write it: `8-10`. */
+internal val RangeText = Regex("""(\d+)\s*-\s*(\d+)""")
 
 /** A program focus brings up at most this many muscle groups. */
 const val MAX_FOCUS = 2
@@ -126,7 +127,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             when {
                 group == null -> error(
                     "focus[$i]",
-                    "unknown muscle group ${item}: use ${MuscleGroup.entries.dropLast(1).joinToString { it.label }} or ${MuscleGroup.entries.last().label}",
+                    "unknown muscle group ${item}: use ${com.hyperlog.app.coach.TrainingStyleJson.or(MuscleGroup.entries.map { it.label })}",
                 )
                 group in groups -> error("focus[$i]", "\"$label\" is already in the focus")
                 else -> groups += group
@@ -298,7 +299,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             if (n !in 1..100) return null.also { error(path, "must be from 1 to 100") }
             return RepRange(n, n)
         }
-        val m = Range.matchEntire(p.content.trim()) ?: return null.also { error(path, message) }
+        val m = RangeText.matchEntire(p.content.trim()) ?: return null.also { error(path, message) }
         val (lo, hi) = m.destructured.toList().map { it.toInt() }
         return when {
             lo < 1 || hi > 100 -> null.also { error(path, "must be from 1 to 100") }
@@ -357,7 +358,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         val seen = mutableListOf<WeekRange>()
         map.forEach { (key, value) ->
             val p = "$path.weeks.\"$key\""
-            val range = Range.matchEntire(key.trim())?.destructured?.toList()?.map { it.toInt() }?.let { WeekRange(it[0], it[1]) }
+            val range = RangeText.matchEntire(key.trim())?.destructured?.toList()?.map { it.toInt() }?.let { WeekRange(it[0], it[1]) }
                 ?: key.trim().toIntOrNull()?.let { WeekRange(it, it) }
             when {
                 range == null -> error(p, "must be a week (\"1\") or weeks (\"7-11\")")

@@ -845,7 +845,7 @@ private fun App(
             onTargets = trainingStyleModel::setTargets,
             onAboutMe = trainingStyleModel::setAboutMe,
             onHowITrain = trainingStyleModel::setHowITrain,
-            onDefaultHowITrain = trainingStyleModel::defaultHowITrain,
+            onDefaultHowITrain = trainingStyleModel::resetHowITrain,
             onBack = { screen = Screen.Settings },
         )
         screen == Screen.Settings -> SettingsScreen(

@@ -40,7 +40,6 @@ class TrainingStylesTest {
     @Test
     fun withNothingSetTheStyleIsTheDefaultsAndTheShippedHowITrain() = runTest {
         val style = TrainingStyles(install(), context).current()
-        assertEquals(TrainingTargets(), style.targets)
         assertEquals(TrainingTargets(volume = NumberRange(8, 14)), style.targets)
         assertEquals(AboutMe(), style.aboutMe)
         assertTrue(style.howITrain, style.howITrain.startsWith("- Form comes before load."))
@@ -71,6 +70,10 @@ class TrainingStylesTest {
         val styles = TrainingStyles(db) { shipped }
         styles.setHowITrain("Mine.")
         styles.setHowITrain(shipped)
+        assertFalse(styles.edited.first())
+        // The page shows the default with its wrapped lines joined: saved like that, it is still the default.
+        shipped = "- Form comes before load. A\n  heavier weight never buys a shorter rep."
+        styles.setHowITrain("- Form comes before load. A heavier weight never buys a shorter rep.")
         assertFalse(styles.edited.first())
         shipped = "New default."
         assertEquals("New default.", styles.current().howITrain)

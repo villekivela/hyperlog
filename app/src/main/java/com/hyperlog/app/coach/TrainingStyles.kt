@@ -29,22 +29,22 @@ class TrainingStyles(private val db: HyperlogDatabase, private val default: () -
 
     suspend fun current(): TrainingStyle = style.first()
 
-    /** The app's own How I train. */
-    fun defaultHowITrain(): String = default()
+    suspend fun setTargets(targets: TrainingTargets) = edit { it.copy(targets = targets) }
 
-    suspend fun setTargets(targets: TrainingTargets) = edit { (_, aboutMe) -> targets to aboutMe }
-
-    suspend fun setAboutMe(aboutMe: AboutMe) = edit { (targets, _) -> targets to aboutMe }
+    suspend fun setAboutMe(aboutMe: AboutMe) = edit { it.copy(aboutMe = aboutMe) }
 
     /** One row holds both, so each edit reads it and writes it back, one at a time. */
-    private suspend fun edit(change: (Pair<TrainingTargets, AboutMe>) -> Pair<TrainingTargets, AboutMe>) = writing.withLock {
-        val (targets, aboutMe) = change(TrainingStyleJson.decode(db.settings().get(STYLE)))
-        db.settings().put(SettingEntity(STYLE, TrainingStyleJson.encode(targets, aboutMe)))
+    private suspend fun edit(change: (TrainingStyleJson.Kept) -> TrainingStyleJson.Kept) = writing.withLock {
+        db.settings().put(SettingEntity(STYLE, TrainingStyleJson.encode(change(TrainingStyleJson.decode(db.settings().get(STYLE))))))
     }
 
-    /** Keeps [text] as How I train; the default's own text, or nothing, goes back to the default. */
+    /**
+     * Keeps [text] as How I train. Nothing, or the default's own words (however its lines wrap, as
+     * the page joins them), goes back to the default.
+     */
     suspend fun setHowITrain(text: String) {
-        if (text.isBlank() || text.trim() == default().trim()) db.settings().delete(HOW_I_TRAIN)
+        fun words(t: String) = t.trim().split(Regex("\\s+"))
+        if (text.isBlank() || words(text) == words(default())) db.settings().delete(HOW_I_TRAIN)
         else db.settings().put(SettingEntity(HOW_I_TRAIN, text.trim()))
     }
 

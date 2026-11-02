@@ -2,7 +2,6 @@ package com.hyperlog.app.coach
 
 import com.hyperlog.app.library.MuscleGroup
 import com.hyperlog.app.program.Program
-import kotlin.math.roundToInt
 
 /**
  * The training style as Claude reads it (SPEC, What Claude is told → The training style): the
@@ -10,11 +9,11 @@ import kotlin.math.roundToInt
  * them. Built once, into the situation both the API and Ask Claude's prompt carry.
  */
 internal object TrainingStyleText {
-    fun StringBuilder.trainingStyle(style: TrainingStyle, names: Map<String, String>) {
+    fun StringBuilder.trainingStyle(style: TrainingStyle, names: Map<String, String>, program: Program? = null) {
         val t = style.targets
         appendLine("## My training style")
         appendLine("- Goal: ${goal(t.goal)}, with my lift goals on top")
-        appendLine("- Volume: ${t.volume} work sets per muscle a week, ${acrossBlock(t)}")
+        appendLine("- Volume: ${t.volume} work sets per muscle a week, ${acrossBlock(t.acrossBlock, t.volume)}")
         appendLine("- Frequency: each muscle ${frequency(t.frequency)} a week")
         appendLine("- How hard: last set 0–1 RIR, earlier sets 1–2 RIR")
         appendLine("- Failure: ${failure(t.failure)}")
@@ -25,6 +24,8 @@ internal object TrainingStyleText {
             appendLine("## How I train")
             appendLine(style.howITrain.trim())
         }
+        // The running program's own volume, when it has one, sets the ranges.
+        val volume = program?.targets?.volume ?: t.volume
         appendLine("## Writing by my training style")
         appendLine(
             "- Write new programs, Changes and workouts by my training style. The training targets are standing: a new program " +
@@ -32,44 +33,45 @@ internal object TrainingStyleText {
                 "program's \"targets\"; my standing ones stay as they are.",
         )
         appendLine(
-            "- For a new program, ask \"Bring anything up this program?\", with the muscle groups (${MuscleGroup.entries.joinToString { it.label }}) " +
-                "to pick up to two, or none, and let me type my own. Write the answer into the program's \"focus\". A focused group's " +
-                "muscles get weekly sets in the raised range (from the top of the volume range to half as much again), go first in " +
-                "their sessions and are trained more often; the other muscles drop to the maintenance range (from half the range's " +
-                "bottom to its bottom).",
+            "- For a new program, ask \"Bring anything up this program?\": offer None and up to three of the muscle groups " +
+                "(${MuscleGroup.entries.joinToString { it.label }}) likeliest for me, and let me type my own for another group or for two. " +
+                "Write the answer, at most two groups, into the program's \"focus\". A focused group's muscles get weekly sets in the " +
+                "raised range (${volume.raised()}), go first in their sessions and are trained more often; the other muscles drop to " +
+                "the maintenance range (${volume.maintenance()}). The raised range runs from the top of the volume range to half as " +
+                "much again, the maintenance range from half the volume range's bottom to its bottom.",
         )
         appendLine("- Changes and workouts keep the how hard, failure and calibration rules.")
+        val example = if (program?.focus.isNullOrEmpty()) {
+            "Quads drop to ${volume.low - 2} sets a week, under your $volume."
+        } else {
+            val maintenance = volume.maintenance()
+            "Quads drop to ${maintenance.low - 1} sets a week, under the maintenance range of $maintenance."
+        }
         appendLine(
             "- When a Change takes a muscle's weekly sets out of its range (in a program with a focus, the raised range or the " +
-                "maintenance range), say so in its summary: \"Quads drop to 6 sets a week, under your ${t.volume}.\"",
+                "maintenance range), say so in its summary: \"$example\"",
         )
     }
 
     /** The running program's focus and own training targets, with the program. */
     fun StringBuilder.programStyle(program: Program, standing: TrainingTargets) {
-        val volume = (program.targets.volume ?: standing.volume)
+        val volume = program.targets.volume ?: standing.volume
         if (program.focus.isNotEmpty()) {
             appendLine(
-                "Program focus: ${program.focus.joinToString { it.label }} (their muscles ${raised(volume)} sets a week, " +
-                    "the rest ${maintenance(volume)})",
+                "Program focus: ${program.focus.joinToString { it.label }} (their muscles ${volume.raised()} sets a week, " +
+                    "the rest ${volume.maintenance()})",
             )
         }
         val own = program.targets
         own.goal?.let { appendLine("Goal for this program: ${goal(it)}") }
         own.volume?.let { appendLine("Volume for this program: $it") }
-        own.acrossBlock?.let { appendLine("Across a block for this program: ${it.name.lowercase()}") }
+        own.acrossBlock?.let { appendLine("Across a block for this program: ${acrossBlock(it, volume)}") }
         own.frequency?.let { appendLine("Frequency for this program: each muscle ${frequency(it)} a week") }
         own.failure?.let { appendLine("Failure for this program: ${failure(it)}") }
         own.calibration?.let { appendLine("Calibration for this program: ${if (it) "on" else "off"}") }
         own.compound?.let { appendLine("Compound reps for this program: $it") }
         own.isolation?.let { appendLine("Isolation reps for this program: $it") }
     }
-
-    /** The raised range: from the top of [volume] to half as much again, rounded. */
-    fun raised(volume: NumberRange) = NumberRange(volume.high, (volume.high * 1.5).roundToInt())
-
-    /** The maintenance range: from half [volume]'s bottom, rounded up, to its bottom. */
-    fun maintenance(volume: NumberRange) = NumberRange((volume.low + 1) / 2, volume.low)
 
     private fun StringBuilder.aboutMe(me: AboutMe, names: Map<String, String>) {
         val lines = buildList {
@@ -94,10 +96,10 @@ internal object TrainingStyleText {
         TrainingGoal.Both -> "hypertrophy and strength"
     }
 
-    private fun acrossBlock(t: TrainingTargets) = when (t.acrossBlock) {
+    private fun acrossBlock(across: AcrossBlock, volume: NumberRange) = when (across) {
         AcrossBlock.Steady -> "steady across a block"
         AcrossBlock.Rising ->
-            "rising across a block: near ${t.volume.low} in its first week, adding sets each week toward ${t.volume.high}, then a deload"
+            "rising across a block: near ${volume.low} in its first week, adding sets each week toward ${volume.high}, then a deload"
     }
 
     private fun frequency(frequency: Frequency) = when (frequency) {

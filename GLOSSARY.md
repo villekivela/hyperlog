@@ -313,7 +313,7 @@ _Avoid_: Supersedes, cancels, overrides
 
 **Time off**:
 Days without training beyond the plan's own rest days: from the first day of the weekday plan missed since the last session, or the days since it with no weekday plan. More than a week shows Today's time-off line.
-_Avoid_: Break, layoff
+_Avoid_: Break, layoff. About me's "Coming back from a break" is the owner's wording for where you are as a lifter, not the app's time off.
 
 **Easy week**:
 The week back after two or more weeks without a session: the days that come up, one set fewer each

@@ -111,10 +111,28 @@ class TrainingStyleTest {
     fun claudeIsToldToWriteByTheStyleAndAskForTheFocus() {
         both(TrainingStyle()).forEach { text ->
             assertTrue(text, text.contains("Bring anything up this program?"))
+            // ask takes 2 to 4 answers: None and up to three groups, the rest (or two) typed.
+            assertTrue(text, text.contains("offer None and up to three of the muscle groups"))
             assertTrue(text, text.contains("\"focus\""))
+            // The ranges as numbers, from my volume.
+            assertTrue(text, text.contains("the raised range (14–21)"))
+            assertTrue(text, text.contains("the maintenance range (4–8)"))
             assertTrue(text, text.contains("keep the how hard, failure and calibration rules"))
             assertTrue(text, text.contains("Quads drop to 6 sets a week, under your 8–14."))
         }
+    }
+
+    @Test
+    fun aProgramsOwnVolumeAndFocusSetTheRangesClaudeIsToldOf() {
+        val own = plan.copy(program = program.copy(targets = ProgramTrainingTargets(volume = NumberRange(14, 20), acrossBlock = AcrossBlock.Rising)))
+        val text = both(TrainingStyle(), own).first()
+        assertTrue(text, text.contains("the raised range (20–30)"))
+        assertTrue(text, text.contains("Quads drop to 12 sets a week, under your 14–20."))
+        assertTrue(text, text.contains("Across a block for this program: rising across a block: near 14 in its first week, adding sets each week toward 20, then a deload"))
+        // With a focus, a Change names the range the muscle leaves.
+        val focused = plan.copy(program = program.copy(focus = listOf(com.hyperlog.app.library.MuscleGroup.Chest)))
+        val withFocus = both(TrainingStyle(), focused).first()
+        assertTrue(withFocus, withFocus.contains("Quads drop to 3 sets a week, under the maintenance range of 4–8."))
     }
 
     @Test

@@ -132,7 +132,7 @@ fun TrainingStyleScreen(
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBack)
-    var picking by rememberSaveable { mutableStateOf<String?>(null) }
+    var picking by rememberSaveable { mutableStateOf<PickList?>(null) }
     // How I train's text as typed: kept only with Save, which waits in a strip over the keyboard
     // while the text differs from what's kept, wherever in the text the cursor is.
     // The default's wrapped markdown lines are joined to fit the screen; your own text shows as you wrote it.
@@ -188,9 +188,9 @@ fun TrainingStyleScreen(
         Sheet(onDismiss = { picking = null }) {
             ExercisePick(
                 library.filter { !it.hidden && it.id !in taken },
-                stringResource(if (list == AVOID) R.string.style_avoid_pick else R.string.style_favour_pick),
+                stringResource(if (list == PickList.Avoid) R.string.style_avoid_pick else R.string.style_favour_pick),
                 onPick = { id ->
-                    onAboutMe(if (list == AVOID) me.copy(avoid = me.avoid + id) else me.copy(favour = me.favour + id))
+                    onAboutMe(if (list == PickList.Avoid) me.copy(avoid = me.avoid + id) else me.copy(favour = me.favour + id))
                     picking = null
                 },
             )
@@ -198,8 +198,8 @@ fun TrainingStyleScreen(
     }
 }
 
-private const val AVOID = "avoid"
-private const val FAVOUR = "favour"
+/** The About me list an exercise is picked for. */
+private enum class PickList { Avoid, Favour }
 
 @Composable
 private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
@@ -491,14 +491,14 @@ private fun HowITrain(typed: String, edited: Boolean, onType: (String) -> Unit, 
             title = { Text(stringResource(R.string.how_i_train_default_title)) },
             text = { Text(stringResource(R.string.how_i_train_default_text)) },
             confirmButton = { TextButton(onClick = { asking = false; onDefault() }) { Text(stringResource(R.string.how_i_train_default)) } },
-            dismissButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.backup_cancel)) } },
+            dismissButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.how_i_train_cancel)) } },
         )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (AboutMe) -> Unit, onPick: (String) -> Unit) {
+private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (AboutMe) -> Unit, onPick: (PickList) -> Unit) {
     val names = library.associate { it.id to it.name }
     val ages = AgeBand.entries
     val where = Progress.entries.map { it.label }
@@ -558,8 +558,8 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
                 }
             }
         }
-        item { Picked(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(AVOID) }) { id -> onAboutMe(me.copy(avoid = me.avoid - id)) } }
-        item { Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(FAVOUR) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) } }
+        item { Picked(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(PickList.Avoid) }) { id -> onAboutMe(me.copy(avoid = me.avoid - id)) } }
+        item { Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(PickList.Favour) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) } }
         item {
             val description = stringResource(R.string.style_anything_else)
             Tile(description) {

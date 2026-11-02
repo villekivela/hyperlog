@@ -1918,9 +1918,10 @@ and Done saves every step at once.
   both.
 - **Settings runs it again** through Set it up again on the Training style page.
 
-**The program focus.** New program asks "Bring anything up this program?", with the muscle groups
-(`MuscleGroup`: Chest, Back, Shoulders, Arms, Legs, Glutes, Core) to pick up to two, or none
-(Claude's `ask`; Type my own stays). The muscles of a focused group get weekly sets at or above
+**The program focus.** New program asks "Bring anything up this program?", for up to two of the
+muscle groups (`MuscleGroup`: Chest, Back, Shoulders, Arms, Legs, Glutes, Core), or none. It is
+Claude's `ask`, which holds 2 to 4 answers, so it offers None and up to three groups likeliest for
+you, and Type my own takes any other group, or two (#132's review). The muscles of a focused group get weekly sets at or above
 the top of the range, go first in their sessions and are trained more often; the rest drop
 toward maintenance. Claude writes the focus into the program's `focus`
 (`docs/program-format.md`), so it stays with the program and later check-ins see it. It is not a
@@ -1999,10 +2000,13 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   own volume when it has one. The instructions, under **Writing by my training style**, tell
   Claude to write new programs, Changes and workouts by the style; to treat the training targets
   as standing, writing others into a program's `targets` only when you ask for them for that
-  program; for a new program to ask "Bring anything up this program?" with the muscle groups, up
-  to two or none, and Type my own, and write the answer into its `focus`, with what a focus does
-  and both ranges; to keep the how hard, failure and calibration rules in Changes and workouts;
-  and to say when a Change takes a muscle out of its range, in the Change's summary.
+  program; for a new program to ask "Bring anything up this program?", offering None and up to
+  three likely muscle groups with Type my own for another or two, and write the answer into its
+  `focus`, with what a focus does and both ranges as numbers (`the raised range (14–21)`, from the
+  running program's own volume when it has one); to keep the how hard, failure and calibration
+  rules in Changes and workouts; and to say when a Change takes a muscle out of its range, in the
+  Change's summary, naming that range (`under your 8–14`, or with a focus `under the maintenance
+  range of 4–8`). A program's own Rising reads as the standing one does, from its own volume.
 - **The formats are generated** from the code that reads them: operation names and fields from the
   serializer, scopes from the scope serializer, ranges from the validators, the program format from
   the program parser, an example Change built for the running program (a swap to the next day's
