@@ -59,7 +59,7 @@ async function filesOf(clips, id) {
   return { clip: at(entry.clip), angles, shared, all: entry.bench ? Object.values(angles).map((c) => c.file) : [at(entry.clip)] };
 }
 
-/** A clip's file as the page holds it: whole, with the mannequin it shares merged in, as a data URL. */
+/** A clip's file as the page holds it: whole, with the files it shares (the mannequin, its kits) merged in, as a data URL. */
 async function wholeClip(file, shared) {
   const files = Object.fromEntries(await Promise.all(shared.map(async (f) => [path.basename(f), await readFile(f)])));
   return `data:model/gltf-binary;base64,${inlineResources(await readFile(file), files).toString('base64')}`;
@@ -91,7 +91,7 @@ export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 
     const files = await filesOf(clips, id);
     const { clip, angles, shared } = files;
     // The page may fetch nothing, data: URLs included, so each clip goes in whole, with the
-    // mannequin it shares merged into it. The OK still names the files that ship.
+    // mannequin and the kits it shares merged into it. The OK still names the files that ship.
     exercises.push({
       id, name: names[id] ?? id, equipment: entry.equipment, clip: await wholeClip(clip, shared),
       hash: await hashOf(files), camera: entry.camera, traced: Boolean(entry.trace), checks, entry,

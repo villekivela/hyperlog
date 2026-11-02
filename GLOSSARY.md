@@ -144,7 +144,7 @@ A baked file of one exercise's lowering that the phone plays forward, holds and 
 _Avoid_: Animation, video (that is the Technique video), asset
 
 **Kit**:
-The plain generic equipment a pose is posed in, built by the mannequin tool for a kind of equipment: a barbell, a bench, a cable tower, a leg press's sled.
+The generic equipment a pose is posed in, built by the mannequin tool for a kind of equipment: a barbell, a bench, a cable tower, a leg press's sled. Each of its parts is in one of five tones (frame, vinyl, plate, metal, pulley), which the theme colours.
 _Avoid_: Prop, model, machine (that is the gym's own)
 
 **Footage**:

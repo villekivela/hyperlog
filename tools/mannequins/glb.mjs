@@ -85,30 +85,31 @@ export function shareParts(glbs, { body, kit }) {
     if (!pools.has(uri)) pools.set(uri, { parts: [], at: 0, offsets: new Map() });
     return pools.get(uri);
   };
-  let theBody = null;
+  // Each shared view once in its file, found again by its bytes.
+  const placeIn = (uri, data) => {
+    const p = pool(uri);
+    const key = data.toString('base64');
+    if (!p.offsets.has(key)) {
+      p.offsets.set(key, p.at);
+      p.parts.push(data, Buffer.alloc(pad4(data.length) - data.length));
+      p.at = pad4(p.at + data.length);
+    }
+    return p.offsets.get(key);
+  };
+  // The first clip's body, which every other clip's must match.
+  let firstBody = null;
   const clips = glbs.map(([id, bytes]) => {
     const { json, bin } = readGlb(bytes);
     const files = sharedViews(json, { body, kit });
     const slice = (v) => bin.subarray(v.byteOffset ?? 0, (v.byteOffset ?? 0) + v.byteLength);
     // The body, as this clip holds it: the same views in the same order in every clip.
     const bodyParts = [...files].filter(([, f]) => f === body).map(([v]) => v).sort((a, b) => a - b).map((v) => slice(json.bufferViews[v]));
-    if (!theBody) theBody = bodyParts;
-    else if (bodyParts.length !== theBody.length || bodyParts.some((p, i) => !p.equals(theBody[i]))) {
+    if (!firstBody) firstBody = bodyParts;
+    else if (bodyParts.length !== firstBody.length || bodyParts.some((p, i) => !p.equals(firstBody[i]))) {
       throw new Error(`${id}: its mannequin isn't the same as the other clips'`);
     }
     // The files it reads: the mannequin's, then its kits', by name.
     const uris = [body, ...new Set([...files.values()].filter((f) => f !== body).sort())];
-    // Each shared view once in its file, found again by its bytes.
-    const placeIn = (uri, data) => {
-      const p = pool(uri);
-      const key = data.toString('base64');
-      if (!p.offsets.has(key)) {
-        p.offsets.set(key, p.at);
-        p.parts.push(data, Buffer.alloc(pad4(data.length) - data.length));
-        p.at = pad4(p.at + data.length);
-      }
-      return p.offsets.get(key);
-    };
     // The clip's own views, packed in order into its own binary chunk.
     const own = [];
     let at = 0;

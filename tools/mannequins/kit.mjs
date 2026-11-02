@@ -1,7 +1,7 @@
 // Generic equipment, built in code from three.js shapes, and the floor shadow under the mannequin.
 // Every kit is at one level of detail (#127): rounded tubing on base plates, soft pads, a stack of
 // separate plates on guide rods with a selector pin, pulleys in housings with the cable over them,
-// and shaped bars and handles with grips; nothing smaller than a phone shows (no bolts or seams).
+// and shaped bars and handles with grips; nothing that can't be seen at phone size (no bolts or seams).
 //
 // Each part is in one of five tones, a material the phone colours by name from the theme (`frame`,
 // `vinyl`, `plate`, `metal`, `pulley`), plus `shadow`; the colours here are the light theme's, for
@@ -329,9 +329,14 @@ function group(name, parts) {
   const g = new THREE.Group();
   g.name = name;
   parts.forEach((m) => g.add(m));
-  let n = 0;
-  g.traverse((o) => { if (o !== g && !o.name) o.name = `${name}_${n++}`; });
+  nameAll(g, name);
   return g;
+}
+
+/** Names everything under `root` that has no name yet `<prefix>_<n>`, in order. */
+function nameAll(root, prefix) {
+  let n = 0;
+  root.traverse((o) => { if (o !== root && !o.name) o.name = `${prefix}_${n++}`; });
 }
 
 /** A 20 kg barbell with a 20 and a 10 a side, along x, on the hands' bar: collars, sleeves and clamps. */
@@ -390,7 +395,6 @@ export function benchHinge({ height = 0.44, z = -0.15, length = 1.2, hinge = nul
 
 /** The length of an adjustable bench's back pad from its hinge. */
 const BACK = 0.8;
-
 
 /**
  * A bench's pad, `length` long along z and centred on the middle of its thickness: a cushion
@@ -459,8 +463,7 @@ function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null
   const g = group('bench', parts);
   if (turning) {
     g.add(turning);
-    let n = 0;
-    turning.traverse((o) => { if (o !== turning && !o.name) o.name = `bench_back_${n++}`; });
+    nameAll(turning, 'bench_back');
   }
   return { group: g, place() {} };
 }
@@ -501,7 +504,7 @@ const WHEEL = 0.045;
 
 /** A pulley wheel at `at`, about x, between the two sides of its housing, which reaches `up` above the axle. */
 function pulley(at, M, up = WHEEL + 0.02) {
-  const parts = [turnedPart(wheelGeometry(WHEEL, 0.022), M.pulley, at, {})];
+  const parts = [turnedPart(wheelGeometry(WHEEL, 0.022), M.pulley, at, { solid: false })];
   const h = up + 0.03;
   for (const s of [-1, 1]) parts.push(pad(0.006, h, 0.09, M.pulley, V(s * 0.017, at.y - 0.03 + h / 2, at.z), { soft: 0.002, solid: false }));
   parts.push(along(0.006, -0.024, 0.024, M.metal, 10).translateY(at.y).translateZ(at.z));
@@ -544,6 +547,20 @@ function weightStack(at, M, { rodTop, toward }) {
   };
   lift(0);
   return { parts: [...plates.map((p) => p.mesh), head, stem, pin, knob, ...fixed], lift, top: (l) => V(at.x, headY + 0.025 + l, at.z) };
+}
+
+/** How far either side of a weight stack its frame's uprights stand. */
+const UPRIGHTS = 0.19;
+
+/** A weight stack's frame at z `z`: an upright either side on its base plate, up to a crossbar at `top`. */
+function stackFrame(z, top, M) {
+  return [
+    ...[-1, 1].flatMap((s) => [
+      tube(0.07, V(s * UPRIGHTS, 0.082, z), V(s * UPRIGHTS, top + 0.035, z), M.frame),
+      pad(0.11, 0.012, 0.11, M.frame, V(s * UPRIGHTS, 0.076, z), { soft: 0.003 }),
+    ]),
+    tube(0.07, V(-UPRIGHTS - 0.035, top, z), V(UPRIGHTS + 0.035, top, z), M.frame),
+  ];
 }
 
 /** A shaped tube along a smooth path through `points`. */
@@ -600,24 +617,20 @@ function cableTower({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 's
   if (py < 1.5) throw new Error(`The cable tower's pulley at ${py} m is low; it has only a high pulley yet`);
   const M = tones();
   // The stack stands behind the pulley, far enough back for its own wheel.
-  const sz = Math.max(column - 0.12, pz + 4 * WHEEL + 0.08);
-  const ux = 0.19;
+  const stackZ = Math.max(column - 0.12, pz + 4 * WHEEL + 0.08);
+  const ux = UPRIGHTS;
   const wheelAt = V(0, py, pz);
   const frontWheel = V(0, py, pz + WHEEL);
-  const backWheel = V(0, py, sz - WHEEL);
+  const backWheel = V(0, py, stackZ - WHEEL);
   const boomY = py + WHEEL + 0.02 + 0.035;
   const rodTop = Math.min(2.0, boomY - 0.3);
-  const frontZ = seat ? seat[1] - 0.25 : sz - 0.32;
+  const frontZ = seat ? seat[1] - 0.25 : stackZ - 0.32;
   const parts = [
-    ...[-1, 1].flatMap((s) => [
-      tube(0.07, V(s * ux, 0.082, sz), V(s * ux, boomY + 0.035, sz), M.frame),
-      pad(0.11, 0.012, 0.11, M.frame, V(s * ux, 0.076, sz), { soft: 0.003 }),
-    ]),
-    tube(0.07, V(-ux - 0.035, boomY, sz), V(ux + 0.035, boomY, sz), M.frame),
-    tube(0.07, V(0, boomY, sz + 0.07), V(0, boomY, Math.min(pz, sz) - 0.02), M.frame),
-    tube(0.05, V(-ux, rodTop + 0.025, sz), V(ux, rodTop + 0.025, sz), M.frame),
-    tube(0.07, V(-ux - 0.15, 0.035, sz), V(ux + 0.15, 0.035, sz), M.frame),
-    tube(0.07, V(0, 0.035, sz - 0.035), V(0, 0.035, frontZ - 0.035), M.frame),
+    ...stackFrame(stackZ, boomY, M),
+    tube(0.07, V(0, boomY, stackZ + 0.07), V(0, boomY, Math.min(pz, stackZ) - 0.02), M.frame),
+    tube(0.05, V(-ux, rodTop + 0.025, stackZ), V(ux, rodTop + 0.025, stackZ), M.frame),
+    tube(0.07, V(-ux - 0.15, 0.035, stackZ), V(ux + 0.15, 0.035, stackZ), M.frame),
+    tube(0.07, V(0, 0.035, stackZ - 0.035), V(0, 0.035, frontZ - 0.035), M.frame),
     tube(0.07, V(-0.3, 0.035, frontZ), V(0.3, 0.035, frontZ), M.frame),
     ...pulley(frontWheel, M),
     ...pulley(backWheel, M),
@@ -626,7 +639,7 @@ function cableTower({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 's
   ];
   const cable = part(rodGeometry(0.0045, 8), M.metal);
   const drop = part(rodGeometry(0.0045, 8), M.metal);
-  const weights = weightStack(V(0, 0, sz), M, { rodTop, toward: -1 });
+  const weights = weightStack(V(0, 0, stackZ), M, { rodTop, toward: -1 });
   if (seat) parts.push(...seatOn(seat[0], seat[1], M));
   if (thighPad) {
     const [ty, tz] = thighPad;
@@ -650,7 +663,7 @@ function cableTower({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 's
       span(cable, at, wheelAt);
       const lift = at.distanceTo(wheelAt) - hook(P0).distanceTo(wheelAt);
       weights.lift(lift);
-      span(drop, V(0, py, sz), weights.top(lift));
+      span(drop, V(0, py, stackZ), weights.top(lift));
     },
   };
 }
@@ -727,7 +740,7 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
   const backRest = backPad(0.36, 0.64, M, { up: 0.36, behind });
   const rear = -0.55;
   const stackZ = -0.71;
-  const ux = 0.19;
+  const ux = UPRIGHTS;
   const frameTop = 1.72;
   const wheel = V(0, frameTop - 0.035 - WHEEL - 0.02, stackZ + WHEEL);
   const parts = [
@@ -736,11 +749,7 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
     tube(0.07, V(0, 0.035, stackZ - 0.12), V(0, 0.035, seat[1] + 0.2), M.frame),
     tube(0.07, V(-ux - 0.15, 0.035, stackZ), V(ux + 0.15, 0.035, stackZ), M.frame),
     tube(0.07, V(-0.3, 0.035, seat[1] + 0.2), V(0.3, 0.035, seat[1] + 0.2), M.frame),
-    ...[-1, 1].flatMap((s) => [
-      tube(0.07, V(s * ux, 0.082, stackZ), V(s * ux, frameTop + 0.035, stackZ), M.frame),
-      pad(0.11, 0.012, 0.11, M.frame, V(s * ux, 0.076, stackZ), { soft: 0.003 }),
-    ]),
-    tube(0.07, V(-ux - 0.035, frameTop, stackZ), V(ux + 0.035, frameTop, stackZ), M.frame),
+    ...stackFrame(stackZ, frameTop, M),
     ...pulley(wheel, M),
     // The cable from the wheel's top forward into the column.
     rod(0.0045, V(0, wheel.y + WHEEL, wheel.z), V(0, wheel.y + WHEEL, rear), M.metal),

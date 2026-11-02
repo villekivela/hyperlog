@@ -298,18 +298,16 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             x, y, z,
             0.0, 1.0, 0.0,
         )
-        // The key light travels from its place toward the stage.
-        val keyAz = az - Math.toRadians(KeyTurn)
-        val keyEl = Math.toRadians(KeyHeight)
+        // Each light travels from its place, turned with the camera, toward the stage.
+        aim(sun, az - Math.toRadians(KeyTurn), Math.toRadians(KeyHeight))
+        aim(rim, az + Math.toRadians(RimTurn), Math.toRadians(RimHeight))
+    }
+
+    /** Points a directional light from [az] round and [el] up (radians) toward the stage. */
+    private fun aim(light: Int, az: Double, el: Double) {
         engine.lightManager.setDirection(
-            engine.lightManager.getInstance(sun),
-            (-cos(keyEl) * sin(keyAz)).toFloat(), (-sin(keyEl)).toFloat(), (-cos(keyEl) * cos(keyAz)).toFloat(),
-        )
-        val rimAz = az + Math.toRadians(RimTurn)
-        val rimEl = Math.toRadians(RimHeight)
-        engine.lightManager.setDirection(
-            engine.lightManager.getInstance(rim),
-            (-cos(rimEl) * sin(rimAz)).toFloat(), (-sin(rimEl)).toFloat(), (-cos(rimEl) * cos(rimAz)).toFloat(),
+            engine.lightManager.getInstance(light),
+            (-cos(el) * sin(az)).toFloat(), (-sin(el)).toFloat(), (-cos(el) * cos(az)).toFloat(),
         )
     }
 

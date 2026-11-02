@@ -28,9 +28,9 @@ class ClayColoursTest {
 
     /** The names of a `.glb`'s materials, from its JSON chunk. */
     private fun materialsOf(glb: File): List<String> {
-        val bytes = ByteBuffer.wrap(glb.readBytes()).order(ByteOrder.LITTLE_ENDIAN)
-        val length = bytes.getInt(12)
-        val json = Json.parseToJsonElement(String(glb.readBytes(), 20, length))
+        val bytes = glb.readBytes()
+        val length = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt(12)
+        val json = Json.parseToJsonElement(String(bytes, 20, length))
         return json.jsonObject["materials"]!!.jsonArray.map { it.jsonObject["name"]!!.jsonPrimitive.content }
     }
 }

@@ -309,13 +309,13 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses
   two-bone IK for the legs and arms, a grip solve that lays the bar across the palm, and finger
   curls round the bar.
-- `kit.mjs`: the generic equipment, built from primitives, the equipment the library uses, and the
-  floor shadow.
+- `kit.mjs`: the generic equipment, built in code from extruded, turned and swept shapes, its five
+  tones, the equipment the library uses, and the floor shadow.
 - `stage.mjs`: a pose's scene, posed at any point of the rep; the checks and the bake both use it.
 - `checks.mjs`: the checks.
 - `bake.mjs`: samples the lowering (31 frames, 0 s at the top to 1 s at the bottom) into one
   animation, `lowering`, and writes the files. `glb.mjs` moves the shared mannequin into
-  `mannequin.bin`.
+  `mannequin.bin` and each kit's parts into `kit_<name>.bin`.
 - `trace.mjs` and `trace/landmarks.py`: tracing a pose from footage. `traces/`: the traced angles.
 - `review.mjs` and `review/page.html`: the review page and the batches. `review/<batch>.json`: each
   batch's verdicts.
@@ -334,9 +334,10 @@ The mannequin's mesh and skin are the same in every clip, so they are baked once
 marked with `extras.kit`). Each clip's glTF reads those buffers by URI, and holds only its shadow
 and animation (`glb.mjs`). A kit file holds each distinct part once, however many clips read it, and
 grows when a clip's options make a part of a new size. The bake checks every clip's mannequin is
-byte for byte the same before it shares it. The phone hands `mannequin.bin` to gltfio's `ResourceLoader` (`addResourceData`) before
-loading a clip. The review page can't fetch anything, `data:` URLs included, so it and the tests
-merge the shared buffer into each clip (`inlineResources`) and parse it from memory.
+byte for byte the same before it shares it. The phone hands each file a clip lists to gltfio's
+`ResourceLoader` (`addResourceData`) before loading the clip. The review page can't fetch anything,
+`data:` URLs included, so it and the tests merge the shared files into each clip (`inlineResources`)
+and parse it from memory.
 
 `mannequins.json`:
 
