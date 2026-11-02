@@ -57,6 +57,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -274,7 +282,8 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
         // How hard is one rule, shown and not chosen: a tile with no control.
         item { Tile(stringResource(R.string.style_how_hard), stringResource(R.string.style_how_hard_rule)) }
         item {
-            Tile(stringResource(R.string.style_failure), failureAbout) {
+            // The line above the options says what the picked one means; three lines hold the longest, so a tap never shifts them.
+            Tile(stringResource(R.string.style_failure), failureAbout, aboutLines = 3) {
                 Options(failures, FailureRule.entries.indexOf(t.failure), onSelect = { onTargets(t.copy(failure = FailureRule.entries[it])) })
             }
         }
@@ -311,6 +320,8 @@ private fun Tile(
     title: String,
     about: String? = null,
     trailing: (@Composable () -> Unit)? = null,
+    /** Lines kept for [about] when it changes with the tile's choice, so the choice under it never moves. */
+    aboutLines: Int = 1,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(CardPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -318,7 +329,7 @@ private fun Tile(
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 if (about != null) {
-                    Text(about, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(about, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, minLines = aboutLines)
                 }
             }
             if (trailing != null) {
@@ -381,16 +392,17 @@ private fun RangeFields(label: String?, range: NumberRange, ends: IntRange, lowL
     var high by rememberSaveable(range.high) { mutableStateOf(range.high.toString()) }
     val typed = NumberRange(low.toIntOrNull() ?: -1, high.toIntOrNull() ?: -1)
     val valid = typed.low in ends && typed.high in ends && typed.low <= typed.high
-    fun changed(l: String, h: String) {
-        val r = NumberRange(l.toIntOrNull() ?: -1, h.toIntOrNull() ?: -1)
-        if (r.low in ends && r.high in ends && r.low <= r.high && r != range) onRange(r)
+    // Kept when you leave a field (Next, Done, or a tap elsewhere), never halfway through typing an end.
+    fun commit() {
+        if (valid && typed != range) onRange(typed)
     }
+    val focus = LocalFocusManager.current
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (label != null) Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-            NumberField(low, lowLabel, !valid) { low = it; changed(it, high) }
+            NumberField(low, lowLabel, !valid, ImeAction.Next, onDone = { focus.moveFocus(FocusDirection.Next) }, onLeave = ::commit) { low = it }
             Text("–", Modifier.width(24.dp), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-            NumberField(high, highLabel, !valid) { high = it; changed(low, it) }
+            NumberField(high, highLabel, !valid, ImeAction.Done, onDone = { focus.clearFocus() }, onLeave = ::commit) { high = it }
         }
         if (!valid) {
             Text(
@@ -404,17 +416,33 @@ private fun RangeFields(label: String?, range: NumberRange, ends: IntRange, lowL
     }
 }
 
-/** A two-digit number field, 80 dp wide, its figure centred; [description] names it for TalkBack and the tests. */
+/**
+ * A two-digit number field, 80 dp wide, its figure centred; [description] names it for TalkBack
+ * and the tests. Focused, its whole number is selected, so typing replaces it wherever the thumb
+ * landed. [onLeave] runs as focus leaves it.
+ */
 @Composable
-private fun NumberField(value: String, description: String, error: Boolean, onChange: (String) -> Unit) {
+private fun NumberField(value: String, description: String, error: Boolean, action: ImeAction, onDone: () -> Unit, onLeave: () -> Unit, onChange: (String) -> Unit) {
+    var field by remember { mutableStateOf(TextFieldValue(value)) }
+    if (field.text != value) field = TextFieldValue(value, TextRange(value.length))
+    var focused by remember { mutableStateOf(false) }
     OutlinedTextField(
-        value = value,
-        onValueChange = { onChange(it.filter(Char::isDigit).take(2)) },
+        value = field,
+        onValueChange = {
+            val digits = it.text.filter(Char::isDigit).take(2)
+            field = it.copy(text = digits, selection = if (digits == it.text) it.selection else TextRange(digits.length))
+            if (digits != value) onChange(digits)
+        },
         singleLine = true,
         isError = error,
         textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.width(80.dp).semantics { contentDescription = description },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = action),
+        keyboardActions = KeyboardActions(onAny = { onDone() }),
+        modifier = Modifier.width(80.dp).semantics { contentDescription = description }.onFocusChanged {
+            if (it.isFocused && !focused) field = field.copy(selection = TextRange(0, field.text.length))
+            if (!it.isFocused && focused) onLeave()
+            focused = it.isFocused
+        },
     )
 }
 
@@ -591,7 +619,10 @@ private fun ExercisePick(exercises: List<Exercise>, title: String, onPick: (Stri
     var query by rememberSaveable { mutableStateOf("") }
     Column(Modifier.fillMaxWidth()) {
         Text(title, Modifier.padding(start = TextEdge, end = TextEdge, top = 8.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineSmall)
-        SearchField(query, onChange = { query = it }, placeholder = stringResource(R.string.session_search), modifier = Modifier.padding(horizontal = CardMargin).padding(bottom = 8.dp))
+        // You came to find one exercise: the search takes the keyboard at once.
+        val search = remember { FocusRequester() }
+        SearchField(query, onChange = { query = it }, placeholder = stringResource(R.string.session_search), modifier = Modifier.padding(horizontal = CardMargin).padding(bottom = 8.dp).focusRequester(search))
+        LaunchedEffect(Unit) { runCatching { search.requestFocus() } }
         val listState = rememberLazyListState()
         LaunchedEffect(query) { listState.scrollToItem(0) }
         LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).imePadding(), state = listState) {

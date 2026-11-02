@@ -102,6 +102,12 @@ the volume range, one line), chevron. It is the Coach group's first row, above t
 
 - **Volume → Custom** opens the range fields, filled with the current range. Picking Low, Moderate
   or High closes them. A custom range that matches none of the three opens on Custom.
+- **A range is kept as you leave its field** (Next, Done, or a tap elsewhere) with both ends
+  right, never halfway through typing an end (tester, #132: typing 18 kept 1–16). Tapped, a
+  number field selects its number, so typing replaces it wherever the thumb lands.
+- **Failure's line** under its title keeps three lines whichever option says it, so picking one
+  never moves the options under a thumb (tester, #132).
+- **The picker's search** takes the keyboard as the sheet opens.
 - **A wrong range** (an end outside 1–40, or 1–30 for reps, or the fewest above the most): both
   fields red, the rule in `error` bodySmall under them, nothing kept. The last whole range stays
   in force.

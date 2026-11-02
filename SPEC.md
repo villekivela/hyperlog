@@ -1838,7 +1838,8 @@ research note names its sources.
 - **The page.** Settings' Coach group has a **Training style** row above the Claude key, reading
   the goal and volume (`Hypertrophy · 8–14 sets a week`). It opens a page with the training
   targets, How I train and About me, each field edited in place and kept as it changes (a range
-  once both its ends are right), and **Set it up again**, which runs the wizard (below) from its
+  as you leave its field with both ends right; a number field selects its number when tapped, so
+  typing replaces it), and **Set it up again**, which runs the wizard (below) from its
   first step on the current values. Design: `docs/design/training-style.md`.
 - **The training targets** are standing: every New program starts from them. Volume and
   frequency are per muscle, the library's muscles (Quads, Hamstrings, Biceps, Side Delts…), and

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
@@ -93,6 +94,13 @@ class TrainingStyleAppTest {
         compose.waitForIdle()
     }
 
+    /** Types [number] into the range field described as [label], then leaves it with the keyboard's Next or Done, which keeps a whole range. */
+    private fun typeNumber(label: String, number: String) {
+        type(label, number)
+        compose.onNode(hasSetTextAction() and androidx.compose.ui.test.hasContentDescription(label)).performImeAction()
+        compose.waitForIdle()
+    }
+
     /** Picks [name] from the picker's list, scrolled to it. */
     private fun pick(name: String) {
         compose.await(androidx.compose.ui.test.hasScrollToNodeAction())
@@ -109,8 +117,8 @@ class TrainingStyleAppTest {
         tap("3+")
         tap("Never")
         tap("Calibration sets")
-        type("Compounds, fewest reps", "4")
-        type("Isolation, most reps", "20")
+        typeNumber("Compounds, fewest reps", "4")
+        typeNumber("Isolation, most reps", "20")
         assertEquals(
             TrainingTargets(
                 goal = TrainingGoal.Strength, volume = NumberRange(14, 20), acrossBlock = com.hyperlog.app.coach.AcrossBlock.Rising,
@@ -121,11 +129,15 @@ class TrainingStyleAppTest {
         )
         // Custom volume: each end its own field; one out of range isn't kept.
         tap("Custom")
-        type("Volume, fewest sets", "12")
-        type("Volume, most sets", "50")
+        typeNumber("Volume, fewest sets", "12")
+        // An end typed but not left isn't kept (the 1 of an 18 on its way); left wrong, the kept range stays.
+        type("Volume, fewest sets", "1")
+        assertEquals(NumberRange(12, 20), style().targets.volume)
+        typeNumber("Volume, fewest sets", "12")
+        typeNumber("Volume, most sets", "50")
         compose.waitFor("Each end 1–40, the fewest not above the most")
         assertEquals(NumberRange(12, 20), style().targets.volume)
-        type("Volume, most sets", "18")
+        typeNumber("Volume, most sets", "18")
         assertEquals(NumberRange(12, 18), style().targets.volume)
 
         // After a restart, the page shows what was kept.
