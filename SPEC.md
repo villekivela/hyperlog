@@ -1963,10 +1963,12 @@ and Done saves every step at once.
   the summary).
 - **Answers are a draft** until Done: Back and Next keep them, a rotation keeps them, and ×
   or Back from the first step drops them. A range typed on a step is kept as Next is tapped, if
-  it is whole; one that isn't keeps the last whole range, as on the page.
+  it is whole; while one isn't (its rule shows under it), Next stays off.
 - **The summary** lists every answer, `Not said` for an About me field left empty, and a row
   taps back to its step. Its **How I train** link opens the principles over the wizard, kept as
   they change, as on the page, and Back returns to the summary.
+- **A step opened from the summary** goes back to the summary on Next.
+- **How I train's switches** keep as they turn, so × doesn't undo them.
 - **From a program review**, New program opens the wizard over the review: Done goes on into the
   check-in, × returns to the review.
 

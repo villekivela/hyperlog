@@ -20,7 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
@@ -90,6 +93,9 @@ fun TrainingStyleWizard(
 ) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var draft by rememberSaveable(stateSaver = DraftSaver) { mutableStateOf(style.targets to style.aboutMe) }
+    // Set when a summary row sent you back to a step: Next returns to the summary.
+    var fromSummary by rememberSaveable { mutableStateOf(false) }
+    val wrongRanges = remember { mutableStateMapOf<String, Boolean>() }
     var principles by rememberSaveable { mutableStateOf(false) }
     var picking by rememberSaveable { mutableStateOf<PickList?>(null) }
     val focus = LocalFocusManager.current
@@ -101,6 +107,7 @@ fun TrainingStyleWizard(
     val leave = { focus.clearFocus(); }
     val back = {
         leave()
+        fromSummary = false
         if (principles) principles = false else if (step > 0) step -= 1 else onClose()
     }
     BackHandler(onBack = back)
@@ -108,7 +115,7 @@ fun TrainingStyleWizard(
         HowITrainPage(style.howITrain, onHowITrain, onBack = back, modifier)
         return
     }
-    Scaffold(
+    CompositionLocalProvider(LocalWrongRanges provides wrongRanges) { Scaffold(
         modifier = modifier.imePadding(),
         containerColor = Tones.screen,
         topBar = {
@@ -130,7 +137,14 @@ fun TrainingStyleWizard(
                 if (current == WizardStep.Summary) {
                     Button(onClick = { leave(); onDone(targets, me) }) { Text(stringResource(R.string.checkin_done)) }
                 } else {
-                    Button(onClick = { leave(); step += 1 }) { Text(stringResource(R.string.wizard_next)) }
+                    Button(
+                        onClick = {
+                            leave()
+                            if (fromSummary) { fromSummary = false; step = WizardStep.Summary.ordinal } else step += 1
+                        },
+                        // A wrong range keeps nothing, so Next waits for it to be put right (it shows its rule).
+                        enabled = wrongRanges.values.none { it },
+                    ) { Text(stringResource(R.string.wizard_next)) }
                 }
             }
         },
@@ -161,10 +175,10 @@ fun TrainingStyleWizard(
                     item { FavourTile(me, names, onAboutMe, onPick = { focus.clearFocus(); picking = it }) }
                 }
                 WizardStep.AnythingElse -> SegmentedList { item { AnythingElseTile(me, onAboutMe, titled = false) } }
-                WizardStep.Summary -> Summary(targets, me, names, onEdit = { step = it.ordinal }, onHowITrain = { principles = true })
+                WizardStep.Summary -> Summary(targets, me, names, onEdit = { step = it.ordinal; fromSummary = true }, onHowITrain = { principles = true })
             }
         }
-    }
+    } }
     picking?.let { list -> PickSheet(list, me, library, onAboutMe, onDismiss = { picking = null }) }
 }
 

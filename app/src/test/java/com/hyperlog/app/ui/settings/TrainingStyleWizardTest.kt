@@ -1,6 +1,8 @@
 package com.hyperlog.app.ui.settings
 
 import android.content.Context
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -274,5 +276,29 @@ class TrainingStyleWizardTest {
         compose.click("New program")
         compose.waitFor("Do you have the program as a file?")
         closeCheckIn()
+    }
+
+    @Test
+    fun aWrongRangeKeepsNextOffUntilItIsPutRight() {
+        setUpAgain()
+        next(); next(); next()
+        compose.waitFor("How many reps a set?")
+        val field = hasSetTextAction() and androidx.compose.ui.test.hasContentDescription("Compounds, fewest reps")
+        compose.onNode(field).performScrollTo().performTextClearance()
+        compose.onNode(field).performTextInput("12")
+        compose.onNodeWithText("Next").assertIsNotEnabled()
+        compose.onNode(field).performTextClearance()
+        compose.onNode(field).performTextInput("5")
+        compose.onNodeWithText("Next").assertIsEnabled()
+    }
+
+    @Test
+    fun aStepOpenedFromTheSummaryGoesBackToTheSummaryOnNext() {
+        setUpAgain()
+        walkToSummary()
+        tap("Rep ranges")
+        compose.waitFor("How many reps a set?")
+        next()
+        compose.waitFor("This is how you train")
     }
 }

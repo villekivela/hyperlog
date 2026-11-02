@@ -384,6 +384,9 @@ private fun Modifier.bleed(by: Dp) = layout { measurable, constraints ->
     layout(constraints.maxWidth, placeable.height) { placeable.place(-by.roundToPx(), 0) }
 }
 
+/** The ranges showing a wrong value, by field: the wizard keeps Next off while any is, since a wrong range keeps nothing. */
+internal val LocalWrongRanges = androidx.compose.runtime.compositionLocalOf<androidx.compose.runtime.snapshots.SnapshotStateMap<String, Boolean>?> { null }
+
 /**
  * A range as two small number fields, its fewest and most, after an optional [label]. Each is kept
  * once the range is whole: both ends in [ends] and the fewest not above the most. Otherwise both
@@ -398,6 +401,11 @@ private fun RangeFields(label: String?, range: NumberRange, ends: IntRange, lowL
     // Kept when you leave a field (Next, Done, or a tap elsewhere), never halfway through typing an end.
     fun commit() {
         if (valid && typed != range) onRange(typed)
+    }
+    val wrongRanges = LocalWrongRanges.current
+    androidx.compose.runtime.DisposableEffect(valid) {
+        wrongRanges?.set(lowLabel, !valid)
+        onDispose { wrongRanges?.remove(lowLabel) }
     }
     val focus = LocalFocusManager.current
     Column {
