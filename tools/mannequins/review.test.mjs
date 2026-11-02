@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
 import { BATCHES, buildReview, batchStatus } from './review.mjs';
+import { readGlb } from './glb.mjs';
 
 let clips;
 let page;
@@ -41,17 +42,20 @@ test('the page holds each exercise of the batch, its clip and its check results'
   assert.deepEqual(data.exercises.map((e) => e.id), BATCHES.prototype);
   const squat = data.exercises.find((e) => e.id === 'barbell_squat');
   assert.equal(squat.name, 'Barbell Back Squat');
-  // The clip is in the page itself, its hash covering the mannequin it reads: the page is
-  // published alone.
+  // The clip is in the page whole, the shared mannequin merged into it: a page may fetch
+  // nothing, data: URLs included, so every clip parses from the bytes it holds.
   const [kind, bytes] = squat.clip.split(',');
   assert.equal(kind, 'data:model/gltf-binary;base64');
-  assert.ok(Buffer.from(bytes, 'base64').equals(await readFile(path.join(clips, 'barbell_squat.glb'))));
+  for (const e of data.exercises) {
+    const { json, bin } = readGlb(Buffer.from(e.clip.split(',')[1], 'base64'));
+    assert.deepEqual(json.buffers, [{ byteLength: bin.length }], `${e.id} reads nothing by URI`);
+  }
+  const own = readGlb(await readFile(path.join(clips, 'barbell_squat.glb')));
+  const whole = readGlb(Buffer.from(bytes, 'base64'));
+  assert.ok(whole.bin.subarray(0, own.bin.length).equals(own.bin));
+  assert.ok(whole.bin.subarray(whole.bin.length - (await readFile(path.join(clips, 'mannequin.bin'))).length).equals(await readFile(path.join(clips, 'mannequin.bin'))));
+  // The OK still names the shipped clip and the mannequin it shares.
   assert.equal(squat.hash, await sha(path.join(clips, 'barbell_squat.glb')));
-  // The mannequin every clip shares is in the page once, under the name the clips read it by.
-  const [sharedKind, shared] = data.resources['mannequin.bin'].split(',');
-  assert.equal(sharedKind, 'data:application/octet-stream;base64');
-  assert.ok(Buffer.from(shared, 'base64').equals(await readFile(path.join(clips, 'mannequin.bin'))));
-  assert.equal(page.split(shared).length, 2, 'the shared mannequin is in the page once');
   assert.deepEqual(Object.keys(squat.checks), ['hands', 'feet', 'equipment', 'joints', 'trace']);
   assert.ok(Object.values(squat.checks).every((c) => c.ok && typeof c.found === 'string'));
   assert.deepEqual(squat.camera, { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 });

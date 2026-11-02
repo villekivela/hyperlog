@@ -4,16 +4,7 @@
 // gltfio's ResourceLoader, and a clip itself carries only its kit and its animation.
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
-// three.js reports a file's progress with ProgressEvent, which Node doesn't have.
-globalThis.ProgressEvent ??= class extends Event {
-  constructor(type, { lengthComputable = false, loaded = 0, total = 0 } = {}) {
-    super(type);
-    Object.assign(this, { lengthComputable, loaded, total });
-  }
-};
 
 const MAGIC = 0x46546c67;
 const JSON_CHUNK = 0x4e4f534a;
@@ -104,16 +95,30 @@ export function shareBody(glbs, uri) {
 }
 
 /**
- * Reads a clip with three.js as the phone reads it with gltfio: each external buffer from the
- * file of its name among `resources`.
+ * A clip made whole: each buffer it reads by URI, from `files` (its bytes by URI), appended to its
+ * own binary chunk. Where nothing may be fetched, like the review page, a clip is parsed whole.
  */
+export function inlineResources(bytes, files) {
+  const { json, bin } = readGlb(bytes);
+  const parts = [bin, Buffer.alloc(pad4(bin.length) - bin.length)];
+  const base = [0];
+  let at = pad4(bin.length);
+  for (const b of json.buffers.slice(1)) {
+    const data = files[b.uri];
+    if (!data) throw new Error(`No file for ${b.uri}`);
+    base.push(at);
+    parts.push(data, Buffer.alloc(pad4(data.length) - data.length));
+    at = pad4(at + data.length);
+  }
+  const whole = Buffer.concat(parts);
+  json.bufferViews = json.bufferViews.map((v) => ({ ...v, buffer: 0, byteOffset: (v.byteOffset ?? 0) + base[v.buffer] }));
+  json.buffers = [{ byteLength: whole.length }];
+  return writeGlb(json, whole);
+}
+
+/** Reads a clip with three.js, each buffer it reads by URI from the file of that name among `resources`. */
 export async function loadClip(file, resources = []) {
-  const byName = Object.fromEntries(await Promise.all(resources.map(async (r) => [path.basename(r), await readFile(r)])));
-  const manager = new THREE.LoadingManager();
-  manager.setURLModifier((url) => {
-    const r = byName[path.basename(url)];
-    return r ? `data:application/octet-stream;base64,${r.toString('base64')}` : url;
-  });
-  const bytes = await readFile(file);
-  return new GLTFLoader(manager).parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
+  const files = Object.fromEntries(await Promise.all(resources.map(async (r) => [path.basename(r), await readFile(r)])));
+  const bytes = inlineResources(await readFile(file), files);
+  return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
 }

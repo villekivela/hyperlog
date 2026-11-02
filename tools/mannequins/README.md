@@ -235,7 +235,8 @@ The mannequin's mesh and skin are the same in every clip, so they are baked once
 `mannequin.bin`. Each clip's glTF reads that buffer by URI, and holds only its own kit, shadow and
 animation (`glb.mjs`). The bake checks every clip's mannequin is byte for byte the same before it
 shares it. The phone hands `mannequin.bin` to gltfio's `ResourceLoader` (`addResourceData`) before
-loading a clip; the review page and the tests resolve it the same way.
+loading a clip. The review page can't fetch anything, `data:` URLs included, so it and the tests
+merge the shared buffer into each clip (`inlineResources`) and parse it from memory.
 
 `mannequins.json`:
 

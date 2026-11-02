@@ -14,6 +14,7 @@ import path from 'node:path';
 import { prepare } from './entries.mjs';
 import { checkPose } from './checks.mjs';
 import { CLIPS } from './bake.mjs';
+import { inlineResources } from './glb.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LIBRARY = path.join(CLIPS, '..', 'exercises.json');
@@ -47,7 +48,6 @@ async function hashOf(files) {
   return hash.digest('hex').slice(0, 16);
 }
 
-const dataUri = async (type, file) => `data:${type};base64,${(await readFile(file)).toString('base64')}`;
 
 /** Builds the batch's review page into `out`/index.html, its clips in it: the page is published alone. */
 export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 'review', 'out', batch) } = {}) {
@@ -56,21 +56,22 @@ export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 
   const names = Object.fromEntries(library.exercises.map((e) => [e.id, e.name]));
   await mkdir(out, { recursive: true });
   const exercises = [];
-  // Each file the clips read by name is in the page once, however many clips share it.
-  const resources = {};
   for (const id of ids) {
     const entry = prepare(id);
     const { checks } = await checkPose(id);
     const [file, ...shared] = await filesOf(clips, id);
-    for (const f of shared) resources[path.basename(f)] ??= await dataUri('application/octet-stream', f);
+    // The page may fetch nothing, data: URLs included, so each clip goes in whole, with the
+    // mannequin it shares merged into it. The OK still names the files that ship.
+    const files = Object.fromEntries(await Promise.all(shared.map(async (f) => [path.basename(f), await readFile(f)])));
+    const whole = inlineResources(await readFile(file), files);
     exercises.push({
-      id, name: names[id] ?? id, equipment: entry.equipment, clip: await dataUri('model/gltf-binary', file),
+      id, name: names[id] ?? id, equipment: entry.equipment, clip: `data:model/gltf-binary;base64,${whole.toString('base64')}`,
       hash: await hashOf([file, ...shared]), camera: entry.camera, traced: Boolean(entry.trace), checks,
     });
   }
   const template = await readFile(path.join(HERE, 'review', 'page.html'), 'utf8');
   // The data sits in the page as JSON; `<` is escaped so nothing in it can close the script.
-  const data = JSON.stringify({ batch, resources, exercises }).replace(/</g, '\\u003c');
+  const data = JSON.stringify({ batch, exercises }).replace(/</g, '\\u003c');
   await writeFile(path.join(out, 'index.html'), template.replace('/*BATCH*/{}', data));
   return out;
 }

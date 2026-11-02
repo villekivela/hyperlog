@@ -136,9 +136,7 @@ const banner = document.getElementById('banner');
 document.getElementById('heading').textContent = `Mannequin review: ${BATCH.batch}`;
 
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-// A clip reads the mannequin it shares with the others by name; the page holds one copy of it.
-const manager = new THREE.LoadingManager();
-manager.setURLModifier((url) => BATCH.resources[url.split('/').pop()] ?? url);
+// Each clip is whole and parsed from its own bytes: the page fetches nothing.
 const bytesOf = (dataUri) => Uint8Array.from(atob(dataUri.split(',')[1]), (c) => c.charCodeAt(0)).buffer;
 const verdicts = {};
 const cards = {};
@@ -199,7 +197,7 @@ function stage(e, canvas, holder) {
   };
   place();
   colour();
-  new GLTFLoader(manager).parse(bytesOf(e.clip), '', (gltf) => {
+  new GLTFLoader().parse(bytesOf(e.clip), '', (gltf) => {
     scene.add(gltf.scene);
     gltf.scene.traverse((o) => { if (o.material) materials.push(o.material); });
     mixer = new THREE.AnimationMixer(gltf.scene);
