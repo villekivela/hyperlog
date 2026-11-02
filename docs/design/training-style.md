@@ -89,6 +89,20 @@ changes. A sub-screen: back arrow, no navigation bar.
 The Settings row: `tune` symbol, **Training style**, `Hypertrophy · 8–14 sets a week` (the goal and
 the volume range, one line), chevron. It is the Coach group's first row, above the Claude key.
 
+## The wizard and the card
+
+The wizard (SPEC, Training style → The wizard) is the check-in step's look with the page's tiles
+as its controls: top bar **Set how you train** with back and ×, the question in `headlineMedium`
+on the text edge, the step's tiles in a `SegmentedList` under it (the very composables the page
+draws), and a bottom strip (`BottomActions`) with `3 of 10` in `onSurfaceVariant` at the start and
+**Next** (**Done** on the summary) at the end. The summary is a list of rows, each a setting and
+its answer in one or two lines, tapped to go back; under it, one row, **How I train**, with a
+chevron.
+
+Today's card, **Set how you train**, is the coach line's banner (`surfaceContainerHighest`,
+`tune` symbol), with a text button **Set up** and ×, under the other banners. The page's
+**Set it up again** is its first row, `tune`, a chevron.
+
 ## Tokens
 
 - Screen `surfaceContainer` (`Tones.screen`), tiles `Tones.card`, 4 dp apart, 32 dp outer and 8 dp

@@ -50,10 +50,17 @@ import java.time.LocalDate
 class AskClaudeAppTest {
     val compose = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule
-    val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(compose)
-
     private val context: Context get() = ApplicationProvider.getApplicationContext()
+
+    /** The training style is set, so New program goes straight to its check-in. */
+    private val styleSet = object : org.junit.rules.ExternalResource() {
+        override fun before() = runBlocking {
+            HyperlogDatabase.get(context).settings().put(com.hyperlog.app.data.SettingEntity(com.hyperlog.app.coach.TrainingStyles.DONE, "true"))
+        }
+    }
+
+    @get:Rule
+    val rules: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(styleSet).around(compose)
     private val db get() = HyperlogDatabase.get(context)
 
     private fun runStarter() {

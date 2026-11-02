@@ -196,6 +196,10 @@ fun TodayScreen(
     onCheckInLine: (String, CoachLine) -> Unit = { _, _ -> },
     /** Hides the coach line until its pattern grows. */
     onHideCoachLine: (CoachLine) -> Unit = {},
+    /** "Set how you train" shows until the training style is set or the card is dismissed. */
+    styleCard: Boolean = false,
+    onSetUpStyle: () -> Unit = {},
+    onDismissStyleCard: () -> Unit = {},
     /** A finished block's review not yet opened (SPEC, Program → Block review); null for none. */
     dueReview: DueReview? = null,
     onOpenReview: (DueReview) -> Unit = {},
@@ -334,6 +338,7 @@ fun TodayScreen(
         state.easeBack?.let { days -> TimeOffBanner(days, onEaseBack = { onEaseBack(days) }) }
         if (dueReview != null && isToday && !sessionRunning) ReviewBanner(dueReview, program?.program?.title.orEmpty()) { onOpenReview(dueReview) }
         if (coachLine != null && !sessionRunning) CoachLineBanner(coachLine, exerciseNames, onCheckInLine, onHide = { onHideCoachLine(coachLine) })
+        if (styleCard && isToday && !sessionRunning) StyleCard(onSetUpStyle, onDismissStyleCard)
         state.again?.let { AgainNotice(it) }
     }
     Scaffold(
@@ -469,6 +474,7 @@ fun TodayScreen(
                 if (dueReview != null && !sessionRunning) {
                     ReviewBanner(dueReview, program?.program?.title.orEmpty(), Modifier.padding(bottom = 8.dp)) { onOpenReview(dueReview) }
                 }
+                if (styleCard && !sessionRunning) StyleCard(onSetUpStyle, onDismissStyleCard, Modifier.padding(bottom = 8.dp))
                 val finished = program?.finished == true
                 // With no program running, or the one running finished, the saved ones are on offer.
                 val offerSaved = savedPrograms.isNotEmpty() && (program == null || finished) && !sessionRunning
@@ -774,6 +780,20 @@ private fun CoachLineBanner(line: CoachLine, names: Map<String, String>, onCheck
     ) {
         TextButton(onClick = { onCheckIn(answer, line) }) { Text(stringResource(R.string.coach_line_check_in)) }
         IconButton(onClick = onHide) { SymbolIcon(Symbol.Close, stringResource(R.string.coach_line_hide)) }
+    }
+}
+
+/** "Set how you train" with **Set up** and ×, in the coach line's style: the training style's wizard, until it is done. */
+@Composable
+private fun StyleCard(onSetUp: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Banner(
+        Symbol.Tune, stringResource(R.string.style_card), modifier,
+        container = cs.surfaceContainerHighest, content = cs.onSurface,
+        titleStyle = MaterialTheme.typography.titleSmall.copy(lineBreak = LineBreak.Heading),
+    ) {
+        TextButton(onClick = onSetUp) { Text(stringResource(R.string.style_card_set_up)) }
+        IconButton(onClick = onDismiss) { SymbolIcon(Symbol.Close, stringResource(R.string.style_card_dismiss)) }
     }
 }
 

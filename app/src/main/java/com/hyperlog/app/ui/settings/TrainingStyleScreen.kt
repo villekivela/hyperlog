@@ -125,6 +125,7 @@ fun TrainingStyleScreen(
     onTargets: (TrainingTargets) -> Unit,
     onAboutMe: (AboutMe) -> Unit,
     onHowITrain: (HowITrain) -> Unit,
+    onSetUpAgain: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -143,6 +144,15 @@ fun TrainingStyleScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding().verticalScroll(rememberScrollState())) {
+            val setUpAgain = stringResource(R.string.style_set_up_again)
+            val setUpAgainAbout = stringResource(R.string.style_set_up_again_about)
+            SegmentedList {
+                row(
+                    setUpAgain, setUpAgainAbout, Symbol.Tune,
+                    onClick = onSetUpAgain,
+                    trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                )
+            }
             Targets(style.targets, onTargets)
             GroupHead(stringResource(R.string.how_i_train))
             HowITrainFields(style.howITrain, onHowITrain)
@@ -157,30 +167,105 @@ fun TrainingStyleScreen(
             Spacer(Modifier.navigationBarsPadding().height(GroupGap))
         }
     }
-    picking?.let { list ->
-        val me = style.aboutMe
-        val taken = me.avoid + me.favour
-        Sheet(onDismiss = { picking = null }) {
-            ExercisePick(
-                library.filter { !it.hidden && it.id !in taken },
-                stringResource(if (list == PickList.Avoid) R.string.style_avoid_pick else R.string.style_favour_pick),
-                onPick = { id ->
-                    onAboutMe(if (list == PickList.Avoid) me.copy(avoid = me.avoid + id) else me.copy(favour = me.favour + id))
-                    picking = null
-                },
+    picking?.let { list -> PickSheet(list, style.aboutMe, library, onAboutMe, onDismiss = { picking = null }) }
+}
+
+/** The About me list an exercise is picked for. */
+internal enum class PickList { Avoid, Favour }
+
+@Composable
+private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    GroupHead(stringResource(R.string.style_targets))
+    SegmentedList {
+        item { GoalTile(t, onTargets) }
+        item { VolumeTile(t, onTargets) }
+        item { AcrossTile(t, onTargets) }
+        item { FrequencyTile(t, onTargets) }
+        item { HowHardTile() }
+        item { FailureTile(t, onTargets) }
+        item { CalibrationTile(t, onTargets) }
+        item { RepsTile(t, onTargets) }
+    }
+}
+
+// The tiles below are the page's controls, which the wizard (TrainingStyleWizard) shows one step at a time.
+
+@Composable
+internal fun GoalTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    val goals = listOf(stringResource(R.string.style_goal_hypertrophy), stringResource(R.string.style_goal_strength), stringResource(R.string.style_goal_both))
+    Tile(stringResource(R.string.style_goal), stringResource(R.string.style_goal_about)) {
+        ConnectedChoice(
+            goals, TrainingGoal.entries.indexOf(t.goal),
+            onSelect = { onTargets(t.copy(goal = TrainingGoal.entries[it])) },
+            contentPadding = ChoicePadding, fitLabels = true,
+        )
+    }
+}
+
+@Composable
+internal fun VolumeTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    val volumes = listOf(stringResource(R.string.style_volume_low), stringResource(R.string.style_volume_moderate), stringResource(R.string.style_volume_high), stringResource(R.string.style_volume_custom))
+    val choice = VolumeChoices.indexOf(t.volume).takeIf { it >= 0 } ?: VolumeChoices.size
+    var custom by rememberSaveable { mutableStateOf(false) }
+    val customShown = custom || choice == VolumeChoices.size
+    Tile(
+        stringResource(R.string.style_volume),
+        if (customShown) stringResource(R.string.style_volume_about_custom) else stringResource(R.string.style_volume_about, t.volume.toString()),
+    ) {
+        ConnectedChoice(
+            volumes, if (custom) VolumeChoices.size else choice,
+            onSelect = {
+                custom = it == VolumeChoices.size
+                if (!custom) onTargets(t.copy(volume = VolumeChoices[it]))
+            },
+            contentPadding = ChoicePadding, fitLabels = true,
+        )
+        if (customShown) {
+            RangeFields(
+                stringResource(R.string.style_volume_range), t.volume, TrainingStyleJson.VOLUME,
+                stringResource(R.string.style_volume_low_end), stringResource(R.string.style_volume_high_end),
+                stringResource(R.string.style_volume_wrong),
+                onRange = { onTargets(t.copy(volume = it)) },
             )
         }
     }
 }
 
-/** The About me list an exercise is picked for. */
-private enum class PickList { Avoid, Favour }
+@Composable
+internal fun AcrossTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    Tile(
+        stringResource(R.string.style_across),
+        if (t.acrossBlock == AcrossBlock.Steady) stringResource(R.string.style_across_steady_about)
+        else stringResource(R.string.style_across_rising_about, t.volume.high),
+    ) {
+        ConnectedChoice(
+            listOf(stringResource(R.string.style_across_steady), stringResource(R.string.style_across_rising)),
+            AcrossBlock.entries.indexOf(t.acrossBlock),
+            onSelect = { onTargets(t.copy(acrossBlock = AcrossBlock.entries[it])) },
+            // "Build up each week" keeps its last word beside the shorter "Same each week".
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            fitLabels = true,
+        )
+    }
+}
 
 @Composable
-private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
-    GroupHead(stringResource(R.string.style_targets))
-    val goals = listOf(stringResource(R.string.style_goal_hypertrophy), stringResource(R.string.style_goal_strength), stringResource(R.string.style_goal_both))
-    val volumes = listOf(stringResource(R.string.style_volume_low), stringResource(R.string.style_volume_moderate), stringResource(R.string.style_volume_high), stringResource(R.string.style_volume_custom))
+private fun FrequencyTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    Tile(stringResource(R.string.style_frequency), stringResource(R.string.style_frequency_about)) {
+        ConnectedChoice(
+            Frequency.entries.map { it.key.replace("-", "–") },
+            Frequency.entries.indexOf(t.frequency),
+            onSelect = { onTargets(t.copy(frequency = Frequency.entries[it])) },
+        )
+    }
+}
+
+/** How hard is one rule, shown and not chosen: a tile with no control. */
+@Composable
+internal fun HowHardTile() = Tile(stringResource(R.string.style_how_hard), stringResource(R.string.style_how_hard_rule))
+
+@Composable
+internal fun FailureTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
     val failures = FailureRule.entries.map {
         stringResource(
             when (it) {
@@ -198,96 +283,34 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
             FailureRule.AnyLift -> R.string.style_failure_any_about
         },
     )
-    SegmentedList {
-        item {
-            Tile(stringResource(R.string.style_goal), stringResource(R.string.style_goal_about)) {
-                ConnectedChoice(
-                    goals, TrainingGoal.entries.indexOf(t.goal),
-                    onSelect = { onTargets(t.copy(goal = TrainingGoal.entries[it])) },
-                    contentPadding = ChoicePadding, fitLabels = true,
-                )
-            }
-        }
-        item {
-            val choice = VolumeChoices.indexOf(t.volume).takeIf { it >= 0 } ?: VolumeChoices.size
-            var custom by rememberSaveable { mutableStateOf(false) }
-            val customShown = custom || choice == VolumeChoices.size
-            Tile(
-                stringResource(R.string.style_volume),
-                if (customShown) stringResource(R.string.style_volume_about_custom) else stringResource(R.string.style_volume_about, t.volume.toString()),
-            ) {
-                ConnectedChoice(
-                    volumes, if (custom) VolumeChoices.size else choice,
-                    onSelect = {
-                        custom = it == VolumeChoices.size
-                        if (!custom) onTargets(t.copy(volume = VolumeChoices[it]))
-                    },
-                    contentPadding = ChoicePadding, fitLabels = true,
-                )
-                if (customShown) {
-                    RangeFields(
-                        stringResource(R.string.style_volume_range), t.volume, TrainingStyleJson.VOLUME,
-                        stringResource(R.string.style_volume_low_end), stringResource(R.string.style_volume_high_end),
-                        stringResource(R.string.style_volume_wrong),
-                        onRange = { onTargets(t.copy(volume = it)) },
-                    )
-                }
-            }
-        }
-        item {
-            Tile(
-                stringResource(R.string.style_across),
-                if (t.acrossBlock == AcrossBlock.Steady) stringResource(R.string.style_across_steady_about)
-                else stringResource(R.string.style_across_rising_about, t.volume.high),
-            ) {
-                ConnectedChoice(
-                    listOf(stringResource(R.string.style_across_steady), stringResource(R.string.style_across_rising)),
-                    AcrossBlock.entries.indexOf(t.acrossBlock),
-                    onSelect = { onTargets(t.copy(acrossBlock = AcrossBlock.entries[it])) },
-                    // "Build up each week" keeps its last word beside the shorter "Same each week".
-                    contentPadding = PaddingValues(horizontal = 12.dp),
-                    fitLabels = true,
-                )
-            }
-        }
-        item {
-            Tile(stringResource(R.string.style_frequency), stringResource(R.string.style_frequency_about)) {
-                ConnectedChoice(
-                    Frequency.entries.map { it.key.replace("-", "–") },
-                    Frequency.entries.indexOf(t.frequency),
-                    onSelect = { onTargets(t.copy(frequency = Frequency.entries[it])) },
-                )
-            }
-        }
-        // How hard is one rule, shown and not chosen: a tile with no control.
-        item { Tile(stringResource(R.string.style_how_hard), stringResource(R.string.style_how_hard_rule)) }
-        item {
-            // The line above the options says what the picked one means; three lines hold the longest, so a tap never shifts them.
-            Tile(stringResource(R.string.style_failure), failureAbout, aboutLines = 3) {
-                Options(failures, FailureRule.entries.indexOf(t.failure), onSelect = { onTargets(t.copy(failure = FailureRule.entries[it])) })
-            }
-        }
-        item {
-            SwitchTile(stringResource(R.string.style_calibration), stringResource(R.string.style_calibration_about), t.calibration) {
-                onTargets(t.copy(calibration = it))
-            }
-        }
-        item {
-            Tile(stringResource(R.string.style_reps), stringResource(R.string.style_reps_about)) {
-                RangeFields(
-                    stringResource(R.string.style_reps_compound), t.compound, TrainingStyleJson.REPS,
-                    stringResource(R.string.style_reps_compound_low), stringResource(R.string.style_reps_compound_high),
-                    stringResource(R.string.style_reps_wrong),
-                    onRange = { onTargets(t.copy(compound = it)) },
-                )
-                RangeFields(
-                    stringResource(R.string.style_reps_isolation), t.isolation, TrainingStyleJson.REPS,
-                    stringResource(R.string.style_reps_isolation_low), stringResource(R.string.style_reps_isolation_high),
-                    stringResource(R.string.style_reps_wrong),
-                    onRange = { onTargets(t.copy(isolation = it)) },
-                )
-            }
-        }
+    // The line above the options says what the picked one means; three lines hold the longest, so a tap never shifts them.
+    Tile(stringResource(R.string.style_failure), failureAbout, aboutLines = 3) {
+        Options(failures, FailureRule.entries.indexOf(t.failure), onSelect = { onTargets(t.copy(failure = FailureRule.entries[it])) })
+    }
+}
+
+@Composable
+internal fun CalibrationTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    SwitchTile(stringResource(R.string.style_calibration), stringResource(R.string.style_calibration_about), t.calibration) {
+        onTargets(t.copy(calibration = it))
+    }
+}
+
+@Composable
+internal fun RepsTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+    Tile(stringResource(R.string.style_reps), stringResource(R.string.style_reps_about)) {
+        RangeFields(
+            stringResource(R.string.style_reps_compound), t.compound, TrainingStyleJson.REPS,
+            stringResource(R.string.style_reps_compound_low), stringResource(R.string.style_reps_compound_high),
+            stringResource(R.string.style_reps_wrong),
+            onRange = { onTargets(t.copy(compound = it)) },
+        )
+        RangeFields(
+            stringResource(R.string.style_reps_isolation), t.isolation, TrainingStyleJson.REPS,
+            stringResource(R.string.style_reps_isolation_low), stringResource(R.string.style_reps_isolation_high),
+            stringResource(R.string.style_reps_wrong),
+            onRange = { onTargets(t.copy(isolation = it)) },
+        )
     }
 }
 
@@ -296,7 +319,7 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
  * [trailing] control beside them, and the [content] (its control) under them, 12 dp down.
  */
 @Composable
-private fun Tile(
+internal fun Tile(
     title: String,
     about: String? = null,
     trailing: (@Composable () -> Unit)? = null,
@@ -323,7 +346,7 @@ private fun Tile(
 
 /** A tile that is one switch: a tap anywhere on it turns it. */
 @Composable
-private fun SwitchTile(title: String, about: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+internal fun SwitchTile(title: String, about: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
     Column(Modifier.toggleable(checked, role = Role.Switch, onValueChange = onChange)) {
         Tile(title, about, trailing = { Switch(checked = checked, onCheckedChange = null) })
     }
@@ -335,7 +358,7 @@ private fun SwitchTile(title: String, about: String?, checked: Boolean, onChange
  * the tile and pads 12 dp. [onSelect] gets the tapped option, the picked one too.
  */
 @Composable
-private fun Options(options: List<String>, selected: Int?, onSelect: (Int) -> Unit) {
+internal fun Options(options: List<String>, selected: Int?, onSelect: (Int) -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.bleed(CardPadding - 4.dp)) {
         options.forEachIndexed { i, label ->
@@ -431,7 +454,7 @@ private fun NumberField(value: String, description: String, error: Boolean, acti
  * the rest switches, and one line more. Their sentences are Claude's; you see only the labels.
  */
 @Composable
-private fun HowITrainFields(how: HowITrain, onHowITrain: (HowITrain) -> Unit) {
+internal fun HowITrainFields(how: HowITrain, onHowITrain: (HowITrain) -> Unit) {
     val always = stringResource(R.string.how_i_train_always)
     val labels = Principle.entries.associateWith { stringResource(it.label) }
     val description = stringResource(R.string.how_i_train_anything_else_description)
@@ -490,86 +513,124 @@ private val Principle.label: Int
         Principle.Deload -> R.string.principle_deload
     }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (AboutMe) -> Unit, onPick: (PickList) -> Unit) {
     val names = library.associate { it.id to it.name }
-    val ages = AgeBand.entries
-    val where = Progress.entries.map { it.label }
     SegmentedList {
-        item {
-            Tile(stringResource(R.string.style_age)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ages.forEach { band ->
-                        FilterChip(
-                            selected = me.age == band,
-                            onClick = { onAboutMe(me.copy(age = band.takeIf { me.age != band })) },
-                            label = { Text(band.label) },
-                            colors = selectedChipColors(),
-                        )
-                    }
-                }
-            }
-        }
-        item {
-            // Tapped again, the picked one clears: every field here is optional.
-            Tile(stringResource(R.string.style_where), stringResource(R.string.style_where_about)) {
-                Options(where, me.progress?.let { Progress.entries.indexOf(it) }, onSelect = { i ->
-                    val p = Progress.entries[i]
-                    onAboutMe(me.copy(progress = p.takeIf { me.progress != p }))
-                })
-            }
-        }
-        item {
-            SwitchTile(stringResource(R.string.style_coming_back), null, me.comingBack) { onAboutMe(me.copy(comingBack = it)) }
-        }
-        item {
-            Tile(stringResource(R.string.style_aches), stringResource(R.string.style_aches_about)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BodyArea.entries.forEach { area ->
-                        val on = area in me.aches
-                        FilterChip(
-                            selected = on,
-                            onClick = { onAboutMe(me.copy(aches = if (on) me.aches - area else (me.aches + (area to "")).toSortedMap(compareBy { it.ordinal }))) },
-                            label = { Text(area.label) },
-                            colors = selectedChipColors(),
-                        )
-                    }
-                }
-                me.aches.forEach { (area, note) ->
-                    var typed by rememberSaveable(area) { mutableStateOf(note) }
-                    OutlinedTextField(
-                        value = typed,
-                        onValueChange = {
-                            typed = it
-                            onAboutMe(me.copy(aches = me.aches + (area to it)))
-                        },
-                        label = { Text(area.label) },
-                        placeholder = { Text(stringResource(R.string.style_ache_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-        }
-        item { Picked(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(PickList.Avoid) }) { id -> onAboutMe(me.copy(avoid = me.avoid - id)) } }
-        item { Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(PickList.Favour) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) } }
-        item {
-            val description = stringResource(R.string.style_anything_else_about_me)
-            Tile(stringResource(R.string.style_anything_else)) {
-                var typed by rememberSaveable { mutableStateOf(me.anythingElse.orEmpty()) }
-                OutlinedTextField(
-                    value = typed,
-                    onValueChange = {
-                        typed = it
-                        onAboutMe(me.copy(anythingElse = it.takeIf { t -> t.isNotBlank() }))
-                    },
-                    placeholder = { Text(stringResource(R.string.style_anything_else_hint)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
+        item { AgeTile(me, onAboutMe) }
+        item { WhereTile(me, onAboutMe) }
+        item { ComingBackTile(me, onAboutMe) }
+        item { AchesTile(me, onAboutMe) }
+        item { AvoidTile(me, names, onAboutMe, onPick) }
+        item { FavourTile(me, names, onAboutMe, onPick) }
+        item { AnythingElseTile(me, onAboutMe) }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun AgeTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
+    Tile(stringResource(R.string.style_age)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AgeBand.entries.forEach { band ->
+                FilterChip(
+                    selected = me.age == band,
+                    onClick = { onAboutMe(me.copy(age = band.takeIf { me.age != band })) },
+                    label = { Text(band.label) },
+                    colors = selectedChipColors(),
                 )
             }
         }
+    }
+}
+
+/** Tapped again, the picked one clears: every field of About me is optional. */
+@Composable
+internal fun WhereTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
+    Tile(stringResource(R.string.style_where), stringResource(R.string.style_where_about)) {
+        Options(Progress.entries.map { it.label }, me.progress?.let { Progress.entries.indexOf(it) }, onSelect = { i ->
+            val p = Progress.entries[i]
+            onAboutMe(me.copy(progress = p.takeIf { me.progress != p }))
+        })
+    }
+}
+
+@Composable
+internal fun ComingBackTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
+    SwitchTile(stringResource(R.string.style_coming_back), null, me.comingBack) { onAboutMe(me.copy(comingBack = it)) }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun AchesTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
+    Tile(stringResource(R.string.style_aches), stringResource(R.string.style_aches_about)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BodyArea.entries.forEach { area ->
+                val on = area in me.aches
+                FilterChip(
+                    selected = on,
+                    onClick = { onAboutMe(me.copy(aches = if (on) me.aches - area else (me.aches + (area to "")).toSortedMap(compareBy { it.ordinal }))) },
+                    label = { Text(area.label) },
+                    colors = selectedChipColors(),
+                )
+            }
+        }
+        me.aches.forEach { (area, note) ->
+            var typed by rememberSaveable(area) { mutableStateOf(note) }
+            OutlinedTextField(
+                value = typed,
+                onValueChange = {
+                    typed = it
+                    onAboutMe(me.copy(aches = me.aches + (area to it)))
+                },
+                label = { Text(area.label) },
+                placeholder = { Text(stringResource(R.string.style_ache_hint)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+internal fun AvoidTile(me: AboutMe, names: Map<String, String>, onAboutMe: (AboutMe) -> Unit, onPick: (PickList) -> Unit) =
+    Picked(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(PickList.Avoid) }) { id -> onAboutMe(me.copy(avoid = me.avoid - id)) }
+
+@Composable
+internal fun FavourTile(me: AboutMe, names: Map<String, String>, onAboutMe: (AboutMe) -> Unit, onPick: (PickList) -> Unit) =
+    Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(PickList.Favour) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) }
+
+@Composable
+internal fun AnythingElseTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
+    val description = stringResource(R.string.style_anything_else_about_me)
+    Tile(stringResource(R.string.style_anything_else)) {
+        var typed by rememberSaveable { mutableStateOf(me.anythingElse.orEmpty()) }
+        OutlinedTextField(
+            value = typed,
+            onValueChange = {
+                typed = it
+                onAboutMe(me.copy(anythingElse = it.takeIf { t -> t.isNotBlank() }))
+            },
+            placeholder = { Text(stringResource(R.string.style_anything_else_hint)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
+        )
+    }
+}
+
+/** Picks one exercise for [list] from the library, in a sheet: the page's and the wizard's. */
+@Composable
+internal fun PickSheet(list: PickList, me: AboutMe, library: List<Exercise>, onAboutMe: (AboutMe) -> Unit, onDismiss: () -> Unit) {
+    val taken = me.avoid + me.favour
+    Sheet(onDismiss = onDismiss) {
+        ExercisePick(
+            library.filter { !it.hidden && it.id !in taken },
+            stringResource(if (list == PickList.Avoid) R.string.style_avoid_pick else R.string.style_favour_pick),
+            onPick = { id ->
+                onAboutMe(if (list == PickList.Avoid) me.copy(avoid = me.avoid + id) else me.copy(favour = me.favour + id))
+                onDismiss()
+            },
+        )
     }
 }
 
@@ -578,7 +639,7 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
  * TalkBack), then each picked exercise on a line with its ×, the × lined up under Add's end.
  */
 @Composable
-private fun Picked(title: String, ids: List<String>, names: Map<String, String>, add: String, onAdd: () -> Unit, onRemove: (String) -> Unit) {
+internal fun Picked(title: String, ids: List<String>, names: Map<String, String>, add: String, onAdd: () -> Unit, onRemove: (String) -> Unit) {
     val removes = ids.associateWith { stringResource(R.string.style_remove, names[it] ?: it) }
     Tile(
         title,
@@ -609,7 +670,7 @@ private fun Picked(title: String, ids: List<String>, names: Map<String, String>,
 
 /** The library's exercises with the swap picker's search, for an About me list. */
 @Composable
-private fun ExercisePick(exercises: List<Exercise>, title: String, onPick: (String) -> Unit) {
+internal fun ExercisePick(exercises: List<Exercise>, title: String, onPick: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     Column(Modifier.fillMaxWidth()) {
         Text(title, Modifier.padding(start = TextEdge, end = TextEdge, top = 8.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineSmall)

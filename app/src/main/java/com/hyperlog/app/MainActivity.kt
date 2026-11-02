@@ -166,6 +166,36 @@ private data class CheckInFrom(val screen: Screen, val reviewProgram: Long? = nu
     }
 }
 
+/**
+ * Where the training style's wizard goes on at its Done: into the New program check-in it stood
+ * in front of, from Coach's tile or from a program review (SPEC, Training style → The wizard).
+ */
+private sealed interface AfterWizard {
+    data class Tile(val tile: com.hyperlog.app.coach.Tile) : AfterWizard
+
+    /** New program on the review open under the wizard, with its [opening] words and the [review] for Claude. */
+    data class Review(val opening: String, val review: String) : AfterWizard
+
+    companion object {
+        val Saver = androidx.compose.runtime.saveable.listSaver<AfterWizard?, String>(
+            save = {
+                when (it) {
+                    null -> emptyList()
+                    is Tile -> listOf("tile", it.tile.name)
+                    is Review -> listOf("review", it.opening, it.review)
+                }
+            },
+            restore = {
+                when (it.firstOrNull()) {
+                    "tile" -> Tile(com.hyperlog.app.coach.Tile.valueOf(it[1]))
+                    "review" -> Review(it[1], it[2])
+                    else -> null
+                }
+            },
+        )
+    }
+}
+
 internal const val NavigationBarTag = "navigation-bar"
 
 /** The five destinations, in the bar's order, with their symbols (outlined, filled when selected). */
@@ -349,6 +379,11 @@ private fun App(
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
     val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
     val trainingStyle by trainingStyleModel.style.collectAsStateWithLifecycle()
+    val styleDone by trainingStyleModel.done.collectAsStateWithLifecycle()
+    val styleCardDismissed by trainingStyleModel.cardDismissed.collectAsStateWithLifecycle()
+    /** The training style's wizard is up, over the screen it was opened from; [afterWizard] is where its Done goes on to. */
+    var wizardOpen by rememberSaveable { mutableStateOf(false) }
+    var afterWizard by rememberSaveable(stateSaver = AfterWizard.Saver) { mutableStateOf<AfterWizard?>(null) }
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
     /** Where the check-in under way started, when not on Coach; leaving it goes back there. */
@@ -389,6 +424,8 @@ private fun App(
         programModel.closeReview()
         toCoach(page)
     }
+    // New program opens the training style's wizard first until it is done; its Done goes on into the check-in.
+    val styleUnset = styleDone == false
     val asking = askOpening != null && !checkInAvailable
     // A key saved (or the scripted coach switched on) while Ask Claude is open: the wizard takes over, and its words go.
     LaunchedEffect(checkInAvailable) { if (checkInAvailable && askOpening != null) { askOpening = null; askTile = null } }
@@ -416,6 +453,10 @@ private fun App(
     }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val startTile = { tile: com.hyperlog.app.coach.Tile ->
+        if (checkInAvailable) checkInModel.start(tile)
+        else openAsk(com.hyperlog.app.coach.Opening.Tile, tile, context.getString(com.hyperlog.app.ui.coach.TileAskWords.getValue(tile)))
+    }
     // A restored backup replaces everything the screens hold: start them again on its data.
     LaunchedEffect(backup) {
         if (backup == BackupState.Restored) (context as? Activity)?.let {
@@ -480,6 +521,27 @@ private fun App(
             onReject = { programModel.reject(); if (reviewingCheckIn) checkInModel.reject() },
             // × drops the check-in, as on every one of its steps.
             onClose = if (reviewingCheckIn) ({ programModel.reject(); checkInModel.close(); leaveCheckIn() }) else null,
+        )
+        return
+    }
+    // The training style's wizard, over whatever opened it; × drops it and where it was going.
+    if (wizardOpen && trainingStyle != null) {
+        com.hyperlog.app.ui.settings.TrainingStyleWizard(
+            trainingStyle!!,
+            library = exercises,
+            onDone = { targets, aboutMe ->
+                trainingStyleModel.finish(targets, aboutMe)
+                wizardOpen = false
+                val next = afterWizard
+                afterWizard = null
+                when (next) {
+                    is AfterWizard.Tile -> startTile(next.tile)
+                    is AfterWizard.Review -> reviewPage?.let { checkInReview(it, com.hyperlog.app.coach.Opening.NewProgramReview, next.opening, next.review) }
+                    null -> Unit
+                }
+            },
+            onHowITrain = trainingStyleModel::setHowITrain,
+            onClose = { wizardOpen = false; afterWizard = null },
         )
         return
     }
@@ -560,7 +622,10 @@ private fun App(
             onCheckIn = { opening, review ->
                 checkInReview(page, page.checkInKind, opening, review)
             },
-            onNewProgram = { opening, review -> checkInReview(page, com.hyperlog.app.coach.Opening.NewProgramReview, opening, review) },
+            onNewProgram = { opening, review ->
+                if (styleUnset) { afterWizard = AfterWizard.Review(opening, review); wizardOpen = true }
+                else checkInReview(page, com.hyperlog.app.coach.Opening.NewProgramReview, opening, review)
+            },
         )
         return
     }
@@ -757,8 +822,8 @@ private fun App(
             // A check-in from Coach's own tiles ends on Coach.
             onTile = { tile ->
                 checkInFrom = null
-                if (checkInAvailable) checkInModel.start(tile)
-                else openAsk(com.hyperlog.app.coach.Opening.Tile, tile, context.getString(com.hyperlog.app.ui.coach.TileAskWords.getValue(tile)))
+                if (tile == com.hyperlog.app.coach.Tile.NewProgram && styleUnset) { afterWizard = AfterWizard.Tile(tile); wizardOpen = true }
+                else startTile(tile)
             },
             onAnswer = checkInModel::answer,
             draft = checkInDraft,
@@ -843,6 +908,7 @@ private fun App(
             onTargets = trainingStyleModel::setTargets,
             onAboutMe = trainingStyleModel::setAboutMe,
             onHowITrain = trainingStyleModel::setHowITrain,
+            onSetUpAgain = { afterWizard = null; wizardOpen = true },
             onBack = { screen = Screen.Settings },
         )
         screen == Screen.Settings -> SettingsScreen(
@@ -909,6 +975,9 @@ private fun App(
             coachLine = coachLine,
             onCheckInLine = checkInLine,
             onHideCoachLine = programModel::hideCoachLine,
+            styleCard = styleDone == false && styleCardDismissed == false,
+            onSetUpStyle = { afterWizard = null; wizardOpen = true },
+            onDismissStyleCard = trainingStyleModel::dismissCard,
             dueReview = dueReview,
             onOpenReview = { programModel.openReview(it.programId, it.blockId) },
             weekdayPlan = weekdayPlan,
