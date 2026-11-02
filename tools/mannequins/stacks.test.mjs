@@ -22,3 +22,19 @@ for (const id of Object.keys(POSES)) {
     heads.forEach((_, i) => assert.ok(worked[i] > rest[i] + 0.03, `stack ${i}: ${rest[i].toFixed(3)} at the stretch, ${worked[i].toFixed(3)} at the squeeze`));
   });
 }
+
+// A working stack is held off its rest all through the rep, the stretch included: only before the
+// first rep does it sit down.
+for (const id of Object.keys(POSES)) {
+  test(`${id}'s stacks stay off their rest at the stretch`, async () => {
+    const entry = prepare(id);
+    const stage = await buildStage(entry);
+    const heads = [];
+    stage.kit.group.traverse((o) => { if (o.userData.stack) heads.push(o); });
+    // Built, before it is first placed, a stack sits at its rest.
+    const rest = heads.map((h) => h.position.y);
+    const { lowering, lifting } = tempoOf(entry);
+    stage.pose(lowering < lifting ? 0 : 1);
+    heads.forEach((h, i) => assert.ok(h.position.y > rest[i] + 0.03, `stack ${i}: ${(h.position.y - rest[i]).toFixed(3)} m off its rest at the stretch`));
+  });
+}

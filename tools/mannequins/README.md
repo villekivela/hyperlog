@@ -189,7 +189,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
   `straight_bar` or `v_handle`. The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
-  rises as the cable is drawn out. It has a high pulley only (1.5 m or more) for now.
+  rises as the cable is drawn out, and is held 6 cm off its rest even at the stretch (`HELD`), as
+  every working stack is. It has a high pulley only (1.5 m or more) for now.
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 

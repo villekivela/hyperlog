@@ -1505,7 +1505,10 @@ gallery (Technique videos).
   - **Generic equipment** (#123): each kind in the library has a generic kit (barbell, dumbbells, a
     flat or adjustable bench, a cable tower with its pulley and stack, and the machines by kind: the
     leg press's sled, the chest press's levers), or is listed as missing in the tool. Stacks, sleds
-    and levers move with the rep.
+    and levers move with the rep. Every stack is lowest where the working muscle is longest, at the
+    stretch, and rises as it works; and a working stack is never fully down at the stretch (owner,
+    via the coordinator, 2026-11-03): it stays a few centimetres off its rest all through the rep, as
+    only before the first rep it sits.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

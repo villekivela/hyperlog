@@ -564,6 +564,12 @@ function stackFrame(z, top, M) {
   ];
 }
 
+/**
+ * How far a working stack is held off its rest at the stretch: only before the first rep does it sit
+ * down.
+ */
+const HELD = 0.06;
+
 /** A shaped tube along a smooth path through `points`. */
 function bent(key, points, radius, material, opts) {
   const g = shape(key, () => soften(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3), 16, radius, 12, false)));
@@ -662,7 +668,7 @@ function cableTower({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 's
       handle.position.copy(P.bar);
       const at = hook(P);
       span(cable, at, wheelAt);
-      const lift = at.distanceTo(wheelAt) - hook(P0).distanceTo(wheelAt);
+      const lift = HELD + Math.max(0, at.distanceTo(wheelAt) - hook(P0).distanceTo(wheelAt));
       weights.lift(lift);
       span(drop, V(0, py, stackZ), weights.top(lift));
     },
@@ -788,7 +794,7 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
         span(l.grip, h.clone().setX(s * out), h.clone().setX(s * (Math.abs(h.x) - 0.1)));
         span(l.sleeve, h.clone().setX(s * (out - 0.04)), h.clone().setX(s * (Math.abs(h.x) - 0.08)));
       });
-      const lift = 0.5 * Math.abs(P.swing - P1.swing);
+      const lift = HELD + 0.5 * Math.abs(P.swing - P1.swing);
       weights.lift(lift);
       span(drop, V(0, wheel.y, stackZ), weights.top(lift));
     },
