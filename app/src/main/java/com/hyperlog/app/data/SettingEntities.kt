@@ -39,6 +39,9 @@ interface SettingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun put(setting: SettingEntity)
 
+    @Query("DELETE FROM setting WHERE `key` = :key")
+    suspend fun delete(key: String)
+
     @Query("SELECT * FROM update_check WHERE id = 0")
     suspend fun lastCheck(): UpdateCheckEntity?
 

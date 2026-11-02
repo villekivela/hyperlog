@@ -1972,20 +1972,31 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   - Age: 40–49
   - Where I am now: progress takes months; coming back from a break
   - Aches: Wrists and hands: sore when gripping
-  - Avoid: barbell_back_squat (Barbell Back Squat)
+  - Avoid: barbell_squat (Barbell Back Squat)
   - Favour: hack_squat (Hack Squat)
   - Anything else: I train fasted in the morning
   ## How I train
   <How I train's text>
+  ## Writing by my training style
+  <the instructions below>
   ```
 
-  An About me field left empty is left out, and so is the heading when all are. With a program
-  running, its lines add `Program focus: Chest, Shoulders (their muscles 14–21 sets a week, the
-  rest 4–8)` and any training target of its own (`Volume for this program: 14–20`). The
-  instructions tell Claude to write new programs, Changes and workouts by the style, to treat the
-  training targets as standing unless you ask otherwise for one program, to keep the intensity
-  and failure rules in Changes and workouts, and to say when a Change takes a muscle out of its
-  range.
+  The other choices read: Goal `strength` or `hypertrophy and strength`; Rising `8–14 work sets
+  per muscle a week, rising across a block: near 8 in its first week, adding sets each week toward
+  14, then a deload`; Frequency `once`, `twice` or `3 or more times` a week; Failure `never; every
+  set stops at 1 RIR or more` or `any lift's last set may go to 0 RIR`; Calibration `off`. Each
+  ache is a line of its own (`- Aches: Knees: clicks on deep squats`), and an exercise no longer
+  in the library goes by its id alone. An About me field left empty is left out, and so is the
+  heading when all are. With a program running, the program's lines start with `Program focus:
+  Chest, Shoulders (their muscles 14–21 sets a week, the rest 4–8)` and any training target of its
+  own (`Volume for this program: 14–20`, `Goal for this program: strength`), its ranges from its
+  own volume when it has one. The instructions, under **Writing by my training style**, tell
+  Claude to write new programs, Changes and workouts by the style; to treat the training targets
+  as standing, writing others into a program's `targets` only when you ask for them for that
+  program; for a new program to ask "Bring anything up this program?" with the muscle groups, up
+  to two or none, and Type my own, and write the answer into its `focus`, with what a focus does
+  and both ranges; to keep the how hard, failure and calibration rules in Changes and workouts;
+  and to say when a Change takes a muscle out of its range, in the Change's summary.
 - **The formats are generated** from the code that reads them: operation names and fields from the
   serializer, scopes from the scope serializer, ranges from the validators, the program format from
   the program parser, an example Change built for the running program (a swap to the next day's

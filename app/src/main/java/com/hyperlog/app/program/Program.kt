@@ -3,9 +3,17 @@ package com.hyperlog.app.program
 /**
  * A periodized plan, as written in a program file (docs/program-format.md): blocks of weeks,
  * each with its days. It runs as a sequence: the next day is whatever comes after the last one
- * finished, whenever you train.
+ * finished, whenever you train. It may carry a program [focus] (up to two muscle groups) and
+ * training [targets] of its own.
  */
-data class Program(val title: String, val author: String?, val blocks: List<Block>, val description: String? = null) {
+data class Program(
+    val title: String,
+    val author: String?,
+    val blocks: List<Block>,
+    val description: String? = null,
+    val focus: List<com.hyperlog.app.library.MuscleGroup> = emptyList(),
+    val targets: com.hyperlog.app.coach.ProgramTrainingTargets = com.hyperlog.app.coach.ProgramTrainingTargets(),
+) {
     /** Weeks run from 1 without gaps, so the last block's end is the program's length. */
     val weeks: Int get() = blocks.last().weekEnd
 

@@ -243,7 +243,7 @@ class AskClaudeTest {
         assertTrue(AskClaude.read(workout, program, ids) is AskClaude.Reply.WorkoutReply)
         // The program format, generated from the parser's own rules, with an example the paste takes.
         val format = text.substringAfter("## Program format")
-        assertTrue(format, format.contains("{\"format\": ${ProgramParser.FORMAT}, \"title\", \"author\"?, \"description\"?, \"blocks\": [...]}"))
+        assertTrue(format, format.contains("{\"format\": ${ProgramParser.FORMAT}, \"title\", \"author\"?, \"description\"?, \"focus\"?, \"targets\"?, \"blocks\": [...]}"))
         assertTrue(format, format.contains("\"newExercises\""))
         assertTrue(AskClaude.read(format, program, ids) is AskClaude.Reply.ProgramReply)
     }

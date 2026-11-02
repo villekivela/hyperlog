@@ -68,6 +68,8 @@ object AskClaude {
         tile: Tile? = null,
         /** More for Claude to read with the situation, as a block review. */
         context: String? = null,
+        /** Your training style, in every check-in. */
+        style: TrainingStyle = TrainingStyle(),
     ): String = buildString {
         if (plan == null) {
             appendLine("I train with Hyperlog, an app that logs my strength sessions. Help me with this:")
@@ -97,7 +99,7 @@ object AskClaude {
             )
         }
         appendLine()
-        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gymNames)
+        situation(plan, sessions, library, zone, today, gym, elsewhere, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gymNames, style)
         context?.let { appendLine(); appendLine(it) }
         if (plan != null) {
             appendLine()
@@ -117,8 +119,8 @@ object AskClaude {
 
     /**
      * What both ways of asking Claude tell it, built once (SPEC, What Claude is told): today and the
-     * days off, the [gym] (or [elsewhere]), the program with its Changes in force, the sessions, the
-     * weekly sets and the library.
+     * days off, the [gym] (or [elsewhere]), the training [style], the program with its Changes in
+     * force, the sessions, the weekly sets and the library.
      */
     internal fun StringBuilder.situation(
         plan: ActiveProgram?,
@@ -133,6 +135,7 @@ object AskClaude {
         weeklySets: List<WeekSets>,
         weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
         gymNames: Map<Long, String> = emptyMap(),
+        style: TrainingStyle = TrainingStyle(),
     ) {
         val names = library.associate { it.id to it.name }
         appendLine("Today is $today (${today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}).")
@@ -149,9 +152,11 @@ object AskClaude {
             appendLine()
             gym(it, names)
         }
+        appendLine()
+        with(TrainingStyleText) { trainingStyle(style, names) }
         if (plan != null) {
             appendLine()
-            program(plan, names)
+            program(plan, names, style.targets)
         }
         appendLine()
         sessions(sessions, today, zone)
@@ -325,9 +330,10 @@ object AskClaude {
         return if (start >= 0 && end > start) text.substring(start, end + 1) else null
     }
 
-    private fun StringBuilder.program(plan: ActiveProgram, names: Map<String, String>) {
+    private fun StringBuilder.program(plan: ActiveProgram, names: Map<String, String>, standing: TrainingTargets) {
         val program = plan.program
         appendLine("## Program: ${program.title}")
+        with(TrainingStyleText) { programStyle(program, standing) }
         val next = plan.next?.day
         if (next == null) {
             appendLine("Finished: every day has been trained.")

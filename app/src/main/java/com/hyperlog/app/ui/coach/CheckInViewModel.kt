@@ -102,11 +102,12 @@ class CheckInViewModel(application: Application) : AndroidViewModel(application)
         val lastTrained = db.sessions().lastTrained()?.let(programs::dateOf)
         val weekdayPlan = WeekdayPlans(db).plan.first()
         val goals = com.hyperlog.app.history.LiftGoals(db).all.first()
+        val style = com.hyperlog.app.coach.TrainingStyles(db, getApplication<Application>()).current()
         return withContext(Dispatchers.Default) {
             CheckInContext.frame(
                 active, PastSessionEditor(db, programs).sessions(), library, Gyms(db).gyms.first(), lowest(),
                 lastTrained = lastTrained, weekdayPlan = weekdayPlan, goals = goals,
-                weeklySets = History(db, programs).weeklySets(AskClaude.SET_WEEKS),
+                weeklySets = History(db, programs).weeklySets(AskClaude.SET_WEEKS), style = style,
             )
         }
     }

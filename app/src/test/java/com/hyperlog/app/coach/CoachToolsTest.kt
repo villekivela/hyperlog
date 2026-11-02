@@ -138,6 +138,25 @@ class CoachToolsTest {
         assertTrue(fits(schema, Json.parseToJsonElement("""{"program": $file, "swaps": [], "newExercises": [${added.replace("cable", "kettlebell")}]}""")).isNotEmpty())
     }
 
+    @Test
+    fun aProgramsFocusAndTrainingTargetsFitTheSchemaAndTheParserTakesThem() {
+        val schema = tools.single { it.name == CoachTools.PROPOSE_PROGRAM }.inputSchema
+        val file = ProgramFormat.example(library.exercises).toString().replaceFirst("{", """{"focus": ["Chest", "Shoulders"],
+            "targets": {"goal": "both", "volume": "14-20", "acrossBlock": "rising", "frequency": "3+", "failure": "never", "calibration": false,
+            "repRanges": {"compound": "4-8", "isolation": "10-20"}},""")
+        val reply = Json.parseToJsonElement("""{"program": $file, "swaps": [], "newExercises": []}""").jsonObject
+        assertEquals(emptyList<String>(), fits(schema, reply))
+        val read = ProgramProposal.read(reply, ids, library.exercises.associate { it.id to it.name }, library.merged)
+        val program = (read as ProgramProposal.Result.Valid).proposal.program
+        assertEquals(listOf(com.hyperlog.app.library.MuscleGroup.Chest, com.hyperlog.app.library.MuscleGroup.Shoulders), program.focus)
+        assertEquals(NumberRange(14, 20), program.targets.volume)
+        // A third group doesn't fit the schema's choices of name, and the parser turns it down.
+        val three = file.replace("\"Shoulders\"]", "\"Shoulders\", \"Arms\"]")
+        val tooMany = ProgramProposal.read(Json.parseToJsonElement("""{"program": $three, "swaps": [], "newExercises": []}""").jsonObject, ids, emptyMap())
+        assertEquals(listOf("program.focus: at most 2 muscle groups"), (tooMany as ProgramProposal.Result.Invalid).errors)
+        assertTrue(fits(schema, Json.parseToJsonElement(reply.toString().replace("\"Chest\"", "\"Biceps\""))).isNotEmpty())
+    }
+
     /** The places [value] breaks [schema], for the keywords the tools use. */
     private fun fits(schema: JsonObject, value: JsonElement, path: String = "$"): List<String> {
         schema["anyOf"]?.let { options ->
