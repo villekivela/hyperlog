@@ -113,3 +113,32 @@ test('review apply puts the tuned values of the OK\'d exercises into poses.mjs a
   const after = await readFile(file, 'utf8');
   assert.equal(after, original.replace('grip: { width: 0.4, elbows: 0.9 }', 'grip: { width: 0.45, elbows: 0.9 }'));
 });
+
+test('the adjustable-bench batch is the incline DB press', () => {
+  assert.deepEqual(BATCHES['adjustable-bench'], ['db_incline_press']);
+});
+
+test('the page of an adjustable-bench pose holds a clip per angle to show, and an OK names every one of them', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'review-'));
+  await buildReview('adjustable-bench', { clips, out: dir });
+  const data = JSON.parse((await readFile(path.join(dir, 'index.html'), 'utf8')).match(/<script type="application\/json" id="batch">([\s\S]*?)<\/script>/)[1]);
+  const [press] = data.exercises;
+  assert.equal(press.typical, 30);
+  assert.deepEqual(Object.keys(press.angles), ['0', '15', '30', '45', '60', '75']);
+  for (const { clip, camera } of Object.values(press.angles)) {
+    const { json, bin } = readGlb(Buffer.from(clip.split(',')[1], 'base64'));
+    assert.deepEqual(json.buffers, [{ byteLength: bin.length }]);
+    assert.ok(camera.halfHeight > 0);
+  }
+  // The pose's entry is prepared at its typical angle, for the Tune panel.
+  assert.equal(press.entry.bench.angle, 30);
+
+  // The OK is for all six clips: it holds until any of them is baked differently.
+  const verdicts = { db_incline_press: { ok: true, clip: press.hash } };
+  assert.equal((await batchStatus('adjustable-bench', verdicts, { clips })).exercises[0].state, 'ok');
+  const copy = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  for (const f of await readdir(clips)) await writeFile(path.join(copy, f), await readFile(path.join(clips, f)));
+  const file = path.join(copy, 'db_incline_press_75.glb');
+  await writeFile(file, Buffer.concat([await readFile(file), Buffer.alloc(4)]));
+  assert.equal((await batchStatus('adjustable-bench', verdicts, { clips: copy })).exercises[0].state, 'changed');
+});

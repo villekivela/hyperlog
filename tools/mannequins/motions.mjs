@@ -9,6 +9,7 @@
 // `upperArm` and `forearm` swing the elbow and the hand forward from hanging straight down.
 import * as THREE from 'three';
 import { V, X, rad } from './rig.mjs';
+import { benchHinge } from './kit.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -279,6 +280,46 @@ export const MOTIONS = {
       hand: handle,
       armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
       pivot, handle, swing,
+    };
+  },
+
+  /**
+   * Pressing dumbbells on an adjustable bench at `bench.angle`: the back along the pad, the hips on
+   * the seat against the hinge, the trunk leaning back as far as the pad does. The hands move from
+   * over the shoulders at the top (`top.over`: how high above them and how far forward, metres,
+   * the arms as straight as they reach) to the chest at the bottom (`bottom.chest`: how far out
+   * from the chest and how far down the trunk from the shoulders), so the same entry fits every
+   * angle. `body.seat` is how far in front of the hinge the hips sit.
+   */
+  dumbbell_press(e, s, L) {
+    const angle = e.bench.angle;
+    const { height, z: hingeZ } = benchHinge(e.kit.bench);
+    const lean = rad(angle - 90 + (e.body.lean ?? 0));
+    // The hips rest on the seat with the back flat on the pad: the pad's face is the line through
+    // the hinge at `angle`, and the hips sit `body.sit` off it.
+    const hipC = V(0, height + e.body.sit, hingeZ + (e.body.seat ?? 0.04) + e.body.sit * Math.tan(rad(angle) / 2));
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const sh = shouldersOf(hipC, u, L);
+    const across = (side) => X.clone().multiplyScalar(-side);
+    const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
+    const [over, forward] = e.top.over;
+    // The hands come in to `grip.lockout` apart at the top and go out to `grip.width` at the bottom.
+    const handAt = (side) => {
+      const dx = e.grip.lockout - L.shW;
+      const top = V(side * e.grip.lockout, sh.y + Math.min(over, Math.sqrt(Math.max(0, reach * reach - dx * dx - forward * forward))), sh.z + forward);
+      const [out, down] = e.bottom.chest;
+      const bottom = V(side * e.grip.width, sh.y, sh.z).addScaledVector(f, out).addScaledVector(u, -down);
+      return top.lerp(bottom, s.press);
+    };
+    return {
+      hipC, u, shoulders: sh,
+      headDir: u.clone().addScaledVector(f, 0.12).normalize(),
+      ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
+      hand: handAt,
+      across,
+      // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the shoulders.
+      armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
     };
   },
 };

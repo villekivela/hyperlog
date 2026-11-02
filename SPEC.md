@@ -1474,6 +1474,18 @@ gallery (Technique videos).
   - **Adjustable-bench exercises:** the bench sits at this session's bench angle, otherwise last
     time's, otherwise the exercise's typical angle. The pose comes from the nearest of the clips
     baked at 15° steps from 0° to 75°, and the bench is turned to the exact angle.
+    - **Decisions** (#125): every exercise the library gives an **Adjustable bench** is baked at
+      the six angles, one clip each, and its entry in `mannequins.json` lists them with the typical
+      angle and the hinge the backrest turns about; a pose of such an exercise without a typical
+      angle doesn't bake. The nearest clip is nearest in degrees among the angles the index lists
+      (the 15° step puts any angle at most 7° from one). The bench's backrest is a part of its own in
+      every clip; the phone turns it about the hinge by the difference between the exact angle and
+      the clip's, and the body keeps the clip's pose. An angle past 75° (the bench angle goes to 90°)
+      plays the 75° clip with the backrest turned to the exact angle. When the angle changes in the
+      session the sheet follows it: the bench turns at once, and a different clip loads only when
+      the nearest one changes. The gallery has no session, so it shows the typical angle. The
+      incline DB press's typical angle is 30°, and its framing moves steadily from the lying 0° to
+      the upright 75°.
   - **Made offline:** poses are short data entries (with `like:` for variants) in the tool under
     `tools/mannequins/`, which bakes a `.glb` clip per exercise and a `mannequins.json` index of
     each exercise's equipment, the stage's framing for it (where the camera looks, how much it

@@ -32,6 +32,34 @@ machine and the rest), listed in `BATCHES` in `review.mjs`. For each batch:
 5. The owner swipes the batch once in the debug gallery (Settings → Debug → Mannequin gallery)
    before its pull request merges.
 
+## Adjustable-bench poses
+
+An exercise the library gives an **Adjustable bench** (`adjustableBench` in `exercises.json`) is
+baked at 0°, 15°, 30°, 45°, 60° and 75°, one clip each, `<id>_<angle>.glb`. Its entry has a
+`bench` and a motion that follows the pad, so one entry fits every angle:
+
+```js
+db_incline_press: {
+  motion: 'dumbbell_press',
+  kit: { dumbbells: {}, bench: { hinge: -0.02 } },   // the backrest turns about this z
+  bench: { typical: 30, cameras: { 0: { …camera }, 75: { …camera } } },
+  body: { sit: 0.17, seat: 0.04, lean: 4 },          // hips above the seat, forward of the hinge; trunk off the pad's line
+  top: { press: 0, over: [0.62, 0] },                // hands over the shoulders: how high, how far forward
+  bottom: { press: 1, chest: [0.14, 0] },            // out from the chest, down the trunk
+  grip: { width: 0.4, lockout: 0.24, elbows: 0.6 },  // hands apart at the bottom and at the top
+},
+```
+
+- **`bench.typical`** is the angle shown with none set; the bake fails without it. `bench.cameras`
+  gives the framing at the lowest and highest angle, and the angles between move steadily from one
+  to the other. `prepare(id, poses, angle)` poses the entry at an angle, its typical one by default.
+- The bench's back pad is the node `bench_back`, with its pivot at the hinge. In the index the
+  entry's own `clip` and `camera` are those of the clip nearest the typical angle, and
+  `bench: { typical, hinge: [y, z], clips: { "0": { clip, camera }, … } }` lists the rest.
+- `node render.mjs <id> [out-dir] --angle <degrees>` renders one angle. The review page has a
+  button per angle; Tune poses the entry at the angle shown. A verdict's `clip` fingerprint covers
+  all six clips.
+
 ## Pose entries
 
 An entry is data only, keyed by the exercise's id in `app/src/main/assets/exercises.json`.
@@ -90,6 +118,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }`; `feet.kneesOut` |
 | `hinge` | a bar hanging in straight arms, an RDL | `shin`, `thigh`, `trunk`; `bar.z`, the bar's distance in front of the ankles |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared; `body.head`, the head's tilt from the spine to rest it on the pad |
+| `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`; `top.over` [up, forward] and `bottom.chest` [out, down] from the shoulders; `grip.lockout`, `grip.width`, `grip.elbows` |
 | `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |

@@ -30,6 +30,8 @@ export const BATCHES = {
     'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'lat_pulldown', 'close_grip_lat_pulldown',
     'triceps_pressdown', 'leg_press', 'machine_chest_press',
   ],
+  // The adjustable-bench pose, baked at six angles (#125).
+  'adjustable-bench': ['db_incline_press'],
 };
 
 const batchOf = (name) => {
@@ -38,11 +40,24 @@ const batchOf = (name) => {
   return ids;
 };
 
-/** The files the clip `id` reads, its own first, from the index in `clips`. */
+/**
+ * The files of the clip `id`, from the index in `clips`: its own `clip` (an adjustable bench's
+ * typical angle), the clip of each bench angle (`angles`, by degrees, none for another pose), and
+ * the files it reads (`shared`). An OK names all of them.
+ */
 async function filesOf(clips, id) {
   const index = JSON.parse(await readFile(path.join(clips, 'mannequins.json'), 'utf8'));
   const entry = index.clips[id];
-  return [entry.clip, ...(entry.resources ?? [])].map((f) => path.join(clips, f));
+  const at = (f) => path.join(clips, f);
+  const angles = Object.fromEntries(Object.entries(entry.bench?.clips ?? {}).map(([a, c]) => [a, { file: at(c.clip), camera: c.camera }]));
+  const shared = (entry.resources ?? []).map(at);
+  return { clip: at(entry.clip), angles, shared, all: [...(entry.bench ? Object.values(angles).map((c) => c.file) : [at(entry.clip)]), ...shared] };
+}
+
+/** A clip's file as the page holds it: whole, with the mannequin it shares merged in, as a data URL. */
+async function wholeClip(file, shared) {
+  const files = Object.fromEntries(await Promise.all(shared.map(async (f) => [path.basename(f), await readFile(f)])));
+  return `data:model/gltf-binary;base64,${inlineResources(await readFile(file), files).toString('base64')}`;
 }
 
 /** A clip's fingerprint, which a verdict names: its own file and the mannequin it shares. */
@@ -63,14 +78,17 @@ export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 
   for (const id of ids) {
     const entry = prepare(id);
     const { checks } = await checkPose(id);
-    const [file, ...shared] = await filesOf(clips, id);
+    const { clip, angles, shared, all } = await filesOf(clips, id);
     // The page may fetch nothing, data: URLs included, so each clip goes in whole, with the
     // mannequin it shares merged into it. The OK still names the files that ship.
-    const files = Object.fromEntries(await Promise.all(shared.map(async (f) => [path.basename(f), await readFile(f)])));
-    const whole = inlineResources(await readFile(file), files);
     exercises.push({
-      id, name: names[id] ?? id, equipment: entry.equipment, clip: `data:model/gltf-binary;base64,${whole.toString('base64')}`,
-      hash: await hashOf([file, ...shared]), camera: entry.camera, traced: Boolean(entry.trace), checks, entry,
+      id, name: names[id] ?? id, equipment: entry.equipment, clip: await wholeClip(clip, shared),
+      hash: await hashOf(all), camera: entry.camera, traced: Boolean(entry.trace), checks, entry,
+      // An adjustable bench shows at each angle it is baked at, from its typical one.
+      ...(entry.bench ? {
+        typical: entry.bench.typical,
+        angles: Object.fromEntries(await Promise.all(Object.entries(angles).map(async ([a, c]) => [a, { clip: await wholeClip(c.file, shared), camera: c.camera }]))),
+      } : {}),
     });
   }
   const template = await readFile(path.join(HERE, 'review', 'page.html'), 'utf8');
@@ -110,7 +128,7 @@ export async function batchStatus(batch, verdicts, { clips = CLIPS } = {}) {
   const exercises = [];
   for (const id of batchOf(batch)) {
     const v = verdicts[id];
-    const now = await hashOf(await filesOf(clips, id));
+    const now = await hashOf((await filesOf(clips, id)).all);
     const tuned = tunedOf(v);
     exercises.push({ id, state: stateOf(v, now), note: v?.note ?? '', ...(Object.keys(tuned).length ? { tuned } : {}) });
   }
@@ -154,7 +172,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // Bake in a process of its own: this one has the old poses loaded.
     execFileSync(process.execPath, [path.join(HERE, 'bake.mjs')], { stdio: 'inherit' });
     for (const id of applied) {
-      verdicts[id] = { ...verdicts[id], clip: await hashOf(await filesOf(CLIPS, id)) };
+      verdicts[id] = { ...verdicts[id], clip: await hashOf((await filesOf(CLIPS, id)).all) };
       delete verdicts[id].tuned;
     }
     await writeFile(file, JSON.stringify(verdicts, null, 2) + '\n');

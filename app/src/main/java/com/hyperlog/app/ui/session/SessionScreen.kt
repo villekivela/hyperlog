@@ -469,6 +469,8 @@ fun SessionScreen(
                 why = current.suggestion?.takeIf { !current.done }?.let { s -> s.why?.let { it to s.direction(current.sets.lastOrNull()?.weightKg) } },
                 startingHint = current.startingHint,
                 mannequin = mannequins?.clipFor(current.exercise),
+                benchAngle = current.benchAngle,
+                lastBenchAngle = current.lastBenchAngle,
             )
         }
     }
@@ -1013,6 +1015,9 @@ internal fun ExerciseSheet(
     startingHint: String? = null,
     /** The exercise's mannequin, played at the top; null for an exercise without one. */
     mannequin: com.hyperlog.app.mannequin.MannequinClip? = null,
+    /** This session's bench angle, and last time's, for an adjustable-bench exercise's mannequin. */
+    benchAngle: Int? = null,
+    lastBenchAngle: Int? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -1022,7 +1027,7 @@ internal fun ExerciseSheet(
     Column(Modifier.fillMaxWidth().verticalScroll(scroll, enabled = scroll.maxValue > 0).padding(bottom = 24.dp).navigationBarsPadding()) {
         mannequin?.let {
             // A card of the sheet, out to the cards' margin like the machine row's and the prescription's.
-            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin))
+            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin), benchAngle, lastBenchAngle)
             Spacer(Modifier.height(16.dp))
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Margin)) {

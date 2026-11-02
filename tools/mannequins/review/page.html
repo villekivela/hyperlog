@@ -84,6 +84,10 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
 .tune { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
 .tune[hidden] { display: none; }
 .tune .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.seg.angles { display: inline-flex; width: fit-content; }
+.seg.angles[hidden] { display: none; }
+.seg.angles button { border: 0; border-radius: 0; padding: 6px 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.seg.angles button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
 .tune .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .tune .seg button { border: 0; border-radius: 0; padding: 6px 12px; font-weight: 500; }
 .tune .seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
@@ -117,6 +121,7 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
         <div><h2></h2><div class="meta"></div></div>
         <span class="state" data-state="waiting">Waiting</span>
       </div>
+      <div class="seg angles" role="group" aria-label="Bench angle" hidden></div>
       <ul class="checks"></ul>
       <section class="tune" hidden aria-label="Tune the pose">
         <div class="bar">
@@ -213,9 +218,11 @@ function stage(e, canvas, holder) {
   sun.position.set(2.2, 4, 2.6);
   scene.add(sun);
   const camera = new THREE.PerspectiveCamera(26, 5 / 4, 0.05, 50);
-  const target = new THREE.Vector3(...e.camera.target);
-  const distance = e.camera.halfHeight / Math.tan(THREE.MathUtils.degToRad(13));
-  let azimuth = e.camera.azimuth;
+  // How the stage frames the clip shown: an adjustable bench frames each of its angles on its own.
+  let cam = e.camera;
+  const target = new THREE.Vector3(...cam.target);
+  let distance = cam.halfHeight / Math.tan(THREE.MathUtils.degToRad(13));
+  let azimuth = cam.azimuth;
   let mixer = null;
   let duration = 1;
   let materials = [];
@@ -232,7 +239,7 @@ function stage(e, canvas, holder) {
   let dragging = null;
   const place = () => {
     const a = THREE.MathUtils.degToRad(azimuth);
-    const el = THREE.MathUtils.degToRad(e.camera.elevation);
+    const el = THREE.MathUtils.degToRad(cam.elevation);
     camera.position.set(target.x + distance * Math.cos(el) * Math.sin(a), target.y + distance * Math.sin(el), target.z + distance * Math.cos(el) * Math.cos(a));
     camera.lookAt(target);
   };
@@ -245,7 +252,8 @@ function stage(e, canvas, holder) {
   };
   place();
   colour();
-  new GLTFLoader().parse(bytesOf(e.clip), '', (gltf) => {
+  const loadClip = (url) => new GLTFLoader().parse(bytesOf(url), '', (gltf) => {
+    if (clipScene) scene.remove(clipScene);
     scene.add(gltf.scene);
     clipScene = gltf.scene;
     clipScene.visible = !live;
@@ -255,6 +263,17 @@ function stage(e, canvas, holder) {
     mixer.clipAction(gltf.animations[0]).play();
     colour();
   }, () => { holder.querySelector('.hint').textContent = 'the clip didn\'t load'; });
+  loadClip(e.clip);
+  // An adjustable bench's other angles: that angle's clip, framed as it is.
+  const setAngle = (angle) => {
+    const at = e.angles[angle];
+    cam = at.camera;
+    target.set(...cam.target);
+    distance = cam.halfHeight / Math.tan(THREE.MathUtils.degToRad(13));
+    azimuth = cam.azimuth;
+    place();
+    loadClip(at.clip);
+  };
 
   // Down, hold, up, hold; with motion reduced, the bottom of the rep, still.
   const at = (t) => {
@@ -329,7 +348,7 @@ function stage(e, canvas, holder) {
   };
   holder.addEventListener('pointerup', end);
   holder.addEventListener('pointercancel', end);
-  holder.addEventListener('dblclick', () => { azimuth = e.camera.azimuth; place(); });
+  holder.addEventListener('dblclick', () => { azimuth = cam.azimuth; place(); });
   holder.addEventListener('keydown', (ev) => {
     if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { azimuth += ev.key === 'ArrowLeft' ? 10 : -10; place(); ev.preventDefault(); }
   });
@@ -362,7 +381,7 @@ function stage(e, canvas, holder) {
       return [h.id, [Math.round(r.left + ((p.x + 1) / 2) * r.width), Math.round(r.top + ((1 - p.y) / 2) * r.height)]];
     })));
   };
-  return { draw, colour, setLive, setHandles, setShow: (v) => { show = v; } };
+  return { draw, colour, setLive, setHandles, setAngle, setShow: (v) => { show = v; } };
 }
 
 /** The check results as the list shows them: a dot, the check, and the worst of it. */
@@ -404,7 +423,12 @@ function tuning(e, node, card, s) {
   // Whether the numbers on the sliders differ from what the verdict has saved.
   const unsaved = () => JSON.stringify(sorted(tuned)) !== JSON.stringify(sorted(tunedOf(verdicts[e.id])));
   card.unsaved = () => opened && unsaved();
-  const entryNow = () => tune.applyTuned(e.entry, tuned);
+  // An adjustable bench is posed at the angle shown.
+  const entryNow = () => {
+    const entry = tune.applyTuned(e.entry, tuned);
+    if (entry.bench) entry.bench.angle = card.angle;
+    return entry;
+  };
   const valueNow = (t) => tune.valueAt(entryNow(), t.path) ?? t.value;
   const paint = () => {
     for (const r of rows) {
@@ -516,6 +540,7 @@ function tuning(e, node, card, s) {
     panel.hidden = true;
     button.setAttribute('aria-expanded', 'false');
   };
+  card.rebuild = () => { if (opened) rebuild(); };
   button.addEventListener('click', () => {
     if (opened) { close(); return; }
     opened = true;
@@ -578,6 +603,26 @@ for (const e of BATCH.exercises) {
   sheet.append(node);
   const s = stage(e, holder.querySelector('canvas'), holder);
   s.holder = holder;
+  // An adjustable bench shows at its typical angle first, and each baked angle can be chosen.
+  card.angle = e.typical;
+  if (e.angles) {
+    const seg = node.querySelector('.angles');
+    seg.hidden = false;
+    const nearest = Object.keys(e.angles).map(Number).reduce((n, a) => (Math.abs(a - e.typical) < Math.abs(n - e.typical) ? a : n));
+    for (const a of Object.keys(e.angles)) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = `${a}°`;
+      b.setAttribute('aria-pressed', String(Number(a) === nearest));
+      b.addEventListener('click', () => {
+        for (const o of seg.children) o.setAttribute('aria-pressed', String(o === b));
+        card.angle = Number(a);
+        s.setAngle(a);
+        card.rebuild?.();
+      });
+      seg.append(b);
+    }
+  }
   tuning(e, node, card, s);
   stages.push(s);
   seen.observe(holder);

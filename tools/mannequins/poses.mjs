@@ -54,6 +54,29 @@ export const POSES = {
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
 
+  // Pressed on an adjustable bench, baked at 0° to 75° (README, Adjustable-bench poses): the body
+  // follows the pad, so one entry fits every angle. From locked out over the shoulders, the arms
+  // straight, down to the chest, the forearms upright.
+  db_incline_press: {
+    equipment: 'dumbbell',
+    motion: 'dumbbell_press',
+    kit: { dumbbells: {}, bench: { hinge: -0.02 } },
+    // The stage's framing at the lying and the upright ends; the angles between move steadily from one to the other.
+    bench: {
+      typical: 30,
+      cameras: {
+        0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
+        75: { target: [0, 1.0, 0.0], halfHeight: 1.22, azimuth: 66, elevation: 10 },
+      },
+    },
+    body: { sit: 0.17, seat: 0.04, lean: 4 },
+    feet: { stance: 0.3, z: 0.5, toeOut: 20 },
+    top: { press: 0, over: [0.62, 0.0] },
+    bottom: { press: 1, chest: [0.14, 0.0] },
+    grip: { width: 0.4, lockout: 0.24, elbows: 0.6 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
   lat_pulldown: {
     equipment: 'cable',
     motion: 'pulldown',

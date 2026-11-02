@@ -151,18 +151,46 @@ function dumbbells() {
   };
 }
 
+/** How thick a bench's pads are. */
+const PAD = 0.065;
+
+/**
+ * Where a bench's seat top and hinge are: the seat's top `height` above the floor, and the hinge,
+ * in the middle of the pad's thickness, at `y` and `z` (by default 42 cm behind the seat's front).
+ */
+export function benchHinge({ height = 0.44, z = -0.15, length = 1.2, hinge = null } = {}) {
+  return { height, y: height - PAD / 2, z: hinge ?? z + length / 2 - 0.42 };
+}
+
+/** The length of an adjustable bench's back pad from its hinge. */
+const BACK = 0.8;
+
 /**
  * A bench along z, `length` long and centred on `z`, the top of its pad `height` above the floor:
  * flat, or with its back pad raised `angle` degrees about a hinge at `hinge` (z; by default 42 cm
- * behind the seat's front), an adjustable bench.
+ * behind the seat's front), an adjustable bench. With `adjustable`, the back pad is a part of its
+ * own, `bench_back`, standing at `angle` about the hinge, which the phone turns to the exact angle.
  */
-function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null } = {}) {
+function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null, adjustable = false } = {}) {
   const pad = MATERIALS.plate();
   const frame = MATERIALS.bar();
-  const t = 0.065;
+  const t = PAD;
   const y = height - t / 2;
   const parts = [];
-  if (angle === 0 && hinge === null) {
+  let turning = null;
+  if (adjustable) {
+    // The seat in front of the hinge, the back pad hanging from the hinge behind it.
+    const front = z + length / 2;
+    const h = benchHinge({ height, z, length, hinge }).z;
+    parts.push(box(0.29, t, front - h, pad, V(0, y, (front + h) / 2)));
+    turning = new THREE.Group();
+    turning.name = 'bench_back';
+    turning.position.set(0, y, h);
+    turning.rotation.x = rad(angle);
+    const slab = box(0.29, t, BACK, pad, V(0, 0, -BACK / 2));
+    slab.name = 'bench_back_pad';
+    turning.add(slab);
+  } else if (angle === 0 && hinge === null) {
     parts.push(box(0.29, t, length, pad, V(0, y, z)));
   } else {
     // The seat in front of the hinge, the back pad behind it raised about it.
@@ -179,7 +207,9 @@ function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null
     parts.push(box(0.42, 0.05, 0.07, frame, V(0, 0.025, e)));
   }
   parts.push(box(0.06, 0.05, ends[1] - ends[0], frame, V(0, 0.07, (ends[0] + ends[1]) / 2)));
-  return { group: group('bench', parts), place() {} };
+  const g = group('bench', parts);
+  if (turning) g.add(turning);
+  return { group: g, place() {} };
 }
 
 /**
@@ -404,7 +434,8 @@ export function buildKit(entry) {
   const kits = Object.entries(entry.kit ?? {}).map(([name, options]) => {
     if (!KITS[name]) throw new Error(`No kit "${name}"`);
     if (!allowed.includes(name)) throw new Error(`Kit "${name}" isn't ${entry.equipment} equipment`);
-    return KITS[name](options);
+    // An adjustable bench stands at the angle the pose is prepared at.
+    return KITS[name](name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle } : options);
   });
   const g = new THREE.Group();
   g.name = 'kit';

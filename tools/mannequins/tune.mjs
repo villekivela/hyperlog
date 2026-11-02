@@ -7,6 +7,7 @@
 export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
   bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0] },
+  dumbbell_press: { 'body.lean': 0 },
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like']);

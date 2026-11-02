@@ -23,8 +23,10 @@ import com.google.android.filament.gltfio.FilamentAsset
 import com.google.android.filament.gltfio.Gltfio
 import com.google.android.filament.gltfio.ResourceLoader
 import com.google.android.filament.gltfio.UbershaderProvider
+import com.hyperlog.app.mannequin.BENCH_BACK
 import com.hyperlog.app.mannequin.RepTimeline
 import com.hyperlog.app.mannequin.StageCamera
+import com.hyperlog.app.mannequin.benchBackTransform
 import com.hyperlog.app.ui.theme.ClayColours
 import java.nio.ByteBuffer
 import kotlin.math.cos
@@ -88,6 +90,8 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     // A still stage draws only when something changed.
     private var dirty = true
     private var shown = false
+    // The bench angle to stand the back pad at, kept for the clips loaded after it.
+    private var bench: Pair<Int, List<Float>>? = null
     // The files the loaded clip reads by name, kept for as long as the player.
     private var shared: Map<String, ByteBuffer> = emptyMap()
 
@@ -176,6 +180,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             renderables.setReceiveShadows(instance, !shadow)
         }
         asset = loaded
+        applyBench()
         animator = loaded.instance.animator.also { duration = it.getAnimationDuration(0) }
         stage = camera
         azimuth = camera.azimuth
@@ -205,6 +210,21 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     override fun resetView() {
         stage?.let { azimuth = it.azimuth }
         dirty = true
+    }
+
+    override fun setBench(degrees: Int, hinge: List<Float>) {
+        bench = degrees to hinge
+        applyBench()
+        dirty = true
+    }
+
+    /** Turns the clip's bench back to the angle: a node the clip bakes without animation, so nothing else moves it. */
+    private fun applyBench() {
+        val (degrees, hinge) = bench ?: return
+        val loaded = asset ?: return
+        val back = loaded.getFirstEntityByName(BENCH_BACK).takeIf { it != 0 } ?: return
+        val transforms = engine.transformManager
+        transforms.setTransform(transforms.getInstance(back), benchBackTransform(degrees, hinge))
     }
 
     override fun setColours(colours: ClayColours) {

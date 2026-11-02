@@ -68,6 +68,8 @@ class MannequinStageTest {
     private class FakePlayer(context: Context) : MannequinPlayer {
         override val view = View(context)
         var loaded: Pair<Int, StageCamera>? = null
+        var loads = 0
+        var bench: Pair<Int, List<Float>>? = null
         var resources: Map<String, Int>? = null
         var tempo: RepTimeline? = null
         var turned = 0f
@@ -78,6 +80,7 @@ class MannequinStageTest {
         override var onShown: () -> Unit = {}
         override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera, tempo: RepTimeline) {
             loaded = glb.remaining() to camera
+            loads++
             this.tempo = tempo
             this.resources = resources.mapValues { it.value.remaining() }
         }
@@ -85,6 +88,7 @@ class MannequinStageTest {
         override fun pause() { playing = false }
         override fun turn(degrees: Float) { turned += degrees }
         override fun resetView() { resets++ }
+        override fun setBench(degrees: Int, hinge: List<Float>) { bench = degrees to hinge }
         override fun setColours(colours: ClayColours) {}
         override fun release() { released = true }
     }
@@ -229,5 +233,77 @@ class MannequinStageTest {
         open = false
         compose.waitForIdle()
         assertTrue("the engine is released with the sheet", player.released)
+    }
+
+    private val incline = library.getValue("db_incline_press")
+
+    /** Waits for [done], idling the composition between looks: a clip is read off the main thread. */
+    private fun awaiting(done: () -> Boolean) {
+        repeat(100) {
+            compose.waitForIdle()
+            if (done()) return
+            Thread.sleep(50)
+        }
+        assertTrue("never happened", done())
+    }
+
+    private fun bytes(asset: String) = context.assets.open("mannequins/$asset").use { it.readBytes().size }
+
+    /** The incline press's stage with the bench angles [session] and [last], which a test changes. */
+    private fun inclineStage(session: () -> Int?, last: () -> Int? = { null }) {
+        compose.setContent {
+            CompositionLocalProvider(LocalMannequinPlayers provides factory, LocalLifecycleOwner provides lifecycle) {
+                HyperlogTheme { MannequinStage(mannequins.clipFor(incline)!!, benchAngle = session(), lastBenchAngle = last()) }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun theInclinePressPlaysTheClipNearestItsBenchAngleAndTurnsTheBenchToTheExactAngle() {
+        inclineStage(session = { 37 })
+        compose.waitUntil { players.single().bench != null && players.single().loaded != null }
+        // 37° is nearest the 30° clip, and the bench is turned the 7° more about its hinge.
+        assertEquals(bytes("db_incline_press_30.glb"), players.single().loaded!!.first)
+        assertEquals(37, players.single().bench!!.first)
+        assertEquals(mannequins.clipFor(incline)!!.bench!!.hinge, players.single().bench!!.second)
+    }
+
+    @Test
+    fun withNoAngleThisSessionItStandsAtLastTimes() {
+        inclineStage(session = { null }, last = { 52 })
+        compose.waitUntil { players.single().bench != null && players.single().loaded != null }
+        assertEquals(52, players.single().bench!!.first)
+        assertEquals(bytes("db_incline_press_45.glb"), players.single().loaded!!.first)
+    }
+
+    @Test
+    fun withNeitherItStandsAtTheTypicalAngle() {
+        inclineStage(session = { null })
+        compose.waitUntil { players.single().bench != null && players.single().loaded != null }
+        assertEquals(mannequins.clipFor(incline)!!.bench!!.typical, players.single().bench!!.first)
+    }
+
+    @Test
+    fun whenTheAngleChangesInTheSessionTheSheetFollowsIt() {
+        var angle by mutableStateOf<Int?>(37)
+        inclineStage(session = { angle })
+        compose.waitUntil { players.single().bench != null && players.single().loaded != null }
+        val player = players.single()
+        // Still nearest the 30° clip: the bench turns, and the clip isn't loaded again.
+        compose.runOnIdle { angle = 34 }
+        awaiting { player.bench!!.first == 34 }
+        assertEquals(1, player.loads)
+        // Nearer the 45° clip: that clip loads, and the bench stands at the exact angle.
+        compose.runOnIdle { angle = 50 }
+        awaiting { player.bench!!.first == 50 && player.loads == 2 }
+        assertEquals(bytes("db_incline_press_45.glb"), player.loaded!!.first)
+    }
+
+    @Test
+    fun anExerciseWithoutAnAdjustableBenchIsNotTurned() {
+        sheet(mannequins.clipFor(squat))
+        compose.waitUntil { players.single().loaded != null }
+        assertEquals(null, players.single().bench)
     }
 }

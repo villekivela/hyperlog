@@ -129,8 +129,8 @@ export function png(rgb, w, h) {
 }
 
 /** The rep's top and bottom side by side, seen from `view`. */
-export async function renderPose(id, viewName) {
-  const entry = prepare(id);
+export async function renderPose(id, viewName, angle) {
+  const entry = prepare(id, undefined, angle);
   const { scene, pose } = await buildStage(entry);
   const view = VIEWS[viewName === 'front' && entry.body?.trunk < -45 ? 'frontLying' : viewName];
   // A cutaway: equipment standing well in front of the body (a cable tower's column) is left out
@@ -157,12 +157,16 @@ export async function renderPose(id, viewName) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const [id, out = '.'] = process.argv.slice(2);
-  if (!id) throw new Error('usage: node render.mjs <id> [out-dir]');
+  const args = process.argv.slice(2);
+  // `--angle <degrees>` renders an adjustable-bench pose at that bench angle, its typical one by default.
+  const at = args.indexOf('--angle');
+  const angle = at < 0 ? undefined : Number(args.splice(at, 2)[1]);
+  const [id, out = '.'] = args;
+  if (!id) throw new Error('usage: node render.mjs <id> [out-dir] [--angle <degrees>]');
   await mkdir(out, { recursive: true });
   for (const view of ['side', 'front']) {
-    const file = path.join(out, `${id}-${view}.png`);
-    await writeFile(file, await renderPose(id, view));
+    const file = path.join(out, `${id}${angle === undefined ? '' : `-${angle}`}-${view}.png`);
+    await writeFile(file, await renderPose(id, view, angle));
     console.log(`rendered ${file}`);
   }
 }

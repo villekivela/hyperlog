@@ -52,7 +52,7 @@ class MannequinsTest {
         }
         assertEquals(
             listOf(
-                "barbell_bench_press", "barbell_rdl", "barbell_squat", "close_grip_lat_pulldown", "lat_pulldown",
+                "barbell_bench_press", "barbell_rdl", "barbell_squat", "close_grip_lat_pulldown", "db_incline_press", "lat_pulldown",
                 "leg_press", "machine_chest_press", "triceps_pressdown",
             ),
             mannequins.clips.map { it.exerciseId },
