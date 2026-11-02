@@ -16,7 +16,8 @@ before switching phones. Auto Backup is the safety net.
 
 Everything you made, as stored on the phone:
 
-- **Programs** with their position (and, on training days, where the rotation was set), and every
+- **Programs** with their position (and, on training days, where the rotation was set), their
+  focus and own targets (both in the program file), and every
   **Change** accepted on them (reverted ones too),
   each with the check-in that made it.
 - **Workouts** from the coach: the one waiting on Today, and each one a session trained.
@@ -31,6 +32,10 @@ Everything you made, as stored on the phone:
 - **Starting weights** from the old app, **lift goals** and **bodyweight**.
 - **Settings**: "Check for updates", the update banner you dismissed, what the coach cost each
   month (`coach_cost_2026-10`), and a debug build's scripted coach switch (`scripted_coach`).
+- **Training style**: the targets and About me (`training_style`), How I train once edited
+  (`how_i_train`; without it the app's default text is read), the wizard's Done
+  (`training_style_done`) and Today's dismissed card (`training_style_card_dismissed`), all in
+  `setting`.
 
 Left out: the last update check (`update_check`), only a cache of GitHub's answer; a restore leaves
 it as it is. A test (`BackupTablesTest`) fails if a table is added to the database without being

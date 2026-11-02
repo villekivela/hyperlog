@@ -712,7 +712,8 @@ each planned day with the training day it lands on, and never changes the day:
      - **Until the finished sessions are read**, Today shows nothing under the navigation bar: no
        calendar, no plan, no Start, and no floating Start workout. Drawing today untrained first would offer the wrong Start
        for a moment on every cold start, then jump.
-     - The update and time-off banners show only while today is selected. A workout from Claude
+     - The update and time-off banners show only while today is selected, and so does the "Set
+       how you train" card until the training style is set (Coaching → Training style). A workout from Claude
        and a running session keep their own layout on today, with their Start or Resume floating.
      - With no program, today keeps the starter offer (or the empty state) under the calendar, and
        a finished program says so and offers an ad-hoc session.
@@ -1259,8 +1260,8 @@ height while it moves. It stops below the status bar; a list longer than that sc
 
 Settings is the navigation bar's fifth tab, a destination with no back arrow and no gear on any top
 bar; its sub-screens (Gyms and equipment, the exercise library) keep their back arrows to Settings.
-It holds gyms and their equipment, exercise library, the Claude key and this month's cost
-(Coaching → With a Claude key), export backup, restore from a backup, starting weights from the
+It holds gyms and their equipment, exercise library, the training style (Coaching → Training
+style), the Claude key and this month's cost (Coaching → With a Claude key), export backup, restore from a backup, starting weights from the
 old app, and "Check for updates" (Distribution). Debug builds add Scripted coach and the mannequin
 gallery (Technique videos).
 
@@ -1544,7 +1545,8 @@ gallery (Technique videos).
     with their new exercises, and past runs) and their Changes, workouts, every session (the
     running one with its pad draft and rest timer), gyms, equipment, ladders, remembered machines
     and missing equipment, the library with its edits, starting weights, goals, bodyweight and
-    settings ("Check for updates", the dismissed update), and the Claude cost by month. Every table
+    settings ("Check for updates", the dismissed update, the training style and its wizard's
+    Done), and the Claude cost by month. Every table
     goes in row for row except the last update check, a cache of GitHub's answer, and the Claude
     key, which never leaves the phone (sealed with Keystore in `no_backup`, not the database) (a test fails on a table that is neither in
     the backup nor excluded with a reason).
@@ -1822,6 +1824,105 @@ It only points: it proposes nothing itself, so ADR 0003 holds, and it needs no C
   sessions.`), as Ease back in does; with no Claude key the same words open Ask Claude, as the fit's
   chip does. The context carries the finished sessions of the last 28 days, the sessions behind it.
 
+### Training style
+
+How you like to train, set once for the app and carried by every check-in (owner, 2026-11-02,
+#130; the sources behind each default: `docs/research/training-style.md`). Until now Claude wrote
+programs, Changes and workouts from the formats and whatever you said, and the starter program's
+principles stayed in its document. A training style has three parts: the **training targets**,
+**How I train** and **About me**. Hyperlog names no coach for it, in the app or in what Claude is
+told.
+
+- **The page.** Settings' Coach group has a **Training style** row above the Claude key. It opens
+  a page with the training targets, How I train and About me, each field edited in place, and
+  **Set it up again**, which runs the wizard (below) from its first step on the current values.
+- **The training targets** are standing: every New program starts from them. Volume and frequency
+  count per muscle group (`MuscleGroup`: Chest, Back, Shoulders, Arms, Legs, Glutes, Core), as
+  the workout's marks and History's groups do.
+
+  | Target | Choices | Default |
+  | --- | --- | --- |
+  | Goal | Hypertrophy, Strength, or Both | Hypertrophy. The lift goals sit on top of any of them. |
+  | Volume | Hard sets per muscle group a week, a range: Low (4–8), Moderate (8–14), High (14–20), or Custom (each end 1–40, the low end not above the high) | 6–10, shown as its own choice, "Hyperlog's default" |
+  | Across a block | **Steady**: the same sets every hard week. **Rising**: a block's first week starts near the bottom of the range, each week adds sets toward the top, and the block ends in a deload. | Steady |
+  | Frequency | Each muscle group 1, 2, 2–3 or 3+ times a week | 2–3 |
+  | How hard | One rule, shown and not chosen: the last set of an exercise at 0–1 RIR, earlier sets at 1–2 RIR | — |
+  | Failure | Isolation and machines only, Never, or Any lift | Isolation and machines only |
+  | Calibration | On or off | On |
+  | Rep ranges | Compounds and isolation, each a range of reps (each end 1–30) | Compounds 5–10, isolation 8–15 |
+
+  - **Isolation and machines only** means isolation exercises and compounds on a machine, a cable or
+    a Smith machine. A free-weight compound (barbell or dumbbell) stops at 1 RIR.
+  - **Calibration** keeps logged RIR honest. In the last week of each block that isn't a deload,
+    the last set of each exercise that is safe to fail (isolation and machines, as above) goes to
+    0 RIR. Never a barbell squat, bench or deadlift. It holds with Failure set to Never too, as one
+    set an exercise in one week; turning it off leaves it out.
+  - **Rising** reads the range as the user's own landmarks: its bottom near the least volume that
+    still grows muscle, its top near the most that can be recovered from.
+- **Targets for one program.** In a New program check-in you can ask for other targets for that
+  program alone ("more volume this time"). Claude writes them into the program's `targets`
+  (`docs/program-format.md`), and the setting stays as it is. Later check-ins and the review read a
+  program's own targets over the standing ones.
+- **How I train** is the training philosophy as text, written to Claude in your voice like the rest
+  of the context. The default ships as `app/src/main/assets/coach/how-i-train.md`: form before
+  load, a controlled lowering and full range; stretch-biased, stable exercises with alternatives in
+  every slot; blocks with a deload; no load in a program, since progression sets the weights; and
+  swapping around pain. The page shows it in a multi-line field with **Save**, and **Back to
+  default** (asking first) once it differs from the default. Only an edited text is kept; without
+  one the asset is read, so an update that changes the default reaches everyone who never edited it.
+- **About me**, every field optional:
+  - **Age band**: Under 30, 30–39, 40–49, 50–59, or 60 and over.
+  - **Where are you now?**: Still learning the lifts, Progress takes weeks, or Progress takes
+    months, with a separate **Coming back from a break** switch. It asks how fast you progress, not
+    years trained: three on-and-off years and three steady years are different lifters.
+  - **Aches and injuries**, by body area: Neck, Shoulders, Elbows, Wrists and hands, Upper back,
+    Lower back, Hips, Knees, Ankles and feet. Any number of areas, each with a one-line note
+    ("clicks on deep presses").
+  - **Exercises to avoid** and **exercises to favour**, picked from the exercise library with the
+    swap picker's search.
+  - **Anything else**, one line.
+- **Kept** in `setting`: `training_style` (the training targets and About me, as JSON),
+  `how_i_train` (the text, only once edited), `training_style_done` (the wizard's Done) and
+  `training_style_card_dismissed` (Today's card). They go into backups with the other settings
+  (`docs/backups.md`). With nothing set, every check-in carries the defaults.
+
+**The wizard** walks you through the training style, one choice a screen, in the check-in steps'
+look: goal; volume, with Steady or Rising; how hard, with the RIR rule, failure and calibration;
+rep ranges; age band; Where are you now?, with Coming back from a break; aches and injuries;
+exercises to avoid and favour; Anything else; then a summary of every answer with **Done** and a
+link to edit How I train. Frequency stays on the page, at its default, since a program's days
+mostly settle it. Each step opens on the current value (the default the first time), so Done
+without a change is a valid answer, and **Next** keeps what a step shows (an About me step left
+empty stays empty). It is local: no key and no call. Back steps back, × leaves without saving,
+and Done saves every step at once.
+
+- **Done counts as set**, even with every default kept, and records `training_style_done`.
+- **Until it is done**, Today shows a card, "Set how you train", with **Set up** opening the wizard
+  and × to dismiss it, while today is selected and no session runs, under the banners and the coach
+  line. Dismissing it hides the card for good but doesn't count as set.
+- **New program opens the wizard first** until it is done: the tile (and New program on a program
+  review) goes to the wizard, and its Done goes on into the New program check-in. × there drops
+  both.
+- **Settings runs it again** through Set it up again on the Training style page.
+
+**A program's focus** (the program focus). New program asks "Bring anything up this program?",
+with the muscle groups to pick up to two, or none (Claude's `ask`; Type my own stays). Focused groups get weekly sets at or
+above the top of the range, go first in their sessions and are trained more often; the rest drop
+toward maintenance. Claude writes the focus into the program's `focus` (`docs/program-format.md`),
+so it stays with the program and later check-ins see it.
+
+- **The raised range** for a focused group runs from the top of the range to half as much again,
+  rounded: 10–15 for the default 6–10.
+- **The maintenance range** for the rest runs from half the range's bottom, rounded up, to its
+  bottom: 3–6 for the default 6–10.
+- Both are judgment calls the research note backs as far as it can; neither is a setting.
+
+**Changes and workouts** keep the training style's intensity and failure rules. When a Change takes
+a muscle group's weekly sets out of its range (the raised range or the maintenance range in a
+focused program), Claude says so in the Change's summary ("Back drops to 4 sets a week, under your
+6–10."). The Change's review marks it too (New program → Sets per muscle group), and nothing is
+blocked.
+
 ### What Claude is told
 
 The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.kt`), built once:
@@ -1843,6 +1944,37 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   weekly sets per muscle for this week and the 4 before it; every visible library exercise, and any
   hidden one the program uses (id, name, equipment, movement pattern, grip, primary muscles); and
   the formats.
+- **The training style**, in every check-in (Training style, above), in the situation both the API
+  and Ask Claude's prompt carry, built once by the same code. The targets and About me go as
+  structured lines, How I train as its text (the edited one, else the asset's), and the running
+  program's focus and own targets with the program:
+
+  ```text
+  ## My training style
+  - Goal: hypertrophy, with my lift goals on top
+  - Volume: 6–10 hard sets per muscle group a week, steady across a block
+  - Frequency: each muscle group 2–3 times a week
+  - How hard: last set 0–1 RIR, earlier sets 1–2 RIR
+  - Failure: isolation exercises and machine, cable and Smith machine compounds only
+  - Calibration: in the last week of each block that isn't a deload, the last set of each exercise safe to fail goes to 0 RIR; never a barbell squat, bench or deadlift
+  - Rep ranges: compounds 5–10, isolation 8–15
+  ## About me
+  - Age: 40–49
+  - Where I am now: progress takes months; coming back from a break
+  - Aches: Wrists and hands: sore when gripping
+  - Avoid: barbell_back_squat (Barbell Back Squat)
+  - Favour: hack_squat (Hack Squat)
+  - Anything else: I train fasted in the morning
+  ## How I train
+  <How I train's text>
+  ```
+
+  An About me field left empty is left out, and so is the heading when all are. With a program
+  running, its lines add `Focus: Chest, Shoulders (raised range 10–15; the rest 3–6)` and any
+  target of its own (`Volume for this program: 8–14`). The instructions tell Claude to write new
+  programs, Changes and workouts by the style, to treat the training targets as standing unless
+  you ask otherwise for one program, to keep the intensity and failure rules in Changes and workouts, and
+  to say when a Change takes a muscle group out of its range.
 - **The formats are generated** from the code that reads them: operation names and fields from the
   serializer, scopes from the scope serializer, ranges from the validators, the program format from
   the program parser, an example Change built for the running program (a swap to the next day's
@@ -2036,6 +2168,11 @@ back.
   rotation would put them from today: Day A on the first training day from today. The context also
   says so, with each training day's gym equipment once and the goals as `Barbell Bench Press: 100
   kg by 2026-12-01`.
+- **Written by your training style** (owner, 2026-11-02, #130). Until the training style is set,
+  New program opens its wizard first (Training style). Claude starts from the training targets,
+  asks "Bring anything up this program?" for the program's focus (up to two muscle groups, or
+  none), and takes other targets for this program only when you ask for them. The program carries both: `focus` and
+  `targets` in the program file.
 - **The reply** is `propose_program`'s input, or pasted: `{ "program": <a program file
   (docs/program-format.md)>, "swaps": [...], "newExercises": [...] }`. The program validates as
   import does, its problems' paths under `program.`, and goes through the self-fix loop.
@@ -2064,6 +2201,17 @@ back.
   action that opens the list. The new exercises wait with it and join the library only when it
   starts. **Reject** and Back step back in the check-in (Type my own open), × drops
   it, as on every review.
+- **Sets per muscle group** (owner, 2026-11-02, #130). The review lists each muscle group's hard
+  sets a week as the program is written, against its range: `Chest  12 sets a week · 10–15`. A
+  set counts 1 for every primary muscle group of its exercise and 0.5 for every secondary one, once
+  per group, as the context's weekly sets per muscle count them, over the program's first week
+  that isn't eased or a deload. A focused group is measured against the raised range and marked
+  "Focus"; with a focus the rest are measured against the maintenance range, and without one
+  every group against the range. The range is the program's own `targets` volume, else the standing one. A
+  group outside its range is marked (`under` or `over`, never by colour alone), and nothing is
+  blocked: Start program and Save for later work as before. A Change's review shows the same list
+  for the plan once it applies, each count before → after, when it changes any group's sets. This
+  is New program's review, not the program review of a finished program (Program).
 - **Without a key**, Ask Claude's prompt carries the program format (`coach/ProgramFormat.kt`),
   built from the parser's fields and with an example the paste reads; you attach the file in the
   Claude app, and a pasted program opens the same review.
@@ -2227,3 +2375,5 @@ changed to the naming rule, ids kept: `db_incline_press` is "Incline DB Press", 
 16. The fit: minutes and swaps on planned days, and New program written for your week.
 17. The coach line.
 18. Block review and program review.
+19. The training style: its page and every check-in carrying it, its wizard, and sets per
+    muscle group in New program's review (#130).

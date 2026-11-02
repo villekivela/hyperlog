@@ -349,6 +349,38 @@ _Avoid_: Token, credentials, API token
 A debug-build setting that plays canned check-ins with no Claude key and no network, so the wizard can be tried and tested.
 _Avoid_: Mock coach, demo mode
 
+**Training style**:
+How you like to train, kept once for the app and carried by every check-in: the training targets, How I train and About me.
+_Avoid_: Preferences, profile, philosophy (that is How I train)
+
+**Training targets**:
+The training style's standing numbers and rules: goal, weekly sets per muscle group as a range, how that volume runs across a block, frequency, effort and failure, calibration and rep ranges. Every new program starts from them; a program can carry its own for itself alone.
+_Avoid_: Targets alone (a set prescription has targets), settings
+
+**How I train**:
+The training philosophy as text, in your voice, that Claude reads in every check-in. The app ships a default; yours replaces it once edited.
+_Avoid_: Philosophy, system prompt, instructions
+
+**About me**:
+What Claude should know about you as a lifter: age band, how fast you progress, aches and injuries, exercises to avoid and to favour, and anything else.
+_Avoid_: Profile, bio, user info
+
+**Program focus**:
+Up to two muscle groups a program brings up, kept with the program: they get the raised range, go first and are trained more often, and the rest drop toward maintenance. Not a workout's focus, which picks the muscle groups of one day.
+_Avoid_: Focus alone, priority, specialisation (the idea, not the setting)
+
+**Raised range**:
+The weekly sets a focused muscle group is written for: from the top of the training targets' range to half as much again.
+_Avoid_: Focus range, specialisation volume
+
+**Maintenance range**:
+The weekly sets the rest get in a program with a focus: from half the range's bottom to its bottom, enough to keep what they have.
+_Avoid_: Minimum volume, MV
+
+**Calibration set**:
+A last set taken to 0 RIR in a block's last hard week, on an exercise that is safe to fail, so the RIR you log stays honest.
+_Avoid_: Test set, AMRAP
+
 ## Data
 
 **Backup**:

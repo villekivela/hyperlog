@@ -9,7 +9,7 @@ exercise "bb_row"`, and a file with any problem imports nothing.
 ## Shape
 
 ```
-program  { format: 1, title, author?, description?, blocks[], newExercises? }
+program  { format: 1, title, author?, description?, focus?, targets?, blocks[], newExercises? }
 block    { id, name, weekStart, weekEnd, weeks?, days[] }
 day      { id, name, weeks?, groups[] }
 group    { type?: "straight" | "superset", slots[] }
@@ -26,8 +26,30 @@ Unknown fields are errors, so a typo can't be ignored silently.
 | `format` | yes | Always `1`. |
 | `title` | yes | Shown on Today and the Program screen. |
 | `author`, `description` | no | Text. |
+| `focus` | no | The program's focus: up to two muscle groups to bring up, by name (`["Chest", "Shoulders"]`), from `Chest`, `Back`, `Shoulders`, `Arms`, `Legs`, `Glutes` and `Core`, each once. Leave it out, or `[]`, for none. The check-in's context and New program's review read it (`SPEC.md`, Coaching → Training style). |
+| `targets` | no | Training-style targets for this program alone, over the standing ones in Settings (below). |
 | `blocks` | yes | The blocks in order. Weeks run from 1 with no gaps: the first block starts at week 1, and each block starts the week after the previous one ends. |
 | `newExercises` | no | Exercises the program uses that the shipped library doesn't have, as a coach reply's `newExercises`: `id`, `name`, `equipment`, `pattern`, `grip`, `muscles`, `secondary`. Export writes them; Import program adds those the program uses, skips one the library already has by id, and rejects one that clashes by name. Only Import program reads it: inside a coach reply the program has none (the reply's own `newExercises` holds them). |
+
+### Targets
+
+Every field is optional, and one left out follows the training style in Settings. An empty
+`targets` is the same as none.
+
+| Field | Values |
+| --- | --- |
+| `goal` | `"hypertrophy"`, `"strength"` or `"both"` |
+| `volume` | `{ "min": 8, "max": 14 }`: hard sets per muscle group a week, each 1–40, `min` not above `max` |
+| `acrossBlock` | `"steady"` or `"rising"` |
+| `frequency` | `"1"`, `"2"`, `"2-3"` or `"3+"`: times a week each muscle group is trained |
+| `failure` | `"isolation_and_machines"`, `"never"` or `"any"` |
+| `calibration` | `true` or `false` |
+| `repRanges` | `{ "compound": "5-10", "isolation": "8-15" }`, each a range of 1–30 reps; either may be left out |
+
+```json
+"focus": ["Chest"],
+"targets": { "volume": { "min": 8, "max": 14 } }
+```
 
 ### Block
 
