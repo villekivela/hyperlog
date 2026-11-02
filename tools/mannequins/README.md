@@ -216,6 +216,17 @@ tempo, turned by a drag, with its check results, an OK button and a note box. Th
 page, so it publishes alone. Publish it as an Artifact with the `db` capability
 (`capabilities: { db: {} }`); republish to the same page after each round of fixes.
 
+Each card has a **Tune** panel: a slider for each number of the exercise's pose entry (and the
+levers its movement offers that the entry leaves at the default), the body posed live in place of
+the clip with the tool's own modules (`bundle.mjs` bundles them, and `tune.mjs` says which numbers
+are sliders), the rep looping or held at the top or the bottom, and the automatic checks re-run on
+what it shows. OK saves what was tuned, as `{ path: value }` in `verdicts/<id>.tuned` (JSON text;
+a point is saved whole, `top.bar`). `npm run review -- status <batch>` lists them as `tuned`, and
+`npm run review -- apply <batch>` puts them into `poses.mjs` as text (`patch.mjs`, so the comments
+stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; write the same
+`clip` into the page's `verdicts/<id>` (and clear its `tuned`) so the OK holds for the new clip.
+Read the diff after: a comment may now describe the old number.
+
 The page keeps one verdict per exercise in its database, `verdicts/<id>`:
 `{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw. Read them back
 with the ArtifactData tool (`list` of `verdicts`), act on the notes, and write the verdicts to
@@ -226,6 +237,7 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 ## Files
 
 - `render.mjs`: PNGs of a pose, with no GPU.
+- `bundle.mjs`, `tune.mjs`, `patch.mjs`: the review page's Tune panel: the modules it runs, its sliders, and `review apply`'s text patch.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses

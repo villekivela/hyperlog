@@ -1504,6 +1504,13 @@ gallery (Technique videos).
     back to the agent, which fixes the poses and republishes. An OK is for the clip it was given on,
     and a batch isn't done until every exercise in it is OK; then the owner swipes it once in the
     debug gallery before its pull request merges.
+  - **Tuning on the review page** (owner, 2026-11-02, #124): each exercise has a Tune panel with a
+    slider for each number of its pose entry, and the levers its movement offers that the entry
+    leaves at the default (shoulder lift, elbow flare, arch). The page poses the body live with the
+    tool's own code, bundled into it, looping or held at the top or the bottom, with the automatic
+    checks re-run on what it shows. OK saves the tuned values with the verdict (`verdicts/<id>`,
+    as JSON text); `review status` lists them, and `review apply <batch>` writes them into
+    `poses.mjs` (comments kept), re-bakes, and gives each its OK for the new clip.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The

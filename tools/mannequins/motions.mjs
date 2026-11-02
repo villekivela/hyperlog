@@ -184,7 +184,11 @@ export const MOTIONS = {
       // The shoulders let up into the stretch at the top, down as the elbows drive down.
       shrug: s.shrug,
       // `elbows` turns the elbows out from the sides: 1 out wide, 0 straight down by the sides.
-      armPole: (side) => V(side * (e.grip.elbows ?? 0.8), -1, -0.3).normalize(),
+      // `elbowZ` is where they bend toward front to back, with the arm overhead: negative behind
+      // the arm, positive in front. Straight overhead the arm's axis is nearly the pole's own (down),
+      // so a pole with no front or back to it leaves the elbow's plane to chance, and the elbow swings
+      // about the arm as it comes down; a pole that leans forward keeps it in one plane.
+      armPole: (side) => V(side * (e.grip.elbows ?? 0.8), -1, e.grip.elbowZ ?? -0.3).normalize(),
     };
   },
 

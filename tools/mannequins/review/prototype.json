@@ -1,8 +1,8 @@
 {
-  "barbell_bench_press": { "ok": true, "note": "head seems to float above the bench", "clip": "9ef44a21c2c5333a" },
+  "barbell_bench_press": { "ok": true, "note": "this is close grip bench press, should be wider (fixed: the owner says it is good now)", "clip": "43a4f9ad01facd7e" },
   "barbell_rdl": { "ok": true, "note": "seems like does not extend fully in top", "clip": "009bc9b37d41eb42" },
   "barbell_squat": { "ok": true, "note": "", "clip": "8629aacca2786d30" },
-  "close_grip_lat_pulldown": { "ok": true, "note": "should pull closer to chest maybe not so low", "clip": "56d3ddb650e2dc2d" },
+  "close_grip_lat_pulldown": { "ok": false, "note": "the elbows rotate weirdly", "clip": "8b4e46d1cf5fbafd" },
   "lat_pulldown": { "ok": true, "note": "the bar should move straight in z axis", "clip": "87ca47517e6fd1cb" },
   "leg_press": { "ok": true, "note": "", "clip": "99fa7fd8e2acbb8a" },
   "machine_chest_press": { "ok": true, "note": "hands should rotate 90deg like you would do with barberll", "clip": "d02c230db482a8c7" },
