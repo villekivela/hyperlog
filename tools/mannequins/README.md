@@ -204,7 +204,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `straight_bar`, `v_handle` or `handles` (two stirrups `spread` metres either side of the middle,
   their grips front to back). The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
-  rises as the cable is drawn out. It has a high pulley only (1.5 m or more) for now.
+  rises as the cable is drawn out, and is held 6 cm off its rest even at the stretch (`HELD`), as
+  every working stack is. It has a high pulley only (1.5 m or more) for now.
 - The machines take their seat, `seat` [y, z] (the top of its cushion), and place the rest from the
   pose: `leg_extension` and the seated `leg_curl` a back pad `pad` metres behind the spine, a
   lever about the knees and a stack behind; the lying `leg_curl` (`lying: true`) a bench at

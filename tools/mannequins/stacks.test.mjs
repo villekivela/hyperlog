@@ -24,10 +24,8 @@ for (const id of Object.keys(POSES)) {
 }
 
 // A working stack is held off its rest all through the rep, the stretch included: only before the
-// first rep does it sit down. The cable columns' and the leg machines' stacks show it.
-const PRELOADED = ['cable_column', 'leg_extension', 'leg_curl'];
-
-for (const id of Object.keys(POSES).filter((id) => Object.keys(prepare(id).kit ?? {}).some((k) => PRELOADED.includes(k)))) {
+// first rep does it sit down.
+for (const id of Object.keys(POSES)) {
   test(`${id}'s stacks stay off their rest at the stretch`, async () => {
     const entry = prepare(id);
     const stage = await buildStage(entry);
