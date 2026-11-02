@@ -64,12 +64,12 @@ class MannequinGalleryTest {
             }
         }
         // The clips come in the index's order, by exercise id.
-        compose.onNodeWithText("Barbell Bench Press").assertExists()
-        compose.onNodeWithText("1 of 9").assertExists()
+        compose.onNodeWithText("2-Grip Lat Pulldown").assertExists()
+        compose.onNodeWithText("1 of 25").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
-        assertEquals(context.assets.open("mannequins/barbell_bench_press.glb").use { it.readBytes().size }, loaded.single())
-        assertEquals(Mannequins.fromAssets(context).clips.single { it.exerciseId == "barbell_bench_press" }.tempo, tempos.single())
+        assertEquals(context.assets.open("mannequins/2_grip_lat_pulldown.glb").use { it.readBytes().size }, loaded.single())
+        assertEquals(Mannequins.fromAssets(context).clips.single { it.exerciseId == "2_grip_lat_pulldown" }.tempo, tempos.single())
     }
 
     private fun settings(onGallery: (() -> Unit)?) {

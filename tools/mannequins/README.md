@@ -200,9 +200,18 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   through a raise or a flye whose top is the hands' far point. A kit's `place(P, top, bottom)` gets
   both ends of the rep for that.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
-  `straight_bar` or `v_handle`. The cable meets the front of the pulley's wheel and runs over a
+  `straight_bar`, `v_handle` or `handles` (two stirrups `spread` metres either side of the middle,
+  their grips front to back). The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
   rises as the cable is drawn out. It has a high pulley only (1.5 m or more) for now.
+- The machines take their seat, `seat` [y, z] (the top of its cushion), and place the rest from the
+  pose: `leg_extension` and the seated `leg_curl` a back pad `pad` metres behind the spine, a
+  lever about the knees and a stack behind; the lying `leg_curl` (`lying: true`) a bench at
+  `height` from `bench` [from z, to z]; `calf_raise_machine` the platform under the balls and a pad
+  over the knees; `squat_machine` the platform and the sled's rails from the hips' path;
+  `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
+  `pulldown_machine` the thigh rollers at `thighPad` [y, z]; and `row_machine`,
+  `pulldown_machine` and `preacher_curl_machine` levers on hubs at the pose's pivot or elbows.
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 

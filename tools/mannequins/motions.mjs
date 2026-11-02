@@ -422,7 +422,6 @@ export const MOTIONS = {
     const hipC = V(0, ...e.body.hip);
     const lean = prone ? rad(90 + (e.body.trunk ?? 0)) : spineLean(s.trunk ?? e.body.trunk, L);
     const u = trunkUp(lean);
-    const f = forwardOf(u);
     // The thigh's and the shin's ways in the side-on plane, round from forward toward down.
     const thighPhi = prone ? Math.PI - rad(e.body.thigh ?? 0) : rad(e.body.thigh ?? 0);
     const shinPhi = thighPhi + rad(s.knee);
@@ -542,7 +541,7 @@ export const MOTIONS = {
       ...seatedFeet(e, L),
       hand: handle,
       armPole: elbowsTo(e, [0.7, -1, -0.5]),
-      pivot, handle, swing,
+      pivot, handle,
     };
   },
 };

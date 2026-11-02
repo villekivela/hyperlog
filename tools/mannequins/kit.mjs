@@ -10,9 +10,8 @@
 //
 // A kit is built once per clip and placed on every frame from the pose frame (`place(P, top,
 // bottom)`, with the frames at the top and the bottom of the rep for what moves relative to them,
-// like a weight stack). A
-// part the body must not pass through is `solid`; one the hands hold is `held` too, so only the
-// hands may close round it. The checks read both, testing a cylinder as one and anything else as
+// like a weight stack). A part the body must not pass through is `solid`; one the hands hold is
+// `held` too, so only the hands may close round it. The checks read both, testing a cylinder as one and anything else as
 // its bounding box.
 import * as THREE from 'three';
 import { V, X, UP, rad } from './rig.mjs';
@@ -621,8 +620,8 @@ const ATTACHMENTS = {
  * front (z, less 12 cm), a boom forward to the pulley at `pulley` [y, z], whose front the cable
  * meets, and a second wheel over the stack. The cable runs from the attachment in the hands over
  * both wheels and down to the stack, which rises as the cable is drawn out. `attachment` is
- * `lat_bar`, `straight_bar`, `v_handle` or `handles` (two stirrups `spread` either side); `seat` [y, z] adds a seat and `thighPad` [y, z] the
- * rollers over the knees, for a pulldown.
+ * `lat_bar`, `straight_bar`, `v_handle` or `handles` (two stirrups `spread` either side); `seat`
+ * [y, z] adds a seat and `thighPad` [y, z] the rollers over the knees, for a pulldown.
  */
 function cableTower({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 'straight_bar', spread, seat = null, thighPad = null } = {}) {
   if (py < 1.5) throw new Error(`The cable tower's pulley at ${py} m is low; it has only a high pulley yet`);
@@ -839,7 +838,7 @@ function turnTo(object, along, toward) {
  * (its two ends in both hands). With `twin`, a second column stands mirrored at [-x, z] for the
  * other hand, a stirrup in each; with `crossed` too, each hand takes the far column's cable.
  */
-function cableColumn({ at = [0.8, 0], pulley = 0.2, attachment = 'handle', hand = 1, twin = false, crossed = false } = {}) {
+function cableColumn({ at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'handle', hand = 1, twin = false, crossed = false } = {}) {
   const M = tones();
   const height = 2.15;
   const stackZ = -0.16;
@@ -851,17 +850,17 @@ function cableColumn({ at = [0.8, 0], pulley = 0.2, attachment = 'handle', hand 
     // Its front faces the middle of the room.
     column.rotation.y = Math.atan2(-position.x, -position.z);
     const weights = weightStack(V(0, 0, stackZ), M, { rodTop: height - 0.25, toward: 1 });
-    const carriage = pad(0.24, 0.12, 0.1, M.pulley, V(0, pulley, 0.05), { soft: 0.01 });
+    const carriage = pad(0.24, 0.12, 0.1, M.pulley, V(0, carriageY, 0.05), { soft: 0.01 });
     const swivel = new THREE.Group();
-    swivel.position.set(0, pulley, 0.13);
-    swivel.add(...pulleyAt(V(0, 0, 0), M));
+    swivel.position.set(0, carriageY, 0.13);
+    swivel.add(...pulley(V(0, 0, 0), M));
     const parts = [
       ...stackFrame(stackZ, height, M),
       tube(0.07, V(-0.4, 0.035, stackZ), V(0.4, 0.035, stackZ), M.frame),
       tube(0.07, V(0, 0.035, stackZ - 0.25), V(0, 0.035, 0.3), M.frame),
       ...[-1, 1].map((s) => rod(0.012, V(s * 0.07, 0.12, 0.05), V(s * 0.07, height - 0.1, 0.05), M.metal)),
       carriage,
-      knob(M, V(0, pulley, 0.11)),
+      knob(M, V(0, carriageY, 0.11)),
       ...weights.parts,
       swivel,
     ];
@@ -874,13 +873,13 @@ function cableColumn({ at = [0.8, 0], pulley = 0.2, attachment = 'handle', hand 
     const local = (p) => p.clone().sub(position).applyAxisAngle(UP, -yaw);
     return {
       column, weights, swivel, drop, rise,
-      exit: position.clone().add(V(0, pulley, 0.13).applyAxisAngle(UP, yaw)),
+      exit: position.clone().add(V(0, carriageY, 0.13).applyAxisAngle(UP, yaw)),
       // Swivels the pulley toward the hook and raises the stack `lift`.
       set(hook, lift) {
         const h = local(hook);
         swivel.rotation.y = Math.atan2(h.x, h.z - 0.13);
         weights.lift(lift);
-        span(rise, V(0, pulley + 0.05, 0.05), V(0, height - 0.06, 0.05));
+        span(rise, V(0, carriageY + 0.05, 0.05), V(0, height - 0.06, 0.05));
         span(drop, V(0, height - 0.06, stackZ), weights.top(lift));
       },
     };
@@ -919,7 +918,10 @@ function cableColumn({ at = [0.8, 0], pulley = 0.2, attachment = 'handle', hand 
   return {
     group: g,
     place(P, P0, P1) {
-      rests ??= hooksAt(P0).map(({ c, hook }, i) => Math.min(hook.distanceTo(c.exit), hooksAt(P1)[i].hook.distanceTo(c.exit)));
+      if (!rests) {
+        const bottom = hooksAt(P1);
+        rests = hooksAt(P0).map(({ c, hook }, i) => Math.min(hook.distanceTo(c.exit), bottom[i].hook.distanceTo(c.exit)));
+      }
       const hooks = hooksAt(P);
       hooks.forEach(({ c, s, hook }, i) => {
         const lift = Math.max(0, hook.distanceTo(c.exit) - rests[i]);
@@ -945,9 +947,6 @@ function cableColumn({ at = [0.8, 0], pulley = 0.2, attachment = 'handle', hand 
   };
 }
 
-/** `pulley`, for a kit whose own `pulley` option hides it. */
-const pulleyAt = (at, M) => pulley(at, M);
-
 /** A round knob, `r` across, at `at`. */
 function knob(M, at, r = 0.016) {
   const k = part(shape(`knob:${r}`, () => { const g = new THREE.SphereGeometry(r, 14, 10); g.deleteAttribute('uv'); return g; }), M.vinyl);
@@ -958,7 +957,7 @@ function knob(M, at, r = 0.016) {
 /** A lever's hub at `at`, about x: a turned boss in the pulley tone. */
 const hub = (M, at) => turnedPart(wheelGeometry(0.055, 0.05), M.pulley, at, { solid: false });
 
-/** A pair of handles along z at the hands, each on a post down to the frame at `floor` height and `z`. */
+/** A pair of handles along z at the hands; `place(P, to)` stands each on a post down to `to(side, hand)`. */
 function sideHandles(M) {
   const grips = [-1, 1].map(() => ({ bar: part(rodGeometry(0.016), M.metal, { held: true }), sleeve: part(rodGeometry(0.0195), M.vinyl, { held: true }), post: stretchedTube(0.04, M.frame) }));
   return {
@@ -975,7 +974,7 @@ function sideHandles(M) {
   };
 }
 
-/** A weight plate on a horn, the horn from `from` out along x `length` metres; `place(from)` moves both. */
+/** A weight plate on a horn, the horn from `from` out along x on side `side`; `place(from)` moves both. */
 function loadedHorn(M, side) {
   const horn = part(rodGeometry(0.025), M.metal);
   const plate = part(plateGeometry(0.17, 0.04), M.plate, { solid: true });
@@ -989,22 +988,43 @@ function loadedHorn(M, side) {
 }
 
 /**
+ * A lever turning about the knees, its hub `side` metres out, with a roller across the shins
+ * `down` metres down them: on their front, or with `behind` on the backs of the calves.
+ * `place(P, P0)` turns it with the shins and returns where its arm meets the roller's axle.
+ */
+function kneeLever(M, side, { down, behind }) {
+  const arm = stretchedTube(0.05, M.frame);
+  const boss = hub(M, V(0, 0, 0));
+  const axle = part(rodGeometry(0.012), M.metal);
+  const rollers = [-1, 1].map(() => part(rollerGeometry(0.045, 0.16), M.vinyl, { solid: true }));
+  return {
+    parts: [arm, boss, axle, ...rollers],
+    place(P, P0) {
+      const pivot = P0.knee.clone().setX(side);
+      boss.position.copy(pivot);
+      const r = P.knee.clone().addScaledVector(P.shin, down).addScaledVector(P.front, behind ? -0.1 : 0.1);
+      span(arm, pivot, r.clone().setX(side));
+      span(axle, r.clone().setX(-0.2), r.clone().setX(side));
+      rollers.forEach((m, i) => m.position.copy(r).setX(i ? 0.1 : -0.1));
+      return { pivot, end: r.setX(side) };
+    },
+  };
+}
+
+/**
  * A leg extension or, with `curl`, a seated leg curl: a seat and back pad (its face `pad` behind
  * the spine), handles beside the seat, and a lever turning about the knees with a roller on the
- * shins: on their front for the extension, behind the calves for the curl, `roller` [down the
- * shin, off it]. A curl adds a pad over the thighs. A weight stack behind the seat rises as the lever
- * turns from the top of the rep.
+ * shins: on their front for the extension, behind the calves for the curl. A curl adds a pad over
+ * the thighs. A weight stack behind the seat rises as the lever turns from the top of the rep.
  */
-function legExtension({ seat = [0.5, 0], pad: behind = 0.12, curl = false, roller = [0.35, 0.1] } = {}) {
+function legExtension({ seat = [0.5, 0], pad: behind = 0.12, curl = false } = {}) {
   const M = tones();
   const backRest = backPad(0.38, 0.5, M, { up: 0.27, behind });
   const stackZ = -0.62;
   const weights = weightStack(V(0, 0, stackZ), M, { rodTop: 1.15, toward: 1 });
   const handles = sideHandles(M);
-  const arm = stretchedTube(0.05, M.frame);
-  const boss = hub(M, V(0, 0, 0));
-  const axle = part(rodGeometry(0.012), M.metal);
-  const rollers = [-1, 1].map(() => part(rollerGeometry(0.045, 0.16), M.vinyl, { solid: true }));
+  const side = 0.33;
+  const lever = kneeLever(M, side, { down: 0.35, behind: curl });
   const sidePost = stretchedTube(0.06, M.frame);
   const thighPad = curl ? pad(0.42, 0.06, 0.14, M.vinyl, V(0, 0, 0), { soft: 0.02 }) : null;
   const thighPost = curl ? stretchedTube(0.05, M.frame) : null;
@@ -1015,23 +1035,16 @@ function legExtension({ seat = [0.5, 0], pad: behind = 0.12, curl = false, rolle
     tube(0.07, V(-0.4, 0.035, stackZ), V(0.4, 0.035, stackZ), M.frame),
     tube(0.07, V(0.06, 0.035, seat[1] + 0.25), V(0.42, 0.035, seat[1] + 0.25), M.frame),
     ...stackFrame(stackZ, 1.3, M),
-    ...weights.parts, ...handles.parts, arm, boss, axle, ...rollers, sidePost,
+    ...weights.parts, ...handles.parts, ...lever.parts, sidePost,
     ...(curl ? [thighPad, thighPost] : []),
   ]);
-  const side = 0.33;
-  const rollerAt = (P) => P.knee.clone().addScaledVector(P.shin, roller[0]).addScaledVector(P.front, curl ? -roller[1] : roller[1]);
   return {
     group: g,
     place(P, P0) {
       backRest.fit(P0);
       handles.place(P, (s, h) => V(s * (Math.abs(h.x) - 0.02), 0.07, h.z - 0.07));
-      const pivot = P0.knee.clone().setX(side);
-      boss.position.copy(pivot);
+      const { pivot } = lever.place(P, P0);
       span(sidePost, V(side, 0.07, pivot.z + 0.25), pivot);
-      const r = rollerAt(P);
-      span(arm, pivot, r.clone().setX(side));
-      span(axle, r.clone().setX(-0.2), r.clone().setX(side));
-      rollers.forEach((m, i) => m.position.copy(r).setX(i ? 0.1 : -0.1));
       if (curl) {
         // Over the thighs, a hand's breadth back from the knees.
         const above = P0.knee.clone().addScaledVector(P0.thigh, -0.14).addScaledVector(P0.kneeUp, 0.13);
@@ -1046,20 +1059,17 @@ function legExtension({ seat = [0.5, 0], pad: behind = 0.12, curl = false, rolle
 
 /**
  * A lying leg curl: a bench under the body from `bench` [from z, to z] at `height`, handles at its
- * head end, and a lever turning about the knees with a roller on the backs of the ankles, `roller`
- * [down the shin, off it], loaded with a plate.
+ * head end, and a lever turning about the knees with a roller on the backs of the ankles, loaded
+ * with a plate.
  */
-function lyingLegCurl({ bench: [from, to] = [-0.45, 0.85], height = 0.62, roller = [0.36, 0.1] } = {}) {
+function lyingLegCurl({ bench: [from, to] = [-0.45, 0.85], height = 0.62 } = {}) {
   const M = tones();
   const length = to - from;
   const cushion = pad(0.34, 0.07, length, M.vinyl, V(0, height - 0.035, (from + to) / 2), { soft: 0.025 });
   const handles = sideHandles(M);
-  const arm = stretchedTube(0.05, M.frame);
-  const boss = hub(M, V(0, 0, 0));
-  const axle = part(rodGeometry(0.012), M.metal);
-  const rollers = [-1, 1].map(() => part(rollerGeometry(0.045, 0.16), M.vinyl, { solid: true }));
-  const load = loadedHorn(M, 1);
   const side = 0.3;
+  const lever = kneeLever(M, side, { down: 0.36, behind: true });
+  const load = loadedHorn(M, 1);
   const g = group('leg_curl', [
     cushion,
     pad(0.3, 0.012, length - 0.04, M.frame, V(0, height - 0.076, (from + to) / 2), { soft: 0.003 }),
@@ -1068,20 +1078,15 @@ function lyingLegCurl({ bench: [from, to] = [-0.45, 0.85], height = 0.62, roller
       tube(0.06, V(-0.25, 0.03, z), V(0.25, 0.03, z), M.frame),
     ]),
     tube(0.05, V(0, 0.085, from + 0.12), V(0, 0.085, to - 0.12), M.frame),
-    ...handles.parts, arm, boss, axle, ...rollers, ...load.parts,
+    ...handles.parts, ...lever.parts, ...load.parts,
   ]);
   return {
     group: g,
     place(P, P0) {
       handles.place(P, (s, h) => V(s * 0.12, height - 0.08, h.z - 0.05));
-      const pivot = P0.knee.clone().setX(side);
-      boss.position.copy(pivot);
-      const r = P.knee.clone().addScaledVector(P.shin, roller[0]).addScaledVector(P.front, -roller[1]);
-      span(arm, pivot, r.clone().setX(side));
-      span(axle, r.clone().setX(-0.2), r.clone().setX(side));
-      rollers.forEach((m, i) => m.position.copy(r).setX(i ? 0.1 : -0.1));
+      const { pivot, end } = lever.place(P, P0);
       // The plate rides the lever's far side of the pivot.
-      load.place(pivot.clone().addScaledVector(pivot.clone().sub(r.clone().setX(side)).normalize(), 0.18).setX(side + 0.03));
+      load.place(pivot.clone().addScaledVector(pivot.clone().sub(end).normalize(), 0.18).setX(side + 0.03));
     },
   };
 }
@@ -1161,12 +1166,12 @@ function squatMachine() {
       plate.quaternion.copy(q);
       const back = X.clone().cross(P0.u).normalize().negate();
       const line = P0.hipC.clone().addScaledVector(back, 0.3);
+      const f = X.clone().cross(P.u).normalize();
       [-1, 1].forEach((s, i) => {
         const lo = line.clone().addScaledVector(P.sled, -0.9).setX(s * 0.25);
         const hi = line.clone().addScaledVector(P.sled, 0.75).setX(s * 0.25);
         span(rails[i], lo, hi);
         span(legs[i], hi, hi.clone().setY(0.07));
-        const f = X.clone().cross(P.u).normalize();
         const over = P.shoulders.clone().add(V(s * 0.14, 0, 0)).addScaledVector(P.u, 0.115).addScaledVector(f, -0.01);
         shoulderPads[i].position.copy(over);
         const h = P.hand(s);

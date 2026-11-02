@@ -1466,7 +1466,10 @@ gallery (Technique videos).
     entry, or from a default by movement where the entry has none. The defaults (owner, 2026-11-02,
     #139) are about 2 s eccentric and 1 s concentric, with short pauses; where the bar is pulled
     down (the pulldown, the pressdown) the clip's first half is the concentric, so the lowering is
-    the 1 s and the lifting the 2 s. Only the lowering is baked into
+    the 1 s and the lifting the 2 s. The same holds for the handles pulled in on levers (#127: the
+    chest-supported row, the machine pulldown). Every other movement of #127's starter batch starts
+    the clip where the muscle is shortest, so its lowering is the eccentric; the seated calf raise
+    holds the stretch at the bottom for half a second. Only the lowering is baked into
     the clip; the phone plays it forward over the lowering time, holds, plays it backward over the
     lifting time, and holds again, in the sheet and the gallery alike. With animations removed the
     clip stays a still frame at the bottom. The player takes the tempo as an input, so a tempo on
