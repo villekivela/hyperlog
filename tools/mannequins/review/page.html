@@ -1,0 +1,336 @@
+<title>Mannequin Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+/* A proof sheet: one card per exercise, its stage on top as on the phone, then its checks and verdict. */
+:root {
+  --ground: #ececef;
+  --card: #f8f8fa;
+  --stage: #e3e3e8;
+  --ink: #1c1c20;
+  --quiet: #5f5f68;
+  --line: #d2d2d8;
+  --ok: #2f7a4f;
+  --ok-tint: #dcefe3;
+  --note: #8a5a00;
+  --note-tint: #f6e9cc;
+  --fail: #b3261e;
+  --focus: #3b5bdb;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --text: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* The clay mannequin's greys (GraphitePalette.kt, ClayColours). */
+  --clay-body: #babac1; --clay-joint: #9a9aa1; --clay-bar: #5c5c62; --clay-plate: #48484e; --clay-shadow: 0.65;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131315; --card: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
+    --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --focus: #9db0ff;
+    --clay-body: #9a9aa2; --clay-joint: #7c7c84; --clay-bar: #85858c; --clay-plate: #55555c; --clay-shadow: 1;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131315; --card: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
+  --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --focus: #9db0ff;
+  --clay-body: #9a9aa2; --clay-joint: #7c7c84; --clay-bar: #85858c; --clay-plate: #55555c; --clay-shadow: 1;
+  color-scheme: dark;
+}
+body {
+  background: var(--ground); color: var(--ink); font: 15px/1.5 var(--text);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 24px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+h1 { font: 600 clamp(26px, 4vw, 34px)/1.1 var(--display); letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+.lede { margin: 6px 0 0; color: var(--quiet); max-width: 62ch; }
+.tally { font: 500 14px/1.3 var(--mono); font-variant-numeric: tabular-nums; color: var(--quiet); text-align: right; }
+.tally strong { display: block; font: 600 28px/1 var(--display); color: var(--ink); }
+.banner { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; color: var(--quiet); }
+.banner:empty { display: none; }
+.sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: grid; min-width: 0; }
+.stage { position: relative; aspect-ratio: 5 / 4; max-width: 100%; background: var(--stage); touch-action: pan-y; cursor: grab; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.stage .hint { position: absolute; left: 10px; bottom: 8px; font: 12px var(--mono); color: var(--quiet); pointer-events: none; }
+.body { padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
+.title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+h2 { font: 600 20px/1.2 var(--display); margin: 0; }
+.meta { font: 12px var(--mono); color: var(--quiet); letter-spacing: 0.04em; text-transform: uppercase; }
+.state { font: 600 12px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; border-radius: 999px; white-space: nowrap; color: var(--quiet); border: 1px solid var(--line); }
+.state[data-state="ok"] { color: var(--ok); background: var(--ok-tint); border-color: transparent; }
+.state[data-state="notes"], .state[data-state="changed"] { color: var(--note); background: var(--note-tint); border-color: transparent; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.checks li { display: grid; grid-template-columns: 14px 86px 1fr; gap: 8px; align-items: baseline; min-width: 0; }
+.checks .mark { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); align-self: center; }
+.checks li[data-ok="false"] .mark { background: var(--fail); }
+.checks .name { font-weight: 500; }
+.checks .found { font: 12px var(--mono); color: var(--quiet); overflow-wrap: anywhere; }
+label { font-size: 13px; font-weight: 500; }
+textarea { width: 100%; box-sizing: border-box; min-height: 64px; resize: vertical; font: 14px/1.4 var(--text); color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 14px var(--text); border-radius: 8px; padding: 8px 14px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+button.ok { background: var(--ink); color: var(--card); border-color: var(--ink); }
+button.ok[aria-pressed="true"] { background: var(--ok); border-color: var(--ok); color: var(--card); }
+button:disabled { opacity: 0.5; cursor: default; }
+button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.saved { font: 12px var(--mono); color: var(--quiet); }
+</style>
+
+<main>
+  <header>
+    <div>
+      <h1 id="heading">Mannequin review</h1>
+      <p class="lede">Each clip loops at a generic tempo: down, hold, up, hold. Drag sideways to turn a mannequin, double-tap to reset. Mark it OK, or leave a note for the next pass. An OK counts for the clip shown; a re-baked clip needs a new one.</p>
+    </div>
+    <div class="tally" aria-live="polite"><strong id="count">–</strong><span id="count-of">OK</span></div>
+  </header>
+  <p class="banner" id="banner" role="status"></p>
+  <section class="sheet" id="sheet" aria-label="Exercises"></section>
+</main>
+
+<template id="card">
+  <article class="card">
+    <div class="stage" tabindex="0" aria-label=""><canvas></canvas><span class="hint">drag to turn</span></div>
+    <div class="body">
+      <div class="title">
+        <div><h2></h2><div class="meta"></div></div>
+        <span class="state" data-state="waiting">Waiting</span>
+      </div>
+      <ul class="checks"></ul>
+      <div>
+        <label></label>
+        <textarea placeholder="What should change in this pose?"></textarea>
+      </div>
+      <div class="actions">
+        <button class="ok" type="button" aria-pressed="false">OK</button>
+        <button class="save" type="button">Save note</button>
+        <span class="saved" aria-live="polite"></span>
+      </div>
+    </div>
+  </article>
+</template>
+
+<script type="application/json" id="batch">/*BATCH*/{}</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const BATCH = JSON.parse(document.getElementById('batch').textContent);
+const CHECKS = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace' };
+const STATES = { ok: 'OK', notes: 'Notes', changed: 'Clip changed', waiting: 'Waiting' };
+// One rep at a generic tempo, in seconds: down, hold at the bottom, up, hold at the top.
+const TEMPO = [1.6, 0.4, 1.2, 0.6];
+const still = matchMedia('(prefers-reduced-motion: reduce)');
+const sheet = document.getElementById('sheet');
+const banner = document.getElementById('banner');
+document.getElementById('heading').textContent = `Mannequin review: ${BATCH.batch}`;
+
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+// Each clip is whole and parsed from its own bytes: the page fetches nothing.
+const bytesOf = (dataUri) => Uint8Array.from(atob(dataUri.split(',')[1]), (c) => c.charCodeAt(0)).buffer;
+const verdicts = {};
+const cards = {};
+
+function stateOf(e) {
+  const v = verdicts[e.id];
+  if (!v) return 'waiting';
+  if (v.ok && v.clip === e.hash) return 'ok';
+  if (v.ok) return 'changed';
+  return v.note ? 'notes' : 'waiting';
+}
+
+function render() {
+  let ok = 0;
+  for (const e of BATCH.exercises) {
+    const c = cards[e.id];
+    const state = stateOf(e);
+    if (state === 'ok') ok++;
+    c.state.dataset.state = state;
+    c.state.textContent = STATES[state];
+    c.ok.setAttribute('aria-pressed', String(state === 'ok'));
+    c.ok.textContent = state === 'ok' ? 'OK ✓' : 'OK';
+    const v = verdicts[e.id];
+    if (v && document.activeElement !== c.note && !c.dirty) c.note.value = v.note ?? '';
+  }
+  document.getElementById('count').textContent = `${ok} of ${BATCH.exercises.length}`;
+  document.getElementById('count-of').textContent = ok === BATCH.exercises.length ? 'OK: the batch is done' : 'OK';
+}
+
+// The stages: one renderer per card, drawn while it's on screen.
+function stage(e, canvas, holder) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x77777f, 1.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+  sun.position.set(2.2, 4, 2.6);
+  scene.add(sun);
+  const camera = new THREE.PerspectiveCamera(26, 5 / 4, 0.05, 50);
+  const target = new THREE.Vector3(...e.camera.target);
+  const distance = e.camera.halfHeight / Math.tan(THREE.MathUtils.degToRad(13));
+  let azimuth = e.camera.azimuth;
+  let mixer = null;
+  let duration = 1;
+  let materials = [];
+  const place = () => {
+    const a = THREE.MathUtils.degToRad(azimuth);
+    const el = THREE.MathUtils.degToRad(e.camera.elevation);
+    camera.position.set(target.x + distance * Math.cos(el) * Math.sin(a), target.y + distance * Math.sin(el), target.z + distance * Math.cos(el) * Math.cos(a));
+    camera.lookAt(target);
+  };
+  const colour = () => {
+    scene.background = new THREE.Color(css('--stage'));
+    for (const m of materials) {
+      if (m.name === 'shadow') m.opacity = Number(css('--clay-shadow')) || 0.65;
+      else if (css(`--clay-${m.name}`)) m.color.set(css(`--clay-${m.name}`));
+    }
+  };
+  place();
+  colour();
+  new GLTFLoader().parse(bytesOf(e.clip), '', (gltf) => {
+    scene.add(gltf.scene);
+    gltf.scene.traverse((o) => { if (o.material) materials.push(o.material); });
+    mixer = new THREE.AnimationMixer(gltf.scene);
+    duration = gltf.animations[0].duration;
+    mixer.clipAction(gltf.animations[0]).play();
+    colour();
+  }, () => { holder.querySelector('.hint').textContent = 'the clip didn\'t load'; });
+
+  // Down, hold, up, hold; with motion reduced, the bottom of the rep, still.
+  const at = (t) => {
+    if (still.matches) return 1;
+    const [down, hold, up, rest] = TEMPO;
+    const p = t % (down + hold + up + rest);
+    if (p < down) return p / down;
+    if (p < down + hold) return 1;
+    if (p < down + hold + up) return 1 - (p - down - hold) / up;
+    return 0;
+  };
+  const draw = (seconds) => {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * renderer.getPixelRatio())) {
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    if (mixer) mixer.setTime(Math.min(at(seconds), 0.9999) * duration);
+    renderer.render(scene, camera);
+  };
+
+  // A sideways drag turns it; the page keeps vertical drags. A double-tap resets the view.
+  let from = null;
+  holder.addEventListener('pointerdown', (ev) => { from = ev.clientX; holder.setPointerCapture(ev.pointerId); });
+  holder.addEventListener('pointermove', (ev) => {
+    if (from === null) return;
+    azimuth -= (ev.clientX - from) * 0.5;
+    from = ev.clientX;
+    place();
+  });
+  const end = () => { from = null; };
+  holder.addEventListener('pointerup', end);
+  holder.addEventListener('pointercancel', end);
+  holder.addEventListener('dblclick', () => { azimuth = e.camera.azimuth; place(); });
+  holder.addEventListener('keydown', (ev) => {
+    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { azimuth += ev.key === 'ArrowLeft' ? 10 : -10; place(); ev.preventDefault(); }
+  });
+  return { draw, colour };
+}
+
+const stages = [];
+const visible = new Set();
+const seen = new IntersectionObserver((entries) => {
+  for (const x of entries) (x.isIntersecting ? visible.add(x.target) : visible.delete(x.target));
+});
+
+for (const e of BATCH.exercises) {
+  const node = document.getElementById('card').content.firstElementChild.cloneNode(true);
+  node.querySelector('h2').textContent = e.name;
+  node.querySelector('.meta').textContent = `${e.equipment.replace('_', ' ')}${e.traced ? ' · traced' : ''}`;
+  const holder = node.querySelector('.stage');
+  holder.setAttribute('aria-label', `${e.name}: drag or use the arrow keys to turn, double-tap to reset`);
+  const list = node.querySelector('.checks');
+  for (const [key, label] of Object.entries(CHECKS)) {
+    const c = e.checks[key];
+    const li = document.createElement('li');
+    li.dataset.ok = String(c.ok);
+    li.innerHTML = '<span class="mark" aria-hidden="true"></span><span class="name"></span><span class="found"></span>';
+    li.querySelector('.name').textContent = `${label}${c.ok ? '' : ' failed'}`;
+    li.querySelector('.found').textContent = c.frame === null ? c.found : `worst at frame ${c.frame}: ${c.found}`;
+    list.append(li);
+  }
+  const note = node.querySelector('textarea');
+  note.id = `note-${e.id}`;
+  node.querySelector('label').htmlFor = note.id;
+  node.querySelector('label').textContent = 'Note';
+  const card = { state: node.querySelector('.state'), ok: node.querySelector('.ok'), save: node.querySelector('.save'), saved: node.querySelector('.saved'), note, dirty: false };
+  note.addEventListener('input', () => { card.dirty = true; card.saved.textContent = ''; });
+  cards[e.id] = card;
+  sheet.append(node);
+  const s = stage(e, holder.querySelector('canvas'), holder);
+  s.holder = holder;
+  stages.push(s);
+  seen.observe(holder);
+}
+render();
+
+const t0 = performance.now();
+const frame = (now) => {
+  for (const s of stages) if (visible.has(s.holder)) s.draw((now - t0) / 1000);
+  requestAnimationFrame(frame);
+};
+requestAnimationFrame(frame);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => stages.forEach((s) => s.colour()));
+new MutationObserver(() => stages.forEach((s) => s.colour())).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// The verdicts: one document per exercise, `verdicts/<id>`, naming the clip it was given on.
+const controls = () => Object.values(cards).flatMap((c) => [c.ok, c.save, c.note]);
+controls().forEach((el) => { el.disabled = true; });
+banner.textContent = 'Loading the verdicts…';
+const db = await window.claude?.use?.('db');
+if (!db) {
+  banner.textContent = 'Verdicts can\'t be saved in this view. Open the page on claude.ai, signed in, to mark exercises OK or leave notes.';
+} else {
+  const slow = setTimeout(() => { banner.textContent = 'The verdicts can\'t be reached yet. They\'ll appear when they load.'; }, 10000);
+  db.collection('verdicts').onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) { clearTimeout(slow); banner.textContent = ''; }
+    for (const k of Object.keys(verdicts)) delete verdicts[k];
+    for (const d of snap.docs) verdicts[d.id] = d.data();
+    controls().forEach((el) => { el.disabled = false; });
+    render();
+  }, (err) => {
+    clearTimeout(slow);
+    banner.textContent = `The verdicts stopped updating (${err.code}). Reload the page to see the latest.`;
+  });
+  const save = async (e, change) => {
+    const c = cards[e.id];
+    const before = verdicts[e.id] ?? { ok: false, note: '' };
+    const next = { ok: before.ok && before.clip === e.hash, note: c.note.value.trim(), ...change, clip: e.hash, at: new Date().toISOString() };
+    c.ok.disabled = c.save.disabled = true;
+    try {
+      await db.doc(`verdicts/${e.id}`).set(next);
+      c.dirty = false;
+      c.saved.textContent = change.ok === undefined ? 'Note saved' : next.ok ? 'Marked OK' : 'OK taken back';
+    } catch (err) {
+      c.saved.textContent = err.code === 'invalid_argument' ? 'Only the page\'s editors can save verdicts.' : `Not saved (${err.code}). Try again.`;
+    } finally {
+      c.ok.disabled = c.save.disabled = false;
+    }
+  };
+  for (const e of BATCH.exercises) {
+    const c = cards[e.id];
+    c.ok.addEventListener('click', () => save(e, { ok: stateOf(e) !== 'ok' }));
+    c.save.addEventListener('click', () => save(e, {}));
+  }
+}
+</script>

@@ -30,14 +30,26 @@ class Mannequins(val clips: List<MannequinClip>) {
         fun parse(json: String): Mannequins {
             val file = Json.decodeFromString<IndexFile>(json)
             return Mannequins(
-                file.clips.map { (id, e) -> MannequinClip(id, "$DIR/${e.clip}", Equipment.ofKey(e.equipment), e.camera) },
+                file.clips.map { (id, e) ->
+                    MannequinClip(id, "$DIR/${e.clip}", Equipment.ofKey(e.equipment), e.camera, e.resources.associateWith { "$DIR/$it" })
+                },
             )
         }
     }
 }
 
-/** One exercise's baked clip: its `.glb` in the app's assets, the equipment its pose is in, and how the stage frames it. */
-data class MannequinClip(val exerciseId: String, val file: String, val equipment: Equipment, val camera: StageCamera)
+/**
+ * One exercise's baked clip: its `.glb` in the app's assets, the equipment its pose is in, how the
+ * stage frames it, and the files it reads by name ([resources], name to asset): the mannequin's
+ * mesh and skin, which every clip shares.
+ */
+data class MannequinClip(
+    val exerciseId: String,
+    val file: String,
+    val equipment: Equipment,
+    val camera: StageCamera,
+    val resources: Map<String, String> = emptyMap(),
+)
 
 /**
  * Where the stage's camera looks ([target], x y z in metres), half the height it shows at the
@@ -50,4 +62,4 @@ data class StageCamera(val target: List<Float>, val halfHeight: Float, val azimu
 private class IndexFile(val clips: Map<String, IndexEntry>)
 
 @Serializable
-private class IndexEntry(val clip: String, val equipment: String, val camera: StageCamera)
+private class IndexEntry(val clip: String, val equipment: String, val camera: StageCamera, val resources: List<String> = emptyList())
