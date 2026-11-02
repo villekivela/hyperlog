@@ -164,7 +164,8 @@ export function heldAt(rig, k) {
 
 /**
  * Poses the rig from a pose frame: the hip centre and trunk direction, the head's direction, the
- * ankles, the feet's way, knee and elbow poles, and where the hands hold.
+ * ankles, the feet's way, knee and elbow poles, and where the hands hold. A pose can also bend
+ * the spine (`spine`).
  */
 export function poseRig(rig, P) {
   const { bones, rest, dims: L } = rig;
@@ -176,7 +177,9 @@ export function poseRig(rig, P) {
   const pelvisWorld = P.hipC.clone().sub(rig.pelvisToHips.clone().applyQuaternion(pelvisDelta));
   bones.pelvis.position.copy(bones.pelvis.parent.worldToLocal(pelvisWorld));
   bones.pelvis.updateMatrixWorld(true);
-  for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.u, X);
+  // The spine runs rigid along u unless the pose bends it: `spine` gives the direction of a bone's
+  // segment (an arched back).
+  for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.spine?.[n] ?? P.u, X);
   aim(rig, 'neck_01', P.headDir, X);
   for (const k of ['l', 'r']) {
     const s = sideOf(rig, k);

@@ -1442,6 +1442,10 @@ gallery (Technique videos).
     the mannequin fades in. It renders only while the sheet is open and the app is in front, and
     the engine is released when the sheet closes. Where the renderer can't start (its native
     library missing), the sheet shows as it does without a mannequin.
+  - **The bench press pose** (owner, 2026-11-02, #124): a slight arch, with the chest up, the upper
+    back and the hips on the pad and a gap under the lower back; the feet flat on the floor back
+    toward the hips; and, at lockout, the arms straight and vertical with the wrists over the
+    elbows and not bent back. The head stays on the pad.
   - **Which exercises have one:** every shipped library exercise gets its own pose, in generic
     equipment, not one per movement pattern. An exercise without a pose yet shows the sheet as
     before. An exercise added on the phone has none, and a shipped exercise whose equipment is

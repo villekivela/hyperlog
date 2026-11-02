@@ -40,14 +40,16 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'bench_press',
     kit: { barbell: {}, bench: {} },
-    // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor.
-    // The head lies back on the pad.
-    body: { hip: [0.55, 0.28], trunk: -89, head: -22 },
-    feet: { stance: 0.3, z: 0.86, toeOut: 25 },
-    // From locked out over the shoulders to the lower chest, the elbows tucked about 50°.
-    top: { bar: [1.06, -0.19] },
+    // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor
+    // back toward the hips. A slight arch: the upper back and the hips on the pad, the chest up and
+    // a gap under the lower back. The head lies back on the pad.
+    body: { hip: [0.55, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
+    feet: { stance: 0.3, z: 0.62, toeOut: 25 },
+    // From locked out over the shoulders, the arms straight and vertical, to the lower chest, the
+    // elbows tucked about 50°.
+    top: { bar: [1.18, -0.235] },
     bottom: { bar: [0.71, -0.05] },
-    grip: { width: 0.4, elbows: 0.55 },
+    grip: { width: 0.28, elbows: 0.55 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },

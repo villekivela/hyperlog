@@ -58,6 +58,10 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   key; anything else, a point or a list included, is replaced whole. Likes chain.
 - **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
   baked, from the top (0 s) to the bottom (1 s).
+- **`body.arch`** (lying motions) bends the back: three angles, in degrees, added to the spine's
+  lean for the lumbar, chest and upper-back segments. The lumbar and chest turn up and the upper
+  back down, which lifts the chest and the lower back off the pad while the upper back and the
+  hips stay on it.
 - **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
   the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without
   one takes its motion's default (`tempo.mjs`). The bake writes it into `mannequins.json`, and the

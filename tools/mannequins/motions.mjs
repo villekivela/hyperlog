@@ -87,6 +87,11 @@ const shouldersOf = (hipC, u, L) => hipC.clone().addScaledVector(u, L.trunkUp).a
 /** The hip centre and the spine's lean of a body placed on a seat or a bench: `body.hip` is [y, z]. */
 const placed = (e, s, L) => ({ hipC: V(0, ...e.body.hip), lean: spineLean(s.trunk ?? e.body.trunk, L) });
 
+/** The spine's segments for an arch: each of `spine_01`..`spine_03` turned `arch` degrees up from the spine's lean. */
+const archOf = (arch, lean) => arch && Object.fromEntries(
+  ['spine_01', 'spine_02', 'spine_03'].map((n, i) => [n, trunkUp(lean + rad(arch[i]))]),
+);
+
 export const MOTIONS = {
   /**
    * A barbell on the back, kept over the middle of the feet. Without a trunk angle, the legs bend
@@ -153,6 +158,9 @@ export const MOTIONS = {
       // The head lies back on the pad: `body.head` tips it from the spine's line, toward the floor
       // when negative.
       headDir: trunkUp(lean + rad(e.body.head ?? 0)),
+      // An arched back: `body.arch` turns the spine's segments up from the lumbar spine (+), so
+      // the lower back lifts off the pad and the chest rises, and back down for the upper back.
+      spine: archOf(e.body.arch, lean),
       bar: V(0, ...s.bar),
       ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       grip: e.grip.width,
