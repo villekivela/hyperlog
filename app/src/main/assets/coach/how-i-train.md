@@ -1,14 +1,11 @@
-I train for muscle first. Strength on the lifts I've set goals for comes on top of that, not
-instead of it.
-
 - Form comes before load. Every rep goes through the full range, with a controlled lowering. A
   heavier weight never buys a shorter or sloppier rep.
 - Pick exercises that load the muscle hard where it's stretched: an incline curl over a standing
   one, an overhead extension for the triceps, a deep leg press or hack squat. Prefer stable ones I
   can push close to failure without my form breaking: machines, cables and supported dumbbells,
-  with a barbell for the lifts I have goals on. Give every slot alternatives, so any commercial gym works.
-- Run a program in blocks of a few weeks, and plan a deload week before fatigue piles up, at least
-  every two blocks.
+  with a barbell for the lifts I have goals on. Give every slot alternatives, so any commercial
+  gym works.
+- Run a program in blocks with a deload week, taken before fatigue piles up.
 - Never write a load into a program. Write the sets, reps and reps in reserve; Hyperlog's
   progression sets the weights from what I log.
 - When something hurts, swap the exercise for one that doesn't, keep the rest of the session, and
