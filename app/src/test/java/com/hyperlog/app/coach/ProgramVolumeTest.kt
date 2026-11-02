@@ -114,4 +114,17 @@ class ProgramVolumeTest {
 
         assertEquals(null, ProgramVolume.change(active, change, library, standing))
     }
+
+    @Test
+    fun aChangesReviewSkipsAnEasedWeekToTheFirstThatIsNot() {
+        // Week 1, the next day's, eases in a set fewer: the review speaks of week 2, where the plan runs in full.
+        val written = program(slot("leg_extension", 6), weeks = listOf(WeekOverride(WeekRange(1, 1), rirAdd = 1, fewerSets = 1)))
+        val change = Change("Quads drop to 4 sets", Scope.RestOfBlock, listOf(Operation.AdjustSets("leg_extension", 4)))
+
+        val volume = ProgramVolume.change(ActiveProgram(1, written, Position(1, 0)), change, library, standing)!!
+
+        assertEquals(2, volume.week)
+        assertEquals(mapOf("Quads" to 6.0), volume.before)
+        assertEquals(4.0, volume.rows.single().sets, 0.0)
+    }
 }

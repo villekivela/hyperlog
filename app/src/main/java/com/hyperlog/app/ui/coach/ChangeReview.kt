@@ -190,7 +190,7 @@ fun ChangeReviewScreen(
             review.checkIn?.let { made ->
                 item { SectionCard(Modifier.padding(bottom = 8.dp)) { CheckInTranscript(made) } }
             }
-            review.volume?.let { volume -> item(key = "volume") { SetsPerMuscle(volume.rows, volume.before) } }
+            review.volume?.let { volume -> item(key = "volume") { SetsPerMuscle(volume.rows, volume.before, volume.week) } }
             if (review.diff.next == null && review.diff.days.isEmpty()) {
                 item {
                     Text(

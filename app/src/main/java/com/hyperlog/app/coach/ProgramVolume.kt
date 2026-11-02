@@ -15,8 +15,8 @@ enum class VolumeStatus { Under, Within, Over }
 /** One muscle's weekly [sets] against its [range], a [focused] muscle's the raised one. */
 data class MuscleVolume(val muscle: String, val sets: Double, val range: NumberRange, val focused: Boolean, val status: VolumeStatus)
 
-/** A Change's sets per muscle once it applies ([rows]), and each muscle's sets [before] it. */
-data class ChangeVolume(val rows: List<MuscleVolume>, val before: Map<String, Double>)
+/** A Change's sets per muscle once it applies ([rows]), and each muscle's sets [before] it, in [week]. */
+data class ChangeVolume(val rows: List<MuscleVolume>, val before: Map<String, Double>, val week: Int)
 
 /**
  * A program's hard sets a week per muscle against the training style (SPEC, Coaching → New
@@ -61,7 +61,7 @@ object ProgramVolume {
      * ([ChangeVolume.before]); null when it changes no muscle's sets, or the program has finished.
      */
     fun change(active: ActiveProgram, proposed: Change, exercises: Map<String, Exercise>, standing: NumberRange): ChangeVolume? {
-        val (was, now) = active.weekWith(proposed) ?: return null
+        val (week, was, now) = active.weekWith(proposed) ?: return null
         val before = of(was, active.program, exercises, standing)
         val after = of(now, active.program, exercises, standing)
         // A muscle the Change takes out of the plan altogether drops to 0 sets.
@@ -69,7 +69,7 @@ object ProgramVolume {
         val rows = (after + gone).sortedBy { Muscles.indexOf(it.muscle) }
         val sets = before.associate { it.muscle to it.sets }
         if (rows.all { sets[it.muscle] == it.sets }) return null
-        return ChangeVolume(rows, sets)
+        return ChangeVolume(rows, sets, week)
     }
 
     private fun days(program: Program, week: Int): List<PlannedDay> {

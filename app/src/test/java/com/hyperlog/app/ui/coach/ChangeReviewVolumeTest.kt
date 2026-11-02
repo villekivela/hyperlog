@@ -43,12 +43,12 @@ class ChangeReviewVolumeTest {
             change, ChangeDiff(null, null, emptyList()), program, null,
             volume = ChangeVolume(
                 listOf(volume("Chest", 10.0, VolumeStatus.Within), volume("Quads", 6.0, VolumeStatus.Under)),
-                before = mapOf("Chest" to 10.0, "Quads" to 12.5),
+                before = mapOf("Chest" to 10.0, "Quads" to 12.5), week = 9,
             ),
         )
         compose.setContent { HyperlogTheme { ChangeReviewScreen(review, emptyMap(), onAccept = { accepted++ }, onReject = {}) } }
 
-        compose.onNodeWithText("Sets per muscle").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Sets per muscle · week 9").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("12.5 → 6 sets a week · 8–14").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("under").performScrollTo().assertIsDisplayed()
         // A muscle the Change leaves alone isn't listed.

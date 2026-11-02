@@ -46,10 +46,10 @@ private const val Shown = 6
  * here blocks anything.
  */
 @Composable
-internal fun SetsPerMuscle(rows: List<MuscleVolume>, before: Map<String, Double>? = null) {
+internal fun SetsPerMuscle(rows: List<MuscleVolume>, before: Map<String, Double>? = null, week: Int? = null) {
     val shownRows = if (before == null) rows else rows.filter { before[it.muscle] != it.sets }
     if (shownRows.isEmpty()) return
-    GroupHead(stringResource(R.string.sets_per_muscle))
+    GroupHead(if (week == null) stringResource(R.string.sets_per_muscle) else stringResource(R.string.sets_per_muscle_week, week))
     var open by rememberSaveable { mutableStateOf(false) }
     val folds = shownRows.size > Folded
     val shown = if (folds && !open) shownRows.take(Shown) else shownRows

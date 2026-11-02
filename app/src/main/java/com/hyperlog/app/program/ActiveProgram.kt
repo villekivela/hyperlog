@@ -205,21 +205,25 @@ data class ActiveProgram(
     }
 
     /**
-     * The days of the week of the next day once [proposed] applies, as they stand before and after
-     * it (SPEC, Sets per muscle): the Changes in force, then those and [proposed] with the ones it
-     * replaces gone. A Change over dates is read as if it covered the week. Null once the program
-     * has finished.
+     * The days of [proposed]'s week as they stand before and after it (SPEC, Sets per muscle): the
+     * week of the next day once it applies, or the first after it that the Changes in force leave
+     * neither eased nor a deload. Before is the Changes in force; after is those and [proposed],
+     * without the ones it replaces. A Change over dates is read as if it covered the week. Null
+     * once the program has finished.
      */
-    fun weekWith(proposed: Change): Pair<List<PlannedDay>, List<PlannedDay>>? {
+    fun weekWith(proposed: Change): ProposedWeek? {
         val (ended, kept) = history.filter { it.revertedAt == null }.partition { it.id in proposed.replaces }
         val from = movedTo(Changes.ending(program, position, ended.map { it.accepted }))
         val accepted = from.accept(proposed).copy(id = Long.MAX_VALUE)
-        val week = accepted.after.week
-        val block = program.blockAt(week) ?: return null
-        fun days(changes: List<AcceptedChange>) = block.days.indices.mapNotNull { program.plannedDay(Position(week, it)) }.map { day ->
-            Changes.edited(day, changes.filter { it.change.scope != Scope.RestOfBlock || it.blockId == day.block.id })
+        if (accepted.after.week > program.weeks) return null
+        fun days(week: Int, changes: List<AcceptedChange>): List<PlannedDay> {
+            val block = program.blockAt(week) ?: return emptyList()
+            return block.days.indices.mapNotNull { program.plannedDay(Position(week, it)) }.map { day ->
+                Changes.edited(day, changes.filter { it.change.scope != Scope.RestOfBlock || it.blockId == day.block.id })
+            }
         }
-        return days(changes) to days(kept.map { it.accepted } + accepted)
+        val week = (accepted.after.week..program.weeks).firstOrNull { w -> days(w, changes).none { it.eased || it.deload } } ?: accepted.after.week
+        return ProposedWeek(week, days(week, changes), days(week, kept.map { it.accepted } + accepted))
     }
 
     /** A diff of [days] whose next day moves [from] → [to], when it moves. */
@@ -279,3 +283,6 @@ data class ActiveProgram(
         return minOf(dates, ((dates + 6) / 7) * perWeek).coerceAtLeast(0)
     }
 }
+
+/** A week of the plan as a proposed Change leaves it: its days [before] and [after] the Change. */
+data class ProposedWeek(val week: Int, val before: List<PlannedDay>, val after: List<PlannedDay>)
