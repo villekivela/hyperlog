@@ -44,13 +44,14 @@ what the files don't explain.
 
 ## Phone
 
-- Your phone connects over USB with debugging authorised. adb is at
-  `~/Android/Sdk/platform-tools/adb`, which isn't on PATH by default.
+- Your phone connects through wireless debugging, never a cable. `adb devices` lists it as
+  `<ip>:<port>`; if it isn't listed, `adb mdns services` finds it and `adb connect <ip>:<port>`
+  attaches it. adb is at `~/Android/Sdk/platform-tools/adb`, which isn't on PATH by default.
 - **Screenshots:** `adb exec-out screencap -p > shot.png`, then `magick shot.png -resize 35% small.png`
   to view it. The screen is 1280 × 2856 px; multiply a 35% screenshot's coordinates by 2.857 for
   `adb shell input tap`.
 - **Leave the phone's settings and lock state alone**, including any `stay_on_while_plugged_in`
-  setting that keeps it awake on USB. A locked phone needs its user to unlock it, so check `adb shell dumpsys window | grep isKeyguardShowing` before driving the UI.
+  setting. A locked phone needs its user to unlock it, so check `adb shell dumpsys window | grep isKeyguardShowing` before driving the UI.
 - **Backups:** what's in them, where Auto Backup restores from and the `adb shell bmgr` checks are
   in `docs/backups.md`. Export a manual backup of the dev data before any `pm clear`.
 - **Update banner on a debug build:** `.dev` never checks GitHub; launch it with a fake release
