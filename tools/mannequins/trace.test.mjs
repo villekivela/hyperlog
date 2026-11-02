@@ -1,5 +1,5 @@
-// `trace` turns a side-on clip's landmarks into a pose's angle keyframes: one clean rep's
-// lowering, smoothed, as angles only.
+// `trace` turns side-on footage's landmarks into a pose's angles: one clean rep's lowering,
+// smoothed, as angles only.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readdir, readFile } from 'node:fs/promises';
@@ -17,7 +17,7 @@ const FPS = 30;
  * (left) side is the more visible, there's a pixel of noise, and two frames find no one. The
  * second rep can stop halfway down.
  */
-function squatClip({ shallowSecond = false } = {}) {
+function squatFootage({ shallowSecond = false } = {}) {
   let seed = 7;
   const noise = () => { seed = (seed * 16807) % 2147483647; return (seed / 2147483647 - 0.5) * 2; };
   const depthAt = (t) => {
@@ -57,8 +57,8 @@ function squatClip({ shallowSecond = false } = {}) {
 
 const ENTRY = { top: TOP, bottom: BOTTOM };
 
-test('one rep\'s lowering becomes 31 keyframes from its top to its bottom', () => {
-  const rep = traceRep(squatClip(), ENTRY, ['shin', 'thigh', 'trunk']);
+test('one rep\'s lowering becomes a sample per baked frame, from its top to its bottom', () => {
+  const rep = traceRep(squatFootage(), ENTRY, ['shin', 'thigh', 'trunk']);
   assert.deepEqual(Object.keys(rep.angles), ['shin', 'thigh', 'trunk']);
   for (const [k, samples] of Object.entries(rep.angles)) {
     assert.equal(samples.length, 31, k);
@@ -75,37 +75,37 @@ test('one rep\'s lowering becomes 31 keyframes from its top to its bottom', () =
 
 test('a rep that turns back before the bottom is not joined to the next one', () => {
   // The second rep stops halfway down and stands back up; the first and third go to the bottom.
-  const rep = traceRep(squatClip({ shallowSecond: true }), ENTRY, ['shin']);
+  const rep = traceRep(squatFootage({ shallowSecond: true }), ENTRY, ['shin']);
   assert.ok(rep.rep[1] - rep.rep[0] < 1.5, `rep ${rep.rep}`);
   assert.ok(Math.abs(rep.angles.shin[30] - BOTTOM.shin) < 3, `${rep.angles.shin[30]}`);
 });
 
 test('a landmark MediaPipe barely sees is filled from either side, not followed', () => {
   // Behind the plates mid-rep, the near ankle jumps 80 px for 0.4 s, and MediaPipe is unsure of it.
-  const clip = squatClip();
-  for (const f of clip.frames) {
+  const footage = squatFootage();
+  for (const f of footage.frames) {
     if (f.image && f.t > 3.9 && f.t < 4.3) {
       f.image[27] = [f.image[27][0] + 80, f.image[27][1] - 40];
       f.visibility[27] = 0.6;
     }
   }
-  const rep = traceRep(clip, ENTRY, ['shin']);
-  const clean = traceRep(squatClip(), ENTRY, ['shin']);
+  const rep = traceRep(footage, ENTRY, ['shin']);
+  const clean = traceRep(squatFootage(), ENTRY, ['shin']);
   const worst = Math.max(...rep.angles.shin.map((v, i) => Math.abs(v - clean.angles.shin[i])));
   assert.ok(worst < 2, `the shin strays ${worst.toFixed(1)}° from the clean trace`);
 });
 
 test('the arms trace too', () => {
-  const rep = traceRep(squatClip(), ENTRY, ['upperArm', 'forearm']);
+  const rep = traceRep(squatFootage(), ENTRY, ['upperArm', 'forearm']);
   assert.ok(Math.abs(rep.angles.forearm[30] - BOTTOM.forearm) < 3, `${rep.angles.forearm[30]}`);
   assert.ok(Math.abs(rep.angles.upperArm[0] - TOP.upperArm) < 3, `${rep.angles.upperArm[0]}`);
 });
 
-test('a clip with no full rep is an error', () => {
-  const clip = squatClip();
+test('footage with no full rep is an error', () => {
+  const footage = squatFootage();
   // A second in, the first rep has only just left the top.
-  clip.frames = clip.frames.slice(0, 30);
-  assert.throws(() => traceRep(clip, ENTRY, ['shin']), /no full rep/);
+  footage.frames = footage.frames.slice(0, 30);
+  assert.throws(() => traceRep(footage, ENTRY, ['shin']), /no full rep/);
 });
 
 test('a time range reads as seconds or minutes and seconds', () => {
@@ -114,16 +114,16 @@ test('a time range reads as seconds or minutes and seconds', () => {
   assert.throws(() => parseRange('18-12'), /time range/);
 });
 
-test('trace writes the pose\'s angle keyframes and nothing of the clip', async () => {
+test('trace writes the pose\'s angles and nothing of the footage', async () => {
   const out = await mkdtemp(path.join(tmpdir(), 'traces-'));
   const asked = [];
-  const landmarks = async (clip, from, to) => { asked.push([clip, from, to]); return squatClip(); };
-  await trace('barbell_squat', '/clips/squat side.mp4', '0-9', { out, angles: ['shin', 'thigh'], landmarks });
-  assert.deepEqual(asked, [['/clips/squat side.mp4', 0, 9]]);
+  const landmarks = async (footage, from, to) => { asked.push([footage, from, to]); return squatFootage(); };
+  await trace('barbell_squat', '/footage/squat side.mp4', '0-9', { out, angles: ['shin', 'thigh'], landmarks });
+  assert.deepEqual(asked, [['/footage/squat side.mp4', 0, 9]]);
   assert.deepEqual(await readdir(out), ['barbell_squat.json']);
   const written = JSON.parse(await readFile(path.join(out, 'barbell_squat.json'), 'utf8'));
-  assert.deepEqual(Object.keys(written).sort(), ['angles', 'clip', 'range', 'rep', 'side']);
-  assert.equal(written.clip, 'squat side.mp4');
+  assert.deepEqual(Object.keys(written).sort(), ['angles', 'footage', 'range', 'rep', 'side']);
+  assert.equal(written.footage, 'squat side.mp4');
   assert.deepEqual(written.range, [0, 9]);
   assert.deepEqual(Object.keys(written.angles), ['shin', 'thigh']);
   assert.ok(written.angles.shin.every((v) => typeof v === 'number'));

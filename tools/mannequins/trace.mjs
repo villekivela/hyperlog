@@ -1,11 +1,11 @@
-// Traces a pose's angles from a side-on clip of the lift (README, Tracing a clip):
+// Traces a pose's angles from side-on footage of the lift (README, Tracing a pose):
 //
-//   node trace.mjs <pose> <clip> <from>-<to> [--angles shin,thigh,trunk,upperArm,forearm]
+//   node trace.mjs <pose> <footage> <from>-<to> [--angles shin,thigh,trunk,upperArm,forearm]
 //
 // MediaPipe Pose Landmarker finds the lifter in each frame of the time range (`landmarks.py`, on
 // the CPU). The angles are measured side-on from the nearer side, smoothed, and one clean rep is
-// picked; its lowering, from the top to the bottom, is sampled into 31 keyframes and written to
-// `traces/<pose>.json`. Only the angles are kept: no clip, frame or landmark is written anywhere
+// picked; its lowering, from the top to the bottom, is sampled once per baked frame and written to
+// `traces/<pose>.json`. Only the angles are kept: no footage, frame or landmark is written anywhere
 // that stays, and the feet, hands, contacts and tempo stay authored in the pose entry.
 import { spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
@@ -14,9 +14,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { resolve, TRACES } from './entries.mjs';
 import { FRAMES } from './stage.mjs';
+import { ANGLES, sideAngles } from './angles.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const ANGLES = ['shin', 'thigh', 'trunk', 'upperArm', 'forearm'];
 
 // MediaPipe's landmarks: the left side's, then the right's is one more.
 const SHOULDER = 11;
@@ -39,7 +39,6 @@ export function parseRange(range) {
 
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
 const percentile = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s[Math.round((p / 100) * (s.length - 1))]; };
-const deg = (r) => (r * 180) / Math.PI;
 
 /** Savitzky–Golay smoothing, quadratic, over `window` samples (odd); near the ends the window shrinks to fit. */
 function smooth(xs, window) {
@@ -54,12 +53,12 @@ function smooth(xs, window) {
 }
 
 /**
- * Each landmark, frame by frame, where MediaPipe saw it: in a frame where no one was found, or where
- * it sees the landmark much less well than it usually does (behind the plates, say), the landmark
- * takes its neighbours' place, in a straight line between them.
+ * Each landmark, frame by frame, where MediaPipe saw it: in a frame where no one was found, or
+ * where it sees the landmark much less well than it usually does (behind the plates, say), the
+ * landmark takes its neighbours' place, in a straight line between them.
  */
 function fillGaps(frames) {
-  if (!frames.some((f) => f.image)) throw new Error('MediaPipe found no one in the clip');
+  if (!frames.some((f) => f.image)) throw new Error('MediaPipe found no one in the footage');
   const usual = Array.from({ length: 33 }, (_, n) => median(frames.filter((f) => f.image).map((f) => f.visibility[n])));
   const image = frames.map(() => []);
   for (let n = 0; n < 33; n++) {
@@ -79,12 +78,12 @@ function fillGaps(frames) {
 }
 
 /**
- * The rep's lowering from a clip's landmarks (`{ fps, frames: [{ t, image, visibility }] }`, image
- * pixels with y down). `entry` gives the pose's top and bottom, which say which way down is; the
- * `angles` named are measured side-on and sampled into 31 keyframes.
+ * The rep's lowering from the footage's landmarks (`{ fps, frames: [{ t, image, visibility }] }`,
+ * image pixels with y down). `entry` gives the pose's top and bottom, which say which way down is;
+ * the `angles` named are measured side-on and sampled once per baked frame.
  */
-export function traceRep(clip, entry, angles = ANGLES) {
-  const { fps, frames } = clip;
+export function traceRep(footage, entry, angles = ANGLES) {
+  const { fps, frames } = footage;
   // The nearer side is the one MediaPipe sees better.
   const seen = (off) => frames.filter((f) => f.visibility).reduce((a, f) => a + SIDE.reduce((b, n) => b + f.visibility[n + off], 0), 0);
   const off = seen(0) >= seen(1) ? 0 : 1;
@@ -97,17 +96,11 @@ export function traceRep(clip, entry, angles = ANGLES) {
     const y = smooth(image.map((p) => -p[n + off][1]), window);
     return x.map((v, i) => [v, y[i]]);
   };
-  const [sh, el, wr, hip, kn, an] = [SHOULDER, ELBOW, WRIST, HIP, KNEE, ANKLE].map(track);
-  const lean = (a, b, i) => deg(Math.atan2(b[i][0] - a[i][0], b[i][1] - a[i][1]));
-  const swing = (a, b, i) => deg(Math.atan2(b[i][0] - a[i][0], a[i][1] - b[i][1]));
-  const measure = {
-    shin: (i) => lean(an, kn, i),
-    thigh: (i) => -lean(kn, hip, i),
-    trunk: (i) => lean(hip, sh, i),
-    upperArm: (i) => swing(sh, el, i),
-    forearm: (i) => swing(el, wr, i),
-  };
-  const series = Object.fromEntries(ANGLES.map((k) => [k, frames.map((_, i) => measure[k](i))]));
+  const [shoulder, elbow, wrist, hip, knee, ankle] = [SHOULDER, ELBOW, WRIST, HIP, KNEE, ANKLE].map(track);
+  const measured = frames.map((_, i) => sideAngles({
+    ankle: ankle[i], knee: knee[i], hip: hip[i], shoulder: shoulder[i], elbow: elbow[i], wrist: wrist[i],
+  }));
+  const series = Object.fromEntries(ANGLES.map((k) => [k, measured.map((m) => m[k])]));
 
   // How far down the rep each frame is: along the pose's own way from its top to its bottom.
   const keys = ANGLES.filter((k) => entry.top?.[k] !== undefined && entry.bottom?.[k] !== undefined && entry.top[k] !== entry.bottom[k]);
@@ -126,7 +119,8 @@ export function traceRep(clip, entry, angles = ANGLES) {
   const reps = [];
   for (let i = 1; i < depth.length; i++) {
     if (!(depth[i - 1] < 0.15 && depth[i] >= 0.15)) continue;
-    // It must reach the bottom before it comes back up to the top: a rep that turns back halfway isn't one.
+    // It must reach the bottom before it comes back up to the top: a rep that turns back halfway
+    // isn't one.
     let bottom = i;
     while (bottom + 1 < depth.length && depth[bottom] < 0.9 && depth[bottom] >= 0.15) bottom++;
     if (depth[bottom] < 0.9) continue;
@@ -140,10 +134,10 @@ export function traceRep(clip, entry, angles = ANGLES) {
     while (depth[end] < deepest - 0.02) end++;
     reps.push([start, end]);
   }
-  if (!full || !reps.length) throw new Error('The clip has no full rep in its time range');
+  if (!full || !reps.length) throw new Error('The footage has no full rep in its time range');
   const [start, end] = reps[Math.floor(reps.length / 2)];
 
-  // Sample the lowering evenly in time, as the clip's frames are.
+  // Sample the lowering evenly in time, as the footage's frames are.
   const sampled = {};
   for (const k of angles) {
     sampled[k] = Array.from({ length: FRAMES }, (_, f) => {
@@ -157,15 +151,15 @@ export function traceRep(clip, entry, angles = ANGLES) {
   return { side: off ? 'right' : 'left', rep: [time(start), time(end)], angles: sampled };
 }
 
-/** Runs `landmarks.py` over the clip's time range and reads what it found; the file it writes is removed. */
-async function mediapipe(clip, from, to) {
+/** Runs `landmarks.py` over the footage's time range and reads what it found; the file it writes is removed. */
+async function mediapipe(footage, from, to) {
   const python = process.env.MANNEQUIN_PYTHON ?? 'python3';
   const model = process.env.MANNEQUIN_POSE_MODEL ?? path.join(HERE, 'trace', 'pose_landmarker_heavy.task');
   const dir = await mkdtemp(path.join(tmpdir(), 'mannequin-trace-'));
   try {
     const out = path.join(dir, 'landmarks.json');
     await new Promise((ok, fail) => {
-      const p = spawn(python, [path.join(HERE, 'trace', 'landmarks.py'), clip, String(from), String(to), model, out], { stdio: 'inherit' });
+      const p = spawn(python, [path.join(HERE, 'trace', 'landmarks.py'), footage, String(from), String(to), model, out], { stdio: 'inherit' });
       p.on('error', fail);
       p.on('exit', (code) => (code === 0 ? ok() : fail(new Error(`landmarks.py exited with ${code}`))));
     });
@@ -176,15 +170,15 @@ async function mediapipe(clip, from, to) {
 }
 
 /**
- * Traces `pose`'s angles from `clip` in `range` and writes `<out>/<pose>.json`: the clip's file
- * name, the range, the rep's times in the clip, the side traced and the angle keyframes.
+ * Traces `pose`'s angles from `footage` in `range` and writes `<out>/<pose>.json`: the footage's
+ * file name, the range, the rep's times in it, the side traced and the angles' samples.
  */
-export async function trace(pose, clip, range, { out = TRACES, angles = ANGLES, landmarks = mediapipe } = {}) {
+export async function trace(pose, footage, range, { out = TRACES, angles = ANGLES, landmarks = mediapipe } = {}) {
   const [from, to] = parseRange(range);
-  const rep = traceRep(await landmarks(clip, from, to), resolve(pose), angles);
+  const rep = traceRep(await landmarks(footage, from, to), resolve(pose), angles);
   await mkdir(out, { recursive: true });
   const file = path.join(out, `${pose}.json`);
-  const written = { clip: path.basename(clip), range: [from, to], rep: rep.rep, side: rep.side, angles: rep.angles };
+  const written = { footage: path.basename(footage), range: [from, to], rep: rep.rep, side: rep.side, angles: rep.angles };
   await writeFile(file, JSON.stringify(written, null, 1) + '\n');
   return file;
 }
@@ -192,13 +186,13 @@ export async function trace(pose, clip, range, { out = TRACES, angles = ANGLES, 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const flag = args.indexOf('--angles');
-  const angles = flag >= 0 ? args.splice(flag, 2)[1].split(',') : ANGLES;
-  const [pose, clip, range] = args;
-  if (!range) {
-    console.error('usage: node trace.mjs <pose> <clip> <from>-<to> [--angles shin,thigh,trunk,upperArm,forearm]');
+  const angles = flag >= 0 ? (args.splice(flag, 2)[1] ?? '').split(',').filter(Boolean) : ANGLES;
+  const [pose, footage, range] = args;
+  if (!range || !angles.length) {
+    console.error('usage: node trace.mjs <pose> <footage> <from>-<to> [--angles shin,thigh,trunk,upperArm,forearm]');
     process.exit(2);
   }
   const unknown = angles.filter((a) => !ANGLES.includes(a));
   if (unknown.length) throw new Error(`No angle ${unknown.join(', ')}: trace measures ${ANGLES.join(', ')}`);
-  console.log(`traced ${pose} → ${path.relative(process.cwd(), await trace(pose, path.resolve(clip), range, { angles }))}`);
+  console.log(`traced ${pose} → ${path.relative(process.cwd(), await trace(pose, path.resolve(footage), range, { angles }))}`);
 }

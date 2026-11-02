@@ -13,7 +13,8 @@ import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { sample } from './motions.mjs';
-import { gripTarget, heldAt, sideOf, turnOf, wpos } from './rig.mjs';
+import { between, gripTarget, heldAt, sideOf, turnOf, wpos } from './rig.mjs';
+import { ANGLES, deg, sideAngles } from './angles.mjs';
 
 export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace'];
 
@@ -21,7 +22,6 @@ const LIMITS = {
   grip: 0.015, foot: 0.02, inside: 0.02,
   bend: 155, kneeTurn: 60, hipFlex: 140, hipExtend: 30, head: 60, ankle: [55, 160], trace: 10,
 };
-const deg = (r) => (r * 180) / Math.PI;
 const angle = (a, b) => deg(a.angleTo(b));
 const FINGERS = /^(hand|index|middle|ring|pinky|thumb)_/;
 
@@ -66,20 +66,14 @@ function bodyVertices(rig) {
   return out;
 }
 
-/** Side-on angles of the posed body, both sides averaged, as `trace` measures them. */
-export function sideAngles(rig) {
-  const at = (n) => wpos(rig.bones[n]);
-  const lean = (from, to) => { const d = to.clone().sub(from); return deg(Math.atan2(d.z, d.y)); };
-  const swing = (from, to) => { const d = to.clone().sub(from); return deg(Math.atan2(d.z, -d.y)); };
-  const both = (f) => (f('l') + f('r')) / 2;
-  const mid = (a, b) => at(a).add(at(b)).multiplyScalar(0.5);
-  return {
-    shin: both((k) => lean(at('foot_' + k), at('calf_' + k))),
-    thigh: both((k) => -lean(at('calf_' + k), at('thigh_' + k))),
-    trunk: lean(mid('thigh_l', 'thigh_r'), mid('upperarm_l', 'upperarm_r')),
-    upperArm: both((k) => swing(at('upperarm_' + k), at('lowerarm_' + k))),
-    forearm: both((k) => swing(at('lowerarm_' + k), at('hand_' + k))),
-  };
+/** Side-on angles of the posed body, both sides averaged, as `trace` measures the lifter's. */
+function posedAngles(rig) {
+  const at = (n) => { const p = wpos(rig.bones[n]); return [p.z, p.y]; };
+  const [l, r] = ['l', 'r'].map((k) => sideAngles({
+    ankle: at('foot_' + k), knee: at('calf_' + k), hip: at('thigh_' + k),
+    shoulder: at('upperarm_' + k), elbow: at('lowerarm_' + k), wrist: at('hand_' + k),
+  }));
+  return Object.fromEntries(ANGLES.map((k) => [k, (l[k] + r[k]) / 2]));
 }
 
 /** How far bone `name` has twisted about its own length since the bind pose, against the pelvis, in degrees. */
@@ -96,8 +90,8 @@ function twist(rig, name) {
 /** The worst joint of a posed body against its range, as how far past it: 0 or less is within. */
 function jointsPast(rig) {
   const at = (n) => wpos(rig.bones[n]);
-  const hips = at('thigh_l').add(at('thigh_r')).multiplyScalar(0.5);
-  const shoulders = at('upperarm_l').add(at('upperarm_r')).multiplyScalar(0.5);
+  const hips = between(rig, 'thigh_l', 'thigh_r');
+  const shoulders = between(rig, 'upperarm_l', 'upperarm_r');
   const u = shoulders.clone().sub(hips).normalize();
   const front = new THREE.Vector3(0, 0, 1).applyQuaternion(turnOf(rig, 'pelvis'));
   const f = front.clone().addScaledVector(u, -front.dot(u)).normalize();
@@ -168,7 +162,7 @@ export async function checkPose(id, { poses } = {}) {
     const [joint, past] = jointsPast(rig);
     note('joints', past, f, joint);
     if (entry.trace) {
-      const measured = sideAngles(rig);
+      const measured = posedAngles(rig);
       for (const [k, samples] of Object.entries(entry.trace.angles)) {
         const traced = sample(samples, f / (FRAMES - 1));
         const off = Math.abs(measured[k] - traced);

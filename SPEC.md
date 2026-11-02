@@ -1462,14 +1462,15 @@ gallery (Technique videos).
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment, and the joints stay within
     range. A pose that fails one doesn't bake.
-  - **Tracing a clip** (owner, 2026-11-02, #123): `trace <clip> <time range>` runs pose estimation
-    on a side-on video of the lift, picks one clean rep, smooths it, and writes the side-on shin,
-    thigh, trunk and arm angles over its lowering as the pose's angle keyframes. The trace only sets
-    angles: the feet, hands, equipment contacts and tempo stay authored, and IK holds the contacts.
-    The checks flag a pose more than 10° off its trace. It is for side-on lifts; lifts whose arms
-    move out of the camera's plane, front-only clips, machines that hide the body and lying lifts
-    stay hand-authored. Clips and frames are never committed, only the angles, so baking and CI
-    never trace. The best source is the owner filming the lift side-on, with one camera and no cuts.
+  - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
+    estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
+    one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its
+    lowering as the pose's traced angles. The trace only sets angles: the feet, hands, equipment
+    contacts and tempo stay authored, and IK holds the contacts. The checks flag a pose more than
+    10° off its trace. It is for side-on lifts; lifts whose arms move out of the camera's plane,
+    front-only footage, machines that hide the body and lying lifts stay hand-authored. Footage and
+    its frames are never committed, only the angles, so baking and CI never trace. The best source
+    is the owner filming the lift side-on, with one camera and no cuts.
   - **Debug builds:** a gallery in Settings swipes through every clip.
   - **Checking:** the logic (which clip, which angle, the tempo phases) is tested in the JVM
     behind a seam; the pixels are checked by the owner, not by screenshot tests.

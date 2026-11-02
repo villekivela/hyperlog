@@ -10,7 +10,7 @@ cd tools/mannequins
 npm ci                                  # three.js, pinned in package-lock.json
 npm run bake                            # node bake.mjs [out-dir]: check every pose, then bake them all
 npm test                                # entries, kits, checks, bake, trace and review
-npm run trace -- <pose> <clip> <from>-<to> [--angles …]   # angles from a side-on clip (Tracing a clip)
+npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
 npm run review -- <batch>               # a batch's review page (Reviewing a batch)
 npm run review -- status <batch>        # whether every exercise in it is OK
 ```
@@ -24,7 +24,7 @@ Poses are made in batches (SPEC: the current program's exercises, then barbell, 
 machine and the rest), listed in `BATCHES` in `review.mjs`. For each batch:
 
 1. Write each exercise's entry in `poses.mjs`, `like:` another where it is a variant.
-2. Trace the side-on lifts that have a clip (Tracing a clip).
+2. Trace the side-on lifts that have footage (Tracing a pose).
 3. `npm run bake`. A pose that fails its checks stops the bake and says which check, on which frame,
    found what; fix the entry and bake again.
 4. `npm run review -- <batch>` and publish the page (Reviewing a batch). Fix the entries the owner
@@ -56,8 +56,8 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 } },
 
 - **`like: <id>`** takes another entry and changes only what this one gives. Objects merge key by
   key; anything else, a point or a list included, is replaced whole. Likes chain.
-- **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is baked,
-  from the top (0 s) to the bottom (1 s).
+- **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
+  baked, from the top (0 s) to the bottom (1 s).
 - **Side-on angles**, as `trace` measures them: `shin` leans the knee forward of the ankle, `thigh`
   puts the hip behind the knee (90 is a level thigh), `trunk` leans the line from the hips to the
   shoulders forward (negative leans back), `upperArm` and `forearm` swing the elbow and the hand
@@ -90,7 +90,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `barbell` | `barbell`, `bench` |
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `bench` |
-| `machine` | `leg_press`, `chest_press` |
+| `machine` | `leg_press`, `chest_press`; the other kinds below are missing |
 | `bodyweight` | none needed |
 | `ez_bar` | missing |
 | `trap_bar` | missing |
@@ -99,11 +99,28 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `plate` | missing |
 | `weighted_bodyweight` | missing |
 
-The machine kinds the library holds beyond those two are missing too: the hack, pendulum and
-machine squats; leg extension; lying and seated leg curls; the pec deck and reverse pec deck;
-machine rows and pulldowns, the T-bar row and the pullover; the shoulder press, lateral raise and
-preacher curl machines; hip abduction, adduction and thrust; standing, seated and donkey calf
-raises; the machine crunch, shrugs, the seated dip machine and the glute-ham raise.
+The library's machines by kind (`MACHINES` in `kit.mjs`):
+
+| Machine kind | Exercises | Kit |
+| --- | --- | --- |
+| `leg_press` | Leg Press, 1-Leg Leg Press, Leg Press Calf Press | `leg_press` |
+| `chest_press` | Machine Chest Press, Incline Machine Press | `chest_press` |
+| `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | missing |
+| `leg_extension` | Leg Extension | missing |
+| `leg_curl` | Lying and Seated Leg Curl | missing |
+| `glute_ham_raise` | Glute-Ham Raise | missing |
+| `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | missing |
+| `row_machine` | Machine Row, Chest-Supported Machine and T-Bar Rows, T-Bar Row | missing |
+| `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | missing |
+| `shoulder_press` | Machine Shoulder Press | missing |
+| `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
+| `preacher_curl_machine` | Machine Preacher Curl | missing |
+| `dip_machine` | Seated Machine Dip | missing |
+| `hip_machine` | Machine Hip Abduction and Adduction | missing |
+| `hip_thrust_machine` | Machine Hip Thrust | missing |
+| `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | missing |
+| `crunch_machine` | Machine Crunch | missing |
+| `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
 
 - `bench` is flat, or adjustable with `angle` raising its back pad from flat.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
@@ -130,26 +147,27 @@ bake (nor does anything else in that bake):
 - **Trace:** every traced angle is within 10° of its trace. Contacts come first (the bar over the
   feet, the hands on the bar), so a pose can drift from its trace; past 10° it fails.
 
-## Tracing a clip
+## Tracing a pose
 
-`npm run trace -- <pose> <clip> <from>-<to>` runs MediaPipe Pose Landmarker on a side-on clip of the
-lift, on the CPU, over the time range (seconds, or `m:ss`). It measures the side-on angles from the
-side nearer the camera, smooths them (Savitzky–Golay, 0.25 s), finds the reps along the pose's own
-way from its `top` to its `bottom`, takes the middle one that reaches the bottom, and writes its
-lowering as 31 keyframes to `traces/<pose>.json`. Add `trace: '<pose>'` to the entry to use them.
+`npm run trace -- <pose> <footage> <from>-<to>` runs MediaPipe Pose Landmarker on side-on footage of
+the lift, on the CPU, over the time range (seconds, or `m:ss`). It measures the side-on angles from
+the side nearer the camera, smooths them (Savitzky–Golay, 0.25 s), finds the reps along the pose's
+own way from its `top` to its `bottom`, takes the middle one that reaches the bottom, and writes its
+lowering, sampled once per baked frame, to `traces/<pose>.json`. Add `trace: '<pose>'` to the entry
+to use them.
 
 - **Only angles are kept.** Feet, hands, equipment contacts and tempo stay authored in the entry,
-  and IK holds the contacts: a trace's feet drift 8–17 cm within a rep. The clip, its frames and
-  MediaPipe's landmarks are never written into the repo (`.gitignore` keeps clips, images and the
+  and IK holds the contacts: a trace's feet drift 8–17 cm within a rep. The footage, its frames and
+  MediaPipe's landmarks are never written into the repo (`.gitignore` keeps videos, images and the
   model out), so baking, and CI, never trace.
 - **`--angles`** picks which angles to keep (`shin,thigh,trunk,upperArm,forearm`, all by default).
-  Keep only what the clip shows well: a landmark MediaPipe barely sees is filled from the frames
+  Keep only what the footage shows well: a landmark MediaPipe barely sees is filled from the frames
   either side, but a knee passing behind the plates for half a second still throws the shin off.
 - **Use it for side-on lifts:** squat, deadlift, RDL, lunge, hip thrust, leg press, calf raise,
   pressdown, curl, row. Lifts whose arms move out of the camera's plane (raises, flyes, grip width,
-  elbow flare), front-only clips, machines that hide the body and lying lifts stay hand-authored.
+  elbow flare), front-only footage, machines that hide the body and lying lifts stay hand-authored.
 - **The best source** is the owner filming the lift side-on, with one camera and no cuts. The
-  library's technique clips may be traced too; only about a third have a usable side-on stretch.
+  library's technique videos may be traced too; only about a third have a usable side-on stretch.
 
 It needs Python with `mediapipe` (0.10.21 traced the first batch) and `opencv-python`, and the
 heavy model, `pose_landmarker_heavy.task`, from MediaPipe's model page:
@@ -157,7 +175,7 @@ heavy model, `pose_landmarker_heavy.task`, from MediaPipe's model page:
 ```sh
 MANNEQUIN_PYTHON=~/mediapipe/.venv/bin/python \
 MANNEQUIN_POSE_MODEL=~/mediapipe/pose_landmarker_heavy.task \
-npm run trace -- barbell_squat ~/clips/squat.mp4 0-20 --angles shin,thigh,trunk
+npm run trace -- barbell_squat ~/footage/squat.mp4 0-20 --angles shin,thigh,trunk
 ```
 
 `MANNEQUIN_PYTHON` defaults to `python3`, and `MANNEQUIN_POSE_MODEL` to
@@ -165,9 +183,9 @@ npm run trace -- barbell_squat ~/clips/squat.mp4 0-20 --angles shin,thigh,trunk
 
 The first batch's traces:
 
-| Pose | Clip | Angles |
+| Pose | Footage | Angles |
 | --- | --- | --- |
-| `barbell_squat` | the library's technique video, UGwmUJkTIx8, 0–20 s | shin, thigh, trunk (the arms hold the bar out of the clip's sight) |
+| `barbell_squat` | the library's technique video, UGwmUJkTIx8, 0–20 s | shin, thigh, trunk (the arms hold the bar out of sight) |
 | `barbell_rdl` | z3Nk7sbHZSU, 0–13.7 s, a true side view | trunk (the knee passes behind the plates) |
 | `triceps_pressdown` | the library's technique video, B5S2mbg0g5c, 0–11 s | all |
 
@@ -199,7 +217,7 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 - `checks.mjs`: the checks.
 - `bake.mjs`: samples the lowering (31 frames, 0 s at the top to 1 s at the bottom) into one
   animation, `lowering`, and writes the files.
-- `trace.mjs` and `trace/landmarks.py`: tracing a clip. `traces/`: the traced angles.
+- `trace.mjs` and `trace/landmarks.py`: tracing a pose from footage. `traces/`: the traced angles.
 - `review.mjs` and `review/page.html`: the review page and the batches. `review/<batch>.json`: each
   batch's verdicts.
 - `model/mannequin.glb`: the mannequin, stripped to its mesh and skeleton (see `CREDITS.md`).

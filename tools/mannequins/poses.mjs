@@ -6,8 +6,9 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'squat',
     kit: { barbell: {} },
-    // The shin and thigh come from the library's technique video (UGwmUJkTIx8), traced side-on;
-    // the trunk leans until the bar is over the middle of the feet.
+    // The shin, thigh and trunk are traced side-on from the library's technique video
+    // (UGwmUJkTIx8); the body keeps that shape and turns about the ankles until the bar is over
+    // the middle of the feet.
     trace: 'barbell_squat',
     top: { shin: 6, thigh: 4 },
     bottom: { shin: 47, thigh: 92 },
@@ -25,11 +26,11 @@ export const POSES = {
     motion: 'hinge',
     kit: { barbell: {} },
     // The trunk is traced from a true side view (z3Nk7sbHZSU). The knee passes behind the plates
-    // there, so the shin and thigh are the trace's top and bottom, eased: the knees soften as the
-    // hips go back, and the bar runs down the thighs to mid-shin.
+    // there, so the shin and thigh are authored: the knees soften from about 20° to 50° as the hips
+    // go back, and the bar runs down the thighs to mid-shin.
     trace: 'barbell_rdl',
-    top: { shin: 13, thigh: 18, trunk: 11 },
-    bottom: { shin: 12, thigh: 49, trunk: 76 },
+    top: { shin: 5, thigh: 14, trunk: 11 },
+    bottom: { shin: 8, thigh: 42, trunk: 76 },
     feet: { stance: 0.12, toeOut: 6, kneesOut: 0 },
     bar: { z: 0.16 },
     grip: { width: 0.25 },
@@ -40,7 +41,7 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'bench_press',
     kit: { barbell: {}, bench: {} },
-    // On the back along the bench, the head toward -z, the thighs near flat to the feet on the floor.
+    // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor.
     body: { hip: [0.55, 0.28], trunk: -89 },
     feet: { stance: 0.3, z: 0.86, toeOut: 25 },
     // From locked out over the shoulders to the lower chest, the elbows tucked about 50°.
@@ -57,7 +58,7 @@ export const POSES = {
     kit: { cable_tower: { column: 0.95, pulley: [2.25, -0.04], attachment: 'lat_bar', seat: [0.47, 0.02], thighPad: [0.71, 0.3] } },
     body: { hip: [0.56, 0] },
     // Knees at about 95°, leaning back a little more as the elbows come down to the sides.
-    feet: { stance: 0.16, z: 0.42, toeOut: 12 },
+    feet: { stance: 0.16, z: 0.32, toeOut: 12 },
     top: { trunk: -18, bar: [1.62, -0.04] },
     bottom: { trunk: -27, bar: [1.03, 0.04] },
     grip: { width: 0.4 },

@@ -13,10 +13,10 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { prepare } from './entries.mjs';
 import { checkPose } from './checks.mjs';
+import { CLIPS } from './bake.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ASSETS = path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets');
-const CLIPS = path.join(ASSETS, 'mannequins');
+const LIBRARY = path.join(CLIPS, '..', 'exercises.json');
 
 /** The batches poses are made and reviewed in, in order (SPEC, The mannequin). */
 export const BATCHES = {
@@ -39,7 +39,7 @@ const hashOf = async (file) => createHash('sha256').update(await readFile(file))
 /** Builds the batch's review page into `out`/index.html, its clips in it: the page is published alone. */
 export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 'review', 'out', batch) } = {}) {
   const ids = batchOf(batch);
-  const library = JSON.parse(await readFile(path.join(ASSETS, 'exercises.json'), 'utf8'));
+  const library = JSON.parse(await readFile(LIBRARY, 'utf8'));
   const names = Object.fromEntries(library.exercises.map((e) => [e.id, e.name]));
   await mkdir(out, { recursive: true });
   const exercises = [];
@@ -60,6 +60,13 @@ export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 
   return out;
 }
 
+/** Where one exercise stands, from its verdict and the fingerprint of the clip it has now. */
+function stateOf(verdict, now) {
+  if (verdict?.ok) return verdict.clip === now ? 'ok' : 'changed';
+  if (verdict?.note) return 'notes';
+  return 'waiting';
+}
+
 /**
  * How each exercise of the batch stands against the owner's verdicts (`{ id: { ok, note, clip } }`,
  * as the page saves them): `ok` for the clip it has now, `changed` when the OK was for an earlier
@@ -69,9 +76,8 @@ export async function batchStatus(batch, verdicts, { clips = CLIPS } = {}) {
   const exercises = [];
   for (const id of batchOf(batch)) {
     const v = verdicts[id];
-    const hash = await hashOf(path.join(clips, `${id}.glb`));
-    const state = !v ? 'waiting' : v.ok && v.clip === hash ? 'ok' : v.ok ? 'changed' : v.note ? 'notes' : 'waiting';
-    exercises.push({ id, state, note: v?.note ?? '' });
+    const now = await hashOf(path.join(clips, `${id}.glb`));
+    exercises.push({ id, state: stateOf(v, now), note: v?.note ?? '' });
   }
   return { done: exercises.every((e) => e.state === 'ok'), exercises };
 }

@@ -143,6 +143,21 @@ _Avoid_: Preset, keyframe
 A baked file of one exercise's lowering that the phone plays forward, holds and plays backward. An adjustable-bench exercise has one per 15° of bench angle.
 _Avoid_: Animation, video (that is the Technique video), asset
 
+**Kit**:
+The plain generic equipment a pose is posed in, built by the mannequin tool for a kind of equipment: a barbell, a bench, a cable tower, a leg press's sled.
+_Avoid_: Prop, model, machine (that is the gym's own)
+
+**Footage**:
+A side-on video of a lift that a trace is taken from: the owner's own filming, or a technique video. It stays on the machine that traces and is never committed.
+_Avoid_: Clip (that is the baked file)
+
+**Trace**:
+The side-on angles of one rep's lowering, taken from footage by pose estimation, that set some of a pose's angles. The feet, hands, contacts and tempo stay authored.
+_Avoid_: Capture, keyframes
+
+**Batch**:
+The poses made and reviewed together. A batch is done when the owner has OK'd every one, for the clip it has now, on the batch's review page.
+
 ## Session
 
 **Session**:

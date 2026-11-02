@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { EQUIPMENT, KITS, buildKit } from './kit.mjs';
+import { EQUIPMENT, KITS, MACHINES, buildKit } from './kit.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const library = JSON.parse(await readFile(path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json'), 'utf8'));
@@ -18,6 +18,19 @@ test('every equipment kind in the library has kits or is listed as missing', () 
       assert.match(readme, new RegExp(`^\\| \`${kind}\` \\| missing`, 'm'), `${kind} isn't listed as missing in the README`);
     } else {
       for (const k of kits) assert.ok(KITS[k], `${kind}: no kit "${k}"`);
+    }
+  }
+});
+
+test('every machine in the library is of one kind, which has a kit or is listed as missing', () => {
+  const machines = library.exercises.filter((e) => e.equipment === 'machine').map((e) => e.id).sort();
+  assert.deepEqual(Object.values(MACHINES).flatMap((m) => m.exercises).sort(), machines);
+  for (const [kind, { kit }] of Object.entries(MACHINES)) {
+    if (kit === null) {
+      assert.match(readme, new RegExp(`^\\| \`${kind}\` \\| [^|]+ \\| missing`, 'm'), `${kind} isn't listed as missing in the README`);
+    } else {
+      assert.ok(KITS[kit], `${kind}: no kit "${kit}"`);
+      assert.ok(EQUIPMENT.machine.includes(kit), `${kind}'s kit "${kit}" isn't machine equipment`);
     }
   }
 });

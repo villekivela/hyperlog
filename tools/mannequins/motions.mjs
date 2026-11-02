@@ -16,7 +16,8 @@ const trunkUp = (lean) => V(0, Math.cos(lean), Math.sin(lean));
 const forwardOf = (u) => X.clone().cross(u).normalize();
 const hanging = (deg) => V(0, -Math.cos(rad(deg)), Math.sin(rad(deg)));
 const floor = { point: V(0, 0, 0), normal: V(0, 1, 0) };
-// The knee and elbow keep a hair of bend at their straightest, so the IK always knows which way they bend.
+// The knee and elbow keep a hair of bend at their straightest, so the IK always knows which way
+// they bend.
 const STRAIGHT = 0.995;
 
 /** The values `top` and `bottom` give, `d` of the way down the rep (0 at the top, 1 at the bottom). */
@@ -60,20 +61,19 @@ function standingHips(e, s, L) {
   return V(0, ky + L.thigh * STRAIGHT * Math.cos(b), kz - L.thigh * STRAIGHT * Math.sin(b) * Math.cos(out));
 }
 
-const floorFeet = (e, L, z = 0) => ({
-  ankles: [V(-e.feet.stance, L.ankleY, z), V(e.feet.stance, L.ankleY, z)],
+/** Feet flat on the floor, `feet.stance` either side of the middle at `feet.z`, the knees toward `pole`. */
+const floorFeet = (e, L, pole) => ({
+  ankles: [-1, 1].map((s) => V(s * e.feet.stance, L.ankleY, e.feet.z ?? 0)),
   toeOut: e.feet.toeOut ?? 0,
-  kneePole: (s) => V(s * (e.feet.kneesOut ?? 0), 0, 1).normalize(),
+  kneePole: pole,
   support: () => floor,
 });
 
-/** Feet flat on the floor in front of a seat, the knees up and a little out. */
-const seatedFeet = (e, L) => ({
-  ankles: [V(-e.feet.stance, L.ankleY, e.feet.z), V(e.feet.stance, L.ankleY, e.feet.z)],
-  toeOut: e.feet.toeOut ?? 0,
-  kneePole: (s) => V(s * (e.feet.kneesOut ?? 0.25), 1, 0.6).normalize(),
-  support: () => floor,
-});
+/** Standing: the knees forward, pushed out by `feet.kneesOut`. */
+const standingFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 0), 0, 1).normalize());
+
+/** In front of a seat: the knees up and a little out. */
+const seatedFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 0.25), 1, 0.6).normalize());
 
 /**
  * The spine's lean for a side-on trunk angle: the line from the hips to the shoulders, which is
@@ -116,7 +116,7 @@ export const MOTIONS = {
       hipC, u, bar,
       // The head stays near upright, the eyes a little down, as the trunk leans.
       headDir: u.clone().add(V(0, 1.2, 0.15)).normalize(),
-      ...floorFeet(e, L),
+      ...standingFeet(e, L),
       grip: e.grip.width,
       armPole: (side) => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, side * 0.3).normalize(),
     };
@@ -138,7 +138,7 @@ export const MOTIONS = {
       hipC, u,
       bar: V(0, sh.y - Math.sqrt(Math.max(0, reach * reach - dx * dx - dz * dz)), e.bar.z),
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
-      ...floorFeet(e, L),
+      ...standingFeet(e, L),
       grip: e.grip.width,
       armPole: (side) => V(side * 0.4, 0, -1).normalize(),
     };
@@ -152,12 +152,10 @@ export const MOTIONS = {
       hipC, u,
       headDir: u.clone().add(V(0, 0.08, 0)).normalize(),
       bar: V(0, ...s.bar),
-      ankles: [V(-e.feet.stance, L.ankleY, e.feet.z), V(e.feet.stance, L.ankleY, e.feet.z)],
-      toeOut: e.feet.toeOut,
-      kneePole: (side) => V(side * 0.5, 1, 0.4).normalize(),
-      support: () => floor,
+      ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       grip: e.grip.width,
-      // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the shoulders.
+      // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the
+      // shoulders.
       armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
     };
   },
@@ -190,7 +188,7 @@ export const MOTIONS = {
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.35).normalize(),
-      ...floorFeet(e, L),
+      ...standingFeet(e, L),
       bar: elbow.clone().addScaledVector(hanging(s.forearm), L.fore + L.gripAlong),
       grip: e.grip.width,
       armPole: (side) => V(side * 0.2, -1, -0.4).normalize(),
@@ -207,7 +205,8 @@ export const MOTIONS = {
     const f = forwardOf(u);
     const sled = V(0, Math.SQRT1_2, Math.SQRT1_2);
     const plateUp = V(0, Math.SQRT1_2, -Math.SQRT1_2);
-    // The plate's centre runs along a line `feet.line` above the hips; the ankles sit `feet.down` below it.
+    // The plate's centre runs along a line `feet.line` above the hips; the ankles sit `feet.down`
+    // below it.
     const line = hipC.clone().addScaledVector(plateUp, e.feet.line);
     const k = rad(180 - s.knee);
     const reach = Math.sqrt(L.thigh ** 2 + L.shin ** 2 - 2 * L.thigh * L.shin * Math.cos(k));
@@ -251,15 +250,16 @@ export const MOTIONS = {
     const pivot = mid.clone().add(V(0, e.lever, 0));
     const swingOf = (p) => Math.atan2(p.z - pivot.z, pivot.y - p.y);
     const swing = lerp(swingOf(a), swingOf(b), s.press);
-    const handle = V(0, pivot.y - r * Math.cos(swing), pivot.z + r * Math.sin(swing));
+    const middle = V(0, pivot.y - r * Math.cos(swing), pivot.z + r * Math.sin(swing));
+    const handle = (side) => middle.clone().setX(side * e.grip.width);
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.12).normalize(),
       ...seatedFeet(e, L),
-      hand: (side) => handle.clone().setX(side * e.grip.width),
+      hand: handle,
       across: () => V(0, 1, 0),
       armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
-      pivot, handle: (side) => handle.clone().setX(side * e.grip.width), swing,
+      pivot, handle, swing,
     };
   },
 };

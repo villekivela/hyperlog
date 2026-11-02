@@ -9,7 +9,7 @@ export const X = V(1, 0, 0);
 export const UP = V(0, 1, 0);
 
 export const wpos = (b) => b.getWorldPosition(new THREE.Vector3());
-export const wquat = (b) => b.getWorldQuaternion(new THREE.Quaternion());
+const wquat = (b) => b.getWorldQuaternion(new THREE.Quaternion());
 
 /** The orientation of a frame whose first axis is `primary` and second as close to `secondary` as it can be. */
 function frame(primary, secondary) {
@@ -131,13 +131,15 @@ export function buildRig(root) {
   // straighten it: up the spine, and behind it. The bind pose's spine curves, so it isn't the same.
   for (const n of SPINE.slice(0, 4)) aim(rig, n, UP, X);
   root.updateMatrixWorld(true);
-  const hips = wpos(bones.thigh_l).add(wpos(bones.thigh_r)).multiplyScalar(0.5);
-  const shoulders = wpos(bones.upperarm_l).add(wpos(bones.upperarm_r)).multiplyScalar(0.5).sub(hips);
+  const shoulders = between(rig, 'upperarm_l', 'upperarm_r').sub(between(rig, 'thigh_l', 'thigh_r'));
   Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z });
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
   root.updateMatrixWorld(true);
   return rig;
 }
+
+/** The point halfway between bones `a` and `b`, where they are now. */
+export const between = (rig, a, b) => wpos(rig.bones[a]).add(wpos(rig.bones[b])).multiplyScalar(0.5);
 
 /** Which side a bone of side `k` ('l' or 'r') is on: -1 for -x, 1 for +x. */
 export const sideOf = (rig, k) => Math.sign(rig.rest['thigh_' + k].p.x) || 1;

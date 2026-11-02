@@ -16,7 +16,8 @@ import { CHECKS, checkPose } from './checks.mjs';
 import { POSES } from './poses.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_OUT = path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'mannequins');
+/** Where the clips and their index ship: the app's assets. */
+export const CLIPS = path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'mannequins');
 
 // GLTFExporter reads its blobs back through FileReader, which Node doesn't have.
 globalThis.FileReader ??= class {
@@ -80,7 +81,8 @@ async function bake(id, poses) {
   });
   const clip = new THREE.AnimationClip('lowering', 1, tracks);
 
-  // The file opens on the top of the rep, so a bone or part left without a track keeps its pose there.
+  // The file opens on the top of the rep, so a bone or part left without a track keeps its pose
+  // there.
   pose(0);
 
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip] });
@@ -91,7 +93,7 @@ async function bake(id, poses) {
 }
 
 /** Bakes every entry into `out`: one .glb each and mannequins.json. A pose that fails its checks stops it before anything is written. */
-export async function bakeAll(out = DEFAULT_OUT, { poses = POSES } = {}) {
+export async function bakeAll(out = CLIPS, { poses = POSES } = {}) {
   const ids = Object.keys(poses).sort();
   for (const id of ids) await mustPass(id, poses);
   const baked = [];
@@ -107,7 +109,7 @@ export async function bakeAll(out = DEFAULT_OUT, { poses = POSES } = {}) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const out = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_OUT;
+  const out = process.argv[2] ? path.resolve(process.argv[2]) : CLIPS;
   const index = await bakeAll(out);
   for (const id of Object.keys(index)) console.log(`baked ${id} → ${path.relative(process.cwd(), path.join(out, index[id].clip))}`);
 }

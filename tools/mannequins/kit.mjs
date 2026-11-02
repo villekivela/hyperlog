@@ -9,6 +9,7 @@
 // part the body must not pass through is `solid`; one the hands hold is `held` too, so only the
 // hands may close round it. The checks read both.
 import * as THREE from 'three';
+import { V, X, UP, rad } from './rig.mjs';
 
 export const MATERIALS = {
   body: () => new THREE.MeshStandardMaterial({ name: 'body', color: 0xbabac1, roughness: 0.8 }),
@@ -17,10 +18,31 @@ export const MATERIALS = {
   plate: () => new THREE.MeshStandardMaterial({ name: 'plate', color: 0x48484e, roughness: 0.85 }),
 };
 
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
-const UP = V(0, 1, 0);
-const X = V(1, 0, 0);
-const rad = (d) => (d * Math.PI) / 180;
+
+/**
+ * The library's machines by kind: the kit a pose of that kind is made in, or `null` while it has
+ * none (listed as missing in the README), and the library's exercises on that kind of machine.
+ */
+export const MACHINES = {
+  leg_press: { kit: 'leg_press', exercises: ['leg_press', 'single_leg_leg_press', 'leg_press_calf_press'] },
+  chest_press: { kit: 'chest_press', exercises: ['machine_chest_press', 'incline_machine_press'] },
+  squat_machine: { kit: null, exercises: ['hack_squat', 'pendulum_squat', 'machine_squat'] },
+  leg_extension: { kit: null, exercises: ['leg_extension'] },
+  leg_curl: { kit: null, exercises: ['lying_leg_curl', 'seated_leg_curl'] },
+  glute_ham_raise: { kit: null, exercises: ['glute_ham_raise'] },
+  pec_deck: { kit: null, exercises: ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'] },
+  row_machine: { kit: null, exercises: ['machine_row', 'chest_supported_machine_row', 'chest_supported_t_bar_row', 't_bar_row'] },
+  pulldown_machine: { kit: null, exercises: ['machine_pulldown', 'machine_lat_pullover'] },
+  shoulder_press: { kit: null, exercises: ['machine_shoulder_press'] },
+  lateral_raise_machine: { kit: null, exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
+  preacher_curl_machine: { kit: null, exercises: ['machine_preacher_curl'] },
+  dip_machine: { kit: null, exercises: ['seated_dip_machine'] },
+  hip_machine: { kit: null, exercises: ['machine_hip_abduction', 'machine_adduction'] },
+  hip_thrust_machine: { kit: null, exercises: ['machine_hip_thrust'] },
+  calf_raise_machine: { kit: null, exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
+  crunch_machine: { kit: null, exercises: ['machine_crunch'] },
+  shrug_machine: { kit: null, exercises: ['machine_shrug', 'kelso_shrug'] },
+};
 
 /**
  * The library's equipment, each with the kits a pose in it may use. A kind with no kit yet is
@@ -31,7 +53,7 @@ export const EQUIPMENT = {
   barbell: ['barbell', 'bench'],
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'bench'],
-  machine: ['leg_press', 'chest_press'],
+  machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
   bodyweight: [],
   ez_bar: null,
   trap_bar: null,
@@ -130,9 +152,9 @@ function dumbbells() {
 }
 
 /**
- * A bench along z: flat, or with its back pad raised `angle` degrees from flat about the seat's
- * end (an adjustable bench). The top of the pad is `height` above the floor; the seat runs from
- * `seat` back to the hinge at `hinge` (z, metres).
+ * A bench along z, `length` long and centred on `z`, the top of its pad `height` above the floor:
+ * flat, or with its back pad raised `angle` degrees about a hinge at `hinge` (z; by default 42 cm
+ * behind the seat's front), an adjustable bench.
  */
 function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null } = {}) {
   const pad = MATERIALS.plate();
@@ -178,7 +200,7 @@ function backPad(w, length, material, { up, behind }) {
 }
 
 /** A weight stack on two guide rods, its top `lift` metres up its rods. */
-function stack(name, at) {
+function stack(at) {
   const plate = MATERIALS.plate();
   const bar = MATERIALS.bar();
   const base = box(0.26, 0.42, 0.12, plate, V(at.x, 0.27, at.z));
@@ -190,6 +212,31 @@ function stack(name, at) {
   });
   return { parts: [base, top, ...rods], lift: (l) => top.position.setY(0.54 + l) };
 }
+
+/** A rod from A to B. */
+function rod(radius, A, B, material) {
+  const r = part(rodGeometry(radius), material);
+  span(r, A, B);
+  return r;
+}
+
+/**
+ * A cable's attachments, each built along x round its middle and held there, and how far above
+ * that middle the cable hooks on.
+ */
+const ATTACHMENTS = {
+  straight_bar: (bar) => ({ parts: [along(0.014, -0.25, 0.25, bar, 16, { held: true })], hook: 0 }),
+  // A long bar whose ends bend down and out.
+  lat_bar: (bar) => ({
+    parts: [along(0.014, -0.48, 0.48, bar, 16, { held: true }), ...[-1, 1].map((s) => rod(0.014, V(s * 0.48, 0, 0), V(s * 0.6, -0.07, 0), bar))],
+    hook: 0,
+  }),
+  // A short handle, its sides meeting above it where the cable hooks on.
+  v_handle: (bar) => ({
+    parts: [along(0.014, -0.07, 0.07, bar, 16, { held: true }), ...[-1, 1].map((s) => rod(0.012, V(s * 0.07, 0, 0), V(0, 0.12, 0), bar))],
+    hook: 0.12,
+  }),
+};
 
 /**
  * A cable column: a tower `column` metres in front (z), a pulley at `pulley` [y, z], the cable down
@@ -213,7 +260,7 @@ function cableTower({ column = 0.9, pulley = [2.2, 0], attachment = 'straight_ba
   back.position.set(0, top - 0.05, column - 0.12);
   const cable = part(rodGeometry(0.004, 8), bar);
   const drop = part(rodGeometry(0.004, 8), bar);
-  const weights = stack('stack', V(0, 0, column - 0.12));
+  const weights = stack(V(0, 0, column - 0.12));
   if (seat) {
     parts.push(box(0.36, 0.08, 0.4, pad, V(0, seat[0] - 0.04, seat[1])));
     parts.push(box(0.07, seat[0] - 0.08, 0.07, bar, V(0, (seat[0] - 0.08) / 2, seat[1])));
@@ -223,28 +270,16 @@ function cableTower({ column = 0.9, pulley = [2.2, 0], attachment = 'straight_ba
     parts.push(box(0.46, 0.1, 0.12, pad, V(0, thighPad[0], thighPad[1])));
     parts.push(box(0.06, 0.06, column - thighPad[1], bar, V(0, thighPad[0], (column + thighPad[1]) / 2)));
   }
-  // The attachment, built along x round its middle, where the cable meets it.
-  const grip = attachment === 'lat_bar'
-    ? [along(0.014, -0.48, 0.48, bar, 16, { held: true }), part(rodGeometry(0.014), bar), part(rodGeometry(0.014), bar)]
-    : attachment === 'v_handle'
-      ? [along(0.014, -0.07, 0.07, bar, 16, { held: true }), part(rodGeometry(0.012), bar), part(rodGeometry(0.012), bar)]
-      : [along(0.014, -0.25, 0.25, bar, 16, { held: true })];
+  if (!ATTACHMENTS[attachment]) throw new Error(`No cable attachment "${attachment}"`);
+  const { parts: grip, hook: above } = ATTACHMENTS[attachment](bar);
   const handle = new THREE.Group();
   grip.forEach((m) => handle.add(m));
-  if (attachment === 'lat_bar') {
-    // The ends bend down and out.
-    span(grip[1], V(-0.48, 0, 0), V(-0.6, -0.07, 0));
-    span(grip[2], V(0.48, 0, 0), V(0.6, -0.07, 0));
-  } else if (attachment === 'v_handle') {
-    span(grip[1], V(-0.07, 0, 0), V(0, 0.12, 0));
-    span(grip[2], V(0.07, 0, 0), V(0, 0.12, 0));
-  }
   const all = [...parts, wheel, back, cable, drop, ...weights.parts];
   const g = group('cable', all);
   handle.name = 'cable_handle';
   grip.forEach((m, i) => { m.name = `cable_handle_${i}`; });
   g.add(handle);
-  const hook = (P) => P.bar.clone().add(V(0, attachment === 'v_handle' ? 0.12 : 0, 0));
+  const hook = (P) => P.bar.clone().add(V(0, above, 0));
   return {
     group: g,
     place(P, P0) {
@@ -260,8 +295,8 @@ function cableTower({ column = 0.9, pulley = [2.2, 0], attachment = 'straight_ba
 
 /**
  * A 45° leg press: the seat and back pad (its face `pad` metres behind the spine), the rails, and
- * the sled with its foot plate, which rides the rails with the feet. `P.plate` is the foot plate's centre; `P.sled` the sled's direction up
- * the rails and `P.plateUp` the plate's face's up.
+ * the sled with its foot plate, which rides the rails with the feet. `P.plate` is the foot plate's
+ * centre, `P.sled` the sled's way up the rails and `P.plateUp` the way up the plate's face.
  */
 function legPress({ seat = [0.5, 0.04], pad: behind = 0.2 } = {}) {
   const pad = MATERIALS.plate();
@@ -313,8 +348,9 @@ function legPress({ seat = [0.5, 0.04], pad: behind = 0.2 } = {}) {
 
 /**
  * A seated chest press: the seat and back pad (its face `pad` metres behind the spine), a column
- * behind, and two levers hung from a pivot above, swinging the handles through their arc. `P.pivot`, `P.handle(s)`
- * and `P.swing` (the levers' angle, radians from their top) place them.
+ * behind, and two levers hung from a pivot above, swinging the handles through their arc.
+ * `P.pivot`, `P.handle(s)` and `P.swing` (the levers' angle, radians from hanging straight down)
+ * place them.
  */
 function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
   const pad = MATERIALS.plate();
@@ -333,7 +369,7 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
     arm: part(rodGeometry(0.02), bar), top: part(rodGeometry(0.016), bar),
     grip: part(rodGeometry(0.017), bar, { held: true }), low: part(rodGeometry(0.016), bar),
   }));
-  const weights = stack('stack', V(0, 0, -0.71));
+  const weights = stack(V(0, 0, -0.71));
   const g = group('chest_press', [
     ...parts, column, boom, axle, ...levers.flatMap((l) => [l.arm, l.top, l.grip, l.low]), ...weights.parts,
   ]);
