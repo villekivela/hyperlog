@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
@@ -60,9 +61,25 @@ class ExerciseEditorTest {
     }
 
     @Test
+    fun anExerciseSaysWhetherItIsDoneOnAnAdjustableBench() {
+        val press = Exercise(
+            id = "seated_db_shoulder_press", name = "Seated DB Shoulder Press", equipment = Equipment.Dumbbell,
+            pattern = MovementPattern.VerticalPush, grip = GripDemand.High, muscles = listOf("Front Delts"),
+        )
+        var saved: Exercise? = null
+        compose.setContent { ExerciseEditor(press, onSave = { saved = it }, onSetHidden = {}, onClose = {}) }
+        compose.onNodeWithText("Adjustable bench").performScrollTo().assertIsOff()
+        compose.onNodeWithText("Adjustable bench").performClick()
+        compose.onNodeWithText("Save").performClick()
+        assertEquals(true, saved!!.adjustableBench)
+    }
+
+    @Test
     fun onlyDumbbellExercisesAskAboutTwo() {
         compose.setContent { ExerciseEditor(pecDeck, onSave = {}, onSetHidden = {}, onClose = {}) }
         assertEquals(0, compose.onAllNodesWithText("Two dumbbells").fetchSemanticsNodes().size)
+        // A machine's seat is its own.
+        assertEquals(0, compose.onAllNodesWithText("Adjustable bench").fetchSemanticsNodes().size)
     }
 
     @Test

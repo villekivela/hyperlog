@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
 /** What a past exercise's table asks for: the pad, and loading a logged row into it. */
 interface PastSessionActions : PadActions {
     fun correct(sessionExerciseId: Long, set: Int, extension: Int?)
+    /** Corrects the bench angle [sessionExerciseId] was done at. */
+    fun setBenchAngle(sessionExerciseId: Long, angle: Int) {}
 }
 
 /**
@@ -52,6 +54,7 @@ class PastSessionsViewModel(application: Application) : AndroidViewModel(applica
 
     override fun correct(sessionExerciseId: Long, set: Int, extension: Int?) = run { editor.correct(sessionExerciseId, set, extension) }
     override fun cancelCorrection() = run { editor.cancelCorrection() }
+    override fun setBenchAngle(sessionExerciseId: Long, angle: Int) = run { editor.setBenchAngle(sessionExerciseId, angle) }
     override fun press(key: PadKey) = run { editor.press(key) }
     override fun done() = run { editor.done() }
     override fun selectRir(value: Int) = run { editor.selectRir(value) }

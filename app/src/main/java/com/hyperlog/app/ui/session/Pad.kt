@@ -258,12 +258,12 @@ private fun androidx.compose.foundation.layout.RowScope.DigitKey(value: Int, act
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.TextKey(label: String, description: String, onClick: () -> Unit) {
+internal fun androidx.compose.foundation.layout.RowScope.TextKey(label: String, description: String, onClick: () -> Unit) {
     Key(description, onClick = onClick) { Text(label, fontSize = 24.sp) }
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.SymbolKey(symbol: Symbol, description: Int, onClick: () -> Unit) {
+internal fun androidx.compose.foundation.layout.RowScope.SymbolKey(symbol: Symbol, description: Int, onClick: () -> Unit) {
     Key(stringResource(description), onClick = onClick) { SymbolIcon(symbol, contentDescription = null) }
 }
 
@@ -283,8 +283,9 @@ private fun androidx.compose.foundation.layout.RowScope.DoneKey(entry: SetEntry,
     }
 }
 
+/** A pad key, drawn like the system number keyboard; the bench angle's keypad uses it too. */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.Key(
+internal fun androidx.compose.foundation.layout.RowScope.Key(
     description: String,
     modifier: Modifier = Modifier,
     container: Color = MaterialTheme.colorScheme.surfaceContainerHighest,

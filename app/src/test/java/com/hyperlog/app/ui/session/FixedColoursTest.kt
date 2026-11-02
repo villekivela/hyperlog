@@ -25,6 +25,7 @@ class FixedColoursTest {
             }
         }
         Direction.entries.forEach { add("trend $it" to it.color) }
+        add("trend Up on light" to Direction.upOnLight)
         listOf(25.0, 20.0, 15.0, 10.0, 5.0, 1.25).forEach { add("$it kg plate" to plateColor(it)) }
         listOf(GraphiteLight, GraphiteDark).forEach { add("error" to it.error); add("errorContainer" to it.errorContainer) }
     }

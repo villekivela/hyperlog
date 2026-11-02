@@ -72,9 +72,13 @@ data class SessionExercise(
     val setIndices: List<Int> = sets.indices.toList(),
     /** Each of [lastTime]'s set index, in the same order: a set skipped last time leaves a gap. */
     val lastTimeIndices: List<Int> = lastTime.indices.toList(),
+    /** The bench angle set in this session, for an adjustable-bench exercise; null until set. */
+    val benchAngle: Int? = null,
+    /** The latest earlier session's bench angle for this exercise, at any gym: the target; null with none. */
+    val lastBenchAngle: Int? = null,
 ) {
     /** Its sets with their records, as summaries show them. */
-    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records)
+    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records, benchAngle)
 
     /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
     fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
@@ -247,6 +251,12 @@ data class PickedSet(val sessionExerciseId: Long, val index: Int, val entry: Set
 data class WarmupEdit(val sessionExerciseId: Long, val index: Int, val entry: SetEntry)
 
 /** An exercise's sets in a session, with the record each makes ([SessionExercise.records]). */
-data class ExerciseSummary(val name: String, val sets: List<LoggedSet>, val records: List<Record?> = emptyList())
+data class ExerciseSummary(
+    val name: String,
+    val sets: List<LoggedSet>,
+    val records: List<Record?> = emptyList(),
+    /** The bench angle it was done at, for an adjustable-bench exercise; null when not set. */
+    val benchAngle: Int? = null,
+)
 
 data class SessionSummary(val sessionId: Long, val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)

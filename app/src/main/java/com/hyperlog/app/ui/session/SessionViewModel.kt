@@ -59,6 +59,8 @@ interface PadActions {
 /** What the session screen can ask for. Each call is saved as soon as it is made. */
 interface SessionActions : PadActions {
     fun addExercise(exerciseId: String)
+    /** Sets the bench angle [sessionExerciseId] is done at (SPEC, Bench angle). */
+    fun setBenchAngle(sessionExerciseId: Long, angle: Int) {}
     fun switchTo(sessionExerciseId: Long)
     fun adjustRest(deltaMs: Long)
     fun endRest()
@@ -220,6 +222,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     override fun setTechnique(setIndex: Int, technique: Technique?) = run { logger.setTechnique(setIndex, technique) }
     override fun split(on: Boolean) = run { logger.split(on) }
     override fun swap(sessionExerciseId: Long, exerciseId: String) = run { logger.swap(sessionExerciseId, exerciseId) }
+    override fun setBenchAngle(sessionExerciseId: Long, angle: Int) = run { logger.setBenchAngle(sessionExerciseId, angle) }
     override fun addSet(sessionExerciseId: Long) = run { logger.addSet(sessionExerciseId) }
     override fun removeSet(sessionExerciseId: Long, setIndex: Int) = run { logger.removeSet(sessionExerciseId, setIndex) }
     override fun setTarget(sessionExerciseId: Long, setIndex: Int, reps: RepRange, rir: Int?) =

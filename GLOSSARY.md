@@ -141,7 +141,7 @@ _Avoid_: Workout (that's the plan, not the record), log, entry
 One set as it was done: weight, full reps, partial reps and RIR, plus any drops or mini-sets.
 
 **Bench angle**:
-The backrest's angle from flat, in whole degrees, that an adjustable-bench exercise was done at in a session. Measured with the phone laid on the backrest, or typed. Last time's angle is the target; progression ignores it.
+The backrest's angle from flat, in whole degrees, that an adjustable-bench exercise was done at in a session. Measured with the phone laid on the backrest, or typed. The target is last time's angle until one is set in the session, then that one; progression ignores it.
 _Avoid_: Incline (that's one kind of exercise), seat angle
 
 **Warm-up set**:

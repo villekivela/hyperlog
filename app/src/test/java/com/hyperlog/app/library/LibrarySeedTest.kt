@@ -87,6 +87,23 @@ class LibrarySeedTest {
     }
 
     @Test
+    fun exercisesOnABenchSetToAnAngleAreMarkedAdjustableBench() {
+        val adjustable = seed.exercises.filter { it.adjustableBench }.map { it.id }.toSet()
+        // SPEC, Exercise library → Adjustable bench: the incline, decline and seated free-weight and Smith presses, and the bench rows, raises and curls.
+        assertEquals(
+            setOf(
+                "db_incline_press", "barbell_incline_press", "smith_machine_incline_press", "decline_db_press", "decline_bench_press",
+                "seated_db_shoulder_press", "arnold_press_seated", "seated_overhead_press_barbell", "smith_machine_seated_press",
+                "chest_supported_db_row", "incline_chest_supported_db_row", "incline_db_y_raise", "incline_db_kelso_shrug", "db_incline_curl",
+            ),
+            adjustable,
+        )
+        // A flat bench is always 0°, a bench as a prop has no angle, and a machine's seat is its own.
+        listOf("db_bench_press", "barbell_hip_thrust", "db_bulgarian_split_squat", "incline_machine_press", "seated_cable_row")
+            .forEach { assertTrue(it, it !in adjustable) }
+    }
+
+    @Test
     fun holdsEveryExerciseTheStarterProgramNames() {
         val program = listOf(
             "barbell_bench_press", "close_grip_bench_press", "smith_machine_bench_press", "hack_squat", "leg_press",

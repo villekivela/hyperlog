@@ -120,6 +120,7 @@ class Backups(private val db: HyperlogDatabase, private val clock: () -> Long = 
                     val today = java.time.Instant.ofEpochMilli(clock()).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     com.hyperlog.app.data.Migration25To26.rotateRunning(sql, today)
                 }
+                if (database < 27) com.hyperlog.app.data.Migration26To27.markAdjustableBench(sql)
             }
             Result.Restored
         } catch (_: android.database.SQLException) {

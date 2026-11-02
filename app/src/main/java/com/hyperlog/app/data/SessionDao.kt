@@ -163,7 +163,7 @@ interface SessionDao {
     @Query("UPDATE session_exercise SET equipment_item_id = :itemId WHERE id = :id")
     suspend fun setEquipmentItem(id: Long, itemId: Long?)
 
-    @Query("UPDATE session_exercise SET exercise_id = :exerciseId, equipment_item_id = NULL, sets = NULL, warmups_done = 0, warmups = NULL WHERE id = :id")
+    @Query("UPDATE session_exercise SET exercise_id = :exerciseId, equipment_item_id = NULL, sets = NULL, warmups_done = 0, warmups = NULL, bench_angle = NULL WHERE id = :id")
     suspend fun setExercise(id: Long, exerciseId: String)
 
     @Query("DELETE FROM set_technique WHERE session_exercise_id = :sessionExerciseId")
@@ -178,6 +178,19 @@ interface SessionDao {
 
     @Query("UPDATE session_exercise SET sets = :sets WHERE id = :id")
     suspend fun setSets(id: Long, sets: String?)
+
+    @Query("UPDATE session_exercise SET bench_angle = :angle WHERE id = :id")
+    suspend fun setBenchAngle(id: Long, angle: Int?)
+
+    /** The bench angle [exerciseId] was last set to in a session started before [before], at any gym; null with none. */
+    @Query(
+        """
+        SELECT se.bench_angle FROM session_exercise se JOIN session s ON s.id = se.session_id
+        WHERE se.exercise_id = :exerciseId AND se.bench_angle IS NOT NULL AND se.removed = 0 AND s.started_at < :before
+        ORDER BY s.started_at DESC, se.id DESC LIMIT 1
+        """,
+    )
+    suspend fun lastBenchAngle(exerciseId: String, before: Long): Int?
 
     @Query("UPDATE session_exercise SET warmups_done = :done WHERE id = :id")
     suspend fun setWarmupsDone(id: Long, done: Int)

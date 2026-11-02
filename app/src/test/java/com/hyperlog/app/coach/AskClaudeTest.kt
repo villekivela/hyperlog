@@ -175,7 +175,10 @@ class AskClaudeTest {
         fun session(daysAgo: Int, title: String) = PastSessionItem(
             id = daysAgo.toLong(), startedAt = now - daysAgo * day, finishedAt = now - daysAgo * day + 3_600_000,
             title = title, gym = "Harbour",
-            exercises = listOf(ExerciseSummary("Barbell Bench Press", listOf(LoggedSet(80.0, 5, 0, 1), LoggedSet(70.0, 8, 2, 1)))),
+            exercises = listOf(
+                ExerciseSummary("Barbell Bench Press", listOf(LoggedSet(80.0, 5, 0, 1), LoggedSet(70.0, 8, 2, 1))),
+                ExerciseSummary("Incline DB Press", listOf(LoggedSet(25.0, 10, 0, 2)), benchAngle = 32),
+            ),
         )
         val text = AskClaude.prompt(
             "Elbow aches on curls.\nGym closes early on Friday.",
@@ -190,6 +193,8 @@ class AskClaudeTest {
         assertTrue(text, text.contains("slot \"close_grip_bench\": close_grip_bench_press"))
         assertTrue(text, text.contains("2026-10-11 Sun: Day A — recent at Harbour"))
         assertTrue(text.contains("  Barbell Bench Press: 80 × 5 @ 1, 70 × 8 + 2p @ 1"))
+        // An adjustable-bench exercise says the angle it was done at.
+        assertTrue(text, text.contains("  Incline DB Press at 32°: 25 × 10 @ 2"))
         assertTrue(text.contains("Day C — four weeks ago"))
         assertFalse(text.contains("too old"))
         // A swap candidate the program doesn't use, found by movement pattern.

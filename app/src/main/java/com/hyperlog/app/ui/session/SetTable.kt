@@ -130,6 +130,8 @@ internal class TableState(
     val onPickSet: ((Int) -> Unit)? = null,
     /** The open set's index, whose drops, mini-sets or hold are being done; null when none is open. */
     val openIndex: Int? = null,
+    /** Opens the bench angle's sheet, for an adjustable-bench exercise; null where it can't be set. */
+    val onBenchAngle: (() -> Unit)? = null,
 ) {
     /** The weight being typed for the next set; a drop's or mini-set's entry isn't one. */
     val activeKg: Double? get() = if (followUp == null) entry?.weightKg else null
@@ -170,6 +172,8 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         items += TableItem(key, content)
         if (isActive) active = key
     }
+    // An adjustable-bench exercise's angle comes first: the bench is set before the warm-ups.
+    if (current.exercise.adjustableBench) add("bench") { BenchRow(current.benchAngle, current.lastBenchAngle, table.onBenchAngle) }
     buildWarmups(table, ::add)
     val plan = current.prescription
     if (plan != null) buildPlanned(table, plan, ::add) else buildAdHoc(table, ::add)
@@ -556,6 +560,55 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
             if (table.undoable(i)) Modifier.toggleable(true, role = Role.Checkbox, onValueChange = { table.onUndo() }).semantics { contentDescription = undo }
             else Modifier.semantics { contentDescription = logged },
         )
+    }
+}
+
+/**
+ * The bench angle's row (SPEC, Today → Bench angle): the bench symbol on an index circle, `Bench`,
+ * and the angle in an outlined cell under kg, drawn as the table's cells are. Until it is set, last
+ * time's angle is a muted placeholder, and with no angle ever the cell reads `Set`. The whole row
+ * is one tap target.
+ */
+@Composable
+private fun BenchRow(angle: Int?, last: Int?, onClick: (() -> Unit)?) {
+    val cs = MaterialTheme.colorScheme
+    val description = when {
+        angle != null -> stringResource(R.string.bench_row_set, angle)
+        last != null -> stringResource(R.string.bench_row_last, last)
+        else -> stringResource(R.string.bench_row_none)
+    }
+    RowFrame(
+        RowHeight, onClick = onClick, clickLabel = stringResource(R.string.bench_set),
+        modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = description },
+    ) {
+        Box(Modifier.width(ColIndex), contentAlignment = Alignment.CenterStart) {
+            // A setting, not a set: the warm-ups' grey circle, with the bench in it.
+            Box(Modifier.size(IndexSize).clip(CircleShape).background(cs.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+                SymbolIcon(Symbol.AirlineSeatReclineNormal, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+            }
+        }
+        Text(stringResource(R.string.bench_row), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        // The table's cell: outlined in outline, the value Inter at figureLarge's size, a placeholder muted.
+        Box(
+            Modifier.width(ColKg).padding(horizontal = CellInset).height(CellHeight).border(1.dp, cs.outline, CellShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            val shown = angle ?: last
+            if (shown != null) {
+                Text(
+                    "$shown°",
+                    Modifier.padding(horizontal = CellPad),
+                    color = if (angle != null) cs.onSurface else cs.outline,
+                    style = MaterialTheme.typography.figureLarge,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1,
+                )
+            } else {
+                // No angle ever: say what the cell is for, rather than leave an empty box by the kg cell.
+                Text(stringResource(R.string.bench_row_placeholder), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+            }
+        }
+        Spacer(Modifier.width(ColReps + ColRir + ColCheck))
     }
 }
 

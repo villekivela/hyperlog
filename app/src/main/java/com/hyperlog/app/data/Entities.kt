@@ -27,6 +27,8 @@ data class ExerciseEntity(
     @ColumnInfo(defaultValue = "0") val edited: Boolean = false,
     /** Done with a dumbbell in each hand, so its estimate counts both. */
     @ColumnInfo(name = "two_dumbbells", defaultValue = "0") val twoDumbbells: Boolean = false,
+    /** Done on a bench set to an angle, so its sessions keep the bench angle. */
+    @ColumnInfo(name = "adjustable_bench", defaultValue = "0") val adjustableBench: Boolean = false,
 )
 
 /** A session. One with no [finishedAt] is running; there is at most one. */
@@ -120,6 +122,8 @@ data class SessionExerciseEntity(
      * null while every one follows the ramp. They last for this session only.
      */
     val warmups: String? = null,
+    /** The bench angle it was done at, whole degrees from flat; null until set, and for an exercise without an adjustable bench. */
+    @ColumnInfo(name = "bench_angle") val benchAngle: Int? = null,
 )
 
 @Entity(
