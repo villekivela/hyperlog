@@ -1444,13 +1444,33 @@ gallery (Technique videos).
     the mannequin fades in. It renders only while the sheet is open and the app is in front, and
     the engine is released when the sheet closes. Where the renderer can't start (its native
     library missing), the sheet shows as it does without a mannequin.
+  - **The bench press pose** (owner, 2026-11-02, #124): a slight arch, with the chest up, the upper
+    back and the hips on the pad and a gap under the lower back; the feet flat on the floor back
+    toward the hips; and, at lockout, the arms straight, vertical side-on, with the wrists not
+    bent back. The head stays on the pad. The grip is a normal bench grip, about 1.5
+    shoulder widths: with the forearms vertical at the bottom the elbows sit out under the wrists,
+    and the arms are straight at lockout.
+  - **The close-grip lat pulldown pose** (owner, 2026-11-02, #124): the arms hang fully extended at
+    the top with the shoulders let up into the stretch, and the pull drives the elbows straight down
+    toward the sides. The grip is underhand (owner, 2026-11-02): the palms face the lifter.
+  - **Grip rotation** (owner, 2026-11-02, #124): every pose with hands has `grip.rotate`, the
+    forearm's twist in degrees: 0 overhand (palms away from the lifter, the default), 90 neutral
+    (palms toward each other), 180 underhand (palms toward the face). The grip solve and the finger
+    curl follow it, and the Tune panel has a slider for it.
   - **Which exercises have one:** every shipped library exercise gets its own pose, in generic
     equipment, not one per movement pattern. An exercise without a pose yet shows the sheet as
     before. An exercise added on the phone has none, and a shipped exercise whose equipment is
     edited on the phone loses its mannequin.
-  - **Tempo:** each exercise has a default tempo, played in four phases: lowering, pause, lifting,
-    pause. Only the lowering is baked into the clip; the phone plays it forward, holds, then plays
-    it backward. A tempo on the prescription is not part of this.
+  - **Tempo** (#124): each exercise has a default tempo, played in four phases: lowering, pause at
+    the bottom, lifting, pause at the top. The tool writes it into `mannequins.json` from the pose
+    entry, or from a default by movement where the entry has none. The defaults (owner, 2026-11-02,
+    #139) are about 2 s eccentric and 1 s concentric, with short pauses; where the bar is pulled
+    down (the pulldown, the pressdown) the clip's first half is the concentric, so the lowering is
+    the 1 s and the lifting the 2 s. Only the lowering is baked into
+    the clip; the phone plays it forward over the lowering time, holds, plays it backward over the
+    lifting time, and holds again, in the sheet and the gallery alike. With animations removed the
+    clip stays a still frame at the bottom. The player takes the tempo as an input, so a tempo on
+    the prescription could replace the default later; that is not part of this.
   - **Adjustable-bench exercises:** the bench sits at this session's bench angle, otherwise last
     time's, otherwise the exercise's typical angle. The pose comes from the nearest of the clips
     baked at 15° steps from 0° to 75°, and the bench is turned to the exact angle.
@@ -1488,6 +1508,17 @@ gallery (Technique videos).
     back to the agent, which fixes the poses and republishes. An OK is for the clip it was given on,
     and a batch isn't done until every exercise in it is OK; then the owner swipes it once in the
     debug gallery before its pull request merges.
+  - **Tuning on the review page** (owner, 2026-11-02, #124): each exercise has a Tune panel with a
+    slider for each number of its pose entry, and the levers its movement offers that the entry
+    leaves at the default (shoulder lift, elbow flare, arch). The page poses the body live with the
+    tool's own code, bundled into it, looping or held at the top or the bottom, with the automatic
+    checks re-run on what it shows. With the rep held at the top or the bottom, dots on the body
+    (the hands, elbows, feet, hips and chest, where the entry has numbers for them) can be dragged:
+    the rig re-solves the limb live, and each drag is saved as the same pose numbers the sliders
+    set (the bar and the grip width, the elbow flare, the feet, `body.hip`, the trunk's lean or the
+    arch). OK saves the tuned values with the verdict (`verdicts/<id>`,
+    as JSON text); `review status` lists them, and `review apply <batch>` writes them into
+    `poses.mjs` (comments kept), re-bakes, and gives each its OK for the new clip.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The

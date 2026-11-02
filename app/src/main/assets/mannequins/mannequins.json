@@ -13,6 +13,12 @@
         "azimuth": 58,
         "elevation": 32
       },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
       "resources": [
         "mannequin.bin"
       ]
@@ -29,6 +35,12 @@
         "halfHeight": 1,
         "azimuth": 66,
         "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
       },
       "resources": [
         "mannequin.bin"
@@ -47,6 +59,12 @@
         "azimuth": 62,
         "elevation": 8
       },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.25,
+        "lifting": 1,
+        "top": 0.7
+      },
       "resources": [
         "mannequin.bin"
       ]
@@ -63,6 +81,12 @@
         "halfHeight": 1.18,
         "azimuth": 62,
         "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
       },
       "resources": [
         "mannequin.bin"
@@ -81,6 +105,12 @@
         "azimuth": 62,
         "elevation": 8
       },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
       "resources": [
         "mannequin.bin"
       ]
@@ -97,6 +127,12 @@
         "halfHeight": 0.98,
         "azimuth": 118,
         "elevation": 16
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
       },
       "resources": [
         "mannequin.bin"
@@ -115,6 +151,12 @@
         "azimuth": 56,
         "elevation": 12
       },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
       "resources": [
         "mannequin.bin"
       ]
@@ -131,6 +173,12 @@
         "halfHeight": 1.12,
         "azimuth": 68,
         "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.2,
+        "lifting": 2,
+        "top": 0.5
       },
       "resources": [
         "mannequin.bin"

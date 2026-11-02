@@ -26,4 +26,14 @@ class RepTimelineTest {
         // A quarter of the way through the lowering, it has covered less than a quarter of it.
         assertEquals(0.15625f, at(0.375f), 1e-4f)
     }
+
+    @Test
+    fun aSlowerTempoStretchesEachPhase() {
+        val legPress = RepTimeline(lowering = 2f, bottom = 0.5f, lifting = 1.5f, top = 0.5f)
+        assertEquals(4.5f, legPress.length, 1e-4f)
+        assertEquals(0.5f, legPress.position(1f), 1e-4f)
+        assertEquals(1f, legPress.position(2.25f), 1e-4f)
+        assertEquals(0.5f, legPress.position(2.5f + 0.75f), 1e-4f)
+        assertEquals(0f, legPress.position(4.25f), 1e-4f)
+    }
 }

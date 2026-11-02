@@ -16,10 +16,8 @@ export const FRAMES = 31;
 
 let model;
 
-async function loadMannequin() {
-  model ??= readFile(MODEL);
-  const bytes = await model;
-  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+/** The mannequin from the bytes of its `.glb`: a scene holding its skinned body. */
+export async function parseMannequin(buffer) {
   const gltf = await new GLTFLoader().parseAsync(buffer, '');
   const root = gltf.scene;
   root.name = 'mannequin';
@@ -29,13 +27,20 @@ async function loadMannequin() {
   return root;
 }
 
+async function loadMannequin() {
+  model ??= readFile(MODEL);
+  const bytes = await model;
+  return parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+}
+
 /**
- * Builds a resolved entry's stage. `pose(d)` poses the body and the kit `d` of the way down the
+ * Builds a resolved entry's stage, around `body` (the mannequin, already loaded: the review page's
+ * Tune panel brings its own) or the one in `model/`. `pose(d)` poses the body and the kit `d` of the way down the
  * rep (0 at the top, 1 at the bottom) and returns the pose frame.
  */
-export async function buildStage(entry) {
+export async function buildStage(entry, body) {
   const scene = new THREE.Scene();
-  const mannequin = await loadMannequin();
+  const mannequin = body ?? await loadMannequin();
   scene.add(mannequin);
   const rig = buildRig(mannequin);
   const kit = buildKit(entry);

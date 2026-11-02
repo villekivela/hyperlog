@@ -31,7 +31,7 @@ class Mannequins(val clips: List<MannequinClip>) {
             val file = Json.decodeFromString<IndexFile>(json)
             return Mannequins(
                 file.clips.map { (id, e) ->
-                    MannequinClip(id, "$DIR/${e.clip}", Equipment.ofKey(e.equipment), e.camera, e.resources.associateWith { "$DIR/$it" })
+                    MannequinClip(id, "$DIR/${e.clip}", Equipment.ofKey(e.equipment), e.camera, e.tempo.timeline, e.resources.associateWith { "$DIR/$it" })
                 },
             )
         }
@@ -40,7 +40,7 @@ class Mannequins(val clips: List<MannequinClip>) {
 
 /**
  * One exercise's baked clip: its `.glb` in the app's assets, the equipment its pose is in, how the
- * stage frames it, and the files it reads by name ([resources], name to asset): the mannequin's
+ * stage frames it, the [tempo] its rep plays at, and the files it reads by name ([resources], name to asset): the mannequin's
  * mesh and skin, which every clip shares.
  */
 data class MannequinClip(
@@ -48,6 +48,7 @@ data class MannequinClip(
     val file: String,
     val equipment: Equipment,
     val camera: StageCamera,
+    val tempo: RepTimeline,
     val resources: Map<String, String> = emptyMap(),
 )
 
@@ -58,8 +59,14 @@ data class MannequinClip(
 @Serializable
 data class StageCamera(val target: List<Float>, val halfHeight: Float, val azimuth: Float, val elevation: Float)
 
+/** A tempo in the index: seconds in the lowering, the pause at the bottom, the lifting and the pause at the top. */
+@Serializable
+private class IndexTempo(val lowering: Float, val bottom: Float, val lifting: Float, val top: Float) {
+    val timeline get() = RepTimeline(lowering, bottom, lifting, top)
+}
+
 @Serializable
 private class IndexFile(val clips: Map<String, IndexEntry>)
 
 @Serializable
-private class IndexEntry(val clip: String, val equipment: String, val camera: StageCamera, val resources: List<String> = emptyList())
+private class IndexEntry(val clip: String, val equipment: String, val camera: StageCamera, val tempo: IndexTempo, val resources: List<String> = emptyList())

@@ -78,6 +78,23 @@ button.ok[aria-pressed="true"] { background: var(--ok); border-color: var(--ok);
 button:disabled { opacity: 0.5; cursor: default; }
 button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .saved { font: 12px var(--mono); color: var(--quiet); }
+.saved[data-error] { color: var(--fail); font-weight: 500; }
+.copybox { width: 100%; min-height: 5em; margin-top: 8px; font: 12px var(--mono); }
+.state[data-state="tuned"] { color: var(--ok); background: var(--ok-tint); border-color: transparent; }
+.tune { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.tune[hidden] { display: none; }
+.tune .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.tune .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tune .seg button { border: 0; border-radius: 0; padding: 6px 12px; font-weight: 500; }
+.tune .seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+.tune details { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.tune summary { font: 600 13px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+.tune .row { display: grid; grid-template-columns: minmax(84px, 1fr) minmax(100px, 2fr) 64px; gap: 8px; align-items: center; padding: 3px 0; }
+.tune .row label { font: 12px var(--mono); overflow-wrap: anywhere; }
+.tune .row input[type="range"] { width: 100%; min-width: 0; }
+.tune .row output { font: 12px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.tune .row[data-changed="true"] label, .tune .row[data-changed="true"] output { color: var(--note); font-weight: 600; }
+.tune .count { font: 12px var(--mono); color: var(--quiet); }
 </style>
 
 <main>
@@ -101,12 +118,26 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
         <span class="state" data-state="waiting">Waiting</span>
       </div>
       <ul class="checks"></ul>
+      <section class="tune" hidden aria-label="Tune the pose">
+        <div class="bar">
+          <div class="seg" role="group" aria-label="Show">
+            <button type="button" data-show="loop" aria-pressed="true">Loop</button>
+            <button type="button" data-show="top" aria-pressed="false">Top</button>
+            <button type="button" data-show="bottom" aria-pressed="false">Bottom</button>
+          </div>
+          <span class="count" aria-live="polite"></span>
+          <button type="button" class="copy">Copy numbers</button>
+          <button type="button" class="reset">Reset</button>
+        </div>
+        <div class="sliders"></div>
+      </section>
       <div>
         <label></label>
         <textarea placeholder="What should change in this pose?"></textarea>
       </div>
       <div class="actions">
         <button class="ok" type="button" aria-pressed="false">OK</button>
+        <button class="tuneButton" type="button" aria-expanded="false">Tune</button>
         <button class="save" type="button">Save note</button>
         <span class="saved" aria-live="polite"></span>
       </div>
@@ -125,9 +156,10 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+/*TUNE*/
 const BATCH = JSON.parse(document.getElementById('batch').textContent);
 const CHECKS = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace' };
-const STATES = { ok: 'OK', notes: 'Notes', changed: 'Clip changed', waiting: 'Waiting' };
+const STATES = { ok: 'OK', tuned: 'OK · tuned', notes: 'Notes', changed: 'Clip changed', waiting: 'Waiting' };
 // One rep at a generic tempo, in seconds: down, hold at the bottom, up, hold at the top.
 const TEMPO = [1.6, 0.4, 1.2, 0.6];
 const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -139,12 +171,16 @@ const css = (name) => getComputedStyle(document.documentElement).getPropertyValu
 // Each clip is whole and parsed from its own bytes: the page fetches nothing.
 const bytesOf = (dataUri) => Uint8Array.from(atob(dataUri.split(',')[1]), (c) => c.charCodeAt(0)).buffer;
 const verdicts = {};
+const sorted = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : 1)));
 const cards = {};
+
+// The tuned values are saved as JSON text: the paths have dots in them, which a database's keys may not.
+const tunedOf = (v) => { try { return JSON.parse(v?.tuned || '{}'); } catch { return {}; } };
 
 function stateOf(e) {
   const v = verdicts[e.id];
   if (!v) return 'waiting';
-  if (v.ok && v.clip === e.hash) return 'ok';
+  if (v.ok && v.clip === e.hash) return Object.keys(tunedOf(v)).length ? 'tuned' : 'ok';
   if (v.ok) return 'changed';
   return v.note ? 'notes' : 'waiting';
 }
@@ -154,11 +190,12 @@ function render() {
   for (const e of BATCH.exercises) {
     const c = cards[e.id];
     const state = stateOf(e);
-    if (state === 'ok') ok++;
+    if (state === 'ok' || state === 'tuned') ok++;
     c.state.dataset.state = state;
     c.state.textContent = STATES[state];
-    c.ok.setAttribute('aria-pressed', String(state === 'ok'));
-    c.ok.textContent = state === 'ok' ? 'OK ✓' : 'OK';
+    const isOk = state === 'ok' || state === 'tuned';
+    c.ok.setAttribute('aria-pressed', String(isOk));
+    c.ok.textContent = isOk ? 'OK ✓' : 'OK';
     const v = verdicts[e.id];
     if (v && document.activeElement !== c.note && !c.dirty) c.note.value = v.note ?? '';
   }
@@ -182,6 +219,17 @@ function stage(e, canvas, holder) {
   let mixer = null;
   let duration = 1;
   let materials = [];
+  // The Tune panel poses the body live in place of the clip: `live` is its stage.
+  let clipScene = null;
+  let live = null;
+  let show = 'loop';
+  // Drag handles (the Tune panel): dots on the body that, dragged, set the pose numbers.
+  const markers = new THREE.Group();
+  scene.add(markers);
+  const dot = new THREE.SphereGeometry(1, 16, 12);
+  let handles = [];
+  let onDrag = () => {};
+  let dragging = null;
   const place = () => {
     const a = THREE.MathUtils.degToRad(azimuth);
     const el = THREE.MathUtils.degToRad(e.camera.elevation);
@@ -199,6 +247,8 @@ function stage(e, canvas, holder) {
   colour();
   new GLTFLoader().parse(bytesOf(e.clip), '', (gltf) => {
     scene.add(gltf.scene);
+    clipScene = gltf.scene;
+    clipScene.visible = !live;
     gltf.scene.traverse((o) => { if (o.material) materials.push(o.material); });
     mixer = new THREE.AnimationMixer(gltf.scene);
     duration = gltf.animations[0].duration;
@@ -224,27 +274,284 @@ function stage(e, canvas, holder) {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
-    if (mixer) mixer.setTime(Math.min(at(seconds), 0.9999) * duration);
+    const along = show === 'top' ? 0 : show === 'bottom' ? 1 : at(seconds);
+    if (live) live.pose(Math.min(along, 1));
+    else if (mixer) mixer.setTime(Math.min(along, 0.9999) * duration);
+    for (const m of markers.children) m.scale.setScalar(camera.position.distanceTo(m.position) * 0.016);
     renderer.render(scene, camera);
   };
 
   // A sideways drag turns it; the page keeps vertical drags. A double-tap resets the view.
   let from = null;
-  holder.addEventListener('pointerdown', (ev) => { from = ev.clientX; holder.setPointerCapture(ev.pointerId); });
+  const ray = new THREE.Raycaster();
+  const pointer = (ev) => {
+    const r = canvas.getBoundingClientRect();
+    return new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  };
+  holder.addEventListener('pointerdown', (ev) => {
+    holder.setPointerCapture(ev.pointerId);
+    if (handles.length) {
+      const r = canvas.getBoundingClientRect();
+      let best = null;
+      let nearest = 28;
+      for (const h of handles) {
+        const p = h.at.clone().project(camera);
+        const d = Math.hypot(((p.x + 1) / 2) * r.width - (ev.clientX - r.left), ((1 - p.y) / 2) * r.height - (ev.clientY - r.top));
+        if (d < nearest) { nearest = d; best = h; }
+      }
+      if (best) {
+        const normal = camera.getWorldDirection(new THREE.Vector3());
+        dragging = { id: best.id, plane: new THREE.Plane().setFromNormalAndCoplanarPoint(normal, best.at) };
+        holder.querySelector('.hint').textContent = `dragging the ${best.label}`;
+        ev.preventDefault();
+        return;
+      }
+    }
+    from = ev.clientX;
+  });
   holder.addEventListener('pointermove', (ev) => {
+    if (dragging) {
+      ray.setFromCamera(pointer(ev), camera);
+      const point = ray.ray.intersectPlane(dragging.plane, new THREE.Vector3());
+      const h = handles.find((x) => x.id === dragging.id);
+      if (point && h) onDrag(h, point);
+      return;
+    }
     if (from === null) return;
     azimuth -= (ev.clientX - from) * 0.5;
     from = ev.clientX;
     place();
   });
-  const end = () => { from = null; };
+  const end = () => {
+    from = null;
+    if (dragging) holder.querySelector('.hint').textContent = 'drag the dots to pose, or turn it';
+    dragging = null;
+  };
   holder.addEventListener('pointerup', end);
   holder.addEventListener('pointercancel', end);
   holder.addEventListener('dblclick', () => { azimuth = e.camera.azimuth; place(); });
   holder.addEventListener('keydown', (ev) => {
     if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { azimuth += ev.key === 'ArrowLeft' ? 10 : -10; place(); ev.preventDefault(); }
   });
-  return { draw, colour };
+  const setLive = (next) => {
+    if (live) scene.remove(live.scene);
+    live = next;
+    if (live) {
+      scene.add(live.scene);
+      live.scene.traverse((o) => { if (o.material) materials.push(o.material); });
+      colour();
+    }
+    if (clipScene) clipScene.visible = !live;
+  };
+  // The handles, and what a drag of one does with the point it was dragged to.
+  const setHandles = (list, drag) => {
+    handles = list;
+    onDrag = drag;
+    markers.clear();
+    for (const h of list) {
+      const m = new THREE.Mesh(dot, new THREE.MeshBasicMaterial({ color: 0xff7a1a, depthTest: false, transparent: true, opacity: 0.92 }));
+      m.renderOrder = 10;
+      m.position.copy(h.at);
+      markers.add(m);
+    }
+    holder.querySelector('.hint').textContent = list.length ? 'drag the dots to pose, or turn it' : 'drag to turn';
+    // Where each dot is on the page, for whoever tests the page.
+    const r = canvas.getBoundingClientRect();
+    holder.dataset.handles = JSON.stringify(Object.fromEntries(list.map((h) => {
+      const p = h.at.clone().project(camera);
+      return [h.id, [Math.round(r.left + ((p.x + 1) / 2) * r.width), Math.round(r.top + ((1 - p.y) / 2) * r.height)]];
+    })));
+  };
+  return { draw, colour, setLive, setHandles, setShow: (v) => { show = v; } };
+}
+
+/** The check results as the list shows them: a dot, the check, and the worst of it. */
+function fillChecks(list, checks) {
+  list.replaceChildren();
+  for (const [key, label] of Object.entries(CHECKS)) {
+    const c = checks[key];
+    const li = document.createElement('li');
+    li.dataset.ok = String(c.ok);
+    li.innerHTML = '<span class="mark" aria-hidden="true"></span><span class="name"></span><span class="found"></span>';
+    li.querySelector('.name').textContent = `${label}${c.ok ? '' : ' failed'}`;
+    li.querySelector('.found').textContent = c.frame === null ? c.found : `worst at frame ${c.frame}: ${c.found}`;
+    list.append(li);
+  }
+}
+
+/**
+ * The Tune panel of one card: a slider for each number of the pose entry, the body posed live with
+ * the tool's own code (the bundle above) in place of the clip, and the checks run on what it shows.
+ * The tuned values are `{ path: value }`, saved with the OK.
+ */
+function tuning(e, node, card, s) {
+  const panel = node.querySelector('.tune');
+  const button = node.querySelector('.tuneButton');
+  const box = panel.querySelector('.sliders');
+  const count = panel.querySelector('.count');
+  const list = node.querySelector('.checks');
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  let opened = false;
+  let body = null;
+  let tuned = {};
+  let rows = [];
+  let built = null;
+  let timer = 0;
+  let frame = 0;
+  let building = false;
+  let again = false;
+
+  // Whether the numbers on the sliders differ from what the verdict has saved.
+  const unsaved = () => JSON.stringify(sorted(tuned)) !== JSON.stringify(sorted(tunedOf(verdicts[e.id])));
+  card.unsaved = () => opened && unsaved();
+  const entryNow = () => tune.applyTuned(e.entry, tuned);
+  const valueNow = (t) => tune.valueAt(entryNow(), t.path) ?? t.value;
+  const paint = () => {
+    for (const r of rows) {
+      const v = valueNow(r.t);
+      r.input.value = v;
+      r.out.textContent = `${Number(v.toFixed(3))}${r.t.unit}`;
+      r.row.dataset.changed = String(v !== r.t.value);
+    }
+    card.saved.removeAttribute('data-error');
+    card.saved.textContent = unsaved() ? 'Unsaved: press OK to save' : '';
+  };
+
+  const checkSoon = () => {
+    clearTimeout(timer);
+    count.textContent = 'Checking…';
+    timer = setTimeout(() => {
+      fillChecks(list, tune.checkStage(built.entry, built.stage));
+      count.textContent = `${Object.keys(tuned).length} changed`;
+    }, 200);
+  };
+  const rebuild = async () => {
+    if (building) { again = true; return; }
+    building = true;
+    try {
+      const entry = entryNow();
+      body ??= await tune.parseMannequin(bytesOf(BATCH.mannequin));
+      const stage = await tune.buildStage(entry, body);
+      s.setLive(stage);
+      built = { entry, stage };
+      handles();
+      checkSoon();
+    } catch (err) {
+      count.textContent = `Can't pose this: ${err.message}`;
+    } finally {
+      building = false;
+      if (again) { again = false; rebuild(); }
+    }
+  };
+
+  // A value goes in at its path, or comes out again when it is what the entry already had.
+  const put = (path, value) => {
+    if (same(value, tune.baseAt(e.entry, path))) delete tuned[path]; else tuned[path] = value;
+  };
+  const soon = () => {
+    paint();
+    if (!frame) frame = requestAnimationFrame(() => { frame = 0; rebuild(); });
+  };
+  const change = (path, v) => {
+    const m = path.match(/^(.*)\.(\d+)$/);
+    if (m) {
+      const [, parent, i] = m;
+      const next = JSON.parse(JSON.stringify(tuned[parent] ?? tune.baseAt(e.entry, parent)));
+      next[Number(i)] = v;
+      put(parent, next);
+    } else {
+      put(path, v);
+    }
+    soon();
+  };
+  // The handles of the body held at the top or the bottom; a drag sets the same numbers the sliders do.
+  let showing = 'loop';
+  const handles = () => {
+    if (showing === 'loop' || !built) { s.setHandles([], () => {}); return; }
+    const d = showing === 'top' ? 0 : 1;
+    const P = built.stage.pose(d);
+    s.setHandles(tune.handlesAt(built.entry, built.stage, P, d), (h, point) => {
+      for (const [path, value] of Object.entries(h.drag(point))) put(path, value);
+      soon();
+    });
+  };
+
+  const make = () => {
+    box.replaceChildren();
+    rows = [];
+    const groups = {};
+    for (const t of tune.tunables(e.entry)) (groups[t.path.split('.')[0]] ??= []).push(t);
+    for (const [name, items] of Object.entries(groups)) {
+      const group = document.createElement('details');
+      group.open = name !== 'kit';
+      group.innerHTML = '<summary></summary>';
+      group.firstChild.textContent = name;
+      for (const t of items) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = '<label></label><input type="range"><output></output>';
+        const [label, input, out] = row.children;
+        input.id = `${e.id}-${t.path}`;
+        label.htmlFor = input.id;
+        label.textContent = t.path.slice(name.length + 1) || name;
+        const at = tune.valueAt(tune.applyTuned(e.entry, tuned), t.path) ?? t.value;
+        input.min = Math.min(t.min, at);
+        input.max = Math.max(t.max, at);
+        input.step = t.step;
+        input.addEventListener('input', () => change(t.path, Number(input.value)));
+        group.append(row);
+        rows.push({ t, row, input, out });
+      }
+      box.append(group);
+    }
+    paint();
+  };
+
+  const close = () => {
+    opened = false;
+    clearTimeout(timer);
+    s.setLive(null);
+    s.setHandles([], () => {});
+    fillChecks(list, e.checks);
+    panel.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+  };
+  button.addEventListener('click', () => {
+    if (opened) { close(); return; }
+    opened = true;
+    tuned = tunedOf(verdicts[e.id]);
+    panel.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    make();
+    rebuild();
+  });
+  // A fallback if the save fails: the tuned numbers as JSON, on the clipboard (or in a box to copy by hand).
+  panel.querySelector('.copy').addEventListener('click', async () => {
+    const text = JSON.stringify({ exercise: e.id, clip: e.hash, tuned: card.tuned() }, null, 2);
+    card.saved.removeAttribute('data-error');
+    try {
+      await navigator.clipboard.writeText(text);
+      card.saved.textContent = 'Numbers copied';
+    } catch {
+      let box = panel.querySelector('.copybox');
+      if (!box) { box = document.createElement('textarea'); box.className = 'copybox'; box.readOnly = true; panel.append(box); }
+      box.value = text;
+      box.select();
+      const done = document.execCommand?.('copy');
+      card.saved.textContent = done ? 'Numbers copied' : 'Copy the numbers from the box';
+    }
+  });
+  panel.querySelector('.reset').addEventListener('click', () => { tuned = {}; paint(); rebuild(); });
+  for (const b of panel.querySelectorAll('[data-show]')) {
+    b.addEventListener('click', () => {
+      s.setShow(b.dataset.show);
+      showing = b.dataset.show;
+      handles();
+      for (const o of panel.querySelectorAll('[data-show]')) o.setAttribute('aria-pressed', String(o === b));
+    });
+  }
+  // What the verdict saves: what is tuned now, or what was saved before if the panel stayed shut.
+  card.tuned = () => (opened ? tuned : tunedOf(verdicts[e.id]));
 }
 
 const stages = [];
@@ -260,15 +567,7 @@ for (const e of BATCH.exercises) {
   const holder = node.querySelector('.stage');
   holder.setAttribute('aria-label', `${e.name}: drag or use the arrow keys to turn, double-tap to reset`);
   const list = node.querySelector('.checks');
-  for (const [key, label] of Object.entries(CHECKS)) {
-    const c = e.checks[key];
-    const li = document.createElement('li');
-    li.dataset.ok = String(c.ok);
-    li.innerHTML = '<span class="mark" aria-hidden="true"></span><span class="name"></span><span class="found"></span>';
-    li.querySelector('.name').textContent = `${label}${c.ok ? '' : ' failed'}`;
-    li.querySelector('.found').textContent = c.frame === null ? c.found : `worst at frame ${c.frame}: ${c.found}`;
-    list.append(li);
-  }
+  fillChecks(list, e.checks);
   const note = node.querySelector('textarea');
   note.id = `note-${e.id}`;
   node.querySelector('label').htmlFor = note.id;
@@ -279,6 +578,7 @@ for (const e of BATCH.exercises) {
   sheet.append(node);
   const s = stage(e, holder.querySelector('canvas'), holder);
   s.holder = holder;
+  tuning(e, node, card, s);
   stages.push(s);
   seen.observe(holder);
 }
@@ -312,24 +612,34 @@ if (!db) {
     clearTimeout(slow);
     banner.textContent = `The verdicts stopped updating (${err.code}). Reload the page to see the latest.`;
   });
+  const within = (promise, ms) => Promise.race([promise, new Promise((_, no) => setTimeout(() => no({ code: 'no_answer', message: `no answer in ${ms / 1000} s` }), ms))]);
+  // A save shows as saved only once the database answers and holds it; any failure shows on the card.
   const save = async (e, change) => {
     const c = cards[e.id];
-    const before = verdicts[e.id] ?? { ok: false, note: '' };
-    const next = { ok: before.ok && before.clip === e.hash, note: c.note.value.trim(), ...change, clip: e.hash, at: new Date().toISOString() };
     c.ok.disabled = c.save.disabled = true;
+    c.saved.removeAttribute('data-error');
+    c.saved.textContent = 'Saving…';
     try {
-      await db.doc(`verdicts/${e.id}`).set(next);
+      const before = verdicts[e.id] ?? { ok: false, note: '' };
+      const next = { ok: before.ok && before.clip === e.hash, note: c.note.value.trim(), ...change, clip: e.hash, at: new Date().toISOString(), via: change.ok === undefined ? 'save-note' : 'ok-button', tuned: JSON.stringify(c.tuned()) };
+      const ref = db.doc(`verdicts/${e.id}`);
+      await within(ref.set(next), 10000);
+      const back = (await within(ref.get(), 10000)).data();
+      if (back?.at !== next.at) throw { code: 'not_stored', message: 'the database still holds an older verdict' };
       c.dirty = false;
       c.saved.textContent = change.ok === undefined ? 'Note saved' : next.ok ? 'Marked OK' : 'OK taken back';
     } catch (err) {
-      c.saved.textContent = err.code === 'invalid_argument' ? 'Only the page\'s editors can save verdicts.' : `Not saved (${err.code}). Try again.`;
+      c.saved.dataset.error = '';
+      const why = err?.code === 'invalid_argument' ? 'only the page\'s editors can save' : `${err?.code ?? 'error'}: ${err?.message ?? err}`;
+      c.saved.textContent = `NOT SAVED (${why}). Use Tune › Copy numbers.`;
     } finally {
       c.ok.disabled = c.save.disabled = false;
     }
   };
   for (const e of BATCH.exercises) {
     const c = cards[e.id];
-    c.ok.addEventListener('click', () => save(e, { ok: stateOf(e) !== 'ok' }));
+    // OK on an OK'd card with unsaved numbers saves them and keeps the OK; otherwise it toggles.
+    c.ok.addEventListener('click', () => save(e, { ok: c.unsaved() || !['ok', 'tuned'].includes(stateOf(e)) }));
     c.save.addEventListener('click', () => save(e, {}));
   }
 }

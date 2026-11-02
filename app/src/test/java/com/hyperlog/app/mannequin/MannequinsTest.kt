@@ -23,6 +23,13 @@ class MannequinsTest {
     }
 
     @Test
+    fun eachClipPlaysAtItsExercisesTempo() {
+        assertEquals(RepTimeline(lowering = 2f, bottom = 0.25f, lifting = 1f, top = 0.7f), mannequins.clipFor(squat)!!.tempo)
+        // The pulldown's clip starts with the pull, the concentric, so its lowering is the quick half.
+        assertEquals(RepTimeline(lowering = 1f, bottom = 0.3f, lifting = 2f, top = 0.5f), mannequins.clipFor(library.getValue("lat_pulldown"))!!.tempo)
+    }
+
+    @Test
     fun anExerciseWithoutAPoseHasNone() {
         assertNull(mannequins.clipFor(library.getValue("deadlift")))
     }

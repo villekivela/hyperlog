@@ -34,6 +34,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.mannequin.MannequinClip
 import com.hyperlog.app.mannequin.Mannequins
+import com.hyperlog.app.mannequin.RepTimeline
 import com.hyperlog.app.mannequin.StageCamera
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
@@ -68,14 +69,16 @@ class MannequinStageTest {
         override val view = View(context)
         var loaded: Pair<Int, StageCamera>? = null
         var resources: Map<String, Int>? = null
+        var tempo: RepTimeline? = null
         var turned = 0f
         var resets = 0
         var playing = false
         var still: Boolean? = null
         var released = false
         override var onShown: () -> Unit = {}
-        override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera) {
+        override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera, tempo: RepTimeline) {
             loaded = glb.remaining() to camera
+            this.tempo = tempo
             this.resources = resources.mapValues { it.value.remaining() }
         }
         override fun play(still: Boolean) { playing = true; this.still = still }
@@ -114,6 +117,7 @@ class MannequinStageTest {
         assertEquals(glb to mannequins.clipFor(squat)!!.camera, players.single().loaded)
         val shared = context.assets.open("mannequins/mannequin.bin").use { it.readBytes().size }
         assertEquals(mapOf("mannequin.bin" to shared), players.single().resources)
+        assertEquals(mannequins.clipFor(squat)!!.tempo, players.single().tempo)
         assertTrue(players.single().playing)
         assertEquals(false, players.single().still)
     }
