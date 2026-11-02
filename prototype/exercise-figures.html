@@ -79,7 +79,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
 </style>
 
 <div class="wrap">
-  <p class="proto-note"><b>Prototype.</b> A figure in the exercise sheet, posed by code. Mannequin is the jointed mannequin from Quaternius's Universal Animation Library; Superhero is the base character from his Universal Base Characters (both CC0); Mannequiny is GDQuest's mannequin (CC BY 4.0). All are stripped of textures. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
+  <p class="proto-note"><b>Prototype.</b> A figure in the exercise sheet, posed by code. Mannequin is the jointed mannequin from Quaternius's Universal Animation Library; Superhero is the base character from his Universal Base Characters (both CC0); Mannequiny is GDQuest's mannequin (CC BY 4.0). All are stripped of textures. The machines (Pulldown, Pressdown, Leg press, Chest press) are built from boxes and rods in code, like the barbell and bench; their weight stacks and sleds move with the rep. Drag the figure to turn it; double-tap to reset. The bar at the bottom switches style.</p>
 
   <section class="sheet" aria-label="Exercise sheet">
     <div class="handle"></div>
@@ -98,6 +98,10 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-h
       <button class="seg" id="ex-squat" data-ex="squat">Squat</button>
       <button class="seg" id="ex-bench" data-ex="bench">Bench</button>
       <button class="seg" id="ex-rdl" data-ex="rdl">RDL</button>
+      <button class="seg" id="ex-pulldown" data-ex="pulldown">Pulldown</button>
+      <button class="seg" id="ex-pressdown" data-ex="pressdown">Pressdown</button>
+      <button class="seg" id="ex-legpress" data-ex="legpress">Leg press</button>
+      <button class="seg" id="ex-chestpress" data-ex="chestpress">Chest press</button>
     </div>
     <div class="row" role="group" aria-label="Body"><span>Body</span>
       <button class="seg" id="body-mannequin" data-body="mannequin">Mannequin</button>
@@ -137,6 +141,10 @@ const X = V(1, 0, 0);
 const EXERCISES = {
   squat: { name: 'Barbell Back Squat', meta: 'Barbell · Quads, Glutes, Hamstrings', note: 'Get as deep as you can without excessive back rounding.', video: 'https://youtu.be/UGwmUJkTIx8', label: 'Technique video', work: ['thigh_l', 'thigh_r', 'pelvis'], frame: { target: V(0, 0.92, 0), half: 1.02 }, view: [62, 8], timing: [0.7, 1.5, 0.25, 1.1] },
   bench: { name: 'Barbell Bench Press', meta: 'Barbell · Chest', note: 'Control the eccentric: 2–3 seconds down.', video: null, label: 'Search technique videos', work: ['spine_03', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r'], frame: { target: V(0, 0.55, 0.05), half: 0.98 }, view: [58, 32], timing: [0.7, 1.8, 0.2, 1.0] },
+  pulldown: { name: 'Lat Pulldown', meta: 'Cable · Lats', note: 'Control the negative and feel your lats pulling apart. Full ROM!', video: null, label: 'Search technique videos', work: ['spine_02', 'spine_03'], frame: { target: V(0, 1.12, 0.38), half: 1.18 }, view: [62, 8], timing: [0.5, 1.0, 0.4, 1.6] },
+  pressdown: { name: 'Triceps Pressdown', meta: 'Cable · Triceps', note: 'You can use a rope or bar attachment for these, whichever you find more comfortable.', video: 'https://youtu.be/B5S2mbg0g5c', label: 'Technique video', work: ['upperarm_l', 'upperarm_r'], frame: { target: V(0, 1.05, 0.28), half: 1.12 }, view: [68, 8], timing: [0.4, 0.9, 0.35, 1.4] },
+  legpress: { name: 'Leg Press', meta: 'Machine · Quads', note: 'Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding.', video: 'https://youtu.be/didU4ZwAkPI?t=241', label: 'Technique video · 4:01', work: ['thigh_l', 'thigh_r', 'pelvis'], frame: { target: V(0, 0.74, 0.4), half: 0.98 }, view: [118, 16], timing: [0.6, 1.6, 0.25, 1.0] },
+  chestpress: { name: 'Machine Chest Press', meta: 'Machine · Chest', note: '1 second pause at the bottom of each rep while maintaining tension on the pecs.', video: 'https://youtu.be/k1S_Any3NIA?t=240', label: 'Technique video · 4:00', work: ['spine_03', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r'], frame: { target: V(0, 0.98, 0.1), half: 1.04 }, view: [56, 12], timing: [0.6, 1.6, 1.0, 1.0] },
   rdl: { name: 'Barbell RDL', meta: 'Barbell · Hamstrings', note: 'Stick your glutes straight back as you lower the bar straight down, centered over the middle of your foot. Get a nice deep stretch at the bottom, but keep your spine neutral.', video: 'https://youtu.be/xbnan2iNh-Q', label: 'Technique video', work: ['thigh_l', 'thigh_r', 'pelvis'], frame: { target: V(0, 0.9, 0.05), half: 1.0 }, view: [66, 8], timing: [0.7, 1.7, 0.3, 1.2] },
 };
 const VARIANTS = [
@@ -148,7 +156,7 @@ const VARIANTS = [
 
 // ---------- poses: targets for the rig, in metres, the figure facing +z ----------
 // Segment lengths are measured from the model when it loads.
-const L = { thigh: 0.44, shin: 0.43, up: 0.3, fore: 0.27, palm: 0.08, trunk: 0.5, hipW: 0.09, shW: 0.18, ankleY: 0.09 };
+const L = { thigh: 0.44, shin: 0.43, up: 0.3, fore: 0.27, palm: 0.08, gripAlong: 0.07, gripOff: 0.03, trunk: 0.5, hipW: 0.09, shW: 0.18, ankleY: 0.09 };
 const trunkUp = c => V(0, Math.cos(c), Math.sin(c));
 const fwdOf = u => X.clone().cross(u).normalize();
 
@@ -163,7 +171,7 @@ function poseSquat(d) {
   return {
     hipC, u, bar: barAt(c), headDir: u.clone().add(V(0, 0.5, 0.1)).normalize(),
     ankles: [V(-0.17, L.ankleY, 0), V(0.17, L.ankleY, 0)], toeOut: 18, kneePole: s => V(s * 0.45, 0, 1).normalize(),
-    grip: 0.4, armPole: s => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, s * 0.3).normalize(),
+    kit: ['barbell'], grip: 0.4, armPole: s => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, s * 0.3).normalize(),
   };
 }
 function poseBench(d) {
@@ -171,7 +179,7 @@ function poseBench(d) {
   const hipC = V(0, 0.56, 0.3), u = V(0, 0.08, -1).normalize();
   const top = V(0, 1.12, -0.16), bottom = V(0, 0.72, -0.02);
   return {
-    hipC, u, bench: true, headDir: u.clone().add(V(0, -0.25, 0)).normalize(),
+    hipC, u, kit: ['barbell', 'bench'], headDir: u.clone().add(V(0, -0.25, 0)).normalize(),
     bar: V(0, lerp(top.y, bottom.y, e), lerp(top.z, bottom.z, Math.pow(e, 1.6))),
     ankles: [V(-0.3, L.ankleY, 0.8), V(0.3, L.ankleY, 0.8)], toeOut: 25, kneePole: s => V(s * 0.5, 1, 0.4).normalize(),
     grip: 0.4, armPole: s => V(s * 0.9, -1, 0.7).normalize(),
@@ -187,10 +195,68 @@ function poseRdl(d) {
     hipC, u, headDir: u.clone().add(V(0, 0.15, 0)).normalize(),
     bar: V(0, shC.y - Math.sqrt(Math.max(0, reach * reach - dz * dz - dx * dx)), barZ),
     ankles: [V(-0.12, L.ankleY, 0), V(0.12, L.ankleY, 0)], toeOut: 6, kneePole: () => V(0, 0, 1),
-    grip: 0.25, armPole: s => V(s * 0.4, 0, -1).normalize(),
+    kit: ['barbell'], grip: 0.25, armPole: s => V(s * 0.4, 0, -1).normalize(),
   };
 }
-const POSES = { squat: poseSquat, bench: poseBench, rdl: poseRdl };
+// seated on a pad, feet flat on the floor in front
+const seatedLegs = z => ({ ankles: [V(-0.16, L.ankleY, z), V(0.16, L.ankleY, z)], toeOut: 12, kneePole: s => V(s * 0.25, 1, 0.6).normalize() });
+const reachTo = () => L.up + L.fore + L.gripAlong; // shoulder to the bar in the palm, arm straight
+function posePulldown(d) {
+  const e = ease(d), hipC = V(0, 0.56, 0), u = trunkUp(rad(-6 - 14 * e)), f = fwdOf(u);
+  const shC = hipC.clone().addScaledVector(u, L.trunk), grip = 0.4, dx = grip - L.shW, r = reachTo() * 0.96;
+  const top = V(0, shC.y + Math.sqrt(r * r - dx * dx - 0.06 * 0.06), shC.z + 0.06);
+  const bottom = shC.clone().addScaledVector(u, -0.1).addScaledVector(f, 0.19);
+  const bar = top.clone().lerp(bottom, e);
+  return {
+    hipC, u, headDir: u.clone().addScaledVector(f, 0.25).add(V(0, 0.1, 0)).normalize(), ...seatedLegs(0.5),
+    bar, grip, armPole: s => V(s * 0.8, -1, -0.3).normalize(), kit: ['pulldown'],
+    top, lift: top.y - bar.y,
+  };
+}
+function posePressdown(d) {
+  const e = ease(d), hipC = V(0, L.ankleY + (L.thigh + L.shin) * 0.975, -0.03), u = trunkUp(rad(14)), f = fwdOf(u);
+  const shC = hipC.clone().addScaledVector(u, L.trunk);
+  const elbow = shC.clone().add(V(0, -L.up * 0.98, 0.04));
+  const th = rad(lerp(98, 6, e)), bar = elbow.clone().addScaledVector(V(0, -Math.cos(th), Math.sin(th)), L.fore + L.gripAlong);
+  const pulley = V(0, 2.05, 0.56), top = elbow.clone().addScaledVector(V(0, -Math.cos(rad(98)), Math.sin(rad(98))), L.fore + L.gripAlong);
+  return {
+    hipC, u, headDir: u.clone().addScaledVector(f, 0.35).normalize(),
+    ankles: [V(-0.13, L.ankleY, 0), V(0.13, L.ankleY, 0)], toeOut: 10, kneePole: s => V(s * 0.2, 0, 1).normalize(),
+    bar, grip: 0.13, armPole: s => V(s * 0.25, 0, -1).normalize(), kit: ['pressdown'],
+    pulley, lift: pulley.distanceTo(top) - pulley.distanceTo(bar),
+  };
+}
+// the sled runs at 45°; the back pad leans 50° from upright
+const SLED = V(0, Math.SQRT1_2, Math.SQRT1_2), SLED_UP = V(0, Math.SQRT1_2, -Math.SQRT1_2);
+function poseLegPress(d) {
+  const e = ease(d), hipC = V(0, 0.62, 0), u = trunkUp(rad(-50)), f = fwdOf(u);
+  const line = hipC.clone().addScaledVector(SLED_UP, 0.1); // the plate's centre travels on this line
+  const at = r => { const w = line.clone().sub(hipC), b = w.dot(SLED); return -b + Math.sqrt(b * b - w.lengthSq() + r * r); };
+  const legs = L.thigh + L.shin, t0 = at(legs * 0.95 + L.ankleY);
+  const plateC = line.clone().addScaledVector(SLED, lerp(t0, at(legs * 0.6 + L.ankleY), e));
+  return {
+    hipC, u, headDir: u.clone().addScaledVector(f, 0.55).normalize(),
+    ankles: [-1, 1].map(s => plateC.clone().addScaledVector(X, s * 0.15).addScaledVector(SLED_UP, -0.05).addScaledVector(SLED, -L.ankleY)),
+    foot: s => ({ toe: SLED_UP.clone().multiplyScalar(Math.cos(rad(12))).addScaledVector(X, s * Math.sin(rad(12))).addScaledVector(SLED, 0.35).normalize(), top: SLED.clone().negate() }),
+    kneePole: s => SLED_UP.clone().addScaledVector(X, s * 0.35).normalize(),
+    hand: s => V(s * 0.3, hipC.y - 0.05, hipC.z + 0.16), across: () => V(0, 0, 1), armPole: s => V(s, -0.2, -0.5).normalize(),
+    kit: ['legpress'], line, plateC, t: lerp(t0, at(legs * 0.6 + L.ankleY), e), t0,
+  };
+}
+function poseChestPress(d) {
+  const e = ease(d), hipC = V(0, 0.56, 0), c = rad(-12), u = trunkUp(c), f = fwdOf(u);
+  const shC = hipC.clone().addScaledVector(u, L.trunk), x = 0.27, dx = x - L.shW, r = reachTo() * 0.94;
+  const hy = shC.y - 0.07, z0 = shC.z + 0.13, z1 = shC.z + Math.sqrt(r * r - dx * dx - 0.07 * 0.07);
+  // the handles swing on levers hung from a pivot above the middle of their path
+  const piv = V(0, hy + 0.85, (z0 + z1) / 2), R = Math.hypot(0.85, (z1 - z0) / 2), a1 = Math.asin((z1 - z0) / 2 / R);
+  const a = lerp(a1, -a1, e), handle = V(0, piv.y - R * Math.cos(a), piv.z + R * Math.sin(a));
+  return {
+    hipC, u, headDir: u.clone().addScaledVector(f, 0.12).normalize(), ...seatedLegs(0.48),
+    hand: s => handle.clone().setX(s * x), across: () => V(0, 1, 0), armPole: s => V(s * 0.7, -1, -0.5).normalize(),
+    kit: ['chestpress'], piv, handle, x, a, a1, back: c,
+  };
+}
+const POSES = { squat: poseSquat, bench: poseBench, rdl: poseRdl, pulldown: posePulldown, pressdown: posePressdown, legpress: poseLegPress, chestpress: poseChestPress };
 
 // ---------- scene ----------
 const stage = document.getElementById('stage');
@@ -210,11 +276,12 @@ scene.add(hemi, sun);
 
 const OUT = 0.011; // outline width, metres
 const parts = [];
+let building = 'barbell'; // the kit the parts made next belong to
 function addPart(geo, hullGeo, opts) {
   const mesh = new THREE.Mesh(geo); mesh.castShadow = true;
   const hull = new THREE.Mesh(hullGeo);
   scene.add(mesh, hull);
-  const p = Object.assign({ mesh, hull }, opts);
+  const p = Object.assign({ mesh, hull, kit: building }, opts);
   parts.push(p); return p;
 }
 const cyl = r => new THREE.CylinderGeometry(r, r, 1, 24, 1, true);
@@ -234,7 +301,7 @@ function placeSeg(p, A, B) {
     m.scale.set(1, len, 1);
   }
 }
-function placeAt(p, C) { p.mesh.position.copy(C); p.hull.position.copy(C); }
+function placeAt(p, C, tilt = 0) { for (const m of [p.mesh, p.hull]) { m.position.copy(C); m.rotation.set(tilt, 0, 0); } }
 
 // barbell: shaft, sleeves, collars, a 20 and a 10 a side
 const G = { shaft: seg(0.014, { gear: 'bar' }) };
@@ -247,6 +314,7 @@ for (const s of [-1, 1]) {
   });
 }
 // flat bench, only shown for the bench press
+building = 'bench';
 const BENCH = [
   [boxPart(0.29, 0.065, 1.2, { gear: 'bench' }), V(0, 0.41, -0.15)],
   [boxPart(0.07, 0.36, 0.07, { gear: 'frame' }), V(0, 0.2, -0.62)],
@@ -256,6 +324,96 @@ const BENCH = [
   [boxPart(0.06, 0.05, 0.96, { gear: 'frame' }), V(0, 0.07, -0.15)],
 ];
 BENCH.forEach(([p, c]) => placeAt(p, c));
+
+// machines: pads, a frame, and whatever moves (a cable, a weight stack, a sled, levers)
+const pad = (w, h, dpt) => boxPart(w, h, dpt, { gear: 'bench' });
+const beam = (w, h, dpt) => boxPart(w, h, dpt, { gear: 'frame' });
+const rod = r => seg(r, { gear: 'frame' });
+const wire = () => seg(0.004, { gear: 'bar' });
+const pulley = () => plate(0.045, 0.025, { gear: 'bar' });
+function stack() { return { base: boxPart(0.26, 0.42, 0.12, { gear: 'plate' }), top: boxPart(0.26, 0.1, 0.12, { gear: 'plate' }), rods: [rod(0.008), rod(0.008)] }; }
+function placeStack(st, x, z, lift) {
+  placeAt(st.base, V(x, 0.27, z)); placeAt(st.top, V(x, 0.54 + lift, z));
+  st.rods.forEach((r, i) => placeSeg(r, V(x + (i ? 0.1 : -0.1), 0.05, z), V(x + (i ? 0.1 : -0.1), 1.45, z)));
+}
+// a fixed frame: [part, centre, tilt]
+const fixed = list => list.forEach(([p, c, a]) => placeAt(p, c, a || 0));
+
+building = 'pulldown';
+fixed([
+  [pad(0.36, 0.08, 0.38), V(0, 0.43, 0.04)], [beam(0.07, 0.39, 0.07), V(0, 0.2, 0.04)], [beam(0.5, 0.05, 1.3), V(0, 0.025, 0.42)],
+  [pad(0.46, 0.1, 0.12), V(0, 0.73, 0.34)], [beam(0.06, 0.06, 0.38), V(0, 0.73, 0.55)], [beam(0.07, 0.76, 0.07), V(0, 0.38, 0.74)],
+  [beam(0.14, 2.32, 0.14), V(0, 1.16, 1.02)], [beam(0.1, 0.1, 0.9), V(0, 2.27, 0.6)],
+]);
+const PD = { bar: seg(0.014, { gear: 'bar' }), ends: [seg(0.014, { gear: 'bar' }), seg(0.014, { gear: 'bar' })], cable: wire(), drop: wire(), wheel: pulley(), stack: stack() };
+building = 'pressdown';
+fixed([[beam(0.14, 2.2, 0.14), V(0, 1.1, 0.74)], [beam(0.5, 0.05, 0.5), V(0, 0.025, 0.7)], [beam(0.08, 0.08, 0.16), V(0, 2.05, 0.64)]]);
+const PR = { bar: seg(0.014, { gear: 'bar' }), cable: wire(), drop: wire(), wheel: pulley(), stack: stack() };
+building = 'legpress';
+fixed([
+  [pad(0.42, 0.72, 0.09), V(0, 0.62 + 0.33 * Math.cos(rad(-50)) - 0.13 * Math.sin(rad(50)), 0.33 * Math.sin(rad(-50)) - 0.13 * Math.cos(rad(50))), rad(-50)],
+  [pad(0.42, 0.38, 0.09), V(0, 0.5, 0.04), rad(72)], [beam(0.5, 0.05, 2.3), V(0, 0.025, 0.55)], [beam(0.1, 0.45, 0.1), V(0, 0.24, -0.05)],
+]);
+const LP = {
+  rails: [beam(0.06, 1, 0.06), beam(0.06, 1, 0.06)], legs: [beam(0.06, 1, 0.06), beam(0.06, 1, 0.06)],
+  plate: boxPart(0.62, 0.52, 0.04, { gear: 'frame' }), sled: beam(0.5, 0.7, 0.08),
+  horns: [rod(0.02), rod(0.02)], plates: [plate(0.17, 0.04, { gear: 'plate' }), plate(0.17, 0.04, { gear: 'plate' })],
+  handles: [rod(0.016), rod(0.016)], posts: [rod(0.016), rod(0.016)],
+};
+building = 'chestpress';
+fixed([
+  [pad(0.36, 0.08, 0.4), V(0, 0.43, 0.02)], [beam(0.07, 0.39, 0.07), V(0, 0.2, 0.02)], [beam(0.5, 0.05, 1.1), V(0, 0.025, -0.05)],
+  [pad(0.36, 0.64, 0.08), V(0, 0.56 + 0.36 * Math.cos(rad(-12)) - 0.12 * Math.sin(rad(12)), 0.36 * Math.sin(rad(-12)) - 0.12 * Math.cos(rad(12))), rad(-12)],
+]);
+const CP = { column: beam(0.12, 1, 0.12), boom: beam(0.08, 0.08, 1), axle: rod(0.022), levers: [0, 1].map(() => ({ arm: rod(0.02), top: rod(0.016), grip: rod(0.017), low: rod(0.016) })), stack: stack() };
+building = 'barbell';
+
+const KITS = {
+  pulldown(P) {
+    const b = P.bar, s = [-1, 1];
+    placeSeg(PD.bar, b.clone().addScaledVector(X, -0.48), b.clone().addScaledVector(X, 0.48));
+    s.forEach((k, i) => placeSeg(PD.ends[i], b.clone().addScaledVector(X, k * 0.48), b.clone().add(V(k * 0.6, -0.07, 0))));
+    const wheel = V(0, 2.2, P.top.z); placeAt(PD.wheel, wheel);
+    placeSeg(PD.cable, b, wheel); placeSeg(PD.drop, V(0, 2.22, 0.9), V(0, 0.6 + P.lift, 0.9));
+    placeStack(PD.stack, 0, 0.9, P.lift);
+  },
+  pressdown(P) {
+    const b = P.bar;
+    placeSeg(PR.bar, b.clone().addScaledVector(X, -0.25), b.clone().addScaledVector(X, 0.25));
+    placeAt(PR.wheel, P.pulley); placeSeg(PR.cable, b, P.pulley);
+    placeSeg(PR.drop, V(0, 2.0, 0.62), V(0, 0.6 + P.lift, 0.62)); placeStack(PR.stack, 0, 0.62, P.lift);
+  },
+  legpress(P) {
+    const under = P.line.clone().addScaledVector(SLED_UP, -0.3);
+    [-1, 1].forEach((s, i) => {
+      const a = under.clone().addScaledVector(SLED, P.t0 - 0.45).setX(s * 0.24), z = under.clone().addScaledVector(SLED, P.t0 + 0.35).setX(s * 0.24);
+      placeSeg(LP.rails[i], a, z); placeSeg(LP.legs[i], z, z.clone().setY(0.05));
+      const horn = P.plateC.clone().addScaledVector(SLED, 0.3).addScaledVector(SLED_UP, -0.22);
+      placeSeg(LP.horns[i], horn.clone().setX(s * 0.25), horn.clone().setX(s * 0.5));
+      placeAt(LP.plates[i], horn.clone().setX(s * 0.36));
+      const h = V(s * 0.3, P.hipC.y - 0.05, P.hipC.z + 0.16);
+      placeSeg(LP.handles[i], h.clone().setZ(h.z - 0.09), h.clone().setZ(h.z + 0.09));
+      placeSeg(LP.posts[i], h.clone().setZ(h.z - 0.08), V(s * 0.3, 0.42, h.z - 0.08));
+    });
+    placeAt(LP.plate, P.plateC.clone().addScaledVector(SLED, 0.02), rad(-45));
+    placeAt(LP.sled, P.plateC.clone().addScaledVector(SLED, 0.18).addScaledVector(SLED_UP, -0.12), rad(45));
+  },
+  chestpress(P) {
+    const top = P.piv.y + 0.05, back = -0.55;
+    placeSeg(CP.column, V(0, 0, back), V(0, top, back));
+    placeSeg(CP.boom, V(0, top, back), V(0, top, P.piv.z)); // a box placed like a rod
+    placeSeg(CP.axle, P.piv.clone().setX(-0.52), P.piv.clone().setX(0.52));
+    CP.levers.forEach((l, i) => {
+      const s = i ? 1 : -1, h = P.handle.clone(), out = 0.5;
+      placeSeg(l.arm, P.piv.clone().setX(s * out), h.clone().setX(s * out).add(V(0, -0.08, 0)));
+      placeSeg(l.top, h.clone().setX(s * out).add(V(0, 0.08, 0)), h.clone().setX(s * P.x).add(V(0, 0.08, 0)));
+      placeSeg(l.grip, h.clone().setX(s * P.x).add(V(0, 0.08, 0)), h.clone().setX(s * P.x).add(V(0, -0.08, 0)));
+      placeSeg(l.low, h.clone().setX(s * P.x).add(V(0, -0.08, 0)), h.clone().setX(s * out).add(V(0, -0.08, 0)));
+    });
+    placeStack(CP.stack, 0, back - 0.16, 0.5 * (P.a1 - P.a));
+  },
+  barbell: placeBarbell, bench() {},
+};
 
 const contact = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.07, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.001; scene.add(contact);
@@ -271,7 +429,6 @@ function placeBarbell(P) {
     placeAt(G['p10' + s], at(0.805));
   }
   placeSeg(G.shaft, P.bar.clone().addScaledVector(X, -0.7), P.bar.clone().addScaledVector(X, 0.7));
-  BENCH.forEach(([p]) => { p.mesh.visible = !!P.bench; p.hull.visible = !!P.bench && state.variant.hull; });
 }
 
 // ---------- the rig: aim each bone at its target from the bind pose ----------
@@ -342,10 +499,10 @@ function buildRig(gltf, key) {
   const len = (a, c) => dirTo(a, c).length();
   const hipMid = rest.thigh_l.p.clone().add(rest.thigh_r.p).multiplyScalar(0.5);
   const shMid = rest.upperarm_l.p.clone().add(rest.upperarm_r.p).multiplyScalar(0.5);
-  Object.assign(L, {
+  const dims = {
     thigh: len('thigh_l', 'calf_l'), shin: len('calf_l', 'foot_l'), up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
     palm: len('hand_l', 'middle_01_l') * 0.9, gripAlong: len('hand_l', 'middle_01_l') * 0.8, gripOff: 0.03, trunk: shMid.y - hipMid.y, hipW: Math.abs(rest.thigh_l.p.x), shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
-  });
+  };
   // curl the fingers round the bar: each joint turned toward the palm
   const curls = [], palms = {};
   for (const k of ['l', 'r']) {
@@ -378,7 +535,7 @@ function buildRig(gltf, key) {
     mesh.castShadow = true; mesh.frustumCulled = hull.frustumCulled = false;
     return { mesh, hull, joint: i > 0 };
   });
-  rigs[key] = { ready: true, root, skins, bones, rest, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
+  rigs[key] = { ready: true, root, skins, bones, rest, dims, hipMid, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
   showBody();
 }
 
@@ -403,13 +560,14 @@ function poseRig(P) {
     const n1 = leg.mid.clone().sub(hip), n2 = leg.end.clone().sub(leg.mid);
     aim('thigh_' + k, n1, n1.clone().cross(leg.pole));
     aim('calf_' + k, n2, n1.clone().cross(leg.pole));
-    const t = rad(P.toeOut) * s, toe = V(Math.sin(t), -0.35, Math.cos(t));
-    aim('foot_' + k, toe, toe.clone().cross(UP));
+    const t = rad(P.toeOut || 0) * s, ft = P.foot ? P.foot(s) : { toe: V(Math.sin(t), -0.35, Math.cos(t)), top: UP };
+    aim('foot_' + k, ft.toe, ft.toe.clone().cross(ft.top));
     // arm: the bar lies across the palm at the base of the fingers, so the wrist sits short of it
     // along the fingers and off it on the back-of-hand side; the forearm sets both, so iterate
     const sh = wpos(bones['upperarm_' + k]);
-    const grip = P.bar.clone().addScaledVector(X, s * P.grip);
-    const inward = X.clone().multiplyScalar(-s), hr = rest['hand_' + k];
+    const grip = P.hand ? P.hand(s) : P.bar.clone().addScaledVector(X, s * P.grip);
+    // pinky to index along the grip: on a bar the thumb points to the middle
+    const inward = P.across ? P.across(s) : X.clone().multiplyScalar(-s), hr = rest['hand_' + k];
     const handRest = frame(hr.dir, hr.across).invert();
     let wrist = grip.clone(), arm;
     for (let it = 0; it < 4; it++) {
@@ -538,7 +696,8 @@ function phase(now) {
 }
 function tick(now) {
   const P = POSES[state.ex](phase(now));
-  placeBarbell(P);
+  for (const k of P.kit) KITS[k](P);
+  for (const p of parts) { p.mesh.visible = P.kit.includes(p.kit); p.hull.visible = p.mesh.visible && state.variant.hull; }
   if (rig.ready) poseRig(P);
   contact.scale.set(state.ex === 'bench' ? 0.42 : 0.55, state.ex === 'bench' ? 0.85 : 0.4, 1);
   const cam = state.variant.camera === 'ortho' ? ortho : persp;
@@ -558,6 +717,7 @@ function showBody() {
   for (const [k, r] of Object.entries(rigs)) r.root.visible = k === state.body;
   if (!rigs[state.body]) return;
   rig = rigs[state.body];
+  Object.assign(L, rig.dims); // each body is posed with its own proportions
   document.getElementById('stage-hint').textContent = 'drag to turn';
   applyStyle();
 }
