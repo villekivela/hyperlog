@@ -88,6 +88,8 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     // A still stage draws only when something changed.
     private var dirty = true
     private var shown = false
+    // The files the loaded clip reads by name, kept for as long as the player.
+    private var shared: Map<String, ByteBuffer> = emptyMap()
 
     private val frame = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
@@ -154,6 +156,10 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         }
         shown = false
         // The clip reads the mannequin's mesh and skin from a file it shares with every other clip.
+        // The engine uploads them from that buffer when it next flushes, at the stage's first
+        // frame, and nothing else keeps the buffer alive, so the player holds it: freed earlier,
+        // the body uploads garbage and doesn't show.
+        shared = resources
         resources.forEach { (name, data) -> resourceLoader.addResourceData(name, data) }
         resourceLoader.loadResources(loaded)
         resourceLoader.evictResourceData()
@@ -229,13 +235,17 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         if (still && !dirty) return
         if (lastFrameNanos != 0L) playedNanos += frameTimeNanos - lastFrameNanos
         lastFrameNanos = frameTimeNanos
+        // Pose the clip only for a frame that will be drawn: the bone matrices go to the GPU as
+        // commands, and a stage with no surface yet (the gallery's next page, made ahead of time)
+        // or a frame the renderer skips would queue them without ever sending them, until the
+        // engine's command buffer overflows.
+        val chain = swapChain ?: return
+        if (!uiHelper.isReadyToRender || !renderer.beginFrame(chain, frameTimeNanos)) return
         val position = if (still) 1f else timeline.position(playedNanos / 1e9f)
         // The animator wraps a time at its end round to the start, so the bottom stays a hair short of it.
         animator.applyAnimation(0, (position * duration).coerceAtMost(duration * 0.9999f))
         animator.updateBoneMatrices()
         placeCamera(stage)
-        val chain = swapChain ?: return
-        if (!uiHelper.isReadyToRender || !renderer.beginFrame(chain, frameTimeNanos)) return
         renderer.render(filamentView)
         renderer.endFrame()
         dirty = false
