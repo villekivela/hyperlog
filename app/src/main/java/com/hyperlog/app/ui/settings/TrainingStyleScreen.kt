@@ -191,9 +191,9 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
 // The tiles below are the page's controls, which the wizard (TrainingStyleWizard) shows one step at a time.
 
 @Composable
-internal fun GoalTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
+internal fun GoalTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit, titled: Boolean = true) {
     val goals = listOf(stringResource(R.string.style_goal_hypertrophy), stringResource(R.string.style_goal_strength), stringResource(R.string.style_goal_both))
-    Tile(stringResource(R.string.style_goal), stringResource(R.string.style_goal_about)) {
+    Tile(if (titled) stringResource(R.string.style_goal) else null, stringResource(R.string.style_goal_about)) {
         ConnectedChoice(
             goals, TrainingGoal.entries.indexOf(t.goal),
             onSelect = { onTargets(t.copy(goal = TrainingGoal.entries[it])) },
@@ -297,8 +297,8 @@ internal fun CalibrationTile(t: TrainingTargets, onTargets: (TrainingTargets) ->
 }
 
 @Composable
-internal fun RepsTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
-    Tile(stringResource(R.string.style_reps), stringResource(R.string.style_reps_about)) {
+internal fun RepsTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit, titled: Boolean = true) {
+    Tile(if (titled) stringResource(R.string.style_reps) else null, stringResource(R.string.style_reps_about)) {
         RangeFields(
             stringResource(R.string.style_reps_compound), t.compound, TrainingStyleJson.REPS,
             stringResource(R.string.style_reps_compound_low), stringResource(R.string.style_reps_compound_high),
@@ -320,7 +320,7 @@ internal fun RepsTile(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) 
  */
 @Composable
 internal fun Tile(
-    title: String,
+    title: String?,
     about: String? = null,
     trailing: (@Composable () -> Unit)? = null,
     /** Lines kept for [about] when it changes with the tile's choice, so the choice under it never moves. */
@@ -328,9 +328,9 @@ internal fun Tile(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(CardPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (title != null || about != null || trailing != null) Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
+                if (title != null) Text(title, style = MaterialTheme.typography.bodyLarge)
                 if (about != null) {
                     Text(about, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, minLines = aboutLines)
                 }
@@ -529,8 +529,8 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AgeTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
-    Tile(stringResource(R.string.style_age)) {
+internal fun AgeTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit, titled: Boolean = true) {
+    Tile(if (titled) stringResource(R.string.style_age) else null) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AgeBand.entries.forEach { band ->
                 FilterChip(
@@ -546,8 +546,8 @@ internal fun AgeTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
 
 /** Tapped again, the picked one clears: every field of About me is optional. */
 @Composable
-internal fun WhereTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
-    Tile(stringResource(R.string.style_where), stringResource(R.string.style_where_about)) {
+internal fun WhereTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit, titled: Boolean = true) {
+    Tile(if (titled) stringResource(R.string.style_where) else null, stringResource(R.string.style_where_about)) {
         Options(Progress.entries.map { it.label }, me.progress?.let { Progress.entries.indexOf(it) }, onSelect = { i ->
             val p = Progress.entries[i]
             onAboutMe(me.copy(progress = p.takeIf { me.progress != p }))
@@ -562,8 +562,8 @@ internal fun ComingBackTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AchesTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
-    Tile(stringResource(R.string.style_aches), stringResource(R.string.style_aches_about)) {
+internal fun AchesTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit, titled: Boolean = true) {
+    Tile(if (titled) stringResource(R.string.style_aches) else null, stringResource(R.string.style_aches_about)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BodyArea.entries.forEach { area ->
                 val on = area in me.aches
@@ -601,9 +601,9 @@ internal fun FavourTile(me: AboutMe, names: Map<String, String>, onAboutMe: (Abo
     Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(PickList.Favour) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) }
 
 @Composable
-internal fun AnythingElseTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit) {
+internal fun AnythingElseTile(me: AboutMe, onAboutMe: (AboutMe) -> Unit, titled: Boolean = true) {
     val description = stringResource(R.string.style_anything_else_about_me)
-    Tile(stringResource(R.string.style_anything_else)) {
+    Tile(if (titled) stringResource(R.string.style_anything_else) else null) {
         var typed by rememberSaveable { mutableStateOf(me.anythingElse.orEmpty()) }
         OutlinedTextField(
             value = typed,

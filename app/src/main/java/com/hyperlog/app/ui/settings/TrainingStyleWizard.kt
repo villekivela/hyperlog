@@ -46,6 +46,7 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.BottomActions
 import com.hyperlog.app.ui.theme.GroupGap
 import com.hyperlog.app.ui.theme.SegmentedList
+import com.hyperlog.app.ui.theme.SegmentedListScope
 import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
@@ -138,7 +139,7 @@ fun TrainingStyleWizard(
             Text(stringResource(current.question), Modifier.padding(horizontal = TextEdge).padding(bottom = 24.dp), style = MaterialTheme.typography.headlineMedium)
             val names = library.associate { it.id to it.name }
             when (current) {
-                WizardStep.Goal -> SegmentedList { item { GoalTile(targets, onTargets) } }
+                WizardStep.Goal -> SegmentedList { item { GoalTile(targets, onTargets, titled = false) } }
                 WizardStep.Volume -> SegmentedList {
                     item { VolumeTile(targets, onTargets) }
                     item { AcrossTile(targets, onTargets) }
@@ -148,18 +149,18 @@ fun TrainingStyleWizard(
                     item { FailureTile(targets, onTargets) }
                     item { CalibrationTile(targets, onTargets) }
                 }
-                WizardStep.Reps -> SegmentedList { item { RepsTile(targets, onTargets) } }
-                WizardStep.Age -> SegmentedList { item { AgeTile(me, onAboutMe) } }
+                WizardStep.Reps -> SegmentedList { item { RepsTile(targets, onTargets, titled = false) } }
+                WizardStep.Age -> SegmentedList { item { AgeTile(me, onAboutMe, titled = false) } }
                 WizardStep.Where -> SegmentedList {
-                    item { WhereTile(me, onAboutMe) }
+                    item { WhereTile(me, onAboutMe, titled = false) }
                     item { ComingBackTile(me, onAboutMe) }
                 }
-                WizardStep.Aches -> SegmentedList { item { AchesTile(me, onAboutMe) } }
+                WizardStep.Aches -> SegmentedList { item { AchesTile(me, onAboutMe, titled = false) } }
                 WizardStep.Exercises -> SegmentedList {
                     item { AvoidTile(me, names, onAboutMe, onPick = { focus.clearFocus(); picking = it }) }
                     item { FavourTile(me, names, onAboutMe, onPick = { focus.clearFocus(); picking = it }) }
                 }
-                WizardStep.AnythingElse -> SegmentedList { item { AnythingElseTile(me, onAboutMe) } }
+                WizardStep.AnythingElse -> SegmentedList { item { AnythingElseTile(me, onAboutMe, titled = false) } }
                 WizardStep.Summary -> Summary(targets, me, names, onEdit = { step = it.ordinal }, onHowITrain = { principles = true })
             }
         }
@@ -198,27 +199,27 @@ private fun Summary(targets: TrainingTargets, me: AboutMe, names: Map<String, St
         R.string.style_goal, R.string.style_volume, R.string.style_how_hard, R.string.style_reps, R.string.style_age, R.string.style_where,
         R.string.style_aches, R.string.style_avoid, R.string.style_favour, R.string.style_anything_else,
     ).map { stringResource(it) }
+    val chevron = @Composable { SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+    // Each answer is a tile on the page's text edge, its words wrapping rather than cut short.
+    fun SegmentedListScope.answer(title: String, answer: String, onClick: () -> Unit) =
+        item(onClick = onClick) { Tile(title, answer, trailing = chevron) }
+    fun SegmentedListScope.answer(title: String, answer: String, step: WizardStep) = answer(title, answer) { onEdit(step) }
     SegmentedList {
-        row(titles[0], goal, onClick = { onEdit(WizardStep.Goal) })
-        row(titles[1], volume, onClick = { onEdit(WizardStep.Volume) })
-        row(titles[2], howHard, supportingLines = 2, onClick = { onEdit(WizardStep.HowHard) })
-        row(titles[3], reps, onClick = { onEdit(WizardStep.Reps) })
-        row(titles[4], me.age?.label ?: none, onClick = { onEdit(WizardStep.Age) })
-        row(titles[5], where, onClick = { onEdit(WizardStep.Where) })
-        row(titles[6], aches, supportingLines = 2, onClick = { onEdit(WizardStep.Aches) })
-        row(titles[7], avoid, supportingLines = 2, onClick = { onEdit(WizardStep.Exercises) })
-        row(titles[8], favour, supportingLines = 2, onClick = { onEdit(WizardStep.Exercises) })
-        row(titles[9], me.anythingElse ?: none, onClick = { onEdit(WizardStep.AnythingElse) })
+        answer(titles[0], goal, WizardStep.Goal)
+        answer(titles[1], volume, WizardStep.Volume)
+        answer(titles[2], howHard, WizardStep.HowHard)
+        answer(titles[3], reps, WizardStep.Reps)
+        answer(titles[4], me.age?.label ?: none, WizardStep.Age)
+        answer(titles[5], where, WizardStep.Where)
+        answer(titles[6], aches, WizardStep.Aches)
+        answer(titles[7], avoid, WizardStep.Exercises)
+        answer(titles[8], favour, WizardStep.Exercises)
+        answer(titles[9], me.anythingElse ?: none, WizardStep.AnythingElse)
     }
     Spacer(Modifier.height(GroupGap))
     val howITrain = stringResource(R.string.how_i_train)
     val howITrainAbout = stringResource(R.string.wizard_how_i_train_about)
-    SegmentedList {
-        row(
-            howITrain, howITrainAbout, onClick = onHowITrain,
-            trailing = { SymbolIcon(Symbol.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-        )
-    }
+    SegmentedList { answer(howITrain, howITrainAbout, onHowITrain) }
     Spacer(Modifier.navigationBarsPadding())
 }
 
