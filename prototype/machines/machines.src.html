@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Machine Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* PROTOTYPE, throwaway. Question: how much detail should the mannequin's machines have?
+   The Lat Pulldown clip (#123's bake, unchanged) on three versions of the cable station, all built
+   in code from three.js geometry: A is today's kit, B and C are new. */
+:root {
+  --surface: #FAFAFB; --on-surface: #19191B; --on-surface-variant: #5C5C62;
+  --container-low: #F5F5F7; --outline: #85858C; --outline-variant: #D4D4D9;
+  --fig-stage: #EEEEF0; --fig-body: #D2D2D8; --fig-joint: #B4B4BB; --fig-gear: #5C5C62;
+  --fig-plate: #3A3A40; --fig-rubber: #1E1E21; --fig-zinc: #9A9AA2;
+  --tone-frame: #2E2E33; --tone-vinyl: #1B1B1E; --tone-stack: #8A8A90; --tone-metal: #C8C8CC; --tone-pulley: #5C5C62;
+  --tone-body: #D2D2D8; --tone-joint: #B4B4BB; --tone-rim: 0;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --surface: #121214; --on-surface: #EDEDEF; --on-surface-variant: #A3A3A8;
+  --container-low: #1B1B1E; --outline: #6E6E75; --outline-variant: #38383D;
+  --fig-stage: #232326; --fig-body: #6A6A72; --fig-joint: #5A5A61; --fig-gear: #A3A3A8;
+  --fig-plate: #C8C8CE; --fig-rubber: #3A3A40; --fig-zinc: #D0D0D5;
+  --tone-frame: #4A4A50; --tone-vinyl: #2E2E33; --tone-stack: #8A8A90; --tone-metal: #C8C8CC; --tone-pulley: #6E6E75;
+  --tone-body: #C4C4CA; --tone-joint: #A8A8AF; --tone-rim: 0.45;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --surface: #121214; --on-surface: #EDEDEF; --on-surface-variant: #A3A3A8;
+  --container-low: #1B1B1E; --outline: #6E6E75; --outline-variant: #38383D;
+  --fig-stage: #232326; --fig-body: #6A6A72; --fig-joint: #5A5A61; --fig-gear: #A3A3A8;
+  --fig-plate: #C8C8CE; --fig-rubber: #3A3A40; --fig-zinc: #D0D0D5;
+  --tone-frame: #4A4A50; --tone-vinyl: #2E2E33; --tone-stack: #8A8A90; --tone-metal: #C8C8CC; --tone-pulley: #6E6E75;
+  --tone-body: #C4C4CA; --tone-joint: #A8A8AF; --tone-rim: 0.45;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body.shot { padding: 0; } body.shot .note, body.shot .controls, body.shot h1, body.shot .meta, body.shot .hint { display: none; }
+body.shot .wrap { max-width: none; } body.shot .sheet { padding: 0; border-radius: 0; background: none; } body.shot .stage { border-radius: 0; }
+body { margin: 0; background: var(--surface); color: var(--on-surface); font-family: var(--font-body); font-variant-numeric: tabular-nums; padding: 16px 16px 40px; }
+.wrap { max-width: 412px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.note { font-size: 13px; line-height: 1.45; color: var(--on-surface-variant); margin: 0; }
+.note b { color: var(--on-surface); font-weight: 600; }
+.sheet { background: var(--container-low); border-radius: 28px; padding: 12px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+.stage { position: relative; aspect-ratio: 5 / 4; border-radius: 20px; overflow: hidden; background: var(--fig-stage); touch-action: pan-y; cursor: grab; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.hint { position: absolute; right: 12px; bottom: 10px; font-size: 11px; color: var(--on-surface-variant); pointer-events: none; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 32px; margin: 0; }
+.meta { font-size: 14px; color: var(--on-surface-variant); margin: -10px 0 0; }
+.controls { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px dashed var(--outline); border-radius: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.row > span { font-size: 13px; color: var(--on-surface-variant); width: 64px; }
+.seg { font: 500 13px var(--font-body); padding: 7px 12px; border-radius: 8px; border: 1px solid var(--outline-variant); background: transparent; color: var(--on-surface); cursor: pointer; }
+.seg[aria-pressed="true"] { background: var(--on-surface); color: var(--surface); border-color: var(--on-surface); }
+.seg:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
+.stats { font-size: 13px; line-height: 1.5; color: var(--on-surface-variant); margin: 0; }
+.stats b { color: var(--on-surface); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="note"><b>Prototype.</b> How detailed should the machines be? The same Lat Pulldown clip on three cable stations, every one built in code from three.js shapes, nothing imported. <b>A</b> is today's kit, boxes and rods. <b>B</b> has rounded tubing, soft pads, a stack of separate plates on guide rods with a selector pin, pulleys in housings, and a shaped bar with grips. <b>B · Tones</b> is B with a material per part in the graphite greys: a dark frame, near-black vinyl, mid-grey plates, light satin metal. <b>C</b> adds bolts, gussets, seams, side shrouds, cable fittings and rubber feet. Drag to turn; double-tap to reset.</p>
+
+  <section class="sheet" aria-label="Exercise sheet">
+    <div class="stage" id="stage"><span class="hint" id="hint">loading…</span></div>
+    <h1>Lat Pulldown</h1>
+    <p class="meta">Cable · Lats, Upper Back, Biceps</p>
+  </section>
+
+  <section class="controls" aria-label="Prototype controls">
+    <div class="row" role="group" aria-label="Detail"><span>Detail</span>
+      <button class="seg" data-level="A">A · Today</button>
+      <button class="seg" data-level="B">B · Refined</button>
+      <button class="seg" data-level="T">B · Tones</button>
+      <button class="seg" data-level="C">C · Detailed</button>
+    </div>
+    <div class="row" role="group" aria-label="Theme"><span>Theme</span>
+      <button class="seg" data-theme-pick="light">Light</button>
+      <button class="seg" data-theme-pick="dark">Dark</button>
+    </div>
+    <div class="row" role="group" aria-label="Motion"><span>Motion</span>
+      <button class="seg" data-motion="loop">Loop</button>
+      <button class="seg" data-motion="top">Top</button>
+      <button class="seg" data-motion="bottom">Bottom</button>
+    </div>
+    <p class="stats" id="stats"></p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script>
+const CLIP = '__CLIP__';
+const q = new URLSearchParams(location.search);
+if (q.get('shot')) document.body.classList.add('shot');
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const UP = V(0, 1, 0);
+const rad = (d) => d * Math.PI / 180;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const state = {
+  level: q.get('level') || 'T',
+  motion: q.get('d') != null ? (q.get('d') === '0' ? 'top' : 'bottom') : (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'bottom' : 'loop'),
+  az: +(q.get('az') ?? 62), el: +(q.get('el') ?? 8), t0: performance.now(),
+};
+if (q.get('theme')) document.documentElement.dataset.theme = q.get('theme');
+try { const t = localStorage.getItem('machines-theme'); if (t && !q.get('theme')) document.documentElement.dataset.theme = t; } catch (e) {}
+
+// ---------- renderer, camera, light ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(26, 1, 0.05, 50);
+const FRAME = { target: V(0, 1.24, 0.42), half: 1.38 };
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8a90, 0.75);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 0.95);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -2, right: 2, top: 3, bottom: -1, near: 0.1, far: 12 });
+sun.shadow.radius = 4;
+sun.shadow.bias = -0.0005;
+scene.add(sun, sun.target);
+// A faint light from behind the machine: in dark, it gives the frame an edge against the stage.
+const rim = new THREE.DirectionalLight(0xffffff, 0);
+scene.add(rim, rim.target);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.ShadowMaterial({ opacity: 0.16 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ---------- materials, coloured from the theme ----------
+const MAT = {
+  bar: new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.15 }),
+  plate: new THREE.MeshStandardMaterial({ roughness: 0.85 }),
+  rubber: new THREE.MeshStandardMaterial({ roughness: 0.95 }),
+  zinc: new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.2 }),
+  body: new THREE.MeshStandardMaterial({ roughness: 0.8, skinning: true }),
+  // B · tones: a material per role, told apart by tone and roughness, not gloss.
+  frame: new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.1 }),
+  vinyl: new THREE.MeshStandardMaterial({ roughness: 0.95 }),
+  stack: new THREE.MeshStandardMaterial({ roughness: 0.8 }),
+  metal: new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.3 }),
+  pulley: new THREE.MeshStandardMaterial({ roughness: 0.55 }),
+  joint: new THREE.MeshStandardMaterial({ roughness: 0.8, skinning: true }),
+};
+function applyTheme() {
+  // The tokens are sRGB; materials take linear colour, as Filament's setParameter(SRGB) does on
+  // the phone. The stage colour is drawn as it is.
+  const c = (n) => new THREE.Color(css(n)).convertSRGBToLinear();
+  renderer.setClearColor(new THREE.Color(css('--fig-stage')));
+  MAT.bar.color = c('--fig-gear'); MAT.plate.color = c('--fig-plate');
+  MAT.rubber.color = c('--fig-rubber'); MAT.zinc.color = c('--fig-zinc');
+  const toned = state.level === 'T';
+  MAT.body.color = c(toned ? '--tone-body' : '--fig-body'); MAT.joint.color = c(toned ? '--tone-joint' : '--fig-joint');
+  for (const k of ['frame', 'vinyl', 'stack', 'metal', 'pulley']) MAT[k].color = c('--tone-' + k);
+  rim.intensity = toned ? +css('--tone-rim') || 0 : 0;
+}
+
+// ---------- shapes ----------
+function roundedRect(w, h, r) {
+  const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+  r = Math.min(r, w / 2, h / 2);
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+/** Extrudes `shape` (in its x-y plane) `depth` along z, centred, with a bevel of `bevel`. */
+function extrude(shape, depth, bevel = 0, curve = 6) {
+  const g = new THREE.ExtrudeGeometry(shape, {
+    depth: Math.max(depth - 2 * bevel, 1e-4), bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel,
+    bevelSegments: bevel > 0 ? 3 : 0, curveSegments: curve,
+  });
+  g.translate(0, 0, -(depth - 2 * bevel) / 2);
+  return g;
+}
+const mesh = (g, m, opts = {}) => { const o = new THREE.Mesh(g, m); o.castShadow = o.receiveShadow = true; o.userData = opts; return o; };
+/** Points a z-aligned geometry's mesh from A to B. */
+function along(o, A, B) {
+  const d = B.clone().sub(A), len = d.length();
+  o.position.copy(A).addScaledVector(d, 0.5);
+  o.quaternion.setFromUnitVectors(V(0, 0, 1), d.normalize());
+  return { len };
+}
+/** Square tubing w × w with rounded corners, from A to B. */
+function tube(w, A, B, m, r = 0.012, curve = 3) {
+  const len = A.distanceTo(B);
+  const o = mesh(extrude(roundedRect(w, w, r), len, 0.004, curve), m, { solid: true });
+  along(o, A, B);
+  return o;
+}
+/** A round rod from A to B. */
+function rod(radius, A, B, m, seg = 12) {
+  const g = new THREE.CylinderGeometry(radius, radius, 1, seg);
+  g.rotateX(Math.PI / 2);
+  const o = mesh(g, m, { solid: true });
+  const { len } = along(o, A, B);
+  o.scale.z = len;
+  return o;
+}
+/** A soft pad w (x) × h (y) × d (z), centred at `at`, edges rounded by `soft`. */
+function pad(w, h, d, at, m, soft = 0.02, curve = 4) {
+  const g = extrude(roundedRect(w, d, soft * 1.6), h, soft, curve);
+  g.rotateX(-Math.PI / 2);
+  const o = mesh(g, m, { solid: true });
+  o.position.copy(at);
+  return o;
+}
+/** A pulley wheel about x with a groove. */
+function wheel(r, w, m, seg = 32) {
+  const pts = [V(0.01, -w / 2, 0), V(r, -w / 2, 0), V(r, -w * 0.3, 0), V(r * 0.82, 0, 0), V(r, w * 0.3, 0), V(r, w / 2, 0), V(0.01, w / 2, 0)].map((p) => new THREE.Vector2(p.x, p.y));
+  const g = new THREE.LatheGeometry(pts, seg);
+  g.rotateZ(Math.PI / 2);
+  return mesh(g, m, { solid: true });
+}
+/** A bolt head: a hex 2r across, pointing along `dir`. */
+function bolt(at, dir, m, r = 0.008) {
+  const g = new THREE.CylinderGeometry(r, r, r * 0.8, 6);
+  const o = mesh(g, m);
+  o.position.copy(at);
+  o.quaternion.setFromUnitVectors(UP, dir.clone().normalize());
+  return o;
+}
+/** A triangular gusset plate in the y-z plane, its corner at `at`: legs `a` up (or down, if
+ * negative) and `b` along z (signed), t thick. */
+function gusset(at, a, b, m, t = 0.008) {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0); s.lineTo(b, 0); s.lineTo(0, a); s.lineTo(0, 0);
+  const g = new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false });
+  g.translate(0, 0, -t / 2);
+  g.rotateY(-Math.PI / 2);
+  const o = mesh(g, m);
+  o.position.copy(at);
+  return o;
+}
+/** A tube following a path of points (cable piping, bent bars). */
+function pathTube(points, radius, m, seg = 48, closed = false) {
+  const curve = new THREE.CatmullRomCurve3(points, closed, 'catmullrom', 0.2);
+  return mesh(new THREE.TubeGeometry(curve, seg, radius, 10, closed), m, { solid: true });
+}
+
+// ---------- the cable station, at three levels of detail ----------
+// The same layout as the bake's cable_tower for the Lat Pulldown: the seat at [0.47, 0.02], the
+// thigh pad at [0.71, 0.3], the pulley over the bar at z 0.02, the stack behind at z 0.88.
+const G = { stackZ: 0.88, top: 2.37, front: V(0, 2.30, 0.07), back: V(0, 2.30, 0.83), wheelR: 0.05, seat: [0.47, 0.02], thigh: [0.71, 0.3] };
+
+function levelA() {
+  // Today's kit, as tools/mannequins/kit.mjs builds it: boxes, rods and plain discs.
+  const g = new THREE.Group(), bar = MAT.bar, pl = MAT.plate;
+  const box = (w, h, d, at, m) => { const o = mesh(new THREE.BoxGeometry(w, h, d), m, { solid: true }); o.position.copy(at); g.add(o); return o; };
+  const column = 0.95, top = G.top;
+  box(0.14, top, 0.14, V(0, top / 2, column), bar);
+  box(0.5, 0.05, 0.5, V(0, 0.025, column - 0.04), bar);
+  box(0.1, 0.1, column + 0.08, V(0, top - 0.05, column / 2 + 0.01), bar);
+  box(0.36, 0.08, 0.4, V(0, 0.43, 0.02), pl);
+  box(0.07, 0.39, 0.07, V(0, 0.195, 0.02), bar);
+  box(0.12, 0.05, 1.23, V(0, 0.025, 0.385), bar);
+  box(0.46, 0.1, 0.12, V(0, 0.71, 0.3), pl);
+  box(0.06, 0.06, column - 0.3, V(0, 0.71, 0.625), bar);
+  const disc = (at) => { const c = new THREE.CylinderGeometry(0.045, 0.045, 0.025, 48); c.rotateZ(Math.PI / 2); const o = mesh(c, bar); o.position.copy(at); g.add(o); };
+  disc(V(0, 2.30, 0.02)); disc(V(0, top - 0.05, column - 0.12));
+  const base = box(0.26, 0.42, 0.12, V(0, 0.27, 0.83), pl);
+  const head = box(0.26, 0.1, 0.12, V(0, 0.54, 0.83), pl);
+  [-0.1, 0.1].forEach((x) => g.add(rod(0.008, V(x, 0.05, 0.83), V(x, 1.45, 0.83), bar)));
+  const cable = rod(0.004, V(0, 1, 0), V(0, 2, 0), bar, 8); g.add(cable);
+  const drop = rod(0.004, V(0, 1, 0), V(0, 2, 0), bar, 8); g.add(drop);
+  const handle = new THREE.Group();
+  handle.add(rodX(0.014, -0.48, 0.48, bar));
+  [-1, 1].forEach((s) => handle.add(rod(0.014, V(s * 0.48, 0, 0), V(s * 0.6, -0.07, 0), bar)));
+  g.add(handle);
+  return {
+    group: g,
+    place(hook, lift) {
+      handle.position.copy(hook);
+      setRod(cable, hook, V(0, 2.25, 0.02));
+      head.position.y = 0.54 + lift;
+      setRod(drop, V(0, top - 0.1, 0.83), V(0, 0.6 + lift, 0.83));
+    },
+  };
+}
+function rodX(radius, from, to, m, seg = 16) {
+  const g = new THREE.CylinderGeometry(radius, radius, to - from, seg);
+  g.rotateZ(Math.PI / 2); g.translate((from + to) / 2, 0, 0);
+  return mesh(g, m, { solid: true, held: true });
+}
+function setRod(o, A, B) { const { len } = along(o, A, B); o.scale.z = Math.max(len, 1e-4); }
+
+/** B and C. `M` gives each part's role a material: frame, vinyl, stack, metal, pulley, rubber, hardware. */
+function levelBC(detailed, M) {
+  const g = new THREE.Group(), bar = M.frame, rub = M.rubber, zinc = M.hardware;
+  const add = (...o) => { o.forEach((x) => g.add(x)); return o[0]; };
+  const T = 0.07, top = G.top, z = G.stackZ, ux = 0.19;
+  const boomY = 2.43;
+
+  // Frame: two uprights either side of the stack, a boom forward over the seat, floor rails.
+  for (const s of [-1, 1]) add(tube(T, V(s * ux, 0.07, z), V(s * ux, boomY + 0.04, z), bar));
+  add(tube(0.08, V(-ux - 0.035, boomY, z), V(ux + 0.035, boomY, z), bar));
+  add(tube(0.08, V(0, boomY, z + 0.06), V(0, boomY, -0.05), bar));
+  add(tube(T, V(-ux - 0.15, 0.035, z), V(ux + 0.15, 0.035, z), bar));
+  add(tube(T, V(0, 0.035, z - 0.04), V(0, 0.035, -0.28), bar));
+  add(tube(T, V(-0.3, 0.035, -0.28), V(0.3, 0.035, -0.28), bar));
+  add(tube(0.05, V(-ux, 2.02, z), V(ux, 2.02, z), bar));
+  for (const s of [-1, 1]) add(pad(0.14, 0.012, 0.14, V(s * ux, 0.006 + 0.07 - 0.012, z), bar, 0.004));
+
+  // Seat: a post, a pan and a soft pad on top at 0.47.
+  add(tube(0.06, V(0, 0.07, G.seat[1]), V(0, G.seat[0] - 0.09, G.seat[1]), bar));
+  add(pad(0.3, 0.012, 0.32, V(0, G.seat[0] - 0.086, G.seat[1]), bar, 0.004));
+  const seatPad = add(pad(0.36, 0.075, 0.38, V(0, G.seat[0] - 0.0375, G.seat[1]), M.vinyl, 0.024, 6));
+
+  // Thigh rollers on a post between the knees.
+  const tz = G.thigh[1], ty = G.thigh[0];
+  add(tube(0.055, V(0, 0.07, tz + 0.1), V(0, ty + 0.03, tz + 0.1), bar));
+  add(tube(0.045, V(0, ty, tz + 0.1), V(0, ty, tz), bar));
+  add(rodX(0.012, -0.24, 0.24, bar).translateY(ty).translateZ(tz));
+  for (const s of [-1, 1]) {
+    const pts = [[0, -0.1], [0.045, -0.1], [0.055, -0.088], [0.056, 0], [0.055, 0.088], [0.045, 0.1], [0, 0.1]].map(([x, y]) => new THREE.Vector2(x, y));
+    const r = new THREE.LatheGeometry(pts, 28); r.rotateZ(Math.PI / 2);
+    const roller = mesh(r, M.vinyl, { solid: true }); roller.position.set(s * 0.13, ty, tz); add(roller);
+  }
+
+  // Weight stack: 12 plates on two guide rods, the pin under the 6th, the head plate on top.
+  const n = 12, ph = 0.032, gap = detailed ? 0.005 : 0.003, pinAt = 6, base = 0.1;
+  const plates = [];
+  for (let i = 0; i < n; i++) {
+    const y = base + i * (ph + gap) + ph / 2;
+    const p = add(pad(0.26, ph, 0.11, V(0, y, z), M.stack, detailed ? 0.004 : 0.003, 3));
+    plates.push({ mesh: p, y, moves: i >= n - pinAt });
+  }
+  for (const s of [-1, 1]) add(pad(0.05, 0.04, 0.05, V(s * 0.1, 0.07 + 0.02, z), rub, 0.008));
+  const headY = base + n * (ph + gap) + 0.025;
+  const head = add(pad(0.28, 0.05, 0.12, V(0, headY, z), M.stack, 0.006));
+  const stem = add(rod(0.007, V(0, 0, 0), V(0, 1, 0), M.metal));
+  const pinY = plates[n - pinAt].y;
+  const pin = new THREE.Group();
+  pin.add(rod(0.005, V(0, 0, 0.04), V(0, 0, -0.1), M.metal));
+  const knob = mesh(new THREE.SphereGeometry(0.016, 16, 12), rub); knob.position.set(0, 0, -0.1); pin.add(knob);
+  add(pin);
+  for (const s of [-1, 1]) add(rod(0.009, V(s * 0.1, 0.07, z), V(s * 0.1, 2.02, z), M.metal, 14));
+
+  // Pulleys in housings under the boom, and the cable over them.
+  for (const c of [G.front, G.back]) {
+    const w = add(wheel(G.wheelR, 0.022, M.pulley)); w.position.copy(c);
+    for (const s of [-1, 1]) {
+      const plateShape = roundedRect(0.08, 0.13, 0.02);
+      const hp = mesh(extrude(plateShape, 0.006), M.housing); hp.rotation.y = Math.PI / 2;
+      hp.position.set(s * 0.02, c.y + 0.045, c.z); add(hp);
+      if (detailed) add(bolt(V(s * 0.025, c.y, c.z), V(s, 0, 0), zinc, 0.007));
+    }
+  }
+  const run = add(rod(0.0045, V(0, G.front.y + G.wheelR, G.front.z), V(0, G.back.y + G.wheelR, G.back.z), M.metal, 8));
+  const cable = add(rod(0.0045, V(0, 1, 0), V(0, 2, 0), M.metal, 8));
+  const drop = add(rod(0.0045, V(0, 1, 0), V(0, 2, 0), M.metal, 8));
+
+  // The lat bar: straight through the middle, bent down and out at the ends, with grips.
+  const handle = new THREE.Group();
+  const half = [V(0, 0, 0), V(0.3, 0, 0), V(0.46, -0.005, 0), V(0.56, -0.04, 0), V(0.63, -0.1, 0)];
+  const pathPts = [...half.slice(1).reverse().map((p) => V(-p.x, p.y, p.z)), ...half];
+  handle.add(Object.assign(pathTube(pathPts, 0.0135, M.metal, 96), { userData: { solid: true, held: true } }));
+  for (const s of [-1, 1]) {
+    const grip = pathTube([V(s * 0.3, 0, 0), V(s * 0.38, 0, 0), V(s * 0.46, -0.005, 0)], 0.0165, M.vinyl, 24);
+    grip.userData = { solid: true, held: true };
+    handle.add(grip);
+  }
+  const clevis = mesh(new THREE.TorusGeometry(0.018, 0.005, 8, 20), M.metal); clevis.position.y = 0.022; handle.add(clevis);
+  if (detailed) {
+    const ferrule = rod(0.008, V(0, 0.04, 0), V(0, 0.075, 0), zinc, 12); handle.add(ferrule);
+    const hookRing = mesh(new THREE.TorusGeometry(0.013, 0.0035, 8, 18), zinc); hookRing.position.y = 0.042; hookRing.rotation.y = Math.PI / 2; handle.add(hookRing);
+  }
+  add(handle);
+  const stopBall = detailed ? add(mesh(new THREE.SphereGeometry(0.022, 16, 12), rub)) : null;
+
+  if (detailed) {
+    // Bolts on the floor plates and brackets, gussets at the joints, seams, shrouds, feet.
+    for (const s of [-1, 1]) {
+      for (const [dx, dz] of [[-0.05, -0.05], [0.05, -0.05], [-0.05, 0.05], [0.05, 0.05]]) add(bolt(V(s * ux + dx, 0.072, z + dz), UP, zinc, 0.007));
+      // In the x-y plane: from each upright out along the floor rail, and in under the crossbar.
+      add(gusset(V(s * (ux + 0.035), 0.07, z), 0.17, s * 0.12, bar)).rotation.y = Math.PI / 2;
+      add(gusset(V(s * (ux - 0.035), boomY - 0.04, z), -0.12, -s * 0.1, bar)).rotation.y = Math.PI / 2;
+    }
+    add(gusset(V(0, boomY - 0.04, z - 0.04), -0.12, -0.14, bar));
+    for (const [x, zz] of [[-ux - 0.15, z], [ux + 0.15, z], [-0.3, -0.28], [0.3, -0.28]]) {
+      const f = mesh(new THREE.CylinderGeometry(0.032, 0.036, 0.016, 20), rub); f.position.set(x, 0.008, zz); add(f);
+      add(bolt(V(x, 0.072, zz), UP, zinc, 0.006));
+    }
+    for (const yy of [0.12, 0.3]) add(bolt(V(0.032, yy, G.seat[1]), V(1, 0, 0), zinc, 0.006));
+    add(bolt(V(0.03, ty, tz + 0.1), V(1, 0, 0), zinc, 0.007));
+    // A pop-pin on the seat post and the thigh post.
+    for (const at of [V(0, 0.25, G.seat[1] - 0.03), V(0, ty - 0.12, tz + 0.1 - 0.028)]) {
+      const k = mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.03, 16), rub); k.rotation.x = Math.PI / 2; k.position.copy(at).add(V(0, 0, -0.015)); add(k);
+    }
+    // Upholstery piping round the seat pad's top edge and the rollers' ends.
+    const pr = [];
+    const sh = roundedRect(0.34, 0.36, 0.05).getSpacedPoints(64);
+    sh.forEach((p) => pr.push(V(p.x, G.seat[0] - 0.012, G.seat[1] + p.y)));
+    add(pathTube(pr.slice(0, -1), 0.0035, M.vinyl, 128, true));
+    for (const s of [-1, 1]) for (const e of [-1, 1]) {
+      const ring = mesh(new THREE.TorusGeometry(0.05, 0.0035, 8, 28), M.vinyl); ring.rotation.y = Math.PI / 2; ring.position.set(s * 0.13 + e * 0.09, ty, tz); add(ring);
+    }
+    // Side shrouds outside the uprights, with a window onto the stack.
+    for (const s of [-1, 1]) {
+      const outer = roundedRect(0.16, 1.1, 0.02);
+      const hole = roundedRect(0.1, 0.9, 0.015);
+      outer.holes.push(new THREE.Path(hole.getPoints(8)));
+      const sg = extrude(outer, 0.006); sg.rotateY(Math.PI / 2);
+      const shroud = mesh(sg, bar); shroud.position.set(s * (ux + 0.042), 0.68, z); add(shroud);
+    }
+  }
+
+  return {
+    group: g,
+    place(hook, lift) {
+      handle.position.copy(hook);
+      for (const p of plates) p.mesh.position.y = p.y + (p.moves ? lift : 0);
+      head.position.y = headY + lift;
+      setRod(stem, V(0, pinY + lift - 0.02, z), V(0, headY + lift, z));
+      pin.position.set(0, pinY + lift, z - 0.055);
+      setRod(cable, hook.clone().add(V(0, detailed ? 0.075 : 0.04, 0)), V(0, G.front.y, G.front.z - G.wheelR));
+      setRod(drop, V(0, G.back.y, G.back.z + G.wheelR), V(0, headY + lift + 0.025, z));
+      if (stopBall) stopBall.position.copy(hook).add(V(0, 0.2, 0));
+    },
+  };
+}
+
+// ---------- the clip ----------
+const LEVELS = {};
+const KEYS = ['A', 'B', 'T', 'C'];
+let clip = null, mixer = null, action = null, handleNode = null, kitNode = null, body = [];
+const timeline = { lowering: 1.2, bottom: 0.35, lifting: 1.4, top: 0.6 };
+const ease = (t) => t * t * (3 - 2 * t);
+function position(now) {
+  if (state.motion === 'top') return 0;
+  if (state.motion === 'bottom') return 1;
+  const len = timeline.lowering + timeline.bottom + timeline.lifting + timeline.top;
+  let t = ((now - state.t0) / 1000) % len;
+  if (t < timeline.lowering) return ease(t / timeline.lowering);
+  t -= timeline.lowering; if (t < timeline.bottom) return 1;
+  t -= timeline.bottom; if (t < timeline.lifting) return 1 - ease(t / timeline.lifting);
+  return 0;
+}
+const bytes = Uint8Array.from(atob(CLIP), (c) => c.charCodeAt(0)).buffer;
+new THREE.GLTFLoader().parse(bytes, '', (gltf) => {
+  clip = gltf.scene;
+  clip.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = o.receiveShadow = true;
+      if (o.material.name === 'body' || o.material.name === 'joint') { o.material = MAT[o.material.name]; body.push(o); }
+      if (o.name === 'shadow') o.visible = false;
+    }
+  });
+  handleNode = clip.getObjectByName('cable_handle');
+  kitNode = clip.getObjectByName('cable');
+  kitNode.traverse((o) => { if (o.isMesh) o.visible = false; });
+  scene.add(clip);
+  mixer = new THREE.AnimationMixer(clip);
+  action = mixer.clipAction(gltf.animations[0]);
+  action.play();
+  const ONE = { frame: MAT.bar, vinyl: MAT.plate, stack: MAT.plate, metal: MAT.bar, pulley: MAT.bar, housing: MAT.bar, rubber: MAT.rubber, hardware: MAT.bar };
+  LEVELS.A = levelA();
+  LEVELS.B = levelBC(false, ONE);
+  LEVELS.T = levelBC(false, { frame: MAT.frame, vinyl: MAT.vinyl, stack: MAT.stack, metal: MAT.metal, pulley: MAT.pulley, housing: MAT.pulley, rubber: MAT.vinyl, hardware: MAT.metal });
+  LEVELS.C = levelBC(true, { ...ONE, pulley: MAT.zinc, hardware: MAT.zinc });
+  for (const k of KEYS) scene.add(LEVELS[k].group);
+  document.getElementById('hint').textContent = 'drag to turn';
+  applyTheme(); syncButtons(); stats();
+  requestAnimationFrame(tick);
+}, (e) => { document.getElementById('hint').textContent = 'the clip didn\'t load'; console.error(e); });
+
+const handleWorld = new THREE.Vector3();
+function frameAt(d) {
+  action.time = Math.min(d, 0.9999) * action.getClip().duration;
+  mixer.update(0);
+  clip.updateMatrixWorld(true);
+  handleNode.getWorldPosition(handleWorld);
+  const hookTop = V(0, 1.62, 0.02);
+  const lift = Math.max(0, hookTop.y - handleWorld.y);
+  for (const k of KEYS) {
+    LEVELS[k].group.visible = k === state.level;
+    LEVELS[k].place(handleWorld.clone(), lift);
+  }
+}
+function placeCamera() {
+  const dist = FRAME.half / Math.tan(rad(camera.fov / 2));
+  const az = rad(state.az), el = rad(state.el), t = FRAME.target;
+  camera.position.set(t.x + dist * Math.cos(el) * Math.sin(az), t.y + dist * Math.sin(el), t.z + dist * Math.cos(el) * Math.cos(az));
+  camera.lookAt(t);
+  const key = az - rad(55), kel = rad(50);
+  sun.position.set(t.x + 5 * Math.cos(kel) * Math.sin(key), t.y + 5 * Math.sin(kel), t.z + 5 * Math.cos(kel) * Math.cos(key));
+  sun.target.position.copy(t);
+  const back = az + rad(160);
+  rim.position.set(t.x + 5 * Math.sin(back), t.y + 3, t.z + 5 * Math.cos(back));
+  rim.target.position.copy(t);
+}
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+function tick(now) {
+  resize();
+  frameAt(position(now));
+  placeCamera();
+  renderer.render(scene, camera);
+  if (!q.get('shot')) requestAnimationFrame(tick);
+  else document.title = 'ready';
+}
+
+// ---------- cost: triangles and a GLB of each level ----------
+function triangles(group) {
+  let n = 0;
+  group.traverse((o) => { if (o.isMesh) { const g = o.geometry; n += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+  return Math.round(n);
+}
+const sizes = {};
+function stats() {
+  const el = document.getElementById('stats');
+  const show = () => {
+    el.innerHTML = KEYS.map((k) => `<b>${k === 'T' ? 'B · tones' : k}</b> ${triangles(LEVELS[k].group).toLocaleString('en')} triangles${sizes[k] ? `, ${(sizes[k] / 1024).toFixed(0)} KB as GLB` : ''}`).join('<br>');
+  };
+  show();
+  if (!THREE.GLTFExporter) return;
+  for (const k of KEYS) {
+    const copy = LEVELS[k].group.clone(true);
+    copy.visible = true;
+    new THREE.GLTFExporter().parse(copy, (out) => { sizes[k] = out.byteLength; show(); }, { binary: true });
+  }
+}
+
+// ---------- checks: the hands on the bar, nothing through the body ----------
+function check(level, d) {
+  const prev = state.level; state.level = level; frameAt(d);
+  const hands = ['hand_l', 'hand_r'].map((n) => clip.getObjectByName(n));
+  const grips = ['middle_02_l', 'middle_02_r'].map((n) => clip.getObjectByName(n));
+  const handGap = grips.map((b) => { const p = b.getWorldPosition(V(0, 0, 0)); return Math.hypot(p.y - handleWorld.y, p.z - handleWorld.z); });
+  // Every body vertex, skinned on the CPU, against every solid kit part's box (held parts and the
+  // hands' own bones excepted).
+  const solids = [];
+  LEVELS[level].group.traverse((o) => { if (o.isMesh && o.userData.solid && !o.userData.held) { o.geometry.computeBoundingBox(); solids.push(o); } });
+  let worst = { depth: 0, part: '' };
+  const v = new THREE.Vector3(), local = new THREE.Vector3(), inv = new THREE.Matrix4();
+  for (const m of body) {
+    if (!m.isSkinnedMesh) continue;
+    const pos = m.geometry.attributes.position, skin = m.geometry.attributes.skinIndex;
+    const names = m.skeleton.bones.map((b) => b.name);
+    for (let i = 0; i < pos.count; i += 2) {
+      const bone = names[skin.getX(i)] || '';
+      if (/hand|index|middle|ring|pinky|thumb|lowerarm/.test(bone)) continue;
+      v.fromBufferAttribute(pos, i); m.boneTransform(i, v); v.applyMatrix4(m.matrixWorld);
+      for (const s of solids) {
+        inv.copy(s.matrixWorld).invert(); local.copy(v).applyMatrix4(inv);
+        const b = s.geometry.boundingBox;
+        if (b.containsPoint(local)) {
+          const depth = Math.min(local.x - b.min.x, b.max.x - local.x, local.y - b.min.y, b.max.y - local.y, local.z - b.min.z, b.max.z - local.z) * Math.min(s.scale.x, s.scale.y, s.scale.z, 1);
+          if (depth > worst.depth) worst = { depth, part: s.geometry.type, at: local.clone(), bone };
+        }
+      }
+    }
+  }
+  state.level = prev;
+  return { level, d, handGapCm: handGap.map((x) => +(x * 100).toFixed(1)), worstCm: +(worst.depth * 100).toFixed(1), part: worst.part, bone: worst.bone };
+}
+window.runChecks = () => KEYS.flatMap((l) => [0, 1].map((d) => check(l, d)));
+
+// ---------- input ----------
+let drag = null, lastTap = 0;
+stage.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, az: state.az }; });
+addEventListener('pointermove', (e) => { if (drag) state.az = drag.az - (e.clientX - drag.x) * 0.5; });
+addEventListener('pointerup', () => { drag = null; });
+stage.addEventListener('pointerup', () => { const t = performance.now(); if (t - lastTap < 300) state.az = 62; lastTap = t; });
+function syncButtons() {
+  const theme = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.querySelectorAll('[data-level]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.level === state.level));
+  document.querySelectorAll('[data-theme-pick]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.themePick === theme));
+  document.querySelectorAll('[data-motion]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.motion === state.motion));
+}
+document.querySelectorAll('[data-level]').forEach((b) => b.addEventListener('click', () => { state.level = b.dataset.level; applyTheme(); syncButtons(); }));
+document.querySelectorAll('[data-motion]').forEach((b) => b.addEventListener('click', () => { state.motion = b.dataset.motion; state.t0 = performance.now(); syncButtons(); }));
+document.querySelectorAll('[data-theme-pick]').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.theme = b.dataset.themePick;
+  try { localStorage.setItem('machines-theme', b.dataset.themePick); } catch (e) {}
+  applyTheme(); syncButtons();
+}));
+</script>
+</body>
+</html>
