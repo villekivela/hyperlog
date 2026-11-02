@@ -51,6 +51,7 @@ def days_of(call, scenario):
     """The days a proposal trains, with the minutes each is held to (None: no limit); a workout is one day."""
     name, data = call
     if name == "propose_program":
+        # Keep in step with weekdayPlan in CompareReplies.kt.
         minutes = [45, 60, 60]  # Monday 60, Wednesday 45, Friday 60; from a Tuesday, Day A lands on Wednesday, B on Friday, C on Monday
         days = first_block_days(data["program"])
         return days, [minutes[i] if i < len(minutes) else None for i in range(len(days))]
@@ -181,22 +182,21 @@ def frequency(days, library):
     return row("Frequency", "missed", f"days a week outside {low}–{high}: " + ", ".join(f"{g} {n}" for g, n in sorted(outside.items())))
 
 
-def day_minutes(day, library):
+def day_minutes(day):
     total = 0.0
     for slot in slots(day):
         total += WARMUP_MINUTES + sum(count(line) * (SECONDS_PER_SET + line.get("rest", 120)) for line in lines(slot)) / 60
     return total
 
 
-def time_fit(days, limits, library):
-    over, worst = [], 0.0
+def time_fit(days, limits):
+    over = []
     for day, limit in zip(days, limits):
         if limit is None:
             continue
-        minutes = day_minutes(day, library)
+        minutes = day_minutes(day)
         if minutes > limit:
             over.append(f"{day.get('name', 'the workout')} about {number(round(minutes))} min against {limit}")
-        worst = max(worst, minutes)
     if not over:
         return row("Time", "met", "estimated within the minutes asked (45 s a set + rest, 2 min warm-up per exercise)")
     return row("Time", "missed", "over its minutes: " + "; ".join(over))
@@ -248,7 +248,7 @@ def score(run, library, plan=None):
     rows = []
     if found[0] == "propose_program":
         rows += ([] if scenario in FOCUS_ASKED else [sets_per_muscle(days, library)]) + [frequency(days, library)]
-    rows += [reps_in_reserve(days, library), failure(days, library), rep_ranges(days, library), time_fit(days, limits, library)]
+    rows += [reps_in_reserve(days, library), failure(days, library), rep_ranges(days, library), time_fit(days, limits)]
     if found[0] == "propose_program" and scenario in FOCUS_ASKED:
         rows.append(focus(found[1]["program"], days, library, FOCUS_ASKED[scenario]))
     return rows

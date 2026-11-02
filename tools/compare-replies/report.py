@@ -5,10 +5,13 @@ self-contained HTML page to stdout. Each reply is scored by checks.py against th
 """
 import html
 import json
+import os
 import sys
 from pathlib import Path
 
 import checks
+
+BEFORE = os.environ.get("COMPARE_BEFORE", "2a431ef")
 
 SCENARIOS = [
     ("new-program", "New program", "Three training days of 45 to 60 minutes, at Harbour."),
@@ -98,7 +101,7 @@ def column(side, run, names, library, plan):
     out = f"<div class='col'><div class='tag'>{side}</div>{status}<details><summary>{len(run['asked'])} questions asked</summary><ol class='qa'>{qa}</ol></details>{proposal_html(run, names)}"
     out += "<table class='checks'><tr><th>Target</th><th>Result</th></tr>"
     for r in sorted(checks.score(run, library, plan), key=lambda r: TARGET_ORDER.index(r["target"])):
-        out += f"<tr><td>{esc(r['target'])}</td><td><span class='chip {r['verdict']}'>{r['verdict']}</span><span class='detail'>{esc(r['detail'])}</span></td></tr>"
+        out += f"<tr><td>{esc(r['target'])}<div class='rule'>{esc(RULES.get(r['target'], ''))}</div></td><td><span class='chip {r['verdict']}'>{r['verdict']}</span><span class='detail'>{esc(r['detail'])}</span></td></tr>"
     return out + "</table></div>"
 
 
@@ -111,7 +114,7 @@ def main():
     body = ""
     for key, title, line in SCENARIOS:
         before, after = load(out_dir / "before" / f"{key}.run.json"), load(out_dir / "after" / f"{key}.run.json")
-        body += f"<h2>{esc(title)}</h2><p class='sub'>{esc(line)}</p><div class='cols'>{column('Before: main at 2a431ef, no training style', before, names, library, plan)}{column('After: main with the training style', after, names, library, plan)}</div>"
+        body += f"<h2>{esc(title)}</h2><p class='sub'>{esc(line)}</p><div class='cols'>{column(f'Before: main at {BEFORE}, no training style', before, names, library, plan)}{column('After: main with the training style', after, names, library, plan)}</div>"
     print(f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Training style replies</title><style>{CSS}</style></head><body><main>
 <h1>Check-in replies, before and after the training style</h1>
 <p class="sub">Four scenarios against the Claude API (claude-opus-5-5, the app's own client and check-in code), once with the context before the training style and once with it.</p>
