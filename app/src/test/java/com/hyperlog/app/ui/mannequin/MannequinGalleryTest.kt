@@ -65,7 +65,7 @@ class MannequinGalleryTest {
         }
         // The clips come in the index's order, by exercise id.
         compose.onNodeWithText("2-Grip Lat Pulldown").assertExists()
-        compose.onNodeWithText("1 of 25").assertExists()
+        compose.onNodeWithText("1 of 38").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
         assertEquals(context.assets.open("mannequins/2_grip_lat_pulldown.glb").use { it.readBytes().size }, loaded.single())

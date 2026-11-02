@@ -105,6 +105,8 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   key; anything else, a point or a list included, is replaced whole. Likes chain.
 - **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
   baked, from the top (0 s) to the bottom (1 s).
+- **`feet.y`** (standing motions) stands the feet on a platform that high, a deficit's; the entry
+  adds the `platform` kit under them.
 - **`body.arch`** (lying motions) bends the back: three angles, in degrees, added to the spine's
   lean for the lumbar, chest and upper-back segments. The lumbar and chest turn up and the upper
   back down, which lifts the chest and the lower back off the pad while the upper back and the
@@ -134,8 +136,8 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 
 | Motion | The body | Reads |
 | --- | --- | --- |
-| `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }`; `feet.kneesOut` |
-| `hinge` | a bar hanging in straight arms, an RDL | `shin`, `thigh`, `trunk`; `bar.z`, the bar's distance in front of the ankles |
+| `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }` (`back` negative racks it in front); `feet.kneesOut`; `grip.pole` for the elbows, and `grip.crossed`, each hand over the other shoulder (a cross-arm front squat) |
+| `hinge` | a bar hanging in straight arms: an RDL, a deadlift, a shrug | `shin`, `thigh`, `trunk`; `bar.z`, the bar's distance in front of the ankles; `shrug`, which lifts the bar with the shoulders |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared; `body.head`, the head's tilt from the spine to rest it on the pad |
 | `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
 | `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
@@ -143,11 +145,12 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point |
-| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms` |
+| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms` |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles |
 | `calf_raise` | seated, the knees under a pad, the balls of the feet on a platform's edge | `ankle`, degrees from flat, heels up positive; `feet.ball` [y, z] |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `hip: [y, z]` at the top and bottom (the rails run between them); `body.trunk`; `feet: { y, z, tilt }` place the platform; `grip.at` [up, out] from the shoulders |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `pivot: [y, z]`; `handle: [y, z]` at the top and bottom, `press` 0 to 1 |
+| `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar.up` over the hips |
 
 ## Equipment
 
@@ -156,7 +159,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 
 | Equipment | Kits |
 | --- | --- |
-| `barbell` | `barbell`, `bench` |
+| `barbell` | `barbell`, `bench`, `platform` (a low one under the feet, for a deficit) |
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
@@ -191,7 +194,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
 
-- `bench` is flat, or adjustable with `angle` raising its back pad from flat.
+- `bench` is flat, or adjustable with `angle` raising its back pad from flat; with `across: z` it
+  stands across the body, its middle at that z (a hip thrust's).
 - `cable_column` is one adjustable column (or two, `twin`, mirrored at [-x, z]) standing at `at`
   [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
   toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with

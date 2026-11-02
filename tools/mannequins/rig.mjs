@@ -104,6 +104,8 @@ export function buildRig(root) {
     midfoot: (heel + toe) / 2 - rest.foot_l.p.z,
     // The ball of the foot, standing flat: how far in front of the ankle and how high off the floor.
     ballAhead: Math.hypot(footRest.x, footRest.z), ballY: rest.ball_l.p.y,
+    // From the collarbone's root to the shoulder joint: how far a shrug lifts the shoulder.
+    clavicle: len('clavicle_l', 'upperarm_l'),
   };
   const curls = [];
   const palms = {};

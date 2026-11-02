@@ -14,6 +14,8 @@ export const OPTIONAL = {
   calf_raise: { 'grip.pole': [1, -0.3, -0.4] },
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
   lever_handles: { 'grip.rotate': 0, 'grip.pole': [0.7, -1, -0.5] },
+  bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
+  hinge: { 'top.shrug': 0, 'bottom.shrug': 0 },
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);

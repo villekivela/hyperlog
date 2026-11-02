@@ -368,4 +368,177 @@ export const POSES = {
     grip: { pole: [1, -1, 0.1] },
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },
   },
+
+  // The library's next barbell exercises (#127, the barbell batch): first poses for the owner to tune.
+
+  // The bar high on the traps, the trunk more upright than the low bar's, the feet a little narrower.
+  back_squat_high_bar: {
+    equipment: 'barbell',
+    motion: 'squat',
+    kit: { barbell: {} },
+    top: { shin: 5, thigh: 4 },
+    bottom: { shin: 42, thigh: 100 },
+    feet: { stance: 0.16, toeOut: 15, kneesOut: 0.45 },
+    bar: { up: 0.06, back: 0.185 },
+    grip: { width: 0.38 },
+    camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
+  },
+
+  // The bar low across the rear delts, the hips back and the trunk leaning further, a wider stance.
+  back_squat_low_bar: {
+    equipment: 'barbell',
+    motion: 'squat',
+    kit: { barbell: {} },
+    top: { shin: 4, thigh: 4 },
+    bottom: { shin: 32, thigh: 92 },
+    feet: { stance: 0.2, toeOut: 22, kneesOut: 0.45 },
+    bar: { up: -0.03, back: 0.24 },
+    grip: { width: 0.45 },
+    camera: { target: [0, 0.85, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
+  },
+
+  // The bar racked on the front of the shoulders, the arms crossed over it, each hand holding it over
+  // the other shoulder, the elbows high and forward; the trunk upright.
+  front_squat: {
+    equipment: 'barbell',
+    motion: 'squat',
+    kit: { barbell: {} },
+    top: { shin: 5, thigh: 3 },
+    bottom: { shin: 42, thigh: 105 },
+    feet: { stance: 0.17, toeOut: 18, kneesOut: 0.45 },
+    bar: { up: 0.02, back: -0.07 },
+    grip: { width: 0.13, crossed: true, pole: [0.35, 0.2, 1] },
+    camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
+  },
+
+  // Standing, the elbows by the sides: the bar curls from the thighs up to the shoulders, palms up.
+  barbell_curl: {
+    equipment: 'barbell',
+    motion: 'arms',
+    kit: { barbell: {} },
+    top: { shin: 3, thigh: 3, trunk: 2, upperArm: 10, forearm: 140 },
+    bottom: { shin: 3, thigh: 3, trunk: 2, upperArm: 6, forearm: 14 },
+    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
+    grip: { width: 0.2, rotate: 180 },
+    camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 62, elevation: 8 },
+  },
+
+  // Lying on the floor, the feet flat and the bar across the hips: the hips rise until the body is
+  // straight from the shoulders to the knees.
+  barbell_glute_bridge: {
+    equipment: 'barbell',
+    motion: 'bridge',
+    kit: { barbell: {} },
+    body: { shoulders: [0.11, -0.42], head: 0 },
+    top: { hip: [0.34, 0.08] },
+    bottom: { hip: [0.13, 0.06] },
+    feet: { stance: 0.15, z: 0.42, toeOut: 10 },
+    bar: { up: 0.175 },
+    grip: { width: 0.3 },
+    camera: { target: [0, 0.3, 0.05], halfHeight: 0.75, azimuth: 70, elevation: 14 },
+    shadow: { size: [0.9, 1.6], at: [0, 0] },
+  },
+
+  // The shoulder blades across a bench, the feet flat and the bar across the hips: the hips rise
+  // until the trunk is level.
+  barbell_hip_thrust: {
+    equipment: 'barbell',
+    motion: 'bridge',
+    kit: { barbell: {}, bench: { z: 0, across: -0.55, height: 0.42 } },
+    body: { shoulders: [0.54, -0.42], head: 10 },
+    top: { hip: [0.52, 0.08] },
+    bottom: { hip: [0.22, -0.02] },
+    feet: { stance: 0.16, z: 0.42, toeOut: 10 },
+    bar: { up: 0.175 },
+    grip: { width: 0.3, pole: [1, 0.1, 0.3] },
+    camera: { target: [0, 0.4, 0.0], halfHeight: 0.8, azimuth: 70, elevation: 12 },
+    shadow: { size: [1.2, 1.6], at: [0, 0] },
+  },
+
+  // Hinged forward with the back flat: the bar rows from hanging under the shoulders to the belly.
+  barbell_row: {
+    equipment: 'barbell',
+    motion: 'arms',
+    kit: { barbell: {} },
+    top: { shin: 12, thigh: 50, trunk: 60, upperArm: -100, forearm: 28 },
+    bottom: { shin: 12, thigh: 50, trunk: 60, upperArm: 24, forearm: 32 },
+    feet: { stance: 0.15, toeOut: 10, kneesOut: 0.25 },
+    grip: { width: 0.25, pole: [0.35, 0.2, -1] },
+    camera: { target: [0, 0.8, 0.1], halfHeight: 0.95, azimuth: 66, elevation: 8 },
+  },
+
+  // Standing on a low platform, the trunk level: each rep rows from the bar at rest on the floor to
+  // the lower chest.
+  deficit_pendlay_row: {
+    equipment: 'barbell',
+    motion: 'arms',
+    kit: { barbell: {}, platform: { height: 0.05 } },
+    top: { shin: 6, thigh: 40, trunk: 80, upperArm: -110, forearm: 12 },
+    bottom: { shin: 6, thigh: 40, trunk: 80, upperArm: 30, forearm: 44 },
+    feet: { stance: 0.16, y: 0.05, toeOut: 10, kneesOut: 0.3 },
+    grip: { width: 0.27, pole: [0.35, 0.2, -1] },
+    camera: { target: [0, 0.6, 0.15], halfHeight: 0.85, azimuth: 66, elevation: 8 },
+  },
+
+  // Standing tall, the arms straight: the shoulders shrug up toward the ears and down again.
+  barbell_shrug: {
+    equipment: 'barbell',
+    motion: 'hinge',
+    kit: { barbell: {} },
+    top: { shin: 1, thigh: 0, trunk: 2, shrug: 22 },
+    bottom: { shin: 1, thigh: 0, trunk: 2, shrug: -4 },
+    feet: { stance: 0.13, toeOut: 6, kneesOut: 0 },
+    bar: { z: 0.14 },
+    grip: { width: 0.24 },
+    camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 62, elevation: 8 },
+  },
+
+  // Standing, a close grip: the bar rises along the body to the chest, the elbows leading high.
+  barbell_upright_row: {
+    equipment: 'barbell',
+    motion: 'free_arms',
+    kit: { barbell: {} },
+    top: { shin: 2, thigh: 2, trunk: 3, hand: [0.11, 1.3, 0.21] },
+    bottom: { shin: 2, thigh: 2, trunk: 3, hand: [0.11, 0.83, 0.17] },
+    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
+    grip: { pole: [1, 0.7, -0.2] },
+    camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 40, elevation: 8 },
+  },
+
+  // From the floor, the bar over the middle of the feet and the back flat, to standing locked out.
+  deadlift: {
+    equipment: 'barbell',
+    motion: 'hinge',
+    kit: { barbell: {} },
+    top: { shin: 2, thigh: 0, trunk: 2 },
+    bottom: { shin: 18, thigh: 72, trunk: 58 },
+    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.2 },
+    bar: { z: 0.15 },
+    grip: { width: 0.25 },
+    camera: { target: [0, 0.8, 0.05], halfHeight: 1.0, azimuth: 66, elevation: 8 },
+  },
+
+  // A deadlift standing on a low platform, the bar starting further below the feet.
+  deficit_deadlift: {
+    like: 'deadlift',
+    kit: { barbell: {}, platform: { height: 0.05 } },
+    bottom: { shin: 22, thigh: 78, trunk: 60 },
+    feet: { y: 0.05 },
+    bar: { z: 0.17 },
+  },
+
+  // Lying on the floor, the knees bent: the bar presses from the elbows resting on the floor to
+  // locked out over the shoulders.
+  floor_press: {
+    equipment: 'barbell',
+    motion: 'bench_press',
+    kit: { barbell: {} },
+    body: { hip: [0.11, 0.28], trunk: -89, head: 0 },
+    feet: { stance: 0.2, z: 0.62, toeOut: 15 },
+    top: { bar: [0.75, -0.2] },
+    bottom: { bar: [0.33, -0.08] },
+    grip: { width: 0.38, elbows: 0.7 },
+    camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
 };

@@ -1514,7 +1514,11 @@ gallery (Technique videos).
     only before the first rep it sits. The starter program's batch (#127) adds a cable column, one or
     a pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
-    row, the machine pulldown and the preacher curl.
+    row, the machine pulldown and the preacher curl. The barbell batch (#127) adds a low platform
+    under the feet for a deficit, and a bench that stands across the body for a hip thrust; its
+    front squat racks the bar with the arms crossed, as the mannequin's hands can't bend back into a
+    clean grip. The incline and decline presses (an adjustable bench is six clips, and the bench has
+    no angle below flat) and the barbell lunge (a split stance) wait for a later batch.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

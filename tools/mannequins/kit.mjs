@@ -70,7 +70,7 @@ export const MACHINES = {
  * Bodyweight needs no kit for most of its exercises.
  */
 export const EQUIPMENT = {
-  barbell: ['barbell', 'bench'],
+  barbell: ['barbell', 'bench', 'platform'],
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'cable_column', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
@@ -415,9 +415,10 @@ function padded(length, M, name) {
  * flat, or with its back pad raised `angle` degrees about a hinge at `hinge` (z; by default 42 cm
  * behind the seat's front), an adjustable bench. With `adjustable`, the back pad is a part of its
  * own, `bench_back`, standing at `angle` about the hinge, which the phone turns to the exact angle.
+ * With `across` it stands across the body instead, its middle at that z (`z` is then along it).
  * The pads stand on legs of tubing with feet across, a spine along the floor and a rail under them.
  */
-function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null, adjustable = false } = {}) {
+function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null, adjustable = false, across = null } = {}) {
   const M = tones();
   const y = height - PAD / 2;
   const parts = [];
@@ -461,6 +462,11 @@ function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null
   parts.push(tube(0.05, V(0, 0.085, ends[0]), V(0, 0.085, ends[1]), M.frame));
   parts.push(tube(0.04, V(0, under, ends[0] - 0.03), V(0, under, ends[1] + 0.03), M.frame));
   const g = group('bench', parts);
+  // Across the body, a hip thrust's: its length along x, its middle at z `across`.
+  if (across !== null) {
+    g.rotation.y = Math.PI / 2;
+    g.position.set(0, 0, across);
+  }
   if (turning) {
     g.add(turning);
     nameAll(turning, 'bench_back');
@@ -1370,8 +1376,15 @@ function preacherCurl({ seat = [0.5, 0] } = {}) {
   };
 }
 
+/** A low platform under the feet, `height` tall and `size` [w, d] at `at` [x, z]: a deficit. */
+function platform({ height = 0.05, size = [0.8, 0.5], at = [0, 0.05] } = {}) {
+  const M = tones();
+  const g = group('platform', [pad(size[0], height, size[1], M.frame, V(at[0], height / 2, at[1]), { soft: 0.008 })]);
+  return { group: g, place() {} };
+}
+
 export const KITS = {
-  barbell, dumbbells, bench, cable_tower: cableTower, cable_column: cableColumn, leg_press: legPress, chest_press: chestPress,
+  barbell, dumbbells, bench, platform, cable_tower: cableTower, cable_column: cableColumn, leg_press: legPress, chest_press: chestPress,
   leg_extension: legExtension, leg_curl: (o = {}) => (o.lying ? lyingLegCurl(o) : legExtension({ ...o, curl: true })),
   calf_raise_machine: calfRaise, squat_machine: squatMachine, row_machine: rowMachine, pulldown_machine: pulldownMachine,
   preacher_curl_machine: preacherCurl,

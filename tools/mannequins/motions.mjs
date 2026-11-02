@@ -66,16 +66,19 @@ function standingHips(e, s, L) {
   const a = inPlane(s.shin);
   const b = inPlane(s.thigh);
   const kz = L.shin * STRAIGHT * Math.sin(a) * Math.cos(out);
-  const ky = L.ankleY + L.shin * STRAIGHT * Math.cos(a);
+  const ky = (e.feet.y ?? 0) + L.ankleY + L.shin * STRAIGHT * Math.cos(a);
   return V(0, ky + L.thigh * STRAIGHT * Math.cos(b), kz - L.thigh * STRAIGHT * Math.sin(b) * Math.cos(out));
 }
 
-/** Feet flat on the floor, `feet.stance` either side of the middle at `feet.z`, the knees toward `pole`. */
+/**
+ * Feet flat on the floor, or on a platform `feet.y` high (a deficit), `feet.stance` either side of
+ * the middle at `feet.z`, the knees toward `pole`.
+ */
 const floorFeet = (e, L, pole) => ({
-  ankles: [-1, 1].map((s) => V(s * e.feet.stance, L.ankleY, e.feet.z ?? 0)),
+  ankles: [-1, 1].map((s) => V(s * e.feet.stance, (e.feet.y ?? 0) + L.ankleY, e.feet.z ?? 0)),
   toeOut: e.feet.toeOut ?? 0,
   kneePole: pole,
-  support: () => floor,
+  support: () => (e.feet.y ? { point: V(0, e.feet.y, 0), normal: V(0, 1, 0) } : floor),
 });
 
 /** Standing: the knees forward, pushed out by `feet.kneesOut`. */
@@ -169,7 +172,12 @@ export const MOTIONS = {
       headDir: u.clone().add(V(0, 1.2, 0.15)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
-      armPole: (side) => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, side * 0.3).normalize(),
+      // With `grip.crossed` (a front squat's cross-arm rack) each hand holds the bar over the other
+      // shoulder, `grip.width` across the middle.
+      ...(e.grip.crossed ? { hand: (side) => bar.clone().addScaledVector(X, -side * e.grip.width) } : {}),
+      // A bar on the back has the elbows down and back; `grip.pole` points them elsewhere, forward
+      // for a bar racked on the front.
+      armPole: e.grip.pole ? elbowsTo(e) : (side) => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, side * 0.3).normalize(),
     };
   },
 
@@ -185,9 +193,11 @@ export const MOTIONS = {
     const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
     const dx = e.grip.width - L.shW;
     const dz = sh.z - e.bar.z;
+    // A shrug lifts the shoulders, and the bar with them.
+    const lift = L.clavicle * Math.sin(rad(s.shrug ?? 0));
     return {
-      hipC, u,
-      bar: V(0, sh.y - Math.sqrt(Math.max(0, reach * reach - dx * dx - dz * dz)), e.bar.z),
+      hipC, u, shrug: s.shrug,
+      bar: V(0, sh.y + lift - Math.sqrt(Math.max(0, reach * reach - dx * dx - dz * dz)), e.bar.z),
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
@@ -406,6 +416,8 @@ export const MOTIONS = {
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
       ...feet,
       hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
+      // Both hands on one bar (an upright row): it lies between them.
+      bar: V(0, s.hand[1], s.hand[2]),
       armPole: elbowsTo(e, [1, -0.3, -0.5]),
     };
   },
@@ -542,6 +554,31 @@ export const MOTIONS = {
       hand: handle,
       armPole: elbowsTo(e, [0.7, -1, -0.5]),
       pivot, handle,
+    };
+  },
+
+  /**
+   * Lying face up, the knees bent and the feet flat, the shoulder joints on the floor or across a
+   * bench at `body.shoulders` [y, z], the head toward -z: the hips lift from `hip` [y, z] at the
+   * bottom of the rep to `hip` at the top, each about a trunk's length from the shoulders, which the
+   * trunk turns about, a bar across them `bar.up` above the hips. A glute bridge, a hip thrust.
+   */
+  bridge(e, s, L) {
+    const hipC = V(0, ...s.hip);
+    // The trunk turns about the shoulder joints, which stay at `body.shoulders`: aimed past them by
+    // as far as they sit behind the spine.
+    const at = V(0, ...e.body.shoulders);
+    let u = at.clone().sub(hipC).normalize();
+    for (let i = 0; i < 4; i++) u = at.clone().addScaledVector(forwardOf(u), L.trunkBack).sub(hipC).normalize();
+    const lean = Math.atan2(u.z, u.y);
+    const f = forwardOf(u);
+    return {
+      hipC, u,
+      headDir: trunkUp(lean + rad(e.body.head ?? 0)),
+      ...floorFeet(e, L, (side) => V(side * (e.feet.kneesOut ?? 0.2), 1, 0.4).normalize()),
+      bar: hipC.clone().addScaledVector(f, e.bar.up),
+      grip: e.grip.width,
+      armPole: elbowsTo(e, [0.6, -1, 0.2]),
     };
   },
 };

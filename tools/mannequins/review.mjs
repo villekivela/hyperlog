@@ -39,6 +39,13 @@ export const BATCHES = {
     'leg_extension', 'seated_leg_curl', 'lying_leg_curl', 'seated_calf_raise', 'machine_preacher_curl', 'bayesian_cable_curl',
     'overhead_cable_triceps_extension', 'cable_lateral_raise', 'cable_shoulder_press', 'cable_flye', 'reverse_cable_crossover',
   ],
+  // The library's next barbell exercises (#127). The incline and decline presses wait for a
+  // page of their own (an adjustable bench is six clips, and a decline is below flat) and the lunge
+  // for a split stance.
+  barbell: [
+    'back_squat_high_bar', 'back_squat_low_bar', 'front_squat', 'barbell_curl', 'barbell_glute_bridge', 'barbell_hip_thrust',
+    'barbell_row', 'deficit_pendlay_row', 'barbell_shrug', 'barbell_upright_row', 'deadlift', 'deficit_deadlift', 'floor_press',
+  ],
   // Every pose above again, on the kits at their full detail and in their tones (#127).
   kits: [
     'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'db_incline_press', 'lat_pulldown', 'close_grip_lat_pulldown',

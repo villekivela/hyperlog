@@ -153,6 +153,17 @@ test('every exercise of the starter program has a pose, the ones it didn\'t have
   assert.deepEqual([...BATCHES.starter].sort(), STARTER);
 });
 
+test('the barbell batch is the library\'s next barbell exercises, bar three that wait for what they need', async () => {
+  const library = JSON.parse(await readFile(new URL('../../app/src/main/assets/exercises.json', import.meta.url), 'utf8'));
+  // The first sixteen barbell exercises without a pose before this batch, in the library's order.
+  const before = new Set([...Object.keys(POSES)].filter((id) => !BATCHES.barbell.includes(id)));
+  const next = library.exercises.filter((e) => e.equipment === 'barbell' && !before.has(e.id)).slice(0, 16).map((e) => e.id);
+  // An adjustable bench is six clips, and a decline below flat; a lunge needs a split stance.
+  const waiting = ['barbell_incline_press', 'barbell_lunge', 'decline_bench_press'];
+  assert.deepEqual([...BATCHES.barbell].sort(), next.filter((id) => !waiting.includes(id)).sort());
+  for (const id of BATCHES.barbell) assert.ok(POSES[id], `${id} has no pose`);
+});
+
 test('the kits batch is every exercise posed before #127, re-reviewed on the detailed kits', () => {
   assert.deepEqual([...BATCHES.kits].sort(), [
     'barbell_bench_press', 'barbell_rdl', 'barbell_squat', 'close_grip_lat_pulldown', 'db_incline_press',
