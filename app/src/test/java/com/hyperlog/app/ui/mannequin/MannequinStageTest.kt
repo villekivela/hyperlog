@@ -120,6 +120,19 @@ class MannequinStageTest {
     }
 
     @Test
+    fun whereTheRendererCantStartTheSheetShowsAsWithoutAClip() {
+        // As on the JVM, where Filament's native library isn't there.
+        val missing = MannequinPlayers { throw UnsatisfiedLinkError("no filament-jni in java.library.path") }
+        compose.setContent {
+            CompositionLocalProvider(LocalMannequinPlayers provides missing, LocalLifecycleOwner provides lifecycle) {
+                HyperlogTheme { ExerciseSheet(squat, machine = null, onChangeMachine = null, mannequin = mannequins.clipFor(squat)) }
+            }
+        }
+        compose.onNodeWithText("Barbell Back Squat").assertIsDisplayed()
+        compose.onAllNodesWithTag(MannequinStageTag).assertCountEquals(0)
+    }
+
+    @Test
     fun aHorizontalDragTurnsItAndAVerticalOneIsLeftToTheSheet() {
         var sheetDragged = 0f
         compose.setContent {

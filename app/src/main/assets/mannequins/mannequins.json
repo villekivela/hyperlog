@@ -1,5 +1,33 @@
 {
   "clips": {
+    "barbell_bench_press": {
+      "clip": "barbell_bench_press.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.55,
+          0.05
+        ],
+        "halfHeight": 0.98,
+        "azimuth": 58,
+        "elevation": 32
+      }
+    },
+    "barbell_rdl": {
+      "clip": "barbell_rdl.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.82,
+          0.05
+        ],
+        "halfHeight": 1,
+        "azimuth": 66,
+        "elevation": 8
+      }
+    },
     "barbell_squat": {
       "clip": "barbell_squat.glb",
       "equipment": "barbell",
@@ -11,6 +39,76 @@
         ],
         "halfHeight": 1.02,
         "azimuth": 62,
+        "elevation": 8
+      }
+    },
+    "close_grip_lat_pulldown": {
+      "clip": "close_grip_lat_pulldown.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          1.12,
+          0.38
+        ],
+        "halfHeight": 1.18,
+        "azimuth": 62,
+        "elevation": 8
+      }
+    },
+    "lat_pulldown": {
+      "clip": "lat_pulldown.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          1.12,
+          0.38
+        ],
+        "halfHeight": 1.18,
+        "azimuth": 62,
+        "elevation": 8
+      }
+    },
+    "leg_press": {
+      "clip": "leg_press.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.74,
+          0.4
+        ],
+        "halfHeight": 0.98,
+        "azimuth": 118,
+        "elevation": 16
+      }
+    },
+    "machine_chest_press": {
+      "clip": "machine_chest_press.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.98,
+          0.1
+        ],
+        "halfHeight": 1.04,
+        "azimuth": 56,
+        "elevation": 12
+      }
+    },
+    "triceps_pressdown": {
+      "clip": "triceps_pressdown.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          1.05,
+          0.28
+        ],
+        "halfHeight": 1.12,
+        "azimuth": 68,
         "elevation": 8
       }
     }

@@ -57,11 +57,12 @@ class MannequinGalleryTest {
                 HyperlogTheme { MannequinGallery(Mannequins.fromAssets(context), exercises, onBack = {}) }
             }
         }
-        compose.onNodeWithText("Barbell Back Squat").assertExists()
-        compose.onNodeWithText("1 of 1").assertExists()
+        // The clips come in the index's order, by exercise id.
+        compose.onNodeWithText("Barbell Bench Press").assertExists()
+        compose.onNodeWithText("1 of 8").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
-        assertEquals(context.assets.open("mannequins/barbell_squat.glb").use { it.readBytes().size }, loaded.single())
+        assertEquals(context.assets.open("mannequins/barbell_bench_press.glb").use { it.readBytes().size }, loaded.single())
     }
 
     private fun settings(onGallery: (() -> Unit)?) {

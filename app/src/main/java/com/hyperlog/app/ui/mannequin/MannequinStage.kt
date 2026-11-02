@@ -102,7 +102,14 @@ internal val LocalMannequinPlayers = staticCompositionLocalOf<MannequinPlayers> 
 internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val players = LocalMannequinPlayers.current
-    val player = remember(players) { players.create(context) }
+    // Where the renderer can't start (its native library missing), the sheet shows as it does without a clip.
+    val player = remember(players) {
+        try {
+            players.create(context)
+        } catch (_: LinkageError) {
+            null
+        }
+    } ?: return
     DisposableEffect(player) { onDispose { player.release() } }
     val still = remember { animationsRemoved(context) }
     var shown by remember(player, clip) { mutableStateOf(false) }

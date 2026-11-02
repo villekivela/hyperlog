@@ -22,7 +22,7 @@ class MannequinsTest {
 
     @Test
     fun anExerciseWithoutAPoseHasNone() {
-        assertNull(mannequins.clipFor(library.getValue("barbell_bench_press")))
+        assertNull(mannequins.clipFor(library.getValue("deadlift")))
     }
 
     @Test
@@ -41,6 +41,12 @@ class MannequinsTest {
         mannequins.clips.forEach { clip ->
             assertEquals(clip.exerciseId, library[clip.exerciseId]?.equipment, clip.equipment)
         }
-        assertEquals(listOf("barbell_squat"), mannequins.clips.map { it.exerciseId })
+        assertEquals(
+            listOf(
+                "barbell_bench_press", "barbell_rdl", "barbell_squat", "close_grip_lat_pulldown", "lat_pulldown",
+                "leg_press", "machine_chest_press", "triceps_pressdown",
+            ),
+            mannequins.clips.map { it.exerciseId },
+        )
     }
 }
