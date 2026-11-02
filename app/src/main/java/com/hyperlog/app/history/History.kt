@@ -77,10 +77,7 @@ class History(
      * for each secondary one, whatever partials, drops or mini-sets extend it (SPEC, Volume).
      * Warm-ups are never logged.
      */
-    suspend fun weeklySets(weeks: Int = 8): List<WeekSets> = counted(weeks) { exercise, sets, week ->
-        for (m in exercise.muscles) week[m] = (week[m] ?: 0.0) + sets
-        for (m in exercise.secondary - exercise.muscles.toSet()) week[m] = (week[m] ?: 0.0) + sets * 0.5
-    }.map { WeekSets(it.start, it.sets.inBodyOrder()) }
+    suspend fun weeklySets(weeks: Int = 8): List<WeekSets> = counted(weeks) { exercise, sets, week -> exercise.addSets(sets, week) }.map { WeekSets(it.start, it.sets.inBodyOrder()) }
 
     /**
      * Sets per muscle group (Chest, Back, Shoulders, Arms, Legs, Glutes, Core) for the last [weeks]
@@ -165,4 +162,13 @@ class History(
 
     private fun Map<String, Double>.inBodyOrder(): Map<String, Double> =
         entries.sortedBy { (m, _) -> Muscles.indexOf(m).let { if (it < 0) Int.MAX_VALUE else it } }.associate { it.key to it.value }
+}
+
+/**
+ * Adds [sets] work sets of this exercise to [into], by muscle: 1 for each primary muscle and 0.5
+ * for each secondary one (SPEC, Volume). The one rule History and a program's review count by.
+ */
+fun Exercise.addSets(sets: Int, into: MutableMap<String, Double>) {
+    for (m in muscles) into[m] = (into[m] ?: 0.0) + sets
+    for (m in secondary - muscles.toSet()) into[m] = (into[m] ?: 0.0) + sets * 0.5
 }

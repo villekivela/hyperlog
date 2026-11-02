@@ -6,8 +6,11 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import com.hyperlog.app.click
+import com.hyperlog.app.coach.MuscleVolume
+import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.coach.ProgramFormat
 import com.hyperlog.app.coach.ProgramProposal
+import com.hyperlog.app.coach.VolumeStatus
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
@@ -107,6 +110,56 @@ class ProgramReviewTest {
             }
         }
         compose.onNodeWithText("· Monday has 5", substring = true).performScrollTo().assertIsDisplayed()
+    }
+
+    private fun volume(muscle: String, sets: Double, range: NumberRange = NumberRange(8, 14), focused: Boolean = false) = MuscleVolume(
+        muscle, sets, range, focused,
+        when { sets < range.low -> VolumeStatus.Under; sets > range.high -> VolumeStatus.Over; else -> VolumeStatus.Within },
+    )
+
+    private fun showVolume(vararg rows: MuscleVolume) = compose.setContent {
+        HyperlogTheme {
+            ProgramReviewScreen(proposal, names, null, onStart = { started++ }, onReject = {}, onSave = { saved++ }, volume = rows.toList())
+        }
+    }
+
+    @Test
+    fun theReviewListsEachMusclesSetsAWeekAgainstItsRangeAndMarksOneOutsideIt() {
+        showVolume(volume("Chest", 16.0, NumberRange(14, 21), focused = true), volume("Quads", 6.0), volume("Biceps", 9.5), volume("Side Delts", 20.0))
+        compose.onNodeWithText("Sets per muscle").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("16 sets a week · 14–21").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Focus").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("6 sets a week · 8–14").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("under").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("9.5 sets a week · 8–14").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("over").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun aMuscleOutsideItsRangeBlocksNothing() {
+        showVolume(volume("Quads", 2.0), volume("Side Delts", 30.0))
+        compose.click("Save for later")
+        assertEquals(1, saved)
+        compose.click("Start program")
+        assertEquals(1, started)
+    }
+
+    @Test
+    fun pastEightMusclesTheListShowsItsFirstSixAndOpensTheRest() {
+        val muscles = listOf("Chest", "Lats", "Traps", "Front Delts", "Side Delts", "Biceps", "Quads", "Hamstrings", "Glutes", "Upper Abs")
+        showVolume(*muscles.map { volume(it, 10.0) }.toTypedArray())
+        compose.onNodeWithText("Biceps").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Quads").assertDoesNotExist()
+        compose.onNodeWithText("4 more muscles").performScrollTo()
+        compose.click("4 more muscles")
+        compose.onNodeWithText("Upper Abs").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun aProgramWithNoCountedMusclesShowsNoSetsPerMuscle() {
+        showVolume()
+        compose.waitFor("Full body, 2 days")
+        compose.onNodeWithText("Sets per muscle").assertDoesNotExist()
     }
 
     @Test

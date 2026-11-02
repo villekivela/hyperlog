@@ -7,6 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
+import com.hyperlog.app.coach.ProgramVolume
+import com.hyperlog.app.coach.NumberRange
+import com.hyperlog.app.coach.TrainingTargets
+import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.coach.CoachLine
 import com.hyperlog.app.coach.CoachLineReader
@@ -155,14 +159,26 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** The Change waiting for accept or reject, with its diff; null when none is. */
     val review: StateFlow<ChangeReview?> = _review.asStateFlow()
 
-    /** Shows [change]'s diff against the running program's plan, for accept or reject. */
+    private var library: Map<String, Exercise> = emptyMap()
+    private var standingVolume = TrainingTargets().volume
+
+    /** The library and the standing volume range a Change's sets per muscle are counted and measured by. */
+    fun countSetsBy(exercises: List<Exercise>, volume: NumberRange) {
+        library = exercises.associateBy { it.id }
+        standingVolume = volume
+    }
+
+    /**
+     * Shows [change]'s diff against the running program's plan, for accept or reject, with the plan's
+     * sets per muscle before → after (SPEC, Sets per muscle).
+     */
     fun propose(change: Change) {
         viewModelScope.launch {
             val active = programs.active.first() ?: return@launch
             val diff = programs.preview(change) ?: return@launch
             val block = active.program.blockAt(active.week)?.name
             val ends = active.history.filter { it.id in change.replaces }.map { it.change.summary }
-            _review.value = ChangeReview(change, diff, active.program, block, ends)
+            _review.value = ChangeReview(change, diff, active.program, block, ends, volume = ProgramVolume.change(active, change, library, standingVolume))
         }
     }
 
