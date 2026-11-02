@@ -368,6 +368,10 @@ _Avoid_: Mock coach, demo mode
 How you like to train, kept once for the app and carried by every check-in: the training targets, How I train and About me.
 _Avoid_: Preferences, profile, philosophy (that is How I train)
 
+**Training style wizard**:
+The local walk through the training style, one choice a screen, ending in a summary with Done. Done counts as set, even with every default kept. Until it is done, Today shows a "Set how you train" card and New program opens the wizard first. Not the Check-in's wizard, which asks Claude's questions.
+_Avoid_: Onboarding, setup wizard
+
 **Training targets**:
 The training style's standing numbers and rules: goal, weekly sets per muscle as a range, how that volume runs across a block, frequency, effort and failure, calibration and rep ranges. Every new program starts from them; a program can carry its own for itself alone.
 _Avoid_: Targets alone (a set prescription has targets), preferences

@@ -29,6 +29,8 @@ import com.hyperlog.app.data.SettingEntity
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.openTab
+import com.hyperlog.app.program.Programs
+import com.hyperlog.app.program.StarterProgram
 import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitGone
 import kotlinx.coroutines.flow.first
@@ -254,6 +256,8 @@ class TrainingStyleWizardTest {
     fun dismissingTodaysCardDoesNotLiftNewProgramsGate() {
         compose.waitFor("Set how you train")
         compose.onNodeWithContentDescription("Dismiss set up").performClick()
+        assertTrue(runBlocking { styles.cardDismissed.first() })
+        assertFalse(done())
         compose.openTab("Coach")
         compose.click("New program")
         compose.waitFor("What are you training for?")
@@ -300,5 +304,30 @@ class TrainingStyleWizardTest {
         compose.waitFor("How many reps a set?")
         next()
         compose.waitFor("This is how you train")
+    }
+
+    @Test
+    fun newProgramOnAProgramReviewOpensTheWizardAndItsCloseGoesBackToTheReview() {
+        runBlocking {
+            Programs(db).import(StarterProgram.source(context))
+            // The whole program done: Today points at its program review.
+            db.programs().setPosition(Programs(db).active.first()!!.id, 13, 0)
+        }
+        compose.click("Hyperlog Full Body is done · See the review")
+        compose.waitFor("Hyperlog Full Body review")
+        compose.onNode(hasText("New program") and androidx.compose.ui.test.hasClickAction()).performClick()
+        compose.waitFor("What are you training for?")
+        compose.onNodeWithContentDescription("Leave without saving").performClick()
+        compose.waitFor("Hyperlog Full Body review")
+        assertFalse(done())
+        // Done goes on into the check-in.
+        compose.onNode(hasText("New program") and androidx.compose.ui.test.hasClickAction()).performClick()
+        compose.waitFor("What are you training for?")
+        walkToSummary()
+        compose.click("Done")
+        compose.waitFor("Do you have the program as a file?")
+        // × on a check-in from a review goes back to the review.
+        compose.onNodeWithContentDescription("Close the check-in").performClick()
+        compose.waitFor("Hyperlog Full Body review")
     }
 }
