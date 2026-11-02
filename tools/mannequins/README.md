@@ -65,6 +65,9 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
 - **`top.shrug`, `bottom.shrug`** (pulldown) lift the shoulders, in degrees: let up into the stretch
   at the top, down again as the elbows drive down. **`grip.elbows`** turns the elbows out from the
   sides: 1 out wide, 0 straight down by the sides (a pulldown's default is 0.8; the bench's, 0.9).
+- **`grip.rotate`** (any pose with hands) twists the forearms, in degrees: 0 overhand, 90 neutral
+  (palms toward each other), 180 underhand (palms toward the face). The default is 0; the
+  close-grip pulldown is 180.
 - **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
   the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without
   one takes its motion's default (`tempo.mjs`). The bake writes it into `mannequins.json`, and the

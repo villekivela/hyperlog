@@ -43,7 +43,9 @@ export function sample(samples, d) {
 export function frameAt(e, d, L) {
   const motion = MOTIONS[e.motion];
   if (!motion) throw new Error(`No motion "${e.motion}"`);
-  return motion(e, stateAt(e, d), L);
+  const P = motion(e, stateAt(e, d), L);
+  if (e.grip?.rotate) P.gripRotate = e.grip.rotate;
+  return P;
 }
 
 /**

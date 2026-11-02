@@ -70,10 +70,10 @@ export const POSES = {
 
   // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
   // the top with the shoulders let up into the stretch, and the elbows drive straight down by the
-  // sides.
+  // sides. Underhand: the palms face the lifter.
   close_grip_lat_pulldown: {
     like: 'lat_pulldown',
-    grip: { width: 0.24, elbows: 0.0 },
+    grip: { width: 0.24, elbows: 0.0, rotate: 180 },
     top: { bar: [1.70, 0.02], shrug: 9 },
     bottom: { bar: [1.14, 0.02], shrug: 0 },
   },

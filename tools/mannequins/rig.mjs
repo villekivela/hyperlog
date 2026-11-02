@@ -209,20 +209,25 @@ export function poseRig(rig, P) {
     // it along the fingers and off it on the back of the hand. The forearm sets both, so iterate.
     const sh = wpos(bones['upperarm_' + k]);
     const grip = gripTarget(P, s);
-    const inward = acrossOf(P, s);
+    const along = acrossOf(P, s);
     const hr = rest['hand_' + k];
     const handRest = frame(hr.dir, hr.across).invert();
+    // The forearm twists the knuckle line about the fingers, from overhand (0°) through neutral to
+    // underhand (180°); the palm turns with it, and so does the grip's offset.
+    const twist = (fingers) => along.clone().applyAxisAngle(fingers, -s * rad(P.gripRotate ?? 0));
     let wrist = grip.clone();
     let arm;
     for (let it = 0; it < 4; it++) {
       arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
       const fingers = arm.end.clone().sub(arm.mid).normalize();
+      const inward = twist(fingers);
       const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
       wrist = grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff);
     }
     const a1 = arm.mid.clone().sub(sh);
     const a2 = arm.end.clone().sub(arm.mid);
     aim(rig, 'upperarm_' + k, a1, a1.clone().cross(arm.pole));
+    const inward = twist(a2.clone().normalize());
     aim(rig, 'lowerarm_' + k, a2, inward);
     aim(rig, 'hand_' + k, a2, inward);
   }

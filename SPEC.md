@@ -1452,7 +1452,11 @@ gallery (Technique videos).
     and the arms are straight at lockout.
   - **The close-grip lat pulldown pose** (owner, 2026-11-02, #124): the arms hang fully extended at
     the top with the shoulders let up into the stretch, and the pull drives the elbows straight down
-    toward the sides.
+    toward the sides. The grip is underhand (owner, 2026-11-02): the palms face the lifter.
+  - **Grip rotation** (owner, 2026-11-02, #124): every pose with hands has `grip.rotate`, the
+    forearm's twist in degrees: 0 overhand (palms away from the lifter, the default), 90 neutral
+    (palms toward each other), 180 underhand (palms toward the face). The grip solve and the finger
+    curl follow it, and the Tune panel has a slider for it.
   - **Which exercises have one:** every shipped library exercise gets its own pose, in generic
     equipment, not one per movement pattern. An exercise without a pose yet shows the sheet as
     before. An exercise added on the phone has none, and a shipped exercise whose equipment is

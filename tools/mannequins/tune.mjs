@@ -10,7 +10,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like']);
-const DEGREES = new Set(['trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug']);
+const DEGREES = new Set(['trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'rotate']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'lever']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -51,6 +51,7 @@ function leaves(value, path, out) {
 /** The range, step and unit that suit the number at `path`, by what it is called. */
 function rangeOf(path, value) {
   const key = steps(path).filter((k) => !/^\d+$/.test(k)).at(-1);
+  if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 0.5, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.005, unit: ' m' };
@@ -72,6 +73,8 @@ export function tunables(entry) {
       if (!have.has(p) && valueAt(entry, p) === undefined) found.push([p, v]);
     }
   }
+  // Every pose with hands can turn them: overhand 0°, neutral 90°, underhand 180°.
+  if (entry.grip && !have.has('grip.rotate')) found.push(['grip.rotate', 0]);
   return found
     .filter(([path]) => !(/^(top|bottom)\./.test(path) && traced.has(steps(path)[1])))
     .map(([path, value]) => ({ path, value, ...rangeOf(path, value) }));
