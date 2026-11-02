@@ -146,7 +146,7 @@ test('every exercise of the starter program has a pose, the ones it didn\'t have
   const ids = new Set();
   const walk = (o) => {
     if (Array.isArray(o)) o.forEach(walk);
-    else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) (k === 'exerciseId' ? ids.add(v) : walk(v));
+    else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) (k === 'exercise' && typeof v === 'string' ? ids.add(v) : walk(v));
   };
   walk(program);
   assert.deepEqual([...ids].filter((id) => !POSES[id]).sort(), []);

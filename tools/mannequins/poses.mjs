@@ -254,7 +254,7 @@ export const POSES = {
     motion: 'lever_handles',
     kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.42, front: 0.13 } } },
     body: { hip: [0.59, 0], trunk: 25 },
-    pivot: [0.45, 0.7],
+    pivot: [1.67, 0.53],
     top: { handle: [1.0, 0.8], press: 0 },
     bottom: { handle: [0.95, 0.45], press: 1 },
     feet: { stance: 0.16, z: 0.45, toeOut: 10 },
@@ -283,15 +283,15 @@ export const POSES = {
     motion: 'arms',
     kit: { preacher_curl_machine: { seat: [0.5, 0] } },
     body: { hip: [0.59, 0], trunk: 5 },
-    top: { upperArm: 50, forearm: 150 },
-    bottom: { upperArm: 50, forearm: 58 },
+    top: { upperArm: 65, forearm: 160 },
+    bottom: { upperArm: 65, forearm: 72 },
     feet: { stance: 0.16, z: 0.4, toeOut: 10 },
     grip: { width: 0.18, rotate: 180, pole: [0.2, -0.7, 0.7] },
     camera: { target: [0, 0.9, 0.3], halfHeight: 0.8, azimuth: 70, elevation: 10 },
   },
 
   // Standing facing away from a low pulley, the left arm back behind the body: it curls with the
-  // upper arm still, palm up; the right hand rests on the hip.
+  // upper arm still, palm up; the right hand hangs by the hip.
   bayesian_cable_curl: {
     equipment: 'cable',
     motion: 'arms',
@@ -325,7 +325,7 @@ export const POSES = {
     top: { shin: 4, thigh: 6, trunk: 6, hand: [0.62, 1.36, 0.12] },
     bottom: { shin: 4, thigh: 6, trunk: 6, hand: [0.0, 0.84, 0.14] },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
-    grip: { one: 1, rest: [-0.44, 1.08, 0.05], pole: [1, 0.15, -0.3] },
+    grip: { one: 1, rest: [-0.53, 1.12, 0.07], pole: [1, 0.15, -0.3] },
     camera: { target: [0, 1.0, 0], halfHeight: 1.1, azimuth: 20, elevation: 8 },
   },
 
