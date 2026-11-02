@@ -91,8 +91,6 @@ export const POSES = {
     top: { knee: 25 },
     bottom: { knee: 100 },
     feet: { stance: 0.15, toeOut: 12, line: 0.1, down: 0.05 },
-    // A sled is moved slowly and under control.
-    tempo: { lowering: 2, bottom: 0.5, lifting: 1.5, top: 0.5 },
     // The hands on the handles beside the hips.
     grip: { width: 0.3, at: [0.6, 0.12] },
     camera: { target: [0, 0.74, 0.4], halfHeight: 0.98, azimuth: 118, elevation: 16 },

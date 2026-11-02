@@ -3,15 +3,20 @@
 // holds, plays it backward and holds again. An entry gives its own `tempo`, otherwise its motion's.
 const tempo = (lowering, bottom, lifting, top) => ({ lowering, bottom, lifting, top });
 
-/** The default tempo of each movement. */
+/**
+ * The default tempo of each movement: about 2 s eccentric and 1 s concentric. The clip bakes the
+ * lowering, which is the eccentric except where the bar is pulled down (the pulldown and the
+ * pressdown), where the clip's first half is the concentric: there the lowering is the 1 s and the
+ * lifting the 2 s.
+ */
 export const MOTION_TEMPOS = {
-  squat: tempo(1.5, 0.25, 1.1, 0.7),
-  hinge: tempo(1.6, 0.3, 1.2, 0.7),
-  bench_press: tempo(1.5, 0.3, 1, 0.7),
-  pulldown: tempo(1.3, 0.3, 1.5, 0.5),
-  pressdown: tempo(1.2, 0.2, 1.2, 0.5),
-  leg_press: tempo(1.5, 0.3, 1.1, 0.6),
-  chest_press: tempo(1.4, 0.3, 1.1, 0.6),
+  squat: tempo(2, 0.25, 1, 0.7),
+  hinge: tempo(2, 0.3, 1, 0.7),
+  bench_press: tempo(2, 0.3, 1, 0.7),
+  pulldown: tempo(1, 0.3, 2, 0.5),
+  pressdown: tempo(1, 0.2, 2, 0.5),
+  leg_press: tempo(2, 0.3, 1, 0.6),
+  chest_press: tempo(2, 0.3, 1, 0.6),
 };
 
 /** The entry's tempo: its own, otherwise its movement's. */

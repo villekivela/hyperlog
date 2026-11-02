@@ -1448,7 +1448,10 @@ gallery (Technique videos).
     edited on the phone loses its mannequin.
   - **Tempo** (#124): each exercise has a default tempo, played in four phases: lowering, pause at
     the bottom, lifting, pause at the top. The tool writes it into `mannequins.json` from the pose
-    entry, or from a default by movement where the entry has none. Only the lowering is baked into
+    entry, or from a default by movement where the entry has none. The defaults (owner, 2026-11-02,
+    #139) are about 2 s eccentric and 1 s concentric, with short pauses; where the bar is pulled
+    down (the pulldown, the pressdown) the clip's first half is the concentric, so the lowering is
+    the 1 s and the lifting the 2 s. Only the lowering is baked into
     the clip; the phone plays it forward over the lowering time, holds, plays it backward over the
     lifting time, and holds again, in the sheet and the gallery alike. With animations removed the
     clip stays a still frame at the bottom. The player takes the tempo as an input, so a tempo on
