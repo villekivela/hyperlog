@@ -29,6 +29,9 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
 
+      - name: Reply-comparison checks
+        run: python3 -I -m unittest discover -s tools/compare-replies
+
       - name: Build debug APK
         run: ./gradlew assembleDebug
 

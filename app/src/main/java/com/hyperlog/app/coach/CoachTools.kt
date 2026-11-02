@@ -150,19 +150,23 @@ object CoachTools {
             choice(com.hyperlog.app.library.MuscleGroup.entries.map { it.label }, ""),
             "The program focus: up to ${com.hyperlog.app.program.MAX_FOCUS} muscle groups to bring up, each once; empty for none.",
         ),
-        "targets" to obj(
-            "goal" to choice(TrainingGoal.entries.map { it.key }, "The goal for this program."),
-            "volume" to string("Work sets per muscle a week, a range (\"14-20\"), each end ${TrainingStyleJson.VOLUME.first}–${TrainingStyleJson.VOLUME.last}."),
-            "acrossBlock" to choice(AcrossBlock.entries.map { it.key }, "How volume runs across a block."),
-            "frequency" to choice(Frequency.entries.map { it.key }, "Times a week each muscle is trained."),
-            "failure" to choice(FailureRule.entries.map { it.key }, "Which lifts may go to 0 RIR."),
-            "calibration" to bool("Whether each block's last week has calibration sets."),
-            "repRanges" to obj(
-                "compound" to string("Reps for compounds, a range (\"5-10\")."),
-                "isolation" to string("Reps for isolation exercises, a range (\"8-15\")."),
-                optional = setOf("compound", "isolation"),
+        "targets" to described(
+            "Only when I asked for other targets for this program (\"more volume this time\"): leave it out otherwise, and then " +
+                "my standing targets apply. Write only the fields I changed.",
+            obj(
+                "goal" to choice(TrainingGoal.entries.map { it.key }, "The goal for this program."),
+                "volume" to string("Work sets per muscle a week, a range (\"14-20\"), each end ${TrainingStyleJson.VOLUME.first}–${TrainingStyleJson.VOLUME.last}."),
+                "acrossBlock" to choice(AcrossBlock.entries.map { it.key }, "How volume runs across a block."),
+                "frequency" to choice(Frequency.entries.map { it.key }, "Times a week each muscle is trained."),
+                "failure" to choice(FailureRule.entries.map { it.key }, "Which lifts may go to 0 RIR."),
+                "calibration" to bool("Whether each block's last week has calibration sets."),
+                "repRanges" to obj(
+                    "compound" to string("Reps for compounds, a range (\"5-10\")."),
+                    "isolation" to string("Reps for isolation exercises, a range (\"8-15\")."),
+                    optional = setOf("compound", "isolation"),
             ),
             optional = setOf("goal", "volume", "acrossBlock", "frequency", "failure", "calibration", "repRanges"),
+            ),
         ),
         "blocks" to array(
             obj(
@@ -365,6 +369,8 @@ object CoachTools {
         put("required", JsonArray(properties.map { it.first }.filter { it !in optional }.map(::JsonPrimitive)))
         put("additionalProperties", false)
     }
+
+    private fun described(description: String, schema: JsonObject) = JsonObject(schema + ("description" to JsonPrimitive(description)))
 
     private fun typed(type: String, description: String, more: JsonObjectBuilder.() -> Unit = {}) = buildJsonObject {
         put("type", type)

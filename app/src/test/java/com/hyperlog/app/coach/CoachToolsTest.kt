@@ -157,6 +157,16 @@ class CoachToolsTest {
         assertTrue(fits(schema, Json.parseToJsonElement(reply.toString().replace("\"Chest\"", "\"Biceps\""))).isNotEmpty())
     }
 
+    @Test
+    fun aProgramsTargetsAreOnlyForTargetsTheLifterAskedFor() {
+        val program = tools.single { it.name == CoachTools.PROPOSE_PROGRAM }.inputSchema["properties"]!!.jsonObject["program"]!!.jsonObject
+        val targets = program["properties"]!!.jsonObject["targets"]!!.jsonObject
+        val said = targets["description"]?.jsonPrimitive?.content.orEmpty()
+        // Without a word on when, every field reads as one to fill in (a run wrote the standing targets out, once with another goal).
+        assertTrue(said, said.contains("only when I asked for other targets for this program", ignoreCase = true))
+        assertTrue(said, said.contains("leave it out", ignoreCase = true))
+    }
+
     /** The places [value] breaks [schema], for the keywords the tools use. */
     private fun fits(schema: JsonObject, value: JsonElement, path: String = "$"): List<String> {
         schema["anyOf"]?.let { options ->

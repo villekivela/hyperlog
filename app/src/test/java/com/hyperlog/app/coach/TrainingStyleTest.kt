@@ -55,6 +55,13 @@ class TrainingStyleTest {
     }
 
     @Test
+    fun aNewProgramLeavesTargetsOutUnlessTheLifterAskedForOtherOnes() {
+        both(style()).forEach { text ->
+            assertTrue(text, text.contains("Otherwise leave \"targets\" out"))
+        }
+    }
+
+    @Test
     fun aboutMeGoesAsStructuredLinesWithEachExercisesName() {
         val me = AboutMe(
             age = AgeBand.Forties, progress = Progress.Months, comingBack = true,

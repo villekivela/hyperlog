@@ -32,3 +32,6 @@ tools/mannequins/**/*.npz
 
 # A batch's built review page, published from here
 tools/mannequins/review/out/
+
+# Python bytecode
+__pycache__/
