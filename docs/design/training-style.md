@@ -14,11 +14,12 @@ navigation bar.
 - **Three groups, named with `GroupHead`:** Training targets, How I train, About me. About me
   starts with one line under its head: every field is optional.
 - **Selection is a filled container.** Two to four short options use a `ConnectedChoice` (Goal,
-  Volume, Across a block, Frequency). Longer options, one per line (Failure, Where are you now?),
+  Volume, Sets through a block, Frequency). Longer options, one per line (Failure, Where are you now?),
   are rows whose picked one is a `secondaryContainer` pill with its radio on. Chips (Age, Aches
   and injuries) pick in `primaryContainer`, as `selectedChipColors` does elsewhere.
 - **The line under a title follows the choice.** Volume shows the range it holds
-  (`8–14 work sets per muscle a week`), Across a block and Failure explain the picked option, and
+  (`8–14 work sets per muscle a week`), Sets through a block and Failure explain the picked option
+  (`Adds sets each week toward 14, then a deload`, with the range's top), and
   How I train says whose text it is.
 - **Numbers sit in a right-hand column.** Ranges are two 80 dp fields with a centred figure and
   an en dash between them, after a label on the text edge (Sets a week, Compounds, Isolation).
@@ -41,7 +42,9 @@ navigation bar.
  │ [ Low ](Moderate)[ High ][ Custom ]           │
  │ Sets a week               [ 12 ] – [ 18 ]     │    Custom only
  │            Each end 1–40, the fewest not …    │    error, right-aligned under the fields
- ├ Across a block   (Steady)[ Rising ]           ┤
+ ├ Sets through a block                          ┤    the spec's Across a block (owner, #138)
+ │ Same sets every week, then a deload           │
+ │ (Same each week)[ Build up each week ]        │
  ├ Frequency        [1][2](2–3)[3+]              ┤
  ├ How hard                                      ┤    shown, not chosen
  │ Last set 0–1 RIR, earlier sets 1–2 RIR        │
@@ -133,8 +136,10 @@ the volume range, one line), chevron. It is the Coach group's first row, above t
 From the emulator (1280 × 2856, text at 115 %), 35 %. The phone was in use by another worker:
 
 - `screens/training-style-settings-row-{dark,light}.png`: the row in Settings' Coach group.
-- `training-style-defaults-{dark,light}.png`: the top of the page with every default.
-- `training-style-custom-volume-{dark,light}.png`: Custom with 8–50, the error, the number keyboard.
+- `training-style-defaults-{dark,light}.png`: the top of the page with every default (Robolectric
+  render, after #138's Sets through a block and light wells).
+- `training-style-custom-volume-{dark,light}.png`: Custom with a wrong end and its error
+  (Robolectric render, as above).
 - `training-style-unsaved-{dark,light}.png`: How I train being typed, the strip over the keyboard.
 - `training-style-edited-{dark,light}.png`: your own text kept, Back to default under it.
 - `training-style-default-dialog-light.png` (emulator), `training-style-default-dialog-dark.png`

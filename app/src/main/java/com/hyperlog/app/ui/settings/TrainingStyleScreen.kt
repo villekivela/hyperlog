@@ -262,12 +262,16 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
         item {
             Tile(
                 stringResource(R.string.style_across),
-                stringResource(if (t.acrossBlock == AcrossBlock.Steady) R.string.style_across_steady_about else R.string.style_across_rising_about),
+                if (t.acrossBlock == AcrossBlock.Steady) stringResource(R.string.style_across_steady_about)
+                else stringResource(R.string.style_across_rising_about, t.volume.high),
             ) {
                 ConnectedChoice(
                     listOf(stringResource(R.string.style_across_steady), stringResource(R.string.style_across_rising)),
                     AcrossBlock.entries.indexOf(t.acrossBlock),
                     onSelect = { onTargets(t.copy(acrossBlock = AcrossBlock.entries[it])) },
+                    // "Build up each week" keeps its last word beside the shorter "Same each week".
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    fitLabels = true,
                 )
             }
         }

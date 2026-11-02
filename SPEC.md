@@ -1896,6 +1896,11 @@ research note names its sources.
     too, as one set an exercise in one week; turning it off leaves it out.
   - **Rising** reads the range as your own landmarks: its bottom near the least volume that still
     grows muscle, its top near the most you recover from.
+  - **On the page** (the owner on #138), Across a block reads **Sets through a block**, its choices
+    **Same each week** (Steady) and **Build up each week** (Rising), and its line follows the
+    choice: "Same sets every week, then a deload" or "Adds sets each week toward 14, then a
+    deload", with the top of the range. Steady and Rising stay the kept values and what Claude
+    reads.
 - **Training targets for one program.** In a New program check-in you can ask for other training
   targets for that program alone ("more volume this time"). Claude writes them into the program's
   `targets` (`docs/program-format.md`), and the standing training targets stay as they are. Later

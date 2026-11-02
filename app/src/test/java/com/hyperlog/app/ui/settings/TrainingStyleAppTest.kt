@@ -113,7 +113,11 @@ class TrainingStyleAppTest {
         open()
         tap("Strength")
         tap("High")
-        tap("Rising")
+        // Sets through a block: its line follows the choice, with the top of the range.
+        compose.waitFor("Sets through a block")
+        compose.waitFor("Same sets every week, then a deload")
+        tap("Build up each week")
+        compose.waitFor("Adds sets each week toward 20, then a deload")
         tap("3+")
         tap("Never")
         tap("Calibration sets")

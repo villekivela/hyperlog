@@ -888,11 +888,12 @@
     <string name="style_volume_low_end">Volume, fewest sets</string>
     <string name="style_volume_high_end">Volume, most sets</string>
     <string name="style_volume_wrong">Each end 1–40, the fewest not above the most</string>
-    <string name="style_across">Across a block</string>
-    <string name="style_across_steady">Steady</string>
-    <string name="style_across_rising">Rising</string>
-    <string name="style_across_steady_about">The same sets every week but a deload</string>
-    <string name="style_across_rising_about">From the range’s bottom toward its top, then a deload</string>
+    <!-- Across a block in the spec; Steady and Rising are what's kept (owner, #138). -->
+    <string name="style_across">Sets through a block</string>
+    <string name="style_across_steady">Same each week</string>
+    <string name="style_across_rising">Build up each week</string>
+    <string name="style_across_steady_about">Same sets every week, then a deload</string>
+    <string name="style_across_rising_about">Adds sets each week toward %1$d, then a deload</string>
     <string name="style_frequency">Frequency</string>
     <string name="style_frequency_about">Times a week each muscle is trained</string>
     <string name="style_how_hard">How hard</string>
