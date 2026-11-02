@@ -25,16 +25,7 @@ fun ComposeTestRule.await(
     expected: (Int) -> Boolean = { it > 0 },
 ) {
     waitForIdle()
-    try {
-        waitUntil(timeoutMillis) { expected(onAllNodes(matcher, useUnmergedTree).fetchSemanticsNodes().size) }
-    } catch (e: androidx.compose.ui.test.ComposeTimeoutException) {
-        System.err.println("[DEBUG-flk] timeout waiting for $matcher at ${java.time.Instant.now()}")
-        Thread.getAllStackTraces().forEach { (t, stack) ->
-            System.err.println("[DEBUG-flk] thread ${t.name} ${t.state}")
-            stack.take(25).forEach { System.err.println("[DEBUG-flk]    at $it") }
-        }
-        throw e
-    }
+    waitUntil(timeoutMillis) { expected(onAllNodes(matcher, useUnmergedTree).fetchSemanticsNodes().size) }
 }
 
 /** Waits until [text] shows. */
