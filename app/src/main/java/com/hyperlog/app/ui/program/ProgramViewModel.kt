@@ -8,6 +8,9 @@ import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.coach.AskClaude
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramVolume
+import com.hyperlog.app.coach.NumberRange
+import com.hyperlog.app.coach.TrainingTargets
+import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.coach.CoachLine
 import com.hyperlog.app.coach.CoachLineReader
@@ -156,11 +159,11 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
     /** The Change waiting for accept or reject, with its diff; null when none is. */
     val review: StateFlow<ChangeReview?> = _review.asStateFlow()
 
-    private var library: Map<String, com.hyperlog.app.library.Exercise> = emptyMap()
-    private var standingVolume = com.hyperlog.app.coach.TrainingTargets().volume
+    private var library: Map<String, Exercise> = emptyMap()
+    private var standingVolume = TrainingTargets().volume
 
     /** The library and the standing volume range a Change's sets per muscle are counted and measured by. */
-    fun countSetsBy(exercises: List<com.hyperlog.app.library.Exercise>, volume: com.hyperlog.app.coach.NumberRange) {
+    fun countSetsBy(exercises: List<Exercise>, volume: NumberRange) {
         library = exercises.associateBy { it.id }
         standingVolume = volume
     }

@@ -591,9 +591,10 @@ private fun App(
             file = checkIn?.checkIn?.file.takeIf { reviewingCheckIn },
             fit = com.hyperlog.app.ui.coach.ReviewFit(weekdayPlan, gyms, exercises, java.time.LocalDate.now()),
             // Its exercises that the library doesn't have yet count too: they come with the proposal.
-            volume = trainingStyle?.let { style ->
-                com.hyperlog.app.coach.ProgramVolume.of(p.program, (exercises + p.newExercises).associateBy { it.id }, style.targets.volume)
-            }.orEmpty(),
+            volume = com.hyperlog.app.coach.ProgramVolume.of(
+                p.program, (exercises + p.newExercises).associateBy { it.id },
+                (trainingStyle?.targets ?: com.hyperlog.app.coach.TrainingTargets()).volume,
+            ),
             // Save for later ends the check-in on Coach, which says where it went; the program running goes on.
             onSave = {
                 programModel.saveProgram(
