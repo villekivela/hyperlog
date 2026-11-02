@@ -30,6 +30,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.MuscleVolume
 import com.hyperlog.app.coach.ProgramProposal
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.library.Exercise
@@ -84,6 +85,8 @@ fun ProgramReviewScreen(
     onSave: () -> Unit = {},
     /** Your week, which each day's fit is read against; null shows none. */
     fit: ReviewFit? = null,
+    /** Hard sets a week per muscle against the range (SPEC, Sets per muscle); empty shows none. */
+    volume: List<MuscleVolume> = emptyList(),
 ) {
     BackHandler(onBack = onReject)
     var replacing by rememberSaveable { mutableStateOf(false) }
@@ -132,7 +135,7 @@ fun ProgramReviewScreen(
                 }
             }
         },
-    ) { padding -> ProgramReviewList(proposal, exerciseNames, file?.let { stringResource(R.string.program_review_from, it) }, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag), fit = fit) }
+    ) { padding -> ProgramReviewList(proposal, exerciseNames, file?.let { stringResource(R.string.program_review_from, it) }, Modifier.fillMaxSize().padding(padding).testTag(ProgramReviewTag), fit = fit, volume = volume) }
 }
 
 /**
@@ -151,6 +154,8 @@ internal fun ProgramReviewList(
     marksNext: Boolean = true,
     /** Your week, which each day's fit is read against (SPEC, The fit); null shows none. */
     fit: ReviewFit? = null,
+    /** Hard sets a week per muscle against the range, under the swaps and new exercises; a saved program's page has none. */
+    volume: List<MuscleVolume> = emptyList(),
 ) {
     val cs = MaterialTheme.colorScheme
     val program = proposal.program
@@ -212,6 +217,7 @@ internal fun ProgramReviewList(
                 }
             }
         }
+        if (volume.isNotEmpty()) item(key = "volume") { SetsPerMuscle(volume) }
         item(key = "gap") { Spacer(Modifier.height(16.dp)) }
         blockItems(
             program, block, fresh, comparison, week, days, names,
