@@ -3,6 +3,7 @@ package com.hyperlog.app.ui.settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -30,8 +31,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -43,7 +42,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -93,7 +91,6 @@ import com.hyperlog.app.library.search
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.BottomActions
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.ConnectedChoice
@@ -115,8 +112,8 @@ private val ChoicePadding = PaddingValues(horizontal = 8.dp)
 
 /**
  * Settings → Training style (SPEC, Coaching → Training style; `docs/design/training-style.md`):
- * the training targets, How I train with Save and Back to default, and About me, each field edited
- * in place and saved as it changes. Every setting is a tile of one group, its title on the text
+ * the training targets, How I train's principles and About me, each field edited in place and
+ * saved as it changes. Every setting is a tile of one group, its title on the text
  * edge and its control under it. Text fields stay on the page, not in dialogs, where Robolectric's
  * tests can't type.
  */
@@ -441,7 +438,21 @@ private fun HowITrainFields(how: HowITrain, onHowITrain: (HowITrain) -> Unit) {
     val title = stringResource(R.string.style_anything_else)
     val hint = stringResource(R.string.how_i_train_anything_else_hint)
     SegmentedList {
-        Principle.entries.filter { it.fixed }.forEach { p -> item { Tile(labels.getValue(p), always) } }
+        item {
+            Tile(always) {
+                Column {
+                    Principle.entries.filter { it.fixed }.forEach { p ->
+                        Row(Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(labels.getValue(p), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                            // In the switches' column, centred on a Switch's 52 dp: on, and not yours to turn off.
+                            Box(Modifier.width(52.dp), contentAlignment = Alignment.Center) {
+                                SymbolIcon(Symbol.Check, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        }
         Principle.entries.filterNot { it.fixed }.forEach { p ->
             item {
                 SwitchTile(labels.getValue(p), null, how.on(p)) { on ->

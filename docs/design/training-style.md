@@ -2,8 +2,7 @@
 
 Settings → Coach → **Training style** (SPEC, Coaching → Training style): one page holding the
 training targets, How I train and About me. Every field is edited in place and kept as it
-changes. The one exception is How I train, which is kept with Save. A sub-screen: back arrow, no
-navigation bar.
+changes. A sub-screen: back arrow, no navigation bar.
 
 ## Principles
 
@@ -19,15 +18,14 @@ navigation bar.
   and injuries) pick in `primaryContainer`, as `selectedChipColors` does elsewhere.
 - **The line under a title follows the choice.** Volume shows the range it holds
   (`8–14 work sets per muscle a week`), Sets through a block and Failure explain the picked option
-  (`Adds sets each week toward 14, then a deload`, with the range's top), and
-  How I train says whose text it is.
+  (`Adds sets each week toward 14, then a deload`, with the range's top).
 - **Numbers sit in a right-hand column.** Ranges are two 80 dp fields with a centred figure and
   an en dash between them, after a label on the text edge (Sets a week, Compounds, Isolation).
   A range that isn't whole turns both fields red, shows its rule under them, and keeps nothing.
-- **Save stays in reach.** While How I train differs from the kept text, a bottom strip
-  (`BottomActions`, `surfaceContainerHighest`) holds "How I train isn't saved", Discard and Save,
-  and rides on top of the keyboard. That way Save is in reach wherever the cursor is in a long
-  text.
+- **How I train is principles, not prose.** You see each principle's short label; Claude reads
+  its sentence from `assets/coach/how-i-train.json`. The fixed rules share one tile, "Always",
+  each with a check in the column where the switches below sit: on, and not yours to turn off,
+  without a greyed switch that would look broken.
 
 ## Layout
 
@@ -59,11 +57,16 @@ navigation bar.
  │ Isolation                 [  8 ] – [ 15 ]     │
  ╰                                               ╯
    How I train
- ╭ Hyperlog's default, read in every check-in    ╮    "Your own words, …" once edited
- │ ┌───────────────────────────────────────────┐ │
- │ │ - Form comes before load. Every rep …     │ │    grows with the text, min 4 lines
- │ └───────────────────────────────────────────┘ │
- │                              Back to default  │    once edited; its label on the field's edge
+ ╭ Always                                        ╮    the fixed rules, one tile
+ │ Form before load                          ✓   │    40 dp lines; the check centred
+ │ No loads in a program                     ✓   │    on the switches' 52 dp column,
+ │ Swap around pain                          ✓   │    onSurfaceVariant
+ │ Alternatives in every slot                ✓   │
+ ├ Stretch-biased exercises                 (●) ┤    switches, on by default;
+ ├ Stable lifts you can push hard           (●) ┤    the whole tile toggles
+ ├ Blocks with a deload                     (●) ┤
+ ├ Anything else                                 ┤
+ │ ┌ One line, like "Supersets for arms" ────┐   │
  ╰                                               ╯
    About me
    Every field is optional
@@ -81,9 +84,6 @@ navigation bar.
  ├ Anything else                                 ┤
  │ ┌ One line, like "I train fasted" ────────┐   │
  ╰                                               ╯
-
- ╭───────────────────────────────────────────────╮    while How I train is unsaved,
- │ How I train isn't saved     Discard   (Save)  │    over the keyboard
 ```
 
 The Settings row: `tune` symbol, **Training style**, `Hypertrophy · 8–14 sets a week` (the goal and
@@ -114,12 +114,11 @@ the volume range, one line), chevron. It is the Coach group's first row, above t
 - **A wrong range** (an end outside 1–40, or 1–30 for reps, or the fewest above the most): both
   fields red, the rule in `error` bodySmall under them, nothing kept. The last whole range stays
   in force.
-- **How I train** shows the default with its markdown's wrapped lines joined, so it wraps to the
-  screen; your own text shows as you wrote it. A save keeps the text as shown. The strip's Discard puts back the kept text, and Save
-  keeps the typed text and closes the keyboard. Save is off while the field is empty.
-  **Back to default** shows once the text is your own, and asks first: an `undo` symbol,
-  "Back to the default?", "Your own words are replaced by Hyperlog's default text.",
-  Cancel / Back to default. Leaving the page (Back) with the strip up drops the unsaved text.
+- **How I train's fixed rules** are text, never a control: no switch, no ripple, nothing
+  toggleable around them. Their checks carry no TalkBack label; "Always" reads first.
+- **How I train's switches** keep as they turn, and the Anything else line as it's typed (blank
+  keeps nothing). A switch turned off is all that's kept of them, so a principle added later
+  starts on.
 - **Options and chips clear on a second tap** in About me (Age, Where are you now?), since every
   field there is optional. Failure always holds one.
 - **Aches and injuries:** a picked area adds a one-line note field labelled with the area.
@@ -129,7 +128,6 @@ the volume range, one line), chevron. It is the Coach group's first row, above t
   with a × (TalkBack: "Remove <name>"). Add is named "Add an exercise to avoid / favour" for
   TalkBack and the tests.
 - **The keyboard** pushes the page up (imePadding). A focused field scrolls into view above it.
-  The unsaved strip rides on the keyboard.
 
 ## Screens
 
@@ -140,10 +138,8 @@ From the emulator (1280 × 2856, text at 115 %), 35 %. The phone was in use by a
   render, after #138's Sets through a block and light wells).
 - `training-style-custom-volume-{dark,light}.png`: Custom with a wrong end and its error
   (Robolectric render, as above).
-- `training-style-unsaved-{dark,light}.png`: How I train being typed, the strip over the keyboard.
-- `training-style-edited-{dark,light}.png`: your own text kept, Back to default under it.
-- `training-style-default-dialog-light.png` (emulator), `training-style-default-dialog-dark.png`
-  (Robolectric render).
+- `training-style-how-i-train-{dark,light}.png`: How I train with Blocks with a deload off and
+  an Anything else line (Robolectric render, the section cropped).
 - `training-style-about-me-{dark,light}.png`, `training-style-about-me-keyboard-dark.png`: About
   me filled, and an ache note being typed.
 - `training-style-picker-{dark,light}.png`, `training-style-picker-search-dark.png`: the picker

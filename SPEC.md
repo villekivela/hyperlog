@@ -1910,7 +1910,8 @@ research note names its sources.
   sentence, in your voice, that Claude reads; the sentences live in one asset,
   `app/src/main/assets/coach/how-i-train.json`, one per principle id, so a reworded sentence
   reaches everyone, and you never see or edit them. It leaves the goal to the training targets.
-  - **Fixed rules**, always sent, shown with "Always" and never a switch: **Form before load**
+  - **Fixed rules**, always sent, listed with a check on one tile titled **Always**, never a
+    switch: **Form before load**
     (`form`: full range, a controlled lowering, and a heavier weight never buys a sloppier rep),
     **No loads in a program** (`no_load`: progression sets the weights), **Swap around pain**
     (`pain`) and **Alternatives in every slot** (`alternatives`).

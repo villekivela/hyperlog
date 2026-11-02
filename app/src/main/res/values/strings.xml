@@ -920,7 +920,7 @@
     <string name="how_i_train">How I train</string>
     <string name="how_i_train_always">Always</string>
     <string name="how_i_train_anything_else_description">How I train, anything else</string>
-    <string name="how_i_train_anything_else_hint">Supersets for arms</string>
+    <string name="how_i_train_anything_else_hint">One line, like “Supersets for arms”</string>
     <string name="principle_form">Form before load</string>
     <string name="principle_no_load">No loads in a program</string>
     <string name="principle_pain">Swap around pain</string>
