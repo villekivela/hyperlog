@@ -5,6 +5,7 @@ import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.StarterProgram
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -17,7 +18,11 @@ class TrainingStyleTest {
     private val program = (ProgramParser.parse(File("src/main/assets/${StarterProgram.ASSET}").readText(), ids, library.merged) as ProgramParser.Result.Valid).program
     private val oct13 = LocalDate.of(2026, 10, 13)
     private val plan = ActiveProgram(1, program, Position(1, 1), today = oct13)
-    private val howITrain = File("src/main/assets/coach/how-i-train.md").readText()
+    private val sentences = Principles.parse(File("src/main/assets/coach/how-i-train.json").readText())
+
+    /** The style with the shipped principles' sentences. */
+    private fun style(targets: TrainingTargets = TrainingTargets(), aboutMe: AboutMe = AboutMe(), howITrain: HowITrain = HowITrain()) =
+        TrainingStyle(targets, aboutMe, howITrain, sentences)
 
     /** The API's context and Ask Claude's prompt, for [style]. */
     private fun both(style: TrainingStyle, plan: ActiveProgram? = this.plan) = listOf(
@@ -27,7 +32,7 @@ class TrainingStyleTest {
 
     @Test
     fun withNothingSetEveryCheckInCarriesTheDefaults() {
-        both(TrainingStyle(howITrain = howITrain)).forEach { text ->
+        both(style()).forEach { text ->
             assertTrue(
                 text,
                 text.contains(
@@ -41,7 +46,7 @@ class TrainingStyleTest {
                     - Calibration: in each block's last week, unless it is a deload, the last set of each exercise safe to fail goes to 0 RIR; never a barbell squat, bench or deadlift
                     - Rep ranges: compounds 5–10, isolation 8–15
                     ## How I train
-                    """.trimIndent() + "\n" + howITrain.trim(),
+                    """.trimIndent() + "\n" + Principle.entries.joinToString("\n") { "- " + sentences.getValue(it) } + "\n## Writing by my training style",
                 ),
             )
             // About me is all optional: with nothing in it, not even its heading.
@@ -56,7 +61,7 @@ class TrainingStyleTest {
             aches = mapOf(BodyArea.WristsAndHands to "sore when gripping"),
             avoid = listOf("barbell_squat", "gone_from_the_library"), favour = listOf("hack_squat"), anythingElse = "I train fasted in the morning",
         )
-        both(TrainingStyle(aboutMe = me, howITrain = howITrain)).forEach { text ->
+        both(style(aboutMe = me)).forEach { text ->
             assertTrue(
                 text,
                 text.contains(
@@ -89,6 +94,35 @@ class TrainingStyleTest {
     }
 
     @Test
+    fun howITrainCarriesTheFixedRulesAndEachPrincipleSwitchedOnWithAnythingElse() {
+        val mine = HowITrain(off = setOf(Principle.StretchBiased, Principle.Deload), anythingElse = "I like supersets for arms")
+        both(style(howITrain = mine)).forEach { text ->
+            val section = text.substringAfter("## How I train\n").substringBefore("## ")
+            // Form before load, no loads, swapping around pain and alternatives are fixed rules: always there.
+            assertTrue(section, section.contains(sentences.getValue(Principle.FormBeforeLoad)))
+            assertTrue(section, section.contains(sentences.getValue(Principle.NoLoads)))
+            assertTrue(section, section.contains(sentences.getValue(Principle.SwapAroundPain)))
+            assertTrue(section, section.contains(sentences.getValue(Principle.Alternatives)))
+            assertTrue(section, section.contains(sentences.getValue(Principle.Stable)))
+            // Switched off, a principle's sentence goes.
+            assertTrue(section, !section.contains(sentences.getValue(Principle.StretchBiased)))
+            assertTrue(section, !section.contains(sentences.getValue(Principle.Deload)))
+            assertTrue(section, section.endsWith("- Anything else: I like supersets for arms\n"))
+        }
+        // A fixed rule can't be switched off.
+        val forced = style(howITrain = HowITrain(off = setOf(Principle.FormBeforeLoad, Principle.SwapAroundPain)))
+        assertTrue(both(forced).first().contains(sentences.getValue(Principle.FormBeforeLoad)))
+        assertTrue(both(forced).first().contains(sentences.getValue(Principle.SwapAroundPain)))
+        assertEquals(listOf(Principle.FormBeforeLoad, Principle.NoLoads, Principle.SwapAroundPain, Principle.Alternatives), Principle.entries.filter { it.fixed })
+    }
+
+    @Test
+    fun theAssetHasASentenceForEveryPrinciple() {
+        assertEquals(Principle.entries.toSet(), sentences.keys)
+        sentences.values.forEach { assertTrue(it, it.isNotBlank() && !it.contains('\n')) }
+    }
+
+    @Test
     fun neverToFailureMakesRoomForCalibrationSetsWhenTheyAreOn() {
         // Calibration holds with Never (SPEC, Training targets), so the two lines mustn't contradict.
         val on = both(TrainingStyle(TrainingTargets(failure = FailureRule.Never, calibration = true))).first()
@@ -109,7 +143,7 @@ class TrainingStyleTest {
                 targets = ProgramTrainingTargets(volume = NumberRange(14, 20)),
             ),
         )
-        both(TrainingStyle(howITrain = howITrain), focused).forEach { text ->
+        both(style(), focused).forEach { text ->
             // The raised and maintenance ranges come from the program's own volume, 14–20.
             assertTrue(text, text.contains("## Program: ${program.title}\nProgram focus: Chest, Shoulders (their muscles 20–30 sets a week, the rest 7–14)\nVolume for this program: 14–20\n"))
         }

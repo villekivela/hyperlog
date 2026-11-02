@@ -24,10 +24,10 @@ object TrainingStyleJson {
     val REPS = 1..30
 
     /** What the `training_style` row holds. */
-    data class Kept(val targets: TrainingTargets = TrainingTargets(), val aboutMe: AboutMe = AboutMe())
+    data class Kept(val targets: TrainingTargets = TrainingTargets(), val aboutMe: AboutMe = AboutMe(), val howITrain: HowITrain = HowITrain())
 
     fun encode(kept: Kept): String = buildJsonObject {
-        val (targets, aboutMe) = kept
+        val (targets, aboutMe, _) = kept
         putJsonObject("targets") {
             put("goal", targets.goal.key)
             put("volume", targets.volume.key)
@@ -51,6 +51,11 @@ object TrainingStyleJson {
             putJsonArray("favour") { aboutMe.favour.forEach { add(JsonPrimitive(it)) } }
             aboutMe.anythingElse?.let { put("anythingElse", it) }
         }
+        // Only what's switched off, so a principle added later starts on.
+        putJsonObject("howITrain") {
+            putJsonArray("off") { Principle.entries.filter { it in kept.howITrain.off && !it.fixed }.forEach { add(JsonPrimitive(it.key)) } }
+            kept.howITrain.anythingElse?.let { put("anythingElse", it) }
+        }
     }.toString()
 
     /** The kept training targets and About me; nothing kept, or anything unreadable, is the default. */
@@ -58,7 +63,16 @@ object TrainingStyleJson {
         val root = text?.let { runCatching { Json.parseToJsonElement(it) as? JsonObject }.getOrNull() } ?: return Kept()
         val ignore: (String, String) -> Unit = { _, _ -> }
         val targets = (root["targets"] as? JsonObject)?.let { targets(it, "targets", ignore).over(TrainingTargets()) } ?: TrainingTargets()
-        return Kept(targets, (root["aboutMe"] as? JsonObject)?.let(::aboutMe) ?: AboutMe())
+        return Kept(
+            targets,
+            (root["aboutMe"] as? JsonObject)?.let(::aboutMe) ?: AboutMe(),
+            (root["howITrain"] as? JsonObject)?.let(::howITrain) ?: HowITrain(),
+        )
+    }
+
+    private fun howITrain(o: JsonObject): HowITrain {
+        val off = (o["off"] as? JsonArray).orEmpty().mapNotNull { el -> Principle.entries.firstOrNull { it.key == (el as? JsonPrimitive)?.content } }
+        return HowITrain(off.filterNot { it.fixed }.toSet(), (o["anythingElse"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() })
     }
 
     private fun aboutMe(o: JsonObject): AboutMe {

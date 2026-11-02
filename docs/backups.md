@@ -32,8 +32,9 @@ Everything you made, as stored on the phone:
 - **Starting weights** from the old app, **lift goals** and **bodyweight**.
 - **Settings**: "Check for updates", the update banner you dismissed, what the coach cost each
   month (`coach_cost_2026-10`), and a debug build's scripted coach switch (`scripted_coach`).
-- **Training style**: the training targets and About me (`training_style`), How I train once edited
-  (`how_i_train`; without it the app's default text is read), the wizard's Done
+- **Training style**: the training targets, About me and How I train (`training_style`, one JSON
+  row; How I train as the switches turned off and its one line, while the principles' sentences
+  stay in the app), the wizard's Done
   (`training_style_done`) and Today's dismissed card (`training_style_card_dismissed`), all in
   `setting`.
 

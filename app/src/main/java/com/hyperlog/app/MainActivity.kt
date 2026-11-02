@@ -349,7 +349,6 @@ private fun App(
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
     val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
     val trainingStyle by trainingStyleModel.style.collectAsStateWithLifecycle()
-    val howITrainEdited by trainingStyleModel.edited.collectAsStateWithLifecycle()
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
     /** Where the check-in under way started, when not on Coach; leaving it goes back there. */
@@ -840,12 +839,10 @@ private fun App(
         )
         screen == Screen.TrainingStyle && trainingStyle != null -> com.hyperlog.app.ui.settings.TrainingStyleScreen(
             trainingStyle!!,
-            edited = howITrainEdited,
             library = exercises,
             onTargets = trainingStyleModel::setTargets,
             onAboutMe = trainingStyleModel::setAboutMe,
             onHowITrain = trainingStyleModel::setHowITrain,
-            onDefaultHowITrain = trainingStyleModel::resetHowITrain,
             onBack = { screen = Screen.Settings },
         )
         screen == Screen.Settings -> SettingsScreen(

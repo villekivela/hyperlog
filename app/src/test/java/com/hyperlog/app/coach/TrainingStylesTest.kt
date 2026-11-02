@@ -27,6 +27,18 @@ class TrainingStylesTest {
     @After
     fun close() = open.forEach { it.close() }
 
+
+    @Test
+    fun withNothingSetTheStyleIsTheDefaultsAndTheShippedPrinciples() = runTest {
+        val style = TrainingStyles(install(), context).current()
+        assertEquals(TrainingTargets(volume = NumberRange(8, 14)), style.targets)
+        assertEquals(AboutMe(), style.aboutMe)
+        // Every principle on, with its sentence from the asset.
+        assertEquals(HowITrain(), style.howITrain)
+        assertTrue(Principle.entries.all { style.howITrain.on(it) })
+        assertTrue(style.sentences.getValue(Principle.FormBeforeLoad), style.sentences.getValue(Principle.FormBeforeLoad).startsWith("Form comes before load"))
+    }
+
     private val mine = TrainingTargets(
         goal = TrainingGoal.Both, volume = NumberRange(14, 20), acrossBlock = AcrossBlock.Rising, frequency = Frequency.Twice,
         failure = FailureRule.Never, calibration = false, compound = NumberRange(4, 8), isolation = NumberRange(10, 20),
@@ -36,14 +48,7 @@ class TrainingStylesTest {
         aches = mapOf(BodyArea.Knees to "clicks on deep squats", BodyArea.WristsAndHands to "sore when gripping"),
         avoid = listOf("barbell_back_squat"), favour = listOf("hack_squat"), anythingElse = "I train fasted",
     )
-
-    @Test
-    fun withNothingSetTheStyleIsTheDefaultsAndTheShippedHowITrain() = runTest {
-        val style = TrainingStyles(install(), context).current()
-        assertEquals(TrainingTargets(volume = NumberRange(8, 14)), style.targets)
-        assertEquals(AboutMe(), style.aboutMe)
-        assertTrue(style.howITrain, style.howITrain.startsWith("- Form comes before load."))
-    }
+    private val principles = HowITrain(off = setOf(Principle.Deload), anythingElse = "Supersets for arms")
 
     @Test
     fun theStyleIsKeptAndComesBackOnTheNextStart() = runTest {
@@ -51,32 +56,18 @@ class TrainingStylesTest {
         TrainingStyles(db, context).apply {
             setTargets(mine)
             setAboutMe(me)
-            setHowITrain("Heavy and simple.")
+            setHowITrain(principles)
         }
         // The next start reads the same table.
-        val again = TrainingStyles(db, context)
-        val style = again.current()
+        val style = TrainingStyles(db, context).current()
         assertEquals(mine, style.targets)
         // Aches come back in body order.
         assertEquals(me.copy(aches = mapOf(BodyArea.WristsAndHands to "sore when gripping", BodyArea.Knees to "clicks on deep squats")), style.aboutMe)
-        assertEquals("Heavy and simple.", style.howITrain)
-        assertTrue(again.edited.first())
-    }
-
-    @Test
-    fun backToDefaultKeepsNoTextSoANewDefaultReachesYou() = runTest {
-        val db = install()
-        var shipped = "Old default."
-        val styles = TrainingStyles(db) { shipped }
-        styles.setHowITrain("Mine.")
-        styles.setHowITrain(shipped)
-        assertFalse(styles.edited.first())
-        // The page shows the default with its wrapped lines joined: saved like that, it is still the default.
-        shipped = "- Form comes before load. A\n  heavier weight never buys a shorter rep."
-        styles.setHowITrain("- Form comes before load. A heavier weight never buys a shorter rep.")
-        assertFalse(styles.edited.first())
-        shipped = "New default."
-        assertEquals("New default.", styles.current().howITrain)
+        assertEquals(principles, style.howITrain)
+        // Only what's off is kept, so a principle added later starts on.
+        val kept = db.settings().get(TrainingStyles.STYLE)!!
+        assertTrue(kept, kept.contains("\"off\":[\"deload\"]"))
+        assertEquals(HowITrain(off = setOf(Principle.Deload)), TrainingStyleJson.decode(kept.replace("\"deload\"", "\"deload\",\"gone_since\"")).howITrain.copy(anythingElse = null))
     }
 
     @Test
@@ -85,7 +76,7 @@ class TrainingStylesTest {
         TrainingStyles(phone, context).apply {
             setTargets(mine)
             setAboutMe(me)
-            setHowITrain("Heavy and simple.")
+            setHowITrain(principles)
         }
         val file = Backups(phone).export()
         val other = install()
@@ -94,7 +85,7 @@ class TrainingStylesTest {
         assertEquals(mine, style.targets)
         assertEquals(me.avoid, style.aboutMe.avoid)
         assertEquals(me.aches.keys, style.aboutMe.aches.keys)
-        assertEquals("Heavy and simple.", style.howITrain)
+        assertEquals(principles, style.howITrain)
     }
 
     @Test

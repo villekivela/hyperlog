@@ -20,6 +20,8 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.coach.AboutMe
+import com.hyperlog.app.coach.HowITrain
+import com.hyperlog.app.coach.Principle
 import com.hyperlog.app.coach.AgeBand
 import com.hyperlog.app.coach.BodyArea
 import com.hyperlog.app.coach.Progress
@@ -50,22 +52,18 @@ class TrainingStyleRenders {
 
     private val out = System.getenv("RENDERS")
     private val dark = System.getenv("DARK") == "1"
-    private val default = ApplicationProvider.getApplicationContext<android.content.Context>().assets.open("coach/how-i-train.md").bufferedReader().readText()
-
-    private fun show(start: TrainingStyle, edited: Boolean = false) {
+    private fun show(start: TrainingStyle) {
         assumeTrue(out != null)
         RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
         val library = LibrarySeed.fromAssets(ApplicationProvider.getApplicationContext()).exercises
         compose.setContent {
             var style by remember { mutableStateOf(start) }
-            var own by remember { mutableStateOf(edited) }
             HyperlogTheme {
                 TrainingStyleScreen(
-                    style, own, library,
+                    style, library,
                     onTargets = { style = style.copy(targets = it) },
                     onAboutMe = { style = style.copy(aboutMe = it) },
-                    onHowITrain = { style = style.copy(howITrain = it); own = true },
-                    onDefaultHowITrain = { style = style.copy(howITrain = default); own = false },
+                    onHowITrain = { style = style.copy(howITrain = it) },
                     onBack = {},
                 )
             }
@@ -82,13 +80,13 @@ class TrainingStyleRenders {
 
     @Test
     fun defaults() {
-        show(TrainingStyle(howITrain = default))
+        show(TrainingStyle())
         save("defaults")
     }
 
     @Test
     fun customVolumeWrong() {
-        show(TrainingStyle(howITrain = default))
+        show(TrainingStyle())
         compose.onNodeWithText("Custom").performClick()
         val high = hasSetTextAction() and hasContentDescription("Volume, most sets")
         compose.onNode(high).performTextClearance()
@@ -97,27 +95,16 @@ class TrainingStyleRenders {
     }
 
     @Test
-    fun howITrainEdited() {
-        show(TrainingStyle(howITrain = "Heavy and simple. Three days a week, full body, and I stop a set when my form slips."), edited = true)
-        save("edited")
-        compose.onNodeWithText("Back to default").performScrollTo().performClick()
-        save("default-dialog", dialog = true)
-    }
-
-    @Test
-    fun unsaved() {
-        show(TrainingStyle(howITrain = default))
-        val field = hasSetTextAction() and hasContentDescription("How I train")
-        compose.onNode(field).performScrollTo().performTextClearance()
-        compose.onNode(field).performTextInput("Heavy and simple.")
-        save("unsaved")
+    fun howITrainSet() {
+        show(TrainingStyle(howITrain = HowITrain(off = setOf(Principle.Deload), anythingElse = "Supersets for arms, the rest straight sets")))
+        compose.onNodeWithText("How I train").performScrollTo()
+        save("how-i-train")
     }
 
     @Test
     fun aboutMeFilled() {
         show(
             TrainingStyle(
-                howITrain = default,
                 aboutMe = AboutMe(
                     age = AgeBand.Forties, progress = Progress.Months, comingBack = true,
                     aches = sortedMapOf(compareBy { it.ordinal }, BodyArea.Shoulders to "clicks on deep presses", BodyArea.Knees to "sore after lunges"),
@@ -130,7 +117,7 @@ class TrainingStyleRenders {
 
     @Test
     fun picker() {
-        show(TrainingStyle(howITrain = default))
+        show(TrainingStyle())
         compose.onNode(hasContentDescription("Add an exercise to avoid") or hasText("Add an exercise to avoid")).performScrollTo().performClick()
         compose.waitForIdle()
         save("picker", dialog = true)

@@ -4,13 +4,51 @@ import kotlin.math.roundToInt
 
 /**
  * How you like to train, carried by every check-in (SPEC, Coaching → Training style): the
- * [targets], [aboutMe], and How I train's text ([howITrain]: the edited one, else the app's default).
+ * [targets], [aboutMe] and [howITrain], with each principle's sentence as the app ships it
+ * ([sentences], from the asset), which is what Claude reads and you never edit.
  */
 data class TrainingStyle(
     val targets: TrainingTargets = TrainingTargets(),
     val aboutMe: AboutMe = AboutMe(),
-    val howITrain: String = "",
+    val howITrain: HowITrain = HowITrain(),
+    val sentences: Map<Principle, String> = emptyMap(),
 )
+
+/**
+ * How I train's principles (GLOSSARY), by their [key] in the asset. A [fixed] one is a rule Claude
+ * always gets; the others are switches, on unless you switch them off.
+ */
+enum class Principle(val key: String, val fixed: Boolean = false) {
+    FormBeforeLoad("form", fixed = true),
+    NoLoads("no_load", fixed = true),
+    SwapAroundPain("pain", fixed = true),
+    Alternatives("alternatives", fixed = true),
+    StretchBiased("stretch"),
+    Stable("stable"),
+    Deload("deload"),
+}
+
+/**
+ * How I train as you set it: the principles switched [off] (only those are kept, so a principle
+ * added later starts on) and one optional line, [anythingElse].
+ */
+data class HowITrain(val off: Set<Principle> = emptySet(), val anythingElse: String? = null) {
+    /** Whether Claude gets [principle]: a fixed one always. */
+    fun on(principle: Principle) = principle.fixed || principle !in off
+}
+
+/** The principles' sentences, as the asset (`coach/how-i-train.json`) holds them, one per key. */
+object Principles {
+    const val ASSET = "coach/how-i-train.json"
+
+    /** Each principle's sentence by its key; a key the app doesn't know is left out. */
+    fun parse(json: String): Map<Principle, String> {
+        val o = kotlinx.serialization.json.Json.parseToJsonElement(json) as kotlinx.serialization.json.JsonObject
+        return Principle.entries.mapNotNull { p ->
+            (o[p.key] as? kotlinx.serialization.json.JsonPrimitive)?.content?.trim()?.let { p to it }
+        }.toMap()
+    }
+}
 
 /** A range of whole numbers, written `8-14` in files and `8–14` in text. */
 data class NumberRange(val low: Int, val high: Int) {

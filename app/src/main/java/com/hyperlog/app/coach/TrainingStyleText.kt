@@ -20,10 +20,7 @@ internal object TrainingStyleText {
         appendLine("- Calibration: ${calibration(t.calibration)}")
         appendLine("- Rep ranges: compounds ${t.compound}, isolation ${t.isolation}")
         aboutMe(style.aboutMe, names)
-        if (style.howITrain.isNotBlank()) {
-            appendLine("## How I train")
-            appendLine(style.howITrain.trim())
-        }
+        howITrain(style.howITrain, style.sentences)
         // The running program's own volume, when it has one, sets the ranges.
         val volume = program?.targets?.volume ?: t.volume
         appendLine("## Writing by my training style")
@@ -85,6 +82,15 @@ internal object TrainingStyleText {
         }
         if (lines.isEmpty()) return
         appendLine("## About me")
+        lines.forEach { appendLine("- $it") }
+    }
+
+    /** Each principle Claude gets (the fixed ones always), as its full sentence, then your own line. */
+    private fun StringBuilder.howITrain(how: HowITrain, sentences: Map<Principle, String>) {
+        val lines = Principle.entries.filter(how::on).mapNotNull(sentences::get) +
+            listOfNotNull(how.anythingElse?.takeIf { it.isNotBlank() }?.let { "Anything else: ${it.trim()}" })
+        if (lines.isEmpty()) return
+        appendLine("## How I train")
         lines.forEach { appendLine("- $it") }
     }
 

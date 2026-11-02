@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hyperlog.app.coach.AboutMe
+import com.hyperlog.app.coach.HowITrain
 import com.hyperlog.app.coach.TrainingStyle
 import com.hyperlog.app.coach.TrainingStyles
 import com.hyperlog.app.coach.TrainingTargets
@@ -20,9 +21,6 @@ class TrainingStyleViewModel(application: Application) : AndroidViewModel(applic
     /** The kept style; null until it is read. */
     val style: StateFlow<TrainingStyle?> = styles.style.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    /** How I train is your own text. */
-    val edited: StateFlow<Boolean> = styles.edited.stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
     fun setTargets(targets: TrainingTargets) {
         viewModelScope.launch { styles.setTargets(targets) }
     }
@@ -31,10 +29,7 @@ class TrainingStyleViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch { styles.setAboutMe(aboutMe) }
     }
 
-    fun setHowITrain(text: String) {
-        viewModelScope.launch { styles.setHowITrain(text) }
+    fun setHowITrain(howITrain: HowITrain) {
+        viewModelScope.launch { styles.setHowITrain(howITrain) }
     }
-
-    /** Back to default: the edited text goes, and the app's is read again. */
-    fun resetHowITrain() = setHowITrain("")
 }

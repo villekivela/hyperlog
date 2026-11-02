@@ -79,6 +79,8 @@ import com.hyperlog.app.coach.AcrossBlock
 import com.hyperlog.app.coach.AgeBand
 import com.hyperlog.app.coach.BodyArea
 import com.hyperlog.app.coach.FailureRule
+import com.hyperlog.app.coach.HowITrain
+import com.hyperlog.app.coach.Principle
 import com.hyperlog.app.coach.Frequency
 import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.coach.Progress
@@ -122,22 +124,15 @@ private val ChoicePadding = PaddingValues(horizontal = 8.dp)
 @Composable
 fun TrainingStyleScreen(
     style: TrainingStyle,
-    edited: Boolean,
     library: List<Exercise>,
     onTargets: (TrainingTargets) -> Unit,
     onAboutMe: (AboutMe) -> Unit,
-    onHowITrain: (String) -> Unit,
-    onDefaultHowITrain: () -> Unit,
+    onHowITrain: (HowITrain) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBack)
     var picking by rememberSaveable { mutableStateOf<PickList?>(null) }
-    // How I train's text as typed: kept only with Save, which waits in a strip over the keyboard
-    // while the text differs from what's kept, wherever in the text the cursor is.
-    // The default's wrapped markdown lines are joined to fit the screen; your own text shows as you wrote it.
-    val shown = if (edited) style.howITrain.trim() else unwrapped(style.howITrain)
-    var typed by rememberSaveable(shown) { mutableStateOf(shown) }
     val focus = LocalFocusManager.current
     Scaffold(
         containerColor = Tones.screen,
@@ -149,28 +144,11 @@ fun TrainingStyleScreen(
                 title = { Text(stringResource(R.string.training_style)) },
             )
         },
-        bottomBar = {
-            if (typed.trim() != shown) {
-                BottomActions(Modifier.imePadding(), padding = PaddingValues(start = TextEdge, end = 16.dp, top = 16.dp, bottom = 16.dp)) {
-                    Text(
-                        stringResource(R.string.how_i_train_unsaved),
-                        Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    TextButton(onClick = { typed = shown; focus.clearFocus() }) { Text(stringResource(R.string.how_i_train_discard)) }
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = { onHowITrain(typed.trim()); focus.clearFocus() }, enabled = typed.isNotBlank()) {
-                        Text(stringResource(R.string.how_i_train_save))
-                    }
-                }
-            }
-        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding().verticalScroll(rememberScrollState())) {
             Targets(style.targets, onTargets)
             GroupHead(stringResource(R.string.how_i_train))
-            HowITrain(typed, edited, onType = { typed = it }, onDefault = onDefaultHowITrain)
+            HowITrainFields(style.howITrain, onHowITrain)
             GroupHead(stringResource(R.string.about_me))
             Text(
                 stringResource(R.string.style_optional),
@@ -452,54 +430,54 @@ private fun NumberField(value: String, description: String, error: Boolean, acti
 }
 
 /**
- * How I train as the asset writes it, its markdown's wrapped lines joined: a continuation line
- * (indented under its bullet) belongs to the line before, so the field wraps it to the screen.
- */
-private fun unwrapped(text: String) = text.trim().replace(Regex("\n[ \t]+"), " ")
-
-/**
- * How I train on its tile: whose text it is, the text in a field that grows with it, and Back to
- * default once it's your own. Save is the screen's strip.
+ * How I train's principles (SPEC, Training style → How I train): the fixed rules shown as rules,
+ * the rest switches, and one line more. Their sentences are Claude's; you see only the labels.
  */
 @Composable
-private fun HowITrain(typed: String, edited: Boolean, onType: (String) -> Unit, onDefault: () -> Unit) {
-    var asking by remember { mutableStateOf(false) }
-    val description = stringResource(R.string.how_i_train)
+private fun HowITrainFields(how: HowITrain, onHowITrain: (HowITrain) -> Unit) {
+    val always = stringResource(R.string.how_i_train_always)
+    val labels = Principle.entries.associateWith { stringResource(it.label) }
+    val description = stringResource(R.string.how_i_train_anything_else_description)
+    val title = stringResource(R.string.style_anything_else)
+    val hint = stringResource(R.string.how_i_train_anything_else_hint)
     SegmentedList {
-        item {
-            Column(Modifier.fillMaxWidth().padding(CardPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    stringResource(if (edited) R.string.how_i_train_own else R.string.how_i_train_about),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                OutlinedTextField(
-                    value = typed,
-                    onValueChange = onType,
-                    minLines = 4,
-                    textStyle = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
-                )
-                if (edited) {
-                    // The label on the text edge's far side: a text button's padding sits outside it.
-                    TextButton(onClick = { asking = true }, Modifier.align(Alignment.End).offset(x = 12.dp)) {
-                        Text(stringResource(R.string.how_i_train_default))
-                    }
+        Principle.entries.filter { it.fixed }.forEach { p -> item { Tile(labels.getValue(p), always) } }
+        Principle.entries.filterNot { it.fixed }.forEach { p ->
+            item {
+                SwitchTile(labels.getValue(p), null, how.on(p)) { on ->
+                    onHowITrain(how.copy(off = if (on) how.off - p else how.off + p))
                 }
             }
         }
-    }
-    if (asking) {
-        AlertDialog(
-            onDismissRequest = { asking = false },
-            icon = { SymbolIcon(Symbol.Undo, null) },
-            title = { Text(stringResource(R.string.how_i_train_default_title)) },
-            text = { Text(stringResource(R.string.how_i_train_default_text)) },
-            confirmButton = { TextButton(onClick = { asking = false; onDefault() }) { Text(stringResource(R.string.how_i_train_default)) } },
-            dismissButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.how_i_train_cancel)) } },
-        )
+        item {
+            Tile(title) {
+                var typed by rememberSaveable { mutableStateOf(how.anythingElse.orEmpty()) }
+                OutlinedTextField(
+                    value = typed,
+                    onValueChange = {
+                        typed = it
+                        onHowITrain(how.copy(anythingElse = it.takeIf { t -> t.isNotBlank() }))
+                    },
+                    placeholder = { Text(hint) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
+                )
+            }
+        }
     }
 }
+
+/** A principle's short label on the page. */
+private val Principle.label: Int
+    get() = when (this) {
+        Principle.FormBeforeLoad -> R.string.principle_form
+        Principle.NoLoads -> R.string.principle_no_load
+        Principle.SwapAroundPain -> R.string.principle_pain
+        Principle.Alternatives -> R.string.principle_alternatives
+        Principle.StretchBiased -> R.string.principle_stretch
+        Principle.Stable -> R.string.principle_stable
+        Principle.Deload -> R.string.principle_deload
+    }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -566,8 +544,8 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
         item { Picked(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(PickList.Avoid) }) { id -> onAboutMe(me.copy(avoid = me.avoid - id)) } }
         item { Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(PickList.Favour) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) } }
         item {
-            val description = stringResource(R.string.style_anything_else)
-            Tile(description) {
+            val description = stringResource(R.string.style_anything_else_about_me)
+            Tile(stringResource(R.string.style_anything_else)) {
                 var typed by rememberSaveable { mutableStateOf(me.anythingElse.orEmpty()) }
                 OutlinedTextField(
                     value = typed,

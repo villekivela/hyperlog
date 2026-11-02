@@ -20,6 +20,8 @@ import com.hyperlog.app.coach.AboutMe
 import com.hyperlog.app.coach.AgeBand
 import com.hyperlog.app.coach.BodyArea
 import com.hyperlog.app.coach.FailureRule
+import com.hyperlog.app.coach.HowITrain
+import com.hyperlog.app.coach.Principle
 import com.hyperlog.app.coach.Frequency
 import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.coach.Progress
@@ -45,8 +47,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Settings → Training style (SPEC, Coaching → Training style): every training target, How I train
- * with Back to default, and About me's fields, edited in place and kept across a restart.
+ * Settings → Training style (SPEC, Coaching → Training style): every training target, How I
+ * train's principles, and About me's fields, edited in place and kept across a restart.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w410dp-h914dp")
@@ -152,23 +154,27 @@ class TrainingStyleAppTest {
     }
 
     @Test
-    fun howITrainSavesAndGoesBackToTheDefaultAfterAsking() {
+    fun howITrainsPrinciplesAreSwitchesWithOneLineMore() {
         open()
-        compose.onNodeWithText("Back to default").assertDoesNotExist()
-        type("How I train", "Heavy and simple.")
-        // Save waits in the strip at the bottom, outside the page's scroll.
-        compose.click("Save")
-        compose.waitGone("Save")
-        assertEquals("Heavy and simple.", style().howITrain)
-        tap("Back to default")
-        compose.waitFor("Back to the default?")
-        compose.click("Cancel")
-        assertEquals("Heavy and simple.", style().howITrain)
-        tap("Back to default")
-        compose.onNode(hasText("Back to default") and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.isDialog())).performClick()
-        compose.waitGone("Back to the default?")
-        assertFalse(runBlocking { TrainingStyles(HyperlogDatabase.get(context), context).edited.first() })
-        compose.await(hasSetTextAction() and hasText("Form comes before load", substring = true))
+        // Form before load, no loads, swapping around pain and alternatives are fixed rules: shown, never a switch.
+        listOf("Form before load", "No loads in a program", "Swap around pain", "Alternatives in every slot").forEach {
+            compose.waitFor(it)
+            compose.onNode(hasText(it) and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.isToggleable())).assertDoesNotExist()
+        }
+        // The rest are switches, on until switched off; the prose is never shown.
+        compose.onNodeWithText(com.hyperlog.app.coach.Principles.parse(context.assets.open("coach/how-i-train.json").bufferedReader().readText())
+            .getValue(Principle.FormBeforeLoad)).assertDoesNotExist()
+        tap("Blocks with a deload")
+        type("How I train, anything else", "Supersets for arms")
+        assertEquals(HowITrain(off = setOf(Principle.Deload), anythingElse = "Supersets for arms"), style().howITrain)
+        tap("Blocks with a deload")
+        assertEquals(HowITrain(anythingElse = "Supersets for arms"), style().howITrain)
+        tap("Stretch-biased exercises")
+
+        compose.activityRule.scenario.recreate()
+        compose.waitFor("Training targets")
+        assertEquals(HowITrain(off = setOf(Principle.StretchBiased), anythingElse = "Supersets for arms"), style().howITrain)
+        compose.await(hasSetTextAction() and hasText("Supersets for arms"))
     }
 
     @Test
@@ -183,7 +189,7 @@ class TrainingStyleAppTest {
         pick("Barbell Back Squat")
         tapDescribed("Add an exercise to favour")
         pick("Hack Squat")
-        type("Anything else", "I train fasted")
+        type("About me, anything else", "I train fasted")
         assertEquals(
             AboutMe(
                 age = AgeBand.Forties, progress = Progress.Months, comingBack = true, aches = mapOf(BodyArea.Knees to "clicks on deep squats"),

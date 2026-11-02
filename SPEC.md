@@ -1905,17 +1905,19 @@ research note names its sources.
   targets for that program alone ("more volume this time"). Claude writes them into the program's
   `targets` (`docs/program-format.md`), and the standing training targets stay as they are. Later
   check-ins and the review read a program's own training targets over the standing ones.
-- **How I train** is the training philosophy as text, written to Claude in your voice like the
-  rest of the context. The default ships as `app/src/main/assets/coach/how-i-train.md`: form
-  before load, a controlled lowering and full range; stretch-biased, stable exercises with
-  alternatives in every slot; blocks with a deload; no load in a program, since progression sets
-  the weights; and swapping around pain. It leaves the goal to the training targets. The page
-  shows it in a multi-line field (the default's wrapped lines joined, so it wraps to the screen),
-  and **Back to default** (asking first) once it differs from the default. While the field differs
-  from the kept text, a bottom strip over the keyboard reads "How I train isn't saved" with
-  **Discard** (the kept text back) and **Save**; leaving the page with it up drops the unsaved
-  text. Only an edited text is kept; without one the asset is read, so an update that changes the
-  default reaches everyone who never edited it.
+- **How I train** is the training philosophy as principles, not prose to edit (the owner on
+  #138, trying the page on the phone). Each principle has a short label on the page and a full
+  sentence, in your voice, that Claude reads; the sentences live in one asset,
+  `app/src/main/assets/coach/how-i-train.json`, one per principle id, so a reworded sentence
+  reaches everyone, and you never see or edit them. It leaves the goal to the training targets.
+  - **Fixed rules**, always sent, shown with "Always" and never a switch: **Form before load**
+    (`form`: full range, a controlled lowering, and a heavier weight never buys a sloppier rep),
+    **No loads in a program** (`no_load`: progression sets the weights), **Swap around pain**
+    (`pain`) and **Alternatives in every slot** (`alternatives`).
+  - **Switches**, on by default: **Stretch-biased exercises** (`stretch`), **Stable lifts you can
+    push hard** (`stable`: machines, cables, supported dumbbells, a barbell for lifts with goals)
+    and **Blocks with a deload** (`deload`).
+  - **Anything else**, one optional line under them, sent as `Anything else: …`.
 - **About me**, every field optional:
   - **Age band**: Under 30, 30–39, 40–49, 50–59, or 60 and over.
   - **Where are you now?**: Still learning the lifts, Progress takes weeks, or Progress takes
@@ -1927,8 +1929,9 @@ research note names its sources.
   - **Exercises to avoid** and **exercises to favour**, picked from the exercise library with the
     swap picker's search.
   - **Anything else**, one line.
-- **Kept** in `setting`: `training_style` (the training targets and About me, as JSON),
-  `how_i_train` (the text, only once edited), `training_style_done` (the wizard's Done) and
+- **Kept** in `setting`: `training_style` (the training targets, About me and How I train, as
+  JSON; How I train keeps only the switches turned off and its line, so a principle added later
+  starts on), `training_style_done` (the wizard's Done) and
   `training_style_card_dismissed` (Today's card). They go into backups with the other settings
   (`docs/backups.md`). With nothing set, every check-in carries the defaults.
 
@@ -1936,7 +1939,7 @@ research note names its sources.
 look: goal; volume, with Steady or Rising; how hard, with the RIR rule, failure and calibration;
 rep ranges; age band; Where are you now?, with Coming back from a break; aches and injuries;
 exercises to avoid and favour; Anything else; then a summary of every answer with **Done** and a
-link to edit How I train. Frequency stays on the page, at its default, since a program's days
+link to How I train's switches. Frequency stays on the page, at its default, since a program's days
 mostly settle it. Each step opens on the current value (the default the first time), so Done
 without a change is a valid answer, and **Next** keeps what a step shows (an About me step left
 empty stays empty). It is local: no key and no call. Back steps back, × leaves without saving,
@@ -1996,7 +1999,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   the formats.
 - **The training style**, in every check-in (Training style, above), in the situation both the API
   and Ask Claude's prompt carry, built once by the same code. The targets and About me go as
-  structured lines, How I train as its text (the edited one, else the asset's), and the running
+  structured lines, How I train as the full sentence of each principle it sends (the fixed rules
+  always, each switch that is on) with its line, and the running
   program's focus and own targets with the program:
 
   ```text
@@ -2016,7 +2020,9 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   - Favour: hack_squat (Hack Squat)
   - Anything else: I train fasted in the morning
   ## How I train
-  <How I train's text>
+  - Form comes before load: every rep goes through the full range with a controlled lowering, …
+  - <each other principle's sentence, fixed rules first, then each switch that is on>
+  - Anything else: supersets for arms
   ## Writing by my training style
   <the instructions below>
   ```
