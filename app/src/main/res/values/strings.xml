@@ -870,7 +870,7 @@
     <string name="settings_coach">Coach</string>
     <!-- Settings → Training style (SPEC, Coaching → Training style). -->
     <string name="training_style">Training style</string>
-    <string name="style_row_line">%1$s · %2$s sets a muscle a week</string>
+    <string name="style_row_line">%1$s · %2$s sets a week</string>
     <string name="style_targets">Training targets</string>
     <string name="style_goal">Goal</string>
     <string name="style_goal_about">Your lift goals sit on top of any of them</string>
@@ -879,6 +879,8 @@
     <string name="style_goal_both">Both</string>
     <string name="style_volume">Volume</string>
     <string name="style_volume_about">%1$s work sets per muscle a week</string>
+    <string name="style_volume_about_custom">Work sets per muscle a week, your own range</string>
+    <string name="style_volume_range">Sets a week</string>
     <string name="style_volume_low">Low</string>
     <string name="style_volume_moderate">Moderate</string>
     <string name="style_volume_high">High</string>
@@ -895,8 +897,9 @@
     <string name="style_frequency_about">Times a week each muscle is trained</string>
     <string name="style_how_hard">How hard</string>
     <string name="style_how_hard_rule">Last set 0–1 RIR, earlier sets 1–2 RIR</string>
+    <string name="style_failure">Failure</string>
     <string name="style_failure_safe">Isolation and machines only</string>
-    <string name="style_failure_safe_about">To failure on isolation, machine, cable and Smith lifts; free-weight compounds stop at 1 RIR</string>
+    <string name="style_failure_safe_about">To failure on isolation and machine, cable or Smith lifts; free-weight compounds stop at 1 RIR</string>
     <string name="style_failure_never">Never</string>
     <string name="style_failure_never_about">Every set stops at 1 RIR or more</string>
     <string name="style_failure_any">Any lift</string>
@@ -913,11 +916,14 @@
     <string name="style_reps_isolation_high">Isolation, most reps</string>
     <string name="style_reps_wrong">Each end 1–30, the fewest not above the most</string>
     <string name="how_i_train">How I train</string>
-    <string name="how_i_train_about">Claude reads this in every check-in, in your words</string>
+    <string name="how_i_train_about">Hyperlog’s default, read in every check-in</string>
+    <string name="how_i_train_own">Your own words, read in every check-in</string>
     <string name="how_i_train_save">Save</string>
+    <string name="how_i_train_discard">Discard</string>
+    <string name="how_i_train_unsaved">How I train isn’t saved</string>
     <string name="how_i_train_default">Back to default</string>
-    <string name="how_i_train_default_title">Go back to the default text?</string>
-    <string name="how_i_train_default_text">Your text is replaced by Hyperlog’s own.</string>
+    <string name="how_i_train_default_title">Back to the default?</string>
+    <string name="how_i_train_default_text">Your own words are replaced by Hyperlog’s default text.</string>
     <string name="about_me">About me</string>
     <string name="style_optional">Every field is optional</string>
     <string name="style_age">Age</string>
@@ -927,14 +933,16 @@
     <string name="style_aches">Aches and injuries</string>
     <string name="style_aches_about">Pick an area, then say what hurts</string>
     <string name="style_ache_hint">Clicks on deep presses</string>
-    <string name="style_avoid">Avoid</string>
-    <string name="style_favour">Favour</string>
+    <string name="style_avoid">Exercises to avoid</string>
+    <string name="style_favour">Exercises to favour</string>
+    <string name="style_add">Add</string>
     <string name="style_avoid_add">Add an exercise to avoid</string>
     <string name="style_favour_add">Add an exercise to favour</string>
     <string name="style_avoid_pick">Exercise to avoid</string>
     <string name="style_favour_pick">Exercise to favour</string>
     <string name="style_remove">Remove %1$s</string>
     <string name="style_anything_else">Anything else</string>
+    <string name="style_anything_else_hint">One line, like “I train fasted”</string>
     <string name="claude_key">Claude key</string>
     <string name="claude_key_about">Ask Claude from the app with an API key</string>
     <string name="claude_key_ending">Key ending …%1$s</string>

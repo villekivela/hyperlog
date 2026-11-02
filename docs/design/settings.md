@@ -22,6 +22,8 @@ Settings                                           ← no back arrow: a tab; the
 [history]   Starting weights from the old app
             80 exercises · tap to import again
 Coach                                              ← GroupHead, primary
+[tune]      Training style                   >    ← its page: training-style.md
+            Hypertrophy · 8–14 sets a week
 [key]       Claude key                            ← no key: tap opens the field in the card
             Ask Claude from the app with an API key
    or       Claude key

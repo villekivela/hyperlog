@@ -76,6 +76,14 @@ class TrainingStyleAppTest {
         compose.waitForIdle()
     }
 
+    /** Taps the control TalkBack reads as [description] (an Add button), after scrolling it into view. */
+    private fun tapDescribed(description: String) {
+        val node = androidx.compose.ui.test.hasContentDescription(description)
+        compose.await(node)
+        compose.onNode(node).performScrollTo().performClick()
+        compose.waitForIdle()
+    }
+
     /** Types [text] into the field labelled or described as [label], in place of what it held. */
     private fun type(label: String, text: String) {
         val field = hasSetTextAction() and (hasText(label) or androidx.compose.ui.test.hasContentDescription(label))
@@ -132,15 +140,17 @@ class TrainingStyleAppTest {
         open()
         compose.onNodeWithText("Back to default").assertDoesNotExist()
         type("How I train", "Heavy and simple.")
-        tap("Save")
+        // Save waits in the strip at the bottom, outside the page's scroll.
+        compose.click("Save")
+        compose.waitGone("Save")
         assertEquals("Heavy and simple.", style().howITrain)
         tap("Back to default")
-        compose.waitFor("Go back to the default text?")
+        compose.waitFor("Back to the default?")
         compose.click("Cancel")
         assertEquals("Heavy and simple.", style().howITrain)
         tap("Back to default")
         compose.onNode(hasText("Back to default") and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.isDialog())).performClick()
-        compose.waitGone("Go back to the default text?")
+        compose.waitGone("Back to the default?")
         assertFalse(runBlocking { TrainingStyles(HyperlogDatabase.get(context), context).edited.first() })
         compose.await(hasSetTextAction() and hasText("Form comes before load", substring = true))
     }
@@ -153,9 +163,9 @@ class TrainingStyleAppTest {
         tap("Coming back from a break")
         tap("Knees")
         type("Knees", "clicks on deep squats")
-        tap("Add an exercise to avoid")
+        tapDescribed("Add an exercise to avoid")
         pick("Barbell Back Squat")
-        tap("Add an exercise to favour")
+        tapDescribed("Add an exercise to favour")
         pick("Hack Squat")
         type("Anything else", "I train fasted")
         assertEquals(

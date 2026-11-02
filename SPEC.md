@@ -1835,9 +1835,11 @@ principles stayed in its document. A training style has three parts: the **train
 **How I train** and **About me**. Neither the app nor what Claude is told names a coach; the
 research note names its sources.
 
-- **The page.** Settings' Coach group has a **Training style** row above the Claude key. It opens
-  a page with the training targets, How I train and About me, each field edited in place, and
-  **Set it up again**, which runs the wizard (below) from its first step on the current values.
+- **The page.** Settings' Coach group has a **Training style** row above the Claude key, reading
+  the goal and volume (`Hypertrophy · 8–14 sets a week`). It opens a page with the training
+  targets, How I train and About me, each field edited in place and kept as it changes (a range
+  once both its ends are right), and **Set it up again**, which runs the wizard (below) from its
+  first step on the current values. Design: `docs/design/training-style.md`.
 - **The training targets** are standing: every New program starts from them. Volume and
   frequency are per muscle, the library's muscles (Quads, Hamstrings, Biceps, Side Delts…), and
   volume counts work sets as weekly sets do: 1 for each primary muscle of the exercise and 0.5
@@ -1874,9 +1876,12 @@ research note names its sources.
   before load, a controlled lowering and full range; stretch-biased, stable exercises with
   alternatives in every slot; blocks with a deload; no load in a program, since progression sets
   the weights; and swapping around pain. It leaves the goal to the training targets. The page
-  shows it in a multi-line field with **Save**, and **Back to default** (asking first) once it
-  differs from the default. Only an edited text is kept; without one the asset is read, so an
-  update that changes the default reaches everyone who never edited it.
+  shows it in a multi-line field (the default's wrapped lines joined, so it wraps to the screen),
+  and **Back to default** (asking first) once it differs from the default. While the field differs
+  from the kept text, a bottom strip over the keyboard reads "How I train isn't saved" with
+  **Discard** (the kept text back) and **Save**; leaving the page with it up drops the unsaved
+  text. Only an edited text is kept; without one the asset is read, so an update that changes the
+  default reaches everyone who never edited it.
 - **About me**, every field optional:
   - **Age band**: Under 30, 30–39, 40–49, 50–59, or 60 and over.
   - **Where are you now?**: Still learning the lifts, Progress takes weeks, or Progress takes

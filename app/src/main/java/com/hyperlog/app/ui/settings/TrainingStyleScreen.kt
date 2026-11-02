@@ -1,30 +1,40 @@
 package com.hyperlog.app.ui.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,11 +54,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.AboutMe
@@ -68,6 +83,7 @@ import com.hyperlog.app.library.search
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.BottomActions
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.ConnectedChoice
@@ -75,7 +91,6 @@ import com.hyperlog.app.ui.theme.GroupGap
 import com.hyperlog.app.ui.theme.GroupHead
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.SegmentedList
-import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.theme.Sheet
 import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
@@ -85,12 +100,17 @@ import com.hyperlog.app.ui.theme.selectedChipColors
 /** The volume choices: Low, Moderate and High, each a range of weekly sets per muscle; any other range is Custom. */
 val VolumeChoices = listOf(NumberRange(4, 8), NumberRange(8, 14), NumberRange(14, 20))
 
+/** A connected choice's buttons, narrow, so `Hypertrophy` and `Moderate` keep their words in a row of three or four. */
+private val ChoicePadding = PaddingValues(horizontal = 8.dp)
+
 /**
- * Settings → Training style (SPEC, Coaching → Training style): the training targets, How I train
- * with Save and Back to default, and About me, each field edited in place and saved as it changes.
- * Text fields stay on the page, not in dialogs, where Robolectric's tests can't type.
+ * Settings → Training style (SPEC, Coaching → Training style; `docs/design/training-style.md`):
+ * the training targets, How I train with Save and Back to default, and About me, each field edited
+ * in place and saved as it changes. Every setting is a tile of one group, its title on the text
+ * edge and its control under it. Text fields stay on the page, not in dialogs, where Robolectric's
+ * tests can't type.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TrainingStyleScreen(
     style: TrainingStyle,
@@ -105,6 +125,12 @@ fun TrainingStyleScreen(
 ) {
     BackHandler(onBack = onBack)
     var picking by rememberSaveable { mutableStateOf<String?>(null) }
+    // How I train's text as typed: kept only with Save, which waits in a strip over the keyboard
+    // while the text differs from what's kept, wherever in the text the cursor is.
+    // The default's wrapped markdown lines are joined to fit the screen; your own text shows as you wrote it.
+    val shown = if (edited) style.howITrain.trim() else unwrapped(style.howITrain)
+    var typed by rememberSaveable(shown) { mutableStateOf(shown) }
+    val focus = LocalFocusManager.current
     Scaffold(
         containerColor = Tones.screen,
         modifier = modifier,
@@ -115,13 +141,36 @@ fun TrainingStyleScreen(
                 title = { Text(stringResource(R.string.training_style)) },
             )
         },
+        bottomBar = {
+            if (typed.trim() != shown) {
+                BottomActions(Modifier.imePadding(), padding = PaddingValues(start = TextEdge, end = 16.dp, top = 16.dp, bottom = 16.dp)) {
+                    Text(
+                        stringResource(R.string.how_i_train_unsaved),
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = { typed = shown; focus.clearFocus() }) { Text(stringResource(R.string.how_i_train_discard)) }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = { onHowITrain(typed.trim()); focus.clearFocus() }, enabled = typed.isNotBlank()) {
+                        Text(stringResource(R.string.how_i_train_save))
+                    }
+                }
+            }
+        },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(top = 8.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding().verticalScroll(rememberScrollState())) {
             Targets(style.targets, onTargets)
             GroupHead(stringResource(R.string.how_i_train))
-            HowITrain(style.howITrain, edited, onHowITrain, onDefaultHowITrain)
+            HowITrain(typed, edited, onType = { typed = it }, onDefault = onDefaultHowITrain)
             GroupHead(stringResource(R.string.about_me))
-            AboutMeFields(style.aboutMe, library, onAboutMe, onPick = { picking = it })
+            Text(
+                stringResource(R.string.style_optional),
+                Modifier.padding(start = TextEdge, end = TextEdge, bottom = 12.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            AboutMeFields(style.aboutMe, library, onAboutMe, onPick = { focus.clearFocus(); picking = it })
             Spacer(Modifier.navigationBarsPadding().height(GroupGap))
         }
     }
@@ -147,34 +196,53 @@ private const val FAVOUR = "favour"
 @Composable
 private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
     GroupHead(stringResource(R.string.style_targets))
-    val howHard = stringResource(R.string.style_how_hard)
-    val howHardRule = stringResource(R.string.style_how_hard_rule)
+    val goals = listOf(stringResource(R.string.style_goal_hypertrophy), stringResource(R.string.style_goal_strength), stringResource(R.string.style_goal_both))
+    val volumes = listOf(stringResource(R.string.style_volume_low), stringResource(R.string.style_volume_moderate), stringResource(R.string.style_volume_high), stringResource(R.string.style_volume_custom))
+    val failures = FailureRule.entries.map {
+        stringResource(
+            when (it) {
+                FailureRule.IsolationAndMachines -> R.string.style_failure_safe
+                FailureRule.Never -> R.string.style_failure_never
+                FailureRule.AnyLift -> R.string.style_failure_any
+            },
+        )
+    }
+    val failureAbout = stringResource(
+        when (t.failure) {
+            FailureRule.IsolationAndMachines -> R.string.style_failure_safe_about
+            FailureRule.Never -> R.string.style_failure_never_about
+            FailureRule.AnyLift -> R.string.style_failure_any_about
+        },
+    )
     SegmentedList {
         item {
-            Labelled(stringResource(R.string.style_goal), stringResource(R.string.style_goal_about)) {
+            Tile(stringResource(R.string.style_goal), stringResource(R.string.style_goal_about)) {
                 ConnectedChoice(
-                    listOf(stringResource(R.string.style_goal_hypertrophy), stringResource(R.string.style_goal_strength), stringResource(R.string.style_goal_both)),
-                    TrainingGoal.entries.indexOf(t.goal),
+                    goals, TrainingGoal.entries.indexOf(t.goal),
                     onSelect = { onTargets(t.copy(goal = TrainingGoal.entries[it])) },
+                    contentPadding = ChoicePadding, fitLabels = true,
                 )
             }
         }
         item {
             val choice = VolumeChoices.indexOf(t.volume).takeIf { it >= 0 } ?: VolumeChoices.size
             var custom by rememberSaveable { mutableStateOf(false) }
-            Labelled(stringResource(R.string.style_volume), stringResource(R.string.style_volume_about, t.volume.toString())) {
+            val customShown = custom || choice == VolumeChoices.size
+            Tile(
+                stringResource(R.string.style_volume),
+                if (customShown) stringResource(R.string.style_volume_about_custom) else stringResource(R.string.style_volume_about, t.volume.toString()),
+            ) {
                 ConnectedChoice(
-                    listOf(stringResource(R.string.style_volume_low), stringResource(R.string.style_volume_moderate), stringResource(R.string.style_volume_high), stringResource(R.string.style_volume_custom)),
-                    if (custom) VolumeChoices.size else choice,
+                    volumes, if (custom) VolumeChoices.size else choice,
                     onSelect = {
                         custom = it == VolumeChoices.size
                         if (!custom) onTargets(t.copy(volume = VolumeChoices[it]))
                     },
-                    fitLabels = true,
+                    contentPadding = ChoicePadding, fitLabels = true,
                 )
-                if (custom || choice == VolumeChoices.size) {
+                if (customShown) {
                     RangeFields(
-                        t.volume, TrainingStyleJson.VOLUME,
+                        stringResource(R.string.style_volume_range), t.volume, TrainingStyleJson.VOLUME,
                         stringResource(R.string.style_volume_low_end), stringResource(R.string.style_volume_high_end),
                         stringResource(R.string.style_volume_wrong),
                         onRange = { onTargets(t.copy(volume = it)) },
@@ -183,7 +251,10 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
             }
         }
         item {
-            Labelled(stringResource(R.string.style_across), stringResource(if (t.acrossBlock == AcrossBlock.Steady) R.string.style_across_steady_about else R.string.style_across_rising_about)) {
+            Tile(
+                stringResource(R.string.style_across),
+                stringResource(if (t.acrossBlock == AcrossBlock.Steady) R.string.style_across_steady_about else R.string.style_across_rising_about),
+            ) {
                 ConnectedChoice(
                     listOf(stringResource(R.string.style_across_steady), stringResource(R.string.style_across_rising)),
                     AcrossBlock.entries.indexOf(t.acrossBlock),
@@ -192,7 +263,7 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
             }
         }
         item {
-            Labelled(stringResource(R.string.style_frequency), stringResource(R.string.style_frequency_about)) {
+            Tile(stringResource(R.string.style_frequency), stringResource(R.string.style_frequency_about)) {
                 ConnectedChoice(
                     Frequency.entries.map { it.key.replace("-", "–") },
                     Frequency.entries.indexOf(t.frequency),
@@ -200,45 +271,28 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
                 )
             }
         }
-        row(howHard, howHardRule, Symbol.LocalFireDepartment, supportingLines = 2)
-        FailureRule.entries.forEach { rule ->
-            val (title, about) = when (rule) {
-                FailureRule.IsolationAndMachines -> R.string.style_failure_safe to R.string.style_failure_safe_about
-                FailureRule.Never -> R.string.style_failure_never to R.string.style_failure_never_about
-                FailureRule.AnyLift -> R.string.style_failure_any to R.string.style_failure_any_about
-            }
-            item {
-                Box(Modifier.selectable(t.failure == rule, role = Role.RadioButton, onClick = { onTargets(t.copy(failure = rule)) })) {
-                    SegmentedRow(
-                        stringResource(title), stringResource(about), if (rule == FailureRule.entries.first()) Symbol.Flag else null,
-                        supportingLines = 2, selected = false,
-                        trailing = { RadioButton(selected = t.failure == rule, onClick = null) },
-                    )
-                }
+        // How hard is one rule, shown and not chosen: a tile with no control.
+        item { Tile(stringResource(R.string.style_how_hard), stringResource(R.string.style_how_hard_rule)) }
+        item {
+            Tile(stringResource(R.string.style_failure), failureAbout) {
+                Options(failures, FailureRule.entries.indexOf(t.failure), onSelect = { onTargets(t.copy(failure = FailureRule.entries[it])) })
             }
         }
         item {
-            Box(Modifier.toggleable(t.calibration, role = Role.Switch, onValueChange = { onTargets(t.copy(calibration = it)) })) {
-                SegmentedRow(
-                    stringResource(R.string.style_calibration), stringResource(R.string.style_calibration_about), Symbol.CheckCircle,
-                    supportingLines = 3,
-                    trailing = { Switch(checked = t.calibration, onCheckedChange = null) },
-                )
+            SwitchTile(stringResource(R.string.style_calibration), stringResource(R.string.style_calibration_about), t.calibration) {
+                onTargets(t.copy(calibration = it))
             }
         }
         item {
-            Labelled(stringResource(R.string.style_reps), stringResource(R.string.style_reps_about)) {
-                Text(stringResource(R.string.style_reps_compound), style = MaterialTheme.typography.labelLarge)
+            Tile(stringResource(R.string.style_reps), stringResource(R.string.style_reps_about)) {
                 RangeFields(
-                    t.compound, TrainingStyleJson.REPS,
+                    stringResource(R.string.style_reps_compound), t.compound, TrainingStyleJson.REPS,
                     stringResource(R.string.style_reps_compound_low), stringResource(R.string.style_reps_compound_high),
                     stringResource(R.string.style_reps_wrong),
                     onRange = { onTargets(t.copy(compound = it)) },
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.style_reps_isolation), style = MaterialTheme.typography.labelLarge)
                 RangeFields(
-                    t.isolation, TrainingStyleJson.REPS,
+                    stringResource(R.string.style_reps_isolation), t.isolation, TrainingStyleJson.REPS,
                     stringResource(R.string.style_reps_isolation_low), stringResource(R.string.style_reps_isolation_high),
                     stringResource(R.string.style_reps_wrong),
                     onRange = { onTargets(t.copy(isolation = it)) },
@@ -248,24 +302,81 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
     }
 }
 
-/** A choice on its own tile: [title] and [about] over the control, on the card's text edge. */
+/**
+ * One setting on its own tile: [title] and [about] on the text edge, an optional
+ * [trailing] control beside them, and the [content] (its control) under them, 12 dp down.
+ */
 @Composable
-private fun Labelled(title: String, about: String, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Column {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(about, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun Tile(
+    title: String,
+    about: String? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    content: (@Composable ColumnScope.() -> Unit)? = null,
+) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(CardPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge)
+                if (about != null) {
+                    Text(about, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (trailing != null) {
+                Spacer(Modifier.width(16.dp))
+                trailing()
+            }
         }
-        content()
+        content?.invoke(this)
+    }
+}
+
+/** A tile that is one switch: a tap anywhere on it turns it. */
+@Composable
+private fun SwitchTile(title: String, about: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Column(Modifier.toggleable(checked, role = Role.Switch, onValueChange = onChange)) {
+        Tile(title, about, trailing = { Switch(checked = checked, onCheckedChange = null) })
     }
 }
 
 /**
- * Two number fields for a range, its fewest and most, each kept once the range is whole: both
- * ends in [ends] and the fewest not above the most. Otherwise [wrong] shows and nothing is kept.
+ * A choice of a few long options, one a line: the picked one is a filled pill in
+ * secondaryContainer with its radio on. Its words keep the text edge: the pill sits 4 dp inside
+ * the tile and pads 12 dp. [onSelect] gets the tapped option, the picked one too.
  */
 @Composable
-private fun RangeFields(range: NumberRange, ends: IntRange, lowLabel: String, highLabel: String, wrong: String, onRange: (NumberRange) -> Unit) {
+private fun Options(options: List<String>, selected: Int?, onSelect: (Int) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.bleed(CardPadding - 4.dp)) {
+        options.forEachIndexed { i, label ->
+            val on = i == selected
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(CircleShape)
+                    .then(if (on) Modifier.background(cs.secondaryContainer) else Modifier)
+                    .selectable(on, role = Role.RadioButton, onClick = { onSelect(i) })
+                    .padding(start = 12.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = if (on) cs.onSecondaryContainer else cs.onSurface)
+                RadioButton(selected = on, onClick = null, Modifier.size(40.dp))
+            }
+        }
+    }
+}
+
+/** Widens the content by [by] on each side, out over its tile's padding. */
+private fun Modifier.bleed(by: Dp) = layout { measurable, constraints ->
+    val extra = (by * 2).roundToPx()
+    val placeable = measurable.measure(constraints.copy(minWidth = constraints.maxWidth + extra, maxWidth = constraints.maxWidth + extra))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-by.roundToPx(), 0) }
+}
+
+/**
+ * A range as two small number fields, its fewest and most, after an optional [label]. Each is kept
+ * once the range is whole: both ends in [ends] and the fewest not above the most. Otherwise both
+ * fields turn red, [wrong] shows under them and nothing is kept.
+ */
+@Composable
+private fun RangeFields(label: String?, range: NumberRange, ends: IntRange, lowLabel: String, highLabel: String, wrong: String, onRange: (NumberRange) -> Unit) {
     var low by rememberSaveable(range.low) { mutableStateOf(range.low.toString()) }
     var high by rememberSaveable(range.high) { mutableStateOf(range.high.toString()) }
     val typed = NumberRange(low.toIntOrNull() ?: -1, high.toIntOrNull() ?: -1)
@@ -275,47 +386,71 @@ private fun RangeFields(range: NumberRange, ends: IntRange, lowLabel: String, hi
         if (r.low in ends && r.high in ends && r.low <= r.high && r != range) onRange(r)
     }
     Column {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            NumberField(low, lowLabel, !valid, Modifier.weight(1f)) { low = it; changed(it, high) }
-            Text("–", style = MaterialTheme.typography.bodyLarge)
-            NumberField(high, highLabel, !valid, Modifier.weight(1f)) { high = it; changed(low, it) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (label != null) Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            NumberField(low, lowLabel, !valid) { low = it; changed(it, high) }
+            Text("–", Modifier.width(24.dp), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+            NumberField(high, highLabel, !valid) { high = it; changed(low, it) }
         }
-        if (!valid) Text(wrong, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp))
+        if (!valid) {
+            Text(
+                wrong,
+                Modifier.fillMaxWidth().padding(top = 4.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = if (label != null) TextAlign.End else TextAlign.Start,
+            )
+        }
     }
 }
 
+/** A two-digit number field, 80 dp wide, its figure centred; [description] names it for TalkBack and the tests. */
 @Composable
-private fun NumberField(value: String, description: String, error: Boolean, modifier: Modifier, onChange: (String) -> Unit) {
+private fun NumberField(value: String, description: String, error: Boolean, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = { onChange(it.filter(Char::isDigit).take(2)) },
         singleLine = true,
         isError = error,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = modifier.semantics { contentDescription = description },
+        modifier = Modifier.width(80.dp).semantics { contentDescription = description },
     )
 }
 
+/**
+ * How I train as the asset writes it, its markdown's wrapped lines joined: a continuation line
+ * (indented under its bullet) belongs to the line before, so the field wraps it to the screen.
+ */
+private fun unwrapped(text: String) = text.trim().replace(Regex("\n[ \t]+"), " ")
+
+/**
+ * How I train on its tile: whose text it is, the text in a field that grows with it, and Back to
+ * default once it's your own. Save is the screen's strip.
+ */
 @Composable
-private fun HowITrain(text: String, edited: Boolean, onSave: (String) -> Unit, onDefault: () -> Unit) {
-    var typed by rememberSaveable(text) { mutableStateOf(text) }
+private fun HowITrain(typed: String, edited: Boolean, onType: (String) -> Unit, onDefault: () -> Unit) {
     var asking by remember { mutableStateOf(false) }
+    val description = stringResource(R.string.how_i_train)
     SegmentedList {
         item {
-            Column(Modifier.fillMaxWidth().padding(CardPadding)) {
-                Text(stringResource(R.string.how_i_train_about), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(8.dp))
+            Column(Modifier.fillMaxWidth().padding(CardPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    stringResource(if (edited) R.string.how_i_train_own else R.string.how_i_train_about),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 OutlinedTextField(
                     value = typed,
-                    onValueChange = { typed = it },
-                    label = { Text(stringResource(R.string.how_i_train)) },
-                    minLines = 6,
-                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = onType,
+                    minLines = 4,
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    if (edited) TextButton(onClick = { asking = true }) { Text(stringResource(R.string.how_i_train_default)) }
-                    TextButton(onClick = { onSave(typed) }, enabled = typed.trim() != text.trim() && typed.isNotBlank()) {
-                        Text(stringResource(R.string.how_i_train_save))
+                if (edited) {
+                    // The label on the text edge's far side: a text button's padding sits outside it.
+                    TextButton(onClick = { asking = true }, Modifier.align(Alignment.End).offset(x = 12.dp)) {
+                        Text(stringResource(R.string.how_i_train_default))
                     }
                 }
             }
@@ -324,6 +459,7 @@ private fun HowITrain(text: String, edited: Boolean, onSave: (String) -> Unit, o
     if (asking) {
         AlertDialog(
             onDismissRequest = { asking = false },
+            icon = { SymbolIcon(Symbol.Undo, null) },
             title = { Text(stringResource(R.string.how_i_train_default_title)) },
             text = { Text(stringResource(R.string.how_i_train_default_text)) },
             confirmButton = { TextButton(onClick = { asking = false; onDefault() }) { Text(stringResource(R.string.how_i_train_default)) } },
@@ -336,11 +472,13 @@ private fun HowITrain(text: String, edited: Boolean, onSave: (String) -> Unit, o
 @Composable
 private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (AboutMe) -> Unit, onPick: (String) -> Unit) {
     val names = library.associate { it.id to it.name }
+    val ages = AgeBand.entries
+    val where = Progress.entries.map { it.label }
     SegmentedList {
         item {
-            Labelled(stringResource(R.string.style_age), stringResource(R.string.style_optional)) {
+            Tile(stringResource(R.string.style_age)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AgeBand.entries.forEach { band ->
+                    ages.forEach { band ->
                         FilterChip(
                             selected = me.age == band,
                             onClick = { onAboutMe(me.copy(age = band.takeIf { me.age != band })) },
@@ -352,35 +490,19 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
             }
         }
         item {
-            Column(Modifier.fillMaxWidth().padding(top = CardPadding)) {
-                Column(Modifier.padding(horizontal = CardPadding)) {
-                    Text(stringResource(R.string.style_where), style = MaterialTheme.typography.bodyLarge)
-                    Text(stringResource(R.string.style_where_about), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Progress.entries.forEach { p ->
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                            .selectable(me.progress == p, role = Role.RadioButton, onClick = { onAboutMe(me.copy(progress = p.takeIf { me.progress != p })) })
-                            .padding(horizontal = CardPadding),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(p.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                        RadioButton(selected = me.progress == p, onClick = null)
-                    }
-                }
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                        .toggleable(me.comingBack, role = Role.Switch, onValueChange = { onAboutMe(me.copy(comingBack = it)) })
-                        .padding(horizontal = CardPadding),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(stringResource(R.string.style_coming_back), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                    Switch(checked = me.comingBack, onCheckedChange = null)
-                }
+            // Tapped again, the picked one clears: every field here is optional.
+            Tile(stringResource(R.string.style_where), stringResource(R.string.style_where_about)) {
+                Options(where, me.progress?.let { Progress.entries.indexOf(it) }, onSelect = { i ->
+                    val p = Progress.entries[i]
+                    onAboutMe(me.copy(progress = p.takeIf { me.progress != p }))
+                })
             }
         }
         item {
-            Labelled(stringResource(R.string.style_aches), stringResource(R.string.style_aches_about)) {
+            SwitchTile(stringResource(R.string.style_coming_back), null, me.comingBack) { onAboutMe(me.copy(comingBack = it)) }
+        }
+        item {
+            Tile(stringResource(R.string.style_aches), stringResource(R.string.style_aches_about)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     BodyArea.entries.forEach { area ->
                         val on = area in me.aches
@@ -408,19 +530,11 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
                 }
             }
         }
-    }
-    Spacer(Modifier.height(GroupGap))
-    PickedList(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(AVOID) }) { id ->
-        onAboutMe(me.copy(avoid = me.avoid - id))
-    }
-    Spacer(Modifier.height(GroupGap))
-    PickedList(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(FAVOUR) }) { id ->
-        onAboutMe(me.copy(favour = me.favour - id))
-    }
-    Spacer(Modifier.height(GroupGap))
-    SegmentedList {
+        item { Picked(stringResource(R.string.style_avoid), me.avoid, names, stringResource(R.string.style_avoid_add), onAdd = { onPick(AVOID) }) { id -> onAboutMe(me.copy(avoid = me.avoid - id)) } }
+        item { Picked(stringResource(R.string.style_favour), me.favour, names, stringResource(R.string.style_favour_add), onAdd = { onPick(FAVOUR) }) { id -> onAboutMe(me.copy(favour = me.favour - id)) } }
         item {
-            Column(Modifier.fillMaxWidth().padding(CardPadding)) {
+            val description = stringResource(R.string.style_anything_else)
+            Tile(description) {
                 var typed by rememberSaveable { mutableStateOf(me.anythingElse.orEmpty()) }
                 OutlinedTextField(
                     value = typed,
@@ -428,24 +542,46 @@ private fun AboutMeFields(me: AboutMe, library: List<Exercise>, onAboutMe: (Abou
                         typed = it
                         onAboutMe(me.copy(anythingElse = it.takeIf { t -> t.isNotBlank() }))
                     },
-                    label = { Text(stringResource(R.string.style_anything_else)) },
+                    placeholder = { Text(stringResource(R.string.style_anything_else_hint)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
                 )
             }
         }
     }
 }
 
-/** Exercises picked for one list, each with its ×, and a row to add one. */
+/**
+ * An exercise list of About me on one tile: [title] with Add at its end ([add] names it for
+ * TalkBack), then each picked exercise on a line with its ×, the × lined up under Add's end.
+ */
 @Composable
-private fun PickedList(title: String, ids: List<String>, names: Map<String, String>, add: String, onAdd: () -> Unit, onRemove: (String) -> Unit) {
+private fun Picked(title: String, ids: List<String>, names: Map<String, String>, add: String, onAdd: () -> Unit, onRemove: (String) -> Unit) {
     val removes = ids.associateWith { stringResource(R.string.style_remove, names[it] ?: it) }
-    SegmentedList {
-        ids.forEach { id ->
-            row(names[id] ?: id, title, Symbol.Exercise, trailing = { IconButton(onClick = { onRemove(id) }) { SymbolIcon(Symbol.Close, removes.getValue(id)) } })
+    Tile(
+        title,
+        trailing = {
+            FilledTonalButton(
+                onClick = onAdd,
+                contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                modifier = Modifier.semantics { contentDescription = add },
+            ) {
+                SymbolIcon(Symbol.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.style_add))
+            }
+        },
+    ) {
+        if (ids.isNotEmpty()) {
+            Column {
+                ids.forEach { id ->
+                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(names[id] ?: id, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                        IconButton(onClick = { onRemove(id) }, Modifier.offset(x = 12.dp)) { SymbolIcon(Symbol.Close, removes.getValue(id)) }
+                    }
+                }
+            }
         }
-        row(add, null, Symbol.Add, onClick = onAdd)
     }
 }
 
@@ -454,7 +590,7 @@ private fun PickedList(title: String, ids: List<String>, names: Map<String, Stri
 private fun ExercisePick(exercises: List<Exercise>, title: String, onPick: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     Column(Modifier.fillMaxWidth()) {
-        Text(title, Modifier.padding(start = TextEdge, end = TextEdge, top = 16.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineSmall)
+        Text(title, Modifier.padding(start = TextEdge, end = TextEdge, top = 8.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineSmall)
         SearchField(query, onChange = { query = it }, placeholder = stringResource(R.string.session_search), modifier = Modifier.padding(horizontal = CardMargin).padding(bottom = 8.dp))
         val listState = rememberLazyListState()
         LaunchedEffect(query) { listState.scrollToItem(0) }
