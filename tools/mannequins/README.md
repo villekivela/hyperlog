@@ -142,6 +142,12 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
+| `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point |
+| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms` |
+| `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles |
+| `calf_raise` | seated, the knees under a pad, the balls of the feet on a platform's edge | `ankle`, degrees from flat, heels up positive; `feet.ball` [y, z] |
+| `hack_squat` | in a hack squat's sled, the back on its pad | `hip: [y, z]` at the top and bottom (the rails run between them); `body.trunk`; `feet: { y, z, tilt }` place the platform; `grip.at` [up, out] from the shoulders |
+| `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `pivot: [y, z]`; `handle: [y, z]` at the top and bottom, `press` 0 to 1 |
 
 ## Equipment
 
@@ -152,8 +158,8 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | --- | --- |
 | `barbell` | `barbell`, `bench` |
 | `dumbbell` | `dumbbells`, `bench` |
-| `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `bench` |
-| `machine` | `leg_press`, `chest_press`; the other kinds below are missing |
+| `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `bench` |
+| `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
 | `bodyweight` | none needed |
 | `ez_bar` | missing |
 | `trap_bar` | missing |
@@ -168,24 +174,31 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | --- | --- | --- |
 | `leg_press` | Leg Press, 1-Leg Leg Press, Leg Press Calf Press | `leg_press` |
 | `chest_press` | Machine Chest Press, Incline Machine Press | `chest_press` |
-| `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | missing |
-| `leg_extension` | Leg Extension | missing |
-| `leg_curl` | Lying and Seated Leg Curl | missing |
+| `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | `squat_machine` |
+| `leg_extension` | Leg Extension | `leg_extension` |
+| `leg_curl` | Lying and Seated Leg Curl | `leg_curl` (`lying` for the lying one) |
 | `glute_ham_raise` | Glute-Ham Raise | missing |
 | `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | missing |
-| `row_machine` | Machine Row, Chest-Supported Machine and T-Bar Rows, T-Bar Row | missing |
-| `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | missing |
+| `row_machine` | Machine Row, Chest-Supported Machine and T-Bar Rows, T-Bar Row | `row_machine` |
+| `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
 | `shoulder_press` | Machine Shoulder Press | missing |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
-| `preacher_curl_machine` | Machine Preacher Curl | missing |
+| `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
 | `hip_machine` | Machine Hip Abduction and Adduction | missing |
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
-| `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | missing |
+| `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
 
 - `bench` is flat, or adjustable with `angle` raising its back pad from flat.
+- `cable_column` is one adjustable column (or two, `twin`, mirrored at [-x, z]) standing at `at`
+  [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
+  toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
+  `twin`, a stirrup in each hand, each on its own column's cable, or the far one's with `crossed`.
+  Its stack rests where the cable is drawn least, at whichever end of the rep that is, so it rises
+  through a raise or a flye whose top is the hands' far point. A kit's `place(P, top, bottom)` gets
+  both ends of the rep for that.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
   `straight_bar` or `v_handle`. The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
@@ -290,6 +303,9 @@ a point is saved whole, `top.bar`). `npm run review -- status <batch>` lists the
 stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; write the same
 `clip` into the page's `verdicts/<id>` (and clear its `tuned`) so the OK holds for the new clip.
 Read the diff after: a comment may now describe the old number.
+
+A page holds every clip whole, so it grows about 0.9 MB a clip; keep a batch to 16 clips or so,
+under the 16 MB a published page may be.
 
 The page keeps one verdict per exercise in its database, `verdicts/<id>`:
 `{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw: what the clip

@@ -51,10 +51,11 @@ export async function buildStage(entry, body) {
   shadow.position.z = at[1];
   scene.add(shadow);
   const top = frameAt(entry, 0, rig.dims);
+  const bottom = frameAt(entry, 1, rig.dims);
   const pose = (d) => {
     const P = d === 0 ? top : frameAt(entry, d, rig.dims);
     poseRig(rig, P);
-    kit.place(P, top);
+    kit.place(P, top, bottom);
     scene.updateMatrixWorld(true);
     return P;
   };

@@ -96,6 +96,43 @@ const shouldersOf = (hipC, u, L) => hipC.clone().addScaledVector(u, L.trunkUp).a
 /** The hip centre and the spine's lean of a body placed on a seat or a bench: `body.hip` is [y, z]. */
 const placed = (e, s, L) => ({ hipC: V(0, ...e.body.hip), lean: spineLean(s.trunk ?? e.body.trunk, L) });
 
+/**
+ * A body standing from its side-on angles, or seated at `body.hip` when the entry gives one: the
+ * hip centre, the trunk's direction and the feet.
+ */
+function bodyOf(e, s, L) {
+  if (e.body?.hip) {
+    const { hipC, lean } = placed(e, s, L);
+    return { hipC, u: trunkUp(lean), feet: seatedFeet(e, L) };
+  }
+  return { hipC: standingHips(e, s, L), u: trunkUp(spineLean(s.trunk, L)), feet: standingFeet(e, L) };
+}
+
+/**
+ * The hands of a pose where one arm may work alone: with `grip.one` (1 the left hand, on +x; -1
+ * the right) the other hand rests at `grip.rest` [x, y, z], and the working one is `work(side)`.
+ */
+const handsOf = (e, work) => (side) => (e.grip?.one && side !== e.grip.one ? V(...e.grip.rest) : work(side));
+
+/** Elbows toward `grip.pole` [out, up, forward], the out mirrored for each side, or toward `fallback`. */
+const elbowsTo = (e, fallback) => {
+  const [x, y, z] = e.grip?.pole ?? fallback;
+  return (side) => V(side * x, y, z).normalize();
+};
+
+/** A direction in the side-on plane `phi` radians round from forward (+z) toward down. */
+const sideOn = (phi) => V(0, -Math.sin(phi), Math.cos(phi));
+
+/** Where a knee bends to between the hip joint at `hip` and the ankle, toward `pole`. */
+function kneeAt(hip, ankle, L, pole) {
+  const d = ankle.clone().sub(hip);
+  const len = Math.min(d.length(), (L.thigh + L.shin) * STRAIGHT);
+  const along = (L.thigh ** 2 - L.shin ** 2 + len ** 2) / (2 * len);
+  const dir = d.normalize();
+  const out = pole.clone().addScaledVector(dir, -pole.dot(dir)).normalize();
+  return hip.clone().addScaledVector(dir, along).addScaledVector(out, Math.sqrt(Math.max(0, L.thigh ** 2 - along ** 2)));
+}
+
 /** The spine's segments for an arch: each of `spine_01`..`spine_03` turned `arch` degrees up from the spine's lean. */
 const archOf = (arch, lean) => arch && Object.fromEntries(
   ['spine_01', 'spine_02', 'spine_03'].map((n, i) => [n, trunkUp(lean + rad(arch[i]))]),
@@ -329,6 +366,183 @@ export const MOTIONS = {
       across: (side) => X.clone().multiplyScalar(-side),
       // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the shoulders.
       armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
+    };
+  },
+
+  /**
+   * The arms swinging side-on, the upper arms and the forearms forward from hanging by `upperArm`
+   * and `forearm` degrees: a curl, a preacher curl, an extension overhead. Standing from side-on
+   * angles, or seated at `body.hip`. The hands hold a bar, a rope or handles `grip.width` either side
+   * of the middle; with `grip.one` one arm works and the other rests.
+   */
+  arms(e, s, L) {
+    const { hipC, u, feet } = bodyOf(e, s, L);
+    const f = forwardOf(u);
+    const sh = shouldersOf(hipC, u, L);
+    const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
+    const bar = elbow.clone().addScaledVector(hanging(s.forearm), L.fore + L.gripAlong);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      ...feet,
+      bar, grip: e.grip.width,
+      hand: handsOf(e, (side) => bar.clone().setX(side * e.grip.width)),
+      armPole: elbowsTo(e, [0.2, -1, -0.4]),
+      elbow, upper: hanging(s.upperArm),
+    };
+  },
+
+  /**
+   * The arms moving freely, each hand at a point in the room: `hand` [x, y, z] for the left hand at
+   * the top and the bottom of the rep, the right mirroring it: a raise, a flye, a press between two
+   * pulleys. Standing from side-on angles, or seated at `body.hip`; with `grip.one` one arm works and
+   * the other rests.
+   */
+  free_arms(e, s, L) {
+    const { hipC, u, feet } = bodyOf(e, s, L);
+    const f = forwardOf(u);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      ...feet,
+      hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
+      armPole: elbowsTo(e, [1, -0.3, -0.5]),
+    };
+  },
+
+  /**
+   * The knees bending against a machine's roller: seated with the thighs along the seat (a leg
+   * extension, a seated leg curl), or with `body.prone` lying face down along a bench, the head
+   * toward +z (a lying leg curl). The thighs leave the hips `body.thigh` degrees below level and the
+   * knees bend `knee` degrees from straight; the feet stay square to the shins. The hands hold
+   * handles at `grip.at` [y, z], `grip.width` either side of the middle.
+   */
+  knee_lever(e, s, L) {
+    const prone = Boolean(e.body.prone);
+    const hipC = V(0, ...e.body.hip);
+    const lean = prone ? rad(90 + (e.body.trunk ?? 0)) : spineLean(s.trunk ?? e.body.trunk, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    // The thigh's and the shin's ways in the side-on plane, round from forward toward down.
+    const thighPhi = prone ? Math.PI - rad(e.body.thigh ?? 0) : rad(e.body.thigh ?? 0);
+    const shinPhi = thighPhi + rad(s.knee);
+    const shin = sideOn(shinPhi);
+    const front = sideOn(shinPhi - Math.PI / 2);
+    const hip = (side) => V(side * e.feet.stance, hipC.y, hipC.z);
+    const knee = (side) => hip(side).addScaledVector(sideOn(thighPhi), L.thigh * STRAIGHT);
+    const ankles = [-1, 1].map((side) => knee(side).addScaledVector(shin, L.shin * STRAIGHT));
+    const top = shin.clone().negate();
+    return {
+      hipC, u,
+      headDir: trunkUp(lean + rad(e.body.head ?? 0)),
+      ankles,
+      toeOut: 0,
+      foot: () => ({ heading: front.clone(), top: top.clone() }),
+      kneePole: (side) => sideOn(thighPhi - Math.PI / 2).addScaledVector(X, side * 0.1).normalize(),
+      support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
+      hand: (side) => V(side * e.grip.width, ...e.grip.at),
+      across: () => V(0, 0, 1),
+      armPole: elbowsTo(e, [1, -0.2, -0.5]),
+      knee: knee(0), shin, front, thigh: sideOn(thighPhi), kneeUp: sideOn(thighPhi - Math.PI / 2),
+    };
+  },
+
+  /**
+   * Seated with the knees under a pad and the balls of the feet on a platform's edge, `feet.ball`
+   * [y, z]: the heels rise and fall as the ankles turn `ankle` degrees from flat, heels up positive,
+   * and the knees rise and fall with them. The hands hold handles at `grip.at` [y, z].
+   */
+  calf_raise(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const a = rad(s.ankle);
+    // The sole tilts with the ankle, about the ball: its way toward the toes, and its up.
+    const heading = V(0, -Math.sin(a), Math.cos(a));
+    const top = V(0, Math.cos(a), Math.sin(a));
+    const ball = (side) => V(side * e.feet.stance, ...e.feet.ball);
+    const ankles = [-1, 1].map((side) => ball(side).addScaledVector(heading, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY));
+    const pole = V(0, 1, 0.3).normalize();
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.25).normalize(),
+      ankles,
+      toeOut: 0,
+      foot: () => ({ heading: heading.clone(), top: top.clone() }),
+      kneePole: (side) => pole.clone().addScaledVector(X, side * 0.15).normalize(),
+      support: (side) => ({ point: ball(side).addScaledVector(top, -L.ballY), normal: top.clone() }),
+      hand: (side) => V(side * e.grip.width, ...e.grip.at),
+      across: () => V(0, 0, 1),
+      armPole: elbowsTo(e, [1, -0.3, -0.4]),
+      knee: kneeAt(V(0, hipC.y, hipC.z), ankles[1].clone().setX(0), L, pole),
+      platform: V(0, ...e.feet.ball),
+    };
+  },
+
+  /**
+   * In a hack squat's sled, the back on its pad and the shoulders under its pads: the hips travel
+   * down the rails from `hip` [y, z] at the top to `hip` at the bottom, the trunk keeps the pad's
+   * lean, `body.trunk`, and the feet stand on a platform tilted `feet.tilt` degrees toes up, its face
+   * at [`feet.y`, `feet.z`] under the ankles. The hands hold the handles by the shoulder pads,
+   * `grip.at` [up the trunk, out from the chest] from the shoulders.
+   */
+  hack_squat(e, s, L) {
+    const hipC = V(0, ...s.hip);
+    const u = trunkUp(spineLean(e.body.trunk, L));
+    const f = forwardOf(u);
+    const sh = shouldersOf(hipC, u, L);
+    const t = rad(e.feet.tilt ?? 0);
+    const heading = V(0, Math.sin(t), Math.cos(t));
+    const top = V(0, Math.cos(t), -Math.sin(t));
+    const face = V(0, e.feet.y, e.feet.z);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    const ankles = [-1, 1].map((side) => face.clone().setX(side * e.feet.stance).addScaledVector(top, L.ankleY));
+    const sled = V(0, ...e.top.hip).sub(V(0, ...e.bottom.hip)).normalize();
+    return {
+      hipC, u, shoulders: sh,
+      headDir: u.clone().addScaledVector(f, 0.15).normalize(),
+      ankles,
+      foot: (side) => ({ heading: heading.clone().applyAxisAngle(top, side * toeOut), top: top.clone() }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.35), 0, 1).normalize(),
+      support: () => ({ point: face.clone(), normal: top.clone() }),
+      hand: (side) => sh.clone().addScaledVector(X, side * e.grip.width).addScaledVector(u, e.grip.at[0]).addScaledVector(f, e.grip.at[1]),
+      across: () => f.clone().negate(),
+      armPole: elbowsTo(e, [0.6, -1, 0.3]),
+      sled, face, plateUp: top,
+    };
+  },
+
+  /**
+   * Seated, the hands on handles that swing on levers about a pivot at `pivot` [y, z]: from
+   * `handle` [y, z] at the top of the rep to `handle` at the bottom, round the pivot, `press` 0 to 1,
+   * `grip.width` either side of the middle. A chest-supported row leans the chest onto a pad; a
+   * machine pulldown sits under thigh pads.
+   */
+  lever_handles(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const pivot = V(0, ...e.pivot);
+    const polar = (p) => {
+      const d = V(0, ...p).sub(pivot);
+      return [d.length(), Math.atan2(d.y, d.z)];
+    };
+    const [r0, a0] = polar(e.top.handle);
+    let [r1, a1] = polar(e.bottom.handle);
+    // The short way round the pivot.
+    if (a1 - a0 > Math.PI) a1 -= 2 * Math.PI;
+    if (a0 - a1 > Math.PI) a1 += 2 * Math.PI;
+    const r = lerp(r0, r1, s.press);
+    const swing = lerp(a0, a1, s.press);
+    const middle = pivot.clone().add(V(0, r * Math.sin(swing), r * Math.cos(swing)));
+    const handle = (side) => middle.clone().setX(side * e.grip.width);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.15).normalize(),
+      ...seatedFeet(e, L),
+      hand: handle,
+      armPole: elbowsTo(e, [0.7, -1, -0.5]),
+      pivot, handle, swing,
     };
   },
 };

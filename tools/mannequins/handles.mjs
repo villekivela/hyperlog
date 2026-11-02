@@ -23,6 +23,14 @@ export function handlesAt(entry, stage, P, d) {
     });
   }
 
+  if (Array.isArray(entry[section]?.hand) && entry[section].hand.length === 3) {
+    // A free hand stands at its own point in the room, the left one's, which the right mirrors.
+    out.push({
+      id: 'hand', label: 'hand', at: gripTarget(P, 1),
+      drag: (p) => ({ [`${section}.hand`]: [round(p.x), round(p.y), round(p.z)] }),
+    });
+  }
+
   if (entry.motion === 'dumbbell_press') {
     // From the shoulders, in the trunk's frame: out from the chest and up the trunk at the top, out from the chest and down the trunk at the bottom.
     const side = (p) => p.clone().sub(P.shoulders);

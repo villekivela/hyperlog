@@ -102,6 +102,8 @@ export function buildRig(root) {
     footPitch: Math.atan2(-footRest.y, Math.hypot(footRest.x, footRest.z)),
     // How far the middle of the sole is in front of the ankle joint.
     midfoot: (heel + toe) / 2 - rest.foot_l.p.z,
+    // The ball of the foot, standing flat: how far in front of the ankle and how high off the floor.
+    ballAhead: Math.hypot(footRest.x, footRest.z), ballY: rest.ball_l.p.y,
   };
   const curls = [];
   const palms = {};

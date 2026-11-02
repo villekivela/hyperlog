@@ -1505,7 +1505,11 @@ gallery (Technique videos).
   - **Generic equipment** (#123): each kind in the library has a generic kit (barbell, dumbbells, a
     flat or adjustable bench, a cable tower with its pulley and stack, and the machines by kind: the
     leg press's sled, the chest press's levers), or is listed as missing in the tool. Stacks, sleds
-    and levers move with the rep.
+    and levers move with the rep. The starter program's batch (#127) adds a cable column, one or a
+    pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
+    the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
+    row, the machine pulldown and the preacher curl. A column's stack rests where its cable is drawn
+    least, at either end of the rep.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

@@ -76,3 +76,13 @@ test('the dumbbell press offers hands, elbows, feet and the chest, and a dragged
   assert.deepEqual(Object.keys(moved).sort(), ['bottom.chest', 'grip.width']);
   assert.ok(gripTarget((await posed('db_incline_press', 1, moved)).P, 1).distanceTo(down) < 0.005);
 });
+
+test('dragging a free hand sets its point at the top or the bottom, and the hand lands there', async () => {
+  const before = await posed('cable_flye', 1);
+  const hand = named(before.handles).hand;
+  const to = hand.at.clone().add(new THREE.Vector3(-0.04, 0.03, 0.05));
+  const changes = hand.drag(to);
+  assert.deepEqual(Object.keys(changes), ['bottom.hand']);
+  const after = await posed('cable_flye', 1, changes);
+  assert.ok(gripTarget(after.P, 1).distanceTo(to) < 0.005, `${gripTarget(after.P, 1).distanceTo(to)}`);
+});
