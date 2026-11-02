@@ -62,6 +62,9 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   lean for the lumbar, chest and upper-back segments. The lumbar and chest turn up and the upper
   back down, which lifts the chest and the lower back off the pad while the upper back and the
   hips stay on it.
+- **`top.shrug`, `bottom.shrug`** (pulldown) lift the shoulders, in degrees: let up into the stretch
+  at the top, down again as the elbows drive down. **`grip.elbows`** turns the elbows out from the
+  sides: 1 out wide, 0 straight down by the sides (a pulldown's default is 0.8; the bench's, 0.9).
 - **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
   the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without
   one takes its motion's default (`tempo.mjs`). The bake writes it into `mannequins.json`, and the
@@ -197,6 +200,14 @@ The first batch's traces:
 | `barbell_squat` | the library's technique video, UGwmUJkTIx8, 0–20 s | shin, thigh, trunk (the arms hold the bar out of sight) |
 | `triceps_pressdown` | the library's technique video, B5S2mbg0g5c, 0–11 s | all |
 
+## Rendering a pose
+
+`node render.mjs <id> [out-dir]` writes `<id>-side.png` and `<id>-front.png`, the top of the rep
+beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
+colours. A lying lift is seen from the head end, and equipment standing well in front of the body
+(a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
+Use it for a pull request's screenshots.
+
 ## Reviewing a batch
 
 `npm run review -- <batch>` checks each exercise of the batch and builds
@@ -214,6 +225,7 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 
 ## Files
 
+- `render.mjs`: PNGs of a pose, with no GPU.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses

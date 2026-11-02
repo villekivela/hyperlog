@@ -181,7 +181,10 @@ export const MOTIONS = {
       ...seatedFeet(e, L),
       bar: V(0, ...s.bar),
       grip: e.grip.width,
-      armPole: (side) => V(side * 0.8, -1, -0.3).normalize(),
+      // The shoulders let up into the stretch at the top, down as the elbows drive down.
+      shrug: s.shrug,
+      // `elbows` turns the elbows out from the sides: 1 out wide, 0 straight down by the sides.
+      armPole: (side) => V(side * (e.grip.elbows ?? 0.8), -1, -0.3).normalize(),
     };
   },
 

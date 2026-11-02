@@ -45,11 +45,11 @@ export const POSES = {
     // a gap under the lower back. The head lies back on the pad.
     body: { hip: [0.55, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
     feet: { stance: 0.3, z: 0.62, toeOut: 25 },
-    // From locked out over the shoulders, the arms straight and vertical, to the lower chest, the
-    // elbows tucked about 50°.
-    top: { bar: [1.18, -0.235] },
-    bottom: { bar: [0.71, -0.05] },
-    grip: { width: 0.28, elbows: 0.55 },
+    // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
+    // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
+    top: { bar: [1.15, -0.23] },
+    bottom: { bar: [0.71, -0.09] },
+    grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
@@ -68,8 +68,15 @@ export const POSES = {
     camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
   },
 
-  // A narrower grip, pulled to the upper chest rather than as low.
-  close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: { bar: [1.14, 0.02] } },
+  // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
+  // the top with the shoulders let up into the stretch, and the elbows drive straight down by the
+  // sides.
+  close_grip_lat_pulldown: {
+    like: 'lat_pulldown',
+    grip: { width: 0.24, elbows: 0.0 },
+    top: { bar: [1.70, 0.02], shrug: 9 },
+    bottom: { bar: [1.14, 0.02], shrug: 0 },
+  },
 
   triceps_pressdown: {
     equipment: 'cable',

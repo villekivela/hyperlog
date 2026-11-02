@@ -44,5 +44,6 @@ test('Close-Grip Lat Pulldown is the Lat Pulldown with a narrower grip, pulled l
   assert.ok(close.grip.width < wide.grip.width, `${close.grip.width} against ${wide.grip.width}`);
   assert.ok(close.bottom.bar[0] > wide.bottom.bar[0], `${close.bottom.bar} against ${wide.bottom.bar}`);
   assert.equal(close.bottom.trunk, wide.bottom.trunk);
-  assert.deepEqual({ ...close, grip: wide.grip, bottom: wide.bottom }, wide);
+  // The arms hang fully extended at the top with the shoulders let up, and the elbows drive straight down.
+  assert.deepEqual({ ...close, grip: wide.grip, top: wide.top, bottom: wide.bottom }, wide);
 });

@@ -49,3 +49,16 @@ test('at lockout the arms are straight and the forearms stand over the elbows', 
   // Side-on, vertical: no more than 6° of lean.
   for (const w of [upper, fore]) assert.ok(Math.abs(deg(Math.atan2(w.z, w.y))) < 6, `leans ${deg(Math.atan2(w.z, w.y))}°`);
 });
+
+test('the grip is a normal bench grip, about 1.5 shoulder widths, with the forearms vertical at the bottom', () => {
+  const at = (n) => wpos(stage.rig.bones[n]);
+  const deg = (r) => (r * 180) / Math.PI;
+  stage.pose(0);
+  const shoulderWidth = 2 * at('upperarm_l').x;
+  const grip = 2 * at('hand_l').x;
+  assert.ok(grip / shoulderWidth > 1.6, `hands ${grip} apart against shoulders ${shoulderWidth}`);
+  stage.pose(1);
+  const fore = at('hand_l').sub(at('lowerarm_l'));
+  assert.ok(Math.abs(deg(Math.atan2(fore.x, fore.y))) < 6, `forearm leans ${deg(Math.atan2(fore.x, fore.y))}° front-on`);
+  assert.ok(Math.abs(deg(Math.atan2(fore.z, fore.y))) < 15, `forearm leans ${deg(Math.atan2(fore.z, fore.y))}° side-on`);
+});

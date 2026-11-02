@@ -165,7 +165,7 @@ export function heldAt(rig, k) {
 /**
  * Poses the rig from a pose frame: the hip centre and trunk direction, the head's direction, the
  * ankles, the feet's way, knee and elbow poles, and where the hands hold. A pose can also bend
- * the spine (`spine`).
+ * the spine (`spine`) or lift the shoulders (`shrug`).
  */
 export function poseRig(rig, P) {
   const { bones, rest, dims: L } = rig;
@@ -181,6 +181,14 @@ export function poseRig(rig, P) {
   // segment (an arched back).
   for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.spine?.[n] ?? P.u, X);
   aim(rig, 'neck_01', P.headDir, X);
+  // Shoulders let up (`shrug`, degrees) or down: each collarbone turns about the body's front axis.
+  if (P.shrug) {
+    const front = X.clone().cross(P.u).normalize();
+    for (const k of ['l', 'r']) {
+      const clavicle = bones['clavicle_' + k];
+      setWorldQuat(clavicle, new THREE.Quaternion().setFromAxisAngle(front, sideOf(rig, k) * rad(P.shrug)).multiply(wquat(clavicle)));
+    }
+  }
   for (const k of ['l', 'r']) {
     const s = sideOf(rig, k);
     const i = s < 0 ? 0 : 1;
