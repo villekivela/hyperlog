@@ -145,7 +145,8 @@ function dumbbells() {
     place(P) {
       [-1, 1].forEach((s, i) => {
         bells[i].position.copy(P.hand(s));
-        bells[i].quaternion.setFromUnitVectors(X, P.across(s).clone().normalize());
+        // The handle lies along the knuckles, as the hand turned and tipped it.
+        bells[i].quaternion.setFromUnitVectors(X, (P.held?.[s] ?? P.across(s)).clone().normalize());
       });
     },
   };

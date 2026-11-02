@@ -93,7 +93,7 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
 .tune .seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
 .tune details { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
 .tune summary { font: 600 13px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
-.tune .row { display: grid; grid-template-columns: minmax(70px, 1fr) 30px minmax(80px, 2fr) 30px 76px 28px; gap: 6px; align-items: center; padding: 3px 0; }
+.tune .row { display: grid; grid-template-columns: minmax(70px, 1fr) 30px minmax(80px, 2fr) 30px 76px 28px auto; gap: 6px; align-items: center; padding: 3px 0; }
 .tune .row label { font: 12px var(--mono); overflow-wrap: anywhere; }
 .tune .row input[type="range"] { width: 100%; min-width: 0; }
 .tune .row .step, .tune .row .undo { padding: 0; height: 30px; font-size: 16px; line-height: 1; }
@@ -102,6 +102,10 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
 .tune .row input.value { width: 100%; box-sizing: border-box; min-width: 0; font: 12px var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 6px; padding: 5px 6px; }
 .tune .row input.value:focus-visible, .tune .row input[type="range"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .tune .row[data-changed="true"] label, .tune .row[data-changed="true"] input.value { color: var(--note); font-weight: 600; }
+.tune .row .scope { padding: 4px 8px; font: 11px var(--mono); font-weight: 500; white-space: nowrap; color: var(--quiet); }
+.tune .row .scope[hidden] { display: none; }
+.tune .row .scope[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.tune .row[data-per="true"] label { text-decoration: underline dotted; }
 .tune .unit { font: 11px var(--mono); color: var(--quiet); }
 /* A card being tuned keeps its stage in view while the list scrolls: stuck to the top on a narrow
    window, on the left beside the list (which scrolls on its own) on a wide one. */
@@ -211,6 +215,7 @@ function render() {
     const c = cards[e.id];
     const state = stateOf(e);
     if (state === 'ok' || state === 'tuned') ok++;
+    c.refreshMarks?.();
     c.state.dataset.state = state;
     c.state.textContent = STATES[state];
     const isOk = state === 'ok' || state === 'tuned';
@@ -438,23 +443,47 @@ function tuning(e, node, card, s) {
   // Whether the numbers on the sliders differ from what the verdict has saved.
   const unsaved = () => JSON.stringify(sorted(tuned)) !== JSON.stringify(sorted(tunedOf(verdicts[e.id])));
   card.unsaved = () => opened && unsaved();
-  // An adjustable bench is posed at the angle shown.
+  // An adjustable bench is posed at the angle shown, each Per angle setting at its value there.
   const entryNow = () => {
     const entry = tune.applyTuned(e.entry, tuned);
-    if (entry.bench) entry.bench.angle = card.angle;
-    return entry;
+    return entry.bench ? tune.atAngle(entry, card.angle) : entry;
   };
   const valueNow = (t) => tune.valueAt(entryNow(), t.path) ?? t.value;
   // What a setting goes back to: the value last saved with an OK, otherwise the entry's own.
   const savedOf = (t) => tune.valueAt(tune.applyTuned(e.entry, tunedOf(verdicts[e.id])), t.path) ?? t.value;
+  // The Per angle settings, `{ path: { angle: value } }`: the tuned ones, else the entry's own. A change
+  // is kept in `tuned['@angles']` only while it differs from the entry's.
+  const perOf = (t) => t['@angles'] ?? e.entry.bench?.perAngle ?? {};
+  const perMap = () => perOf(tuned);
+  const savedPer = () => perOf(tunedOf(verdicts[e.id]));
+  const setPer = (path, map) => {
+    const next = JSON.parse(JSON.stringify(perMap()));
+    if (map === undefined) delete next[path]; else next[path] = map;
+    if (same(next, e.entry.bench?.perAngle ?? {})) delete tuned['@angles']; else tuned['@angles'] = next;
+  };
+  // The angle buttons say which angles have something tuned.
+  card.refreshMarks = () => {
+    const known = new Set(tune.tunedAngles({ bench: { perAngle: perOf(opened ? tuned : tunedOf(verdicts[e.id])) } }));
+    for (const [a, b] of Object.entries(card.angleButtons ?? {})) {
+      b.textContent = `${a}°${known.has(Number(a)) ? ' \u2022' : ''}`;
+      b.title = known.has(Number(a)) ? 'Something is tuned at this angle' : '';
+    }
+  };
   const paint = () => {
     for (const r of rows) {
       const v = valueNow(r.t);
+      const per = perMap()[r.t.path];
       r.input.value = v;
       if (document.activeElement !== r.num) r.num.value = Number(v.toFixed(3));
-      r.row.dataset.changed = String(v !== r.t.value);
-      r.undo.disabled = v === savedOf(r.t);
+      r.row.dataset.changed = String(per ? !same(per, e.entry.bench?.perAngle?.[r.t.path]) : v !== r.t.value);
+      r.row.dataset.per = String(Boolean(per));
+      const own = Object.keys(per ?? {}).map((a) => `${a}°`).join(', ');
+      r.scope.setAttribute('aria-pressed', String(Boolean(per)));
+      r.scope.textContent = per ? 'Per angle' : 'All angles';
+      r.scope.title = per ? `Tuned at ${own || 'no angle yet'}; the others interpolate. Click for the same at every angle.` : 'The same at every angle. Click to tune per angle.';
+      r.undo.disabled = same(per, savedPer()[r.t.path]) && (per ? true : v === savedOf(r.t));
     }
+    card.refreshMarks();
     card.saved.removeAttribute('data-error');
     card.saved.textContent = unsaved() ? 'Unsaved: press OK to save' : '';
   };
@@ -464,7 +493,7 @@ function tuning(e, node, card, s) {
     count.textContent = 'Checking…';
     timer = setTimeout(() => {
       fillChecks(list, tune.checkStage(built.entry, built.stage));
-      count.textContent = `${Object.keys(tuned).length} changed`;
+      count.textContent = `${Object.keys(tuned).filter((k) => k !== '@angles').length + Object.keys(tuned['@angles'] ?? {}).length} changed`;
     }, 200);
   };
   const rebuild = async () => {
@@ -496,7 +525,11 @@ function tuning(e, node, card, s) {
   };
   const change = (path, v) => {
     const m = path.match(/^(.*)\.(\d+)$/);
-    if (m) {
+    const per = perMap()[path];
+    if (per) {
+      // A Per angle setting changes at the angle shown.
+      setPer(path, { ...per, [card.angle]: v });
+    } else if (m) {
       const [, parent, i] = m;
       const next = JSON.parse(JSON.stringify(tuned[parent] ?? tune.baseAt(e.entry, parent)));
       next[Number(i)] = v;
@@ -513,7 +546,19 @@ function tuning(e, node, card, s) {
     const d = showing === 'top' ? 0 : 1;
     const P = built.stage.pose(d);
     s.setHandles(tune.handlesAt(built.entry, built.stage, P, d), (h, point) => {
-      for (const [path, value] of Object.entries(h.drag(point))) put(path, value);
+      for (const [path, value] of Object.entries(h.drag(point))) {
+        // A point's numbers that are Per angle change at the angle shown; the others as ever.
+        const leaves = Array.isArray(value) ? value.map((v, i) => [`${path}.${i}`, v]) : [];
+        if (leaves.some(([leaf]) => perMap()[leaf])) {
+          const rest = JSON.parse(JSON.stringify(tuned[path] ?? tune.baseAt(e.entry, path)));
+          leaves.forEach(([leaf, v], i) => { if (perMap()[leaf]) setPer(leaf, { ...perMap()[leaf], [card.angle]: v }); else rest[i] = v; });
+          put(path, rest);
+        } else if (perMap()[path]) {
+          setPer(path, { ...perMap()[path], [card.angle]: value });
+        } else {
+          put(path, value);
+        }
+      }
       soon();
     });
   };
@@ -538,9 +583,11 @@ function tuning(e, node, card, s) {
       for (const t of items) {
         const row = document.createElement('div');
         row.className = 'row';
-        row.innerHTML = '<label></label><button type="button" class="step" tabindex="-1">\u2212</button><input type="range" tabindex="-1"><button type="button" class="step" tabindex="-1">+</button><input type="number" class="value" step="any"><button type="button" class="undo" tabindex="-1" title="Back to the saved value" aria-label="Reset">\u21ba</button>';
-        const [label, minus, input, plus, num, undo] = row.children;
-        const r = { t, row, input, num, undo, typing: false };
+        row.innerHTML = '<label></label><button type="button" class="step" tabindex="-1">\u2212</button><input type="range" tabindex="-1"><button type="button" class="step" tabindex="-1">+</button><input type="number" class="value" step="any"><button type="button" class="undo" tabindex="-1" title="Back to the saved value" aria-label="Reset">\u21ba</button><button type="button" class="scope" tabindex="-1" aria-pressed="false"></button>';
+        const [label, minus, input, plus, num, undo, scope] = row.children;
+        const r = { t, row, input, num, undo, scope, typing: false };
+        // Only an adjustable bench has angles to tune apart.
+        scope.hidden = !e.angles;
         num.id = `${e.id}-${t.path}`;
         label.htmlFor = num.id;
         label.textContent = t.path;
@@ -554,7 +601,16 @@ function tuning(e, node, card, s) {
         input.addEventListener('input', () => change(t.path, Number(Number(input.value).toFixed(4))));
         minus.addEventListener('click', (ev) => nudge(r, -1, ev.shiftKey));
         plus.addEventListener('click', (ev) => nudge(r, 1, ev.shiftKey));
-        undo.addEventListener('click', () => change(t.path, savedOf(t)));
+        undo.addEventListener('click', () => {
+          const was = savedPer()[t.path];
+          setPer(t.path, was && JSON.parse(JSON.stringify(was)));
+          if (!was) change(t.path, savedOf(t)); else soon();
+        });
+        // `Per angle` starts at the value shown, at the angle shown; back to `All angles` keeps that value.
+        scope.addEventListener('click', () => {
+          const v = valueNow(t);
+          if (perMap()[t.path]) { setPer(t.path, undefined); change(t.path, v); } else { setPer(t.path, { [card.angle]: v }); soon(); }
+        });
         // A number can be typed; the slider and the body follow it.
         num.addEventListener('input', () => {
           r.typing = true;
@@ -597,7 +653,8 @@ function tuning(e, node, card, s) {
     panel.hidden = true;
     button.setAttribute('aria-expanded', 'false');
   };
-  card.rebuild = () => { if (opened) rebuild(); };
+  card.rebuild = () => { if (opened) { paint(); rebuild(); } };
+  card.refreshMarks();
   button.addEventListener('click', () => {
     if (opened) { close(); return; }
     opened = true;
@@ -677,8 +734,10 @@ for (const e of BATCH.exercises) {
     const seg = node.querySelector('.angles');
     seg.hidden = false;
     const nearest = Object.keys(e.angles).map(Number).reduce((n, a) => (Math.abs(a - e.typical) < Math.abs(n - e.typical) ? a : n));
+    card.angleButtons = {};
     for (const a of Object.keys(e.angles)) {
       const b = document.createElement('button');
+      card.angleButtons[a] = b;
       b.type = 'button';
       b.textContent = `${a}°`;
       b.setAttribute('aria-pressed', String(Number(a) === nearest));

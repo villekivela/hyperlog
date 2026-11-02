@@ -60,7 +60,11 @@ function members(src, open, close) {
   return out;
 }
 
-const show = (v) => (Array.isArray(v) ? `[${v.map(show).join(', ')}]` : typeof v === 'number' ? String(Number(v.toFixed(4))) : JSON.stringify(v));
+const key = (k) => (/^\w+$/.test(k) ? k : `'${k}'`);
+const show = (v) => (Array.isArray(v) ? `[${v.map(show).join(', ')}]`
+  : typeof v === 'number' ? String(Number(v.toFixed(4)))
+  : v && typeof v === 'object' ? `{ ${Object.entries(v).map(([k, x]) => `${key(k)}: ${show(x)}`).join(', ')} }`
+  : JSON.stringify(v));
 
 /** `{ a: { b: v } }`'s text for the steps `a.b` and the value `v`. */
 const nested = (steps, value) => (steps.length === 1 ? `${steps[0]}: ${show(value)}` : `${steps[0]}: { ${nested(steps.slice(1), value)} }`);
@@ -88,7 +92,9 @@ export function patchPoses(source, id, tuned) {
   const start = new RegExp(`^  ${id}: \\{`, 'm').exec(source);
   if (!start) throw new Error(`No pose entry ${id} in poses.mjs`);
   let out = source;
-  for (const [p, value] of Object.entries(tuned)) {
+  for (const [named, value] of Object.entries(tuned)) {
+    // `@angles` is an adjustable bench's per-angle settings, which the entry keeps in `bench.perAngle`.
+    const p = named === '@angles' ? 'bench.perAngle' : named;
     const open = new RegExp(`^  ${id}: \\{`, 'm').exec(out).index + `  ${id}: `.length;
     try {
       out = put(out, open, p.split('.'), value, `${id}.${p}`);

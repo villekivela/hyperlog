@@ -1486,6 +1486,14 @@ gallery (Technique videos).
       the nearest one changes. The gallery has no session, so it shows the typical angle. The
       incline DB press's typical angle is 30°, and its framing moves steadily from the lying 0° to
       the upright 75°.
+    - **One pose for every angle** (owner, 2026-11-02, #125): an adjustable-bench pose is written in
+      the backrest's frame (the hips off the pad's face and down it from the seat-back corner, the
+      head along the pad, the hands measured from the shoulders in the trunk's frame), so one set of
+      numbers holds across the angles. Where one value can't fit, a setting is tuned **per angle**:
+      tuned at the angles that need it, interpolated between them, and the nearest one's beyond.
+      The dumbbells turn in the hands: the grip's twist (0 overhand, 90 neutral, between) and the
+      handle's tilt in the palm are pose numbers at the top and the bottom of the rep, either of
+      which may be per angle.
   - **Made offline:** poses are short data entries (with `like:` for variants) in the tool under
     `tools/mannequins/`, which bakes a `.glb` clip per exercise and a `mannequins.json` index of
     each exercise's equipment, the stage's framing for it (where the camera looks, how much it

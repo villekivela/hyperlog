@@ -24,13 +24,13 @@ export function handlesAt(entry, stage, P, d) {
   }
 
   if (entry.motion === 'dumbbell_press') {
-    // From the shoulders: over them at the top (up and forward), out from the chest and down the trunk at the bottom.
+    // From the shoulders, in the trunk's frame: out from the chest and up the trunk at the top, out from the chest and down the trunk at the bottom.
     const side = (p) => p.clone().sub(P.shoulders);
     const front = X.clone().cross(P.u).normalize();
     out.push({
       id: 'hand', label: 'hands', at: gripTarget(P, 1),
       drag: (p) => (d === 0
-        ? { 'top.over': [round(side(p).y), round(side(p).z)], 'grip.lockout': round(Math.abs(p.x)) }
+        ? { 'top.over': [round(side(p).dot(front)), round(side(p).dot(P.u))], 'grip.lockout': round(Math.abs(p.x)) }
         : { 'bottom.chest': [round(side(p).dot(front)), round(-side(p).dot(P.u))], 'grip.width': round(Math.abs(p.x)) }),
     });
   }

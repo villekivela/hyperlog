@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { POSES } from './poses.mjs';
+import { atAngle } from './tune.mjs';
 
 const LIBRARY = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json');
 
@@ -63,7 +64,8 @@ function cameraAt(cameras, angle) {
 export function prepare(id, poses = POSES, angle) {
   const entry = resolve(id, poses);
   if (entry.bench) {
-    entry.bench = { ...entry.bench, angle: angle ?? entry.bench.typical };
+    // Each per-angle setting takes its value for the angle.
+    Object.assign(entry, atAngle(entry, angle ?? entry.bench.typical));
     if (entry.bench.cameras) entry.camera = cameraAt(entry.bench.cameras, entry.bench.angle);
   }
   if (typeof entry.trace === 'string') {
