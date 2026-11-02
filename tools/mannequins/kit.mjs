@@ -365,13 +365,12 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
   const column = box(0.12, 1, 0.12, bar, V(0, 0, 0));
   const boom = part(new THREE.BoxGeometry(0.08, 1, 0.08), bar, { solid: true });
   const axle = part(rodGeometry(0.022), bar);
-  const levers = [0, 1].map(() => ({
-    arm: part(rodGeometry(0.02), bar), top: part(rodGeometry(0.016), bar),
-    grip: part(rodGeometry(0.017), bar, { held: true }), low: part(rodGeometry(0.016), bar),
-  }));
+  // Each lever hangs outside the body and ends in a horizontal handle reaching in across the
+  // palm, held like a bar.
+  const levers = [0, 1].map(() => ({ arm: part(rodGeometry(0.02), bar), grip: part(rodGeometry(0.017), bar, { held: true }) }));
   const weights = stack(V(0, 0, -0.71));
   const g = group('chest_press', [
-    ...parts, column, boom, axle, ...levers.flatMap((l) => [l.arm, l.top, l.grip, l.low]), ...weights.parts,
+    ...parts, column, boom, axle, ...levers.flatMap((l) => [l.arm, l.grip]), ...weights.parts,
   ]);
   const rear = -0.55;
   return {
@@ -387,10 +386,8 @@ function chestPress({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}) {
         const s = i ? 1 : -1;
         const h = P.handle(s);
         const out = 0.5;
-        span(l.arm, P.pivot.clone().setX(s * out), h.clone().setX(s * out).add(V(0, -0.08, 0)));
-        span(l.top, h.clone().setX(s * out).add(V(0, 0.08, 0)), h.clone().add(V(0, 0.08, 0)));
-        span(l.grip, h.clone().add(V(0, 0.08, 0)), h.clone().add(V(0, -0.08, 0)));
-        span(l.low, h.clone().add(V(0, -0.08, 0)), h.clone().setX(s * out).add(V(0, -0.08, 0)));
+        span(l.arm, P.pivot.clone().setX(s * out), h.clone().setX(s * out));
+        span(l.grip, h.clone().setX(s * out), h.clone().setX(s * (Math.abs(h.x) - 0.1)));
       });
       weights.lift(0.5 * (P0.swing - P.swing));
     },

@@ -25,11 +25,10 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'hinge',
     kit: { barbell: {} },
-    // The trunk is traced from a true side view (z3Nk7sbHZSU). The knee passes behind the plates
-    // there, so the shin and thigh are authored: the knees soften from about 20° to 50° as the hips
-    // go back, and the bar runs down the thighs to mid-shin.
-    trace: 'barbell_rdl',
-    top: { shin: 5, thigh: 14, trunk: 11 },
+    // Locked out at the top, hips and knees straight (the owner's review; the traced lifter stood
+    // with soft knees and a forward trunk, so the RDL isn't traced). The knees soften to about 50°
+    // as the hips go back, and the bar runs down the thighs to mid-shin.
+    top: { shin: 1, thigh: 0, trunk: 1 },
     bottom: { shin: 8, thigh: 42, trunk: 76 },
     feet: { stance: 0.12, toeOut: 6, kneesOut: 0 },
     bar: { z: 0.16 },
@@ -42,7 +41,8 @@ export const POSES = {
     motion: 'bench_press',
     kit: { barbell: {}, bench: {} },
     // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor.
-    body: { hip: [0.55, 0.28], trunk: -89 },
+    // The head lies back on the pad.
+    body: { hip: [0.55, 0.28], trunk: -89, head: -22 },
     feet: { stance: 0.3, z: 0.86, toeOut: 25 },
     // From locked out over the shoulders to the lower chest, the elbows tucked about 50°.
     top: { bar: [1.06, -0.19] },
@@ -55,17 +55,19 @@ export const POSES = {
   lat_pulldown: {
     equipment: 'cable',
     motion: 'pulldown',
-    kit: { cable_tower: { column: 0.95, pulley: [2.25, -0.04], attachment: 'lat_bar', seat: [0.47, 0.02], thighPad: [0.71, 0.3] } },
+    kit: { cable_tower: { column: 0.95, pulley: [2.25, 0.02], attachment: 'lat_bar', seat: [0.47, 0.02], thighPad: [0.71, 0.3] } },
     body: { hip: [0.56, 0] },
-    // Knees at about 95°, leaning back a little more as the elbows come down to the sides.
+    // Knees at about 95°, leaning back a little more as the elbows come down to the sides. The bar
+    // runs straight down under the pulley, with no drift forward or back.
     feet: { stance: 0.16, z: 0.32, toeOut: 12 },
-    top: { trunk: -18, bar: [1.62, -0.04] },
-    bottom: { trunk: -27, bar: [1.03, 0.04] },
+    top: { trunk: -18, bar: [1.62, 0.02] },
+    bottom: { trunk: -27, bar: [1.03, 0.02] },
     grip: { width: 0.4 },
     camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
   },
 
-  close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 } },
+  // A narrower grip, pulled to the upper chest rather than as low.
+  close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: { bar: [1.14, 0.02] } },
 
   triceps_pressdown: {
     equipment: 'cable',

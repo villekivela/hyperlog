@@ -42,16 +42,16 @@ are in degrees.
 lat_pulldown: {
   equipment: 'cable',                   // the library's equipment key
   motion: 'pulldown',                   // how the body moves (motions.mjs)
-  kit: { cable_tower: { column: 0.95, pulley: [2.25, -0.04], attachment: 'lat_bar',
+  kit: { cable_tower: { column: 0.95, pulley: [2.25, 0.02], attachment: 'lat_bar',
     seat: [0.47, 0.02], thighPad: [0.71, 0.3] } },
   body: { hip: [0.56, 0] },             // where a seated or lying body sits: hip centre [y, z]
-  feet: { stance: 0.16, z: 0.42, toeOut: 12 },
-  top: { trunk: -18, bar: [1.62, -0.04] },      // the top of the rep
-  bottom: { trunk: -27, bar: [1.03, 0.04] },    // and its bottom
+  feet: { stance: 0.16, z: 0.32, toeOut: 12 },
+  top: { trunk: -18, bar: [1.62, 0.02] },       // the top of the rep
+  bottom: { trunk: -27, bar: [1.03, 0.02] },    // and its bottom
   grip: { width: 0.4 },                 // the hands either side of the middle
   camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
 },
-close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 } },
+close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: { bar: [1.14, 0.02] } },
 ```
 
 - **`like: <id>`** takes another entry and changes only what this one gives. Objects merge key by
@@ -74,11 +74,11 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | --- | --- | --- |
 | `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }`; `feet.kneesOut` |
 | `hinge` | a bar hanging in straight arms, an RDL | `shin`, `thigh`, `trunk`; `bar.z`, the bar's distance in front of the ankles |
-| `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared |
+| `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared; `body.head`, the head's tilt from the spine to rest it on the pad |
 | `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
-| `chest_press` | seated, pressing handles on hung levers | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
+| `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
 
 ## Equipment
 
@@ -186,7 +186,6 @@ The first batch's traces:
 | Pose | Footage | Angles |
 | --- | --- | --- |
 | `barbell_squat` | the library's technique video, UGwmUJkTIx8, 0–20 s | shin, thigh, trunk (the arms hold the bar out of sight) |
-| `barbell_rdl` | z3Nk7sbHZSU, 0–13.7 s, a true side view | trunk (the knee passes behind the plates) |
 | `triceps_pressdown` | the library's technique video, B5S2mbg0g5c, 0–11 s | all |
 
 ## Reviewing a batch

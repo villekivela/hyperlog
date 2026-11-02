@@ -38,9 +38,11 @@ test('an entry like one that is missing, or like itself through a chain, is an e
   assert.throws(() => resolve('a', { a: { like: 'b' }, b: { like: 'a' } }), /a: like goes round in a circle/);
 });
 
-test('Close-Grip Lat Pulldown is the Lat Pulldown with a narrower grip', () => {
+test('Close-Grip Lat Pulldown is the Lat Pulldown with a narrower grip, pulled less low', () => {
   const wide = resolve('lat_pulldown');
   const close = resolve('close_grip_lat_pulldown');
   assert.ok(close.grip.width < wide.grip.width, `${close.grip.width} against ${wide.grip.width}`);
-  assert.deepEqual({ ...close, grip: wide.grip }, wide);
+  assert.ok(close.bottom.bar[0] > wide.bottom.bar[0], `${close.bottom.bar} against ${wide.bottom.bar}`);
+  assert.equal(close.bottom.trunk, wide.bottom.trunk);
+  assert.deepEqual({ ...close, grip: wide.grip, bottom: wide.bottom }, wide);
 });

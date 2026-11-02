@@ -150,7 +150,9 @@ export const MOTIONS = {
     const u = trunkUp(lean);
     return {
       hipC, u,
-      headDir: u.clone().add(V(0, 0.08, 0)).normalize(),
+      // The head lies back on the pad: `body.head` tips it from the spine's line, toward the floor
+      // when negative.
+      headDir: trunkUp(lean + rad(e.body.head ?? 0)),
       bar: V(0, ...s.bar),
       ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       grip: e.grip.width,
@@ -256,8 +258,8 @@ export const MOTIONS = {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.12).normalize(),
       ...seatedFeet(e, L),
+      // Horizontal handles, held like a bar: the knuckles run along them.
       hand: handle,
-      across: () => V(0, 1, 0),
       armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
       pivot, handle, swing,
     };
