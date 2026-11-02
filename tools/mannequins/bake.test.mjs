@@ -90,6 +90,7 @@ test('every clip shares one mannequin: its mesh and skin are baked once, and a c
 test('baking again gives byte-identical files', async () => {
   const again = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
   await bakeAll(again);
+  assert.deepEqual((await readdir(again)).sort(), (await readdir(out)).sort());
   for (const f of (await readdir(out)).sort()) {
     assert.ok((await readFile(path.join(out, f))).equals(await readFile(path.join(again, f))), f);
   }
