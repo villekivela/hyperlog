@@ -32,6 +32,11 @@ export const BATCHES = {
   ],
   // The adjustable-bench pose, baked at six angles (#125).
   'adjustable-bench': ['db_incline_press'],
+  // Every pose above again, on the kits at their full detail and in their tones (#127).
+  kits: [
+    'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'db_incline_press', 'lat_pulldown', 'close_grip_lat_pulldown',
+    'triceps_pressdown', 'leg_press', 'machine_chest_press',
+  ],
 };
 
 const batchOf = (name) => {

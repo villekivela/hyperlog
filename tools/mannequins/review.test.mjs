@@ -134,6 +134,13 @@ test('the adjustable-bench batch is the incline DB press', () => {
   assert.deepEqual(BATCHES['adjustable-bench'], ['db_incline_press']);
 });
 
+test('the kits batch is every exercise posed before #127, re-reviewed on the detailed kits', () => {
+  assert.deepEqual([...BATCHES.kits].sort(), [
+    'barbell_bench_press', 'barbell_rdl', 'barbell_squat', 'close_grip_lat_pulldown', 'db_incline_press',
+    'lat_pulldown', 'leg_press', 'machine_chest_press', 'triceps_pressdown',
+  ]);
+});
+
 test('the page of an adjustable-bench pose holds a clip per angle to show, and an OK names every one of them', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'review-'));
   await buildReview('adjustable-bench', { clips, out: dir });

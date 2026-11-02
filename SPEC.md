@@ -1506,6 +1506,22 @@ gallery (Technique videos).
     flat or adjustable bench, a cable tower with its pulley and stack, and the machines by kind: the
     leg press's sled, the chest press's levers), or is listed as missing in the tool. Stacks, sleds
     and levers move with the rep.
+    - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
+      with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
+      seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
+      selector pin; pulley wheels in housings with the cable over them; and shaped bars and handles
+      with grips. Nothing that can't be seen at phone size (bolts, seams, gussets).
+    - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
+      palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
+      #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #2E2E33, 0.95; stack plates and every
+      other weight #8A8A90 in both, 0.8; rods, bars, cables and pins #C8C8CC in both, 0.3; pulleys
+      and housings #5C5C62, #6E6E75, 0.55. Nothing is metallic. In dark a faint light from behind
+      the kit gives the dark frame an edge against the stage.
+    - **The mannequin in dark** (owner, 2026-11-02, #127) is lighter, body #C4C4CA and joints
+      #A8A8AF, so it stays the subject against the frame. Light stays body #BABAC1, joints #9A9AA1.
+    - **Each kit ships once** (#127), shared across the clips that use it the way the mannequin's
+      mesh is: a clip reads its kits' parts from a file per kit, so detail costs about 110 KB per
+      kind of equipment, not per clip.
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment, and the joints stay within
     range. A pose that fails one doesn't bake.

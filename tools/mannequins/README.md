@@ -187,13 +187,23 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 
 - `bench` is flat, or adjustable with `angle` raising its back pad from flat.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
-  `straight_bar` or `v_handle`. Its weight stack rises as the cable is drawn out.
+  `straight_bar` or `v_handle`. The cable meets the front of the pulley's wheel and runs over a
+  second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
+  rises as the cable is drawn out. It has a high pulley only (1.5 m or more) for now.
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 
+Every kit is built at one level of detail (SPEC, #127): rounded tubing on base plates, soft pads,
+a stack of twelve plates on guide rods with a selector pin, pulleys in housings with the cable over
+them, and shaped bars and handles with grips. Nothing smaller shows at phone size, so there are no
+bolts or seams. Each shape is made once per size and shared by every part of that size (`shape`
+in `kit.mjs`), with positions and normals only, so a kit's file stays small.
+
 Materials are named for the phone, which colours them from the theme: `body` and `joint` on the
-mannequin, `bar` for metal (bars, frames, cables, handles), `plate` for plates, stacks and pads, and
-`shadow`.
+mannequin, the kits' five tones, and `shadow`. The tones are `frame` (frames and uprights), `vinyl`
+(pads, rollers and grips), `plate` (a stack's plates and every other weight), `metal` (rods, bars,
+cables and pins) and `pulley` (pulleys and their housings). Each tone's roughness ships in the clip;
+the colours in it are the light theme's, which the phone replaces.
 
 ## Checks
 
@@ -282,7 +292,9 @@ stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; w
 Read the diff after: a comment may now describe the old number.
 
 The page keeps one verdict per exercise in its database, `verdicts/<id>`:
-`{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw. Read them back
+`{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw: what the clip
+shows, with the parts it reads from the files it shares, so a kit file that grows for another
+exercise leaves the OK in place (`clipContent` in `glb.mjs`). Read them back
 with the ArtifactData tool (`list` of `verdicts`), act on the notes, and write the verdicts to
 `review/<batch>.json` as `{ "<id>": { "ok": …, "note": …, "clip": … } }`. `npm run review --
 status <batch>` then lists each exercise as `ok`, `notes`, `changed` (OK'd on a clip since re-baked)
@@ -318,9 +330,11 @@ at its pose at the top. The phone plays the lowering forward, holds, plays it ba
 again.
 
 The mannequin's mesh and skin are the same in every clip, so they are baked once, into
-`mannequin.bin`. Each clip's glTF reads that buffer by URI, and holds only its own kit, shadow and
-animation (`glb.mjs`). The bake checks every clip's mannequin is byte for byte the same before it
-shares it. The phone hands `mannequin.bin` to gltfio's `ResourceLoader` (`addResourceData`) before
+`mannequin.bin`, and each kit's parts are baked once, into `kit_<name>.bin` (the kit's node is
+marked with `extras.kit`). Each clip's glTF reads those buffers by URI, and holds only its shadow
+and animation (`glb.mjs`). A kit file holds each distinct part once, however many clips read it, and
+grows when a clip's options make a part of a new size. The bake checks every clip's mannequin is
+byte for byte the same before it shares it. The phone hands `mannequin.bin` to gltfio's `ResourceLoader` (`addResourceData`) before
 loading a clip. The review page can't fetch anything, `data:` URLs included, so it and the tests
 merge the shared buffer into each clip (`inlineResources`) and parse it from memory.
 
@@ -329,7 +343,8 @@ merge the shared buffer into each clip (`inlineResources`) and parse it from mem
 ```json
 { "clips": { "barbell_squat": { "clip": "barbell_squat.glb", "equipment": "barbell",
   "camera": { "target": [0, 0.87, 0], "halfHeight": 1.02, "azimuth": 62, "elevation": 8 },
-  "resources": ["mannequin.bin"] } } }
+  "resources": ["mannequin.bin", "kit_barbell.bin"] } } }
 ```
 
-`resources` names the files a clip reads by URI, beside it in `assets/mannequins/`.
+`resources` names the files a clip reads by URI, beside it in `assets/mannequins/`: the mannequin's,
+then its kits' by name.

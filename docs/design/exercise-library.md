@@ -114,7 +114,8 @@ the bottom), `mannequin-gallery-dark.png` (emulator, #122).
    prescription: `sheetCard` tone, 32 dp corners, 12 dp from the sheet's edges. The text stays on
    the sheet's 24 dp edge below it.
 3. **The body is the subject.** It holds the most contrast with the stage; the joint rings are a
-   step darker than the body, and the equipment sits apart from it without outshining it.
+   step darker than the body, and the equipment sits apart from it without outshining it. The
+   kits read as real machines by tone and roughness by part, not by colour or gloss.
 4. **Clay shows its form.** A key light from the side of the camera models the body; a light from
    the camera's direction flattens it into a cut-out. The key moves with the camera, so every turn
    is lit alike.
@@ -126,12 +127,16 @@ the bottom), `mannequin-gallery-dark.png` (emulator, #122).
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
 | Stage | `surfaceContainerHighest` #E4E4E8 | #2E2E33 | `Tones.sheetCard`, `CardShape`, 5:4, 12 dp in from the sheet's edges |
-| Body | #BABAC1 | #9A9AA2 | the mannequin's shell |
-| Joint | #9A9AA1 | #7C7C84 | the rings between its pieces, a step under the body |
-| Bar | #5C5C62 | #85858C | bar and sleeves |
-| Plate | #48484E | #55555C | plates: dark iron in light, a muted grey under the body in dark |
+| Body | #BABAC1 | #C4C4CA | the mannequin's shell |
+| Joint | #9A9AA1 | #A8A8AF | the rings between its pieces, a step under the body |
+| Frame | #2E2E33 | #4A4A50 | frames and uprights, roughness 0.5 |
+| Vinyl | #1B1B1E | #2E2E33 | pads, rollers and grips, roughness 0.95 |
+| Plate | #8A8A90 | #8A8A90 | a stack's plates and every other weight, roughness 0.8 |
+| Metal | #C8C8CC | #C8C8CC | rods, bars, cables and pins, roughness 0.3 |
+| Pulley | #5C5C62 | #6E6E75 | pulleys and their housings, roughness 0.55 |
 | Floor shadow | 65 % | 100 % | of the baked shadow (black, 45 % at its centre, gone at the rim) |
 | Key light | 2.8, casts shadows | same | 55° round to the camera's left, 50° up, turning with the camera |
+| Rim light | none | 1.3, no shadows | from behind the kit, 160° round from the camera and 30° up, turning with it: a dark frame's edge |
 | Sky | SH 0.36 + 0.26 · up | same | a hemisphere: bright above, dim below, filling the shade |
 | Lens | 26° vertical | same | linear tone mapping, exposure 1 |
 | Framing (squat) | target (0, 0.87, 0), half 1.02 m, 62° turn, 8° tilt | same | in `poses.mjs`; the plates' top and the feet sit about 8 % in from the stage's edges |
@@ -215,3 +220,10 @@ demand is a connected button group and its chips pick in primaryContainer.
   outweighed the body, and checked the turned, still and gallery states. A scroll added to the
   sheet for long content now turns on only when the content outgrows the room: always on, it
   stopped a downward drag on the stage from closing the sheet.
+- **Kit detail and tones** (owner, #127, from the machines prototype's "B · tones"): every kit is
+  rounded tubing on base plates, soft pads, a stack of separate plates on guide rods with a pin,
+  pulleys in housings and shaped bars with grips, in five tones by part. In dark the body went
+  lighter (#9A9AA2 → #C4C4CA), so it stays the subject against the lighter frame. The light body
+  stays #BABAC1: the issue quoted the prototype's #D2D2D8, the near-white this note's first pass
+  darkened. Dark vinyl (#2E2E33) is the dark stage's own tone, so a dark pad shows by its shading
+  and the rim light.

@@ -45,6 +45,14 @@ private const val KeyTurn = 55.0
 private const val KeyHeight = 50.0
 private const val KeyIntensity = 2.8f
 
+/**
+ * The rim light's place, kept relative to the camera like the key: this far round from the camera,
+ * in degrees, so it comes from behind the kit, and this high. Its strength is the theme's
+ * ([ClayColours.rim]): only dark has one, to give a dark frame an edge against a dark stage.
+ */
+private const val RimTurn = 160.0
+private const val RimHeight = 30.0
+
 /** The sky's irradiance, 2-band SH: the even part, and how much brighter from above than below. */
 private const val SkyBase = 0.36f
 private const val SkyTilt = 0.26f
@@ -65,6 +73,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     private val cameraEntity = EntityManager.get().create()
     private val camera = engine.createCamera(cameraEntity)
     private val sun = EntityManager.get().create()
+    private val rim = EntityManager.get().create()
     private val materials = UbershaderProvider(engine)
     private val assetLoader = AssetLoader(engine, materials, EntityManager.get())
     private val resourceLoader = ResourceLoader(engine, true)
@@ -121,6 +130,12 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             .castShadows(true)
             .build(engine, sun)
         scene.addEntity(sun)
+        LightManager.Builder(LightManager.Type.DIRECTIONAL)
+            .direction(0f, -1f, 0f)
+            .intensity(0f)
+            .castShadows(false)
+            .build(engine, rim)
+        scene.addEntity(rim)
         sky = IndirectLight.Builder()
             .irradiance(2, floatArrayOf(SkyBase, SkyBase, SkyBase + 0.01f, SkyTilt, SkyTilt, SkyTilt - 0.01f, 0f, 0f, 0f, 0f, 0f, 0f))
             .intensity(1f)
@@ -235,18 +250,13 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
 
     private fun applyColours() {
         val c = colours ?: return
+        engine.lightManager.setIntensity(engine.lightManager.getInstance(rim), c.rim)
         asset?.instance?.materialInstances?.forEach { m ->
-            val colour = when (m.name) {
-                "body" -> c.body
-                "joint" -> c.joint
-                "bar" -> c.bar
-                "plate" -> c.plate
-                "shadow" -> {
-                    m.setParameter("baseColorFactor", Colors.RgbaType.SRGB, 0f, 0f, 0f, c.shadow)
-                    return@forEach
-                }
-                else -> return@forEach
+            if (m.name == "shadow") {
+                m.setParameter("baseColorFactor", Colors.RgbaType.SRGB, 0f, 0f, 0f, c.shadow)
+                return@forEach
             }
+            val colour = c.colourOf(m.name) ?: return@forEach
             m.setParameter("baseColorFactor", Colors.RgbaType.SRGB, colour.red, colour.green, colour.blue, 1f)
         }
     }
@@ -295,6 +305,12 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             engine.lightManager.getInstance(sun),
             (-cos(keyEl) * sin(keyAz)).toFloat(), (-sin(keyEl)).toFloat(), (-cos(keyEl) * cos(keyAz)).toFloat(),
         )
+        val rimAz = az + Math.toRadians(RimTurn)
+        val rimEl = Math.toRadians(RimHeight)
+        engine.lightManager.setDirection(
+            engine.lightManager.getInstance(rim),
+            (-cos(rimEl) * sin(rimAz)).toFloat(), (-sin(rimEl)).toFloat(), (-cos(rimEl) * cos(rimAz)).toFloat(),
+        )
     }
 
     override fun release() {
@@ -310,6 +326,8 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         resourceLoader.destroy()
         engine.destroyEntity(sun)
         EntityManager.get().destroy(sun)
+        engine.destroyEntity(rim)
+        EntityManager.get().destroy(rim)
         engine.destroyIndirectLight(sky)
         engine.destroyColorGrading(grading)
         engine.destroyRenderer(renderer)

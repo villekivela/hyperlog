@@ -50,7 +50,7 @@ test('the squat bakes a clip of its lowering and an index entry', async () => {
   assert.deepEqual(gltf.animations.map((a) => [a.name, a.duration]), [['lowering', 1]]);
   const materials = new Set();
   gltf.scene.traverse((o) => { if (o.material) materials.add(o.material.name); });
-  assert.deepEqual([...materials].sort(), ['bar', 'body', 'joint', 'plate', 'shadow']);
+  assert.deepEqual([...materials].sort(), ['body', 'joint', 'metal', 'plate', 'shadow']);
 
   // Played from the top to the bottom, the hips and the bar go down.
   const mixer = new THREE.AnimationMixer(gltf.scene);

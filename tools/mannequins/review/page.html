@@ -21,21 +21,22 @@
   --display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
   --text: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
-  /* The clay mannequin's greys (GraphitePalette.kt, ClayColours). */
-  --clay-body: #babac1; --clay-joint: #9a9aa1; --clay-bar: #5c5c62; --clay-plate: #48484e; --clay-shadow: 0.65;
+  /* The clay mannequin's greys and the kits' tones (GraphitePalette.kt, ClayColours); the rim is
+     the light from behind that gives a dark frame its edge. */
+  --clay-body: #babac1; --clay-joint: #9a9aa1; --clay-frame: #2e2e33; --clay-vinyl: #1b1b1e; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #5c5c62; --clay-shadow: 0.65; --clay-rim: 0;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ground: #131315; --card: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
     --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --focus: #9db0ff;
-    --clay-body: #9a9aa2; --clay-joint: #7c7c84; --clay-bar: #85858c; --clay-plate: #55555c; --clay-shadow: 1;
+    --clay-body: #c4c4ca; --clay-joint: #a8a8af; --clay-frame: #4a4a50; --clay-vinyl: #2e2e33; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #6e6e75; --clay-shadow: 1; --clay-rim: 0.7;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --ground: #131315; --card: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
   --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --focus: #9db0ff;
-  --clay-body: #9a9aa2; --clay-joint: #7c7c84; --clay-bar: #85858c; --clay-plate: #55555c; --clay-shadow: 1;
+  --clay-body: #c4c4ca; --clay-joint: #a8a8af; --clay-frame: #4a4a50; --clay-vinyl: #2e2e33; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #6e6e75; --clay-shadow: 1; --clay-rim: 0.7;
   color-scheme: dark;
 }
 body {
@@ -237,6 +238,9 @@ function stage(e, canvas, holder) {
   const sun = new THREE.DirectionalLight(0xffffff, 1.5);
   sun.position.set(2.2, 4, 2.6);
   scene.add(sun);
+  // From behind the kit, wherever the stage is turned: only dark lights it (--clay-rim).
+  const rim = new THREE.DirectionalLight(0xffffff, 0);
+  scene.add(rim, rim.target);
   const camera = new THREE.PerspectiveCamera(26, 5 / 4, 0.05, 50);
   // How the stage frames the clip shown: an adjustable bench frames each of its angles on its own.
   let cam = e.camera;
@@ -262,9 +266,13 @@ function stage(e, canvas, holder) {
     const el = THREE.MathUtils.degToRad(cam.elevation);
     camera.position.set(target.x + distance * Math.cos(el) * Math.sin(a), target.y + distance * Math.sin(el), target.z + distance * Math.cos(el) * Math.cos(a));
     camera.lookAt(target);
+    const back = a + THREE.MathUtils.degToRad(160);
+    rim.position.set(target.x + 5 * Math.sin(back), target.y + 3, target.z + 5 * Math.cos(back));
+    rim.target.position.copy(target);
   };
   const colour = () => {
     scene.background = new THREE.Color(css('--stage'));
+    rim.intensity = Number(css('--clay-rim')) || 0;
     for (const m of materials) {
       if (m.name === 'shadow') m.opacity = Number(css('--clay-shadow')) || 0.65;
       else if (css(`--clay-${m.name}`)) m.color.set(css(`--clay-${m.name}`));
