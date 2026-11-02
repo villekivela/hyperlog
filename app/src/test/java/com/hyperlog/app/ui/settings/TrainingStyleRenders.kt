@@ -64,6 +64,7 @@ class TrainingStyleRenders {
                     onTargets = { style = style.copy(targets = it) },
                     onAboutMe = { style = style.copy(aboutMe = it) },
                     onHowITrain = { style = style.copy(howITrain = it) },
+                    onSetUpAgain = {},
                     onBack = {},
                 )
             }

@@ -1953,7 +1953,24 @@ and Done saves every step at once.
 - **New program opens the wizard first** until it is done: the tile (and New program on a program
   review) goes to the wizard, and its Done goes on into the New program check-in. × there drops
   both.
-- **Settings runs it again** through Set it up again on the Training style page.
+- **Settings runs it again** through Set it up again on the Training style page, a row at its top.
+- **The steps** are ten, one question each over the page's own tiles (the same controls, so a
+  choice looks and works as it does there): Goal; Volume with Sets through a block; How hard
+  (the rule, Failure and Calibration sets); Rep ranges; Age; Where are you now? with Coming back
+  from a break; Aches and injuries; Exercises to avoid and to favour; Anything else, which is
+  About me's line (How I train's own line is reached from the summary); and the summary. The bar
+  title is "Set how you train", and the strip under the step reads `3 of 10` beside Next (Done on
+  the summary).
+- **Answers are a draft** until Done: Back and Next keep them, a rotation keeps them, and ×
+  or Back from the first step drops them. A range typed on a step is kept as Next is tapped, if
+  it is whole; while one isn't (its rule shows under it), Next stays off.
+- **The summary** lists every answer, `Not said` for an About me field left empty, and a row
+  taps back to its step. Its **How I train** link opens the principles over the wizard, kept as
+  they change, as on the page, and Back returns to the summary.
+- **A step opened from the summary** goes back to the summary on Next.
+- **How I train's switches** keep as they turn, so × doesn't undo them.
+- **From a program review**, New program opens the wizard over the review: Done goes on into the
+  check-in, × returns to the review.
 
 **The program focus.** New program asks "Bring anything up this program?", for up to two of the
 muscle groups (`MuscleGroup`: Chest, Back, Shoulders, Arms, Legs, Glutes, Core), or none. It is

@@ -106,4 +106,45 @@ class TrainingStylesTest {
         assertTrue(text, text.contains("Program focus: Back (their muscles 16–24 sets a week, the rest 5–10)"))
         assertTrue(text, text.contains("Volume for this program: 10–16"))
     }
+
+    @Test
+    fun theWizardsDoneCountsAsSetEvenWithEveryDefaultKeptAndKeepsTheStyle() = runTest {
+        val styles = TrainingStyles(install(), context)
+        assertFalse(styles.done.first())
+        styles.finish(TrainingTargets(), AboutMe())
+        assertTrue(styles.done.first())
+        assertEquals(TrainingTargets(), styles.current().targets)
+        styles.finish(mine, me)
+        assertEquals(mine, styles.current().targets)
+        assertEquals(me.avoid, styles.current().aboutMe.avoid)
+    }
+
+    @Test
+    fun finishingLeavesHowITrainAsItWas() = runTest {
+        val styles = TrainingStyles(install(), context)
+        styles.setHowITrain(principles)
+        styles.finish(mine, me)
+        assertEquals(principles, styles.current().howITrain)
+    }
+
+    @Test
+    fun dismissingTheCardHidesItButDoesNotCountAsSet() = runTest {
+        val styles = TrainingStyles(install(), context)
+        assertFalse(styles.cardDismissed.first())
+        styles.dismissCard()
+        assertTrue(styles.cardDismissed.first())
+        assertFalse(styles.done.first())
+    }
+
+    @Test
+    fun theWizardsFlagsGoIntoABackup() = runTest {
+        val phone = install()
+        val styles = TrainingStyles(phone, context)
+        styles.finish(mine, me)
+        styles.dismissCard()
+        val other = install()
+        assertEquals(Backups.Result.Restored, Backups(other).restore(Backups(phone).export()))
+        assertTrue(TrainingStyles(other, context).done.first())
+        assertTrue(TrainingStyles(other, context).cardDismissed.first())
+    }
 }

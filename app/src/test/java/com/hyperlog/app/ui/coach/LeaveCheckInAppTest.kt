@@ -56,6 +56,8 @@ class LeaveCheckInAppTest {
         override fun before() = runBlocking {
             val db = HyperlogDatabase.get(context)
             db.settings().put(SettingEntity("scripted_coach", "on"))
+            // The training style is set, so New program goes straight to its check-in.
+            db.settings().put(SettingEntity(com.hyperlog.app.coach.TrainingStyles.DONE, "true"))
             ExerciseLibrary(db).sync(LibrarySeed.fromAssets(context))
             val programs = Programs(db)
             programs.import(StarterProgram.source(context))

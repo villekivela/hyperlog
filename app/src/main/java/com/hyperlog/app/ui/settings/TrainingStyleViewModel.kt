@@ -21,6 +21,20 @@ class TrainingStyleViewModel(application: Application) : AndroidViewModel(applic
     /** The kept style; null until it is read. */
     val style: StateFlow<TrainingStyle?> = styles.style.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** The wizard's Done was pressed; null until it is read, so Today shows no card and New program no gate before then. */
+    val done: StateFlow<Boolean?> = styles.done.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Today's card was dismissed; null until it is read. */
+    val cardDismissed: StateFlow<Boolean?> = styles.cardDismissed.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun finish(targets: TrainingTargets, aboutMe: AboutMe) {
+        viewModelScope.launch { styles.finish(targets, aboutMe) }
+    }
+
+    fun dismissCard() {
+        viewModelScope.launch { styles.dismissCard() }
+    }
+
     fun setTargets(targets: TrainingTargets) {
         viewModelScope.launch { styles.setTargets(targets) }
     }
