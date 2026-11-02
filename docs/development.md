@@ -105,6 +105,26 @@ UI is designed and checked by agents, and the owner judges whole passes on the p
 
 Both agents drive the same phone, so run them one after the other.
 
+## Comparing check-in replies
+
+`tools/compare-replies/run.sh` plays four scenarios (a new program, the same with a chest focus,
+Something hurts and a 45-minute workout) against the Claude API, once with the context as it was
+before the training style (`2a431ef`, override with `COMPARE_BEFORE`) and once with this checkout's,
+and writes `build/compare-replies/compare.html`: both replies side by side, each scored against the
+default training targets (`checks.py`). Publish the page for the owner to read; the results are not
+committed.
+
+- **The key** is read from `ANTHROPIC_API_KEY`, else from `~/.config/hyperlog/claude-key`. It is
+  never printed or written anywhere. The run costs a few dollars of Opus.
+- **How it runs.** `CompareReplies.kt` is copied into a checkout's unit-test sources for the run
+  and removed after, so it is never part of `testDebugUnitTest`; the repo's tests don't call the API.
+  The old commit is extracted under `build/compare-replies/before-src`. It builds the frames with
+  that commit's context code and plays both through this checkout's check-in and client, so only the
+  context differs. `--frames-only` stops before any call; `--only key,key` plays some scenarios.
+- **The fixed data** is the starter program with six logged sessions at Harbour (a full gym) and
+  Itis (dumbbells only). They stand in for the owner's own gyms, which live in the phone's database.
+- **The checker's tests** run in CI: `python3 -I -m unittest discover -s tools/compare-replies`.
+
 ## Prototype
 
 The logging-screen prototype is throwaway code on the `prototype/logging-screen` branch, which is
