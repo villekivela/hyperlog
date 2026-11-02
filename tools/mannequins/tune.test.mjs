@@ -10,7 +10,7 @@ const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
 test('the bench press offers its own numbers, points one element at a time, and not the camera', () => {
   const t = byPath(tunables(prepare('barbell_bench_press')));
   assert.equal(t['grip.width'].value, 0.4);
-  assert.equal(t['feet.z'].value, 0.62);
+  assert.equal(t['feet.z'].value, 0.445);
   assert.equal(t['top.bar.0'].value, 1.15);
   assert.equal(t['body.arch.1'].value, -16.5);
   assert.ok(!Object.keys(t).some((p) => p.startsWith('camera') || p.startsWith('shadow')));

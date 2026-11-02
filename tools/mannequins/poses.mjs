@@ -44,7 +44,7 @@ export const POSES = {
     // back toward the hips. A slight arch: the upper back and the hips on the pad, the chest up and
     // a gap under the lower back. The head lies back on the pad.
     body: { hip: [0.55, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
-    feet: { stance: 0.3, z: 0.62, toeOut: 25 },
+    feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
     top: { bar: [1.15, -0.23] },
@@ -113,10 +113,10 @@ export const POSES = {
     body: { hip: [0.56, 0], trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The handles at mid-chest: out in front at the top, back to the shoulders' line at the bottom.
-    top: { handle: [0.88, 0.36], press: 0 },
-    bottom: { handle: [0.88, -0.01], press: 1 },
+    top: { handle: [0.94, 0.42], press: 0 },
+    bottom: { handle: [1.055, -0.01], press: 1 },
     lever: 0.85,
-    grip: { width: 0.27 },
+    grip: { width: 0.385 },
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 };

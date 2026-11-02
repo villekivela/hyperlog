@@ -78,6 +78,8 @@ button.ok[aria-pressed="true"] { background: var(--ok); border-color: var(--ok);
 button:disabled { opacity: 0.5; cursor: default; }
 button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .saved { font: 12px var(--mono); color: var(--quiet); }
+.saved[data-error] { color: var(--fail); font-weight: 500; }
+.copybox { width: 100%; min-height: 5em; margin-top: 8px; font: 12px var(--mono); }
 .state[data-state="tuned"] { color: var(--ok); background: var(--ok-tint); border-color: transparent; }
 .tune { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
 .tune[hidden] { display: none; }
@@ -124,6 +126,7 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
             <button type="button" data-show="bottom" aria-pressed="false">Bottom</button>
           </div>
           <span class="count" aria-live="polite"></span>
+          <button type="button" class="copy">Copy numbers</button>
           <button type="button" class="reset">Reset</button>
         </div>
         <div class="sliders"></div>
@@ -168,6 +171,7 @@ const css = (name) => getComputedStyle(document.documentElement).getPropertyValu
 // Each clip is whole and parsed from its own bytes: the page fetches nothing.
 const bytesOf = (dataUri) => Uint8Array.from(atob(dataUri.split(',')[1]), (c) => c.charCodeAt(0)).buffer;
 const verdicts = {};
+const sorted = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : 1)));
 const cards = {};
 
 // The tuned values are saved as JSON text: the paths have dots in them, which a database's keys may not.
@@ -397,6 +401,9 @@ function tuning(e, node, card, s) {
   let building = false;
   let again = false;
 
+  // Whether the numbers on the sliders differ from what the verdict has saved.
+  const unsaved = () => JSON.stringify(sorted(tuned)) !== JSON.stringify(sorted(tunedOf(verdicts[e.id])));
+  card.unsaved = () => opened && unsaved();
   const entryNow = () => tune.applyTuned(e.entry, tuned);
   const valueNow = (t) => tune.valueAt(entryNow(), t.path) ?? t.value;
   const paint = () => {
@@ -406,8 +413,8 @@ function tuning(e, node, card, s) {
       r.out.textContent = `${Number(v.toFixed(3))}${r.t.unit}`;
       r.row.dataset.changed = String(v !== r.t.value);
     }
-    const n = Object.keys(tuned).length;
-    card.saved.textContent = n ? `${n} tuned: OK saves them` : '';
+    card.saved.removeAttribute('data-error');
+    card.saved.textContent = unsaved() ? 'Unsaved: press OK to save' : '';
   };
 
   const checkSoon = () => {
@@ -518,6 +525,22 @@ function tuning(e, node, card, s) {
     make();
     rebuild();
   });
+  // A fallback if the save fails: the tuned numbers as JSON, on the clipboard (or in a box to copy by hand).
+  panel.querySelector('.copy').addEventListener('click', async () => {
+    const text = JSON.stringify({ exercise: e.id, clip: e.hash, tuned: card.tuned() }, null, 2);
+    card.saved.removeAttribute('data-error');
+    try {
+      await navigator.clipboard.writeText(text);
+      card.saved.textContent = 'Numbers copied';
+    } catch {
+      let box = panel.querySelector('.copybox');
+      if (!box) { box = document.createElement('textarea'); box.className = 'copybox'; box.readOnly = true; panel.append(box); }
+      box.value = text;
+      box.select();
+      const done = document.execCommand?.('copy');
+      card.saved.textContent = done ? 'Numbers copied' : 'Copy the numbers from the box';
+    }
+  });
   panel.querySelector('.reset').addEventListener('click', () => { tuned = {}; paint(); rebuild(); });
   for (const b of panel.querySelectorAll('[data-show]')) {
     b.addEventListener('click', () => {
@@ -589,24 +612,34 @@ if (!db) {
     clearTimeout(slow);
     banner.textContent = `The verdicts stopped updating (${err.code}). Reload the page to see the latest.`;
   });
+  const within = (promise, ms) => Promise.race([promise, new Promise((_, no) => setTimeout(() => no({ code: 'no_answer', message: `no answer in ${ms / 1000} s` }), ms))]);
+  // A save shows as saved only once the database answers and holds it; any failure shows on the card.
   const save = async (e, change) => {
     const c = cards[e.id];
-    const before = verdicts[e.id] ?? { ok: false, note: '' };
-    const next = { ok: before.ok && before.clip === e.hash, note: c.note.value.trim(), ...change, clip: e.hash, at: new Date().toISOString(), tuned: JSON.stringify(c.tuned()) };
     c.ok.disabled = c.save.disabled = true;
+    c.saved.removeAttribute('data-error');
+    c.saved.textContent = 'Saving…';
     try {
-      await db.doc(`verdicts/${e.id}`).set(next);
+      const before = verdicts[e.id] ?? { ok: false, note: '' };
+      const next = { ok: before.ok && before.clip === e.hash, note: c.note.value.trim(), ...change, clip: e.hash, at: new Date().toISOString(), via: change.ok === undefined ? 'save-note' : 'ok-button', tuned: JSON.stringify(c.tuned()) };
+      const ref = db.doc(`verdicts/${e.id}`);
+      await within(ref.set(next), 10000);
+      const back = (await within(ref.get(), 10000)).data();
+      if (back?.at !== next.at) throw { code: 'not_stored', message: 'the database still holds an older verdict' };
       c.dirty = false;
       c.saved.textContent = change.ok === undefined ? 'Note saved' : next.ok ? 'Marked OK' : 'OK taken back';
     } catch (err) {
-      c.saved.textContent = err.code === 'invalid_argument' ? 'Only the page\'s editors can save verdicts.' : `Not saved (${err.code}). Try again.`;
+      c.saved.dataset.error = '';
+      const why = err?.code === 'invalid_argument' ? 'only the page\'s editors can save' : `${err?.code ?? 'error'}: ${err?.message ?? err}`;
+      c.saved.textContent = `NOT SAVED (${why}). Use Tune › Copy numbers.`;
     } finally {
       c.ok.disabled = c.save.disabled = false;
     }
   };
   for (const e of BATCH.exercises) {
     const c = cards[e.id];
-    c.ok.addEventListener('click', () => save(e, { ok: !['ok', 'tuned'].includes(stateOf(e)) }));
+    // OK on an OK'd card with unsaved numbers saves them and keeps the OK; otherwise it toggles.
+    c.ok.addEventListener('click', () => save(e, { ok: c.unsaved() || !['ok', 'tuned'].includes(stateOf(e)) }));
     c.save.addEventListener('click', () => save(e, {}));
   }
 }
