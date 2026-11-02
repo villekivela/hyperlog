@@ -25,16 +25,23 @@ const BROKEN = {
   feet: { like: 'barbell_bench_press', feet: { z: 1.7 } },
   // The hips sink into the bench.
   equipment: { like: 'barbell_bench_press', body: { hip: [0.36, 0.3] } },
+  // The back sinks into the floor.
+  floor: { like: 'floor_press', body: { hip: [0.03, 0.28] } },
   // The knees turn in and back.
   joints: { like: 'barbell_squat', feet: { kneesOut: -4 } },
   // A trace whose trunk is 30° more upright than the balanced squat can be.
   trace: { like: 'barbell_squat', trace: { angles: { trunk: Array(31).fill(-10) } } },
 };
 
-for (const [check, entry] of Object.entries(BROKEN)) {
-  test(`a pose that breaks ${check} fails that check`, async () => {
+// The floor is a solid part like any other: the equipment check fails a body that sinks into it.
+const CHECKED = { floor: 'equipment' };
+
+for (const [broken, entry] of Object.entries(BROKEN)) {
+  const check = CHECKED[broken] ?? broken;
+  test(`a pose that breaks ${broken} fails the ${check} check`, async () => {
     const report = await checkPose('broken', { poses: { ...POSES, broken: entry } });
     assert.ok(failing(report).includes(check), `${check}: ${JSON.stringify(report.checks[check])}`);
+    if (broken === 'floor') assert.match(report.checks.equipment.found, /into the floor/);
   });
 }
 

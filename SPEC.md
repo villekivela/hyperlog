@@ -1536,8 +1536,8 @@ gallery (Technique videos).
       mesh is: a clip reads its kits' parts from a file per kit, so detail costs about 110 KB per
       kind of equipment, not per clip.
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
-    stay on the floor or plate, no limb passes through the equipment, and the joints stay within
-    range. A pose that fails one doesn't bake.
+    stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
+    the joints stay within range. A pose that fails one doesn't bake.
   - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
     estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
     one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its

@@ -377,7 +377,7 @@ export const POSES = {
     motion: 'squat',
     kit: { barbell: {} },
     top: { shin: 5, thigh: 4 },
-    bottom: { shin: 42, thigh: 100 },
+    bottom: { shin: 46, thigh: 104 },
     feet: { stance: 0.16, toeOut: 15, kneesOut: 0.45 },
     bar: { up: 0.06, back: 0.185 },
     grip: { width: 0.38 },
@@ -390,7 +390,7 @@ export const POSES = {
     motion: 'squat',
     kit: { barbell: {} },
     top: { shin: 4, thigh: 4 },
-    bottom: { shin: 32, thigh: 92 },
+    bottom: { shin: 25, thigh: 90 },
     feet: { stance: 0.2, toeOut: 22, kneesOut: 0.45 },
     bar: { up: -0.03, back: 0.24 },
     grip: { width: 0.45 },
@@ -429,7 +429,7 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'bridge',
     kit: { barbell: {} },
-    body: { shoulders: [0.11, -0.42], head: 0 },
+    body: { shoulders: [0.11, -0.42], head: 20 },
     top: { hip: [0.34, 0.08] },
     bottom: { hip: [0.13, 0.06] },
     feet: { stance: 0.15, z: 0.42, toeOut: 10 },
@@ -455,26 +455,26 @@ export const POSES = {
     shadow: { size: [1.2, 1.6], at: [0, 0] },
   },
 
-  // Hinged forward with the back flat: the bar rows from hanging under the shoulders to the belly.
+  // Hinged forward with the back flat: the bar lowers from the belly to hanging under the shoulders.
   barbell_row: {
     equipment: 'barbell',
     motion: 'arms',
     kit: { barbell: {} },
-    top: { shin: 12, thigh: 50, trunk: 60, upperArm: -100, forearm: 28 },
-    bottom: { shin: 12, thigh: 50, trunk: 60, upperArm: 24, forearm: 32 },
+    top: { shin: 8, thigh: 32, trunk: 60, upperArm: -100, forearm: 28 },
+    bottom: { shin: 8, thigh: 32, trunk: 60, upperArm: 4, forearm: 4 },
     feet: { stance: 0.15, toeOut: 10, kneesOut: 0.25 },
     grip: { width: 0.25, pole: [0.35, 0.2, -1] },
     camera: { target: [0, 0.8, 0.1], halfHeight: 0.95, azimuth: 66, elevation: 8 },
   },
 
-  // Standing on a low platform, the trunk level: each rep rows from the bar at rest on the floor to
-  // the lower chest.
+  // Standing on a low platform, the trunk level: the bar lowers from the lower chest to hanging
+  // near the floor, where each rep starts.
   deficit_pendlay_row: {
     equipment: 'barbell',
     motion: 'arms',
-    kit: { barbell: {}, platform: { height: 0.05 } },
-    top: { shin: 6, thigh: 40, trunk: 80, upperArm: -110, forearm: 12 },
-    bottom: { shin: 6, thigh: 40, trunk: 80, upperArm: 30, forearm: 44 },
+    kit: { barbell: {}, platform: {} },
+    top: { shin: 14, thigh: 53, trunk: 80, upperArm: -110, forearm: 26 },
+    bottom: { shin: 14, thigh: 53, trunk: 80, upperArm: 7, forearm: 9 },
     feet: { stance: 0.16, y: 0.05, toeOut: 10, kneesOut: 0.3 },
     grip: { width: 0.27, pole: [0.35, 0.2, -1] },
     camera: { target: [0, 0.6, 0.15], halfHeight: 0.85, azimuth: 66, elevation: 8 },
@@ -511,9 +511,9 @@ export const POSES = {
     motion: 'hinge',
     kit: { barbell: {} },
     top: { shin: 2, thigh: 0, trunk: 2 },
-    bottom: { shin: 18, thigh: 72, trunk: 58 },
+    bottom: { shin: 20, thigh: 75, trunk: 60 },
     feet: { stance: 0.13, toeOut: 8, kneesOut: 0.2 },
-    bar: { z: 0.15 },
+    bar: { z: 0.19 },
     grip: { width: 0.25 },
     camera: { target: [0, 0.8, 0.05], halfHeight: 1.0, azimuth: 66, elevation: 8 },
   },
@@ -521,8 +521,8 @@ export const POSES = {
   // A deadlift standing on a low platform, the bar starting further below the feet.
   deficit_deadlift: {
     like: 'deadlift',
-    kit: { barbell: {}, platform: { height: 0.05 } },
-    bottom: { shin: 22, thigh: 78, trunk: 60 },
+    kit: { platform: {} },
+    bottom: { shin: 24, thigh: 79, trunk: 60 },
     feet: { y: 0.05 },
     bar: { z: 0.17 },
   },
@@ -533,10 +533,10 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'bench_press',
     kit: { barbell: {} },
-    body: { hip: [0.11, 0.28], trunk: -89, head: 0 },
+    body: { hip: [0.13, 0.28], trunk: -89, head: 0 },
     feet: { stance: 0.2, z: 0.62, toeOut: 15 },
     top: { bar: [0.75, -0.2] },
-    bottom: { bar: [0.33, -0.08] },
+    bottom: { bar: [0.43, -0.08] },
     grip: { width: 0.38, elbows: 0.7 },
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },

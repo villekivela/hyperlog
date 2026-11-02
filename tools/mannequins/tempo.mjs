@@ -27,7 +27,6 @@ export const MOTION_TEMPOS = {
   hack_squat: tempo(2, 0.3, 1, 0.6),
   // Pulled from arms long (a row, a machine pulldown): the clip's first half is the concentric.
   lever_handles: tempo(1, 0.3, 2, 0.5),
-  // The hips' top is the squeeze.
   bridge: tempo(2, 0.3, 1, 0.6),
 };
 

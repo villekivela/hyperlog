@@ -417,7 +417,7 @@ export const MOTIONS = {
       ...feet,
       hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
       // Both hands on one bar (an upright row): it lies between them.
-      bar: V(0, s.hand[1], s.hand[2]),
+      ...(e.grip?.one ? {} : { bar: V(0, s.hand[1], s.hand[2]) }),
       armPole: elbowsTo(e, [1, -0.3, -0.5]),
     };
   },

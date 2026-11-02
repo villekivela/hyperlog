@@ -1376,7 +1376,7 @@ function preacherCurl({ seat = [0.5, 0] } = {}) {
   };
 }
 
-/** A low platform under the feet, `height` tall and `size` [w, d] at `at` [x, z]: a deficit. */
+/** A low platform under the feet, `height` tall (the pose's `feet.y`) and `size` [w, d] at `at` [x, z]: a deficit. */
 function platform({ height = 0.05, size = [0.8, 0.5], at = [0, 0.05] } = {}) {
   const M = tones();
   const g = group('platform', [pad(size[0], height, size[1], M.frame, V(at[0], height / 2, at[1]), { soft: 0.008 })]);
@@ -1398,8 +1398,12 @@ export function buildKit(entry) {
   const kits = Object.entries(entry.kit ?? {}).map(([name, options]) => {
     if (!KITS[name]) throw new Error(`No kit "${name}"`);
     if (!allowed.includes(name)) throw new Error(`Kit "${name}" isn't ${entry.equipment} equipment`);
-    // An adjustable bench stands at the angle the pose is prepared at.
-    const kit = KITS[name](name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle } : options);
+    // An adjustable bench stands at the angle the pose is prepared at, and a platform is as high as
+    // the feet stand.
+    const kit = KITS[name](
+      name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle }
+        : name === 'platform' ? { height: entry.feet?.y, ...options } : options,
+    );
     // The bake shares the parts under this node with every clip in the same kit.
     kit.group.userData.kit = name;
     return kit;

@@ -105,8 +105,8 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   key; anything else, a point or a list included, is replaced whole. Likes chain.
 - **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
   baked, from the top (0 s) to the bottom (1 s).
-- **`feet.y`** (standing motions) stands the feet on a platform that high, a deficit's; the entry
-  adds the `platform` kit under them.
+- **`feet.y`** (standing motions) stands the feet on a platform that high, a deficit's; list the
+  `platform` kit in `kit` too, and it stands under them at that height.
 - **`body.arch`** (lying motions) bends the back: three angles, in degrees, added to the spine's
   lean for the lumbar, chest and upper-back segments. The lumbar and chest turn up and the upper
   back down, which lifts the chest and the lower back off the pad while the upper back and the
@@ -195,7 +195,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
 
 - `bench` is flat, or adjustable with `angle` raising its back pad from flat; with `across: z` it
-  stands across the body, its middle at that z (a hip thrust's).
+  stands across the body, its middle at that z (a hip thrust's), and its own `z` then runs along it
+  (so give `z: 0` to centre it).
 - `cable_column` is one adjustable column (or two, `twin`, mirrored at [-x, z]) standing at `at`
   [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
   toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
@@ -242,6 +243,7 @@ bake (nor does anything else in that bake):
 - **Feet:** each foot stands where the pose puts it, flat on the floor or on its plate, within 2 cm.
 - **Equipment:** no limb is more than 2 cm inside a solid part of the kit (a pad gives that much),
   and none passes into a thin part like a bar at all. Only the hands close round what they hold.
+  The floor counts as solid: nothing goes more than 1.5 cm into it.
 - **Joints:** knees and elbows bend no more than 155°, a knee turns no more than 60° from the hips'
   front, a hip flexes no more than 140° or extends past 30°, the head turns no more than 60° from
   the trunk, and the ankle stays between 55° and 160° from shin to foot.
