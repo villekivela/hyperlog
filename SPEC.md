@@ -1478,9 +1478,9 @@ gallery (Technique videos).
       the six angles, one clip each, and its entry in `mannequins.json` lists them with the typical
       angle and the hinge the backrest turns about; a pose of such an exercise without a typical
       angle doesn't bake. The nearest clip is nearest in degrees among the angles the index lists
-      (the 15° step puts any angle at most 7° from one). The bench's backrest is a part of its own in
-      every clip; the phone turns it about the hinge by the difference between the exact angle and
-      the clip's, and the body keeps the clip's pose. An angle past 75° (the bench angle goes to 90°)
+      (the 15° step puts any angle up to 75° at most 7° from one). The bench's backrest is a part of
+      its own in every clip; the phone stands it at the exact angle about the hinge (the clip's own
+      angle swapped for it), and the body keeps the clip's pose. An angle past 75° (the bench angle goes to 90°)
       plays the 75° clip with the backrest turned to the exact angle. When the angle changes in the
       session the sheet follows it: the bench turns at once, and a different clip loads only when
       the nearest one changes. The gallery has no session, so it shows the typical angle. The

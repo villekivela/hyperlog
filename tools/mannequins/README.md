@@ -75,7 +75,9 @@ db_incline_press: {
   setting has a toggle, **All angles** (the default) or **Per angle**: a Per angle value is tuned at
   the angle shown, the angle buttons carry a • where something is tuned, and the OK saves it as
   `@angles` in the verdict's tuned values, which `review apply` writes into `bench.perAngle`. Tune
-  poses the entry at the angle shown. A verdict's `clip` fingerprint covers all six clips.
+  poses the entry at the angle shown. A verdict's `clip` fingerprint covers all six clips. Tune's sliders step a centimetre, a degree or a
+  twentieth, each has a − and + beside it, a number to type into and a ↺; ←/→ or ↓/↑ step the
+  focused one (Shift for ten) and Enter presses OK.
 
 ## Pose entries
 

@@ -73,7 +73,7 @@ data class BenchClips(val typical: Int, val hinge: List<Float>, val clips: Map<I
     fun shown(session: Int?, last: Int?): BenchShown {
         val angle = session ?: last ?: typical
         val baked = clips.keys.sorted().minBy { kotlin.math.abs(it - angle) }
-        return BenchShown(angle, baked, clips.getValue(baked))
+        return BenchShown(angle, baked, clips.getValue(baked), hinge)
     }
 }
 
@@ -96,8 +96,8 @@ fun benchBackTransform(degrees: Int, hinge: List<Float>): FloatArray {
     )
 }
 
-/** A bench angle shown: the exact [angle], the [baked] angle whose [clip] supplies the pose. */
-data class BenchShown(val angle: Int, val baked: Int, val clip: BenchClip)
+/** A bench angle shown: the exact [angle], the [baked] angle whose [clip] supplies the pose, and the [hinge] ([y, z]) the backrest turns about. */
+data class BenchShown(val angle: Int, val baked: Int, val clip: BenchClip, val hinge: List<Float>)
 
 /**
  * Where the stage's camera looks ([target], x y z in metres), half the height it shows at the

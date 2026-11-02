@@ -139,7 +139,7 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier, 
         player.load(glb, resources, camera, clip.tempo)
     }
     LaunchedEffect(player, bench?.angle) {
-        bench?.let { player.setBench(it.angle, clip.bench!!.hinge) }
+        bench?.let { player.setBench(it.angle, it.hinge) }
     }
     LaunchedEffect(player, colours) { player.setColours(colours) }
     LifecycleResumeEffect(player, still) {

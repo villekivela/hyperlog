@@ -42,8 +42,7 @@ function setAt(entry, path, value) {
 export function applyTuned(entry, tuned) {
   const copy = JSON.parse(JSON.stringify(entry));
   for (const [path, value] of Object.entries(tuned ?? {})) {
-    if (path === '@angles') setAt(copy, 'bench.perAngle', JSON.parse(JSON.stringify(value)));
-    else setAt(copy, path, JSON.parse(JSON.stringify(value)));
+    setAt(copy, path === '@angles' ? 'bench.perAngle' : path, JSON.parse(JSON.stringify(value)));
   }
   return copy;
 }
@@ -51,6 +50,7 @@ export function applyTuned(entry, tuned) {
 /** A per-angle setting's value at `angle`: interpolated between the nearest tuned angles, the nearest one's beyond them. */
 export function perAngleValue(tuned, angle) {
   const at = Object.keys(tuned).map(Number).sort((a, b) => a - b);
+  if (!at.length) throw new Error('A per-angle setting needs a value at some angle');
   if (angle <= at[0]) return tuned[at[0]];
   if (angle >= at.at(-1)) return tuned[at.at(-1)];
   const hi = at.find((a) => a >= angle);
