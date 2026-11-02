@@ -94,6 +94,7 @@ class MainActivity : ComponentActivity() {
     private val updates: UpdateViewModel by viewModels()
     private val claudeKey: ClaudeKeyViewModel by viewModels()
     private val checkIns: com.hyperlog.app.ui.coach.CheckInViewModel by viewModels()
+    private val trainingStyles: com.hyperlog.app.ui.settings.TrainingStyleViewModel by viewModels()
 
     /** Each tap on a check-in's notification, counted: Coach opens on it. */
     private val openCheckIn = kotlinx.coroutines.flow.MutableStateFlow(0)
@@ -103,7 +104,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (savedInstanceState == null) opened(intent)
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, openCheckIn) }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) }
         }
     }
 
@@ -153,7 +154,7 @@ private fun AskForNotifications(once: String? = null) {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins }
+private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins, TrainingStyle }
 
 /** Where a check-in started outside Coach: the [screen], and the review open over it ([reviewProgram]'s [reviewBlock]; null: its program review). */
 private data class CheckInFrom(val screen: Screen, val reviewProgram: Long? = null, val reviewBlock: String? = null) {
@@ -235,6 +236,7 @@ private fun App(
     updateModel: UpdateViewModel,
     claudeKeyModel: ClaudeKeyViewModel,
     checkInModel: com.hyperlog.app.ui.coach.CheckInViewModel,
+    trainingStyleModel: com.hyperlog.app.ui.settings.TrainingStyleViewModel,
     openCheckIn: kotlinx.coroutines.flow.StateFlow<Int> = kotlinx.coroutines.flow.MutableStateFlow(0),
 ) {
     val loaded by sessions.loaded.collectAsStateWithLifecycle()
@@ -346,6 +348,8 @@ private fun App(
     val checkForUpdates by updateModel.checkForUpdates.collectAsStateWithLifecycle()
     val checkedNow by updateModel.checkedNow.collectAsStateWithLifecycle()
     val claudeKey by claudeKeyModel.status.collectAsStateWithLifecycle()
+    val trainingStyle by trainingStyleModel.style.collectAsStateWithLifecycle()
+    val howITrainEdited by trainingStyleModel.edited.collectAsStateWithLifecycle()
     // With a Claude key, or the scripted coach, a tile starts a check-in with Claude; without, it opens Ask Claude.
     val checkInAvailable by checkInModel.available.collectAsStateWithLifecycle()
     /** Where the check-in under way started, when not on Coach; leaving it goes back there. */
@@ -834,6 +838,16 @@ private fun App(
             exercises,
             onBack = { screen = Screen.Settings },
         )
+        screen == Screen.TrainingStyle && trainingStyle != null -> com.hyperlog.app.ui.settings.TrainingStyleScreen(
+            trainingStyle!!,
+            edited = howITrainEdited,
+            library = exercises,
+            onTargets = trainingStyleModel::setTargets,
+            onAboutMe = trainingStyleModel::setAboutMe,
+            onHowITrain = trainingStyleModel::setHowITrain,
+            onDefaultHowITrain = trainingStyleModel::defaultHowITrain,
+            onBack = { screen = Screen.Settings },
+        )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
@@ -857,6 +871,8 @@ private fun App(
             scriptedCoach = scriptedCoach.takeIf { com.hyperlog.app.coach.BuildCoach.SCRIPTED },
             onScriptedCoach = checkInModel::setScripted,
             onMannequinGallery = if (BuildConfig.DEBUG) { { screen = Screen.Mannequins } } else null,
+            trainingTargets = trainingStyle?.targets,
+            onTrainingStyle = { screen = Screen.TrainingStyle },
             onSaveKey = claudeKeyModel::save,
             onRemoveKey = claudeKeyModel::remove,
             onDismissKey = claudeKeyModel::dismiss,

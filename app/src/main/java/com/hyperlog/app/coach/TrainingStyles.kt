@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * The training style as kept on the phone (SPEC, Coaching → Training style), in `setting`: the
@@ -30,13 +32,13 @@ class TrainingStyles(private val db: HyperlogDatabase, private val default: () -
     /** The app's own How I train. */
     fun defaultHowITrain(): String = default()
 
-    suspend fun setTargets(targets: TrainingTargets) {
-        val (_, aboutMe) = TrainingStyleJson.decode(db.settings().get(STYLE))
-        db.settings().put(SettingEntity(STYLE, TrainingStyleJson.encode(targets, aboutMe)))
-    }
+    suspend fun setTargets(targets: TrainingTargets) = edit { (_, aboutMe) -> targets to aboutMe }
 
-    suspend fun setAboutMe(aboutMe: AboutMe) {
-        val (targets, _) = TrainingStyleJson.decode(db.settings().get(STYLE))
+    suspend fun setAboutMe(aboutMe: AboutMe) = edit { (targets, _) -> targets to aboutMe }
+
+    /** One row holds both, so each edit reads it and writes it back, one at a time. */
+    private suspend fun edit(change: (Pair<TrainingTargets, AboutMe>) -> Pair<TrainingTargets, AboutMe>) = writing.withLock {
+        val (targets, aboutMe) = change(TrainingStyleJson.decode(db.settings().get(STYLE)))
         db.settings().put(SettingEntity(STYLE, TrainingStyleJson.encode(targets, aboutMe)))
     }
 
@@ -47,6 +49,8 @@ class TrainingStyles(private val db: HyperlogDatabase, private val default: () -
     }
 
     companion object {
+        private val writing = Mutex()
+
         /** The training targets and About me, as JSON. */
         const val STYLE = "training_style"
 
