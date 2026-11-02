@@ -7,13 +7,14 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { POSES } from './poses.mjs';
+import { FIXTURE } from './adjustable.fixture.mjs';
 import { prepare } from './entries.mjs';
 import { perAngleValue, atAngle, applyTuned, tunables, tunedAngles } from './tune.mjs';
 import { patchPoses } from './patch.mjs';
 import { checkPose } from './checks.mjs';
 
 const ID = 'db_incline_press';
-const withPer = (perAngle) => ({ ...POSES, t: { like: ID, bench: { perAngle } } });
+const withPer = (perAngle) => ({ fixture: FIXTURE, t: { like: 'fixture', bench: { perAngle } } });
 
 test('between two tuned angles a value is interpolated, and beyond them it holds the nearest', () => {
   const tuned = { 15: 0.2, 45: 0.5, 75: 0.3 };
@@ -33,9 +34,9 @@ test('an entry is posed with each per-angle setting at its value for the angle, 
   assert.equal(at(75).feet.z, 0.7);
   // A point's one number is per angle, its other stays.
   assert.equal(at(0).bottom.chest[0], 0.2);
-  assert.equal(at(0).bottom.chest[1], POSES[ID].bottom.chest[1]);
+  assert.equal(at(0).bottom.chest[1], FIXTURE.bottom.chest[1]);
   // What isn't per angle is untouched.
-  assert.equal(at(45).grip.width, POSES[ID].grip.width);
+  assert.equal(at(45).grip.width, FIXTURE.grip.width);
 });
 
 test('each baked angle gets its own value, and the pose still passes its checks', async () => {

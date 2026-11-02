@@ -7,13 +7,14 @@ import * as THREE from 'three';
 import { prepare, BENCH_ANGLES } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { benchHinge } from './kit.mjs';
+import { FIXTURE } from './adjustable.fixture.mjs';
 
 const ID = 'db_incline_press';
 const rad = (d) => (d * Math.PI) / 180;
 
 /** The posed stage at `angle`, at the top (0) or the bottom (1) of the rep. */
-async function at(angle, d) {
-  const entry = prepare(ID, undefined, angle);
+async function at(angle, d, id = ID, poses) {
+  const entry = prepare(id, poses, angle);
   const stage = await buildStage(entry);
   return { entry, P: stage.pose(d) };
 }
@@ -47,7 +48,7 @@ test('the trunk lies along the backrest at every angle', async () => {
 test('the hands touch the chest in the same place against the torso at every angle', async () => {
   const seen = [];
   for (const a of BENCH_ANGLES) {
-    const { P } = await at(a, 1);
+    const { P } = await at(a, 1, 'fixture', { fixture: FIXTURE });
     const off = P.hand(1).sub(P.shoulders);
     const front = new THREE.Vector3(1, 0, 0).cross(P.u).normalize();
     seen.push([off.dot(front), off.dot(P.u)]);
@@ -58,7 +59,7 @@ test('the hands touch the chest in the same place against the torso at every ang
 test('the arms lock out vertically over the shoulders at every angle (the entry\'s per-angle top.over)', async () => {
   const seen = [];
   for (const a of BENCH_ANGLES) {
-    const { P } = await at(a, 0);
+    const { P } = await at(a, 0, 'fixture', { fixture: FIXTURE });
     const off = P.hand(1).sub(P.shoulders);
     seen.push([off.y, off.z]);
   }

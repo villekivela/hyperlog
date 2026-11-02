@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { POSES } from './poses.mjs';
+import { FIXTURE } from './adjustable.fixture.mjs';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { checkPose, CHECKS } from './checks.mjs';
@@ -17,7 +17,7 @@ const grip = (rotate, tilt = 0) => ({ top: { rotate, tilt }, bottom: { rotate, t
 
 /** The posed dumbbells' handle directions (left, right) at `d` down the rep, and the stage. */
 async function axes(entryOver, d, angle = 30) {
-  const poses = { ...POSES, t: { like: ID, ...entryOver } };
+  const poses = { fixture: FIXTURE, t: { like: 'fixture', ...entryOver } };
   const stage = await buildStage(prepare('t', poses, angle));
   stage.pose(d);
   return ['dumbbell_l', 'dumbbell_r'].map((n) => new THREE.Vector3(1, 0, 0).applyQuaternion(stage.kit.group.getObjectByName(n).quaternion));
@@ -55,7 +55,7 @@ test('the grip may be neutral at the bottom and turn overhand by the top', async
 });
 
 test('the hands still hold their grip, at every angle, turned and tipped', async () => {
-  const poses = { ...POSES, t: { like: ID, top: { press: 0, rotate: 0, tilt: 15 }, bottom: { press: 1, rotate: 90, tilt: -15 } } };
+  const poses = { fixture: FIXTURE, t: { like: 'fixture', top: { press: 0, rotate: 0, tilt: 15 }, bottom: { press: 1, rotate: 90, tilt: -15 } } };
   for (const angle of [0, 30, 75]) {
     const { checks } = await checkPose('t', { poses, angle });
     assert.ok(checks.hands.ok, `${angle}°: ${checks.hands.found}`);
