@@ -53,9 +53,37 @@ function leaves(value, path, out) {
 function rangeOf(path, value) {
   const key = steps(path).filter((k) => !/^\d+$/.test(k)).at(-1);
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
-  if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 0.5, unit: '°' };
-  if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
-  return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.005, unit: ' m' };
+  if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
+  if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.05, unit: '' };
+  return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.01, unit: ' m' };
+}
+
+/** The headings the sliders are grouped under, in order; the less used start collapsed. */
+export const HEADINGS = [
+  { name: 'Grip', open: true },
+  { name: 'Bar', open: true },
+  { name: 'Torso', open: true },
+  { name: 'Feet', open: true },
+  { name: 'Arms', open: false },
+  { name: 'Legs', open: false },
+  { name: 'Equipment', open: false },
+  { name: 'Other', open: false },
+];
+
+/** The heading the number at `path` goes under. */
+export function headingOf(path) {
+  const ks = steps(path).filter((k) => !/^\d+$/.test(k));
+  const [section, key] = ks;
+  const name = section === 'kit' ? 'Equipment'
+    : ['width', 'lockout', 'rotate'].includes(key) && section === 'grip' ? 'Grip'
+    : section === 'grip' ? 'Arms'
+    : section === 'feet' ? 'Feet'
+    : section === 'body' || ['trunk', 'shrug', 'head', 'arch', 'lean'].includes(key) ? 'Torso'
+    : ['bar', 'over', 'chest', 'hand', 'handle', 'press'].includes(key) || section === 'bar' ? 'Bar'
+    : ['upperArm', 'forearm'].includes(key) ? 'Arms'
+    : ['shin', 'thigh', 'knee'].includes(key) ? 'Legs'
+    : 'Other';
+  return HEADINGS.find((h) => h.name === name);
 }
 
 /**
@@ -77,6 +105,8 @@ export function tunables(entry) {
   // Every pose with hands can turn them: overhand 0°, neutral 90°, underhand 180°.
   if (entry.grip && !have.has('grip.rotate')) found.push(['grip.rotate', 0]);
   return found
+    // `press` is the rep's own 0 and 1 (top and bottom), not a setting.
+    .filter(([path]) => !/^(top|bottom)\.press$/.test(path))
     .filter(([path]) => !(/^(top|bottom)\./.test(path) && traced.has(steps(path)[1])))
     .map(([path, value]) => ({ path, value, ...rangeOf(path, value) }));
 }

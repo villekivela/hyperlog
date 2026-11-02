@@ -93,11 +93,26 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
 .tune .seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
 .tune details { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
 .tune summary { font: 600 13px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
-.tune .row { display: grid; grid-template-columns: minmax(84px, 1fr) minmax(100px, 2fr) 64px; gap: 8px; align-items: center; padding: 3px 0; }
+.tune .row { display: grid; grid-template-columns: minmax(70px, 1fr) 30px minmax(80px, 2fr) 30px 76px 28px; gap: 6px; align-items: center; padding: 3px 0; }
 .tune .row label { font: 12px var(--mono); overflow-wrap: anywhere; }
 .tune .row input[type="range"] { width: 100%; min-width: 0; }
-.tune .row output { font: 12px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
-.tune .row[data-changed="true"] label, .tune .row[data-changed="true"] output { color: var(--note); font-weight: 600; }
+.tune .row .step, .tune .row .undo { padding: 0; height: 30px; font-size: 16px; line-height: 1; }
+.tune .row .undo { height: 28px; border-color: transparent; color: var(--quiet); }
+.tune .row .undo:disabled { visibility: hidden; }
+.tune .row input.value { width: 100%; box-sizing: border-box; min-width: 0; font: 12px var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 6px; padding: 5px 6px; }
+.tune .row input.value:focus-visible, .tune .row input[type="range"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tune .row[data-changed="true"] label, .tune .row[data-changed="true"] input.value { color: var(--note); font-weight: 600; }
+.tune .unit { font: 11px var(--mono); color: var(--quiet); }
+/* A card being tuned keeps its stage in view while the list scrolls: stuck to the top on a narrow
+   window, on the left beside the list (which scrolls on its own) on a wide one. */
+.card.tuning { overflow: visible; grid-column: 1 / -1; }
+.card.tuning .stage { position: sticky; top: 0; z-index: 5; width: min(100%, calc(42vh * 1.25)); margin-inline: auto; border-radius: 12px 12px 0 0; }
+.card.tuning .actions { position: sticky; bottom: 0; z-index: 4; background: var(--card); padding-block: 8px; border-top: 1px solid var(--line); }
+@media (min-width: 900px) {
+  .card.tuning { grid-template-columns: minmax(380px, 5fr) minmax(420px, 6fr); align-items: start; }
+  .card.tuning .stage { top: 16px; width: 100%; margin: 0; border-radius: 12px 0 0 12px; }
+  .card.tuning .body { max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; position: sticky; top: 16px; }
+}
 .tune .count { font: 12px var(--mono); color: var(--quiet); }
 </style>
 
@@ -132,7 +147,7 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
           </div>
           <span class="count" aria-live="polite"></span>
           <button type="button" class="copy">Copy numbers</button>
-          <button type="button" class="reset">Reset</button>
+          <button type="button" class="reset">Reset all</button>
         </div>
         <div class="sliders"></div>
       </section>
@@ -430,12 +445,15 @@ function tuning(e, node, card, s) {
     return entry;
   };
   const valueNow = (t) => tune.valueAt(entryNow(), t.path) ?? t.value;
+  // What a setting goes back to: the value last saved with an OK, otherwise the entry's own.
+  const savedOf = (t) => tune.valueAt(tune.applyTuned(e.entry, tunedOf(verdicts[e.id])), t.path) ?? t.value;
   const paint = () => {
     for (const r of rows) {
       const v = valueNow(r.t);
       r.input.value = v;
-      r.out.textContent = `${Number(v.toFixed(3))}${r.t.unit}`;
+      if (document.activeElement !== r.num) r.num.value = Number(v.toFixed(3));
       r.row.dataset.changed = String(v !== r.t.value);
+      r.undo.disabled = v === savedOf(r.t);
     }
     card.saved.removeAttribute('data-error');
     card.saved.textContent = unsaved() ? 'Unsaved: press OK to save' : '';
@@ -500,31 +518,69 @@ function tuning(e, node, card, s) {
     });
   };
 
+  // One step of a setting: a centimetre, a degree, a twentieth; ten with Shift.
+  const nudge = (r, direction, big) => {
+    const v = valueNow(r.t) + direction * r.t.step * (big ? 10 : 1);
+    change(r.t.path, Number(v.toFixed(4)));
+    r.num.value = Number(valueNow(r.t).toFixed(3));
+  };
   const make = () => {
     box.replaceChildren();
     rows = [];
-    const groups = {};
-    for (const t of tune.tunables(e.entry)) (groups[t.path.split('.')[0]] ??= []).push(t);
-    for (const [name, items] of Object.entries(groups)) {
+    const groups = new Map(tune.HEADINGS.map((h) => [h.name, { h, items: [] }]));
+    for (const t of tune.tunables(e.entry)) groups.get(tune.headingOf(t.path).name).items.push(t);
+    for (const { h, items } of groups.values()) {
+      if (!items.length) continue;
       const group = document.createElement('details');
-      group.open = name !== 'kit';
+      group.open = h.open;
       group.innerHTML = '<summary></summary>';
-      group.firstChild.textContent = name;
+      group.firstChild.textContent = h.name;
       for (const t of items) {
         const row = document.createElement('div');
         row.className = 'row';
-        row.innerHTML = '<label></label><input type="range"><output></output>';
-        const [label, input, out] = row.children;
-        input.id = `${e.id}-${t.path}`;
-        label.htmlFor = input.id;
-        label.textContent = t.path.slice(name.length + 1) || name;
+        row.innerHTML = '<label></label><button type="button" class="step" tabindex="-1">\u2212</button><input type="range" tabindex="-1"><button type="button" class="step" tabindex="-1">+</button><input type="number" class="value" step="any"><button type="button" class="undo" tabindex="-1" title="Back to the saved value" aria-label="Reset">\u21ba</button>';
+        const [label, minus, input, plus, num, undo] = row.children;
+        const r = { t, row, input, num, undo, typing: false };
+        num.id = `${e.id}-${t.path}`;
+        label.htmlFor = num.id;
+        label.textContent = t.path;
+        label.title = `${t.path} (${t.unit.trim() || 'ratio'}, step ${t.step})`;
+        minus.setAttribute('aria-label', `Less ${t.path}`);
+        plus.setAttribute('aria-label', `More ${t.path}`);
         const at = tune.valueAt(tune.applyTuned(e.entry, tuned), t.path) ?? t.value;
         input.min = Math.min(t.min, at);
         input.max = Math.max(t.max, at);
-        input.step = t.step;
-        input.addEventListener('input', () => change(t.path, Number(input.value)));
+        input.step = 'any';
+        input.addEventListener('input', () => change(t.path, Number(Number(input.value).toFixed(4))));
+        minus.addEventListener('click', (ev) => nudge(r, -1, ev.shiftKey));
+        plus.addEventListener('click', (ev) => nudge(r, 1, ev.shiftKey));
+        undo.addEventListener('click', () => change(t.path, savedOf(t)));
+        // A number can be typed; the slider and the body follow it.
+        num.addEventListener('input', () => {
+          r.typing = true;
+          const v = num.valueAsNumber;
+          if (!Number.isFinite(v)) return;
+          input.min = Math.min(input.min, v);
+          input.max = Math.max(input.max, v);
+          change(t.path, v);
+        });
+        num.addEventListener('focus', () => { r.typing = false; num.select(); });
+        // ←/→ and ↓/↑ move the focused setting a step, Shift ten. In the number field the sideways
+        // keys move the caret once something has been typed.
+        row.addEventListener('keydown', (ev) => {
+          if (ev.target !== num && ev.target !== input) return;
+          if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+          const sideways = ev.key === 'ArrowLeft' || ev.key === 'ArrowRight';
+          const vertical = ev.key === 'ArrowUp' || ev.key === 'ArrowDown';
+          if (!sideways && !vertical) return;
+          if (sideways && ev.target === num && r.typing) return;
+          ev.preventDefault();
+          r.typing = false;
+          nudge(r, ev.key === 'ArrowLeft' || ev.key === 'ArrowDown' ? -1 : 1, ev.shiftKey);
+          if (ev.target === num) num.select();
+        });
         group.append(row);
-        rows.push({ t, row, input, out });
+        rows.push(r);
       }
       box.append(group);
     }
@@ -533,6 +589,7 @@ function tuning(e, node, card, s) {
 
   const close = () => {
     opened = false;
+    node.classList.remove('tuning');
     clearTimeout(timer);
     s.setLive(null);
     s.setHandles([], () => {});
@@ -546,9 +603,19 @@ function tuning(e, node, card, s) {
     opened = true;
     tuned = tunedOf(verdicts[e.id]);
     panel.hidden = false;
+    node.classList.add('tuning');
     button.setAttribute('aria-expanded', 'true');
     make();
     rebuild();
+    // The card grows to the window; bring it into view with its stage.
+    node.scrollIntoView({ block: 'start' });
+  });
+  // Enter presses OK on the open card, from anywhere but a text box or a button of its own.
+  node.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' || !opened || ev.isComposing || ev.shiftKey || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (['TEXTAREA', 'BUTTON', 'SUMMARY', 'A'].includes(ev.target.tagName)) return;
+    ev.preventDefault();
+    card.ok.click();
   });
   // A fallback if the save fails: the tuned numbers as JSON, on the clipboard (or in a box to copy by hand).
   panel.querySelector('.copy').addEventListener('click', async () => {
@@ -566,7 +633,8 @@ function tuning(e, node, card, s) {
       card.saved.textContent = done ? 'Numbers copied' : 'Copy the numbers from the box';
     }
   });
-  panel.querySelector('.reset').addEventListener('click', () => { tuned = {}; paint(); rebuild(); });
+  // Reset all: every setting goes back to the saved value, otherwise the entry's own.
+  panel.querySelector('.reset').addEventListener('click', () => { tuned = tunedOf(verdicts[e.id]); paint(); rebuild(); });
   for (const b of panel.querySelectorAll('[data-show]')) {
     b.addEventListener('click', () => {
       s.setShow(b.dataset.show);
