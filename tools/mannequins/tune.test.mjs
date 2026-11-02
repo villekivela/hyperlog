@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned } from './tune.mjs';
+import { tunables, applyTuned, headingOf, HEADINGS } from './tune.mjs';
 
 const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
 
@@ -44,4 +44,31 @@ test('tuned values go into a copy, arrays whole, and the entry is untouched', ()
   assert.equal(tuned.grip.elbowZ, 0.5);
   assert.equal(entry.grip.width, 0.4);
   assert.deepEqual(entry.top.bar, [1.15, -0.23]);
+});
+
+test('each slider steps by what suits it: a centimetre, a degree, a twentieth of a ratio', () => {
+  const t = byPath(tunables(prepare('barbell_bench_press')));
+  assert.equal(t['grip.width'].step, 0.01);
+  assert.equal(t['feet.z'].step, 0.01);
+  assert.equal(t['body.head'].step, 1);
+  assert.equal(t['grip.elbows'].step, 0.05);
+});
+
+test('the numbers are grouped under short headings, the commonly tuned ones open', () => {
+  const heading = (path) => headingOf(path).name;
+  assert.equal(heading('grip.width'), 'Grip');
+  assert.equal(heading('grip.rotate'), 'Grip');
+  assert.equal(heading('grip.elbows'), 'Arms');
+  assert.equal(heading('top.upperArm'), 'Arms');
+  assert.equal(heading('body.arch.0'), 'Torso');
+  assert.equal(heading('bottom.trunk'), 'Torso');
+  assert.equal(heading('feet.z'), 'Feet');
+  assert.equal(heading('top.bar.1'), 'Bar');
+  assert.equal(heading('top.over.0'), 'Bar');
+  assert.equal(heading('bottom.chest.1'), 'Bar');
+  assert.equal(heading('kit.cable_tower.column'), 'Equipment');
+  assert.equal(heading('bottom.shin'), 'Legs');
+  assert.equal(heading('lever'), 'Other');
+  // Grip, Bar, Torso and Feet are open; the less used are collapsed.
+  assert.deepEqual(HEADINGS.filter((h) => h.open).map((h) => h.name), ['Grip', 'Bar', 'Torso', 'Feet']);
 });

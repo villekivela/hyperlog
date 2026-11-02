@@ -9,6 +9,7 @@
 // `upperArm` and `forearm` swing the elbow and the hand forward from hanging straight down.
 import * as THREE from 'three';
 import { V, X, rad } from './rig.mjs';
+import { benchHinge } from './kit.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -43,8 +44,14 @@ export function sample(samples, d) {
 export function frameAt(e, d, L) {
   const motion = MOTIONS[e.motion];
   if (!motion) throw new Error(`No motion "${e.motion}"`);
-  const P = motion(e, stateAt(e, d), L);
-  if (e.grip?.rotate) P.gripRotate = e.grip.rotate;
+  const s = stateAt(e, d);
+  const P = motion(e, s, L);
+  // The grip's twist, overhand 0° to underhand 180°, and the handle's tilt in the hand: the entry's
+  // own, or the top's and the bottom's eased between.
+  const rotate = s.rotate ?? e.grip?.rotate;
+  if (rotate) P.gripRotate = rotate;
+  const tilt = s.tilt ?? e.grip?.tilt;
+  if (tilt) P.gripTilt = tilt;
   return P;
 }
 
@@ -279,6 +286,49 @@ export const MOTIONS = {
       hand: handle,
       armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
       pivot, handle, swing,
+    };
+  },
+
+  /**
+   * Pressing dumbbells on an adjustable bench at `bench.angle`, written in the backrest's frame so
+   * one entry fits every angle: the back along the pad, and the hips `body.sit` off its face and
+   * `body.seat` down it from the seat-back corner (the body slides down the pad, never into the
+   * seat); the trunk leans back as far as the pad does, off it by `body.lean`; the head lies back
+   * along the trunk, tilted `body.head`. The hands are measured from the shoulders in the trunk's
+   * frame: at the top `top.over` is [out from the chest, up the trunk] (the arms as straight as
+   * they reach), at the bottom `bottom.chest` is [out from the chest, down the trunk].
+   */
+  dumbbell_press(e, s, L) {
+    const angle = e.bench.angle;
+    const a = rad(angle);
+    const { height, z: hingeZ } = benchHinge(e.kit.bench);
+    const lean = rad(angle - 90 + (e.body.lean ?? 0));
+    // The corner's bisector runs (cos A/2, sin A/2) over [y, z]: `sit` off the face along it is
+    // sit / cos(A/2) long. Down the pad from the corner is [-sin A, cos A].
+    const hipC = V(0, height + e.body.sit - e.body.seat * Math.sin(a), hingeZ + e.body.sit * Math.tan(a / 2) + e.body.seat * Math.cos(a));
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const sh = shouldersOf(hipC, u, L);
+    const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
+    // The hands come in to `grip.lockout` apart at the top and go out to `grip.width` at the bottom.
+    const handAt = (side) => {
+      const dx = e.grip.lockout - L.shW;
+      const [out, along] = e.top.over;
+      const top = V(side * e.grip.lockout, sh.y, sh.z)
+        .addScaledVector(f, Math.min(out, Math.sqrt(Math.max(0, reach * reach - dx * dx - along * along))))
+        .addScaledVector(u, along);
+      const [away, down] = e.bottom.chest;
+      const bottom = V(side * e.grip.width, sh.y, sh.z).addScaledVector(f, away).addScaledVector(u, -down);
+      return top.lerp(bottom, s.press);
+    };
+    return {
+      hipC, u, shoulders: sh,
+      headDir: trunkUp(lean + rad(e.body.head ?? 0)),
+      ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
+      hand: handAt,
+      across: (side) => X.clone().multiplyScalar(-side),
+      // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the shoulders.
+      armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
     };
   },
 };

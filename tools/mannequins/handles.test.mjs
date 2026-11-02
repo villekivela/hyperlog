@@ -60,3 +60,19 @@ test('dragging an elbow out sets how far the elbows flare', async () => {
   const out = elbow.drag(elbow.at.clone().add(new THREE.Vector3(0.05, 0, 0)));
   assert.ok(out['grip.elbows'] > entry.grip.elbows, `${out['grip.elbows']}`);
 });
+
+test('the dumbbell press offers hands, elbows, feet and the chest, and a dragged hand lands where it was dragged', async () => {
+  const top = await posed('db_incline_press', 0);
+  assert.deepEqual(top.handles.map((h) => h.id).sort(), ['chest', 'elbow', 'feet', 'hand']);
+  const hand = named(top.handles).hand;
+  const to = hand.at.clone().add(new THREE.Vector3(0.02, -0.05, 0.03));
+  const changes = hand.drag(to);
+  assert.deepEqual(Object.keys(changes).sort(), ['grip.lockout', 'top.over']);
+  assert.ok(gripTarget((await posed('db_incline_press', 0, changes)).P, 1).distanceTo(to) < 0.005);
+  // At the bottom the same handle sets where the hands are on the chest, and the grip width.
+  const bottom = named((await posed('db_incline_press', 1)).handles).hand;
+  const down = bottom.at.clone().add(new THREE.Vector3(0.03, -0.02, 0.02));
+  const moved = bottom.drag(down);
+  assert.deepEqual(Object.keys(moved).sort(), ['bottom.chest', 'grip.width']);
+  assert.ok(gripTarget((await posed('db_incline_press', 1, moved)).P, 1).distanceTo(down) < 0.005);
+});

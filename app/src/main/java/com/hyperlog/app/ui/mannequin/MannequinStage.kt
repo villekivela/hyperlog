@@ -82,6 +82,12 @@ internal interface MannequinPlayer {
     /** Back to the turn the clip opens on. */
     fun resetView()
 
+    /**
+     * Turns the loaded clip's bench back to [degrees] about [hinge] ([y, z]). It holds for the
+     * clips loaded after, so it may come before the clip does.
+     */
+    fun setBench(degrees: Int, hinge: List<Float>)
+
     fun setColours(colours: ClayColours)
 
     /** Releases the engine. The player is not used again. */
@@ -100,10 +106,12 @@ internal val LocalMannequinPlayers = staticCompositionLocalOf<MannequinPlayers> 
  * horizontal drag turns it and a double-tap turns it back; vertical drags go on to the sheet. With
  * animations removed it holds still at the bottom of the rep. The stage shows while the clip
  * loads, then the mannequin fades in. It draws only while the app is in front, and its engine is
- * released when the stage leaves the screen with its sheet.
+ * released when the stage leaves the screen with its sheet. An adjustable-bench exercise stands
+ * at the session's [benchAngle], otherwise [lastBenchAngle], otherwise its typical one: the clip
+ * nearest it plays and the bench turns to the exact angle.
  */
 @Composable
-internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) {
+internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier, benchAngle: Int? = null, lastBenchAngle: Int? = null) {
     val context = LocalContext.current
     val players = LocalMannequinPlayers.current
     // Where the renderer can't start (its native library missing), the sheet shows as it does without a clip.
@@ -116,15 +124,22 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) 
     } ?: return
     DisposableEffect(player) { onDispose { player.release() } }
     val still = remember { animationsRemoved(context) }
-    var shown by remember(player, clip) { mutableStateOf(false) }
+    val bench = remember(clip, benchAngle, lastBenchAngle) { clip.bench?.shown(benchAngle, lastBenchAngle) }
+    val file = bench?.clip?.file ?: clip.file
+    val camera = bench?.clip?.camera ?: clip.camera
+    var shown by remember(player, file) { mutableStateOf(false) }
     val alpha by animateFloatAsState(if (shown) 1f else 0f, tween(durationMillis = 300), label = "mannequin")
     val colours = if (isDarkSurface()) ClayColours.Dark else ClayColours.Light
-    LaunchedEffect(player, clip) {
+    // A clip loads again only when the nearest baked angle changes; the bench turns on its own.
+    LaunchedEffect(player, file) {
         player.onShown = { shown = true }
         val (glb, resources) = withContext(Dispatchers.IO) {
-            context.readAsset(clip.file) to clip.resources.mapValues { (_, file) -> context.readAsset(file) }
+            context.readAsset(file) to clip.resources.mapValues { (_, resource) -> context.readAsset(resource) }
         }
-        player.load(glb, resources, clip.camera, clip.tempo)
+        player.load(glb, resources, camera, clip.tempo)
+    }
+    LaunchedEffect(player, bench?.angle) {
+        bench?.let { player.setBench(it.angle, it.hinge) }
     }
     LaunchedEffect(player, colours) { player.setColours(colours) }
     LifecycleResumeEffect(player, still) {

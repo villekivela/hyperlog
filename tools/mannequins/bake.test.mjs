@@ -19,7 +19,10 @@ before(async () => {
 });
 
 /** A baked clip, read as the phone reads it: with the resources the index lists for it. */
-const read = (file) => loadClip(file, index.clips[path.basename(file, '.glb')].resources.map((r) => path.join(out, r)));
+const read = (file) => loadClip(file, index.clips[path.basename(file, '.glb').replace(/_\d+$/, '')].resources.map((r) => path.join(out, r)));
+
+/** Every clip file of `id`: its one clip, or a clip per bench angle. */
+const filesOf = (id) => (index.clips[id].bench ? Object.values(index.clips[id].bench.clips).map((c) => c.clip) : [index.clips[id].clip]);
 
 /** The clip played to `t` seconds: where each joint and each part of the kit is. */
 function player(gltf) {
@@ -67,8 +70,9 @@ test('the squat bakes a clip of its lowering and an index entry', async () => {
 test('every clip shares one mannequin: its mesh and skin are baked once, and a clip holds its kit and animation', async () => {
   const shared = await readFile(path.join(out, 'mannequin.bin'));
   assert.deepEqual((await readdir(out)).filter((f) => !f.endsWith('.glb')).sort(), ['mannequin.bin', 'mannequins.json']);
-  for (const id of Object.keys(POSES)) {
-    const { json, bin } = readGlb(await readFile(path.join(out, `${id}.glb`)));
+  for (const file of Object.keys(POSES).flatMap(filesOf)) {
+    const id = file;
+    const { json, bin } = readGlb(await readFile(path.join(out, file)));
     assert.deepEqual(json.buffers, [{ byteLength: bin.length }, { uri: 'mannequin.bin', byteLength: shared.length }], id);
     // Every view of the skinned body is in the shared file, and nothing of the clip's own is.
     const skinned = new Set(json.nodes.filter((n) => n.skin !== undefined).map((n) => n.mesh));
@@ -94,14 +98,15 @@ test('baking again gives byte-identical files', async () => {
 test('every pose is baked and indexed under its exercise, in its equipment', () => {
   assert.deepEqual(Object.keys(index.clips).sort(), Object.keys(POSES).sort());
   for (const [id, e] of Object.entries(index.clips)) {
-    assert.equal(e.clip, `${id}.glb`);
+    assert.ok(filesOf(id).includes(e.clip));
+    for (const f of filesOf(id)) assert.ok(f === `${id}.glb` || f.startsWith(`${id}_`), f);
     assert.equal(e.equipment, prepare(id).equipment);
   }
 });
 
 for (const id of Object.keys(POSES)) {
   test(`${id}'s clip holds the lowering half only: the top to the bottom, and never back up`, async () => {
-    const gltf = await read(path.join(out, `${id}.glb`));
+    const gltf = await read(path.join(out, index.clips[id].clip));
     assert.deepEqual(gltf.animations.map((a) => [a.name, a.duration]), [['lowering', 1]]);
     const play = player(gltf);
     // It opens on the pose's top and ends on its bottom.

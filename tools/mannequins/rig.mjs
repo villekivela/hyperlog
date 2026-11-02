@@ -228,6 +228,14 @@ export function poseRig(rig, P) {
     const a2 = arm.end.clone().sub(arm.mid);
     aim(rig, 'upperarm_' + k, a1, a1.clone().cross(arm.pole));
     const inward = twist(a2.clone().normalize());
+    // What the hand holds lies along the knuckles, tipped in the palm's plane by `gripTilt`: a
+    // dumbbell's handle (the left and right tip the same way, so the sign follows the side).
+    const fingers = a2.clone().normalize();
+    const palmNormal = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest)).normalize();
+    const handle = inward.clone().normalize();
+    // The palm's normal, square to the handle.
+    palmNormal.addScaledVector(handle, -palmNormal.dot(handle)).normalize();
+    (P.held ??= {})[s] = handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
     aim(rig, 'lowerarm_' + k, a2, inward);
     aim(rig, 'hand_' + k, a2, inward);
   }

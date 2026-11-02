@@ -49,6 +49,7 @@ class MannequinGalleryTest {
             override fun pause() {}
             override fun turn(degrees: Float) {}
             override fun resetView() {}
+            override fun setBench(degrees: Int, hinge: List<Float>) {}
             override fun setColours(colours: ClayColours) {}
             override fun release() {}
         }
@@ -64,7 +65,7 @@ class MannequinGalleryTest {
         }
         // The clips come in the index's order, by exercise id.
         compose.onNodeWithText("Barbell Bench Press").assertExists()
-        compose.onNodeWithText("1 of 8").assertExists()
+        compose.onNodeWithText("1 of 9").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
         assertEquals(context.assets.open("mannequins/barbell_bench_press.glb").use { it.readBytes().size }, loaded.single())

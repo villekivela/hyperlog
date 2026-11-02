@@ -92,6 +92,116 @@
         "mannequin.bin"
       ]
     },
+    "db_incline_press": {
+      "clip": "db_incline_press_30.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          0.868,
+          0.03
+        ],
+        "halfHeight": 1.076,
+        "azimuth": 61.2,
+        "elevation": 17.2
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin"
+      ],
+      "bench": {
+        "typical": 30,
+        "hinge": [
+          0.4075,
+          -0.02
+        ],
+        "clips": {
+          "0": {
+            "clip": "db_incline_press_0.glb",
+            "camera": {
+              "target": [
+                0,
+                0.78,
+                0.05
+              ],
+              "halfHeight": 0.98,
+              "azimuth": 58,
+              "elevation": 22
+            }
+          },
+          "15": {
+            "clip": "db_incline_press_15.glb",
+            "camera": {
+              "target": [
+                0,
+                0.824,
+                0.04
+              ],
+              "halfHeight": 1.028,
+              "azimuth": 59.6,
+              "elevation": 19.6
+            }
+          },
+          "30": {
+            "clip": "db_incline_press_30.glb",
+            "camera": {
+              "target": [
+                0,
+                0.868,
+                0.03
+              ],
+              "halfHeight": 1.076,
+              "azimuth": 61.2,
+              "elevation": 17.2
+            }
+          },
+          "45": {
+            "clip": "db_incline_press_45.glb",
+            "camera": {
+              "target": [
+                0,
+                0.912,
+                0.02
+              ],
+              "halfHeight": 1.124,
+              "azimuth": 62.8,
+              "elevation": 14.8
+            }
+          },
+          "60": {
+            "clip": "db_incline_press_60.glb",
+            "camera": {
+              "target": [
+                0,
+                0.956,
+                0.01
+              ],
+              "halfHeight": 1.172,
+              "azimuth": 64.4,
+              "elevation": 12.4
+            }
+          },
+          "75": {
+            "clip": "db_incline_press_75.glb",
+            "camera": {
+              "target": [
+                0,
+                1,
+                0
+              ],
+              "halfHeight": 1.22,
+              "azimuth": 66,
+              "elevation": 10
+            }
+          }
+        }
+      }
+    },
     "lat_pulldown": {
       "clip": "lat_pulldown.glb",
       "equipment": "cable",

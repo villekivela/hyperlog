@@ -54,6 +54,44 @@ export const POSES = {
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
 
+  // Pressed on an adjustable bench, baked at 0° to 75° (README, Adjustable-bench poses): the body
+  // follows the pad, so one entry fits every angle. From locked out over the shoulders, the arms
+  // straight, down to the chest, the forearms upright.
+  db_incline_press: {
+    equipment: 'dumbbell',
+    motion: 'dumbbell_press',
+    kit: { dumbbells: {}, bench: { hinge: -0.02 } },
+    // The stage's framing at the lying and the upright ends; the angles between move steadily from one to the other.
+    bench: {
+      typical: 30,
+      // Settings tuned per angle, `{ path: { angle: value } }`, and interpolated between (README, Adjustable-bench
+      // poses). The top.over pair keeps the arms locking out vertically (0.64 up, 0.09 forward of the shoulders),
+      // which in the trunk's frame is a different [out, up the trunk] at each angle.
+      perAngle: {
+        'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167 },
+        'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624 },
+        'bottom.chest.1': { 0: 0.0271, 60: -0.0878, 75: -0.1487 },
+        'bottom.tilt': { 0: 3.3019 },
+        'bottom.rotate': { 0: 18.6834 },
+        'top.tilt': { 0: 11.6519, 75: 2.3362 },
+        'top.rotate': { 0: 20 },
+        'grip.width': { 0: 0.3541, 75: 0.3978 },
+        'bottom.chest.0': { 60: 0.1196, 75: 0.1072 },
+      },
+      cameras: {
+        0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
+        75: { target: [0, 1.0, 0.0], halfHeight: 1.22, azimuth: 66, elevation: 10 },
+      },
+    },
+    body: { sit: 0.15, seat: 0.06, lean: 8 },
+    feet: { stance: 0.3, z: 0.2266, toeOut: 20 },
+    // The grip turns (0 overhand, 90 neutral) and the handle tips in the hand, at the top and the bottom.
+    top: { press: 0, over: [0.56, 0.323], rotate: 20, tilt: 11.6519 },
+    bottom: { press: 1, chest: [0.2084, 0.1151], rotate: 18.6834, tilt: 3.3019 },
+    grip: { width: 0.3541, lockout: 0.26, elbows: 0.7975 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
   lat_pulldown: {
     equipment: 'cable',
     motion: 'pulldown',

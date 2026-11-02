@@ -121,8 +121,8 @@ function jointsPast(rig) {
  * Checks a pose on every frame of its lowering. Each check reports whether it passed, its worst
  * frame, and what it found there.
  */
-export async function checkPose(id, { poses } = {}) {
-  const entry = prepare(id, poses);
+export async function checkPose(id, { poses, angle } = {}) {
+  const entry = prepare(id, poses, angle);
   return { id, checks: checkStage(entry, await buildStage(entry)) };
 }
 

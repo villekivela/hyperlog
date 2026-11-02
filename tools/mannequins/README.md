@@ -32,6 +32,53 @@ machine and the rest), listed in `BATCHES` in `review.mjs`. For each batch:
 5. The owner swipes the batch once in the debug gallery (Settings → Debug → Mannequin gallery)
    before its pull request merges.
 
+## Adjustable-bench poses
+
+An exercise the library gives an **Adjustable bench** (`adjustableBench` in `exercises.json`) is
+baked at 0°, 15°, 30°, 45°, 60° and 75°, one clip each, `<id>_<angle>.glb`. Its entry has a
+`bench` and a motion that follows the pad, so one entry fits every angle:
+
+```js
+db_incline_press: {
+  motion: 'dumbbell_press',
+  kit: { dumbbells: {}, bench: { hinge: -0.02 } },   // the backrest turns about this z
+  bench: { typical: 30, cameras: { 0: { …camera }, 75: { …camera } }, perAngle: { 'feet.z': { 0: 0.2, 75: 0.3 } } },
+  body: { sit: 0.15, seat: 0.06, lean: 8, head: 0 }, // see below
+  top: { press: 0, over: [0.581, 0.283], rotate: 0, tilt: 0 },
+  bottom: { press: 1, chest: [0.1592, -0.0137], rotate: 0, tilt: 0 },
+  grip: { width: 0.4, lockout: 0.26, elbows: 0.7975 },
+},
+```
+
+- **The backrest's frame.** The numbers are written against the backrest, so one set holds from
+  0° to 75°. `body.sit` is how far the hips sit off the pad's face and `body.seat` how far down it
+  from the seat-back corner (the body slides down the pad, never into the seat); `body.lean` leans
+  the trunk off the pad's line and `body.head` tilts the head from the trunk (0 lies along the pad).
+  The hands are measured from the shoulders in the trunk's frame: `top.over` is [out from the
+  chest, up the trunk] (the arms as straight as they reach) and `bottom.chest` [out from the chest,
+  down the trunk]. The feet stand in the world, where the bench is fixed.
+- **The dumbbells turn.** `rotate` twists the grip (0 overhand, the handle across the body; 90
+  neutral, along it; anything between) and `tilt` tips the handle in the hand, in the palm's plane
+  (the ends up or down). Each is set at the top and the bottom and eases between them, so neutral
+  at the bottom may turn overhand at the top. (`grip.rotate` and `grip.tilt` set one for the whole
+  rep, for an entry with no `top` or `bottom` of its own.)
+- **`bench.typical`** is the angle shown with none set; the bake fails without it. `bench.cameras`
+  gives the framing at the lowest and highest angle, and the angles between move steadily from one
+  to the other. `prepare(id, poses, angle)` poses the entry at an angle, its typical one by default.
+- **Per angle** (`bench.perAngle`): a number that one value can't fit at every angle is tuned at
+  the angles that need it, `{ path: { angle: value } }` with the path of a single number (`top.over.0`).
+  Between the tuned angles it interpolates, and beyond them it holds the nearest one's.
+- The bench's back pad is the node `bench_back`, with its pivot at the hinge. In the index the
+  entry's own `clip` and `camera` are those of the clip nearest the typical angle, and
+  `bench: { typical, hinge: [y, z], clips: { "0": { clip, camera }, … } }` lists the rest.
+- `node render.mjs <id> [out-dir] --angle <degrees>` renders one angle. In the review page each
+  setting has a toggle, **All angles** (the default) or **Per angle**: a Per angle value is tuned at
+  the angle shown, the angle buttons carry a • where something is tuned, and the OK saves it as
+  `@angles` in the verdict's tuned values, which `review apply` writes into `bench.perAngle`. Tune
+  poses the entry at the angle shown. A verdict's `clip` fingerprint covers all six clips. Tune's sliders step a centimetre, a degree or a
+  twentieth, each has a − and + beside it, a number to type into and a ↺; ←/→ or ↓/↑ step the
+  focused one (Shift for ten) and Enter presses OK.
+
 ## Pose entries
 
 An entry is data only, keyed by the exercise's id in `app/src/main/assets/exercises.json`.
@@ -90,6 +137,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }`; `feet.kneesOut` |
 | `hinge` | a bar hanging in straight arms, an RDL | `shin`, `thigh`, `trunk`; `bar.z`, the bar's distance in front of the ankles |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared; `body.head`, the head's tilt from the spine to rest it on the pad |
+| `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
 | `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
