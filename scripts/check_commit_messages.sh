@@ -72,9 +72,11 @@ if [[ -n "$baseline" ]] && ! git merge-base --is-ancestor "$baseline" "$head"; t
 fi
 
 # Commits whose subjects fail the check but can't be rewritten on main.
-# #101's squash subject ran past 72 characters with a second reference, "(#98) (#101)".
+# #101's squash subject ran past 72 characters with a second reference, "(#98) (#101)";
+# so did #119's, "(#118) (#119)".
 readonly exempt_commits=(
     8dda7febb5bc3873889cc1d0a7cc6f19170e0f82
+    945bf5943e46a88030ed436fed949266bf91df59
 )
 
 status=0

@@ -131,6 +131,18 @@ _Avoid_: Tip, instruction
 **Technique video**:
 A YouTube link for an exercise, opened in the YouTube app at its timestamp.
 
+**Mannequin**:
+The faceless body at the top of an exercise's prescription sheet that does one rep in a loop, with plain generic equipment around it. A cue for which movement it is, not form instruction.
+_Avoid_: Avatar, figure (the spec's figures are numerals), animation
+
+**Pose**:
+An exercise's authored entry in the mannequin tool: where the body, hands and feet go through the rep, its equipment and its default tempo.
+_Avoid_: Preset, keyframe
+
+**Clip**:
+A baked file of one exercise's lowering that the phone plays forward, holds and plays backward. An adjustable-bench exercise has one per 15° of bench angle.
+_Avoid_: Animation, video (that is the Technique video), asset
+
 ## Session
 
 **Session**:

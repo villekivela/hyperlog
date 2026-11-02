@@ -70,6 +70,10 @@ configuration, iOS, web, any server.
   the app ships only the icons it uses (vector drawables or a subset font).
 - Room for storage. Everything lives on the device.
 - kotlinx.serialization for program files, backup import and coach changes.
+- **Filament with gltfio** (pinned) draws the exercise mannequin (Screens → Technique videos), behind
+  Hyperlog's own Compose wrapper. Its Apache-2.0 licence and notice are in
+  `docs/licences/Filament-LICENSE.txt` and `Filament-NOTICE.txt` and in the APK; the mannequin
+  model is credited in `docs/licences/Quaternius-UAL-CC0.txt` and `tools/mannequins/CREDITS.md`.
 - The network is for the update check (Distribution) and, with a Claude key, the coach's calls to
   `api.anthropic.com` (Coaching, ADR 0005). Nothing else goes out.
 - Application ID `com.hyperlog.app`, debug builds `.dev`. A debug build is labelled **DEV Hyperlog** and has its own launcher icon, the logo on amber with a DEV badge (themed icon too), so it can never be mistaken for the real app. The launcher glyph spans about 46 dp of the 108 dp adaptive canvas at its tallest, inside the keyline and as large as other apps' icons, in the coloured and themed layers alike.
@@ -81,6 +85,8 @@ configuration, iOS, web, any server.
   that tag in the public `villekivela/hyperlog` repo itself. The first install comes from that
   release page in the phone's browser; after that the app updates itself (below). Fallback: Firebase App Distribution (free,
   email invites).
+- **The release APK is arm64-v8a only** (the mannequin's native Filament libraries add about 6 MB).
+  Debug builds also carry x86_64, for the emulator.
 - **Versions come from the tag.** Tag `vMAJOR.MINOR.PATCH` (minor and patch 0–99) builds with
   `-PhyperlogVersion=vMAJOR.MINOR.PATCH`: versionName `MAJOR.MINOR.PATCH`, versionCode
   `MAJOR·10000 + MINOR·100 + PATCH` (v0.2.0 is 200, v1.0.0 is 10000). Without the property a build
@@ -726,8 +732,9 @@ each planned day with the training day it lands on, and never changes the day:
      exercise's last planned set the first exercise with sets left comes up. When every planned
      set is logged, the pad gives way to **Day done** (with the session's records, if any) and
      Finish session.
-   - The **prescription sheet** (tap the exercise name) shows every set's target, technique or
-     back-off rule, the rest, the slot note and the exercise's technique note.
+   - The **prescription sheet** (tap the exercise name) shows the exercise's mannequin (Technique
+     videos), every set's target, technique or back-off rule, the rest, the slot note and the
+     exercise's technique note.
    - **Bench angle** (owner, 2026-11-01, #115; the prototype is on `prototype/bench-angle`): an
      exercise with **Adjustable bench** has a row above its sets: the bench symbol, `Bench`, and a
      cell under kg with the angle. Until it's set this session, the cell shows last time's angle as
@@ -1254,7 +1261,8 @@ Settings is the navigation bar's fifth tab, a destination with no back arrow and
 bar; its sub-screens (Gyms and equipment, the exercise library) keep their back arrows to Settings.
 It holds gyms and their equipment, exercise library, the Claude key and this month's cost
 (Coaching → With a Claude key), export backup, restore from a backup, starting weights from the
-old app, and "Check for updates" (Distribution). Debug builds add Scripted coach.
+old app, and "Check for updates" (Distribution). Debug builds add Scripted coach and the mannequin
+gallery (Technique videos).
 
 - **Effort is RIR everywhere**, both targets and logging.
   RIR has a small fixed colour scale (3+ calm, 1–2 warm, 0 hot) that is not part of the
@@ -1417,6 +1425,33 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
     `https://www.youtube.com/results?search_query=<exercise name> technique` (URL-encoded) in the
     same Custom Tab as the videos. The app calls no API and stores nothing; adding a link in the
     library editor brings back the video button.
+- **The mannequin** (owner, 2026-11-02, #120): at the top of the exercise's prescription sheet,
+  above the note and the video button, a faceless mannequin does the movement in a loop, with plain
+  generic equipment around it. It is a quick cue for which movement this is, not form instruction.
+  It is the Quaternius Universal Animation Library mannequin (CC0), drawn in a clay style:
+  perspective, soft light, a floor shadow and the Graphite colours. No muscle tint.
+  - **Behaviour:** it plays a loop of one rep on its own, with no pause. A horizontal drag turns it;
+    a vertical drag stays with the sheet. A double-tap resets the view. With animations removed it
+    holds still at the bottom of the rep. While the clip loads, the stage's background shows, then
+    the mannequin fades in. It renders only while the sheet is open and the app is in front, and
+    the engine is released when the sheet closes.
+  - **Which exercises have one:** every shipped library exercise gets its own pose, in generic
+    equipment, not one per movement pattern. An exercise without a pose yet shows the sheet as
+    before. An exercise added on the phone has none, and a shipped exercise whose equipment is
+    edited on the phone loses its mannequin.
+  - **Tempo:** each exercise has a default tempo, played in four phases: lowering, pause, lifting,
+    pause. Only the lowering is baked into the clip; the phone plays it forward, holds, then plays
+    it backward. A tempo on the prescription is not part of this.
+  - **Adjustable-bench exercises:** the bench sits at this session's bench angle, otherwise last
+    time's, otherwise the exercise's typical angle. The pose comes from the nearest of the clips
+    baked at 15° steps from 0° to 75°, and the bench is turned to the exact angle.
+  - **Made offline:** poses are short data entries (with `like:` for variants) in the tool under
+    `tools/mannequins/`, which bakes a `.glb` clip per exercise and a `mannequins.json` index of
+    each exercise's tempo and typical angle. The clips and the index are committed and shipped
+    with the app; the phone poses nothing live. CI re-bakes them and fails on any difference.
+  - **Debug builds:** a gallery in Settings swipes through every clip.
+  - **Checking:** the logic (which clip, which angle, the tempo phases) is tested in the JVM
+    behind a seam; the pixels are checked by the owner, not by screenshot tests.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The
