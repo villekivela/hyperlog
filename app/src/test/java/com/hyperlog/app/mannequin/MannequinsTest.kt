@@ -23,6 +23,14 @@ class MannequinsTest {
     }
 
     @Test
+    fun eachClipPlaysAtItsExercisesTempo() {
+        val squatTempo = mannequins.clipFor(squat)!!.tempo
+        assertEquals(RepTimeline(lowering = 1.5f, bottom = 0.25f, lifting = 1.1f, top = 0.7f), squatTempo)
+        // The leg press has a tempo of its own, slower than its movement's default.
+        assertEquals(RepTimeline(lowering = 2f, bottom = 0.5f, lifting = 1.5f, top = 0.5f), mannequins.clipFor(library.getValue("leg_press"))!!.tempo)
+    }
+
+    @Test
     fun anExerciseWithoutAPoseHasNone() {
         assertNull(mannequins.clipFor(library.getValue("deadlift")))
     }

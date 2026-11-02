@@ -3,9 +3,10 @@ package com.hyperlog.app.mannequin
 /**
  * One rep in a loop, in four phases, in seconds: the lowering, the pause at the bottom, the
  * lifting and the pause at the top. A clip bakes only the lowering, so the loop plays it forward,
- * holds, plays it backward and holds again (SPEC, Technique videos → The mannequin).
+ * holds, plays it backward and holds again. Each exercise's comes from the index (SPEC, Technique
+ * videos → The mannequin).
  */
-class RepTimeline(val lowering: Float, val bottom: Float, val lifting: Float, val top: Float) {
+data class RepTimeline(val lowering: Float, val bottom: Float, val lifting: Float, val top: Float) {
     val length: Float get() = lowering + bottom + lifting + top
 
     /** How far into the clip the rep is after [seconds]: 0 at the top, 1 at the bottom. */
@@ -20,9 +21,6 @@ class RepTimeline(val lowering: Float, val bottom: Float, val lifting: Float, va
     }
 
     companion object {
-        /** Until each exercise has its own tempo: a squat's, from the prototype. */
-        val Default = RepTimeline(lowering = 1.5f, bottom = 0.25f, lifting = 1.1f, top = 0.7f)
-
         /** Each move starts and ends gently. */
         private fun ease(t: Float) = t * t * (3 - 2 * t)
     }

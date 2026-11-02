@@ -39,6 +39,7 @@ test('the squat bakes a clip of its lowering and an index entry', async () => {
     clip: 'barbell_squat.glb',
     equipment: 'barbell',
     camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
+    tempo: { lowering: 1.5, bottom: 0.25, lifting: 1.1, top: 0.7 },
     resources: ['mannequin.bin'],
   });
 
@@ -123,3 +124,13 @@ for (const id of Object.keys(POSES)) {
     }
   });
 }
+
+test('every clip carries a four-phase tempo, from its entry or its movement', () => {
+  for (const [id, { tempo }] of Object.entries(index.clips)) {
+    assert.deepEqual(Object.keys(tempo), ['lowering', 'bottom', 'lifting', 'top'], id);
+    for (const s of Object.values(tempo)) assert.ok(s >= 0 && s <= 6, `${id}: ${s}`);
+    assert.ok(tempo.lowering > 0 && tempo.lifting > 0, id);
+  }
+  // An entry's own tempo wins over its movement's.
+  assert.deepEqual(index.clips.leg_press.tempo, { lowering: 2, bottom: 0.5, lifting: 1.5, top: 0.5 });
+});

@@ -58,6 +58,11 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   key; anything else, a point or a list included, is replaced whole. Likes chain.
 - **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
   baked, from the top (0 s) to the bottom (1 s).
+- **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
+  the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without
+  one takes its motion's default (`tempo.mjs`). The bake writes it into `mannequins.json`, and the
+  phone plays the baked lowering forward over `lowering`, holds `bottom`, plays it backward over
+  `lifting` and holds `top`.
 - **Side-on angles**, as `trace` measures them: `shin` leans the knee forward of the ankle, `thigh`
   puts the hip behind the knee (90 is a level thigh), `trunk` leans the line from the hips to the
   shoulders forward (negative leans back), `upperArm` and `forearm` swing the elbow and the hand

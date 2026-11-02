@@ -31,6 +31,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.hyperlog.app.mannequin.MannequinClip
 import com.hyperlog.app.mannequin.Mannequins
+import com.hyperlog.app.mannequin.RepTimeline
 import com.hyperlog.app.mannequin.StageCamera
 import com.hyperlog.app.ui.session.isDarkSurface
 import com.hyperlog.app.ui.theme.CardShape
@@ -65,9 +66,9 @@ internal interface MannequinPlayer {
 
     /**
      * Loads a clip's `.glb` (a direct buffer), with the files it reads by name ([resources], each a
-     * direct buffer), and frames the stage on [camera].
+     * direct buffer), frames the stage on [camera] and plays the rep at [tempo].
      */
-    fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera)
+    fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera, tempo: RepTimeline)
 
     /** Draws frames, looping the rep; [still] holds it at the bottom instead. */
     fun play(still: Boolean)
@@ -123,7 +124,7 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier) 
         val (glb, resources) = withContext(Dispatchers.IO) {
             context.readAsset(clip.file) to clip.resources.mapValues { (_, file) -> context.readAsset(file) }
         }
-        player.load(glb, resources, clip.camera)
+        player.load(glb, resources, clip.camera, clip.tempo)
     }
     LaunchedEffect(player, colours) { player.setColours(colours) }
     LifecycleResumeEffect(player, still) {

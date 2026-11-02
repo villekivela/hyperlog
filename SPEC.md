@@ -1446,9 +1446,13 @@ gallery (Technique videos).
     equipment, not one per movement pattern. An exercise without a pose yet shows the sheet as
     before. An exercise added on the phone has none, and a shipped exercise whose equipment is
     edited on the phone loses its mannequin.
-  - **Tempo:** each exercise has a default tempo, played in four phases: lowering, pause, lifting,
-    pause. Only the lowering is baked into the clip; the phone plays it forward, holds, then plays
-    it backward. A tempo on the prescription is not part of this.
+  - **Tempo** (#124): each exercise has a default tempo, played in four phases: lowering, pause at
+    the bottom, lifting, pause at the top. The tool writes it into `mannequins.json` from the pose
+    entry, or from a default by movement where the entry has none. Only the lowering is baked into
+    the clip; the phone plays it forward over the lowering time, holds, plays it backward over the
+    lifting time, and holds again, in the sheet and the gallery alike. With animations removed the
+    clip stays a still frame at the bottom. The player takes the tempo as an input, so a tempo on
+    the prescription could replace the default later; that is not part of this.
   - **Adjustable-bench exercises:** the bench sits at this session's bench angle, otherwise last
     time's, otherwise the exercise's typical angle. The pose comes from the nearest of the clips
     baked at 15° steps from 0° to 75°, and the bench is turned to the exact angle.
