@@ -25,7 +25,7 @@ RIR chip checked on the phone (#46, dark mode).
    one tap. The pad still logs too, and keeps every decision for a set in thumb reach.
 4. **Planned things look planned, done things look done.** Prefills and targets are muted; done
    rows are full strength with a filled primary check. RIR is the one chip the whole app uses: an
-   outlined chip is a target, a tinted badge a result.
+   outlined chip is a target, a filled badge a result.
 5. **The index column says what a set is.** `W` or the set number on a circle; a technique tints
    it and adds its symbol, and its drops or mini-sets hang off it in one tall pill.
 6. **One list, visibly scrollable.** Warm-ups and sets scroll together, fading at an edge with
@@ -100,9 +100,10 @@ Two fixed scales sit outside the theme:
 - **RIR:** one shape everywhere, the RIR chip, here as on Today, Program and History (#46, the
   owner's call). A target is an outline: `#D9645B`, `#E0A84E`, `#6BAFA9` in dark mode, and in
   light mode `#D5544A`, `#AA741E` and `#4A8983`, the same hues darkened to at least 3:1 on every
-  light surface so they read in daylight (`RirContrastTest`). A logged or chosen RIR is a tonal
-  badge: a soft opaque tint of its colour with a 1 dp edge (the owner's call, 2026-11-01). On both,
-  the number (semibold) is in the chip's hue, darker in light and lighter in dark, at least 4.5:1
+  light surface so they read in daylight (`RirContrastTest`). A logged or chosen RIR is a badge:
+  in dark a deep shade of its colour with no edge (the owner's call, 2026-11-02, #118), in light a
+  soft opaque tint with a 1 dp edge (2026-11-01). On both, the number (semibold) is in the chip's
+  hue, darker in light and pale in dark, at least 4.5:1
   (SPEC, RIR chip). So a set looks the same the moment you tap its RIR as it does in History. On
   the pad every key is an outlined
   chip and the chosen one turns into its badge.

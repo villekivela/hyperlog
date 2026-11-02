@@ -79,11 +79,11 @@ class LoggedRirColourTest {
     }
 
     @Test
-    fun aLoggedZeroIsTheHotBadge() = assertBadge(0, light = 0xFFFAE9E8 to 0xFFA52F26, dark = 0xFF482C38 to 0xFFE4918B)
+    fun aLoggedZeroIsTheHotBadge() = assertBadge(0, light = 0xFFFAE9E8 to 0xFFA52F26, dark = 0xFF952A22 to 0xFFF2C8C5)
 
     @Test
-    fun aLoggedTwoIsTheWarmBadge() = assertBadge(2, light = 0xFFFBF3E6 to 0xFF7D5516, dark = 0xFF4A3A35 to 0xFFE1AA52)
+    fun aLoggedTwoIsTheWarmBadge() = assertBadge(2, light = 0xFFFBF3E6 to 0xFF7D5516, dark = 0xFF825917 to 0xFFF4E1C2)
 
     @Test
-    fun aLoggedThreeIsTheCalmBadge() = assertBadge(3, light = 0xFFEAF4F3 to 0xFF366460, dark = 0xFF323B47 to 0xFF7FBAB5)
+    fun aLoggedThreeIsTheCalmBadge() = assertBadge(3, light = 0xFFEAF4F3 to 0xFF366460, dark = 0xFF36635F to 0xFFD1E6E4)
 }

@@ -39,7 +39,8 @@ import com.hyperlog.app.progression.Record
 
 // The RIR chip (SPEC, RIR chip): set text keeps `@ N` as its one source, and the UI draws each
 // `@ N` (or `@ N RIR`) as the number, in its colour, in a small chip of the fixed RIR scale. A
-// target is outlined; a logged set is a tinted badge with a thin edge. The logging screen draws the same chip on its own ([RirChip]).
+// target is outlined; a logged set is a badge, deep with a pale number in dark mode and a tint with
+// a thin edge in light. The logging screen draws the same chip on its own ([RirChip]).
 
 internal const val RirChipTargetTag = "rir-chip-target"
 internal const val RirChipLoggedTag = "rir-chip-logged"
@@ -67,14 +68,14 @@ internal fun rirChipColor(rir: Int, dark: Boolean): Color = when {
 }
 
 /**
- * A chip's number, target and logged alike: its hue, darker in light mode and lighter in dark, so
- * it keeps 4.5:1 on its badge and on every neutral surface.
+ * A chip's number, target and logged alike: its hue, darker in light mode and pale in dark (owner,
+ * 2026-11-02, #118), so it keeps 4.5:1 on its badge and on every neutral surface.
  */
 internal fun rirNumberColor(rir: Int, dark: Boolean): Color = when {
     dark -> when {
-        rir <= 0 -> Color(0xFFE4918B)
-        rir <= 2 -> Color(0xFFE1AA52)
-        else -> Color(0xFF7FBAB5)
+        rir <= 0 -> Color(0xFFF2C8C5)
+        rir <= 2 -> Color(0xFFF4E1C2)
+        else -> Color(0xFFD1E6E4)
     }
     rir <= 0 -> Color(0xFFA52F26)
     rir <= 2 -> Color(0xFF7D5516)
@@ -82,27 +83,24 @@ internal fun rirNumberColor(rir: Int, dark: Boolean): Color = when {
 }
 
 /**
- * A logged chip's fill: a soft tint of [rirColor], opaque so it reads the same on any surface (14%
- * on the light card, 20% on the dark one). Its edge, [rirBadgeEdge], keeps it a chip on its card.
+ * A logged chip's fill. Dark: a deep shade of [rirColor]'s hue, which stands off the card by its
+ * colour, with no edge. Light: a soft tint, opaque so it reads the same on any surface, with
+ * [rirBadgeEdge] to keep it a chip on its white card.
  */
 internal fun rirBadgeColor(rir: Int, dark: Boolean): Color = when {
     dark -> when {
-        rir <= 0 -> Color(0xFF482C38)
-        rir <= 2 -> Color(0xFF4A3A35)
-        else -> Color(0xFF323B47)
+        rir <= 0 -> Color(0xFF952A22)
+        rir <= 2 -> Color(0xFF825917)
+        else -> Color(0xFF36635F)
     }
     rir <= 0 -> Color(0xFFFAE9E8)
     rir <= 2 -> Color(0xFFFBF3E6)
     else -> Color(0xFFEAF4F3)
 }
 
-/** A logged chip's 1 dp edge: the outline's colour at 55% over the fill. */
-internal fun rirBadgeEdge(rir: Int, dark: Boolean): Color = when {
-    dark -> when {
-        rir <= 0 -> Color(0xFF984B4B)
-        rir <= 2 -> Color(0xFF9C7643)
-        else -> Color(0xFF517B7D)
-    }
+/** A logged chip's 1 dp edge in light mode: the outline's colour at 55% over the fill. A dark badge has none. */
+internal fun rirBadgeEdge(rir: Int, dark: Boolean): Color? = when {
+    dark -> null
     rir <= 0 -> Color(0xFFE69791)
     rir <= 2 -> Color(0xFFCEAD78)
     else -> Color(0xFF92B9B5)
@@ -155,7 +153,9 @@ private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String
     Box(
         modifier.then(
             if (target) Modifier.border(1.5.dp, rirChipColor(rir, dark), RirChipShape)
-            else Modifier.background(rirBadgeColor(rir, dark), RirChipShape).border(1.dp, rirBadgeEdge(rir, dark), RirChipShape),
+            else Modifier.background(rirBadgeColor(rir, dark), RirChipShape).then(
+                rirBadgeEdge(rir, dark)?.let { Modifier.border(1.dp, it, RirChipShape) } ?: Modifier,
+            ),
         ),
         contentAlignment = Alignment.Center,
     ) {
