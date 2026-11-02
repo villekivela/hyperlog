@@ -82,7 +82,9 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     private var colours: ClayColours? = null
     private var playing = false
     private var still = false
-    private var startNanos = 0L
+    // How far into the loop it has played, so a pause behind another app carries on where it was.
+    private var playedNanos = 0L
+    private var lastFrameNanos = 0L
     // A still stage draws only when something changed.
     private var dirty = true
     private var shown = false
@@ -174,7 +176,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         this.still = still
         if (playing) return
         playing = true
-        startNanos = 0L
+        lastFrameNanos = 0L
         dirty = true
         choreographer.postFrameCallback(frame)
     }
@@ -222,8 +224,9 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         val stage = stage ?: return
         val animator = animator ?: return
         if (still && !dirty) return
-        if (startNanos == 0L) startNanos = frameTimeNanos
-        val position = if (still) 1f else timeline.position((frameTimeNanos - startNanos) / 1e9f)
+        if (lastFrameNanos != 0L) playedNanos += frameTimeNanos - lastFrameNanos
+        lastFrameNanos = frameTimeNanos
+        val position = if (still) 1f else timeline.position(playedNanos / 1e9f)
         // The animator wraps a time at its end round to the start, so the bottom stays a hair short of it.
         animator.applyAnimation(0, (position * duration).coerceAtMost(duration * 0.9999f))
         animator.updateBoneMatrices()

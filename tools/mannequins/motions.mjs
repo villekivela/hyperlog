@@ -33,7 +33,9 @@ export const MOTIONS = {
     const u = trunkUp(lean);
     const f = forwardOf(u);
     return {
-      hipC, u, bar: barAt(lean), headDir: u.clone().add(V(0, 0.5, 0.1)).normalize(),
+      hipC, u, bar: barAt(lean),
+      // The head stays near upright, the eyes a little down, as the trunk leans.
+      headDir: u.clone().add(V(0, 1.2, 0.15)).normalize(),
       ankles: [V(-e.stance, L.ankleY, 0), V(e.stance, L.ankleY, 0)], toeOut: e.toeOut,
       kneePole: (s) => V(s * e.kneesOut, 0, 1).normalize(),
       grip: e.grip,
