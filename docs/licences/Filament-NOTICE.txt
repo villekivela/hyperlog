@@ -4,14 +4,14 @@ Filament and gltfio
 Hyperlog draws the exercise mannequin with Filament and its glTF loader,
 gltfio, from https://github.com/google/filament.
 
-Filament is Copyright (C) Google LLC and licensed under the Apache License,
+Filament is Copyright The Android Open Source Project and licensed under the Apache License,
 Version 2.0. The licence is in Filament-LICENSE.txt, next to this file.
 
 Filament's repository has no NOTICE file of its own, so this is Hyperlog's
 notice: the licence text above is the one that ships, unmodified, and it is
 repeated in the APK. The Filament libraries are used as published, with no
-changes. Filament also builds in third-party code under its own licences
-(among them cgltf, meshoptimizer, SPIRV-Cross and stb), listed in the
-`third_party` directory of the Filament release that Hyperlog pins.
+changes. Filament also builds in third-party code under its own licences,
+listed in the `third_party` directory of the Filament release that Hyperlog
+pins.
 
 When the pinned version changes, check this notice against that release.
