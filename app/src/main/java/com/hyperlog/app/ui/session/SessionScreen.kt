@@ -145,6 +145,8 @@ fun SessionScreen(
     var showPicker by rememberSaveable { mutableStateOf(false) }
     var showRest by rememberSaveable { mutableStateOf(false) }
     var showDetails by rememberSaveable { mutableStateOf(false) }
+    // Read with the screen, so the prescription sheet opens at its full height with its mannequin.
+    val mannequins = com.hyperlog.app.ui.mannequin.rememberMannequins()
     var showFinish by rememberSaveable { mutableStateOf(false) }
     /** The set whose options sheet is open, by index; null when closed. */
     var setOptions by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -466,6 +468,7 @@ fun SessionScreen(
                 // The full reason for the weight, and the old app's set for a machine, live here rather than on the screen.
                 why = current.suggestion?.takeIf { !current.done }?.let { s -> s.why?.let { it to s.direction(current.sets.lastOrNull()?.weightKg) } },
                 startingHint = current.startingHint,
+                mannequin = mannequins?.clipFor(current.exercise),
             )
         }
     }
@@ -992,7 +995,8 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
 /**
  * The exercise's prescription sheet. An ad-hoc session has no prescription, so it shows what
  * the library knows: equipment and muscles, the technique note and the technique video, or a
- * YouTube search for the technique when the exercise has none.
+ * YouTube search for the technique when the exercise has none. An exercise with a mannequin plays
+ * it at the top.
  */
 @Composable
 internal fun ExerciseSheet(
@@ -1007,79 +1011,91 @@ internal fun ExerciseSheet(
     why: Pair<String, Direction>? = null,
     /** A machine's set from the old app (`45 kg × 12 @ 1 RIR, 12 Sep`); null with none. */
     startingHint: String? = null,
+    /** The exercise's mannequin, played at the top; null for an exercise without one. */
+    mannequin: com.hyperlog.app.mannequin.MannequinClip? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
-    Column(Modifier.fillMaxWidth().padding(horizontal = Margin).padding(bottom = 24.dp).navigationBarsPadding()) {
-        Text(interFigures(exercise.name), style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(4.dp))
-        Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-        machine?.let {
+    // It scrolls only when it's taller than the room: a scroll takes vertical drags for itself, and
+    // while everything fits a drag anywhere on it, the mannequin's stage included, moves the sheet.
+    val scroll = rememberScrollState()
+    Column(Modifier.fillMaxWidth().verticalScroll(scroll, enabled = scroll.maxValue > 0).padding(bottom = 24.dp).navigationBarsPadding()) {
+        mannequin?.let {
+            // A card of the sheet, out to the cards' margin like the machine row's and the prescription's.
+            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin))
             Spacer(Modifier.height(16.dp))
-            Row(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
-                SymbolIcon(Symbol.LocationOn, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
-                Spacer(Modifier.width(16.dp))
-                Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                onEditMachine?.let { edit ->
-                    val label = stringResource(R.string.machine_edit_description)
-                    TextButton(onClick = edit, Modifier.semantics { contentDescription = label }) {
-                        Text(stringResource(R.string.machine_edit))
+        }
+        Column(Modifier.fillMaxWidth().padding(horizontal = Margin)) {
+            Text(interFigures(exercise.name), style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(4.dp))
+            Text(exercise.summary, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            machine?.let {
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+                    SymbolIcon(Symbol.LocationOn, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                    Spacer(Modifier.width(16.dp))
+                    Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    onEditMachine?.let { edit ->
+                        val label = stringResource(R.string.machine_edit_description)
+                        TextButton(onClick = edit, Modifier.semantics { contentDescription = label }) {
+                            Text(stringResource(R.string.machine_edit))
+                        }
+                    }
+                    onChangeMachine?.let { change ->
+                        val label = stringResource(R.string.machine_change_description)
+                        TextButton(onClick = change, Modifier.semantics { contentDescription = label }) {
+                            Text(stringResource(R.string.machine_change))
+                        }
                     }
                 }
-                onChangeMachine?.let { change ->
-                    val label = stringResource(R.string.machine_change_description)
-                    TextButton(onClick = change, Modifier.semantics { contentDescription = label }) {
-                        Text(stringResource(R.string.machine_change))
-                    }
+            }
+            why?.let { (text, direction) ->
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.testTag(SuggestionTag)) {
+                    SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
+                    Spacer(Modifier.width(16.dp))
+                    RirText(text, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-        }
-        why?.let { (text, direction) ->
-            Spacer(Modifier.height(16.dp))
-            Row(Modifier.testTag(SuggestionTag)) {
-                SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
-                Spacer(Modifier.width(16.dp))
-                RirText(text, style = MaterialTheme.typography.bodyLarge)
+            startingHint?.let {
+                Spacer(Modifier.height(16.dp))
+                StartingHintRow(it)
             }
-        }
-        startingHint?.let {
-            Spacer(Modifier.height(16.dp))
-            StartingHintRow(it)
-        }
-        plan?.let { Prescription(it) }
-        goal?.let { GoalBlock(exercise.name, it) }
-        slotNote?.let { note ->
+            plan?.let { Prescription(it) }
+            goal?.let { GoalBlock(exercise.name, it) }
+            slotNote?.let { note ->
+                Spacer(Modifier.height(24.dp))
+                val label = stringResource(R.string.sheet_program_note)
+                Row(Modifier.semantics { contentDescription = label }) {
+                    SymbolIcon(Symbol.ViewTimeline, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                    Spacer(Modifier.width(16.dp))
+                    Text(note, style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+            exercise.note?.let { note ->
+                Spacer(Modifier.height(24.dp))
+                Row {
+                    SymbolIcon(Symbol.StickyNote2, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                    Spacer(Modifier.width(16.dp))
+                    Text(note, style = MaterialTheme.typography.bodyLarge)
+                }
+            }
             Spacer(Modifier.height(24.dp))
-            val label = stringResource(R.string.sheet_program_note)
-            Row(Modifier.semantics { contentDescription = label }) {
-                SymbolIcon(Symbol.ViewTimeline, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
-                Spacer(Modifier.width(16.dp))
-                Text(note, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        exercise.note?.let { note ->
-            Spacer(Modifier.height(24.dp))
-            Row {
-                SymbolIcon(Symbol.StickyNote2, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
-                Spacer(Modifier.width(16.dp))
-                Text(note, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        Spacer(Modifier.height(24.dp))
-        val link = exercise.video
-        if (link != null) {
-            val at = TechniqueVideo.parse(link)?.startLabel
-            FilledTonalButton(onClick = { context.openTechniqueVideo(link) }) {
-                SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
-            }
-        } else {
-            // No video in the library: a YouTube search for the technique, in the same Custom Tab.
-            FilledTonalButton(onClick = { context.openTechniqueVideo(TechniqueVideo.searchUrl(exercise.name)) }) {
-                SymbolIcon(Symbol.Search, null, Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.sheet_video_search))
+            val link = exercise.video
+            if (link != null) {
+                val at = TechniqueVideo.parse(link)?.startLabel
+                FilledTonalButton(onClick = { context.openTechniqueVideo(link) }) {
+                    SymbolIcon(Symbol.SmartDisplay, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (at != null) stringResource(R.string.sheet_video_at, at) else stringResource(R.string.sheet_video))
+                }
+            } else {
+                // No video in the library: a YouTube search for the technique, in the same Custom Tab.
+                FilledTonalButton(onClick = { context.openTechniqueVideo(TechniqueVideo.searchUrl(exercise.name)) }) {
+                    SymbolIcon(Symbol.Search, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.sheet_video_search))
+                }
             }
         }
     }

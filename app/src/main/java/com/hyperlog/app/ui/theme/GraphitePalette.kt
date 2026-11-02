@@ -90,3 +90,21 @@ internal val GraphiteDark = darkColorScheme(
     surfaceContainerHigh = Color(0xFF1F1F22),
     surfaceContainerHighest = Color(0xFF2E2E33),
 )
+
+/**
+ * The clay mannequin's greys, Graphite's own (SPEC, Technique videos → The mannequin;
+ * docs/design/exercise-library.md, Mannequin). The body is the subject, so it holds the most
+ * contrast with the stage; the joint rings are a step darker than it, and the equipment sits apart
+ * from both: dark iron in light, a muted mid grey in dark, below the body. [shadow] is the floor
+ * shadow's strength.
+ */
+internal data class ClayColours(val body: Color, val joint: Color, val bar: Color, val plate: Color, val shadow: Float) {
+    companion object {
+        val Light = ClayColours(
+            body = Color(0xFFBABAC1), joint = Color(0xFF9A9AA1), bar = Color(0xFF5C5C62), plate = Color(0xFF48484E), shadow = 0.65f,
+        )
+        val Dark = ClayColours(
+            body = Color(0xFF9A9AA2), joint = Color(0xFF7C7C84), bar = Color(0xFF85858C), plate = Color(0xFF55555C), shadow = 1f,
+        )
+    }
+}

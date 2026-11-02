@@ -48,9 +48,13 @@ android {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             resValue("string", "app_name", "DEV Hyperlog")
+            // The phone, and the emulator (SPEC, Distribution).
+            ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         }
         release {
             resValue("string", "app_name", "Hyperlog")
+            // Filament's native libraries for phones only: about 6 MB (SPEC, Distribution).
+            ndk { abiFilters += "arm64-v8a" }
             isMinifyEnabled = false
             signingConfig = releaseSigning
         }
@@ -80,6 +84,28 @@ android {
     }
 }
 
+// The licences of what the APK bundles (docs/licences/) ship inside it, under assets/licences/.
+abstract class LicenceAssets : DefaultTask() {
+    @get:InputDirectory
+    abstract val licences: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val output: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val into = output.get().asFile.resolve("licences")
+        into.deleteRecursively()
+        licences.get().asFile.copyRecursively(into)
+    }
+}
+val licenceAssets = tasks.register<LicenceAssets>("licenceAssets") {
+    licences.set(rootProject.layout.projectDirectory.dir("docs/licences"))
+}
+androidComponents {
+    onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(licenceAssets, LicenceAssets::output) }
+}
+
 room {
     // Exported schemas are the baseline for migrations once a release holds real data.
     schemaDirectory("$projectDir/schemas")
@@ -98,6 +124,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.anthropic.java)
+    implementation(libs.filament.android)
+    implementation(libs.filament.gltfio)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

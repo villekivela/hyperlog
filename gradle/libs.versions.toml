@@ -17,6 +17,8 @@ serialization = "1.11.0"
 core = "1.18.0"
 # The coach's calls to Claude (ADR 0005). Kept on 2.x: 3.0 (2026-10-21) moves to a new API version.
 anthropic = "2.75.0"
+# The mannequin's renderer (SPEC, Stack). A new version needs docs/licences/Filament-NOTICE.txt checked against its release.
+filament = "1.77.3"
 
 [libraries]
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "core" }
@@ -37,6 +39,8 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 anthropic-java = { module = "com.anthropic:anthropic-java", version.ref = "anthropic" }
+filament-android = { module = "com.google.android.filament:filament-android", version.ref = "filament" }
+filament-gltfio = { module = "com.google.android.filament:gltfio-android", version.ref = "filament" }
 junit = { module = "junit:junit", version.ref = "junit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 

@@ -125,6 +125,8 @@ fun SettingsScreen(
     /** The scripted coach's switch, offered in a debug build only; null hides it. */
     scriptedCoach: Boolean? = null,
     onScriptedCoach: (Boolean) -> Unit = {},
+    /** Opens the mannequin gallery, offered in a debug build only; null hides it. */
+    onMannequinGallery: (() -> Unit)? = null,
 ) {
     BackHandler(onBack = onBack)
     var enteringKey by rememberSaveable { mutableStateOf(false) }
@@ -257,6 +259,12 @@ fun SettingsScreen(
                         onClick = if (checking) null else onCheckNow,
                     )
                 }
+            }
+            onMannequinGallery?.let { open ->
+                GroupHead(stringResource(R.string.settings_debug))
+                val galleryTitle = stringResource(R.string.mannequin_gallery)
+                val galleryLine = stringResource(R.string.settings_mannequin_gallery_body)
+                SegmentedList { row(galleryTitle, galleryLine, Symbol.Exercise, onClick = open, trailing = chevron) }
             }
             if (version != null) {
                 Text(

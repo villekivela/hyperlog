@@ -153,7 +153,7 @@ private fun AskForNotifications(once: String? = null) {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach }
+private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins }
 
 /** Where a check-in started outside Coach: the [screen], and the review open over it ([reviewProgram]'s [reviewBlock]; null: its program review). */
 private data class CheckInFrom(val screen: Screen, val reviewProgram: Long? = null, val reviewBlock: String? = null) {
@@ -829,6 +829,11 @@ private fun App(
             onLogBodyweight = historyModel::logBodyweight,
             onBack = { screen = Screen.Today },
         )
+        screen == Screen.Mannequins -> com.hyperlog.app.ui.mannequin.MannequinGallery(
+            com.hyperlog.app.ui.mannequin.rememberMannequins(),
+            exercises,
+            onBack = { screen = Screen.Settings },
+        )
         screen == Screen.Settings -> SettingsScreen(
             gymCount = gyms.size,
             exerciseCount = exercises.count { !it.hidden },
@@ -851,6 +856,7 @@ private fun App(
             claudeKey = claudeKey,
             scriptedCoach = scriptedCoach.takeIf { com.hyperlog.app.coach.BuildCoach.SCRIPTED },
             onScriptedCoach = checkInModel::setScripted,
+            onMannequinGallery = if (BuildConfig.DEBUG) { { screen = Screen.Mannequins } } else null,
             onSaveKey = claudeKeyModel::save,
             onRemoveKey = claudeKeyModel::remove,
             onDismissKey = claudeKeyModel::dismiss,
