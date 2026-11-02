@@ -127,6 +127,9 @@ fun SettingsScreen(
     onScriptedCoach: (Boolean) -> Unit = {},
     /** Opens the mannequin gallery, offered in a debug build only; null hides it. */
     onMannequinGallery: (() -> Unit)? = null,
+    /** The training targets the Training style row sums up, and the page it opens; null hides the row. */
+    trainingTargets: com.hyperlog.app.coach.TrainingTargets? = null,
+    onTrainingStyle: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var enteringKey by rememberSaveable { mutableStateOf(false) }
@@ -173,7 +176,11 @@ fun SettingsScreen(
             val keyLine = claudeKey.ending?.let { stringResource(R.string.claude_key_ending, it) } ?: stringResource(R.string.claude_key_about)
             val removeLabel = stringResource(R.string.claude_key_remove)
             val keyText = stringResource(R.string.claude_key_text)
+            val styleTitle = stringResource(R.string.training_style)
+            val styleLine = trainingTargets?.let { trainingStyleLine(it) }
             SegmentedList {
+                // The training style comes first, above the key (SPEC, Coaching → Training style).
+                if (styleLine != null) row(styleTitle, styleLine, Symbol.Tune, onClick = onTrainingStyle, trailing = chevron)
                 if (claudeKey.ending == null && enteringKey) {
                     item {
                         SegmentedRow(keyTitle, keyText, Symbol.Key, supportingLines = 3)

@@ -51,8 +51,18 @@ class CheckInRunner(
     private val world: suspend () -> CheckInWorld,
     /** The frame for a new check-in: built once, then sent with every call. */
     private val frame: suspend () -> CheckInFrame,
-    private val io: CoroutineDispatcher = Dispatchers.IO,
+    /** Where the check-in's file is read and written: off the main thread, but for [forTests]. */
+    private val io: CoroutineDispatcher = forTests ?: Dispatchers.IO,
 ) {
+    companion object {
+        /**
+         * Set by tests that run the app (FreshDatabaseRule): the file's reads and writes on the
+         * main thread, as Room's are there, so `waitForIdle` waits for them and none lands after
+         * its test ends, where the next test's app would restore it as a check-in of its own.
+         */
+        @Volatile var forTests: CoroutineDispatcher? = null
+    }
+
     private val _state = MutableStateFlow<CheckInView?>(null)
     val state: StateFlow<CheckInView?> = _state.asStateFlow()
 

@@ -328,7 +328,7 @@ _Avoid_: Supersedes, cancels, overrides
 
 **Time off**:
 Days without training beyond the plan's own rest days: from the first day of the weekday plan missed since the last session, or the days since it with no weekday plan. More than a week shows Today's time-off line.
-_Avoid_: Break, layoff
+_Avoid_: Break, layoff. About me's "Coming back from a break" is the owner's wording for where you are as a lifter, not the app's time off.
 
 **Easy week**:
 The week back after two or more weeks without a session: the days that come up, one set fewer each
@@ -373,8 +373,8 @@ The training style's standing numbers and rules: goal, weekly sets per muscle as
 _Avoid_: Targets alone (a set prescription has targets), preferences
 
 **How I train**:
-The training philosophy as text, in your voice, that Claude reads in every check-in. The app ships a default; yours replaces it once edited.
-_Avoid_: Philosophy, system prompt, instructions
+The training philosophy as principles: fixed rules Claude always gets (form before load, no loads in a program, swap around pain, alternatives in every slot), switches on by default (stretch-biased exercises, stable lifts you can push hard, blocks with a deload) and one optional line. You see each principle's short label; Claude reads its full sentence, which the app ships.
+_Avoid_: Philosophy, system prompt, instructions, rules (alone)
 
 **About me**:
 What Claude should know about you as a lifter: age band, how fast you progress, aches and injuries, exercises to avoid and to favour, and anything else.

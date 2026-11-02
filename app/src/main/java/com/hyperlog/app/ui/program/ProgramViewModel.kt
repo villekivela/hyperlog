@@ -205,10 +205,11 @@ class ProgramViewModel(application: Application) : AndroidViewModel(application)
         val weeks = History(db, programs).weeklySets(AskClaude.SET_WEEKS)
         val weekdayPlan = weekdayPlans.current()
         val gymNames = com.hyperlog.app.gym.Gyms(db).gyms.first().associate { it.id to it.name }
+        val style = com.hyperlog.app.coach.TrainingStyles(db, getApplication<android.app.Application>()).current()
         return withContext(Dispatchers.Default) {
             AskClaude.prompt(
                 words, active, sessions, library, gym = gym, elsewhere = elsewhere, lastTrained = lastTrained, weekdays = weekdays,
-                weeklySets = weeks, tile = tile, weekdayPlan = weekdayPlan, gymNames = gymNames, context = context,
+                weeklySets = weeks, tile = tile, weekdayPlan = weekdayPlan, gymNames = gymNames, context = context, style = style,
             )
         }
     }

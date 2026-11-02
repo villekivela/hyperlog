@@ -71,4 +71,19 @@ class AccentContrastTest {
             assertTrue("$name picked words", choiceColors(s, card, onAccent = false).onChecked == s.onPrimaryContainer)
         }
     }
+
+    @Test
+    fun unpickedChoicesSitInAFaintWellInLightAsInDark() {
+        // The owner's call on #138, replacing #58's white: on a card the others sit in the
+        // screen's grey; on the screen itself, a step darker, so the well never vanishes.
+        val s = GraphiteLight
+        val onCard = choiceColors(s, s.surfaceContainerLowest, onAccent = false).unchecked
+        assertTrue("on a card: $onCard", onCard == s.surfaceContainer)
+        val onScreen = choiceColors(s, s.surfaceContainer, onAccent = false).unchecked
+        assertTrue("on the screen: $onScreen", onScreen != s.surfaceContainer && onScreen == s.surfaceContainerHighest)
+        // Dark keeps its well a tone below the screen.
+        assertTrue(choiceColors(GraphiteDark, GraphiteDark.surfaceBright, onAccent = false).unchecked == GraphiteDark.surfaceContainerLowest)
+        // The words in either well still read.
+        listOf(onCard, onScreen).forEach { assertTrue("words on $it", contrast(s.onSurfaceVariant, it) >= 4.5f) }
+    }
 }

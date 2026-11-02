@@ -153,4 +153,57 @@ class ProgramParserTest {
             errors(program(bench, dayExtra = """, "weeks": { "4": { "deload": 1 } }""")),
         )
     }
+
+    /** [bench]'s one-block program, with [extra] at the top level. */
+    private fun withTop(extra: String) = program(bench).replaceFirst("\"title\": \"Test\",", "\"title\": \"Test\", $extra,")
+
+    @Test
+    fun aProgramCarriesItsFocusAndTrainingTargetsOfItsOwn() {
+        val program = valid(
+            withTop(
+                """"focus": ["Chest", "Shoulders"], "targets": { "goal": "both", "volume": "14-20", "acrossBlock": "rising",
+                "frequency": "3+", "failure": "never", "calibration": false, "repRanges": { "compound": "4-8" } }""",
+            ),
+        )
+        assertEquals(listOf(com.hyperlog.app.library.MuscleGroup.Chest, com.hyperlog.app.library.MuscleGroup.Shoulders), program.focus)
+        assertEquals(
+            com.hyperlog.app.coach.ProgramTrainingTargets(
+                goal = com.hyperlog.app.coach.TrainingGoal.Both,
+                volume = com.hyperlog.app.coach.NumberRange(14, 20),
+                acrossBlock = com.hyperlog.app.coach.AcrossBlock.Rising,
+                frequency = com.hyperlog.app.coach.Frequency.ThreeOrMore,
+                failure = com.hyperlog.app.coach.FailureRule.Never,
+                calibration = false,
+                compound = com.hyperlog.app.coach.NumberRange(4, 8),
+            ),
+            program.targets,
+        )
+        // Neither is required, and an empty focus is none.
+        assertEquals(emptyList<Any>(), valid(program(bench)).focus)
+        assertEquals(emptyList<Any>(), valid(withTop(""""focus": []""")).focus)
+    }
+
+    @Test
+    fun aFocusIsAtMostTwoMuscleGroupsEachOnce() {
+        assertEquals(listOf("focus: at most 2 muscle groups"), errors(withTop(""""focus": ["Chest", "Back", "Arms"]""")))
+        assertEquals(
+            listOf("""focus[0]: unknown muscle group "Biceps": use Chest, Back, Shoulders, Arms, Legs, Glutes or Core"""),
+            errors(withTop(""""focus": ["Biceps"]""")),
+        )
+        assertEquals(listOf("""focus[1]: "Chest" is already in the focus"""), errors(withTop(""""focus": ["Chest", "Chest"]""")))
+        assertEquals(listOf("focus: must be a list of muscle groups"), errors(withTop(""""focus": "Chest"""")))
+    }
+
+    @Test
+    fun trainingTargetsAreCheckedWithTheirPaths() {
+        assertEquals(
+            listOf(
+                """targets.goal: must be "hypertrophy", "strength" or "both"""",
+                """targets.volume: must be a range like "8-14", each end 1–40, the low end not above the high""",
+                """targets.repRanges.isolation: must be a range like "8-14", each end 1–30, the low end not above the high""",
+                """targets: unknown field "tempo"""",
+            ).sorted(),
+            errors(withTop(""""targets": { "goal": "size", "volume": "20-10", "repRanges": { "isolation": "8-40" }, "tempo": "3-1-1" }""")).sorted(),
+        )
+    }
 }

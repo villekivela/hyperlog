@@ -39,6 +39,8 @@ object CheckInContext {
         weekdayPlan: com.hyperlog.app.week.WeekdayPlan = com.hyperlog.app.week.WeekdayPlan.None,
         /** Your lift goals. */
         goals: List<LiftGoal> = emptyList(),
+        /** Your training style, in every check-in. */
+        style: TrainingStyle = TrainingStyle(),
     ): CheckInFrame {
         val context = buildString {
             appendLine(intro(plan != null, gyms, lowest))
@@ -48,7 +50,7 @@ object CheckInContext {
                 appendLine()
             }
             with(AskClaude) {
-                situation(plan, sessions, library, zone, today, null, false, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gyms.associate { it.id to it.name })
+                situation(plan, sessions, library, zone, today, null, false, lastTrained, weekdays.ifEmpty { weekdayPlan.days }, weeklySets, weekdayPlan, gyms.associate { it.id to it.name }, style)
             }
         }
         return CheckInFrame(context.trimEnd(), CoachTools.all(plan?.program))
