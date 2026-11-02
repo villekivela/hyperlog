@@ -21,7 +21,7 @@ class FixedColoursTest {
             for (dark in listOf(false, true)) {
                 add("RIR $rir number" to rirNumberColor(rir, dark))
                 add("RIR $rir badge" to rirBadgeColor(rir, dark))
-                add("RIR $rir badge edge" to rirBadgeEdge(rir, dark))
+                rirBadgeEdge(rir, dark)?.let { add("RIR $rir badge edge" to it) }
             }
         }
         Direction.entries.forEach { add("trend $it" to it.color) }

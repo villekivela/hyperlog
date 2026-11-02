@@ -1268,14 +1268,16 @@ old app, and "Check for updates" (Distribution). Debug builds add Scripted coach
   sessions, Last time in a why-line, a logged row on the logging screen) is a filled chip, a badge.
   An outline is the scale's colour, darkened in light mode (`#D5544A`, `#AA741E`, `#4A8983`) so it
   keeps 3:1 against every light surface in daylight; dark mode keeps the base colours (`#D9645B`,
-  `#E0A84E`, `#6BAFA9`). A fill is a tonal badge (the owner's call, 2026-11-01, replacing the solid
-  badge of 2026-10-16): a soft tint of the base colour, opaque so it looks the same on any surface
-  (14% over white in light, `#FAE9E8`, `#FBF3E6`, `#EAF4F3`; 20% over the dark card in dark,
-  `#482C38`, `#4A3A35`, `#323B47`), with a 1 dp edge of the outline's colour at 55% (light `#E69791`,
-  `#CEAD78`, `#92B9B5`; dark `#984B4B`, `#9C7643`, `#517B7D`) so it stays a chip on its card. **The
-  number takes the chip's colour**, on targets and badges alike: its hue, darker in light mode
-  (`#A52F26`, `#7D5516`, `#366460`) and lighter in dark (`#E4918B`, `#E1AA52`, `#7FBAB5`), so it keeps
-  4.5:1 on its badge and on every neutral surface. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
+  `#E0A84E`, `#6BAFA9`). In dark mode a fill is a deep shade of the base colour's hue (`#952A22`,
+  `#825917`, `#36635F`) with no edge (the owner's call, 2026-11-02, #118, replacing 2026-11-01's dark
+  tint). In light mode it is a tonal badge (the owner's call, 2026-11-01, replacing the solid badge
+  of 2026-10-16): a soft tint of the base colour, opaque so it looks the same on any surface (14%
+  over white, `#FAE9E8`, `#FBF3E6`, `#EAF4F3`), with a 1 dp edge of the outline's colour at 55%
+  (`#E69791`, `#CEAD78`, `#92B9B5`) so it stays a chip on its white card. **The number takes the
+  chip's colour**, on targets and badges alike: its hue, darker in light mode (`#A52F26`, `#7D5516`,
+  `#366460`) and pale in dark (`#F2C8C5`, `#F4E1C2`, `#D1E6E4`), so it keeps 4.5:1 on its badge and
+  on every neutral surface. A pale number on a solid fill would drop under 4.5:1 in light mode, so
+  light keeps the tint. The chip is 1.25 em tall and centred on the line, its number 0.8 em semibold with
   0.45 em either side; corners are 4 dp, so a chip reads as a tag, never as the accent or a
   button. A set's parts and its chip are joined by no-break spaces, so a line wraps only between
   sets, never inside one or before its chip (`45 × 10 + 3 + 3 + 3 [2]`). TalkBack reads
