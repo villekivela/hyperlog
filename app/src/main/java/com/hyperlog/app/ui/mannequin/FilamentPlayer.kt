@@ -70,12 +70,12 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
     private val sky: IndirectLight
     private val uiHelper = UiHelper(UiHelper.ContextErrorPolicy.DONT_CHECK)
     private val choreographer = Choreographer.getInstance()
-    private val timeline = RepTimeline.Default
 
     private var swapChain: SwapChain? = null
     private var asset: FilamentAsset? = null
     private var animator: Animator? = null
     private var duration = 1f
+    private var timeline = RepTimeline(lowering = 1f, bottom = 0f, lifting = 1f, top = 0f)
     private var stage: StageCamera? = null
     private var azimuth = 0f
     private var aspect = 1.0
@@ -147,7 +147,7 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
         uiHelper.attachTo(view)
     }
 
-    override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera) {
+    override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera, tempo: RepTimeline) {
         val loaded = assetLoader.createAsset(glb) ?: return
         // Another clip replaces the one before, and fades in again.
         asset?.let {
@@ -155,6 +155,8 @@ internal class FilamentPlayer(context: Context) : MannequinPlayer {
             assetLoader.destroyAsset(it)
         }
         shown = false
+        timeline = tempo
+        playedNanos = 0L
         // The clip reads the mannequin's mesh and skin from a file it shares with every other clip.
         // The engine uploads them from that buffer when it next flushes, at the stage's first
         // frame, and nothing else keeps the buffer alive, so the player holds it: freed earlier,

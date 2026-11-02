@@ -58,6 +58,21 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   key; anything else, a point or a list included, is replaced whole. Likes chain.
 - **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
   baked, from the top (0 s) to the bottom (1 s).
+- **`body.arch`** (lying motions) bends the back: three angles, in degrees, added to the spine's
+  lean for the lumbar, chest and upper-back segments. The lumbar and chest turn up and the upper
+  back down, which lifts the chest and the lower back off the pad while the upper back and the
+  hips stay on it.
+- **`top.shrug`, `bottom.shrug`** (pulldown) lift the shoulders, in degrees: let up into the stretch
+  at the top, down again as the elbows drive down. **`grip.elbows`** turns the elbows out from the
+  sides: 1 out wide, 0 straight down by the sides (a pulldown's default is 0.8; the bench's, 0.9).
+- **`grip.rotate`** (any pose with hands) twists the forearms, in degrees: 0 overhand, 90 neutral
+  (palms toward each other), 180 underhand (palms toward the face). The default is 0; the
+  close-grip pulldown is 180.
+- **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
+  the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without
+  one takes its motion's default (`tempo.mjs`). The bake writes it into `mannequins.json`, and the
+  phone plays the baked lowering forward over `lowering`, holds `bottom`, plays it backward over
+  `lifting` and holds `top`.
 - **Side-on angles**, as `trace` measures them: `shin` leans the knee forward of the ankle, `thigh`
   puts the hip behind the knee (90 is a level thigh), `trunk` leans the line from the hips to the
   shoulders forward (negative leans back), `upperArm` and `forearm` swing the elbow and the hand
@@ -188,6 +203,14 @@ The first batch's traces:
 | `barbell_squat` | the library's technique video, UGwmUJkTIx8, 0–20 s | shin, thigh, trunk (the arms hold the bar out of sight) |
 | `triceps_pressdown` | the library's technique video, B5S2mbg0g5c, 0–11 s | all |
 
+## Rendering a pose
+
+`node render.mjs <id> [out-dir]` writes `<id>-side.png` and `<id>-front.png`, the top of the rep
+beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
+colours. A lying lift is seen from the head end, and equipment standing well in front of the body
+(a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
+Use it for a pull request's screenshots.
+
 ## Reviewing a batch
 
 `npm run review -- <batch>` checks each exercise of the batch and builds
@@ -195,6 +218,20 @@ The first batch's traces:
 tempo, turned by a drag, with its check results, an OK button and a note box. The clips are in the
 page, so it publishes alone. Publish it as an Artifact with the `db` capability
 (`capabilities: { db: {} }`); republish to the same page after each round of fixes.
+
+Each card has a **Tune** panel: a slider for each number of the exercise's pose entry (and the
+levers its movement offers that the entry leaves at the default), the body posed live in place of
+the clip with the tool's own modules (`bundle.mjs` bundles them, and `tune.mjs` says which numbers
+are sliders), the rep looping or held at the top or the bottom, and the automatic checks re-run on
+what it shows. Held at the top or the bottom, it also shows **drag handles** (`handles.mjs`): dots on
+the hands, elbows, feet, hips and chest, where the entry has numbers for them. A drag is saved as
+those same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
+`body.arch`), so the sliders follow it and the rig re-solves the limb. OK saves what was tuned, as `{ path: value }` in `verdicts/<id>.tuned` (JSON text;
+a point is saved whole, `top.bar`). `npm run review -- status <batch>` lists them as `tuned`, and
+`npm run review -- apply <batch>` puts them into `poses.mjs` as text (`patch.mjs`, so the comments
+stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; write the same
+`clip` into the page's `verdicts/<id>` (and clear its `tuned`) so the OK holds for the new clip.
+Read the diff after: a comment may now describe the old number.
 
 The page keeps one verdict per exercise in its database, `verdicts/<id>`:
 `{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw. Read them back
@@ -205,6 +242,8 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
 
 ## Files
 
+- `render.mjs`: PNGs of a pose, with no GPU.
+- `bundle.mjs`, `tune.mjs`, `handles.mjs`, `patch.mjs`: the review page's Tune panel: the modules it runs, its sliders, its drag handles, and `review apply`'s text patch.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses

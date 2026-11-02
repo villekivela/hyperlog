@@ -123,7 +123,14 @@ function jointsPast(rig) {
  */
 export async function checkPose(id, { poses } = {}) {
   const entry = prepare(id, poses);
-  const { rig, kit, pose } = await buildStage(entry);
+  return { id, checks: checkStage(entry, await buildStage(entry)) };
+}
+
+/**
+ * The same checks over a built stage (`buildStage`), on `frames` frames of the lowering. The
+ * review page's Tune panel runs them live on fewer.
+ */
+export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
   const parts = solids(kit);
   const vertices = bodyVertices(rig);
   const restAnkle = rig.rest.foot_l.p.y;
@@ -133,8 +140,8 @@ export async function checkPose(id, { poses } = {}) {
     if (past > worst[check].past) worst[check] = { past, frame, found };
   };
   const v = new THREE.Vector3();
-  for (let f = 0; f < FRAMES; f++) {
-    const P = pose(f / (FRAMES - 1));
+  for (let f = 0; f < frames; f++) {
+    const P = pose(f / (frames - 1));
     for (const k of ['l', 'r']) {
       const s = sideOf(rig, k);
       const miss = heldAt(rig, k).distanceTo(gripTarget(P, s));
@@ -164,7 +171,7 @@ export async function checkPose(id, { poses } = {}) {
     if (entry.trace) {
       const measured = posedAngles(rig);
       for (const [k, samples] of Object.entries(entry.trace.angles)) {
-        const traced = sample(samples, f / (FRAMES - 1));
+        const traced = sample(samples, f / (frames - 1));
         const off = Math.abs(measured[k] - traced);
         note('trace', off - LIMITS.trace, f, `${k} ${measured[k].toFixed(0)}° against the trace's ${traced.toFixed(0)}°`);
       }
@@ -172,5 +179,5 @@ export async function checkPose(id, { poses } = {}) {
   }
   if (worst.equipment.frame === null) worst.equipment = { past: -Infinity, frame: null, found: 'nothing inside the kit' };
   const checks = Object.fromEntries(CHECKS.map((c) => [c, { ok: !(worst[c].past > 0), frame: worst[c].frame, found: worst[c].found }]));
-  return { id, checks };
+  return checks;
 }

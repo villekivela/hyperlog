@@ -164,7 +164,8 @@ export function heldAt(rig, k) {
 
 /**
  * Poses the rig from a pose frame: the hip centre and trunk direction, the head's direction, the
- * ankles, the feet's way, knee and elbow poles, and where the hands hold.
+ * ankles, the feet's way, knee and elbow poles, and where the hands hold. A pose can also bend
+ * the spine (`spine`) or lift the shoulders (`shrug`).
  */
 export function poseRig(rig, P) {
   const { bones, rest, dims: L } = rig;
@@ -176,8 +177,18 @@ export function poseRig(rig, P) {
   const pelvisWorld = P.hipC.clone().sub(rig.pelvisToHips.clone().applyQuaternion(pelvisDelta));
   bones.pelvis.position.copy(bones.pelvis.parent.worldToLocal(pelvisWorld));
   bones.pelvis.updateMatrixWorld(true);
-  for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.u, X);
+  // The spine runs rigid along u unless the pose bends it: `spine` gives the direction of a bone's
+  // segment (an arched back).
+  for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.spine?.[n] ?? P.u, X);
   aim(rig, 'neck_01', P.headDir, X);
+  // Shoulders let up (`shrug`, degrees) or down: each collarbone turns about the body's front axis.
+  if (P.shrug) {
+    const front = X.clone().cross(P.u).normalize();
+    for (const k of ['l', 'r']) {
+      const clavicle = bones['clavicle_' + k];
+      setWorldQuat(clavicle, new THREE.Quaternion().setFromAxisAngle(front, sideOf(rig, k) * rad(P.shrug)).multiply(wquat(clavicle)));
+    }
+  }
   for (const k of ['l', 'r']) {
     const s = sideOf(rig, k);
     const i = s < 0 ? 0 : 1;
@@ -198,20 +209,25 @@ export function poseRig(rig, P) {
     // it along the fingers and off it on the back of the hand. The forearm sets both, so iterate.
     const sh = wpos(bones['upperarm_' + k]);
     const grip = gripTarget(P, s);
-    const inward = acrossOf(P, s);
+    const along = acrossOf(P, s);
     const hr = rest['hand_' + k];
     const handRest = frame(hr.dir, hr.across).invert();
+    // The forearm twists the knuckle line about the fingers, from overhand (0°) through neutral to
+    // underhand (180°); the palm turns with it, and so does the grip's offset.
+    const twist = (fingers) => along.clone().applyAxisAngle(fingers, -s * rad(P.gripRotate ?? 0));
     let wrist = grip.clone();
     let arm;
     for (let it = 0; it < 4; it++) {
       arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
       const fingers = arm.end.clone().sub(arm.mid).normalize();
+      const inward = twist(fingers);
       const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
       wrist = grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff);
     }
     const a1 = arm.mid.clone().sub(sh);
     const a2 = arm.end.clone().sub(arm.mid);
     aim(rig, 'upperarm_' + k, a1, a1.clone().cross(arm.pole));
+    const inward = twist(a2.clone().normalize());
     aim(rig, 'lowerarm_' + k, a2, inward);
     aim(rig, 'hand_' + k, a2, inward);
   }

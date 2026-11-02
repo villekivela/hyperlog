@@ -40,14 +40,16 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'bench_press',
     kit: { barbell: {}, bench: {} },
-    // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor.
-    // The head lies back on the pad.
-    body: { hip: [0.55, 0.28], trunk: -89, head: -22 },
-    feet: { stance: 0.3, z: 0.86, toeOut: 25 },
-    // From locked out over the shoulders to the lower chest, the elbows tucked about 50°.
-    top: { bar: [1.06, -0.19] },
-    bottom: { bar: [0.71, -0.05] },
-    grip: { width: 0.4, elbows: 0.55 },
+    // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor
+    // back toward the hips. A slight arch: the upper back and the hips on the pad, the chest up and
+    // a gap under the lower back. The head lies back on the pad.
+    body: { hip: [0.55, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
+    feet: { stance: 0.325, z: 0.445, toeOut: 25 },
+    // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
+    // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
+    top: { bar: [1.15, -0.23] },
+    bottom: { bar: [0.71, -0.09] },
+    grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
@@ -66,8 +68,15 @@ export const POSES = {
     camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
   },
 
-  // A narrower grip, pulled to the upper chest rather than as low.
-  close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: { bar: [1.14, 0.02] } },
+  // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
+  // the top with the shoulders let up into the stretch, and the elbows drive straight down by the
+  // sides. Underhand: the palms face the lifter.
+  close_grip_lat_pulldown: {
+    like: 'lat_pulldown',
+    grip: { width: 0.24, elbows: 0.0, rotate: 180 },
+    top: { bar: [1.70, 0.02], shrug: 9 },
+    bottom: { bar: [1.14, 0.02], shrug: 0 },
+  },
 
   triceps_pressdown: {
     equipment: 'cable',
@@ -104,10 +113,10 @@ export const POSES = {
     body: { hip: [0.56, 0], trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The handles at mid-chest: out in front at the top, back to the shoulders' line at the bottom.
-    top: { handle: [0.88, 0.36], press: 0 },
-    bottom: { handle: [0.88, -0.01], press: 1 },
+    top: { handle: [0.94, 0.42], press: 0 },
+    bottom: { handle: [1.055, -0.01], press: 1 },
     lever: 0.85,
-    grip: { width: 0.27 },
+    grip: { width: 0.385 },
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 };

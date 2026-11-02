@@ -3,11 +3,11 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
-import { BATCHES, buildReview, batchStatus } from './review.mjs';
+import { BATCHES, buildReview, batchStatus, applyTunedValues } from './review.mjs';
 import { readGlb } from './glb.mjs';
 
 let clips;
@@ -79,4 +79,37 @@ test('a batch is done only when every exercise is OK for the clip it has now', a
   assert.deepEqual(by.leg_press, { id: 'leg_press', state: 'changed', note: '' });
   assert.deepEqual(by.machine_chest_press, { id: 'machine_chest_press', state: 'waiting', note: '' });
   assert.deepEqual(by.barbell_rdl, { id: 'barbell_rdl', state: 'ok', note: '' });
+});
+
+test('an OK with tuned values is not done until review apply has put them in poses.mjs', async () => {
+  const hash = await sha(path.join(clips, 'barbell_squat.glb'));
+  const verdicts = Object.fromEntries(BATCHES.prototype.map((id) => [id, { ok: true, clip: 'x' }]));
+  const none = await batchStatus('prototype', { barbell_squat: { ok: true, clip: hash } }, { clips });
+  assert.equal(none.exercises.find((e) => e.id === 'barbell_squat').state, 'ok');
+  const tuned = JSON.stringify({ 'feet.stance': 0.2 });
+  const { exercises } = await batchStatus('prototype', { ...verdicts, barbell_squat: { ok: true, clip: hash, tuned } }, { clips });
+  assert.equal(exercises.find((e) => e.id === 'barbell_squat').state, 'tuned');
+  assert.deepEqual(exercises.find((e) => e.id === 'barbell_squat').tuned, { 'feet.stance': 0.2 });
+});
+
+test('the page carries the Tune panel: the bundled modules, each exercise\'s entry and the mannequin', () => {
+  const data = pageData();
+  assert.ok(data.mannequin.startsWith('data:model/gltf-binary;base64,'));
+  assert.equal(data.exercises.find((e) => e.id === 'barbell_bench_press').entry.grip.width, 0.4);
+  assert.ok(page.includes('const tune = (function (THREE, GLTFLoader)'));
+  assert.ok(!page.includes('/*TUNE*/') && !page.includes('/*BATCH*/'));
+});
+
+test('review apply puts the tuned values of the OK\'d exercises into poses.mjs and nothing else', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'apply-'));
+  const file = path.join(dir, 'poses.mjs');
+  const original = await readFile(new URL('./poses.mjs', import.meta.url), 'utf8');
+  await writeFile(file, original);
+  const verdicts = {
+    barbell_bench_press: { ok: true, clip: 'x', tuned: JSON.stringify({ 'grip.width': 0.45 }) },
+    barbell_squat: { ok: false, clip: 'x', tuned: JSON.stringify({ 'feet.stance': 0.2 }) },
+  };
+  assert.deepEqual(await applyTunedValues('prototype', verdicts, file), ['barbell_bench_press']);
+  const after = await readFile(file, 'utf8');
+  assert.equal(after, original.replace('grip: { width: 0.4, elbows: 0.9 }', 'grip: { width: 0.45, elbows: 0.9 }'));
 });

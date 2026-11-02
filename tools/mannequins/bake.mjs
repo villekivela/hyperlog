@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { tempoOf } from './tempo.mjs';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkPose } from './checks.mjs';
@@ -88,7 +89,7 @@ async function bake(id, poses) {
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip] });
   return {
     glb: Buffer.from(glb),
-    entry: { clip: `${id}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, resources: [SHARED] },
+    entry: { clip: `${id}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, tempo: tempoOf(entry), resources: [SHARED] },
   };
 }
 

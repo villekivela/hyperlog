@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.mannequin.Mannequins
+import com.hyperlog.app.mannequin.RepTimeline
 import com.hyperlog.app.mannequin.StageCamera
 import com.hyperlog.app.ui.settings.SettingsScreen
 import com.hyperlog.app.ui.settings.StartingWeightsStatus
@@ -35,11 +36,15 @@ class MannequinGalleryTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     private val loaded = mutableListOf<Int>()
+    private val tempos = mutableListOf<RepTimeline>()
     private val factory = MannequinPlayers { c ->
         object : MannequinPlayer {
             override val view = View(c)
             override var onShown: () -> Unit = {}
-            override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera) { loaded += glb.remaining() }
+            override fun load(glb: ByteBuffer, resources: Map<String, ByteBuffer>, camera: StageCamera, tempo: RepTimeline) {
+                loaded += glb.remaining()
+                tempos += tempo
+            }
             override fun play(still: Boolean) {}
             override fun pause() {}
             override fun turn(degrees: Float) {}
@@ -63,6 +68,7 @@ class MannequinGalleryTest {
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
         assertEquals(context.assets.open("mannequins/barbell_bench_press.glb").use { it.readBytes().size }, loaded.single())
+        assertEquals(Mannequins.fromAssets(context).clips.single { it.exerciseId == "barbell_bench_press" }.tempo, tempos.single())
     }
 
     private fun settings(onGallery: (() -> Unit)?) {

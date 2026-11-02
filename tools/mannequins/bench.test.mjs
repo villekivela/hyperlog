@@ -1,0 +1,64 @@
+// The bench press pose, from the owner's notes (#124): a slight arch, the feet back toward the hips,
+// and the arms straight and vertical at lockout.
+import { test, before } from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import { prepare } from './entries.mjs';
+import { buildStage } from './stage.mjs';
+import { wpos } from './rig.mjs';
+
+const PAD = 0.44;
+let stage;
+before(async () => { stage = await buildStage(prepare('barbell_bench_press')); });
+
+/** The lowest the body goes at each z, over the pad (metres), at the top of the rep. */
+function undersideAt(z) {
+  stage.pose(0);
+  const v = new THREE.Vector3();
+  let low = Infinity;
+  for (const m of stage.rig.meshes) {
+    for (let i = 0; i < m.geometry.attributes.position.count; i++) {
+      m.getVertexPosition(i, v).applyMatrix4(m.matrixWorld);
+      if (Math.abs(v.x) < 0.14 && v.y < 0.8 && Math.abs(v.z - z) < 0.03) low = Math.min(low, v.y - PAD);
+    }
+  }
+  return low;
+}
+
+test('the back arches: a gap under the lower back, the upper back and the hips on the pad', () => {
+  assert.ok(undersideAt(0.05) > 0.03, `lower back ${undersideAt(0.05)}`);
+  assert.ok(undersideAt(-0.2) < 0.015, `upper back ${undersideAt(-0.2)}`);
+  assert.ok(undersideAt(0.25) < 0.015, `hips ${undersideAt(0.25)}`);
+});
+
+test('the feet are back toward the hips and flat', () => {
+  stage.pose(0);
+  const ankle = wpos(stage.rig.bones.foot_l);
+  const ball = wpos(stage.rig.bones.ball_l);
+  assert.ok(ankle.z < 0.7, `ankles at z ${ankle.z}`);
+  assert.ok(Math.abs(ankle.y - stage.rig.dims.ankleY) < 0.01 && ball.y < 0.03, 'flat on the floor');
+});
+
+test('at lockout the arms are straight and the forearms stand over the elbows', () => {
+  stage.pose(0);
+  const at = (n) => wpos(stage.rig.bones[n]);
+  const upper = at('lowerarm_l').sub(at('upperarm_l'));
+  const fore = at('hand_l').sub(at('lowerarm_l'));
+  const deg = (r) => (r * 180) / Math.PI;
+  assert.ok(deg(upper.angleTo(fore)) < 8, `elbow bends ${deg(upper.angleTo(fore))}°`);
+  // Side-on, vertical: no more than 6° of lean.
+  for (const w of [upper, fore]) assert.ok(Math.abs(deg(Math.atan2(w.z, w.y))) < 6, `leans ${deg(Math.atan2(w.z, w.y))}°`);
+});
+
+test('the grip is a normal bench grip, about 1.5 shoulder widths, with the forearms vertical at the bottom', () => {
+  const at = (n) => wpos(stage.rig.bones[n]);
+  const deg = (r) => (r * 180) / Math.PI;
+  stage.pose(0);
+  const shoulderWidth = 2 * at('upperarm_l').x;
+  const grip = 2 * at('hand_l').x;
+  assert.ok(grip / shoulderWidth > 1.6, `hands ${grip} apart against shoulders ${shoulderWidth}`);
+  stage.pose(1);
+  const fore = at('hand_l').sub(at('lowerarm_l'));
+  assert.ok(Math.abs(deg(Math.atan2(fore.x, fore.y))) < 6, `forearm leans ${deg(Math.atan2(fore.x, fore.y))}° front-on`);
+  assert.ok(Math.abs(deg(Math.atan2(fore.z, fore.y))) < 15, `forearm leans ${deg(Math.atan2(fore.z, fore.y))}° side-on`);
+});
