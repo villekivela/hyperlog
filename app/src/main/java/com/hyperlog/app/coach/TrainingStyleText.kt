@@ -16,7 +16,7 @@ internal object TrainingStyleText {
         appendLine("- Volume: ${t.volume} work sets per muscle a week, ${acrossBlock(t.acrossBlock, t.volume)}")
         appendLine("- Frequency: each muscle ${frequency(t.frequency)} a week")
         appendLine("- How hard: last set 0–1 RIR, earlier sets 1–2 RIR")
-        appendLine("- Failure: ${failure(t.failure)}")
+        appendLine("- Failure: ${failure(t.failure, t.calibration)}")
         appendLine("- Calibration: ${calibration(t.calibration)}")
         appendLine("- Rep ranges: compounds ${t.compound}, isolation ${t.isolation}")
         aboutMe(style.aboutMe, names)
@@ -67,7 +67,7 @@ internal object TrainingStyleText {
         own.volume?.let { appendLine("Volume for this program: $it") }
         own.acrossBlock?.let { appendLine("Across a block for this program: ${acrossBlock(it, volume)}") }
         own.frequency?.let { appendLine("Frequency for this program: each muscle ${frequency(it)} a week") }
-        own.failure?.let { appendLine("Failure for this program: ${failure(it)}") }
+        own.failure?.let { appendLine("Failure for this program: ${failure(it, own.calibration ?: standing.calibration)}") }
         own.calibration?.let { appendLine("Calibration for this program: ${if (it) "on" else "off"}") }
         own.compound?.let { appendLine("Compound reps for this program: $it") }
         own.isolation?.let { appendLine("Isolation reps for this program: $it") }
@@ -109,9 +109,12 @@ internal object TrainingStyleText {
         Frequency.ThreeOrMore -> "3 or more times"
     }
 
-    private fun failure(failure: FailureRule) = when (failure) {
+    /** Which lifts go to failure; with [calibration] on, Never still leaves room for the calibration sets. */
+    private fun failure(failure: FailureRule, calibration: Boolean) = when (failure) {
         FailureRule.IsolationAndMachines -> "isolation exercises and machine, cable and Smith machine compounds only"
-        FailureRule.Never -> "never; every set stops at 1 RIR or more"
+        FailureRule.Never ->
+            if (calibration) "never, apart from calibration sets; every other set stops at 1 RIR or more"
+            else "never; every set stops at 1 RIR or more"
         FailureRule.AnyLift -> "any lift's last set may go to 0 RIR"
     }
 

@@ -89,6 +89,19 @@ class TrainingStyleTest {
     }
 
     @Test
+    fun neverToFailureMakesRoomForCalibrationSetsWhenTheyAreOn() {
+        // Calibration holds with Never (SPEC, Training targets), so the two lines mustn't contradict.
+        val on = both(TrainingStyle(TrainingTargets(failure = FailureRule.Never, calibration = true))).first()
+        assertTrue(on, on.contains("- Failure: never, apart from calibration sets; every other set stops at 1 RIR or more\n"))
+        val off = both(TrainingStyle(TrainingTargets(failure = FailureRule.Never, calibration = false))).first()
+        assertTrue(off, off.contains("- Failure: never; every set stops at 1 RIR or more\n"))
+        // A program's own Never reads with the calibration it runs with.
+        val own = plan.copy(program = program.copy(targets = ProgramTrainingTargets(failure = FailureRule.Never)))
+        val text = both(TrainingStyle(), own).first()
+        assertTrue(text, text.contains("Failure for this program: never, apart from calibration sets; every other set stops at 1 RIR or more\n"))
+    }
+
+    @Test
     fun theRunningProgramsFocusAndOwnTargetsGoWithIt() {
         val focused = plan.copy(
             program = program.copy(

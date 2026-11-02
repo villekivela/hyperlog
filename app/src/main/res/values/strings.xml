@@ -902,6 +902,7 @@
     <string name="style_failure_safe_about">To failure on isolation and machine, cable or Smith lifts; free-weight compounds stop at 1 RIR</string>
     <string name="style_failure_never">Never</string>
     <string name="style_failure_never_about">Every set stops at 1 RIR or more</string>
+    <string name="style_failure_never_calibration_about">Every set but the calibration sets stops at 1 RIR or more</string>
     <string name="style_failure_any">Any lift</string>
     <string name="style_failure_any_about">Any exercise’s last set may go to failure</string>
     <string name="style_calibration">Calibration sets</string>

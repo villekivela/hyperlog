@@ -218,7 +218,8 @@ private fun Targets(t: TrainingTargets, onTargets: (TrainingTargets) -> Unit) {
     val failureAbout = stringResource(
         when (t.failure) {
             FailureRule.IsolationAndMachines -> R.string.style_failure_safe_about
-            FailureRule.Never -> R.string.style_failure_never_about
+            // Calibration holds with Never, so the line says so while it's on.
+            FailureRule.Never -> if (t.calibration) R.string.style_failure_never_calibration_about else R.string.style_failure_never_about
             FailureRule.AnyLift -> R.string.style_failure_any_about
         },
     )

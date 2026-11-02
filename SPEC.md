@@ -2017,7 +2017,9 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   The other choices read: Goal `strength` or `hypertrophy and strength`; Rising `8–14 work sets
   per muscle a week, rising across a block: near 8 in its first week, adding sets each week toward
   14, then a deload`; Frequency `once`, `twice` or `3 or more times` a week; Failure `never; every
-  set stops at 1 RIR or more` or `any lift's last set may go to 0 RIR`; Calibration `off`. Each
+  set stops at 1 RIR or more` (with calibration on, `never, apart from calibration sets; every other
+  set stops at 1 RIR or more`, and the page's line likewise, so the two rules never contradict) or
+  `any lift's last set may go to 0 RIR`; Calibration `off`. Each
   ache is a line of its own (`- Aches: Knees: clicks on deep squats`), and an exercise no longer
   in the library goes by its id alone. An About me field left empty is left out, and so is the
   heading when all are. With a program running, the program's lines start with `Program focus:
