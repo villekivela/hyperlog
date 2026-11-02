@@ -31,8 +31,10 @@ configuration, iOS, web, any server.
   cards (`#E2E2E6` light, `#44444A` dark), for the selected tab and chips that are on. **Every
   connected button group picks in primaryContainer** with onPrimaryContainer words, the accent of
   the selected calendar day, the selected tab and Start (decided by the owner on #58; in light it
-  is the same near-black as primary). In dark the choices not picked sit in a
-  `surfaceContainerLowest` well; in light they are the white card. Tertiary follows primary;
+  is the same near-black as primary). The choices not picked sit in a faint
+  well: in dark `surfaceContainerLowest`; in light the screen's `surfaceContainer` (`#EEEEF0`) on
+  a card, and `surfaceContainerHighest` (`#E4E4E8`) for a group on the screen itself, as History's
+  Sessions | Progress and Program's blocks (the owner on #138, replacing #58's white card in light). Tertiary follows primary;
   secondary and tertiaryContainer (advice cards, technique pills) are greys of their own step. The
   RIR, progression, plate and error colours stay fixed; a coloured accent would have to keep 30° of
   hue from each of them, and a neutral one never competes. Light and dark follow the system

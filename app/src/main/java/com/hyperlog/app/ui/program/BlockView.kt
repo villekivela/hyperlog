@@ -137,6 +137,8 @@ private fun BlockChoice(program: Program, picked: Int, onBlock: (Int) -> Unit) {
             ConnectedChoice(
                 names, picked, onBlock,
                 Modifier.padding(horizontal = CardMargin),
+                // On the screen between the cards, not on one.
+                color = com.hyperlog.app.ui.theme.Tones.screen,
                 contentPadding = PaddingValues(horizontal = 8.dp),
                 fitLabels = true,
             )

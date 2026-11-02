@@ -324,17 +324,24 @@ fun ConnectedChoice(
 data class ChoiceColors(val checked: Color, val onChecked: Color, val unchecked: Color, val onUnchecked: Color)
 
 /**
- * The colours of a connected choice on [card], or on the accent card when [onAccent]. On a
- * neutral card the picked one is filled primaryContainer, the accent of the selected day,
- * tab and Start (the owner's call, #58). On the accent card (primaryContainer) that fill would
- * vanish, so the picked one is filled onPrimaryContainer with the card's accent for its words, as
- * the hero's Start, and the others sit in a shaded well.
+ * The colours of a connected choice on [card] (what it sits on: a card, or [Tones.screen]), or on
+ * the accent card when [onAccent]. On a neutral card the picked one is filled primaryContainer,
+ * the accent of the selected day, tab and Start (the owner's call, #58). On the accent card
+ * (primaryContainer) that fill would vanish, so the picked one is filled onPrimaryContainer with
+ * the card's accent for its words, as the hero's Start, and the others sit in a shaded well.
  */
 fun choiceColors(scheme: ColorScheme, card: Color, onAccent: Boolean): ChoiceColors = with(scheme) {
     if (onAccent) ChoiceColors(onPrimaryContainer, primaryContainer, scrim.copy(alpha = 0.16f), onPrimaryContainer)
-    // In dark the others sit in a well a tone below the screen, so the near-white pick stands
-    // well off them; in light they're the white card.
-    else ChoiceColors(primaryContainer, onPrimaryContainer, if (surface.luminance() < 0.5f) surfaceContainerLowest else card, onSurfaceVariant)
+    // The others sit in a faint well (the owner, #138, replacing #58's white in light): in dark a
+    // tone below the screen; in light the screen's grey on a card, and a step darker on the
+    // screen itself, so the well never vanishes into what it sits on.
+    else ChoiceColors(primaryContainer, onPrimaryContainer, well(card), onSurfaceVariant)
+}
+
+private fun ColorScheme.well(on: Color) = when {
+    surface.luminance() < 0.5f -> surfaceContainerLowest
+    on == surfaceContainer -> surfaceContainerHighest
+    else -> surfaceContainer
 }
 
 /** [choiceColors] as a toggle button's colours, for every connected group. */
