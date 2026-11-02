@@ -1428,8 +1428,8 @@ gallery (Technique videos).
 - **The mannequin** (owner, 2026-11-02, #120): at the top of the exercise's prescription sheet,
   above the note and the video button, a faceless mannequin does the movement in a loop, with plain
   generic equipment around it. It is a quick cue for which movement this is, not form instruction.
-  It is the Quaternius Universal Animation Library mannequin (CC0), drawn in a clay style (as in the prototype): perspective, soft
-  light, a floor shadow and the Graphite colours. No muscle tint.
+  It is the Quaternius Universal Animation Library mannequin (CC0), drawn in a clay style:
+  perspective, soft light, a floor shadow and the Graphite colours. No muscle tint.
   - **Behaviour:** it plays a loop of one rep on its own, with no pause. A horizontal drag turns it;
     a vertical drag stays with the sheet. A double-tap resets the view. With animations removed it
     holds still at the bottom of the rep. While the clip loads, the stage's background shows, then
