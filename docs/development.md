@@ -89,7 +89,9 @@ When the phone isn't free, an emulator stands in for it: the same screen, 1280 �
 
 The clips the prescription sheet plays are baked offline by `tools/mannequins/` (Node and
 three.js, see its README) and committed under `app/src/main/assets/mannequins/`. Debug builds list
-them in Settings → Debug → Mannequin gallery.
+them in Settings → Debug → Mannequin gallery. Poses are made in batches, each checked, reviewed on a
+published page and then swiped in the gallery (the README's Making a batch). Tracing a pose from a
+clip needs Python with MediaPipe and its model, which the project doesn't install.
 
 ## UI work: designer and tester
 

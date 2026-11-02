@@ -75,33 +75,45 @@ const seatedFeet = (e, L) => ({
   support: () => floor,
 });
 
+/**
+ * The spine's lean for a side-on trunk angle: the line from the hips to the shoulders, which is
+ * what a trace sees, runs a little behind the spine.
+ */
+const spineLean = (trunk, L) => rad(trunk) + Math.atan2(L.trunkBack, L.trunkUp);
+
 /** Where the trunk puts the shoulders' middle: up the spine, and a little behind it. */
 const shouldersOf = (hipC, u, L) => hipC.clone().addScaledVector(u, L.trunkUp).addScaledVector(forwardOf(u), -L.trunkBack);
 
-/** The hip centre and the trunk's lean of a body placed on a seat or a bench: `body.hip` is [y, z]. */
-const placed = (e, s) => ({ hipC: V(0, ...e.body.hip), lean: rad(s.trunk ?? e.body.trunk) });
+/** The hip centre and the spine's lean of a body placed on a seat or a bench: `body.hip` is [y, z]. */
+const placed = (e, s, L) => ({ hipC: V(0, ...e.body.hip), lean: spineLean(s.trunk ?? e.body.trunk, L) });
 
 export const MOTIONS = {
-  /** A barbell on the back: the legs bend, and the trunk leans until the bar is over midfoot. */
+  /**
+   * A barbell on the back, kept over the middle of the feet. Without a trunk angle, the legs bend
+   * as given and the trunk leans until the bar is over midfoot. With one (a traced squat), the
+   * body keeps its shape, knee and hip as given, and turns about the ankles until it is.
+   */
   squat(e, s, L) {
-    const hipC = standingHips(e, s, L);
-    const barAt = (lean) => {
+    const shaped = s.trunk !== undefined;
+    const at = (turn) => {
+      const shape = shaped ? { shin: s.shin + turn, thigh: s.thigh - turn } : s;
+      const hipC = standingHips(e, shape, L);
+      const lean = shaped ? spineLean(s.trunk + turn, L) : rad(turn);
       const u = trunkUp(lean);
-      return hipC.clone().addScaledVector(u, L.trunk + e.bar.up).addScaledVector(forwardOf(u), -e.bar.back);
+      return { hipC, u, bar: hipC.clone().addScaledVector(u, L.trunk + e.bar.up).addScaledVector(forwardOf(u), -e.bar.back) };
     };
     // A loaded bar stays over the middle of the feet, turned out as they are.
     const midfoot = L.midfoot * Math.cos(rad(e.feet.toeOut));
-    let lo = -0.4;
-    let hi = 1.4;
-    for (let i = 0; i < 32; i++) {
+    let lo = shaped ? -30 : -0.4;
+    let hi = shaped ? 30 : 1.4;
+    for (let i = 0; i < 40; i++) {
       const m = (lo + hi) / 2;
-      if (barAt(m).z > midfoot) hi = m; else lo = m;
+      if (at(m).bar.z > midfoot) hi = m; else lo = m;
     }
-    const lean = (lo + hi) / 2;
-    const u = trunkUp(lean);
+    const { hipC, u, bar } = at((lo + hi) / 2);
     const f = forwardOf(u);
     return {
-      hipC, u, bar: barAt(lean),
+      hipC, u, bar,
       // The head stays near upright, the eyes a little down, as the trunk leans.
       headDir: u.clone().add(V(0, 1.2, 0.15)).normalize(),
       ...floorFeet(e, L),
@@ -116,7 +128,7 @@ export const MOTIONS = {
    */
   hinge(e, s, L) {
     const hipC = standingHips(e, s, L);
-    const u = trunkUp(rad(s.trunk));
+    const u = trunkUp(spineLean(s.trunk, L));
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
     const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
@@ -134,7 +146,7 @@ export const MOTIONS = {
 
   /** Lying on a bench, pressing a bar from over the shoulders down to the chest along `bar` [y, z]. */
   bench_press(e, s, L) {
-    const { hipC, lean } = placed(e, s);
+    const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     return {
       hipC, u,
@@ -152,7 +164,7 @@ export const MOTIONS = {
 
   /** Seated under a thigh pad, pulling a bar from overhead to the chest along `bar` [y, z]. */
   pulldown(e, s, L) {
-    const { hipC, lean } = placed(e, s);
+    const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
     return {
@@ -171,7 +183,7 @@ export const MOTIONS = {
    */
   pressdown(e, s, L) {
     const hipC = standingHips(e, s, L);
-    const u = trunkUp(rad(s.trunk));
+    const u = trunkUp(spineLean(s.trunk, L));
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
@@ -181,7 +193,7 @@ export const MOTIONS = {
       ...floorFeet(e, L),
       bar: elbow.clone().addScaledVector(hanging(s.forearm), L.fore + L.gripAlong),
       grip: e.grip.width,
-      armPole: (side) => V(side * 0.25, 0, -1).normalize(),
+      armPole: (side) => V(side * 0.2, -1, -0.4).normalize(),
     };
   },
 
@@ -190,7 +202,7 @@ export const MOTIONS = {
    * down its rails as the knees bend to `knee` degrees.
    */
   leg_press(e, s, L) {
-    const { hipC, lean } = placed(e, s);
+    const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const sled = V(0, Math.SQRT1_2, Math.SQRT1_2);
@@ -228,7 +240,7 @@ export const MOTIONS = {
    * from `handle` [y, z] at the top, arms out in front, back to `handle` at the bottom.
    */
   chest_press(e, s, L) {
-    const { hipC, lean } = placed(e, s);
+    const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
     // The levers' pivot sits `lever` metres above the middle of the handles' path, which is an arc.

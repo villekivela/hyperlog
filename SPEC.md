@@ -1437,7 +1437,8 @@ gallery (Technique videos).
     a vertical drag stays with the sheet. A double-tap resets the view. With animations removed it
     holds still at the bottom of the rep. While the clip loads, the stage's background shows, then
     the mannequin fades in. It renders only while the sheet is open and the app is in front, and
-    the engine is released when the sheet closes.
+    the engine is released when the sheet closes. Where the renderer can't start (its native
+    library missing), the sheet shows as it does without a mannequin.
   - **Which exercises have one:** every shipped library exercise gets its own pose, in generic
     equipment, not one per movement pattern. An exercise without a pose yet shows the sheet as
     before. An exercise added on the phone has none, and a shipped exercise whose equipment is
@@ -1454,9 +1455,31 @@ gallery (Technique videos).
     shows, the turn and tilt it opens on), its tempo and its typical angle. A clip plays only for
     an exercise with its pose's equipment. The clips and the index are committed and shipped
     with the app; the phone poses nothing live. CI re-bakes them and fails on any difference.
+  - **Generic equipment** (#123): each kind in the library has a generic kit (barbell, dumbbells, a
+    flat or adjustable bench, a cable tower with its pulley and stack, and the machines by kind: the
+    leg press's sled, the chest press's levers), or is listed as missing in the tool. Stacks, sleds
+    and levers move with the rep.
+  - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
+    stay on the floor or plate, no limb passes through the equipment, and the joints stay within
+    range. A pose that fails one doesn't bake.
+  - **Tracing a clip** (owner, 2026-11-02, #123): `trace <clip> <time range>` runs pose estimation
+    on a side-on video of the lift, picks one clean rep, smooths it, and writes the side-on shin,
+    thigh, trunk and arm angles over its lowering as the pose's angle keyframes. The trace only sets
+    angles: the feet, hands, equipment contacts and tempo stay authored, and IK holds the contacts.
+    The checks flag a pose more than 10° off its trace. It is for side-on lifts; lifts whose arms
+    move out of the camera's plane, front-only clips, machines that hide the body and lying lifts
+    stay hand-authored. Clips and frames are never committed, only the angles, so baking and CI
+    never trace. The best source is the owner filming the lift side-on, with one camera and no cuts.
   - **Debug builds:** a gallery in Settings swipes through every clip.
   - **Checking:** the logic (which clip, which angle, the tempo phases) is tested in the JVM
     behind a seam; the pixels are checked by the owner, not by screenshot tests.
+  - **Batches and review** (#123): poses are made in batches, the first the prototype's seven
+    exercises (squat, bench, RDL, Lat Pulldown, Triceps Pressdown, Leg Press, Machine Chest Press)
+    and the Close-Grip Lat Pulldown. One command builds a batch's review page: each exercise loops
+    and can be turned, with its check results, an OK button and a note box. The owner's notes go
+    back to the agent, which fixes the poses and republishes. An OK is for the clip it was given on,
+    and a batch isn't done until every exercise in it is OK; then the owner swipes it once in the
+    debug gallery before its pull request merges.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The

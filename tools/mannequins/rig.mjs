@@ -92,17 +92,12 @@ export function buildRig(root) {
       }
     }
   }
-  // The shoulders' middle from the hips', along the spine and behind it: the bind pose holds the
-  // shoulders a little behind the hips.
-  const trunkRest = shMid.clone().sub(hipMid);
-  const spineRest = dirTo('pelvis', 'spine_01').normalize();
   const footRest = dirTo('foot_l', 'ball_l');
   const dims = {
     thigh: len('thigh_l', 'calf_l'), shin: len('calf_l', 'foot_l'),
     up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
     gripAlong: palmLength * 0.8, gripOff: 0.03,
     trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
-    trunkUp: trunkRest.dot(spineRest), trunkBack: -trunkRest.dot(X.clone().cross(spineRest)),
     // How far the foot pitches down from the ankle to the ball, standing flat.
     footPitch: Math.atan2(-footRest.y, Math.hypot(footRest.x, footRest.z)),
     // How far the middle of the sole is in front of the ankle joint.
@@ -131,7 +126,17 @@ export function buildRig(root) {
       });
     }
   }
-  return { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
+  const rig = { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
+  // Where the shoulders' middle sits from the hips' with the spine straightened upright, as poses
+  // straighten it: up the spine, and behind it. The bind pose's spine curves, so it isn't the same.
+  for (const n of SPINE.slice(0, 4)) aim(rig, n, UP, X);
+  root.updateMatrixWorld(true);
+  const hips = wpos(bones.thigh_l).add(wpos(bones.thigh_r)).multiplyScalar(0.5);
+  const shoulders = wpos(bones.upperarm_l).add(wpos(bones.upperarm_r)).multiplyScalar(0.5).sub(hips);
+  Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z });
+  for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
+  root.updateMatrixWorld(true);
+  return rig;
 }
 
 /** Which side a bone of side `k` ('l' or 'r') is on: -1 for -x, 1 for +x. */

@@ -8,6 +8,7 @@ export const POSES = {
     kit: { barbell: {} },
     // The shin and thigh come from the library's technique video (UGwmUJkTIx8), traced side-on;
     // the trunk leans until the bar is over the middle of the feet.
+    trace: 'barbell_squat',
     top: { shin: 6, thigh: 4 },
     bottom: { shin: 47, thigh: 92 },
     // Ankles this far either side of the middle, toes turned out, knees pushed out toward the toes.
@@ -23,10 +24,12 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'hinge',
     kit: { barbell: {} },
-    // Traced from a true side view (z3Nk7sbHZSU): the knees soften as the hips go back, and the
-    // bar runs down the thighs to mid-shin.
-    top: { shin: 4, thigh: 10, trunk: 5 },
-    bottom: { shin: 12, thigh: 50, trunk: 76 },
+    // The trunk is traced from a true side view (z3Nk7sbHZSU). The knee passes behind the plates
+    // there, so the shin and thigh are the trace's top and bottom, eased: the knees soften as the
+    // hips go back, and the bar runs down the thighs to mid-shin.
+    trace: 'barbell_rdl',
+    top: { shin: 13, thigh: 18, trunk: 11 },
+    bottom: { shin: 12, thigh: 49, trunk: 76 },
     feet: { stance: 0.12, toeOut: 6, kneesOut: 0 },
     bar: { z: 0.16 },
     grip: { width: 0.25 },
@@ -38,11 +41,11 @@ export const POSES = {
     motion: 'bench_press',
     kit: { barbell: {}, bench: {} },
     // On the back along the bench, the head toward -z, the thighs near flat to the feet on the floor.
-    body: { hip: [0.59, 0.28], trunk: -83 },
+    body: { hip: [0.55, 0.28], trunk: -89 },
     feet: { stance: 0.3, z: 0.86, toeOut: 25 },
     // From locked out over the shoulders to the lower chest, the elbows tucked about 50°.
-    top: { bar: [1.09, -0.19] },
-    bottom: { bar: [0.73, -0.05] },
+    top: { bar: [1.06, -0.19] },
+    bottom: { bar: [0.71, -0.05] },
     grip: { width: 0.4, elbows: 0.55 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
@@ -55,8 +58,8 @@ export const POSES = {
     body: { hip: [0.56, 0] },
     // Knees at about 95°, leaning back a little more as the elbows come down to the sides.
     feet: { stance: 0.16, z: 0.42, toeOut: 12 },
-    top: { trunk: -12, bar: [1.62, -0.04] },
-    bottom: { trunk: -22, bar: [1.03, 0.04] },
+    top: { trunk: -18, bar: [1.62, -0.04] },
+    bottom: { trunk: -27, bar: [1.03, 0.04] },
     grip: { width: 0.4 },
     camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
   },
@@ -69,6 +72,7 @@ export const POSES = {
     kit: { cable_tower: { column: 0.74, pulley: [2.05, 0.56], attachment: 'straight_bar' } },
     // Traced side-on from the library's video (B5S2mbg0g5c): standing straight, the forearms from
     // well above level down to the thighs.
+    trace: 'triceps_pressdown',
     top: { shin: 4, thigh: 6, trunk: 8, upperArm: 10, forearm: 117 },
     bottom: { shin: 4, thigh: 6, trunk: 8, upperArm: 10, forearm: 24 },
     feet: { stance: 0.13, toeOut: 10, kneesOut: 0.2 },
@@ -80,7 +84,7 @@ export const POSES = {
     equipment: 'machine',
     motion: 'leg_press',
     kit: { leg_press: { seat: [0.5, 0.04] } },
-    body: { hip: [0.62, 0], trunk: -50 },
+    body: { hip: [0.62, 0], trunk: -57 },
     top: { knee: 25 },
     bottom: { knee: 100 },
     feet: { stance: 0.15, toeOut: 12, line: 0.1, down: 0.05 },
@@ -94,7 +98,7 @@ export const POSES = {
     equipment: 'machine',
     motion: 'chest_press',
     kit: { chest_press: { seat: [0.47, 0.02] } },
-    body: { hip: [0.56, 0], trunk: -12 },
+    body: { hip: [0.56, 0], trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The handles at mid-chest: out in front at the top, back to the shoulders' line at the bottom.
     top: { handle: [0.88, 0.36], press: 0 },

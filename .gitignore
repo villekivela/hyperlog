@@ -19,3 +19,16 @@ local.properties
 
 # The mannequin tool's npm packages
 node_modules/
+
+# Tracing a pose: clips, frames and the pose model stay local; only the angles are committed
+tools/mannequins/**/*.mp4
+tools/mannequins/**/*.webm
+tools/mannequins/**/*.mov
+tools/mannequins/**/*.mkv
+tools/mannequins/**/*.png
+tools/mannequins/**/*.jpg
+tools/mannequins/**/*.task
+tools/mannequins/**/*.npz
+
+# A batch's built review page, published from here
+tools/mannequins/review/out/
