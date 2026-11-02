@@ -94,7 +94,9 @@ class CheckInScreenTest {
             HyperlogTheme {
                 val scope = rememberCoroutineScope()
                 val runner = remember {
-                    CheckInRunner(scope, CheckInStore(File(folder.root, "check_in.json")), { model }, { CheckInWorld(program, ids) }, { CheckInFrame("Context", CoachTools.all(program)) })
+                    CheckInRunner(scope, CheckInStore(File(folder.root, "check_in.json")), { model }, { CheckInWorld(program, ids) }, { CheckInFrame("Context", CoachTools.all(program)) },
+                        // On the main thread, so no write outlives the test and its folder.
+                        io = kotlinx.coroutines.Dispatchers.Main.immediate)
                 }
                 val view by runner.state.collectAsState()
                 val progress by runner.progress.collectAsState()

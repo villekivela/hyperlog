@@ -146,6 +146,24 @@ object CoachTools {
         "title" to string("The program's name."),
         "author" to string("Who wrote it."),
         "description" to string("What it is, in a sentence or two."),
+        "focus" to array(
+            choice(com.hyperlog.app.library.MuscleGroup.entries.map { it.label }, ""),
+            "The program focus: up to ${com.hyperlog.app.program.MAX_FOCUS} muscle groups to bring up, each once; empty for none.",
+        ),
+        "targets" to obj(
+            "goal" to choice(TrainingGoal.entries.map { it.key }, "The goal for this program."),
+            "volume" to string("Work sets per muscle a week, a range (\"14-20\"), each end ${TrainingStyleJson.VOLUME.first}–${TrainingStyleJson.VOLUME.last}."),
+            "acrossBlock" to choice(AcrossBlock.entries.map { it.key }, "How volume runs across a block."),
+            "frequency" to choice(Frequency.entries.map { it.key }, "Times a week each muscle is trained."),
+            "failure" to choice(FailureRule.entries.map { it.key }, "Which lifts may go to 0 RIR."),
+            "calibration" to bool("Whether each block's last week has calibration sets."),
+            "repRanges" to obj(
+                "compound" to string("Reps for compounds, a range (\"5-10\")."),
+                "isolation" to string("Reps for isolation exercises, a range (\"8-15\")."),
+                optional = setOf("compound", "isolation"),
+            ),
+            optional = setOf("goal", "volume", "acrossBlock", "frequency", "failure", "calibration", "repRanges"),
+        ),
         "blocks" to array(
             obj(
                 "id" to string("Lowercase letters, digits and _, unique in the program."),
@@ -192,7 +210,7 @@ object CoachTools {
             ),
             "The blocks in order; weeks run from 1 with no gaps.",
         ),
-        optional = setOf("author", "description"),
+        optional = setOf("author", "description", "focus", "targets"),
     )
 
     /** A program file's set line: [setLine]'s, and a back-off and week overrides. */

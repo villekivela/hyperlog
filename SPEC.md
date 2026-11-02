@@ -31,8 +31,10 @@ configuration, iOS, web, any server.
   cards (`#E2E2E6` light, `#44444A` dark), for the selected tab and chips that are on. **Every
   connected button group picks in primaryContainer** with onPrimaryContainer words, the accent of
   the selected calendar day, the selected tab and Start (decided by the owner on #58; in light it
-  is the same near-black as primary). In dark the choices not picked sit in a
-  `surfaceContainerLowest` well; in light they are the white card. Tertiary follows primary;
+  is the same near-black as primary). The choices not picked sit in a faint
+  well: in dark `surfaceContainerLowest`; in light the screen's `surfaceContainer` (`#EEEEF0`) on
+  a card, and `surfaceContainerHighest` (`#E4E4E8`) for a group on the screen itself, as History's
+  Sessions | Progress and Program's blocks (the owner on #138, replacing #58's white card in light). Tertiary follows primary;
   secondary and tertiaryContainer (advice cards, technique pills) are greys of their own step. The
   RIR, progression, plate and error colours stay fixed; a coloured accent would have to keep 30° of
   hue from each of them, and a neutral one never competes. Light and dark follow the system
@@ -1861,9 +1863,12 @@ principles stayed in its document. A training style has three parts: the **train
 **How I train** and **About me**. Neither the app nor what Claude is told names a coach; the
 research note names its sources.
 
-- **The page.** Settings' Coach group has a **Training style** row above the Claude key. It opens
-  a page with the training targets, How I train and About me, each field edited in place, and
-  **Set it up again**, which runs the wizard (below) from its first step on the current values.
+- **The page.** Settings' Coach group has a **Training style** row above the Claude key, reading
+  the goal and volume (`Hypertrophy · 8–14 sets a week`). It opens a page with the training
+  targets, How I train and About me, each field edited in place and kept as it changes (a range
+  as you leave its field with both ends right; a number field selects its number when tapped, so
+  typing replaces it), and **Set it up again**, which runs the wizard (below) from its
+  first step on the current values. Design: `docs/design/training-style.md`.
 - **The training targets** are standing: every New program starts from them. Volume and
   frequency are per muscle, the library's muscles (Quads, Hamstrings, Biceps, Side Delts…), and
   volume counts work sets as weekly sets do: 1 for each primary muscle of the exercise and 0.5
@@ -1891,18 +1896,29 @@ research note names its sources.
     too, as one set an exercise in one week; turning it off leaves it out.
   - **Rising** reads the range as your own landmarks: its bottom near the least volume that still
     grows muscle, its top near the most you recover from.
+  - **On the page** (the owner on #138), Across a block reads **Sets through a block**, its choices
+    **Same each week** (Steady) and **Build up each week** (Rising), and its line follows the
+    choice: "Same sets every week, then a deload" or "Adds sets each week toward 14, then a
+    deload", with the top of the range. Steady and Rising stay the kept values and what Claude
+    reads.
 - **Training targets for one program.** In a New program check-in you can ask for other training
   targets for that program alone ("more volume this time"). Claude writes them into the program's
   `targets` (`docs/program-format.md`), and the standing training targets stay as they are. Later
   check-ins and the review read a program's own training targets over the standing ones.
-- **How I train** is the training philosophy as text, written to Claude in your voice like the
-  rest of the context. The default ships as `app/src/main/assets/coach/how-i-train.md`: form
-  before load, a controlled lowering and full range; stretch-biased, stable exercises with
-  alternatives in every slot; blocks with a deload; no load in a program, since progression sets
-  the weights; and swapping around pain. It leaves the goal to the training targets. The page
-  shows it in a multi-line field with **Save**, and **Back to default** (asking first) once it
-  differs from the default. Only an edited text is kept; without one the asset is read, so an
-  update that changes the default reaches everyone who never edited it.
+- **How I train** is the training philosophy as principles, not prose to edit (the owner on
+  #138, trying the page on the phone). Each principle has a short label on the page and a full
+  sentence, in your voice, that Claude reads; the sentences live in one asset,
+  `app/src/main/assets/coach/how-i-train.json`, one per principle id, so a reworded sentence
+  reaches everyone, and you never see or edit them. It leaves the goal to the training targets.
+  - **Fixed rules**, always sent, listed with a check on one tile titled **Always**, never a
+    switch: **Form before load**
+    (`form`: full range, a controlled lowering, and a heavier weight never buys a sloppier rep),
+    **No loads in a program** (`no_load`: progression sets the weights), **Swap around pain**
+    (`pain`) and **Alternatives in every slot** (`alternatives`).
+  - **Switches**, on by default: **Stretch-biased exercises** (`stretch`), **Stable lifts you can
+    push hard** (`stable`: machines, cables, supported dumbbells, a barbell for lifts with goals)
+    and **Blocks with a deload** (`deload`).
+  - **Anything else**, one optional line under them, sent as `Anything else: …`.
 - **About me**, every field optional:
   - **Age band**: Under 30, 30–39, 40–49, 50–59, or 60 and over.
   - **Where are you now?**: Still learning the lifts, Progress takes weeks, or Progress takes
@@ -1914,8 +1930,9 @@ research note names its sources.
   - **Exercises to avoid** and **exercises to favour**, picked from the exercise library with the
     swap picker's search.
   - **Anything else**, one line.
-- **Kept** in `setting`: `training_style` (the training targets and About me, as JSON),
-  `how_i_train` (the text, only once edited), `training_style_done` (the wizard's Done) and
+- **Kept** in `setting`: `training_style` (the training targets, About me and How I train, as
+  JSON; How I train keeps only the switches turned off and its line, so a principle added later
+  starts on), `training_style_done` (the wizard's Done) and
   `training_style_card_dismissed` (Today's card). They go into backups with the other settings
   (`docs/backups.md`). With nothing set, every check-in carries the defaults.
 
@@ -1923,7 +1940,7 @@ research note names its sources.
 look: goal; volume, with Steady or Rising; how hard, with the RIR rule, failure and calibration;
 rep ranges; age band; Where are you now?, with Coming back from a break; aches and injuries;
 exercises to avoid and favour; Anything else; then a summary of every answer with **Done** and a
-link to edit How I train. Frequency stays on the page, at its default, since a program's days
+link to How I train's switches. Frequency stays on the page, at its default, since a program's days
 mostly settle it. Each step opens on the current value (the default the first time), so Done
 without a change is a valid answer, and **Next** keeps what a step shows (an About me step left
 empty stays empty). It is local: no key and no call. Back steps back, × leaves without saving,
@@ -1938,9 +1955,10 @@ and Done saves every step at once.
   both.
 - **Settings runs it again** through Set it up again on the Training style page.
 
-**The program focus.** New program asks "Bring anything up this program?", with the muscle groups
-(`MuscleGroup`: Chest, Back, Shoulders, Arms, Legs, Glutes, Core) to pick up to two, or none
-(Claude's `ask`; Type my own stays). The muscles of a focused group get weekly sets at or above
+**The program focus.** New program asks "Bring anything up this program?", for up to two of the
+muscle groups (`MuscleGroup`: Chest, Back, Shoulders, Arms, Legs, Glutes, Core), or none. It is
+Claude's `ask`, which holds 2 to 4 answers, so it offers None and up to three groups likeliest for
+you, and Type my own takes any other group, or two (#132's review). The muscles of a focused group get weekly sets at or above
 the top of the range, go first in their sessions and are trained more often; the rest drop
 toward maintenance. Claude writes the focus into the program's `focus`
 (`docs/program-format.md`), so it stays with the program and later check-ins see it. It is not a
@@ -1982,7 +2000,8 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   the formats.
 - **The training style**, in every check-in (Training style, above), in the situation both the API
   and Ask Claude's prompt carry, built once by the same code. The targets and About me go as
-  structured lines, How I train as its text (the edited one, else the asset's), and the running
+  structured lines, How I train as the full sentence of each principle it sends (the fixed rules
+  always, each switch that is on) with its line, and the running
   program's focus and own targets with the program:
 
   ```text
@@ -1998,20 +2017,38 @@ The same context goes to the API and into Ask Claude's prompt (`coach/AskClaude.
   - Age: 40–49
   - Where I am now: progress takes months; coming back from a break
   - Aches: Wrists and hands: sore when gripping
-  - Avoid: barbell_back_squat (Barbell Back Squat)
+  - Avoid: barbell_squat (Barbell Back Squat)
   - Favour: hack_squat (Hack Squat)
   - Anything else: I train fasted in the morning
   ## How I train
-  <How I train's text>
+  - Form comes before load: every rep goes through the full range with a controlled lowering, …
+  - <each other principle's sentence, fixed rules first, then each switch that is on>
+  - Anything else: supersets for arms
+  ## Writing by my training style
+  <the instructions below>
   ```
 
-  An About me field left empty is left out, and so is the heading when all are. With a program
-  running, its lines add `Program focus: Chest, Shoulders (their muscles 14–21 sets a week, the
-  rest 4–8)` and any training target of its own (`Volume for this program: 14–20`). The
-  instructions tell Claude to write new programs, Changes and workouts by the style, to treat the
-  training targets as standing unless you ask otherwise for one program, to keep the intensity
-  and failure rules in Changes and workouts, and to say when a Change takes a muscle out of its
-  range.
+  The other choices read: Goal `strength` or `hypertrophy and strength`; Rising `8–14 work sets
+  per muscle a week, rising across a block: near 8 in its first week, adding sets each week toward
+  14, then a deload`; Frequency `once`, `twice` or `3 or more times` a week; Failure `never; every
+  set stops at 1 RIR or more` (with calibration on, `never, apart from calibration sets; every other
+  set stops at 1 RIR or more`, and the page's line likewise, so the two rules never contradict) or
+  `any lift's last set may go to 0 RIR`; Calibration `off`. Each
+  ache is a line of its own (`- Aches: Knees: clicks on deep squats`), and an exercise no longer
+  in the library goes by its id alone. An About me field left empty is left out, and so is the
+  heading when all are. With a program running, the program's lines start with `Program focus:
+  Chest, Shoulders (their muscles 14–21 sets a week, the rest 4–8)` and any training target of its
+  own (`Volume for this program: 14–20`, `Goal for this program: strength`), its ranges from its
+  own volume when it has one. The instructions, under **Writing by my training style**, tell
+  Claude to write new programs, Changes and workouts by the style; to treat the training targets
+  as standing, writing others into a program's `targets` only when you ask for them for that
+  program; for a new program to ask "Bring anything up this program?", offering None and up to
+  three likely muscle groups with Type my own for another or two, and write the answer into its
+  `focus`, with what a focus does and both ranges as numbers (`the raised range (14–21)`, from the
+  running program's own volume when it has one); to keep the how hard, failure and calibration
+  rules in Changes and workouts; and to say when a Change takes a muscle out of its range, in the
+  Change's summary, naming that range (`under your 8–14`, or with a focus `under the maintenance
+  range of 4–8`). A program's own Rising reads as the standing one does, from its own volume.
 - **The formats are generated** from the code that reads them: operation names and fields from the
   serializer, scopes from the scope serializer, ranges from the validators, the program format from
   the program parser, an example Change built for the running program (a swap to the next day's

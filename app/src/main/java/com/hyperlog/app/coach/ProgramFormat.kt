@@ -4,6 +4,7 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
+import com.hyperlog.app.library.MuscleGroup
 import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.TechniqueKind
@@ -34,7 +35,17 @@ object ProgramFormat {
                 "holding {\"program\": {...}, \"swaps\": [...], \"newExercises\": [...]}:",
         )
         appendLine("- \"program\": a Hyperlog program file:")
-        appendLine("  {\"format\": ${ProgramParser.FORMAT}, \"title\", \"author\"?, \"description\"?, \"blocks\": [...]}.")
+        appendLine("  {\"format\": ${ProgramParser.FORMAT}, \"title\", \"author\"?, \"description\"?, \"focus\"?, \"targets\"?, \"blocks\": [...]}.")
+        appendLine(
+            "  \"focus\": up to ${com.hyperlog.app.program.MAX_FOCUS} muscle groups to bring up, each once (${MuscleGroup.entries.joinToString { "\"${it.label}\"" }}); " +
+                "leave it out for none.",
+        )
+        appendLine(
+            "  \"targets\": training targets for this program alone, only those I asked to change: {\"goal\"?: ${keys(TrainingGoal.entries.map { it.key })}, " +
+                "\"volume\"?: work sets per muscle a week as a range like \"14-20\", \"acrossBlock\"?: ${keys(AcrossBlock.entries.map { it.key })}, " +
+                "\"frequency\"?: ${keys(Frequency.entries.map { it.key })}, \"failure\"?: ${keys(FailureRule.entries.map { it.key })}, " +
+                "\"calibration\"?: true or false, \"repRanges\"?: {\"compound\"?: \"5-10\", \"isolation\"?: \"8-15\"}}.",
+        )
         appendLine(
             "  A block is a run of weeks that train the same days: {\"id\", \"name\", \"weekStart\", \"weekEnd\", \"weeks\"?, \"days\": [...]}. " +
                 "The first block starts in week 1 and each starts the week after the one before.",

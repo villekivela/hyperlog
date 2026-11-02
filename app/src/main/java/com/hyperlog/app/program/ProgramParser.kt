@@ -1,5 +1,6 @@
 package com.hyperlog.app.program
 
+import com.hyperlog.app.library.MuscleGroup
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -62,7 +63,11 @@ object ProgramParser {
 }
 
 private val Id = Regex("[a-z0-9_]+")
-private val Range = Regex("""(\d+)\s*-\s*(\d+)""")
+/** A range as files write it: `8-10`. */
+internal val RangeText = Regex("""(\d+)\s*-\s*(\d+)""")
+
+/** A program focus brings up at most this many muscle groups. */
+const val MAX_FOCUS = 2
 
 /** Myo-reps once had a maximum; programs that still carry it read, and it is ignored. */
 private const val LEGACY_MAX_MINI_SETS = "maxMiniSets"
@@ -76,12 +81,17 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
     }
 
     fun program(root: JsonElement): Program? {
-        val o = obj(root, "", setOf("format", "title", "author", "description", "blocks")) ?: return null
+        val o = obj(root, "", setOf("format", "title", "author", "description", "focus", "targets", "blocks")) ?: return null
         val format = int(o, "", "format", required = true)
         if (format != null && format != ProgramParser.FORMAT) error("format", "must be ${ProgramParser.FORMAT}")
         val title = string(o, "", "title", required = true)
         val author = string(o, "", "author")
         val description = string(o, "", "description")
+        val focus = focus(o["focus"])
+        val targets = o["targets"]?.let { el ->
+            val t = el as? JsonObject ?: return@let null.also { error("targets", "must be an object") }
+            com.hyperlog.app.coach.TrainingStyleJson.targets(t, "targets", ::error)
+        } ?: com.hyperlog.app.coach.ProgramTrainingTargets()
         val blocks = list(o, "", "blocks", required = true) { el, path -> block(el, path) }
         if (blocks != null) {
             // Read the weeks and ids again from the file, so a block with problems inside still
@@ -102,7 +112,28 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             }
         }
         if (title == null || blocks == null || blocks.any { it == null }) return null
-        return Program(title, author, blocks.filterNotNull(), description)
+        return Program(title, author, blocks.filterNotNull(), description, focus, targets)
+    }
+
+    /** The program focus: up to two muscle groups, by name, each once. */
+    private fun focus(el: JsonElement?): List<MuscleGroup> {
+        if (el == null) return emptyList()
+        val items = el as? JsonArray ?: return emptyList<MuscleGroup>().also { error("focus", "must be a list of muscle groups") }
+        if (items.size > MAX_FOCUS) return emptyList<MuscleGroup>().also { error("focus", "at most $MAX_FOCUS muscle groups") }
+        val groups = mutableListOf<MuscleGroup>()
+        items.forEachIndexed { i, item ->
+            val label = (item as? JsonPrimitive)?.takeIf { it.isString }?.content
+            val group = label?.let(MuscleGroup::labelled)
+            when {
+                group == null -> error(
+                    "focus[$i]",
+                    "unknown muscle group ${item}: use ${com.hyperlog.app.coach.TrainingStyleJson.or(MuscleGroup.entries.map { it.label })}",
+                )
+                group in groups -> error("focus[$i]", "\"$label\" is already in the focus")
+                else -> groups += group
+            }
+        }
+        return groups
     }
 
     fun workout(root: JsonElement): com.hyperlog.app.coach.Workout? {
@@ -268,7 +299,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
             if (n !in 1..100) return null.also { error(path, "must be from 1 to 100") }
             return RepRange(n, n)
         }
-        val m = Range.matchEntire(p.content.trim()) ?: return null.also { error(path, message) }
+        val m = RangeText.matchEntire(p.content.trim()) ?: return null.also { error(path, message) }
         val (lo, hi) = m.destructured.toList().map { it.toInt() }
         return when {
             lo < 1 || hi > 100 -> null.also { error(path, "must be from 1 to 100") }
@@ -327,7 +358,7 @@ private class Reader(private val exercises: Set<String>, private val merged: Map
         val seen = mutableListOf<WeekRange>()
         map.forEach { (key, value) ->
             val p = "$path.weeks.\"$key\""
-            val range = Range.matchEntire(key.trim())?.destructured?.toList()?.map { it.toInt() }?.let { WeekRange(it[0], it[1]) }
+            val range = RangeText.matchEntire(key.trim())?.destructured?.toList()?.map { it.toInt() }?.let { WeekRange(it[0], it[1]) }
                 ?: key.trim().toIntOrNull()?.let { WeekRange(it, it) }
             when {
                 range == null -> error(p, "must be a week (\"1\") or weeks (\"7-11\")")

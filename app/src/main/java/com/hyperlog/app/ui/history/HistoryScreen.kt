@@ -132,7 +132,8 @@ fun HistoryScreen(
                             onCheckedChange = { onTab(i) },
                             modifier = Modifier.weight(1f).semantics { role = Role.Tab },
                             shapes = if (i == 0) ButtonGroupDefaults.connectedLeadingButtonShapes() else ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                            colors = connectedChoiceColors(),
+                            // On the screen, under the top bar, not on a card.
+                            colors = connectedChoiceColors(com.hyperlog.app.ui.theme.Tones.screen),
                         ) { Text(stringResource(label)) }
                     }
                 }

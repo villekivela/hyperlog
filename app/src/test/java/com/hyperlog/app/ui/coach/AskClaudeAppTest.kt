@@ -181,6 +181,9 @@ class AskClaudeAppTest {
         assertTrue(prompt.contains("## Exercise library"))
         assertTrue(prompt.contains("\"op\": \"repeat_week\""))
         assertTrue(prompt.contains("## Weekly sets per muscle"))
+        // The training style, How I train's principles from the app's asset, all on with nothing set.
+        assertTrue(prompt, prompt.contains("## My training style\n- Goal: hypertrophy"))
+        assertTrue(prompt, prompt.contains("## How I train\n- Form comes before load:"))
     }
 
     @Test
