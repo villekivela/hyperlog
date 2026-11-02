@@ -221,6 +221,13 @@ def focus(program, days, library, asked):
     return row("Focus", "missed", "outside range: " + "; ".join(bad))
 
 
+def unasked_targets(program):
+    written = program.get("targets") or {}
+    if not written:
+        return row("No unasked targets", "met", "the program leaves the standing targets alone")
+    return row("No unasked targets", "missed", "wrote targets nobody asked for: " + ", ".join(written))
+
+
 def pain(call, library, plan):
     if plan is None:
         return []
@@ -251,4 +258,6 @@ def score(run, library, plan=None):
     rows += [reps_in_reserve(days, library), failure(days, library), rep_ranges(days, library), time_fit(days, limits)]
     if found[0] == "propose_program" and scenario in FOCUS_ASKED:
         rows.append(focus(found[1]["program"], days, library, FOCUS_ASKED[scenario]))
+    if found[0] == "propose_program":
+        rows.append(unasked_targets(found[1]["program"]))
     return rows

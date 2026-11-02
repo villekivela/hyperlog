@@ -216,5 +216,23 @@ class Pain(unittest.TestCase):
         self.assertEqual("missed", verdict(checks.score(change(ops), LIBRARY, PLAN), "Keeps the rest of the session"))
 
 
+class UnaskedTargets(unittest.TestCase):
+    DAY = [[("bench", [line("6-8", 1, count=4)])]]
+
+    def test_a_program_without_targets_is_met(self):
+        self.assertEqual("met", verdict(checks.score(run(program(self.DAY)), LIBRARY), "No unasked targets"))
+
+    def test_targets_nobody_asked_for_miss_and_name_the_fields(self):
+        row = next(r for r in checks.score(run(program(self.DAY, targets={"goal": "both", "volume": "8-14"})), LIBRARY) if r["target"] == "No unasked targets")
+        self.assertEqual("missed", row["verdict"])
+        self.assertIn("goal, volume", row["detail"])
+
+    def test_empty_targets_count_as_none(self):
+        self.assertEqual("met", verdict(checks.score(run(program(self.DAY, targets={})), LIBRARY), "No unasked targets"))
+
+    def test_a_workout_is_not_scored_on_it(self):
+        self.assertNotIn("No unasked targets", [r["target"] for r in checks.score(workout([straight("bench", line("6-8", 1))]), LIBRARY)])
+
+
 if __name__ == "__main__":
     unittest.main()

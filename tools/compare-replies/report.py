@@ -19,7 +19,7 @@ SCENARIOS = [
     ("hurts-elbow", "Something hurts", "Left elbow, on pressing."),
     ("workout-45", "A 45-minute workout", "Build a workout for today, 45 minutes at Harbour."),
 ]
-TARGET_ORDER = ["Proposal", "Sets per muscle", "Frequency", "Reps in reserve", "Failure", "Rep ranges", "Time", "Focus", "Swaps the painful lift", "Keeps the rest of the session"]
+TARGET_ORDER = ["Proposal", "Sets per muscle", "Frequency", "Reps in reserve", "Failure", "Rep ranges", "Time", "Focus", "No unasked targets", "Swaps the painful lift", "Keeps the rest of the session"]
 RULES = {
     "Sets per muscle": "8–14 work sets a week for each muscle trained as a main mover (primary 1, secondary 0.5)",
     "Frequency": "each muscle group on 2–3 days a week",
@@ -30,6 +30,7 @@ RULES = {
     "Focus": "the asked group is written as the focus; its muscles get 14–21 sets a week, every other muscle 4–8",
     "Swaps the painful lift": "at least one pressing slot is swapped or left out",
     "Keeps the rest of the session": "only slots that load the elbow (presses, triceps, curls) are changed",
+    "No unasked targets": "the program has no \"targets\" unless I asked for other ones for it",
     "Proposal": "a program, workout or Change",
 }
 

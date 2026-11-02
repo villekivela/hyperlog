@@ -27,7 +27,7 @@ internal object TrainingStyleText {
         appendLine(
             "- Write new programs, Changes and workouts by my training style. The training targets are standing: a new program " +
                 "starts from them. Only when I ask for other ones for one program (\"more volume this time\"), write them into that " +
-                "program's \"targets\"; my standing ones stay as they are.",
+                "program's \"targets\"; my standing ones stay as they are. Otherwise leave \"targets\" out.",
         )
         appendLine(
             "- For a new program, ask \"Bring anything up this program?\": offer None and up to three of the muscle groups " +

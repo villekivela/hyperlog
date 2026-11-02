@@ -2,7 +2,7 @@
 # Plays the check-in scenarios against the Claude API, once on the commit before the training style
 # reached the context and once on this checkout, then writes the side-by-side page.
 #
-#   tools/compare-replies/run.sh [--frames-only] [--only key,key]
+#   tools/compare-replies/run.sh [--frames-only] [--only key,key]   (COMPARE_SIDES=after plays one side)
 #
 # The key is read from ANTHROPIC_API_KEY, else from ~/.config/hyperlog/claude-key. It is never
 # printed, put on a command line or written to a file. Results go to build/compare-replies/.
@@ -53,7 +53,7 @@ if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
   ANTHROPIC_API_KEY="$(< "$HOME/.config/hyperlog/claude-key")"
   export ANTHROPIC_API_KEY
 fi
-for side in before after; do
+for side in ${COMPARE_SIDES:-before after}; do
   COMPARE_FRAMES="$out/$side" COMPARE_DIR="$out/$side" COMPARE_ONLY="$only" harness "$root" "after" run
 done
 
