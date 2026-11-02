@@ -180,10 +180,11 @@ the mannequin is the size the owner approved; the stage gains air at its sides.
 ### Interaction rules
 
 - A vertical drag on the stage goes on to the sheet; only a horizontal one turns the mannequin.
-- The sheet doesn't scroll, so a downward drag anywhere on it, the stage included, closes it. A
+- The sheet scrolls only when it is taller than the room. While it fits, a downward drag anywhere
+  on it, the stage included, closes it; a scroll would take vertical drags for itself, because a
   scrolling sheet doesn't pass the drag on to the sheet once at its top (the exercise picker
-  doesn't either), so a scroll here would take that away. The stage takes about a third of the
-  screen; a planned exercise with a goal, a long note and many sets could outgrow it.
+  doesn't either). The stage takes about a third of the screen, so a planned exercise with a
+  goal, a long note and many sets can outgrow it, and then it scrolls to its video button.
 - In the gallery a swipe on the stage turns the clip; a swipe below it pages.
 
 ## Critique log
@@ -212,5 +213,5 @@ demand is a connected button group and its chips pick in primaryContainer.
   cards' margin at 5:4, the same height as before. The feet sat 6 % above the stage's bottom edge,
   crowding their shadow: the camera now looks 5 cm lower. Pass 2 softened the light plates (#3A3A40 → #48484E), which
   outweighed the body, and checked the turned, still and gallery states. A scroll added to the
-  sheet for long content was taken out again: it stopped a downward drag on the stage from
-  closing the sheet.
+  sheet for long content now turns on only when the content outgrows the room: always on, it
+  stopped a downward drag on the stage from closing the sheet.
