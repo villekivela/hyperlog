@@ -48,3 +48,22 @@ backward and holds again.
 `target` is the point the stage's camera looks at (metres, y up, the mannequin facing +z), `halfHeight`
 is half the height it shows there, and `azimuth` and `elevation` are the turn and tilt it opens on,
 in degrees. A double-tap on the phone returns to them.
+
+## Equipment
+
+Every kind of equipment in the library, and the generic kits a pose in it can use (`EQUIPMENT` in
+`kit.mjs`). A kind marked missing has no kit yet, so its exercises can't be posed until it has one.
+
+| Equipment | Kits |
+| --- | --- |
+| `barbell` | `barbell`, `bench` |
+| `dumbbell` | `dumbbells`, `bench` |
+| `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `bench` |
+| `machine` | `leg_press`, `chest_press` |
+| `bodyweight` | none needed |
+| `ez_bar` | missing |
+| `trap_bar` | missing |
+| `safety_bar` | missing |
+| `smith_machine` | missing |
+| `plate` | missing |
+| `weighted_bodyweight` | missing |

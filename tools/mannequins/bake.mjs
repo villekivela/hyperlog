@@ -1,26 +1,22 @@
 // Bakes each pose entry into a clip the phone plays: the mannequin, its equipment and the floor
 // shadow in one .glb, with one animation of the rep's lowering, from the top (0 s) to the bottom
 // (1 s). The phone plays it forward, holds, and plays it backward. `mannequins.json` indexes the
-// clips by exercise id.
+// clips by exercise id. Every pose is checked first (checks.mjs), and if any fails, nothing is
+// written.
 //
 //   node bake.mjs [out-dir]     (default: app/src/main/assets/mannequins)
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { buildRig, poseRig } from './rig.mjs';
-import { MOTIONS } from './motions.mjs';
-import { MATERIALS, barbell, floorShadow } from './kit.mjs';
+import { prepare } from './entries.mjs';
+import { buildStage, FRAMES } from './stage.mjs';
+import { CHECKS, checkPose } from './checks.mjs';
 import { POSES } from './poses.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const MODEL = path.join(HERE, 'model', 'mannequin.glb');
 const DEFAULT_OUT = path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'mannequins');
-/** Frames baked over the lowering, top and bottom included. */
-export const FRAMES = 31;
-const KITS = { barbell };
 
 // GLTFExporter reads its blobs back through FileReader, which Node doesn't have.
 globalThis.FileReader ??= class {
@@ -29,54 +25,46 @@ globalThis.FileReader ??= class {
   }
 };
 
-async function loadMannequin() {
-  const bytes = await readFile(MODEL);
-  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  const gltf = await new GLTFLoader().parseAsync(buffer, '');
-  const root = gltf.scene;
-  root.name = 'mannequin';
-  // The first part is the body, the next the joint rings between its pieces.
-  let part = 0;
-  root.traverse((o) => { if (o.isSkinnedMesh) o.material = part++ === 0 ? MATERIALS.body() : MATERIALS.joint(); });
-  return root;
-}
-
-/** The pose entry for an exercise id. */
-function resolve(id) {
-  const e = POSES[id];
-  if (!e) throw new Error(`No pose entry for ${id}`);
-  return e;
-}
-
 const rounded = (v) => Math.round(v * 1e5) / 1e5;
 
-/** Bakes one entry: the .glb's bytes and the index entry. */
-export async function bakeOne(id) {
-  const entry = resolve(id);
-  const motion = MOTIONS[entry.motion];
-  if (!motion) throw new Error(`${id}: no motion "${entry.motion}"`);
-  const scene = new THREE.Scene();
-  const mannequin = await loadMannequin();
-  scene.add(mannequin);
-  const rig = buildRig(mannequin);
-  const kit = KITS[entry.kit]();
-  scene.add(kit);
-  scene.add(floorShadow(1.1, 0.8));
+/** Throws, naming each failing check, unless the pose passes them all. */
+async function mustPass(id, poses) {
+  const { checks } = await checkPose(id, { poses });
+  const failing = CHECKS.filter((c) => !checks[c].ok);
+  if (failing.length) {
+    const why = failing.map((c) => `${c} (frame ${checks[c].frame}: ${checks[c].found})`).join(', ');
+    throw new Error(`${id} fails its checks: ${why}`);
+  }
+}
 
-  // Sample the lowering; every bone that moves and the kit get a track.
+/** Bakes one entry, once it passes its checks: the .glb's bytes and the index entry. */
+export async function bakeOne(id, { poses = POSES } = {}) {
+  await mustPass(id, poses);
+  return bake(id, poses);
+}
+
+async function bake(id, poses) {
+  const entry = prepare(id, poses);
+  const { scene, rig, kit, pose } = await buildStage(entry);
+
+  // Sample the lowering. Every bone that turns gets a track, and so does every part of the kit
+  // that moves, turns or stretches; the pelvis always moves.
   const bones = Object.values(rig.bones);
+  const parts = [];
+  kit.group.traverse((o) => { if (o !== kit.group) parts.push(o); });
   const times = [];
   const rotations = bones.map(() => []);
   const pelvis = [];
-  const bar = [];
+  const placed = parts.map(() => ({ position: [], quaternion: [], scale: [] }));
   for (let f = 0; f < FRAMES; f++) {
     const d = f / (FRAMES - 1);
-    const P = motion(entry, d, rig.dims);
-    poseRig(rig, P);
+    pose(d);
     times.push(d);
     bones.forEach((b, i) => rotations[i].push(...b.quaternion.toArray().map(rounded)));
     pelvis.push(...rig.bones.pelvis.position.toArray().map(rounded));
-    bar.push(...P.bar.toArray().map(rounded));
+    parts.forEach((o, i) => {
+      for (const k of ['position', 'quaternion', 'scale']) placed[i][k].push(...o[k].toArray().map(rounded));
+    });
   }
   const tracks = [];
   const moves = (values, size) => values.some((v, i) => Math.abs(v - values[i % size]) > 1e-5);
@@ -84,28 +72,33 @@ export async function bakeOne(id) {
     if (moves(rotations[i], 4)) tracks.push(new THREE.QuaternionKeyframeTrack(`${b.name}.quaternion`, times, rotations[i]));
   });
   tracks.push(new THREE.VectorKeyframeTrack('pelvis.position', times, pelvis));
-  tracks.push(new THREE.VectorKeyframeTrack(`${kit.name}.position`, times, bar));
+  parts.forEach((o, i) => {
+    const { position, quaternion, scale } = placed[i];
+    if (moves(position, 3)) tracks.push(new THREE.VectorKeyframeTrack(`${o.name}.position`, times, position));
+    if (moves(quaternion, 4)) tracks.push(new THREE.QuaternionKeyframeTrack(`${o.name}.quaternion`, times, quaternion));
+    if (moves(scale, 3)) tracks.push(new THREE.VectorKeyframeTrack(`${o.name}.scale`, times, scale));
+  });
   const clip = new THREE.AnimationClip('lowering', 1, tracks);
 
-  // The file opens on the top of the rep, so a bone left without a track keeps its pose there.
-  poseRig(rig, motion(entry, 0, rig.dims));
-  kit.position.fromArray(bar.slice(0, 3));
-  scene.updateMatrixWorld(true);
+  // The file opens on the top of the rep, so a bone or part left without a track keeps its pose there.
+  pose(0);
 
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip] });
-  const camera = { ...entry.camera };
   return {
     glb: Buffer.from(glb),
-    entry: { clip: `${id}.glb`, equipment: entry.equipment, camera },
+    entry: { clip: `${id}.glb`, equipment: entry.equipment, camera: { ...entry.camera } },
   };
 }
 
-/** Bakes every entry into `out`: one .glb each and mannequins.json. */
-export async function bakeAll(out = DEFAULT_OUT) {
+/** Bakes every entry into `out`: one .glb each and mannequins.json. A pose that fails its checks stops it before anything is written. */
+export async function bakeAll(out = DEFAULT_OUT, { poses = POSES } = {}) {
+  const ids = Object.keys(poses).sort();
+  for (const id of ids) await mustPass(id, poses);
+  const baked = [];
+  for (const id of ids) baked.push([id, await bake(id, poses)]);
   await mkdir(out, { recursive: true });
   const index = {};
-  for (const id of Object.keys(POSES).sort()) {
-    const { glb, entry } = await bakeOne(id);
+  for (const [id, { glb, entry }] of baked) {
     await writeFile(path.join(out, entry.clip), glb);
     index[id] = entry;
   }
