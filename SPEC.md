@@ -1532,6 +1532,13 @@ gallery (Technique videos).
       and preacher's hubs on posts and mounts, nothing hanging in the air; the hack squat's
       carriage on rollers; the row's and pulldown's posts on floor rails; and the preacher loaded
       with a plate a side.
+    - **Row, pulldown and preacher** (owner, via the coordinator, 2026-11-03, #151): all three are
+      plate-loaded, a plate on a horn a side that rises as the muscle works. The chest-supported row
+      turns its levers low in front of the knees; its chest pad stands 10-20° from upright with the
+      chest on it. The pulldown's levers turn on a portal ahead of the head; its thigh pads hang
+      under their bar onto the thighs. The preacher has one wide arm pad, the lifter leaning about
+      20° onto it with the chest against its back edge, the pad stopping short of the elbows and the
+      levers' hubs in line with the elbows beyond it, never over the pad.
     - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
       palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
       #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #3A3A40, 0.95 (dark a step up from the

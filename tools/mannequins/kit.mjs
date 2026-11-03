@@ -1395,25 +1395,44 @@ function squatMachine() {
   };
 }
 
+/** The angle of `p` about the x axis through `pivot`, side-on: what a lever there has swung. */
+const swingOf = (pivot, p) => Math.atan2(p.y - pivot.y, p.z - pivot.z);
+
+/** A floor rail 7 cm across whose ends are known only once the kit is placed: `set(A, B)` lays it from A to B along x or z. */
+function placedRail(M) {
+  const rail = stretchedTube(0.07, M.frame);
+  const caps = [0, 1].map(() => pad(0.016, 0.074, 0.074, M.vinyl, V(0, 0, 0), { soft: 0.005, solid: false }));
+  return {
+    parts: [rail, ...caps],
+    set(A, B) {
+      const d = B.clone().sub(A).normalize();
+      span(rail, A.clone().setY(0.035), B.clone().setY(0.035));
+      railCap(caps[0], A, d.clone().negate());
+      railCap(caps[1], B, d);
+    },
+  };
+}
+
 /**
- * Two levers on hubs at `P.pivot` either side of the body, each ending in a handle held at
- * `P.handle(s)`: the arm out at `out` from the middle, a crossbar in to the grip, which lies along
- * the hand's knuckles. With `counter`, each lever runs on past the pivot to a plate.
+ * Two plate-loaded levers on hubs at `P.pivot` either side of the body, each ending in a handle held
+ * at `P.handle(s)`: the arm out at `out` from the middle, a crossbar in to the grip, which lies along
+ * the hand's knuckles. Each lever runs on from its hub `horn.length` metres, `horn.turn` degrees round
+ * from its arm, to a horn out along x with a plate on it.
  */
-function levers(M, { out = 0.45, counter = 0 } = {}) {
+function levers(M, { out = 0.45, horn: { length, turn } }) {
   const sides = [-1, 1].map((s) => ({
     s,
     boss: hub(M, V(0, 0, 0)),
-    arm: stretchedTube(0.045, M.frame),
+    arm: stretchedTube(0.05, M.frame),
     cross: part(rodGeometry(0.016), M.metal),
     grip: part(rodGeometry(0.0165), M.vinyl, { held: true }),
-    tail: counter ? stretchedTube(0.045, M.frame) : null,
-    load: counter ? loadedHorn(M, s) : null,
+    tail: stretchedTube(0.05, M.frame),
+    load: loadedHorn(M, s),
   }));
   return {
-    parts: sides.flatMap((l) => [l.boss, l.arm, l.cross, l.grip, ...(l.tail ? [l.tail, ...l.load.parts] : [])]),
+    parts: sides.flatMap((l) => [l.boss, l.arm, l.cross, l.grip, l.tail, ...l.load.parts]),
     place(P) {
-      for (const l of sides) {
+      sides.forEach((l) => {
         const pivot = P.pivot.clone().setX(l.s * out);
         const h = P.handle(l.s);
         const end = h.clone().setX(l.s * out);
@@ -1422,19 +1441,18 @@ function levers(M, { out = 0.45, counter = 0 } = {}) {
         span(l.cross, end, h);
         const along = (P.held?.[l.s] ?? X).clone().normalize();
         span(l.grip, h.clone().addScaledVector(along, -0.06), h.clone().addScaledVector(along, 0.06));
-        if (l.tail) {
-          const back = pivot.clone().addScaledVector(pivot.clone().sub(end).normalize(), counter);
-          span(l.tail, pivot, back);
-          l.load.place(back);
-        }
-      }
+        const a = swingOf(pivot, end) + rad(turn);
+        const tip = pivot.clone().add(V(0, length * Math.sin(a), length * Math.cos(a)));
+        span(l.tail, pivot, tip);
+        l.load.place(tip);
+      });
     },
   };
 }
 
 /**
  * A pad in front of the chest at the top of the rep: its face `front` metres out from the line up
- * the spine, its middle `up` metres up it, on a post down to the floor.
+ * the spine, its middle `up` metres up it, on an arm from its back to the point `to(back)` returns.
  */
 function chestPad(M, { up, front }) {
   const t = 0.08;
@@ -1443,126 +1461,176 @@ function chestPad(M, { up, front }) {
   const board = part(padGeometry(0.3, 0.38, 0.012, 0.003), M.frame);
   board.position.z = t / 2 + 0.006;
   holder.add(cushion, board);
-  const post = stretchedTube(0.06, M.frame);
+  const arm = stretchedTube(0.06, M.frame);
   return {
-    parts: [holder, post],
-    fit(P0) {
+    parts: [holder, arm],
+    fit(P0, to) {
       const f = X.clone().cross(P0.u).normalize();
       holder.position.copy(P0.hipC).addScaledVector(P0.u, up).addScaledVector(f, front + t / 2);
       holder.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, P0.u, f));
-      const behind = holder.position.clone().addScaledVector(f, t / 2 + 0.03);
-      span(post, behind, behind.clone().setY(0.07));
+      const back = holder.position.clone().addScaledVector(f, t / 2 + 0.012);
+      span(arm, back, to(back));
     },
   };
 }
 
 /**
- * A chest-supported row: a seat, a pad for the chest, and two levers hung from hubs above and ahead
- * of it, each with a handle and loaded with a plate past the pivot, which rises as the handles are
- * pulled back.
+ * A plate-loaded chest-supported row, laid out as the Gymleco 010 Seated Row: the seat, and ahead
+ * of the knees a column up from the base to the chest pad's arm, with the levers' axle across it
+ * low down at the pose's pivot, braced to the base. Each lever rises from its hub to a handle and
+ * runs on forward and down to a loaded horn, whose plate rises as the handles come back.
  */
 function rowMachine({ seat = [0.5, 0], chest = { up: 0.4, front: 0.1 } } = {}) {
   const M = tones();
+  const out = 0.3;
   const pad_ = chestPad(M, chest);
-  const arms = levers(M, { out: 0.42, counter: 0.22 });
-  const posts = [-1, 1].map(() => stretchedTube(0.07, M.frame));
-  // The posts stand on the front floor rail, ahead of the feet, and a crossbar ties their heads.
-  const head = stretchedTube(0.06, M.frame);
+  const arms = levers(M, { out, horn: { length: 0.45, turn: -100 } });
+  const column = stretchedTube(0.08, M.frame);
+  const housing = stretchedTube(0.06, M.frame);
+  const axle = part(rodGeometry(0.02), M.metal);
+  const braces = [-1, 1].map(() => stretchedTube(0.05, M.frame));
+  const spine = placedRail(M);
+  const front = movableRail(M);
   const g = group('row_machine', [
     ...seatOn(seat[0], seat[1], M, { pin: -1 }),
-    ...floorRail(V(0, 0.035, seat[1] - 0.25), V(0, 0.035, seat[1] + 1.0), M),
-    ...floorRail(V(-0.5, 0.035, seat[1] + 0.8), V(0.5, 0.035, seat[1] + 0.8), M),
-    ...pad_.parts, ...arms.parts, ...posts, head,
+    ...floorRail(V(-0.25, 0.035, seat[1] - 0.18), V(0.25, 0.035, seat[1] - 0.18), M),
+    ...spine.parts, ...front.parts, ...pad_.parts, ...arms.parts, column, housing, axle, ...braces,
   ]);
   return {
     group: g,
     place(P, P0) {
-      pad_.fit(P0);
       arms.place(P);
-      [-1, 1].forEach((s, i) => span(posts[i], P.pivot.clone().setX(s * 0.5).add(V(0, 0.08, 0)), V(s * 0.5, 0.07, seat[1] + 0.8)));
-      span(head, P.pivot.clone().setX(-0.535).add(V(0, 0.08, 0)), P.pivot.clone().setX(0.535).add(V(0, 0.08, 0)));
+      const { pivot } = P;
+      // The braces lean from the axle's housing forward and down to the base's front rail.
+      const foot = pivot.z + 0.35;
+      spine.set(V(0, 0, seat[1] - 0.25), V(0, 0, foot + 0.1));
+      front.set(foot, out);
+      const base = V(0, 0.07, pivot.z);
+      // The chest pad's arm runs forward from its board to the column's head.
+      pad_.fit(P0, (back) => {
+        const head = base.clone().setY(back.y);
+        span(column, base, head);
+        return head;
+      });
+      span(housing, pivot.clone().setX(-out + 0.04), pivot.clone().setX(out - 0.04));
+      span(axle, pivot.clone().setX(-out - 0.03), pivot.clone().setX(out + 0.03));
+      [-1, 1].forEach((s, i) => span(braces[i], pivot.clone().setX(s * (out - 0.06)), V(s * (out - 0.06), 0.07, foot)));
     },
   };
 }
 
 /**
- * A machine pulldown: a seat under thigh rollers, two uprights up to a crossbar over the pivot,
- * and two levers hung from it, each with a handle and a plate on its tail past the pivot.
+ * A plate-loaded iso-lateral pulldown, laid out as the Gymleco 011: a seat with a back pad behind
+ * the lifter (its face `pad` metres behind the spine) and pads over the thighs at `thighPad`
+ * [y, z] hanging under their bar, facing a portal ahead whose beam carries the levers' axle at the pose's pivot. Each lever
+ * rises back over the seat to a handle and runs on past the axle to a loaded horn, whose plate rises
+ * as the handles come down. A brace from the beam to the floor carries the thigh pads.
  */
-function pulldownMachine({ seat = [0.47, 0], thighPad = [0.71, 0.3] } = {}) {
+function pulldownMachine({ seat = [0.47, 0], thighPad: [ty, tz] = [0.71, 0.3], pad: behind = 0.13 } = {}) {
   const M = tones();
-  const arms = levers(M, { out: 0.42, counter: 0.3 });
-  const uprights = [-1, 1].map(() => stretchedTube(0.07, M.frame));
-  const crossbar = stretchedTube(0.07, M.frame);
-  // The uprights stand on a floor rail under the pivot.
-  const footRail = movableRail(M);
+  const out = 0.42;
+  const post = out - 0.07;
+  const arms = levers(M, { out, horn: { length: 0.35, turn: 180 } });
+  const backRest = backPad(0.32, 0.56, M, { up: 0.5, behind });
+  const beam = stretchedTube(0.08, M.frame);
+  const uprights = [-1, 1].map(() => stretchedTube(0.08, M.frame));
+  const axle = part(rodGeometry(0.02), M.metal);
+  const brace = stretchedTube(0.07, M.frame);
+  const padArm = stretchedTube(0.05, M.frame);
+  const backPost = stretchedTube(0.06, M.frame);
+  const spine = placedRail(M);
+  const front = movableRail(M);
+  const thighPads = [-1, 1].map((s) => pad(0.2, 0.07, 0.11, M.vinyl, V(s * 0.12, ty, tz), { soft: 0.025 }));
+  const bar = ty + 0.035 + 0.02;
   const g = group('pulldown_machine', [
     ...seatOn(seat[0], seat[1], M, { pin: -1 }),
-    ...thighRollers(thighPad[0], thighPad[1], M),
-    ...floorRail(V(0, 0.035, seat[1] - 0.3), V(0, 0.035, seat[1] + 0.9), M),
-    ...floorRail(V(-0.6, 0.035, seat[1] + 0.6), V(0.6, 0.035, seat[1] + 0.6), M),
-    ...arms.parts, ...uprights, crossbar, ...footRail.parts,
+    ...floorRail(V(-0.25, 0.035, seat[1] - 0.3), V(0.25, 0.035, seat[1] - 0.3), M),
+    ...spine.parts, ...front.parts, ...thighPads,
+    // The pads hang under their bar, on the lifter's side of it.
+    tube(0.04, V(-0.22, bar, tz), V(0.22, bar, tz), M.frame),
+    backRest.mesh, ...arms.parts, beam, ...uprights, axle, brace, padArm, backPost,
   ]);
   return {
     group: g,
-    place(P) {
+    place(P, P0) {
       arms.place(P);
-      const top = P.pivot.clone().add(V(0, 0.1, 0));
-      footRail.set(top.z, 0.62);
-      [-1, 1].forEach((s, i) => span(uprights[i], V(s * 0.55, 0.07, top.z), top.clone().setX(s * 0.55)));
-      span(crossbar, top.clone().setX(-0.59), top.clone().setX(0.59));
+      const { pivot } = P;
+      spine.set(V(0, 0, seat[1] - 0.35), V(0, 0, pivot.z + 0.1));
+      front.set(pivot.z, post + 0.15);
+      span(beam, pivot.clone().setX(-post - 0.04), pivot.clone().setX(post + 0.04));
+      span(axle, pivot.clone().setX(-out - 0.03), pivot.clone().setX(out + 0.03));
+      [-1, 1].forEach((s, i) => span(uprights[i], V(s * post, 0.07, pivot.z), pivot.clone().setX(s * post).add(V(0, 0.04, 0))));
+      // The brace leans from under the beam down to the floor before the shins, the thigh pads' arm off it.
+      const foot = V(0, 0.07, seat[1] + 0.62);
+      const under = pivot.clone().setX(0).add(V(0, -0.04, 0));
+      span(brace, foot, under);
+      span(padArm, V(0, bar, tz), foot.clone().lerp(under, (bar - foot.y) / (under.y - foot.y)));
+      const support = backRest.fit(P0);
+      span(backPost, support, support.clone().setY(0.07));
     },
   };
 }
 
 /**
- * A preacher curl machine: a seat, a pad under the upper arms, and a bar on two levers turning
- * about the elbows, `P.elbow` and `P.upper` placing the pad, the bar held at `P.bar`.
+ * A plate-loaded preacher curl: the lifter leans onto one wide arm pad `pad` metres deep, on a
+ * column leaning up from the floor ahead, the chest against its back edge and its front edge
+ * stopping short of the elbows, so the upper arms lie on clear pad. A bar on two levers turns about
+ * the elbows (`P0.elbow`), on hubs beyond the pad's front edge either side of the arms, and each
+ * lever carries a loaded horn on a stub below it, whose plate swings forward and up as the bar
+ * curls.
  */
-function preacherCurl({ seat = [0.5, 0] } = {}) {
+function preacherCurl({ seat = [0.5, 0], pad: deep = 0.08 } = {}) {
   const M = tones();
-  // A pad under each upper arm, the chest free between them, on a bar across beneath.
-  const armPads = [-1, 1].map(() => part(padGeometry(0.13, 0.06, 0.16, 0.02), M.vinyl, { solid: true }));
-  const crossbar = stretchedTube(0.04, M.frame);
-  const posts = [-1, 1].map(() => stretchedTube(0.05, M.frame));
-  const arms = [-1, 1].map(() => stretchedTube(0.04, M.frame));
+  const side = 0.3;
+  const frontZ = seat[1] + 0.85;
+  const thick = 0.07;
+  // One wide pad under both upper arms, on a board.
+  const armPad = new THREE.Group();
+  armPad.add(part(padGeometry(0.5, thick, deep, 0.025), M.vinyl, { solid: true }));
+  armPad.add(part(padGeometry(0.46, 0.012, deep - 0.04, 0.003), M.frame).translateY(-thick / 2 - 0.006));
+  const column = stretchedTube(0.1, M.frame);
+  const crossbar = stretchedTube(0.05, M.frame);
+  const mounts = [-1, 1].map(() => stretchedTube(0.04, M.frame));
   const bosses = [-1, 1].map(() => hub(M, V(0, 0, 0)));
+  const arms = [-1, 1].map(() => stretchedTube(0.04, M.frame));
+  const loads = [-1, 1].map((s) => loadedHorn(M, s));
+  const stubs = [-1, 1].map(() => stretchedTube(0.04, M.frame));
   const bar = along(0.014, -0.32, 0.32, M.metal, 16, { held: true });
   const grips = [-1, 1].map((s) => along(0.0175, ...(s < 0 ? [-0.25, -0.1] : [0.1, 0.25]), M.vinyl, 16, { held: true }));
   const handle = new THREE.Group();
   handle.add(bar, ...grips);
-  // Each hub on a mount off the pad's post, and a plate on a horn out of each lever's end.
-  const mounts = [-1, 1].map(() => stretchedTube(0.04, M.frame));
-  const loads = [-1, 1].map((s) => loadedHorn(M, s));
-  const footRail = movableRail(M);
   const g = group('preacher_curl', [
-    ...seatOn(seat[0], seat[1], M, { pin: -1 }),
-    ...floorRail(V(0, 0.035, seat[1] - 0.25), V(0, 0.035, seat[1] + 0.7), M),
-    ...floorRail(V(-0.35, 0.035, seat[1] + 0.7), V(0.35, 0.035, seat[1] + 0.7), M),
-    ...armPads, crossbar, ...posts, ...arms, ...bosses, handle, ...mounts, ...loads.flatMap((l) => l.parts), ...footRail.parts,
+    ...seatOn(seat[0], seat[1], M, { pin: 1 }),
+    ...floorRail(V(0, 0.035, seat[1] - 0.3), V(0, 0.035, frontZ), M),
+    ...floorRail(V(-0.3, 0.035, frontZ), V(0.3, 0.035, frontZ), M),
+    ...floorRail(V(-0.25, 0.035, seat[1] - 0.3), V(0.25, 0.035, seat[1] - 0.3), M),
+    armPad, column, crossbar, ...mounts, ...bosses, ...arms, ...stubs, ...loads.flatMap((l) => l.parts), handle,
   ]);
   return {
     group: g,
     place(P, P0) {
-      // Under the upper arms: on the side of them away from the forearms' swing.
+      // Under the upper arms, on the side of them away from the forearms' swing, its front edge 3 cm
+      // short of the elbows.
       const under = V(0, -P0.upper.z, P0.upper.y);
-      const at = P0.elbow.clone().addScaledVector(P0.upper, -0.08).addScaledVector(under, 0.1);
-      const facing = new THREE.Matrix4().makeBasis(X, under.clone().negate(), X.clone().cross(under.clone().negate()));
-      armPads.forEach((m, i) => {
-        m.position.copy(at).setX(i ? 0.2 : -0.2);
-        m.quaternion.setFromRotationMatrix(facing);
-      });
-      const bar = at.clone().addScaledVector(under, 0.05).addScaledVector(P0.upper, 0.07);
-      span(crossbar, bar.clone().setX(-0.28), bar.clone().setX(0.28));
-      posts.forEach((m, i) => span(m, bar.clone().setX(i ? 0.28 : -0.28), V(i ? 0.28 : -0.28, 0.07, bar.z)));
-      footRail.set(bar.z, 0.36);
+      const at = P0.elbow.clone().addScaledVector(P0.upper, -(0.03 + deep / 2)).addScaledVector(under, 0.045 + thick / 2);
+      armPad.position.copy(at);
+      armPad.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, under.clone().negate(), X.clone().cross(under.clone().negate())));
+      // Carried from under its front edge, clear of the lap.
+      const below = at.clone().addScaledVector(P0.upper, deep / 2 + 0.01).addScaledVector(under, thick / 2 + 0.03);
+      span(column, V(0, 0.07, frontZ), below);
+      span(crossbar, below.clone().setX(-side), below.clone().setX(side));
       handle.position.copy(P.bar);
       [-1, 1].forEach((s, i) => {
-        const pivot = P0.elbow.clone().setX(s * 0.34);
+        const pivot = P0.elbow.clone().setX(s * side);
+        const end = P.bar.clone().setX(s * side);
         bosses[i].position.copy(pivot);
-        span(mounts[i], pivot.clone().setX(s * 0.31), bar.clone().setX(s * 0.28));
-        span(arms[i], pivot, P.bar.clone().setX(s * 0.34));
-        loads[i].place(P.bar.clone().setX(s * 0.36));
+        span(mounts[i], pivot, below.clone().setX(s * side));
+        span(arms[i], pivot, end);
+        // The horn on a stub a quarter turn below the lever, swinging forward and up as the bar curls.
+        const a = swingOf(pivot, end) - Math.PI / 2;
+        const horn = pivot.clone().add(V(0, 0.2 * Math.sin(a), 0.2 * Math.cos(a)));
+        span(stubs[i], pivot, horn);
+        loads[i].place(horn);
       });
     },
   };

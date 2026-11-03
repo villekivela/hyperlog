@@ -217,8 +217,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `height` from `bench` [from z, to z]; `calf_raise_machine` the platform under the balls and a pad
   over the knees; `squat_machine` the platform and the sled's rails from the hips' path;
   `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
-  `pulldown_machine` the thigh rollers at `thighPad` [y, z]; and `row_machine`,
-  `pulldown_machine` and `preacher_curl_machine` levers on hubs at the pose's pivot or elbows.
+  `pulldown_machine` a back pad `pad` metres behind the spine and thigh pads at `thighPad` [y, z],
+  hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
+  its front edge short of the elbows. The three are plate-loaded: `row_machine` and
+  `pulldown_machine` turn their levers on hubs at the pose's `pivot` (the row's low in front of the
+  knees, the pulldown's on a portal ahead of the head), each lever running on past its hub to a
+  loaded horn; `preacher_curl_machine` turns its bar's levers on hubs in line with the elbows,
+  beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the muscle works.
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 
