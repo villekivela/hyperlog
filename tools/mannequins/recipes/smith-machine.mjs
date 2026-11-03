@@ -1,7 +1,7 @@
 // A plate-loaded smith machine with its bar on two guide rods (refs/smith_machine/ref.md): a front
 // upright either side, leaning 7° with its top toward the back, carries the rod on its inner face
 // and, behind the rod, a plate of 13 hook notches 152 mm apart, both from the floor beam to a hood
-// at the top; a rear upright either side, leaning with them,, wrapped in a pad, carries four plate horns
+// at the top; a rear upright either side, leaning with them, wrapped in a pad, carries four plate horns
 // through its outer face. Crossbars join the front uprights at the top and the rear ones at the middle.
 // Each carriage is a block round its rod, with the bar through it and a hook lug that rests on a
 // notch; a safety stop lies on the plate, and the bar can't go below it.
@@ -39,6 +39,8 @@ const BLOCK = 0.07;
 const BAR = { half: 1.05, grip: 0.0125 };
 // The rear uprights rise from 300 mm behind the machine's middle, leaning with the rods, with four horns a side.
 const REAR = { z: -0.3, pad: 1.8 };
+// The horns stand out of the pad's outer face, 200 mm.
+const HORN = { x: UPRIGHT.x + UPRIGHT.w / 2 + 0.015, length: 0.2 };
 const HORNS = [0.5, 0.93, 1.36, 1.79];
 // The floor beams run 1.24 m along the machine.
 const FLOOR = { front: 0.62, back: -0.62 };
@@ -76,7 +78,7 @@ export default recipe({
   fit: [
     {
       sets: 'hook',
-      rule: 'the notch one below the bar\'s standing height, for a short push to unrack it: about 1.36 m for a squat or a lunge, numbered from the lowest notch',
+      rule: 'the notch one below the bar\'s standing height, for a short push to unrack it: about 1.35 m for a squat or a lunge, numbered from the lowest notch',
     },
     {
       sets: 'stops',
@@ -88,42 +90,41 @@ export default recipe({
     const frame = [];
     const sides = [-1, 1];
     const topAt = HEIGHT - 0.035;
-    const sFrom = (y) => valueAt(y);
-    // The floor beams, with the front uprights on them 470 mm from their front ends.
+    // The floor beams, with the front uprights on them about 530 mm from their front ends.
     for (const s of sides) {
       const [beam, ...caps] = floorRail(V(s * UPRIGHT.x, 0.035, FLOOR.back), V(s * UPRIGHT.x, 0.035, FLOOR.front), M);
       frame.push(role(beam, 'beam'), ...caps);
-      const base = onRod(s * UPRIGHT.x, sFrom(0.07), -UPRIGHT.back);
-      const top = onRod(s * UPRIGHT.x, sFrom(HEIGHT), -UPRIGHT.back);
+      const base = onRod(s * UPRIGHT.x, valueAt(0.07), -UPRIGHT.back);
+      const top = onRod(s * UPRIGHT.x, valueAt(HEIGHT), -UPRIGHT.back);
       frame.push(role(tube(UPRIGHT.w, base, top, M.frame), 'upright'));
       // The rod on the upright's inner face, bracketed at each end, with a rubber stop at its foot.
-      const rodTo = (s2) => onRod(s * ROD, s2);
-      frame.push(role(rod(0.0125, rodTo(sFrom(0.2)), rodTo(sFrom(RODS_TOP)), M.metal), 'guide'));
+      const rodAt = (along) => onRod(s * ROD, along);
+      frame.push(role(rod(0.0125, rodAt(valueAt(0.2)), rodAt(valueAt(RODS_TOP)), M.metal), 'guide'));
       for (const y of [0.2, RODS_TOP]) {
-        frame.push(role(leaning(0.07, 0.05, 0.1, M.pulley, onRod(s * ROD, sFrom(y), -0.03), { solid: true }), 'bracket'));
+        frame.push(role(leaning(0.07, 0.05, 0.1, M.pulley, onRod(s * ROD, valueAt(y), -0.03), { solid: true }), 'bracket'));
       }
-      frame.push(leaning(0.05, 0.03, 0.05, M.vinyl, onRod(s * ROD, sFrom(0.235)), { soft: 0.006 }));
+      frame.push(leaning(0.05, 0.03, 0.05, M.vinyl, onRod(s * ROD, valueAt(0.235)), { soft: 0.006 }));
       // The hook plate behind it, on the floor beam and up to the hood: a spine and a tooth under each lug.
-      frame.push(role(leaning(0.012, (2.25 - 0.13) / Math.cos(LEAN), 0.04, M.metal, onRod(s * PLATE, sFrom(1.19), -BEHIND - 0.02)), 'spine'));
+      frame.push(role(leaning(0.012, (2.25 - 0.13) / Math.cos(LEAN), 0.04, M.metal, onRod(s * PLATE, valueAt(1.19), -BEHIND - 0.02)), 'spine'));
       for (let k = 0; k < NOTCH.count; k++) {
-        frame.push(role(leaning(0.012, 0.07, 0.04, M.metal, onRod(s * PLATE, sFrom(notchY(k) - 0.05), -BEHIND + 0.02)), 'tooth'));
+        frame.push(role(leaning(0.012, 0.07, 0.04, M.metal, onRod(s * PLATE, valueAt(notchY(k) - 0.05), -BEHIND + 0.02)), 'tooth'));
       }
-      // The safety stop on the plate: a wedge under the carriage, its top a carriage's half height below the bar.
-      frame.push(role(leaning(0.03, 0.03, 0.24, M.vinyl, onRod(s * PLATE, sFrom(notchY(stops) - CARRIAGE / 2 - 0.015), -0.07), { soft: 0.006, solid: true }), 'stop'));
+      // The safety stop on the plate: a block under the carriage, its top a carriage's half height below the bar.
+      frame.push(role(leaning(0.03, 0.03, 0.24, M.vinyl, onRod(s * PLATE, valueAt(notchY(stops) - CARRIAGE / 2 - 0.015), -0.07), { soft: 0.006, solid: true }), 'stop'));
       // The hood from the top of the front upright back to the rear upright.
-      const hoodFrom = onRod(s * UPRIGHT.x, sFrom(topAt), -UPRIGHT.back);
+      const hoodFrom = onRod(s * UPRIGHT.x, valueAt(topAt), -UPRIGHT.back);
       frame.push(role(tube(0.07, hoodFrom, V(s * UPRIGHT.x, hoodFrom.y, rearAt(hoodFrom.y)), M.frame), 'hood'));
-      // The rear upright, upright, its pad inside it and four horns outside.
+      // The rear upright, its pad inside it and four horns outside.
       frame.push(role(tube(UPRIGHT.w, V(s * UPRIGHT.x, 0.07, REAR.z), V(s * UPRIGHT.x, HEIGHT, rearAt(HEIGHT)), M.frame), 'upright'));
       const middle = 0.18 + REAR.pad / 2;
       frame.push(role(leaning(UPRIGHT.w + 0.03, REAR.pad / Math.cos(LEAN), 0.24, M.vinyl, V(s * UPRIGHT.x, middle, rearAt(middle)), { soft: 0.012, solid: true }), 'cushion'));
       for (const y of HORNS) {
-        frame.push(role(rod(0.025, V(s * (UPRIGHT.x + UPRIGHT.w / 2 + 0.015), y, rearAt(y)), V(s * (UPRIGHT.x + UPRIGHT.w / 2 + 0.015 + 0.2), y, rearAt(y)), M.metal), 'horn'));
-        frame.push(turnedPart(plateGeometry(0.04, 0.02), M.pulley, V(s * (UPRIGHT.x + UPRIGHT.w / 2 + 0.015 + 0.01), y, rearAt(y))));
+        frame.push(role(rod(0.025, V(s * (HORN.x), y, rearAt(y)), V(s * (HORN.x + HORN.length), y, rearAt(y)), M.metal), 'horn'));
+        frame.push(turnedPart(plateGeometry(0.04, 0.02), M.pulley, V(s * (HORN.x + 0.01), y, rearAt(y))));
       }
     }
     // The crossbars: between the front uprights at the top, between the rear ones at the middle.
-    const topFront = onRod(0, sFrom(topAt - 0.03), -UPRIGHT.back);
+    const topFront = onRod(0, valueAt(topAt - 0.03), -UPRIGHT.back);
     frame.push(tube(0.07, topFront.clone().setX(-UPRIGHT.x), topFront.clone().setX(UPRIGHT.x), M.frame));
     frame.push(tube(0.07, V(-UPRIGHT.x, 1.95, rearAt(1.95)), V(UPRIGHT.x, 1.95, rearAt(1.95)), M.frame));
 
@@ -134,8 +135,8 @@ export default recipe({
     role(shaft, 'shaft');
     bar.add(shaft);
     for (const s of sides) {
-      const at = (a, b) => [Math.min(s * a, s * b), Math.max(s * a, s * b)];
-      bar.add(role(along(0.025, ...at(ROD, BAR.half), M.metal, 24, { solid: true }), 'sleeve'));
+      const outward = (a, b) => [Math.min(s * a, s * b), Math.max(s * a, s * b)];
+      bar.add(role(along(0.025, ...outward(ROD, BAR.half), M.metal, 24, { solid: true }), 'sleeve'));
       bar.add(role(leaning(BLOCK, CARRIAGE, BLOCK, M.pulley, V(s * ROD, 0, 0), { soft: 0.01, solid: true }), 'carriage'));
       bar.add(role(leaning(0.02, 0.03, BEHIND - 0.02, M.pulley, V(s * PLATE, 0, -(BEHIND - 0.02) / 2 - 0.02)), 'lug'));
     }

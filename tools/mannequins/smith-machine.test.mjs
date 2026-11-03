@@ -1,5 +1,5 @@
 // The smith machine (#182), from refs/smith_machine/ref.md: a bar on two guide rods leaning 7° with
-// the top toward the back, a carriage at each end whose hooks turn onto notches in a plate behind
+// the top toward the back, a carriage at each end whose hook lug rests on a notch in a plate behind
 // the rod, safety stops on the same plates, and plate horns on two padded rear uprights.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,7 +17,6 @@ const machine = (options = {}) => {
   return kit;
 };
 const contact = (kit, point) => kit.contacts.find((c) => c.point === point);
-const deg = (r) => (r * 180) / Math.PI;
 const close = (a, b, within, why) => assert.ok(Math.abs(a - b) <= within, `${why}: ${a.toFixed(3)}, not ${b} ± ${within}`);
 const LEAN = rad(7);
 const FOOT_Y = 0.25;
@@ -62,17 +61,17 @@ test('the joint\'s value is the metres the bar has moved along the rods', () => 
 
 test('unposed, the bar hangs on the hook one notch below a standing squat\'s bar, 150 mm between notches', () => {
   const kit = machine();
-  // The ref: the notch at about 1.36 m, for a squat's bar at about 1.47 m.
+  // The ref: the notch at about 1.35 m, for a squat's bar at about 1.47 m.
   close(barHeight(kit), LOWEST + 7 * PITCH, 0.005, 'the racked bar\'s height');
   close(machine({ hook: 3 }).joints.bar.value, machine().joints.bar.value - 4 * PITCH / Math.cos(LEAN), 1e-6, 'four notches lower, along the rods');
   assert.ok(HIGHEST > LOWEST + 12 * PITCH - 0.01 && HIGHEST < LOWEST + 12 * PITCH + 0.01, 'thirteen notches span the ref\'s lowest to highest hook');
 });
 
-test('its nine exercises are the library\'s smith machine ones', async () => {
+test('its nine exercises are the library\'s smith machine ones, under equipment that has the kit', async () => {
   const library = JSON.parse(await readFile(new URL('../../app/src/main/assets/exercises.json', import.meta.url), 'utf8'));
   const ids = library.exercises.filter((e) => e.equipment === 'smith_machine').map((e) => e.id).sort();
-  assert.equal(ids.length, 9);
-  assert.ok(Array.isArray(EQUIPMENT[library.exercises.find((e) => e.id === ids[0]).equipment]), 'their equipment has kits');
+  assert.deepEqual(ids, ['ffe_smith_machine_lunge', 'smith_machine_bench_press', 'smith_machine_incline_press', 'smith_machine_jm_press', 'smith_machine_lunge', 'smith_machine_rdl', 'smith_machine_seated_press', 'smith_machine_squat', 'split_squat_smith']);
+  assert.ok(EQUIPMENT.smith_machine.includes('smith_machine'));
 });
 
 test('the hands hold the shaft between the carriages and the upper back rests on it, both at the bar\'s height', () => {
