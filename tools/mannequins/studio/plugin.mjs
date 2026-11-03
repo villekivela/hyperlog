@@ -5,8 +5,8 @@
 // An exercise's technique video is fetched with yt-dlp the first time it is opened, into a cache
 // outside the repo, and its loop (the marks of one rep) goes into review/loops.json.
 //
-// The tool's modules are loaded through Vite (`ssrLoadModule`), so an edit to kit.mjs or poses.mjs
-// is posed from at once. The page imports the same modules; what is node's in them (reading
+// The tool's modules are loaded through Vite (`ssrLoadModule`), so an edit to a recipe, a part or
+// poses.mjs is posed from at once. The page imports the same modules; what is node's in them (reading
 // files) is stubbed there, and never reached, since the page is handed every entry prepared.
 import { execFile } from 'node:child_process';
 import { createReadStream } from 'node:fs';
@@ -14,8 +14,8 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-// Nothing here imports poses.mjs or kit.mjs, even through another module: Vite restarts its server
-// when a file its config imports changes, and those change all the time.
+// Nothing here imports poses.mjs, kit.mjs or the recipes and parts, even through another module:
+// Vite restarts its server when a file its config imports changes, and those change all the time.
 import { patchPoses } from '../patch.mjs';
 import { videoOf } from './video.mjs';
 

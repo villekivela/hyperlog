@@ -167,12 +167,13 @@ test('the page is served, and the tool\'s modules reach it with node\'s files st
 });
 
 // Vite restarts its server, dropping a save in flight, when a file its config imports changes.
-test('the studio\'s config reaches neither poses.mjs nor kit.mjs, which change while it runs', async () => {
+test('the studio\'s config reaches neither poses.mjs, kit.mjs nor the recipes and parts, which change while it runs', async () => {
   const config = await createServer({ configFile: path.join(TOOL, 'studio', 'vite.config.mjs'), logLevel: 'silent', server: { port: 0, host: '127.0.0.1' } });
   try {
     const deps = config.config.configFileDependencies.map((f) => path.basename(f));
     assert.ok(deps.includes('plugin.mjs'), deps.join(', '));
-    assert.deepEqual(deps.filter((f) => ['poses.mjs', 'kit.mjs', 'entries.mjs', 'stage.mjs'].includes(f)), []);
+    const changing = ['poses.mjs', 'kit.mjs', 'recipe.mjs', 'parts.mjs', 'entries.mjs', 'stage.mjs'];
+    assert.deepEqual(config.config.configFileDependencies.filter((f) => changing.includes(path.basename(f)) || f.includes(`${path.sep}recipes${path.sep}`)), []);
   } finally {
     await config.close();
   }

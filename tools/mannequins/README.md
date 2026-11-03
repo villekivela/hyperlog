@@ -424,7 +424,13 @@ listens on localhost only.
 - **The stage** shows one item. An exercise is posed live with the tool's own modules, looping at
   its tempo or held at the top or the bottom, with drag handles (`handles.mjs`) when held, and the
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
-  the first exercise that uses it (by id) sets it up. A change to a recipe, a part or `poses.mjs`
+  the first exercise that uses it (by id) sets it up.
+- **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
+  `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
+  `L` a tenth of that, `=` types it in degrees or millimetres, and `^` `$` send it to its lower or
+  upper limit; no step goes past them. A joint scrubbed is held where it is set, its stack with it,
+  while the rep its exercise poses plays round it, and `R` gives it back to the rep. A scrub is a
+  view, kept nowhere: a recipe's dimensions are edited as text. A change to a recipe, a part or `poses.mjs`
   on disk reloads the page on the same item, its unsaved numbers kept.
 - **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers
   its motion offers that the entry leaves at the default), lengths shown in millimetres. `h` and `l`
@@ -487,6 +493,7 @@ one (`5l`, `3j`). A new key goes into `keys.json`, under its group, with what it
 | `t` / `b`, `Space`, `,` `.` | Hold at the top / the bottom; play or pause; step a frame |
 | `c` | The baked clip, or the live pose |
 | `h` `l`, `H` `L`, `=`, `R` | Step the selected number, a tenth of a step, type a value, reset it |
+| `^` `$` | A kit's selected joint to its lower / upper limit (`h` `l` `H` `L` `=` `R` move it, on a kit) |
 | `<` `>`, `p` | Bench angle down / up; tune the number per angle |
 | `gf` `gs` `gt`, `←` `→` | Front, side and top cameras; turn 10° |
 | `[` `]`, `{` `}`, `m` | The selected bone's parent, child; previous, next sibling; the mirror bone |

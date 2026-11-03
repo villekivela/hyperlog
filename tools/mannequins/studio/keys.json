@@ -32,12 +32,14 @@
     {
       "name": "Numbers",
       "keys": [
-        { "keys": "h", "command": "less", "count": true, "does": "Step the selected number down (1° or 1 mm), or on the stage turn the selected bone back 1° on its axis" },
-        { "keys": "l", "command": "more", "count": true, "does": "Step the selected number up (1° or 1 mm), or on the stage turn the selected bone on 1° on its axis" },
+        { "keys": "h", "command": "less", "count": true, "does": "Step the selected number down (1° or 1 mm), on the stage turn the selected bone back 1° on its axis, or on a kit move the selected joint back 1° or 1 cm" },
+        { "keys": "l", "command": "more", "count": true, "does": "Step the selected number up (1° or 1 mm), on the stage turn the selected bone on 1° on its axis, or on a kit move the selected joint on 1° or 1 cm" },
         { "keys": "H", "command": "lessFine", "count": true, "does": "Step it down by a tenth of that" },
         { "keys": "L", "command": "moreFine", "count": true, "does": "Step it up by a tenth of that" },
         { "keys": "=", "command": "type", "does": "Type an exact value (12.5, or +2 relative), Enter to set, Esc to cancel" },
-        { "keys": "R", "command": "reset", "does": "Reset to the entry's default (a bone's offset to what is saved)" },
+        { "keys": "R", "command": "reset", "does": "Reset to the entry's default (a bone's offset to what is saved, a kit's joint to where the rep has it)" },
+        { "keys": "^", "command": "lowest", "does": "Send the kit's selected joint to its lower limit" },
+        { "keys": "$", "command": "highest", "does": "Send the kit's selected joint to its upper limit" },
         { "keys": "p", "command": "perAngle", "does": "Tune at this bench angle only, or at all of them" },
         { "keys": "u", "command": "undo", "count": true, "does": "Undo" },
         { "keys": "<C-r>", "command": "redo", "count": true, "does": "Redo" }
