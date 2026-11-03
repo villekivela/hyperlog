@@ -53,12 +53,15 @@ button[aria-pressed="true"] kbd { color: var(--ink); }
 button:disabled { opacity: 0.45; cursor: default; }
 .pane { min-height: 0; background: var(--pane); display: flex; flex-direction: column; border-top: 2px solid transparent; }
 .pane[data-focused="true"] { border-top-color: var(--focus); }
+.pane h2 kbd { text-transform: none; letter-spacing: 0; }
 .pane h2 { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); margin: 0; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 
 /* The sidebar. */
 .sidebar { border-right: 1px solid var(--line); }
 .sidebar .head { padding: 10px 12px 8px; display: grid; gap: 8px; }
-.sidebar input { width: 100%; font: 13px var(--text); color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.filter { position: relative; display: block; }
+.filter kbd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.sidebar input { padding-right: 28px !important; width: 100%; font: 13px var(--text); color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 .list { overflow-y: auto; flex: 1; padding: 0 0 12px; }
 .group { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); padding: 12px 12px 4px; position: sticky; top: 0; background: var(--pane); }
 .row { scroll-margin-top: 32px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 4px 12px; cursor: pointer; border-left: 3px solid transparent; }
@@ -142,8 +145,8 @@ dialog h2 { margin: 0 0 12px; font-size: 16px; }
 
   <aside class="pane sidebar" id="sidebar" data-pane="sidebar" aria-label="Exercises and kits">
     <div class="head">
-      <h2>Library <span id="tally"></span></h2>
-      <input id="filter" type="search" placeholder="Filter: name or status (notes, failing, no pose…)" aria-label="Filter the list" autocomplete="off">
+      <h2>Library <span><span id="tally"></span> <kbd data-key="down"></kbd><kbd data-key="up"></kbd></span></h2>
+      <label class="filter"><input id="filter" type="search" placeholder="Filter: name or status (notes, failing, no pose…)" aria-label="Filter the list" autocomplete="off"><kbd data-key="filter"></kbd></label>
     </div>
     <div class="list" id="list" role="listbox" aria-label="Items"></div>
   </aside>
@@ -173,7 +176,7 @@ dialog h2 { margin: 0 0 12px; font-size: 16px; }
 
   <aside class="pane numbers" id="numbers" data-pane="numbers" aria-label="Numbers">
     <div class="head">
-      <h2>Numbers <span id="changed"></span></h2>
+      <h2>Numbers <span><span id="changed"></span> <kbd data-key="down"></kbd><kbd data-key="up"></kbd></span></h2>
       <div class="step" id="step"></div>
     </div>
     <div class="sliders" id="sliders"></div>

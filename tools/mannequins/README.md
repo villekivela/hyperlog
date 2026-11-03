@@ -393,8 +393,9 @@ listens on localhost only.
   same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
   `body.arch`), a point whole.
 - **Saving** (`:w`) writes the tuned numbers into `poses.mjs` as text (`patch.mjs`, so the comments
-  stay) and re-bakes every clip in a process of its own, then shows the new clip. A pose that fails
-  its checks doesn't bake, and then `poses.mjs` goes back to what it was. Read the diff after: a
+  stay) and re-bakes every clip in a process of its own (the kit files are shared, so one clip
+  can't bake alone), then shows the new clip. A pose that fails its checks doesn't bake, any pose,
+  and then `poses.mjs` goes back to what it was and the studio names the pose that failed. Read the diff after: a
   comment may now describe the old number.
 
 The page imports the tool's modules through Vite, with node's `fs`, `url` and `path` stubbed out:

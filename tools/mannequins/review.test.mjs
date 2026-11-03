@@ -8,7 +8,7 @@ import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
-import { BATCHES, addNote, batchStatus, batchOf, phoneChecked, readNotes, setOk } from './review.mjs';
+import { BATCHES, addNote, batchStatus, batchReviewing, phoneChecked, readNotes, setOk } from './review.mjs';
 import { clipContent, readGlb, writeGlb } from './glb.mjs';
 import { POSES } from './poses.mjs';
 
@@ -42,9 +42,9 @@ test('the first batch is the prototype\'s seven exercises and the close-grip pul
 test('an OK goes into the latest batch that lists the exercise, naming the clip it was given on', async () => {
   const dir = await reviewDir();
   // The squat was posed in the prototype and re-reviewed on the detailed kits; the hack squat is the starter's.
-  assert.equal(batchOf('barbell_squat'), 'kits');
-  assert.equal(batchOf('hack_squat'), 'starter');
-  assert.equal(batchOf('pendulum_squat'), null);
+  assert.equal(batchReviewing('barbell_squat'), 'kits');
+  assert.equal(batchReviewing('hack_squat'), 'starter');
+  assert.equal(batchReviewing('pendulum_squat'), null);
   const squat = await setOk('barbell_squat', true, { dir, clips, at: '2026-11-03T12:00:00.000Z' });
   assert.deepEqual(squat, { batch: 'kits', ok: true, clip: await sha(path.join(clips, 'barbell_squat.glb')) });
   assert.deepEqual(await json(path.join(dir, 'kits.json')), {

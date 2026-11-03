@@ -46,6 +46,28 @@ const bodyOf = (req) => new Promise((resolve, reject) => {
 });
 
 class Refused extends Error {}
+/** A refusal of what `run` throws: the owner's mistake, not the studio's. */
+const refusing = async (run) => {
+  try {
+    return await run();
+  } catch (err) {
+    throw err instanceof Refused ? err : new Refused(err.message);
+  }
+};
+const readLibrary = async () => JSON.parse(await readFile(LIBRARY, 'utf8')).exercises;
+/** A kit's status: an open note on it, or whether a pose uses it. */
+const kitStatus = (notes, uses) => (notes ? 'notes' : uses ? 'kit' : 'unused');
+
+/**
+ * Whether a write comes from the studio's own page: as JSON (which a page elsewhere can't send
+ * without asking first) and, if the browser names its origin, from this server's.
+ */
+function refusal(req) {
+  if (!/^application\/json\b/.test(req.headers['content-type'] ?? '')) return [415, 'A write is JSON'];
+  const origin = req.headers.origin;
+  if (origin && new URL(origin).host !== req.headers.host) return [403, `Not from the studio: ${origin}`];
+  return null;
+}
 
 /**
  * The studio plugin. `posesFile`, `reviewDir` and `clips` are where the poses, the review files
@@ -68,8 +90,8 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
     return checked.get(id);
   };
   const failing = (checks) => Object.values(checks).some((c) => !c.ok);
-  // What the studio has written to poses.mjs itself: the page already has it, so it needn't reload.
-  const own = new Set();
+  // What the studio last wrote to poses.mjs itself: the page already has it, so it needn't reload.
+  let own = null;
   const changed = () => {
     checked = new Map();
     for (const m of server.moduleGraph.getModulesByFile(posesFile) ?? []) server.moduleGraph.invalidateModule(m);
@@ -77,7 +99,7 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
 
   async function items(wait) {
     const t = await tool();
-    const library = JSON.parse(await readFile(LIBRARY, 'utf8')).exercises;
+    const library = await readLibrary();
     const notes = await t.review.readNotes({ dir: t.dir });
     const order = Object.keys(t.kit.EQUIPMENT);
     const rank = (e) => (order.includes(e) ? order.indexOf(e) : order.length);
@@ -103,7 +125,7 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
     const uses = usesOf(t);
     const kits = Object.keys(t.kit.KITS).sort().map((name) => {
       const n = notes[`kit:${name}`]?.length ?? 0;
-      return { id: name, name, uses: uses[name] ?? null, status: n ? 'notes' : uses[name] ? 'kit' : 'unused', notes: n };
+      return { id: name, name, uses: uses[name] ?? null, status: kitStatus(n, uses[name]), notes: n };
     });
     return { exercises, kits };
   }
@@ -130,7 +152,7 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
 
   async function exercise(id) {
     const t = await tool();
-    const library = JSON.parse(await readFile(LIBRARY, 'utf8')).exercises.find((e) => e.id === id);
+    const library = (await readLibrary()).find((e) => e.id === id);
     if (!library) throw new Refused(`No exercise ${id} in the library`);
     const { batch, state, notes } = await t.review.reviewOf(id, { dir: t.dir, clips });
     const base = { kind: 'exercise', id, name: library.name, equipment: library.equipment, batch, notes };
@@ -139,6 +161,7 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
     return {
       ...base, status: failing(checks) ? 'failing' : state, checks,
       entry: t.entries.prepare(id, t.POSES), grips: t.entries.gripsOf(id, t.POSES), clip: await clipOf(id),
+      fingerprint: await t.review.fingerprint(id, clips).catch(() => null),
     };
   }
 
@@ -147,25 +170,25 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
     if (!t.kit.KITS[name]) throw new Refused(`No kit ${name}`);
     const uses = usesOf(t)[name] ?? null;
     const notes = (await t.review.readNotes({ dir: t.dir }))[`kit:${name}`] ?? [];
-    return { kind: 'kit', id: name, name, uses, notes, status: notes.length ? 'notes' : uses ? 'kit' : 'unused', entry: uses && t.entries.prepare(uses, t.POSES) };
+    return { kind: 'kit', id: name, name, uses, notes, status: kitStatus(notes.length, uses), entry: uses && t.entries.prepare(uses, t.POSES) };
   }
 
   // One save at a time: each patches the file as the last one left it, and bakes.
   let saving = Promise.resolve();
-  let state = { baking: null, last: null };
+  let baking = { baking: null, last: null };
   function save(id, tuned) {
     const run = saving.then(async () => {
-      state = { ...state, baking: id };
+      baking = { ...baking, baking: id };
       const before = await readFile(posesFile, 'utf8');
       const after = patchPoses(before, id, tuned);
-      own.add(after);
+      own = after;
       await writeFile(posesFile, after);
       changed();
       try {
         await bake();
       } catch (err) {
         // A pose that fails its checks doesn't bake, and the file never holds one that didn't.
-        own.add(before);
+        own = before;
         await writeFile(posesFile, before);
         changed();
         throw new Refused(`Not saved: the bake failed. ${err.message}`);
@@ -173,30 +196,22 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
       const t = await tool();
       return { id, clip: await t.review.fingerprint(id, clips) };
     });
-    saving = run.then((r) => { state = { baking: null, last: { ...r, ok: true } }; }, (err) => { state = { baking: null, last: { id, ok: false, error: err.message } }; });
+    saving = run.then((r) => { baking = { baking: null, last: { ...r, ok: true } }; }, (err) => { baking = { baking: null, last: { id, ok: false, error: err.message } }; });
     return run;
   }
 
   const routes = {
     'GET /api/items': (url) => items(url.searchParams.has('wait')),
-    'GET /api/state': () => state,
+    'GET /api/state': () => baking,
     'POST /api/save': ({ id, tuned }) => save(id, tuned),
     'POST /api/ok': async ({ id, ok }) => {
       const t = await tool();
       if (!t.POSES[id]) throw new Refused(`${id} has no pose to OK`);
-      try {
-        return await t.review.setOk(id, ok, { dir: t.dir, clips });
-      } catch (err) {
-        throw new Refused(err.message);
-      }
+      return refusing(() => t.review.setOk(id, ok, { dir: t.dir, clips }));
     },
     'POST /api/note': async ({ item, text }) => {
       const t = await tool();
-      try {
-        await t.review.addNote(item, text ?? '', { dir: t.dir, clips });
-      } catch (err) {
-        throw new Refused(err.message);
-      }
+      await refusing(() => t.review.addNote(item, text ?? '', { dir: t.dir, clips }));
       return { item };
     },
   };
@@ -216,11 +231,7 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
     async hotUpdate({ file, read }) {
       if (path.resolve(file) === path.resolve(posesFile) || file.endsWith('.mjs')) checked = new Map();
       if (this.environment.name !== 'client' || path.resolve(file) !== path.resolve(posesFile)) return;
-      const text = await read();
-      if (own.has(text)) {
-        own.delete(text);
-        return [];
-      }
+      if ((await read()) === own) return [];
     },
     configureServer(s) {
       server = s;
@@ -237,6 +248,13 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
         const item = /^\/api\/item\/(exercise|kit)\/([\w-]+)$/.exec(url.pathname);
         const route = routes[`${req.method} ${url.pathname}`];
         if (!clip && !item && !route) return next();
+        const refused = req.method === 'POST' && refusal(req);
+        if (refused) {
+          res.statusCode = refused[0];
+          res.setHeader('content-type', 'application/json');
+          res.end(JSON.stringify({ error: refused[1] }));
+          return;
+        }
         try {
           if (clip) {
             const bytes = await readFile(path.join(clips, clip[1]));

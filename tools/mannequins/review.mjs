@@ -1,7 +1,7 @@
 // The owner's OKs and notes, which the studio writes (README, Reviewing a batch), and whether a
 // batch is done:
 //
-//   node review.mjs status <batch>     how the batch stands, from review/<batch>.json and review/notes.md
+//   node review.mjs status <batch>     how the batch stands, from its file and review/notes.md
 //   node review.mjs phone <batch>      the owner has swiped the batch in the phone's debug gallery
 //
 // An OK names the clip it was given on, so a re-baked clip needs a new one. A batch is done when
@@ -52,8 +52,8 @@ const idsOf = (name) => {
   return ids;
 };
 
-/** The batch an exercise is reviewed in now: the latest that lists it, or null. */
-export const batchOf = (id) => Object.keys(BATCHES).findLast((name) => BATCHES[name].includes(id)) ?? null;
+/** The batch exercise `id` is reviewed in now: the latest in BATCHES that lists it, or null. */
+export const batchReviewing = (id) => Object.keys(BATCHES).findLast((name) => BATCHES[name].includes(id)) ?? null;
 
 /**
  * The files of the clip `id`, from the index in `clips`: its own `clip` (an adjustable bench's
@@ -76,7 +76,7 @@ async function filesOf(clips, id) {
  * reads from the files it shares (`clipContent`), so a kit file that grows for another exercise
  * leaves it as it was.
  */
-export async function hashOf({ all, shared }) {
+async function hashOf({ all, shared }) {
   const files = Object.fromEntries(await Promise.all(shared.map(async (f) => [path.basename(f), await readFile(f)])));
   const hash = createHash('sha256');
   for (const f of all) hash.update(clipContent(await readFile(f), files));
@@ -95,7 +95,7 @@ const writeVerdicts = (dir, batch, verdicts) => writeFile(verdictsFile(dir, batc
  * Gives exercise `id` the owner's OK (or takes it back) for the clip it has now, in `batch`'s file,
  * the latest batch that lists it by default. Returns the batch, the OK and the clip's fingerprint.
  */
-export async function setOk(id, ok, { dir = REVIEW, clips = CLIPS, batch = batchOf(id), at = new Date().toISOString() } = {}) {
+export async function setOk(id, ok, { dir = REVIEW, clips = CLIPS, batch = batchReviewing(id), at = new Date().toISOString() } = {}) {
   if (!batch) throw new Error(`${id} is in no batch: add it to one in BATCHES (review.mjs) first`);
   const clip = await fingerprint(id, clips);
   const verdicts = await readVerdicts(dir, batch);
@@ -121,7 +121,10 @@ The owner's notes from the studio, under the exercise or the kit (\`kit:<name>\`
 the day and the clip it was left on. Fix what a note asks, then delete it.
 `;
 
-/** The open notes in `dir`'s notes.md, by exercise id or \`kit:<name>\`: each note's text, its lines joined by newlines. */
+/**
+ * The open notes in `dir`'s notes.md, by exercise id or `kit:<name>`: each note's text, its lines
+ * joined by newlines.
+ */
 export async function readNotes({ dir = REVIEW } = {}) {
   const text = await readFile(notesFile(dir), 'utf8').catch(() => '');
   const notes = {};
@@ -137,7 +140,7 @@ export async function readNotes({ dir = REVIEW } = {}) {
 }
 
 /**
- * Adds the owner's note on `item` (an exercise id, or \`kit:<name>\`) to notes.md, under its heading,
+ * Adds the owner's note on `item` (an exercise id, or `kit:<name>`) to notes.md, under its heading,
  * with the day and, for a posed exercise, the clip it has now.
  */
 export async function addNote(item, note, { dir = REVIEW, clips = CLIPS, at = new Date().toISOString() } = {}) {
@@ -160,7 +163,7 @@ export async function addNote(item, note, { dir = REVIEW, clips = CLIPS, at = ne
   await writeFile(notesFile(dir), out);
 }
 
-/** Where one exercise stands, from its verdict, the fingerprint of the clip it has now and its open notes. */
+/** Where one exercise stands: from its verdict, the fingerprint of its clip now and its open notes. */
 function stateOf(verdict, now, notes) {
   if (verdict?.ok && verdict.clip === now) return verdict.phone === now ? 'phone-checked' : 'ok';
   if (notes.length) return 'notes';
@@ -170,8 +173,9 @@ function stateOf(verdict, now, notes) {
 
 /**
  * How each exercise of the batch stands, from the verdicts and the notes in `dir`: `ok` for the
- * clip it has now (`phone-checked` when the batch was swiped on the phone on that clip too), `notes` when it has an open note and no such OK, `changed` when the OK was for
- * an earlier clip, or `waiting`. Each lists its open notes.
+ * clip it has now (`phone-checked` when the batch was swiped on the phone on that clip too),
+ * `notes` when it has an open note and no such OK, `changed` when the OK was for an earlier clip,
+ * or `waiting`. Each lists its open notes.
  */
 export async function batchStatus(batch, { dir = REVIEW, clips = CLIPS } = {}) {
   const verdicts = await readVerdicts(dir, batch);
@@ -184,9 +188,12 @@ export async function batchStatus(batch, { dir = REVIEW, clips = CLIPS } = {}) {
   return { done: exercises.every((e) => e.state === 'ok' || e.state === 'phone-checked'), exercises };
 }
 
-/** Where exercise `id` stands in the batch it is reviewed in now (`batchOf`), with its open notes (`notes`, from `readNotes`). */
+/**
+ * Where exercise `id` stands in the batch it is reviewed in now (`batchReviewing`), with its open
+ * notes (`notes`, from `readNotes`, or read here).
+ */
 export async function reviewOf(id, { dir = REVIEW, clips = CLIPS, notes } = {}) {
-  const batch = batchOf(id);
+  const batch = batchReviewing(id);
   const verdict = batch ? (await readVerdicts(dir, batch))[id] : undefined;
   const mine = (notes ?? await readNotes({ dir }))[id] ?? [];
   // A pose not baked yet has no clip to be OK for.

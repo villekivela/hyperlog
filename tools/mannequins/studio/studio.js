@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import KEYS from './keys.json';
 import { helpOf, keymap, tokenOf } from './keys.mjs';
 import { FRAMES, buildStage, parseMannequin } from '../stage.mjs';
-import { CHECKS, checkStage } from '../checks.mjs';
+import { checkStage } from '../checks.mjs';
 import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
@@ -95,7 +95,6 @@ let clipScene = null;
 let mixer = null;
 let duration = 1;
 let handles = [];
-let materials = [];
 
 function frame(cam) {
   view.framing = cam;
@@ -117,23 +116,40 @@ function place() {
   rim.target.position.copy(t);
 }
 
+/** The materials of what is on stage, which the theme colours. */
+function materials() {
+  const out = new Set();
+  for (const root of [live?.stage.scene, clipScene]) root?.traverse((o) => { if (o.material) out.add(o.material); });
+  return out;
+}
+
+/** Frees what a stage or a clip took on the GPU; the mannequin's body is kept for the next stage. */
+function free(root) {
+  root.traverse((o) => {
+    if (o === body) return;
+    if (!o.isMesh || body?.getObjectById(o.id)) return;
+    o.geometry?.dispose();
+    o.material?.dispose?.();
+  });
+}
+
 function colour() {
   scene.background = new THREE.Color(css('--stage'));
   rim.intensity = Number(css('--clay-rim')) || 0;
-  for (const m of materials) {
+  for (const m of materials()) {
     if (m.name === 'shadow') m.opacity = Number(css('--clay-shadow')) || 0.65;
     else if (css(`--clay-${m.name}`)) m.color.set(css(`--clay-${m.name}`));
   }
 }
 
-const gather = (root) => root.traverse((o) => { if (o.material) materials.push(o.material); });
-
 function setLive(next) {
-  if (live) scene.remove(live.stage.scene);
+  if (live) {
+    scene.remove(live.stage.scene);
+    free(live.stage.scene);
+  }
   live = next;
   if (live) {
     scene.add(live.stage.scene);
-    gather(live.stage.scene);
     colour();
   }
   showWhich();
@@ -146,16 +162,19 @@ function showWhich() {
 }
 
 async function loadClip() {
-  if (clipScene) scene.remove(clipScene);
+  if (clipScene) {
+    scene.remove(clipScene);
+    free(clipScene);
+  }
   clipScene = null;
   mixer = null;
   const clip = state.item?.clip;
   if (!clip) return;
   const at = clip.angles?.[state.angle] ?? clip;
+  // The fingerprint changes with what the clip shows, so a re-baked clip is never one cached.
   const gltf = await new GLTFLoader().loadAsync(`${at.file}?v=${state.item.fingerprint ?? ''}`);
   clipScene = gltf.scene;
   scene.add(clipScene);
-  gather(clipScene);
   mixer = new THREE.AnimationMixer(clipScene);
   duration = gltf.animations[0].duration;
   mixer.clipAction(gltf.animations[0]).play();
@@ -353,8 +372,8 @@ holder.addEventListener('pointercancel', endDrag);
 
 // ---- The sidebar --------------------------------------------------------------------------------
 
-const keyOf = (row) => `${row.kind}/${row.id}`;
-const statusText = (s) => s;
+/** A sidebar row's item, as `openItem` takes it. */
+const rowKey = (row) => `${row.kind}/${row.id}`;
 
 function allRows() {
   if (!state.items) return [];
@@ -389,16 +408,16 @@ function paintList() {
     const row = document.createElement('div');
     row.className = 'row';
     row.setAttribute('role', 'option');
-    row.dataset.key = keyOf(r);
+    row.dataset.key = rowKey(r);
     row.dataset.cursor = String(i === state.cursor);
-    row.dataset.current = String(keyOf(r) === state.current);
+    row.dataset.current = String(rowKey(r) === state.current);
     row.setAttribute('aria-selected', String(i === state.cursor));
     row.innerHTML = '<span class="name"></span><span class="status"></span>';
     row.querySelector('.name').textContent = r.name.replace(/_/g, ' ');
     row.querySelector('.name').title = r.kind === 'kit' ? (r.uses ? `as in ${r.uses}` : 'no pose uses it') : r.id;
     const status = row.querySelector('.status');
     status.dataset.status = r.checking ? 'checking' : r.status;
-    status.textContent = r.checking ? 'checking' : statusText(r.status);
+    status.textContent = r.checking ? 'checking' : r.status;
     row.addEventListener('click', () => { setFocus('sidebar'); moveCursor(i); });
     list.append(row);
   });
@@ -414,13 +433,13 @@ function moveCursor(i) {
   state.cursor = Math.max(0, Math.min(state.rows.length - 1, i));
   paintList();
   clearTimeout(openTimer);
-  openTimer = setTimeout(() => openItem(keyOf(state.rows[state.cursor])), 120);
+  openTimer = setTimeout(() => openItem(rowKey(state.rows[state.cursor])), 120);
 }
 
 async function loadItems(wait = false) {
   state.items = await api(`/api/items${wait ? '?wait=1' : ''}`);
   paintList();
-  const at = state.rows.findIndex((r) => keyOf(r) === state.current);
+  const at = state.rows.findIndex((r) => rowKey(r) === state.current);
   if (at >= 0 && at !== state.cursor) { state.cursor = at; paintList(); }
 }
 
@@ -438,7 +457,7 @@ async function openItem(key, { keepTuned = false } = {}) {
     return;
   }
   // Another item asked for since this one.
-  if (state.rows[state.cursor] && keyOf(state.rows[state.cursor]) !== key && state.current !== key) return;
+  if (state.rows[state.cursor] && rowKey(state.rows[state.cursor]) !== key && state.current !== key) return;
   const fresh = key !== state.current || !state.item;
   state.current = key;
   state.item = item;
@@ -684,7 +703,7 @@ function findMatches(query) {
   const out = [];
   for (const r of allRows()) {
     const score = Math.min(fuzzy(query, r.name) ?? Infinity, fuzzy(query, r.id) ?? Infinity);
-    if (score < Infinity) out.push({ score, kind: 'item', key: keyOf(r), label: r.name });
+    if (score < Infinity) out.push({ score, kind: 'item', key: rowKey(r), label: r.name });
   }
   for (const t of state.numbers) {
     const score = Math.min(fuzzy(query, t.path) ?? Infinity, fuzzy(query, labelOf(t.path)) ?? Infinity);
@@ -699,13 +718,13 @@ function jump(match) {
     select(match.path);
     return;
   }
-  let i = state.rows.findIndex((r) => keyOf(r) === match.key);
+  let i = state.rows.findIndex((r) => rowKey(r) === match.key);
   if (i === -1) {
     // A filter hides it: let the find through.
     state.filter = '';
     $('filter').value = '';
     paintList();
-    i = state.rows.findIndex((r) => keyOf(r) === match.key);
+    i = state.rows.findIndex((r) => rowKey(r) === match.key);
   }
   setFocus('sidebar');
   moveCursor(i);
@@ -733,7 +752,6 @@ async function save() {
     state.undo = [];
     state.redo = [];
     await openItem(state.current, { keepTuned: true });
-    state.item.fingerprint = clip;
     // The new clip, as it will ship.
     await loadClip();
     state.clip = true;
@@ -875,7 +893,7 @@ function turnAngle(by) {
   rebuild();
 }
 
-function camera3(azimuth, elevation) {
+function turnTo(azimuth, elevation) {
   view.azimuth = azimuth;
   view.elevation = elevation;
   place();
@@ -916,9 +934,9 @@ const COMMANDS = {
   perAngle: () => perAngle(),
   undo: (n) => history(state.undo, state.redo, n),
   redo: (n) => history(state.redo, state.undo, n),
-  cameraFront: () => camera3(0, 6),
-  cameraSide: () => camera3(90, 6),
-  cameraTop: () => camera3(view.azimuth, 89.5),
+  cameraFront: () => turnTo(0, 6),
+  cameraSide: () => turnTo(90, 6),
+  cameraTop: () => turnTo(view.azimuth, 89.5),
   turnLeft: (n) => { view.azimuth += 10 * n; place(); },
   turnRight: (n) => { view.azimuth -= 10 * n; place(); },
   ok: () => ok(),
@@ -941,6 +959,9 @@ for (const el of document.querySelectorAll('[data-command]')) {
   el.title = KEYS.groups.flatMap((g) => g.keys).find((b) => b.command === el.dataset.command)?.does ?? KEYS.ex.find((c) => c.command === el.dataset.command)?.does ?? '';
   el.addEventListener('click', (ev) => { ev.currentTarget.blur(); run(el.dataset.command, null); });
 }
+
+// A list or a field shows the key that moves through it or opens it.
+for (const el of document.querySelectorAll('[data-key]')) el.textContent = keys.keyOf(el.dataset.key);
 
 function paintCommands() {
   const pressed = { holdTop: state.show === 'top', holdBottom: state.show === 'bottom', play: state.show === 'loop', clip: state.clip };
@@ -1069,9 +1090,9 @@ place();
 requestAnimationFrame(draw);
 
 await loadItems().catch((err) => message(`The studio's server didn't answer: ${err.message}`, 'error'));
-const first = state.current ?? (state.rows[0] && keyOf(state.rows[0]));
+const first = state.current ?? (state.rows[0] && rowKey(state.rows[0]));
 if (first) {
-  state.cursor = Math.max(0, state.rows.findIndex((r) => keyOf(r) === first));
+  state.cursor = Math.max(0, state.rows.findIndex((r) => rowKey(r) === first));
   paintList();
   await openItem(first);
 }

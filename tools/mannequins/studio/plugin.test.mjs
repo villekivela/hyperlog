@@ -162,3 +162,16 @@ test('the studio\'s config reaches neither poses.mjs nor kit.mjs, which change w
     await config.close();
   }
 });
+
+// The studio writes poses.mjs and bakes: another site open in the owner's browser must not.
+test('a write from another site, or one that isn\'t JSON, is refused', async () => {
+  const was = await readFile(poses, 'utf8');
+  const elsewhere = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://example.com' }, body: JSON.stringify({ id: 'barbell_bench_press', tuned: { 'grip.width': 0.5 } }) });
+  assert.equal(elsewhere.status, 403);
+  const form = await fetch(`${base}/api/note`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ item: 'barbell_row', text: 'x' }) });
+  assert.equal(form.status, 415);
+  assert.equal(await readFile(poses, 'utf8'), was);
+  // The studio's own page may.
+  const own = await fetch(`${base}/api/note`, { method: 'POST', headers: { 'content-type': 'application/json', origin: base }, body: JSON.stringify({ item: 'barbell_row', text: 'from the page' }) });
+  assert.equal(own.status, 200);
+});

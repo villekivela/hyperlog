@@ -1647,8 +1647,8 @@ gallery (Technique videos).
     angles. The OK and the notes are files in the repo (#158): the OK goes into the batch's
     `review/<batch>.json` with the fingerprint of the clip it was given on (the latest batch that
     lists the exercise), a note into `review/notes.md` under the exercise or kit, and a phone check
-    into the batch's file as well. `review status <batch>` reads the same files. The published
-    review page, its database and `review apply` are gone.
+    into the batch's file as well. `review status <batch>` reads the same files; nothing is
+    published or kept in a database.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The
