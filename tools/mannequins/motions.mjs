@@ -21,6 +21,12 @@ const floor = { point: V(0, 0, 0), normal: V(0, 1, 0) };
 // they bend.
 const STRAIGHT = 0.995;
 
+/** The movements that hold the bar low in the palm: the presses and the squats. */
+const PALM_GRIPS = new Set(['bench_press', 'dumbbell_press', 'squat', 'pressdown', 'chest_press']);
+
+/** How far along the palm the motion's grip sits: low in the palm for a press, at the fingers' roots for a pull. */
+const depthOf = (e, L) => (PALM_GRIPS.has(e.motion) ? L.gripPalm : L.gripAlong);
+
 /** The values `top` and `bottom` give, `d` of the way down the rep (0 at the top, 1 at the bottom). */
 export function stateAt(e, d) {
   const t = smooth(d);
@@ -60,6 +66,11 @@ export function frameAt(e, d, L) {
   if (tilt) P.gripTilt = tilt;
   // The wrists' bend, [flexion, deviation] in degrees, at the top and the bottom eased between.
   if (s.wrist) P.wrist = s.wrist;
+  // A press or a squat holds the bar low in the palm, stacked over the forearm; a pull at the
+  // fingers' roots.
+  if (PALM_GRIPS.has(e.motion)) P.gripDepth = 'palm';
+  // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
+  if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;
 }
 
@@ -254,7 +265,7 @@ export const MOTIONS = {
    */
   hinge(e, s, L) {
     const hipC = standingHips(e, s.bar === undefined ? s : clearOf(e, s, L), L);
-    const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
+    const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
     const dx = e.grip.width - L.shW;
     // A shrug lifts the shoulders, and the bar with them.
     const lift = L.clavicle * Math.sin(rad(s.shrug ?? 0));
@@ -344,7 +355,7 @@ export const MOTIONS = {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.35).normalize(),
       ...standingFeet(e, L),
-      bar: elbow.clone().addScaledVector(hanging(s.forearm), L.fore + L.gripAlong),
+      bar: elbow.clone().addScaledVector(hanging(s.forearm), L.fore + depthOf(e, L)),
       grip: e.grip.width,
       armPole: (side) => V(side * 0.2, -1, -0.4).normalize(),
     };
@@ -438,14 +449,16 @@ export const MOTIONS = {
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
-    const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
+    const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
     // The hands come in to `grip.lockout` apart at the top and go out to `grip.width` at the bottom.
     const handAt = (side) => {
       const dx = e.grip.lockout - L.shW;
-      const [out, along] = e.top.over;
-      const top = V(side * e.grip.lockout, sh.y, sh.z)
-        .addScaledVector(f, Math.min(out, Math.sqrt(Math.max(0, reach * reach - dx * dx - along * along))))
-        .addScaledVector(u, along);
+      let [out, along] = e.top.over;
+      // No further from the shoulder than the arm reaches, on the same line from it.
+      const room = Math.sqrt(Math.max(0, reach * reach - dx * dx));
+      const far = Math.hypot(out, along);
+      if (far > room) [out, along] = [(out * room) / far, (along * room) / far];
+      const top = V(side * e.grip.lockout, sh.y, sh.z).addScaledVector(f, out).addScaledVector(u, along);
       const [away, down] = e.bottom.chest;
       const bottom = V(side * e.grip.width, sh.y, sh.z).addScaledVector(f, away).addScaledVector(u, -down);
       return top.lerp(bottom, s.press);
@@ -456,6 +469,8 @@ export const MOTIONS = {
       ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       hand: handAt,
       across: (side) => X.clone().multiplyScalar(-side),
+      // A dumbbell turns with the hand: the wrist stays straight and the dumbbell follows it.
+      heldFree: true,
       // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the shoulders.
       armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
     };
@@ -530,8 +545,10 @@ export const MOTIONS = {
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
       ...feet,
       hand: handsOf(e, work),
-      // Both hands on one bar (an upright row): it lies between them.
+      // Both hands on one bar (an upright row): it lies between them, and with a barbell the hands
+      // hold it across the palm, knuckles along it.
       ...(e.grip?.one ? {} : { bar: V(0, work(1).y, work(1).z) }),
+      ...(e.kit?.barbell && !e.grip?.one ? { across: (side) => X.clone().multiplyScalar(-side) } : {}),
       armPole: elbowsTo(e, [1, -0.3, -0.5]),
     };
   },

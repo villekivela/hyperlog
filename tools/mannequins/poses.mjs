@@ -47,7 +47,7 @@ export const POSES = {
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.15, -0.23] },
+    top: { bar: [1.1, -0.23] },
     bottom: { bar: [0.71, -0.09] },
     grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
@@ -151,7 +151,7 @@ export const POSES = {
     body: { hip: [0.56, 0], trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The handles at mid-chest: out in front at the top, back to the shoulders' line at the bottom.
-    top: { handle: [0.94, 0.42], press: 0 },
+    top: { handle: [0.94, 0.38], press: 0 },
     bottom: { handle: [1.055, -0.01], press: 1 },
     lever: 0.85,
     grip: { width: 0.385 },
@@ -163,7 +163,7 @@ export const POSES = {
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides.
   close_grip_bench_press: {
     like: 'barbell_bench_press',
-    top: { bar: [1.15, -0.21] },
+    top: { bar: [1.13, -0.21] },
     bottom: { bar: [0.725, -0.05] },
     grip: { width: 0.22, elbows: 0.45 },
   },
@@ -174,8 +174,8 @@ export const POSES = {
   '2_grip_lat_pulldown': {
     like: 'lat_pulldown',
     grips: {
-      wide: { grip: { width: 0.29, rotate: 0 } },
-      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.3 }, bottom: { bar: [1.08, 0.06] } },
+      wide: { grip: { width: 0.31, rotate: 0 } },
+      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.2 }, bottom: { bar: [1.08, 0.06] } },
     },
   },
 
@@ -302,11 +302,11 @@ export const POSES = {
   bayesian_cable_curl: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_column: { at: [0.15, -0.8], pulley: 0.25, attachment: 'handle', hand: 1 } },
-    top: { shin: 10, thigh: 10, trunk: 12, upperArm: -22, forearm: 125 },
-    bottom: { shin: 10, thigh: 10, trunk: 12, upperArm: -22, forearm: -20 },
+    kit: { cable_column: { at: [0.3522, -0.8], pulley: 0.25, attachment: 'handle', hand: 1 } },
+    top: { shin: 10, thigh: 10, trunk: 20.9948, upperArm: -10.3208, forearm: 107.4867 },
+    bottom: { shin: 10, thigh: 10, trunk: 20.0502, upperArm: -34.6598, forearm: -11.2509 },
     feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: -0.32 },
-    grip: { width: 0.2, rotate: 180, one: 1, rest: [-0.2, 0.96, 0.06], pole: [0.15, -1, -0.5] },
+    grip: { width: 0.2, rotate: 180, one: 1, rest: [-0.2, 0.96, 0.12], pole: [0.15, -1, -0.5] },
     camera: { target: [0, 1.0, -0.2], halfHeight: 1.1, azimuth: 80, elevation: 8 },
   },
 
@@ -404,10 +404,10 @@ export const POSES = {
   front_squat: {
     like: 'barbell_squat',
     trace: null,
-    top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702 },
-    bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517 },
-    bar: { up: 0.104, back: 0.045 },
-    grip: { crossed: true, pole: [0.35, -0.1, 1], rotate: 210, spot: [0.02, 0.12, 0.08] },
+    top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702, rotate: 141.329 },
+    bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517, rotate: 144.2005 },
+    bar: { up: 0.074, back: 0.06 },
+    grip: { crossed: true, pole: [0.35, 0.0896, 1.3], rotate: 210, spot: [0.1755, 0.0695, 0.1018] },
   },
 
   // Standing, the elbows by the sides: the bar curls from the thighs up to the shoulders, palms up.
@@ -429,8 +429,10 @@ export const POSES = {
     motion: 'bridge',
     kit: { barbell: {} },
     body: { shoulders: [0.12, -0.6085], head: 40 },
-    top: { hip: [0.3844, 0.08], bar: [0.471, -0.0132] },
-    bottom: { hip: [0.13, 0.06], bar: [0.2241, -0.0434] },
+    // The hands rest the bar on the hips, the wrists straight on the forearms (set, so the elbows
+    // keep out to the sides on the floor).
+    top: { hip: [0.3844, 0.08], bar: [0.471, -0.0132], wrist: [0, 0] },
+    bottom: { hip: [0.13, 0.06], bar: [0.2241, -0.0434], wrist: [0, 0] },
     feet: { stance: 0.15, z: 0.42, toeOut: 10 },
     grip: { width: 0.3, pole: [1, 0, 0] },
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.75, azimuth: 70, elevation: 14 },
@@ -445,8 +447,8 @@ export const POSES = {
     motion: 'bridge',
     kit: { barbell: {}, bench: { z: 0, across: -0.62, height: 0.3923 } },
     body: { shoulders: [0.5127, -0.4949], head: 15.6222 },
-    top: { hip: [0.52, 0.08], bar: [0.625, 0.1], arch: [0, 0, 0] },
-    bottom: { hip: [0.22, -0.02], bar: [0.3417, -0.0491], arch: [18.3305, -0.1695, -12.3207] },
+    top: { hip: [0.52, 0.08], bar: [0.625, 0.1], arch: [0, 0, 0], wrist: [0, 0] },
+    bottom: { hip: [0.22, -0.02], bar: [0.3417, -0.0491], arch: [18.3305, -0.1695, -12.3207], wrist: [0, 0] },
     feet: { stance: 0.16, z: 0.42, toeOut: 10 },
     grip: { width: 0.3453, pole: [1, 0.1, 0.3], rotate: 8.4497 },
     camera: { target: [0, 0.4, 0.0], halfHeight: 0.8, azimuth: 70, elevation: 12 },
@@ -459,11 +461,11 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'row',
     kit: { barbell: {} },
-    top: { shin: 8, thigh: 32, trunk: 60, bar: 0.862 },
-    bottom: { shin: 8, thigh: 32, trunk: 60, bar: 0.477 },
-    bar: { z: 0.254 },
+    top: { shin: 8, thigh: 32, trunk: 60, bar: 0.8687, rotate: 0 },
+    bottom: { shin: 8, thigh: 32, trunk: 60, bar: 0.517 },
+    bar: { z: 0.1964 },
     feet: { stance: 0.15, toeOut: 10, kneesOut: 0.25 },
-    grip: { width: 0.25, pole: [0.35, 0.2, -1] },
+    grip: { width: 0.3436, pole: [0.55, 0.2, -0.8] },
     camera: { target: [0, 0.8, 0.1], halfHeight: 0.95, azimuth: 66, elevation: 8 },
   },
 
@@ -477,7 +479,7 @@ export const POSES = {
     bottom: { shin: 14, thigh: 53, trunk: 80, bar: 0.2904 },
     bar: { z: 0.2039 },
     feet: { stance: 0.16, y: 0.05, toeOut: 10, kneesOut: 0.3 },
-    grip: { width: 0.3665, pole: [0.35, 0.2, -1], rotate: -6.1337 },
+    grip: { width: 0.3665, rotate: -6.1337 },
     camera: { target: [0, 0.6, 0.15], halfHeight: 0.85, azimuth: 66, elevation: 8 },
   },
 
@@ -499,10 +501,11 @@ export const POSES = {
     equipment: 'barbell',
     motion: 'free_arms',
     kit: { barbell: {} },
-    top: { shin: 2, thigh: 2, trunk: 3, hand: [0.11, 1.3, 0.21] },
-    bottom: { shin: 2, thigh: 2, trunk: 3, hand: [0.11, 0.83, 0.17] },
+    top: { shin: 2, thigh: 2, trunk: 3, hand: [0.11, 1.3, 0.21], rotate: 0 },
+    bottom: { shin: 2, thigh: 2, trunk: 3, hand: [0.11, 0.83, 0.17], rotate: 0 },
     feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
-    grip: { pole: [1.4295, 0.7, -0.2] },
+    // The hands lie along the bar, the wrists bending to keep them there as the elbows ride high.
+    grip: { pole: [1.4295, 0.7, -0.2], wristBends: true },
     camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 40, elevation: 8 },
   },
 
@@ -539,7 +542,7 @@ export const POSES = {
     kit: { barbell: {} },
     body: { hip: [0.13, 0.28], trunk: -89, head: 0 },
     feet: { stance: 0.2, z: 0.62, toeOut: 15 },
-    top: { bar: [0.75, -0.2] },
+    top: { bar: [0.71, -0.2] },
     bottom: { bar: [0.43, -0.08] },
     grip: { width: 0.38, elbows: 0.7 },
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },

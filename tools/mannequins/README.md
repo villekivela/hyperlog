@@ -82,13 +82,21 @@ db_incline_press: {
 
 ## Wrists and grip turn
 
-Every pose with hands bends its wrists (SPEC, #127). A hand on something that lies its own way (a
-bar, a handle the pose sets) turns at the wrist until its knuckles lie along it, as far as a wrist
-bends (40°); a free handle turns with the hand. `top.wrist` and `bottom.wrist` bend it further,
-[flexion toward the palm, deviation toward the index finger] in degrees, eased through the rep
-(one given at the bottom alone eases from straight). The grip's turn is `top.rotate` and
-`bottom.rotate`, each from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers
-handle bends the wrist.
+Every pose with hands keeps its wrists straight (SPEC, #127): the back of the hand in line with the
+forearm. A hand on something that lies its own way (a bar, a handle the pose sets) takes it across
+the palm, knuckles along it, and rolls about it; the elbow goes round the line from the shoulder to
+the wrist to wherever the wrist comes out straightest, keeping to the pose's pole side, and keeping
+close to the pole where the arm was traced or the entry sets `grip.pole`. A free handle (a dumbbell,
+a stirrup) turns with the hand. Where no straight arm reaches, the wrist turns as little as it must.
+A press or a squat holds the bar low in the palm, near its heel, the fingers closed further round
+it; a pull at the fingers' roots, the palm against it.
+
+`top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
+degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
+given at the bottom alone eases from straight). The joints check fails a wrist bent more than 20°
+in a pose that doesn't set its wrists. The grip's turn is `top.rotate` and `bottom.rotate`, each
+from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers handle bends the wrist,
+and a squat's elbow handle sets `grip.pole`.
 
 ## Grips set by set
 

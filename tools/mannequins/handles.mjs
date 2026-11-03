@@ -111,6 +111,18 @@ export function handlesAt(entry, stage, P, d) {
     }
   }
 
+  if (entry.motion === 'squat') {
+    // A squat's elbow points where it's dragged, from the shoulder: `grip.pole` [out, up, forward].
+    const sh = wpos(rig.bones.upperarm_l);
+    out.push({
+      id: 'elbow', label: 'elbows', at: wpos(rig.bones.lowerarm_l),
+      drag: (p) => {
+        const d = p.clone().sub(sh).normalize();
+        return { 'grip.pole': [round(d.x), round(d.y), round(d.z)] };
+      },
+    });
+  }
+
   if (entry.motion === 'pulldown' || entry.motion === 'bench_press' || entry.motion === 'dumbbell_press') {
     const sh = wpos(rig.bones.upperarm_l);
     const axis = wpos(rig.bones.hand_l).sub(sh);

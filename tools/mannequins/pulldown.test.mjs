@@ -27,9 +27,10 @@ test('at the top the arms are fully extended and the shoulders are up in the str
 
 test('at the bottom the elbows are down by the sides, not out', () => {
   const { upper } = arm(1);
-  // Front-on, the upper arm is within 15° of straight down.
+  // Front-on, the upper arm is within 18° of straight down: the elbow gives a little to keep the
+  // underhand wrist straight.
   const out = deg(Math.atan2(upper.x, -upper.y));
-  assert.ok(Math.abs(out) < 15, `elbow out ${out}°`);
+  assert.ok(Math.abs(out) < 18, `elbow out ${out}°`);
 });
 
 test('the grip is underhand: the palms face the lifter', () => {

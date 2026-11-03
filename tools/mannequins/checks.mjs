@@ -7,8 +7,9 @@
 //   hands close round what they hold), and never through a thin one, nor more than 1.5 cm into the
 //   floor; and every cable ends within 1 cm of its handle's hook;
 // - joints: knees and elbows bend no further than 155°, knees point within 60° of the hips' front,
-//   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, and
-//   the ankle keeps between 55° and 160° from shin to foot;
+//   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, the
+//   ankle keeps between 55° and 160° from shin to foot, and a wrist bends no more than 20° off the
+//   forearm's line unless the pose sets its wrists (an open hand counts as set);
 // - trace: each angle the pose has a trace for is within 10° of it.
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
@@ -20,7 +21,7 @@ import { ANGLES, deg, sideAngles } from './angles.mjs';
 export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace'];
 
 const LIMITS = {
-  grip: 0.015, foot: 0.02, inside: 0.02, floor: 0.015, cable: 0.01,
+  grip: 0.015, foot: 0.02, inside: 0.02, floor: 0.015, wrist: 20, cable: 0.01, rack: 0.015,
   bend: 155, kneeTurn: 60, hipFlex: 140, hipExtend: 30, head: 60, ankle: [55, 160], trace: 10,
 };
 const angle = (a, b) => deg(a.angleTo(b));
@@ -163,12 +164,15 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     for (const s of parts) {
       const near = new THREE.Box3().setFromObject(s.mesh).expandByScalar(0.01);
       const inverse = s.mesh.matrixWorld.clone().invert();
-      // Thin parts, like a bar, count from any way in; others from 2 cm in.
+      // Thin parts, like a bar, count from any way in; others from 2 cm in. A bar racked on open
+      // hands (a cross-arm front squat) rests on the arms, up to its own thickness.
       const allowed = Math.min(LIMITS.inside, 0.5 * Math.min(...s.half));
+      const racked = P.openHands && s.held ? LIMITS.rack : 0;
       vertices.forEach((b, i) => {
         if ((s.held && b.hand) || !near.containsPoint(skinned[i])) return;
         const depth = depthIn(s, v.copy(skinned[i]).applyMatrix4(inverse));
-        if (depth > 0) note('equipment', depth - allowed, f, `${b.bone} ${(depth * 100).toFixed(1)} cm into ${s.mesh.name}`);
+        const allow = racked && /^(upperarm|lowerarm)_/.test(b.bone) ? Math.max(allowed, racked) : allowed;
+        if (depth > 0) note('equipment', depth - allow, f, `${b.bone} ${(depth * 100).toFixed(1)} cm into ${s.mesh.name}`);
       });
     }
     for (const { cable, hook } of kit.cables ?? []) {
@@ -178,6 +182,14 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     }
     const [joint, past] = jointsPast(rig);
     note('joints', past, f, joint);
+    // An exercise whose wrists bend (`grip.wristBends`, an upright row's at the top) is let off.
+    if (!entry.top?.wrist && !entry.bottom?.wrist && !P.openHands && !entry.grip?.wristBends) {
+      for (const k of ['l', 'r']) {
+        const fore = wpos(rig.bones['hand_' + k]).sub(wpos(rig.bones['lowerarm_' + k]));
+        const bend = deg(wpos(rig.bones['middle_01_' + k]).sub(wpos(rig.bones['hand_' + k])).angleTo(fore));
+        note('joints', bend - LIMITS.wrist, f, `wrist ${k} bends ${bend.toFixed(0)}°`);
+      }
+    }
     if (entry.trace) {
       const measured = posedAngles(rig);
       for (const [k, samples] of Object.entries(entry.trace.angles)) {
