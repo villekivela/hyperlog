@@ -3,12 +3,16 @@
 One `<machine>/ref.md` per piece of equipment the library's exercises need and `kit.mjs` has no kit
 for (#161 builds them). Each names a real model to base the recipe on, with links, the dimensions
 found, the motion and the fit rules. Brand names live only here; the recipes and the app stay
-generic. Links only: no web photo or 3D model is committed (#149). The owner's own photos get added
-later, downscaled.
+generic. Links only: no web photo, video frame or 3D model is committed (#149).
 
-Dimensions marked "estimated" or "not published" are gaps: most makers publish a footprint, a
-height and a stack, but not seat heights, pivot places or ranges of motion. Each file's last section
-lists the photos to take at Hukka (the owner's gym) to close them.
+Most makers publish a footprint, a height and a stack, but not seat heights, pivot places or ranges
+of motion. Those are measured from the makers' photos and the exercises' technique videos (#168):
+each such cell says "estimated from" the photo or the video at m:ss it was measured in, and the
+known size it was scaled by (a published dimension, a 450 mm bumper plate, a stack plate, or a
+person of about 1.75 m). What no picture settles is "chosen from" a named fit rule and the
+mannequin's body, at low confidence, for the owner's eye in the studio. The internet is the only
+source; no one photographs machines at the gym. Each file's last section, Open gaps, lists what
+stays chosen and why.
 
 ## Build order
 
@@ -16,16 +20,16 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 
 | # | Machine | Exercises | Based on |
 | --- | --- | --- | --- |
-| 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 2 | Titan Chest-Supported T-Bar Row (adjustable) |
+| 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable) |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°) |
 | 4 | [`pullup_dip_station`](pullup_dip_station/ref.md) | 16 | Rogue Crown Pull-up Bar and Monster Matador dip handles |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar |
-| 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid |
+| 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY) |
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise |
 | 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction |
 | 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar |
-| 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 2 | Bench Fitness REVOLVE 45 Degree Back Extension |
+| 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension |
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug |
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip |
@@ -33,6 +37,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD |
 | 16 | [`crunch_machine`](crunch_machine/ref.md) | 1 | Hammer Strength Select Abdominal Crunch |
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar |
+| 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD) |
 
 The cable crossover serves the 25 cable exercises that use a free handle at an adjustable height.
 The other 16 cable exercises (the pulldowns, the seated rows, the pressdown and the rest named in
@@ -46,23 +51,64 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
   [Echo bumpers](https://www.roguefitness.com/eu/nl/rogue-lb-echo-bumper-plates-with-white-text)
   keep at every weight; cast-iron plates run smaller (Rogue's
   [45 lb iron plate](https://www.roguefitness.com/ca/rogue-olympic-plates) is 445 mm, the 25 lb 277 mm).
-- `weighted_bodyweight` is the pull-up and dip station plus a belt (its file notes the belt is drawn
-  as a plate at the hips) and the hyperextension bench.
+- `weighted_bodyweight` is the pull-up and dip station plus a dip belt (its file notes the plate
+  hangs on the belt's chain at about mid-thigh, between the legs, as the videos show) and the
+  hyperextension bench.
 - Nordic and reverse nordic curls need only a pad and an anchor (a note in the hyperextension file).
-- `kit.mjs` also lists `chest_supported_t_bar_row` under `row_machine`. #161 moves it, with `kelso_shrug`,
-  to `t_bar_row_machine`.
+- `kit.mjs` also lists `chest_supported_t_bar_row` and `t_bar_row` under `row_machine`. #161 moves
+  both, with `kelso_shrug`, to `t_bar_row_machine`: the `t_bar_row` video shows a chest-supported
+  plate-loaded machine, not a landmine or an unsupported T-bar ([ref](t_bar_row_machine/ref.md)).
+- `roman_chair_crunch` was listed under the hyperextension bench, but its video shows a knee raise
+  on a captain's chair ([ref](captains_chair/ref.md)). #161 should give it that kit.
 - `kit.mjs` lists `kelso_shrug` under `shrug_machine`, but the owner confirms it is done
   chest-supported on the T-bar row machine ([video](https://youtu.be/76rz0UNAlYI)). #161 should move
   it to `t_bar_row_machine` ([ref](t_bar_row_machine/ref.md)), not `row_machine`. That leaves `shrug_machine` at one exercise.
-- `t_bar_row` stays on `row_machine`: its video is titled only "T Bar Row" and could not be watched, so what it shows is unchecked.
 
 ## Gaps
 
-- No maker publishes seat and pad heights, pivot places or ranges of motion for these machines, so
-  every machine's motion is partly inferred from its type and marked so.
-- Only Rogue's trap bar, GHD and pull-up bar have good dimensions. The Hammer Strength machines have
-  a footprint and a stack, and no spec sheet or manual with numbers.
-- Few side-on photos, and no carriage or pivot close-ups, were reachable. Rep, Titan and Hoist pages
-  often refused the fetch (HTTP 429), so none of their numbers are used.
-- Several links were seen in a search result but not read (a Rogue support guide, a Life Fitness
-  manual); each file says which.
+Every dimension a maker doesn't publish is now estimated from a viewed photo or video frame, or
+chosen from a fit rule at low confidence. What stays chosen, or rough, per machine (each file's Open
+gaps says why):
+
+- `t_bar_row_machine`: the foot plate setting for the mannequin; the top of the row comes from a
+  three-quarter photo.
+- `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
+  80 mm); the carriage position per exercise is chosen.
+- `smith_machine`: the 7 degree lean's direction, the bar and sleeve length and the hooks' turn are
+  chosen; hook heights are from three-quarter renders (about ±10%). No video uses an angled smith.
+- `pullup_dip_station`: the bar height (2.30 m) is chosen and the dip handle height is rough, from one
+  video. The chin-up video is unavailable.
+- `ez_bar`: the bend angles and grip places are chosen; the zigzag depth is a rough photo estimate.
+- `pec_deck`: the seat range, the start position's step and the lever radius stay chosen or rough;
+  no top or straight-front view.
+- `lateral_raise_machine`: the seat range is chosen and the pivot spacing is rough. The standing
+  exercise's video shows another, standing machine, with no reference model of its own.
+- `hip_machine`: the seat range, closed pad spacing and the range of motion stay chosen or rough; no
+  side-on photo, and the video is another make.
+- `safety_bar`: the handle arms' length and angle are chosen from the published width and height;
+  no side-on photo exists.
+- `hyperextension_bench`: the body line and pad height are chosen (the bench telescopes); all sizes
+  come from one spec drawing.
+- `shrug_machine`: the seat range and the bottom of the rep are chosen; no photo shows the bottom.
+- `shoulder_press`: the pivot, yoke length and rotation come from oblique views; the seat range is
+  chosen.
+- `dip_machine`: the seat positions, grip spread and carriage pivot stay chosen; no front view of
+  the Hoist.
+- `hip_thrust_machine`: the hips' top height is chosen from the fit rule; the pivot's place and
+  radius are rough, hidden in the only side-on photo.
+- `glute_ham_raise`: the pad width and the mannequin's pad-to-plate distance are chosen; pad sizes
+  are good to about 10%.
+- `crunch_machine`: the axis's place along the body is by eye and the handle spacing is chosen. The
+  recipe is Hammer Strength's reclined crunch; the technique video shows an upright one.
+- `trap_bar`: the lockout height is chosen from the mannequin's arm; the frame's plan comes from one
+  corner photo, mirrored.
+- `captains_chair`: the plan is scaled from the manual's drawing, but every height is rough (about
+  ±50 mm, one three-quarter render, no side view); the arm pads' tilt is chosen flat. The video's
+  chair is a lower make with no visible step.
+
+Across them:
+
+- Few technique videos use the based-on model, so most videos settle the range of motion and the fit
+  rules, and the photos the sizes. Each file says which make its videos show.
+- Rep, Titan's store, Hoist and some dealer pages refused the fetch (HTTP 429 or 403), and Rogue's
+  support guides still return 403; each file says which.

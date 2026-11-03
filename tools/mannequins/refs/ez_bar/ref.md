@@ -7,9 +7,15 @@ A short Olympic-sleeved bar with a zigzag (cambered) shaft so the wrists sit sem
 - Brand and model: Rogue Curl Bar (E-Coat), 30 lb, 28.5 mm shaft, bushing sleeves.
 - Product page (fetched): https://www.roguefitness.com/rogue-curl-bar
 - Spec sheet: the "Gear Specs" block on that same page (no separate PDF found).
-- Photos (only one product image was exposed by the fetch, and it is an angled three-quarter view, not a true side/front/close-up):
-  - https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_768,b_rgb:f8f8f8/v1/catalog/Weightlifting%20Bars%20and%20Plates/Barbells/Specialty%20Barbells/RA1077-SSSS/updated%20heros/RA1077-BEBR-H_nseh4y_odst6h.png
-  - Side-on, front and close-up of the zigzag: none verified. See the last section.
+- Photos viewed (base `https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_2000,b_rgb:ffffff/v1/catalog/Weightlifting%20Bars%20and%20Plates/Barbells/Specialty%20Barbells/`):
+  - E-coat hero, lying on the floor, three-quarter view down the bar (the only view of the whole zigzag): `RA1077-SSSS/updated%20heros/RA1077-BEBR-H_nseh4y_odst6h.png`
+  - Sleeve end cap, straight on: `CURLBAR/CURLBAR-WEB1_gggo0c.png`
+  - Stainless, E-coat and black variants, sleeve and first bend, three-quarter: `RA1077-SSSS/RA1077-SSSS-TH_i1klpb.png`, `RA1077-EBLACK-BR/RA1077-EBLACK-BR-TH_faoeff.png`, `CURLBAR/CURLBAR-TH_scmqbw.png`
+  - No front, top or side-on view of the Rogue bar exists on the page.
+- Videos viewed (contact sheet, then full frames; none uses the Rogue bar, all use plain black EZ bars):
+  - ez_bar_curl https://youtu.be/Dd0t5UOCEUc: frames at 0:06 (bottom, front three-quarter), 0:07 (top), 0:10, 0:11.
+  - ez_bar_preacher_curl https://youtu.be/zX0KvQCLbac: frames at 0:15 (bottom) and 0:16 (top), front three-quarter, the zigzag in view.
+  - skull_crusher https://youtu.be/1n6xrEI5g0Q: frames at 0:01 (top) and 0:05 (bottom), side-on; 0:16 and 0:19 from above.
 - Why not a lighter bar: the Rogue bar is the owner's brand. Its real bar is heavier (30 lb) than many 18-22 lb curl bars; use its numbers as-is.
 
 ## Key dimensions (mm)
@@ -21,22 +27,37 @@ A short Olympic-sleeved bar with a zigzag (cambered) shaft so the wrists sit sem
 | Sleeve diameter | 50 (1.96 in) | Rogue product page description |
 | Shaft diameter | 28.5 | Rogue product page |
 | Weight | 13.6 kg (30 lb) | Rogue product page |
-| Grip-zone diameter | 28.5 (assumed equal to shaft; the page lists no separate figure) | estimated |
-| Zigzag offset depth (peak to trough, in the bar's plane) | about 70 | estimated from photo: the kink is roughly 2.5 shaft diameters deep against the 28.5 mm shaft |
-| Grip spacing, inner pair (the two inside kinks) | about 150 centre to centre | estimated from photo, roughly a fifth of the shaft |
+| Grip-zone diameter | 28.5 (the page lists no separate figure; the hero shows one tube throughout) | Rogue product page; hero photo |
+| Shaft layout | a straight centre section in line with the sleeves, then on each side two bends (an inner and an outer grip segment) knurled, returning to the sleeve axis at the collar | hero photo: the centre section lies on the line between the two collars |
+| Zigzag depth (peak to trough, in the bar's plane) | about 80 | estimated from the hero photo, scaled by the 50 mm sleeve at each end: 67 mm at the near end, 95 mm at the far end; rough |
+| Grip segment angles to the bar axis | inner about 15 degrees, outer about 30 degrees, tilted opposite ways | chosen from the 80 mm depth and the layout below, low confidence: no square-on view exists |
+| Centre straight section | about 120 | chosen, low confidence: see Open gaps |
+| Inner grip pair, hand centre to centre | about 250 | chosen from the layout below; the preacher video (0:16) shows the lifter's hands about 260 mm apart, scaled by the bar's collars (taken as 800 mm); rough |
+| Outer grip pair, hand centre to centre | about 510 | chosen from the layout below; the curl video (0:06) shows about 420 mm on a 47 in bar, scaled by its collars (taken as 850 mm, a common 47 in bar figure); rough |
 | Knurled grip length (comparison only, Titan 47 in curl bar) | 190 (7.5 in) | search-result text of a Titan page; the page itself returned HTTP 429, not fetched |
+
+Chosen shaft layout for the recipe, low confidence: a polyline in the bar's plane, x along the axis from the centre, y off the sleeve axis (mm), mirrored on the other side: (0, 0), (60, 0), (190, 40), (320, -40), (400, 0), then the collar. The inner grip is the 60 to 190 segment (hand centre at x 125, about 17 degrees to the axis); the outer grip is the 190 to 320 segment (hand centre at x 255, about 32 degrees, tilted the other way). Negative y points away from the lifter when curling, so the outer kink at (320, -40) sits forward of the inner one at (190, 40), as Motion says.
 
 ## Motion
 Nothing moves. The bar is a rigid body; the sleeves spin on bushings but that is not animated. The zigzag lies in one plane, so the bar has a top and a bottom: the wrist-friendly angle puts the outer kinks forward of the inner pair.
 
+Doesn't apply: there is no seat, pad, pivot or adjustment on a bar.
+
+Range of motion of the lifts (the body's, from the videos):
+- Curl: elbow from straight (bar at the thighs) to about 140 degrees of flexion (bar at the upper chest), upper arm still at the sides (video 0:06 and 0:07).
+- Preacher curl: elbow from about 20 degrees short of straight, upper arm on the pad, to about 130 degrees, bar at the chin (video 0:15 and 0:16).
+- Skull crusher: from arms vertical over the shoulders to the bar behind the head below the bench top, elbows about 130 degrees flexed and the upper arm about 30 degrees back past vertical (video 0:01 and 0:05).
+
 ## Adjustments and fit rules
 - No adjustments.
-- Preacher curl: the bar is held by the outer or inner grip pair; skull crusher uses the inner pair (narrow, semi-supinated).
+- Curl: hands on the outer pair, about shoulder width (video 0:06).
+- Preacher curl: hands on the inner pair (video 0:16), the back of the upper arm on the pad.
+- Skull crusher: inner pair (narrow, semi-supinated).
 - Plates load on the sleeve only: stop them 267 mm from the sleeve tip, keep the inner shaft clear.
 - Not rackable (the page says so), so it never sits on a rack in the scene.
 
-## Owner photos to take at Hukka
-- The gym's actual curl bar from the side and from above: zigzag peak-to-trough depth with a tape measure.
-- The distances between the four grip kinks (centre to centre) and the length of the straight middle section.
-- Whether its grip knurl is continuous or in patches, and its brand and weight stamp on the sleeve.
-- The preacher pad it is used with (angle and edge height) if the gym has one.
+## Open gaps
+- No maker publishes the bend angles, grip positions or spacing, and no photo shows the Rogue bar square on, so the zigzag depth is a rough estimate and the layout and angle are chosen. The videos' bars are other makes; their hand spacings are rough checks, not the Rogue's.
+- The knurl pattern (continuous or in patches) is not visible clearly enough to say; it does not affect the mannequin.
+- The preacher pad belongs to the bench, not the bar; its angle and height go with whatever preacher bench the scene uses.
+- The owner's gym's curl bar (make, weight, bends) is unknown and stays so. The Rogue bar stands in for the type.
