@@ -2,79 +2,79 @@
   "back_squat_high_bar": {
     "ok": true,
     "note": "",
-    "clip": "a80ef884017bcac4",
-    "tuned": "{}"
+    "clip": "266909957a90ecdb",
+    "tuned": "{\"grip.pole\":[0.35,-1,-0.8]}"
   },
   "back_squat_low_bar": {
     "ok": true,
-    "note": "",
-    "clip": "39a7227d11fddb24",
-    "tuned": "{}"
+    "note": "the elbows cant be manipulated correctly for the hands to look natural",
+    "clip": "6b94c74d70eb0184",
+    "tuned": "{\"top.rotate\":5.6724,\"bottom.rotate\":-8.2238,\"grip.width\":0.4114,\"grip.pole\":[0.35,-1,-0.8],\"bar.back\":0.2}"
   },
   "barbell_curl": {
     "ok": true,
     "note": "",
-    "clip": "8183bbbbf311d33f",
+    "clip": "a0ea7586fe6969d8",
     "tuned": "{}"
   },
   "barbell_glute_bridge": {
     "ok": true,
     "note": "i cant position the barbell in bottom properly",
-    "clip": "30200e49bf065b0b",
-    "tuned": "{\"bar.up\":0.1116,\"bottom.bar\":[0.2241,-0.0434],\"top.bar\":[0.4514,-0.0132],\"body.shoulders\":[0.0187,-0.6085],\"body.head\":40,\"top.hip\":[0.3844,0.08]}"
+    "clip": "c30d391cc6b521dd",
+    "tuned": "{}"
   },
   "barbell_hip_thrust": {
     "ok": true,
     "note": "i cant adjust the arc of back on the bottom which would help make this more natural. also the bottom barbell position is so i cant tune it properly",
-    "clip": "dbaa544ea38b5d26",
+    "clip": "a036361cea8113d9",
     "tuned": "{}"
   },
   "barbell_row": {
     "ok": true,
     "note": "the path arcs it should not",
-    "clip": "62520124a0e1cee2",
-    "tuned": ""
+    "clip": "a85084f9f837747c",
+    "tuned": "{}"
   },
   "barbell_shrug": {
     "ok": true,
     "note": "",
-    "clip": "ab53d88317b27de9",
+    "clip": "30d7ade359855b6b",
     "tuned": "{}"
   },
   "barbell_upright_row": {
     "ok": true,
     "note": "",
-    "clip": "74a4869615c26680",
-    "tuned": ""
+    "clip": "0155227a10023c99",
+    "tuned": "{}"
   },
   "deadlift": {
-    "ok": true,
-    "note": "cant tune this properly",
-    "clip": "f9dce8e8e507b442",
-    "tuned": "{}"
+    "ok": false,
+    "note": "there is slight jump when the animation is at the knees",
+    "clip": "67638db52a024fa5",
+    "tuned": "{\"bottom.wrist\":[0,16.6123],\"top.wrist\":[0,13.0912],\"feet.kneesOut\":0.117}"
   },
   "deficit_deadlift": {
-    "ok": true,
-    "note": "",
-    "clip": "078d0bf48eed5073",
-    "tuned": "{}"
+    "ok": false,
+    "note": "there is slight jump when the animation is at the knees",
+    "clip": "15cd8dcdc5cf8fbf",
+    "tuned": "{\"top.wrist\":[0,20.6606]}"
   },
   "deficit_pendlay_row": {
     "ok": true,
     "note": "barbell path arcs",
-    "clip": "1b415493ecf74488",
-    "tuned": ""
+    "clip": "b656f077cc60a30e",
+    "tuned": "{}"
   },
   "floor_press": {
     "ok": true,
     "note": "",
-    "clip": "5bda57a337c1d178",
+    "clip": "93d39c5ae59c0016",
     "tuned": "{}"
   },
   "front_squat": {
     "ok": true,
     "note": "the hands should not be attached to the barbell",
-    "clip": "537d30a9b9eeb01f",
-    "tuned": "{\"bar.up\":0.104,\"grip.rotate\":210,\"bar.back\":0.04,\"bottom.trunk\":25.517,\"top.trunk\":6.2702,\"top.shin\":3.388,\"top.thigh\":-11.6002,\"bottom.shin\":31.2548,\"bottom.thigh\":103.7533}"
+    "clip": "505b50440ce20acc",
+    "tuned": "{}"
   }
 }
