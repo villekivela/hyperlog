@@ -3,7 +3,7 @@
 Plate-loaded lever with a low front pivot. Not the seated `row_machine` (laid out as a Gymleco 010, a sit-down row with a vertical chest pad): here the user stands on a foot plate and lies prone on an inclined chest pad.
 
 ## Movement and exercises served
-The user stands on the foot plate, leans onto the inclined chest pad, and pulls the handles toward the chest. The handles sit on a lever that pivots low at the front; plates go on a horn at the rear end of the lever. Chest support takes the lower back out of the lift. The same setup serves the shrug: elevate the shoulders against the chest pad with the arms straight.
+The user stands on the foot plate, leans onto the inclined chest pad, and pulls the handles toward the chest. The handles sit on a lever that pivots low at the front; plates go on a horn at the rear end of the lever. Chest support takes the lower back out of the lift. The same setup serves the Kelso shrug: chest on the pad, arms straight, squeeze the shoulder blades together (scapular retraction), not an upward shrug.
 - `chest_supported_t_bar_row` (video, titled "Chest Supported T Bar Row": https://youtu.be/160n9FBX84s).
 - `kelso_shrug` (the owner does it chest-supported on this type of machine; video, titled "Kelso Shrug": https://youtu.be/76rz0UNAlYI).
 - `t_bar_row`: its video is titled only "T Bar Row" (https://youtu.be/ZOg0CcJCKrk) and the video could not be watched here, so landmine versus unsupported versus machine is unchecked. `kit.mjs` lists it under `row_machine`. Left where it is.
