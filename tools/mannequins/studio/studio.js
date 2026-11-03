@@ -14,9 +14,9 @@ import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
 import { faster, repAt, slower, spanOf, stepFrames, stepSeconds, synced, timeAt, zoomOf } from './video.mjs';
-import { HALF_FOV, closeUp, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
+import { HALF_FOV, closeUpOf, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
 import { skeletonOf } from './bones.mjs';
-import { between, heldAt, sideOf, turnOf, wpos } from '../rig.mjs';
+import { between, heldAt, turnOf, wpos } from '../rig.mjs';
 
 const keys = keymap(KEYS);
 const $ = (id) => document.getElementById(id);
@@ -74,9 +74,11 @@ function remember() {
   } catch { /* a private window keeps nothing; the page works without it */ }
 }
 
+let aboutView = false; // the message says where the camera is, so a move of it clears the message
 function message(text, tone = '') {
   $('message').textContent = text;
   $('message').dataset.tone = tone;
+  aboutView = false;
 }
 
 const api = async (url, body) => {
@@ -133,6 +135,12 @@ function frame(framing) {
   view = viewOf(framing);
   state.lock = null;
   place();
+}
+
+/** The camera moved to `next` by the keys or the mouse: a message about where it was goes. */
+function move(next) {
+  place(next);
+  if (aboutView) message('');
 }
 
 /** Sets the camera where `view` is. */
@@ -358,10 +366,11 @@ function paintBone() {
 /** The close-up of the hand on side `k`, following it through the rep. */
 function closeUpOn(k) {
   if (!hasBody()) { message('No hands to close up on here'); return; }
-  place(closeUp(heldAt(rigNow(), k), sideOf(rigNow(), k)));
+  place(closeUpOf(live.stage, k));
   state.lock = k;
   held = null;
   message(`The ${k === 'l' ? 'left' : 'right'} hand, where it holds: the camera follows it (${keys.keyOf('cameraClip')} for the clip's framing)`);
+  aboutView = true;
 }
 
 /** Degrees for an orbit or a roll: 5, or a count's. */
@@ -554,9 +563,9 @@ holder.addEventListener('pointermove', (ev) => {
   if (turning.pan) {
     // The stage follows the pointer: a pixel is what the view shows over the canvas's height.
     const metres = (2 * halfHeightOf(view)) / (canvas.clientHeight || 1);
-    place(pan(view, -dx * metres, dy * metres));
+    move(pan(view, -dx * metres, dy * metres));
   } else {
-    place(orbit(view, -dx * 0.5, dy * 0.5, turning.pivot));
+    move(orbit(view, -dx * 0.5, dy * 0.5, turning.pivot));
   }
 });
 const endDrag = () => { turning = null; dragging = null; };
@@ -564,7 +573,7 @@ holder.addEventListener('pointerup', endDrag);
 holder.addEventListener('pointercancel', endDrag);
 holder.addEventListener('wheel', (ev) => {
   ev.preventDefault();
-  if (ev.deltaY) place(dolly(view, ev.deltaY < 0 ? 1 : -1));
+  if (ev.deltaY) move(dolly(view, ev.deltaY < 0 ? 1 : -1));
 }, { passive: false });
 
 // ---- The sidebar --------------------------------------------------------------------------------
@@ -1342,7 +1351,7 @@ function turnAngle(by) {
 
 function turnTo(azimuth, elevation) {
   state.lock = null;
-  place({ ...view, azimuth, elevation, roll: 0 });
+  move({ ...view, azimuth, elevation, roll: 0 });
 }
 
 const COMMANDS = {
@@ -1383,28 +1392,29 @@ const COMMANDS = {
   cameraFront: () => turnTo(0, 6),
   cameraSide: () => turnTo(90, 6),
   cameraTop: () => turnTo(view.azimuth, 89.5),
-  turnLeft: (n) => place({ ...view, azimuth: view.azimuth + 10 * n }),
-  turnRight: (n) => place({ ...view, azimuth: view.azimuth - 10 * n }),
+  turnLeft: (n) => move({ ...view, azimuth: view.azimuth + 10 * n }),
+  turnRight: (n) => move({ ...view, azimuth: view.azimuth - 10 * n }),
   cameraClip: () => {
     if (!state.item?.entry) { message('No framing here'); return; }
     frame(cameraAtAngle());
     message('The clip\'s own framing');
+    aboutView = true;
   },
   closeUpLeft: () => closeUpOn('l'),
   closeUpRight: () => closeUpOn('r'),
   plates: () => togglePlates(),
-  orbitLeft: (n, counted) => place(orbit(view, degreesOf(n, counted), 0, pivot())),
-  orbitRight: (n, counted) => place(orbit(view, -degreesOf(n, counted), 0, pivot())),
-  orbitDown: (n, counted) => place(orbit(view, 0, -degreesOf(n, counted), pivot())),
-  orbitUp: (n, counted) => place(orbit(view, 0, degreesOf(n, counted), pivot())),
-  panLeft: (n) => place(pan(view, -panStep() * n, 0)),
-  panRight: (n) => place(pan(view, panStep() * n, 0)),
-  panDown: (n) => place(pan(view, 0, -panStep() * n)),
-  panUp: (n) => place(pan(view, 0, panStep() * n)),
-  dollyIn: (n) => place(dolly(view, n)),
-  dollyOut: (n) => place(dolly(view, -n)),
-  rollLeft: (n, counted) => place(roll(view, -degreesOf(n, counted))),
-  rollRight: (n, counted) => place(roll(view, degreesOf(n, counted))),
+  orbitLeft: (n, counted) => move(orbit(view, degreesOf(n, counted), 0, pivot())),
+  orbitRight: (n, counted) => move(orbit(view, -degreesOf(n, counted), 0, pivot())),
+  orbitDown: (n, counted) => move(orbit(view, 0, -degreesOf(n, counted), pivot())),
+  orbitUp: (n, counted) => move(orbit(view, 0, degreesOf(n, counted), pivot())),
+  panLeft: (n) => move(pan(view, -panStep() * n, 0)),
+  panRight: (n) => move(pan(view, panStep() * n, 0)),
+  panDown: (n) => move(pan(view, 0, -panStep() * n)),
+  panUp: (n) => move(pan(view, 0, panStep() * n)),
+  dollyIn: (n) => move(dolly(view, n)),
+  dollyOut: (n) => move(dolly(view, -n)),
+  rollLeft: (n, counted) => move(roll(view, -degreesOf(n, counted))),
+  rollRight: (n, counted) => move(roll(view, degreesOf(n, counted))),
   boneParent: () => walkBone((k, b) => k.parent(b)),
   boneChild: () => walkBone((k, b) => k.child(b)),
   bonePrevious: () => walkBone((k, b) => k.sibling(b, -1)),

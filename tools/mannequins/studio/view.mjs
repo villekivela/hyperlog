@@ -4,6 +4,7 @@
 // `roll` degrees about the line of sight. A framing is what an entry keeps of it, which the phone
 // opens on: the target, how much it shows, the turn and the tilt.
 import * as THREE from 'three';
+import { heldAt, sideOf } from '../rig.mjs';
 
 /** Half the camera's field of view, top to bottom, in degrees: a framing's `halfHeight` is shown at its distance. */
 export const HALF_FOV = 13;
@@ -92,11 +93,44 @@ export function framingOf(view) {
   };
 }
 
-/** How much a hand's close-up shows either way of the hand, in metres, and where it looks from: in front, out to the hand's side and a little above. */
-const CLOSE_UP = { halfHeight: 0.12, azimuth: 55, elevation: 15 };
+/** How much a hand's close-up shows either way of the hand, in metres. */
+const CLOSE_UP = 0.12;
+/**
+ * The ways a close-up may look at a hand from, in turn, [azimuth out to the hand's side, elevation]:
+ * in front and outside, in front, outside, above, below, and behind and outside.
+ */
+const CLOSE_UP_WAYS = [[55, 15], [20, 10], [90, 10], [45, 65], [45, -40], [135, 15]];
 
-/** The close-up of a hand holding at `at` (a point), on side `side` of the body (+1 for +x, its left). */
-export const closeUp = (at, side) => viewOf({ target: at.toArray(), halfHeight: CLOSE_UP.halfHeight, azimuth: side * CLOSE_UP.azimuth, elevation: CLOSE_UP.elevation });
+/** The close-up of a hand holding at `at` (a point), on side `side` of the body (+1 for +x, its left), from the first way. */
+export const closeUp = (at, side, [azimuth, elevation] = CLOSE_UP_WAYS[0]) => viewOf({ target: at.toArray(), halfHeight: CLOSE_UP, azimuth: side * azimuth, elevation });
+
+/** The points of a hand a close-up wants to see: the last joint and the end of each finger, where they close round the bar. */
+const TIPS = ['index', 'middle', 'ring', 'pinky', 'thumb'].flatMap((f) => [`${f}_03`, `${f}_04_leaf`]);
+
+/**
+ * The close-up of the hand on side `k` of `stage` (the body and its kit), as posed now: from the way
+ * that sees most of its fingertips, the first of the ways on a tie. A tip is seen when nothing of
+ * the body or the kit shown stands between it and the camera: the deadlift's hanging hand, seen from
+ * in front, shows only its back.
+ */
+export function closeUpOf({ rig, kit }, k) {
+  const solid = [...rig.meshes];
+  kit.group.traverse((o) => { if (o.isMesh && o.visible) solid.push(o); });
+  for (const m of rig.meshes) m.computeBoundingSphere();
+  const tips = TIPS.map((n) => rig.bones[`${n}_${k}`].getWorldPosition(new THREE.Vector3()));
+  // From each tip out toward the camera, so a camera inside a part is hidden by it: the tip's own
+  // finger is left from the inside, which a ray doesn't meet.
+  const seen = (view) => {
+    const from = placeOf(view).position;
+    return tips.filter((tip) => {
+      const out = from.clone().sub(tip);
+      return !new THREE.Raycaster(tip, out.clone().normalize(), 0, out.length()).intersectObjects(solid, false).length;
+    }).length;
+  };
+  const views = CLOSE_UP_WAYS.map((way) => closeUp(heldAt(rig, k), sideOf(rig, k), way));
+  const counts = views.map(seen);
+  return views[counts.indexOf(Math.max(...counts))];
+}
 
 /** Hides or shows every part of `root` in the plate tone (barbell plates, dumbbell heads, a stack's plates), so the hands on the bar can be seen. */
 export function showPlates(root, shown) {

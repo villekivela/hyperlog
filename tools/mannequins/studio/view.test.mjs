@@ -4,7 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { viewOf, placeOf, orbit, pan, dolly, roll, framingOf, closeUp, showPlates } from './view.mjs';
+import { viewOf, placeOf, orbit, pan, dolly, roll, framingOf, closeUp, closeUpOf, showPlates } from './view.mjs';
+import { heldAt, sideOf, wpos } from '../rig.mjs';
 import { prepare } from '../entries.mjs';
 import { buildStage } from '../stage.mjs';
 
@@ -120,4 +121,35 @@ test('the plates hide and show again, every part of the plate tone and nothing e
   assert.ok(parts.filter((o) => o.material.name !== 'plate').every((o) => o.visible), 'the bar or the body hid too');
   showPlates(scene, true);
   assert.ok(parts.every((o) => o.visible));
+});
+
+/** The fingertips of hand `k` a camera at `from` sees, the first thing on the line to each: of ten, the end and last joint of each finger. */
+function tipsSeen(stage, k, from) {
+  const solid = [...stage.rig.meshes];
+  stage.kit.group.traverse((o) => { if (o.isMesh && o.visible) solid.push(o); });
+  for (const m of stage.rig.meshes) m.computeBoundingSphere();
+  const tips = ['index', 'middle', 'ring', 'pinky', 'thumb'].flatMap((f) => [`${f}_03_${k}`, `${f}_04_leaf_${k}`]);
+  return tips.filter((n) => {
+    const tip = wpos(stage.rig.bones[n]);
+    const toward = tip.clone().sub(from);
+    const first = new THREE.Raycaster(from, toward.clone().normalize(), 0, toward.length() + 0.3).intersectObjects(solid, false)[0];
+    return first && first.point.distanceTo(tip) < 0.012;
+  }).length;
+}
+
+// The owner's look review (#164): on the deadlift's bottom the close-up saw the back of the hand,
+// not where it meets the bar. A close-up looks from the way that sees most of the fingers round it.
+test('a hand\'s close-up looks from where it sees the fingers round the bar: the deadlift\'s bottom, the squat and the bench', async () => {
+  for (const [id, least] of [['deadlift', 7], ['barbell_squat', 7], ['barbell_bench_press', 6]]) {
+    const stage = await buildStage(prepare(id));
+    stage.pose(1);
+    for (const k of ['l', 'r']) {
+      const at = heldAt(stage.rig, k);
+      const first = tipsSeen(stage, k, placeOf(closeUp(at, sideOf(stage.rig, k))).position);
+      const view = closeUpOf(stage, k);
+      assert.deepEqual(view.target, at.toArray());
+      const seen = tipsSeen(stage, k, placeOf(view).position);
+      assert.ok(seen >= least && seen >= first, `${id} ${k}: ${seen} fingertips seen, ${first} from in front and outside`);
+    }
+  }
 });

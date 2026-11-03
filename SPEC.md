@@ -1676,7 +1676,9 @@ gallery (Technique videos).
       degrees (`15 Alt+l` is 15°), `Alt+H` `Alt+J` `Alt+K` `Alt+L` pan, `Alt+i` `Alt+o` dolly and
       `Alt+,` `Alt+.` roll; the mouse drags to orbit, right-drags to pan and wheels to zoom. `gh`
       `gl` close up on the left and the right hand where it meets the bar, following it through the
-      rep, and `gc` goes back to the clip's own framing. `gp` hides every part made of the plate
+      rep, from whichever way sees most of its fingers round the bar with nothing of the body or the
+      kit in between (owner's review: from in front, a deadlift's hanging hand shows only its back),
+      and `gc` goes back to the clip's own framing. `gp` hides every part made of the plate
       tone (barbell plates, dumbbell heads, stack plates) so the hands can be seen, and shows them
       again (owner, #164): a view setting only, nothing saved and the bake unchanged. `:frame` saves
       the view as the clip's framing (the target, how much it shows, the turn and tilt the phone

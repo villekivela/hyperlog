@@ -425,7 +425,9 @@ listens on localhost only.
 - **The camera** is free in the studio (`view.mjs`): it orbits on both axes, over the top and under
   the floor, round the selected bone or the body's centre, and pans, dollies and rolls, from the
   keys or the mouse (drag, right-drag, wheel). `gh` `gl` close up on the left and the right hand
-  where it holds and follow it through the rep, `gc` goes back to the clip's framing, and `gp`
+  where it holds and follow it through the rep, looking from the way (in front and outside, in
+  front, outside, above, below, or behind and outside) that sees most of its fingertips with
+  nothing of the body or the kit shown in between, `gc` goes back to the clip's framing, and `gp`
   hides the plates (every part in the plate tone) to see the hands on the bar; that is a view
   setting only. `:frame` saves the view as the clip's `camera` (an adjustable bench's
   `bench.cameras` at the angle shown) and re-bakes: the target, how much it shows, the turn and the
