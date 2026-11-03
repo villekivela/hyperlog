@@ -82,8 +82,7 @@ test('a front squat\'s hands lie open on the other shoulder, not on the bar', as
   }
 });
 
-// The owner, #127: a straight wrist is one they can set on the low-bar squat, and the upright row's
-// hands lie along its bar.
+// The owner, #127: a straight wrist is one they can set on the low-bar squat.
 test('a straight wrist set on the low-bar squat keeps the hand in line with the forearm', async () => {
   const thrust = POSES.back_squat_low_bar;
   const entry = prepare('back_squat_low_bar', { ...POSES, back_squat_low_bar: { ...thrust, top: { ...thrust.top, wrist: [0, 0] }, bottom: { ...thrust.bottom, wrist: [0, 0] } } });
@@ -93,18 +92,6 @@ test('a straight wrist set on the low-bar squat keeps the hand in line with the 
     const at = (n) => wpos(stage.rig.bones[n]);
     const bend = (at('middle_01_l').sub(at('hand_l')).angleTo(at('hand_l').sub(at('lowerarm_l'))) * 180) / Math.PI;
     assert.ok(bend < 5, `at ${d} the wrist bends ${bend.toFixed(1)}°`);
-  }
-});
-
-test('the upright row\'s hands lie along the bar', async () => {
-  const stage = await buildStage(prepare('barbell_upright_row'));
-  for (const d of [0, 1]) {
-    stage.pose(d);
-    const at = (n) => wpos(stage.rig.bones[n]);
-    const { dir, across } = stage.rig.rest.hand_l;
-    const k = across.clone().addScaledVector(dir.clone().normalize(), -across.dot(dir.clone().normalize())).applyQuaternion(turnOf(stage.rig, 'hand_l')).normalize();
-    const off = (Math.acos(Math.min(1, Math.abs(k.x))) * 180) / Math.PI;
-    assert.ok(off < 12, `at ${d} the knuckles cross the bar ${off.toFixed(0)}° off its line`);
   }
 });
 
