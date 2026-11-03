@@ -1525,7 +1525,13 @@ gallery (Technique videos).
       its boom, the levers' pivot in housings, capped grips and a back pad braced to the column; the
       leg press stands on a framed base, its rails on posts, uprights and braces, its sled a
       carriage on rollers under a foot plate with a heel lip; and the benches roll on front wheels,
-      lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder.
+      lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder. The
+      starter batch's machines meet it too: rubber caps on every floor rail and pop-pins on the
+      adjustable seats; the leg extension's and seated curl's cable turning down to the hub over a
+      second wheel in its housing, their back pads braced to the stack's frame; the calf raise's
+      and preacher's hubs on posts and mounts, nothing hanging in the air; the hack squat's
+      carriage on rollers; the row's and pulldown's posts on floor rails; and the preacher loaded
+      with a plate a side.
     - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
       palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
       #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #3A3A40, 0.95 (dark a step up from the
