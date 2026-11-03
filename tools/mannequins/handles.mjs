@@ -1,4 +1,4 @@
-// The Tune panel's drag handles (README, Reviewing a batch): a point on the posed body that, dragged,
+// The studio's drag handles (README, The studio): a point on the posed body that, dragged,
 // becomes the pose numbers a slider sets, so the rig re-solves the rest. A handle is only offered
 // where the entry has numbers for it. `drag(point)` takes where the handle was dragged to, in
 // metres, and returns the numbers that would put it there: `{ path: value }`, a point whole.

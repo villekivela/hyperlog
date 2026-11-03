@@ -61,7 +61,7 @@ test('Tune applies tuned per-angle settings over the entry\'s, and says which an
   assert.ok(!tunables(now).some((t) => t.path.startsWith('bench')));
 });
 
-test('review apply writes per-angle values into the entry, keeping its comments', async () => {
+test('a save writes per-angle values into the entry, keeping its comments', async () => {
   const real = await readFile(new URL('./poses.mjs', import.meta.url), 'utf8');
   const out = patchPoses(real, ID, { '@angles': { 'feet.z': { 0: 0.22, 75: 0.3 }, 'bottom.chest.0': { 30: 0.5 } } });
   assert.ok(out.includes('The grip turns'), 'comments kept');

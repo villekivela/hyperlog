@@ -1,4 +1,4 @@
-// The Tune panel's drag handles: each is a point on the body (a hand, an elbow, a foot, the hips,
+// The studio's drag handles: each is a point on the body (a hand, an elbow, a foot, the hips,
 // the chest) that, dragged, becomes the pose numbers the sliders set, and the rig solves the rest.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

@@ -7,9 +7,11 @@
     "bake": "node bake.mjs",
     "test": "node --test",
     "trace": "node trace.mjs",
-    "review": "node review.mjs"
+    "review": "node review.mjs",
+    "studio": "vite --config studio/vite.config.mjs"
   },
   "dependencies": {
-    "three": "0.186.1"
+    "three": "0.186.1",
+    "vite": "8.3.5"
   }
 }
