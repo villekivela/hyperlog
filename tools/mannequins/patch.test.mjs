@@ -1,4 +1,4 @@
-// `review apply` writes tuned values into poses.mjs as text, so the owner's comments stay.
+// A save in the studio writes tuned values into poses.mjs as text, so the owner's comments stay.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdtemp, writeFile } from 'node:fs/promises';

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mannequin Studio</title>
+<style>
+/* Three panes: the list of everything, the one item on stage, and its numbers. The focused pane has
+   an edge in the focus colour; every control carries its key. */
+:root {
+  --ground: #ececef; --pane: #f8f8fa; --stage: #e3e3e8; --ink: #1c1c20; --quiet: #5f5f68; --line: #d2d2d8;
+  --ok: #2f7a4f; --ok-tint: #dcefe3; --note: #8a5a00; --note-tint: #f6e9cc; --fail: #b3261e; --fail-tint: #f9dedc;
+  --focus: #3b5bdb; --focus-tint: #e3e8fc; --handle: #ff7a1a;
+  --text: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", monospace;
+  /* The clay mannequin's greys and the kits' tones (GraphitePalette.kt, ClayColours), and the rim
+     light from behind that gives a dark frame its edge. */
+  --clay-body: #babac1; --clay-joint: #9a9aa1; --clay-frame: #2e2e33; --clay-vinyl: #1b1b1e; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #5c5c62; --clay-shadow: 0.65; --clay-rim: 0;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131315; --pane: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
+    --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --fail-tint: #3d1d1b;
+    --focus: #9db0ff; --focus-tint: #252b45;
+    --clay-body: #c4c4ca; --clay-joint: #a8a8af; --clay-frame: #4a4a50; --clay-vinyl: #3a3a40; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #6e6e75; --clay-shadow: 1; --clay-rim: 0.7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131315; --pane: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
+  --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --fail-tint: #3d1d1b;
+  --focus: #9db0ff; --focus-tint: #252b45;
+  --clay-body: #c4c4ca; --clay-joint: #a8a8af; --clay-frame: #4a4a50; --clay-vinyl: #3a3a40; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #6e6e75; --clay-shadow: 1; --clay-rim: 0.7;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--ground); color: var(--ink); font: 14px/1.4 var(--text); }
+.app { height: 100dvh; display: grid; grid-template-columns: 290px minmax(0, 1fr) 400px; grid-template-rows: auto minmax(0, 1fr) auto; }
+header { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--pane); }
+header h1 { font-size: 15px; font-weight: 650; margin: 0; letter-spacing: 0.01em; }
+header .message { flex: 1; min-width: 0; color: var(--quiet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+header .message[data-tone="error"] { color: var(--fail); font-weight: 600; }
+header .message[data-tone="busy"] { color: var(--note); }
+.pending { font: 600 13px var(--mono); min-width: 4ch; text-align: right; color: var(--focus); }
+kbd { font: 500 11px/1 var(--mono); padding: 2px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; color: var(--quiet); background: var(--ground); white-space: nowrap; }
+button { font: 500 13px var(--text); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+button:hover { background: var(--ground); }
+button[aria-pressed="true"] { background: var(--ink); color: var(--pane); border-color: var(--ink); }
+button[aria-pressed="true"] kbd { color: var(--ink); }
+button:disabled { opacity: 0.45; cursor: default; }
+.pane { min-height: 0; background: var(--pane); display: flex; flex-direction: column; border-top: 2px solid transparent; }
+.pane[data-focused="true"] { border-top-color: var(--focus); }
+.pane h2 kbd { text-transform: none; letter-spacing: 0; }
+.pane h2 { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); margin: 0; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+
+/* The sidebar. */
+.sidebar { border-right: 1px solid var(--line); }
+.sidebar .head { padding: 10px 12px 8px; display: grid; gap: 8px; }
+.filter { position: relative; display: block; }
+.filter kbd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.sidebar input { padding-right: 28px !important; width: 100%; font: 13px var(--text); color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.list { overflow-y: auto; flex: 1; padding: 0 0 12px; }
+.group { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); padding: 12px 12px 4px; position: sticky; top: 0; background: var(--pane); }
+.row { scroll-margin-top: 32px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 4px 12px; cursor: pointer; border-left: 3px solid transparent; }
+.row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row[data-cursor="true"] { background: var(--focus-tint); border-left-color: var(--focus); }
+.row[data-current="true"] .name { font-weight: 650; }
+.status { font: 600 10px/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 6px; border-radius: 999px; color: var(--quiet); border: 1px solid var(--line); white-space: nowrap; }
+.status[data-status="ok"], .status[data-status="phone-checked"] { color: var(--ok); background: var(--ok-tint); border-color: transparent; }
+.status[data-status="notes"], .status[data-status="changed"] { color: var(--note); background: var(--note-tint); border-color: transparent; }
+.status[data-status="failing"] { color: var(--fail); background: var(--fail-tint); border-color: transparent; }
+.status[data-status="no pose"], .status[data-status="unused"] { opacity: 0.7; border-style: dashed; }
+
+/* The stage. */
+.stage { position: relative; }
+.stage .title { padding: 10px 14px 6px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.stage .title strong { font-size: 18px; font-weight: 650; }
+.stage .title .meta { color: var(--quiet); font: 12px var(--mono); }
+.canvas { position: relative; flex: 1; min-height: 0; background: var(--stage); cursor: grab; }
+.canvas canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.canvas .hint { position: absolute; left: 10px; bottom: 8px; font: 12px var(--mono); color: var(--quiet); pointer-events: none; }
+.canvas .empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--quiet); text-align: center; padding: 24px; }
+.canvas .empty[hidden] { display: none; }
+.transport { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
+.transport .gap { flex: 1; }
+.checks { list-style: none; margin: 0; padding: 6px 14px 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 16px; font-size: 12px; border-top: 1px solid var(--line); }
+.checks li { display: grid; grid-template-columns: 10px auto 1fr; gap: 6px; align-items: baseline; min-width: 0; }
+.checks .mark { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); align-self: center; }
+.checks li[data-ok="false"] .mark { background: var(--fail); }
+.checks li[data-ok="false"] .name { color: var(--fail); }
+.checks .found { font: 11px var(--mono); color: var(--quiet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The numbers. */
+.numbers { border-left: 1px solid var(--line); }
+.numbers .head { padding: 10px 12px 8px; display: grid; gap: 6px; }
+.numbers .step { font: 12px var(--mono); color: var(--quiet); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 20px; }
+.numbers .step strong { color: var(--ink); font-weight: 600; }
+.sliders { overflow-y: auto; flex: 1; padding-bottom: 8px; }
+.num { display: grid; grid-template-columns: minmax(0, 1fr) 84px; grid-template-areas: "label value" "range range"; gap: 0 8px; padding: 4px 12px; cursor: pointer; border-left: 3px solid transparent; }
+.num label { grid-area: label; font: 12px var(--mono); overflow-wrap: anywhere; cursor: pointer; }
+.num .value { grid-area: value; font: 12px var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.num input[type="range"] { grid-area: range; width: 100%; margin: 2px 0 0; height: 14px; }
+.num input.typing { grid-area: value; width: 100%; font: 12px var(--mono); text-align: right; color: var(--ink); background: var(--ground); border: 1px solid var(--focus); border-radius: 4px; padding: 1px 4px; }
+.num[data-selected="true"] { background: var(--focus-tint); border-left-color: var(--focus); }
+.num[data-changed="true"] label, .num[data-changed="true"] .value { color: var(--note); font-weight: 650; }
+.num[data-per="true"] label::after { content: " · per angle"; color: var(--quiet); font-weight: 400; }
+.sliders .heading { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); padding: 10px 12px 2px; }
+.review { border-top: 1px solid var(--line); padding: 10px 12px 12px; display: grid; gap: 8px; }
+.review .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.review textarea { width: 100%; min-height: 60px; resize: vertical; font: 13px/1.4 var(--text); color: var(--ink); background: var(--ground); border: 1px solid var(--focus); border-radius: 6px; padding: 6px 8px; }
+.review textarea[hidden] { display: none; }
+.notes { margin: 0; padding: 0 0 0 16px; font-size: 12px; color: var(--note); display: grid; gap: 2px; max-height: 120px; overflow-y: auto; }
+.notes:empty { display: none; }
+.notes li { white-space: pre-wrap; }
+
+/* The find bar, the command line and the key sheet. */
+.bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-top: 1px solid var(--line); background: var(--pane); font: 13px var(--mono); min-height: 34px; }
+.bar input { flex: 1; font: 13px var(--mono); color: var(--ink); background: transparent; border: 0; outline: none; }
+.bar .prompt { color: var(--focus); font-weight: 700; }
+.bar .matches { color: var(--quiet); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.bar .keys { color: var(--quiet); display: flex; gap: 10px; flex-wrap: wrap; font: 12px var(--text); }
+dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--pane); color: var(--ink); padding: 18px 22px; max-width: min(960px, 94vw); max-height: 88vh; overflow-y: auto; }
+dialog::backdrop { background: rgb(0 0 0 / 0.35); }
+dialog h2 { margin: 0 0 12px; font-size: 16px; }
+.sheet { columns: 3 240px; column-gap: 28px; }
+.sheet section { break-inside: avoid; margin-bottom: 14px; }
+.sheet h3 { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); margin: 0 0 6px; }
+.sheet dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; font-size: 13px; }
+.sheet dt { text-align: right; }
+.sheet dd { margin: 0; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Mannequin Studio</h1>
+    <span class="message" id="message" role="status" aria-live="polite"></span>
+    <span class="pending" id="pending" aria-label="Keys typed"></span>
+    <button type="button" data-command="help">Keys</button>
+  </header>
+
+  <aside class="pane sidebar" id="sidebar" data-pane="sidebar" aria-label="Exercises and kits">
+    <div class="head">
+      <h2>Library <span><span id="tally"></span> <kbd data-key="down"></kbd><kbd data-key="up"></kbd></span></h2>
+      <label class="filter"><input id="filter" type="search" placeholder="Filter: name or status (notes, failing, no pose…)" aria-label="Filter the list" autocomplete="off"><kbd data-key="filter"></kbd></label>
+    </div>
+    <div class="list" id="list" role="listbox" aria-label="Items"></div>
+  </aside>
+
+  <main class="pane stage" id="stage" data-pane="stage" aria-label="Stage">
+    <div class="title"><strong id="name">–</strong><span class="meta" id="meta"></span><span class="status" id="status" hidden></span></div>
+    <div class="canvas" id="canvas"><canvas></canvas><span class="hint" id="hint"></span><div class="empty" id="empty" hidden></div></div>
+    <div class="transport" id="transport">
+      <button type="button" data-command="play">Play</button>
+      <button type="button" data-command="holdTop">Top</button>
+      <button type="button" data-command="holdBottom">Bottom</button>
+      <button type="button" data-command="frameBack">Frame −</button>
+      <button type="button" data-command="frameOn">Frame +</button>
+      <button type="button" data-command="clip">Clip</button>
+      <span class="gap"></span>
+      <button type="button" data-command="anglePrevious" data-bench>Angle −</button>
+      <span id="angle" data-bench></span>
+      <button type="button" data-command="angleNext" data-bench>Angle +</button>
+      <button type="button" data-command="cameraFront">Front</button>
+      <button type="button" data-command="cameraSide">Side</button>
+      <button type="button" data-command="cameraTop">Top view</button>
+      <button type="button" data-command="turnLeft">Turn</button>
+      <button type="button" data-command="turnRight">Turn</button>
+    </div>
+    <ul class="checks" id="checks" aria-label="Checks"></ul>
+  </main>
+
+  <aside class="pane numbers" id="numbers" data-pane="numbers" aria-label="Numbers">
+    <div class="head">
+      <h2>Numbers <span><span id="changed"></span> <kbd data-key="down"></kbd><kbd data-key="up"></kbd></span></h2>
+      <div class="step" id="step"></div>
+    </div>
+    <div class="sliders" id="sliders"></div>
+    <div class="review">
+      <div class="actions">
+        <button type="button" data-command="save">Save</button>
+        <button type="button" data-command="undo">Undo</button>
+        <button type="button" data-command="redo">Redo</button>
+        <button type="button" data-command="reset">Reset</button>
+        <button type="button" data-command="ok">OK</button>
+        <button type="button" data-command="note">Note</button>
+      </div>
+      <textarea id="note" hidden placeholder="What should change? Enter saves, Shift+Enter a new line, Esc cancels" aria-label="Note"></textarea>
+      <ul class="notes" id="notes" aria-label="Open notes"></ul>
+    </div>
+  </aside>
+
+  <div class="bar" id="bar">
+    <span class="prompt" id="prompt"></span>
+    <input id="line" autocomplete="off" spellcheck="false" hidden aria-label="Command">
+    <span class="matches" id="matches"></span>
+    <span class="keys" id="keys"></span>
+  </div>
+</div>
+
+<dialog id="help" aria-label="Keys">
+  <h2>Keys <kbd>Esc</kbd></h2>
+  <div class="sheet" id="sheet"></div>
+</dialog>
+
+<script type="module" src="./studio.js"></script>
+</body>
+</html>

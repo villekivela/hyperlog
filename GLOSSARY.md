@@ -156,7 +156,31 @@ The side-on angles of one rep's lowering, taken from footage by pose estimation,
 _Avoid_: Capture, keyframes
 
 **Batch**:
-The poses made and reviewed together. A batch is done when the owner has OK'd every one, for the clip it has now, on the batch's review page.
+The poses made and reviewed together. A batch is done when the owner has OK'd every one, for the clip it has now, on the studio.
+
+**Studio**:
+The mannequin tool served on the owner's machine (`npm run studio`), where every exercise and kit is listed with its status, posed live, tuned, OK'd and noted. It views, tunes and annotates; it never models.
+_Avoid_: Review page (the published page it replaced), editor
+
+**Recipe**:
+A kit written as data: the parts it is made of, placed by dimensions, its fixed frame and its moving bodies on joints, with its contacts and fit rules (ADR 0007).
+_Avoid_: Blueprint, builder
+
+**Part**:
+One piece from the kits' shared library that a recipe places: tubing with its caps and base plates, a pad, a seat, a roller, a pulley in its housing, a cable, a stack, a pop-pin, a handle.
+_Avoid_: Component, mesh
+
+**Joint**:
+Where a recipe's moving body turns (revolute: a lever, a pec deck's arm) or slides (prismatic: a sled, a carriage) on its frame, with its limits. Not one of the mannequin's own joints, which are bones.
+_Avoid_: Hinge, axis
+
+**Contact**:
+Where a recipe ties a moving body to the mannequin: handles to the hands, a pad to the shins, a foot plate to the feet. On a machine the joint drives the rep and IK holds the limbs to the contacts.
+_Avoid_: Attachment (that is a cable's handle), constraint
+
+**Fit rule**:
+How a recipe sets its adjustments for the mannequin, as the machine's placard says: the knee on the pivot axis, the handles at mid-chest, the pad just above the ankle. A pose entry can override what it sets.
+_Avoid_: Setting, preset
 
 ## Session
 

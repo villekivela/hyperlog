@@ -1,0 +1,68 @@
+{
+  "about": "The studio's keymap (README, The studio). Keys are in vim's notation: a character is itself, <C-r> is Ctrl+r, <S-Tab> Shift+Tab, <Space>, <Tab>, <Esc>, <Enter>, <Left> and <Right> name the keys; two characters together (gg) are pressed one after the other. A count typed first (5l) repeats a command that takes one. Each `ex` command is typed after `:`.",
+  "groups": [
+    {
+      "name": "Lists",
+      "keys": [
+        { "keys": "j", "command": "down", "count": true, "does": "Next item in the focused list" },
+        { "keys": "k", "command": "up", "count": true, "does": "Previous item in the focused list" },
+        { "keys": "gg", "command": "first", "does": "First item" },
+        { "keys": "G", "command": "last", "count": true, "does": "Last item, or the item a count names" },
+        { "keys": "<Tab>", "command": "focusNext", "does": "Focus: sidebar → stage → numbers" },
+        { "keys": "<S-Tab>", "command": "focusPrevious", "does": "Focus the other way" },
+        { "keys": "/", "command": "find", "does": "Find an exercise, a kit or a number" },
+        { "keys": "n", "command": "findNext", "count": true, "does": "Next match" },
+        { "keys": "N", "command": "findPrevious", "count": true, "does": "Previous match" },
+        { "keys": "f", "command": "filter", "does": "Filter the sidebar by name or status" }
+      ]
+    },
+    {
+      "name": "The rep",
+      "keys": [
+        { "keys": "t", "command": "holdTop", "does": "Hold at the top of the rep" },
+        { "keys": "b", "command": "holdBottom", "does": "Hold at the bottom of the rep" },
+        { "keys": "<Space>", "command": "play", "does": "Play or pause" },
+        { "keys": ",", "command": "frameBack", "count": true, "does": "Step a frame back, toward the top" },
+        { "keys": ".", "command": "frameOn", "count": true, "does": "Step a frame on, toward the bottom" },
+        { "keys": "c", "command": "clip", "does": "Show the baked clip, or the live pose" },
+        { "keys": "<", "command": "anglePrevious", "does": "Lower bench angle" },
+        { "keys": ">", "command": "angleNext", "does": "Higher bench angle" }
+      ]
+    },
+    {
+      "name": "Numbers",
+      "keys": [
+        { "keys": "h", "command": "less", "count": true, "does": "Step the selected number down (1° or 1 mm)" },
+        { "keys": "l", "command": "more", "count": true, "does": "Step the selected number up (1° or 1 mm)" },
+        { "keys": "H", "command": "lessFine", "count": true, "does": "Step it down by a tenth of that" },
+        { "keys": "L", "command": "moreFine", "count": true, "does": "Step it up by a tenth of that" },
+        { "keys": "=", "command": "type", "does": "Type an exact value (12.5, or +2 relative), Enter to set, Esc to cancel" },
+        { "keys": "R", "command": "reset", "does": "Reset to the entry's default" },
+        { "keys": "p", "command": "perAngle", "does": "Tune at this bench angle only, or at all of them" },
+        { "keys": "u", "command": "undo", "count": true, "does": "Undo" },
+        { "keys": "<C-r>", "command": "redo", "count": true, "does": "Redo" }
+      ]
+    },
+    {
+      "name": "Cameras",
+      "keys": [
+        { "keys": "gf", "command": "cameraFront", "does": "Front" },
+        { "keys": "gs", "command": "cameraSide", "does": "Side" },
+        { "keys": "gt", "command": "cameraTop", "does": "Top" },
+        { "keys": "<Left>", "command": "turnLeft", "count": true, "does": "Turn 10° left" },
+        { "keys": "<Right>", "command": "turnRight", "count": true, "does": "Turn 10° right" }
+      ]
+    },
+    {
+      "name": "Review",
+      "keys": [
+        { "keys": "o", "command": "ok", "does": "OK the exercise, for the clip it has now (again takes it back)" },
+        { "keys": "a", "command": "note", "does": "Add a note, Enter to save, Esc to cancel" },
+        { "keys": "?", "command": "help", "does": "This sheet" }
+      ]
+    }
+  ],
+  "ex": [
+    { "name": "w", "command": "save", "does": "Save into poses.mjs and re-bake" }
+  ]
+}

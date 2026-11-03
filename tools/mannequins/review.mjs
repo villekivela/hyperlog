@@ -1,27 +1,21 @@
-// A batch's review page, and whether the batch is done (README, Reviewing a batch):
+// The owner's OKs and notes, which the studio writes (README, Reviewing a batch), and whether a
+// batch is done:
 //
-//   node review.mjs <batch>            builds review/out/<batch>/index.html, the page to publish
-//   node review.mjs status <batch>     how the batch stands, from review/<batch>.json
+//   node review.mjs status <batch>     how the batch stands, from its file and review/notes.md
+//   node review.mjs phone <batch>      the owner has swiped the batch in the phone's debug gallery
 //
-// The page plays each exercise's baked clip in a loop, turns it on a drag, lists its check results,
-// and keeps the owner's OK and note for each in its database. Each verdict names the clip it was
-// given on, so a re-baked clip needs a new OK. A batch is done when every exercise in it is OK for
-// the clip it has now.
+// An OK names the clip it was given on, so a re-baked clip needs a new one. A batch is done when
+// every exercise in it is OK for the clip it has now.
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { prepare } from './entries.mjs';
-import { checkPose } from './checks.mjs';
 import { CLIPS } from './bake.mjs';
-import { clipContent, inlineResources } from './glb.mjs';
-import { execFileSync } from 'node:child_process';
-import { bundleTune } from './bundle.mjs';
-import { patchPoses } from './patch.mjs';
-import { MODEL } from './stage.mjs';
+import { clipContent } from './glb.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const LIBRARY = path.join(CLIPS, '..', 'exercises.json');
+/** Where each batch's verdicts are, `<batch>.json`, and the notes, `notes.md`. */
+export const REVIEW = path.join(HERE, 'review');
 
 /** The batches poses are made and reviewed in, in order (SPEC, The mannequin). */
 export const BATCHES = {
@@ -52,11 +46,14 @@ export const BATCHES = {
   ],
 };
 
-const batchOf = (name) => {
+const idsOf = (name) => {
   const ids = BATCHES[name];
   if (!ids) throw new Error(`No batch "${name}": ${Object.keys(BATCHES).join(', ')}`);
   return ids;
 };
+
+/** The batch exercise `id` is reviewed in now: the latest in BATCHES that lists it, or null. */
+export const batchReviewing = (id) => Object.keys(BATCHES).findLast((name) => BATCHES[name].includes(id)) ?? null;
 
 /**
  * The files of the clip `id`, from the index in `clips`: its own `clip` (an adjustable bench's
@@ -74,12 +71,6 @@ async function filesOf(clips, id) {
   return { clip: at(entry.clip), angles, shared, all };
 }
 
-/** A clip's file as the page holds it: whole, with the files it shares (the mannequin, its kits) merged in, as a data URL. */
-async function wholeClip(file, shared) {
-  const files = Object.fromEntries(await Promise.all(shared.map(async (f) => [path.basename(f), await readFile(f)])));
-  return `data:model/gltf-binary;base64,${inlineResources(await readFile(file), files).toString('base64')}`;
-}
-
 /**
  * A clip's fingerprint, which a verdict names: what each of its files shows, with the parts it
  * reads from the files it shares (`clipContent`), so a kit file that grows for another exercise
@@ -92,124 +83,136 @@ async function hashOf({ all, shared }) {
   return hash.digest('hex').slice(0, 16);
 }
 
+/** The fingerprint of the clips exercise `id` has now in `clips`. */
+export const fingerprint = async (id, clips = CLIPS) => hashOf(await filesOf(clips, id));
 
-/** Builds the batch's review page into `out`/index.html, its clips in it: the page is published alone. */
-export async function buildReview(batch, { clips = CLIPS, out = path.join(HERE, 'review', 'out', batch) } = {}) {
-  const ids = batchOf(batch);
-  const library = JSON.parse(await readFile(LIBRARY, 'utf8'));
-  const names = Object.fromEntries(library.exercises.map((e) => [e.id, e.name]));
-  await mkdir(out, { recursive: true });
-  const exercises = [];
-  for (const id of ids) {
-    const entry = prepare(id);
-    const { checks } = await checkPose(id);
-    const files = await filesOf(clips, id);
-    const { clip, angles, shared } = files;
-    // The page may fetch nothing, data: URLs included, so each clip goes in whole, with the
-    // mannequin and the kits it shares merged into it. The OK still names the files that ship.
-    exercises.push({
-      id, name: names[id] ?? id, equipment: entry.equipment, clip: await wholeClip(clip, shared),
-      hash: await hashOf(files), camera: entry.camera, traced: Boolean(entry.trace), checks, entry,
-      // An adjustable bench shows at each angle it is baked at, from its typical one.
-      ...(entry.bench ? {
-        typical: entry.bench.typical,
-        angles: Object.fromEntries(await Promise.all(Object.entries(angles).map(async ([a, c]) => [a, { clip: await wholeClip(c.file, shared), camera: c.camera }]))),
-      } : {}),
-    });
+const verdictsFile = (dir, batch) => path.join(dir, `${batch}.json`);
+const readVerdicts = (dir, batch) => readFile(verdictsFile(dir, batch), 'utf8').then(JSON.parse, () => ({}));
+const sorted = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : 1)));
+const writeVerdicts = (dir, batch, verdicts) => writeFile(verdictsFile(dir, batch), JSON.stringify(sorted(verdicts), null, 2) + '\n');
+
+/**
+ * Gives exercise `id` the owner's OK (or takes it back) for the clip it has now, in `batch`'s file,
+ * the latest batch that lists it by default. Returns the batch, the OK and the clip's fingerprint.
+ */
+export async function setOk(id, ok, { dir = REVIEW, clips = CLIPS, batch = batchReviewing(id), at = new Date().toISOString() } = {}) {
+  if (!batch) throw new Error(`${id} is in no batch: add it to one in BATCHES (review.mjs) first`);
+  const clip = await fingerprint(id, clips);
+  const verdicts = await readVerdicts(dir, batch);
+  verdicts[id] = { ...verdicts[id], ok, clip, at };
+  await writeVerdicts(dir, batch, verdicts);
+  return { batch, ok, clip };
+}
+
+/**
+ * The owner has swiped `batch` in the phone's debug gallery: each exercise in it is phone-checked
+ * for the clip it has now. Only a batch that adds or changes a kit or a part needs it.
+ */
+export async function phoneChecked(batch, { dir = REVIEW, clips = CLIPS } = {}) {
+  const verdicts = await readVerdicts(dir, batch);
+  for (const id of idsOf(batch)) verdicts[id] = { ...verdicts[id], phone: await fingerprint(id, clips) };
+  await writeVerdicts(dir, batch, verdicts);
+}
+
+const notesFile = (dir) => path.join(dir, 'notes.md');
+const NOTES_HEAD = `# Notes
+
+The owner's notes from the studio, under the exercise or the kit (\`kit:<name>\`) each is on, with
+the day and the clip it was left on. Fix what a note asks, then delete it.
+`;
+
+/**
+ * The open notes in `dir`'s notes.md, by exercise id or `kit:<name>`: each note's text, its lines
+ * joined by newlines.
+ */
+export async function readNotes({ dir = REVIEW } = {}) {
+  const text = await readFile(notesFile(dir), 'utf8').catch(() => '');
+  const notes = {};
+  let at = null;
+  for (const line of text.split('\n')) {
+    const heading = /^## (\S+)\s*$/.exec(line);
+    if (heading) { at = heading[1]; continue; }
+    if (!at) continue;
+    if (line.startsWith('- ')) (notes[at] ??= []).push(line.slice(2));
+    else if (line.startsWith('  ') && notes[at]?.length) notes[at][notes[at].length - 1] += `\n${line.slice(2)}`;
   }
-  const template = await readFile(path.join(HERE, 'review', 'page.html'), 'utf8');
-  // The data sits in the page as JSON; `<` is escaped so nothing in it can close the script.
-  const mannequin = `data:model/gltf-binary;base64,${(await readFile(MODEL)).toString('base64')}`;
-  const data = JSON.stringify({ batch, exercises, mannequin }).replace(/</g, '\\u003c');
-  // The Tune panel's code is the tool's own, bundled into the page's script (bundle.mjs).
-  const code = await bundleTune();
-  if (code.includes('</script')) throw new Error("The tune bundle has a </script in it");
-  const tune = `const tune = (function (THREE, GLTFLoader) {\n${code}})(THREE, GLTFLoader);`;
-  const page = template.replace('/*BATCH*/{}', () => data).replace('/*TUNE*/', () => tune);
-  await writeFile(path.join(out, 'index.html'), page);
-  return out;
+  return notes;
 }
 
-/** The tuned values of a verdict (`{ path: value }`): the page saves them as JSON text. */
-function tunedOf(verdict) {
-  const t = verdict?.tuned;
-  if (!t) return {};
-  return typeof t === 'string' ? JSON.parse(t || '{}') : t;
+/**
+ * Adds the owner's note on `item` (an exercise id, or `kit:<name>`) to notes.md, under its heading,
+ * with the day and, for a posed exercise, the clip it has now.
+ */
+export async function addNote(item, note, { dir = REVIEW, clips = CLIPS, at = new Date().toISOString() } = {}) {
+  const words = note.trim();
+  if (!words) throw new Error('A note needs some words');
+  const clip = item.startsWith('kit:') ? null : await fingerprint(item, clips).catch(() => null);
+  const bullet = `- ${at.slice(0, 10)}${clip ? `, clip ${clip.slice(0, 8)}` : ''}: ${words.split('\n').join('\n  ')}\n`;
+  const text = await readFile(notesFile(dir), 'utf8').catch(() => NOTES_HEAD);
+  const heading = new RegExp(`^## ${item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm').exec(text);
+  let out;
+  if (heading) {
+    // At the end of its section: before the next heading, or the end of the file.
+    const next = text.slice(heading.index + heading[0].length).search(/^## /m);
+    const end = next === -1 ? text.length : heading.index + heading[0].length + next;
+    const before = text.slice(0, end).replace(/\n*$/, '\n');
+    out = `${before}${bullet}${next === -1 ? '' : '\n'}${text.slice(end)}`;
+  } else {
+    out = `${text.replace(/\n*$/, '\n')}\n## ${item}\n\n${bullet}`;
+  }
+  await writeFile(notesFile(dir), out);
 }
 
-/** Where one exercise stands, from its verdict and the fingerprint of the clip it has now. */
-function stateOf(verdict, now) {
-  if (verdict?.ok) return verdict.clip === now ? (Object.keys(tunedOf(verdict)).length ? 'tuned' : 'ok') : 'changed';
-  if (verdict?.note) return 'notes';
+/** Where one exercise stands: from its verdict, the fingerprint of its clip now and its open notes. */
+function stateOf(verdict, now, notes) {
+  if (verdict?.ok && verdict.clip === now) return verdict.phone === now ? 'phone-checked' : 'ok';
+  if (notes.length) return 'notes';
+  if (verdict?.ok) return 'changed';
   return 'waiting';
 }
 
 /**
- * How each exercise of the batch stands against the owner's verdicts (`{ id: { ok, note, clip } }`,
- * as the page saves them): `ok` for the clip it has now, `tuned` when the OK came with tuned values
- * that `review apply` hasn't yet put in poses.mjs, `changed` when the OK was for an earlier clip,
- * `notes` when the owner left a note and no OK, or `waiting`.
+ * How each exercise of the batch stands, from the verdicts and the notes in `dir`: `ok` for the
+ * clip it has now (`phone-checked` when the batch was swiped on the phone on that clip too),
+ * `notes` when it has an open note and no such OK, `changed` when the OK was for an earlier clip,
+ * or `waiting`. Each lists its open notes.
  */
-export async function batchStatus(batch, verdicts, { clips = CLIPS } = {}) {
+export async function batchStatus(batch, { dir = REVIEW, clips = CLIPS } = {}) {
+  const verdicts = await readVerdicts(dir, batch);
+  const notes = await readNotes({ dir });
   const exercises = [];
-  for (const id of batchOf(batch)) {
-    const v = verdicts[id];
-    const now = await hashOf(await filesOf(clips, id));
-    const tuned = tunedOf(v);
-    exercises.push({ id, state: stateOf(v, now), note: v?.note ?? '', ...(Object.keys(tuned).length ? { tuned } : {}) });
+  for (const id of idsOf(batch)) {
+    const mine = notes[id] ?? [];
+    exercises.push({ id, state: stateOf(verdicts[id], await fingerprint(id, clips), mine), notes: mine });
   }
-  return { done: exercises.every((e) => e.state === 'ok'), exercises };
+  return { done: exercises.every((e) => e.state === 'ok' || e.state === 'phone-checked'), exercises };
 }
 
 /**
- * Puts the tuned values of each OK'd exercise of the batch into poses.mjs (`posesFile`) and returns
- * the ids it changed. It doesn't bake: `review apply` does that, then gives each its new OK.
+ * Where exercise `id` stands in the batch it is reviewed in now (`batchReviewing`), with its open
+ * notes (`notes`, from `readNotes`, or read here).
  */
-export async function applyTunedValues(batch, verdicts, posesFile) {
-  let source = await readFile(posesFile, 'utf8');
-  const applied = [];
-  for (const id of batchOf(batch)) {
-    const tuned = tunedOf(verdicts[id]);
-    if (!verdicts[id]?.ok || !Object.keys(tuned).length) continue;
-    source = patchPoses(source, id, tuned);
-    applied.push(id);
-  }
-  if (applied.length) await writeFile(posesFile, source);
-  return applied;
+export async function reviewOf(id, { dir = REVIEW, clips = CLIPS, notes } = {}) {
+  const batch = batchReviewing(id);
+  const verdict = batch ? (await readVerdicts(dir, batch))[id] : undefined;
+  const mine = (notes ?? await readNotes({ dir }))[id] ?? [];
+  // A pose not baked yet has no clip to be OK for.
+  const now = await fingerprint(id, clips).catch(() => null);
+  return { batch, state: stateOf(verdict, now, mine), notes: mine };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [verb, name] = process.argv.slice(2);
-  if (verb === 'status') {
-    const file = path.join(HERE, 'review', `${name}.json`);
-    const verdicts = await readFile(file, 'utf8').then(JSON.parse, () => ({}));
-    const { done, exercises } = await batchStatus(name, verdicts);
-    for (const e of exercises) {
-      const tuned = e.tuned ? ` [tuned: ${Object.entries(e.tuned).map(([p, v]) => `${p}=${JSON.stringify(v)}`).join(', ')}]` : '';
-      console.log(`${e.state.padEnd(8)} ${e.id}${e.note ? `: ${e.note}` : ''}${tuned}`);
-    }
+  if (verb === 'status' && name) {
+    const { done, exercises } = await batchStatus(name);
+    for (const e of exercises) console.log(`${e.state.padEnd(13)} ${e.id}${e.notes.map((n) => `\n              - ${n.replace(/\n/g, ' ')}`).join('')}`);
     console.log(done ? `${name} is done` : `${name} isn't done`);
     process.exit(done ? 0 : 1);
-  } else if (verb === 'apply') {
-    const file = path.join(HERE, 'review', `${name}.json`);
-    const verdicts = await readFile(file, 'utf8').then(JSON.parse, () => ({}));
-    const applied = await applyTunedValues(name, verdicts, path.join(HERE, 'poses.mjs'));
-    if (!applied.length) { console.log('no tuned values to apply'); process.exit(0); }
-    // Bake in a process of its own: this one has the old poses loaded.
-    execFileSync(process.execPath, [path.join(HERE, 'bake.mjs')], { stdio: 'inherit' });
-    for (const id of applied) {
-      verdicts[id] = { ...verdicts[id], clip: await hashOf(await filesOf(CLIPS, id)) };
-      delete verdicts[id].tuned;
-    }
-    await writeFile(file, JSON.stringify(verdicts, null, 2) + '\n');
-    console.log(`applied to poses.mjs and re-baked: ${applied.join(', ')}`);
-    console.log('Give them their new OK in the page database (verdicts/<id>: clip = the new hash, tuned = ""):');
-    for (const id of applied) console.log(`  ${id}: ${verdicts[id].clip}`);
-  } else if (verb) {
-    const out = await buildReview(verb);
-    console.log(`built ${path.relative(process.cwd(), path.join(out, 'index.html'))}`);
+  } else if (verb === 'phone' && name) {
+    await phoneChecked(name);
+    console.log(`${name} is phone-checked on the clips it has now`);
   } else {
-    console.error('usage: node review.mjs <batch> | node review.mjs status <batch> | node review.mjs apply <batch>');
+    console.error('usage: node review.mjs status <batch> | node review.mjs phone <batch>');
     process.exit(2);
   }
 }

@@ -1,7 +1,7 @@
-// What the review page's Tune panel does with a pose entry, with nothing of the page or of node in
-// it (the page bundles this file, bundle.mjs). A slider is one number of the entry, named by its
-// path (`grip.width`, `top.bar.0`); a tuned value is saved at the path of the number it changes,
-// a point whole (`top.bar`), since an entry's lists are replaced whole, not merged.
+// What the studio's numbers panel does with a pose entry, with nothing of the page or of node in
+// it. A number is one of the entry's, named by its path (`grip.width`, `top.bar.0`); a tuned value
+// is saved at the path of the number it changes, a point whole (`top.bar`), since an entry's lists
+// are replaced whole, not merged.
 
 /** What a motion does that an entry may leave unsaid: a lever with a default, offered all the same. */
 export const OPTIONAL = {
@@ -120,17 +120,17 @@ function leaves(value, path, out) {
   return out;
 }
 
-/** The range, step and unit that suit the number at `path`, by what it is called. */
+/** The range, step and unit that suit the number at `path`, by what it is called: a step is a degree, a millimetre or a hundredth of a ratio. */
 function rangeOf(path, value) {
   const key = steps(path).filter((k) => !/^\d+$/.test(k)).at(-1);
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
   // A wrist bends well past the hand's own turn to the bar.
   if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
-  if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.05, unit: '' };
+  if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
   // Equipment stands where the pose needs it: a metre either way.
-  if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.01, unit: ' m' };
-  return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.01, unit: ' m' };
+  if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.001, unit: ' m' };
+  return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.001, unit: ' m' };
 }
 
 /** What the wrist's numbers do, [flexion, deviation], and which way each sign bends the hand. */
