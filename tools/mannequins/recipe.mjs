@@ -19,7 +19,8 @@
 // the parts, in the order the bake writes them, and says which belong to which body (`bodies`) and
 // which stack each stack's joint lifts (`stacks`). Its `drive` is the body-first solve: it places
 // the parts from the pose frame and returns each joint's value and where it is, and each contact's
-// point. `stand(group)`, if it has one, stands the kit's group where it goes. The parts are named
+// point. `stand(group)`, if it has one, stands the kit's group where it goes, and `follow()` lays
+// again what hangs between a body and the frame (a cable to a cam) after a scrub has moved it. The parts are named
 // after `node` (the recipe's name by default) in the clip.
 import * as THREE from 'three';
 import { group, tones } from './parts.mjs';
@@ -108,6 +109,8 @@ export function recipe(def) {
         joints,
         /** Each body on a joint, by name: the nodes that move with it. */
         bodies: built.bodies ?? {},
+        /** Whether it has a free body, which the hands carry. */
+        free: Object.values(bodies).some((b) => b.type === 'free'),
         /** Each contact, with where its point is now (`at`, a point a side where the body has two). */
         get contacts() {
           return contacts.map((c) => ({ ...c, at: points[c.point] }));
@@ -136,6 +139,7 @@ export function recipe(def) {
           for (const c of contacts) if (c.body === body) points[c.point] = points[c.point].map((p) => p.clone().applyMatrix4(move));
           joint.value = value;
           lift();
+          built.follow?.();
         },
       };
     },

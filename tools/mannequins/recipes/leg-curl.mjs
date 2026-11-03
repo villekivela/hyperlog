@@ -69,6 +69,7 @@ function lying({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {}, M) {
     ],
     bodies: { lever: drive.lever },
     stacks: { lever: drive.tower },
+    follow: drive.follow,
     drive(P, P0, P1) {
       const { pivot, roller, joint } = drive.place(P, P0, P1);
       span(kneeBar, kneeEnd, kneeEnd.clone().setX(side));

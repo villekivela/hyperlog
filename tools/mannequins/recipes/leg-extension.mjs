@@ -110,6 +110,7 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
     parts,
     bodies: { lever: drive.lever },
     stacks: { lever: drive.tower },
+    follow: drive.follow,
     drive(P, P0, P1) {
       const { pivot, roller, joint } = drive.place(P, P0, P1);
       fitBack(P0);

@@ -642,6 +642,11 @@ export function camLever(M, side, { down, behind }) {
   return {
     parts: [lever],
     camX: cam.x,
+    /** Where the cam's centre is now, wherever the lever has been turned. */
+    camAt() {
+      lever.updateWorldMatrix(true, false);
+      return lever.localToWorld(cam.clone());
+    },
     place(P, P0) {
       const pivot = P0.knee.clone().setX(0);
       lever.position.copy(pivot);
@@ -694,6 +699,8 @@ export function kneeDrive(M, { z, toward, down, behind }) {
   return {
     side, tx, z0, tower,
     lever: lever.parts,
+    // The cable up to the cam, laid again where the lever is now.
+    follow: () => cable.place(lever.camAt()),
     parts: [
       ...tower.parts, ...lever.parts, ...cable.parts, post, pivotHub,
       ...floorRail(V(tx - 0.12, 0.035, z0), V(side + 0.1, 0.035, z0), M),

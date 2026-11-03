@@ -43,6 +43,25 @@ for (const id of JOINTED) {
   });
 }
 
+for (const id of JOINTED) {
+  test(`${id}: scrubbing every joint from the bottom of the rep to the top's values sets the whole kit as the top has it`, async () => {
+    const stage = await buildStage(prepare(id));
+    const nodes = (kit) => { const out = []; kit.group.traverse((o) => { if (o !== kit.group) out.push(o); }); return out; };
+    // A kit with a free body has parts the hands carry, which no joint moves.
+    const kits = Object.entries(stage.kit.kits).filter(([, kit]) => Object.keys(kit.bodies).length && !kit.free);
+    stage.pose(0);
+    const top = kits.map(([, kit]) => ({ values: Object.fromEntries(Object.entries(kit.joints).map(([b, j]) => [b, j.value])), at: nodes(kit).map(world) }));
+    stage.pose(1);
+    kits.forEach(([name, kit], i) => {
+      for (const [body, value] of Object.entries(top[i].values)) kit.scrub(body, value);
+      nodes(kit).forEach((node, k) => {
+        const miss = world(node).distanceTo(top[i].at[k]);
+        assert.ok(miss < 0.02, `${name}: ${node.name} ${(miss * 100).toFixed(1)} cm from where the top of the rep has it`);
+      });
+    });
+  });
+}
+
 /**
  * Each landmark on side `k`, as a segment between two bones' points, and how far from it a
  * contact's point may be: the hands' grip exactly; a pad, a roller or a foot plate's middle within
