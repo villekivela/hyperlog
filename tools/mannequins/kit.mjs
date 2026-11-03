@@ -6,6 +6,7 @@
 // like a weight stack).
 import * as THREE from 'three';
 import { RECIPES } from './recipes/index.mjs';
+import { MOTION_TEMPOS } from './tempo.mjs';
 
 export { MATERIALS } from './parts.mjs';
 
@@ -59,14 +60,15 @@ export const KITS = RECIPES;
 
 /**
  * The entry the studio shows kit `name` by while no pose uses it: the kit alone, as its recipe
- * stands with no pose (`alone: { camera }` on the recipe, the framing it opens on), or null for a
- * kit whose recipe is set up by its pose.
+ * stands with no pose (`standsAlone: { camera }` on the recipe, the framing it opens on), or null
+ * for a kit whose recipe is set up by its pose. The studio's loop runs on a tempo, so it has the
+ * machines' usual one, though nothing moves.
  */
 export function shownAlone(name) {
-  const alone = KITS[name]?.alone;
-  if (!alone) return null;
+  const stands = KITS[name]?.standsAlone;
+  if (!stands) return null;
   const equipment = Object.keys(EQUIPMENT).find((k) => EQUIPMENT[k]?.includes(name));
-  return { equipment, kit: { [name]: {} }, alone: true, tempo: { lowering: 2, bottom: 0.3, lifting: 1, top: 0.6 }, camera: alone.camera };
+  return { equipment, kit: { [name]: {} }, alone: true, tempo: MOTION_TEMPOS.lever_handles, camera: stands.camera };
 }
 
 /**

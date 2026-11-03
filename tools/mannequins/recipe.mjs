@@ -14,6 +14,8 @@
 //   radian, or a metre).
 // - `fit`: its fit rules, the adjustments the machine's placard sets for the mannequin, each
 //   naming the option it sets. They are declared, not yet solved.
+// - `standsAlone` (optional): `{ camera }`, for a recipe that stands where it goes with no pose,
+//   its joints at rest; the studio shows it so, in that framing, while no pose uses it.
 //
 // Each of those may instead be a function of the kit's options. `build(options, materials)` makes
 // the parts, in the order the bake writes them, and says which belong to which body (`bodies`) and

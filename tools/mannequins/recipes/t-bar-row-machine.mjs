@@ -12,7 +12,7 @@
 // gives none.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { basePlate, floorRail, knob, pad, padGeometry, part, plateGeometry, rod, tube, turnedPart, wheelGeometry } from '../parts.mjs';
+import { basePlate, floorRail, hub, knob, pad, padGeometry, part, plateGeometry, rod, tube } from '../parts.mjs';
 import { V, X, rad } from '../rig.mjs';
 
 // From on its catch, 3° below level, to 20° above (the ref's Motion).
@@ -47,8 +47,9 @@ const YOKE = { along: 0.76, cross: 0.15, top: 0.41 };
 const NEUTRAL = { out: 0.2225, up: YOKE.top, length: 0.23, held: -0.075 };
 const WIDE = { out: 0.33, up: YOKE.top, length: 0.14 };
 const GRIP = 0.0155;
-// The horn, from a stop 1.27 m along the lever to its end at 1.62 m, the plate's middle at 1.30 m.
-const HORN = { from: 1.27, to: 1.62, plate: 1.3 };
+// The horn, 370 mm from 1.25 m along the lever to its end at 1.62 m, a stop on it at 1.27 m and the
+// plate's middle at 1.30 m.
+const HORN = { from: 1.25, stop: 1.27, to: 1.62, plate: 1.3 };
 // Where the lever lies on its catch, and where the base's front feet splay from.
 const CATCH = 1.15;
 
@@ -56,7 +57,7 @@ export default recipe({
   name: 't_bar_row_machine',
   // Shown alone in the studio until a pose uses it: three-quarter from the front, as the ref's
   // photos are.
-  alone: { camera: { target: [0, 0.62, 0.42], halfHeight: 1.2, azimuth: -40, elevation: 14 } },
+  standsAlone: { camera: { target: [0, 0.62, 0.42], halfHeight: 1.2, azimuth: -40, elevation: 14 } },
   bodies: { lever: revolute({ axis: V(-1, 0, 0), limits: LIMITS }) },
   // A pose holds one pair of grips; #160 solves the body to them.
   contacts: [
@@ -126,32 +127,31 @@ export default recipe({
 
     // The lever, built in its own frame about the pivot: z along it, y up from it.
     const lever = new THREE.Group();
-    const at = (x, y, z) => V(x, y, z);
     const loaded = part(plateGeometry(0.225, 0.06), M.plate, { solid: true });
     loaded.position.set(BESIDE, 0, HORN.plate);
     loaded.rotation.y = Math.PI / 2;
     const { along, cross, top } = YOKE;
     const yoke = [
-      tube(0.06, at(BESIDE, 0.04, along), at(BESIDE, cross - 0.03, along), M.frame),
-      tube(0.06, at(-NEUTRAL.out - 0.03, cross, along), at(NEUTRAL.out + 0.03, cross, along), M.frame),
+      tube(0.06, V(BESIDE, 0.04, along), V(BESIDE, cross - 0.03, along), M.frame),
+      tube(0.06, V(-NEUTRAL.out - 0.03, cross, along), V(NEUTRAL.out + 0.03, cross, along), M.frame),
       ...[-1, 1].flatMap((s) => [
-        tube(0.05, at(s * NEUTRAL.out, cross + 0.03, along), at(s * NEUTRAL.out, top - 0.03, along), M.frame),
-        pad(0.06, 0.06, 0.06, M.frame, at(s * NEUTRAL.out, top, along), { soft: 0.006 }),
-        rod(GRIP, at(s * NEUTRAL.out, top, along - NEUTRAL.length / 2), at(s * NEUTRAL.out, top, along + NEUTRAL.length / 2), M.vinyl, { held: true }),
-        rod(0.0125, at(s * (NEUTRAL.out + 0.03), top, along), at(s * (WIDE.out + WIDE.length / 2 + 0.005), top, along), M.metal),
-        rod(GRIP, at(s * (WIDE.out - WIDE.length / 2), top, along), at(s * (WIDE.out + WIDE.length / 2), top, along), M.vinyl, { held: true }),
+        tube(0.05, V(s * NEUTRAL.out, cross + 0.03, along), V(s * NEUTRAL.out, top - 0.03, along), M.frame),
+        pad(0.06, 0.06, 0.06, M.frame, V(s * NEUTRAL.out, top, along), { soft: 0.006 }),
+        rod(GRIP, V(s * NEUTRAL.out, top, along - NEUTRAL.length / 2), V(s * NEUTRAL.out, top, along + NEUTRAL.length / 2), M.vinyl, { held: true }),
+        rod(0.0125, V(s * (NEUTRAL.out + 0.03), top, along), V(s * (WIDE.out + WIDE.length / 2 + 0.005), top, along), M.metal),
+        rod(GRIP, V(s * (WIDE.out - WIDE.length / 2), top, along), V(s * (WIDE.out + WIDE.length / 2), top, along), M.vinyl, { held: true }),
       ]),
     ];
     lever.add(
-      turnedPart(wheelGeometry(0.06, 0.1), M.pulley, at(BESIDE + 0.01, 0, 0), { solid: false }),
-      tube(BEAM, at(BESIDE, 0, 0.06), at(BESIDE, 0, HORN.from), M.frame),
+      hub(M, V(BESIDE + 0.01, 0, 0)),
+      tube(BEAM, V(BESIDE, 0, 0.06), V(BESIDE, 0, HORN.from), M.frame),
       ...yoke,
-      rod(0.045, at(BESIDE, 0, HORN.from - 0.015), at(BESIDE, 0, HORN.from), M.metal),
-      rod(0.025, at(BESIDE, 0, HORN.from), at(BESIDE, 0, HORN.to), M.metal),
+      rod(0.045, V(BESIDE, 0, HORN.stop - 0.015), V(BESIDE, 0, HORN.stop), M.metal),
+      rod(0.025, V(BESIDE, 0, HORN.from), V(BESIDE, 0, HORN.to), M.metal),
       loaded,
-      rod(0.034, at(BESIDE, 0, HORN.plate + 0.035), at(BESIDE, 0, HORN.plate + 0.055), M.metal),
+      rod(0.034, V(BESIDE, 0, HORN.plate + 0.035), V(BESIDE, 0, HORN.plate + 0.055), M.metal),
     );
-    const grips = (g) => [-1, 1].map((s) => at(s * g.out, g.up, along + (g.held ?? 0)));
+    const grips = (g) => [-1, 1].map((s) => V(s * g.out, g.up, along + (g.held ?? 0)));
 
     return {
       parts: [cushion, board, beam, ...base, ...posts, axle, ...catchPost, ...footPlateParts, lever],

@@ -62,6 +62,7 @@ Photo 07 is side-on with the lever and the plate in the machine's middle plane. 
 - Neutral: vertical grips, 230 mm long, 445 mm apart.
 - Wide: horizontal grips, 140 mm long, 660 mm apart.
 - Both are fixed on the Titan lever's yoke; 31 mm rubber.
+- Photos 05 and 06 show the neutral grips running fore and aft through the blocks atop the yoke's uprights, the palms upright on them; the recipe (#176) builds them so.
 
 ## Adjustments and fit rules
 - Foot plate: pop-pin, sliding along the inclined beam (photo 10). The page names no other adjustment and the photos show the pad bolted to the beam and post, so the pad is fixed.

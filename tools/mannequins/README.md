@@ -299,7 +299,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   and aft through the blocks atop its uprights) and wide grips (out from them), and a plate on a
   horn at its front end. Its lever's angle up from level is `P.lever`, and it rests on its catch,
   3° below level, where the pose frame gives none. Its contacts tie the hands to either pair of
-  grips, the chest to the pad and the feet to the foot plate.
+  grips, the chest to the pad and the feet to the foot plate. Its grips stand 410 mm above the
+  lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with the lever on its
+  catch, and its foot plate's default (790 mm, the ref's choice for the mannequin) sits about
+  140 mm higher up the beam than photo 07's.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
@@ -436,7 +439,8 @@ listens on localhost only.
   its tempo or held at the top or the bottom, with drag handles (`handles.mjs`) when held, and the
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
-  first by id of those. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the T-bar row machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
