@@ -1,8 +1,9 @@
 // The mannequin's rig: each bone is aimed at a target from its bind pose, with two-bone IK for the
-// legs and arms, a grip solve that lays the bar across the palm, and fingers curled round it.
+// legs and arms and a grip solve that lays the bar across the palm; the hands close on it in
+// `grip.mjs`.
 // Every function takes the rig built by `buildRig`, so nothing here keeps state of its own.
 import * as THREE from 'three';
-import { closeHand, handModel, relaxHand, seatOf, skinPoints } from './grip.mjs';
+import { closeHand, handModel, holdsNothing, relaxHand, seatOf, skinPoints } from './grip.mjs';
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, z);
 export const rad = (d) => (d * Math.PI) / 180;
@@ -534,7 +535,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // touch it: the part the stage placed under it (`holding(s)`, along its own line, in pieces), or
     // a bar of the radius the hand was seated for, along the line it lies in the hand. A hand that
     // holds nothing lies open, or relaxed where it rests (`P.resting`).
-    const bar = hold.sits === 'open' || P.resting === s ? null
+    const bar = holdsNothing(P, s) ? null
       : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
     if (bar) (arms[k] ??= {}).fingers = closeHand(rig, k, bar, hold.thumb, near[k]?.at ? near[k].fingers : null);
     else relaxHand(rig, k, hold.sits === 'open');

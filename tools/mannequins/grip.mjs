@@ -6,11 +6,13 @@
 // joint until they touch it. The contact check measures the same skin, as the body is drawn.
 import * as THREE from 'three';
 
-/** Each landmark's distance along the palm from the wrist, as a fraction of the palm's length. */
-// This mannequin's fingers close round nothing lower in its palm than 0.6 of the way from the wrist
-// joint to the knuckles (its palm is deep), so the heel of the palm is as low as they reach.
-export const LANDMARKS = { heel: 0.65, mid: 0.72, base: 0.8 };
-export const THUMBS = ['wrapped', 'thumbless'];
+/**
+ * Each grip landmark's distance along the palm from the wrist joint, as a fraction of the palm's
+ * length to the knuckles. This mannequin's fingers close round nothing lower in its palm than 0.6
+ * (its palm is deep), so the heel of the palm is as low as they reach.
+ */
+export const GRIP_LANDMARKS = { heel: 0.65, mid: 0.72, base: 0.8 };
+const THUMBS = ['wrapped', 'thumbless'];
 
 /** Where the bar sits by default in each motion's hands (the research's section 5.1). */
 const SITS = {
@@ -25,14 +27,24 @@ const SITS = {
  */
 export function holdOf(e) {
   const sits = e.grip?.crossed ? 'open' : e.grip?.sits ?? SITS[e.motion] ?? 'base';
-  if (sits !== 'open' && !LANDMARKS[sits]) throw new Error(`No grip landmark "${sits}": heel, mid, base or open`);
+  if (sits !== 'open' && !GRIP_LANDMARKS[sits]) throw new Error(`No grip landmark "${sits}": heel, mid, base or open`);
   if (sits === 'open') return { sits, thumb: 'open' };
   const thumb = e.grip?.thumb ?? 'wrapped';
   if (!THUMBS.includes(thumb)) throw new Error(`No thumb "${thumb}": wrapped or thumbless`);
   return { sits, thumb };
 }
 
-export const DIGITS = ['index', 'middle', 'ring', 'pinky', 'thumb'];
+/**
+ * Whether the hand on side `s` holds nothing round in frame `P`: lying open (a cross-arm rack's) or
+ * resting while the other works (`P.resting`).
+ */
+export const holdsNothing = (P, s) => Boolean(P.openHands) || P.hold?.sits === 'open' || P.resting === s;
+
+const DIGITS = ['index', 'middle', 'ring', 'pinky', 'thumb'];
+/** The palm's own skin and the ball of the thumb, which a bar rests on. */
+const PALM = /^(hand|thumb_01)_/;
+/** A wrapped thumb rests on the fingers round a bar thinner than this, in radius (research, section 1.2). */
+const THIN = 0.02;
 const HAND = /^(hand|index|middle|ring|pinky|thumb)_/;
 
 /** Each vertex's bone: the one that moves it most. */
@@ -53,8 +65,8 @@ const commonest = (a, b, c) => (b === c ? b : a);
 /**
  * Points on the skin of the hands, for the grip and the contact check: every vertex of a hand, each
  * triangle's middle, and on the palm, whose triangles are large, a grid over each. Each point is
- * the vertices and weights it is made of, so it can be measured as the body is drawn (`skinned`).
- * By side, by bone.
+ * the vertices and weights it is made of, so it can be measured as the body is drawn (`drawn`). By
+ * side, by bone.
  */
 export function skinPoints(meshes) {
   const out = { l: {}, r: {} };
@@ -148,7 +160,7 @@ export function nearestOf(points, cell = 0.006) {
  * The round parts the hands hold (a bar, a handle's grip, a rope), each as a line in the world:
  * through `at` along `along`, `half` either way, `radius` round it.
  */
-export function heldParts(kit) {
+function heldParts(kit) {
   const out = [];
   kit.group.updateMatrixWorld(true);
   kit.group.traverse((m) => {
@@ -180,17 +192,16 @@ function fromAxis(part, p) {
 /** How far `p` is outside `part`, a capped cylinder: negative inside. */
 function outside(part, p) {
   const { radial, ax } = fromAxis(part, p);
-  const past = Math.abs(ax) - part.half;
-  if (past <= 0) return Math.max(radial - part.radius, past);
-  return radial <= part.radius ? past : Math.hypot(radial - part.radius, past);
+  return outsidePieces(ax, radial, part.radius, [{ from: -part.half, to: part.half, radius: part.radius }]);
 }
 
 /**
- * What a hand holding at `grip` holds: the round held parts whose axis runs within a centimetre of
- * it, one inside another (a grip's sleeve over its bar), as `with`, and the outermost of them, whose
- * radius the hand closes to. Null for a hand holding nothing.
+ * What a hand holding at `grip` holds in `kit`: the round held parts whose axis runs within a
+ * centimetre of it, one inside another (a grip's sleeve over its bar), as `with`, and the outermost
+ * of them, whose radius the hand closes to. Null for a hand holding nothing.
  */
-export function heldAt(parts, grip) {
+export function partUnder(kit, grip) {
+  const parts = heldParts(kit);
   const under = parts.filter((part) => {
     const { radial, ax } = fromAxis(part, grip);
     return radial <= 0.01 && Math.abs(ax) <= part.half + 0.01;
@@ -201,17 +212,18 @@ export function heldAt(parts, grip) {
   return { ...outer, with: coaxial };
 }
 
-/** How far `p` is outside what the hand holds (`held`, from `heldAt`): negative inside. */
+/** How far `p` is outside what the hand holds (`held`, from `partUnder`): negative inside. */
 const outsideHeld = (held, p) => Math.min(...held.with.map((part) => outside(part, p)));
 
 /** How near two skin points must come to touch: the skin's points are a few millimetres apart. */
 const TOUCHING = 0.002;
 
 /**
- * How hand `k` meets `part` (what it holds, from `heldAt`), as the body is drawn now: each digit's gap to the bar's surface (its
- * nearest point; negative inside), with where; and the deepest point of the hand inside the bar.
- * A wrapped thumb on a bar thinner than the hand can close round rests on the fingers (research,
- * section 6), so its gap is the nearer of the bar and the index and middle fingers.
+ * How hand `k` meets `part` (what it holds, from `partUnder`), as the body is drawn now: the palm's
+ * and each digit's gap to the bar's surface (its nearest point; negative inside), with where; and
+ * the deepest point of the hand inside the bar. A wrapped thumb on a bar under 40 mm rests on the
+ * fingers (research, sections 1.2 and 6), so its gap is the nearer of the bar and the index and
+ * middle fingers.
  */
 export function contactOf(skin, k, part, thumb = 'wrapped') {
   const digits = {};
@@ -219,7 +231,7 @@ export function contactOf(skin, k, part, thumb = 'wrapped') {
   const points = {};
   const at = drawn();
   for (const [bone, list] of Object.entries(skin[k])) {
-    const digit = DIGITS.find((d) => bone.startsWith(d + '_'));
+    const digit = PALM.test(bone) ? 'palm' : DIGITS.find((d) => bone.startsWith(d + '_'));
     for (const s of list) {
       const p = at(s);
       if (digit) (points[digit] ??= []).push(p);
@@ -228,7 +240,7 @@ export function contactOf(skin, k, part, thumb = 'wrapped') {
       if (digit && (!digits[digit] || gap < digits[digit].gap)) digits[digit] = { gap, at: p };
     }
   }
-  if (thumb === 'wrapped' && digits.thumb) {
+  if (thumb === 'wrapped' && digits.thumb && part.radius < THIN) {
     const nearest = nearestOf([...points.index, ...points.middle]);
     for (const p of points.thumb) {
       const d = nearest(p.x, p.y, p.z) - TOUCHING;
@@ -269,11 +281,11 @@ export function handModel(skin, bones, rest) {
 }
 
 /**
- * The palm's skin with the thumb's root where grip `thumb` holds it and the fingers straight, from
- * the wrist in the bind pose: the ball of the thumb is part of what a bar rests on. Measured as the
- * body is drawn, since the thumb's root carries some of the palm's skin with it.
+ * The palm's skin with the thumb's root where grip `thumb` holds it, from the wrist in the bind
+ * pose: the ball of the thumb is part of what a bar rests on. Measured as the body is drawn, since
+ * the thumb and the fingers carry some of the palm's skin with them.
  */
-function palmSkin(rig, k, thumb) {
+function palmSkin(rig, k, thumb, closedOn = null) {
   const { hand, digits } = rig;
   const spec = THUMB[thumb] ?? THUMB.wrapped;
   const joints = Object.values(digits[k]).flat();
@@ -282,10 +294,18 @@ function palmSkin(rig, k, thumb) {
   digits[k].thumb[0].bone.quaternion.copy(digits[k].thumb[0].curl(spec.start[0], spec));
   rig.bones['hand_' + k].updateMatrixWorld(true);
   const toBind = hand.bind[k].clone().multiply(rig.bones['hand_' + k].matrixWorld.clone().invert());
+  // Closed on a bar seated `closedOn` (`{ depth, off, radius, line }`, along `line` in the bind
+  // pose's frame): the fingers and the thumb carry the skin near them as they close.
+  if (closedOn && THUMB[thumb]) {
+    const toWorld = toBind.clone().invert();
+    const { wrist, fingers, normal } = hand.rest[k];
+    const at = wrist.clone().addScaledVector(fingers, closedOn.depth).addScaledVector(normal, closedOn.off).applyMatrix4(toWorld);
+    closeHand(rig, k, { at, along: closedOn.line.clone().transformDirection(toWorld), radius: closedOn.radius }, thumb);
+  }
   const at = drawn();
   const out = [];
   for (const [bone, list] of Object.entries(rig.skin[k])) {
-    if (!/^(hand|thumb_01)_/.test(bone)) continue;
+    if (!PALM.test(bone)) continue;
     for (const s of list) out.push(at(s).applyMatrix4(toBind).sub(hand.rest[k].wrist));
   }
   joints.forEach((j, i) => j.bone.quaternion.copy(kept[i]));
@@ -317,21 +337,20 @@ export function seatOf(rig, k, sits, radius, thumb = 'wrapped') {
   const key = `${rig.dims.palmLength}:${k}:${sits}:${radius}:${thumb}`;
   if (SEATS.has(key)) return SEATS.get(key);
   const { fingers, normal, knuckles } = rig.hand.rest[k];
-  const depth = (LANDMARKS[sits] ?? LANDMARKS.base) * rig.dims.palmLength;
+  const depth = (GRIP_LANDMARKS[sits] ?? GRIP_LANDMARKS.base) * rig.dims.palmLength;
   // Only the skin a bar there can reach: within a few centimetres of the landmark.
-  const skin = palmSkin(rig, k, thumb).filter((d) => Math.abs(d.dot(fingers) - depth) < radius + 0.06);
+  const near = (skin) => skin.filter((d) => Math.abs(d.dot(fingers) - depth) < radius + 0.06);
   const w = new THREE.Vector3();
-  const offs = SLANTS.map((q) => TILTS.map((e) => {
-    const line = knuckles.clone().multiplyScalar(Math.cos(q * RAD) * Math.cos(e * RAD))
-      .addScaledVector(fingers, Math.sin(q * RAD)).addScaledVector(normal, Math.cos(q * RAD) * Math.sin(e * RAD));
+  // How far off the palm's face a bar along `line` rests on `skin`, touching.
+  const offOn = (skin, line) => {
     const clear = (off) => {
-      let near = Infinity;
+      let nearest = Infinity;
       for (const d of skin) {
         w.copy(d).addScaledVector(fingers, -depth).addScaledVector(normal, -off);
         w.addScaledVector(line, -w.dot(line));
-        near = Math.min(near, w.length());
+        nearest = Math.min(nearest, w.length());
       }
-      return near - radius;
+      return nearest - radius;
     };
     // Between the palm's bones and well clear of its skin, home in on the touch.
     let lo = 0;
@@ -341,7 +360,25 @@ export function seatOf(rig, k, sits, radius, thumb = 'wrapped') {
       if (clear(m) < 0) lo = m; else hi = m;
     }
     return hi;
-  }));
+  };
+  const lineAt = (q, e) => knuckles.clone().multiplyScalar(Math.cos(q * RAD) * Math.cos(e * RAD))
+    .addScaledVector(fingers, Math.sin(q * RAD)).addScaledVector(normal, Math.cos(q * RAD) * Math.sin(e * RAD));
+  const open = near(palmSkin(rig, k, thumb));
+  // At each slant, where the hand closed round a bar seated there rests on it: closing moves the
+  // palm's skin as the fingers and the thumb curl, the nearer the bar the more, so home in on the
+  // seat that a hand closed round it agrees with.
+  const offs = SLANTS.map((q) => {
+    const line = lineAt(q, 0);
+    const closed = (off) => near(palmSkin(rig, k, thumb, { depth, off, radius, line }));
+    let lo = offOn(open, line) - 0.02;
+    let hi = lo + 0.05;
+    for (let i = 0; i < 8; i++) {
+      const m = (lo + hi) / 2;
+      if (offOn(closed(m), line) > m) lo = m; else hi = m;
+    }
+    const skin = closed(hi);
+    return TILTS.map((e) => offOn(skin, lineAt(q, e)));
+  });
   const offAt = ([kk, ff, nn]) => {
     // A line either way along is the same line.
     if (kk < 0) [kk, ff, nn] = [-kk, -ff, -nn];
@@ -368,10 +405,21 @@ export const THUMB = {
   wrapped: { turn: 0.3, sense: -1, start: [60, 0, 0], base: [0, 40, 40], limit: [60, 90, 85] },
   thumbless: { turn: 1, sense: 1, start: [0, 0, 0], base: [0, 40, 40], limit: [0, 90, 85] },
 };
+/**
+ * How far short of the bar's surface a digit stops: a hair, so the skin where its joints bend,
+ * which the closing doesn't follow exactly, stays out of the bar.
+ */
+const SHY = 0.0005;
 /** How far the thumb's root may swing back toward the palm to clear a bar, in degrees. */
 const SWING_BACK = 60;
 /** A step of a digit's closing, in the fist's proportions. */
 const STEP = 0.04;
+
+/** Turns a digit's joints to `angles` (degrees, from the knuckle out), held as `spec` holds it. */
+function setDigit(joints, angles, spec) {
+  joints.forEach((j, i) => j.bone.quaternion.copy(j.curl(angles[i], spec)));
+  joints[0].bone.updateMatrixWorld(true);
+}
 
 /** Calls `each(x, y, z)` for each rigid point of `bone` where it is now. */
 function eachPoint(rig, k, bone, each) {
@@ -419,7 +467,7 @@ function barGap(rig, k, bone, { at, along, radius, pieces }) {
 }
 
 /**
- * What the hand holding `held` (from `heldAt`) at `grip` closes on, laid out along `line` from the
+ * What the hand holding `held` (from `partUnder`) at `grip` closes on, laid out along `line` from the
  * grip: each piece's span and radius.
  */
 export function piecesOf(held, grip, line) {
@@ -440,8 +488,7 @@ function closeDigit(joints, spec, gapOf) {
   const { start: open, base, limit } = spec;
   const angles = open ? open.slice() : joints.map(() => 0);
   const set = () => {
-    joints.forEach((j, i) => j.bone.quaternion.copy(j.curl(angles[i], spec)));
-    joints[0].bone.updateMatrixWorld(true);
+    setDigit(joints, angles, spec);
   };
   // The nearest of the links from `from` on, and which.
   const nearest = (from) => {
@@ -507,17 +554,16 @@ export function closeHand(rig, k, bar, thumb, given = null) {
     const joints = digits[f];
     if (given?.[f]) {
       const spec = f === 'thumb' ? thumbAt(given[f][0]) : FINGER;
-      joints.forEach((j, i) => j.bone.quaternion.copy(j.curl(given[f][i], spec)));
-      joints[0].bone.updateMatrixWorld(true);
+      setDigit(joints, given[f], spec);
       out[f] = given[f];
       continue;
     }
     if (f !== 'thumb') {
-      out[f] = closeDigit(joints, FINGER, (i) => barGap(rig, k, joints[i].bone.name, bar));
+      out[f] = closeDigit(joints, FINGER, (i) => barGap(rig, k, joints[i].bone.name, bar) - SHY);
       continue;
     }
     let near = null;
-    if (thumb === 'wrapped') {
+    if (thumb === 'wrapped' && bar.radius < THIN) {
       const fingers = [];
       for (const g of ['index', 'middle']) for (const j of digits[g]) eachPoint(rig, k, j.bone.name, (x, y, z) => fingers.push(new THREE.Vector3(x, y, z)));
       near = nearestOf(fingers);
@@ -534,7 +580,7 @@ export function closeHand(rig, k, bar, thumb, given = null) {
     const gapOf = (i) => {
       if (i === 0) return Infinity;
       const name = joints[i].bone.name;
-      let gap = Math.min(barGap(rig, k, name, bar), i === 1 ? ballGap() : Infinity);
+      let gap = Math.min(barGap(rig, k, name, bar) - SHY, i === 1 ? ballGap() : Infinity);
       if (near) eachPoint(rig, k, name, (x, y, z) => { gap = Math.min(gap, near(x, y, z) - TOUCHING); });
       return gap;
     };
@@ -542,8 +588,7 @@ export function closeHand(rig, k, bar, thumb, given = null) {
     // ball clear the bar, where a bar slanting across the palm runs into them there.
     const clearAt = (swing) => {
       const spec = thumbAt(swing);
-      joints.forEach((j, i) => j.bone.quaternion.copy(j.curl(spec.start[i], spec)));
-      joints[0].bone.updateMatrixWorld(true);
+      setDigit(joints, spec.start, spec);
       return Math.min(ballGap(), ...[1, 2].map((i) => barGap(rig, k, joints[i].bone.name, bar))) >= 0;
     };
     const start = (THUMB[thumb] ?? THUMB.wrapped).start[0];
@@ -571,7 +616,6 @@ export function relaxHand(rig, k, open) {
   for (const f of DIGITS) {
     const joints = rig.digits[k][f];
     const spec = f === 'thumb' ? THUMB.wrapped : FINGER;
-    joints.forEach((j, i) => j.bone.quaternion.copy(j.curl(open ? 0 : spec.base[i] * 0.5, spec)));
-    joints[0].bone.updateMatrixWorld(true);
+    setDigit(joints, spec.base.map((b) => (open ? 0 : b * 0.5)), spec);
   }
 }

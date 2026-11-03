@@ -196,7 +196,7 @@ _Avoid_: Attachment (that is a cable's handle), constraint
 
 **Grip landmark**:
 Where a bar or handle sits in a pose's hand: the heel of the palm (a press), mid-palm (a curl, a squat) or the base of the fingers (a pull); or an open hand, which holds nothing round. With the thumb, wrapped round the bar or thumbless over it, it is what the grip solve closes the hand to. Each motion has one by default; an entry can name its own.
-_Avoid_: Grip depth, hold, grip (that is the hands' width and turn on the bar)
+_Avoid_: Grip depth, grip (that is the hands' width and turn on the bar)
 
 **Fit rule**:
 How a recipe sets its adjustments for the mannequin, as the machine's placard says: the knee on the pivot axis, the handles at mid-chest, the pad just above the ankle. A pose entry can override what it sets.

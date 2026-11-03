@@ -6,7 +6,7 @@ import path from 'node:path';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { buildRig, gripTarget, poseRig } from './rig.mjs';
-import { heldAt, heldParts, piecesOf } from './grip.mjs';
+import { partUnder, piecesOf } from './grip.mjs';
 import { frameAt } from './motions.mjs';
 import { MATERIALS, buildKit, floorShadow } from './kit.mjs';
 
@@ -139,7 +139,7 @@ export async function buildStage(entry, body) {
   kit.place(top, top, bottom);
   const radius = {};
   for (const s of [-1, 1]) {
-    const held = heldAt(heldParts(kit), gripTarget(top, s));
+    const held = partUnder(kit, gripTarget(top, s));
     if (held) radius[s] = held.radius;
   }
   const frame = (d) => Object.assign(d === 0 ? top : d === 1 ? bottom : frameAt(entry, d, rig.dims), { radius });
@@ -149,7 +149,7 @@ export async function buildStage(entry, body) {
   const holding = (P) => (s) => {
     kit.place(P, top, bottom);
     const grip = gripTarget(P, s);
-    const held = heldAt(heldParts(kit), grip);
+    const held = partUnder(kit, grip);
     if (!held) return null;
     const along = held.along.clone();
     if (P.held?.[s] && along.dot(P.held[s]) < 0) along.negate();

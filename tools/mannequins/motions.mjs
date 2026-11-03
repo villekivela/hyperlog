@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { V, X, rad } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
-import { LANDMARKS, holdOf } from './grip.mjs';
+import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -23,7 +23,7 @@ const floor = { point: V(0, 0, 0), normal: V(0, 1, 0) };
 const STRAIGHT = 0.995;
 
 /** How far along the palm from the wrist the pose's grip sits: its landmark's (`grip.mjs`). */
-const depthOf = (e, L) => L.palmLength * (LANDMARKS[holdOf(e).sits] ?? LANDMARKS.base);
+const depthOf = (e, L) => L.palmLength * (GRIP_LANDMARKS[holdOf(e).sits] ?? GRIP_LANDMARKS.base);
 
 /**
  * Where a forearm swinging side-on `deg` from hanging, from `elbow`, holds its bar with a straight

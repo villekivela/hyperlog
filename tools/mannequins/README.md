@@ -123,17 +123,19 @@ palm is as low as they reach, higher than a lifter's.
 The bar's radius is the kit's part under the hand (a barbell's 14 mm, a stirrup's 16.5 mm sleeve
 and the 12 mm bar past it, a chest press's 20.5 mm), and the hand is seated so its palm, the ball
 of the thumb with it, rests on that part's skin at the landmark, for the way the bar slants and
-tilts across the palm. Then each finger closes joint by joint until it touches the part: its
+tilts across the palm, measured on the hand as it closes round the bar, since the fingers and the
+thumb carry some of the palm's skin with them. Then each finger closes joint by joint until it touches the part: its
 joints together in a fist's proportions until a link touches, then the joints past that link,
 out to the tip. The thumb's root swings out of the palm, and its other joints bend about the bar
-until the thumb touches it or, wrapped round a bar thinner than the hand, the index and middle
-fingers. It runs on every frame: the stage places the kit for the arms as they are and the hand
+until the thumb touches it or, wrapped round a bar under 40 mm, the index and middle fingers. It runs on every frame: the stage places the kit for the arms as they are and the hand
 closes on the part where it is, along its own line, in its pieces (a sleeve and the bar under it).
-Bone offsets still turn the fingers on top.
+Bone offsets still turn the fingers on top. The research's wrist angles (5–10° of extension for a
+press, the upright row's flexion) aren't applied: a wrist stays straight unless the pose sets it
+(Wrists and grip turn, above).
 
 The **contact** check fails a hand that stands off its part, or sinks into it, by more than 2 mm on
-any frame: each finger and the thumb within 2 mm of its surface, and no part of the hand more than
-2 mm inside it. In the studio a hand's close-up marks in red where it misses on the frame shown.
+any frame: the palm, each finger and the thumb within 2 mm of its surface, and no part of the hand
+more than 2 mm inside it. In the studio a hand's close-up marks in red where it misses on the frame shown.
 The hands check also fails fingers folded into one another (their joints under 1.3 cm apart).
 
 `top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
@@ -403,8 +405,8 @@ bake (nor does anything else in that bake):
 - **Joints:** knees and elbows bend no more than 155°, a knee turns no more than 60° from the hips'
   front, a hip flexes no more than 140° or extends past 30°, the head turns no more than 60° from
   the trunk, and the ankle stays between 55° and 160° from shin to foot.
-- **Contact:** every finger and the thumb of a hand on a bar or a handle meet its surface within
-  2 mm, and no part of the hand is more than 2 mm inside it (Grips, above).
+- **Contact:** the palm, every finger and the thumb of a hand on a bar or a handle meet its surface
+  within 2 mm, and no part of the hand is more than 2 mm inside it (Grips, above).
 - **Trace:** every traced angle is within 10° of its trace. Contacts come first (the bar over the
   feet, the hands on the bar), so a pose can drift from its trace; past 10° it fails.
 

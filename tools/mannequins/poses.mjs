@@ -47,7 +47,7 @@ export const POSES = {
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.14, -0.19] },
+    top: { bar: [1.1265, -0.2] },
     bottom: { bar: [0.71, -0.09] },
     grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
@@ -113,7 +113,7 @@ export const POSES = {
     like: 'lat_pulldown',
     grip: { width: 0.24, elbows: 0.0, rotate: 180 },
     top: { bar: [1.70, 0.02], shrug: 9 },
-    bottom: { bar: [1.12, 0.02], shrug: 0 },
+    bottom: { bar: [1.11, 0.02], shrug: 0 },
   },
 
   triceps_pressdown: {
@@ -238,7 +238,7 @@ export const POSES = {
     bottom: { ankle: -18 },
     feet: { stance: 0.1, ball: [0.2, 0.52] },
     pivot: [0.79, 0.88],
-    grip: { width: 0.13, at: [0.86, 0.34] },
+    grip: { width: 0.13, at: [0.86, 0.349] },
     camera: { target: [0, 0.55, 0.25], halfHeight: 0.78, azimuth: 72, elevation: 10 },
   },
 
@@ -334,7 +334,7 @@ export const POSES = {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_column: { at: [-0.6, 0.05], pulley: 0.15, attachment: 'handle', hand: 1 } },
-    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.7743, 1.5155, 0.339] },
+    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.763, 1.513, 0.334] },
     bottom: { shin: 4, thigh: 6, trunk: 6, hand: [0.0309, 0.8331, 0.0938] },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
     grip: { arc: true, one: 1, rest: [-0.53, 1.12, 0.07], pole: [1, -0.2505, -0.7094] },
@@ -374,7 +374,7 @@ export const POSES = {
     motion: 'free_arms',
     kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
     body: { hip: [0.53, 0.17], trunk: -10 },
-    top: { hand: [0.2882, 1.6383, 0.2743] },
+    top: { hand: [0.2882, 1.627, 0.2743] },
     bottom: { hand: [0.32, 1.13, 0.18] },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
     grip: { pole: [1, -1, 0.1], sits: 'heel' },

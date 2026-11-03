@@ -1526,8 +1526,9 @@ gallery (Technique videos).
     nothing round, and its thumb, wrapped round the bar or thumbless over it (the low-bar squat);
     each motion has one by default and an entry can name its own. The palm rests on the bar at the
     radius of the kit's part under the hand, and each finger and the thumb close joint by joint
-    until they touch it (a wrapped thumb on a bar thinner than the hand rests on the fingers), on
-    every frame. A check fails a hand that stands off its bar or sinks into it by more than 2 mm,
+    until they touch it (a wrapped thumb on a bar under 40 mm rests on the fingers), on every
+    frame; the research's wrist angles are not applied, since a wrist stays straight unless the
+    pose sets it. A check fails a hand that stands off its bar or sinks into it by more than 2 mm,
     and the studio's hand close-up marks where. The mannequin's deep palm keeps its fingers from
     closing round a bar lower than about 0.6 of the way from the wrist to the knuckles, so its heel
     of the palm sits as low as they reach. The rope is 28 mm with 60 mm end stops, bending at each
