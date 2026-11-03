@@ -34,6 +34,7 @@ class Mannequins(val clips: List<MannequinClip>) {
                     MannequinClip(
                         id, "$DIR/${e.clip}", Equipment.ofKey(e.equipment), e.camera, e.tempo.timeline, e.resources.associateWith { "$DIR/$it" },
                         e.bench?.let { b -> BenchClips(b.typical, b.hinge, b.clips.entries.associate { (angle, c) -> angle.toInt() to BenchClip("$DIR/${c.clip}", c.camera) }) },
+                        e.grips?.map { g -> GripClip(g.name, "$DIR/${g.clip}", g.camera) },
                     )
                 },
             )
@@ -54,7 +55,15 @@ data class MannequinClip(
     val tempo: RepTimeline,
     val resources: Map<String, String> = emptyMap(),
     val bench: BenchClips? = null,
-)
+    /** An exercise done with a different grip set by set: a clip per grip, in the order the sets take them; null with one grip. */
+    val grips: List<GripClip>? = null,
+) {
+    /** The grip the set at [set] (0 the first) takes; a set past the last grip keeps the last. */
+    fun gripForSet(set: Int): GripClip = grips!!.let { it[set.coerceIn(0, it.size - 1)] }
+}
+
+/** One grip of an exercise done with a different grip set by set: its [name] (`wide`, `narrow`), its `.glb` in the assets and how the stage frames it. */
+data class GripClip(val name: String, val file: String, val camera: StageCamera)
 
 /** One baked bench angle of an adjustable-bench exercise: its `.glb` in the assets and how the stage frames it. */
 data class BenchClip(val file: String, val camera: StageCamera)
@@ -116,7 +125,10 @@ private class IndexTempo(val lowering: Float, val bottom: Float, val lifting: Fl
 private class IndexFile(val clips: Map<String, IndexEntry>)
 
 @Serializable
-private class IndexEntry(val clip: String, val equipment: String, val camera: StageCamera, val tempo: IndexTempo, val resources: List<String> = emptyList(), val bench: IndexBench? = null)
+private class IndexEntry(val clip: String, val equipment: String, val camera: StageCamera, val tempo: IndexTempo, val resources: List<String> = emptyList(), val bench: IndexBench? = null, val grips: List<IndexGrip>? = null)
+
+@Serializable
+private class IndexGrip(val name: String, val clip: String, val camera: StageCamera)
 
 @Serializable
 private class IndexBenchClip(val clip: String, val camera: StageCamera)

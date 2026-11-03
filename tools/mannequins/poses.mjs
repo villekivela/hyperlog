@@ -168,13 +168,15 @@ export const POSES = {
     grip: { width: 0.22, elbows: 0.45 },
   },
 
-  // A pulldown on two handles, palms facing each other, the elbows driving down in front of the body.
+  // Two grips on the lat bar (owner): the first set wide and overhand, at 1.5 shoulder widths, the
+  // second narrow and underhand, at shoulder width, palms to the face as in a curl, the elbows
+  // driving down in front of the body. A clip each, in that order.
   '2_grip_lat_pulldown': {
     like: 'lat_pulldown',
-    kit: { cable_tower: { attachment: 'handles', spread: 0.2 } },
-    grip: { width: 0.2, rotate: 90, elbows: 0.3 },
-    top: { bar: [1.66, 0.02], shrug: 8 },
-    bottom: { bar: [1.1, 0.06], shrug: 0 },
+    grips: {
+      wide: { grip: { width: 0.29, rotate: 0 } },
+      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.3 }, bottom: { bar: [1.08, 0.06] } },
+    },
   },
 
   // Seated, the thighs on the seat and the shins under the roller: from straight legs down to the
@@ -182,12 +184,12 @@ export const POSES = {
   leg_extension: {
     equipment: 'machine',
     motion: 'knee_lever',
-    kit: { leg_extension: { seat: [0.5, 0.1], pad: 0.18 } },
-    body: { hip: [0.59, 0], trunk: -8, thigh: 0 },
+    kit: { leg_extension: { seat: [0.59, 0.1], pad: 0.18 } },
+    body: { hip: [0.66, 0], trunk: -8, thigh: -10 },
     top: { knee: 10 },
     bottom: { knee: 95 },
     feet: { stance: 0.1 },
-    grip: { width: 0.27, at: [0.52, 0.06] },
+    grip: { width: 0.25, at: [0.6, 0.05] },
     camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
   },
 
@@ -195,26 +197,27 @@ export const POSES = {
   seated_leg_curl: {
     equipment: 'machine',
     motion: 'knee_lever',
-    kit: { leg_curl: { seat: [0.5, 0.1], pad: 0.18 } },
-    body: { hip: [0.59, 0], trunk: -8, thigh: 0 },
+    kit: { leg_curl: { seat: [0.59, 0.1], pad: 0.18 } },
+    body: { hip: [0.66, 0], trunk: -8, thigh: -10 },
     top: { knee: 95 },
     bottom: { knee: 8 },
     feet: { stance: 0.1 },
-    grip: { width: 0.27, at: [0.52, 0.06] },
+    grip: { width: 0.09, at: [0.97, 0.19], across: [0, 1, 0] },
     camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
   },
 
   // Face down along the bench, the knees at its end and the roller on the backs of the ankles:
-  // from the heels drawn up to straight legs.
+  // from the heels drawn up to straight legs. The thighs leave the hips 25° down, steeper than the
+  // pad's 21°: their front tapers toward the knees, so it lies along the pad.
   lying_leg_curl: {
     equipment: 'machine',
     motion: 'knee_lever',
-    kit: { leg_curl: { lying: true, bench: [-0.42, 0.95], height: 0.62 } },
-    body: { prone: true, hip: [0.75, 0], thigh: 2, head: -20 },
+    kit: { leg_curl: { lying: true } },
+    body: { prone: true, hip: [0.785, 0], trunk: 10, thigh: 25, head: -20 },
     top: { knee: 100 },
     bottom: { knee: 6 },
     feet: { stance: 0.1 },
-    grip: { width: 0.24, at: [0.6, 0.86], pole: [1, -1, 0.2] },
+    grip: { width: 0.23, at: [0.28, 0.59], across: [-0.94, 0.35, 0], pole: [1, -1, 0.2] },
     camera: { target: [0, 0.75, 0.1], halfHeight: 0.85, azimuth: 80, elevation: 14 },
     shadow: { size: [0.9, 1.6], at: [0, 0.2] },
   },
@@ -254,11 +257,12 @@ export const POSES = {
   chest_supported_machine_row: {
     equipment: 'machine',
     motion: 'lever_handles',
-    kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.42, front: 0.13 } } },
-    body: { hip: [0.59, 0], trunk: 25 },
-    pivot: [1.67, 0.53],
-    top: { handle: [1.0, 0.8], press: 0 },
-    bottom: { handle: [0.95, 0.45], press: 1 },
+    kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.36, front: 0.085 } } },
+    body: { hip: [0.59, 0], trunk: 5 },
+    // The levers' pivot low in front of the knees, the same distance from both handles.
+    pivot: [0.45, 0.527],
+    top: { handle: [1.0, 0.62], press: 0 },
+    bottom: { handle: [0.95, 0.28], press: 1 },
     feet: { stance: 0.16, z: 0.45, toeOut: 10 },
     grip: { width: 0.22, rotate: 90, pole: [0.4, -0.6, -1] },
     camera: { target: [0, 0.8, 0.3], halfHeight: 0.92, azimuth: 66, elevation: 10 },
@@ -268,9 +272,10 @@ export const POSES = {
   machine_pulldown: {
     equipment: 'machine',
     motion: 'lever_handles',
-    kit: { pulldown_machine: { seat: [0.47, 0.02], thighPad: [0.71, 0.3] } },
+    kit: { pulldown_machine: { seat: [0.47, 0.02], thighPad: [0.66, 0.3], pad: 0.2 } },
     body: { hip: [0.56, 0], trunk: -15 },
-    pivot: [1.45, 0.85],
+    // The levers' pivot on the portal ahead of the head, the same distance from both handles.
+    pivot: [1.29, 0.85],
     top: { handle: [1.6, 0.17], press: 0 },
     bottom: { handle: [1.12, 0.12], press: 1 },
     feet: { stance: 0.16, z: 0.32, toeOut: 12 },
@@ -278,13 +283,13 @@ export const POSES = {
     camera: { target: [0, 1.1, 0.35], halfHeight: 1.15, azimuth: 62, elevation: 8 },
   },
 
-  // Seated, the upper arms down the pad: the bar curls from the arms near straight up toward the
-  // shoulders.
+  // Seated, leaning onto the pad, the chest against its back edge and the upper arms down it: the
+  // bar curls from the arms near straight up toward the shoulders.
   machine_preacher_curl: {
     equipment: 'machine',
     motion: 'arms',
-    kit: { preacher_curl_machine: { seat: [0.5, 0] } },
-    body: { hip: [0.59, 0], trunk: 5 },
+    kit: { preacher_curl_machine: { seat: [0.5, 0], pad: 0.08 } },
+    body: { hip: [0.59, 0], trunk: 20 },
     top: { upperArm: 65, forearm: 160 },
     bottom: { upperArm: 65, forearm: 72 },
     feet: { stance: 0.16, z: 0.4, toeOut: 10 },

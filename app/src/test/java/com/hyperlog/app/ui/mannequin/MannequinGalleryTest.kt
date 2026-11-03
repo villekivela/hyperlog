@@ -68,8 +68,10 @@ class MannequinGalleryTest {
         compose.onNodeWithText("1 of 38").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
-        assertEquals(context.assets.open("mannequins/2_grip_lat_pulldown.glb").use { it.readBytes().size }, loaded.single())
-        assertEquals(Mannequins.fromAssets(context).clips.single { it.exerciseId == "2_grip_lat_pulldown" }.tempo, tempos.single())
+        // A 2-grip exercise plays its first set's grip.
+        val first = Mannequins.fromAssets(context).clips.single { it.exerciseId == "2_grip_lat_pulldown" }
+        assertEquals(context.assets.open(first.file).use { it.readBytes().size }, loaded.single())
+        assertEquals(first.tempo, tempos.single())
     }
 
     private fun settings(onGallery: (() -> Unit)?) {

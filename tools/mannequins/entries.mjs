@@ -30,6 +30,12 @@ function merge(base, over) {
   return out;
 }
 
+/** The grips an exercise changes between set by set (`grips`, in the order the sets take them), or null. */
+export const gripsOf = (id, poses = POSES) => {
+  const { grips } = resolve(id, poses);
+  return grips ? Object.keys(grips) : null;
+};
+
 /** The entry for `id`, with its `like:` chain merged in. */
 export function resolve(id, poses = POSES) {
   const seen = [];
@@ -61,8 +67,16 @@ function cameraAt(cameras, angle) {
  * The entry for `id`, resolved, with the trace it names read in: `trace: <name>` reads
  * `traces/<name>.json`. An adjustable-bench pose is prepared at `angle`, its typical one by default.
  */
-export function prepare(id, poses = POSES, angle) {
-  const entry = resolve(id, poses);
+export function prepare(id, poses = POSES, angle, grip) {
+  let entry = resolve(id, poses);
+  if (entry.grips) {
+    // A pose done with a different grip set by set (`grips`) is prepared with one of them, the
+    // first set's by default, merged in as a `like:` merges.
+    const { grips, ...rest } = entry;
+    const chosen = grip ?? Object.keys(grips)[0];
+    if (!grips[chosen]) throw new Error(`${id}: no grip "${chosen}" (${Object.keys(grips).join(', ')})`);
+    entry = merge(rest, grips[chosen]);
+  }
   if (entry.bench) {
     // Each per-angle setting takes its value for the angle.
     Object.assign(entry, atAngle(entry, angle ?? entry.bench.typical));

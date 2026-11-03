@@ -108,10 +108,11 @@ internal val LocalMannequinPlayers = staticCompositionLocalOf<MannequinPlayers> 
  * loads, then the mannequin fades in. It draws only while the app is in front, and its engine is
  * released when the stage leaves the screen with its sheet. An adjustable-bench exercise stands
  * at the session's [benchAngle], otherwise [lastBenchAngle], otherwise its typical one: the clip
- * nearest it plays and the bench turns to the exact angle.
+ * nearest it plays and the bench turns to the exact angle. An exercise done with a different grip
+ * set by set plays the [grip] named, the first by default.
  */
 @Composable
-internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier, benchAngle: Int? = null, lastBenchAngle: Int? = null) {
+internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier, benchAngle: Int? = null, lastBenchAngle: Int? = null, grip: String? = null) {
     val context = LocalContext.current
     val players = LocalMannequinPlayers.current
     // Where the renderer can't start (its native library missing), the sheet shows as it does without a clip.
@@ -125,8 +126,9 @@ internal fun MannequinStage(clip: MannequinClip, modifier: Modifier = Modifier, 
     DisposableEffect(player) { onDispose { player.release() } }
     val still = remember { animationsRemoved(context) }
     val bench = remember(clip, benchAngle, lastBenchAngle) { clip.bench?.shown(benchAngle, lastBenchAngle) }
-    val file = bench?.clip?.file ?: clip.file
-    val camera = bench?.clip?.camera ?: clip.camera
+    val held = clip.grips?.let { grips -> grips.firstOrNull { it.name == grip } ?: grips.first() }
+    val file = bench?.clip?.file ?: held?.file ?: clip.file
+    val camera = bench?.clip?.camera ?: held?.camera ?: clip.camera
     var shown by remember(player, file) { mutableStateOf(false) }
     val alpha by animateFloatAsState(if (shown) 1f else 0f, tween(durationMillis = 300), label = "mannequin")
     val colours = if (isDarkSurface()) ClayColours.Dark else ClayColours.Light

@@ -254,6 +254,11 @@
     <string name="editor_keep_editing">Keep editing</string>
 
     <string name="sheet_video">Technique video</string>
+    <!-- The grips of an exercise done with a different grip set by set, over its mannequin. -->
+    <string name="grip_wide">Wide</string>
+    <string name="grip_narrow">Narrow</string>
+    <!-- A 2-grip exercise's button under its mannequin: "Set 1 · Wide". -->
+    <string name="grip_for_set">Set %1$d · %2$s</string>
     <string name="sheet_video_at">Technique video · %1$s</string>
     <string name="sheet_video_search">Search technique videos</string>
     <string name="session_exercise_details">Exercise details</string>

@@ -192,6 +192,57 @@ the mannequin is the size the owner approved; the stage gains air at its sides.
   goal, a long note and many sets can outgrow it, and then it scrolls to its video button.
 - In the gallery a swipe on the stage turns the clip; a swipe below it pages.
 
+### The grip choice
+
+An exercise done with a different grip set by set (the 2-Grip Lat Pulldown: set 1 wide and
+overhand, set 2 narrow and underhand) has a clip per grip, and a choice under the stage switches
+between them. Screens: `screens/mannequin-grip-set-1-light.png`, `-set-1-dark.png`,
+`-set-2-light.png`, `-set-2-dark.png`, `-past-last-light.png`, `-past-last-dark.png` (emulator,
+115 % text, #127).
+
+Principles:
+
+1. **It belongs to the stage.** It switches what the stage plays, so it sits under it, out to
+   the stage's own edges, closer to the stage than to the name below.
+2. **Each grip says its set.** `Set 1 · Wide`, `Set 2 · Narrow`: the grip is the set's, so the
+   button names both, in the session's own words (`Set 2`, as the rest strip's `· Set 3`). The
+   choice the sheet opens on then reads as "this is the set you're on", not as a default.
+3. **One control, nothing more.** No caption or help line: the note says what the grips are, the
+   mannequin shows the hands, the button says which set.
+
+Tokens:
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Group | `ConnectedChoice`, 12 dp in from the sheet's edges (the stage's edges) | on the sheet (`surfaceContainerLow`): the others in its well, the picked one `primaryContainer` |
+| Label | labelLarge, `Set n · Grip` | one line; `Set n` is the grip's place in the clip's list |
+| Stage → group | 8 dp | half the 16 dp to the name, so the group reads with the stage (a 4 dp spacer: the buttons' 48 dp touch target adds 4 dp round their 40 dp) |
+| Group → name | 16 dp | the stage's own gap to the name (a 12 dp spacer, for the same reason) |
+
+```
+╭──────────────────────────────────────╮   ← the stage, 12 dp in
+│              (clip)                  │
+╰──────────────────────────────────────╯
+                                             8 dp
+(████ Set 1 · Wide ████)( Set 2 · Narrow )   ← connected group, the stage's width
+                                             16 dp
+ 2-Grip Lat Pulldown                         ← 28 dp text edge
+```
+
+States:
+
+- **Set 1 being done** (and its warm-ups): opens on `Set 1 · Wide`.
+- **Set 2 being done:** opens on `Set 2 · Narrow`.
+- **Past the last grip** (a third set in an ad-hoc session, or the exercise done): opens on the
+  last grip, its label unchanged (`Set 2 · Narrow` while set 3 is done): the label names the
+  grip's place in the exercise, not the set on the table.
+- **Outside a session:** opens on the first grip.
+- **Light and dark:** the group's colours follow the theme with the sheet.
+
+Interaction: a tap picks a grip and the stage loads its clip (it fades in as on opening); the pick
+holds while the sheet stays open, and the sheet opens on the set's grip again next time. Turning
+the mannequin keeps working on the stage; the group takes only taps.
+
 ## Critique log
 
 - **Pass 1** (phone): a video symbol on 138 of 173 rows was noise, not state: removed. The title
@@ -233,3 +284,11 @@ demand is a connected button group and its chips pick in primaryContainer.
   capped grips, the leg press's framed base and roller carriage, and the benches' wheels, handle
   and adjustable strut. Rendered shaded in light (`mannequin-kits-before.png`, the #123 kits;
   `mannequin-kits-after.png`, these).
+- **Grip choice** (emulator, 115 % text, #127): the first build was a plain `Wide | Narrow` group
+  12 dp under the stage, which showed 16 dp above the buttons (their touch target adds 4 dp) and
+  20 dp below: it floated halfway between the stage and the name, and said nothing about why the
+  sheet opened on one grip. Pass 1 named the set on each button (`Set 1 · Wide`) and closed the
+  gap to 8 dp shown; pass 2 measured the gaps on the screenshot (8 dp above, 16 dp to the name),
+  checked set 1, set 2 and a set past the last in light and dark, and that a tap loads the other
+  clip. The group is told it sits on the sheet (`surfaceContainerLow`), not on a sheet card; the
+  well comes out the same, but it now says what it means.
