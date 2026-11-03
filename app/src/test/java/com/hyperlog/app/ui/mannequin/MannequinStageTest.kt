@@ -119,8 +119,9 @@ class MannequinStageTest {
         compose.waitUntil { players.single().loaded != null }
         val glb = context.assets.open("mannequins/barbell_squat.glb").use { it.readBytes().size }
         assertEquals(glb to mannequins.clipFor(squat)!!.camera, players.single().loaded)
-        val shared = context.assets.open("mannequins/mannequin.bin").use { it.readBytes().size }
-        assertEquals(mapOf("mannequin.bin" to shared), players.single().resources)
+        val size = { name: String -> context.assets.open("mannequins/$name").use { it.readBytes().size } }
+        // The clip reads the mannequin and its kit, each shared with other clips, by name.
+        assertEquals(mapOf("mannequin.bin" to size("mannequin.bin"), "kit_barbell.bin" to size("kit_barbell.bin")), players.single().resources)
         assertEquals(mannequins.clipFor(squat)!!.tempo, players.single().tempo)
         assertTrue(players.single().playing)
         assertEquals(false, players.single().still)

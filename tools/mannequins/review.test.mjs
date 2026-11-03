@@ -8,7 +8,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
 import { BATCHES, buildReview, batchStatus, applyTunedValues } from './review.mjs';
-import { readGlb } from './glb.mjs';
+import { clipContent, readGlb, writeGlb } from './glb.mjs';
+import { POSES } from './poses.mjs';
 
 let clips;
 let page;
@@ -21,11 +22,12 @@ before(async () => {
   page = await readFile(path.join(out, 'index.html'), 'utf8');
 });
 
-/** A clip's fingerprint: its own file, and the mannequin it shares. */
+/** A clip's fingerprint: what it shows, with the parts it reads from the files it shares. */
 const sha = async (file) => {
-  const hash = createHash('sha256');
-  for (const f of [file, path.join(path.dirname(file), 'mannequin.bin')]) hash.update(await readFile(f));
-  return hash.digest('hex').slice(0, 16);
+  const index = JSON.parse(await readFile(path.join(path.dirname(file), 'mannequins.json'), 'utf8'));
+  const { resources } = index.clips[path.basename(file, '.glb')];
+  const files = Object.fromEntries(await Promise.all(resources.map(async (r) => [r, await readFile(path.join(path.dirname(file), r))])));
+  return createHash('sha256').update(clipContent(await readFile(file), files)).digest('hex').slice(0, 16);
 };
 const pageData = () => JSON.parse(page.match(/<script type="application\/json" id="batch">([\s\S]*?)<\/script>/)[1]);
 
@@ -53,8 +55,8 @@ test('the page holds each exercise of the batch, its clip and its check results'
   const own = readGlb(await readFile(path.join(clips, 'barbell_squat.glb')));
   const whole = readGlb(Buffer.from(bytes, 'base64'));
   assert.ok(whole.bin.subarray(0, own.bin.length).equals(own.bin));
-  assert.ok(whole.bin.subarray(whole.bin.length - (await readFile(path.join(clips, 'mannequin.bin'))).length).equals(await readFile(path.join(clips, 'mannequin.bin'))));
-  // The OK still names the shipped clip and the mannequin it shares.
+  for (const shared of ['mannequin.bin', 'kit_barbell.bin']) assert.ok(whole.bin.includes(await readFile(path.join(clips, shared))), shared);
+  // The OK still names the shipped clip and the files it shares.
   assert.equal(squat.hash, await sha(path.join(clips, 'barbell_squat.glb')));
   assert.deepEqual(Object.keys(squat.checks), ['hands', 'feet', 'equipment', 'joints', 'trace']);
   assert.ok(Object.values(squat.checks).every((c) => c.ok && typeof c.found === 'string'));
@@ -79,6 +81,20 @@ test('a batch is done only when every exercise is OK for the clip it has now', a
   assert.deepEqual(by.leg_press, { id: 'leg_press', state: 'changed', note: '' });
   assert.deepEqual(by.machine_chest_press, { id: 'machine_chest_press', state: 'waiting', note: '' });
   assert.deepEqual(by.barbell_rdl, { id: 'barbell_rdl', state: 'ok', note: '' });
+});
+
+test('an OK holds when another exercise\'s parts join the kit file its clip shares', async () => {
+  const hashes = Object.fromEntries(pageData().exercises.map((e) => [e.id, e.hash]));
+  const verdicts = Object.fromEntries(BATCHES.prototype.map((id) => [id, { ok: true, note: '', clip: hashes[id] }]));
+  // A cable exercise baked before the pulldowns, at a column of its own: its parts go into the
+  // cable tower's file ahead of theirs.
+  const poses = { ...POSES, a_cable_row: { like: 'lat_pulldown', kit: { cable_tower: { column: 1.1 } } } };
+  const again = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  await bakeAll(again, { poses });
+  assert.notEqual((await readFile(path.join(again, 'kit_cable_tower.bin'))).length, (await readFile(path.join(clips, 'kit_cable_tower.bin'))).length);
+  const { done, exercises } = await batchStatus('prototype', verdicts, { clips: again });
+  assert.deepEqual(exercises.filter((e) => e.state !== 'ok'), []);
+  assert.equal(done, true);
 });
 
 test('an OK with tuned values is not done until review apply has put them in poses.mjs', async () => {
@@ -118,6 +134,13 @@ test('the adjustable-bench batch is the incline DB press', () => {
   assert.deepEqual(BATCHES['adjustable-bench'], ['db_incline_press']);
 });
 
+test('the kits batch is every exercise posed before #127, re-reviewed on the detailed kits', () => {
+  assert.deepEqual([...BATCHES.kits].sort(), [
+    'barbell_bench_press', 'barbell_rdl', 'barbell_squat', 'close_grip_lat_pulldown', 'db_incline_press',
+    'lat_pulldown', 'leg_press', 'machine_chest_press', 'triceps_pressdown',
+  ]);
+});
+
 test('the page of an adjustable-bench pose holds a clip per angle to show, and an OK names every one of them', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'review-'));
   await buildReview('adjustable-bench', { clips, out: dir });
@@ -139,6 +162,8 @@ test('the page of an adjustable-bench pose holds a clip per angle to show, and a
   const copy = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
   for (const f of await readdir(clips)) await writeFile(path.join(copy, f), await readFile(path.join(clips, f)));
   const file = path.join(copy, 'db_incline_press_75.glb');
-  await writeFile(file, Buffer.concat([await readFile(file), Buffer.alloc(4)]));
+  const baked = readGlb(await readFile(file));
+  baked.bin[0] ^= 1;
+  await writeFile(file, writeGlb(baked.json, baked.bin));
   assert.equal((await batchStatus('adjustable-bench', verdicts, { clips: copy })).exercises[0].state, 'changed');
 });

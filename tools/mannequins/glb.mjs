@@ -40,58 +40,99 @@ export function writeGlb(json, bin) {
   return Buffer.concat([head, body]);
 }
 
-/** The buffer views of a glTF's skinned meshes and their skins: the mannequin's body. */
-function bodyViews(json) {
+/** The buffer views of the meshes on `nodes` (indices), and of their skins: their geometry. */
+function meshViews(json, nodes) {
   const views = new Set();
-  const meshes = new Set((json.nodes ?? []).filter((n) => n.skin !== undefined).map((n) => n.mesh));
-  for (const m of meshes) {
-    for (const p of json.meshes[m].primitives) {
-      for (const a of [...Object.values(p.attributes), p.indices].filter((x) => x !== undefined)) views.add(json.accessors[a].bufferView);
+  for (const n of nodes) {
+    const node = json.nodes[n];
+    if (node.mesh !== undefined) {
+      for (const p of json.meshes[node.mesh].primitives) {
+        for (const a of [...Object.values(p.attributes), p.indices].filter((x) => x !== undefined)) views.add(json.accessors[a].bufferView);
+      }
     }
+    if (node.skin !== undefined) views.add(json.accessors[json.skins[node.skin].inverseBindMatrices].bufferView);
   }
-  for (const s of json.skins ?? []) views.add(json.accessors[s.inverseBindMatrices].bufferView);
-  return [...views].sort((a, b) => a - b);
+  return views;
+}
+
+/** The nodes under `n` (indices), `n` included. */
+function under(json, n) {
+  return [n, ...(json.nodes[n].children ?? []).flatMap((c) => under(json, c))];
+}
+
+/** The file each buffer view of a glTF is shared in, by view: the mannequin's body to `body`, each kit's parts to `kit(name)`. */
+function sharedViews(json, { body, kit }) {
+  const files = new Map();
+  const skinned = (json.nodes ?? []).flatMap((node, i) => (node.skin !== undefined ? [i] : []));
+  for (const v of meshViews(json, skinned)) files.set(v, body);
+  (json.nodes ?? []).forEach((node, i) => {
+    if (!node.extras?.kit) return;
+    for (const v of meshViews(json, under(json, i))) if (!files.has(v)) files.set(v, kit(node.extras.kit));
+  });
+  return files;
 }
 
 /**
- * Moves the mannequin's body out of every clip into one shared buffer, read by `uri`. Each clip's
- * body must be byte for byte the same; the clips keep everything else, repacked.
+ * Moves what the clips have in common out of each into files they share, read by URI: the
+ * mannequin's mesh and skin into `body`, and each kit's parts (a node with `extras.kit`, and every
+ * mesh under it) into `kit(name)`. A shared file holds each distinct view once, however many clips
+ * read it. The body must be byte for byte the same in every clip; the clips keep everything else,
+ * repacked. `shared` is each file's bytes, by URI.
  */
-export function shareBody(glbs, uri) {
-  let shared = null;
+export function shareParts(glbs, { body, kit }) {
+  const pools = new Map();
+  const pool = (uri) => {
+    if (!pools.has(uri)) pools.set(uri, { parts: [], at: 0, offsets: new Map() });
+    return pools.get(uri);
+  };
+  // Each shared view once in its file, found again by its bytes.
+  const placeIn = (uri, data) => {
+    const p = pool(uri);
+    const key = data.toString('base64');
+    if (!p.offsets.has(key)) {
+      p.offsets.set(key, p.at);
+      p.parts.push(data, Buffer.alloc(pad4(data.length) - data.length));
+      p.at = pad4(p.at + data.length);
+    }
+    return p.offsets.get(key);
+  };
+  // The first clip's body, which every other clip's must match.
+  let firstBody = null;
   const clips = glbs.map(([id, bytes]) => {
     const { json, bin } = readGlb(bytes);
-    const body = bodyViews(json);
-    const used = new Set(body);
-    for (const [i, a] of (json.accessors ?? []).entries()) {
-      if (used.has(a.bufferView) && !body.includes(a.bufferView)) throw new Error(`${id}: accessor ${i} shares the body's data`);
-    }
+    const files = sharedViews(json, { body, kit });
     const slice = (v) => bin.subarray(v.byteOffset ?? 0, (v.byteOffset ?? 0) + v.byteLength);
     // The body, as this clip holds it: the same views in the same order in every clip.
-    const parts = body.map((i) => slice(json.bufferViews[i]));
-    if (!shared) {
-      let at = 0;
-      const offsets = parts.map((p) => { const o = at; at = pad4(at + p.length); return o; });
-      shared = { parts, offsets, bytes: Buffer.concat(parts.flatMap((p) => [p, Buffer.alloc(pad4(p.length) - p.length)])) };
-    } else if (parts.length !== shared.parts.length || parts.some((p, i) => !p.equals(shared.parts[i]))) {
+    const bodyParts = [...files].filter(([, f]) => f === body).map(([v]) => v).sort((a, b) => a - b).map((v) => slice(json.bufferViews[v]));
+    if (!firstBody) firstBody = bodyParts;
+    else if (bodyParts.length !== firstBody.length || bodyParts.some((p, i) => !p.equals(firstBody[i]))) {
       throw new Error(`${id}: its mannequin isn't the same as the other clips'`);
     }
+    // The files it reads: the mannequin's, then its kits', by name.
+    const uris = [body, ...new Set([...files.values()].filter((f) => f !== body).sort())];
     // The clip's own views, packed in order into its own binary chunk.
     const own = [];
     let at = 0;
     json.bufferViews = json.bufferViews.map((v, i) => {
-      const k = body.indexOf(i);
-      if (k >= 0) return { ...v, buffer: 1, byteOffset: shared.offsets[k] };
+      const uri = files.get(i);
+      if (uri) return { ...v, buffer: 1 + uris.indexOf(uri), byteOffset: placeIn(uri, slice(v)) };
       const o = at;
       own.push(slice(v), Buffer.alloc(pad4(v.byteLength) - v.byteLength));
       at = pad4(at + v.byteLength);
       return { ...v, buffer: 0, byteOffset: o };
     });
     const ownBin = Buffer.concat(own);
-    json.buffers = [{ byteLength: ownBin.length }, { uri, byteLength: shared.bytes.length }];
-    return [id, writeGlb(json, ownBin)];
+    return { id, json, ownBin, uris };
   });
-  return { clips, shared: shared?.bytes ?? Buffer.alloc(0) };
+  const shared = Object.fromEntries([...pools].map(([uri, p]) => [uri, Buffer.concat(p.parts)]));
+  // A file's length is known once every clip has added its parts to it.
+  return {
+    clips: clips.map(({ id, json, ownBin, uris }) => {
+      json.buffers = [{ byteLength: ownBin.length }, ...uris.map((uri) => ({ uri, byteLength: shared[uri].length }))];
+      return [id, writeGlb(json, ownBin)];
+    }),
+    shared,
+  };
 }
 
 /**
@@ -114,6 +155,23 @@ export function inlineResources(bytes, files) {
   json.bufferViews = json.bufferViews.map((v) => ({ ...v, buffer: 0, byteOffset: (v.byteOffset ?? 0) + base[v.buffer] }));
   json.buffers = [{ byteLength: whole.length }];
   return writeGlb(json, whole);
+}
+
+/**
+ * What a clip shows, whatever the files it shares are packed like: its glTF with each view's place
+ * left out, then each view's bytes, from its own chunk or the file it reads (`files`, bytes by
+ * URI). A clip reading the same parts from a kit file that has since grown gives the same bytes.
+ */
+export function clipContent(bytes, files) {
+  const { json, bin } = readGlb(bytes);
+  const sources = [bin, ...json.buffers.slice(1).map((b) => {
+    if (!files[b.uri]) throw new Error(`No file for ${b.uri}`);
+    return files[b.uri];
+  })];
+  const views = json.bufferViews.map((v) => sources[v.buffer].subarray(v.byteOffset ?? 0, (v.byteOffset ?? 0) + v.byteLength));
+  const { buffers, bufferViews, ...rest } = json;
+  const shape = { ...rest, bufferViews: bufferViews.map(({ buffer, byteOffset, ...v }) => v) };
+  return Buffer.concat([Buffer.from(JSON.stringify(shape), 'utf8'), ...views]);
 }
 
 /** Reads a clip with three.js, each buffer it reads by URI from the file of that name among `resources`. */

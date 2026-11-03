@@ -35,8 +35,16 @@ test('every machine in the library is of one kind, which has a kit or is listed 
   }
 });
 
-test('every kit builds, in materials the phone colours', () => {
-  const named = new Set(['bar', 'plate']);
+// The kits' tones by part (#127): the light theme's colour, which the bake writes, and the roughness.
+const TONES = {
+  frame: ['2e2e33', 0.5],
+  vinyl: ['1b1b1e', 0.95],
+  plate: ['8a8a90', 0.8],
+  metal: ['c8c8cc', 0.3],
+  pulley: ['5c5c62', 0.55],
+};
+
+test('every kit builds, each part in one of the tones the phone colours', () => {
   for (const name of Object.keys(KITS)) {
     const kind = Object.keys(EQUIPMENT).find((k) => EQUIPMENT[k]?.includes(name));
     const kit = buildKit({ equipment: kind, kit: { [name]: {} } });
@@ -44,7 +52,11 @@ test('every kit builds, in materials the phone colours', () => {
     kit.group.traverse((o) => {
       if (!o.isMesh) return;
       meshes++;
-      assert.ok(named.has(o.material.name), `${name}: a part in "${o.material.name}"`);
+      const tone = TONES[o.material.name];
+      assert.ok(tone, `${name}: ${o.name} in "${o.material.name}"`);
+      assert.equal(o.material.color.getHexString(), tone[0], `${name}: ${o.material.name}'s colour`);
+      assert.equal(o.material.roughness, tone[1], `${name}: ${o.material.name}'s roughness`);
+      assert.equal(o.material.metalness, 0, `${name}: ${o.material.name} is metallic`);
     });
     assert.ok(meshes > 0, `${name} has no parts`);
   }
@@ -53,4 +65,23 @@ test('every kit builds, in materials the phone colours', () => {
 test('a pose can only use kits of its own equipment, and none for a kind without one', () => {
   assert.throws(() => buildKit({ equipment: 'barbell', kit: { cable_tower: {} } }), /Kit "cable_tower" isn't barbell equipment/);
   assert.throws(() => buildKit({ equipment: 'trap_bar', kit: {} }), /"trap_bar" has no kit yet/);
+});
+
+// The owner's bar (#127): every machine and bench at the lat tower's detail, built in the tones
+// table's parts: a frame, vinyl pads and grips, plates, metal rods and cables, pulleys and housings.
+// A bench carries no plates of its own.
+const WEARS = {
+  cable_tower: [{ equipment: 'cable', kit: { cable_tower: { attachment: 'straight_bar' } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  chest_press: [{ equipment: 'machine', kit: { chest_press: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  leg_press: [{ equipment: 'machine', kit: { leg_press: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  bench: [{ equipment: 'barbell', kit: { bench: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
+  adjustable_bench: [{ equipment: 'dumbbell', kit: { bench: {} }, bench: { angle: 30 } }, ['frame', 'vinyl', 'metal', 'pulley']],
+};
+
+test('every machine and bench wears each tone of its parts', () => {
+  for (const [name, [entry, tones]] of Object.entries(WEARS)) {
+    const worn = new Set();
+    buildKit(entry).group.traverse((o) => { if (o.isMesh) worn.add(o.material.name); });
+    assert.deepEqual([...worn].filter((t) => tones.includes(t)).sort(), [...tones].sort(), `${name} wears ${[...worn].sort().join(', ')}`);
+  }
 });

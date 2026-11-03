@@ -1505,7 +1505,33 @@ gallery (Technique videos).
   - **Generic equipment** (#123): each kind in the library has a generic kit (barbell, dumbbells, a
     flat or adjustable bench, a cable tower with its pulley and stack, and the machines by kind: the
     leg press's sled, the chest press's levers), or is listed as missing in the tool. Stacks, sleds
-    and levers move with the rep.
+    and levers move with the rep. Every stack is lowest where the working muscle is longest, at the
+    stretch, and rises as it works; and a working stack is never fully down at the stretch (owner,
+    via the coordinator, 2026-11-03): it stays a few centimetres off its rest all through the rep, as
+    only before the first rep it sits.
+    - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
+      with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
+      seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
+      selector pin; pulley wheels in housings with the cable over them; and shaped bars and handles
+      with grips. Nothing that can't be seen at phone size (bolts, seams, gussets). The lat
+      pulldown's tower is the bar every other kit meets (owner, 2026-11-03): the standing tower
+      has its low pulley in a housing on the floor; the chest press has a capped column braced to
+      its boom, the levers' pivot in housings, capped grips and a back pad braced to the column; the
+      leg press stands on a framed base, its rails on posts, uprights and braces, its sled a
+      carriage on rollers under a foot plate with a heel lip; and the benches roll on front wheels,
+      lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder.
+    - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
+      palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
+      #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #3A3A40, 0.95 (dark a step up from the
+      dark stage's own #2E2E33, owner 2026-11-03); stack plates and every other weight #8A8A90 in
+      both, 0.8; rods, bars, cables and pins #C8C8CC in both, 0.3; pulleys
+      and housings #5C5C62, #6E6E75, 0.55. Nothing is metallic. In dark a faint light from behind
+      the kit gives the dark frame an edge against the stage.
+    - **The mannequin in dark** (owner, 2026-11-02, #127) is lighter, body #C4C4CA and joints
+      #A8A8AF, so it stays the subject against the frame. Light stays body #BABAC1, joints #9A9AA1.
+    - **Each kit ships once** (#127), shared across the clips that use it the way the mannequin's
+      mesh is: a clip reads its kits' parts from a file per kit, so detail costs about 110 KB per
+      kind of equipment, not per clip.
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment, and the joints stay within
     range. A pose that fails one doesn't bake.
