@@ -371,44 +371,35 @@ export const POSES = {
 
   // The library's next barbell exercises (#127, the barbell batch): first poses for the owner to tune.
 
-  // The bar high on the traps, the trunk more upright than the low bar's, the feet a little narrower.
+  // The three squats are the first batch's barbell_squat, which the owner tuned, changed only where
+  // the variant differs; they keep its traced legs and trunk, turned about the ankles until the bar
+  // is over the middle of the feet, so the bar's place sets the lean.
+
+  // The bar a little higher on the traps; otherwise the squat as tuned.
   back_squat_high_bar: {
-    equipment: 'barbell',
-    motion: 'squat',
-    kit: { barbell: {} },
-    top: { shin: 5, thigh: 4 },
-    bottom: { shin: 46, thigh: 104 },
-    feet: { stance: 0.16, toeOut: 15, kneesOut: 0.45 },
-    bar: { up: 0.06, back: 0.185 },
-    grip: { width: 0.38 },
-    camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
+    like: 'barbell_squat',
+    bar: { up: 0.04, back: 0.2 },
   },
 
-  // The bar low across the rear delts, the hips back and the trunk leaning further, a wider stance.
+  // The bar low across the rear delts, a few centimetres down the back and further behind the
+  // trunk's line, so the trunk leans further to keep it over the feet; the hands wider to reach it.
   back_squat_low_bar: {
-    equipment: 'barbell',
-    motion: 'squat',
-    kit: { barbell: {} },
-    top: { shin: 4, thigh: 4 },
-    bottom: { shin: 25, thigh: 90 },
-    feet: { stance: 0.2, toeOut: 22, kneesOut: 0.45 },
+    like: 'barbell_squat',
     bar: { up: -0.03, back: 0.24 },
     grip: { width: 0.45 },
-    camera: { target: [0, 0.85, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   },
 
   // The bar racked on the front of the shoulders, the arms crossed over it, each hand holding it over
-  // the other shoulder, the elbows high and forward; the trunk upright.
+  // the other shoulder, the elbows high and forward. The trunk stands upright, which the traced back
+  // squat's doesn't, so it has its own shape: the trace's legs, top and bottom, with the trunk near
+  // upright; the body turns about the ankles to keep the bar over the feet, as the back squat's does.
   front_squat: {
-    equipment: 'barbell',
-    motion: 'squat',
-    kit: { barbell: {} },
-    top: { shin: 5, thigh: 3 },
-    bottom: { shin: 42, thigh: 105 },
-    feet: { stance: 0.17, toeOut: 18, kneesOut: 0.45 },
-    bar: { up: 0.02, back: -0.07 },
+    like: 'barbell_squat',
+    trace: null,
+    top: { shin: 6.5, thigh: 3.8, trunk: 0 },
+    bottom: { shin: 46, thigh: 97, trunk: 6 },
+    bar: { up: 0.06, back: -0.05 },
     grip: { width: 0.13, crossed: true, pole: [0.35, 0.2, 1] },
-    camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   },
 
   // Standing, the elbows by the sides: the bar curls from the thighs up to the shoulders, palms up.

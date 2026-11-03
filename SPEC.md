@@ -1515,9 +1515,12 @@ gallery (Technique videos).
     a pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
     row, the machine pulldown and the preacher curl. The barbell batch (#127) adds a low platform
-    under the feet for a deficit, and a bench that stands across the body for a hip thrust; its
-    front squat racks the bar with the arms crossed, as the mannequin's hands can't bend back into a
-    clean grip. The incline and decline presses (an adjustable bench is six clips, and the bench has
+    under the feet for a deficit, and a bench that stands across the body for a hip thrust. Its
+    squats are the owner's tuned Barbell Squat changed only where the variant differs (owner, via
+    the coordinator, 2026-11-03): the high bar a little higher on the traps; the low bar across the
+    rear delts, leaning further to keep it over the feet; and the front squat upright with the bar
+    racked in front, the arms crossed, as the mannequin's hands can't bend back into a clean grip.
+    The incline and decline presses (an adjustable bench is six clips, and the bench has
     no angle below flat) and the barbell lunge (a split stance) wait for a later batch.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
