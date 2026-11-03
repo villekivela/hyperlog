@@ -110,6 +110,14 @@ class GripButtonsTest {
     }
 
     @Test
+    fun theChosenGripSaysHowToHoldTheBar() {
+        sheet(set = 0)
+        compose.onNodeWithText("Overhand, 1.5× shoulder width").assertExists()
+        compose.onNodeWithText("Set 2 · Narrow").performClick()
+        compose.onNodeWithText("Underhand, shoulder width, palms to your face").assertExists()
+    }
+
+    @Test
     fun outsideASessionItOpensOnTheFirstGrip() {
         sheet(set = null)
         compose.onNodeWithText("Set 1 · Wide").assertIsOn()

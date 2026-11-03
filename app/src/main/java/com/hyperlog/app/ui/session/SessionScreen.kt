@@ -969,6 +969,14 @@ private fun gripLabel(name: String): String = when (name) {
     else -> name.replaceFirstChar { it.uppercase() }
 }
 
+/** How a grip holds the bar, in a line under its button; null for a grip with none written. */
+@Composable
+private fun gripHow(name: String?): String? = when (name) {
+    "wide" -> stringResource(R.string.grip_wide_how)
+    "narrow" -> stringResource(R.string.grip_narrow_how)
+    else -> null
+}
+
 /** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
 private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -1056,6 +1064,11 @@ internal fun ExerciseSheet(
                     // It sits on the sheet itself, not on one of its cards.
                     color = cs.surfaceContainerLow,
                 )
+                // How to hold the bar for the grip shown: overhand or underhand is the part most
+                // easily got wrong, and the clip at phone size doesn't show it plainly.
+                gripHow(grip)?.let { how ->
+                    Text(how, Modifier.padding(horizontal = Margin).padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                }
             }
             Spacer(Modifier.height(if (it.grips != null) 12.dp else 16.dp))
         }
