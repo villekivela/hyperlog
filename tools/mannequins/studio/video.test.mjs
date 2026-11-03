@@ -1,9 +1,10 @@
 // The technique video beside the stage (#171): it opens at its link's timestamp, steps a frame or a
-// second at a time at 0.25×, 0.5× or 1×, and with sync on its A–B loop is the rep: A the top, B the
-// bottom, so either one scrubbed moves the other.
+// second at a time at 0.25×, 0.5× or 1×, and with sync on its loop is the rep: A the top, B the
+// bottom and C the top again, the lowering A to B and the lift B to C, both played forward, so
+// either one scrubbed moves the other.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { videoOf, faster, slower, stepFrames, stepSeconds, timeAt, repAt, synced } from './video.mjs';
+import { videoOf, faster, slower, stepFrames, stepSeconds, timeAt, repAt, synced, spanOf, zoomOf } from './video.mjs';
 
 test('a link names its video and the second it opens at', () => {
   assert.deepEqual(videoOf('https://youtu.be/jLvqKgW-_G8?t=278'), { id: 'jLvqKgW-_G8', start: 278 });
@@ -38,26 +39,46 @@ test('a frame step lands in the middle of the next frame, and never before the s
   assert.equal(stepSeconds(59.5, 1, 60), 60);
 });
 
-test('with a loop set, the rep\'s top is A and its bottom is B, and either one finds the other', () => {
-  const loop = { a: 280, b: 281.5 };
-  assert.equal(timeAt(loop, 0), 280);
-  assert.equal(timeAt(loop, 1), 281.5);
-  assert.equal(timeAt(loop, 0.5), 280.75);
-  assert.equal(repAt(loop, 280.75), 0.5);
-  assert.equal(repAt(loop, 281.5), 1);
-  // Outside the loop the rep holds at its top or its bottom.
-  assert.equal(repAt(loop, 279), 0);
-  assert.equal(repAt(loop, 290), 1);
-  // A bottom filmed before its top: B before A in the video.
-  const up = { a: 12, b: 10 };
-  assert.equal(timeAt(up, 0.25), 11.5);
-  assert.equal(repAt(up, 11.5), 0.25);
+test('synced, the lowering is A to B and the lift B to C, both forward, and either one finds the other', () => {
+  const loop = { a: 280, b: 281.5, c: 283.5 };
+  const down = (d) => ({ d, lifting: false });
+  const up = (d) => ({ d, lifting: true });
+  assert.equal(timeAt(loop, down(0)), 280);
+  assert.equal(timeAt(loop, down(0.5)), 280.75);
+  assert.equal(timeAt(loop, down(1)), 281.5);
+  // The lift runs on from the bottom, B, to the top again, C: the video never plays backwards.
+  assert.equal(timeAt(loop, up(1)), 281.5);
+  assert.equal(timeAt(loop, up(0.5)), 282.5);
+  assert.equal(timeAt(loop, up(0)), 283.5);
+  assert.deepEqual(repAt(loop, 280.75), down(0.5));
+  assert.deepEqual(repAt(loop, 282.5), up(0.5));
+  assert.deepEqual(repAt(loop, 283.5), up(0));
+  // Before A the rep holds at its top, past C at its top again.
+  assert.deepEqual(repAt(loop, 279), down(0));
+  assert.deepEqual(repAt(loop, 290), up(0));
 });
 
-test('sync needs a whole loop: both ends set, and not at the same frame', () => {
-  assert.equal(synced({ a: 280, b: 281.5 }, true), true);
-  assert.equal(synced({ a: 280, b: 281.5 }, false), false);
-  assert.equal(synced({ a: 280, b: null }, true), false);
-  assert.equal(synced({ a: 280, b: 280 }, true), false);
+test('sync needs the whole rep: A, B and C set, in that order in the video', () => {
+  assert.equal(synced({ a: 280, b: 281.5, c: 283 }, true), true);
+  assert.equal(synced({ a: 280, b: 281.5, c: 283 }, false), false);
+  // A loop saved with only A and B loads, and waits for C.
+  assert.equal(synced({ a: 280, b: 281.5 }, true), false);
+  assert.equal(synced({ a: 280, b: 281.5, c: null }, true), false);
+  assert.equal(synced({ a: 280, b: 280, c: 281 }, true), false);
+  assert.equal(synced({ a: 283, b: 281.5, c: 280 }, true), false);
   assert.equal(synced(null, true), false);
+});
+
+test('the loop spans A to its last mark, and the scrub bar zooms to it with a margin', () => {
+  assert.deepEqual(spanOf({ a: 280, b: 281.5, c: 283.5 }), [280, 283.5]);
+  assert.deepEqual(spanOf({ a: 280, b: 281.5, c: null }), [280, 281.5]);
+  assert.deepEqual(spanOf({ a: 280, b: null, c: null }), null);
+  assert.equal(spanOf(null), null);
+  // A quarter of the loop either side, half a second at least, within the video.
+  assert.deepEqual(zoomOf({ a: 280, b: 281.5, c: 284 }, 600), [279, 285]);
+  assert.deepEqual(zoomOf({ a: 280, b: 280.5 }, 600), [279.5, 281]);
+  assert.deepEqual(zoomOf({ a: 0.2, b: 1, c: 2.2 }, 2.4), [0, 2.4]);
+  // No loop yet: the whole video.
+  assert.deepEqual(zoomOf({ a: 280, b: null }, 600), [0, 600]);
+  assert.deepEqual(zoomOf(null, 600), [0, 600]);
 });

@@ -64,8 +64,10 @@
         { "keys": "L", "command": "videoSecondOn", "count": true, "does": "1 s forward" },
         { "keys": "<", "command": "videoSlower", "does": "Slower: 1×, 0.5×, 0.25×" },
         { "keys": ">", "command": "videoFaster", "does": "Faster: 0.25×, 0.5×, 1×" },
-        { "keys": "[", "command": "loopStart", "does": "Set the loop's start (A), the top of the rep, at this frame" },
-        { "keys": "]", "command": "loopEnd", "does": "Set the loop's end (B), the bottom of the rep, at this frame" },
+        { "keys": "[", "command": "markA", "does": "Mark A, the top of the rep, at this frame" },
+        { "keys": "]", "command": "markB", "does": "Mark B, the bottom of the rep, at this frame" },
+        { "keys": "}", "command": "markC", "does": "Mark C, back at the top of the rep, at this frame" },
+        { "keys": "z", "command": "zoom", "does": "Zoom the scrub bar to the loop, or show the whole video" },
         { "keys": "gv", "command": "sync", "does": "Sync the video with the rep, or not" }
       ]
     },

@@ -116,8 +116,10 @@ test('a group bound to a pane takes its keys over while that pane is focused, an
   assert.deepEqual(keys.feed('<Space>', 'video'), { command: 'videoPlay', count: null });
   assert.deepEqual(keys.feed('<', 'video'), { command: 'videoSlower', count: null });
   assert.deepEqual(keys.feed('>', 'video'), { command: 'videoFaster', count: null });
-  assert.deepEqual(keys.feed('[', 'video'), { command: 'loopStart', count: null });
-  assert.deepEqual(keys.feed(']', 'video'), { command: 'loopEnd', count: null });
+  assert.deepEqual(keys.feed('[', 'video'), { command: 'markA', count: null });
+  assert.deepEqual(keys.feed(']', 'video'), { command: 'markB', count: null });
+  assert.deepEqual(keys.feed('}', 'video'), { command: 'markC', count: null });
+  assert.deepEqual(keys.feed('z', 'video'), { command: 'zoom', count: null });
   assert.equal(keys.feed('g', 'video'), null);
   assert.deepEqual(keys.feed('v', 'video'), { command: 'sync', count: null });
   // The rest of the keymap still works there, and the video's keys do nothing elsewhere.

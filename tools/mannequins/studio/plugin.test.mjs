@@ -246,28 +246,32 @@ test('without a link, or offline, the video says so, and a later try fetches aga
   assert.deepEqual(fetched.filter((id) => id === 'B5S2mbg0g5c').length, 2);
 });
 
-test('the A–B loop is saved per exercise beside the OKs and notes, and comes back with it', async () => {
-  let res = await post('/api/loop', { id: 'barbell_squat', loop: { a: 12.4, b: 13.9 } });
+test('the loop is saved per exercise beside the OKs and notes, and comes back with it', async () => {
+  let res = await post('/api/loop', { id: 'barbell_squat', loop: { a: 12.4, b: 13.9, c: 15.2 } });
   assert.equal(res.status, 200, await res.clone().text());
-  res = await post('/api/loop', { id: 'triceps_pressdown', loop: { a: 3.1, b: null } });
+  res = await post('/api/loop', { id: 'triceps_pressdown', loop: { a: 3.1, b: null, c: null } });
   assert.equal(res.status, 200);
-  assert.deepEqual((await get('/api/item/exercise/barbell_squat')).video.loop, { a: 12.4, b: 13.9 });
-  assert.deepEqual((await get('/api/item/exercise/triceps_pressdown')).video.loop, { a: 3.1, b: null });
+  assert.deepEqual((await get('/api/item/exercise/barbell_squat')).video.loop, { a: 12.4, b: 13.9, c: 15.2 });
+  assert.deepEqual((await get('/api/item/exercise/triceps_pressdown')).video.loop, { a: 3.1, b: null, c: null });
   assert.deepEqual(JSON.parse(await readFile(path.join(review, 'loops.json'), 'utf8')), {
-    barbell_squat: { a: 12.4, b: 13.9 }, triceps_pressdown: { a: 3.1, b: null },
+    barbell_squat: { a: 12.4, b: 13.9, c: 15.2 }, triceps_pressdown: { a: 3.1, b: null, c: null },
   });
-  // Two set at once both land: A and B pressed in turn.
+  // Two set at once both land: marks pressed in turn.
   await Promise.all([
-    post('/api/loop', { id: 'leg_extension', loop: { a: 202, b: null } }),
-    post('/api/loop', { id: 'leg_press', loop: { a: 241, b: 242 } }),
-    post('/api/loop', { id: 'cable_flye', loop: { a: 169, b: 170 } }),
+    post('/api/loop', { id: 'leg_extension', loop: { a: 202, b: null, c: null } }),
+    post('/api/loop', { id: 'leg_press', loop: { a: 241, b: 242, c: 243 } }),
+    post('/api/loop', { id: 'cable_flye', loop: { a: 169, b: 170, c: 171 } }),
   ]);
   const loops = JSON.parse(await readFile(path.join(review, 'loops.json'), 'utf8'));
   assert.deepEqual(Object.keys(loops), ['barbell_squat', 'cable_flye', 'leg_extension', 'leg_press', 'triceps_pressdown']);
+  // A loop saved with only A and B, before C, still loads.
+  await writeFile(path.join(review, 'loops.json'), JSON.stringify({ ...loops, leg_press: { a: 241, b: 242 } }));
+  assert.deepEqual((await get('/api/item/exercise/leg_press')).video.loop, { a: 241, b: 242, c: null });
   // Cleared, and refused for what isn't a time or an exercise with a video.
   res = await post('/api/loop', { id: 'triceps_pressdown', loop: null });
   assert.equal(res.status, 200);
   assert.equal((await get('/api/item/exercise/triceps_pressdown')).video.loop, null);
+  assert.equal((await post('/api/loop', { id: 'barbell_squat', loop: { a: 1, b: 2, c: 'top' } })).status, 422);
   assert.equal((await post('/api/loop', { id: 'barbell_squat', loop: { a: 'top', b: 2 } })).status, 422);
   assert.equal((await post('/api/loop', { id: 'barbell_bench_press', loop: { a: 1, b: 2 } })).status, 422);
 });

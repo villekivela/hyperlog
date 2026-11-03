@@ -1,5 +1,5 @@
 // The technique video beside the stage (README, The studio): where a link opens, its steps and
-// speeds, and the A–B loop that, with sync on, is the rep. Nothing of the page in it.
+// speeds, and the loop that, with sync on, is the rep. Nothing of the page in it.
 
 /** The speeds the video plays at, slowest first. */
 export const SPEEDS = [0.25, 0.5, 1];
@@ -40,11 +40,36 @@ export function stepFrames(t, n, fps, duration) {
 /** `n` seconds on from `t` (back for a negative `n`), within `duration`. */
 export const stepSeconds = (t, n, duration) => Math.max(0, Math.min(duration, t + n));
 
-/** Where in the video the rep is `d` down (0 the top, 1 the bottom): A at the top, B at the bottom. */
-export const timeAt = ({ a, b }, d) => a + d * (b - a);
+// A loop is `{ a, b, c }`, seconds in the video: A the top of a rep, B its bottom and C the top
+// again, each null until it is marked. A loop saved before C existed has no `c`.
 
-/** How far down the rep the video is at `t`: held at the top before A and at the bottom past B. */
-export const repAt = ({ a, b }, t) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+/**
+ * Where in the video the rep is, `{ d, lifting }` (`d` 0 at the top, 1 at the bottom): the lowering
+ * runs from A to B and the lift from B on to C, so the video only ever plays forward.
+ */
+export const timeAt = ({ a, b, c }, { d, lifting }) => (lifting ? b + (1 - d) * (c - b) : a + d * (b - a));
 
-/** Whether the video and the rep move together: sync on, and a loop with two different ends. */
-export const synced = (loop, on) => Boolean(on && loop && loop.a !== null && loop.b !== null && loop.a !== loop.b);
+/** Where in the rep the video is at `t`, `{ d, lifting }`: at the top before A, and again past C. */
+export function repAt({ a, b, c }, t) {
+  if (t <= b) return { d: Math.max(0, (t - a) / (b - a)), lifting: false };
+  return { d: Math.max(0, 1 - (t - b) / (c - b)), lifting: true };
+}
+
+const isSet = (v) => typeof v === 'number';
+
+/** Whether the video and the rep move together: sync on, and A, B and C marked in that order. */
+export const synced = (loop, on) => Boolean(on && loop && [loop.a, loop.b, loop.c].every(isSet) && loop.a < loop.b && loop.b < loop.c);
+
+/** The stretch of the video the loop's marks span, `[from, to]`, or null before two are marked. */
+export function spanOf(loop) {
+  const marks = [loop?.a, loop?.b, loop?.c].filter(isSet);
+  return marks.length < 2 ? null : [Math.min(...marks), Math.max(...marks)];
+}
+
+/** What the scrub bar shows, `[from, to]`: the loop and a quarter of it either side (0.5 s at least), else the whole video. */
+export function zoomOf(loop, duration) {
+  const span = spanOf(loop);
+  if (!span) return [0, duration];
+  const margin = Math.max(0.5, (span[1] - span[0]) / 4);
+  return [Math.max(0, span[0] - margin), Math.min(duration, span[1] + margin)];
+}

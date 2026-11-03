@@ -162,9 +162,9 @@ The poses made and reviewed together. A batch is done when the owner has OK'd ev
 The mannequin tool served on the owner's machine (`npm run studio`), where every exercise and kit is listed with its status, posed live, tuned, OK'd and noted. It views, tunes and annotates; it never models.
 _Avoid_: Review page (the published page it replaced), editor
 
-**A–B loop**:
-The stretch of an exercise's technique video from the top of one rep (A) to its bottom (B), which the studio keeps for the exercise. With sync on it is the clip's rep: moving either one moves the other.
-_Avoid_: Range, segment, clip (that is the baked file)
+**Video loop**:
+One rep in an exercise's technique video, marked at its top (A), its bottom (B) and back at the top (C), which the studio keeps for the exercise. With sync on it is the clip's rep, the lowering A to B and the lift B to C: moving either one moves the other.
+_Avoid_: A–B loop (it has three marks), range, segment, clip (that is the baked file)
 
 **Recipe**:
 A kit written as data: the parts it is made of, placed by dimensions, its fixed frame and its moving bodies on joints, with its contacts and fit rules (ADR 0007).

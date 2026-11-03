@@ -3,7 +3,7 @@
 // what the owner does into the repo's files. A save goes into poses.mjs through patch.mjs and
 // re-bakes; an OK goes into the batch's review file and a note into review/notes.md (review.mjs).
 // An exercise's technique video is fetched with yt-dlp the first time it is opened, into a cache
-// outside the repo, and its A–B loop goes into review/loops.json.
+// outside the repo, and its loop (the marks of one rep) goes into review/loops.json.
 //
 // The tool's modules are loaded through Vite (`ssrLoadModule`), so an edit to kit.mjs or poses.mjs
 // is posed from at once. The page imports the same modules; what is node's in them (reading
@@ -310,7 +310,7 @@ export function studio({
     'POST /api/loop': async ({ id, loop }) => {
       const t = await tool();
       if (!(await libraryEntry(id))?.video) throw new Refused(`${id} has no video to loop`);
-      if (loop && !(isTime(loop.a) && isTime(loop.b))) throw new Refused('A loop\'s ends are times in seconds');
+      if (loop && ![loop.a, loop.b, loop.c ?? null].every(isTime)) throw new Refused('A loop\'s marks are times in seconds');
       const write = looping.then(() => t.review.setLoop(id, loop ?? null, { dir: t.dir }));
       looping = write.catch(() => {});
       await write;
