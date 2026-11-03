@@ -1604,8 +1604,8 @@ gallery (Technique videos).
       follow the contacts, and the recipe's fit rules set its adjustments (an entry can override
       them). A free weight, and a cable's attachment, is a free body on no joint, which the hands
       carry (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
-      besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads) or
-      the shoulders (a hack squat's pads). A weight stack rises by a ratio of a joint's travel: a
+      besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads),
+      the shoulders (a hack squat's pads) or the chest (the T-bar row machine's pad, #176). A weight stack rises by a ratio of a joint's travel: a
       lever's turn on a selectorised machine, and on a cable machine the stack's own joint, the
       cable drawn out, one for one. A lever's limits are where the body stops (the knee straight,
       the arms straight, the heels as high as they rise), so a rep past them has gone too far.
@@ -1637,7 +1637,8 @@ gallery (Technique videos).
     opened on its own, its joints scrubbed, its references beside it. The sidebar holds the whole
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
-    scrubbed through its limits. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
+    with no body, its levers at rest (#176): the T-bar row machine, until #160 poses it. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **Keyboard first, vim style** (owner, 2026-11-03, #158): everything in the studio can be done
       from the keyboard, and the mouse is optional. Digits are counts (`5l` is five steps); `j` `k`

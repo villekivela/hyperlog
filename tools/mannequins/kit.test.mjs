@@ -77,7 +77,7 @@ const WEARS = {
   bench: [{ equipment: 'barbell', kit: { bench: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
   adjustable_bench: [{ equipment: 'dumbbell', kit: { bench: {} }, bench: { angle: 30 } }, ['frame', 'vinyl', 'metal', 'pulley']],
   cable_column: [{ equipment: 'cable', kit: { cable_column: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
-  ...Object.fromEntries(['leg_extension', 'leg_curl', 'calf_raise_machine', 'squat_machine', 'row_machine', 'pulldown_machine', 'preacher_curl_machine']
+  ...Object.fromEntries(['leg_extension', 'leg_curl', 'calf_raise_machine', 'squat_machine', 'row_machine', 'pulldown_machine', 'preacher_curl_machine', 't_bar_row_machine']
     .map((k) => [k, [{ equipment: 'machine', kit: { [k]: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']]])),
   lying_leg_curl: [{ equipment: 'machine', kit: { leg_curl: { lying: true } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
   platform: [{ equipment: 'barbell', kit: { platform: {} } }, ['frame', 'vinyl']],
@@ -89,4 +89,11 @@ test('every machine and bench wears each tone of its parts', () => {
     buildKit(entry).group.traverse((o) => { if (o.isMesh) worn.add(o.material.name); });
     assert.deepEqual([...worn].filter((t) => tones.includes(t)).sort(), [...tones].sort(), `${name} wears ${[...worn].sort().join(', ')}`);
   }
+});
+
+// #168's refs: the T-bar row and the Kelso shrug are done chest-supported on the T-bar row machine.
+test('the T-bar row machine serves the chest-supported T-bar row, the T-bar row and the Kelso shrug', () => {
+  assert.deepEqual(MACHINES.t_bar_row_machine, { kit: 't_bar_row_machine', exercises: ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'] });
+  assert.deepEqual(MACHINES.row_machine.exercises, ['machine_row', 'chest_supported_machine_row']);
+  assert.deepEqual(MACHINES.shrug_machine.exercises, ['machine_shrug']);
 });

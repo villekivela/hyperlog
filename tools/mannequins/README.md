@@ -241,7 +241,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `leg_curl` | Lying and Seated Leg Curl | `leg_curl` (`lying` for the lying one) |
 | `glute_ham_raise` | Glute-Ham Raise | missing |
 | `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | missing |
-| `row_machine` | Machine Row, Chest-Supported Machine and T-Bar Rows, T-Bar Row | `row_machine` |
+| `row_machine` | Machine Row, Chest-Supported Machine Row | `row_machine` |
+| `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
 | `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
 | `shoulder_press` | Machine Shoulder Press | missing |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
@@ -251,7 +252,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
-| `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
+| `shrug_machine` | Machine Shrug | missing |
 
 - `bench` is flat, or adjustable with `angle` raising its back pad from flat; with `across: z` it
   stands across the body, its middle at that z (a hip thrust's), and its own `z` then runs along it
@@ -291,6 +292,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
+- `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
+  machine-first, for #160 to solve the body to): a pad inclined 40° on a beam held up by two posts,
+  a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
+  lever pivoting 420 mm up on the rear post, beside the posts, with a yoke of neutral grips (fore
+  and aft through the blocks atop its uprights) and wide grips (out from them), and a plate on a
+  horn at its front end. Its lever's angle up from level is `P.lever`, and it rests on its catch,
+  3° below level, where the pose frame gives none. Its contacts tie the hands to either pair of
+  grips, the chest to the pad and the feet to the foot plate.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its

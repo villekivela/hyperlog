@@ -14,8 +14,9 @@ import squatMachine from './squat-machine.mjs';
 import rowMachine from './row-machine.mjs';
 import pulldownMachine from './pulldown-machine.mjs';
 import preacherCurl from './preacher-curl.mjs';
+import tBarRowMachine from './t-bar-row-machine.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
-  pulldownMachine, preacherCurl,
+  pulldownMachine, preacherCurl, tBarRowMachine,
 ].map((r) => [r.name, r]));

@@ -9,7 +9,7 @@
 //   limits. A joint's value is in radians or metres from where its recipe measures it: from its
 //   rest where it raises a stack, or a lever's angle up from level ahead.
 // - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
-//   landmark it meets (`hands`, `feet`, `shins`, `thighs` or `shoulders`).
+//   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `shoulders` or `chest`).
 // - `stacks`: each weight stack and the joint whose travel raises it, by a ratio (metres a
 //   radian, or a metre).
 // - `fit`: its fit rules, the adjustments the machine's placard sets for the mannequin, each
@@ -41,7 +41,7 @@ export const free = () => ({ type: 'free' });
 export const HELD = 0.06;
 
 /** The mannequin's landmarks a contact can tie a body to. */
-export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'shoulders'];
+export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'shoulders', 'chest'];
 
 const forOptions = (v, options) => (typeof v === 'function' ? v(options) : v);
 
