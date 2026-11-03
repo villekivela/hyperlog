@@ -91,7 +91,7 @@ test('the help sheet lists every key in keys.json, the command line\'s too', () 
   assert.equal(by['Ctrl+r'], 'Redo');
   assert.equal(by[':w'], 'Save into poses.mjs and re-bake');
   assert.equal(by.gg, 'First item');
-  assert.deepEqual(sheet.map((g) => g.name), ['Lists', 'The rep', 'Numbers', 'Cameras', 'Video', 'Review', 'Commands']);
+  assert.deepEqual(sheet.map((g) => g.name), ['Lists', 'The rep', 'Numbers', 'Bones', 'Cameras', 'Video', 'Review', 'Commands']);
   assert.equal(sheet.find((g) => g.name === 'Video').focus, 'video');
 });
 
@@ -122,11 +122,11 @@ test('a group bound to a pane takes its keys over while that pane is focused, an
   assert.deepEqual(keys.feed('z', 'video'), { command: 'zoom', count: null });
   assert.equal(keys.feed('g', 'video'), null);
   assert.deepEqual(keys.feed('v', 'video'), { command: 'sync', count: null });
-  // The rest of the keymap still works there, and the video's keys do nothing elsewhere.
+  // The rest of the keymap still works there, and the video's keys do what they do elsewhere.
   assert.deepEqual(keys.feed('j', 'video'), { command: 'down', count: null });
   assert.deepEqual(typed(keys, ['g', 'g']), { command: 'first', count: null });
   assert.deepEqual(keys.feed('<Space>', 'stage'), { command: 'play', count: null });
-  assert.deepEqual(keys.feed('['), { command: null, count: null });
+  assert.deepEqual(keys.feed('['), { command: 'boneParent', count: null });
   assert.deepEqual(typed(keys, ['g', 'v']), { command: null, count: null });
   assert.equal(keys.keyOf('sync'), 'gv');
   assert.equal(keys.keyOf('videoSecondOn'), 'L');
@@ -139,4 +139,46 @@ test('a pane\'s group may rebind a key, but not twice, and not as the start of a
   assert.throws(() => keymap(prefix), /g starts gg/);
   const over = { groups: [{ name: 'A', keys: [{ keys: 'l', command: 'more' }] }, { name: 'B', focus: 'video', keys: [{ keys: 'l', command: 'on' }] }], ex: [] };
   assert.equal(keymap(over).feed('l', 'video').command, 'on');
+});
+
+// Posing any bone and the free camera (#164): their keys are bound everywhere but the video pane,
+// which keeps its own `[` `]` `}` `z` `h` `l` `H` `L` (#171).
+test('the bones and the free camera have their keys, Alt ones too, and a count goes with the camera\'s', () => {
+  const keys = keymap(KEYS);
+  const on = (tokens, focus = 'stage') => tokens.map((t) => keys.feed(t, focus)).at(-1);
+  assert.deepEqual(on(['[']), { command: 'boneParent', count: null });
+  assert.deepEqual(on([']']), { command: 'boneChild', count: null });
+  assert.deepEqual(on(['{']), { command: 'bonePrevious', count: null });
+  assert.deepEqual(on(['}']), { command: 'boneNext', count: null });
+  assert.deepEqual(on(['m']), { command: 'boneMirror', count: null });
+  assert.deepEqual(on(['x']), { command: 'axisX', count: null });
+  assert.deepEqual(on(['y']), { command: 'axisY', count: null });
+  assert.deepEqual(on(['z']), { command: 'axisZ', count: null });
+  assert.deepEqual(on(['g', 'h']), { command: 'closeUpLeft', count: null });
+  assert.deepEqual(on(['g', 'l']), { command: 'closeUpRight', count: null });
+  assert.deepEqual(on(['g', 'c']), { command: 'cameraClip', count: null });
+  assert.deepEqual(on(['g', 'p']), { command: 'plates', count: null });
+  assert.deepEqual(on(['1', '5', tokenOf({ key: 'l', altKey: true })]), { command: 'orbitRight', count: 15 });
+  const alt = { h: 'orbitLeft', j: 'orbitDown', k: 'orbitUp', H: 'panLeft', J: 'panDown', K: 'panUp', L: 'panRight', i: 'dollyIn', o: 'dollyOut', ',': 'rollLeft', '.': 'rollRight' };
+  for (const [key, command] of Object.entries(alt)) {
+    assert.deepEqual(on(['3', tokenOf({ key, altKey: true, shiftKey: key !== key.toLowerCase() })]), { command, count: 3 }, `Alt+${key}`);
+  }
+  assert.equal(keys.ex('frame'), 'saveFraming');
+  assert.equal(keys.keyOf('orbitRight'), 'Alt+l');
+  assert.equal(keys.keyOf('panUp'), 'Alt+K');
+  assert.equal(keys.keyOf('saveFraming'), ':frame');
+});
+
+test('the bones\' keys and the video\'s don\'t clash: the video pane keeps its own, every other pane walks the bones', () => {
+  const keys = keymap(KEYS);
+  const video = { '[': 'markA', ']': 'markB', '}': 'markC', z: 'zoom', h: 'videoFrameBack', l: 'videoFrameOn', H: 'videoSecondBack', L: 'videoSecondOn' };
+  const elsewhere = { '[': 'boneParent', ']': 'boneChild', '}': 'boneNext', z: 'axisZ', h: 'less', l: 'more', H: 'lessFine', L: 'moreFine' };
+  for (const [key, command] of Object.entries(video)) assert.equal(keys.feed(key, 'video').command, command, `${key} on the video`);
+  for (const focus of ['sidebar', 'stage', 'numbers']) {
+    for (const [key, command] of Object.entries(elsewhere)) assert.equal(keys.feed(key, focus).command, command, `${key} on the ${focus}`);
+  }
+  // With the video focused, the bones' other keys and the camera's still work.
+  assert.equal(keys.feed('{', 'video').command, 'bonePrevious');
+  assert.equal(keys.feed('x', 'video').command, 'axisX');
+  assert.equal(keys.feed(tokenOf({ key: 'h', altKey: true }), 'video').command, 'orbitLeft');
 });
