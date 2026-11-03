@@ -474,19 +474,32 @@ export const MOTIONS = {
   /**
    * Seated with the knees under a pad and the balls of the feet on a platform's edge, `feet.ball`
    * [y, z]: the heels rise and fall as the ankles turn `ankle` degrees from flat, heels up positive,
-   * and the knees rise and fall with them. The hands hold handles at `grip.at` [y, z].
+   * and the knees rise and fall with them. A lever over the knees turns about `pivot` [y, z] with
+   * them, from where it rests at the stretch, and the hands hold handles on it, `grip.at` [y, z] at
+   * the stretch, `grip.width` either side of the middle.
    */
   calf_raise(e, s, L) {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const a = rad(s.ankle);
-    // The sole tilts with the ankle, about the ball: its way toward the toes, and its up.
-    const heading = V(0, -Math.sin(a), Math.cos(a));
-    const top = V(0, Math.cos(a), Math.sin(a));
+    // The sole tilted `deg` with the ankle, about the ball: its way toward the toes, and its up.
+    const sole = (deg) => {
+      const a = rad(deg);
+      return [V(0, -Math.sin(a), Math.cos(a)), V(0, Math.cos(a), Math.sin(a))];
+    };
+    const [heading, top] = sole(s.ankle);
     const ball = (side) => V(side * e.feet.stance, ...e.feet.ball);
-    const ankles = [-1, 1].map((side) => ball(side).addScaledVector(heading, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY));
+    const anklesAt = ([head, up]) => [-1, 1].map((side) => ball(side).addScaledVector(head, -L.ballAhead).addScaledVector(up, L.ankleY - L.ballY));
+    const ankles = anklesAt([heading, top]);
     const pole = V(0, 1, 0.3).normalize();
+    const kneeOf = (feet) => kneeAt(V(0, hipC.y, hipC.z), feet[1].clone().setX(0), L, pole);
+    const knee = kneeOf(ankles);
+    // The lever turns as far about its pivot as the knees under its pads have from the stretch.
+    const pivot = V(0, ...e.pivot);
+    const angle = (p) => Math.atan2(p.y - pivot.y, p.z - pivot.z);
+    const turned = angle(knee) - angle(kneeOf(anklesAt(sole(e.bottom.ankle))));
+    const turn = Math.atan2(Math.sin(turned), Math.cos(turned));
+    const onLever = (p) => p.sub(pivot).applyAxisAngle(X, -turn).add(pivot);
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.25).normalize(),
@@ -495,11 +508,12 @@ export const MOTIONS = {
       foot: () => ({ heading: heading.clone(), top: top.clone() }),
       kneePole: (side) => pole.clone().addScaledVector(X, side * 0.15).normalize(),
       support: (side) => ({ point: ball(side).addScaledVector(top, -L.ballY), normal: top.clone() }),
-      hand: (side) => V(side * e.grip.width, ...e.grip.at),
-      across: () => V(0, 0, 1),
+      hand: (side) => onLever(V(side * e.grip.width, ...e.grip.at)),
+      across: () => V(0, 1, 0).applyAxisAngle(X, -turn),
       armPole: elbowsTo(e, [1, -0.3, -0.4]),
-      knee: kneeAt(V(0, hipC.y, hipC.z), ankles[1].clone().setX(0), L, pole),
-      platform: V(0, ...e.feet.ball),
+      knee, pivot, turn,
+      // The top of the platform, under the balls.
+      platform: V(0, e.feet.ball[0] - L.ballY, e.feet.ball[1]),
     };
   },
 

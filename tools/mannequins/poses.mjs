@@ -229,21 +229,23 @@ export const POSES = {
     top: { ankle: 22 },
     bottom: { ankle: -18 },
     feet: { stance: 0.1, ball: [0.2, 0.52] },
-    grip: { width: 0.26, at: [0.5, 0.0] },
+    pivot: [0.79, 0.88],
+    grip: { width: 0.13, at: [0.86, 0.34] },
     camera: { target: [0, 0.55, 0.25], halfHeight: 0.78, azimuth: 72, elevation: 10 },
   },
 
-  // In the sled, the back on the pad and the shoulders under the rollers, the feet on the tilted
-  // platform: the hips travel down the rails until the knees are well past a right angle.
+  // In the sled, the back on the pad and the shoulders under their pads, the feet on the tilted
+  // platform: the hips travel down the rails until the knees are well past a right angle. The hands
+  // hold the handles beside the head, the elbows out, so the knuckles can lie along them.
   hack_squat: {
     equipment: 'machine',
     motion: 'hack_squat',
     kit: { squat_machine: {} },
-    body: { trunk: -40 },
-    top: { hip: [0.9, 0.05] },
-    bottom: { hip: [0.63, 0.27] },
-    feet: { stance: 0.16, y: 0.12, z: 0.36, tilt: 20, toeOut: 15, kneesOut: 0.35 },
-    grip: { width: 0.3, at: [-0.05, 0.2] },
+    body: { trunk: -51 },
+    top: { hip: [1.0, 0.05] },
+    bottom: { hip: [0.73, 0.27] },
+    feet: { stance: 0.16, y: 0.22, z: 0.36, tilt: 20, toeOut: 15, kneesOut: 0.35 },
+    grip: { width: 0.3, at: [0.15, 0], pole: [1, -0.5, 0] },
     camera: { target: [0, 0.85, 0.15], halfHeight: 1.0, azimuth: 70, elevation: 8 },
   },
 
