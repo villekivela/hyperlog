@@ -29,6 +29,12 @@ export function stateAt(e, d) {
     const b = e.bottom?.[k] ?? a;
     s[k] = Array.isArray(a) ? a.map((v, i) => lerp(v, b[i], t)) : lerp(a, b, t);
   }
+  // A wrist's bend given at the bottom alone eases from straight at the top, and a grip's turn
+  // given at one end alone from the entry's own `grip.rotate` at the other.
+  if (e.bottom?.wrist && !e.top?.wrist) s.wrist = e.bottom.wrist.map((v) => v * t);
+  const turn = e.grip?.rotate ?? 0;
+  if (e.top?.rotate === undefined && e.bottom?.rotate !== undefined) s.rotate = lerp(turn, e.bottom.rotate, t);
+  if (e.top?.rotate !== undefined && e.bottom?.rotate === undefined) s.rotate = lerp(e.top.rotate, turn, t);
   for (const [k, samples] of Object.entries(e.trace?.angles ?? {})) s[k] = sample(samples, d);
   return s;
 }
@@ -52,6 +58,8 @@ export function frameAt(e, d, L) {
   if (rotate) P.gripRotate = rotate;
   const tilt = s.tilt ?? e.grip?.tilt;
   if (tilt) P.gripTilt = tilt;
+  // The wrists' bend, [flexion, deviation] in degrees, at the top and the bottom eased between.
+  if (s.wrist) P.wrist = s.wrist;
   return P;
 }
 
@@ -72,7 +80,8 @@ function standingHips(e, s, L) {
 
 /** Feet flat on the floor, `feet.stance` either side of the middle at `feet.z`, the knees toward `pole`. */
 const floorFeet = (e, L, pole) => ({
-  ankles: [-1, 1].map((s) => V(s * e.feet.stance, L.ankleY, e.feet.z ?? 0)),
+  // With `feet.stagger`, the left foot (+x) stands that far ahead of the right (behind, if negative).
+  ankles: [-1, 1].map((s) => V(s * e.feet.stance, L.ankleY, (e.feet.z ?? 0) + (s * (e.feet.stagger ?? 0)) / 2)),
   toeOut: e.feet.toeOut ?? 0,
   kneePole: pole,
   support: () => floor,
@@ -401,11 +410,27 @@ export const MOTIONS = {
   free_arms(e, s, L) {
     const { hipC, u, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
+    const at = (p, side) => V(side * p[0], p[1], p[2]);
+    let work = (side) => at(s.hand, side);
+    if (e.grip?.arc) {
+      // With `grip.arc` (a flye, a raise) the hand sweeps an arc about its shoulder from the top's
+      // point to the bottom's, its reach between theirs, so the elbow holds its bend.
+      const [top, bottom] = [V(...e.top.hand), V(...e.bottom.hand)];
+      const way = bottom.clone().sub(top);
+      const t = Math.min(1, Math.max(0, V(...s.hand).sub(top).dot(way) / Math.max(way.lengthSq(), 1e-9)));
+      work = (side) => {
+        const sh = shouldersOf(hipC, u, L).addScaledVector(X, side * L.shW);
+        const a = at(e.top.hand, side).sub(sh);
+        const b = at(e.bottom.hand, side).sub(sh);
+        const turn = new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(a.clone().normalize(), b.clone().normalize()), t);
+        return sh.add(a.clone().normalize().applyQuaternion(turn).multiplyScalar(a.length() + (b.length() - a.length()) * t));
+      };
+    }
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
       ...feet,
-      hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
+      hand: handsOf(e, work),
       armPole: elbowsTo(e, [1, -0.3, -0.5]),
     };
   },
