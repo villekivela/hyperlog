@@ -1602,7 +1602,10 @@ gallery (Technique videos).
       kit, with the moving bodies on revolute or prismatic joints and contacts to the hands, shins
       or feet. A machine exercise is solved from its machine: the joint drives the rep, the limbs
       follow the contacts, and the recipe's fit rules set its adjustments (an entry can override
-      them).
+      them). A free weight, and a cable's attachment, is a free body on no joint, which the hands
+      carry (#159). A weight stack rises by a ratio of a joint's travel: a lever's turn on a
+      selectorised machine, and on a cable machine the stack's own joint, the cable drawn out, one
+      for one. Every kit was ported to a recipe with its clips byte for byte the same.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
@@ -1630,8 +1633,8 @@ gallery (Technique videos).
     shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes. A machine can be
     opened on its own, its joints scrubbed, its references beside it. The sidebar holds the whole
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the first
-    exercise that uses it sets it up. A change to `kit.mjs` or `poses.mjs` on disk reloads the stage
-    on the item it was showing.
+    exercise that uses it sets it up. A change to a recipe, a part or `poses.mjs` on disk reloads
+    the stage on the item it was showing.
     - **Keyboard first, vim style** (owner, 2026-11-03, #158): everything in the studio can be done
       from the keyboard, and the mouse is optional. Digits are counts (`5l` is five steps); `j` `k`
       move through the focused list, `Tab` cycles the sidebar, the stage and the numbers, `/` finds
