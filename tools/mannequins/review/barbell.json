@@ -1,0 +1,80 @@
+{
+  "back_squat_high_bar": {
+    "ok": true,
+    "note": "",
+    "clip": "266909957a90ecdb",
+    "tuned": "{\"grip.pole\":[0.35,-1,-0.8]}"
+  },
+  "back_squat_low_bar": {
+    "ok": true,
+    "note": "the elbows cant be manipulated correctly for the hands to look natural",
+    "clip": "6b94c74d70eb0184",
+    "tuned": "{\"top.rotate\":5.6724,\"bottom.rotate\":-8.2238,\"grip.width\":0.4114,\"grip.pole\":[0.35,-1,-0.8],\"bar.back\":0.2}"
+  },
+  "barbell_curl": {
+    "ok": true,
+    "note": "",
+    "clip": "a0ea7586fe6969d8",
+    "tuned": "{}"
+  },
+  "barbell_glute_bridge": {
+    "ok": true,
+    "note": "i cant position the barbell in bottom properly",
+    "clip": "c30d391cc6b521dd",
+    "tuned": "{}"
+  },
+  "barbell_hip_thrust": {
+    "ok": true,
+    "note": "i cant adjust the arc of back on the bottom which would help make this more natural. also the bottom barbell position is so i cant tune it properly",
+    "clip": "a036361cea8113d9",
+    "tuned": "{}"
+  },
+  "barbell_row": {
+    "ok": true,
+    "note": "the path arcs it should not",
+    "clip": "a85084f9f837747c",
+    "tuned": "{}"
+  },
+  "barbell_shrug": {
+    "ok": true,
+    "note": "",
+    "clip": "30d7ade359855b6b",
+    "tuned": "{}"
+  },
+  "barbell_upright_row": {
+    "ok": true,
+    "note": "",
+    "clip": "0155227a10023c99",
+    "tuned": "{}"
+  },
+  "deadlift": {
+    "ok": false,
+    "note": "there is slight jump when the animation is at the knees",
+    "clip": "67638db52a024fa5",
+    "tuned": "{\"bottom.wrist\":[0,16.6123],\"top.wrist\":[0,13.0912],\"feet.kneesOut\":0.117}"
+  },
+  "deficit_deadlift": {
+    "ok": false,
+    "note": "there is slight jump when the animation is at the knees",
+    "clip": "15cd8dcdc5cf8fbf",
+    "tuned": "{\"top.wrist\":[0,20.6606]}"
+  },
+  "deficit_pendlay_row": {
+    "ok": true,
+    "note": "barbell path arcs",
+    "clip": "b656f077cc60a30e",
+    "tuned": "{}"
+  },
+  "floor_press": {
+    "ok": true,
+    "note": "",
+    "clip": "93d39c5ae59c0016",
+    "tuned": "{}"
+  },
+  "front_squat": {
+    "ok": true,
+    "note": "the hands should not be attached to the barbell",
+    "clip": "505b50440ce20acc",
+    "tuned": "{}"
+  }
+}

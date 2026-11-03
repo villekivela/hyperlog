@@ -7,6 +7,12 @@ import { buildStage } from './stage.mjs';
 import { applyTuned, tunables } from './tune.mjs';
 import { handlesAt } from './handles.mjs';
 import * as THREE from 'three';
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { bakeAll } from './bake.mjs';
+import { loadClip } from './glb.mjs';
+import { POSES } from './poses.mjs';
 import { X, gripTarget, heldAt, turnOf, wpos } from './rig.mjs';
 
 const deg = (r) => (r * 180) / Math.PI;
@@ -62,6 +68,7 @@ test('dragging the fingers turns the wrist', async () => {
 test('a grip turned at one end eases from grip.rotate at the other', async () => {
   const { frameAt } = await import('./motions.mjs');
   const entry = applyTuned(prepare('cable_flye'), { 'grip.rotate': 30, 'bottom.rotate': 150 });
+  delete entry.top.rotate;
   const stage = await buildStage(entry);
   const L = stage.rig.dims;
   assert.equal(frameAt(entry, 0, L).gripRotate, 30);
@@ -75,14 +82,18 @@ test('a back squat offers its elbows in Tune, starting where the squat puts them
   assert.deepEqual(t.map((x) => x.path), ['grip.pole.0', 'grip.pole.1', 'grip.pole.2']);
 });
 
-test('elbows set back and down behind the bar keep the hands on it, knuckles along it', async () => {
+// The owner, #127: a wrist the pose doesn't set stays straight, so the bar slants across the palm
+// where the elbows put the hand off square to it.
+test('elbows set back and down behind the bar keep the hands on it, the wrist straight', async () => {
   const back = await posed('barbell_squat', 0, { 'grip.pole': [0.3, -0.6, -1] });
   const elbow = wpos(back.stage.rig.bones.lowerarm_l);
   const shoulder = wpos(back.stage.rig.bones.upperarm_l);
   assert.ok(elbow.z < shoulder.z - 0.05 && elbow.y < shoulder.y, `the elbow at ${elbow.toArray().map((v) => v.toFixed(2))}, the shoulder at ${shoulder.toArray().map((v) => v.toFixed(2))}`);
   assert.ok(heldAt(back.stage.rig, 'l').distanceTo(gripTarget(back.P, 1)) < 0.015, 'the hand left the bar');
+  const bend = deg(back.fingers.angleTo(back.forearm));
+  assert.ok(bend < 5, `the wrist bends ${bend.toFixed(1)}°`);
   const off = deg(Math.acos(Math.min(1, Math.abs(back.knuckles.dot(X)))));
-  assert.ok(off < 15, `the knuckles cross the bar ${off.toFixed(0)}° off its line`);
+  assert.ok(off <= 35.5, `the bar slants ${off.toFixed(0)}° across the palm`);
 });
 
 test('dragging a squat\'s elbow sets where the elbows point', async () => {
@@ -126,3 +137,25 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
     }
   });
 }
+
+// The owner, #127: the tilt slider bends the hand toward the thumb or the little finger from a
+// straight wrist, on a bar as anywhere, and neither the hand's roll about the bar nor the
+// straight-wrist solve undoes it.
+test('15° of ulnar tilt at a back squat\'s bottom is 15° in the baked clip', async () => {
+  const out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  await bakeAll(out, { poses: { barbell_squat: applyTuned(POSES.barbell_squat, { 'bottom.wrist': [0, -15] }) } });
+  const { clip, resources } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips.barbell_squat;
+  const gltf = await loadClip(path.join(out, clip), resources.map((r) => path.join(out, r)));
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  mixer.clipAction(gltf.animations[0]).play();
+  mixer.setTime(0.9999 * gltf.animations[0].duration);
+  gltf.scene.updateMatrixWorld(true);
+  // The hand's tilt off the forearm, toward the thumb, in the plane of the knuckles.
+  const at = (n) => gltf.scene.getObjectByName(n).getWorldPosition(new THREE.Vector3());
+  const forearm = at('hand_l').sub(at('lowerarm_l')).normalize();
+  const fingers = at('middle_01_l').sub(at('hand_l')).normalize();
+  const thumbSide = at('index_01_l').sub(at('pinky_01_l'));
+  thumbSide.addScaledVector(forearm, -thumbSide.dot(forearm)).normalize();
+  const tilt = deg(Math.atan2(fingers.dot(thumbSide), fingers.dot(forearm)));
+  assert.ok(Math.abs(tilt + 15) < 2, `the hand tilts ${tilt.toFixed(1)}° toward the thumb`);
+});

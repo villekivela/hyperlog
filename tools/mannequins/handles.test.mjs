@@ -86,3 +86,13 @@ test('dragging a free hand sets its point at the top or the bottom, and the hand
   const after = await posed('cable_flye', 1, changes);
   assert.ok(gripTarget(after.P, 1).distanceTo(to) < 0.005, `${gripTarget(after.P, 1).distanceTo(to)}`);
 });
+
+test('dragging a row\'s bar sets its height at that end and its line, and the bar lands there', async () => {
+  const before = await posed('barbell_row', 1);
+  const bar = named(before.handles).hand;
+  const to = bar.at.clone().add(new THREE.Vector3(0, 0.05, -0.03));
+  const changes = bar.drag(to);
+  assert.deepEqual(Object.keys(changes).sort(), ['bar.z', 'bottom.bar']);
+  const after = await posed('barbell_row', 1, changes);
+  assert.ok(Math.abs(after.P.bar.y - to.y) < 0.005 && Math.abs(after.P.bar.z - to.z) < 0.005, `${after.P.bar.toArray()}`);
+});

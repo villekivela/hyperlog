@@ -54,6 +54,54 @@
         }
       ]
     },
+    "back_squat_high_bar": {
+      "clip": "back_squat_high_bar.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.87,
+          0
+        ],
+        "halfHeight": 1.02,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.25,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "back_squat_low_bar": {
+      "clip": "back_squat_low_bar.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.87,
+          0
+        ],
+        "halfHeight": 1.02,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.25,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
     "barbell_bench_press": {
       "clip": "barbell_bench_press.glb",
       "equipment": "barbell",
@@ -72,6 +120,79 @@
         "bottom": 0.3,
         "lifting": 1,
         "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin",
+        "kit_bench.bin"
+      ]
+    },
+    "barbell_curl": {
+      "clip": "barbell_curl.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.05
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "barbell_glute_bridge": {
+      "clip": "barbell_glute_bridge.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.3,
+          0.05
+        ],
+        "halfHeight": 0.75,
+        "azimuth": 70,
+        "elevation": 14
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "barbell_hip_thrust": {
+      "clip": "barbell_hip_thrust.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.4,
+          0
+        ],
+        "halfHeight": 0.8,
+        "azimuth": 70,
+        "elevation": 12
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
       },
       "resources": [
         "mannequin.bin",
@@ -103,6 +224,54 @@
         "kit_barbell.bin"
       ]
     },
+    "barbell_row": {
+      "clip": "barbell_row.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.1
+        ],
+        "halfHeight": 0.95,
+        "azimuth": 66,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "barbell_shrug": {
+      "clip": "barbell_shrug.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.05
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
     "barbell_squat": {
       "clip": "barbell_squat.glb",
       "equipment": "barbell",
@@ -121,6 +290,30 @@
         "bottom": 0.25,
         "lifting": 1,
         "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "barbell_upright_row": {
+      "clip": "barbell_upright_row.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.05
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 40,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
       },
       "resources": [
         "mannequin.bin",
@@ -408,6 +601,128 @@
           }
         }
       }
+    },
+    "deadlift": {
+      "clip": "deadlift.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.05
+        ],
+        "halfHeight": 1,
+        "azimuth": 66,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "deficit_deadlift": {
+      "clip": "deficit_deadlift.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.05
+        ],
+        "halfHeight": 1,
+        "azimuth": 66,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin",
+        "kit_platform.bin"
+      ]
+    },
+    "deficit_pendlay_row": {
+      "clip": "deficit_pendlay_row.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.6,
+          0.15
+        ],
+        "halfHeight": 0.85,
+        "azimuth": 66,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin",
+        "kit_platform.bin"
+      ]
+    },
+    "floor_press": {
+      "clip": "floor_press.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.3,
+          0.05
+        ],
+        "halfHeight": 0.8,
+        "azimuth": 58,
+        "elevation": 28
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
+    },
+    "front_squat": {
+      "clip": "front_squat.glb",
+      "equipment": "barbell",
+      "camera": {
+        "target": [
+          0,
+          0.87,
+          0
+        ],
+        "halfHeight": 1.02,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.25,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_barbell.bin"
+      ]
     },
     "hack_squat": {
       "clip": "hack_squat.glb",

@@ -1,97 +1,98 @@
 {
   "2_grip_lat_pulldown": {
-    "ok": false,
+    "ok": true,
     "note": "2 grip lat pulldown is exercise where first set is done with 1.5 shoulder width grip and second set with narrow shoulder width palms in like curl",
-    "clip": "99003383d4aede4e",
-    "tuned": "{}"
+    "clip": "bea2b87c13abe79e",
+    "tuned": "{\"top.wrist\":[0,29.3072],\"top.rotate\":0,\"grip.width\":0.4018,\"bottom.bar\":[1.119,-0.0434],\"kit.cable_tower.thighPad\":[0.6819,0.1745],\"kit.cable_tower.seat\":[0.48,-0.01],\"kit.cable_tower.pulley\":[2.13,-0.04],\"kit.cable_tower.column\":0.92,\"top.bar\":[1.62,-0.05]}"
   },
   "bayesian_cable_curl": {
-    "ok": false,
+    "ok": true,
     "note": "should have more stable stance",
-    "clip": "a7d5cb7726faea7d",
+    "clip": "7de401b33eeba5f5",
     "tuned": "{}"
   },
   "cable_flye": {
-    "ok": false,
-    "note": "cant really tune  for the movement to be correct",
-    "clip": "adbd3a66575aec19",
-    "tuned": "{\"grip.rotate\":-0.5602,\"top.hand\":[0.2037,1.5397,0.7136],\"kit.cable_column.at\":[0.808,-0.45],\"kit.cable_column.pulley\":1.2049,\"bottom.hand\":[0.7891,1.2839,-0.0151]}"
+    "ok": true,
+    "note": "cant really tune  for the movement to be correct, grip rotate needs different top and bottom values",
+    "clip": "a59dd26267f00200",
+    "tuned": "{}"
   },
   "cable_lateral_raise": {
-    "ok": false,
+    "ok": true,
     "note": "arm should be pretty straight through out the movement no it bends at elbow in the middle",
-    "clip": "f51b9f185a6a1bc1",
+    "clip": "7d7e256619c9944f",
     "tuned": "{\"top.hand\":[0.8229,1.5221,0.3638],\"bottom.hand\":[0.0309,0.8331,0.0938],\"grip.pole\":[1,-0.2505,-0.7094]}"
   },
   "cable_shoulder_press": {
-    "ok": false,
+    "ok": true,
     "note": "cant put the equipment colums quite fat back",
-    "clip": "019249644a5484fc",
-    "tuned": "{\"top.hand\":[0.2882,1.6383,0.2743],\"kit.cable_column.at\":[0.6691,-0.15]}"
+    "clip": "810e3bc76152d51b",
+    "tuned": "{}"
   },
   "chest_supported_machine_row": {
-    "ok": false,
+    "ok": true,
     "note": "machine looks bad check this for example https://www.google.com/search?sca_esv=42710b0963df5426&hl=en&sxsrf=AKL5yDhBFHTOFa_AwJxjfp_Am3OrMQ2w6A:1793686334813&udm=2&fbs=ACAhTvwdifjn2dKXmjtOfBxVFl_koHVe5RLSnJlTH2QYaq_YVV3xLDZ0MDF3xjYYYn11fZzAJAouEckp90rh9mUoTnN1fiUzV9PPNstmX25bGqkzrH9QbYFRp3JhDulF-28WKTsOzE5AHofung3bnAaCfvU7vOaaXPn-dOepfLL406XQ68rOBiTNfqLSpIwDgcLu4BBL920t&q=chest+supported+row+machine&sa=X&ved=2ahUKEwjwq8ymkuuXAxX6HBAIHSFoFxIQtKgLegQIEhAB&biw=2538&bih=1397&dpr=1.5#sv=CAMSURoyKhBlLTFrZEpocC1mblk2YzBNMg4xa2RKaHAtZm5ZNmMwTToONTNKRWVMcFNsUUdOV00gBCoXCgFzEhBlLTFrZEpocC1mblk2YzBNGAEwARgHILPo5bcPSggQAhgBIAIoAQ",
-    "clip": "b94769172c8dd526",
+    "clip": "a18955c3b2d39395",
     "tuned": "{}"
   },
   "close_grip_bench_press": {
     "ok": true,
     "note": "",
-    "clip": "65524eee788b2152",
+    "clip": "f85fb32255cd249d",
     "tuned": "{}"
   },
   "hack_squat": {
-    "ok": false,
+    "ok": true,
     "note": "cant rotate wrist to align with the grips, machine looks pretty smallo and bad get better model",
-    "clip": "8ad3ee2f67ae249d",
-    "tuned": "{\"grip.rotate\":0}"
+    "clip": "5f9ecb2a84742f7a",
+    "tuned": "{\"grip.rotate\":0,\"feet.stance\":0.148,\"feet.z\":0.545,\"feet.y\":0.2415,\"bottom.hip\":[0.5416,0.27],\"top.hip\":[1.01,0.05]}"
   },
   "leg_extension": {
-    "ok": false,
+    "ok": true,
     "note": "machine does not look complete and there is some weird placementes, usually the stack is next to user",
-    "clip": "62ba242f9ff43c3b",
+    "clip": "e4e13ca0e1e9265d",
     "tuned": "{}"
   },
   "lying_leg_curl": {
-    "ok": false,
+    "ok": true,
     "note": "needs better machine here is reference https://www.gymsolutions.com.au/wp-content/uploads/2024/10/IMG_9973.jpg",
-    "clip": "40308d813a5b2b15",
+    "clip": "9c11c2c9e1334c7f",
     "tuned": "{}"
   },
   "machine_preacher_curl": {
-    "ok": false,
+    "ok": true,
     "note": "would need real machine",
-    "clip": "e0b9ee926b62f227",
-    "tuned": "{}"
+    "clip": "abcdf92f623765eb",
+    "tuned": "{\"kit.preacher_curl_machine.pad\":0.0854}"
   },
   "machine_pulldown": {
-    "ok": false,
+    "ok": true,
     "note": "machine looks bad",
-    "clip": "e7168d440e5b5fa2",
+    "clip": "d68e0fd0570261e9",
     "tuned": "{}"
   },
   "overhead_cable_triceps_extension": {
     "ok": true,
     "note": "",
-    "clip": "4df9b4c1fe17213c"
+    "clip": "d58dd17ff7066c0e",
+    "tuned": "{}"
   },
   "reverse_cable_crossover": {
-    "ok": false,
-    "note": "equipment should be in front of the user",
-    "clip": "4c011d9036de4ecf",
-    "tuned": "{\"kit.cable_column.at\":[0.8684,0.5]}"
+    "ok": true,
+    "note": "otherwise ok but the cable is not attached to the handle",
+    "clip": "c62a0a188f9b7080",
+    "tuned": "{}"
   },
   "seated_calf_raise": {
-    "ok": false,
+    "ok": true,
     "note": "machine looks weird, needs updated machine",
-    "clip": "9baed51d7cf58281",
+    "clip": "83a299763a272204",
     "tuned": "{}"
   },
   "seated_leg_curl": {
-    "ok": false,
+    "ok": true,
     "note": "machine does not look complete and there is some weird placementes, usually the stack is next to user",
-    "clip": "16879769f3955b99",
+    "clip": "c765507b7aa136ba",
     "tuned": "{}"
   }
 }

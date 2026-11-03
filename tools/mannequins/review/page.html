@@ -97,6 +97,8 @@ button:focus-visible, textarea:focus-visible, .stage:focus-visible { outline: 2p
 .tune summary { font: 600 13px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
 .tune .row { display: grid; grid-template-columns: minmax(70px, 1fr) 30px minmax(80px, 2fr) 30px 76px 28px auto; gap: 6px; align-items: center; padding: 3px 0; }
 .tune .row label { font: 12px var(--mono); overflow-wrap: anywhere; }
+.tune .row label.words { grid-column: 1 / -1; overflow-wrap: normal; }
+.tune .row label.words + .step { grid-column: 2; }
 .tune .row input[type="range"] { width: 100%; min-width: 0; }
 .tune .row .step, .tune .row .undo { padding: 0; height: 30px; font-size: 16px; line-height: 1; }
 .tune .row .undo { height: 28px; border-color: transparent; color: var(--quiet); }
@@ -525,24 +527,16 @@ function tuning(e, node, card, s) {
   };
 
   // A value goes in at its path, or comes out again when it is what the entry already had.
-  const put = (path, value) => {
-    if (same(value, tune.baseAt(e.entry, path))) delete tuned[path]; else tuned[path] = value;
-  };
+  const put = (path, value) => { tuned = tune.withTuned(e.entry, tuned, path, value); };
   const soon = () => {
     paint();
     if (!frame) frame = requestAnimationFrame(() => { frame = 0; rebuild(); });
   };
   const change = (path, v) => {
-    const m = path.match(/^(.*)\.(\d+)$/);
     const per = perMap()[path];
     if (per) {
       // A Per angle setting changes at the angle shown.
       setPer(path, { ...per, [card.angle]: v });
-    } else if (m) {
-      const [, parent, i] = m;
-      const next = JSON.parse(JSON.stringify(tuned[parent] ?? tune.baseAt(e.entry, parent)));
-      next[Number(i)] = v;
-      put(parent, next);
     } else {
       put(path, v);
     }
@@ -599,7 +593,9 @@ function tuning(e, node, card, s) {
         scope.hidden = !e.angles;
         num.id = `${e.id}-${t.path}`;
         label.htmlFor = num.id;
-        label.textContent = t.path;
+        label.textContent = tune.labelOf(t.path);
+        // A label in words takes the row's width, the slider under it.
+        label.classList.toggle('words', label.textContent !== t.path);
         label.title = `${t.path} (${t.unit.trim() || 'ratio'}, step ${t.step})`;
         minus.setAttribute('aria-label', `Less ${t.path}`);
         plus.setAttribute('aria-label', `More ${t.path}`);

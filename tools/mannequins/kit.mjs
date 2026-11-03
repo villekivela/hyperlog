@@ -70,7 +70,7 @@ export const MACHINES = {
  * Bodyweight needs no kit for most of its exercises.
  */
 export const EQUIPMENT = {
-  barbell: ['barbell', 'bench'],
+  barbell: ['barbell', 'bench', 'platform'],
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'cable_column', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
@@ -460,9 +460,10 @@ function padded(length, M, name) {
  * flat, or with its back pad raised `angle` degrees about a hinge at `hinge` (z; by default 42 cm
  * behind the seat's front), an adjustable bench. With `adjustable`, the back pad is a part of its
  * own, `bench_back`, standing at `angle` about the hinge, which the phone turns to the exact angle.
+ * With `across` it stands across the body instead, its middle at that z (`z` is then along it).
  * The pads stand on legs of tubing with feet across, a spine along the floor and a rail under them.
  */
-function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null, adjustable = false } = {}) {
+function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null, adjustable = false, across = null } = {}) {
   const M = tones();
   const y = height - PAD / 2;
   const parts = [];
@@ -535,6 +536,11 @@ function bench({ angle = 0, height = 0.44, z = -0.15, length = 1.2, hinge = null
     }
   }
   const g = group('bench', parts);
+  // Across the body, a hip thrust's: its length along x, its middle at z `across`.
+  if (across !== null) {
+    g.rotation.y = Math.PI / 2;
+    g.position.set(0, 0, across);
+  }
   if (turning) {
     g.add(turning);
     nameAll(turning, 'bench_back');
@@ -1991,8 +1997,20 @@ function preacherCurl({ seat = [0.5, 0], pad: deep = 0.08 } = {}) {
   };
 }
 
+/** A low platform under the feet, `height` tall (the pose's `feet.y`) and `size` [w, d] at `at` [x, z]: a deficit. */
+function platform({ height = 0.05, size = [0.8, 0.5], at = [0, 0.05] } = {}) {
+  const M = tones();
+  // A frame with a rubber mat on top, where the feet stand.
+  const mat = 0.012;
+  const g = group('platform', [
+    pad(size[0], height - mat, size[1], M.frame, V(at[0], (height - mat) / 2, at[1]), { soft: 0.006 }),
+    pad(size[0] - 0.03, mat, size[1] - 0.03, M.vinyl, V(at[0], height - mat / 2, at[1]), { soft: 0.004 }),
+  ]);
+  return { group: g, place() {} };
+}
+
 export const KITS = {
-  barbell, dumbbells, bench, cable_tower: cableTower, cable_column: cableColumn, leg_press: legPress, chest_press: chestPress,
+  barbell, dumbbells, bench, platform, cable_tower: cableTower, cable_column: cableColumn, leg_press: legPress, chest_press: chestPress,
   leg_extension: legExtension, leg_curl: (o = {}) => (o.lying ? lyingLegCurl(o) : legExtension({ ...o, curl: true })),
   calf_raise_machine: calfRaise, squat_machine: squatMachine, row_machine: rowMachine, pulldown_machine: pulldownMachine,
   preacher_curl_machine: preacherCurl,
@@ -2006,8 +2024,12 @@ export function buildKit(entry) {
   const kits = Object.entries(entry.kit ?? {}).map(([name, options]) => {
     if (!KITS[name]) throw new Error(`No kit "${name}"`);
     if (!allowed.includes(name)) throw new Error(`Kit "${name}" isn't ${entry.equipment} equipment`);
-    // An adjustable bench stands at the angle the pose is prepared at.
-    const kit = KITS[name](name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle } : options);
+    // An adjustable bench stands at the angle the pose is prepared at, and a platform is as high as
+    // the feet stand.
+    const kit = KITS[name](
+      name === 'bench' && entry.bench ? { ...options, adjustable: true, angle: entry.bench.angle }
+        : name === 'platform' ? { height: entry.feet?.y, ...options } : options,
+    );
     // The bake shares the parts under this node with every clip in the same kit.
     kit.group.userData.kit = name;
     return kit;

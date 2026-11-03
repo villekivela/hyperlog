@@ -23,6 +23,15 @@ export function handlesAt(entry, stage, P, d) {
     });
   }
 
+  if (typeof entry[section]?.bar === 'number' && entry.bar?.z !== undefined) {
+    // A bar on a line straight up and down (a row, a deadlift): its height at this end, and the
+    // line's place, which both ends share.
+    out.push({
+      id: 'hand', label: 'bar', at: gripTarget(P, 1),
+      drag: (p) => ({ [`${section}.bar`]: round(p.y), 'bar.z': round(p.z) }),
+    });
+  }
+
   if (Array.isArray(entry[section]?.hand) && entry[section].hand.length === 3) {
     // A free hand stands at its own point in the room, the left one's, which the right mirrors.
     out.push({

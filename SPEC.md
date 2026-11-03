@@ -1519,8 +1519,12 @@ gallery (Technique videos).
     curl can stand staggered; and equipment moves a metre either way in Tune. Every wrist is straight
     by default, the back of the hand in line with the forearm (owner, 2026-11-03): a bar or a set
     handle lies across the palm, low near its heel for a press or a squat, at the fingers' roots for
-    a pull, and the hand rolls about it while the elbow moves to suit; a wrist bends only where the
-    pose sets it, and a check fails one bent more than 20° otherwise. Tune bends the wrists, turns
+    a pull, and the hand rolls about it while the elbow moves to suit; where a straight wrist can't
+    have its knuckles along the bar, the bar slants across the palm instead. A wrist bends only where
+    the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
+    frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
+    wrists, with each slider named in words ("Wrist tilt: + radial (thumb side) / − ulnar
+    (little-finger side)"), turns
     the grip at each end and points a squat's elbows; every cable ends at its handle's
     hook (a check fails one more than 1 cm off). An exercise done with a different grip set by set
     has a clip per grip (owner, 2026-11-03): the 2-Grip Lat Pulldown's set 1 wide and overhand at
@@ -1528,7 +1532,18 @@ gallery (Technique videos).
     shows a connected choice under the mannequin, each button naming its set and grip (`Set 1 ·
     Wide`, `Set 2 · Narrow`) and a line under them on how the chosen grip holds the bar (overhand
     at 1.5 shoulder widths; underhand at shoulder width, palms to the face), and opens on the grip
-    of the set being done (outside a session, the first; past the last grip, the last).
+    of the set being done (outside a session, the first; past the last grip, the last). The barbell batch (#127) adds a low platform
+    under the feet for a deficit, and a bench that stands across the body for a hip thrust. Its
+    squats are the owner's tuned Barbell Squat changed only where the variant differs (owner, via
+    the coordinator, 2026-11-03): the high bar a little higher on the traps; the low bar across the
+    rear delts, leaning further to keep it over the feet; and the front squat upright with the bar
+    racked on the front delts, the arms crossed and each hand lying open on the other shoulder, not
+    gripping the bar (the mannequin's hands can't bend back into a clean grip).
+    Rows and pulls run the bar straight up and down; Tune places the bar at the bottom of a
+    deadlift, a row and a bridge, and arches a hip thrust's back (owner, via the coordinator,
+    2026-11-03).
+    The incline and decline presses (an adjustable bench is six clips, and the bench has
+    no angle below flat) and the barbell lunge (a split stance) wait for a later batch.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
@@ -1584,8 +1599,8 @@ gallery (Technique videos).
       mesh is: a clip reads its kits' parts from a file per kit, so detail costs about 110 KB per
       kind of equipment, not per clip.
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
-    stay on the floor or plate, no limb passes through the equipment, and the joints stay within
-    range. A pose that fails one doesn't bake.
+    stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
+    the joints stay within range. A pose that fails one doesn't bake.
   - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
     estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
     one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its

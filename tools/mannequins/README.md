@@ -83,21 +83,36 @@ db_incline_press: {
 ## Wrists and grip turn
 
 Every pose with hands keeps its wrists straight (SPEC, #127): the back of the hand in line with the
-forearm. A hand on something that lies its own way (a bar, a handle the pose sets) takes it across
-the palm, knuckles along it, and rolls about it; the elbow goes round the line from the shoulder to
-the wrist to wherever the wrist comes out straightest, keeping to the pose's pole side, and keeping
-close to the pole where the arm was traced or the entry sets `grip.pole`. A free handle (a dumbbell,
-a stirrup) turns with the hand. Where no straight arm reaches, the wrist turns as little as it must.
+forearm, a wrist the pose doesn't set within 5° of it. A hand on something that lies its own way (a
+bar, a handle the pose sets) takes it across the palm and rolls about it; the elbow goes round the
+line from the shoulder to the wrist, keeping to the pose's pole, and closer to it where the arm was
+traced or the entry sets `grip.pole`. Of all the arms that fit, the solve takes the straightest
+wrist first, then the elbow nearest its pole, then the knuckles nearest along the bar: where a
+straight wrist can't have its knuckles along it (a wide grip at a press's lockout), the bar slants
+across the palm, as much as 35°, as a lifter's does. A free handle (a dumbbell, a stirrup) turns
+with the hand. Where no straight arm reaches at all, the arm reaches as far as it can, the wrist
+straight and the handle slanting in the hand. Near full reach an arm eases into straight over its
+last 4 mm, so an elbow never snaps open at lockout.
+
+The motion has no jumps: each side's arm, and each finger's closing, is followed through the rep
+from both ends, the cheaper way kept, and averaged over a few frames, so where the best arm
+changes branch the elbow travels there instead of jumping; and the knees give way smoothly as a
+pull's bar passes them, the legs' front rounded over the kneecap and the give eased in. A test
+fails any joint whose step between two frames stands out from the steps either side of it by more
+than 2°, in every clip.
+
 A press or a squat holds the bar low in the palm, near its heel; a pull at the fingers' roots, the
 palm against it. Each finger closes round what the hand holds only until its tip touches it, and
 the hands check fails fingers folded into one another (their joints under 1.3 cm apart).
 
 `top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
 degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
-given at the bottom alone eases from straight). The joints check fails a wrist bent more than 20°
+given at the bottom alone eases from straight). The joints check fails a wrist bent more than 5°
 in a pose that doesn't set its wrists. The grip's turn is `top.rotate` and `bottom.rotate`, each
-from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers handle bends the wrist,
-and a squat's elbow handle sets `grip.pole`.
+from `grip.rotate`, which stands for both ends. In Tune the wrist's two sliders at each end are
+labelled in words, "Wrist bend: + flexion / − extension" and "Wrist tilt: + radial (thumb side) /
+− ulnar (little-finger side)", and start straight where the entry sets no wrist; a drag of the
+fingers handle bends the wrist, and a squat's elbow handle sets `grip.pole`.
 
 ## Grips set by set
 
@@ -134,6 +149,8 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   key; anything else, a point or a list included, is replaced whole. Likes chain.
 - **`top` and `bottom`** give the values the motion moves between, eased; only the lowering is
   baked, from the top (0 s) to the bottom (1 s).
+- **`feet.y`** (standing motions) stands the feet on a platform that high, a deficit's; list the
+  `platform` kit in `kit` too, and it stands under them at that height.
 - **`body.arch`** (lying motions) bends the back: three angles, in degrees, added to the spine's
   lean for the lumbar, chest and upper-back segments. The lumbar and chest turn up and the upper
   back down, which lifts the chest and the lower back off the pad while the upper back and the
@@ -163,8 +180,9 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 
 | Motion | The body | Reads |
 | --- | --- | --- |
-| `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }`; `feet.kneesOut` |
-| `hinge` | a bar hanging in straight arms, an RDL | `shin`, `thigh`, `trunk`; `bar.z`, the bar's distance in front of the ankles |
+| `squat` | a bar on the back, kept over the middle of the feet | `shin`, `thigh` (and `trunk` when traced: the body then keeps its shape and turns about the ankles); `bar: { up, back }` (`back` negative racks it in front); `feet.kneesOut`; `grip.pole` for the elbows (with `grip.crossed`, how high they ride), and `grip.crossed`, a cross-arm front squat: the bar rides on the front delts and each hand lies open on the other shoulder at `grip.spot` [across, up, forward] from its joint, not gripping the bar |
+| `hinge` | a bar hanging in straight arms, straight up and down at `bar.z` in front of the ankles: an RDL, a deadlift, a shrug | `shin`, `thigh`, `trunk`; `shrug`, which lifts the bar with the shoulders; or, for a pull from the floor, `bar` (its height at the top and the bottom) in place of `trunk`: the trunk leans as far as the straight arms need, and the shins stand back where the bar would run into the shins or thighs |
+| `row` | hinged over, pulling a bar straight up and down at `bar.z`: a bent-over row, a Pendlay row | `shin`, `thigh`, `trunk`; `bar`, its height at the top and the bottom; `grip.pole` for the elbows. A drag of the hands sets the end's `bar` and `bar.z` |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared; `body.head`, the head's tilt from the spine to rest it on the pad |
 | `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
 | `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
@@ -172,11 +190,12 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
-| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend |
+| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles, `grip.across` [out, up, forward] the way their knuckles run |
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `ankle`, degrees from flat, heels up positive; `feet.ball` [y, z]; `pivot` [y, z], where the lever turns with the knees; `grip.at` [y, z], the hands on its handle at the stretch, `grip.width` |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `hip: [y, z]` at the top and bottom (the rails run between them); `body.trunk`; `feet: { y, z, tilt }` place the platform; `grip.at` [up, out] from the shoulders; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `pivot: [y, z]`; `handle: [y, z]` at the top and bottom, `press` 0 to 1 |
+| `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment
 
@@ -185,7 +204,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 
 | Equipment | Kits |
 | --- | --- |
-| `barbell` | `barbell`, `bench` |
+| `barbell` | `barbell`, `bench`, `platform` (a low one under the feet, for a deficit) |
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
@@ -220,7 +239,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
 
-- `bench` is flat, or adjustable with `angle` raising its back pad from flat.
+- `bench` is flat, or adjustable with `angle` raising its back pad from flat; with `across: z` it
+  stands across the body, its middle at that z (a hip thrust's), and its own `z` then runs along it
+  (so give `z: 0` to centre it).
 - `cable_column` is one adjustable column (or two, `twin`, mirrored at [-x, z]) standing at `at`
   [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
   toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
@@ -291,6 +312,7 @@ bake (nor does anything else in that bake):
 - **Feet:** each foot stands where the pose puts it, flat on the floor or on its plate, within 2 cm.
 - **Equipment:** no limb is more than 2 cm inside a solid part of the kit (a pad gives that much),
   and none passes into a thin part like a bar at all. Only the hands close round what they hold.
+  The floor counts as solid: nothing goes more than 1.5 cm into it.
 - **Joints:** knees and elbows bend no more than 155°, a knee turns no more than 60° from the hips'
   front, a hip flexes no more than 140° or extends past 30°, the head turns no more than 60° from
   the trunk, and the ankle stays between 55° and 160° from shin to foot.
