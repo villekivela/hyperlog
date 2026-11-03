@@ -13,6 +13,7 @@ import path from 'node:path';
 import { bakeAll } from './bake.mjs';
 import { loadClip } from './glb.mjs';
 import { POSES } from './poses.mjs';
+import { contactsOf } from './checks.mjs';
 import { X, gripTarget, heldAt, turnOf, wpos } from './rig.mjs';
 
 const deg = (r) => (r * 180) / Math.PI;
@@ -39,8 +40,11 @@ const posed = async (id, d, tuned = {}) => {
 for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_pulldown', 0], ['lat_pulldown', 1]]) {
   test(`${id}'s knuckles lie along the bar at ${d ? 'the bottom' : 'the top'}, the wrist within its reach`, async () => {
     const { knuckles, fingers, forearm } = await posed(id, d);
+    // The bar rests on the palm's skin (#162), 6-7 cm off this mannequin's deep palm, so a straight
+    // wrist rolls a little further round it than it did when the bar sat in the palm: a back
+    // squat's top crosses it 16°.
     const off = deg(Math.acos(Math.min(1, Math.abs(knuckles.dot(X)))));
-    assert.ok(off < 12, `the knuckles cross the bar ${off.toFixed(0)}° off its line`);
+    assert.ok(off < 18, `the knuckles cross the bar ${off.toFixed(0)}° off its line`);
     const bend = deg(fingers.angleTo(forearm));
     assert.ok(bend < 45, `the wrist bends ${bend.toFixed(0)}°`);
   });
@@ -85,7 +89,7 @@ test('a back squat offers its elbows in Tune, starting where the squat puts them
 // The owner, #127: a wrist the pose doesn't set stays straight, so the bar slants across the palm
 // where the elbows put the hand off square to it.
 test('elbows set back and down behind the bar keep the hands on it, the wrist straight', async () => {
-  const back = await posed('barbell_squat', 0, { 'grip.pole': [0.3, -0.6, -1] });
+  const back = await posed('barbell_squat', 0, { 'grip.pole': [0.3, -0.4, -1] });
   const elbow = wpos(back.stage.rig.bones.lowerarm_l);
   const shoulder = wpos(back.stage.rig.bones.upperarm_l);
   assert.ok(elbow.z < shoulder.z - 0.05 && elbow.y < shoulder.y, `the elbow at ${elbow.toArray().map((v) => v.toFixed(2))}, the shoulder at ${shoulder.toArray().map((v) => v.toFixed(2))}`);
@@ -122,15 +126,9 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
   test(`${id}'s fingers wrap the bar, touching it, none folded into the next`, async () => {
     const { stage, P } = await posed(id, d);
     const at = (n) => wpos(stage.rig.bones[n]);
-    const grip = gripTarget(P, 1);
-    const k = stage.rig.rest.hand_l;
-    const dir = k.across.clone().addScaledVector(k.dir.clone().normalize(), -k.across.dot(k.dir.clone().normalize())).applyQuaternion(turnOf(stage.rig, 'hand_l')).normalize();
-    const off = (p) => { const v = p.clone().sub(grip); return v.addScaledVector(dir, -v.dot(dir)).length(); };
+    // Each finger's skin on the bar's, within the contact check's 2 mm (#162).
+    for (const c of contactsOf(stage, P, 'l')) assert.ok(c.past <= 0, c.found);
     const order = ['index', 'middle', 'ring', 'pinky'];
-    for (const f of order) {
-      const tip = off(at(`${f}_04_leaf_l`));
-      assert.ok(tip > 0.016 && tip < 0.035, `the ${f} fingertip ${(tip * 100).toFixed(1)} cm off the bar's axis`);
-    }
     for (let i = 0; i < 3; i++) {
       const gap = at(`${order[i]}_03_l`).distanceTo(at(`${order[i + 1]}_03_l`));
       assert.ok(gap > 0.013, `the ${order[i]} and ${order[i + 1]} fingers ${(gap * 100).toFixed(1)} cm apart`);

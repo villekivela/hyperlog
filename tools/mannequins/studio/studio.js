@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import KEYS from './keys.json';
 import { helpOf, keymap, tokenOf } from './keys.mjs';
 import { FRAMES, buildStage, parseMannequin } from '../stage.mjs';
-import { checkStage } from '../checks.mjs';
+import { checkStage, contactsOf } from '../checks.mjs';
 import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
@@ -24,7 +24,7 @@ const $ = (id) => document.getElementById(id);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copy = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
-const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', error: "Can't pose" };
+const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', contact: 'Contact', error: "Can't pose" };
 const PANES = ['sidebar', 'stage', 'video', 'numbers'];
 
 // What the page keeps across a reload (a change to a recipe, a part or poses.mjs reloads it): where
@@ -113,6 +113,11 @@ let view = viewOf({ target: [0, 1, 0], halfHeight: 1.1, azimuth: 62, elevation: 
 const markers = new THREE.Group();
 scene.add(markers);
 const dot = new THREE.SphereGeometry(1, 16, 12);
+// In a hand's close-up, a dot wherever the hand stands off its bar or sinks into it past the
+// contact check's 2 mm (#162), on the frame shown.
+const misses = new THREE.Group();
+misses.renderOrder = 13;
+scene.add(misses);
 // The selected bone: a dot on its joint and its three axes, the one it turns about drawn strong.
 const gizmo = new THREE.Group();
 gizmo.renderOrder = 11;
@@ -265,14 +270,15 @@ function draw(now) {
   followVideo({ d, lifting: rep.lifting });
   if (state.clip && mixer) mixer.setTime(Math.min(d, 0.9999) * duration);
   // The live pose is posed under the clip too, for the bone the camera orbits and the hand it follows.
-  if (live) live.stage.pose(d);
+  const posed = live ? live.stage.pose(d) : null;
   // A kit's scrubbed joints are held where they are set, whatever the rep does.
   if (live && isKit()) {
     scrubAll(liveKits(), state.scrubs);
     paintJointValues();
   }
   follow();
-  for (const m of markers.children) m.scale.setScalar(camera.position.distanceTo(m.position) * 0.009);
+  markMisses(d, posed);
+  for (const m of [...markers.children, ...misses.children]) m.scale.setScalar(camera.position.distanceTo(m.position) * 0.009);
   paintGizmo();
   renderer.render(scene, camera);
   requestAnimationFrame(draw);
@@ -297,6 +303,25 @@ function follow() {
   if (held) place(moved(at.clone().sub(held)));
   held = at;
 }
+let missesAt = null; // the stage, frame and hand the misses were marked for
+/** Marks where the close-up's hand misses its bar, posed `P` at `d` of the rep; live poses only. */
+function markMisses(d, P) {
+  const on = Boolean(state.lock && hasBody() && !state.clip && P);
+  misses.visible = on;
+  if (!on) { missesAt = null; return; }
+  if (missesAt?.stage === live.stage && missesAt.d === d && missesAt.k === state.lock) return;
+  missesAt = { stage: live.stage, d, k: state.lock };
+  misses.clear();
+  for (const c of contactsOf(live.stage, P, state.lock)) {
+    if (c.past <= 0 || !c.at) continue;
+    const m = new THREE.Mesh(dot, new THREE.MeshBasicMaterial({ color: css('--fail'), depthTest: false, transparent: true, opacity: 0.95 }));
+    m.renderOrder = 13;
+    m.position.copy(c.at);
+    m.name = c.found;
+    misses.add(m);
+  }
+}
+
 /** `view` moved by `by` (a vector), the camera with its target. */
 const moved = (by) => ({ ...view, target: new THREE.Vector3(...view.target).add(by).toArray() });
 

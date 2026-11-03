@@ -101,7 +101,7 @@ export default recipe({
         crossbar.position.copy(local(bar, padZ));
         kneePads.forEach((m, i) => m.position.copy(local(padBottom + 0.035, padZ)).setX((i ? 1 : -1) * 0.11));
         handle.position.copy(local(bar + 0.007, padZ));
-        grips.forEach((m, i) => span(m, local(bar + 0.02, padZ).setX((i ? 1 : -1) * 0.13), local(bar + 0.1, padZ).setX((i ? 1 : -1) * 0.13)));
+        grips.forEach((m, i) => span(m, local(bar + 0.02, padZ).setX((i ? 1 : -1) * 0.13), local(bar + 0.14, padZ).setX((i ? 1 : -1) * 0.13)));
         horns.forEach(({ horn, collar, plate }, i) => {
           const s = i ? 1 : -1;
           const at = local(pivot.y, pivot.z - 0.12);

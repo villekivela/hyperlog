@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { V, X, rad } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
+import { LANDMARKS, holdOf } from './grip.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -21,11 +22,20 @@ const floor = { point: V(0, 0, 0), normal: V(0, 1, 0) };
 // they bend.
 const STRAIGHT = 0.995;
 
-/** The movements that hold the bar low in the palm: the presses and the squats. */
-const PALM_GRIPS = new Set(['bench_press', 'dumbbell_press', 'squat', 'pressdown', 'chest_press']);
+/** How far along the palm from the wrist the pose's grip sits: its landmark's (`grip.mjs`). */
+const depthOf = (e, L) => L.palmLength * (LANDMARKS[holdOf(e).sits] ?? LANDMARKS.base);
 
-/** How far along the palm the motion's grip sits: low in the palm for a press, at the fingers' roots for a pull. */
-const depthOf = (e, L) => (PALM_GRIPS.has(e.motion) ? L.gripPalm : L.gripAlong);
+/**
+ * Where a forearm swinging side-on `deg` from hanging, from `elbow`, holds its bar with a straight
+ * wrist: along it past the wrist to the grip's landmark, and off its line toward the palm as far as
+ * the bar is seated (`L.seatOff`). The palm faces the way the elbow straightens in an overhand grip,
+ * the way it bends in an underhand one, and neither in a neutral one (`rotate`, degrees).
+ */
+function heldPast(e, elbow, deg, rotate, L) {
+  const { sits, thumb } = holdOf(e);
+  const bends = V(0, Math.sin(rad(deg)), Math.cos(rad(deg)));
+  return elbow.clone().addScaledVector(hanging(deg), L.fore + depthOf(e, L)).addScaledVector(bends, -Math.cos(rad(rotate)) * L.seatOff(sits, thumb));
+}
 
 /** The values `top` and `bottom` give, `d` of the way down the rep (0 at the top, 1 at the bottom). */
 export function stateAt(e, d) {
@@ -80,9 +90,9 @@ export function frameAt(e, d, L) {
   if (s.wrist) P.wrist = s.wrist;
   // The bones turned on top of the solve (`poseRig`).
   if (s.offsets) P.offsets = s.offsets;
-  // A press or a squat holds the bar low in the palm, stacked over the forearm; a pull at the
-  // fingers' roots.
-  if (PALM_GRIPS.has(e.motion)) P.gripDepth = 'palm';
+  // Where the bar sits in the hand and the thumb (`grip.mjs`); with `grip.one` the other hand rests.
+  P.hold = holdOf(e);
+  if (e.grip?.one) P.resting = -e.grip.one;
   // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
   if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;
@@ -377,7 +387,7 @@ export const MOTIONS = {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.35).normalize(),
       ...standingFeet(e, L),
-      bar: elbow.clone().addScaledVector(hanging(s.forearm), L.fore + depthOf(e, L)),
+      bar: heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L),
       grip: e.grip.width,
       armPole: (side) => V(side * 0.2, -1, -0.4).normalize(),
     };
@@ -446,6 +456,7 @@ export const MOTIONS = {
       ...seatedFeet(e, L),
       // Horizontal handles, held like a bar: the knuckles run along them.
       hand: handle,
+      across: (side) => X.clone().multiplyScalar(-side),
       armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
       pivot, handle, swing,
     };
@@ -509,7 +520,7 @@ export const MOTIONS = {
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
-    const bar = elbow.clone().addScaledVector(hanging(s.forearm), L.fore + L.gripAlong);
+    const bar = heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L);
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),

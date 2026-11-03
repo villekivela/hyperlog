@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
+import { buildKit } from './kit.mjs';
 import { tempoOf } from './tempo.mjs';
 import { POSES } from './poses.mjs';
 
@@ -31,8 +32,10 @@ for (const id of Object.keys(POSES)) {
     const stage = await buildStage(entry);
     const heads = [];
     stage.kit.group.traverse((o) => { if (o.userData.stack) heads.push(o); });
-    // Built, before it is first placed, a stack sits at its rest.
-    const rest = heads.map((h) => h.position.y);
+    // Built, before it is first placed, a stack sits at its rest (the stage places its own kit as the
+    // hands close on what they hold, so a fresh one).
+    const rest = [];
+    buildKit(entry).group.traverse((o) => { if (o.userData.stack) rest.push(o.position.y); });
     const { lowering, lifting } = tempoOf(entry);
     stage.pose(lowering < lifting ? 0 : 1);
     heads.forEach((h, i) => assert.ok(h.position.y > rest[i] + 0.03, `stack ${i}: ${(h.position.y - rest[i]).toFixed(3)} m off its rest at the stretch`));

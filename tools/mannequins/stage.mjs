@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { buildRig, poseRig } from './rig.mjs';
+import { buildRig, gripTarget, poseRig } from './rig.mjs';
+import { heldAt, heldParts, piecesOf } from './grip.mjs';
 import { frameAt } from './motions.mjs';
 import { MATERIALS, buildKit, floorShadow } from './kit.mjs';
 
@@ -37,6 +38,9 @@ async function loadMannequin() {
 const STEPS = 60;
 /** How many steps either side an arm's roll and turn are averaged over, so a change of branch eases in. */
 const EASE = 6;
+/** The same for the fingers' closing, over fewer: each is solved to touch, and an average of many stands off. */
+const EASE_FINGERS = 2;
+const EASE_THUMB = 4;
 
 /**
  * Each side's straight arm (the hand's roll `t` and the elbow's turn `p`) followed step by step
@@ -45,11 +49,14 @@ const EASE = 6;
  * changes branch, or a finger finds the bar at another point, it turns over a few frames instead
  * of jumping. What `pose(d)` takes, by step; a side without a straight arm keeps its own.
  */
-function followArms(rig, frame) {
+function followArms(rig, frame, holding) {
   const pass = (order) => {
     const out = [];
     let near = {};
-    for (const i of order) near = out[i] = poseRig(rig, frame(i / STEPS), near);
+    for (const i of order) {
+      const P = frame(i / STEPS);
+      near = out[i] = poseRig(rig, P, near, holding(P));
+    }
     return out;
   };
   const steps = [...Array(STEPS + 1).keys()];
@@ -59,14 +66,14 @@ function followArms(rig, frame) {
   const arms = steps.map(() => ({}));
   // Runs of steps that have a value, each averaged twice (a triangle), evenly either side and
   // narrower toward the ends, so the ends keep their own and a steady change stays as it is.
-  const smoothed = (values) => {
+  const smoothed = (values, ease = EASE) => {
     const out = [];
     for (let i = 0; i < values.length;) {
       if (!values[i]) { i++; continue; }
       let j = i;
       while (j < values.length && values[j]) j++;
       const average = (xs) => xs.map((_, n) => {
-        const r = Math.min(EASE, n, xs.length - 1 - n);
+        const r = Math.min(ease, n, xs.length - 1 - n);
         const near = xs.slice(n - r, n + r + 1);
         return xs[0].map((__, c) => near.reduce((sum, x) => sum + x[c], 0) / near.length);
       });
@@ -83,10 +90,15 @@ function followArms(rig, frame) {
       if (!turns[n] || !turns[n - 1]) continue;
       for (const c of [0, 1]) turns[n][c] += Math.round((turns[n - 1][c] - turns[n][c]) / (2 * Math.PI)) * 2 * Math.PI;
     }
+    // Each digit's joints' angles, laid end to end.
     const names = Object.keys(chosen.find((a) => a?.fingers)?.fingers ?? {});
-    const closings = smoothed(chosen.map((a) => (a?.fingers ? names.map((f) => a.fingers[f]) : null)));
+    const laid = chosen.map((a) => (a?.fingers ? names.flatMap((f) => a.fingers[f]) : null));
+    // The thumb over more steps: where it moves from the bar onto the fingers it turns quickly.
+    const [fingers, thumbs] = [EASE_FINGERS, EASE_THUMB].map((ease) => smoothed(laid, ease));
+    const thumbAt = 3 * names.indexOf('thumb');
+    const closings = fingers.map((c, i) => c && (thumbAt < 0 ? c : [...c.slice(0, thumbAt), ...thumbs[i].slice(thumbAt, thumbAt + 3), ...c.slice(thumbAt + 3)]));
     smoothed(turns).forEach(([t, p, q], i) => Object.assign(arms[i][k] ??= { at: true }, { t, p, q }));
-    closings.forEach((c, i) => { if (c) (arms[i][k] ??= { at: true }).fingers = Object.fromEntries(names.map((f, n) => [f, c[n]])); });
+    closings.forEach((c, i) => { if (c) (arms[i][k] ??= { at: true }).fingers = Object.fromEntries(names.map((f, n) => [f, c.slice(3 * n, 3 * n + 3)])); });
   }
   return arms;
 }
@@ -110,11 +122,36 @@ export async function buildStage(entry, body) {
   scene.add(shadow);
   const top = frameAt(entry, 0, rig.dims);
   const bottom = frameAt(entry, 1, rig.dims);
-  const frame = (d) => (d === 0 ? top : d === 1 ? bottom : frameAt(entry, d, rig.dims));
-  const arms = followArms(rig, frame);
+  // The radius of what each hand holds, the kit's part under it at the top: the hand is seated on
+  // it before the arm reaches (`poseRig`). Both ends are posed first, so the kit's first placing
+  // (which may measure where its parts rest from them, as a stack does) has them whole.
+  poseRig(rig, bottom);
+  poseRig(rig, top);
+  kit.place(top, top, bottom);
+  const radius = {};
+  for (const s of [-1, 1]) {
+    const held = heldAt(heldParts(kit), gripTarget(top, s));
+    if (held) radius[s] = held.radius;
+  }
+  const frame = (d) => Object.assign(d === 0 ? top : d === 1 ? bottom : frameAt(entry, d, rig.dims), { radius });
+  // What the hand on side `s` holds in frame `P`, as the fingers close on it: the kit placed for the
+  // arms as they are, and the part under the hand, along its own line (the way the hand holds it),
+  // in pieces (a grip's sleeve and the bar under it). Null for a hand that holds nothing.
+  const holding = (P) => (s) => {
+    kit.place(P, top, bottom);
+    const grip = gripTarget(P, s);
+    const held = heldAt(heldParts(kit), grip);
+    if (!held) return null;
+    const along = held.along.clone();
+    if (P.held?.[s] && along.dot(P.held[s]) < 0) along.negate();
+    // On the part's own axis, beside the grip: a kit may place its part a little off the pose's point.
+    const at = held.at.clone().addScaledVector(along, grip.clone().sub(held.at).dot(along));
+    return { at, along, radius: held.radius, pieces: piecesOf(held, at, along) };
+  };
+  const arms = followArms(rig, frame, holding);
   const pose = (d) => {
     const P = frame(d);
-    poseRig(rig, P, arms[Math.round(d * STEPS)]);
+    poseRig(rig, P, arms[Math.round(d * STEPS)], holding(P));
     kit.place(P, top, bottom);
     scene.updateMatrixWorld(true);
     return P;

@@ -82,8 +82,12 @@ export default recipe({
     let rope = null;
     let handles = null;
     if (attachment === 'rope') {
-      const strands = [-1, 1].map((s) => ({ s, strand: part(rodGeometry(0.011, 10), M.vinyl, { held: true }), end: knob(M, V(0, 0, 0), 0.02) }));
-      strands.forEach(({ strand, end }) => ends.push(strand, end));
+      // Each strand down from the ring to the fist, through it, and out to its end stop: 28 mm rope
+      // with 60 mm stops (docs/research/grip.md, section 4.4).
+      const strands = [-1, 1].map((s) => ({
+        s, strand: part(rodGeometry(0.014, 12), M.vinyl), fist: part(rodGeometry(0.014, 12), M.vinyl, { held: true }), end: knob(M, V(0, 0, 0), 0.03),
+      }));
+      strands.forEach(({ strand, fist, end }) => ends.push(strand, fist, end));
       const ring = clevis(M, 0);
       ends.push(ring);
       rope = { strands, ring };
@@ -145,11 +149,17 @@ export default recipe({
         if (rope) {
           const { hook } = hooks[0];
           rope.ring.position.copy(hook);
-          rope.strands.forEach(({ s, strand, end }) => {
+          // The rope bends at the fist: it runs through it along the knuckles (`P.held`, from the
+          // little finger's side to the index finger's), in at the index finger's side and out at
+          // the little finger's, where its end stop sits against the hand.
+          rope.strands.forEach(({ s, strand, fist, end }) => {
             const h = P.hand(s);
-            const beyond = h.clone().addScaledVector(h.clone().sub(hook).normalize(), 0.06);
-            span(strand, hook, beyond);
-            end.position.copy(beyond);
+            const across = (P.held?.[s] ?? h.clone().sub(hook)).clone().normalize();
+            const into = h.clone().addScaledVector(across, 0.05);
+            const out = h.clone().addScaledVector(across, -0.06);
+            span(strand, hook, into);
+            span(fist, into, out);
+            end.position.copy(out).addScaledVector(across, -0.03);
           });
           points.rope = [-1, 1].map((s) => P.hand(s).clone());
         }
