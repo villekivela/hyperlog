@@ -1301,107 +1301,245 @@ function lyingLegCurl({ bench: [from, to] = [-0.45, 0.85], height = 0.62 } = {})
 }
 
 /**
- * A seated calf raise: a seat, a platform under the balls of the feet, and a pad over the knees on
- * a lever that pivots ahead of the platform, loaded with a plate a side, rising with the knees.
+ * A plate-loaded seated calf raise, after a Hammer Strength-style one (#150): a beam along the floor
+ * with feet across both ends, the seat on its post at the back, a low foot block across the beam,
+ * the balls of the feet on its back edge, and a post in front of the toes. The lever pivots on the
+ * post's head, about as high as the pads, and runs back over the shins to the pads on the thighs
+ * just behind the knees, a crossbar over them with a U-handle on top; a horn either side behind the
+ * pivot is loaded with a 20. The lever is flat at the stretch, where a peg on the post sits a few
+ * centimetres under it, and turns up with the knees, the pads riding the thighs.
  */
 function calfRaise({ seat = [0.48, -0.05] } = {}) {
   const M = tones();
-  const kneePad = pad(0.42, 0.06, 0.14, M.vinyl, V(0, 0, 0), { soft: 0.02 });
-  const arms = [-1, 1].map(() => stretchedTube(0.05, M.frame));
-  const loads = [-1, 1].map((s) => loadedHorn(M, s));
-  const handles = sideHandles(M);
-  const bosses = [-1, 1].map(() => hub(M, V(0, 0, 0)));
-  // The levers' pivot stands on a post either side, on a floor rail across.
-  const pivotPosts = [-1, 1].map(() => stretchedTube(0.06, M.frame));
-  const pivotRail = movableRail(M);
+  const [seatY, seatZ] = seat;
+  // What stands still: the base, the seat, the foot block, and the post with the pivot and its peg.
+  const beam = stretchedTube(0.07, M.frame);
+  const beamCaps = [0, 1].map(() => pad(0.016, 0.074, 0.074, M.vinyl, V(0, 0, 0), { soft: 0.005, solid: false }));
+  const frontFeet = movableRail(M);
+  const block = part(padGeometry(0.46, 0.12, 0.14, 0.006), M.frame, { solid: true });
+  const deck = part(padGeometry(0.44, 0.006, 0.12, 0.002), M.metal);
+  const post = stretchedTube(0.07, M.frame);
+  const postPlate = pad(0.12, 0.012, 0.12, M.frame, V(0, 0, 0), { soft: 0.003, solid: false });
+  const cheeks = [-1, 1].map(() => part(padGeometry(0.012, 0.13, 0.11, 0.003), M.frame));
+  const boss = hub(M, V(0, 0, 0));
+  const axle = part(rodGeometry(0.008, 12), M.metal);
+  const peg = part(rodGeometry(0.014, 12), M.metal);
+  const pegKnob = knob(M, V(0, 0, 0), 0.02);
+  // The lever, built flat at the stretch about the pivot and turned there as one.
+  const lever = new THREE.Group();
+  lever.name = 'calf_raise_lever';
+  const arm = stretchedTube(0.07, M.frame);
+  const drop = stretchedTube(0.055, M.frame);
+  const pin = popPin(V(0, 0, 0), 1, M);
+  const crossbar = part(padGeometry(0.46, 0.014, 0.13, 0.003), M.frame);
+  const kneePads = [-1, 1].map(() => part(padGeometry(0.19, 0.07, 0.14, 0.025), M.vinyl, { solid: true }));
+  const handle = bent('calf_raise_u', [V(-0.13, 0, 0), V(-0.13, 0.1, 0), V(-0.1, 0.14, 0), V(0.1, 0.14, 0), V(0.13, 0.1, 0), V(0.13, 0, 0)], 0.016, M.frame);
+  const grips = [-1, 1].map(() => part(rodGeometry(0.0195), M.vinyl, { held: true }));
+  const horns = [-1, 1].map(() => ({
+    horn: part(rodGeometry(0.025, 20), M.metal, { solid: true }),
+    collar: part(rodGeometry(0.045, 24), M.metal),
+    plate: part(plateGeometry(0.225, 0.05), M.plate, { solid: true }),
+  }));
+  lever.add(arm, drop, pin, crossbar, ...kneePads, handle, ...grips, ...horns.flatMap((h) => [h.horn, h.collar, h.plate]));
   const g = group('calf_raise', [
-    ...seatOn(seat[0], seat[1], M, { pin: -1 }),
-    ...floorRail(V(0, 0.035, seat[1] - 0.2), V(0, 0.035, seat[1] + 1.0), M),
-    ...floorRail(V(-0.35, 0.035, seat[1] + 1.0), V(0.35, 0.035, seat[1] + 1.0), M),
-    kneePad, ...arms, ...loads.flatMap((l) => l.parts), ...handles.parts, ...bosses, ...pivotPosts, ...pivotRail.parts,
+    ...seatOn(seatY, seatZ, M, { pin: -1 }),
+    ...floorRail(V(-0.3, 0.035, seatZ - 0.17), V(0.3, 0.035, seatZ - 0.17), M),
+    beam, ...beamCaps, ...frontFeet.parts, block, deck, post, postPlate, ...cheeks, boss, axle, peg, pegKnob, lever,
   ]);
-  let platform = null;
   return {
     group: g,
-    place(P, P0) {
-      if (!platform) {
-        // The balls stand on its back edge; the heels hang off behind it.
-        const at = P0.platform;
-        platform = pad(0.5, 0.05, 0.2, M.frame, V(0, at.y - 0.025, at.z + 0.06), { soft: 0.006 });
-        platform.name = 'calf_raise_platform';
-        const legs = tube(0.06, V(0, 0.07, at.z + 0.06), V(0, at.y - 0.05, at.z + 0.06), M.frame);
-        legs.name = 'calf_raise_platform_post';
-        g.add(platform, legs);
-      }
-      const knee = P.knee;
-      const top = knee.clone().add(V(0, 0.1, -0.02));
-      kneePad.position.copy(top);
-      const pivot = P0.platform.clone().add(V(0, -0.02, 0.45));
-      pivotRail.set(pivot.z, 0.35);
-      [-1, 1].forEach((s, i) => {
-        const end = top.clone().setX(s * 0.26);
-        const p = pivot.clone().setX(s * 0.26);
-        bosses[i].position.copy(p);
-        span(pivotPosts[i], p.clone().setX(s * 0.32), V(s * 0.32, 0.07, p.z));
-        span(arms[i], end, p);
-        loads[i].place(top.clone().lerp(pivot, 0.5).setX(s * 0.28));
+    place(P, P0, P1) {
+      // The foot block, the balls on its back edge and the heels hanging off behind it.
+      const ball = P0.platform;
+      block.position.set(0, ball.y - 0.006 - 0.06, ball.z + 0.03);
+      deck.position.set(0, ball.y - 0.003, ball.z + 0.03);
+      // The pads sit 6 cm over the knees at the stretch, on the thighs a hand's breadth back from
+      // them; the pivot, the pose's, stands in front of the toes, a little above the pads' undersides.
+      const knee = P1.knee;
+      const padZ = knee.z - 0.05;
+      const pivot = P0.pivot;
+      lever.position.copy(pivot);
+      // The base, from behind the seat to the front feet under the post, and the post up to the pivot.
+      const rear = seatZ - 0.17;
+      const front = pivot.z + 0.1;
+      span(beam, V(0, 0.035, rear), V(0, 0.035, front));
+      railCap(beamCaps[0], V(0, 0, rear - 0.035), V(0, 0, -1));
+      railCap(beamCaps[1], V(0, 0, front + 0.035), V(0, 0, 1));
+      frontFeet.set(front, 0.4);
+      span(post, V(0, 0.07, pivot.z + 0.07), V(0, pivot.y + 0.05, pivot.z + 0.07));
+      postPlate.position.set(0, 0.076, pivot.z + 0.07);
+      cheeks.forEach((c, i) => c.position.set((i ? 1 : -1) * 0.042, pivot.y, pivot.z + 0.035));
+      boss.position.set(0.06, pivot.y, pivot.z);
+      span(axle, V(-0.06, pivot.y, pivot.z), V(0.09, pivot.y, pivot.z));
+      // The peg out of the post's back, under the lever at the stretch: a working lever is held off it.
+      const pegY = pivot.y - 0.035 - 0.04;
+      span(peg, V(0, pegY, pivot.z + 0.035), V(0, pegY, pivot.z - 0.09));
+      pegKnob.position.set(0, pegY, pivot.z - 0.09);
+      // The lever in the pivot's frame: the arm back to the pads, a drop down to their crossbar, the
+      // U-handle on it and the horns behind the pivot.
+      const local = (y, z) => V(0, y - pivot.y, z - pivot.z);
+      const padBottom = knee.y + 0.06;
+      const bar = padBottom + 0.077;
+      span(arm, local(pivot.y, pivot.z + 0.035), local(pivot.y, padZ + 0.03));
+      span(drop, local(pivot.y + 0.035, padZ + 0.03), local(bar, padZ + 0.03));
+      pin.position.copy(local(pivot.y - 0.01, padZ + 0.09));
+      crossbar.position.copy(local(bar, padZ));
+      kneePads.forEach((m, i) => m.position.copy(local(padBottom + 0.035, padZ)).setX((i ? 1 : -1) * 0.11));
+      handle.position.copy(local(bar + 0.007, padZ));
+      grips.forEach((m, i) => span(m, local(bar + 0.02, padZ).setX((i ? 1 : -1) * 0.13), local(bar + 0.1, padZ).setX((i ? 1 : -1) * 0.13)));
+      horns.forEach(({ horn, collar, plate }, i) => {
+        const s = i ? 1 : -1;
+        const at = local(pivot.y, pivot.z - 0.12);
+        span(horn, at, at.clone().setX(s * 0.42));
+        span(collar, at.clone().setX(s * 0.2), at.clone().setX(s * 0.22));
+        plate.position.copy(at).setX(s * 0.25);
       });
-      handles.place(P, (s, h) => V(s * (Math.abs(h.x) - 0.02), 0.07, h.z - 0.07));
+      // The lever turns about the pivot with the knees, as the pose turns it: the pads ride the thighs.
+      lever.rotation.x = -P.turn;
     },
   };
 }
 
+/** How far either side of the middle a hack squat's rails run. */
+const HACK_RAILS = 0.17;
+
 /**
- * A hack squat: a foot platform tilted toes up, two rails up the sled's line behind the back, and a
- * carriage riding them with the back pad, a roller over each shoulder and a handle by each, loaded
- * with a plate a side.
+ * A plate-loaded hack squat, after a Hammer Strength-style machine (#150): a base along the floor
+ * with feet across both ends; the foot platform low in front, tilted toes up on its legs; two chrome
+ * rails along the hips' path, from a bracket just behind the platform up to a capped post at the
+ * rear, braced back to the base and carrying a storage horn a side; and the carriage riding the
+ * rails on bearings. The carriage holds the back pad, its face `pad` metres behind the hips' line,
+ * a pad over each shoulder, a handle by each that lies along the hand's knuckles, and a horn a side
+ * loaded with a 20. It moves as one, along the rails, with the hips.
  */
-function squatMachine() {
+function squatMachine({ pad: behind = 0.2 } = {}) {
   const M = tones();
-  const backRest = backPad(0.4, 0.62, M, { up: 0.3, behind: 0.21 });
-  const plate = pad(0.7, 0.04, 0.55, M.frame, V(0, 0, 0), { soft: 0.008 });
-  const rails = [-1, 1].map(() => stretchedTube(0.07, M.frame));
-  const legs = [-1, 1].map(() => stretchedTube(0.06, M.frame));
-  const shoulderPads = [-1, 1].map(() => part(rollerGeometry(0.05, 0.1), M.vinyl, { solid: true }));
-  const handles = [-1, 1].map(() => part(rodGeometry(0.0165), M.vinyl, { held: true }));
-  const carriage = [-1, 1].map(() => stretchedTube(0.05, M.frame));
-  const loads = [-1, 1].map((s) => loadedHorn(M, s));
-  // The carriage rides each rail on two rollers; the rails are tied across at both ends.
-  const rollers = [0, 1, 2, 3].map(() => turnedPart(wheelGeometry(0.035, 0.03), M.pulley, V(0, 0, 0), { solid: false }));
-  const ties = [0, 1].map(() => stretchedTube(0.06, M.frame));
+  // What stands still: the base, the platform and its legs, the rails, their bracket and cap, and
+  // the rear post with its brace and horns.
+  const beam = stretchedTube(0.07, M.frame);
+  const beamCaps = [0, 1].map(() => pad(0.016, 0.074, 0.074, M.vinyl, V(0, 0, 0), { soft: 0.005, solid: false }));
+  const feet = [0, 1].map(() => movableRail(M));
+  const platform = part(padGeometry(0.76, 0.035, 0.58, 0.008), M.frame, { solid: true });
+  const deck = part(padGeometry(0.7, 0.006, 0.52, 0.002), M.metal);
+  const platformLegs = [-1, 1].map(() => stretchedTube(0.06, M.frame));
+  const platformBack = stretchedTube(0.05, M.frame);
+  const rails = [-1, 1].map(() => part(rodGeometry(0.025, 20), M.metal, { solid: true }));
+  const bracket = part(padGeometry(0.46, 0.07, 0.1, 0.006), M.frame, { solid: true });
+  const bracketPost = stretchedTube(0.06, M.frame);
+  const cap = part(padGeometry(0.48, 0.08, 0.12, 0.008), M.frame, { solid: true });
+  const post = stretchedTube(0.08, M.frame);
+  const postPlate = pad(0.13, 0.012, 0.13, M.frame, V(0, 0, 0), { soft: 0.003, solid: false });
+  const brace = stretchedTube(0.06, M.frame);
+  const storage = [-1, 1].map(() => part(rodGeometry(0.025, 20), M.metal));
+  // The carriage, placed at the top of the rep and moved as one with the hips.
+  const carriage = new THREE.Group();
+  carriage.name = 'squat_machine_carriage';
+  const cushion = part(padGeometry(0.42, 0.62, 0.08, 0.025), M.vinyl, { solid: true });
+  const board = part(padGeometry(0.38, 0.58, 0.012, 0.003), M.frame);
+  const members = [-1, 1].map(() => stretchedTube(0.05, M.frame));
+  const crossbars = [0, 1].map(() => stretchedTube(0.05, M.frame));
+  const bearings = [0, 1, 2, 3].map(() => part(padGeometry(0.075, 0.14, 0.075, 0.01), M.pulley));
+  const shoulderPads = [-1, 1].map(() => part(padGeometry(0.12, 0.08, 0.24, 0.025), M.vinyl, { solid: true }));
+  const shoulderBoards = [-1, 1].map(() => part(padGeometry(0.1, 0.012, 0.22, 0.003), M.frame));
+  const mounts = [-1, 1].map(() => stretchedTube(0.05, M.frame));
+  const grips = [-1, 1].map(() => ({
+    bar: part(rodGeometry(0.016), M.metal, { held: true }),
+    sleeve: part(rodGeometry(0.0195), M.vinyl, { held: true }),
+    end: knob(M, V(0, 0, 0), 0.022),
+    arm: stretchedTube(0.04, M.frame),
+  }));
+  const horns = [-1, 1].map(() => ({
+    horn: part(rodGeometry(0.025, 20), M.metal, { solid: true }),
+    stop: part(rodGeometry(0.045, 24), M.metal),
+    plate: part(plateGeometry(0.225, 0.05), M.plate, { solid: true }),
+  }));
+  carriage.add(cushion, board, ...members, ...crossbars, ...bearings, ...shoulderPads, ...shoulderBoards, ...mounts,
+    ...grips.flatMap((h) => [h.bar, h.sleeve, h.end, h.arm]), ...horns.flatMap((h) => [h.horn, h.stop, h.plate]));
   const g = group('squat_machine', [
-    ...floorRail(V(0, 0.035, -0.9), V(0, 0.035, 0.8), M),
-    ...[-0.9, 0.8].flatMap((z) => floorRail(V(-0.4, 0.035, z), V(0.4, 0.035, z), M)),
-    plate, backRest.mesh, ...rails, ...legs, ...shoulderPads, ...handles, ...carriage, ...loads.flatMap((l) => l.parts),
-    ...rollers, ...ties,
+    beam, ...beamCaps, ...feet.flatMap((f) => f.parts), platform, deck, ...platformLegs, platformBack,
+    ...rails, bracket, bracketPost, cap, post, postPlate, brace, ...storage, carriage,
   ]);
   return {
     group: g,
     place(P, P0) {
-      backRest.fit(P);
-      const q = new THREE.Quaternion().setFromUnitVectors(UP, P.plateUp);
-      plate.position.copy(P.face).addScaledVector(P.plateUp, -0.02).addScaledVector(X.clone().cross(P.plateUp), 0.1);
-      plate.quaternion.copy(q);
-      const back = X.clone().cross(P0.u).normalize().negate();
-      const line = P0.hipC.clone().addScaledVector(back, 0.3);
-      const f = X.clone().cross(P.u).normalize();
-      [-1, 1].forEach((s, i) => {
-        const lo = line.clone().addScaledVector(P.sled, -0.9).setX(s * 0.25);
-        const hi = line.clone().addScaledVector(P.sled, 0.75).setX(s * 0.25);
-        span(rails[i], lo, hi);
-        span(legs[i], hi, hi.clone().setY(0.07));
-        const over = P.shoulders.clone().add(V(s * 0.14, 0, 0)).addScaledVector(P.u, 0.115).addScaledVector(f, -0.01);
-        shoulderPads[i].position.copy(over);
-        const h = P.hand(s);
-        span(handles[i], h.clone().addScaledVector(f, -0.05), h.clone().addScaledVector(f, 0.06));
-        const rail = P.hipC.clone().addScaledVector(back, 0.3).setX(s * 0.25);
-        span(carriage[i], rail.clone().addScaledVector(P.u, -0.1), rail.clone().addScaledVector(P.u, 0.62));
-        // On the rail's face toward the body, the carriage between.
-        [-0.05, 0.5].forEach((t, k) => rollers[2 * i + k].position.copy(rail).addScaledVector(P.u, t).addScaledVector(back, -0.06));
-        const end = (i ? hi : lo).clone();
-        span(ties[i], end.clone().setX(-0.25), end.clone().setX(0.25));
-        loads[i].place(rail.clone().addScaledVector(P.u, 0.1).setX(s * 0.27));
+      // The carriage's frame at the top of the rep: `sled` up the rails, `face` out of the back pad's
+      // face, from the `origin` on the pad's face at the hips.
+      const sled = P0.sled.clone();
+      const face = X.clone().cross(sled).normalize();
+      const origin = P0.hipC.clone().addScaledVector(face, -behind);
+      const at = (along, out, x = 0) => origin.clone().addScaledVector(sled, along).addScaledVector(face, out).setX(x);
+      const facing = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, sled, face));
+      const lay = (mesh, along, out, x = 0) => { mesh.position.copy(at(along, out, x)); mesh.quaternion.copy(facing); };
+      const shoulder = P0.shoulders.clone().sub(origin).dot(sled);
+      const top = shoulder + 0.12;
+      // The rails, behind the carriage, from just above the floor to a cap 30 cm past the carriage's
+      // top at the top of the rep.
+      const railOut = -0.21;
+      const bottom = (0.17 - origin.y - face.y * railOut) / sled.y;
+      const end = top + 0.3;
+      [-1, 1].forEach((side, i) => span(rails[i], at(bottom, railOut, side * HACK_RAILS), at(end, railOut, side * HACK_RAILS)));
+      lay(bracket, bottom - 0.03, railOut);
+      lay(cap, end + 0.04, railOut);
+      const low = at(bottom - 0.03, railOut);
+      span(bracketPost, low, low.clone().setY(0.07));
+      // The rear post stands under the cap; a brace runs back from it to the base's rear end.
+      const head = at(end + 0.04, railOut - 0.06);
+      const rearZ = head.z - 0.3;
+      span(post, head, head.clone().setY(0.012));
+      postPlate.position.set(0, 0.006, head.z);
+      span(brace, V(0, head.y * 0.5, head.z), V(0, 0.07, rearZ + 0.04));
+      storage.forEach((h, i) => span(h, V(0, head.y * 0.62, head.z), V((i ? 1 : -1) * 0.26, head.y * 0.62, head.z)));
+      // The platform, its face under the feet, its back edge just ahead of the heels; two legs down
+      // from its front to the front feet, and a strut from its back to the base.
+      const up = P0.plateUp.clone();
+      const ahead = X.clone().cross(up).normalize();
+      const middle = P0.face.clone().addScaledVector(up, -0.0175).addScaledVector(ahead, 0.13);
+      platform.position.copy(middle);
+      platform.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, up, ahead));
+      deck.position.copy(middle).addScaledVector(up, 0.0205);
+      deck.quaternion.copy(platform.quaternion);
+      const front = middle.clone().addScaledVector(ahead, 0.18).addScaledVector(up, -0.02);
+      const frontZ = front.z;
+      platformLegs.forEach((leg, i) => span(leg, front.clone().setX((i ? 1 : -1) * 0.27), V((i ? 1 : -1) * 0.27, 0.07, frontZ)));
+      const under = middle.clone().addScaledVector(ahead, -0.12).addScaledVector(up, -0.02);
+      span(platformBack, under, V(0, 0.07, under.z));
+      // The base: a beam from the rear feet to the front feet, capped at both ends.
+      span(beam, V(0, 0.035, rearZ), V(0, 0.035, frontZ));
+      railCap(beamCaps[0], V(0, 0, rearZ - 0.035), V(0, 0, -1));
+      railCap(beamCaps[1], V(0, 0, frontZ + 0.035), V(0, 0, 1));
+      feet[0].set(rearZ, 0.6);
+      feet[1].set(frontZ, 0.45);
+      // The carriage: the back pad on its board, two members behind it riding the rails on bearings,
+      // a pad over each shoulder on a mount off the members' heads, and a loaded horn a side.
+      const padMiddle = (shoulder - 0.03 - 0.15) / 2;
+      lay(cushion, padMiddle, -0.04);
+      lay(board, padMiddle, -0.086);
+      [-1, 1].forEach((side, i) => {
+        const x = side * HACK_RAILS;
+        span(members[i], at(-0.2, -0.14, x), at(top, -0.14, x));
+        [-0.12, shoulder].forEach((t, k) => lay(bearings[2 * i + k], t, railOut, x));
+        lay(shoulderPads[i], shoulder + 0.11, 0.1, side * 0.155);
+        lay(shoulderBoards[i], shoulder + 0.156, 0.1, side * 0.155);
+        span(mounts[i], at(top, -0.14, x), at(shoulder + 0.16, -0.01, side * 0.155));
+        // The handle runs the way the pose lays the grip at the top, fixed on the carriage: the
+        // wrists turn the knuckles along it. It sits on an arm back to the shoulder pad's outer side.
+        const { bar, sleeve, end: knobEnd, arm } = grips[i];
+        const h = P.hand(side).sub(P.hipC).add(P0.hipC);
+        const along = P0.across(side).normalize();
+        const mount = at(shoulder + 0.11, 0.02, side * 0.225);
+        const [near, far] = [-1, 1].map((k) => h.clone().addScaledVector(along, k * 0.1)).sort((a, b) => a.distanceTo(mount) - b.distanceTo(mount));
+        span(bar, near, far);
+        span(sleeve, h.clone().addScaledVector(along, -0.055), h.clone().addScaledVector(along, 0.055));
+        knobEnd.position.copy(far);
+        span(arm, near, mount);
+        const { horn, stop, plate } = horns[i];
+        const from = at(-0.05, -0.17, x);
+        span(horn, from, from.clone().setX(side * 0.52));
+        span(stop, from.clone().setX(side * 0.24), from.clone().setX(side * 0.26));
+        plate.position.copy(from).setX(side * 0.3);
       });
+      [-0.2, top].forEach((t, k) => span(crossbars[k], at(t, -0.14, -HACK_RAILS), at(t, -0.14, HACK_RAILS)));
+      carriage.position.copy(P.hipC).sub(P0.hipC);
     },
   };
 }

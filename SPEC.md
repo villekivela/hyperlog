@@ -1535,8 +1535,18 @@ gallery (Technique videos).
       adjustable seats; the leg extension's and seated curl's cable turning down to the hub over a
       second wheel in its housing, their back pads braced to the stack's frame; the calf raise's
       and preacher's hubs on posts and mounts, nothing hanging in the air; the hack squat's
-      carriage on rollers; the row's and pulldown's posts on floor rails; and the preacher loaded
+      carriage on bearings; the row's and pulldown's posts on floor rails; and the preacher loaded
       with a plate a side.
+    - **Machines from reference** (owner, 2026-11-03, #150): the hack squat and the seated calf raise
+      copy a real plate-loaded machine's layout and size, after Hammer Strength's, with no photo or
+      model in the repo. The hack squat, about 2.1 m long, 1.25 m wide and 1.55 m high, has its
+      platform low in front, tilted toes up, and chrome rails along the hips' path from behind it to
+      a capped, braced post at the rear; the carriage rides them on bearings with the back pad, the
+      shoulder pads, a loaded horn a side and handles beside the head, the elbows out, each lying
+      along the knuckles of the hand that holds it. The seated calf raise, about 1.35 m long, 0.85 m
+      wide and 1.1 m high, has a foot block under the balls and a lever pivoting on a post in front
+      of the toes, level with the knee pads, so the pads ride the thighs as it turns; the hands hold
+      a U-handle on the lever, and a plate loads a horn either side behind the pivot.
     - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
       palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
       #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #3A3A40, 0.95 (dark a step up from the
