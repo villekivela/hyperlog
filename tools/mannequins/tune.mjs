@@ -35,6 +35,10 @@ export function valueAt(entry, path) {
   return steps(path).reduce((v, k) => (v === undefined || v === null ? undefined : v[k]), entry);
 }
 
+/** A bone's offset at an end (`top.offsets.Head`), [x, y, z] in degrees, and a bone's where the entry turns it not at all. */
+const OFFSET = /^(top|bottom)\.offsets\.\w+$/;
+const NO_OFFSET = [0, 0, 0];
+
 /** A hand's wrist, [flexion, deviation], where the entry sets none: straight. */
 const STRAIGHT_WRIST = [0, 0];
 
@@ -43,7 +47,9 @@ const STRAIGHT_WRIST = [0, 0];
  * entry leaves unset starts straight.
  */
 export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.motion]?.[path]
-  ?? (entry.grip && /^(top|bottom)\.wrist$/.test(path) ? STRAIGHT_WRIST : undefined);
+  ?? (entry.grip && /^(top|bottom)\.wrist$/.test(path) ? STRAIGHT_WRIST : undefined)
+  ?? (OFFSET.test(path) ? NO_OFFSET : undefined)
+  ?? (OFFSET.test(path.replace(/\.[012]$/, '')) ? 0 : undefined);
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -123,6 +129,8 @@ function leaves(value, path, out) {
 /** The range, step and unit that suit the number at `path`, by what it is called: a step is a degree, a millimetre or a hundredth of a ratio. */
 function rangeOf(path, value) {
   const key = steps(path).filter((k) => !/^\d+$/.test(k)).at(-1);
+  // A bone turns all the way round, either way.
+  if (steps(path)[1] === 'offsets') return { min: -180, max: 180, step: 1, unit: '°' };
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
   // A wrist bends well past the hand's own turn to the bar.
   if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
@@ -138,6 +146,8 @@ const WRIST_WORDS = ['Wrist bend: + flexion / − extension', 'Wrist tilt: + rad
 
 /** A slider's label: in words where its path doesn't say what it does, else the path. */
 export function labelOf(path) {
+  const bone = path.match(/^(top|bottom)\.offsets\.(\w+)\.([012])$/);
+  if (bone) return `${bone[1] === 'top' ? 'Top' : 'Bottom'} · ${bone[2]} · ${'xyz'[Number(bone[3])]}`;
   const m = path.match(/^(top|bottom)\.wrist\.([01])$/);
   if (!m) return path;
   return `${m[1] === 'top' ? 'Top' : 'Bottom'} · ${WRIST_WORDS[Number(m[2])]}`;
@@ -151,6 +161,7 @@ export const HEADINGS = [
   { name: 'Feet', open: true },
   { name: 'Arms', open: false },
   { name: 'Legs', open: false },
+  { name: 'Bones', open: false },
   { name: 'Equipment', open: false },
   { name: 'Other', open: false },
 ];
@@ -160,6 +171,7 @@ export function headingOf(path) {
   const ks = steps(path).filter((k) => !/^\d+$/.test(k));
   const [section, key] = ks;
   const name = section === 'kit' ? 'Equipment'
+    : key === 'offsets' ? 'Bones'
     : ['width', 'lockout'].includes(key) && section === 'grip' ? 'Grip'
     : ['rotate', 'tilt'].includes(key) ? 'Grip'
     : section === 'grip' ? 'Arms'

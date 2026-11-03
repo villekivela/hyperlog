@@ -32,15 +32,28 @@
     {
       "name": "Numbers",
       "keys": [
-        { "keys": "h", "command": "less", "count": true, "does": "Step the selected number down (1° or 1 mm)" },
-        { "keys": "l", "command": "more", "count": true, "does": "Step the selected number up (1° or 1 mm)" },
+        { "keys": "h", "command": "less", "count": true, "does": "Step the selected number down (1° or 1 mm), or on the stage turn the selected bone back 1° on its axis" },
+        { "keys": "l", "command": "more", "count": true, "does": "Step the selected number up (1° or 1 mm), or on the stage turn the selected bone on 1° on its axis" },
         { "keys": "H", "command": "lessFine", "count": true, "does": "Step it down by a tenth of that" },
         { "keys": "L", "command": "moreFine", "count": true, "does": "Step it up by a tenth of that" },
         { "keys": "=", "command": "type", "does": "Type an exact value (12.5, or +2 relative), Enter to set, Esc to cancel" },
-        { "keys": "R", "command": "reset", "does": "Reset to the entry's default" },
+        { "keys": "R", "command": "reset", "does": "Reset to the entry's default (a bone's turn to what is saved)" },
         { "keys": "p", "command": "perAngle", "does": "Tune at this bench angle only, or at all of them" },
         { "keys": "u", "command": "undo", "count": true, "does": "Undo" },
         { "keys": "<C-r>", "command": "redo", "count": true, "does": "Redo" }
+      ]
+    },
+    {
+      "name": "Bones",
+      "keys": [
+        { "keys": "[", "command": "boneParent", "does": "Select the bone's parent (the pelvis first)" },
+        { "keys": "]", "command": "boneChild", "does": "Select its first child" },
+        { "keys": "{", "command": "bonePrevious", "does": "Select the previous sibling" },
+        { "keys": "}", "command": "boneNext", "does": "Select the next sibling" },
+        { "keys": "m", "command": "boneMirror", "does": "Select the mirror bone on the other side" },
+        { "keys": "x", "command": "axisX", "does": "Turn the bone about x: across the body, as it stood in the bind pose" },
+        { "keys": "y", "command": "axisY", "does": "Turn the bone about y: up" },
+        { "keys": "z", "command": "axisZ", "does": "Turn the bone about z: forward" }
       ]
     },
     {
@@ -49,8 +62,24 @@
         { "keys": "gf", "command": "cameraFront", "does": "Front" },
         { "keys": "gs", "command": "cameraSide", "does": "Side" },
         { "keys": "gt", "command": "cameraTop", "does": "Top" },
+        { "keys": "gc", "command": "cameraClip", "does": "Back to the clip's own framing" },
+        { "keys": "gh", "command": "closeUpLeft", "does": "Close up on the left hand, where it holds" },
+        { "keys": "gl", "command": "closeUpRight", "does": "Close up on the right hand, where it holds" },
+        { "keys": "gp", "command": "plates", "does": "Hide the plates, or show them" },
         { "keys": "<Left>", "command": "turnLeft", "count": true, "does": "Turn 10° left" },
-        { "keys": "<Right>", "command": "turnRight", "count": true, "does": "Turn 10° right" }
+        { "keys": "<Right>", "command": "turnRight", "count": true, "does": "Turn 10° right" },
+        { "keys": "<A-h>", "command": "orbitLeft", "count": true, "does": "Orbit left round the bone, or the body: 5°, or a count's degrees" },
+        { "keys": "<A-l>", "command": "orbitRight", "count": true, "does": "Orbit right: 5°, or a count's degrees (15 Alt+l)" },
+        { "keys": "<A-j>", "command": "orbitDown", "count": true, "does": "Orbit down, under the floor too: 5°, or a count's degrees" },
+        { "keys": "<A-k>", "command": "orbitUp", "count": true, "does": "Orbit up, over the top too: 5°, or a count's degrees" },
+        { "keys": "<A-H>", "command": "panLeft", "count": true, "does": "Pan left a tenth of what the view shows" },
+        { "keys": "<A-J>", "command": "panDown", "count": true, "does": "Pan down" },
+        { "keys": "<A-K>", "command": "panUp", "count": true, "does": "Pan up" },
+        { "keys": "<A-L>", "command": "panRight", "count": true, "does": "Pan right" },
+        { "keys": "<A-i>", "command": "dollyIn", "count": true, "does": "Dolly in, a tenth of the way" },
+        { "keys": "<A-o>", "command": "dollyOut", "count": true, "does": "Dolly out" },
+        { "keys": "<A-,>", "command": "rollLeft", "count": true, "does": "Roll left: 5°, or a count's degrees" },
+        { "keys": "<A-.>", "command": "rollRight", "count": true, "does": "Roll right: 5°, or a count's degrees" }
       ]
     },
     {
@@ -81,6 +110,7 @@
     }
   ],
   "ex": [
-    { "name": "w", "command": "save", "does": "Save into poses.mjs and re-bake" }
+    { "name": "w", "command": "save", "does": "Save into poses.mjs and re-bake" },
+    { "name": "frame", "command": "saveFraming", "does": "Save the view as the clip's framing (the turn and tilt the phone opens on, and how much it shows), and re-bake" }
   ]
 }

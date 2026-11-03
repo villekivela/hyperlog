@@ -360,6 +360,28 @@ function straightArm(sh, grip, along, L, pole, palmOf, depth, off, pull = POLE_P
 }
 
 /**
+ * Turns each of `names` by the pose's offset for it (`P.offsets`, [x, y, z] in degrees), on top of
+ * where the solve put it: about the axes the bone had in the bind pose (x across the body, y up, z
+ * forward), carried with it, so its children turn with it. A turn multiplies the bone's own, so the
+ * order the names come in doesn't matter; only that nothing aims them after. Returns the names done.
+ */
+function offset(rig, P, names) {
+  const done = [];
+  for (const name of names) {
+    const o = P.offsets?.[name];
+    if (!o) continue;
+    const bone = rig.bones[name];
+    if (!bone) throw new Error(`No bone ${name} to turn`);
+    const wq = rig.rest[name].wq;
+    const turn = new THREE.Quaternion().setFromEuler(new THREE.Euler(rad(o[0]), rad(o[1]), rad(o[2]), 'XYZ'));
+    bone.quaternion.multiply(wq.clone().invert().multiply(turn).multiply(wq));
+    bone.updateMatrixWorld(true);
+    done.push(name);
+  }
+  return done;
+}
+
+/**
  * Poses the rig from a pose frame: the hip centre and trunk direction, the head's direction, the
  * ankles, the feet's way, knee and elbow poles, and where the hands hold. A pose can also bend
  * the spine (`spine`) or lift the shoulders (`shrug`). `near` is each side's straight arm and
@@ -368,6 +390,9 @@ function straightArm(sh, grip, along, L, pole, palmOf, depth, off, pull = POLE_P
  */
 export function poseRig(rig, P, near = {}) {
   const arms = {};
+  // The bones turned on top of the solve so far: the trunk's and the shoulders' before the limbs
+  // reach from them, so the hands and feet still hold; a limb's after it is solved; the rest last.
+  const turned = new Set();
   const { bones, rest, dims: L } = rig;
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
   // The fingers close round what the hand holds, further for a bar low in the palm; an open hand
@@ -383,6 +408,7 @@ export function poseRig(rig, P, near = {}) {
   // segment (an arched back).
   for (const n of ['pelvis', 'spine_01', 'spine_02', 'spine_03']) aim(rig, n, P.spine?.[n] ?? P.u, X);
   aim(rig, 'neck_01', P.headDir, X);
+  for (const n of offset(rig, P, [...SPINE])) turned.add(n);
   // Shoulders let up (`shrug`, degrees) or down: each collarbone turns about the body's front axis.
   if (P.shrug) {
     const front = X.clone().cross(P.u).normalize();
@@ -391,6 +417,7 @@ export function poseRig(rig, P, near = {}) {
       setWorldQuat(clavicle, new THREE.Quaternion().setFromAxisAngle(front, sideOf(rig, k) * rad(P.shrug)).multiply(wquat(clavicle)));
     }
   }
+  for (const n of offset(rig, P, ['clavicle_l', 'clavicle_r'])) turned.add(n);
   for (const k of ['l', 'r']) {
     const s = sideOf(rig, k);
     const i = s < 0 ? 0 : 1;
@@ -407,6 +434,7 @@ export function poseRig(rig, P, near = {}) {
     const { heading, top } = P.foot ? P.foot(s) : { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
     const toe = heading.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(top, -Math.sin(L.footPitch));
     aim(rig, 'foot_' + k, toe, toe.clone().cross(top));
+    for (const n of offset(rig, P, ['thigh_', 'calf_', 'foot_'].map((b) => b + k))) turned.add(n);
     // The arm: the bar lies across the palm at the base of the fingers, so the wrist sits short of
     // it along the fingers and off it on the back of the hand. The forearm sets both, so iterate.
     const sh = wpos(bones['upperarm_' + k]);
@@ -476,6 +504,8 @@ export function poseRig(rig, P, near = {}) {
     (P.held ??= {})[s] = handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
     aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
     aim(rig, 'hand_' + k, fingers, inward);
+    // A turned arm before the fingers close, so they close round what the hand holds where it is now.
+    for (const n of offset(rig, P, ['upperarm_', 'lowerarm_', 'hand_'].map((b) => b + k))) turned.add(n);
     // The fingers close round what the hand holds, as far as they touch it.
     if (!P.openHands) {
       // A bar or a set handle lies its own way, slanting across the palm or not; a free handle
@@ -485,5 +515,6 @@ export function poseRig(rig, P, near = {}) {
       (arms[k] ??= {}).fingers = closed;
     }
   }
+  offset(rig, P, Object.keys(P.offsets ?? {}).filter((n) => !turned.has(n)));
   return arms;
 }

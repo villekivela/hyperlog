@@ -174,9 +174,18 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   forward from hanging straight down. A motion turns them into the mannequin's own joints.
 - **`trace: <name>`** reads `traces/<name>.json`. Each angle it holds replaces that angle's `top`
   and `bottom`, sample by sample.
+- **`top.offsets`, `bottom.offsets`** turn any bone on top of the solve (#164): `{ <bone>: [x, y, z] }`
+  in degrees, about the axes the bone had in the bind pose (x across the body, y up, z forward),
+  carried with it, so its children turn with it. They ease between the ends like the rest, and a
+  bone turned at one end alone eases from none at the other. The trunk's and the shoulder blades'
+  are turned before the limbs reach from them, so the hands and feet still hold; a limb's after
+  it is solved (a hand's before its fingers close round what it holds), and the fingers' and toes'
+  last. A hand turned this way counts as the pose setting its wrist. An entry without offsets
+  bakes byte for byte as it did.
 - **`camera`** frames the stage: `target` is the point the camera looks at, `halfHeight` half the
   height it shows there, and `azimuth` and `elevation` the turn and tilt it opens on. A double-tap
-  on the phone returns to them. `shadow: { size: [w, d], at: [x, z] }` moves the floor shadow.
+  on the phone returns to them. An adjustable bench's `bench.cameras` gives framings by angle, and
+  each angle's moves steadily between the nearest given either side. `shadow: { size: [w, d], at: [x, z] }` moves the floor shadow.
 
 The motions, in `motions.mjs`, and what each reads besides the above:
 
@@ -404,6 +413,20 @@ listens on localhost only.
   marked in that order, the loop is the rep: the lowering is A to B and the lift B to C, both
   played forward. A step or a scrub of the video moves the stage, the stage's own play, holds and
   steps move the video, and both play at the clip's tempo, slowed to the video's speed.
+- **Bones** (#164): `[` `]` walk to a bone's parent and its first child, `{` `}` to its siblings,
+  `m` to the mirror bone, and `/` finds one by name; the pelvis is the first. `x` `y` `z` pick the
+  axis it turns about, drawn strong on the stage with the other two faint. With the stage focused
+  and the rep held at the top or the bottom, `h` `l` `H` `L` `=` `R` turn the bone as they step a
+  number, into that end's `offsets`; every frame is solved again and the checks re-run. The turn
+  is a number in the numbers panel too, under Bones. `Esc` lets the bone go.
+- **The camera** is free in the studio (`view.mjs`): it orbits on both axes, over the top and under
+  the floor, round the selected bone or the body's centre, and pans, dollies and rolls, from the
+  keys or the mouse (drag, right-drag, wheel). `gh` `gl` close up on the left and the right hand
+  where it holds and follow it through the rep, `gc` goes back to the clip's framing, and `gp`
+  hides the plates (every part in the plate tone) to see the hands on the bar; that is a view
+  setting only. `:frame` saves the view as the clip's `camera` (an adjustable bench's
+  `bench.cameras` at the angle shown) and re-bakes: the target, how much it shows, the turn and the
+  tilt, the view brought the right way up if it is over the top; the phone has no roll.
 - **Saving** (`:w`) writes the tuned numbers into `poses.mjs` as text (`patch.mjs`, so the comments
   stay) and re-bakes every clip in a process of its own (the kit files are shared, so one clip
   can't bake alone), then shows the new clip. A pose that fails its checks doesn't bake, any pose,
@@ -433,11 +456,20 @@ one (`5l`, `3j`). A new key goes into `keys.json`, under its group, with what it
 | `h` `l`, `H` `L`, `=`, `R` | Step the selected number, a tenth of a step, type a value, reset it |
 | `<` `>`, `p` | Bench angle down / up; tune the number per angle |
 | `gf` `gs` `gt`, `←` `→` | Front, side and top cameras; turn 10° |
+| `[` `]`, `{` `}`, `m` | The selected bone's parent, child; previous, next sibling; the mirror bone |
+| `x` `y` `z` | The axis the bone turns about (`h` `l` `H` `L` `=` `R` turn it, on the stage) |
+| `gh` `gl`, `gc` | Close up on the left, the right hand; back to the clip's framing |
+| `gp` | Hide the plates, or show them |
+| `Alt+h` `Alt+l`, `Alt+j` `Alt+k` | Orbit left, right; down, up: 5°, or a count's degrees (`15 Alt+l`) |
+| `Alt+H` `Alt+J` `Alt+K` `Alt+L` | Pan left, down, up, right, a tenth of what the view shows |
+| `Alt+i` `Alt+o`, `Alt+,` `Alt+.` | Dolly in, out; roll left, right |
+| `:frame` | Save the view as the clip's framing, and re-bake |
 | `u` / `Ctrl+r` | Undo / redo |
 | `:w` | Save and re-bake |
 | `o` / `a` | OK the exercise (again takes it back) / add a note |
 
-With the video focused, its own keys take over (a group in `keys.json` with `"focus": "video"`):
+With the video focused, its own keys take over (a group in `keys.json` with `"focus": "video"`), and
+`[` `]` `}` `z` `h` `l` `H` `L` are the video's there, not the bones':
 
 | Key | Does |
 | --- | --- |
@@ -479,7 +511,8 @@ has now.
 - `render.mjs`: PNGs of a pose, with no GPU.
 - `studio/`: the studio. `plugin.mjs` its server, `studio.js` and `index.html` its page,
   `keys.json` and `keys.mjs` its keymap, `video.mjs` the technique video's steps, speeds and sync,
-  `vite.config.mjs` what `npm run studio` serves.
+  `view.mjs` the free camera, the hands' close-ups and the plates' toggle, `bones.mjs` the walk of
+  the skeleton, `vite.config.mjs` what `npm run studio` serves.
 - `tune.mjs`, `handles.mjs`, `patch.mjs`: the studio's numbers, its drag handles, and the text patch
   a save writes into `poses.mjs`.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.

@@ -1654,6 +1654,32 @@ gallery (Technique videos).
       A→B and the lift B→C, both played forward and never in reverse. Scrubbing or stepping either
       one moves the other, and both play together at the clip's tempo, both slowed with the video's
       speed. Drawing the video over the stage with a matched camera waits until this has been used.
+    - **Any bone, at the top and the bottom** (owner, 2026-11-03, #164): any bone (the spine's
+      segments, the neck, the head, the shoulder blades, the hips, knees, ankles, wrists and
+      fingers) can be selected and turned on any axis, at the top or the bottom of the rep. The turn
+      is saved in the entry as a bone offset on top of the solve (`top.offsets` and
+      `bottom.offsets`, `{ <bone>: [x, y, z] }` in degrees about the axes the bone had in the bind
+      pose: x across the body, y up, z forward). Every frame between is solved again: the two ends
+      blended, then the limbs reaching what they hold and stand on, since the trunk's and the
+      shoulder blades' turns come before the limbs are solved; the rep replays at once with the
+      checks on every frame. A hand turned this way counts as the pose setting its wrist. An entry
+      without offsets bakes byte for byte as before. `[` `]` walk to the parent and the child bone,
+      `{` `}` the previous and next sibling, `m` the mirror bone, `/` finds a bone by name, `x` `y`
+      `z` pick the axis, and on the stage `h` `l` `H` `L` `=` `R` turn it as they step a number;
+      outside the video pane, which keeps its own `[` `]` `}` `z`.
+    - **A free camera, in the studio only** (owner, 2026-11-03, #164): it orbits on both axes
+      (over the top and under the floor) round the selected bone, or the body's centre with none
+      selected, pans, dollies and rolls: `Alt+h` `Alt+l` `Alt+j` `Alt+k` orbit 5° or a count's
+      degrees (`15 Alt+l` is 15°), `Alt+H` `Alt+J` `Alt+K` `Alt+L` pan, `Alt+i` `Alt+o` dolly and
+      `Alt+,` `Alt+.` roll; the mouse drags to orbit, right-drags to pan and wheels to zoom. `gh`
+      `gl` close up on the left and the right hand where it meets the bar, following it through the
+      rep, and `gc` goes back to the clip's own framing. `gp` hides every part made of the plate
+      tone (barbell plates, dumbbell heads, stack plates) so the hands can be seen, and shows them
+      again (owner, #164): a view setting only, nothing saved and the bake unchanged. `:frame` saves
+      the view as the clip's framing (the target, how much it shows, the turn and tilt the phone
+      opens on; the phone has no roll) and re-bakes; an adjustable bench's at the angle shown, the
+      angles between moving steadily from one given framing to the next. The phone keeps #120's
+      gesture rule: a horizontal drag turns, a vertical drag scrolls the sheet.
   - **Batches and review:** poses are made in batches. The owner OKs each exercise in the studio, or
     leaves a note the agent reads and fixes. An OK is for the clip it was given on, and a batch isn't
     done until every exercise in it is OK. A batch that adds or changes a machine or a part is

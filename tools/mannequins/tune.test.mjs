@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, atAngle, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
+import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
@@ -144,4 +144,26 @@ test('each wrist number turns the hand as the studio poses it, on every pose wit
     }
   }
   assert.deepEqual(still, [], 'from -15 to 15 the hand turned only');
+});
+
+// A bone's offset (#164) is three numbers at each end, [x, y, z] in degrees: the bones the entry
+// turns are numbers like any other, under their own heading, and a bone it doesn't turn starts at none.
+test('a bone\'s offset is a number per axis, in degrees under Bones, and a bone not turned starts at none', () => {
+  const entry = applyTuned(prepare('barbell_squat'), { 'bottom.offsets': { Head: [10, 0, -4] } });
+  const t = byPath(tunables(entry));
+  assert.equal(t['bottom.offsets.Head.0'].value, 10);
+  assert.equal(t['bottom.offsets.Head.2'].value, -4);
+  assert.equal(t['bottom.offsets.Head.1'].unit, '°');
+  assert.equal(t['bottom.offsets.Head.1'].step, 1);
+  assert.ok(t['bottom.offsets.Head.1'].min <= -180 && t['bottom.offsets.Head.1'].max >= 180);
+  assert.equal(headingOf('bottom.offsets.Head.0').name, 'Bones');
+  assert.equal(labelOf('bottom.offsets.Head.0'), 'Bottom · Head · x');
+  assert.equal(labelOf('top.offsets.spine_02.2'), 'Top · spine_02 · z');
+  // A turn of a bone the entry leaves alone puts its offset in whole; turned back, it comes out again.
+  const tuned = withTuned(entry, {}, 'top.offsets.clavicle_l.1', 5);
+  assert.deepEqual(tuned, { 'top.offsets.clavicle_l': [0, 5, 0] });
+  assert.deepEqual(withTuned(entry, tuned, 'top.offsets.clavicle_l.1', 0), {});
+  // Reset, an axis goes back to what the entry has: none for a bone it doesn't turn.
+  assert.equal(baseAt(entry, 'bottom.offsets.Head.0'), 10);
+  assert.equal(baseAt(entry, 'top.offsets.clavicle_l.1'), 0);
 });

@@ -53,11 +53,15 @@ export function resolve(id, poses = POSES) {
   return entry;
 }
 
-/** The stage's framing at `angle`, from the framings given at the ends: each number moves steadily from one end's to the other's. */
+/**
+ * The stage's framing at `angle`, from the framings given at some angles: each number moves steadily
+ * from the nearest given below to the nearest above, and past the ends stays at theirs.
+ */
 function cameraAt(cameras, angle) {
   const at = Object.keys(cameras).map(Number).sort((a, b) => a - b);
-  const [lo, hi] = [at[0], at.at(-1)];
-  const t = Math.min(1, Math.max(0, (angle - lo) / (hi - lo)));
+  const hi = at.find((a) => a >= angle) ?? at.at(-1);
+  const lo = at.findLast((a) => a <= angle) ?? at[0];
+  const t = hi === lo ? 0 : (angle - lo) / (hi - lo);
   const [a, b] = [cameras[lo], cameras[hi]];
   const mix = (x, y) => Math.round((x + (y - x) * t) * 1e4) / 1e4;
   return { target: a.target.map((v, i) => mix(v, b.target[i])), halfHeight: mix(a.halfHeight, b.halfHeight), azimuth: mix(a.azimuth, b.azimuth), elevation: mix(a.elevation, b.elevation) };
