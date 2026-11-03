@@ -337,7 +337,8 @@ class AskClaudeAppTest {
     @Test
     fun easeBackInOpensCoachWithTheWordsFilledIn() {
         runStarter()
-        runBlocking { db.sessions().insertSession(SessionEntity(startedAt = daysAgo(11), finishedAt = daysAgo(11) + 3_600_000)) }
+        val last = daysAgo(11)
+        runBlocking { db.sessions().insertSession(SessionEntity(startedAt = last, finishedAt = last + 3_600_000)) }
         // Today reads the last session again when it shows.
         compose.openTab("Program")
         compose.waitFor("Ramp-in · weeks 1–2", substring = true)
@@ -380,7 +381,7 @@ class AskClaudeAppTest {
         // Nine days since the last session, but you train only on the weekday two days ago: 2 days off.
         val planned = LocalDate.now().minusDays(2).dayOfWeek
         runBlocking {
-            db.sessions().insertSession(SessionEntity(startedAt = daysAgo(9), finishedAt = daysAgo(9) + 3_600_000))
+            daysAgo(9).let { db.sessions().insertSession(SessionEntity(startedAt = it, finishedAt = it + 3_600_000)) }
             com.hyperlog.app.week.WeekdayPlans(db).set(com.hyperlog.app.week.WeekdayPlan(mapOf(planned to null)))
         }
         compose.openTab("Program")
