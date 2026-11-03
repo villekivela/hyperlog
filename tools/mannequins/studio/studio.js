@@ -16,7 +16,7 @@ import { BENCH_ANGLES } from '../entries.mjs';
 import { faster, repAt, slower, spanOf, stepFrames, stepSeconds, synced, timeAt, zoomOf } from './video.mjs';
 import { HALF_FOV, closeUpOf, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
 import { skeletonOf } from './bones.mjs';
-import { jointsOf, limitOf, scrubAll, showJoint, stepJoint, typedJoint } from './joints.mjs';
+import { inUnits, jointsOf, limitOf, limitsOf, scrubAll, showJoint, stepJoint, stepsOf, typedJoint } from './joints.mjs';
 import { between, heldAt, turnOf, wpos } from '../rig.mjs';
 
 const keys = keymap(KEYS);
@@ -54,6 +54,7 @@ const state = {
   find: null, // { matches, at }
   input: null, // what the bar or a box is taking: find, ex, type or note
   typing: null, // the number the bar's `type` sets: a bone's offset
+  typingJoint: null, // or the kit's joint it sets
   video: null, // the item's technique video: { link, start, loop, src, fps, duration } once fetched
   sync: remembered.sync ?? true, // the video and the rep move together, once the loop is set
   speed: remembered.speed ?? 1,
@@ -267,7 +268,7 @@ function draw(now) {
   if (live) live.stage.pose(d);
   // A kit's scrubbed joints are held where they are set, whatever the rep does.
   if (live && isKit()) {
-    scrubAll(live.stage.kit.kits, state.scrubs);
+    scrubAll(liveKits(), state.scrubs);
     paintJointValues();
   }
   follow();
@@ -456,9 +457,9 @@ async function rebuild() {
     body.visible = !isKit();
     setLive({ stage, entry });
     if (isKit()) {
-      // Posed once, so the kit has its joints to list.
+      // Posed once, so the kit has its joints to list: its own, not those of a kit beside it.
       stage.pose(state.d);
-      state.joints = jointsOf(stage.kit.kits);
+      state.joints = jointsOf({ [state.item.id]: stage.kit.kits[state.item.id] });
       if (!state.joints.some((j) => j.key === state.joint)) state.joint = state.joints[0]?.key ?? null;
       paintNumbers();
     }
@@ -754,7 +755,7 @@ function paintNumbers() {
   box.replaceChildren();
   if (isKit() && state.joints.length) { paintJoints(); return; }
   if (!state.item?.entry || isKit()) {
-    box.innerHTML = `<p style="padding: 4px 12px; color: var(--quiet)">${isKit() ? (state.item?.entry ? 'Nothing on this kit moves: it has no joints. Its numbers are the entry\'s that uses it: tune them there.' : 'Nothing to scrub without a pose that uses it.') : 'Nothing to tune without a pose.'}</p>`;
+    box.innerHTML = `<p style="padding: 4px 12px; color: var(--quiet)">${isKit() ? `${noJoints()}. The entry that uses it holds its numbers: tune them there.` : 'Nothing to tune without a pose.'}</p>`;
     paintStep();
     return;
   }
@@ -879,9 +880,13 @@ function nudge(direction, fine, count) {
 // With a kit on stage, its numbers are its joints (joints.mjs). A joint scrubbed is held where it is
 // set while the rep plays round it, its stack with it; reset, it goes back to where the rep has it.
 const selectedJoint = () => state.joints.find((j) => j.key === state.joint);
+/** The kits on the live stage, by name. */
+const liveKits = () => live?.stage.kit.kits ?? {};
 /** Where joint `j` is now: where it is scrubbed to, or where the rep has it. */
-const jointNow = (j) => state.scrubs[j.key] ?? live?.stage.kit.kits[j.kit]?.joints[j.body]?.value ?? 0;
+const jointNow = (j) => state.scrubs[j.key] ?? liveKits()[j.kit]?.joints[j.body]?.value ?? 0;
 const jointLabel = (j) => `${j.kit} ${j.body}`;
+/** Why a kit has no joint to scrub. */
+const noJoints = () => (state.item?.entry ? 'Nothing on this kit moves: it has no joints' : 'Nothing to scrub without a pose that uses it');
 
 function paintJoints() {
   const box = $('sliders');
@@ -897,7 +902,7 @@ function paintJoints() {
     row.innerHTML = '<label></label><span class="value"></span><input type="range" tabindex="-1">';
     const [label, , range] = row.children;
     label.textContent = jointLabel(j);
-    label.title = `${j.type}, ${showJoint(j, j.limits[0])} to ${showJoint(j, j.limits[1])}`;
+    label.title = `${j.type}, ${limitsOf(j)}`;
     range.min = j.limits[0];
     range.max = j.limits[1];
     range.step = 'any';
@@ -926,11 +931,11 @@ function paintJointStep() {
   const j = selectedJoint();
   const step = $('step');
   if (!j) { step.textContent = ''; return; }
-  const by = j.type === 'revolute' ? ['1°', '0.1°'] : ['1 cm', '1 mm'];
+  const by = stepsOf(j);
   step.innerHTML = '';
   const add = (html) => step.insertAdjacentHTML('beforeend', html);
   add(`<strong></strong>`);
-  step.querySelector('strong').textContent = `${jointLabel(j)}, ${showJoint(j, j.limits[0])} to ${showJoint(j, j.limits[1])}`;
+  step.querySelector('strong').textContent = `${jointLabel(j)}, ${limitsOf(j)}`;
   add(`<span><kbd>${keys.keyOf('less')}</kbd><kbd>${keys.keyOf('more')}</kbd> ${by[0]}</span>`);
   add(`<span><kbd>${keys.keyOf('lessFine')}</kbd><kbd>${keys.keyOf('moreFine')}</kbd> ${by[1]}</span>`);
   add(`<span><kbd>${keys.keyOf('lowest')}</kbd><kbd>${keys.keyOf('highest')}</kbd> limits</span>`);
@@ -955,14 +960,14 @@ function moveJoint(by, absolute) {
 /** Scrubs joint `j` to `value`, within its limits. */
 function setJoint(j, value) {
   state.scrubs[j.key] = value;
-  if (live) scrubAll(live.stage.kit.kits, { [j.key]: value });
+  scrubAll(liveKits(), { [j.key]: value });
   paintJointValues();
 }
 
 /** Runs `fn` on the selected joint, or says there is none. */
 function onJoint(fn) {
   const j = selectedJoint();
-  if (!j) { message(state.item?.entry ? 'Nothing on this kit moves: it has no joints' : 'Nothing to scrub without a pose that uses it'); return; }
+  if (!j) { message(noJoints()); return; }
   fn(j);
 }
 
@@ -971,9 +976,9 @@ const limitJoint = (end) => onJoint((j) => { setJoint(j, limitOf(j, end)); messa
 const resetJoint = () => onJoint((j) => { delete state.scrubs[j.key]; paintJointValues(); message(`${jointLabel(j)} back where the rep has it`); });
 function typeJoint() {
   onJoint((j) => {
-    state.typing = { joint: j };
+    state.typingJoint = j;
     openBar('type', `${jointLabel(j)} = `);
-    $('line').value = String(parseFloat(showJoint(j, jointNow(j))));
+    $('line').value = String(inUnits(j, jointNow(j)));
     $('line').select();
   });
 }
@@ -1401,6 +1406,7 @@ function typeValue() {
   // A bone's offset is typed on the command line: it may have no row yet.
   if (t.path.includes('.offsets.')) {
     state.typing = t;
+    state.typingJoint = null;
     openBar('type', `${labelOf(t.path)} = `);
     $('line').value = String(Number(valueNow(t).toFixed(4)));
     $('line').select();
@@ -1482,12 +1488,15 @@ function turnTo(azimuth, elevation) {
   move({ ...view, azimuth, elevation, roll: 0 });
 }
 
+/** A command that does `onKit` with a kit on stage, its joints the numbers, and `otherwise` elsewhere. */
+const either = (onKit, otherwise) => (...args) => (isKit() ? onKit(...args) : otherwise(...args));
+const noLimits = () => message('Only a kit\'s joints have limits to send them to');
+
 const COMMANDS = {
-  down: (n) => (state.focus !== 'numbers' ? moveCursor(state.cursor + n) : isKit() ? moveJoint(n) : moveSelection(n)),
-  up: (n) => (state.focus !== 'numbers' ? moveCursor(state.cursor - n) : isKit() ? moveJoint(-n) : moveSelection(-n)),
-  first: () => (state.focus !== 'numbers' ? moveCursor(0) : isKit() ? moveJoint(0, 0) : moveSelection(0, 0)),
-  last: (n, counted) => (state.focus !== 'numbers' ? moveCursor(counted ? n - 1 : state.rows.length - 1)
-    : isKit() ? moveJoint(0, counted ? n - 1 : Infinity) : moveSelection(0, counted ? n - 1 : Infinity)),
+  down: (n) => (state.focus === 'numbers' ? either(moveJoint, moveSelection)(n) : moveCursor(state.cursor + n)),
+  up: (n) => (state.focus === 'numbers' ? either(moveJoint, moveSelection)(-n) : moveCursor(state.cursor - n)),
+  first: () => (state.focus === 'numbers' ? either(moveJoint, moveSelection)(0, 0) : moveCursor(0)),
+  last: (n, counted) => (state.focus === 'numbers' ? either(moveJoint, moveSelection)(0, counted ? n - 1 : Infinity) : moveCursor(counted ? n - 1 : state.rows.length - 1)),
   focusNext: () => setFocus(PANES[(PANES.indexOf(state.focus) + 1) % PANES.length]),
   focusPrevious: () => setFocus(PANES[(PANES.indexOf(state.focus) + PANES.length - 1) % PANES.length]),
   find: () => openBar('find', '/'),
@@ -1509,14 +1518,14 @@ const COMMANDS = {
   },
   anglePrevious: () => turnAngle(-1),
   angleNext: () => turnAngle(1),
-  less: (n) => (isKit() ? nudgeJoint(-1, false, n) : nudge(-1, false, n)),
-  more: (n) => (isKit() ? nudgeJoint(1, false, n) : nudge(1, false, n)),
-  lessFine: (n) => (isKit() ? nudgeJoint(-1, true, n) : nudge(-1, true, n)),
-  moreFine: (n) => (isKit() ? nudgeJoint(1, true, n) : nudge(1, true, n)),
-  type: () => (isKit() ? typeJoint() : typeValue()),
-  reset: () => (isKit() ? resetJoint() : reset()),
-  lowest: () => (isKit() ? limitJoint(-1) : message('Only a kit\'s joints have limits to send them to')),
-  highest: () => (isKit() ? limitJoint(1) : message('Only a kit\'s joints have limits to send them to')),
+  less: (n) => either(nudgeJoint, nudge)(-1, false, n),
+  more: (n) => either(nudgeJoint, nudge)(1, false, n),
+  lessFine: (n) => either(nudgeJoint, nudge)(-1, true, n),
+  moreFine: (n) => either(nudgeJoint, nudge)(1, true, n),
+  type: either(typeJoint, () => typeValue()),
+  reset: either(resetJoint, () => reset()),
+  lowest: either(() => limitJoint(-1), noLimits),
+  highest: either(() => limitJoint(1), noLimits),
   perAngle: () => perAngle(),
   undo: (n) => history(state.undo, state.redo, n),
   redo: (n) => history(state.redo, state.undo, n),
@@ -1603,7 +1612,8 @@ function paintCommands() {
   const kit = isKit();
   for (const c of ['save', 'undo', 'redo', 'reset', 'ok', 'saveFraming']) {
     const el = document.querySelector(`[data-command="${c}"]`);
-    if (el) el.disabled = kit || !state.item?.entry;
+    // A kit's joint resets; nothing else here is a kit's.
+    if (el) el.disabled = (kit && c !== 'reset') || !state.item?.entry;
   }
 }
 
@@ -1664,7 +1674,9 @@ $('line').addEventListener('keydown', (ev) => {
     jump(matches[0]);
     message(`match 1 of ${matches.length}: ${matches[0].label} (${keys.keyOf('findNext')} next, ${keys.keyOf('findPrevious')} previous)`);
   } else if (kind === 'type') {
-    if (state.typing?.joint) setTypedJoint(state.typing.joint, text.trim());
+    const joint = state.typingJoint;
+    state.typingJoint = null;
+    if (joint) setTypedJoint(joint, text.trim());
     else setTyped(state.typing, text.trim());
   } else if (kind === 'ex') {
     const command = keys.ex(text);

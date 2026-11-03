@@ -184,7 +184,8 @@ test('the bones\' keys and the video\'s don\'t clash: the video pane keeps its o
 });
 
 // Scrubbing a kit's joints (#159): with a kit on stage, `h` `l` `H` `L` `=` `R` step, type and reset
-// the selected joint, and `^` `$` send it to its lower and upper limit, on every pane but the video.
+// the selected joint, and `^` `$` send it to its lower and upper limit, on every pane: the video's
+// keys don't take them.
 test('a kit\'s joints are sent to their limits with ^ and $, which nothing else takes', () => {
   const keys = keymap(KEYS);
   for (const focus of ['sidebar', 'stage', 'numbers', 'video']) {

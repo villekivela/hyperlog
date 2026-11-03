@@ -1605,9 +1605,9 @@ gallery (Technique videos).
       them). A free weight, and a cable's attachment, is a free body on no joint, which the hands
       carry (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
       besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads) or
-      the shoulders (a hack squat's pads). A weight stack rises by a ratio of a joint's travel: a lever's turn on a
-      selectorised machine, and on a cable machine the stack's own joint, the cable drawn out, one
-      for one. Every kit was ported to a recipe with its clips byte for byte the same.
+      the shoulders (a hack squat's pads). A weight stack rises by a ratio of a joint's travel: a
+      lever's turn on a selectorised machine, and on a cable machine the stack's own joint, the
+      cable drawn out, one for one.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
@@ -1634,9 +1634,10 @@ gallery (Technique videos).
     pose entry, drag handles at the top and the bottom, and the automatic checks re-run on what it
     shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes. A machine can be
     opened on its own, its joints scrubbed, its references beside it. The sidebar holds the whole
-    library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the first
-    exercise that uses it sets it up. A change to a recipe, a part or `poses.mjs` on disk reloads
-    the stage on the item it was showing.
+    library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
+    exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
+    scrubbed through its limits. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    stage on the item it was showing.
     - **Keyboard first, vim style** (owner, 2026-11-03, #158): everything in the studio can be done
       from the keyboard, and the mouse is optional. Digits are counts (`5l` is five steps); `j` `k`
       move through the focused list, `Tab` cycles the sidebar, the stage and the numbers, `/` finds

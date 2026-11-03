@@ -165,11 +165,24 @@ export function studio({
     return { exercises, kits };
   }
 
-  /** The first posed exercise, by id, that each kit is used in. */
+  /**
+   * The posed exercise each kit is shown as: the one that gives it the most joints (an adjustable
+   * bench's back, a twin column's two stacks), so each can be scrubbed, and the first by id of those.
+   */
   function usesOf(t) {
     const out = {};
+    const most = {};
     for (const id of Object.keys(t.POSES).sort()) {
-      for (const name of Object.keys(t.entries.resolve(id, t.POSES).kit ?? {})) out[name] ??= id;
+      let kits;
+      try {
+        kits = t.kit.buildKit(t.entries.prepare(id, t.POSES)).kits;
+      } catch {
+        continue;
+      }
+      for (const [name, kit] of Object.entries(kits)) {
+        const joints = Object.keys(kit.bodies).length;
+        if (!(name in out) || joints > most[name]) { out[name] = id; most[name] = joints; }
+      }
     }
     return out;
   }

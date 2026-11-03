@@ -16,15 +16,15 @@ import {
 import { V, X, UP } from '../rig.mjs';
 
 /** Each column's joint, by column: the one at +x first. */
-const jointsOf = ({ twin = false } = {}) => (twin ? ['stack_l', 'stack_r'] : ['stack']);
+const stacksOf = ({ twin = false } = {}) => (twin ? ['stack_l', 'stack_r'] : ['stack']);
 
 export default recipe({
   name: 'cable_column',
-  bodies: (o) => ({ attachment: free(), ...Object.fromEntries(jointsOf(o).map((j) => [j, prismatic({ axis: UP, limits: [0, 1.2] })])) }),
+  bodies: (o) => ({ attachment: free(), ...Object.fromEntries(stacksOf(o).map((j) => [j, prismatic({ axis: UP, limits: [0, 1.2] })])) }),
   contacts: ({ attachment = 'handle', hand = 1, twin = false } = {}) => (attachment === 'rope'
     ? [{ body: 'attachment', point: 'rope', landmark: 'hands' }]
     : (twin ? [1, -1] : [hand]).map((s) => ({ body: 'attachment', point: `handle_${s < 0 ? 'r' : 'l'}`, landmark: 'hands' }))),
-  stacks: (o) => jointsOf(o).map((joint) => ({ joint, ratio: 1 })),
+  stacks: (o) => stacksOf(o).map((joint) => ({ joint, ratio: 1 })),
   build(options, M) {
     const { at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'handle', hand = 1, twin = false, crossed = false } = options ?? {};
     const height = 2.15;
@@ -76,7 +76,7 @@ export default recipe({
         },
       };
     });
-    const joints = jointsOf(options);
+    const joints = stacksOf(options);
     // The attachments, in the room's own frame.
     const ends = [];
     let rope = null;

@@ -20,8 +20,8 @@
 // which stack each stack's joint lifts (`stacks`). Its `drive` is the body-first solve: it places
 // the parts from the pose frame and returns each joint's value and where it is, and each contact's
 // point. `stand(group)`, if it has one, stands the kit's group where it goes, and `follow()` lays
-// again what hangs between a body and the frame (a cable to a cam) after a scrub has moved it. The parts are named
-// after `node` (the recipe's name by default) in the clip.
+// again what hangs between a body and the frame (a cable to a cam) after a scrub has moved it. The
+// parts are named after `node` (the recipe's name by default) in the clip.
 import * as THREE from 'three';
 import { group, tones } from './parts.mjs';
 
@@ -35,8 +35,8 @@ export const prismatic = ({ axis, limits }) => ({ type: 'prismatic', axis, limit
 export const free = () => ({ type: 'free' });
 
 /**
- * How far a working stack is held off its rest at the stretch: only before the first rep does it sit
- * down.
+ * How far a working stack is held off its rest at the stretch: only before the first rep does it
+ * sit down.
  */
 export const HELD = 0.06;
 
@@ -66,7 +66,10 @@ function moveNode(node, move) {
   local.decompose(node.position, node.quaternion, node.scale);
 }
 
-/** Throws unless `name`'s declarations mean something: each one names what it ties, and each limit is in order. */
+/**
+ * Throws unless `name`'s declarations mean something: each one names what it ties, and each limit
+ * is in order.
+ */
 function validate(name, { bodies, contacts, stacks, fit }) {
   const refuse = (why) => { throw new Error(`${name}: ${why}`); };
   for (const [body, { type, limits }] of Object.entries(bodies)) {

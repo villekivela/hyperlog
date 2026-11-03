@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from '../entries.mjs';
 import { buildStage } from '../stage.mjs';
-import { jointsOf, stepJoint, typedJoint, limitOf, showJoint, scrubAll } from './joints.mjs';
+import { jointsOf, stepJoint, typedJoint, limitOf, showJoint, scrubAll, inUnits, limitsOf, stepsOf } from './joints.mjs';
 
 const rad = (d) => (d * Math.PI) / 180;
 const near = (a, b, why) => assert.ok(Math.abs(a - b) < 1e-9, `${why}: ${a}, not ${b}`);
@@ -44,16 +44,28 @@ test('a joint is typed and shown in degrees or millimetres, a + moving it from w
   near(typedJoint(lever, '500', 0), rad(120), 'past its limit');
   assert.equal(typedJoint(lever, 'far', 0), null);
   assert.equal(showJoint(lever, rad(30)), '30.0°');
+  assert.equal(inUnits(lever, rad(30)), 30);
+  assert.equal(limitsOf(lever), '0.0° to 120.0°');
+  assert.deepEqual(stepsOf(lever), ['1°', '0.1°']);
   const [sled] = jointsOf((await posed('leg_press')).kit.kits);
   near(typedJoint(sled, '120', 0), 0.12, 'typed in millimetres');
   assert.equal(showJoint(sled, 0.12), '120 mm');
+  assert.equal(inUnits(sled, 0.12), 120);
+  assert.deepEqual(stepsOf(sled), ['1 cm', '1 mm']);
 });
 
+// The leg extension's stack rises 22 cm a radian of its lever.
 test('each scrubbed joint is set on its kit after the pose, the stack with it', async () => {
   const stage = await posed('leg_extension');
   const kit = stage.kit.kits.leg_extension;
+  let head;
+  kit.group.traverse((o) => { if (o.userData.stack) head = o; });
+  const height = () => { head.updateWorldMatrix(true, false); return head.getWorldPosition(head.position.clone()).y; };
+  scrubAll(stage.kit.kits, { 'leg_extension.lever': 0 });
+  const rest = height();
   scrubAll(stage.kit.kits, { 'leg_extension.lever': rad(60) });
   near(kit.joints.lever.value, rad(60), 'the lever');
+  near(height() - rest, 0.22 * rad(60), 'the stack, risen');
   stage.pose(0);
   scrubAll(stage.kit.kits, { 'leg_extension.lever': rad(60), 'no_kit.lever': 1 });
   near(kit.joints.lever.value, rad(60), 'set again after the next pose');

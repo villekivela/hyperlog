@@ -322,8 +322,8 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
   value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
-- `fit`: the fit rules, each naming the option it `sets` (the seat, a pad). They are declared for
-  now; the solver that sets them comes later (#160).
+- `fit`: the fit rules, each naming the option it `sets` (the seat, a pad). They are declared, not
+  solved: the entry sets its kit's options, and the drive places the rest from the pose.
 
 Its `build` makes the parts in the order the clip names them and says which nodes move with which
 body. Its `drive` is the body-first solve: it places the parts from the pose frame and returns each
@@ -424,14 +424,15 @@ listens on localhost only.
 - **The stage** shows one item. An exercise is posed live with the tool's own modules, looping at
   its tempo or held at the top or the bottom, with drag handles (`handles.mjs`) when held, and the
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
-  the first exercise that uses it (by id) sets it up.
+  the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
+  first by id of those. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
   `L` a tenth of that, `=` types it in degrees or millimetres, and `^` `$` send it to its lower or
   upper limit; no step goes past them. A joint scrubbed is held where it is set, its stack with it,
   while the rep its exercise poses plays round it, and `R` gives it back to the rep. A scrub is a
-  view, kept nowhere: a recipe's dimensions are edited as text. A change to a recipe, a part or `poses.mjs`
-  on disk reloads the page on the same item, its unsaved numbers kept.
+  view, kept nowhere: a recipe's dimensions are edited as text.
 - **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers
   its motion offers that the entry leaves at the default), lengths shown in millimetres. `h` and `l`
   step the selected one a degree, a millimetre or a hundredth of a ratio, `H` and `L` a tenth of

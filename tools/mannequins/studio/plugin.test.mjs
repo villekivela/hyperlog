@@ -103,10 +103,15 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   const press = await get('/api/item/exercise/db_incline_press');
   assert.equal(press.entry.bench.angle, 30);
   assert.deepEqual(Object.keys(press.clip.angles), ['0', '15', '30', '45', '60', '75']);
-  // A kit comes as the first exercise that uses it sets it up.
+  // A kit comes as the exercise that moves most of it sets it up, the first of those by id.
   const kit = await get('/api/item/kit/leg_extension');
   assert.equal(kit.uses, 'leg_extension');
   assert.equal(kit.entry.motion, 'knee_lever');
+  // So an adjustable bench's back and a twin column's two stacks can each be scrubbed (#159).
+  const bench = await get('/api/item/kit/bench');
+  assert.equal(typeof bench.entry.bench?.angle, 'number', `the bench as in ${bench.uses}, not adjustable`);
+  const column = await get('/api/item/kit/cable_column');
+  assert.equal(column.entry.kit.cable_column.twin, true, `the cable column as in ${column.uses}, one column`);
   const none = await get('/api/item/exercise/pendulum_squat');
   assert.equal(none.entry, null);
   assert.equal(none.status, 'no pose');

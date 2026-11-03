@@ -4,10 +4,10 @@
 
 const DEGREE = Math.PI / 180;
 
-/** How a joint's value is stepped, typed and shown, by its type. */
+/** How a joint's value is stepped, typed and shown, by its type: `steps` names a step and a fine one. */
 const UNITS = {
-  revolute: { step: DEGREE, scale: 1 / DEGREE, show: (v) => `${(v / DEGREE).toFixed(1)}°` },
-  prismatic: { step: 0.01, scale: 1000, show: (v) => `${Math.round(v * 1000)} mm` },
+  revolute: { step: DEGREE, scale: 1 / DEGREE, show: (v) => `${(v / DEGREE).toFixed(1)}°`, steps: ['1°', '0.1°'] },
+  prismatic: { step: 0.01, scale: 1000, show: (v) => `${Math.round(v * 1000)} mm`, steps: ['1 cm', '1 mm'] },
 };
 
 /**
@@ -39,6 +39,15 @@ export function typedJoint(row, text, value) {
 
 /** `value` of `row`'s joint as the studio shows it. */
 export const showJoint = (row, value) => UNITS[row.type].show(value);
+
+/** `value` of `row`'s joint in what it is typed in: degrees or millimetres. */
+export const inUnits = (row, value) => Number((value * UNITS[row.type].scale).toFixed(4));
+
+/** What a step of `row`'s joint is, and a fine one, as the studio names them. */
+export const stepsOf = (row) => UNITS[row.type].steps;
+
+/** `row`'s joint's limits as the studio shows them. */
+export const limitsOf = (row) => `${showJoint(row, row.limits[0])} to ${showJoint(row, row.limits[1])}`;
 
 /** Sets each scrubbed joint (`scrubs`, values by key) on `kits`, after they are posed; a key no kit has is passed over. */
 export function scrubAll(kits, scrubs) {
