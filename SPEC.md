@@ -1560,6 +1560,13 @@ gallery (Technique videos).
       wide and 1.1 m high, has a foot block under the balls and a lever pivoting on a post in front
       of the toes, level with the knee pads, so the pads ride the thighs as it turns; the hands hold
       a U-handle on the lever, and a plate loads a horn either side behind the pivot.
+    - **Row, pulldown and preacher** (owner, via the coordinator, 2026-11-03, #151): all three are
+      plate-loaded, a plate on a horn a side that rises as the muscle works. The chest-supported row
+      turns its levers low in front of the knees; its chest pad stands 10-20° from upright with the
+      chest on it. The pulldown's levers turn on a portal ahead of the head; the back rests on its
+      back pad, and its thigh pads hang under their bar onto the thighs. The preacher has one wide arm pad, the lifter leaning about
+      20° onto it with the chest against its back edge, the pad stopping short of the elbows and the
+      levers' hubs in line with the elbows beyond it, never over the pad.
     - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
       palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
       #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #3A3A40, 0.95 (dark a step up from the
