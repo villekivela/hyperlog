@@ -153,7 +153,7 @@ test('the studio shows it alone, its lever on the catch through the rep and scru
   assert.equal(shownAlone('row_machine'), null, 'a kit set up by its pose has nothing to stand alone by');
 });
 
-// The owner's review of #176: the weight and the posts belong on the machine's centre line.
+// The weight and the posts are on the machine's centre line.
 const boxes = (kit, wanted) => {
   const out = [];
   kit.group.traverse((o) => { if (o.isMesh && wanted(o)) out.push(new THREE.Box3().setFromObject(o)); });
@@ -198,7 +198,7 @@ test('the lever runs clear of the posts, from its catch to its top', () => {
   }
 });
 
-// The owner's third flaw: the handles hang down and point away from the user, none up. A held part
+// The grips point away from the user, none up. A held part
 // is laid from its attached end (A) to its free end (B), so its y axis points to the free end.
 test('each upright has two grips as the maker\'s photo shows: one forward and down, one straight out, none up', () => {
   const kit = machine();

@@ -41,10 +41,10 @@ const SOLE = V(0, Math.SQRT1_2, Math.SQRT1_2);
 const LOWEST = 0.95;
 // On the lever, in its own frame (z along it, y up from it): the yoke 760 mm along it, its cross
 // tube 150 mm above its line and its uprights 445 mm apart, each topped with a block 410 mm above
-// the line. Through each block runs a 230 mm neutral grip, fore and aft, held on its rear half (the
-// ref's vertical grips: the palms upright); out from each runs a 140 mm wide grip, 660 mm apart.
+// the line. From each block a 230 mm neutral grip runs forward and down, held on its rear half (the
+// palms upright), and a 140 mm wide grip runs straight out, 660 mm apart.
 const YOKE = { along: 0.76, cross: 0.15, top: 0.41 };
-const NEUTRAL = { out: 0.2225, up: YOKE.top, length: 0.23, held: 0.06 };
+const NEUTRAL = { out: 0.2225, length: 0.23, held: 0.06 };
 const WIDE = { out: 0.33, up: YOKE.top, length: 0.14 };
 // Each upright's block carries two grips, as the maker's photo shows: a neutral grip from the block
 // forward with its free end 40° below the lever's line, and a wide one straight out. Nothing points
@@ -146,13 +146,13 @@ export default recipe({
     const ahead = V(0, -Math.sin(HANG), Math.cos(HANG));
     const block = (s) => V(s * NEUTRAL.out, YOKE.top, along);
     const neutralEnd = (s) => block(s).addScaledVector(ahead, NEUTRAL.length);
-    const wideFrom = (s) => V(s * (WIDE.out - WIDE.length / 2), WIDE.up, along);
+    const wideFrom = (s) => V(s * (NEUTRAL.out + 0.03), WIDE.up, along);
     const wideTo = (s) => V(s * (WIDE.out + WIDE.length / 2), WIDE.up, along);
     const yoke = [
       tube(0.06, V(0, 0.04, along), V(0, cross - 0.03, along), M.frame),
       tube(0.06, V(-NEUTRAL.out - 0.03, cross, along), V(NEUTRAL.out + 0.03, cross, along), M.frame),
       ...[-1, 1].flatMap((s) => [
-        tube(0.05, V(s * NEUTRAL.out, cross + 0.03, along), V(s * NEUTRAL.out, YOKE.top - 0.03, along), M.frame),
+        tube(0.05, V(s * NEUTRAL.out, cross + 0.03, along), block(s).setY(YOKE.top - 0.03), M.frame),
         pad(0.06, 0.06, 0.06, M.frame, block(s), { soft: 0.006 }),
         rod(GRIP, block(s), neutralEnd(s), M.vinyl, { held: true }),
         rod(GRIP, wideFrom(s), wideTo(s), M.vinyl, { held: true }),
