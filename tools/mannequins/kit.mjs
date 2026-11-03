@@ -1577,7 +1577,12 @@ function preacherCurl({ seat = [0.5, 0] } = {}) {
 /** A low platform under the feet, `height` tall (the pose's `feet.y`) and `size` [w, d] at `at` [x, z]: a deficit. */
 function platform({ height = 0.05, size = [0.8, 0.5], at = [0, 0.05] } = {}) {
   const M = tones();
-  const g = group('platform', [pad(size[0], height, size[1], M.frame, V(at[0], height / 2, at[1]), { soft: 0.008 })]);
+  // A frame with a rubber mat on top, where the feet stand.
+  const mat = 0.012;
+  const g = group('platform', [
+    pad(size[0], height - mat, size[1], M.frame, V(at[0], (height - mat) / 2, at[1]), { soft: 0.006 }),
+    pad(size[0] - 0.03, mat, size[1] - 0.03, M.vinyl, V(at[0], height - mat / 2, at[1]), { soft: 0.004 }),
+  ]);
   return { group: g, place() {} };
 }
 
