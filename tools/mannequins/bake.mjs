@@ -12,7 +12,7 @@ import path from 'node:path';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { tempoOf } from './tempo.mjs';
-import { prepare, benchAngles } from './entries.mjs';
+import { prepare, benchAngles, gripsOf } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkPose } from './checks.mjs';
 import { shareParts } from './glb.mjs';
@@ -32,20 +32,23 @@ globalThis.FileReader ??= class {
 
 const rounded = (v) => Math.round(v * 1e5) / 1e5;
 
-/** Throws, naming each failing check, unless the pose passes them all (at every bench angle it is baked at). */
+/** Each clip an exercise bakes: [bench angle, grip], one for each bench angle or each grip it has, or one. */
+const variantsOf = (id, poses) => (benchAngles(id) ?? [undefined]).flatMap((angle) => (gripsOf(id, poses) ?? [undefined]).map((grip) => [angle, grip]));
+
+/** Throws, naming each failing check, unless the pose passes them all (at every bench angle and grip it is baked at). */
 async function mustPass(id, poses) {
-  for (const angle of benchAngles(id) ?? [undefined]) {
-    const { checks } = await checkPose(id, { poses, angle });
+  for (const [angle, grip] of variantsOf(id, poses)) {
+    const { checks } = await checkPose(id, { poses, angle, grip });
     const failing = CHECKS.filter((c) => !checks[c].ok);
     if (failing.length) {
       const why = failing.map((c) => `${c} (frame ${checks[c].frame}: ${checks[c].found})`).join(', ');
-      throw new Error(`${id}${angle === undefined ? '' : ` at ${angle}°`} fails its checks: ${why}`);
+      throw new Error(`${id}${angle === undefined ? '' : ` at ${angle}°`}${grip === undefined ? '' : ` with the ${grip} grip`} fails its checks: ${why}`);
     }
   }
 }
 
-/** The name of a clip's file, without `.glb`: the exercise's id, and the bench angle it stands at when it has one. */
-const clipName = (id, angle) => (angle === undefined ? id : `${id}_${angle}`);
+/** The name of a clip's file, without `.glb`: the exercise's id, and the bench angle it stands at or the grip it takes, when it has one. */
+const clipName = (id, angle, grip) => [id, angle, grip].filter((p) => p !== undefined).join('_');
 
 /** The file the clips share their mannequin's mesh and skin from. */
 export const SHARED = 'mannequin.bin';
@@ -53,9 +56,9 @@ export const SHARED = 'mannequin.bin';
 /** The file the clips posed in kit `name` share its parts from. */
 export const kitFile = (name) => `kit_${name}.bin`;
 
-/** Bakes one entry, at `angle` if it has an adjustable bench: its .glb's bytes, the mannequin still in it, and the index entry. */
-async function bake(id, poses, angle) {
-  const entry = prepare(id, poses, angle);
+/** Bakes one entry, at `angle` if it has an adjustable bench and with `grip` if it has grips: its .glb's bytes, the mannequin still in it, and the index entry. */
+async function bake(id, poses, angle, grip) {
+  const entry = prepare(id, poses, angle, grip);
   const { scene, rig, kit, pose } = await buildStage(entry);
 
   // Sample the lowering. Every bone that turns gets a track, and so does every part of the kit
@@ -98,7 +101,7 @@ async function bake(id, poses, angle) {
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip] });
   return {
     glb: Buffer.from(glb),
-    entry: { clip: `${clipName(id, angle)}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, tempo: tempoOf(entry), resources: [SHARED, ...Object.keys(entry.kit ?? {}).sort().map(kitFile)] },
+    entry: { clip: `${clipName(id, angle, grip)}.glb`, equipment: entry.equipment, camera: { ...entry.camera }, tempo: tempoOf(entry), resources: [SHARED, ...Object.keys(entry.kit ?? {}).sort().map(kitFile)] },
   };
 }
 
@@ -115,15 +118,20 @@ export async function bakeAll(out = CLIPS, { poses = POSES } = {}) {
     if (!angles && bench) throw new Error(`${id}: has a bench angle, but the library gives it no adjustable bench`);
     await mustPass(id, poses);
   }
-  // A clip per exercise, or per bench angle for an adjustable bench.
+  // A clip per exercise, or per bench angle for an adjustable bench, or per grip.
   const baked = [];
-  for (const id of ids) for (const angle of benchAngles(id) ?? [undefined]) baked.push([clipName(id, angle), id, angle, await bake(id, poses, angle)]);
+  for (const id of ids) for (const [angle, grip] of variantsOf(id, poses)) baked.push([clipName(id, angle, grip), id, angle, await bake(id, poses, angle, grip), grip]);
   const { clips, shared } = shareParts(baked.map(([name, , , b]) => [name, b.glb]), { body: SHARED, kit: kitFile });
   await mkdir(out, { recursive: true });
   for (const [uri, bytes] of Object.entries(shared)) await writeFile(path.join(out, uri), bytes);
   const index = {};
   for (const id of ids) {
     const mine = baked.filter(([, i]) => i === id);
+    if (mine[0][4] !== undefined) {
+      // The first set's grip is the entry's own clip; each grip's clip and camera, in set order.
+      index[id] = { ...mine[0][3].entry, grips: mine.map(([, , , b, grip]) => ({ name: grip, clip: b.entry.clip, camera: b.entry.camera })) };
+      continue;
+    }
     if (mine[0][2] === undefined) { index[id] = mine[0][3].entry; continue; }
     // Each angle's own clip and camera, the typical angle, and the hinge the back pad turns about.
     const { typical } = prepare(id, poses).bench;

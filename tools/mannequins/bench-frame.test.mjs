@@ -63,7 +63,8 @@ test('the arms lock out vertically over the shoulders at every angle (the entry\
     const off = P.hand(1).sub(P.shoulders);
     seen.push([off.y, off.z]);
   }
-  for (const s of seen) assert.ok(Math.abs(s[0] - 0.64) < 0.03 && Math.abs(s[1] - 0.09) < 0.04, JSON.stringify(seen));
+  // Over the shoulders, as high as arms holding the dumbbells low in the palm reach.
+  for (const s of seen) assert.ok(Math.abs(s[0] - 0.6) < 0.03 && Math.abs(s[1] - 0.085) < 0.04, JSON.stringify(seen));
 });
 
 test('the head lies along the pad, tilted by body.head', async () => {

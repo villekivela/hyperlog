@@ -52,8 +52,12 @@ class MannequinsTest {
         }
         assertEquals(
             listOf(
-                "barbell_bench_press", "barbell_rdl", "barbell_squat", "close_grip_lat_pulldown", "db_incline_press", "lat_pulldown",
-                "leg_press", "machine_chest_press", "triceps_pressdown",
+                "2_grip_lat_pulldown", "barbell_bench_press", "barbell_rdl", "barbell_squat", "bayesian_cable_curl", "cable_flye",
+                "cable_lateral_raise", "cable_shoulder_press", "chest_supported_machine_row", "close_grip_bench_press",
+                "close_grip_lat_pulldown", "db_incline_press", "hack_squat", "lat_pulldown", "leg_extension", "leg_press",
+                "lying_leg_curl", "machine_chest_press", "machine_preacher_curl", "machine_pulldown",
+                "overhead_cable_triceps_extension", "reverse_cable_crossover", "seated_calf_raise", "seated_leg_curl",
+                "triceps_pressdown",
             ),
             mannequins.clips.map { it.exerciseId },
         )

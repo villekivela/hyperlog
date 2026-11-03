@@ -134,6 +134,25 @@ test('the adjustable-bench batch is the incline DB press', () => {
   assert.deepEqual(BATCHES['adjustable-bench'], ['db_incline_press']);
 });
 
+const STARTER = [
+  '2_grip_lat_pulldown', 'bayesian_cable_curl', 'cable_flye', 'cable_lateral_raise', 'cable_shoulder_press',
+  'chest_supported_machine_row', 'close_grip_bench_press', 'hack_squat', 'leg_extension', 'lying_leg_curl',
+  'machine_preacher_curl', 'machine_pulldown', 'overhead_cable_triceps_extension', 'reverse_cable_crossover',
+  'seated_calf_raise', 'seated_leg_curl',
+];
+
+test('every exercise of the starter program has a pose, the ones it didn\'t have in the starter batch', async () => {
+  const program = JSON.parse(await readFile(new URL('../../app/src/main/assets/programs/full-body-3-day.json', import.meta.url), 'utf8'));
+  const ids = new Set();
+  const walk = (o) => {
+    if (Array.isArray(o)) o.forEach(walk);
+    else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) (k === 'exercise' && typeof v === 'string' ? ids.add(v) : walk(v));
+  };
+  walk(program);
+  assert.deepEqual([...ids].filter((id) => !POSES[id]).sort(), []);
+  assert.deepEqual([...BATCHES.starter].sort(), STARTER);
+});
+
 test('the kits batch is every exercise posed before #127, re-reviewed on the detailed kits', () => {
   assert.deepEqual([...BATCHES.kits].sort(), [
     'barbell_bench_press', 'barbell_rdl', 'barbell_squat', 'close_grip_lat_pulldown', 'db_incline_press',

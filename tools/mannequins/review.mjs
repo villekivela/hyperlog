@@ -32,6 +32,13 @@ export const BATCHES = {
   ],
   // The adjustable-bench pose, baked at six angles (#125).
   'adjustable-bench': ['db_incline_press'],
+  // The starter program's exercises that had no pose (#127), with the machines and the cable
+  // column they needed.
+  starter: [
+    'close_grip_bench_press', '2_grip_lat_pulldown', 'machine_pulldown', 'chest_supported_machine_row', 'hack_squat',
+    'leg_extension', 'seated_leg_curl', 'lying_leg_curl', 'seated_calf_raise', 'machine_preacher_curl', 'bayesian_cable_curl',
+    'overhead_cable_triceps_extension', 'cable_lateral_raise', 'cable_shoulder_press', 'cable_flye', 'reverse_cable_crossover',
+  ],
   // Every pose above again, on the kits at their full detail and in their tones (#127).
   kits: [
     'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'db_incline_press', 'lat_pulldown', 'close_grip_lat_pulldown',
@@ -56,7 +63,9 @@ async function filesOf(clips, id) {
   const at = (f) => path.join(clips, f);
   const angles = Object.fromEntries(Object.entries(entry.bench?.clips ?? {}).map(([a, c]) => [a, { file: at(c.clip), camera: c.camera }]));
   const shared = (entry.resources ?? []).map(at);
-  return { clip: at(entry.clip), angles, shared, all: entry.bench ? Object.values(angles).map((c) => c.file) : [at(entry.clip)] };
+  // An OK covers every clip the exercise has: each bench angle's, or each grip's.
+  const all = entry.bench ? Object.values(angles).map((c) => c.file) : entry.grips ? entry.grips.map((g) => at(g.clip)) : [at(entry.clip)];
+  return { clip: at(entry.clip), angles, shared, all };
 }
 
 /** A clip's file as the page holds it: whole, with the files it shares (the mannequin, its kits) merged in, as a data URL. */

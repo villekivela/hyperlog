@@ -19,7 +19,7 @@ const named = (list) => Object.fromEntries(list.map((h) => [h.id, h]));
 
 test('the bench press offers a handle wherever its entry has numbers for one', async () => {
   const { handles } = await posed('barbell_bench_press', 0);
-  assert.deepEqual(handles.map((h) => h.id).sort(), ['chest', 'elbow', 'feet', 'hand', 'hips']);
+  assert.deepEqual(handles.map((h) => h.id).sort(), ['chest', 'elbow', 'feet', 'hand', 'hips', 'wrist']);
 });
 
 test('dragging the hand sets the bar at the top or the bottom, and the grip width, and the hand lands there', async () => {
@@ -61,9 +61,9 @@ test('dragging an elbow out sets how far the elbows flare', async () => {
   assert.ok(out['grip.elbows'] > entry.grip.elbows, `${out['grip.elbows']}`);
 });
 
-test('the dumbbell press offers hands, elbows, feet and the chest, and a dragged hand lands where it was dragged', async () => {
+test('the dumbbell press offers hands, elbows, feet, the chest and the fingers, and a dragged hand lands where it was dragged', async () => {
   const top = await posed('db_incline_press', 0);
-  assert.deepEqual(top.handles.map((h) => h.id).sort(), ['chest', 'elbow', 'feet', 'hand']);
+  assert.deepEqual(top.handles.map((h) => h.id).sort(), ['chest', 'elbow', 'feet', 'hand', 'wrist']);
   const hand = named(top.handles).hand;
   const to = hand.at.clone().add(new THREE.Vector3(0.02, -0.05, 0.03));
   const changes = hand.drag(to);
@@ -75,4 +75,14 @@ test('the dumbbell press offers hands, elbows, feet and the chest, and a dragged
   const moved = bottom.drag(down);
   assert.deepEqual(Object.keys(moved).sort(), ['bottom.chest', 'grip.width']);
   assert.ok(gripTarget((await posed('db_incline_press', 1, moved)).P, 1).distanceTo(down) < 0.005);
+});
+
+test('dragging a free hand sets its point at the top or the bottom, and the hand lands there', async () => {
+  const before = await posed('cable_flye', 1);
+  const hand = named(before.handles).hand;
+  const to = hand.at.clone().add(new THREE.Vector3(-0.04, 0.03, 0.05));
+  const changes = hand.drag(to);
+  assert.deepEqual(Object.keys(changes), ['bottom.hand']);
+  const after = await posed('cable_flye', 1, changes);
+  assert.ok(gripTarget(after.P, 1).distanceTo(to) < 0.005, `${gripTarget(after.P, 1).distanceTo(to)}`);
 });

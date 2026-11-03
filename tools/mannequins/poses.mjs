@@ -47,7 +47,7 @@ export const POSES = {
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.15, -0.23] },
+    top: { bar: [1.1, -0.23] },
     bottom: { bar: [0.71, -0.09] },
     grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
@@ -151,10 +151,228 @@ export const POSES = {
     body: { hip: [0.56, 0], trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The handles at mid-chest: out in front at the top, back to the shoulders' line at the bottom.
-    top: { handle: [0.94, 0.42], press: 0 },
+    top: { handle: [0.94, 0.38], press: 0 },
     bottom: { handle: [1.055, -0.01], press: 1 },
     lever: 0.85,
     grip: { width: 0.385 },
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
+  },
+
+  // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
+
+  // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides.
+  close_grip_bench_press: {
+    like: 'barbell_bench_press',
+    top: { bar: [1.13, -0.21] },
+    bottom: { bar: [0.725, -0.05] },
+    grip: { width: 0.22, elbows: 0.45 },
+  },
+
+  // Two grips on the lat bar (owner): the first set wide and overhand, at 1.5 shoulder widths, the
+  // second narrow and underhand, at shoulder width, palms to the face as in a curl, the elbows
+  // driving down in front of the body. A clip each, in that order.
+  '2_grip_lat_pulldown': {
+    like: 'lat_pulldown',
+    grips: {
+      wide: { grip: { width: 0.31, rotate: 0 } },
+      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.2 }, bottom: { bar: [1.08, 0.06] } },
+    },
+  },
+
+  // Seated, the thighs on the seat and the shins under the roller: from straight legs down to the
+  // knees bent past a right angle.
+  leg_extension: {
+    equipment: 'machine',
+    motion: 'knee_lever',
+    kit: { leg_extension: { seat: [0.59, 0.1], pad: 0.18 } },
+    body: { hip: [0.66, 0], trunk: -8, thigh: -10 },
+    top: { knee: 10 },
+    bottom: { knee: 95 },
+    feet: { stance: 0.1 },
+    grip: { width: 0.25, at: [0.6, 0.05] },
+    camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
+  },
+
+  // Seated under the thigh pad, the roller behind the calves: from the knees bent to straight legs.
+  seated_leg_curl: {
+    equipment: 'machine',
+    motion: 'knee_lever',
+    kit: { leg_curl: { seat: [0.59, 0.1], pad: 0.18 } },
+    body: { hip: [0.66, 0], trunk: -8, thigh: -10 },
+    top: { knee: 95 },
+    bottom: { knee: 8 },
+    feet: { stance: 0.1 },
+    grip: { width: 0.09, at: [0.97, 0.19], across: [0, 1, 0] },
+    camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
+  },
+
+  // Face down along the bench, the knees at its end and the roller on the backs of the ankles:
+  // from the heels drawn up to straight legs. The thighs leave the hips 25° down, steeper than the
+  // pad's 21°: their front tapers toward the knees, so it lies along the pad.
+  lying_leg_curl: {
+    equipment: 'machine',
+    motion: 'knee_lever',
+    kit: { leg_curl: { lying: true } },
+    body: { prone: true, hip: [0.785, 0], trunk: 10, thigh: 25, head: -20 },
+    top: { knee: 100 },
+    bottom: { knee: 6 },
+    feet: { stance: 0.1 },
+    grip: { width: 0.23, at: [0.28, 0.59], across: [-0.94, 0.35, 0], pole: [1, -1, 0.2] },
+    camera: { target: [0, 0.75, 0.1], halfHeight: 0.85, azimuth: 80, elevation: 14 },
+    shadow: { size: [0.9, 1.6], at: [0, 0.2] },
+  },
+
+  // Seated, the knees under the pad and the balls of the feet on the platform: the heels rise from
+  // stretched below it.
+  seated_calf_raise: {
+    equipment: 'machine',
+    motion: 'calf_raise',
+    kit: { calf_raise_machine: { seat: [0.48, -0.05] } },
+    body: { hip: [0.57, 0], trunk: -2 },
+    top: { ankle: 22 },
+    bottom: { ankle: -18 },
+    feet: { stance: 0.1, ball: [0.2, 0.52] },
+    pivot: [0.79, 0.88],
+    grip: { width: 0.13, at: [0.86, 0.34] },
+    camera: { target: [0, 0.55, 0.25], halfHeight: 0.78, azimuth: 72, elevation: 10 },
+  },
+
+  // In the sled, the back on the pad and the shoulders under their pads, the feet on the tilted
+  // platform: the hips travel down the rails until the knees are well past a right angle. The hands
+  // hold the handles beside the head, the elbows out, so the knuckles can lie along them.
+  hack_squat: {
+    equipment: 'machine',
+    motion: 'hack_squat',
+    kit: { squat_machine: {} },
+    body: { trunk: -51 },
+    top: { hip: [1.0, 0.05] },
+    bottom: { hip: [0.73, 0.27] },
+    feet: { stance: 0.16, y: 0.22, z: 0.36, tilt: 20, toeOut: 15, kneesOut: 0.35 },
+    grip: { width: 0.3, at: [0.15, 0], pole: [1, -0.5, 0] },
+    camera: { target: [0, 0.85, 0.15], halfHeight: 1.0, azimuth: 70, elevation: 8 },
+  },
+
+  // Chest on the pad, palms facing each other: from the arms out in front, the elbows driving back
+  // to the handles by the ribs.
+  chest_supported_machine_row: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.36, front: 0.085 } } },
+    body: { hip: [0.59, 0], trunk: 5 },
+    // The levers' pivot low in front of the knees, the same distance from both handles.
+    pivot: [0.45, 0.527],
+    top: { handle: [1.0, 0.62], press: 0 },
+    bottom: { handle: [0.95, 0.28], press: 1 },
+    feet: { stance: 0.16, z: 0.45, toeOut: 10 },
+    grip: { width: 0.22, rotate: 90, pole: [0.4, -0.6, -1] },
+    camera: { target: [0, 0.8, 0.3], halfHeight: 0.92, azimuth: 66, elevation: 10 },
+  },
+
+  // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
+  machine_pulldown: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pulldown_machine: { seat: [0.47, 0.02], thighPad: [0.66, 0.3], pad: 0.2 } },
+    body: { hip: [0.56, 0], trunk: -15 },
+    // The levers' pivot on the portal ahead of the head, the same distance from both handles.
+    pivot: [1.29, 0.85],
+    top: { handle: [1.6, 0.17], press: 0 },
+    bottom: { handle: [1.12, 0.12], press: 1 },
+    feet: { stance: 0.16, z: 0.32, toeOut: 12 },
+    grip: { width: 0.32, pole: [0.8, -1, -0.3] },
+    camera: { target: [0, 1.1, 0.35], halfHeight: 1.15, azimuth: 62, elevation: 8 },
+  },
+
+  // Seated, leaning onto the pad, the chest against its back edge and the upper arms down it: the
+  // bar curls from the arms near straight up toward the shoulders.
+  machine_preacher_curl: {
+    equipment: 'machine',
+    motion: 'arms',
+    kit: { preacher_curl_machine: { seat: [0.5, 0], pad: 0.08 } },
+    body: { hip: [0.59, 0], trunk: 20 },
+    top: { upperArm: 65, forearm: 160 },
+    bottom: { upperArm: 65, forearm: 72 },
+    feet: { stance: 0.16, z: 0.4, toeOut: 10 },
+    grip: { width: 0.18, rotate: 180, pole: [0.2, -0.7, 0.7] },
+    camera: { target: [0, 0.9, 0.3], halfHeight: 0.8, azimuth: 70, elevation: 10 },
+  },
+
+  // Standing facing away from a low pulley, the left arm back behind the body: it curls with the
+  // upper arm still, palm up; the right hand hangs by the hip.
+  bayesian_cable_curl: {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_column: { at: [0.3522, -0.8], pulley: 0.25, attachment: 'handle', hand: 1 } },
+    top: { shin: 10, thigh: 10, trunk: 20.9948, upperArm: -10.3208, forearm: 107.4867 },
+    bottom: { shin: 10, thigh: 10, trunk: 20.0502, upperArm: -34.6598, forearm: -11.2509 },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: -0.32 },
+    grip: { width: 0.2, rotate: 180, one: 1, rest: [-0.2, 0.96, 0.12], pole: [0.15, -1, -0.5] },
+    camera: { target: [0, 1.0, -0.2], halfHeight: 1.1, azimuth: 80, elevation: 8 },
+  },
+
+  // Standing facing away from the pulley, leaning forward, the rope over the head: from the arms
+  // straight overhead, the hands lower behind the head.
+  overhead_cable_triceps_extension: {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_column: { at: [0, -0.6497], pulley: 1.0655, attachment: 'rope' } },
+    top: { shin: 8, thigh: 14, trunk: 20, upperArm: 137.2876, forearm: 154.5043 },
+    bottom: { shin: 8, thigh: 14, trunk: 20, upperArm: 163.1089, forearm: 284.2194 },
+    feet: { stance: 0.16, toeOut: 10, kneesOut: 0.2 },
+    grip: { width: 0.07, rotate: 90, pole: [0.25, 0.6, 1] },
+    camera: { target: [0, 1.15, -0.2], halfHeight: 1.15, azimuth: 76, elevation: 8 },
+  },
+
+  // Standing side-on to a low pulley on the right, the left arm raising the handle out to the side
+  // to shoulder height; the right hand holds the column.
+  cable_lateral_raise: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_column: { at: [-0.6, 0.05], pulley: 0.15, attachment: 'handle', hand: 1 } },
+    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.754, 1.513, 0.329] },
+    bottom: { shin: 4, thigh: 6, trunk: 6, hand: [0.0309, 0.8331, 0.0938] },
+    feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
+    grip: { arc: true, one: 1, rest: [-0.53, 1.12, 0.07], pole: [1, -0.2505, -0.7094] },
+    camera: { target: [0, 1.0, 0], halfHeight: 1.1, azimuth: 20, elevation: 8 },
+  },
+
+  // Standing between two pulleys at chest height, palms facing: from the arms wide, the hands meet
+  // in front of the chest.
+  cable_flye: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_column: { at: [0.808, -0.45], pulley: 1.2049, twin: true } },
+    top: { shin: 6, thigh: 8, trunk: 12, hand: [0.2037, 1.5397, 0.7136] },
+    bottom: { shin: 6, thigh: 8, trunk: 12, hand: [0.7891, 1.2839, -0.0151] },
+    feet: { stance: 0.18, toeOut: 10, kneesOut: 0.2 },
+    grip: { arc: true, rotate: 144.7937, pole: [1, -0.4, -0.6] },
+    camera: { target: [0, 1.05, 0], halfHeight: 1.15, azimuth: 30, elevation: 10 },
+  },
+
+  // Standing behind two high pulleys in front, each hand on the far one's cable: from the arms
+  // crossed in front, they sweep out wide to the sides on an arc about the shoulders.
+  reverse_cable_crossover: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_column: { at: [0.7729, 0.8181], pulley: 1.8, twin: true, crossed: true } },
+    top: { shin: 4, thigh: 6, trunk: 4, hand: [0.78, 1.45, 0.08] },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.18, 1.4357, 0.6348] },
+    feet: { stance: 0.16, toeOut: 8, kneesOut: 0.2 },
+    grip: { arc: true, pole: [1, 0, -0.3], rotate: 58.0559 },
+    camera: { target: [0, 1.1, 0.1], halfHeight: 1.15, azimuth: 24, elevation: 10 },
+  },
+
+  // Seated against an upright bench between two low pulleys: the handles press from the shoulders
+  // to overhead.
+  cable_shoulder_press: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
+    body: { hip: [0.53, 0.17], trunk: -10 },
+    top: { hand: [0.2882, 1.6383, 0.2743] },
+    bottom: { hand: [0.32, 1.13, 0.18] },
+    feet: { stance: 0.18, z: 0.5, toeOut: 12 },
+    grip: { pole: [1, -1, 0.1] },
+    camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },
   },
 };

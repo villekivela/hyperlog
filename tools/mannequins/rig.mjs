@@ -46,6 +46,8 @@ const SPINE = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'Head'];
 // Each finger joint's curl toward the palm, from the knuckle out; the thumb first swings across
 // to the palm, then bends.
 const CURL = [70, 75, 55];
+// Closed further round a bar held low in the palm (a press, a squat).
+const CURL_PALM = [85, 85, 60];
 const THUMB = [80, 40, 40];
 
 /**
@@ -96,15 +98,26 @@ export function buildRig(root) {
   const dims = {
     thigh: len('thigh_l', 'calf_l'), shin: len('calf_l', 'foot_l'),
     up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
-    gripAlong: palmLength * 0.8, gripOff: 0.03,
+    // Where a bar sits in the hand, along the palm from the wrist: at the fingers' roots for a pull,
+    // low in the palm, near its heel, for a press or a squat (`gripDepth: 'palm'`); and how far
+    // off the palm's bones it lies.
+    gripAlong: palmLength * 0.8, gripPalm: palmLength * 0.45, gripOff: 0.03,
+    // A bar low in the palm sits in the hollow of its heel, nearly on the forearm's line.
+    gripPalmOff: 0.012,
     trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
     // How far the foot pitches down from the ankle to the ball, standing flat.
     footPitch: Math.atan2(-footRest.y, Math.hypot(footRest.x, footRest.z)),
     // How far the middle of the sole is in front of the ankle joint.
     midfoot: (heel + toe) / 2 - rest.foot_l.p.z,
+    // The ball of the foot, standing flat: how far in front of the ankle and how high off the floor.
+    ballAhead: Math.hypot(footRest.x, footRest.z), ballY: rest.ball_l.p.y,
   };
   const curls = [];
+  const palmCurls = [];
   const palms = {};
+  // Each finger's joints, from the knuckle out, with what it takes to curl one by an angle: for
+  // closing the fingers round what the hand holds until they touch it (fitFingers).
+  const fingers = { l: {}, r: {} };
   for (const k of ['l', 'r']) {
     const s = Math.sign(rest['hand_' + k].p.x) || 1;
     const hand = rest['hand_' + k].p;
@@ -120,13 +133,17 @@ export function buildRig(root) {
         const dir = child ? rest[child.name].p.clone().sub(rest[n].p).normalize() : fd;
         const thumb = f === 'thumb';
         const axis = thumb && i === 0 ? th.clone().normalize().cross(palm).normalize() : dir.clone().cross(palm).normalize();
-        const turn = new THREE.Quaternion().setFromAxisAngle(axis, rad(thumb ? THUMB[i] : deg));
-        const local = rest[n].wq.clone().invert().multiply(turn).multiply(rest[n].wq);
-        curls.push([bones[n], rest[n].lq.clone().multiply(local)]);
+        const curl = (d) => {
+          const turn = new THREE.Quaternion().setFromAxisAngle(axis, rad(d));
+          return rest[n].lq.clone().multiply(rest[n].wq.clone().invert().multiply(turn).multiply(rest[n].wq));
+        };
+        curls.push([bones[n], curl(thumb ? THUMB[i] : deg)]);
+        palmCurls.push([bones[n], curl(thumb ? THUMB[i] : CURL_PALM[i])]);
+        if (!thumb) (fingers[k][f] ??= []).push({ bone: bones[n], curl, base: deg });
       });
     }
   }
-  const rig = { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palms };
+  const rig = { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palmCurls, palms, fingers, depth: {}, off: {} };
   // Where the shoulders' middle sits from the hips' with the spine straightened upright, as poses
   // straighten it: up the spine, and behind it. The bind pose's spine curves, so it isn't the same.
   for (const n of SPINE.slice(0, 4)) aim(rig, n, UP, X);
@@ -136,6 +153,58 @@ export function buildRig(root) {
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
   root.updateMatrixWorld(true);
   return rig;
+}
+
+/** The radius of what a hand holds (a bar, a dumbbell's handle, a grip), and how far a fingertip's middle sits off it, touching. */
+const HELD_RADIUS = 0.016;
+const FINGERTIP = 0.009;
+
+/**
+ * Closes each finger of hand `k` round what it holds, a bar along `along` through `at`: the knuckle,
+ * middle and end joints turned together in the fist's proportions, only until the fingertip touches
+ * it, so the fingers wrap the bar and don't fold into one another.
+ */
+function fitFingers(rig, k, at, along) {
+  const dir = along.clone().normalize();
+  const off = (p) => {
+    const v = p.clone().sub(at);
+    return v.addScaledVector(dir, -v.dot(dir)).length();
+  };
+  const touch = HELD_RADIUS + FINGERTIP;
+  for (const [f, joints] of Object.entries(rig.fingers[k])) {
+    const tip = rig.bones[`${f}_04_leaf_${k}`];
+    const set = (c) => {
+      for (const j of joints) j.bone.quaternion.copy(j.curl(j.base * c));
+      joints[0].bone.updateMatrixWorld(true);
+      return off(wpos(tip));
+    };
+    // From open, close in steps until the tip reaches the bar, then home in on the touch.
+    let lo = 0.2;
+    let hi = null;
+    let nearest = [Infinity, lo];
+    for (let c = 0.2; c <= 1.6 + 1e-9; c += 0.05) {
+      const d = set(c);
+      if (d < nearest[0]) nearest = [d, c];
+      if (d <= touch) { hi = c; break; }
+      lo = c;
+    }
+    if (hi === null) { set(nearest[1]); continue; }
+    for (let i = 0; i < 12; i++) {
+      const m = (lo + hi) / 2;
+      if (set(m) <= touch) hi = m; else lo = m;
+    }
+    set(hi);
+  }
+}
+
+/** How far a wrist turns the hand off the forearm's line to lay its knuckles along what it holds. */
+const WRIST_REACH = rad(40);
+
+/** `from` turned `angle` radians toward `to`, in the plane of the two. */
+function turnToward(from, to, angle) {
+  const axis = from.clone().cross(to);
+  if (axis.lengthSq() < 1e-12) return from.clone();
+  return from.clone().applyAxisAngle(axis.normalize(), angle).normalize();
 }
 
 /** The point halfway between bones `a` and `b`, where they are now. */
@@ -159,7 +228,59 @@ export function heldAt(rig, k) {
   const wrist = wpos(bones['hand_' + k]);
   const fingers = wpos(bones['middle_01_' + k]).sub(wrist).normalize();
   const palm = rig.palms[k].clone().applyQuaternion(turnOf(rig, 'hand_' + k));
-  return wrist.addScaledVector(fingers, L.gripAlong).addScaledVector(palm, L.gripOff);
+  return wrist.addScaledVector(fingers, rig.depth[k] ?? L.gripAlong).addScaledVector(palm, rig.off[k] ?? L.gripOff);
+}
+
+/**
+ * How many degrees of wrist bend a degree of the elbow off the pose's pole is worth: a little, so
+ * the elbow turns where a straight wrist needs it, keeping to the pole's side; much more where the
+ * pose's arm was traced from footage or the entry points the elbows itself (`P.armTraced`).
+ */
+const POLE_PULL = 0.3;
+const TRACED_POLE_PULL = 3;
+
+/**
+ * An arm for a hand on something lying along `along` (a unit vector): the hand square to it, its
+ * knuckles along it, rolling about it; the elbow anywhere round the line from the shoulder to the
+ * wrist that the arm's lengths allow. Of all of them, the one with the straightest wrist, the elbow
+ * kept toward `pole` (`POLE_PULL`). `palmOf(fingers)` is the palm's normal for a hand pointing that
+ * way, `depth` and `off` where the grip sits in the hand. Null where the grip is out of reach.
+ */
+function straightArm(sh, grip, along, L, pole, palmOf, depth, off, pull = POLE_PULL) {
+  const a = (Math.abs(along.y) < 0.9 ? UP : X).clone().cross(along).normalize();
+  const b = along.clone().cross(a).normalize();
+  const fingersAt = (t) => a.clone().multiplyScalar(Math.cos(t)).addScaledVector(b, Math.sin(t));
+  const wristAt = (fingers) => grip.clone().addScaledVector(fingers, -depth).addScaledVector(palmOf(fingers), -off);
+  const score = (t, p) => {
+    const fingers = fingersAt(t);
+    const end = wristAt(fingers);
+    const toEnd = end.clone().sub(sh);
+    const d = toEnd.length();
+    if (d > L.up + L.fore - 1e-4 || d < Math.abs(L.up - L.fore) + 1e-4) return null;
+    const axis = toEnd.divideScalar(d);
+    const along_ = (L.up * L.up - L.fore * L.fore + d * d) / (2 * d);
+    const h = Math.sqrt(Math.max(0, L.up * L.up - along_ * along_));
+    // Round the line from the shoulder to the wrist, from the pole's side.
+    const u1 = pole.clone().addScaledVector(axis, -pole.dot(axis)).normalize();
+    const u2 = axis.clone().cross(u1);
+    const mid = sh.clone().addScaledVector(axis, along_).addScaledVector(u1, h * Math.cos(p)).addScaledVector(u2, h * Math.sin(p));
+    const bend = end.clone().sub(mid).normalize().angleTo(fingers);
+    const offPole = Math.abs(Math.atan2(Math.sin(p), Math.cos(p)));
+    return { t, p, fingers, end, mid, bend, cost: ((bend + pull * offPole) * 180) / Math.PI };
+  };
+  let best = null;
+  const consider = (t, p) => {
+    const c = score(t, p);
+    if (c && (!best || c.cost < best.cost)) best = c;
+  };
+  for (let i = 0; i < 72; i++) for (let j = 0; j < 48; j++) consider((2 * Math.PI * i) / 72, (2 * Math.PI * j) / 48 - Math.PI);
+  if (!best) return null;
+  // Finer round the best, three times.
+  for (const step of [(2 * Math.PI) / 72 / 6, (2 * Math.PI) / 72 / 36, (2 * Math.PI) / 72 / 216]) {
+    const { t, p } = best;
+    for (let i = -6; i <= 6; i++) for (let j = -6; j <= 6; j++) consider(t + i * step, p + j * step);
+  }
+  return best;
 }
 
 /**
@@ -170,7 +291,8 @@ export function heldAt(rig, k) {
 export function poseRig(rig, P) {
   const { bones, rest, dims: L } = rig;
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
-  for (const [b, q] of rig.curls) b.quaternion.copy(q);
+  // The fingers close round what the hand holds: further for a bar low in the palm.
+  for (const [b, q] of P.gripDepth === 'palm' ? rig.palmCurls : rig.curls) b.quaternion.copy(q);
   rig.root.updateMatrixWorld(true);
   // The trunk: the spine rigid along u, the pelvis placed so the hip joints land on hipC.
   const pelvisDelta = frame(P.u, X).multiply(frame(rest.pelvis.dir, X).invert());
@@ -215,28 +337,73 @@ export function poseRig(rig, P) {
     // The forearm twists the knuckle line about the fingers, from overhand (0°) through neutral to
     // underhand (180°); the palm turns with it, and so does the grip's offset.
     const twist = (fingers) => along.clone().applyAxisAngle(fingers, -s * rad(P.gripRotate ?? 0));
-    let wrist = grip.clone();
-    let arm;
-    for (let it = 0; it < 4; it++) {
-      arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
-      const fingers = arm.end.clone().sub(arm.mid).normalize();
+    // The hand off the forearm: turned at the wrist until its knuckles lie along what it holds, as
+    // far as a wrist bends (WRIST_REACH), then bent by `wrist` [flexion toward the palm,
+    // deviation toward the index finger], in degrees.
+    const [flex, deviate] = P.wrist ?? [0, 0];
+    const fixed = !P.hand || (Boolean(P.across) && !P.heldFree);
+    const depth = P.gripDepth === 'palm' ? L.gripPalm : L.gripAlong;
+    const off = P.gripDepth === 'palm' ? L.gripPalmOff : L.gripOff;
+    rig.depth[k] = depth;
+    rig.off[k] = off;
+    const palmOf = (fingers) => rig.palms[k].clone().applyQuaternion(frame(fingers, twist(fingers)).multiply(handRest));
+    const handOf = (fore) => {
+      const knuckles = twist(fore).normalize();
+      let fingers = fore.clone();
+      // Only what lies its own way (a bar, a handle the pose sets) has knuckles to line up with: a
+      // free handle turns with the hand. As the forearm comes to run along it, the turn fades out,
+      // smoothly, so the solve settles.
+      // Only where no straight arm reaches (below), and the pose sets no wrist of its own.
+      const square = fore.clone().addScaledVector(knuckles, -fore.dot(knuckles));
+      const fade = Math.min(1, Math.max(0, (square.length() - 0.15) / 0.3));
+      if (fixed && !P.wrist && fade > 0) fingers = turnToward(fore, square.normalize(), Math.min(fore.angleTo(square), WRIST_REACH) * keep * fade);
       const inward = twist(fingers);
       const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
-      wrist = grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff);
+      if (flex) fingers = turnToward(fingers, palm, rad(flex));
+      if (deviate) fingers = turnToward(fingers, inward, rad(deviate));
+      return fingers;
+    };
+    let wrist = grip.clone();
+    let arm;
+    let straight = null;
+    // A hand on a bar or a set handle keeps its wrist straight, the hand rolling about what it
+    // holds and the elbow where that puts it (the pole choosing between the two that fit), unless
+    // the pose sets its wrist.
+    if (fixed && !P.wrist) {
+      straight = straightArm(sh, grip, along.clone().normalize(), L, P.armPole(s), palmOf, depth, off, P.armTraced ? TRACED_POLE_PULL : POLE_PULL);
+      if (straight) {
+        const axis = straight.end.clone().sub(sh).normalize();
+        const out = straight.mid.clone().sub(sh);
+        arm = { mid: straight.mid, end: straight.end, pole: out.addScaledVector(axis, -out.dot(axis)).normalize() };
+      }
+    }
+    // How much of the fallback's turn the arm can afford: a straight arm gives some back to reach its grip.
+    let keep = 1;
+    const reach = L.up + L.fore - 1e-3;
+    for (let it = 0; !straight && it < 12; it++) {
+      arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
+      const fingers = handOf(arm.end.clone().sub(arm.mid).normalize());
+      // Halfway to where this pass puts the wrist: the hand's turn follows the forearm, so a full
+      // step can swing back and forth.
+      wrist.lerp(grip.clone().addScaledVector(fingers, -depth).addScaledVector(palmOf(fingers), -off), it ? 0.5 : 1);
+      if (wrist.distanceTo(sh) > reach) keep *= 0.8;
     }
     const a1 = arm.mid.clone().sub(sh);
     const a2 = arm.end.clone().sub(arm.mid);
     aim(rig, 'upperarm_' + k, a1, a1.clone().cross(arm.pole));
-    const inward = twist(a2.clone().normalize());
+    const fingers = straight ? straight.fingers.clone() : handOf(a2.clone().normalize());
+    const inward = twist(fingers);
     // What the hand holds lies along the knuckles, tipped in the palm's plane by `gripTilt`: a
     // dumbbell's handle (the left and right tip the same way, so the sign follows the side).
-    const fingers = a2.clone().normalize();
     const palmNormal = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest)).normalize();
     const handle = inward.clone().normalize();
     // The palm's normal, square to the handle.
     palmNormal.addScaledVector(handle, -palmNormal.dot(handle)).normalize();
     (P.held ??= {})[s] = handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
-    aim(rig, 'lowerarm_' + k, a2, inward);
-    aim(rig, 'hand_' + k, a2, inward);
+    aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
+    aim(rig, 'hand_' + k, fingers, inward);
+    // The fingers close round what the hand holds, as far as they touch it.
+    // (What it holds lies along the knuckles, square to the fingers, as the hand is aimed.)
+    if (!P.openHands) fitFingers(rig, k, grip, inward.clone().addScaledVector(fingers, -inward.dot(fingers) / fingers.lengthSq()));
   }
 }

@@ -1,13 +1,16 @@
 // The automatic checks, run on every frame of a pose before it bakes (README, Checks):
 //
-// - hands: each hand holds its grip, the point across the palm within 1.5 cm of it;
+// - hands: each hand holds its grip, the point across the palm within 1.5 cm of it, and no finger
+//   folds into the next (their joints at least 1.3 cm apart);
 // - feet: each foot is planted where the pose puts it, flat on the floor or the plate it stands
 //   on, ankle and ball at their standing heights within 2 cm;
 // - equipment: no part of the body is more than 2 cm inside a solid part of the kit (only the
-//   hands close round what they hold), and never through a thin one;
+//   hands close round what they hold), and never through a thin one; and every cable ends within
+//   1 cm of its handle's hook;
 // - joints: knees and elbows bend no further than 155°, knees point within 60° of the hips' front,
-//   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, and
-//   the ankle keeps between 55° and 160° from shin to foot;
+//   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, the
+//   ankle keeps between 55° and 160° from shin to foot, and a wrist bends no more than 20° off the
+//   forearm's line unless the pose sets its wrists (an open hand counts as set);
 // - trace: each angle the pose has a trace for is within 10° of it.
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
@@ -19,7 +22,7 @@ import { ANGLES, deg, sideAngles } from './angles.mjs';
 export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace'];
 
 const LIMITS = {
-  grip: 0.015, foot: 0.02, inside: 0.02,
+  grip: 0.015, fingers: 0.013, foot: 0.02, inside: 0.02, wrist: 20, cable: 0.01,
   bend: 155, kneeTurn: 60, hipFlex: 140, hipExtend: 30, head: 60, ankle: [55, 160], trace: 10,
 };
 const angle = (a, b) => deg(a.angleTo(b));
@@ -121,8 +124,8 @@ function jointsPast(rig) {
  * Checks a pose on every frame of its lowering. Each check reports whether it passed, its worst
  * frame, and what it found there.
  */
-export async function checkPose(id, { poses, angle } = {}) {
-  const entry = prepare(id, poses, angle);
+export async function checkPose(id, { poses, angle, grip } = {}) {
+  const entry = prepare(id, poses, angle, grip);
   return { id, checks: checkStage(entry, await buildStage(entry)) };
 }
 
@@ -146,6 +149,13 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
       const s = sideOf(rig, k);
       const miss = heldAt(rig, k).distanceTo(gripTarget(P, s));
       note('hands', miss - LIMITS.grip, f, `the ${k} hand ${(miss * 100).toFixed(1)} cm from its grip`);
+      const order = ['index', 'middle', 'ring', 'pinky'];
+      for (let i = 0; i < 3; i++) {
+        for (const j of ['02', '03', '04_leaf']) {
+          const gap = wpos(rig.bones[`${order[i]}_${j}_${k}`]).distanceTo(wpos(rig.bones[`${order[i + 1]}_${j}_${k}`]));
+          note('hands', LIMITS.fingers - gap, f, `the ${k} ${order[i]} and ${order[i + 1]} fingers ${(gap * 100).toFixed(1)} cm apart`);
+        }
+      }
       const target = P.ankles[s < 0 ? 0 : 1];
       const plane = P.support(s);
       const height = (p) => p.clone().sub(plane.point).dot(plane.normal);
@@ -166,8 +176,20 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
         if (depth > 0) note('equipment', depth - allowed, f, `${b.bone} ${(depth * 100).toFixed(1)} cm into ${s.mesh.name}`);
       });
     }
+    for (const { cable, hook } of kit.cables ?? []) {
+      const at = hook();
+      const miss = Math.min(...[-0.5, 0.5].map((y) => cable.localToWorld(new THREE.Vector3(0, y, 0)).distanceTo(at)));
+      note('equipment', miss - LIMITS.cable, f, `${cable.name} ends ${(miss * 100).toFixed(1)} cm off its handle`);
+    }
     const [joint, past] = jointsPast(rig);
     note('joints', past, f, joint);
+    if (!entry.top?.wrist && !entry.bottom?.wrist && !P.openHands) {
+      for (const k of ['l', 'r']) {
+        const fore = wpos(rig.bones['hand_' + k]).sub(wpos(rig.bones['lowerarm_' + k]));
+        const bend = deg(wpos(rig.bones['middle_01_' + k]).sub(wpos(rig.bones['hand_' + k])).angleTo(fore));
+        note('joints', bend - LIMITS.wrist, f, `wrist ${k} bends ${bend.toFixed(0)}°`);
+      }
+    }
     if (entry.trace) {
       const measured = posedAngles(rig);
       for (const [k, samples] of Object.entries(entry.trace.angles)) {

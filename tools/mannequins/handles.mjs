@@ -3,7 +3,7 @@
 // where the entry has numbers for it. `drag(point)` takes where the handle was dragged to, in
 // metres, and returns the numbers that would put it there: `{ path: value }`, a point whole.
 import { baseAt } from './tune.mjs';
-import { X, between, gripTarget, wpos } from './rig.mjs';
+import { X, between, gripTarget, turnOf, wpos } from './rig.mjs';
 
 const round = (v) => Number(v.toFixed(4));
 const deg = (r) => (r * 180) / Math.PI;
@@ -23,6 +23,14 @@ export function handlesAt(entry, stage, P, d) {
     });
   }
 
+  if (Array.isArray(entry[section]?.hand) && entry[section].hand.length === 3) {
+    // A free hand stands at its own point in the room, the left one's, which the right mirrors.
+    out.push({
+      id: 'hand', label: 'hand', at: gripTarget(P, 1),
+      drag: (p) => ({ [`${section}.hand`]: [round(p.x), round(p.y), round(p.z)] }),
+    });
+  }
+
   if (entry.motion === 'dumbbell_press') {
     // From the shoulders, in the trunk's frame: out from the chest and up the trunk at the top, out from the chest and down the trunk at the bottom.
     const side = (p) => p.clone().sub(P.shoulders);
@@ -32,6 +40,25 @@ export function handlesAt(entry, stage, P, d) {
       drag: (p) => (d === 0
         ? { 'top.over': [round(side(p).dot(front)), round(side(p).dot(P.u))], 'grip.lockout': round(Math.abs(p.x)) }
         : { 'bottom.chest': [round(side(p).dot(front)), round(-side(p).dot(P.u))], 'grip.width': round(Math.abs(p.x)) }),
+    });
+  }
+
+  if (entry.grip) {
+    // The fingers turn the wrist: a drag toward the palm flexes it, toward the index finger
+    // deviates it, from where it is now.
+    const wrist = wpos(rig.bones.hand_l);
+    const fingers = wpos(rig.bones.middle_01_l).sub(wrist).normalize();
+    const palm = rig.palms.l.clone().applyQuaternion(turnOf(rig, 'hand_l')).normalize();
+    const index = wpos(rig.bones.index_01_l).sub(wpos(rig.bones.pinky_01_l));
+    index.addScaledVector(fingers, -index.dot(fingers)).normalize();
+    const [flex, deviate] = baseAt(entry, `${section}.wrist`) ?? [0, 0];
+    out.push({
+      id: 'wrist', label: 'fingers', at: wpos(rig.bones.middle_01_l).addScaledVector(fingers, 0.04),
+      drag: (p) => {
+        const d = p.clone().sub(wrist);
+        const ahead = d.dot(fingers);
+        return { [`${section}.wrist`]: [round(flex + deg(Math.atan2(d.dot(palm), ahead))), round(deviate + deg(Math.atan2(d.dot(index), ahead)))] };
+      },
     });
   }
 
@@ -73,6 +100,18 @@ export function handlesAt(entry, stage, P, d) {
         drag: (p) => ({ [key]: round(deg(Math.atan2(p.z - P.hipC.z, p.y - P.hipC.y))) }),
       });
     }
+  }
+
+  if (entry.motion === 'squat') {
+    // A squat's elbow points where it's dragged, from the shoulder: `grip.pole` [out, up, forward].
+    const sh = wpos(rig.bones.upperarm_l);
+    out.push({
+      id: 'elbow', label: 'elbows', at: wpos(rig.bones.lowerarm_l),
+      drag: (p) => {
+        const d = p.clone().sub(sh).normalize();
+        return { 'grip.pole': [round(d.x), round(d.y), round(d.z)] };
+      },
+    });
   }
 
   if (entry.motion === 'pulldown' || entry.motion === 'bench_press' || entry.motion === 'dumbbell_press') {

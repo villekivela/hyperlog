@@ -11,7 +11,7 @@ test('the bench press offers its own numbers, points one element at a time, and 
   const t = byPath(tunables(prepare('barbell_bench_press')));
   assert.equal(t['grip.width'].value, 0.4);
   assert.equal(t['feet.z'].value, 0.445);
-  assert.equal(t['top.bar.0'].value, 1.15);
+  assert.equal(t['top.bar.0'].value, 1.1);
   assert.equal(t['body.arch.1'].value, -16.5);
   assert.ok(!Object.keys(t).some((p) => p.startsWith('camera') || p.startsWith('shadow')));
   // Metres, degrees and ratios get ranges that suit them.
@@ -43,7 +43,7 @@ test('tuned values go into a copy, arrays whole, and the entry is untouched', ()
   assert.deepEqual(tuned.top.bar, [1.2, -0.2]);
   assert.equal(tuned.grip.elbowZ, 0.5);
   assert.equal(entry.grip.width, 0.4);
-  assert.deepEqual(entry.top.bar, [1.15, -0.23]);
+  assert.deepEqual(entry.top.bar, [1.1, -0.23]);
 });
 
 test('each slider steps by what suits it: a centimetre, a degree, a twentieth of a ratio', () => {
@@ -71,4 +71,20 @@ test('the numbers are grouped under short headings, the commonly tuned ones open
   assert.equal(heading('lever'), 'Other');
   // Grip, Bar, Torso and Feet are open; the less used are collapsed.
   assert.deepEqual(HEADINGS.filter((h) => h.open).map((h) => h.name), ['Grip', 'Bar', 'Torso', 'Feet']);
+});
+
+test('equipment moves a metre either way, a body point only 30 cm', () => {
+  const t = byPath(tunables(prepare('cable_shoulder_press')));
+  const z = t['kit.cable_column.at.1'];
+  assert.ok(z.max - z.value > 0.999 && z.value - z.min > 0.999, `the column moves ${z.min} to ${z.max}`);
+  const hand = t['top.hand.1'];
+  assert.ok(hand.max - hand.value <= 0.31, `a hand moves to ${hand.max}`);
+});
+
+test('every pose offers its grip\'s turn at the top and the bottom, each from grip.rotate', () => {
+  const t = byPath(tunables(prepare('cable_flye')));
+  const rotate = prepare('cable_flye').grip.rotate ?? 0;
+  assert.equal(t['top.rotate']?.value, rotate);
+  assert.equal(t['bottom.rotate']?.value, rotate);
+  assert.equal(t['grip.rotate'], undefined);
 });

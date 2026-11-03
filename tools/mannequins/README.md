@@ -80,6 +80,34 @@ db_incline_press: {
   twentieth, each has a − and + beside it, a number to type into and a ↺; ←/→ or ↓/↑ step the
   focused one (Shift for ten) and Enter presses OK.
 
+## Wrists and grip turn
+
+Every pose with hands keeps its wrists straight (SPEC, #127): the back of the hand in line with the
+forearm. A hand on something that lies its own way (a bar, a handle the pose sets) takes it across
+the palm, knuckles along it, and rolls about it; the elbow goes round the line from the shoulder to
+the wrist to wherever the wrist comes out straightest, keeping to the pose's pole side, and keeping
+close to the pole where the arm was traced or the entry sets `grip.pole`. A free handle (a dumbbell,
+a stirrup) turns with the hand. Where no straight arm reaches, the wrist turns as little as it must.
+A press or a squat holds the bar low in the palm, near its heel; a pull at the fingers' roots, the
+palm against it. Each finger closes round what the hand holds only until its tip touches it, and
+the hands check fails fingers folded into one another (their joints under 1.3 cm apart).
+
+`top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
+degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
+given at the bottom alone eases from straight). The joints check fails a wrist bent more than 20°
+in a pose that doesn't set its wrists. The grip's turn is `top.rotate` and `bottom.rotate`, each
+from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers handle bends the wrist,
+and a squat's elbow handle sets `grip.pole`.
+
+## Grips set by set
+
+An exercise done with a different grip set by set has `grips: { <name>: { …changes } }`, in the
+order the sets take them; each grip is merged over the entry as `like:` merges, and the first is
+the entry's own. The bake makes a clip per grip (`<id>_<grip>.glb`), checks each, and the index
+lists them in that order, `grips: [{ name, clip, camera }, …]`, the entry's own `clip` the first
+set's. The phone's sheet shows a button per grip (`wide`, `narrow`) and opens on the grip of the
+set being done. A verdict's fingerprint covers every grip's clip; Tune shows the first grip.
+
 ## Pose entries
 
 An entry is data only, keyed by the exercise's id in `app/src/main/assets/exercises.json`.
@@ -143,6 +171,12 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
+| `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
+| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend |
+| `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles, `grip.across` [out, up, forward] the way their knuckles run |
+| `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `ankle`, degrees from flat, heels up positive; `feet.ball` [y, z]; `pivot` [y, z], where the lever turns with the knees; `grip.at` [y, z], the hands on its handle at the stretch, `grip.width` |
+| `hack_squat` | in a hack squat's sled, the back on its pad | `hip: [y, z]` at the top and bottom (the rails run between them); `body.trunk`; `feet: { y, z, tilt }` place the platform; `grip.at` [up, out] from the shoulders; `grip.pole` |
+| `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `pivot: [y, z]`; `handle: [y, z]` at the top and bottom, `press` 0 to 1 |
 
 ## Equipment
 
@@ -153,8 +187,8 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | --- | --- |
 | `barbell` | `barbell`, `bench` |
 | `dumbbell` | `dumbbells`, `bench` |
-| `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `bench` |
-| `machine` | `leg_press`, `chest_press`; the other kinds below are missing |
+| `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `bench` |
+| `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
 | `bodyweight` | none needed |
 | `ez_bar` | missing |
 | `trap_bar` | missing |
@@ -169,26 +203,35 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | --- | --- | --- |
 | `leg_press` | Leg Press, 1-Leg Leg Press, Leg Press Calf Press | `leg_press` |
 | `chest_press` | Machine Chest Press, Incline Machine Press | `chest_press` |
-| `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | missing |
-| `leg_extension` | Leg Extension | missing |
-| `leg_curl` | Lying and Seated Leg Curl | missing |
+| `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | `squat_machine` |
+| `leg_extension` | Leg Extension | `leg_extension` |
+| `leg_curl` | Lying and Seated Leg Curl | `leg_curl` (`lying` for the lying one) |
 | `glute_ham_raise` | Glute-Ham Raise | missing |
 | `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | missing |
-| `row_machine` | Machine Row, Chest-Supported Machine and T-Bar Rows, T-Bar Row | missing |
-| `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | missing |
+| `row_machine` | Machine Row, Chest-Supported Machine and T-Bar Rows, T-Bar Row | `row_machine` |
+| `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
 | `shoulder_press` | Machine Shoulder Press | missing |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
-| `preacher_curl_machine` | Machine Preacher Curl | missing |
+| `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
 | `hip_machine` | Machine Hip Abduction and Adduction | missing |
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
-| `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | missing |
+| `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug, Machine Kelso Shrug | missing |
 
 - `bench` is flat, or adjustable with `angle` raising its back pad from flat.
+- `cable_column` is one adjustable column (or two, `twin`, mirrored at [-x, z]) standing at `at`
+  [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
+  toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
+  `twin`, a stirrup in each hand, each on its own column's cable, or the far one's with `crossed`.
+  Its stack is lowest where the cable is drawn least, at whichever end of the rep that is, so it
+  rises through a raise or a flye whose top is the hands' far point, and even there it is held 6 cm
+  off its rest (`HELD`), as a working stack is; the leg machines' stacks are held the same way. A kit's `place(P, top, bottom)` gets
+  both ends of the rep for that.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
-  `straight_bar` or `v_handle`. The cable meets the front of the pulley's wheel and runs over a
+  `straight_bar`, `v_handle` or `handles` (two stirrups `spread` metres either side of the middle,
+  their grips front to back). The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
   rises as the cable is drawn out, and is held 6 cm off its rest even at the stretch (`HELD`), as
   every working stack is. A pose draws on its high pulley only (1.5 m or more) for now; without a
@@ -196,6 +239,34 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `bench` rolls on wheels at its front foot and has a handle out of its back; the adjustable one's
   back pad rests on a strut set in a ladder of rungs on the rail, placed for the angle the clip is
   baked at (the phone turns the pad a few degrees either side of it at most).
+- The machines take their seat, `seat` [y, z] (the top of its cushion), and place the rest from the
+  pose: `leg_extension` and the seated `leg_curl` a seat tilted `tilt` degrees up toward the knees,
+  a cam lever about the knees and a back pad `pad` metres behind the spine; the lying
+  `leg_curl` (`lying: true`) a bed humped at `hips` [y, z], its thigh and chest pads sloping down
+  `thigh` and `chest` degrees from there; `calf_raise_machine` the foot block under the balls and a
+  lever on a post at the pose's pivot, its pads over the knees and its handle in the hands;
+  `squat_machine` the platform, the rails along the hips' path and a carriage riding them, its
+  back pad's face `pad` metres behind the hips and its handles along the grip;
+  `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
+  `pulldown_machine` a back pad `pad` metres behind the spine and thigh pads at `thighPad` [y, z],
+  hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
+  its front edge short of the elbows. The three are plate-loaded: `row_machine` and
+  `pulldown_machine` turn their levers on hubs at the pose's `pivot` (the row's low in front of the
+  knees, the pulldown's on a portal ahead of the head), each lever carrying a loaded horn on an
+  arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
+  elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
+  muscle works.
+- The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
+  beside the user, its stack facing them and its cable over two wheels under the cap, down its end
+  to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
+  adjuster plate and pop-pin and a long roller with end caps, turns on a post on the near side, the
+  camera's. The pads follow the body in them: the
+  seats rise with the thighs, the back pads run from the seat to the shoulder blades and slide on a
+  bar set by a pop-pin, and the seated curl's thigh pad lies along the thighs and carries upright
+  grips. The extension's handles run forward beside the hips. The lying curl's bed is humped at the
+  hips, its thigh pad dropping more steeply to the knees than its chest pad to the shoulders, on
+  legs leaning toward the head, with handles under its head end and a plate stored low on the post.
+  `knee_lever`'s `grip.across` lays a handle that isn't along the body across the palm.
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 
@@ -296,6 +367,9 @@ a point is saved whole, `top.bar`). `npm run review -- status <batch>` lists the
 stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; write the same
 `clip` into the page's `verdicts/<id>` (and clear its `tuned`) so the OK holds for the new clip.
 Read the diff after: a comment may now describe the old number.
+
+A page holds every clip whole, so it grows about 0.9 MB a clip; keep a batch to 16 clips or so,
+under the 16 MB a published page may be.
 
 The page keeps one verdict per exercise in its database, `verdicts/<id>`:
 `{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw: what the clip

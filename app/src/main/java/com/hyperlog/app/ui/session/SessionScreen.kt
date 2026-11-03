@@ -471,6 +471,7 @@ fun SessionScreen(
                 mannequin = mannequins?.clipFor(current.exercise),
                 benchAngle = current.benchAngle,
                 lastBenchAngle = current.lastBenchAngle,
+                set = current.toDo,
             )
         }
     }
@@ -960,6 +961,22 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
             }
 }
 
+/** A grip's name on its button: Wide, Narrow, or the name itself for any other. */
+@Composable
+private fun gripLabel(name: String): String = when (name) {
+    "wide" -> stringResource(R.string.grip_wide)
+    "narrow" -> stringResource(R.string.grip_narrow)
+    else -> name.replaceFirstChar { it.uppercase() }
+}
+
+/** How a grip holds the bar, in a line under its button; null for a grip with none written. */
+@Composable
+private fun gripHow(name: String?): String? = when (name) {
+    "wide" -> stringResource(R.string.grip_wide_how)
+    "narrow" -> stringResource(R.string.grip_narrow_how)
+    else -> null
+}
+
 /** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
 private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -1018,6 +1035,8 @@ internal fun ExerciseSheet(
     /** This session's bench angle, and last time's, for an adjustable-bench exercise's mannequin. */
     benchAngle: Int? = null,
     lastBenchAngle: Int? = null,
+    /** The set being done (0 the first), for an exercise whose grip changes set by set; null outside a session. */
+    set: Int? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -1026,9 +1045,32 @@ internal fun ExerciseSheet(
     val scroll = rememberScrollState()
     Column(Modifier.fillMaxWidth().verticalScroll(scroll, enabled = scroll.maxValue > 0).padding(bottom = 24.dp).navigationBarsPadding()) {
         mannequin?.let {
+            // An exercise done with a different grip set by set opens on the grip of the set being
+            // done, and a button shows each.
+            var grip by rememberSaveable(it.exerciseId, set) { mutableStateOf(it.grips?.let { _ -> it.gripForSet(set ?: 0).name }) }
             // A card of the sheet, out to the cards' margin like the machine row's and the prescription's.
-            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin), benchAngle, lastBenchAngle)
-            Spacer(Modifier.height(16.dp))
+            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin), benchAngle, lastBenchAngle, grip)
+            it.grips?.let { grips ->
+                // Closer to the stage than to the name: it switches what the stage plays. Each
+                // button names its set, so the one the sheet opens on reads as the set being done.
+                // The buttons' 48 dp touch target adds 4 dp round their 40 dp, so 8 dp show above
+                // them and the stage's 16 dp below.
+                Spacer(Modifier.height(4.dp))
+                com.hyperlog.app.ui.theme.ConnectedChoice(
+                    grips.mapIndexed { i, g -> stringResource(R.string.grip_for_set, i + 1, gripLabel(g.name)) },
+                    grips.indexOfFirst { g -> g.name == grip },
+                    onSelect = { i -> grip = grips[i].name },
+                    Modifier.padding(horizontal = CardMargin),
+                    // It sits on the sheet itself, not on one of its cards.
+                    color = cs.surfaceContainerLow,
+                )
+                // How to hold the bar for the grip shown: overhand or underhand is the part most
+                // easily got wrong, and the clip at phone size doesn't show it plainly.
+                gripHow(grip)?.let { how ->
+                    Text(how, Modifier.padding(horizontal = Margin).padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                }
+            }
+            Spacer(Modifier.height(if (it.grips != null) 12.dp else 16.dp))
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Margin)) {
             Text(interFigures(exercise.name), style = MaterialTheme.typography.headlineSmall)
