@@ -107,3 +107,19 @@ test('the upright row\'s hands lie along the bar', async () => {
     assert.ok(off < 12, `at ${d} the knuckles cross the bar ${off.toFixed(0)}° off its line`);
   }
 });
+
+// The coordinator's look at the hands (#127): at the bottom of the curl the fingers wrap the bar.
+test('the curl\'s fingers wrap the bar at the bottom, touching it', async () => {
+  const stage = await buildStage(prepare('barbell_curl'));
+  const P = stage.pose(1);
+  const at = (n) => wpos(stage.rig.bones[n]);
+  const { dir, across } = stage.rig.rest.hand_l;
+  const d = dir.clone().normalize();
+  const axis = across.clone().addScaledVector(d, -across.dot(d)).applyQuaternion(turnOf(stage.rig, 'hand_l')).normalize();
+  const grip = P.bar.clone().addScaledVector(axis.clone().set(1, 0, 0), P.grip);
+  for (const f of ['index', 'middle', 'ring', 'pinky']) {
+    const v = at(`${f}_04_leaf_l`).sub(grip);
+    const off = v.addScaledVector(axis, -v.dot(axis)).length();
+    assert.ok(off > 0.016 && off < 0.035, `the ${f} fingertip ${(off * 100).toFixed(1)} cm off the bar's axis`);
+  }
+});

@@ -117,6 +117,9 @@ export function buildRig(root) {
   const curls = [];
   const palmCurls = [];
   const palms = {};
+  // Each finger's joints, from the knuckle out, with what it takes to curl one by an angle: for
+  // closing the fingers round what the hand holds until they touch it (fitFingers).
+  const fingers = { l: {}, r: {} };
   for (const k of ['l', 'r']) {
     const s = Math.sign(rest['hand_' + k].p.x) || 1;
     const hand = rest['hand_' + k].p;
@@ -138,10 +141,11 @@ export function buildRig(root) {
         };
         curls.push([bones[n], curl(thumb ? THUMB[i] : deg)]);
         palmCurls.push([bones[n], curl(thumb ? THUMB[i] : CURL_PALM[i])]);
+        if (!thumb) (fingers[k][f] ??= []).push({ bone: bones[n], curl, base: deg });
       });
     }
   }
-  const rig = { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palmCurls, palms, depth: {}, off: {} };
+  const rig = { root, meshes, bones, rest, dims, pelvisToHips: hipMid.clone().sub(rest.pelvis.p), curls, palmCurls, palms, fingers, depth: {}, off: {} };
   // Where the shoulders' middle sits from the hips' with the spine straightened upright, as poses
   // straighten it: up the spine, and behind it. The bind pose's spine curves, so it isn't the same.
   for (const n of SPINE.slice(0, 4)) aim(rig, n, UP, X);
@@ -156,6 +160,48 @@ export function buildRig(root) {
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
   root.updateMatrixWorld(true);
   return rig;
+}
+
+/** The radius of what a hand holds (a bar, a dumbbell's handle, a grip), and how far a fingertip's middle sits off it, touching. */
+const HELD_RADIUS = 0.016;
+const FINGERTIP = 0.009;
+
+/**
+ * Closes each finger of hand `k` round what it holds, a bar along `along` through `at`: the knuckle,
+ * middle and end joints turned together in the fist's proportions, only until the fingertip touches
+ * it, so the fingers wrap the bar and don't fold into one another.
+ */
+function fitFingers(rig, k, at, along) {
+  const dir = along.clone().normalize();
+  const off = (p) => {
+    const v = p.clone().sub(at);
+    return v.addScaledVector(dir, -v.dot(dir)).length();
+  };
+  const touch = HELD_RADIUS + FINGERTIP;
+  for (const [f, joints] of Object.entries(rig.fingers[k])) {
+    const tip = rig.bones[`${f}_04_leaf_${k}`];
+    const set = (c) => {
+      for (const j of joints) j.bone.quaternion.copy(j.curl(j.base * c));
+      joints[0].bone.updateMatrixWorld(true);
+      return off(wpos(tip));
+    };
+    // From open, close in steps until the tip reaches the bar, then home in on the touch.
+    let lo = 0.2;
+    let hi = null;
+    let nearest = [Infinity, lo];
+    for (let c = 0.2; c <= 1.6 + 1e-9; c += 0.05) {
+      const d = set(c);
+      if (d < nearest[0]) nearest = [d, c];
+      if (d <= touch) { hi = c; break; }
+      lo = c;
+    }
+    if (hi === null) { set(nearest[1]); continue; }
+    for (let i = 0; i < 12; i++) {
+      const m = (lo + hi) / 2;
+      if (set(m) <= touch) hi = m; else lo = m;
+    }
+    set(hi);
+  }
 }
 
 /** How far a wrist turns the hand off the forearm's line to lay its knuckles along what it holds. */
@@ -364,5 +410,8 @@ export function poseRig(rig, P) {
     (P.held ??= {})[s] = handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
     aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
     aim(rig, 'hand_' + k, fingers, inward);
+    // The fingers close round what the hand holds, as far as they touch it.
+    // (What it holds lies along the knuckles, square to the fingers, as the hand is aimed.)
+    if (!P.openHands) fitFingers(rig, k, grip, inward.clone().addScaledVector(fingers, -inward.dot(fingers) / fingers.lengthSq()));
   }
 }
