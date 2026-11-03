@@ -8,17 +8,46 @@
 // adds a pad lying along the thighs on a bar out from the near post, with upright grips on it.
 //
 // The lever is a body on a revolute joint about the knees, its value how far it has turned from the
-// stretch, the bottom of the rep, where the stack rests; the stack rises 22 cm a radian of it.
+// stretch, where the stack rests; the stack rises 22 cm a radian of it.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { UPRIGHTS, backPad, floorRail, kneeDrive, knob, pad, part, popPin, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
-import { V, UP, rad } from '../rig.mjs';
+import { UPRIGHTS, backPad, floorRail, kneeDrive, kneeLinkage, knob, pad, part, popPin, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
+import { STRAIGHT, V, UP, rad, sideOn } from '../rig.mjs';
 
 /**
  * The lever's joint, turning from the stretch up to `max`: forward and up for the extension, which
  * stops where the knee is straight, and back for a curl.
  */
 export const kneeLever = (axis, max) => revolute({ axis, limits: [0, max] });
+
+// The seated machines' lever turns here, [y, z], and its roller hangs this far down it.
+const PIVOT = [0.7292, 0.3923];
+const DOWN = { extension: 0.35, curl: 0.38 };
+// The side-on way down the lever at the stretch: near straight down for the extension, and for the
+// curl straight on from the thighs, a little above level.
+const STRETCH = { extension: rad(85), curl: rad(-2) };
+/** The hips on the seat at [y, z]: a little behind its middle. */
+const hipOn = ([y, z]) => [y + 0.07, z - 0.1];
+
+/** A point on a seat at [y, z] tilted `tilt` degrees: `h` above its top and `along` it toward the knees. */
+function onSeat([y, z], tilt, h, along) {
+  const t = rad(tilt);
+  return [y + h * Math.cos(t) + along * Math.sin(t), z - h * Math.sin(t) + along * Math.cos(t)];
+}
+
+/** The seated knee machines with no pose, the extension's or with `curl` the curl's. */
+export function seatedMachine({ seat = [0.59, 0.1], tilt = 10 }, curl) {
+  const lever = kneeLinkage(PIVOT, {
+    rest: curl ? STRETCH.curl : STRETCH.extension, way: curl ? 1 : -1, down: curl ? DOWN.curl : DOWN.extension, behind: curl,
+  });
+  // The curl's thigh pad, over the lower half of the thighs, lying along them, with upright grips on its bar.
+  const kneeUp = sideOn(-rad(tilt) - Math.PI / 2);
+  const thighPad = V(0, ...PIVOT).addScaledVector(sideOn(-rad(tilt)), -0.18).addScaledVector(kneeUp, 0.125);
+  const held = curl
+    ? { hand: (s) => V(s * 0.09, thighPad.y + 0.15, thighPad.z), across: () => UP.clone(), thighPad, kneeUp }
+    : { hand: (s) => V(s * 0.25, ...onSeat(seat, tilt, 0.02, -0.05)), across: () => V(0, Math.sin(rad(tilt)), Math.cos(rad(tilt))) };
+  return { hip: hipOn(seat), at: (value) => ({ ...lever(value), ...held }) };
+}
 
 /** The seated knee machines' parts, the extension's or with `curl` the curl's. */
 export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl = false } = {}, M) {
@@ -92,10 +121,9 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
     const grips = [-1, 1].map(() => [part(rodGeometry(0.016), M.metal, { held: true }), part(rodGeometry(0.0195), M.vinyl, { held: true })]);
     parts.push(thighPad, thighBar, riser, plate, plateKnob, ...grips.flat());
     fit = (P0, pivot) => {
-      // Over the lower half of the thighs, lying along them.
-      const above = P0.knee.clone().addScaledVector(P0.thigh, -0.18).addScaledVector(P0.kneeUp, 0.125);
+      const { thighPad: above, kneeUp } = P0.machine;
       thighPad.position.copy(above);
-      thighPad.quaternion.setFromUnitVectors(UP, P0.kneeUp);
+      thighPad.quaternion.setFromUnitVectors(UP, kneeUp);
       const by = above.y + 0.06;
       span(thighBar, V(side + 0.03, by, above.z), V(-0.2, by, above.z));
       span(riser, pivot, V(side, by + 0.03, above.z));
@@ -107,15 +135,15 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
         span(sleeveGrip, V(x, by + 0.04, above.z), V(x, by + 0.15, above.z));
       });
     };
-    held = () => ({ thighPad: [thighPad.position.clone()] });
+    held = (P) => ({ thighPad: [thighPad.position.clone()], handles: [-1, 1].map((s) => P.hand(s).clone()) });
   }
   return {
     parts,
     bodies: { lever: drive.lever },
     stacks: { lever: drive.tower },
     follow: drive.follow,
-    drive(P, P0, P1) {
-      const { pivot, roller, joint } = drive.place(P, P0, P1);
+    drive(P, P0) {
+      const { pivot, roller, joint } = drive.place(P);
       fitBack(P0);
       fit(P0, pivot);
       return { joints: { lever: joint }, points: { roller: [roller], ...held(P) } };
@@ -125,19 +153,29 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
 
 /** The fit rules both seated knee machines share. */
 export const SEATED_FIT = [
-  { sets: 'seat', rule: 'the knees on the pivot axis' },
-  { sets: 'pad', rule: 'the back pad on the shoulder blades' },
+  {
+    sets: 'seat',
+    rule: 'the knees on the pivot axis',
+    solve: ({ L, entry }) => {
+      const hip = V(0, ...PIVOT).addScaledVector(sideOn(rad(entry.body.thigh)), -L.thigh * STRAIGHT);
+      return [hip.y - 0.07, hip.z + 0.1];
+    },
+  },
+  // The pad is tipped back onto the blades, so its middle stands a little nearer the spine than they do.
+  { sets: 'pad', rule: 'the back pad on the shoulder blades', solve: ({ L }) => L.back - 0.02 },
 ];
 
 export default recipe({
   name: 'leg_extension',
   // From the stretch, the knee bent about 95°, to the knee straight.
   bodies: { lever: kneeLever(V(-1, 0, 0), rad(95)) },
+  rep: { joint: 'lever', from: 'max' },
   contacts: [
     { body: 'lever', point: 'roller', landmark: 'shins' },
     { body: 'frame', point: 'handles', landmark: 'hands' },
   ],
   stacks: [{ joint: 'lever', ratio: 0.22 }],
   fit: SEATED_FIT,
+  machine: (options) => seatedMachine(options, false),
   build: (options, M) => seatedKnees({ ...options, curl: false }, M),
 });

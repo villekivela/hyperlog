@@ -10,14 +10,32 @@
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import { along, around, floorRail, hub, loadedHorn, padGeometry, part, seatOn, span, stretchedTube, swingOf } from '../parts.mjs';
-import { V, X, gripTarget, rad } from '../rig.mjs';
+import { STRAIGHT, V, X, gripTarget, hanging, rad, shouldersOf, spineLean, trunkUp } from '../rig.mjs';
+
+// The levers' pivot, [y, z], in line with the elbows, and how far along them the bar is.
+const PIVOT = [0.9575, 0.4233];
+const ARM = 0.3637;
 
 export default recipe({
   name: 'preacher_curl_machine',
   node: 'preacher_curl',
-  bodies: { bar: revolute({ axis: V(-1, 0, 0), limits: [rad(-30), rad(100)] }) },
-  contacts: [{ body: 'bar', point: 'grips', landmark: 'hands' }],
-  fit: [{ sets: 'seat', rule: "the armpits at the pad's back edge, the elbows just past its front" }],
+  bodies: { lever: revolute({ axis: V(-1, 0, 0), limits: [rad(-30), rad(100)] }) },
+  rep: { joint: 'lever', from: 'max' },
+  contacts: [{ body: 'lever', point: 'grips', landmark: 'hands' }],
+  fit: [{
+    sets: 'seat',
+    rule: "the armpits at the pad's back edge, the elbows just past its front",
+    // The elbows on the levers' axis: the hips as far below it as the trunk and the upper arm reach.
+    solve: ({ L, entry }) => {
+      const reach = shouldersOf(V(0, 0, 0), trunkUp(spineLean(entry.body.trunk, L)), L).addScaledVector(hanging(entry.top.upperArm), L.up * STRAIGHT);
+      const hip = V(0, ...PIVOT).sub(reach);
+      return [hip.y - 0.09, hip.z];
+    },
+  }],
+  machine: ({ seat = [0.5, 0] }) => {
+    const pivot = V(0, ...PIVOT);
+    return { hip: [seat[0] + 0.09, seat[1]], at: (value) => ({ pivot, bar: around(pivot, value, ARM) }) };
+  },
   build({ seat = [0.5, 0], pad: deep = 0.08 } = {}, M) {
     const side = 0.3;
     const frontZ = seat[1] + 0.85;
@@ -45,7 +63,7 @@ export default recipe({
         ...floorRail(V(-0.25, 0.035, seat[1] - 0.3), V(0.25, 0.035, seat[1] - 0.3), M),
         armPad, column, crossbar, ...mounts, ...bosses, ...arms, ...stubs, ...loads.flatMap((l) => l.parts), handle,
       ],
-      bodies: { bar: [...bosses, ...arms, ...stubs, ...loads.flatMap((l) => l.parts), handle] },
+      bodies: { lever: [...bosses, ...arms, ...stubs, ...loads.flatMap((l) => l.parts), handle] },
       drive(P, P0) {
         // Under the upper arms, on the side of them away from the forearms' swing, its front edge 3 cm
         // short of the elbows.
@@ -60,7 +78,7 @@ export default recipe({
         handle.position.copy(P.bar);
         let joint;
         [-1, 1].forEach((s, i) => {
-          const pivot = P0.elbow.clone().setX(s * side);
+          const pivot = P0.machine.pivot.clone().setX(s * side);
           const end = P.bar.clone().setX(s * side);
           bosses[i].position.copy(pivot);
           span(mounts[i], pivot, below.clone().setX(s * side));
@@ -71,7 +89,7 @@ export default recipe({
           loads[i].place(horn);
           joint = { value: swingOf(pivot, end), origin: pivot };
         });
-        return { joints: { bar: joint }, points: { grips: [-1, 1].map((s) => gripTarget(P, s)) } };
+        return { joints: { lever: joint }, points: { grips: [-1, 1].map((s) => gripTarget(P, s)) } };
       },
     };
   },

@@ -13,7 +13,20 @@ import { recipe, revolute } from '../recipe.mjs';
 import {
   bent, floorRail, hub, knob, movableRail, pad, padGeometry, part, plateGeometry, popPin, railCap, rodGeometry, seatOn, span, stretchedTube,
 } from '../parts.mjs';
-import { V, X, rad } from '../rig.mjs';
+import { UP, V, X, rad } from '../rig.mjs';
+
+// The lever's pivot, [y, z]; the platform's edge, under the balls of the feet; where the knees lie
+// under the pads at the stretch; and the hands' place on the U-handle there, this far either side.
+const PIVOT = [0.79, 0.88];
+const BALL = [0.2, 0.52];
+const KNEE = [0.6649, 0.3989];
+const GRIP = [0.86, 0.349];
+const GRIP_OUT = 0.13;
+const SEAT_HEIGHT = 0.5;
+// How far ahead of the seat's middle the hips sit.
+const HIPS_BACK = 0.05;
+/** The hips on the seat at [y, z]. */
+const hipOn = ([y, z]) => [y + 0.07, z + HIPS_BACK];
 
 export default recipe({
   name: 'calf_raise_machine',
@@ -24,8 +37,28 @@ export default recipe({
     { body: 'lever', point: 'pads', landmark: 'thighs' },
     { body: 'lever', point: 'grips', landmark: 'hands' },
   ],
-  fit: [{ sets: 'seat', rule: 'the pads on the thighs just behind the knees' }],
-  build({ seat = [0.48, -0.05] } = {}, M) {
+  rep: { joint: 'lever', from: 'max' },
+  fit: [{
+    sets: 'seat',
+    rule: 'the pads on the thighs just behind the knees',
+    // The seat slides until the thighs reach the knees' place under the pads.
+    solve: ({ L }) => [SEAT_HEIGHT, KNEE[1] - Math.sqrt(L.thigh ** 2 - (KNEE[0] - hipOn([SEAT_HEIGHT, 0])[0]) ** 2) - HIPS_BACK],
+  }],
+  machine: ({ seat = [SEAT_HEIGHT, -0.04] }) => {
+    const pivot = V(0, ...PIVOT);
+    return {
+      hip: hipOn(seat),
+      at: (value) => {
+        const onLever = (p) => p.sub(pivot).applyAxisAngle(X, value).add(pivot);
+        return {
+          pivot, ball: BALL, rest: Math.atan2(KNEE[0] - PIVOT[0], PIVOT[1] - KNEE[1]),
+          hand: (s) => onLever(V(s * GRIP_OUT, ...GRIP)),
+          across: () => UP.clone().applyAxisAngle(X, value),
+        };
+      },
+    };
+  },
+  build({ seat = [SEAT_HEIGHT, -0.04] } = {}, M) {
     const [seatY, seatZ] = seat;
     // What stands still: the base, the seat, the foot block, and the post with the pivot and its peg.
     const beam = stretchedTube(0.07, M.frame);
@@ -63,14 +96,14 @@ export default recipe({
         beam, ...beamCaps, ...frontFeet.parts, block, deck, post, postPlate, ...cheeks, boss, axle, peg, pegKnob, lever,
       ],
       bodies: { lever: [lever] },
-      drive(P, P0, P1) {
+      drive(P, P0) {
         // The foot block, the balls on its back edge and the heels hanging off behind it.
         const ball = P0.platform;
         block.position.set(0, ball.y - 0.006 - 0.06, ball.z + 0.03);
         deck.position.set(0, ball.y - 0.003, ball.z + 0.03);
-        // The pads sit 6 cm over the knees at the stretch, on the thighs a hand's breadth back from
+        // The pads sit 4.5 cm over the knees at the stretch, on the thighs a hand's breadth back from
         // them; the pivot, the pose's, stands in front of the toes, a little above the pads' undersides.
-        const knee = P1.knee;
+        const knee = V(0, ...KNEE);
         const padZ = knee.z - 0.05;
         const pivot = P0.pivot;
         lever.position.copy(pivot);
@@ -93,7 +126,7 @@ export default recipe({
         // The lever in the pivot's frame: the arm back to the pads, a drop down to their crossbar, the
         // U-handle on it and the horns behind the pivot.
         const local = (y, z) => V(0, y - pivot.y, z - pivot.z);
-        const padBottom = knee.y + 0.06;
+        const padBottom = knee.y + 0.045;
         const bar = padBottom + 0.077;
         span(arm, local(pivot.y, pivot.z + 0.035), local(pivot.y, padZ + 0.03));
         span(drop, local(pivot.y + 0.035, padZ + 0.03), local(bar, padZ + 0.03));
@@ -110,11 +143,11 @@ export default recipe({
           plate.position.copy(at).setX(s * 0.25);
         });
         // The lever turns about the pivot with the knees, as the pose turns it: the pads ride the thighs.
-        lever.rotation.x = -P.turn;
+        lever.rotation.x = P.machine.value;
         lever.updateWorldMatrix(true, false);
         const onLever = (m) => m.position.clone().applyMatrix4(lever.matrixWorld);
         return {
-          joints: { lever: { value: -P.turn, origin: pivot.clone() } },
+          joints: { lever: { value: P.machine.value, origin: pivot.clone() } },
           points: { pads: kneePads.map(onLever), grips: [-1, 1].map((s) => P.hand(s).clone()) },
         };
       },

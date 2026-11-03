@@ -3,8 +3,8 @@
 // `P.plate` is the foot plate's centre, `P.sled` the sled's way up the rails and `P.plateUp` the
 // way up the plate's face.
 //
-// The sled is a body on a prismatic joint up the rails, its value how far its plate is above where
-// it is at the bottom of the rep.
+// The sled is a body on a prismatic joint up the rails, its value how far its plate is above its
+// stops.
 import * as THREE from 'three';
 import { recipe, prismatic } from '../recipe.mjs';
 import {
@@ -12,14 +12,30 @@ import {
 } from '../parts.mjs';
 import { V, X, UP, rad } from '../rig.mjs';
 
+const SLED = V(0, Math.SQRT1_2, Math.SQRT1_2);
+const PLATE_UP = V(0, Math.SQRT1_2, -Math.SQRT1_2);
+// The foot plate's centre on its stops, [y, z].
+const PLATE = [1.1399, 0.3784];
+// The handles by the hips, [y, z], this far either side of the middle.
+const HANDLES = [0.57, 0.12];
+const HANDLES_OUT = 0.3;
+
 export default recipe({
   name: 'leg_press',
-  bodies: { sled: prismatic({ axis: V(0, Math.SQRT1_2, Math.SQRT1_2), limits: [0, 0.45] }) },
+  bodies: { sled: prismatic({ axis: SLED, limits: [0, 0.45] }) },
+  rep: { joint: 'sled', from: 'max' },
   contacts: [
     { body: 'sled', point: 'plate', landmark: 'feet' },
     { body: 'frame', point: 'handles', landmark: 'hands' },
   ],
-  fit: [{ sets: 'pad', rule: 'the back pad at the spine, the hips deep in the seat' }],
+  fit: [{ sets: 'pad', rule: 'the back pad at the spine, the hips deep in the seat', solve: ({ L }) => L.back }],
+  machine: ({ seat = [0.5, 0.04] }) => ({
+    hip: [seat[0] + 0.12, seat[1] - 0.04],
+    at: (value) => ({
+      plate: V(0, ...PLATE).addScaledVector(SLED, value), sled: SLED, plateUp: PLATE_UP,
+      hand: (s) => V(s * HANDLES_OUT, ...HANDLES),
+    }),
+  }),
   build({ seat = [0.5, 0.04], pad: behind = 0.2 } = {}, M) {
     const backRest = backPad(0.42, 0.72, M, { up: 0.33, behind });
     const tilt = rad(-18);
@@ -66,7 +82,7 @@ export default recipe({
         ...horns, ...weights, ...collars, ...handles, ...grips, ...handlePosts, support,
       ],
       bodies: { sled: [...sides, ...rollers, ...axles, cross, plate, lip, ...horns, ...weights, ...collars] },
-      drive(P, P0, P1) {
+      drive(P, P0) {
         const board = backRest.fit(P0);
         // The back pad's support down from its board to the base's back tie.
         span(support, board, V(0, 0.07, back));
@@ -110,7 +126,7 @@ export default recipe({
         lip.position.copy(P.plate).addScaledVector(along, -0.02).addScaledVector(up, -0.245);
         lip.quaternion.copy(q);
         return {
-          joints: { sled: { value: P.plate.clone().sub(P1.plate).dot(along), origin: P.plate.clone(), axis: along.clone() } },
+          joints: { sled: { value: P.machine.value, origin: P.plate.clone(), axis: along.clone() } },
           points: { plate: [P.plate.clone()], handles: [-1, 1].map((s) => P.hand(s).clone()) },
         };
       },

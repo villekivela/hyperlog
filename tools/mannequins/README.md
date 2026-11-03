@@ -241,14 +241,14 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
 | `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
-| `leg_press` | seated in a 45° sled, feet on its plate | `knee`; `feet: { line, down }` place the plate; `grip.at` the handles |
-| `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
-| `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
+| `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
+| `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
+| `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend |
-| `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles, `grip.across` [out, up, forward] the way their knuckles run |
-| `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `ankle`, degrees from flat, heels up positive; `feet.ball` [y, z]; `pivot` [y, z], where the lever turns with the knees; `grip.at` [y, z], the hands on its handle at the stretch, `grip.width` |
-| `hack_squat` | in a hack squat's sled, the back on its pad | `hip: [y, z]` at the top and bottom (the rails run between them); `body.trunk`; `feet: { y, z, tilt }` place the platform; `grip.at` [up, out] from the shoulders; `grip.pole` |
-| `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `pivot: [y, z]`; `handle: [y, z]` at the top and bottom, `press` 0 to 1 |
+| `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
+| `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
+| `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
+| `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment
@@ -315,25 +315,25 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `bench` rolls on wheels at its front foot and has a handle out of its back; the adjustable one's
   back pad rests on a strut set in a ladder of rungs on the rail, placed for the angle the clip is
   baked at (the phone turns the pad a few degrees either side of it at most).
-- The machines take their seat, `seat` [y, z] (the top of its cushion), and place the rest from the
-  pose: `leg_extension` and the seated `leg_curl` a seat tilted `tilt` degrees up toward the knees,
+- The machines take their seat, `seat` [y, z] (the top of its cushion), and fit the rest to the
+  body: `leg_extension` and the seated `leg_curl` a seat tilted `tilt` degrees up toward the knees,
   a cam lever about the knees and a back pad `pad` metres behind the spine; the lying
   `leg_curl` (`lying: true`) a bed humped at `hips` [y, z], its thigh and chest pads sloping down
   `thigh` and `chest` degrees from there; `calf_raise_machine` the foot block under the balls and a
-  lever on a post at the pose's pivot, its pads over the knees and its handle in the hands;
-  `squat_machine` the platform, the rails along the hips' path and a carriage riding them, its
+  lever on a post, its pads over the knees and its handle in the hands;
+  `squat_machine` the platform, the rails and a carriage riding them with the hips on it, its
   back pad's face `pad` metres behind the hips and its handles along the grip;
   `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
   `pulldown_machine` a back pad `pad` metres behind the spine and thigh pads at `thighPad` [y, z],
   hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
   its front edge short of the elbows. The three are plate-loaded: `row_machine` and
-  `pulldown_machine` turn their levers on hubs at the pose's `pivot` (the row's low in front of the
+  `pulldown_machine` turn their levers on hubs at their own pivot (the row's low in front of the
   knees, the pulldown's on a portal ahead of the head), each lever carrying a loaded horn on an
   arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
-  machine-first, for #160 to solve the body to): a pad inclined 40° on a beam held up by two posts,
+  machine-first; no pose stands on it yet, so it has no `machine` or `rep`): a pad inclined 40° on a beam held up by two posts,
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
   lever pivoting 420 mm up on the rear post, beside the posts, with a yoke of neutral grips (fore
   and aft through the blocks atop its uprights) and wide grips (out from them), and a plate on a
@@ -376,16 +376,37 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
   value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
-- `fit`: the fit rules, each naming the option it `sets` (the seat, a pad). They are declared, not
-  solved: the entry sets its kit's options, and the drive places the rest from the pose.
+- `fit`: the fit rules, each naming the option it `sets` (the seat, a pad) and how to `solve` it from
+  the mannequin's measurements. An entry that sets the option overrides its rule, and a rule with no
+  `solve` is only declared: the T-bar row's, until a pose stands on it.
+- `rep` (a machine's): the joint the rep drives, and which limit (`from`) is the top of the rep.
+- `machine(options, entry)` (a machine's): the machine with no pose, the `hip` its seat puts, and
+  `at(value)`, where everything the body meets is with its joint at a value.
 
 Its `build` makes the parts in the order the clip names them and says which nodes move with which
-body. Its `drive` is the body-first solve: it places the parts from the pose frame and returns each
-joint's value and where it is, and each contact's point. A kit's `scrub(body, value)` moves a
+body. Its `drive` places the parts from the pose frame and returns each joint's value and where it
+is, and each contact's point. A kit's `scrub(body, value)` moves a
 joint's body rigidly to a value within its limits, its stack with it. `recipes.test.mjs` checks
 every posed exercise against its recipes: the joints stay within their limits through the rep, a
 scrub from the bottom of the rep to the top's value puts each body where the top has it, and each
 contact meets its landmark.
+
+### Solving a machine
+
+An exercise in a recipe with a `machine` is solved from it (`machine.mjs`, ADR 0007); a free weight,
+or a cable's attachment, stays body-first. First the entry is fitted: each fit rule sets its option
+for the mannequin, unless the entry sets it, and the seat puts `body.hip`. Then the rep drives the
+joint, eased from the top's value to the bottom's. Those are the limits by default; an entry gives its
+own range under the joint's name, in degrees or metres (`top: { levers: 75.43 }`). On each frame the
+motion reads `s.machine`, what the recipe has at that value, and hangs the body from it: the hands on
+the handles, the feet on the plate, the shin against the roller. Everything the machine decides stays
+out of the entry, so `body.hip`, a pivot, a handle's path and the handles' place are the recipe's. A
+rep's range, where the hands and feet go on what the machine offers, and how the trunk leans are the
+entry's.
+
+`buildStage` returns what the fit solved as `fit`, by the path an entry would set it at, and the
+studio offers a slider for each. A slider saved writes the override into `poses.mjs`; with none, the
+rule solves it again.
 
 Every kit is built at one level of detail (SPEC, #127): rounded tubing on base plates, soft pads,
 a stack of twelve plates on guide rods with a selector pin, pulleys in housings with the cable over
@@ -414,6 +435,9 @@ bake (nor does anything else in that bake):
   the trunk, and the ankle stays between 55° and 160° from shin to foot.
 - **Contact:** every finger and the thumb of a hand on a bar or a handle meet its surface within
   2 mm, and no part of the hand is more than 2 mm inside it; the palm within 3 mm (Grips, above).
+- **Machine:** each joint stays within its limits, each point a joint carries stays on the path the
+  joint gives it (a handle on its arc) within 1 mm, each hand within 1.5 cm of the handle it holds,
+  and each pad, roller and plate within 2 cm of the limb it bears on.
 - **Trace:** every traced angle is within 10° of its trace. Contacts come first (the bar over the
   feet, the hands on the bar), so a pose can drift from its trace; past 10° it fails.
 

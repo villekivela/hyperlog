@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
+import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withFit, withTuned, labelOf } from './tune.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
@@ -166,4 +166,34 @@ test('a bone\'s offset is a number per axis, in degrees under Bones, and a bone 
   // Reset, an axis goes back to what the entry has: none for a bone it doesn't turn.
   assert.equal(baseAt(entry, 'bottom.offsets.Head.0'), 10);
   assert.equal(baseAt(entry, 'top.offsets.clavicle_l.1'), 0);
+});
+
+// A machine's fit (#160): each rule the entry leaves to the solve has a slider at what it solved, as
+// has each end of the rep, and moving one writes the override.
+const FIT = { 'kit.leg_extension.seat': [0.59, 0.1], 'kit.leg_extension.pad': 0.18, 'bottom.lever': 0 };
+
+test('a machine offers a slider for each fit rule and each end of its rep, at what was solved', () => {
+  const t = byPath(tunables(withFit(prepare('leg_extension'), FIT)));
+  assert.equal(t['kit.leg_extension.seat.0'].value, 0.59);
+  assert.equal(t['kit.leg_extension.pad'].value, 0.18);
+  assert.equal(t['top.lever'].value, 85);
+  assert.equal(t['top.lever'].unit, '°');
+  assert.equal(t['bottom.lever'].value, 0);
+  assert.equal(byPath(tunables(prepare('hack_squat')))['top.carriage'].unit, ' m');
+  assert.equal(headingOf('top.lever').name, 'Bar');
+  assert.equal(headingOf('top.sled').name, 'Bar');
+});
+
+test('fitting a slider leaves the entry alone: what isn\'t overridden is solved again', () => {
+  const entry = prepare('leg_extension');
+  const before = JSON.stringify(entry);
+  withFit(entry, FIT);
+  assert.equal(JSON.stringify(entry), before);
+});
+
+test('a fit slider moved is an override of the whole option, and back at the solve it comes out', () => {
+  const base = withFit(prepare('leg_extension'), FIT);
+  const tuned = withTuned(base, {}, 'kit.leg_extension.seat.0', 0.62);
+  assert.deepEqual(tuned, { 'kit.leg_extension.seat': [0.62, 0.1] });
+  assert.deepEqual(withTuned(base, tuned, 'kit.leg_extension.seat.0', 0.59), {});
 });

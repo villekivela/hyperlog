@@ -10,13 +10,37 @@
 // turned from the stretch, where the stack rests; the stack rises 22 cm a radian of it.
 import * as THREE from 'three';
 import { recipe } from '../recipe.mjs';
-import { floorRail, kneeDrive, pad, part, plateGeometry, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
-import { V, X, rad } from '../rig.mjs';
-import { SEATED_FIT, kneeLever, seatedKnees } from './leg-extension.mjs';
+import { floorRail, kneeDrive, kneeLinkage, pad, part, plateGeometry, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
+import { STRAIGHT, V, X, rad, sideOn } from '../rig.mjs';
+import { SEATED_FIT, kneeLever, seatedKnees, seatedMachine } from './leg-extension.mjs';
+
+// The lying curl's lever turns here, [y, z], and its roller hangs this far down it; at the stretch
+// the way down it is near straight on from the thighs, out past the bench's end.
+const LYING_PIVOT = [0.6167, -0.361];
+const LYING_DOWN = 0.37;
+const LYING_STRETCH = rad(161);
+/** How far above the bed's apex the hip joints lie. */
+const LYING_HIPS = 0.125;
+
+/** Where the lying curl's handles are: under the chest pad's head end, for a bed at `hips`, the pad sloping down `chest` degrees. */
+function lyingHandles({ hips: [hy, hz] = [0.66, 0], chest = 10 }) {
+  const a = rad(chest);
+  return [hy - 0.62 * Math.sin(a) - 0.24, hz + 0.62 * Math.cos(a) - 0.02];
+}
+
+/** The lying curl with no pose. */
+function lyingMachine(options) {
+  const { hips: [hy, hz] = [0.66, 0] } = options;
+  const lever = kneeLinkage(LYING_PIVOT, { rest: LYING_STRETCH, way: 1, down: LYING_DOWN, behind: true });
+  const [y, z] = lyingHandles(options);
+  // The grips angle out and down from the bar across: the hands hold their middles, along them.
+  const held = { hand: (s) => V(s * 0.23, y - 0.0335, z), across: (s) => V(-s * 0.94, 0.35, 0).normalize() };
+  return { hip: [hy + LYING_HIPS, hz], at: (value) => ({ ...lever(value), ...held }) };
+}
 
 function lying({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {}, M) {
   const tz = hz + 0.05;
-  const drive = kneeDrive(M, { z: tz, toward: -1, down: 0.37, behind: true });
+  const drive = kneeDrive(M, { z: tz, toward: -1, down: LYING_DOWN, behind: true });
   const { side, tx, z0 } = drive;
   const apex = V(0, hy, hz);
   // A pad `length` long from the apex `way` along z (±1), sloping down `slope` degrees, on a board
@@ -70,8 +94,8 @@ function lying({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {}, M) {
     bodies: { lever: drive.lever },
     stacks: { lever: drive.tower },
     follow: drive.follow,
-    drive(P, P0, P1) {
-      const { pivot, roller, joint } = drive.place(P, P0, P1);
+    drive(P) {
+      const { pivot, roller, joint } = drive.place(P);
       span(kneeBar, kneeEnd, kneeEnd.clone().setX(side));
       const low = V(side, 0.07, z0).lerp(pivot, 0.3);
       span(horn, low, low.clone().add(V(0.14, 0, 0)));
@@ -85,11 +109,21 @@ export default recipe({
   name: 'leg_curl',
   // From the stretch, the knee all but straight, to a bend of about 135°.
   bodies: { lever: kneeLever(X, rad(120)) },
+  rep: { joint: 'lever', from: 'max' },
   contacts: ({ lying: flat = false } = {}) => [
     { body: 'lever', point: 'roller', landmark: 'shins' },
-    flat ? { body: 'frame', point: 'handles', landmark: 'hands' } : { body: 'frame', point: 'thighPad', landmark: 'thighs' },
+    { body: 'frame', point: 'handles', landmark: 'hands' },
+    ...(flat ? [] : [{ body: 'frame', point: 'thighPad', landmark: 'thighs' }]),
   ],
   stacks: [{ joint: 'lever', ratio: 0.22 }],
-  fit: ({ lying: flat = false } = {}) => (flat ? [{ sets: 'hips', rule: "the knees just past the thigh pad's end, on the pivot axis" }] : SEATED_FIT),
+  fit: ({ lying: flat = false } = {}) => (flat ? [{
+    sets: 'hips',
+    rule: "the knees just past the thigh pad's end, on the pivot axis",
+    solve: ({ L, entry }) => {
+      const hip = V(0, ...LYING_PIVOT).addScaledVector(sideOn(Math.PI - rad(entry.body.thigh)), -L.thigh * STRAIGHT);
+      return [hip.y - LYING_HIPS, hip.z];
+    },
+  }] : SEATED_FIT),
+  machine: (options) => (options.lying ? lyingMachine(options) : seatedMachine(options, true)),
   build: (options, M) => (options?.lying ? lying(options, M) : seatedKnees({ ...options, curl: true }, M)),
 });

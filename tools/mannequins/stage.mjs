@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { buildRig, gripTarget, poseRig } from './rig.mjs';
 import { partUnder, piecesOf } from './grip.mjs';
 import { frameAt } from './motions.mjs';
+import { fitted } from './machine.mjs';
 import { MATERIALS, buildKit, floorShadow } from './kit.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -106,13 +107,16 @@ function followArms(rig, frame, holding) {
 /**
  * Builds a resolved entry's stage, around `body` (the mannequin, already loaded: the studio's page
  * brings its own) or the one in `model/`. `pose(d)` poses the body and the kit `d` of the way down
- * the rep (0 at the top, 1 at the bottom) and returns the pose frame.
+ * the rep (0 at the top, 1 at the bottom) and returns the pose frame. An entry in a machine is
+ * fitted to the mannequin first, and `fit` is what that solved, by the path that would override it.
  */
-export async function buildStage(entry, body) {
+export async function buildStage(unfitted, body) {
   const scene = new THREE.Scene();
   const mannequin = body ?? await loadMannequin();
   scene.add(mannequin);
   const rig = buildRig(mannequin);
+  const entry = fitted(unfitted, rig.dims);
+  const fit = entry.fit ?? {};
   const kit = buildKit(entry);
   scene.add(kit.group);
   const { size = [1.1, 0.8], at = [0, 0] } = entry.shadow ?? {};
@@ -127,7 +131,7 @@ export async function buildStage(entry, body) {
       scene.updateMatrixWorld(true);
       return {};
     };
-    return { scene, rig, kit, pose };
+    return { scene, rig, kit, pose, fit };
   }
   const top = frameAt(entry, 0, rig.dims);
   const bottom = frameAt(entry, 1, rig.dims);
@@ -165,5 +169,5 @@ export async function buildStage(entry, body) {
     scene.updateMatrixWorld(true);
     return P;
   };
-  return { scene, rig, kit, pose };
+  return { scene, rig, kit, pose, fit };
 }

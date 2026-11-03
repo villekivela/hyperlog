@@ -56,3 +56,9 @@ test('the real poses patch and still load, with the owner\'s words kept', async 
   assert.equal(POSES.barbell_bench_press.grip.width, 0.45);
   assert.deepEqual(POSES.barbell_bench_press.top.bar, [1.16, -0.23]);
 });
+
+test('a fit override goes into a kit that sets nothing yet', () => {
+  const source = "export const POSES = {\n  a: {\n    kit: { leg_extension: {} },\n  },\n};\n";
+  const out = patchPoses(source, 'a', { 'kit.leg_extension.seat': [0.6, 0.1] });
+  assert.match(out, /kit: \{ leg_extension: \{ seat: \[0\.6, 0\.1\] \} \}/);
+});

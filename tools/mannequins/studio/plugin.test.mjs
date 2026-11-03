@@ -93,7 +93,7 @@ test('a pose that fails a check is listed as failing', async () => {
 test('an exercise comes with its prepared entry, its checks and its baked clip', async () => {
   const squat = await get('/api/item/exercise/barbell_squat');
   assert.equal(squat.entry.motion, 'squat');
-  assert.deepEqual(Object.keys(squat.checks), ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact']);
+  assert.deepEqual(Object.keys(squat.checks), ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact', 'machine']);
   assert.equal(squat.clip.file, '/clips/barbell_squat.glb');
   assert.deepEqual(squat.clip.camera, { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 });
   const glb = await fetch(base + squat.clip.file);

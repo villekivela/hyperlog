@@ -22,8 +22,8 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle']);
-const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'lever', 'pole']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers']);
+const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
 
@@ -102,6 +102,12 @@ export function perAngleValue(tuned, angle) {
   return tuned[lo] + (tuned[hi] - tuned[lo]) * t;
 }
 
+/**
+ * A copy of `entry` with what a machine's fit solved (`fit`, `{ path: value }`) put in: what its
+ * sliders start from. The entry itself keeps leaving them to the fit, so they are solved again.
+ */
+export const withFit = (entry, fit) => applyTuned(entry, fit);
+
 /** A copy of an adjustable-bench entry posed at `angle`: each per-angle setting (`bench.perAngle`) at its value there. */
 export function atAngle(entry, angle) {
   const copy = JSON.parse(JSON.stringify(entry));
@@ -179,7 +185,7 @@ export function headingOf(path) {
     : section === 'grip' ? 'Arms'
     : section === 'feet' ? 'Feet'
     : section === 'body' || ['trunk', 'shrug', 'head', 'arch', 'lean'].includes(key) ? 'Torso'
-    : ['bar', 'over', 'chest', 'hand', 'handle', 'press'].includes(key) || section === 'bar' ? 'Bar'
+    : ['bar', 'over', 'chest', 'hand', 'handle', 'press', 'lever', 'levers', 'sled', 'carriage'].includes(key) || section === 'bar' ? 'Bar'
     : ['upperArm', 'forearm'].includes(key) ? 'Arms'
     : ['shin', 'thigh', 'knee'].includes(key) ? 'Legs'
     : 'Other';

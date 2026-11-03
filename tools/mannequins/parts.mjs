@@ -13,7 +13,7 @@
 // hands may close round it. The checks read both, testing a cylinder as one and anything else as
 // its bounding box.
 import * as THREE from 'three';
-import { V, X, UP, rad } from './rig.mjs';
+import { V, X, UP, rad, sideOn } from './rig.mjs';
 
 /**
  * The kits' tones by part (owner, #127), the graphite palette with no hue: the light theme's
@@ -647,10 +647,9 @@ export function camLever(M, side, { down, behind }) {
       lever.updateWorldMatrix(true, false);
       return lever.localToWorld(cam.clone());
     },
-    place(P, P0) {
-      const pivot = P0.knee.clone().setX(0);
+    place({ pivot, shin, front }) {
       lever.position.copy(pivot);
-      lever.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, P.shin.clone().negate(), P.front));
+      lever.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, shin.clone().negate(), front));
       return {
         pivot: pivot.clone().setX(side),
         cam: cam.clone().applyQuaternion(lever.quaternion).add(pivot),
@@ -706,22 +705,42 @@ export function kneeDrive(M, { z, toward, down, behind }) {
       ...floorRail(V(tx - 0.12, 0.035, z0), V(side + 0.1, 0.035, z0), M),
       pad(0.11, 0.012, 0.11, M.frame, V(side, 0.076, z0), { soft: 0.003, solid: false }),
     ],
-    place(P, P0, P1) {
-      const { pivot, cam, roller } = lever.place(P, P0);
+    place(P) {
+      const { pivot, cam, roller } = lever.place(P.machine);
       span(post, V(side, 0.082, z0), pivot);
       pivotHub.position.copy(pivot).setX(side - 0.01);
       cable.place(cam);
-      // The lever turns from the stretch, the bottom of the rep, where the stack rests.
-      return { pivot, roller, joint: { value: P.shin.angleTo(P1.shin), origin: pivot.clone().setX(0) } };
+      // The lever turns from the stretch, where the stack rests.
+      return { pivot, roller, joint: { value: P.machine.value, origin: pivot.clone().setX(0) } };
     },
   };
 }
+
+/**
+ * What a cam lever about `pivot` [y, z] has with its joint at a value: the way down it (`shin`, the
+ * way a shin on its axis runs) and across it (`front`), its `roller` `down` along it, and how far
+ * the roller stands off the lever's line (`off`, negative behind it). The lever's value turns it
+ * from the side-on direction `rest`, the way `way` (1 toward down, -1 away from it).
+ */
+export const kneeLinkage = ([y, z], { rest, way, down, behind }) => (value) => {
+  const pivot = V(0, y, z);
+  const off = (behind ? -1 : 1) * (0.05 + ROLLER);
+  const shin = sideOn(rest + way * value);
+  const front = sideOn(rest + way * value - Math.PI / 2);
+  return { pivot, shin, front, off, roller: pivot.clone().addScaledVector(shin, down).addScaledVector(front, off) };
+};
 
 /** The angle of `p` about the x axis through `pivot`, side-on: what a lever there has swung. */
 export const swingOf = (pivot, p) => Math.atan2(p.y - pivot.y, p.z - pivot.z);
 
 /** The point `length` metres from `pivot` at `angle` about the x axis, as `swingOf` measures. */
 export const around = (pivot, angle, length) => pivot.clone().add(V(0, length * Math.sin(angle), length * Math.cos(angle)));
+
+/** Handles `width` either side of the middle, `arm` metres round a pivot at [y, z], its levers at a value. */
+export const swungHandles = ([y, z], arm, width) => (value) => {
+  const pivot = V(0, y, z);
+  return { pivot, handle: (s) => around(pivot, value, arm).setX(s * width) };
+};
 
 /**
  * A floor rail 7 cm across whose ends are known only once the kit is placed: `set(A, B)` lays it

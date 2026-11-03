@@ -9,7 +9,7 @@ import KEYS from './keys.json';
 import { helpOf, keymap, tokenOf } from './keys.mjs';
 import { FRAMES, buildStage, parseMannequin } from '../stage.mjs';
 import { checkStage, contactsOf } from '../checks.mjs';
-import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
+import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withFit, withTuned } from '../tune.mjs';
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
@@ -39,6 +39,7 @@ const state = {
   current: remembered.current ?? null, // `exercise/<id>` or `kit/<name>`
   item: null, // what the server says of it (plugin.mjs)
   tuned: {}, // `{ path: value }`, not yet saved
+  fit: {}, // what the machine's fit solved for the stage, `{ path: value }`
   unsaved: remembered.unsaved ?? {},
   undo: [],
   redo: [],
@@ -449,6 +450,8 @@ const entryNow = () => {
   return entry.bench ? atAngle(entry, state.angle) : entry;
 };
 const valueNow = (t) => valueAt(entryNow(), t.path) ?? t.value;
+/** The entry as the sliders start from it: with what the fit solved, which it leaves unsaid. */
+const baseEntry = () => withFit(state.item.entry, state.fit);
 // The Per angle settings, `{ path: { angle: value } }`: the tuned ones, else the entry's own. A change
 // is kept in `tuned['@angles']` only while it differs from the entry's.
 const perOf = (tuned) => tuned['@angles'] ?? state.item.entry.bench?.perAngle ?? {};
@@ -462,7 +465,7 @@ function setPer(path, map) {
 function put(path, value) {
   const per = perMap()[path];
   if (per) setPer(path, { ...per, [state.angle]: value });
-  else state.tuned = withTuned(state.item.entry, state.tuned, path, value);
+  else state.tuned = withTuned(baseEntry(), state.tuned, path, value);
 }
 
 let building = false;
@@ -481,6 +484,12 @@ async function rebuild() {
     // A kit is shown alone, as its exercise sets it up.
     body.visible = !isKit();
     setLive({ stage, entry });
+    // The fit's numbers come with the stage: each is a slider, at what it solved.
+    if (!same(stage.fit, state.fit)) {
+      state.fit = stage.fit;
+      state.numbers = numbersOf(state.tuned);
+      paintNumbers();
+    }
     if (isKit()) {
       // Posed once, so the kit has its joints to list: its own, not those of a kit beside it.
       stage.pose(state.d);
@@ -552,9 +561,9 @@ function dragTo(h, point) {
     // A point's numbers that are Per angle change at the angle shown; the others as ever.
     const leaves = Array.isArray(value) ? value.map((v, i) => [`${path}.${i}`, v]) : [];
     if (leaves.some(([leaf]) => perMap()[leaf])) {
-      const rest = copy(state.tuned[path] ?? baseAt(state.item.entry, path));
+      const rest = copy(state.tuned[path] ?? baseAt(baseEntry(), path));
       leaves.forEach(([leaf, v], i) => { if (perMap()[leaf]) setPer(leaf, { ...perMap()[leaf], [state.angle]: v }); else rest[i] = v; });
-      state.tuned = withTuned(state.item.entry, state.tuned, path, rest);
+      state.tuned = withTuned(baseEntry(), state.tuned, path, rest);
     } else {
       put(path, value);
     }
@@ -715,7 +724,7 @@ async function openItem(key, { keepTuned = false } = {}) {
   }
   state.angle = item.entry?.bench ? (state.angle !== null && fresh === false ? state.angle : item.entry.bench.angle) : null;
   state.clip = false;
-  if (fresh) { state.joints = []; state.scrubs = {}; }
+  if (fresh) { state.joints = []; state.scrubs = {}; state.fit = {}; }
   state.numbers = numbersOf(state.tuned);
   if (!state.numbers.some((t) => t.path === state.selected)) state.selected = onScreen()[0]?.path ?? null;
   if (fresh && item.entry) frame(cameraAtAngle());
@@ -773,7 +782,7 @@ const UNITS = {
 const unitOf = (t) => UNITS[t.unit] ?? UNITS[''];
 const selectedNumber = () => state.numbers.find((t) => t.path === state.selected);
 /** The item's numbers with `tuned` in: a bone turned and not saved yet is a number too. */
-const numbersOf = (tuned) => (state.item?.entry && !isKit() ? tunables(applyTuned(state.item.entry, tuned)) : []);
+const numbersOf = (tuned) => (state.item?.entry && !isKit() ? tunables(applyTuned(baseEntry(), tuned)) : []);
 
 function paintNumbers() {
   const box = $('sliders');
@@ -823,7 +832,7 @@ function paintValues() {
     range.min = Math.min(t.min, v);
     range.max = Math.max(t.max, v);
     range.value = v;
-    row.dataset.changed = String(per ? !same(per, state.item.entry.bench?.perAngle?.[t.path]) : v !== baseAt(state.item.entry, t.path) && v !== t.value);
+    row.dataset.changed = String(per ? !same(per, state.item.entry.bench?.perAngle?.[t.path]) : v !== baseAt(baseEntry(), t.path) && v !== t.value);
     row.dataset.per = String(Boolean(per));
     row.dataset.selected = String(t.path === state.selected);
   }
@@ -1472,7 +1481,7 @@ function reset() {
   if (!t) return;
   snapshot();
   if (perMap()[t.path]) setPer(t.path, copy(state.item.entry.bench?.perAngle?.[t.path]));
-  if (!perMap()[t.path]) state.tuned = withTuned(state.item.entry, state.tuned, t.path, baseAt(state.item.entry, t.path));
+  if (!perMap()[t.path]) state.tuned = withTuned(baseEntry(), state.tuned, t.path, baseAt(baseEntry(), t.path));
   changed();
 }
 

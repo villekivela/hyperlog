@@ -6,15 +6,30 @@
 // The levers are one body on a revolute joint at the pivot, its value the arms' angle up from
 // level ahead.
 import { recipe, revolute } from '../recipe.mjs';
-import { chestPad, floorRail, levers, part, placedRail, rodGeometry, seatOn, span, stretchedTube } from '../parts.mjs';
+import { chestPad, floorRail, levers, part, placedRail, rodGeometry, seatOn, span, stretchedTube, swungHandles } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
+
+// The levers' pivot, [y, z], low in front of the knees, and how far it is up them to the handles.
+const PIVOT = [0.45, 0.527];
+const ARM = 0.563;
+/** How far up from the hips to the shoulders the chest pad's middle is. */
+const PAD_UP = 0.715;
 
 export default recipe({
   name: 'row_machine',
   // From the arms straight ahead to the handles back at the ribs.
   bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [rad(73), rad(135)] }) },
-  contacts: [{ body: 'levers', point: 'handles', landmark: 'hands' }],
-  fit: [{ sets: 'chest', rule: 'the chest on the pad, the arms long to the handles' }],
+  rep: { joint: 'levers', from: 'min' },
+  contacts: [
+    { body: 'levers', point: 'handles', landmark: 'hands' },
+    { body: 'frame', point: 'pad', landmark: 'chest' },
+  ],
+  fit: [{
+    sets: 'chest',
+    rule: 'the chest on the pad, the arms long to the handles',
+    solve: ({ L }) => ({ up: PAD_UP * L.trunkUp, front: L.chest }),
+  }],
+  machine: ({ seat = [0.5, 0] }, { grip }) => ({ hip: [seat[0] + 0.09, seat[1]], at: swungHandles(PIVOT, ARM, grip.width) }),
   build({ seat = [0.5, 0], chest = { up: 0.4, front: 0.1 } } = {}, M) {
     const out = 0.33;
     const pad_ = chestPad(M, chest);
@@ -49,7 +64,7 @@ export default recipe({
         span(housing, pivot.clone().setX(-out + 0.04), pivot.clone().setX(out - 0.04));
         span(axle, pivot.clone().setX(-out - 0.03), pivot.clone().setX(out + 0.03));
         [-1, 1].forEach((s, i) => span(braces[i], pivot.clone().setX(s * (out - 0.06)), V(s * (out - 0.06), 0.07, foot)));
-        return { joints: { levers: joint }, points: { handles: [-1, 1].map((s) => P.handle(s).clone()) } };
+        return { joints: { levers: joint }, points: { handles: [-1, 1].map((s) => P.handle(s).clone()), pad: [pad_.parts[0].position.clone()] } };
       },
     };
   },
