@@ -3,7 +3,7 @@
 ## Movement and exercises served
 Standing or seated, handles at the sides, work arms lift vertically as the shoulders elevate. Serves `machine_shrug`.
 
-**Serves `machine_shrug` only. Kelso shrug (`kelso_shrug`) is not this machine.** The Kelso shrug is done chest-supported, face down on an incline bench, with dumbbells (or a Smith bar), retracting the shoulder blades (thatfitfriend.com/kelso-shrugs, strive-workout.com/2026/03/11/kelso-shrugs, seen in search). It needs the incline bench frame plus a free weight, so the movement differs (prone, scapular retraction, no machine arm). Do not add a shrug-machine variant for it.
+**Serves `machine_shrug` only. `kelso_shrug` is not this machine.** The library's `kelso_shrug` ("Machine Kelso Shrug", equipment `machine`, video https://youtu.be/76rz0UNAlYI, oEmbed title "Kelso Shrug") has no description text. Its thumbnail shows the lifter leaning chest-first on a pad and holding handles on a plate-loaded machine with a loaded horn, a T-bar or chest-supported row machine. It has the row's geometry, not the shrug machine's, so #161 should move it to `row_machine` (that kit exists) and leave this machine at one exercise. Confirm the machine at Hukka (last section).
 
 ## Based on
 - Brand/model: Hammer Strength Plate-Loaded Seated/Standing Shrug (PL-SH).
@@ -33,3 +33,4 @@ Standing or seated, handles at the sides, work arms lift vertically as the shoul
 - Which shrug machine Hukka has, or whether shrugs are done on a Smith machine or with a bar.
 - Side-on and front photos; handle height from floor and spacing; lever pivot position; ROM in mm.
 - Seat height range and plate horn position.
+- Which machine the Kelso shrug is done on (the library's video shows a chest pad and plate-loaded handles; confirm it is the row machine).

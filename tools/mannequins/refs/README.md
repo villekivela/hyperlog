@@ -48,8 +48,9 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
 - `weighted_bodyweight` is the pull-up and dip station plus a belt (its file notes the belt is drawn
   as a plate at the hips) and the hyperextension bench.
 - Nordic and reverse nordic curls need only a pad and an anchor (a note in the hyperextension file).
-- `kit.mjs` lists `kelso_shrug` under `shrug_machine`, but it is not that machine: it is done face down on an incline bench with dumbbells, so it needs the `bench` kit.
-  #161 should move it out of `MACHINES`.
+- `kit.mjs` lists `kelso_shrug` under `shrug_machine`, but the library's video
+  ([youtu.be/76rz0UNAlYI](https://youtu.be/76rz0UNAlYI)) shows it chest-supported on a plate-loaded row-type machine. #161 should move
+  it to `row_machine`, which has a kit. That leaves `shrug_machine` at one exercise.
 
 ## Gaps
 
