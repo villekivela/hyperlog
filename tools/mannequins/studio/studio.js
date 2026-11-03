@@ -24,7 +24,7 @@ const $ = (id) => document.getElementById(id);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copy = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
-const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', contact: 'Contact', error: "Can't pose" };
+const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', contact: 'Contact', machine: 'Machine', error: "Can't pose" };
 const PANES = ['sidebar', 'stage', 'video', 'numbers'];
 
 // What the page keeps across a reload (a change to a recipe, a part or poses.mjs reloads it): where
