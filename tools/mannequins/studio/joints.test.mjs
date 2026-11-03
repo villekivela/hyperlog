@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from '../entries.mjs';
 import { buildStage } from '../stage.mjs';
-import { jointsOf, stepJoint, typedJoint, limitOf, showJoint, scrubAll, inUnits, limitsOf, stepsOf } from './joints.mjs';
+import { jointsOf, stepJoint, typedJoint, limitOf, showJoint, scrubAll, inUnits, limitsOf, stepsOf, statusOf } from './joints.mjs';
 
 const rad = (d) => (d * Math.PI) / 180;
 const near = (a, b, why) => assert.ok(Math.abs(a - b) < 1e-9, `${why}: ${a}, not ${b}`);
@@ -18,7 +18,7 @@ const posed = async (id) => {
 test("each joint of the kit on stage is a row: its kit, its body, its type and its limits", async () => {
   const extension = jointsOf((await posed('leg_extension')).kit.kits);
   assert.deepEqual(extension.map(({ key, kit, body, type }) => ({ key, kit, body, type })), [{ key: 'leg_extension.lever', kit: 'leg_extension', body: 'lever', type: 'revolute' }]);
-  assert.deepEqual(extension[0].limits, [0, rad(120)]);
+  assert.deepEqual(extension[0].limits, [0, rad(95)]);
   const press = jointsOf((await posed('leg_press')).kit.kits);
   assert.deepEqual(press.map(({ key, type }) => [key, type]), [['leg_press.sled', 'prismatic']]);
   // A barbell is carried, on no joint.
@@ -30,7 +30,7 @@ test('a joint steps a degree or a centimetre, a tenth of that fine, and never pa
   near(stepJoint(lever, 0, 5), rad(5), 'five steps on');
   near(stepJoint(lever, rad(5), -3, true), rad(4.7), 'three fine steps back');
   near(stepJoint(lever, rad(2), -5), 0, 'past its lower limit');
-  near(stepJoint(lever, rad(118), 5), rad(120), 'past its upper limit');
+  near(stepJoint(lever, rad(93), 5), rad(95), 'past its upper limit');
   const [sled] = jointsOf((await posed('leg_press')).kit.kits);
   near(stepJoint(sled, 0.1, 2), 0.12, 'two steps up the rails');
   near(limitOf(sled, 1), 0.45, 'its upper limit');
@@ -41,11 +41,11 @@ test('a joint is typed and shown in degrees or millimetres, a + moving it from w
   const [lever] = jointsOf((await posed('leg_extension')).kit.kits);
   near(typedJoint(lever, '45', 0), rad(45), 'typed');
   near(typedJoint(lever, '+10', rad(20)), rad(30), 'moved');
-  near(typedJoint(lever, '500', 0), rad(120), 'past its limit');
+  near(typedJoint(lever, '500', 0), rad(95), 'past its limit');
   assert.equal(typedJoint(lever, 'far', 0), null);
   assert.equal(showJoint(lever, rad(30)), '30.0°');
   assert.equal(inUnits(lever, rad(30)), 30);
-  assert.equal(limitsOf(lever), '0.0° to 120.0°');
+  assert.equal(limitsOf(lever), '0.0° to 95.0°');
   assert.deepEqual(stepsOf(lever), ['1°', '0.1°']);
   const [sled] = jointsOf((await posed('leg_press')).kit.kits);
   near(typedJoint(sled, '120', 0), 0.12, 'typed in millimetres');
@@ -69,4 +69,11 @@ test('each scrubbed joint is set on its kit after the pose, the stack with it', 
   stage.pose(0);
   scrubAll(stage.kit.kits, { 'leg_extension.lever': rad(60), 'no_kit.lever': 1 });
   near(kit.joints.lever.value, rad(60), 'set again after the next pose');
+});
+
+test('the status line says where the joint is after every move, and which limit it is at', async () => {
+  const [sled] = jointsOf((await posed('leg_press')).kit.kits);
+  assert.equal(statusOf(sled, 0.45), 'leg_press sled 450 mm, at its upper limit');
+  assert.equal(statusOf(sled, stepJoint(sled, 0.45, -5)), 'leg_press sled 400 mm');
+  assert.equal(statusOf(sled, 0), 'leg_press sled 0 mm, at its lower limit');
 });

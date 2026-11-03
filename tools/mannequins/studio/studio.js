@@ -16,7 +16,7 @@ import { BENCH_ANGLES } from '../entries.mjs';
 import { faster, repAt, slower, spanOf, stepFrames, stepSeconds, synced, timeAt, zoomOf } from './video.mjs';
 import { HALF_FOV, closeUpOf, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
 import { skeletonOf } from './bones.mjs';
-import { inUnits, jointsOf, limitOf, limitsOf, scrubAll, showJoint, stepJoint, stepsOf, typedJoint } from './joints.mjs';
+import { inUnits, jointsOf, limitOf, limitsOf, scrubAll, showJoint, statusOf, stepJoint, stepsOf, typedJoint } from './joints.mjs';
 import { between, heldAt, turnOf, wpos } from '../rig.mjs';
 
 const keys = keymap(KEYS);
@@ -957,11 +957,12 @@ function moveJoint(by, absolute) {
   selectJoint(state.joints[Math.max(0, Math.min(state.joints.length - 1, i))].key);
 }
 
-/** Scrubs joint `j` to `value`, within its limits. */
+/** Scrubs joint `j` to `value`, within its limits, and says where it is. */
 function setJoint(j, value) {
   state.scrubs[j.key] = value;
   scrubAll(liveKits(), { [j.key]: value });
   paintJointValues();
+  message(statusOf(j, value));
 }
 
 /** Runs `fn` on the selected joint, or says there is none. */
@@ -972,7 +973,7 @@ function onJoint(fn) {
 }
 
 const nudgeJoint = (direction, fine, count) => onJoint((j) => setJoint(j, stepJoint(j, jointNow(j), direction * count, fine)));
-const limitJoint = (end) => onJoint((j) => { setJoint(j, limitOf(j, end)); message(`${jointLabel(j)} at its ${end < 0 ? 'lower' : 'upper'} limit`); });
+const limitJoint = (end) => onJoint((j) => setJoint(j, limitOf(j, end)));
 const resetJoint = () => onJoint((j) => { delete state.scrubs[j.key]; paintJointValues(); message(`${jointLabel(j)} back where the rep has it`); });
 function typeJoint() {
   onJoint((j) => {

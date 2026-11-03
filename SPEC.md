@@ -1607,7 +1607,8 @@ gallery (Technique videos).
       besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads) or
       the shoulders (a hack squat's pads). A weight stack rises by a ratio of a joint's travel: a
       lever's turn on a selectorised machine, and on a cable machine the stack's own joint, the
-      cable drawn out, one for one.
+      cable drawn out, one for one. A lever's limits are where the body stops (the knee straight,
+      the arms straight, the heels as high as they rise), so a rep past them has gone too far.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its

@@ -16,7 +16,8 @@ import { V, rad } from '../rig.mjs';
 
 export default recipe({
   name: 'chest_press',
-  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [0, rad(60)] }) },
+  // From the handles at the chest to the arms straight.
+  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [0, rad(26)] }) },
   contacts: [{ body: 'levers', point: 'handles', landmark: 'hands' }],
   stacks: [{ joint: 'levers', ratio: 0.5 }],
   fit: [

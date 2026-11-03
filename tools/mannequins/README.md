@@ -316,7 +316,9 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   `prismatic` (a sled, a carriage, a stack sliding along its rails), with its `limits`; or `free`,
   on no joint, for what the hands carry (a barbell, a cable's attachment). A joint's value is how far
   it has moved from where it is measured: its rest where it has a stack, or a lever's angle up from
-  level ahead.
+  level ahead. A lever's limits are where the body stops, not only the machine: a leg extension's
+  where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
+  arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
 - `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
   `hands`, `feet`, `shins`, `thighs` or `shoulders`.
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or

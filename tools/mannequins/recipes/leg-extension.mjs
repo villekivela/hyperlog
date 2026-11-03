@@ -14,8 +14,11 @@ import { recipe, revolute } from '../recipe.mjs';
 import { UPRIGHTS, backPad, floorRail, kneeDrive, knob, pad, part, popPin, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
 import { V, UP, rad } from '../rig.mjs';
 
-/** The lever's joint: turning forward and up for the extension, back for the curl. */
-export const kneeLever = (axis) => revolute({ axis, limits: [0, rad(120)] });
+/**
+ * The lever's joint, turning from the stretch up to `max`: forward and up for the extension, which
+ * stops where the knee is straight, and back for a curl.
+ */
+export const kneeLever = (axis, max) => revolute({ axis, limits: [0, max] });
 
 /** The seated knee machines' parts, the extension's or with `curl` the curl's. */
 export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl = false } = {}, M) {
@@ -128,7 +131,8 @@ export const SEATED_FIT = [
 
 export default recipe({
   name: 'leg_extension',
-  bodies: { lever: kneeLever(V(-1, 0, 0)) },
+  // From the stretch, the knee bent about 95°, to the knee straight.
+  bodies: { lever: kneeLever(V(-1, 0, 0), rad(95)) },
   contacts: [
     { body: 'lever', point: 'roller', landmark: 'shins' },
     { body: 'frame', point: 'handles', landmark: 'hands' },

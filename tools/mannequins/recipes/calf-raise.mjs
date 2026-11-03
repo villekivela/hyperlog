@@ -18,7 +18,8 @@ import { V, X, rad } from '../rig.mjs';
 export default recipe({
   name: 'calf_raise_machine',
   node: 'calf_raise',
-  bodies: { lever: revolute({ axis: X, limits: [0, rad(25)] }) },
+  // From the stretch to the heels as high as they rise, 45° from flat.
+  bodies: { lever: revolute({ axis: X, limits: [0, rad(13)] }) },
   contacts: [
     { body: 'lever', point: 'pads', landmark: 'thighs' },
     { body: 'lever', point: 'grips', landmark: 'hands' },

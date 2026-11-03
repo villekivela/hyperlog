@@ -83,7 +83,8 @@ function lying({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {}, M) {
 
 export default recipe({
   name: 'leg_curl',
-  bodies: { lever: kneeLever(X) },
+  // From the stretch, the knee all but straight, to a bend of about 135°.
+  bodies: { lever: kneeLever(X, rad(120)) },
   contacts: ({ lying: flat = false } = {}) => [
     { body: 'lever', point: 'roller', landmark: 'shins' },
     flat ? { body: 'frame', point: 'handles', landmark: 'hands' } : { body: 'frame', point: 'thighPad', landmark: 'thighs' },

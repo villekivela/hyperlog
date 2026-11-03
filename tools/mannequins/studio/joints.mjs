@@ -49,6 +49,12 @@ export const stepsOf = (row) => UNITS[row.type].steps;
 /** `row`'s joint's limits as the studio shows them. */
 export const limitsOf = (row) => `${showJoint(row, row.limits[0])} to ${showJoint(row, row.limits[1])}`;
 
+/** What the status line says of `row`'s joint at `value`: where it is, and the limit it is at. */
+export function statusOf(row, value) {
+  const at = value <= row.limits[0] ? ', at its lower limit' : value >= row.limits[1] ? ', at its upper limit' : '';
+  return `${row.kit} ${row.body} ${showJoint(row, value)}${at}`;
+}
+
 /** Sets each scrubbed joint (`scrubs`, values by key) on `kits`, after they are posed; a key no kit has is passed over. */
 export function scrubAll(kits, scrubs) {
   for (const [key, value] of Object.entries(scrubs)) {

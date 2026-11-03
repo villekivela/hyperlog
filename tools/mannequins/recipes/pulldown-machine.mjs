@@ -13,7 +13,8 @@ import { V, rad } from '../rig.mjs';
 
 export default recipe({
   name: 'pulldown_machine',
-  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [rad(120), rad(220)] }) },
+  // From the arms straight overhead to the handles down past the shoulders.
+  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [rad(154), rad(220)] }) },
   contacts: [
     { body: 'levers', point: 'handles', landmark: 'hands' },
     { body: 'frame', point: 'thighPads', landmark: 'thighs' },

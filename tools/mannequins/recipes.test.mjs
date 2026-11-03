@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
-import { heldAt, wpos } from './rig.mjs';
+import { heldAt, rad, wpos } from './rig.mjs';
 import { buildKit } from './kit.mjs';
 import { POSES } from './poses.mjs';
 
@@ -120,3 +120,63 @@ for (const id of Object.keys(POSES).sort()) {
     }
   });
 }
+
+// Each lever's limits are where the body stops, not only the machine (#160 reads them as where a
+// rep has gone too far): a knee lever between a straight knee and the checks' deepest bend, a lever
+// in the hands no further than the arms reach, and the calf raise's no further than the heels rise.
+const angleAt = (rig, a, b, c) => {
+  const [A, B, C] = [a, b, c].map((n) => wpos(rig.bones[n]));
+  return B.clone().sub(A).angleTo(C.clone().sub(B));
+};
+const KNEE_LEVERS = ['leg_extension', 'seated_leg_curl', 'lying_leg_curl'];
+
+for (const id of KNEE_LEVERS) {
+  test(`${id}: the lever's limits keep the knee between straight and its deepest bend`, async () => {
+    const stage = await buildStage(prepare(id));
+    const [name, kit] = Object.entries(stage.kit.kits).find(([, k]) => k.bodies.lever);
+    const knee = () => angleAt(stage.rig, 'thigh_l', 'calf_l', 'foot_l');
+    stage.pose(1);
+    const stretch = knee();
+    stage.pose(0);
+    // Which way the lever bends the knee: less for an extension, more for a curl.
+    const way = Math.sign(knee() - stretch);
+    for (const limit of kit.joints.lever.limits) {
+      const bend = stretch + way * limit;
+      assert.ok(bend >= -rad(2) && bend <= rad(155), `${name}'s lever at ${(limit * 180 / Math.PI).toFixed(0)}° bends the knee ${(bend * 180 / Math.PI).toFixed(0)}°`);
+    }
+  });
+}
+
+for (const id of ['machine_chest_press', 'chest_supported_machine_row', 'machine_pulldown', 'machine_preacher_curl']) {
+  test(`${id}: the levers' limits keep the handles within the arms' reach`, async () => {
+    const stage = await buildStage(prepare(id));
+    stage.pose(0);
+    const { rig } = stage;
+    const reach = (k) => wpos(rig.bones[`upperarm_${k}`]).distanceTo(wpos(rig.bones[`lowerarm_${k}`]))
+      + wpos(rig.bones[`lowerarm_${k}`]).distanceTo(wpos(rig.bones[`hand_${k}`])) + wpos(rig.bones[`hand_${k}`]).distanceTo(heldAt(rig, k));
+    const shoulders = ['l', 'r'].map((k) => ({ at: wpos(rig.bones[`upperarm_${k}`]), reach: reach(k) }));
+    for (const [name, kit] of Object.entries(stage.kit.kits)) {
+      for (const [body, joint] of Object.entries(kit.joints)) {
+        for (const limit of joint.limits) {
+          stage.pose(0);
+          kit.scrub(body, limit);
+          for (const { at } of kit.contacts.filter((c) => c.landmark === 'hands' && c.body === body)) {
+            for (const p of at) {
+              const short = Math.min(...shoulders.map((sh) => p.distanceTo(sh.at) - sh.reach));
+              assert.ok(short < 0.01, `${name}'s ${body} at ${(limit * 180 / Math.PI).toFixed(0)}°: a handle ${(short * 100).toFixed(1)} cm past the arms' reach`);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+test("seated_calf_raise: the lever's upper limit is no further than the heels rise, 45° from flat", async () => {
+  const entry = prepare('seated_calf_raise');
+  const highest = await buildStage({ ...entry, top: { ...entry.top, ankle: 45 } });
+  highest.pose(0);
+  const turn = highest.kit.kits.calf_raise_machine.joints.lever.value;
+  const [, max] = highest.kit.kits.calf_raise_machine.joints.lever.limits;
+  assert.ok(max <= turn + 1e-9, `the lever's upper limit ${(max * 180 / Math.PI).toFixed(1)}°, the heels highest at ${(turn * 180 / Math.PI).toFixed(1)}°`);
+});
