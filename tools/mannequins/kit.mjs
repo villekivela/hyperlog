@@ -758,6 +758,7 @@ function cableTower({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 's
   const hook = (P) => P.bar.clone().add(V(0, above, 0));
   return {
     group: g,
+    cables: [{ cable, hook: () => handle.localToWorld(V(0, above, 0)) }],
     place(P, P0) {
       handle.position.copy(P.bar);
       const at = hook(P);
@@ -1065,6 +1066,10 @@ function cableColumn({ at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'han
   const g = group('cable_column', [...columns.map((c) => c.column), ...ends, ...cables]);
   // The column a hand's cable runs to.
   const columnOf = (s) => (twin ? columns[(crossed ? -s : s) > 0 ? 0 : 1] : columns[0]);
+  // Where each cable hooks on: a stirrup's ring, or the rope's.
+  const hookOn = rope
+    ? [{ cable: cables[0], hook: () => rope.ring.getWorldPosition(V(0, 0, 0)) }]
+    : handles.map(({ s, handle }) => ({ cable: cables[columns.indexOf(columnOf(s))], hook: () => handle.localToWorld(V(0, STIRRUP, 0)) }));
   // The stack rests where the cable is drawn least, at whichever end of the rep that is.
   let rests = null;
   const hooksAt = (P) => {
@@ -1080,6 +1085,7 @@ function cableColumn({ at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'han
   };
   return {
     group: g,
+    cables: hookOn,
     place(P, P0, P1) {
       if (!rests) {
         const bottom = hooksAt(P1);
@@ -1087,14 +1093,19 @@ function cableColumn({ at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'han
       }
       const hooks = hooksAt(P);
       hooks.forEach(({ c, s, hook }, i) => {
-        const lift = HELD + Math.max(0, hook.distanceTo(c.exit) - rests[i]);
-        c.set(hook, lift);
-        span(cables[columns.indexOf(c)], hook, c.exit);
+        let at = hook;
         if (handles) {
+          // The stirrup in the hand, turned toward the pulley as square to the grip allows: the
+          // cable runs from its ring, wherever that comes to.
           const { handle } = handles.find((h) => h.s === s);
           handle.position.copy(P.hand(s));
           turnTo(handle, P.held?.[s] ?? X, c.exit.clone().sub(P.hand(s)));
+          handle.updateMatrixWorld(true);
+          at = handle.localToWorld(V(0, STIRRUP, 0));
         }
+        const lift = HELD + Math.max(0, at.distanceTo(c.exit) - rests[i]);
+        c.set(at, lift);
+        span(cables[columns.indexOf(c)], at, c.exit);
       });
       if (rope) {
         const { hook } = hooks[0];
@@ -1592,7 +1603,8 @@ export function buildKit(entry) {
   const g = new THREE.Group();
   g.name = 'kit';
   kits.forEach((k) => g.add(k.group));
-  return { group: g, place: (P, P0, P1) => kits.forEach((k) => k.place(P, P0, P1)) };
+  // Each cable, with where on its handle it hooks on (`hook()`, in the world), for the checks.
+  return { group: g, place: (P, P0, P1) => kits.forEach((k) => k.place(P, P0, P1)), cables: kits.flatMap((k) => k.cables ?? []) };
 }
 
 /**

@@ -80,3 +80,11 @@ test('equipment moves a metre either way, a body point only 30 cm', () => {
   const hand = t['top.hand.1'];
   assert.ok(hand.max - hand.value <= 0.31, `a hand moves to ${hand.max}`);
 });
+
+test('every pose offers its grip\'s turn at the top and the bottom, each from grip.rotate', () => {
+  const t = byPath(tunables(prepare('cable_flye')));
+  const rotate = prepare('cable_flye').grip.rotate ?? 0;
+  assert.equal(t['top.rotate']?.value, rotate);
+  assert.equal(t['bottom.rotate']?.value, rotate);
+  assert.equal(t['grip.rotate'], undefined);
+});

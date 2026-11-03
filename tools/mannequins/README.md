@@ -80,6 +80,16 @@ db_incline_press: {
   twentieth, each has a − and + beside it, a number to type into and a ↺; ←/→ or ↓/↑ step the
   focused one (Shift for ten) and Enter presses OK.
 
+## Wrists and grip turn
+
+Every pose with hands bends its wrists (SPEC, #127). A hand on something that lies its own way (a
+bar, a handle the pose sets) turns at the wrist until its knuckles lie along it, as far as a wrist
+bends (40°); a free handle turns with the hand. `top.wrist` and `bottom.wrist` bend it further,
+[flexion toward the palm, deviation toward the index finger] in degrees, eased through the rep
+(one given at the bottom alone eases from straight). The grip's turn is `top.rotate` and
+`bottom.rotate`, each from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers
+handle bends the wrist.
+
 ## Pose entries
 
 An entry is data only, keyed by the exercise's id in `app/src/main/assets/exercises.json`.

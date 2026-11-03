@@ -338,7 +338,7 @@ export const POSES = {
     top: { shin: 6, thigh: 8, trunk: 12, hand: [0.2037, 1.5397, 0.7136] },
     bottom: { shin: 6, thigh: 8, trunk: 12, hand: [0.7891, 1.2839, -0.0151] },
     feet: { stance: 0.18, toeOut: 10, kneesOut: 0.2 },
-    grip: { arc: true, rotate: -0.5602, pole: [1, -0.4, -0.6] },
+    grip: { arc: true, rotate: 144.7937, pole: [1, -0.4, -0.6] },
     camera: { target: [0, 1.05, 0], halfHeight: 1.15, azimuth: 30, elevation: 10 },
   },
 
@@ -347,11 +347,11 @@ export const POSES = {
   reverse_cable_crossover: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_column: { at: [0.8684, 0.85], pulley: 1.8, twin: true, crossed: true } },
+    kit: { cable_column: { at: [0.7729, 0.8181], pulley: 1.8, twin: true, crossed: true } },
     top: { shin: 4, thigh: 6, trunk: 4, hand: [0.78, 1.45, 0.08] },
-    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [-0.12, 1.38, 0.45] },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.18, 1.4357, 0.6348] },
     feet: { stance: 0.16, toeOut: 8, kneesOut: 0.2 },
-    grip: { arc: true, pole: [1, 0, -0.3] },
+    grip: { arc: true, pole: [1, 0, -0.3], rotate: 58.0559 },
     camera: { target: [0, 1.1, 0.1], halfHeight: 1.15, azimuth: 24, elevation: 10 },
   },
 
@@ -363,7 +363,7 @@ export const POSES = {
     kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
     body: { hip: [0.53, 0.17], trunk: -10 },
     top: { hand: [0.2882, 1.6383, 0.2743] },
-    bottom: { hand: [0.32, 1.12, 0.18] },
+    bottom: { hand: [0.32, 1.13, 0.18] },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
     grip: { pole: [1, -1, 0.1] },
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },

@@ -1516,7 +1516,10 @@ gallery (Technique videos).
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
     row, the machine pulldown and the preacher curl. After the owner's review (2026-11-03) a flye's,
     a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a
-    curl can stand staggered; and equipment moves a metre either way in Tune.
+    curl can stand staggered; and equipment moves a metre either way in Tune. Every hand on a bar
+    or a set handle turns at the wrist until its knuckles lie along it, as far as a wrist bends,
+    and Tune bends the wrists and turns the grip at each end; every cable ends at its handle's
+    hook (a check fails one more than 1 cm off).
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
