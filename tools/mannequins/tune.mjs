@@ -21,7 +21,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'lever', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -149,12 +149,18 @@ export function tunables(entry) {
       if (!have.has(p) && valueAt(entry, p) === undefined) found.push([p, v]);
     }
   }
-  // Every pose with hands can turn them: overhand 0°, neutral 90°, underhand 180°.
-  // (A dumbbell press turns them at the top and at the bottom, which `top.rotate` and `bottom.rotate` set.)
-  if (entry.grip && !have.has('grip.rotate') && entry.motion !== 'dumbbell_press') found.push(['grip.rotate', 0]);
+  // Every pose with hands bends its wrists, at the top and the bottom: [flexion, deviation].
+  if (entry.grip) for (const end of ['top', 'bottom']) {
+    if (valueAt(entry, `${end}.wrist`) === undefined) found.push([`${end}.wrist.0`, 0], [`${end}.wrist.1`, 0]);
+  }
+  // Every pose with hands can turn them, at the top and at the bottom: overhand 0°, neutral 90°,
+  // underhand 180°, each from the entry's own `grip.rotate`, which stands for both ends.
+  if (entry.grip) for (const end of ['top', 'bottom']) {
+    if (valueAt(entry, `${end}.rotate`) === undefined) found.push([`${end}.rotate`, entry.grip.rotate ?? 0]);
+  }
   return found
     // `press` is the rep's own 0 and 1 (top and bottom), not a setting.
-    .filter(([path]) => !/^(top|bottom)\.press$/.test(path) && !(entry.motion === 'dumbbell_press' && /^grip\.(rotate|tilt)$/.test(path)))
+    .filter(([path]) => !/^(top|bottom)\.press$/.test(path) && path !== 'grip.rotate' && !(entry.motion === 'dumbbell_press' && path === 'grip.tilt'))
     .filter(([path]) => !(/^(top|bottom)\./.test(path) && traced.has(steps(path)[1])))
     .map(([path, value]) => ({ path, value, ...rangeOf(path, value) }));
 }

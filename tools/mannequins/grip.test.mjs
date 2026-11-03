@@ -45,8 +45,10 @@ test('the hands still hold the bar whichever way they turn', async () => {
   }
 });
 
-test('every pose with hands offers a rotation slider, set to overhand', () => {
-  const t = tunables(prepare('barbell_bench_press') ?? entry).find((x) => x.path === 'grip.rotate');
-  assert.equal(t?.value, 0);
-  assert.ok(t.max >= 180 && t.min <= 0);
+test('every pose with hands offers a rotation slider at the top and the bottom, set to overhand', () => {
+  for (const end of ['top', 'bottom']) {
+    const t = tunables(prepare('barbell_bench_press')).find((x) => x.path === `${end}.rotate`);
+    assert.equal(t?.value, 0);
+    assert.ok(t.max >= 180 && t.min <= 0);
+  }
 });
