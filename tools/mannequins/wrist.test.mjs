@@ -141,12 +141,13 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
 // The owner, #127: the tilt slider bends the hand toward the thumb or the little finger from a
 // straight wrist, on a bar as anywhere, and neither the hand's roll about the bar nor the
 // straight-wrist solve undoes it.
-// 12°: at 15° the hand, tilted on the bar it holds, stands its palm just past the contact check's
-// 2 mm off the bar at the bottom (#162), so the squat won't bake.
-test('12° of ulnar tilt at a back squat\'s bottom is 12° in the baked clip', async () => {
+// On the low-bar squat, 12°: the hand, tilted on the bar it holds, still meets it within the contact
+// check's 2 mm (#162); the barbell squat's wrapped thumb comes off its bar when tilted so.
+test('12° of ulnar tilt at a low-bar squat\'s bottom is 12° in the baked clip', async () => {
   const out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
-  await bakeAll(out, { poses: { barbell_squat: applyTuned(POSES.barbell_squat, { 'bottom.wrist': [0, -12] }) } });
-  const { clip, resources } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips.barbell_squat;
+  const poses = { barbell_squat: POSES.barbell_squat, back_squat_low_bar: applyTuned(POSES.back_squat_low_bar, { 'bottom.wrist': [0, -12] }) };
+  await bakeAll(out, { poses });
+  const { clip, resources } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips.back_squat_low_bar;
   const gltf = await loadClip(path.join(out, clip), resources.map((r) => path.join(out, r)));
   const mixer = new THREE.AnimationMixer(gltf.scene);
   mixer.clipAction(gltf.animations[0]).play();

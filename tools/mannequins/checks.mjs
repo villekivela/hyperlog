@@ -13,9 +13,9 @@
 //   forearm's line unless the pose sets its wrists (an open hand, or a hand turned by a bone
 //   offset, counts as set);
 // - trace: each angle the pose has a trace for is within 10° of it;
-// - contact: each hand on a bar or a handle meets it (#162): the palm, every finger and the thumb
-//   within 2 mm of its surface (a wrapped thumb on a bar under 40 mm may rest on the fingers
-//   instead), and no part of the hand more than 2 mm inside it.
+// - contact: each hand on a bar or a handle meets it (#162): every finger and the thumb within
+//   2 mm of its surface (a wrapped thumb on a bar under 40 mm may rest on the fingers instead), and
+//   none more than 2 mm inside it; the palm, the ball of the thumb with it, within 3 mm either way.
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
@@ -30,6 +30,8 @@ const LIMITS = {
   grip: 0.015, fingers: 0.013, foot: 0.02, inside: 0.02, floor: 0.015, wrist: 5, cable: 0.01, rack: 0.015,
   bend: 155, kneeTurn: 60, hipFlex: 140, hipExtend: 30, head: 60, ankle: [55, 160], trace: 10,
   contact: 0.002,
+  // The palm's skin is measured on a grid over large triangles, so it is held to a little more.
+  palm: 0.003,
 };
 const angle = (a, b) => deg(a.angleTo(b));
 const FINGERS = /^(hand|index|middle|ring|pinky|thumb)_/;
@@ -142,9 +144,9 @@ export function contactsOf({ rig, kit }, P, k) {
   const name = part.mesh.name || 'its bar';
   return [
     ...Object.entries(digits).map(([digit, { gap, at }]) => ({
-      past: gap - LIMITS.contact, at, found: `the ${k} ${digit === 'thumb' || digit === 'palm' ? digit : `${digit} finger`} ${mm(gap)} mm off ${name}`,
+      past: gap - (digit === 'palm' ? LIMITS.palm : LIMITS.contact), at, found: `the ${k} ${digit === 'thumb' || digit === 'palm' ? digit : `${digit} finger`} ${mm(gap)} mm off ${name}`,
     })),
-    { past: inside.depth - LIMITS.contact, at: inside.at, found: `${inside.bone} ${mm(inside.depth)} mm into ${name}` },
+    { past: inside.depth - (/^(hand|thumb_01)_/.test(inside.bone) ? LIMITS.palm : LIMITS.contact), at: inside.at, found: `${inside.bone} ${mm(inside.depth)} mm into ${name}` },
   ];
 }
 

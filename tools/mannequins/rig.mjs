@@ -458,7 +458,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     const fixed = !P.hand || (Boolean(P.across) && !P.heldFree);
     // The bar's own radius (the kit's part under the hand), seated on the palm's skin at the grip's landmark.
     const radius = P.radius?.[s] ?? DEFAULT_RADIUS;
-    const seat = seatOf(rig, k, hold.sits, radius, hold.thumb);
+    const seat = seatOf(rig, k, hold.sits, radius, hold.thumb, hold.swing);
     const { depth } = seat;
     rig.depth[k] = depth;
     // How far off the palm the bar is seated with the hand pointing `fingers`: as it lies in the
@@ -537,7 +537,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // holds nothing lies open, or relaxed where it rests (`P.resting`).
     const bar = holdsNothing(P, s) ? null
       : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
-    if (bar) (arms[k] ??= {}).fingers = closeHand(rig, k, bar, hold.thumb, near[k]?.at ? near[k].fingers : null);
+    if (bar) (arms[k] ??= {}).fingers = closeHand(rig, k, bar, hold, near[k]?.at ? near[k].fingers : null);
     else relaxHand(rig, k, hold.sits === 'open');
   }
   offset(rig, P, Object.keys(P.offsets ?? {}).filter((n) => !turned.has(n)));

@@ -17,7 +17,9 @@ export const POSES = {
     // The bar on the upper back: up the trunk from the hips to just past the shoulders, and behind
     // the trunk's line. It sits about 6 cm behind the shoulder joints.
     bar: { up: 0.02, back: 0.2 },
-    grip: { width: 0.4 },
+    // The thumbs swing further out of the palms than mid-palm's default to wrap the bar behind the
+    // neck (`grip.swing`).
+    grip: { width: 0.4, swing: 50 },
     camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   },
 
@@ -391,7 +393,7 @@ export const POSES = {
   back_squat_high_bar: {
     like: 'barbell_squat',
     bar: { up: 0.04, back: 0.2 },
-    grip: { pole: [0.35, -1, -0.8] },
+    grip: { pole: [0.35, -1, -0.8], swing: 55 },
   },
 
   // The bar low across the rear delts, a few centimetres down the back and further behind the
@@ -427,7 +429,8 @@ export const POSES = {
     top: { shin: 3, thigh: 3, trunk: 2, upperArm: 10, forearm: 140 },
     bottom: { shin: 3, thigh: 3, trunk: 2, upperArm: 6, forearm: 14 },
     feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
-    grip: { width: 0.2, rotate: 180 },
+    // The thumbs swing a little further out than mid-palm's default, clear of the bar as it rises.
+    grip: { width: 0.2, rotate: 180, swing: 40 },
     camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 62, elevation: 8 },
   },
 

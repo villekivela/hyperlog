@@ -1526,12 +1526,15 @@ gallery (Technique videos).
     nothing round, and its thumb, wrapped round the bar or thumbless over it (the low-bar squat);
     each motion has one by default and an entry can name its own. The palm rests on the bar at the
     radius of the kit's part under the hand, and each finger and the thumb close joint by joint
-    until they touch it (a wrapped thumb on a bar under 40 mm rests on the fingers), on every
-    frame; the research's wrist angles are not applied, since a wrist stays straight unless the
-    pose sets it. A check fails a hand that stands off its bar or sinks into it by more than 2 mm,
-    and the studio's hand close-up marks where. The mannequin's deep palm keeps its fingers from
-    closing round a bar lower than about 0.6 of the way from the wrist to the knuckles, so its heel
-    of the palm sits as low as they reach. The rope is 28 mm with 60 mm end stops, bending at each
+    until they touch it, the thumb lying round the bar (a wrapped thumb on a bar under 40 mm may
+    rest on the fingers where they come round it), on every frame. Whether to apply the research's
+    wrist angles (5–10° of extension for a press) is open for the owner; until then a wrist stays
+    straight unless the pose sets it. A check fails a hand that stands off its bar or sinks into it
+    by more than 2 mm (the palm, measured over large triangles, 3 mm), and the studio's hand
+    close-up marks where. The mannequin's deep palm and thick fingers keep its fingers from closing
+    round a bar lower than about 0.5 of the way from the wrist to the knuckles, and its thumb from
+    coming round a press's bar below 0.65, so its heel of the palm sits there, not at a lifter's
+    0.2–0.3, and the three landmarks lie close. The rope is 28 mm with 60 mm end stops, bending at each
     fist to run through it along the knuckles, its stop against the little finger. A wrist bends only where
     the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
     frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
