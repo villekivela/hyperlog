@@ -96,8 +96,10 @@ the hands check fails fingers folded into one another (their joints under 1.3 cm
 degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
 given at the bottom alone eases from straight). The joints check fails a wrist bent more than 20°
 in a pose that doesn't set its wrists. The grip's turn is `top.rotate` and `bottom.rotate`, each
-from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers handle bends the wrist,
-and a squat's elbow handle sets `grip.pole`.
+from `grip.rotate`, which stands for both ends. In Tune the wrist's two sliders at each end are
+labelled in words, "Wrist bend: + flexion / − extension" and "Wrist tilt: + radial (thumb side) /
+− ulnar (little-finger side)", and start straight where the entry sets no wrist; a drag of the
+fingers handle bends the wrist, and a squat's elbow handle sets `grip.pole`.
 
 ## Grips set by set
 

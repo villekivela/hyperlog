@@ -35,8 +35,34 @@ export function valueAt(entry, path) {
   return steps(path).reduce((v, k) => (v === undefined || v === null ? undefined : v[k]), entry);
 }
 
-/** What the entry has at `path`, or what its motion does there when it says nothing. */
-export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.motion]?.[path];
+/** A hand's wrist, [flexion, deviation], where the entry sets none: straight. */
+const STRAIGHT_WRIST = [0, 0];
+
+/**
+ * What the entry has at `path`, or what its motion does there when it says nothing. A wrist the
+ * entry leaves unset starts straight.
+ */
+export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.motion]?.[path]
+  ?? (entry.grip && /^(top|bottom)\.wrist$/.test(path) ? STRAIGHT_WRIST : undefined);
+
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * `tuned` with a slider's `value` put at its `path`: one number of a point goes into the point,
+ * which is saved whole, and a value that is what the entry already has comes out again.
+ */
+export function withTuned(entry, tuned, path, value) {
+  const m = path.match(/^(.*)\.(\d+)$/);
+  if (m) {
+    const [, point, i] = m;
+    const whole = JSON.parse(JSON.stringify(tuned[point] ?? baseAt(entry, point)));
+    whole[Number(i)] = value;
+    return withTuned(entry, tuned, point, whole);
+  }
+  const next = { ...tuned };
+  if (same(value, baseAt(entry, path))) delete next[path]; else next[path] = value;
+  return next;
+}
 
 /** Puts `value` at `path` in `entry`, making the objects on the way. */
 function setAt(entry, path, value) {
@@ -105,6 +131,16 @@ function rangeOf(path, value) {
   // Equipment stands where the pose needs it: a metre either way.
   if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.01, unit: ' m' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.01, unit: ' m' };
+}
+
+/** What the wrist's numbers do, [flexion, deviation], and which way each sign bends the hand. */
+const WRIST_WORDS = ['Wrist bend: + flexion / − extension', 'Wrist tilt: + radial (thumb side) / − ulnar (little-finger side)'];
+
+/** A slider's label: in words where its path doesn't say what it does, else the path. */
+export function labelOf(path) {
+  const m = path.match(/^(top|bottom)\.wrist\.([01])$/);
+  if (!m) return path;
+  return `${m[1] === 'top' ? 'Top' : 'Bottom'} · ${WRIST_WORDS[Number(m[2])]}`;
 }
 
 /** The headings the sliders are grouped under, in order; the less used start collapsed. */

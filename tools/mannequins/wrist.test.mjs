@@ -7,6 +7,12 @@ import { buildStage } from './stage.mjs';
 import { applyTuned, tunables } from './tune.mjs';
 import { handlesAt } from './handles.mjs';
 import * as THREE from 'three';
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { bakeAll } from './bake.mjs';
+import { loadClip } from './glb.mjs';
+import { POSES } from './poses.mjs';
 import { X, gripTarget, heldAt, turnOf, wpos } from './rig.mjs';
 
 const deg = (r) => (r * 180) / Math.PI;
@@ -126,3 +132,25 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
     }
   });
 }
+
+// The owner, #127: the tilt slider bends the hand toward the thumb or the little finger from a
+// straight wrist, on a bar as anywhere, and neither the hand's roll about the bar nor the
+// straight-wrist solve undoes it.
+test('15° of ulnar tilt at a back squat\'s bottom is 15° in the baked clip', async () => {
+  const out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  await bakeAll(out, { poses: { barbell_squat: applyTuned(POSES.barbell_squat, { 'bottom.wrist': [0, -15] }) } });
+  const { clip, resources } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips.barbell_squat;
+  const gltf = await loadClip(path.join(out, clip), resources.map((r) => path.join(out, r)));
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  mixer.clipAction(gltf.animations[0]).play();
+  mixer.setTime(0.9999 * gltf.animations[0].duration);
+  gltf.scene.updateMatrixWorld(true);
+  // The hand's tilt off the forearm, toward the thumb, in the plane of the knuckles.
+  const at = (n) => gltf.scene.getObjectByName(n).getWorldPosition(new THREE.Vector3());
+  const forearm = at('hand_l').sub(at('lowerarm_l')).normalize();
+  const fingers = at('middle_01_l').sub(at('hand_l')).normalize();
+  const thumbSide = at('index_01_l').sub(at('pinky_01_l'));
+  thumbSide.addScaledVector(forearm, -thumbSide.dot(forearm)).normalize();
+  const tilt = deg(Math.atan2(fingers.dot(thumbSide), fingers.dot(forearm)));
+  assert.ok(Math.abs(tilt + 15) < 2, `the hand tilts ${tilt.toFixed(1)}° toward the thumb`);
+});

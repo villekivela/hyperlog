@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, headingOf, HEADINGS } from './tune.mjs';
+import { tunables, applyTuned, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
 
 const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
 
@@ -87,4 +87,24 @@ test('every pose offers its grip\'s turn at the top and the bottom, each from gr
   assert.equal(t['top.rotate']?.value, rotate);
   assert.equal(t['bottom.rotate']?.value, rotate);
   assert.equal(t['grip.rotate'], undefined);
+});
+
+// The owner, #127: on a pose whose entry sets no wrist, the wrist sliders did nothing, since there
+// was no point to put the one number into.
+test('a wrist slider moved on a pose that sets no wrist puts the whole wrist in, from straight', () => {
+  const entry = prepare('close_grip_bench_press');
+  assert.deepEqual(withTuned(entry, {}, 'top.wrist.1', -15), { 'top.wrist': [0, -15] });
+  assert.deepEqual(withTuned(entry, { 'top.wrist': [0, -15] }, 'top.wrist.0', 10), { 'top.wrist': [10, -15] });
+  // Back at straight, it comes out again.
+  assert.deepEqual(withTuned(entry, { 'top.wrist': [0, -15] }, 'top.wrist.1', 0), {});
+  // Any other number, whole or in a point, goes in the same way.
+  assert.deepEqual(withTuned(entry, {}, 'grip.width', 0.3), { 'grip.width': 0.3 });
+  assert.deepEqual(withTuned(entry, {}, 'top.bar.0', 1.2), { 'top.bar': [1.2, -0.21] });
+});
+
+// The owner, #127: the wrist sliders say in words which way they bend the hand, and which sign is which.
+test('the wrist sliders are labelled in words, with the sign of each direction', () => {
+  assert.equal(labelOf('top.wrist.0'), 'Top · Wrist bend: + flexion / − extension');
+  assert.equal(labelOf('bottom.wrist.1'), 'Bottom · Wrist tilt: + radial (thumb side) / − ulnar (little-finger side)');
+  assert.equal(labelOf('grip.width'), 'grip.width');
 });
