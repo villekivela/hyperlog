@@ -415,7 +415,8 @@ export const MOTIONS = {
    * extension, a seated leg curl), or with `body.prone` lying face down along a bench, the head
    * toward +z (a lying leg curl). The thighs leave the hips `body.thigh` degrees below level and the
    * knees bend `knee` degrees from straight; the feet stay square to the shins. The hands hold
-   * handles at `grip.at` [y, z], `grip.width` either side of the middle.
+   * handles at `grip.at` [y, z], `grip.width` either side of the middle, the knuckles along
+   * `grip.across` [out, up, forward] (the out mirrored for each side), or forward.
    */
   knee_lever(e, s, L) {
     const prone = Boolean(e.body.prone);
@@ -440,7 +441,10 @@ export const MOTIONS = {
       kneePole: (side) => sideOn(thighPhi - Math.PI / 2).addScaledVector(X, side * 0.1).normalize(),
       support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
       hand: (side) => V(side * e.grip.width, ...e.grip.at),
-      across: () => V(0, 0, 1),
+      across: (side) => {
+        const [x, y, z] = e.grip.across ?? [0, 0, 1];
+        return V(side * x, y, z).normalize();
+      },
       armPole: elbowsTo(e, [1, -0.2, -0.5]),
       knee: knee(0), shin, front, thigh: sideOn(thighPhi), kneeUp: sideOn(thighPhi - Math.PI / 2),
     };
