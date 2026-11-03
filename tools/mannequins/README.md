@@ -16,7 +16,8 @@ npm run review -- status <batch>        # whether every exercise in it is OK
 ```
 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
-give byte-identical files.
+give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
+fails on any difference (`committed.test.mjs`), so bake and commit together.
 
 ## Making a batch
 
@@ -210,7 +211,11 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   their grips front to back). The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
   rises as the cable is drawn out, and is held 6 cm off its rest even at the stretch (`HELD`), as
-  every working stack is. It has a high pulley only (1.5 m or more) for now.
+  every working stack is. A pose draws on its high pulley only (1.5 m or more) for now; without a
+  seat, the tower also shows its low pulley, in a housing on the floor rail in front of the stack.
+- `bench` rolls on wheels at its front foot and has a handle out of its back; the adjustable one's
+  back pad rests on a strut set in a ladder of rungs on the rail, placed for the angle the clip is
+  baked at (the phone turns the pad a few degrees either side of it at most).
 - The machines take their seat, `seat` [y, z] (the top of its cushion), and place the rest from the
   pose: `leg_extension` and the seated `leg_curl` a back pad `pad` metres behind the spine, a
   lever about the knees and a stack behind; the lying `leg_curl` (`lying: true`) a bench at
