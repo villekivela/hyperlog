@@ -131,7 +131,7 @@ internal data class ClayColours(
         )
         val Dark = ClayColours(
             body = Color(0xFFC4C4CA), joint = Color(0xFFA8A8AF),
-            frame = Color(0xFF4A4A50), vinyl = Color(0xFF2E2E33), plate = Color(0xFF8A8A90), metal = Color(0xFFC8C8CC), pulley = Color(0xFF6E6E75),
+            frame = Color(0xFF4A4A50), vinyl = Color(0xFF3A3A40), plate = Color(0xFF8A8A90), metal = Color(0xFFC8C8CC), pulley = Color(0xFF6E6E75),
             shadow = 1f, rim = 1.3f,
         )
     }
