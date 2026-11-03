@@ -292,7 +292,7 @@ Each gives the choice the tables make and why. All are [Inferred].
 - Rogue SB-1 Safety Squat Bar: https://www.roguecanada.ca/sb-1-rogue-safety-squat-bar
 - Rogue TB-2 Trap Bar: https://www.roguecanada.ca/rogue-tb-2-trap-bar
 - Rogue Dumbbells: https://www.roguefitness.com/ca/rogue-dumbbells
-- PowerBlock Elite EXP (Rogue listing): https://www.roguefitness.com/powerblock-series-elite-exp-dumbbells
+- [Secondary] PowerBlock Elite EXP (Rogue listing): https://www.roguefitness.com/powerblock-series-elite-exp-dumbbells
 - Rogue Single Handle Cable Attachment: https://www.roguecanada.ca/single-handle-cable-attachment
 - Rogue Lat Bar: https://www.roguecanada.ca/rogue-lat-bar
 - Rogue Stainless Straight Lat Bar: https://www.roguecanada.ca/rogue-stainless-straight-lat-bar
@@ -302,7 +302,7 @@ Each gives the choice the tables make and why. All are [Inferred].
 - Rogue Velocidor: https://www.roguecanada.ca/rogue-velocidor
 - [Secondary] Body-Solid triceps rope, retailer's spec: https://www.sportsunlimitedinc.com/body-solid-triceps-rope.html
 - [Secondary] Ivanko pro-style dumbbells, Iron Company listing: https://www.ironcompany.com/ivanko-pro-style-dumbbells-chrome-endcaps
-- [Secondary] Testify Strength & Conditioning, "Use this grip for a bigger bench press and press": https://decagon-koala-6f68.squarespace.com/articles/use-this-grip-for-a-bigger-bench-press-and-press
+- Testify Strength & Conditioning, coach's published material, "Use this grip for a bigger bench press and press": https://decagon-koala-6f68.squarespace.com/articles/use-this-grip-for-a-bigger-bench-press-and-press
 - [Secondary] "How to Barbell Press", exercise summary of Starting Strength material: https://exercises.kemitchell.com/sources/Starting-Strength-how-to-barbell-press
 - [Secondary] PTPioneer summary of NSCA CSCS chapter 15: https://www.ptpioneer.com/personal-training/certifications/nsca-cscs/cscs-chapter-15/
 
