@@ -1,35 +1,54 @@
 # Shrug machine (`shrug_machine`)
 
 ## Movement and exercises served
-Standing or seated, handles at the sides, work arms lift vertically as the shoulders elevate. Serves `machine_shrug`.
+Standing (or seated on a high seat) between two levers, a handle at each side; the levers lift as the shoulders elevate, with the arms straight. Serves `machine_shrug`.
 
-**Serves `machine_shrug` only. `kelso_shrug` is not this machine.** The library's `kelso_shrug` ("Machine Kelso Shrug", video https://youtu.be/76rz0UNAlYI) is done chest-supported on the T-bar row machine (confirmed by the owner), so #161 should move it to `row_machine`, which has a kit. That leaves this machine at one exercise.
+**Serves `machine_shrug` only. `kelso_shrug` is not this machine.** The library's `kelso_shrug` ("Machine Kelso Shrug", video https://youtu.be/76rz0UNAlYI) is done chest-supported on the T-bar row machine (confirmed by the owner), so #161 moves it to `t_bar_row_machine` (see [its ref](../t_bar_row_machine/ref.md)). That leaves this machine at one exercise.
 
 ## Based on
 - Brand/model: Hammer Strength Plate-Loaded Seated/Standing Shrug (PL-SH).
 - Product pages: https://lifefitness.com/en-us/catalog/strength-training/plate-loaded/plate-loaded-seated-standing-shrug , https://www.lifefitness.com.au/commercial/seatedstanding-shrug-plsh
 - Spec sheet / manual: none found (the pages link only a general brochures page).
-- Photos: none exposed; galleries on https://shop.lifefitness.com/products/hammer-strength-plate-loaded-seated-standing-shrug and https://fitnesssuperstore.com/products/hammer-strength-pl-sh-plate-loaded-seated-standing-shrug-remanufactured (seen in search, images not opened).
+- Photos viewed (all on `https://shop.lifefitness.com/cdn/shop/files/Hammer_Strength_-_Plate_Loaded_-_Seated_Standing_Shrug_` + the name):
+  - Side-on, empty: `PL-SH_27__mr.jpg`
+  - Side-on, standing user: `PL-SH_29__mr_1200x1200.jpg`
+  - Side-on, seated user: `PL-SH_1__mr_1200x1200.jpg`
+  - Front, standing user at the top of a shrug: `PL-SH_17__mr.jpg`
+  - Front and three-quarter, empty and loaded: `PL-SH_11__mr.jpg`, `PL-SH_12__mr.jpg`, `PL-SH_28__mr.jpg`; seated front `PL-SH_15__mr.jpg`; close-ups `PL-SH_20__mr.jpg`, `PL-SH_25__mr.jpg`
+  - Life Fitness AU gallery: https://a.storyblok.com/f/292045577297161/1920x1280/19774bec40/strength-plateloaded-seatedstandingshrug-4.webp (front, standing), `.../22f2eff25f/...-2.webp`, `.../49c75679f5/...-1.webp`, `.../f18ba789cd/...-5.webp`, `.../2bf6338957/...-6.webp` (seat close-up), render https://a.storyblok.com/f/292045577297161/1920x1920/82ea28b53f/pl-sh-midblk-seated-standing-shrug.png
+  - Remanufactured unit render: https://www.fitnesssuperstore.com/cdn/shop/files/HSISOshrug-main.webp
+- Video viewed: `machine_shrug` https://youtu.be/2KDc6iAcrAw, side-on 0:00–0:08, front 0:08–0:14 (frames at 0:02, 0:02.5, 0:02.75 top, 0:03.5 bottom, and a 4 fps strip 0:01.5–0:07.5). It shows a different make: a long plate-loaded lever whose pivot is in front of the lifter, not behind as on the PL-SH.
 - Chosen: preferred brand, and the only shrug spec found with dimensions.
 
 ## Key dimensions (mm)
 | Dimension | mm | Source |
 |---|---|---|
-| Footprint | 1020 x 1520 | Life Fitness (40" x 60"); resellers disagree on which side is L |
-| Height | 1240 | same (49") |
+| Footprint | 1020 front to back x 1520 across (horn tip to horn tip) | Life Fitness (40" x 60"); which side is which settled by `PL-SH_27`, where the side-on length from handle tip to rear foot is about 1010, scaled by the 1240 mm height |
+| Height | 1240 (top of the back pad) | same (49") |
 | Starting resistance | 11 kg per arm | same |
 | Max plates | 5 x 20 kg per rod, 2 horns | same pages and search summary |
-| Seat height range, handle height and spacing, pivot location | unknown | not published |
+| Lever pivot | transverse, at the top of the rear upright, about 600 above the floor | estimated from `PL-SH_27`, scaled by the 1240 mm height (2.44 mm/px) |
+| Lever reach, pivot to grip centre | 760 forward, grip 100 above the pivot at rest | same photo and scale |
+| Grip height at rest (lever on its stop) | 700 | same photo and scale |
+| Grip height at the top of a shrug | 940 | estimated from `PL-SH_17` (front), scaled by the lifter, taken as a person of about 1.78 m; matches the mannequin's 0.93 below |
+| Grip height, mannequin, bottom / top | 820 / 930 | chosen from the fit rule (arms hanging straight from a 1.45 m shoulder, 0.63 m to the grip; 110 mm of shoulder rise) for the mannequin, low confidence |
+| Grip spread | 740 between grip centres | estimated from `PL-SH_17`, scaled by the 45 lb plate (450 mm), rough; the hands sit well outside the hips |
+| Handle | a post rising about 270 from each lever, the grip pointing forward | estimated from `PL-SH_27`, scaled by the 1240 mm height |
+| Plate horn | on each lever, under the handle post | `PL-SH_27`, `PL-SH_29`; the two horns on the rear uprights are storage by their place on the fixed frame |
+| Seat top above floor | 650 | estimated from `PL-SH_27` (empty, about 660) and `PL-SH_1` (seated, about 620 to 640), scaled by the 1240 mm height and the 45 lb plate |
+| Seat height range | adjustable, range not visible; the recipe keeps the seat at 650 | the seat post shows numbered holes (`strength-...-4`, `PL-SH_25`), their spacing not visible; 650 kept at the measured seat, since no picture shows the travel; low confidence |
 
 ## Motion
-- Work arms with fixed side handles, angled to match trap and shoulder alignment; plate-loaded on horns. Joint type and axis are not published; a lever pivot with a near-vertical arc of the handles is expected (estimated from the machine type, unverified).
-- ROM in mm not published.
+- Two levers, one per side, each a revolute about one transverse axis at the top of the rear upright, behind the back pad. The grips swing on a 760 mm radius, close to vertical over the shrug's small angle.
+- Range of motion: 110 mm at the grip, about 9 degrees of lever (from 16 to 25 degrees above the pivot's level, for the mannequin). The video's make: the grip rises about 40 px, about 120 mm, from video https://youtu.be/2KDc6iAcrAw at 0:03.5 (bottom) and 0:02.75 (top), scaled by the lifter, taken as a person of about 1.78 m; about 5 degrees on its longer lever. The stop sits lower than the hanging hands, so the levers travel about 9 degrees more from rest to the start of the rep (chosen from the fit rule, low confidence).
+- Plate-loaded on the lever horns.
 
 ## Adjustments and fit rules
 - Only the seat adjusts; the handles are fixed (page FAQ). Can be used standing.
-- Fit rule: handles at the sides at about hip level at the bottom so the arms hang straight, unverified.
+- Fit rule, checked against the video and `PL-SH_17`: stand upright between the levers, arms straight at the sides, the grips beside the front of the thighs at about the hip line; shrug straight up with no elbow bend and no roll. At the top the shoulders are raised and the arms still straight (video 0:02.75, `PL-SH_17`). The PL-SH grips are wider than the hips (about 740 apart), so the arms hang slightly out from the body in the front view.
+- Seated: the photo `PL-SH_1` shows the lifter on the seat with the elbows bent about 110 degrees, which is not the working position, so it is not used for the fit. For the mannequin, seated use needs the shoulders about 0.63 m above the grip, which puts the seat near its top setting.
 
-## Owner photos to take at Hukka
-- Which shrug machine Hukka has, or whether shrugs are done on a Smith machine or with a bar.
-- Side-on and front photos; handle height from floor and spacing; lever pivot position; ROM in mm.
-- Seat height range and plate horn position.
+## Open gaps
+- The seat's range is not visible (the numbered holes' spacing can't be read), so the recipe keeps the seat at the measured 650 mm.
+- No photo shows the bottom of a shrug on the PL-SH, so the start height and the 9 degree range are chosen from the mannequin's arm and the video's 120 mm.
+- The lever's stop angle comes from one empty photo.

@@ -129,7 +129,7 @@ An exercise's own cue on how to do it, kept in the library. A program's slot not
 _Avoid_: Tip, instruction
 
 **Technique video**:
-A YouTube link for an exercise, opened in the YouTube app at its timestamp.
+A YouTube link for an exercise, opened in the YouTube app at its timestamp. The studio shows it beside the stage, fetched once into a cache on the owner's machine and never committed.
 
 **Mannequin**:
 The faceless body at the top of an exercise's prescription sheet that does one rep in a loop, with plain generic equipment around it. A cue for which movement it is, not form instruction.
@@ -161,6 +161,10 @@ The poses made and reviewed together. A batch is done when the owner has OK'd ev
 **Studio**:
 The mannequin tool served on the owner's machine (`npm run studio`), where every exercise and kit is listed with its status, posed live, tuned, OK'd and noted. It views, tunes and annotates; it never models.
 _Avoid_: Review page (the published page it replaced), editor
+
+**Video loop**:
+One rep in an exercise's technique video, marked at its top (A), its bottom (B) and back at the top (C), which the studio keeps for the exercise. With sync on it is the clip's rep, the lowering A to B and the lift B to C: moving either one moves the other.
+_Avoid_: A–B loop (it has three marks), range, segment, clip (that is the baked file)
 
 **Recipe**:
 A kit written as data: the parts it is made of, placed by dimensions, its fixed frame and its moving bodies on joints, with its contacts and fit rules (ADR 0007).

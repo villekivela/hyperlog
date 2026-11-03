@@ -2,23 +2,52 @@
 // exercise and kit with its status, hands the page each one's prepared entry and checks, and writes
 // what the owner does into the repo's files. A save goes into poses.mjs through patch.mjs and
 // re-bakes; an OK goes into the batch's review file and a note into review/notes.md (review.mjs).
+// An exercise's technique video is fetched with yt-dlp the first time it is opened, into a cache
+// outside the repo, and its loop (the marks of one rep) goes into review/loops.json.
 //
 // The tool's modules are loaded through Vite (`ssrLoadModule`), so an edit to kit.mjs or poses.mjs
 // is posed from at once. The page imports the same modules; what is node's in them (reading
 // files) is stubbed there, and never reached, since the page is handed every entry prepared.
 import { execFile } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 // Nothing here imports poses.mjs or kit.mjs, even through another module: Vite restarts its server
 // when a file its config imports changes, and those change all the time.
 import { patchPoses } from '../patch.mjs';
+import { videoOf } from './video.mjs';
 
 const TOOL = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const ASSETS = path.join(TOOL, '..', '..', 'app', 'src', 'main', 'assets');
 const LIBRARY = path.join(ASSETS, 'exercises.json');
 /** Where the bake writes the clips (bake.mjs's CLIPS). */
 const CLIPS = path.join(ASSETS, 'mannequins');
+
+/** Where technique videos are kept once fetched: outside the repo, like footage, so none is ever committed. */
+export const VIDEOS = path.join(process.env.XDG_CACHE_HOME || path.join(homedir(), '.cache'), 'hyperlog', 'videos');
+const VIDEO_TYPES = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mkv': 'video/x-matroska' };
+
+/**
+ * Fetches YouTube video `id` into `dir` with yt-dlp, the picture only (the studio plays it muted)
+ * at 720p or less, and says what it fetched: `{ file, fps, duration }` (null when yt-dlp can't
+ * say; the page reads it from the video). A fetch that stalls for ten minutes is given up.
+ */
+const ytDlp = (id, dir) => new Promise((resolve, reject) => {
+  const args = [
+    '--no-playlist', '--no-warnings', '--no-progress',
+    '-f', 'bv*[height<=720][ext=mp4]/bv*[height<=720]/b[height<=720]/b',
+    '-o', path.join(dir, '%(id)s.%(ext)s'),
+    '--print', 'after_move:%(filepath)s\t%(fps)s\t%(duration)s',
+    `https://youtu.be/${id}`,
+  ];
+  execFile('yt-dlp', args, { maxBuffer: 1 << 20, timeout: 10 * 60 * 1000 }, (err, stdout, stderr) => {
+    if (err) { reject(new Error(err.killed ? 'yt-dlp took over ten minutes' : (stderr || err.message).trim().split('\n').at(-1))); return; }
+    const [file, fps, duration] = stdout.trim().split('\n').at(-1).split('\t');
+    resolve({ file: path.basename(file), fps: Number(fps) || 30, duration: Number(duration) || null });
+  });
+});
 
 /** What the page's copies of the tool's modules get for node's: nothing that reads a file. */
 const STUBS = {
@@ -55,6 +84,8 @@ const refusing = async (run) => {
   }
 };
 const readLibrary = async () => JSON.parse(await readFile(LIBRARY, 'utf8')).exercises;
+/** Exercise `id` as the library has it, or undefined. */
+const libraryEntry = async (id) => (await readLibrary()).find((e) => e.id === id);
 /** A kit's status: an open note on it, or whether a pose uses it. */
 const kitStatus = (notes, uses) => (notes ? 'notes' : uses ? 'kit' : 'unused');
 
@@ -71,9 +102,13 @@ function refusal(req) {
 
 /**
  * The studio plugin. `posesFile`, `reviewDir` and `clips` are where the poses, the review files
- * and the baked clips are (the repo's own by default); `bake()` re-bakes every clip.
+ * and the baked clips are (the repo's own by default); `bake()` re-bakes every clip. `videos` is
+ * the technique videos' cache, and `fetchVideo(id, dir)` fetches one into it (`ytDlp`).
  */
-export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = () => bakeInChild(clips) } = {}) {
+export function studio({
+  posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = () => bakeInChild(clips),
+  videos = VIDEOS, fetchVideo = ytDlp,
+} = {}) {
   let server;
   const load = (file) => server.ssrLoadModule(path.isAbsolute(file) ? file : path.join(TOOL, file));
   const tool = async () => {
@@ -152,10 +187,12 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
 
   async function exercise(id) {
     const t = await tool();
-    const library = (await readLibrary()).find((e) => e.id === id);
+    const library = await libraryEntry(id);
     if (!library) throw new Refused(`No exercise ${id} in the library`);
     const { batch, state, notes } = await t.review.reviewOf(id, { dir: t.dir, clips });
-    const base = { kind: 'exercise', id, name: library.name, equipment: library.equipment, batch, notes };
+    const loop = (await t.review.readLoops({ dir: t.dir }))[id] ?? null;
+    const video = library.video ? { link: library.video, start: videoOf(library.video)?.start ?? 0, loop } : null;
+    const base = { kind: 'exercise', id, name: library.name, equipment: library.equipment, batch, notes, video };
     if (!t.POSES[id]) return { ...base, status: 'no pose', entry: null, checks: null, clip: null };
     const checks = await checksOf(t, id);
     return {
@@ -200,6 +237,67 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
     return run;
   }
 
+  // Each video fetched once: what the cache holds, or the fetch under way, which every exercise
+  // from the same video waits on.
+  const fetching = new Map();
+  async function video(exerciseId) {
+    const link = (await libraryEntry(exerciseId))?.video;
+    if (!link) throw new Refused(`${exerciseId} has no video link`);
+    const id = videoOf(link)?.id;
+    if (!id) throw new Refused(`Not a YouTube link: ${link}`);
+    if (!fetching.has(id)) {
+      const run = (async () => {
+        const meta = path.join(videos, `${id}.json`);
+        const cached = await readFile(meta, 'utf8').then(JSON.parse, () => null);
+        if (cached && await stat(path.join(videos, cached.file)).catch(() => null)) return cached;
+        await mkdir(videos, { recursive: true });
+        let got;
+        try {
+          got = await fetchVideo(id, videos);
+        } catch (err) {
+          throw new Refused(`Couldn't fetch the video: ${err.message}`);
+        }
+        await writeFile(meta, JSON.stringify(got));
+        return got;
+      })();
+      fetching.set(id, run);
+      // A failed fetch (offline) is tried again next time.
+      run.catch(() => fetching.delete(id));
+    }
+    const { file, fps, duration } = await fetching.get(id);
+    return { src: `/videos/${file}`, fps, duration };
+  }
+
+  /** A cached video's bytes, or the range of them a seek asks for. */
+  async function sendVideo(req, res, file) {
+    const at = path.join(videos, file);
+    const { size } = await stat(at);
+    res.setHeader('content-type', VIDEO_TYPES[path.extname(file)] ?? 'application/octet-stream');
+    res.setHeader('accept-ranges', 'bytes');
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
+    let [start, end] = [0, size - 1];
+    if (range) {
+      // `-500` is the last 500 bytes, or all of them.
+      start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+      end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      if (start > end || start >= size) {
+        res.statusCode = 416;
+        res.setHeader('content-range', `bytes */${size}`);
+        res.end();
+        return;
+      }
+      res.statusCode = 206;
+      res.setHeader('content-range', `bytes ${start}-${end}/${size}`);
+    }
+    res.setHeader('content-length', end - start + 1);
+    // A file gone since `stat` ends the response short rather than the server.
+    createReadStream(at, { start, end }).on('error', () => res.destroy()).pipe(res);
+  }
+
+  const isTime = (v) => v === null || (typeof v === 'number' && Number.isFinite(v) && v >= 0);
+  // One loop written at a time: each reads the file as the last one left it.
+  let looping = Promise.resolve();
+
   const routes = {
     'GET /api/items': (url) => items(url.searchParams.has('wait')),
     'GET /api/state': () => baking,
@@ -208,6 +306,15 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
       const t = await tool();
       if (!t.POSES[id]) throw new Refused(`${id} has no pose to OK`);
       return refusing(() => t.review.setOk(id, ok, { dir: t.dir, clips }));
+    },
+    'POST /api/loop': async ({ id, loop }) => {
+      const t = await tool();
+      if (!(await libraryEntry(id))?.video) throw new Refused(`${id} has no video to loop`);
+      if (loop && ![loop.a, loop.b, loop.c ?? null].every(isTime)) throw new Refused('A loop\'s marks are times in seconds');
+      const write = looping.then(() => t.review.setLoop(id, loop ?? null, { dir: t.dir }));
+      looping = write.catch(() => {});
+      await write;
+      return { id, loop: loop ?? null };
     },
     'POST /api/note': async ({ item, text }) => {
       const t = await tool();
@@ -246,8 +353,10 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
         }
         const clip = /^\/clips\/([\w.-]+)$/.exec(url.pathname);
         const item = /^\/api\/item\/(exercise|kit)\/([\w-]+)$/.exec(url.pathname);
+        const fetchIt = /^\/api\/video\/([\w-]+)$/.exec(url.pathname);
+        const served = ['GET', 'HEAD'].includes(req.method) && /^\/videos\/([\w-]+\.(?:mp4|webm|mkv))$/.exec(url.pathname);
         const route = routes[`${req.method} ${url.pathname}`];
-        if (!clip && !item && !route) return next();
+        if (!clip && !item && !fetchIt && !served && !route) return next();
         const refused = req.method === 'POST' && refusal(req);
         if (refused) {
           res.statusCode = refused[0];
@@ -263,8 +372,13 @@ export function studio({ posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, cl
             res.end(bytes);
             return;
           }
+          if (served) {
+            await sendVideo(req, res, served[1]);
+            return;
+          }
           const out = item ? await (item[1] === 'kit' ? kit(item[2]) : exercise(item[2]))
-            : await route(req.method === 'POST' ? await bodyOf(req) : url);
+            : fetchIt ? await video(fetchIt[1])
+              : await route(req.method === 'POST' ? await bodyOf(req) : url);
           res.setHeader('content-type', 'application/json');
           res.end(JSON.stringify(out));
         } catch (err) {
