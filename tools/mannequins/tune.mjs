@@ -8,8 +8,8 @@ export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
   bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0] },
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
-  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4] },
-  free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5] },
+  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.stagger': 0 },
+  free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5], 'feet.stagger': 0 },
   knee_lever: { 'grip.pole': [1, -0.2, -0.5], 'body.head': 0 },
   calf_raise: { 'grip.pole': [1, -0.3, -0.4] },
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
@@ -17,7 +17,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'lever', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -95,6 +95,8 @@ function rangeOf(path, value) {
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.05, unit: '' };
+  // Equipment stands where the pose needs it: a metre either way.
+  if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.01, unit: ' m' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.01, unit: ' m' };
 }
 
@@ -143,12 +145,18 @@ export function tunables(entry) {
       if (!have.has(p) && valueAt(entry, p) === undefined) found.push([p, v]);
     }
   }
-  // Every pose with hands can turn them: overhand 0°, neutral 90°, underhand 180°.
-  // (A dumbbell press turns them at the top and at the bottom, which `top.rotate` and `bottom.rotate` set.)
-  if (entry.grip && !have.has('grip.rotate') && entry.motion !== 'dumbbell_press') found.push(['grip.rotate', 0]);
+  // Every pose with hands bends its wrists, at the top and the bottom: [flexion, deviation].
+  if (entry.grip) for (const end of ['top', 'bottom']) {
+    if (valueAt(entry, `${end}.wrist`) === undefined) found.push([`${end}.wrist.0`, 0], [`${end}.wrist.1`, 0]);
+  }
+  // Every pose with hands can turn them, at the top and at the bottom: overhand 0°, neutral 90°,
+  // underhand 180°, each from the entry's own `grip.rotate`, which stands for both ends.
+  if (entry.grip) for (const end of ['top', 'bottom']) {
+    if (valueAt(entry, `${end}.rotate`) === undefined) found.push([`${end}.rotate`, entry.grip.rotate ?? 0]);
+  }
   return found
     // `press` is the rep's own 0 and 1 (top and bottom), not a setting.
-    .filter(([path]) => !/^(top|bottom)\.press$/.test(path) && !(entry.motion === 'dumbbell_press' && /^grip\.(rotate|tilt)$/.test(path)))
+    .filter(([path]) => !/^(top|bottom)\.press$/.test(path) && path !== 'grip.rotate' && !(entry.motion === 'dumbbell_press' && path === 'grip.tilt'))
     .filter(([path]) => !(/^(top|bottom)\./.test(path) && traced.has(steps(path)[1])))
     .map(([path, value]) => ({ path, value, ...rangeOf(path, value) }));
 }

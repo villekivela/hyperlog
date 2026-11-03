@@ -140,6 +140,16 @@ export function buildRig(root) {
   return rig;
 }
 
+/** How far a wrist turns the hand off the forearm's line to lay its knuckles along what it holds. */
+const WRIST_REACH = rad(40);
+
+/** `from` turned `angle` radians toward `to`, in the plane of the two. */
+function turnToward(from, to, angle) {
+  const axis = from.clone().cross(to);
+  if (axis.lengthSq() < 1e-12) return from.clone();
+  return from.clone().applyAxisAngle(axis.normalize(), angle).normalize();
+}
+
 /** The point halfway between bones `a` and `b`, where they are now. */
 export const between = (rig, a, b) => wpos(rig.bones[a]).add(wpos(rig.bones[b])).multiplyScalar(0.5);
 
@@ -217,28 +227,54 @@ export function poseRig(rig, P) {
     // The forearm twists the knuckle line about the fingers, from overhand (0°) through neutral to
     // underhand (180°); the palm turns with it, and so does the grip's offset.
     const twist = (fingers) => along.clone().applyAxisAngle(fingers, -s * rad(P.gripRotate ?? 0));
-    let wrist = grip.clone();
-    let arm;
-    for (let it = 0; it < 4; it++) {
-      arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
-      const fingers = arm.end.clone().sub(arm.mid).normalize();
+    // The hand off the forearm: turned at the wrist until its knuckles lie along what it holds, as
+    // far as a wrist bends (WRIST_REACH), then bent by `wrist` [flexion toward the palm,
+    // deviation toward the index finger], in degrees.
+    const [flex, deviate] = P.wrist ?? [0, 0];
+    const fixed = !P.hand || Boolean(P.across);
+    const handOf = (fore) => {
+      const knuckles = twist(fore).normalize();
+      let fingers = fore.clone();
+      // Only what lies its own way (a bar, a handle the pose sets) has knuckles to line up with: a
+      // free handle turns with the hand. As the forearm comes to run along it, the turn fades out,
+      // smoothly, so the solve settles.
+      const square = fore.clone().addScaledVector(knuckles, -fore.dot(knuckles));
+      const fade = Math.min(1, Math.max(0, (square.length() - 0.15) / 0.3));
+      if (fixed && fade > 0) fingers = turnToward(fore, square.normalize(), Math.min(fore.angleTo(square), WRIST_REACH) * keep * fade);
       const inward = twist(fingers);
       const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
-      wrist = grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff);
+      if (flex) fingers = turnToward(fingers, palm, rad(flex));
+      if (deviate) fingers = turnToward(fingers, inward, rad(deviate));
+      return fingers;
+    };
+    let wrist = grip.clone();
+    let arm;
+    // How much of that turn the arm can afford: a straight arm gives some back to reach its grip.
+    let keep = 1;
+    const reach = L.up + L.fore - 1e-3;
+    for (let it = 0; it < 12; it++) {
+      arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
+      const fingers = handOf(arm.end.clone().sub(arm.mid).normalize());
+      const inward = twist(fingers);
+      const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
+      // Halfway to where this pass puts the wrist: the hand's turn follows the forearm, so a full
+      // step can swing back and forth.
+      wrist.lerp(grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff), it ? 0.5 : 1);
+      if (wrist.distanceTo(sh) > reach) keep *= 0.8;
     }
     const a1 = arm.mid.clone().sub(sh);
     const a2 = arm.end.clone().sub(arm.mid);
     aim(rig, 'upperarm_' + k, a1, a1.clone().cross(arm.pole));
-    const inward = twist(a2.clone().normalize());
+    const fingers = handOf(a2.clone().normalize());
+    const inward = twist(fingers);
     // What the hand holds lies along the knuckles, tipped in the palm's plane by `gripTilt`: a
     // dumbbell's handle (the left and right tip the same way, so the sign follows the side).
-    const fingers = a2.clone().normalize();
     const palmNormal = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest)).normalize();
     const handle = inward.clone().normalize();
     // The palm's normal, square to the handle.
     palmNormal.addScaledVector(handle, -palmNormal.dot(handle)).normalize();
     (P.held ??= {})[s] = handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
-    aim(rig, 'lowerarm_' + k, a2, inward);
-    aim(rig, 'hand_' + k, a2, inward);
+    aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
+    aim(rig, 'hand_' + k, fingers, inward);
   }
 }

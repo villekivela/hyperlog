@@ -1514,7 +1514,12 @@ gallery (Technique videos).
     only before the first rep it sits. The starter program's batch (#127) adds a cable column, one or
     a pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
-    row, the machine pulldown and the preacher curl.
+    row, the machine pulldown and the preacher curl. After the owner's review (2026-11-03) a flye's,
+    a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a
+    curl can stand staggered; and equipment moves a metre either way in Tune. Every hand on a bar
+    or a set handle turns at the wrist until its knuckles lie along it, as far as a wrist bends,
+    and Tune bends the wrists and turns the grip at each end; every cable ends at its handle's
+    hook (a check fails one more than 1 cm off).
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
@@ -1527,11 +1532,29 @@ gallery (Technique videos).
       carriage on rollers under a foot plate with a heel lip; and the benches roll on front wheels,
       lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder. The
       starter batch's machines meet it too: rubber caps on every floor rail and pop-pins on the
-      adjustable seats; the leg extension's and seated curl's cable turning down to the hub over a
-      second wheel in its housing, their back pads braced to the stack's frame; the calf raise's
-      and preacher's hubs on posts and mounts, nothing hanging in the air; the hack squat's
-      carriage on rollers; the row's and pulldown's posts on floor rails; and the preacher loaded
-      with a plate a side.
+      adjustable seats; the calf raise's and preacher's hubs on posts and mounts, nothing hanging
+      in the air; the hack squat's carriage on bearings; the row's and pulldown's posts on floor
+      rails; and the preacher loaded with a plate a side.
+    - **From a real machine** (owner, 2026-11-03, #127, #149): a machine is copied from reference
+      photos of a common commercial model, looked at and never kept, not made up. The leg extension
+      and the leg curls follow the Watson line: the stack in a tower beside the user, not behind
+      them, its cable down the tower's end and along the floor to a cam on the lever at the knees;
+      the lever, its adjuster and its roller on a post on the near side. The pads follow how a body
+      sits or lies in them: both seated machines have an adjustable back pad on a pop-pin bar, from
+      the seat up to the shoulder blades; the extension's handles are beside the hips; the seated
+      curl's thigh pad lies along the thighs and carries the grips; the lying curl's bed is humped
+      at the hips, the thigh pad dropping about 20° to the knees and the longer chest pad about 10°
+      to the shoulders, with the handles under its head end.
+    - **Machines from reference** (owner, 2026-11-03, #150): the hack squat and the seated calf raise
+      copy a real plate-loaded machine's layout and size, after Hammer Strength's, with no photo or
+      model in the repo. The hack squat, about 2.1 m long, 1.25 m wide and 1.55 m high, has its
+      platform low in front, tilted toes up, and chrome rails along the hips' path from behind it to
+      a capped, braced post at the rear; the carriage rides them on bearings with the back pad, the
+      shoulder pads, a loaded horn a side and handles beside the head, the elbows out, each lying
+      along the knuckles of the hand that holds it. The seated calf raise, about 1.35 m long, 0.85 m
+      wide and 1.1 m high, has a foot block under the balls and a lever pivoting on a post in front
+      of the toes, level with the knee pads, so the pads ride the thighs as it turns; the hands hold
+      a U-handle on the lever, and a plate loads a horn either side behind the pivot.
     - **Row, pulldown and preacher** (owner, via the coordinator, 2026-11-03, #151): all three are
       plate-loaded, a plate on a horn a side that rises as the muscle works. The chest-supported row
       turns its levers low in front of the knees; its chest pad stands 10-20° from upright with the

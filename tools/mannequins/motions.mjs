@@ -29,6 +29,12 @@ export function stateAt(e, d) {
     const b = e.bottom?.[k] ?? a;
     s[k] = Array.isArray(a) ? a.map((v, i) => lerp(v, b[i], t)) : lerp(a, b, t);
   }
+  // A wrist's bend given at the bottom alone eases from straight at the top, and a grip's turn
+  // given at one end alone from the entry's own `grip.rotate` at the other.
+  if (e.bottom?.wrist && !e.top?.wrist) s.wrist = e.bottom.wrist.map((v) => v * t);
+  const turn = e.grip?.rotate ?? 0;
+  if (e.top?.rotate === undefined && e.bottom?.rotate !== undefined) s.rotate = lerp(turn, e.bottom.rotate, t);
+  if (e.top?.rotate !== undefined && e.bottom?.rotate === undefined) s.rotate = lerp(e.top.rotate, turn, t);
   for (const [k, samples] of Object.entries(e.trace?.angles ?? {})) s[k] = sample(samples, d);
   return s;
 }
@@ -52,6 +58,8 @@ export function frameAt(e, d, L) {
   if (rotate) P.gripRotate = rotate;
   const tilt = s.tilt ?? e.grip?.tilt;
   if (tilt) P.gripTilt = tilt;
+  // The wrists' bend, [flexion, deviation] in degrees, at the top and the bottom eased between.
+  if (s.wrist) P.wrist = s.wrist;
   return P;
 }
 
@@ -72,7 +80,8 @@ function standingHips(e, s, L) {
 
 /** Feet flat on the floor, `feet.stance` either side of the middle at `feet.z`, the knees toward `pole`. */
 const floorFeet = (e, L, pole) => ({
-  ankles: [-1, 1].map((s) => V(s * e.feet.stance, L.ankleY, e.feet.z ?? 0)),
+  // With `feet.stagger`, the left foot (+x) stands that far ahead of the right (behind, if negative).
+  ankles: [-1, 1].map((s) => V(s * e.feet.stance, L.ankleY, (e.feet.z ?? 0) + (s * (e.feet.stagger ?? 0)) / 2)),
   toeOut: e.feet.toeOut ?? 0,
   kneePole: pole,
   support: () => floor,
@@ -401,11 +410,27 @@ export const MOTIONS = {
   free_arms(e, s, L) {
     const { hipC, u, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
+    const at = (p, side) => V(side * p[0], p[1], p[2]);
+    let work = (side) => at(s.hand, side);
+    if (e.grip?.arc) {
+      // With `grip.arc` (a flye, a raise) the hand sweeps an arc about its shoulder from the top's
+      // point to the bottom's, its reach between theirs, so the elbow holds its bend.
+      const [top, bottom] = [V(...e.top.hand), V(...e.bottom.hand)];
+      const way = bottom.clone().sub(top);
+      const t = Math.min(1, Math.max(0, V(...s.hand).sub(top).dot(way) / Math.max(way.lengthSq(), 1e-9)));
+      work = (side) => {
+        const sh = shouldersOf(hipC, u, L).addScaledVector(X, side * L.shW);
+        const a = at(e.top.hand, side).sub(sh);
+        const b = at(e.bottom.hand, side).sub(sh);
+        const turn = new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(a.clone().normalize(), b.clone().normalize()), t);
+        return sh.add(a.clone().normalize().applyQuaternion(turn).multiplyScalar(a.length() + (b.length() - a.length()) * t));
+      };
+    }
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
       ...feet,
-      hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
+      hand: handsOf(e, work),
       armPole: elbowsTo(e, [1, -0.3, -0.5]),
     };
   },
@@ -415,7 +440,8 @@ export const MOTIONS = {
    * extension, a seated leg curl), or with `body.prone` lying face down along a bench, the head
    * toward +z (a lying leg curl). The thighs leave the hips `body.thigh` degrees below level and the
    * knees bend `knee` degrees from straight; the feet stay square to the shins. The hands hold
-   * handles at `grip.at` [y, z], `grip.width` either side of the middle.
+   * handles at `grip.at` [y, z], `grip.width` either side of the middle, the knuckles along
+   * `grip.across` [out, up, forward] (the out mirrored for each side), or forward.
    */
   knee_lever(e, s, L) {
     const prone = Boolean(e.body.prone);
@@ -440,7 +466,10 @@ export const MOTIONS = {
       kneePole: (side) => sideOn(thighPhi - Math.PI / 2).addScaledVector(X, side * 0.1).normalize(),
       support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
       hand: (side) => V(side * e.grip.width, ...e.grip.at),
-      across: () => V(0, 0, 1),
+      across: (side) => {
+        const [x, y, z] = e.grip.across ?? [0, 0, 1];
+        return V(side * x, y, z).normalize();
+      },
       armPole: elbowsTo(e, [1, -0.2, -0.5]),
       knee: knee(0), shin, front, thigh: sideOn(thighPhi), kneeUp: sideOn(thighPhi - Math.PI / 2),
     };
@@ -449,19 +478,32 @@ export const MOTIONS = {
   /**
    * Seated with the knees under a pad and the balls of the feet on a platform's edge, `feet.ball`
    * [y, z]: the heels rise and fall as the ankles turn `ankle` degrees from flat, heels up positive,
-   * and the knees rise and fall with them. The hands hold handles at `grip.at` [y, z].
+   * and the knees rise and fall with them. A lever over the knees turns about `pivot` [y, z] with
+   * them, from where it rests at the stretch, and the hands hold handles on it, `grip.at` [y, z] at
+   * the stretch, `grip.width` either side of the middle.
    */
   calf_raise(e, s, L) {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const a = rad(s.ankle);
-    // The sole tilts with the ankle, about the ball: its way toward the toes, and its up.
-    const heading = V(0, -Math.sin(a), Math.cos(a));
-    const top = V(0, Math.cos(a), Math.sin(a));
+    // The sole tilted `deg` with the ankle, about the ball: its way toward the toes, and its up.
+    const sole = (deg) => {
+      const a = rad(deg);
+      return [V(0, -Math.sin(a), Math.cos(a)), V(0, Math.cos(a), Math.sin(a))];
+    };
+    const [heading, top] = sole(s.ankle);
     const ball = (side) => V(side * e.feet.stance, ...e.feet.ball);
-    const ankles = [-1, 1].map((side) => ball(side).addScaledVector(heading, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY));
+    const anklesAt = ([head, up]) => [-1, 1].map((side) => ball(side).addScaledVector(head, -L.ballAhead).addScaledVector(up, L.ankleY - L.ballY));
+    const ankles = anklesAt([heading, top]);
     const pole = V(0, 1, 0.3).normalize();
+    const kneeOf = (feet) => kneeAt(V(0, hipC.y, hipC.z), feet[1].clone().setX(0), L, pole);
+    const knee = kneeOf(ankles);
+    // The lever turns as far about its pivot as the knees under its pads have from the stretch.
+    const pivot = V(0, ...e.pivot);
+    const angle = (p) => Math.atan2(p.y - pivot.y, p.z - pivot.z);
+    const turned = angle(knee) - angle(kneeOf(anklesAt(sole(e.bottom.ankle))));
+    const turn = Math.atan2(Math.sin(turned), Math.cos(turned));
+    const onLever = (p) => p.sub(pivot).applyAxisAngle(X, -turn).add(pivot);
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.25).normalize(),
@@ -470,11 +512,12 @@ export const MOTIONS = {
       foot: () => ({ heading: heading.clone(), top: top.clone() }),
       kneePole: (side) => pole.clone().addScaledVector(X, side * 0.15).normalize(),
       support: (side) => ({ point: ball(side).addScaledVector(top, -L.ballY), normal: top.clone() }),
-      hand: (side) => V(side * e.grip.width, ...e.grip.at),
-      across: () => V(0, 0, 1),
+      hand: (side) => onLever(V(side * e.grip.width, ...e.grip.at)),
+      across: () => V(0, 1, 0).applyAxisAngle(X, -turn),
       armPole: elbowsTo(e, [1, -0.3, -0.4]),
-      knee: kneeAt(V(0, hipC.y, hipC.z), ankles[1].clone().setX(0), L, pole),
-      platform: V(0, ...e.feet.ball),
+      knee, pivot, turn,
+      // The top of the platform, under the balls.
+      platform: V(0, e.feet.ball[0] - L.ballY, e.feet.ball[1]),
     };
   },
 

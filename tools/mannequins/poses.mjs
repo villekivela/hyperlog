@@ -182,12 +182,12 @@ export const POSES = {
   leg_extension: {
     equipment: 'machine',
     motion: 'knee_lever',
-    kit: { leg_extension: { seat: [0.5, 0.1], pad: 0.18 } },
-    body: { hip: [0.59, 0], trunk: -8, thigh: 0 },
+    kit: { leg_extension: { seat: [0.59, 0.1], pad: 0.18 } },
+    body: { hip: [0.66, 0], trunk: -8, thigh: -10 },
     top: { knee: 10 },
     bottom: { knee: 95 },
     feet: { stance: 0.1 },
-    grip: { width: 0.27, at: [0.52, 0.06] },
+    grip: { width: 0.25, at: [0.6, 0.05] },
     camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
   },
 
@@ -195,26 +195,27 @@ export const POSES = {
   seated_leg_curl: {
     equipment: 'machine',
     motion: 'knee_lever',
-    kit: { leg_curl: { seat: [0.5, 0.1], pad: 0.18 } },
-    body: { hip: [0.59, 0], trunk: -8, thigh: 0 },
+    kit: { leg_curl: { seat: [0.59, 0.1], pad: 0.18 } },
+    body: { hip: [0.66, 0], trunk: -8, thigh: -10 },
     top: { knee: 95 },
     bottom: { knee: 8 },
     feet: { stance: 0.1 },
-    grip: { width: 0.27, at: [0.52, 0.06] },
+    grip: { width: 0.09, at: [0.97, 0.19], across: [0, 1, 0] },
     camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
   },
 
   // Face down along the bench, the knees at its end and the roller on the backs of the ankles:
-  // from the heels drawn up to straight legs.
+  // from the heels drawn up to straight legs. The thighs leave the hips 25° down, steeper than the
+  // pad's 21°: their front tapers toward the knees, so it lies along the pad.
   lying_leg_curl: {
     equipment: 'machine',
     motion: 'knee_lever',
-    kit: { leg_curl: { lying: true, bench: [-0.42, 0.95], height: 0.62 } },
-    body: { prone: true, hip: [0.75, 0], thigh: 2, head: -20 },
+    kit: { leg_curl: { lying: true } },
+    body: { prone: true, hip: [0.785, 0], trunk: 10, thigh: 25, head: -20 },
     top: { knee: 100 },
     bottom: { knee: 6 },
     feet: { stance: 0.1 },
-    grip: { width: 0.24, at: [0.6, 0.86], pole: [1, -1, 0.2] },
+    grip: { width: 0.23, at: [0.28, 0.59], across: [-0.94, 0.35, 0], pole: [1, -1, 0.2] },
     camera: { target: [0, 0.75, 0.1], halfHeight: 0.85, azimuth: 80, elevation: 14 },
     shadow: { size: [0.9, 1.6], at: [0, 0.2] },
   },
@@ -229,21 +230,23 @@ export const POSES = {
     top: { ankle: 22 },
     bottom: { ankle: -18 },
     feet: { stance: 0.1, ball: [0.2, 0.52] },
-    grip: { width: 0.26, at: [0.5, 0.0] },
+    pivot: [0.79, 0.88],
+    grip: { width: 0.13, at: [0.86, 0.34] },
     camera: { target: [0, 0.55, 0.25], halfHeight: 0.78, azimuth: 72, elevation: 10 },
   },
 
-  // In the sled, the back on the pad and the shoulders under the rollers, the feet on the tilted
-  // platform: the hips travel down the rails until the knees are well past a right angle.
+  // In the sled, the back on the pad and the shoulders under their pads, the feet on the tilted
+  // platform: the hips travel down the rails until the knees are well past a right angle. The hands
+  // hold the handles beside the head, the elbows out, so the knuckles can lie along them.
   hack_squat: {
     equipment: 'machine',
     motion: 'hack_squat',
     kit: { squat_machine: {} },
-    body: { trunk: -40 },
-    top: { hip: [0.9, 0.05] },
-    bottom: { hip: [0.63, 0.27] },
-    feet: { stance: 0.16, y: 0.12, z: 0.36, tilt: 20, toeOut: 15, kneesOut: 0.35 },
-    grip: { width: 0.3, at: [-0.05, 0.2] },
+    body: { trunk: -51 },
+    top: { hip: [1.0, 0.05] },
+    bottom: { hip: [0.73, 0.27] },
+    feet: { stance: 0.16, y: 0.22, z: 0.36, tilt: 20, toeOut: 15, kneesOut: 0.35 },
+    grip: { width: 0.3, at: [0.15, 0], pole: [1, -0.5, 0] },
     camera: { target: [0, 0.85, 0.15], halfHeight: 1.0, azimuth: 70, elevation: 8 },
   },
 
@@ -298,9 +301,9 @@ export const POSES = {
     equipment: 'cable',
     motion: 'arms',
     kit: { cable_column: { at: [0.15, -0.8], pulley: 0.25, attachment: 'handle', hand: 1 } },
-    top: { shin: 6, thigh: 4, trunk: 8, upperArm: -22, forearm: 125 },
-    bottom: { shin: 6, thigh: 4, trunk: 8, upperArm: -22, forearm: -20 },
-    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2 },
+    top: { shin: 10, thigh: 10, trunk: 12, upperArm: -22, forearm: 125 },
+    bottom: { shin: 10, thigh: 10, trunk: 12, upperArm: -22, forearm: -20 },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: -0.32 },
     grip: { width: 0.2, rotate: 180, one: 1, rest: [-0.2, 0.96, 0.06], pole: [0.15, -1, -0.5] },
     camera: { target: [0, 1.0, -0.2], halfHeight: 1.1, azimuth: 80, elevation: 8 },
   },
@@ -310,9 +313,9 @@ export const POSES = {
   overhead_cable_triceps_extension: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_column: { at: [0, -0.85], pulley: 1.1, attachment: 'rope' } },
-    top: { shin: 8, thigh: 14, trunk: 20, upperArm: 168, forearm: 172 },
-    bottom: { shin: 8, thigh: 14, trunk: 20, upperArm: 168, forearm: 320 },
+    kit: { cable_column: { at: [0, -0.6497], pulley: 1.0655, attachment: 'rope' } },
+    top: { shin: 8, thigh: 14, trunk: 20, upperArm: 137.2876, forearm: 154.5043 },
+    bottom: { shin: 8, thigh: 14, trunk: 20, upperArm: 163.1089, forearm: 284.2194 },
     feet: { stance: 0.16, toeOut: 10, kneesOut: 0.2 },
     grip: { width: 0.07, rotate: 90, pole: [0.25, 0.6, 1] },
     camera: { target: [0, 1.15, -0.2], halfHeight: 1.15, azimuth: 76, elevation: 8 },
@@ -324,10 +327,10 @@ export const POSES = {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_column: { at: [-0.6, 0.05], pulley: 0.15, attachment: 'handle', hand: 1 } },
-    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.62, 1.36, 0.12] },
-    bottom: { shin: 4, thigh: 6, trunk: 6, hand: [0.0, 0.84, 0.14] },
+    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.754, 1.513, 0.329] },
+    bottom: { shin: 4, thigh: 6, trunk: 6, hand: [0.0309, 0.8331, 0.0938] },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
-    grip: { one: 1, rest: [-0.53, 1.12, 0.07], pole: [1, 0.15, -0.3] },
+    grip: { arc: true, one: 1, rest: [-0.53, 1.12, 0.07], pole: [1, -0.2505, -0.7094] },
     camera: { target: [0, 1.0, 0], halfHeight: 1.1, azimuth: 20, elevation: 8 },
   },
 
@@ -336,24 +339,24 @@ export const POSES = {
   cable_flye: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_column: { at: [0.95, -0.15], pulley: 1.35, twin: true } },
-    top: { shin: 6, thigh: 8, trunk: 12, hand: [0.08, 1.25, 0.52] },
-    bottom: { shin: 6, thigh: 8, trunk: 12, hand: [0.67, 1.3, 0.12] },
+    kit: { cable_column: { at: [0.808, -0.45], pulley: 1.2049, twin: true } },
+    top: { shin: 6, thigh: 8, trunk: 12, hand: [0.2037, 1.5397, 0.7136] },
+    bottom: { shin: 6, thigh: 8, trunk: 12, hand: [0.7891, 1.2839, -0.0151] },
     feet: { stance: 0.18, toeOut: 10, kneesOut: 0.2 },
-    grip: { rotate: 90, pole: [1, -0.4, -0.6] },
+    grip: { arc: true, rotate: 144.7937, pole: [1, -0.4, -0.6] },
     camera: { target: [0, 1.05, 0], halfHeight: 1.15, azimuth: 30, elevation: 10 },
   },
 
-  // Standing between two high pulleys, each hand on the far one's cable: from the arms crossed in
-  // front, they open out wide to the sides.
+  // Standing behind two high pulleys in front, each hand on the far one's cable: from the arms
+  // crossed in front, they sweep out wide to the sides on an arc about the shoulders.
   reverse_cable_crossover: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_column: { at: [0.85, 0.2], pulley: 1.8, twin: true, crossed: true } },
+    kit: { cable_column: { at: [0.7729, 0.8181], pulley: 1.8, twin: true, crossed: true } },
     top: { shin: 4, thigh: 6, trunk: 4, hand: [0.78, 1.45, 0.08] },
-    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [-0.12, 1.38, 0.45] },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.18, 1.4357, 0.6348] },
     feet: { stance: 0.16, toeOut: 8, kneesOut: 0.2 },
-    grip: { pole: [1, 0, -0.3] },
+    grip: { arc: true, pole: [1, 0, -0.3], rotate: 58.0559 },
     camera: { target: [0, 1.1, 0.1], halfHeight: 1.15, azimuth: 24, elevation: 10 },
   },
 
@@ -362,10 +365,10 @@ export const POSES = {
   cable_shoulder_press: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { bench: { angle: 80 }, cable_column: { at: [0.75, 0.15], pulley: 0.12, twin: true } },
+    kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
     body: { hip: [0.53, 0.17], trunk: -10 },
-    top: { hand: [0.17, 1.58, 0.16] },
-    bottom: { hand: [0.32, 1.12, 0.18] },
+    top: { hand: [0.2882, 1.6383, 0.2743] },
+    bottom: { hand: [0.32, 1.13, 0.18] },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
     grip: { pole: [1, -1, 0.1] },
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },

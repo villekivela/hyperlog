@@ -72,3 +72,19 @@ test('the numbers are grouped under short headings, the commonly tuned ones open
   // Grip, Bar, Torso and Feet are open; the less used are collapsed.
   assert.deepEqual(HEADINGS.filter((h) => h.open).map((h) => h.name), ['Grip', 'Bar', 'Torso', 'Feet']);
 });
+
+test('equipment moves a metre either way, a body point only 30 cm', () => {
+  const t = byPath(tunables(prepare('cable_shoulder_press')));
+  const z = t['kit.cable_column.at.1'];
+  assert.ok(z.max - z.value > 0.999 && z.value - z.min > 0.999, `the column moves ${z.min} to ${z.max}`);
+  const hand = t['top.hand.1'];
+  assert.ok(hand.max - hand.value <= 0.31, `a hand moves to ${hand.max}`);
+});
+
+test('every pose offers its grip\'s turn at the top and the bottom, each from grip.rotate', () => {
+  const t = byPath(tunables(prepare('cable_flye')));
+  const rotate = prepare('cable_flye').grip.rotate ?? 0;
+  assert.equal(t['top.rotate']?.value, rotate);
+  assert.equal(t['bottom.rotate']?.value, rotate);
+  assert.equal(t['grip.rotate'], undefined);
+});
