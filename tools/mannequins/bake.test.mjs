@@ -191,3 +191,27 @@ test('every clip carries a four-phase tempo, from its entry or its movement', ()
   for (const id of ['barbell_squat', 'barbell_rdl', 'barbell_bench_press', 'leg_press', 'machine_chest_press']) slow(id, 'lowering');
   for (const id of ['lat_pulldown', 'close_grip_lat_pulldown', 'triceps_pressdown']) slow(id, 'lifting');
 });
+
+// The owner, #127: 'a slight jump when the animation is at the knees'. No joint steps further
+// between two frames than it does in the frames either side, beyond a degree or two: a step
+// that stands out is a jump the eye catches, however slow the joint moves elsewhere.
+const JUMP = 2;
+test('no joint jumps between two frames, in any clip', async () => {
+  const jumps = [];
+  for (const id of Object.keys(index.clips)) {
+    for (const file of filesOf(id)) {
+      const gltf = await read(path.join(out, file));
+      for (const track of gltf.animations[0].tracks) {
+        if (!track.name.endsWith('.quaternion')) continue;
+        const q = (i) => new THREE.Quaternion().fromArray(track.values, i * 4);
+        const steps = [];
+        for (let i = 1; i < track.times.length; i++) steps.push((q(i).angleTo(q(i - 1)) * 180) / Math.PI);
+        for (let i = 1; i < steps.length - 1; i++) {
+          const jump = steps[i] - Math.max(steps[i - 1], steps[i + 1]);
+          if (jump > JUMP) jumps.push(`${file} ${track.name.replace('.quaternion', '')} at frame ${i + 1}: ${jump.toFixed(1)}°`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(jumps, []);
+});

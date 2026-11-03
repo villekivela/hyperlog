@@ -68,6 +68,7 @@ test('dragging the fingers turns the wrist', async () => {
 test('a grip turned at one end eases from grip.rotate at the other', async () => {
   const { frameAt } = await import('./motions.mjs');
   const entry = applyTuned(prepare('cable_flye'), { 'grip.rotate': 30, 'bottom.rotate': 150 });
+  delete entry.top.rotate;
   const stage = await buildStage(entry);
   const L = stage.rig.dims;
   assert.equal(frameAt(entry, 0, L).gripRotate, 30);
@@ -81,14 +82,18 @@ test('a back squat offers its elbows in Tune, starting where the squat puts them
   assert.deepEqual(t.map((x) => x.path), ['grip.pole.0', 'grip.pole.1', 'grip.pole.2']);
 });
 
-test('elbows set back and down behind the bar keep the hands on it, knuckles along it', async () => {
+// The owner, #127: a wrist the pose doesn't set stays straight, so the bar slants across the palm
+// where the elbows put the hand off square to it.
+test('elbows set back and down behind the bar keep the hands on it, the wrist straight', async () => {
   const back = await posed('barbell_squat', 0, { 'grip.pole': [0.3, -0.6, -1] });
   const elbow = wpos(back.stage.rig.bones.lowerarm_l);
   const shoulder = wpos(back.stage.rig.bones.upperarm_l);
   assert.ok(elbow.z < shoulder.z - 0.05 && elbow.y < shoulder.y, `the elbow at ${elbow.toArray().map((v) => v.toFixed(2))}, the shoulder at ${shoulder.toArray().map((v) => v.toFixed(2))}`);
   assert.ok(heldAt(back.stage.rig, 'l').distanceTo(gripTarget(back.P, 1)) < 0.015, 'the hand left the bar');
+  const bend = deg(back.fingers.angleTo(back.forearm));
+  assert.ok(bend < 5, `the wrist bends ${bend.toFixed(1)}°`);
   const off = deg(Math.acos(Math.min(1, Math.abs(back.knuckles.dot(X)))));
-  assert.ok(off < 15, `the knuckles cross the bar ${off.toFixed(0)}° off its line`);
+  assert.ok(off <= 35.5, `the bar slants ${off.toFixed(0)}° across the palm`);
 });
 
 test('dragging a squat\'s elbow sets where the elbows point', async () => {

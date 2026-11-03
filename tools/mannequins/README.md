@@ -83,18 +83,31 @@ db_incline_press: {
 ## Wrists and grip turn
 
 Every pose with hands keeps its wrists straight (SPEC, #127): the back of the hand in line with the
-forearm. A hand on something that lies its own way (a bar, a handle the pose sets) takes it across
-the palm, knuckles along it, and rolls about it; the elbow goes round the line from the shoulder to
-the wrist to wherever the wrist comes out straightest, keeping to the pose's pole side, and keeping
-close to the pole where the arm was traced or the entry sets `grip.pole`. A free handle (a dumbbell,
-a stirrup) turns with the hand. Where no straight arm reaches, the wrist turns as little as it must.
+forearm, a wrist the pose doesn't set within 5° of it. A hand on something that lies its own way (a
+bar, a handle the pose sets) takes it across the palm and rolls about it; the elbow goes round the
+line from the shoulder to the wrist, keeping to the pose's pole, and closer to it where the arm was
+traced or the entry sets `grip.pole`. Of all the arms that fit, the solve takes the straightest
+wrist first, then the elbow nearest its pole, then the knuckles nearest along the bar: where a
+straight wrist can't have its knuckles along it (a wide grip at a press's lockout), the bar slants
+across the palm, as much as 35°, as a lifter's does. A free handle (a dumbbell, a stirrup) turns
+with the hand. Where no straight arm reaches at all, the arm reaches as far as it can, the wrist
+straight and the handle slanting in the hand. Near full reach an arm eases into straight over its
+last 4 mm, so an elbow never snaps open at lockout.
+
+The motion has no jumps: each side's arm, and each finger's closing, is followed through the rep
+from both ends, the cheaper way kept, and averaged over a few frames, so where the best arm
+changes branch the elbow travels there instead of jumping; and the knees give way smoothly as a
+pull's bar passes them, the legs' front rounded over the kneecap and the give eased in. A test
+fails any joint whose step between two frames stands out from the steps either side of it by more
+than 2°, in every clip.
+
 A press or a squat holds the bar low in the palm, near its heel; a pull at the fingers' roots, the
 palm against it. Each finger closes round what the hand holds only until its tip touches it, and
 the hands check fails fingers folded into one another (their joints under 1.3 cm apart).
 
 `top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
 degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
-given at the bottom alone eases from straight). The joints check fails a wrist bent more than 20°
+given at the bottom alone eases from straight). The joints check fails a wrist bent more than 5°
 in a pose that doesn't set its wrists. The grip's turn is `top.rotate` and `bottom.rotate`, each
 from `grip.rotate`, which stands for both ends. In Tune the wrist's two sliders at each end are
 labelled in words, "Wrist bend: + flexion / − extension" and "Wrist tilt: + radial (thumb side) /

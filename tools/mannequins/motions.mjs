@@ -113,12 +113,16 @@ const SPOT = [0.02, 0.06, 0.07];
 /** How far in front of the shin's and the thigh's line a bar running past them must stay: their own depth and the bar's. */
 const SHIN_FRONT = 0.075;
 const THIGH_FRONT = 0.11;
-/** How far above and below the knee a bar counts as running past it. */
-const KNEE = 0.06;
+/** How far below the knee the leg's front turns from the shin's line to the thigh's, round the kneecap. */
+const KNEE = 0.2;
+/** How many degrees either side of where the bar first touches the knees start to give way. */
+const GIVE = 6;
 
 /**
  * A pull's legs with the knees out of the bar's way: where the bar, at its height `s.bar` on its
  * line at `bar.z`, would run into the shins or the thighs, the shins stand back, as far as it takes.
+ * The legs' front runs up the shin, round the kneecap and up the thigh with no corner, and the
+ * knees start to give a little before the bar reaches them, so they give way smoothly.
  */
 function clearOf(e, s, L) {
   const ankleY = (e.feet.y ?? 0) + L.ankleY;
@@ -128,19 +132,23 @@ function clearOf(e, s, L) {
     const out = Math.atan(e.feet.kneesOut ?? 0);
     const a = Math.atan2(Math.sin(rad(shin)), Math.cos(rad(shin)) * Math.cos(out));
     const knee = V(0, ankleY + L.shin * STRAIGHT * Math.cos(a), L.shin * STRAIGHT * Math.sin(a) * Math.cos(out));
-    // Near the knee, both: the bar runs past the kneecap.
-    const rooms = [];
-    if (s.bar <= knee.y + KNEE) rooms.push(e.bar.z - knee.z * Math.min(1, (s.bar - ankleY) / (knee.y - ankleY)) - SHIN_FRONT);
-    if (s.bar >= knee.y - KNEE) rooms.push(e.bar.z - (knee.z + Math.max(0, Math.min(1, (s.bar - knee.y) / (hip.y - knee.y))) * (hip.z - knee.z)) - THIGH_FRONT);
-    return Math.min(...rooms);
+    // The shin's line and the thigh's, each run on past the knee, and the kneecap between: the
+    // leg's front turns from one to the other over the stretch below the knee.
+    const shinZ = knee.z * ((s.bar - ankleY) / (knee.y - ankleY));
+    const thighZ = knee.z + ((s.bar - knee.y) / (hip.y - knee.y)) * (hip.z - knee.z);
+    const k = smooth(Math.max(0, Math.min(1, (s.bar - (knee.y - KNEE)) / KNEE)));
+    return e.bar.z - (shinZ + (thighZ - shinZ) * k) - (SHIN_FRONT + (THIGH_FRONT - SHIN_FRONT) * k);
   };
-  if (room(s.shin) >= 0) return s;
-  let [lo, hi] = [-10, s.shin];
+  // The shin that just clears the bar (the room shrinks as the shin leans in), and the traced
+  // shin eased onto it: a smooth minimum, never past it.
+  let [lo, hi] = [-10, 80];
+  if (room(hi) >= 0) return s;
   for (let i = 0; i < 30; i++) {
     const m = (lo + hi) / 2;
     if (room(m) >= 0) lo = m; else hi = m;
   }
-  return { ...s, shin: lo };
+  const shin = (s.shin + lo - Math.hypot(s.shin - lo, GIVE)) / 2;
+  return { ...s, shin };
 }
 
 /**

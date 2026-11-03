@@ -1519,8 +1519,12 @@ gallery (Technique videos).
     curl can stand staggered; and equipment moves a metre either way in Tune. Every wrist is straight
     by default, the back of the hand in line with the forearm (owner, 2026-11-03): a bar or a set
     handle lies across the palm, low near its heel for a press or a squat, at the fingers' roots for
-    a pull, and the hand rolls about it while the elbow moves to suit; a wrist bends only where the
-    pose sets it, and a check fails one bent more than 20° otherwise. Tune bends the wrists, turns
+    a pull, and the hand rolls about it while the elbow moves to suit; where a straight wrist can't
+    have its knuckles along the bar, the bar slants across the palm instead. A wrist bends only where
+    the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
+    frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
+    wrists, with each slider named in words ("Wrist tilt: + radial (thumb side) / − ulnar
+    (little-finger side)"), turns
     the grip at each end and points a squat's elbows; every cable ends at its handle's
     hook (a check fails one more than 1 cm off). An exercise done with a different grip set by set
     has a clip per grip (owner, 2026-11-03): the 2-Grip Lat Pulldown's set 1 wide and overhand at
