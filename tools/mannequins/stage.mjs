@@ -108,6 +108,15 @@ export async function buildStage(entry, body) {
   shadow.position.x = at[0];
   shadow.position.z = at[1];
   scene.add(shadow);
+  // A kit shown alone (`shownAlone`) stands as its recipe has it with no pose, the body unposed.
+  if (entry.alone) {
+    const pose = () => {
+      kit.place({}, {}, {});
+      scene.updateMatrixWorld(true);
+      return {};
+    };
+    return { scene, rig, kit, pose };
+  }
   const top = frameAt(entry, 0, rig.dims);
   const bottom = frameAt(entry, 1, rig.dims);
   const frame = (d) => (d === 0 ? top : d === 1 ? bottom : frameAt(entry, d, rig.dims));

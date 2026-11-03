@@ -6,6 +6,7 @@
 // like a weight stack).
 import * as THREE from 'three';
 import { RECIPES } from './recipes/index.mjs';
+import { MOTION_TEMPOS } from './tempo.mjs';
 
 export { MATERIALS } from './parts.mjs';
 
@@ -21,7 +22,8 @@ export const MACHINES = {
   leg_curl: { kit: 'leg_curl', exercises: ['lying_leg_curl', 'seated_leg_curl'] },
   glute_ham_raise: { kit: null, exercises: ['glute_ham_raise'] },
   pec_deck: { kit: null, exercises: ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'] },
-  row_machine: { kit: 'row_machine', exercises: ['machine_row', 'chest_supported_machine_row', 'chest_supported_t_bar_row', 't_bar_row'] },
+  row_machine: { kit: 'row_machine', exercises: ['machine_row', 'chest_supported_machine_row'] },
+  t_bar_row_machine: { kit: 't_bar_row_machine', exercises: ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'] },
   pulldown_machine: { kit: 'pulldown_machine', exercises: ['machine_pulldown', 'machine_lat_pullover'] },
   shoulder_press: { kit: null, exercises: ['machine_shoulder_press'] },
   lateral_raise_machine: { kit: null, exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
@@ -31,7 +33,7 @@ export const MACHINES = {
   hip_thrust_machine: { kit: null, exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
   crunch_machine: { kit: null, exercises: ['machine_crunch'] },
-  shrug_machine: { kit: null, exercises: ['machine_shrug', 'kelso_shrug'] },
+  shrug_machine: { kit: null, exercises: ['machine_shrug'] },
 };
 
 /**
@@ -55,6 +57,19 @@ export const EQUIPMENT = {
 
 /** Every kit's recipe, by name. */
 export const KITS = RECIPES;
+
+/**
+ * The entry the studio shows kit `name` by while no pose uses it: the kit alone, as its recipe
+ * stands with no pose (`standsAlone: { camera }` on the recipe, the framing it opens on), or null
+ * for a kit whose recipe is set up by its pose. The studio's loop runs on a tempo, so it has the
+ * machines' usual one, though nothing moves.
+ */
+export function shownAlone(name) {
+  const stands = KITS[name]?.standsAlone;
+  if (!stands) return null;
+  const equipment = Object.keys(EQUIPMENT).find((k) => EQUIPMENT[k]?.includes(name));
+  return { equipment, kit: { [name]: {} }, alone: true, tempo: MOTION_TEMPOS.lever_handles, camera: stands.camera };
+}
 
 /**
  * Builds a pose's kit: each kit it names, with its options, in one group placed together. `kits`
