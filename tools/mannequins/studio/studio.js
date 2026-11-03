@@ -9,11 +9,14 @@ import KEYS from './keys.json';
 import { helpOf, keymap, tokenOf } from './keys.mjs';
 import { FRAMES, buildStage, parseMannequin } from '../stage.mjs';
 import { checkStage } from '../checks.mjs';
-import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
+import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
 import { faster, repAt, slower, spanOf, stepFrames, stepSeconds, synced, timeAt, zoomOf } from './video.mjs';
+import { HALF_FOV, closeUpOf, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
+import { skeletonOf } from './bones.mjs';
+import { between, heldAt, turnOf, wpos } from '../rig.mjs';
 
 const keys = keymap(KEYS);
 const $ = (id) => document.getElementById(id);
@@ -49,10 +52,15 @@ const state = {
   filter: remembered.filter ?? '',
   find: null, // { matches, at }
   input: null, // what the bar or a box is taking: find, ex, type or note
+  typing: null, // the number the bar's `type` sets: a bone's offset
   video: null, // the item's technique video: { link, start, loop, src, fps, duration } once fetched
   sync: remembered.sync ?? true, // the video and the rep move together, once the loop is set
   speed: remembered.speed ?? 1,
   zoom: remembered.zoom ?? true, // the scrub bar shows the loop, not the whole video
+  bone: remembered.bone ?? null, // the bone selected to turn, by name
+  axis: remembered.axis ?? 'x', // the axis it turns about: x, y or z
+  plates: true, // the plates shown, or hidden to see the hands on the bar: a view setting, kept nowhere
+  lock: null, // the hand a close-up follows: l or r
 };
 
 function remember() {
@@ -61,14 +69,16 @@ function remember() {
   try {
     sessionStorage.setItem(MEMORY, JSON.stringify({
       current: state.current, unsaved: state.unsaved, selected: state.selected, focus: state.focus, show: state.show, filter: state.filter,
-      sync: state.sync, speed: state.speed, zoom: state.zoom,
+      sync: state.sync, speed: state.speed, zoom: state.zoom, bone: state.bone, axis: state.axis,
     }));
   } catch { /* a private window keeps nothing; the page works without it */ }
 }
 
+let aboutView = false; // the message says where the camera is, so a move of it clears the message
 function message(text, tone = '') {
   $('message').textContent = text;
   $('message').dataset.tone = tone;
+  aboutView = false;
 }
 
 const api = async (url, body) => {
@@ -91,11 +101,27 @@ scene.add(sun);
 // From behind the kit, wherever the stage is turned: only dark lights it (--clay-rim).
 const rim = new THREE.DirectionalLight(0xffffff, 0);
 scene.add(rim, rim.target);
-const camera = new THREE.PerspectiveCamera(26, 1, 0.05, 50);
-const view = { target: new THREE.Vector3(0, 1, 0), distance: 4, azimuth: 62, elevation: 8, framing: null };
+const camera = new THREE.PerspectiveCamera(HALF_FOV * 2, 1, 0.02, 50);
+// The free camera (view.mjs): it orbits round the selected bone or the body's centre, pans, dollies
+// and rolls; a close-up follows its hand.
+let view = viewOf({ target: [0, 1, 0], halfHeight: 1.1, azimuth: 62, elevation: 8 });
 const markers = new THREE.Group();
 scene.add(markers);
 const dot = new THREE.SphereGeometry(1, 16, 12);
+// The selected bone: a dot on its joint and its three axes, the one it turns about drawn strong.
+const gizmo = new THREE.Group();
+gizmo.renderOrder = 11;
+scene.add(gizmo);
+const AXES = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+for (const [name, dir] of Object.entries(AXES)) {
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), dir]), new THREE.LineBasicMaterial({ depthTest: false, transparent: true }));
+  line.name = name;
+  line.renderOrder = 11;
+  gizmo.add(line);
+}
+const joint = new THREE.Mesh(dot, new THREE.MeshBasicMaterial({ depthTest: false, transparent: true, opacity: 0.95 }));
+joint.renderOrder = 12;
+gizmo.add(joint);
 
 let body = null;
 let live = null; // { stage, entry }
@@ -104,24 +130,29 @@ let mixer = null;
 let duration = 1;
 let handles = [];
 
-function frame(cam) {
-  view.framing = cam;
-  view.target.set(...cam.target);
-  view.distance = cam.halfHeight / Math.tan(THREE.MathUtils.degToRad(13));
-  view.azimuth = cam.azimuth;
-  view.elevation = cam.elevation;
+/** Puts the camera on `framing` (the clip's own), unrolled and following no hand. */
+function frame(framing) {
+  view = viewOf(framing);
+  state.lock = null;
   place();
 }
 
-function place() {
-  const a = THREE.MathUtils.degToRad(view.azimuth);
-  const el = THREE.MathUtils.degToRad(Math.min(89.5, view.elevation));
-  const t = view.target;
-  camera.position.set(t.x + view.distance * Math.cos(el) * Math.sin(a), t.y + view.distance * Math.sin(el), t.z + view.distance * Math.cos(el) * Math.cos(a));
-  camera.lookAt(t);
-  const back = a + THREE.MathUtils.degToRad(160);
-  rim.position.set(t.x + 5 * Math.sin(back), t.y + 3, t.z + 5 * Math.cos(back));
-  rim.target.position.copy(t);
+/** The camera moved to `next` by the keys or the mouse: a message about where it was goes. */
+function move(next) {
+  place(next);
+  if (aboutView) message('');
+}
+
+/** Sets the camera where `view` is. */
+function place(next = view) {
+  view = next;
+  const { position, up, target } = placeOf(view);
+  camera.position.copy(position);
+  camera.up.copy(up);
+  camera.lookAt(target);
+  const back = THREE.MathUtils.degToRad(view.azimuth + 160);
+  rim.position.set(target.x + 5 * Math.sin(back), target.y + 3, target.z + 5 * Math.cos(back));
+  rim.target.position.copy(target);
 }
 
 /** The materials of what is on stage, which the theme colours. */
@@ -143,6 +174,8 @@ function free(root) {
 
 function colour() {
   scene.background = new THREE.Color(css('--stage'));
+  for (const line of gizmo.children) if (line.isLine) line.material.color.set(css(`--axis-${line.name}`));
+  joint.material.color.set(css('--focus'));
   rim.intensity = Number(css('--clay-rim')) || 0;
   for (const m of materials()) {
     if (m.name === 'shadow') m.opacity = Number(css('--clay-shadow')) || 0.65;
@@ -167,6 +200,7 @@ function showWhich() {
   if (live) live.stage.scene.visible = !state.clip;
   if (clipScene) clipScene.visible = state.clip;
   markers.visible = !state.clip;
+  for (const root of [live?.stage.scene, clipScene]) if (root) showPlates(root, state.plates);
 }
 
 async function loadClip() {
@@ -225,10 +259,150 @@ function draw(now) {
   if (state.show === 'loop') { state.d = d; state.lifting = rep.lifting; }
   followVideo({ d, lifting: rep.lifting });
   if (state.clip && mixer) mixer.setTime(Math.min(d, 0.9999) * duration);
-  else if (live) live.stage.pose(d);
+  // The live pose is posed under the clip too, for the bone the camera orbits and the hand it follows.
+  if (live) live.stage.pose(d);
+  follow();
   for (const m of markers.children) m.scale.setScalar(camera.position.distanceTo(m.position) * 0.009);
+  paintGizmo();
   renderer.render(scene, camera);
   requestAnimationFrame(draw);
+}
+
+// ---- The bones and the camera --------------------------------------------------------------------
+
+let skeleton = null; // the bones' walk (bones.mjs), once the mannequin is loaded
+const hasBody = () => Boolean(live && !isKit());
+const rigNow = () => live.stage.rig;
+/** Where the camera orbits: the selected bone, or the body's centre, or what it looks at. */
+function pivot() {
+  if (!hasBody()) return new THREE.Vector3(...view.target);
+  return state.bone ? wpos(rigNow().bones[state.bone]) : between(rigNow(), 'pelvis', 'neck_01');
+}
+
+let held = null; // where the followed hand held a frame ago
+/** A close-up's camera moves with its hand through the rep. */
+function follow() {
+  if (!state.lock || !hasBody()) return;
+  const at = heldAt(rigNow(), state.lock);
+  if (held) place(moved(at.clone().sub(held)));
+  held = at;
+}
+/** `view` moved by `by` (a vector), the camera with its target. */
+const moved = (by) => ({ ...view, target: new THREE.Vector3(...view.target).add(by).toArray() });
+
+/** The selected bone's gizmo, where the bone is now and turned as it is. */
+function paintGizmo() {
+  gizmo.visible = Boolean(state.bone && hasBody() && !state.clip);
+  if (!gizmo.visible) return;
+  const rig = rigNow();
+  gizmo.position.copy(wpos(rig.bones[state.bone]));
+  // The axes the bone had in the bind pose, carried with it: what x, y and z turn it about.
+  gizmo.quaternion.copy(turnOf(rig, state.bone));
+  const size = camera.position.distanceTo(gizmo.position) * 0.05;
+  for (const line of gizmo.children) {
+    if (line.isLine) {
+      line.scale.setScalar(size * (line.name === state.axis ? 1.6 : 1));
+      line.material.opacity = line.name === state.axis ? 1 : 0.7;
+    }
+  }
+  joint.scale.setScalar(size * 0.14);
+}
+
+const ENDS = { top: 'the top', bottom: 'the bottom' };
+/** The end of the rep the stage holds (`top` or `bottom`), where a bone turns, or null. */
+const endHeld = () => (state.show in ENDS ? state.show : null);
+/** The selected bone's offset on its axis at the end held, as a number the keys step, or null. */
+function boneNumber() {
+  const end = endHeld();
+  if (!state.bone || !end) return null;
+  const path = `${end}.offsets.${state.bone}.${'xyz'.indexOf(state.axis)}`;
+  return { path, value: 0, ...rangeOf(path, 0) };
+}
+/** Whether the keys turn the selected bone: the stage is focused and a bone of the body is selected. */
+const turningBone = () => Boolean(state.focus === 'stage' && state.bone && hasBody());
+/** What `h` `l` `=` `R` change: on the stage the selected bone's offset, else the selected number. */
+function aimed() {
+  if (turningBone()) {
+    const t = boneNumber();
+    if (!t) message(`Hold the top (${keys.keyOf('holdTop')}) or the bottom (${keys.keyOf('holdBottom')}): a bone turns at one of them`);
+    return t;
+  }
+  return selectedNumber();
+}
+
+/** Selects bone `name` and focuses the stage, where the keys turn it. */
+function selectBone(name) {
+  if (!hasBody() || !skeleton) { message('No bones to select here'); return; }
+  state.bone = name;
+  setFocus('stage');
+  paintBone();
+  paintStep();
+  remember();
+}
+/** Selects the bone `to(skeleton, bone)` names from the one selected; the pelvis if none is. */
+const walkBone = (to) => selectBone(state.bone ? to(skeleton, state.bone) : skeleton?.names[0]);
+/** Picks the axis the selected bone turns about: x, y or z. */
+function setAxis(axis) {
+  if (!state.bone) { message(`Select a bone first (${keys.keyOf('boneParent')}, or ${keys.keyOf('find')} by name)`); return; }
+  state.axis = axis;
+  paintBone();
+  paintStep();
+  remember();
+}
+
+/** The selected bone's box on the stage: its name, axis, and its offset at the end held. */
+function paintBone() {
+  const box = $('bone');
+  box.hidden = !state.bone || !hasBody();
+  if (box.hidden) return;
+  const end = endHeld();
+  const turned = valueAt(entryNow(), `${end ?? 'top'}.offsets.${state.bone}`) ?? [0, 0, 0];
+  $('bone-name').textContent = state.bone;
+  $('bone-axis').textContent = state.axis;
+  $('bone-axis').dataset.axis = state.axis;
+  $('bone-end').textContent = end ? `at ${ENDS[end]} · turned ${turned.map((v) => `${Number(v.toFixed(1))}°`).join(' ')}` : 'hold the top or the bottom to turn it';
+}
+
+/** The close-up of the hand on side `k`, following it through the rep. */
+function closeUpOn(k) {
+  if (!hasBody()) { message('No hands to close up on here'); return; }
+  place(closeUpOf(live.stage, k));
+  state.lock = k;
+  held = null;
+  message(`The ${k === 'l' ? 'left' : 'right'} hand, where it holds: the camera follows it (${keys.keyOf('cameraClip')} for the clip's framing)`);
+  aboutView = true;
+}
+
+/** Degrees for an orbit or a roll: 5, or a count's. */
+const degreesOf = (n, counted) => (counted ? n : 5);
+/** A pan's step: a tenth of what the view shows top to bottom. */
+const panStep = () => halfHeightOf(view) * 0.2;
+
+/** Hides the plates, or shows them again, live and in the clip: nothing is saved. */
+function togglePlates() {
+  state.plates = !state.plates;
+  showWhich();
+  paintCommands();
+  remember();
+  message(state.plates ? 'The plates are shown' : 'The plates are hidden, to see the hands on the bar (the clip keeps them)');
+}
+
+/** Saves the view as the clip's framing, at the bench angle shown for an adjustable bench, and re-bakes. */
+async function saveFraming() {
+  const item = state.item;
+  if (!item?.entry || isKit()) { message('Only an exercise has a framing'); return; }
+  const framing = framingOf(view);
+  const path = item.entry.bench?.cameras ? `bench.cameras.${state.angle}` : 'camera';
+  message(`Saving the framing into poses.mjs (${path}) and baking…`, 'busy');
+  try {
+    await api('/api/save', { id: item.id, tuned: { [path]: framing } });
+    await openItem(state.current, { keepTuned: true });
+    await loadClip();
+    message(`The clip opens on this view now: ${path} in poses.mjs, turned ${framing.azimuth}°, tilted ${framing.elevation}°, ${Math.round(framing.halfHeight * 2000)} mm high`);
+    loadItems(true);
+  } catch (err) {
+    message(err.message, 'error');
+  }
 }
 
 // ---- Posing live --------------------------------------------------------------------------------
@@ -272,6 +446,8 @@ async function rebuild() {
     // A kit is shown alone, as its exercise sets it up.
     body.visible = !isKit();
     setLive({ stage, entry });
+    skeleton ??= skeletonOf(stage.rig.bones);
+    paintBone();
     showHandles();
     checkSoon();
   } catch (err) {
@@ -326,7 +502,7 @@ function showHandles() {
       markers.add(m);
     }
   }
-  $('hint').textContent = handles.length ? 'drag a dot to pose it, or drag to turn' : 'drag to turn';
+  $('hint').textContent = `${handles.length ? 'drag a dot to pose it, or ' : ''}drag to orbit, right-drag to pan, wheel to zoom`;
 }
 
 function dragTo(h, point) {
@@ -344,18 +520,20 @@ function dragTo(h, point) {
   changed();
 }
 
-// The stage turns on a sideways drag, and a dot drags its pose numbers.
-let turning = null;
+// A drag orbits the stage (round the selected bone, or the body's centre), a right-drag pans it, the
+// wheel dollies it, and a dot drags its pose numbers.
+let turning = null; // { x, y, pan, pivot }
 let dragging = null;
 const ray = new THREE.Raycaster();
 const holder = $('canvas');
+holder.addEventListener('contextmenu', (ev) => ev.preventDefault());
 holder.addEventListener('pointerdown', (ev) => {
   setFocus('stage');
   holder.setPointerCapture(ev.pointerId);
   const r = canvas.getBoundingClientRect();
   let best = null;
   let nearest = 28;
-  for (const h of handles) {
+  for (const h of ev.button === 0 ? handles : []) {
     const p = h.at.clone().project(camera);
     const d = Math.hypot(((p.x + 1) / 2) * r.width - (ev.clientX - r.left), ((1 - p.y) / 2) * r.height - (ev.clientY - r.top));
     if (d < nearest) { nearest = d; best = h; }
@@ -367,7 +545,7 @@ holder.addEventListener('pointerdown', (ev) => {
     ev.preventDefault();
     return;
   }
-  turning = ev.clientX;
+  turning = { x: ev.clientX, y: ev.clientY, pan: ev.button === 2, pivot: pivot() };
 });
 holder.addEventListener('pointermove', (ev) => {
   if (dragging) {
@@ -378,14 +556,25 @@ holder.addEventListener('pointermove', (ev) => {
     if (point && h) dragTo(h, point);
     return;
   }
-  if (turning === null) return;
-  view.azimuth -= (ev.clientX - turning) * 0.5;
-  turning = ev.clientX;
-  place();
+  if (!turning) return;
+  const [dx, dy] = [ev.clientX - turning.x, ev.clientY - turning.y];
+  turning.x = ev.clientX;
+  turning.y = ev.clientY;
+  if (turning.pan) {
+    // The stage follows the pointer: a pixel is what the view shows over the canvas's height.
+    const metres = (2 * halfHeightOf(view)) / (canvas.clientHeight || 1);
+    move(pan(view, -dx * metres, dy * metres));
+  } else {
+    move(orbit(view, -dx * 0.5, dy * 0.5, turning.pivot));
+  }
 });
 const endDrag = () => { turning = null; dragging = null; };
 holder.addEventListener('pointerup', endDrag);
 holder.addEventListener('pointercancel', endDrag);
+holder.addEventListener('wheel', (ev) => {
+  ev.preventDefault();
+  if (ev.deltaY) move(dolly(view, ev.deltaY < 0 ? 1 : -1));
+}, { passive: false });
 
 // ---- The sidebar --------------------------------------------------------------------------------
 
@@ -484,7 +673,7 @@ async function openItem(key, { keepTuned = false } = {}) {
   }
   state.angle = item.entry?.bench ? (state.angle !== null && fresh === false ? state.angle : item.entry.bench.angle) : null;
   state.clip = false;
-  state.numbers = item.entry && !isKit() ? tunables(item.entry) : [];
+  state.numbers = numbersOf(state.tuned);
   if (!state.numbers.some((t) => t.path === state.selected)) state.selected = onScreen()[0]?.path ?? null;
   if (fresh && item.entry) frame(cameraAtAngle());
   if (fresh && !item.entry) setLive(null);
@@ -540,6 +729,8 @@ const UNITS = {
 };
 const unitOf = (t) => UNITS[t.unit] ?? UNITS[''];
 const selectedNumber = () => state.numbers.find((t) => t.path === state.selected);
+/** The item's numbers with `tuned` in: a bone turned and not saved yet is a number too. */
+const numbersOf = (tuned) => (state.item?.entry && !isKit() ? tunables(applyTuned(state.item.entry, tuned)) : []);
 
 function paintNumbers() {
   const box = $('sliders');
@@ -599,18 +790,20 @@ function paintValues() {
 }
 
 function paintStep() {
-  const t = selectedNumber();
+  // On the stage with a bone selected, the keys turn it; elsewhere they step the number.
+  const bone = turningBone();
+  const t = bone ? boneNumber() : selectedNumber();
   const step = $('step');
-  if (!t) { step.textContent = ''; return; }
+  if (!t) { step.textContent = bone ? `${state.bone}: hold the top or the bottom to turn it` : ''; return; }
   const u = unitOf(t);
   step.innerHTML = '';
   const add = (html) => step.insertAdjacentHTML('beforeend', html);
   add(`<strong></strong>`);
-  step.querySelector('strong').textContent = t.path;
+  step.querySelector('strong').textContent = bone ? labelOf(t.path) : t.path;
   add(`<span><kbd>${keys.keyOf('less')}</kbd><kbd>${keys.keyOf('more')}</kbd> ${u.step(t.step)}</span>`);
   add(`<span><kbd>${keys.keyOf('lessFine')}</kbd><kbd>${keys.keyOf('moreFine')}</kbd> ${u.step(Number((t.step / 10).toPrecision(3)))}</span>`);
   add(`<span><kbd>${keys.keyOf('type')}</kbd> type</span><span><kbd>${keys.keyOf('reset')}</kbd> reset</span>`);
-  if (state.angle !== null) add(`<span><kbd>${keys.keyOf('perAngle')}</kbd> per angle</span>`);
+  if (state.angle !== null && !bone) add(`<span><kbd>${keys.keyOf('perAngle')}</kbd> per angle</span>`);
 }
 
 function select(path) {
@@ -640,7 +833,13 @@ function snapshot() {
 let rebuildFrame = 0;
 /** After a change: paint, remember, and pose again on the next frame. */
 function changed() {
+  const numbers = numbersOf(state.tuned);
+  if (!same(numbers.map((t) => t.path), state.numbers.map((t) => t.path))) {
+    state.numbers = numbers;
+    paintNumbers();
+  }
   paintValues();
+  paintBone();
   remember();
   state.clip = false;
   showWhich();
@@ -648,7 +847,7 @@ function changed() {
 }
 
 function nudge(direction, fine, count) {
-  const t = selectedNumber();
+  const t = aimed();
   if (!t || !state.item?.entry) return;
   snapshot();
   const v = valueNow(t) + direction * t.step * (fine ? 0.1 : 1) * count;
@@ -876,6 +1075,7 @@ player.addEventListener('pause', () => paintCommands());
 function setFocus(pane) {
   state.focus = pane;
   for (const p of PANES) $(p).dataset.focused = String(p === pane);
+  paintStep();
   remember();
 }
 
@@ -884,6 +1084,8 @@ function setShow(show) {
   state.show = show;
   showHandles();
   paintCommands();
+  paintBone();
+  paintStep();
   remember();
 }
 /** Where in the loop the rep is `d` down, on the way down or up: so play resumes from where it was paused. */
@@ -947,10 +1149,15 @@ function findMatches(query) {
     const score = Math.min(fuzzy(query, t.path) ?? Infinity, fuzzy(query, labelOf(t.path)) ?? Infinity);
     if (score < Infinity) out.push({ score: score - 0.5, kind: 'number', path: t.path, label: t.path });
   }
+  for (const name of hasBody() ? skeleton?.names ?? [] : []) {
+    const score = fuzzy(query, name);
+    if (score !== null) out.push({ score: score - 0.25, kind: 'bone', name, label: `bone ${name}` });
+  }
   return out.sort((a, b) => a.score - b.score).slice(0, 40);
 }
 
 function jump(match) {
+  if (match.kind === 'bone') { selectBone(match.name); return; }
   if (match.kind === 'number') {
     setFocus('numbers');
     select(match.path);
@@ -1049,10 +1256,30 @@ function closeNote() {
   paintHints();
 }
 
+/** Sets number `t` to what `text` says: `12.5` is the value, `+2` (or `+-2`) moves it from where it is. */
+function setTyped(t, text) {
+  const u = unitOf(t);
+  const relative = text.startsWith('+');
+  const n = Number(relative ? text.slice(1) : text);
+  if (!Number.isFinite(n) || text === '') { message(`Not a number: ${text}`, 'error'); return; }
+  snapshot();
+  put(t.path, Number(((relative ? valueNow(t) : 0) + n / u.scale).toFixed(5)));
+  changed();
+}
+
 function typeValue() {
-  const t = selectedNumber();
+  const t = aimed();
+  if (!t) return;
+  // A bone's offset is typed on the command line: it may have no row yet.
+  if (t.path.includes('.offsets.')) {
+    state.typing = t;
+    openBar('type', `${labelOf(t.path)} = `);
+    $('line').value = String(Number(valueNow(t).toFixed(4)));
+    $('line').select();
+    return;
+  }
   const row = $('sliders').querySelector(`[data-path="${CSS.escape(state.selected ?? '')}"]`);
-  if (!t || !row) return;
+  if (!row) return;
   setFocus('numbers');
   state.input = 'type';
   const u = unitOf(t);
@@ -1068,16 +1295,7 @@ function typeValue() {
     state.input = null;
     box.remove();
     row.querySelector('.value').hidden = false;
-    if (set) {
-      // `12.5` is the value; `+2` (or `+-2`) moves it from where it is.
-      const text = box.value.trim();
-      const relative = text.startsWith('+');
-      const n = Number(relative ? text.slice(1) : text);
-      if (!Number.isFinite(n) || text === '') { message(`Not a number: ${text}`, 'error'); return; }
-      snapshot();
-      put(t.path, Number(((relative ? valueNow(t) : 0) + n / u.scale).toFixed(5)));
-      changed();
-    }
+    if (set) setTyped(t, box.value.trim());
     paintHints();
   };
   box.addEventListener('keydown', (ev) => {
@@ -1090,7 +1308,7 @@ function typeValue() {
 }
 
 function reset() {
-  const t = selectedNumber();
+  const t = aimed();
   if (!t) return;
   snapshot();
   if (perMap()[t.path]) setPer(t.path, copy(state.item.entry.bench?.perAngle?.[t.path]));
@@ -1132,9 +1350,8 @@ function turnAngle(by) {
 }
 
 function turnTo(azimuth, elevation) {
-  view.azimuth = azimuth;
-  view.elevation = elevation;
-  place();
+  state.lock = null;
+  move({ ...view, azimuth, elevation, roll: 0 });
 }
 
 const COMMANDS = {
@@ -1175,8 +1392,38 @@ const COMMANDS = {
   cameraFront: () => turnTo(0, 6),
   cameraSide: () => turnTo(90, 6),
   cameraTop: () => turnTo(view.azimuth, 89.5),
-  turnLeft: (n) => { view.azimuth += 10 * n; place(); },
-  turnRight: (n) => { view.azimuth -= 10 * n; place(); },
+  turnLeft: (n) => move({ ...view, azimuth: view.azimuth + 10 * n }),
+  turnRight: (n) => move({ ...view, azimuth: view.azimuth - 10 * n }),
+  cameraClip: () => {
+    if (!state.item?.entry) { message('No framing here'); return; }
+    frame(cameraAtAngle());
+    message('The clip\'s own framing');
+    aboutView = true;
+  },
+  closeUpLeft: () => closeUpOn('l'),
+  closeUpRight: () => closeUpOn('r'),
+  plates: () => togglePlates(),
+  orbitLeft: (n, counted) => move(orbit(view, degreesOf(n, counted), 0, pivot())),
+  orbitRight: (n, counted) => move(orbit(view, -degreesOf(n, counted), 0, pivot())),
+  orbitDown: (n, counted) => move(orbit(view, 0, -degreesOf(n, counted), pivot())),
+  orbitUp: (n, counted) => move(orbit(view, 0, degreesOf(n, counted), pivot())),
+  panLeft: (n) => move(pan(view, -panStep() * n, 0)),
+  panRight: (n) => move(pan(view, panStep() * n, 0)),
+  panDown: (n) => move(pan(view, 0, -panStep() * n)),
+  panUp: (n) => move(pan(view, 0, panStep() * n)),
+  dollyIn: (n) => move(dolly(view, n)),
+  dollyOut: (n) => move(dolly(view, -n)),
+  rollLeft: (n, counted) => move(roll(view, -degreesOf(n, counted))),
+  rollRight: (n, counted) => move(roll(view, degreesOf(n, counted))),
+  boneParent: () => walkBone((k, b) => k.parent(b)),
+  boneChild: () => walkBone((k, b) => k.child(b)),
+  bonePrevious: () => walkBone((k, b) => k.sibling(b, -1)),
+  boneNext: () => walkBone((k, b) => k.sibling(b, 1)),
+  boneMirror: () => walkBone((k, b) => k.mirror(b)),
+  axisX: () => setAxis('x'),
+  axisY: () => setAxis('y'),
+  axisZ: () => setAxis('z'),
+  saveFraming: () => saveFraming(),
   videoPlay: () => playVideo(),
   videoFrameBack: (n) => stepVideo((t, v) => stepFrames(t, -n, v.fps, v.duration)),
   videoFrameOn: (n) => stepVideo((t, v) => stepFrames(t, n, v.fps, v.duration)),
@@ -1217,12 +1464,13 @@ function paintCommands() {
   const pressed = {
     holdTop: state.show === 'top', holdBottom: state.show === 'bottom', play: state.show === 'loop', clip: state.clip,
     videoPlay: isSynced() ? state.show === 'loop' : !player.paused, sync: state.sync, zoom: state.zoom,
+    plates: !state.plates,
   };
   for (const el of document.querySelectorAll('[data-command]')) {
     if (el.dataset.command in pressed) el.setAttribute('aria-pressed', String(pressed[el.dataset.command]));
   }
   const kit = isKit();
-  for (const c of ['save', 'undo', 'redo', 'reset', 'ok']) {
+  for (const c of ['save', 'undo', 'redo', 'reset', 'ok', 'saveFraming']) {
     const el = document.querySelector(`[data-command="${c}"]`);
     if (el) el.disabled = kit || !state.item?.entry;
   }
@@ -1284,6 +1532,8 @@ $('line').addEventListener('keydown', (ev) => {
     state.find = { matches, at: 0 };
     jump(matches[0]);
     message(`match 1 of ${matches.length}: ${matches[0].label} (${keys.keyOf('findNext')} next, ${keys.keyOf('findPrevious')} previous)`);
+  } else if (kind === 'type') {
+    setTyped(state.typing, text.trim());
   } else if (kind === 'ex') {
     const command = keys.ex(text);
     if (command) run(command, null); else message(`Not a command: :${text}`, 'error');
@@ -1321,7 +1571,13 @@ for (const p of PANES) $(p).addEventListener('pointerdown', () => setFocus(p));
 
 document.addEventListener('keydown', (ev) => {
   if (state.input || ev.isComposing || ev.metaKey) return;
-  if (ev.key === 'Escape') { keys.reset(); $('pending').textContent = ''; return; }
+  if (ev.key === 'Escape') {
+    // Esc clears what is typed, or else lets go of the selected bone.
+    if (!keys.pending && state.bone) { state.bone = null; paintBone(); paintStep(); remember(); message('No bone selected: the camera orbits the body'); }
+    keys.reset();
+    $('pending').textContent = '';
+    return;
+  }
   const token = tokenOf(ev);
   if (!token) return;
   const done = keys.feed(token, state.focus);

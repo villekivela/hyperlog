@@ -79,3 +79,19 @@ test('the camera follows the bench angle: the upright 75° frames higher and wid
   const heights = ANGLES.map((a) => clips[a].camera.target[1]);
   assert.deepEqual(heights, [...heights].sort((a, b) => a - b));
 });
+
+// The studio's `:frame` saves the view at the angle shown (#164): a framing given between the ends is
+// the framing there, and the angles either side move steadily to it.
+test('a framing given at an angle between the ends is the framing there, and the angles between move to it', async () => {
+  const { prepare } = await import('./entries.mjs');
+  const cameras = POSES[ID].bench.cameras;
+  const mid = { target: [0, 0.9, 0.1], halfHeight: 1.5, azimuth: 40, elevation: 0 };
+  const poses = { ...POSES, [ID]: { ...POSES[ID], bench: { ...POSES[ID].bench, cameras: { ...cameras, 30: mid } } } };
+  assert.deepEqual(prepare(ID, poses, 30).camera, mid);
+  // 15° is halfway from 0° to 30°.
+  const at15 = prepare(ID, poses, 15).camera;
+  assert.equal(at15.halfHeight, (cameras[0].halfHeight + mid.halfHeight) / 2);
+  assert.equal(at15.azimuth, (cameras[0].azimuth + mid.azimuth) / 2);
+  // And the ends keep theirs.
+  assert.deepEqual(prepare(ID, poses, 75).camera, cameras[75]);
+});

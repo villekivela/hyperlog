@@ -11,6 +11,8 @@
   --ground: #ececef; --pane: #f8f8fa; --stage: #e3e3e8; --ink: #1c1c20; --quiet: #5f5f68; --line: #d2d2d8;
   --ok: #2f7a4f; --ok-tint: #dcefe3; --note: #8a5a00; --note-tint: #f6e9cc; --fail: #b3261e; --fail-tint: #f9dedc;
   --focus: #3b5bdb; --focus-tint: #e3e8fc; --handle: #ff7a1a;
+  /* The selected bone's axes: x across, y up, z forward. */
+  --axis-x: #c92a2a; --axis-y: #2b8a3e; --axis-z: #1c62d6;
   --text: system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", monospace;
   /* The clay mannequin's greys and the kits' tones (GraphitePalette.kt, ClayColours), and the rim
@@ -23,6 +25,7 @@
     --ground: #131315; --pane: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
     --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --fail-tint: #3d1d1b;
     --focus: #9db0ff; --focus-tint: #252b45;
+    --axis-x: #ff8787; --axis-y: #8ce99a; --axis-z: #91b4ff;
     --clay-body: #c4c4ca; --clay-joint: #a8a8af; --clay-frame: #4a4a50; --clay-vinyl: #3a3a40; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #6e6e75; --clay-shadow: 1; --clay-rim: 0.7;
     color-scheme: dark;
   }
@@ -31,6 +34,7 @@
   --ground: #131315; --pane: #1f1f22; --stage: #2e2e33; --ink: #e8e8ec; --quiet: #a2a2ab; --line: #38383e;
   --ok: #7fcf9c; --ok-tint: #1d3326; --note: #e6b85c; --note-tint: #3a2e15; --fail: #f2b8b5; --fail-tint: #3d1d1b;
   --focus: #9db0ff; --focus-tint: #252b45;
+  --axis-x: #ff8787; --axis-y: #8ce99a; --axis-z: #91b4ff;
   --clay-body: #c4c4ca; --clay-joint: #a8a8af; --clay-frame: #4a4a50; --clay-vinyl: #3a3a40; --clay-plate: #8a8a90; --clay-metal: #c8c8cc; --clay-pulley: #6e6e75; --clay-shadow: 1; --clay-rim: 0.7;
   color-scheme: dark;
 }
@@ -84,6 +88,16 @@ button:disabled { opacity: 0.45; cursor: default; }
 .canvas .hint { position: absolute; left: 10px; bottom: 8px; font: 12px var(--mono); color: var(--quiet); pointer-events: none; }
 .canvas .empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--quiet); text-align: center; padding: 24px; }
 .canvas .empty[hidden] { display: none; }
+/* The selected bone, over the stage's corner, with the keys that walk and turn it. */
+.canvas .bone { position: absolute; left: 10px; top: 8px; display: grid; gap: 4px; padding: 6px 9px; border-radius: 6px; background: color-mix(in srgb, var(--pane) 88%, transparent); font: 12px var(--mono); color: var(--quiet); pointer-events: none; max-width: calc(100% - 20px); }
+.canvas .bone strong { color: var(--ink); font-weight: 650; }
+.canvas .bone .axis { font-weight: 700; }
+.canvas .bone .axis[data-axis="x"] { color: var(--axis-x); }
+.canvas .bone .axis[data-axis="y"] { color: var(--axis-y); }
+.canvas .bone .axis[data-axis="z"] { color: var(--axis-z); }
+.canvas .bone .keys { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.camera-keys { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0 10px 8px; font: 12px var(--text); color: var(--quiet); }
+.camera-keys span { display: inline-flex; gap: 3px; align-items: center; }
 .transport { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
 .transport .gap { flex: 1; }
 .checks { list-style: none; margin: 0; padding: 6px 14px 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 16px; font-size: 12px; border-top: 1px solid var(--line); }
@@ -168,7 +182,12 @@ dialog h2 { margin: 0 0 12px; font-size: 16px; }
 
   <main class="pane stage" id="stage" data-pane="stage" aria-label="Stage">
     <div class="title"><strong id="name">–</strong><span class="meta" id="meta"></span><span class="status" id="status" hidden></span></div>
-    <div class="canvas" id="canvas"><canvas></canvas><span class="hint" id="hint"></span><div class="empty" id="empty" hidden></div></div>
+    <div class="canvas" id="canvas"><canvas></canvas><span class="hint" id="hint"></span><div class="empty" id="empty" hidden></div>
+      <div class="bone" id="bone" hidden aria-live="polite">
+        <div><strong id="bone-name"></strong> · axis <span class="axis" id="bone-axis"></span> · <span id="bone-end"></span></div>
+        <div class="keys"><span><kbd data-key="boneParent"></kbd><kbd data-key="boneChild"></kbd> parent, child</span><span><kbd data-key="bonePrevious"></kbd><kbd data-key="boneNext"></kbd> sibling</span><span><kbd data-key="boneMirror"></kbd> mirror</span><span><kbd data-key="axisX"></kbd><kbd data-key="axisY"></kbd><kbd data-key="axisZ"></kbd> axis</span><span><kbd data-key="less"></kbd><kbd data-key="more"></kbd> turn</span><span><kbd>Esc</kbd> let go</span></div>
+      </div>
+    </div>
     <div class="transport" id="transport">
       <button type="button" data-command="play">Play</button>
       <button type="button" data-command="holdTop">Top</button>
@@ -185,6 +204,19 @@ dialog h2 { margin: 0 0 12px; font-size: 16px; }
       <button type="button" data-command="cameraTop">Top view</button>
       <button type="button" data-command="turnLeft">Turn</button>
       <button type="button" data-command="turnRight">Turn</button>
+    </div>
+    <div class="transport" id="view">
+      <button type="button" data-command="closeUpLeft">Left hand</button>
+      <button type="button" data-command="closeUpRight">Right hand</button>
+      <button type="button" data-command="cameraClip">Clip framing</button>
+      <button type="button" data-command="plates">Hide plates</button>
+      <button type="button" data-command="saveFraming">Save framing</button>
+    </div>
+    <div class="camera-keys" aria-label="Camera keys">
+      <span><kbd data-key="orbitLeft"></kbd><kbd data-key="orbitRight"></kbd><kbd data-key="orbitDown"></kbd><kbd data-key="orbitUp"></kbd> orbit</span>
+      <span><kbd data-key="panLeft"></kbd><kbd data-key="panDown"></kbd><kbd data-key="panUp"></kbd><kbd data-key="panRight"></kbd> pan</span>
+      <span><kbd data-key="dollyIn"></kbd><kbd data-key="dollyOut"></kbd> dolly</span>
+      <span><kbd data-key="rollLeft"></kbd><kbd data-key="rollRight"></kbd> roll</span>
     </div>
     <ul class="checks" id="checks" aria-label="Checks"></ul>
   </main>

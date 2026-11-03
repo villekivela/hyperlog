@@ -139,6 +139,14 @@ _Avoid_: Avatar, figure (the spec's figures are numerals), animation
 An exercise's authored entry in the mannequin tool: where the body, hands and feet go through the rep, its equipment and its default tempo.
 _Avoid_: Preset, keyframe
 
+**Bone offset**:
+How far a pose turns one of the mannequin's bones at the top or the bottom of the rep, on top of what the solve does, eased between the two ends. Set in the studio.
+_Avoid_: Turn (that is a date in the rotation), override, keyframe
+
+**Framing**:
+Where the stage's camera looks for a clip, how much it shows there, and the turn and tilt the phone opens on. The studio's `:frame` saves its view as the clip's framing.
+_Avoid_: Camera angle, view (the studio's free camera)
+
 **Clip**:
 A baked file of one exercise's lowering that the phone plays forward, holds and plays backward. An adjustable-bench exercise has one per 15° of bench angle.
 _Avoid_: Animation, video (that is the Technique video), asset

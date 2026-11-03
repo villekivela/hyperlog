@@ -32,6 +32,7 @@ export function stateAt(e, d) {
   const t = smooth(d);
   const s = {};
   for (const [k, a] of Object.entries(e.top ?? {})) {
+    if (k === 'offsets') continue;
     const b = e.bottom?.[k] ?? a;
     s[k] = Array.isArray(a) ? a.map((v, i) => lerp(v, b[i], t)) : lerp(a, b, t);
   }
@@ -42,6 +43,17 @@ export function stateAt(e, d) {
   if (e.top?.rotate === undefined && e.bottom?.rotate !== undefined) s.rotate = lerp(turn, e.bottom.rotate, t);
   if (e.top?.rotate !== undefined && e.bottom?.rotate === undefined) s.rotate = lerp(e.top.rotate, turn, t);
   for (const [k, samples] of Object.entries(e.trace?.angles ?? {})) s[k] = sample(samples, d);
+  // Each bone's offset, [x, y, z] in degrees, eased between the ends; a bone turned at one end
+  // alone eases from none at the other.
+  const bones = new Set([...Object.keys(e.top?.offsets ?? {}), ...Object.keys(e.bottom?.offsets ?? {})]);
+  if (bones.size) {
+    s.offsets = {};
+    for (const n of bones) {
+      const a = e.top?.offsets?.[n] ?? [0, 0, 0];
+      const b = e.bottom?.offsets?.[n] ?? [0, 0, 0];
+      s.offsets[n] = a.map((v, i) => lerp(v, b[i], t));
+    }
+  }
   return s;
 }
 
@@ -66,6 +78,8 @@ export function frameAt(e, d, L) {
   if (tilt) P.gripTilt = tilt;
   // The wrists' bend, [flexion, deviation] in degrees, at the top and the bottom eased between.
   if (s.wrist) P.wrist = s.wrist;
+  // The bones turned on top of the solve (`poseRig`).
+  if (s.offsets) P.offsets = s.offsets;
   // A press or a squat holds the bar low in the palm, stacked over the forearm; a pull at the
   // fingers' roots.
   if (PALM_GRIPS.has(e.motion)) P.gripDepth = 'palm';

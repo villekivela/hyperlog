@@ -10,7 +10,8 @@
 // - joints: knees and elbows bend no further than 155°, knees point within 60° of the hips' front,
 //   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, the
 //   ankle keeps between 55° and 160° from shin to foot, and a wrist bends no more than 5° off the
-//   forearm's line unless the pose sets its wrists (an open hand counts as set);
+//   forearm's line unless the pose sets its wrists (an open hand, or a hand turned by a bone
+//   offset, counts as set);
 // - trace: each angle the pose has a trace for is within 10° of it.
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
@@ -190,9 +191,11 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     }
     const [joint, past] = jointsPast(rig);
     note('joints', past, f, joint);
-    // A wrist the pose doesn't set stays straight (owner, #127).
+    // A wrist the pose doesn't set stays straight (owner, #127); a hand the entry turns (a bone
+    // offset, #164) is set.
     if (!entry.top?.wrist && !entry.bottom?.wrist && !P.openHands) {
       for (const k of ['l', 'r']) {
+        if (entry.top?.offsets?.['hand_' + k] || entry.bottom?.offsets?.['hand_' + k]) continue;
         const fore = wpos(rig.bones['hand_' + k]).sub(wpos(rig.bones['lowerarm_' + k]));
         const bend = deg(wpos(rig.bones['middle_01_' + k]).sub(wpos(rig.bones['hand_' + k])).angleTo(fore));
         note('joints', bend - LIMITS.wrist, f, `wrist ${k} bends ${bend.toFixed(0)}°`);
