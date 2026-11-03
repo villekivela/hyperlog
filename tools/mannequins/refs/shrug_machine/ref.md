@@ -3,7 +3,7 @@
 ## Movement and exercises served
 Standing or seated, handles at the sides, work arms lift vertically as the shoulders elevate. Serves `machine_shrug`.
 
-**Serves `machine_shrug` only. `kelso_shrug` is not this machine.** The library's `kelso_shrug` ("Machine Kelso Shrug", equipment `machine`, video https://youtu.be/76rz0UNAlYI, oEmbed title "Kelso Shrug") has no description text. Its thumbnail shows the lifter leaning chest-first on a pad and holding handles on a plate-loaded machine with a loaded horn, a T-bar or chest-supported row machine. It has the row's geometry, not the shrug machine's, so #161 should move it to `row_machine` (that kit exists) and leave this machine at one exercise. Confirm the machine at Hukka (last section).
+**Serves `machine_shrug` only. `kelso_shrug` is not this machine.** The library's `kelso_shrug` ("Machine Kelso Shrug", video https://youtu.be/76rz0UNAlYI) is done chest-supported on the T-bar row machine (confirmed by the owner), so #161 should move it to `row_machine`, which has a kit. That leaves this machine at one exercise.
 
 ## Based on
 - Brand/model: Hammer Strength Plate-Loaded Seated/Standing Shrug (PL-SH).
@@ -33,4 +33,3 @@ Standing or seated, handles at the sides, work arms lift vertically as the shoul
 - Which shrug machine Hukka has, or whether shrugs are done on a Smith machine or with a bar.
 - Side-on and front photos; handle height from floor and spacing; lever pivot position; ROM in mm.
 - Seat height range and plate horn position.
-- Which machine the Kelso shrug is done on (the library's video shows a chest pad and plate-loaded handles; confirm it is the row machine).
