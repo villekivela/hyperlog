@@ -227,7 +227,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `height` from `bench` [from z, to z]; `calf_raise_machine` the foot block under the balls and a
   lever on a post at the pose's pivot, its pads over the knees and its handle in the hands;
   `squat_machine` the platform, the rails along the hips' path and a carriage riding them, its
-  handles along the hands' knuckles;
+  back pad's face `pad` metres behind the hips and its handles along the grip;
   `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
   `pulldown_machine` the thigh rollers at `thighPad` [y, z]; and `row_machine`,
   `pulldown_machine` and `preacher_curl_machine` levers on hubs at the pose's pivot or elbows.

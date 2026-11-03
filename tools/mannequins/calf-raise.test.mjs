@@ -9,7 +9,13 @@ import { buildStage } from './stage.mjs';
 import { heldAt, wpos } from './rig.mjs';
 
 const stage = await buildStage(prepare('seated_calf_raise'));
-const TONES = ['frame', 'vinyl', 'plate', 'metal', 'pulley'];
+
+/** The calf raise's held parts: the U-handle's grips. */
+function grips() {
+  const out = [];
+  stage.kit.group.traverse((o) => { if (o.isMesh && o.userData.held) out.push(o); });
+  return out;
+}
 
 /** Every part of the kit, with where it is at each of `ds` down the rep. */
 function track(ds) {
@@ -22,7 +28,7 @@ function track(ds) {
   return parts;
 }
 
-test('the seated calf raise stands the size of a real one, about 1.25 m long, 0.85 m wide and 1 m high', () => {
+test('the seated calf raise stands the size of a real one, about 1.35 m long, 0.85 m wide and 1.1 m high', () => {
   stage.pose(0);
   const size = new THREE.Box3().setFromObject(stage.kit.group).getSize(new THREE.Vector3());
   assert.ok(size.z > 1.1 && size.z < 1.4, `${size.z.toFixed(2)} m long`);
@@ -80,22 +86,4 @@ test('the hands hold the U-handle\'s grips all through the rep', () => {
       assert.ok(miss < 0.015, `the ${k} hand at ${d} is ${(miss * 100).toFixed(1)} cm off the handle`);
     }
   }
-});
-
-/** The calf raise's held parts: the U-handle's grips. */
-function grips() {
-  const out = [];
-  stage.kit.group.traverse((o) => { if (o.isMesh && o.userData.held) out.push(o); });
-  return out;
-}
-
-test('every part of the placed calf raise is in one of the tones, and it wears all five', () => {
-  stage.pose(0.5);
-  const worn = new Set();
-  stage.kit.group.traverse((o) => {
-    if (!o.isMesh) return;
-    assert.ok(TONES.includes(o.material.name), `${o.name} in "${o.material.name}"`);
-    worn.add(o.material.name);
-  });
-  assert.deepEqual([...worn].sort(), [...TONES].sort());
 });

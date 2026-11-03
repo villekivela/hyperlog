@@ -1330,17 +1330,17 @@ function calfRaise({ seat = [0.48, -0.05] } = {}) {
   lever.name = 'calf_raise_lever';
   const arm = stretchedTube(0.07, M.frame);
   const drop = stretchedTube(0.055, M.frame);
-  const pin = part(shape('pop_pin', () => { const c = cylinder(0.014, 0.03, 16); c.rotateX(Math.PI / 2); return c; }), M.vinyl);
+  const pin = popPin(V(0, 0, 0), 1, M);
   const crossbar = part(padGeometry(0.46, 0.014, 0.13, 0.003), M.frame);
   const kneePads = [-1, 1].map(() => part(padGeometry(0.19, 0.07, 0.14, 0.025), M.vinyl, { solid: true }));
-  const U = bent('calf_raise_u', [V(-0.13, 0, 0), V(-0.13, 0.1, 0), V(-0.1, 0.14, 0), V(0.1, 0.14, 0), V(0.13, 0.1, 0), V(0.13, 0, 0)], 0.016, M.frame);
+  const handle = bent('calf_raise_u', [V(-0.13, 0, 0), V(-0.13, 0.1, 0), V(-0.1, 0.14, 0), V(0.1, 0.14, 0), V(0.13, 0.1, 0), V(0.13, 0, 0)], 0.016, M.frame);
   const grips = [-1, 1].map(() => part(rodGeometry(0.0195), M.vinyl, { held: true }));
   const horns = [-1, 1].map(() => ({
     horn: part(rodGeometry(0.025, 20), M.metal, { solid: true }),
     collar: part(rodGeometry(0.045, 24), M.metal),
     plate: part(plateGeometry(0.225, 0.05), M.plate, { solid: true }),
   }));
-  lever.add(arm, drop, pin, crossbar, ...kneePads, U, ...grips, ...horns.flatMap((h) => [h.horn, h.collar, h.plate]));
+  lever.add(arm, drop, pin, crossbar, ...kneePads, handle, ...grips, ...horns.flatMap((h) => [h.horn, h.collar, h.plate]));
   const g = group('calf_raise', [
     ...seatOn(seatY, seatZ, M, { pin: -1 }),
     ...floorRail(V(-0.3, 0.035, seatZ - 0.17), V(0.3, 0.035, seatZ - 0.17), M),
@@ -1385,7 +1385,7 @@ function calfRaise({ seat = [0.48, -0.05] } = {}) {
       pin.position.copy(local(pivot.y - 0.01, padZ + 0.09));
       crossbar.position.copy(local(bar, padZ));
       kneePads.forEach((m, i) => m.position.copy(local(padBottom + 0.035, padZ)).setX((i ? 1 : -1) * 0.11));
-      U.position.copy(local(bar + 0.007, padZ));
+      handle.position.copy(local(bar + 0.007, padZ));
       grips.forEach((m, i) => span(m, local(bar + 0.02, padZ).setX((i ? 1 : -1) * 0.13), local(bar + 0.1, padZ).setX((i ? 1 : -1) * 0.13)));
       horns.forEach(({ horn, collar, plate }, i) => {
         const s = i ? 1 : -1;
@@ -1462,20 +1462,20 @@ function squatMachine({ pad: behind = 0.2 } = {}) {
   return {
     group: g,
     place(P, P0) {
-      // The carriage's frame at the top of the rep: `s` up the rails, `n` out of the back pad's face,
-      // from the pad's face at the hips.
-      const s = P0.sled.clone();
-      const n = X.clone().cross(s).normalize();
-      const O = P0.hipC.clone().addScaledVector(n, -behind);
-      const at = (along, out, x = 0) => O.clone().addScaledVector(s, along).addScaledVector(n, out).setX(x);
-      const facing = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, s, n));
+      // The carriage's frame at the top of the rep: `sled` up the rails, `face` out of the back pad's
+      // face, from the `origin` on the pad's face at the hips.
+      const sled = P0.sled.clone();
+      const face = X.clone().cross(sled).normalize();
+      const origin = P0.hipC.clone().addScaledVector(face, -behind);
+      const at = (along, out, x = 0) => origin.clone().addScaledVector(sled, along).addScaledVector(face, out).setX(x);
+      const facing = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, sled, face));
       const lay = (mesh, along, out, x = 0) => { mesh.position.copy(at(along, out, x)); mesh.quaternion.copy(facing); };
-      const shoulder = P0.shoulders.clone().sub(O).dot(s);
+      const shoulder = P0.shoulders.clone().sub(origin).dot(sled);
       const top = shoulder + 0.12;
       // The rails, behind the carriage, from just above the floor to a cap 30 cm past the carriage's
       // top at the top of the rep.
       const railOut = -0.21;
-      const bottom = (0.17 - O.y - n.y * railOut) / s.y;
+      const bottom = (0.17 - origin.y - face.y * railOut) / sled.y;
       const end = top + 0.3;
       [-1, 1].forEach((side, i) => span(rails[i], at(bottom, railOut, side * HACK_RAILS), at(end, railOut, side * HACK_RAILS)));
       lay(bracket, bottom - 0.03, railOut);
@@ -1521,11 +1521,11 @@ function squatMachine({ pad: behind = 0.2 } = {}) {
         lay(shoulderPads[i], shoulder + 0.11, 0.1, side * 0.155);
         lay(shoulderBoards[i], shoulder + 0.156, 0.1, side * 0.155);
         span(mounts[i], at(top, -0.14, x), at(shoulder + 0.16, -0.01, side * 0.155));
-        // The handle lies along the hand's knuckles, which keep their line through the rep, on an arm
-        // back to the shoulder pad's outer side.
+        // The handle runs the way the pose lays the grip at the top, fixed on the carriage: the
+        // wrists turn the knuckles along it. It sits on an arm back to the shoulder pad's outer side.
         const { bar, sleeve, end: knobEnd, arm } = grips[i];
         const h = P.hand(side).sub(P.hipC).add(P0.hipC);
-        const along = (P.held?.[side] ?? P.across(side)).clone().normalize();
+        const along = P0.across(side).normalize();
         const mount = at(shoulder + 0.11, 0.02, side * 0.225);
         const [near, far] = [-1, 1].map((k) => h.clone().addScaledVector(along, k * 0.1)).sort((a, b) => a.distanceTo(mount) - b.distanceTo(mount));
         span(bar, near, far);

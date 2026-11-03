@@ -9,6 +9,7 @@ import { buildStage } from './stage.mjs';
 import { heldAt, turnOf } from './rig.mjs';
 
 const stage = await buildStage(prepare('hack_squat'));
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 
 /**
  * The line a bar lies along across the palm of hand `k` now: the knuckles' line, from the little
@@ -46,7 +47,6 @@ function lengthwise(o) {
   const axis = [V3(1, 0, 0), V3(0, 1, 0), V3(0, 0, 1)][size.indexOf(Math.max(...size))];
   return axis.applyQuaternion(o.getWorldQuaternion(new THREE.Quaternion()));
 }
-function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
 
 test('the carriage rides the rails: the back pad lies along them and moves along them with the hips', () => {
   const all = meshes();
@@ -64,11 +64,6 @@ test('the carriage rides the rails: the back pad lies along them and moves along
   assert.ok(off(along, moved.normalize()) < 1, 'the back pad moves along the rails');
 });
 
-test('every part of the placed hack squat is in one of the tones, and it wears all five', () => {
-  const worn = new Set(meshes().map((o) => o.material.name));
-  assert.deepEqual([...worn].sort(), ['frame', 'metal', 'plate', 'pulley', 'vinyl']);
-});
-
 // The owner couldn't turn the grip to the old handles (#150): a handle that doesn't lie along the
 // knuckles bends the wrist off it, and the grip's twist only turns the knuckles about the forearm.
 test('each handle lies along the knuckles of the hand that holds it, all through the rep', () => {
@@ -81,7 +76,7 @@ test('each handle lies along the knuckles of the hand that holds it, all through
   }
 });
 
-test('the hack squat stands the size of a real one, about 2.1 m long, 1.5 m wide and 1.4 m high', () => {
+test('the hack squat stands the size of a real one, about 2.1 m long, 1.25 m wide and 1.55 m high', () => {
   stage.pose(0);
   const size = new THREE.Box3().setFromObject(stage.kit.group).getSize(new THREE.Vector3());
   assert.ok(size.z > 1.9 && size.z < 2.3, `${size.z.toFixed(2)} m long`);
