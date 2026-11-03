@@ -1,0 +1,42 @@
+name: Mannequin clips
+
+# The committed clips must be what tools/mannequins/ bakes. Only a change to the tool or the clips
+# can break that, so nothing else runs it.
+on:
+  push:
+    paths:
+      - tools/mannequins/**
+      - app/src/main/assets/mannequins/**
+      - .github/workflows/mannequins.yml
+  pull_request:
+    paths:
+      - tools/mannequins/**
+      - app/src/main/assets/mannequins/**
+      - .github/workflows/mannequins.yml
+
+concurrency:
+  group: mannequins-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rebake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/mannequins
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/mannequins/package-lock.json
+
+      - run: npm ci
+
+      # Re-bakes every pose (failing on one that fails its checks) and compares the result with
+      # the committed .glb, mannequin.bin and mannequins.json, byte for byte.
+      - name: Committed clips match the tool
+        run: node --test committed.test.mjs bake.test.mjs

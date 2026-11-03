@@ -16,7 +16,8 @@ npm run review -- status <batch>        # whether every exercise in it is OK
 ```
 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
-give byte-identical files.
+give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
+fails on any difference (`committed.test.mjs`), so bake and commit together.
 
 ## Making a batch
 
