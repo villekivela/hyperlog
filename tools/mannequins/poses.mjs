@@ -168,13 +168,15 @@ export const POSES = {
     grip: { width: 0.22, elbows: 0.45 },
   },
 
-  // A pulldown on two handles, palms facing each other, the elbows driving down in front of the body.
+  // Two grips on the lat bar (owner): the first set wide and overhand, at 1.5 shoulder widths, the
+  // second narrow and underhand, at shoulder width, palms to the face as in a curl, the elbows
+  // driving down in front of the body. A clip each, in that order.
   '2_grip_lat_pulldown': {
     like: 'lat_pulldown',
-    kit: { cable_tower: { attachment: 'handles', spread: 0.2 } },
-    grip: { width: 0.2, rotate: 90, elbows: 0.3 },
-    top: { bar: [1.66, 0.02], shrug: 8 },
-    bottom: { bar: [1.1, 0.06], shrug: 0 },
+    grips: {
+      wide: { grip: { width: 0.29, rotate: 0 } },
+      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.3 }, bottom: { bar: [1.08, 0.06] } },
+    },
   },
 
   // Seated, the thighs on the seat and the shins under the roller: from straight legs down to the

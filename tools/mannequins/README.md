@@ -90,6 +90,15 @@ bends (40°); a free handle turns with the hand. `top.wrist` and `bottom.wrist` 
 `bottom.rotate`, each from `grip.rotate`, which stands for both ends. In Tune a drag of the fingers
 handle bends the wrist.
 
+## Grips set by set
+
+An exercise done with a different grip set by set has `grips: { <name>: { …changes } }`, in the
+order the sets take them; each grip is merged over the entry as `like:` merges, and the first is
+the entry's own. The bake makes a clip per grip (`<id>_<grip>.glb`), checks each, and the index
+lists them in that order, `grips: [{ name, clip, camera }, …]`, the entry's own `clip` the first
+set's. The phone's sheet shows a button per grip (`wide`, `narrow`) and opens on the grip of the
+set being done. A verdict's fingerprint covers every grip's clip; Tune shows the first grip.
+
 ## Pose entries
 
 An entry is data only, keyed by the exercise's id in `app/src/main/assets/exercises.json`.

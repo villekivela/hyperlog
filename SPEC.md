@@ -1519,7 +1519,11 @@ gallery (Technique videos).
     curl can stand staggered; and equipment moves a metre either way in Tune. Every hand on a bar
     or a set handle turns at the wrist until its knuckles lie along it, as far as a wrist bends,
     and Tune bends the wrists and turns the grip at each end; every cable ends at its handle's
-    hook (a check fails one more than 1 cm off).
+    hook (a check fails one more than 1 cm off). An exercise done with a different grip set by set
+    has a clip per grip (owner, 2026-11-03): the 2-Grip Lat Pulldown's set 1 wide and overhand at
+    1.5 shoulder widths, set 2 narrow and underhand at shoulder width, palms to the face. Its sheet
+    shows a Wide and a Narrow button under the mannequin and opens on the grip of the set being done
+    (outside a session, the first).
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

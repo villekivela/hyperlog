@@ -63,7 +63,9 @@ async function filesOf(clips, id) {
   const at = (f) => path.join(clips, f);
   const angles = Object.fromEntries(Object.entries(entry.bench?.clips ?? {}).map(([a, c]) => [a, { file: at(c.clip), camera: c.camera }]));
   const shared = (entry.resources ?? []).map(at);
-  return { clip: at(entry.clip), angles, shared, all: entry.bench ? Object.values(angles).map((c) => c.file) : [at(entry.clip)] };
+  // An OK covers every clip the exercise has: each bench angle's, or each grip's.
+  const all = entry.bench ? Object.values(angles).map((c) => c.file) : entry.grips ? entry.grips.map((g) => at(g.clip)) : [at(entry.clip)];
+  return { clip: at(entry.clip), angles, shared, all };
 }
 
 /** A clip's file as the page holds it: whole, with the files it shares (the mannequin, its kits) merged in, as a data URL. */

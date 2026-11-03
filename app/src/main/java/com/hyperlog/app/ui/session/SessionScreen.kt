@@ -51,6 +51,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -471,6 +474,7 @@ fun SessionScreen(
                 mannequin = mannequins?.clipFor(current.exercise),
                 benchAngle = current.benchAngle,
                 lastBenchAngle = current.lastBenchAngle,
+                set = current.toDo,
             )
         }
     }
@@ -960,6 +964,14 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
             }
 }
 
+/** A grip's name on its button: Wide, Narrow, or the name itself for any other. */
+@Composable
+private fun gripLabel(name: String): String = when (name) {
+    "wide" -> stringResource(R.string.grip_wide)
+    "narrow" -> stringResource(R.string.grip_narrow)
+    else -> name.replaceFirstChar { it.uppercase() }
+}
+
 /** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
 private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -1018,6 +1030,8 @@ internal fun ExerciseSheet(
     /** This session's bench angle, and last time's, for an adjustable-bench exercise's mannequin. */
     benchAngle: Int? = null,
     lastBenchAngle: Int? = null,
+    /** The set being done (0 the first), for an exercise whose grip changes set by set; null outside a session. */
+    set: Int? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -1026,8 +1040,23 @@ internal fun ExerciseSheet(
     val scroll = rememberScrollState()
     Column(Modifier.fillMaxWidth().verticalScroll(scroll, enabled = scroll.maxValue > 0).padding(bottom = 24.dp).navigationBarsPadding()) {
         mannequin?.let {
+            // An exercise done with a different grip set by set opens on the grip of the set being
+            // done, and a button shows each.
+            var grip by rememberSaveable(it.exerciseId, set) { mutableStateOf(it.grips?.let { _ -> it.gripForSet(set ?: 0).name }) }
             // A card of the sheet, out to the cards' margin like the machine row's and the prescription's.
-            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin), benchAngle, lastBenchAngle)
+            com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin), benchAngle, lastBenchAngle, grip)
+            it.grips?.let { grips ->
+                Spacer(Modifier.height(12.dp))
+                SingleChoiceSegmentedButtonRow(Modifier.padding(horizontal = CardMargin).fillMaxWidth()) {
+                    grips.forEachIndexed { i, g ->
+                        SegmentedButton(
+                            selected = g.name == grip,
+                            onClick = { grip = g.name },
+                            shape = SegmentedButtonDefaults.itemShape(i, grips.size),
+                        ) { Text(gripLabel(g.name)) }
+                    }
+                }
+            }
             Spacer(Modifier.height(16.dp))
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Margin)) {
