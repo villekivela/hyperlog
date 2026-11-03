@@ -1,7 +1,8 @@
 // `npm run studio` serves every exercise and kit with its status, poses them with the tool's own
 // modules, and writes what the owner does into the repo's files: a save into poses.mjs (its
 // comments kept) and a re-bake, an OK into the batch's file, a note into notes.md. Here against
-// copies of those files, with a bake that only says it ran.
+// copies of those files, with a bake that only says it ran, and a technique video fetched from
+// nowhere.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
@@ -9,7 +10,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
-import { studio } from './plugin.mjs';
+import { studio, VIDEOS } from './plugin.mjs';
 import { KITS } from '../kit.mjs';
 
 const TOOL = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -22,11 +23,17 @@ let poses;
 let review;
 const baked = [];
 let bakeFails = false;
+let videos;
+const fetched = [];
+let offline = false;
+/** A video's bytes as the fake yt-dlp writes them. */
+const BYTES = Buffer.from('not really an mp4, but bytes to serve');
 
 before(async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'studio-'));
   poses = path.join(dir, 'poses.mjs');
   review = await mkdtemp(path.join(tmpdir(), 'studio-review-'));
+  videos = await mkdtemp(path.join(tmpdir(), 'studio-videos-'));
   // The squat's hands a metre off its bar: the hands check fails it.
   await writeFile(poses, ORIGINAL.replace(/(\n  barbell_rdl: \{)/, "\n  barbell_lunge: { like: 'barbell_squat', grip: { width: 1.4 } },$1"));
   server = await createServer({
@@ -40,6 +47,14 @@ before(async () => {
       bake: async () => {
         if (bakeFails) throw new Error('barbell_bench_press failed hands on frame 0');
         baked.push(await readFile(poses, 'utf8'));
+      },
+      videos,
+      fetchVideo: async (id, dir) => {
+        fetched.push(id);
+        await new Promise((r) => setTimeout(r, 50));
+        if (offline) throw new Error('Unable to download webpage: <urlopen error [Errno -3] Temporary failure in name resolution>');
+        await writeFile(path.join(dir, `${id}.mp4`), BYTES);
+        return { file: `${id}.mp4`, fps: 30, duration: 600 };
       },
     })],
   });
@@ -174,4 +189,89 @@ test('a write from another site, or one that isn\'t JSON, is refused', async () 
   // The studio's own page may.
   const own = await fetch(`${base}/api/note`, { method: 'POST', headers: { 'content-type': 'application/json', origin: base }, body: JSON.stringify({ item: 'barbell_row', text: 'from the page' }) });
   assert.equal(own.status, 200);
+});
+
+test('an exercise with a video link comes with it at its timestamp, fetched once into a cache outside the repo', async () => {
+  const repo = path.join(TOOL, '..', '..');
+  assert.match(path.relative(repo, VIDEOS), /^\.\.\//, VIDEOS);
+  const item = await get('/api/item/exercise/1_arm_cable_lat_pull_around');
+  assert.deepEqual(item.video, { link: 'https://youtu.be/jLvqKgW-_G8?t=278', start: 278, loop: null });
+  // Two asking at once, and another exercise from the same video, fetch it once.
+  const [one, two] = await Promise.all([get('/api/video/1_arm_cable_lat_pull_around'), get('/api/video/1_arm_cable_lat_pull_around')]);
+  const kroc = await get('/api/video/1_arm_db_kroc_row');
+  assert.deepEqual(fetched, ['jLvqKgW-_G8']);
+  assert.deepEqual(one, { src: '/videos/jLvqKgW-_G8.mp4', fps: 30, duration: 600 });
+  assert.deepEqual(two, one);
+  assert.deepEqual(kroc, one);
+  assert.equal((await get('/api/item/exercise/1_arm_db_kroc_row')).video.start, 477);
+  // Served whole, and a range of it, which seeking asks for.
+  const whole = await fetch(base + one.src);
+  assert.equal(whole.headers.get('content-type'), 'video/mp4');
+  assert.deepEqual(Buffer.from(await whole.arrayBuffer()), BYTES);
+  const part = await fetch(base + one.src, { headers: { range: 'bytes=4-9' } });
+  assert.equal(part.status, 206);
+  assert.equal(part.headers.get('content-range'), `bytes 4-9/${BYTES.length}`);
+  assert.equal(Buffer.from(await part.arrayBuffer()).toString(), 'really');
+  // The last bytes, more than there are, is all of them; a range past the end is refused.
+  const tail = await fetch(base + one.src, { headers: { range: 'bytes=-1000' } });
+  assert.equal(tail.status, 206);
+  assert.equal(tail.headers.get('content-range'), `bytes 0-${BYTES.length - 1}/${BYTES.length}`);
+  assert.deepEqual(Buffer.from(await tail.arrayBuffer()), BYTES);
+  assert.equal((await fetch(base + one.src, { headers: { range: 'bytes=1000-' } })).status, 416);
+  // Only read.
+  assert.notEqual((await fetch(base + one.src, { method: 'POST' })).status, 200);
+  assert.deepEqual(JSON.parse(await readFile(path.join(videos, 'jLvqKgW-_G8.json'), 'utf8')), { file: 'jLvqKgW-_G8.mp4', fps: 30, duration: 600 });
+  // A video fetched before, by a studio since stopped, is taken from the cache.
+  await writeFile(path.join(videos, 'UGwmUJkTIx8.webm'), BYTES);
+  await writeFile(path.join(videos, 'UGwmUJkTIx8.json'), JSON.stringify({ file: 'UGwmUJkTIx8.webm', fps: 25, duration: 40 }));
+  assert.deepEqual(await get('/api/video/barbell_squat'), { src: '/videos/UGwmUJkTIx8.webm', fps: 25, duration: 40 });
+  assert.deepEqual(fetched, ['jLvqKgW-_G8']);
+});
+
+test('without a link, or offline, the video says so, and a later try fetches again', async () => {
+  const bench = await get('/api/item/exercise/barbell_bench_press');
+  assert.equal(bench.video, null);
+  let res = await fetch(`${base}/api/video/barbell_bench_press`);
+  assert.equal(res.status, 422);
+  assert.match((await res.json()).error, /no video link/);
+  offline = true;
+  try {
+    res = await fetch(`${base}/api/video/triceps_pressdown`);
+    assert.equal(res.status, 422);
+    assert.match((await res.json()).error, /Couldn't fetch the video: .*name resolution/);
+  } finally {
+    offline = false;
+  }
+  assert.deepEqual(await get('/api/video/triceps_pressdown'), { src: '/videos/B5S2mbg0g5c.mp4', fps: 30, duration: 600 });
+  assert.deepEqual(fetched.filter((id) => id === 'B5S2mbg0g5c').length, 2);
+});
+
+test('the loop is saved per exercise beside the OKs and notes, and comes back with it', async () => {
+  let res = await post('/api/loop', { id: 'barbell_squat', loop: { a: 12.4, b: 13.9, c: 15.2 } });
+  assert.equal(res.status, 200, await res.clone().text());
+  res = await post('/api/loop', { id: 'triceps_pressdown', loop: { a: 3.1, b: null, c: null } });
+  assert.equal(res.status, 200);
+  assert.deepEqual((await get('/api/item/exercise/barbell_squat')).video.loop, { a: 12.4, b: 13.9, c: 15.2 });
+  assert.deepEqual((await get('/api/item/exercise/triceps_pressdown')).video.loop, { a: 3.1, b: null, c: null });
+  assert.deepEqual(JSON.parse(await readFile(path.join(review, 'loops.json'), 'utf8')), {
+    barbell_squat: { a: 12.4, b: 13.9, c: 15.2 }, triceps_pressdown: { a: 3.1, b: null, c: null },
+  });
+  // Two set at once both land: marks pressed in turn.
+  await Promise.all([
+    post('/api/loop', { id: 'leg_extension', loop: { a: 202, b: null, c: null } }),
+    post('/api/loop', { id: 'leg_press', loop: { a: 241, b: 242, c: 243 } }),
+    post('/api/loop', { id: 'cable_flye', loop: { a: 169, b: 170, c: 171 } }),
+  ]);
+  const loops = JSON.parse(await readFile(path.join(review, 'loops.json'), 'utf8'));
+  assert.deepEqual(Object.keys(loops), ['barbell_squat', 'cable_flye', 'leg_extension', 'leg_press', 'triceps_pressdown']);
+  // A loop saved with only A and B, before C, still loads.
+  await writeFile(path.join(review, 'loops.json'), JSON.stringify({ ...loops, leg_press: { a: 241, b: 242 } }));
+  assert.deepEqual((await get('/api/item/exercise/leg_press')).video.loop, { a: 241, b: 242, c: null });
+  // Cleared, and refused for what isn't a time or an exercise with a video.
+  res = await post('/api/loop', { id: 'triceps_pressdown', loop: null });
+  assert.equal(res.status, 200);
+  assert.equal((await get('/api/item/exercise/triceps_pressdown')).video.loop, null);
+  assert.equal((await post('/api/loop', { id: 'barbell_squat', loop: { a: 1, b: 2, c: 'top' } })).status, 422);
+  assert.equal((await post('/api/loop', { id: 'barbell_squat', loop: { a: 'top', b: 2 } })).status, 422);
+  assert.equal((await post('/api/loop', { id: 'barbell_bench_press', loop: { a: 1, b: 2 } })).status, 422);
 });
