@@ -395,7 +395,7 @@ listens on localhost only.
 - **The technique video** of an exercise with a video link in `exercises.json` is beside the
   stage, opened at the link's timestamp. The first time it is opened the studio fetches it with
   `yt-dlp` (the picture only, 720p at most, played muted) into a cache outside the repo,
-  `~/.cache/hyperlog/videos` (`$XDG_CACHE_HOME`, or `MANNEQUIN_VIDEOS` to move it), and reuses that
+  `~/.cache/hyperlog/videos` (under `$XDG_CACHE_HOME` when it is set), and reuses that
   copy, so a video shared by several exercises is fetched once. Without a link, or offline, the
   panel says so and the rest of the studio works as before. `[` and `]` set the loop's start (A,
   the top of the rep) and end (B, the bottom), saved in `review/loops.json`; the video reopens on

@@ -25,17 +25,14 @@ const LIBRARY = path.join(ASSETS, 'exercises.json');
 /** Where the bake writes the clips (bake.mjs's CLIPS). */
 const CLIPS = path.join(ASSETS, 'mannequins');
 
-/**
- * Where technique videos are kept once fetched: outside the repo, like footage, so none is ever
- * committed. `MANNEQUIN_VIDEOS` moves it.
- */
-export const VIDEOS = process.env.MANNEQUIN_VIDEOS
-  ?? path.join(process.env.XDG_CACHE_HOME || path.join(homedir(), '.cache'), 'hyperlog', 'videos');
+/** Where technique videos are kept once fetched: outside the repo, like footage, so none is ever committed. */
+export const VIDEOS = path.join(process.env.XDG_CACHE_HOME || path.join(homedir(), '.cache'), 'hyperlog', 'videos');
 const VIDEO_TYPES = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mkv': 'video/x-matroska' };
 
 /**
  * Fetches YouTube video `id` into `dir` with yt-dlp, the picture only (the studio plays it muted)
- * at 720p or less, and says what it fetched: `{ file, fps, duration }`.
+ * at 720p or less, and says what it fetched: `{ file, fps, duration }` (null when yt-dlp can't
+ * say; the page reads it from the video). A fetch that stalls for ten minutes is given up.
  */
 const ytDlp = (id, dir) => new Promise((resolve, reject) => {
   const args = [
@@ -45,10 +42,10 @@ const ytDlp = (id, dir) => new Promise((resolve, reject) => {
     '--print', 'after_move:%(filepath)s\t%(fps)s\t%(duration)s',
     `https://youtu.be/${id}`,
   ];
-  execFile('yt-dlp', args, { maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-    if (err) { reject(new Error((stderr || err.message).trim().split('\n').at(-1))); return; }
+  execFile('yt-dlp', args, { maxBuffer: 1 << 20, timeout: 10 * 60 * 1000 }, (err, stdout, stderr) => {
+    if (err) { reject(new Error(err.killed ? 'yt-dlp took over ten minutes' : (stderr || err.message).trim().split('\n').at(-1))); return; }
     const [file, fps, duration] = stdout.trim().split('\n').at(-1).split('\t');
-    resolve({ file: path.basename(file), fps: Number(fps) || 30, duration: Number(duration) });
+    resolve({ file: path.basename(file), fps: Number(fps) || 30, duration: Number(duration) || null });
   });
 });
 
@@ -87,6 +84,8 @@ const refusing = async (run) => {
   }
 };
 const readLibrary = async () => JSON.parse(await readFile(LIBRARY, 'utf8')).exercises;
+/** Exercise `id` as the library has it, or undefined. */
+const libraryEntry = async (id) => (await readLibrary()).find((e) => e.id === id);
 /** A kit's status: an open note on it, or whether a pose uses it. */
 const kitStatus = (notes, uses) => (notes ? 'notes' : uses ? 'kit' : 'unused');
 
@@ -188,10 +187,11 @@ export function studio({
 
   async function exercise(id) {
     const t = await tool();
-    const library = (await readLibrary()).find((e) => e.id === id);
+    const library = await libraryEntry(id);
     if (!library) throw new Refused(`No exercise ${id} in the library`);
     const { batch, state, notes } = await t.review.reviewOf(id, { dir: t.dir, clips });
-    const video = library.video ? { link: library.video, start: videoOf(library.video)?.start ?? 0, loop: (await t.review.readLoops({ dir: t.dir }))[id] ?? null } : null;
+    const loop = (await t.review.readLoops({ dir: t.dir }))[id] ?? null;
+    const video = library.video ? { link: library.video, start: videoOf(library.video)?.start ?? 0, loop } : null;
     const base = { kind: 'exercise', id, name: library.name, equipment: library.equipment, batch, notes, video };
     if (!t.POSES[id]) return { ...base, status: 'no pose', entry: null, checks: null, clip: null };
     const checks = await checksOf(t, id);
@@ -241,7 +241,7 @@ export function studio({
   // from the same video waits on.
   const fetching = new Map();
   async function video(exerciseId) {
-    const link = (await readLibrary()).find((e) => e.id === exerciseId)?.video;
+    const link = (await libraryEntry(exerciseId))?.video;
     if (!link) throw new Refused(`${exerciseId} has no video link`);
     const id = videoOf(link)?.id;
     if (!id) throw new Refused(`Not a YouTube link: ${link}`);
@@ -277,7 +277,8 @@ export function studio({
     const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
     let [start, end] = [0, size - 1];
     if (range) {
-      start = range[1] ? Number(range[1]) : size - Number(range[2]);
+      // `-500` is the last 500 bytes, or all of them.
+      start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
       end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
       if (start > end || start >= size) {
         res.statusCode = 416;
@@ -289,10 +290,13 @@ export function studio({
       res.setHeader('content-range', `bytes ${start}-${end}/${size}`);
     }
     res.setHeader('content-length', end - start + 1);
-    createReadStream(at, { start, end }).pipe(res);
+    // A file gone since `stat` ends the response short rather than the server.
+    createReadStream(at, { start, end }).on('error', () => res.destroy()).pipe(res);
   }
 
   const isTime = (v) => v === null || (typeof v === 'number' && Number.isFinite(v) && v >= 0);
+  // One loop written at a time: each reads the file as the last one left it.
+  let looping = Promise.resolve();
 
   const routes = {
     'GET /api/items': (url) => items(url.searchParams.has('wait')),
@@ -305,9 +309,11 @@ export function studio({
     },
     'POST /api/loop': async ({ id, loop }) => {
       const t = await tool();
-      if (!(await readLibrary()).find((e) => e.id === id)?.video) throw new Refused(`${id} has no video to loop`);
+      if (!(await libraryEntry(id))?.video) throw new Refused(`${id} has no video to loop`);
       if (loop && !(isTime(loop.a) && isTime(loop.b))) throw new Refused('A loop\'s ends are times in seconds');
-      await t.review.setLoop(id, loop ?? null, { dir: t.dir });
+      const write = looping.then(() => t.review.setLoop(id, loop ?? null, { dir: t.dir }));
+      looping = write.catch(() => {});
+      await write;
       return { id, loop: loop ?? null };
     },
     'POST /api/note': async ({ item, text }) => {
@@ -348,7 +354,7 @@ export function studio({
         const clip = /^\/clips\/([\w.-]+)$/.exec(url.pathname);
         const item = /^\/api\/item\/(exercise|kit)\/([\w-]+)$/.exec(url.pathname);
         const fetchIt = /^\/api\/video\/([\w-]+)$/.exec(url.pathname);
-        const served = /^\/videos\/([\w-]+\.(?:mp4|webm|mkv))$/.exec(url.pathname);
+        const served = ['GET', 'HEAD'].includes(req.method) && /^\/videos\/([\w-]+\.(?:mp4|webm|mkv))$/.exec(url.pathname);
         const route = routes[`${req.method} ${url.pathname}`];
         if (!clip && !item && !fetchIt && !served && !route) return next();
         const refused = req.method === 'POST' && refusal(req);

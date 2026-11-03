@@ -1,6 +1,7 @@
 // The studio's page (README, The studio): the sidebar of every exercise and kit, the one item on
-// stage, posed live with the tool's own modules, its technique video, and its numbers. Everything is a command from
-// keys.json, so a key, a button and the help sheet all do the same thing; the mouse is optional.
+// stage, posed live with the tool's own modules, its technique video, and its numbers. Everything
+// is a command from keys.json, so a key, a button and the help sheet all do the same thing; the
+// mouse is optional.
 // The server (plugin.mjs) prepares each entry and writes what is saved, OK'd or noted.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -654,20 +655,34 @@ function nudge(direction, fine, count) {
 // Fetched by the server the first time an exercise is opened (plugin.mjs) and played muted. With
 // sync on and both ends of its loop set, A is the top of the rep and B the bottom: the stage drives
 // the video while it plays or steps, and a step or a scrub of the video moves the stage.
-const footage = $('footage');
-footage.muted = true;
+const player = $('player');
+player.muted = true;
 const scrubber = $('scrubber');
 /** Whether the video and the rep move together now. */
 const isSynced = () => Boolean(live && state.video?.src) && synced(state.video.loop, state.sync);
 const wholeLoop = () => synced(state.video?.loop, true);
+/** The loop's earlier and later end in the video, whichever of A and B each is. */
+const loopSpan = ({ a, b }) => [Math.min(a, b), Math.max(a, b)];
+/** Whether there is no video to `what`, saying so. */
+const noVideoTo = (what) => {
+  if (state.video?.src) return false;
+  message(`No video to ${what}`);
+  return true;
+};
+/** The stage paused `d` down the rep, where the video put it: the video isn't moved back. */
+function moveRep(d) {
+  state.d = d;
+  pushed = d;
+  setShow('paused');
+}
 const timeLabel = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
 
 let asked = null; // the exercise whose video is being fetched
 async function openVideo(item) {
   asked = item.id;
-  footage.pause();
-  footage.removeAttribute('src');
-  footage.load();
+  player.pause();
+  player.removeAttribute('src');
+  player.load();
   state.video = item.kind === 'exercise' && item.video ? { ...item.video } : null;
   $('link').hidden = !state.video;
   if (state.video) $('link').href = state.video.link;
@@ -685,14 +700,15 @@ async function openVideo(item) {
   }
   if (asked !== item.id) return;
   Object.assign(state.video, got);
-  footage.addEventListener('loadedmetadata', () => {
-    footage.playbackRate = state.speed;
+  player.addEventListener('loadedmetadata', () => {
+    player.playbackRate = state.speed;
+    if (Number.isFinite(player.duration)) state.video.duration = player.duration;
     // On its loop's top if it has one, else at the link's timestamp; a synced video follows the stage.
-    footage.currentTime = state.video.loop?.a ?? state.video.start;
+    player.currentTime = state.video.loop?.a ?? state.video.start;
     pushed = null;
     paintVideo();
   }, { once: true });
-  footage.src = got.src;
+  player.src = got.src;
   $('no-video').hidden = true;
   paintVideo();
 }
@@ -708,68 +724,66 @@ let lastT = 0;
 /** Each frame: the video follows the stage when synced, else it plays its A–B loop round. */
 function followVideo(d) {
   const v = state.video;
-  if (!v?.src || footage.readyState < 1) return;
+  if (!v?.src || player.readyState < 1) return;
   if (isSynced()) {
-    if (d !== pushed && !footage.seeking) {
-      footage.currentTime = timeAt(v.loop, d);
+    if (d !== pushed && !player.seeking) {
+      player.currentTime = timeAt(v.loop, d);
       pushed = d;
     }
-  } else if (!footage.paused && wholeLoop()) {
-    const [lo, hi] = [Math.min(v.loop.a, v.loop.b), Math.max(v.loop.a, v.loop.b)];
-    if (lastT < hi && footage.currentTime >= hi) footage.currentTime = lo;
+  } else if (!player.paused && wholeLoop()) {
+    // Round the loop when it plays from inside it; played from outside, it runs on.
+    const [lo, hi] = loopSpan(v.loop);
+    if (lastT >= lo && lastT < hi && player.currentTime >= hi) player.currentTime = lo;
   }
-  lastT = footage.currentTime;
+  lastT = player.currentTime;
   paintVideo();
 }
 
 /** Puts the video at `t`, paused; when synced, the stage goes where the video is. */
 function seekVideo(t) {
-  const v = state.video;
-  if (!v?.src) { message('No video to move'); return; }
-  footage.pause();
-  footage.currentTime = t;
+  if (noVideoTo('move')) return;
+  player.pause();
+  player.currentTime = t;
   if (isSynced()) {
-    state.d = repAt(v.loop, t);
-    pushed = state.d;
-    setShow('paused');
+    moveRep(repAt(state.video.loop, t));
     message(`the rep at frame ${Math.round(state.d * (FRAMES - 1))} of ${FRAMES - 1}`);
   }
   paintVideo();
 }
 
 /** Moves the video to where `to(time, video)` says, from where it is. */
-const stepVideo = (to) => (state.video?.src ? seekVideo(to(footage.currentTime, state.video)) : message('No video to move'));
+const stepVideo = (to) => noVideoTo('move') || seekVideo(to(player.currentTime, state.video));
 
 function playVideo() {
-  const v = state.video;
-  if (!v?.src) { message('No video to play'); return; }
+  if (noVideoTo('play')) return;
   if (isSynced()) { run('play', null); paintCommands(); return; }
-  if (!footage.paused) { footage.pause(); return; }
+  if (!player.paused) { player.pause(); return; }
+  // From the loop's end, round to its start.
   if (wholeLoop()) {
-    const [lo, hi] = [Math.min(v.loop.a, v.loop.b), Math.max(v.loop.a, v.loop.b)];
-    if (footage.currentTime < lo || footage.currentTime >= hi) footage.currentTime = lo;
+    const [lo, hi] = loopSpan(state.video.loop);
+    if (Math.abs(player.currentTime - hi) < 1 / state.video.fps) player.currentTime = lo;
   }
-  footage.play().catch((err) => message(`The video won't play: ${err.message}`, 'error'));
+  player.play().catch((err) => message(`The video won't play: ${err.message}`, 'error'));
 }
 
 function setSpeed(speed) {
   state.speed = speed;
-  footage.playbackRate = speed;
+  player.playbackRate = speed;
   remember();
   paintVideo();
   message(`${speed}×${isSynced() ? ', the rep with it' : ''}`);
 }
 
-/** Sets the loop's start (`a`, the top of the rep) or its end (`b`, the bottom) here, and saves it. */
-async function setLoopEnd(end) {
+/** Marks the loop's start (`a`, the top of the rep) or its end (`b`, the bottom) here, and saves it. */
+async function setLoopMark(end) {
+  if (noVideoTo('loop')) return;
   const v = state.video;
-  if (!v?.src) { message('No video to loop'); return; }
-  const t = Number(footage.currentTime.toFixed(3));
+  const t = Number(player.currentTime.toFixed(3));
   v.loop = { a: null, b: null, ...v.loop, [end]: t };
+  // Synced now: the stage holds the end just marked, and the video waits on it.
   if (isSynced()) {
-    state.d = end === 'a' ? 0 : 1;
-    pushed = state.d;
-    setShow('paused');
+    player.pause();
+    moveRep(end === 'a' ? 0 : 1);
   }
   paintVideo();
   try {
@@ -785,7 +799,7 @@ function toggleSync() {
   remember();
   if (state.sync && !wholeLoop()) message(`Sync is on, and waits for the loop: ${keys.keyOf('loopStart')} at the top of a rep, ${keys.keyOf('loopEnd')} at its bottom`);
   else message(state.sync ? 'The video follows the rep, and the rep the video' : 'The video plays on its own');
-  if (isSynced()) { footage.pause(); pushed = null; }
+  if (isSynced()) { player.pause(); pushed = null; }
   paintCommands();
   paintVideo();
 }
@@ -793,7 +807,7 @@ function toggleSync() {
 let painted = '';
 function paintVideo() {
   const v = state.video;
-  const t = footage.currentTime || 0;
+  const t = player.currentTime || 0;
   const on = isSynced();
   const where = !v?.src ? '' : [
     `<strong>${timeLabel(t)}</strong>`, `frame ${Math.floor(t * v.fps)}`, `${state.speed}×`,
@@ -824,8 +838,8 @@ function paintVideo() {
 }
 
 scrubber.addEventListener('input', () => seekVideo(Number(scrubber.value)));
-footage.addEventListener('play', () => paintCommands());
-footage.addEventListener('pause', () => paintCommands());
+player.addEventListener('play', () => paintCommands());
+player.addEventListener('pause', () => paintCommands());
 
 // ---- Commands -----------------------------------------------------------------------------------
 
@@ -1135,8 +1149,8 @@ const COMMANDS = {
   videoSecondOn: (n) => stepVideo((t, v) => stepSeconds(t, n, v.duration)),
   videoSlower: () => setSpeed(slower(state.speed)),
   videoFaster: () => setSpeed(faster(state.speed)),
-  loopStart: () => setLoopEnd('a'),
-  loopEnd: () => setLoopEnd('b'),
+  loopStart: () => setLoopMark('a'),
+  loopEnd: () => setLoopMark('b'),
   sync: () => toggleSync(),
   ok: () => ok(),
   note: () => openNote(),
@@ -1165,7 +1179,7 @@ for (const el of document.querySelectorAll('[data-key]')) el.textContent = keys.
 function paintCommands() {
   const pressed = {
     holdTop: state.show === 'top', holdBottom: state.show === 'bottom', play: state.show === 'loop', clip: state.clip,
-    videoPlay: isSynced() ? state.show === 'loop' : !footage.paused, sync: state.sync,
+    videoPlay: isSynced() ? state.show === 'loop' : !player.paused, sync: state.sync,
   };
   for (const el of document.querySelectorAll('[data-command]')) {
     if (el.dataset.command in pressed) el.setAttribute('aria-pressed', String(pressed[el.dataset.command]));

@@ -212,6 +212,14 @@ test('an exercise with a video link comes with it at its timestamp, fetched once
   assert.equal(part.status, 206);
   assert.equal(part.headers.get('content-range'), `bytes 4-9/${BYTES.length}`);
   assert.equal(Buffer.from(await part.arrayBuffer()).toString(), 'really');
+  // The last bytes, more than there are, is all of them; a range past the end is refused.
+  const tail = await fetch(base + one.src, { headers: { range: 'bytes=-1000' } });
+  assert.equal(tail.status, 206);
+  assert.equal(tail.headers.get('content-range'), `bytes 0-${BYTES.length - 1}/${BYTES.length}`);
+  assert.deepEqual(Buffer.from(await tail.arrayBuffer()), BYTES);
+  assert.equal((await fetch(base + one.src, { headers: { range: 'bytes=1000-' } })).status, 416);
+  // Only read.
+  assert.notEqual((await fetch(base + one.src, { method: 'POST' })).status, 200);
   assert.deepEqual(JSON.parse(await readFile(path.join(videos, 'jLvqKgW-_G8.json'), 'utf8')), { file: 'jLvqKgW-_G8.mp4', fps: 30, duration: 600 });
   // A video fetched before, by a studio since stopped, is taken from the cache.
   await writeFile(path.join(videos, 'UGwmUJkTIx8.webm'), BYTES);
@@ -248,6 +256,14 @@ test('the A–B loop is saved per exercise beside the OKs and notes, and comes b
   assert.deepEqual(JSON.parse(await readFile(path.join(review, 'loops.json'), 'utf8')), {
     barbell_squat: { a: 12.4, b: 13.9 }, triceps_pressdown: { a: 3.1, b: null },
   });
+  // Two set at once both land: A and B pressed in turn.
+  await Promise.all([
+    post('/api/loop', { id: 'leg_extension', loop: { a: 202, b: null } }),
+    post('/api/loop', { id: 'leg_press', loop: { a: 241, b: 242 } }),
+    post('/api/loop', { id: 'cable_flye', loop: { a: 169, b: 170 } }),
+  ]);
+  const loops = JSON.parse(await readFile(path.join(review, 'loops.json'), 'utf8'));
+  assert.deepEqual(Object.keys(loops), ['barbell_squat', 'cable_flye', 'leg_extension', 'leg_press', 'triceps_pressdown']);
   // Cleared, and refused for what isn't a time or an exercise with a video.
   res = await post('/api/loop', { id: 'triceps_pressdown', loop: null });
   assert.equal(res.status, 200);
