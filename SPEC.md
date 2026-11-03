@@ -1519,7 +1519,13 @@ gallery (Technique videos).
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
       selector pin; pulley wheels in housings with the cable over them; and shaped bars and handles
-      with grips. Nothing that can't be seen at phone size (bolts, seams, gussets).
+      with grips. Nothing that can't be seen at phone size (bolts, seams, gussets). The lat
+      pulldown's tower is the bar every other kit meets (owner, 2026-11-03): the standing tower
+      has its low pulley in a housing on the floor; the chest press has a capped column braced to
+      its boom, the levers' pivot in housings, capped grips and a back pad braced to the column; the
+      leg press stands on a framed base, its rails on posts, uprights and braces, its sled a
+      carriage on rollers under a foot plate with a heel lip; and the benches roll on front wheels,
+      lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder.
     - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
       palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
       #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #2E2E33, 0.95; stack plates and every
