@@ -17,7 +17,7 @@
 import * as THREE from 'three';
 import { recipe, free, prismatic, revolute } from '../recipe.mjs';
 import {
-  STIRRUP, WHEEL, floorRail, knob, nameAll, pad, part, pulley, rod, rodGeometry, span, stackFrame, stirrup, tube, turnTo, turnedPart, weightStack, wheelGeometry,
+  STIRRUP, WHEEL, floorRail, knob, nameAll, pad, pulley, rod, span, stackFrame, stirrup, tube, turnTo, turnedPart, weightStack, wheelGeometry, wire,
 } from '../parts.mjs';
 import { V, X, UP } from '../rig.mjs';
 
@@ -41,7 +41,7 @@ const TRAVEL = (POSITIONS - 1) * PITCH;
 const SWIVEL_Z = 0.19;
 const WHEELS = 0.085;
 /** The swivel's two wheels are 152 mm across, side by side in one figure-eight housing. */
-const BIG = 0.076;
+const SWIVEL_WHEEL = 0.076;
 /** The cable's travel, 108 in, and the stack's rise for it (2:1). */
 const CABLE = 2.743;
 const RATIO = 0.5;
@@ -49,6 +49,9 @@ const RATIO = 0.5;
 const HANG = 0.45;
 /** The top wheels' axle height. */
 const TOP_Y = BEAM_Y - POST / 2 - WHEEL - 0.04;
+
+/** A cable's radius. */
+const WIRE = 0.0045;
 
 const sides = [{ k: 'l', s: 1 }, { k: 'r', s: -1 }];
 
@@ -83,11 +86,8 @@ export default recipe({
     // The crossmember rests on the front posts' tops and runs past them, centred on the machine.
     const bridge = tube(POST, V(-BRIDGE / 2, BEAM_Y, 0), V(BRIDGE / 2, BEAM_Y, 0), M.frame);
     bridge.userData.bridge = true;
-    const handles = Object.fromEntries(handsOf({ hands }).map(({ k, s }) => {
-      const handle = stirrup(M, `cable_handle_${k}`);
-      return [k, { s, handle }];
-    }));
-    const cables = Object.fromEntries(sides.map(({ k }) => [k, part(rodGeometry(0.0045, 8), M.metal)]));
+    const handles = Object.fromEntries(handsOf({ hands }).map(({ k }) => [k, stirrup(M, `cable_handle_${k}`)]));
+    const cables = Object.fromEntries(sides.map(({ k }) => [k, wire(M)]));
     // Each cable's far end: the handle's ring, in the kit's frame.
     const rings = {};
     const ringOf = (handle) => { handle.updateMatrix(); return V(0, STIRRUP, 0).applyMatrix4(handle.matrix); };
@@ -99,7 +99,7 @@ export default recipe({
       span(cables[tower.k], rings[tower.k] ?? hanging(tower), exit);
     };
     return {
-      parts: [...towers.map((t) => t.group), bridge, ...towers.flatMap((t) => t.wires), ...Object.values(handles).map((h) => h.handle), ...Object.values(cables)],
+      parts: [...towers.map((t) => t.group), bridge, ...towers.flatMap((t) => t.wires), ...Object.values(handles), ...Object.values(cables)],
       // Each tower's stack is raised by its own lift, not moved as a body.
       bodies: Object.fromEntries(towers.flatMap((t) => [[`carriage_${t.k}`, [t.carriage]], [`swivel_${t.k}`, [t.swivel]], [`stack_${t.k}`, []]])),
       cables: towers.map((t) => ({ cable: cables[t.k], hook: () => rings[t.k] ?? hanging(t) })),
@@ -119,17 +119,17 @@ export default recipe({
           if (held && P.hand) {
             // The handle in the hand, turned toward the pulley as square to the grip allows: the cable
             // runs from its ring, wherever that comes to.
-            held.handle.position.copy(P.hand(s));
-            turnTo(held.handle, P.held?.[s] ?? X, exit.clone().sub(P.hand(s)));
+            held.position.copy(P.hand(s));
+            turnTo(held, P.held?.[s] ?? X, exit.clone().sub(P.hand(s)));
             points[`handle_${k}`] = [P.hand(s).clone()];
-            hook = ringOf(held.handle);
+            hook = ringOf(held);
           } else {
             // Hanging on the cable from the lower wheel's front, its grip off the floor.
             const ring = Math.max(exit.y - HANG, 0.05 + STIRRUP);
-            const hang = V(exit.x, ring - STIRRUP, exit.z + BIG);
+            const hang = V(exit.x, ring - STIRRUP, exit.z + SWIVEL_WHEEL);
             if (held) {
-              held.handle.position.copy(hang);
-              held.handle.quaternion.identity();
+              held.position.copy(hang);
+              held.quaternion.identity();
               points[`handle_${k}`] = [hang.clone()];
             }
             hook = V(hang.x, ring, hang.z);
@@ -189,10 +189,10 @@ function buildTower(k, s, at, M) {
   // The cable's runs, in the kit's frame since the carriage and the stack move them: over the top
   // wheels, up the spindle, and down to the stack's head.
   const x = s * TOWER_X;
-  const over = rod(0.0045, V(x, TOP_Y + WHEEL, first.z), V(x, TOP_Y + WHEEL, second.z), M.metal);
+  const over = rod(WIRE, V(x, TOP_Y + WHEEL, first.z), V(x, TOP_Y + WHEEL, second.z), M.metal);
   const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: top - POST / 2 - 0.2, toward: 1 });
-  const drop = part(rodGeometry(0.0045, 8), M.metal);
-  const rise = part(rodGeometry(0.0045, 8), M.metal);
+  const drop = wire(M);
+  const rise = wire(M);
 
   // The carriage, in the frame of the lowest hole: a block round the rail, an arm out to the swivel,
   // a pull-pin, and the fixed grip bar beside the pin.
@@ -215,8 +215,8 @@ function buildTower(k, s, at, M) {
   swivel.position.set(0, pin, SWIVEL_Z);
   swivel.add(
     rod(0.008, V(-0.024, 0, 0), V(0.024, 0, 0), M.metal),
-    ...[WHEELS, -WHEELS].map((y) => turnedPart(wheelGeometry(BIG, 0.022), M.pulley, V(0, y, 0), { solid: false })),
-    ...[-1, 1].map((x) => pad(0.006, 2 * WHEELS + 2 * BIG, 2 * BIG, M.pulley, V(x * 0.017, 0, 0), { soft: 0.05, solid: false })),
+    ...[WHEELS, -WHEELS].map((y) => turnedPart(wheelGeometry(SWIVEL_WHEEL, 0.022), M.pulley, V(0, y, 0), { solid: false })),
+    ...[-1, 1].map((x) => pad(0.006, 2 * WHEELS + 2 * SWIVEL_WHEEL, 2 * SWIVEL_WHEEL, M.pulley, V(x * 0.017, 0, 0), { soft: 0.05, solid: false })),
   );
   carriage.add(swivel);
   tower.add(...base, ...frame, ...wheels, ...weights.parts, carriage);

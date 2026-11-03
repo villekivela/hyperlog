@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { CABLE_MACHINES, EQUIPMENT, KITS, buildKit, shownAlone } from './kit.mjs';
 import { buildStage } from './stage.mjs';
 import { POSES } from './poses.mjs';
-import { V, rad } from './rig.mjs';
+import { V } from './rig.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const crossover = (options = {}) => {
@@ -95,7 +95,6 @@ test('a carriage scrubbed through its limits takes its pulley and grip bar with 
   close(kit.joints.carriage_l.value, 15 * 0.132, 1e-9, 'held at its upper limit');
   // The cable runs from the handle's ring to the lower pulley, and the rise to the top wheel.
   const [{ cable, hook }] = kit.cables;
-  cable.geometry.computeBoundingBox();
   const ends = new THREE.Box3().setFromObject(cable);
   assert.ok(ends.max.y > 2.2, `the cable reaches ${ends.max.y.toFixed(2)} m, not the raised pulley`);
   assert.ok(hook().y < ends.max.y);
@@ -161,9 +160,12 @@ test('the studio shows it alone, its handles hanging through the rep', async () 
   assert.ok(entry.camera, 'a framing to open on');
   const stage = await buildStage(entry);
   const kit = stage.kit.kits.cable_crossover;
-  for (const d of [0, 1]) {
+  stage.pose(0);
+  const hung = contact(kit, 'handle_l').at[0].clone();
+  for (const d of [0, 0.5, 1]) {
     stage.pose(d);
     close(kit.joints.stack_l.value, 0, 1e-9, 'the stack at rest');
+    close(contact(kit, 'handle_l').at[0].distanceTo(hung), 0, 1e-9, 'the handle, hanging where it did');
   }
 });
 

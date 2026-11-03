@@ -315,7 +315,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   the hands to the handles and to each carriage's fixed grip bar; the fit rule sets `position`.
   It departs from the ref: the stack's plates and the frame's tubes are the library's generic ones
   (twelve 26 cm plates, 76 mm tubes without the holes), the stack stands 500 mm behind the rail, the
-  top wheels are 90 mm, and the 2210 mm is taken centre to centre.
+  top wheels are 90 mm, and the 2210 mm is taken centre to centre. The handle is the
+  stirrup; the ref's ankle cuff and rope are further attachments, for the pose ticket that needs
+  them (the glute kickback's). `position` takes one number for a two-arm lift, the same hole on both
+  towers, and a pair only where the arms differ.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
