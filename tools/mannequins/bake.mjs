@@ -16,7 +16,7 @@ import { prepare, benchAngles, gripsOf } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkPose } from './checks.mjs';
 import { shareParts } from './glb.mjs';
-import { benchHinge } from './kit.mjs';
+import { benchHinge } from './recipes/bench.mjs';
 import { POSES } from './poses.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));

@@ -103,10 +103,15 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   const press = await get('/api/item/exercise/db_incline_press');
   assert.equal(press.entry.bench.angle, 30);
   assert.deepEqual(Object.keys(press.clip.angles), ['0', '15', '30', '45', '60', '75']);
-  // A kit comes as the first exercise that uses it sets it up.
+  // A kit comes as the exercise that moves most of it sets it up, the first of those by id.
   const kit = await get('/api/item/kit/leg_extension');
   assert.equal(kit.uses, 'leg_extension');
   assert.equal(kit.entry.motion, 'knee_lever');
+  // So an adjustable bench's back and a twin column's two stacks can each be scrubbed (#159).
+  const bench = await get('/api/item/kit/bench');
+  assert.equal(typeof bench.entry.bench?.angle, 'number', `the bench as in ${bench.uses}, not adjustable`);
+  const column = await get('/api/item/kit/cable_column');
+  assert.equal(column.entry.kit.cable_column.twin, true, `the cable column as in ${column.uses}, one column`);
   const none = await get('/api/item/exercise/pendulum_squat');
   assert.equal(none.entry, null);
   assert.equal(none.status, 'no pose');
@@ -167,12 +172,13 @@ test('the page is served, and the tool\'s modules reach it with node\'s files st
 });
 
 // Vite restarts its server, dropping a save in flight, when a file its config imports changes.
-test('the studio\'s config reaches neither poses.mjs nor kit.mjs, which change while it runs', async () => {
+test('the studio\'s config reaches neither poses.mjs, kit.mjs nor the recipes and parts, which change while it runs', async () => {
   const config = await createServer({ configFile: path.join(TOOL, 'studio', 'vite.config.mjs'), logLevel: 'silent', server: { port: 0, host: '127.0.0.1' } });
   try {
     const deps = config.config.configFileDependencies.map((f) => path.basename(f));
     assert.ok(deps.includes('plugin.mjs'), deps.join(', '));
-    assert.deepEqual(deps.filter((f) => ['poses.mjs', 'kit.mjs', 'entries.mjs', 'stage.mjs'].includes(f)), []);
+    const changing = ['poses.mjs', 'kit.mjs', 'recipe.mjs', 'parts.mjs', 'entries.mjs', 'stage.mjs'];
+    assert.deepEqual(config.config.configFileDependencies.filter((f) => changing.includes(path.basename(f)) || f.includes(`${path.sep}recipes${path.sep}`)), []);
   } finally {
     await config.close();
   }

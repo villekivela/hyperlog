@@ -5,8 +5,8 @@
 // An exercise's technique video is fetched with yt-dlp the first time it is opened, into a cache
 // outside the repo, and its loop (the marks of one rep) goes into review/loops.json.
 //
-// The tool's modules are loaded through Vite (`ssrLoadModule`), so an edit to kit.mjs or poses.mjs
-// is posed from at once. The page imports the same modules; what is node's in them (reading
+// The tool's modules are loaded through Vite (`ssrLoadModule`), so an edit to a recipe, a part or
+// poses.mjs is posed from at once. The page imports the same modules; what is node's in them (reading
 // files) is stubbed there, and never reached, since the page is handed every entry prepared.
 import { execFile } from 'node:child_process';
 import { createReadStream } from 'node:fs';
@@ -14,8 +14,8 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-// Nothing here imports poses.mjs or kit.mjs, even through another module: Vite restarts its server
-// when a file its config imports changes, and those change all the time.
+// Nothing here imports poses.mjs, kit.mjs or the recipes and parts, even through another module:
+// Vite restarts its server when a file its config imports changes, and those change all the time.
 import { patchPoses } from '../patch.mjs';
 import { videoOf } from './video.mjs';
 
@@ -165,11 +165,24 @@ export function studio({
     return { exercises, kits };
   }
 
-  /** The first posed exercise, by id, that each kit is used in. */
+  /**
+   * The posed exercise each kit is shown as: the one that gives it the most joints (an adjustable
+   * bench's back, a twin column's two stacks), so each can be scrubbed, and the first by id of those.
+   */
   function usesOf(t) {
     const out = {};
+    const most = {};
     for (const id of Object.keys(t.POSES).sort()) {
-      for (const name of Object.keys(t.entries.resolve(id, t.POSES).kit ?? {})) out[name] ??= id;
+      let kits;
+      try {
+        kits = t.kit.buildKit(t.entries.prepare(id, t.POSES)).kits;
+      } catch {
+        continue;
+      }
+      for (const [name, kit] of Object.entries(kits)) {
+        const joints = Object.keys(kit.bodies).length;
+        if (!(name in out) || joints > most[name]) { out[name] = id; most[name] = joints; }
+      }
     }
     return out;
   }

@@ -182,12 +182,16 @@ _Avoid_: Blueprint, builder
 One piece from the kits' shared library that a recipe places: tubing with its caps and base plates, a pad, a seat, a roller, a pulley in its housing, a cable, a stack, a pop-pin, a handle.
 _Avoid_: Component, mesh
 
+**Body**:
+A piece of a recipe that moves as one: on a joint (a lever, a sled, a stack), or free, on no joint, where the hands carry it (a barbell, a cable's attachment).
+_Avoid_: Link, moving part
+
 **Joint**:
 Where a recipe's moving body turns (revolute: a lever, a pec deck's arm) or slides (prismatic: a sled, a carriage) on its frame, with its limits. Not one of the mannequin's own joints, which are bones.
 _Avoid_: Hinge, axis
 
 **Contact**:
-Where a recipe ties a moving body to the mannequin: handles to the hands, a pad to the shins, a foot plate to the feet. On a machine the joint drives the rep and IK holds the limbs to the contacts.
+Where a recipe ties a moving body, or its fixed frame, to the mannequin: handles to the hands, a pad to the shins or the thighs, a foot plate to the feet, shoulder pads to the shoulders. On a machine the joint drives the rep and IK holds the limbs to the contacts.
 _Avoid_: Attachment (that is a cable's handle), constraint
 
 **Fit rule**:

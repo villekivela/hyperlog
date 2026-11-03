@@ -9,7 +9,7 @@
 // `upperArm` and `forearm` swing the elbow and the hand forward from hanging straight down.
 import * as THREE from 'three';
 import { V, X, rad } from './rig.mjs';
-import { benchHinge } from './kit.mjs';
+import { benchHinge } from './recipes/bench.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);

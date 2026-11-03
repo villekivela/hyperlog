@@ -262,8 +262,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `twin`, a stirrup in each hand, each on its own column's cable, or the far one's with `crossed`.
   Its stack is lowest where the cable is drawn least, at whichever end of the rep that is, so it
   rises through a raise or a flye whose top is the hands' far point, and even there it is held 6 cm
-  off its rest (`HELD`), as a working stack is; the leg machines' stacks are held the same way. A kit's `place(P, top, bottom)` gets
-  both ends of the rep for that.
+  off its rest (`HELD`), as a working stack is; the leg machines' stacks are held the same way. A
+  kit's `place(P, top, bottom)` gets both ends of the rep for that.
 - `cable_tower` takes the pulley's height and place, its column, and an `attachment`: `lat_bar`,
   `straight_bar`, `v_handle` or `handles` (two stirrups `spread` metres either side of the middle,
   their grips front to back). The cable meets the front of the pulley's wheel and runs over a
@@ -305,11 +305,41 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 
+### Recipes
+
+Every kit is a recipe (ADR 0007): `recipes/<kit>.mjs`, over the part library in `parts.mjs`
+(tubing with its caps and base plates, pads, seats, rollers, pulleys in housings, cables, stacks
+with guide rods and a pin, pop-pins, bars and handles, each a function of its dimensions and tone).
+`recipe.mjs` is the format. A recipe declares, as data:
+
+- `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot) or
+  `prismatic` (a sled, a carriage, a stack sliding along its rails), with its `limits`; or `free`,
+  on no joint, for what the hands carry (a barbell, a cable's attachment). A joint's value is how far
+  it has moved from where it is measured: its rest where it has a stack, or a lever's angle up from
+  level ahead. A lever's limits are where the body stops, not only the machine: a leg extension's
+  where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
+  arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
+- `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
+  `hands`, `feet`, `shins`, `thighs` or `shoulders`.
+- `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
+  a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
+  value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
+- `fit`: the fit rules, each naming the option it `sets` (the seat, a pad). They are declared, not
+  solved: the entry sets its kit's options, and the drive places the rest from the pose.
+
+Its `build` makes the parts in the order the clip names them and says which nodes move with which
+body. Its `drive` is the body-first solve: it places the parts from the pose frame and returns each
+joint's value and where it is, and each contact's point. A kit's `scrub(body, value)` moves a
+joint's body rigidly to a value within its limits, its stack with it. `recipes.test.mjs` checks
+every posed exercise against its recipes: the joints stay within their limits through the rep, a
+scrub from the bottom of the rep to the top's value puts each body where the top has it, and each
+contact meets its landmark.
+
 Every kit is built at one level of detail (SPEC, #127): rounded tubing on base plates, soft pads,
 a stack of twelve plates on guide rods with a selector pin, pulleys in housings with the cable over
 them, and shaped bars and handles with grips. Nothing smaller shows at phone size, so there are no
 bolts or seams. Each shape is made once per size and shared by every part of that size (`shape`
-in `kit.mjs`), with positions and normals only, so a kit's file stays small.
+in `parts.mjs`), with positions and normals only, so a kit's file stays small.
 
 Materials are named for the phone, which colours them from the theme: `body` and `joint` on the
 mannequin, the kits' five tones, and `shadow`. The tones are `frame` (frames and uprights), `vinyl`
@@ -396,8 +426,15 @@ listens on localhost only.
 - **The stage** shows one item. An exercise is posed live with the tool's own modules, looping at
   its tempo or held at the top or the bottom, with drag handles (`handles.mjs`) when held, and the
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
-  the first exercise that uses it (by id) sets it up. A change to `kit.mjs` or `poses.mjs` on disk
-  reloads the page on the same item, its unsaved numbers kept.
+  the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
+  first by id of those. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  same item, its unsaved numbers kept.
+- **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
+  `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
+  `L` a tenth of that, `=` types it in degrees or millimetres, and `^` `$` send it to its lower or
+  upper limit; no step goes past them. A joint scrubbed is held where it is set, its stack with it,
+  while the rep its exercise poses plays round it, and `R` gives it back to the rep. A scrub is a
+  view, kept nowhere: a recipe's dimensions are edited as text.
 - **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers
   its motion offers that the entry leaves at the default), lengths shown in millimetres. `h` and `l`
   step the selected one a degree, a millimetre or a hundredth of a ratio, `H` and `L` a tenth of
@@ -440,8 +477,8 @@ listens on localhost only.
 
 The page imports the tool's modules through Vite, with node's `fs`, `url` and `path` stubbed out:
 the server (`ssrLoadModule`, fresh on every change) prepares each entry, so the page never reads a
-file. Nothing the Vite config imports may reach `poses.mjs` or `kit.mjs`: Vite restarts its server
-when one of those changes.
+file. Nothing the Vite config imports may reach `poses.mjs`, `kit.mjs` or the recipes: Vite
+restarts its server when one of those changes.
 
 ### Keys
 
@@ -459,6 +496,7 @@ one (`5l`, `3j`). A new key goes into `keys.json`, under its group, with what it
 | `t` / `b`, `Space`, `,` `.` | Hold at the top / the bottom; play or pause; step a frame |
 | `c` | The baked clip, or the live pose |
 | `h` `l`, `H` `L`, `=`, `R` | Step the selected number, a tenth of a step, type a value, reset it |
+| `^` `$` | A kit's selected joint to its lower / upper limit (`h` `l` `H` `L` `=` `R` move it, on a kit) |
 | `<` `>`, `p` | Bench angle down / up; tune the number per angle |
 | `gf` `gs` `gt`, `←` `→` | Front, side and top cameras; turn 10° |
 | `[` `]`, `{` `}`, `m` | The selected bone's parent, child; previous, next sibling; the mirror bone |
@@ -525,8 +563,9 @@ has now.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses
   two-bone IK for the legs and arms, a grip solve that lays the bar across the palm, and finger
   curls round the bar.
-- `kit.mjs`: the generic equipment, built in code from extruded, turned and swept shapes, its five
-  tones, the equipment the library uses, and the floor shadow.
+- `kit.mjs`: the generic equipment the library uses, each kit built from its recipe, and the floor
+  shadow. `recipe.mjs`: the recipe format. `recipes/`: a recipe per kit. `parts.mjs`: the part
+  library, built in code from extruded, turned and swept shapes, and its five tones.
 - `stage.mjs`: a pose's scene, posed at any point of the rep; the checks and the bake both use it.
 - `checks.mjs`: the checks.
 - `bake.mjs`: samples the lowering (31 frames, 0 s at the top to 1 s at the bottom) into one
