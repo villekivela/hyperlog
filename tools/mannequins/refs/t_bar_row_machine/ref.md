@@ -16,7 +16,7 @@ The user stands on the foot plate, leans onto the inclined chest pad, and pulls 
 - Titan manual: https://support.titan.fitness/hc/en-us/articles/48740373774477-Adjustable-Chest-Support-T-Bar-Row-Machine-Box-2-of-2 (seen in search, not read)
 - French Fitness TBAR-C40, a second maker's version: https://fitnesssuperstore.com/products/french-fitness-chest-supported-t-bar-row-tbar-c40-new (seen in search, not read)
 - Photos viewed (the product page's gallery, `https://titan.fitness/cdn/shop/files/401007_NN.jpg`):
-  - [01](https://titan.fitness/cdn/shop/files/401007_01.jpg): studio, three-quarter from the front; shows the lever bolted to the top of the rear post, the handle yoke on the lever, the horn on the lever's front end.
+  - [01](https://titan.fitness/cdn/shop/files/401007_01.jpg): studio, three-quarter from the front; shows the lever bolted between the rear posts, the handle yoke on the lever, the horn on the lever's front end.
   - [02](https://titan.fitness/cdn/shop/files/401007_02.jpg) and [03](https://titan.fitness/cdn/shop/files/401007_03.jpg): the same camera, user at the bottom (arms straight, lever on its catch) and the top (elbows back), loaded with a Titan 55 lb bumper.
   - [07](https://titan.fitness/cdn/shop/files/401007_07.jpg): side-on, user at the bottom. The measuring photo.
   - [04](https://titan.fitness/cdn/shop/files/401007_04.jpg), [05](https://titan.fitness/cdn/shop/files/401007_05.jpg), [06](https://titan.fitness/cdn/shop/files/401007_06.jpg), [08](https://titan.fitness/cdn/shop/files/401007_08.jpg), [09](https://titan.fitness/cdn/shop/files/401007_09.jpg): close-ups of the grips, the pad and the top of the rep.
@@ -59,10 +59,10 @@ Photo 07 is side-on with the lever and the plate in the machine's middle plane. 
 - The horn is a 50 mm sleeve for Olympic plates, 370 mm long (Titan page).
 
 ## Handles
-- Neutral: vertical grips, 230 mm long, 445 mm apart.
+- Neutral: 230 mm long, 445 mm apart, one on each upright's block, angled down and forward (away from the user).
 - Wide: horizontal grips, 140 mm long, 660 mm apart.
 - Both are fixed on the Titan lever's yoke; 31 mm rubber.
-- Photos 05 and 06 show the neutral grips running fore and aft through the blocks atop the yoke's uprights, the palms upright on them; the recipe (#176) builds them so.
+- Photos 05 and 06 and the maker's three-quarter photo show two grips on the block atop each yoke upright: a neutral one angled down and forward, and a wide one straight out, none pointing up or back; the recipe (#176) builds them so, the palms upright on the neutral grip, held on its rear half.
 
 ## Adjustments and fit rules
 - Foot plate: pop-pin, sliding along the inclined beam (photo 10). The page names no other adjustment and the photos show the pad bolted to the beam and post, so the pad is fixed.

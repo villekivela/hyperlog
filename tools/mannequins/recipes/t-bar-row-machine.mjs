@@ -1,10 +1,10 @@
 // A plate-loaded chest-supported T-bar row (refs/t_bar_row_machine/ref.md): the body stands on a
 // foot plate and lies on a pad inclined 40°, its top end 1.27 m up, on an inclined beam held up by
-// two posts off a floor beam: a rear post, which the lever pivots on 420 mm up, and a tall one under
-// the pad. The lever runs forward beside the posts to a horn with a 450 mm plate on it, and at rest
-// lies on a catch post at the front, where the base's feet splay out. A yoke rises from it: a stalk,
-// a cross tube and an upright either side of the pad, each topped with a block, through which a
-// grip runs fore and aft for a neutral grip and from which another runs out wide.
+// two posts off a floor beam: a rear one on the centre line, which the lever pivots on 420 mm up, and
+// a tall one under the pad, to one side, each from the floor to the inclined beam. The lever runs forward down the machine's centre line to a horn with a 450 mm plate on it, and at rest lies on a catch post at the front, where the
+// base's feet splay out. A yoke rises from it: a stalk, a cross tube and an upright either side of
+// the pad, each topped with a block carrying two grips: a neutral one back toward the feet and down, a wide one
+// straight out.
 //
 // The frame stands where the ref puts it, whatever the pose: the pivot 16 cm behind the hips' place,
 // where a body lying on the pad has them. The lever is one body on a revolute joint at the pivot,
@@ -18,9 +18,8 @@ import { V, X, rad } from '../rig.mjs';
 // From on its catch, 3° below level, to 20° above (the ref's Motion).
 const LIMITS = [rad(-3), rad(20)];
 const PIVOT = V(0, 0.42, -0.16);
-// The lever runs beside the posts, its middle this far to the side of theirs: on the near side in
-// the ref's photos, -x, with the pop-pin.
-const BESIDE = -0.075;
+// The tall post stands this far to the side of the centre line, its face against the inclined beam's side, on the side away from the pop-pin.
+const SIDE = 0.07;
 // The pad's top end, on its face, 620 mm ahead of the pivot; the pad 510 mm long and 250 wide.
 const TOP = V(0, 1.27, PIVOT.z + 0.62);
 const PAD = { length: 0.51, width: 0.25, thick: 0.08 };
@@ -41,11 +40,14 @@ const SOLE = V(0, Math.SQRT1_2, Math.SQRT1_2);
 const LOWEST = 0.95;
 // On the lever, in its own frame (z along it, y up from it): the yoke 760 mm along it, its cross
 // tube 150 mm above its line and its uprights 445 mm apart, each topped with a block 410 mm above
-// the line. Through each block runs a 230 mm neutral grip, fore and aft, held on its rear half (the
-// ref's vertical grips: the palms upright); out from each runs a 140 mm wide grip, 660 mm apart.
+// the line. From each block a 230 mm neutral grip runs back toward the user's feet (the
+// palms upright), and a 140 mm wide grip runs straight out, 660 mm apart.
 const YOKE = { along: 0.76, cross: 0.15, top: 0.41 };
-const NEUTRAL = { out: 0.2225, up: YOKE.top, length: 0.23, held: -0.075 };
+const NEUTRAL = { out: 0.2225, length: 0.23, held: 0.06 };
 const WIDE = { out: 0.33, up: YOKE.top, length: 0.14 };
+// Each upright's block carries two grips, as the maker's photo shows, 90° apart and level with the
+// lever: a neutral one back toward the user's feet and a wide one straight out.
+
 const GRIP = 0.0155;
 // The horn, 370 mm from 1.25 m along the lever to its end at 1.62 m, a stop on it at 1.27 m and the
 // plate's middle at 1.30 m.
@@ -96,18 +98,24 @@ export default recipe({
       ...[-1, 1].map((s) => tube(0.07, V(0, 0.035, front), splay.clone().setX(s * splay.x), M.frame)),
       ...[-1, 1].map((s) => basePlate(s * (splay.x - 0.03), splay.z - 0.02, M)),
     ];
-    // The posts up from the floor beam to the inclined beam: the rear one, with the lever's axle
-    // through it, and the tall one under the pad.
+    // Two posts, one each, from the floor to the inclined beam: the rear one on the centre line, with
+    // the lever's axle through it at the pivot; and the one under the pad, to one side so the lever
+    // runs past it, its face against the beam's side.
     const below = BEAM / 2 / Math.cos(INCLINE);
-    const posts = [PIVOT.z, PIVOT.z + 0.55].map((z) => tube(0.06, V(0, 0.07, z), V(0, beamAt(z).y - below + 0.01, z), M.frame));
-    const axle = rod(0.015, PIVOT.clone().setX(0.05), PIVOT.clone().setX(BESIDE - 0.06), M.metal);
-    // The catch: a post beside the floor beam's end with a rubber bumper the lever lies on.
+    const upTo = (z) => beamAt(z).y - below + 0.04;
+    const tallZ = PIVOT.z + 0.46;
+    const posts = [
+      tube(0.06, V(0, 0.07, PIVOT.z), V(0, upTo(PIVOT.z), PIVOT.z), M.frame),
+      tube(0.06, V(SIDE, 0, tallZ), V(SIDE, upTo(tallZ), tallZ), M.frame),
+      basePlate(SIDE, tallZ, M),
+    ];
+    const axle = rod(0.015, PIVOT.clone().setX(0.05), PIVOT.clone().setX(-0.05), M.metal);
+    // The catch: a post on the floor beam's end with a rubber bumper the lever lies on.
     const catchZ = PIVOT.z + CATCH * Math.cos(LIMITS[0]);
     const rest = PIVOT.y + CATCH * Math.sin(LIMITS[0]) - BEAM / 2 / Math.cos(LIMITS[0]);
     const catchPost = [
-      tube(0.06, V(BESIDE, 0.07, catchZ - 0.06), V(BESIDE, rest - 0.03, catchZ - 0.06), M.frame),
-      basePlate(BESIDE, catchZ - 0.06, M),
-      pad(0.1, 0.03, 0.1, M.vinyl, V(BESIDE, rest - 0.015, catchZ - 0.06), { soft: 0.008 }),
+      tube(0.06, V(0, 0.07, catchZ - 0.06), V(0, rest - 0.03, catchZ - 0.06), M.frame),
+      pad(0.1, 0.03, 0.1, M.vinyl, V(0, rest - 0.015, catchZ - 0.06), { soft: 0.008 }),
     ];
     // The foot plate on a sleeve round the beam, its pop-pin on the side, standing off the beam on a
     // stem far enough that its lower edge clears it.
@@ -128,30 +136,36 @@ export default recipe({
     // The lever, built in its own frame about the pivot: z along it, y up from it.
     const lever = new THREE.Group();
     const loaded = part(plateGeometry(0.225, 0.06), M.plate, { solid: true });
-    loaded.position.set(BESIDE, 0, HORN.plate);
+    loaded.position.set(0, 0, HORN.plate);
     loaded.rotation.y = Math.PI / 2;
-    const { along, cross, top } = YOKE;
+    const { along, cross } = YOKE;
+    // The neutral grip runs from its block back toward the user's feet, held this far along it;
+    // the wide grip runs out from the block's side, held in its middle.
+    const toFeet = V(0, 0, -1);
+    const block = (s) => V(s * NEUTRAL.out, YOKE.top, along);
+    const neutralEnd = (s) => block(s).addScaledVector(toFeet, NEUTRAL.length);
+    const wideFrom = (s) => V(s * (NEUTRAL.out + 0.03), WIDE.up, along);
+    const wideTo = (s) => V(s * (WIDE.out + WIDE.length / 2), WIDE.up, along);
     const yoke = [
-      tube(0.06, V(BESIDE, 0.04, along), V(BESIDE, cross - 0.03, along), M.frame),
+      tube(0.06, V(0, 0.04, along), V(0, cross - 0.03, along), M.frame),
       tube(0.06, V(-NEUTRAL.out - 0.03, cross, along), V(NEUTRAL.out + 0.03, cross, along), M.frame),
       ...[-1, 1].flatMap((s) => [
-        tube(0.05, V(s * NEUTRAL.out, cross + 0.03, along), V(s * NEUTRAL.out, top - 0.03, along), M.frame),
-        pad(0.06, 0.06, 0.06, M.frame, V(s * NEUTRAL.out, top, along), { soft: 0.006 }),
-        rod(GRIP, V(s * NEUTRAL.out, top, along - NEUTRAL.length / 2), V(s * NEUTRAL.out, top, along + NEUTRAL.length / 2), M.vinyl, { held: true }),
-        rod(0.0125, V(s * (NEUTRAL.out + 0.03), top, along), V(s * (WIDE.out + WIDE.length / 2 + 0.005), top, along), M.metal),
-        rod(GRIP, V(s * (WIDE.out - WIDE.length / 2), top, along), V(s * (WIDE.out + WIDE.length / 2), top, along), M.vinyl, { held: true }),
+        tube(0.05, V(s * NEUTRAL.out, cross + 0.03, along), block(s).setY(YOKE.top - 0.03), M.frame),
+        pad(0.06, 0.06, 0.06, M.frame, block(s), { soft: 0.006 }),
+        rod(GRIP, block(s), neutralEnd(s), M.vinyl, { held: true }),
+        rod(GRIP, wideFrom(s), wideTo(s), M.vinyl, { held: true }),
       ]),
     ];
     lever.add(
-      hub(M, V(BESIDE + 0.01, 0, 0)),
-      tube(BEAM, V(BESIDE, 0, 0.06), V(BESIDE, 0, HORN.from), M.frame),
+      hub(M, V(0.06, 0, 0)),
+      tube(BEAM, V(0, 0, 0.06), V(0, 0, HORN.from), M.frame),
       ...yoke,
-      rod(0.045, V(BESIDE, 0, HORN.stop - 0.015), V(BESIDE, 0, HORN.stop), M.metal),
-      rod(0.025, V(BESIDE, 0, HORN.from), V(BESIDE, 0, HORN.to), M.metal),
+      rod(0.045, V(0, 0, HORN.stop - 0.015), V(0, 0, HORN.stop), M.metal),
+      rod(0.025, V(0, 0, HORN.from), V(0, 0, HORN.to), M.metal),
       loaded,
-      rod(0.034, V(BESIDE, 0, HORN.plate + 0.035), V(BESIDE, 0, HORN.plate + 0.055), M.metal),
+      rod(0.034, V(0, 0, HORN.plate + 0.035), V(0, 0, HORN.plate + 0.055), M.metal),
     );
-    const grips = (g) => [-1, 1].map((s) => V(s * g.out, g.up, along + (g.held ?? 0)));
+    const grips = (g) => [-1, 1].map((s) => (g === NEUTRAL ? block(s).addScaledVector(toFeet, NEUTRAL.held) : V(s * g.out, g.up, along)));
 
     return {
       parts: [cushion, board, beam, ...base, ...posts, axle, ...catchPost, ...footPlateParts, lever],
