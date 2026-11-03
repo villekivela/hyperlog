@@ -186,3 +186,17 @@ test('its recipe names no brand', async () => {
   const source = await readFile(path.join(HERE, 'recipes', 'cable-crossover.mjs'), 'utf8');
   assert.doesNotMatch(source, /rogue|hammer|life ?fitness|atlantis|\bCC-1|CT-1/i);
 });
+
+// A stack nobody is pulling sits down whole; only a drawn cable lifts the pinned plates off the rest.
+test('a stack at rest has its plates together, and the pinned ones part from the rest only as the cable is drawn', () => {
+  const kit = crossover();
+  const stack = (side) => boxes(kit, (o) => o.material?.name === 'plate' && !o.userData.stack && Math.sign(centre(new THREE.Box3().setFromObject(o)).x) === side && new THREE.Box3().setFromObject(o).max.y < 1.9)
+    .filter((b) => b.max.x - b.min.x > 0.2 && b.max.x - b.min.x < 0.3).sort((a, b) => a.min.y - b.min.y);
+  const widest = (plates) => Math.max(...plates.slice(1).map((b, i) => b.min.y - plates[i].max.y));
+  assert.equal(stack(1).length, 12);
+  assert.ok(widest(stack(1)) < 0.005, `a ${(widest(stack(1)) * 1000).toFixed(0)} mm gap in the plates at rest`);
+  kit.scrub('stack_l', 0.5);
+  kit.group.updateMatrixWorld(true);
+  close(widest(stack(1)), 0.25 + 0.003, 0.002, 'the gap once 0.5 m of cable is drawn: the pinned plates 0.25 m up');
+  assert.ok(widest(stack(-1)) < 0.005, 'the other stack stays down');
+});

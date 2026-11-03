@@ -15,7 +15,7 @@
 // far the cable is drawn out, the stack rising half as far (2:1). Each handle is a free body,
 // carried by a hand, or hanging from its cable's end where no pose holds it.
 import * as THREE from 'three';
-import { recipe, free, prismatic, revolute } from '../recipe.mjs';
+import { recipe, free, prismatic, revolute, HELD } from '../recipe.mjs';
 import {
   STIRRUP, WHEEL, floorRail, knob, nameAll, pad, pulley, rod, span, stackFrame, stirrup, tube, turnTo, turnedPart, weightStack, wheelGeometry, wire,
 } from '../parts.mjs';
@@ -77,7 +77,7 @@ export default recipe({
   // is the fit rule.
   fit: [{
     sets: 'position',
-    rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 4 to 6 at the thigh, 10 at the standing shoulder (7 seated), 15 or 16 for a crossover or a pushdown',
+    rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 4 to 7 from the thigh to just above the hip (the high lateral raise cable is at about 1.05 m, hole 7), 10 at the standing shoulder (7 seated), 15 or 16 for a crossover or a pushdown',
   }],
   build({ position = 10, hands = [1, -1] } = {}, M) {
     const holes = Array.isArray(position) ? position : [position, position];
@@ -237,9 +237,10 @@ function buildTower(k, s, at, M) {
       span(rise, V(x, pin + carriage.position.y + WHEELS, SWIVEL_Z), V(x, TOP_Y, SWIVEL_Z));
     },
     steady: () => V(x + 0.125, pin + carriage.position.y, 0.09),
-    // Raises the stack `l` metres, the cable down to its head with it.
+    // Raises the stack `l` metres, less the hold the recipe format adds (`HELD`): the stack sits
+    // down whole with no cable drawn, and rises half as far as the cable is drawn after that.
     lift(l) {
-      weights.lift(l);
+      weights.lift(Math.max(0, l - HELD));
       span(drop, V(x, TOP_Y, STACK_Z), weights.top(l).add(V(x, 0, 0)));
     },
   };
