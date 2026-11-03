@@ -11,7 +11,7 @@ Note: 9 ids, 8 distinct movements. `ffe_smith_machine_lunge` and `smith_machine_
 
 ## Based on
 - Brand/model: Hammer Strength Smith Machine (HSSM; angled, 7 degree; plate-loaded). Variant with vertical path: Hammer Strength Vertical Smith Machine (HSSMV).
-- Product pages read: https://shop-uk.lifefitness.com/products/hammer-strength-smith-machine-1 (now HTTP 429), https://gymstore.com/hammer-strength-smith-machine , https://www.lifefitness.com.au/commercial/vertical-smith-machine-hssmv , https://lifefitness.com/fr-fr/catalog/strength-training/benches/smith-machine (code HSSM; specs block says "13 bar racking positions" and, in the same block, "bar follows vertical path of motion", while its description says seven degrees).
+- Product pages read: https://shop-uk.lifefitness.com/products/hammer-strength-smith-machine-1 , https://gymstore.com/hammer-strength-smith-machine , https://www.lifefitness.com.au/commercial/vertical-smith-machine-hssmv , https://lifefitness.com/fr-fr/catalog/strength-training/benches/smith-machine (code HSSM; specs block says "13 bar racking positions" and, in the same block, "bar follows vertical path of motion", while its description says seven degrees).
 - Spec sheet: none reached. No manual found.
 - Photos viewed (none is side-on; all are three-quarter front):
   - Life Fitness UK render, black frame: https://shop-uk.lifefitness.com/cdn/shop/files/hammer-strength-benches-and-rackssmith-machine-charcoal1000x1000.jpg?v=1777932436&width=1000 (the main source: the hook plate is unobstructed)
@@ -28,7 +28,7 @@ Note: 9 ids, 8 distinct movements. `ffe_smith_machine_lunge` and `smith_machine_
   - smith_machine_lunge https://youtu.be/FPIsTw-jh5s: frames at 0:07 (top) and 0:10 (bottom), from behind.
   - ffe_smith_machine_lunge https://youtu.be/3ryh7PNhz3E?t=623: 10:18 to 11:03, frame at 10:24 (bottom, side-on).
   - smith_machine_rdl, smith_machine_seated_press and split_squat_smith have no video.
-- Chosen because it is the preferred owner brand and publishes footprint and rack count. It does not publish bar travel, upright spacing or bar height; those are estimated from the renders below.
+- Chosen because it is the preferred owner brand and publishes footprint and rack count. It does not publish bar travel, upright spacing or bar height; those are estimated from the renders and photos above.
 
 ## Key dimensions (mm)
 | Dimension | mm | Source |
@@ -48,16 +48,16 @@ Note: 9 ids, 8 distinct movements. `ffe_smith_machine_lunge` and `smith_machine_
 | Bar travel along the rods | about 250 to 2050 above the floor | estimated from the black render: the carriage runs from the rubber stop at the rod's foot to the top bracket; rough |
 | Gap between the guide rods | about 1300 | estimated from the platinum near-front photo, scaled by the 2357 mm upright height; low confidence (perspective) |
 | Plate horns | 8, 4 x 45 lb each; rods hold 7 x 45 lb | Life Fitness UK |
-| Bar length / sleeves | 2100 long, 50 mm sleeves outside the rods | chosen from an Olympic bar's size, low confidence; no photo shows the bar straight on (Open gaps) |
+| Bar length / sleeves | 2100 long, 50 mm sleeves outside the rods | chosen to fit inside the 2197 mm published width with Olympic 50 mm sleeves outside the 1300 mm rod gap, low confidence; no photo shows the bar straight on (Open gaps) |
 
 ## Motion
 - Bar assembly: prismatic along the guide rods, 7 degrees off vertical (HSSMV: 0 degrees). Mechanical range about 1800 mm (bar about 250 to 2050 mm above the floor, estimated above).
-- Range of motion of the lifts, from the videos, scaled by the lifter (about 1.78 m):
+- Range of motion of the lifts, from the videos, scaled by the lifter, taken as a person of about 1.78 m:
   - squat: bar from about 1.55 m (standing, bar on the upper back) to about 1.20 m at about parallel: about 360 mm (video 0:08 and 0:11). For the mannequin, chosen: bar from 1.47 m (shoulder joint plus 0.02 m) to 1.00 m at parallel, 470 mm, low confidence.
   - lunge: bar from about 1.57 m to about 1.15 m with the back knee near the floor: about 420 mm (video 0:07 and 0:10). ffe lunge: the front foot is on a platform about 100 mm high and the back knee drops below the front foot's level (10:24), so about 100 mm more travel.
   - bench press: bar from arms straight to just above the chest, about 270 to 300 mm (video 0:06 and 0:09, scaled by the shin, about 0.43 m; rough). For the mannequin, chosen: arms vertical, 0.63 m from shoulder joint to grip, to the bar touching the chest 0.23 m above the pad: 400 mm, low confidence.
   - JM press: bar from arms straight to the upper chest with the elbows forward, about 200 mm (video 0:01 and 0:07; rough).
-- Hooks: revolute about the bar's long axis; a wrist turn of about 45 degrees takes them off the notch (chosen from how the lifters rack in the videos, low confidence: the hook itself is never in close-up).
+- Hooks: revolute about the bar's long axis; a wrist turn of about 45 degrees takes them off the notch, chosen from the turn a pronated grip makes without letting go, low confidence: the bench video shows the lifter taking the bar off the hooks with the hands on it (0:01), but no frame shows the hook's angle.
 - Load: plates on the bar-end sleeves, no stack. Hammer Strength lists 30 lb starting resistance, so the bar is not counterbalanced to zero.
 
 ## Adjustments and fit rules
@@ -71,6 +71,6 @@ Placard text not read. From the videos:
 ## Open gaps
 - No side-on photo of the Hammer Strength model was found, so the 7 degree lean is from the page only, and which way it leans (bar top toward the front or the back) is not settled. Chosen: the bar top 7 degrees toward the back of the frame (the hook plate side), low confidence.
 - Hook heights, pitch, bar travel and rod gap are measured on three-quarter renders and photos with no person in them, scaled by the published overall height: good to about +-10 percent.
-- The bar's length and sleeve length are not published and no photo shows the bar straight on. Chosen: an Olympic-style bar 2100 mm long with 50 mm sleeves outside the rods, low confidence.
+- The bar's length and sleeve length are not published and no photo shows the bar straight on. Chosen: an Olympic-style bar 2100 mm long with 50 mm sleeves outside the rods, to fit inside the 2197 mm published width, low confidence.
 - All videos use vertical smith machines of other makes; the ranges of motion are the body's, not the machine's.
 - Whether the owner's gym has an angled or vertical smith, and its make, is unknown and stays so. Hammer Strength stands in for the type.

@@ -2,7 +2,7 @@
 
 ## Movement and exercises served
 A fixed frame with an upright back pad, two horizontal arm (elbow) pads and a grip at the front end of each pad. The lifter backs against the pad, rests the forearms on the arm pads with the elbows under the shoulders, holds the grips, lets the legs hang and raises the knees. Nothing on the chair moves.
-- `roman_chair_crunch`: "Roman Chair Crunch", https://youtu.be/dd1WoEcQB4c. The video is a vertical knee raise on a captain's chair, not a crunch on the hyperextension bench it was filed under (see `hyperextension_bench`).
+- `roman_chair_crunch`: "Roman Chair Crunch", https://youtu.be/dd1WoEcQB4c. The video is a vertical knee raise on a captain's chair, not a crunch on the hyperextension bench, so it belongs to this chair (see `hyperextension_bench`).
 - Not this item: `hanging_leg_raise` hangs from the pull-up bar (`pullup_dip_station`). The chair below also has dip handles, but the dips stay on `pullup_dip_station`.
 
 ## Based on
@@ -45,7 +45,7 @@ Scales: plan drawing (manual page 10) at 1.27 mm/px (300 dpi), from the 29 in (7
 | Back pad recline | 10 degrees back from vertical | product page |
 | Back pad face position | about 360 from the rear at its bottom edge, about 290 at arm pad height | estimated from the plan drawing (bottom front edge) and the 10 degree recline |
 | Foot step | two foot pegs, one per side frame, pointing forward, about 40 thick with rubber, under the front half of the arm pads (about 600 to 750 from the rear), about 650 apart | manual page 11 names them ("step onto the foot pegs"); position estimated from the plan drawing (mostly hidden under the pads) and the renders |
-| Foot peg height | about 280 (250 to 320) | estimated from the silver render, scaled by the 1550 mm height, rough: the two ways of finding the peg's floor point give 220 and 320 |
+| Foot peg height | about 280 (220 to 320) | estimated from the silver render, scaled by the 1550 mm height, rough: the two ways of finding the peg's floor point give 220 and 320 |
 | Dip handles (not used by this item) | one per side from the same hub, pointing forward; ends 930 from the rear, 600 apart, about 1200 up | estimated from the plan drawing and the render, rough |
 
 ## Motion

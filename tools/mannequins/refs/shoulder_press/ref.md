@@ -23,7 +23,7 @@ One machine: the bar grip versus the neutral grip is a hand-position choice, not
 ## Key dimensions (mm)
 Measuring frame: the demo at 0:08, 720 px tall. The stack column runs from its top at 118 px to its foot at 608 px; the 1630 mm height gives 3.35 mm/px in the column's plane. The user and seat are a little nearer the camera, so heights at the seat are rough.
 
-| dimension | mm | source or "estimated" |
+| Dimension | mm | Source |
 |---|---|---|
 | Footprint length | 1520 (60 in) | Life Fitness US page |
 | Footprint width | 1420 (56 in) | Life Fitness US page |
@@ -35,7 +35,7 @@ Measuring frame: the demo at 0:08, 720 px tall. The stack column runs from its t
 | Pivot to grips (yoke arm) | about 900 | estimated from the hero photo, scaled by the 1630 mm height: the left side arm spans about 700 px from the pivot box to the bar end, on a line about 35 degrees off the image plane; low confidence |
 | Grip spacing | about 700 between the hands | estimated from the demo at 0:08 (hands 230 px apart, in the user's plane), scaled by the 1630 mm height; rough |
 | Seat top | about 350 at the setting shown | estimated from the demo at 0:08 (seat top at about 505 px), scaled by the 1630 mm height; the knees sit above the hips in that frame |
-| Seat range | not shown | chosen 330 to 500, low confidence |
+| Seat range | not shown | chosen 330 to 500 from the fit rule (grips level with the shoulders at the start): the mannequin's setting, 350 (0.98 m grips less 0.63 m to the seated shoulder), sits near the low end, and the demo's user sits at about 350 too; low confidence |
 | Back pad | about 830 long, from just above the seat to about 1270 above the floor; reclined about 10 degrees from vertical | estimated from the hero photo (700 px, 345 px to 1045 px, the floor at 1395 px: 1.21 mm/px), scaled by the 1630 mm height; rough, the pad is nearer the camera than the column |
 
 The hero photo gives the seat top at about 345 mm too (seat at 1110 px), agreeing with the demo.
@@ -52,10 +52,10 @@ The hero photo gives the seat top at about 345 mm too (seat at 1110 px), agreein
 
 ## Adjustments and fit rules
 - Seat height, by a lever under the seat front (demo 0:01; page).
-- Fit rule, checked against the demo at 0:08: the grips are level with the shoulders at the bottom of the rep, with the elbows below the hands. That was the rule to confirm; the demo shows it.
+- Fit rule, checked against the demo at 0:08: the grips are level with the shoulders at the bottom of the rep, with the elbows below the hands. The demo shows it.
 - Red indicator: the page says it marks the axis of rotation. The axis is behind the pad at about shoulder height, so lining the shoulder up with it means setting the seat so the shoulders are at the grips' height. The demo's user sits that way.
 
 ## Open gaps
 - Pivot place, yoke length and the rotation angle: no side-on photo or frame was found, so they come from oblique views and are low confidence.
-- Seat range: no frame shows the seat at its ends; chosen.
-- For the mannequin (seated shoulder about 0.63 m above the seat top): with the seat at 0.47 m the shoulders sit at 1.10 m, 120 mm above the estimated grips. Chosen from the fit rule: either lower the seat to about 0.35 m (as the demo's user sits), or set the grips and pivot at 1.10 m. Low confidence either way.
+- Seat range: no frame shows the seat at its ends, so it is chosen from the fit rule, low confidence.
+- For the mannequin (seated shoulder about 0.63 m above the seat top): the seat goes at about 0.35 m, chosen from the fit rule (grips level with the shoulders at the start), low confidence. The grips and pivot stay at their estimates (0.98 m), so the shoulders sit at 0.98 m, as the demo's user sits. The seat range above runs from 330, so the setting is inside it; the mannequin's usual 0.47 m seat would put the shoulders 120 mm above the grips.

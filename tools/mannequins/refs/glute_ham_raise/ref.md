@@ -39,13 +39,13 @@ Measured in the WEB3 photo in the machine's centre plane, scaled by the publishe
 
 ## Motion
 - Machine is static; no moving bodies. The user's hinge axis is the knee, resting on the back of the pad; the hip stays straight through the rep (the exercise note says "Keep your hips straight").
-- Range of motion at the knee: about 90 degrees, from about 90-95 degrees of flexion at the top (thighs and torso upright, shins horizontal on the pad's rear) to about 0-10 degrees at the bottom (body straight and horizontal from knee to head). Estimated from the video https://youtu.be/psdbgvbdd_M at 0:04.5 and 0:09.5, angles read off a three-quarter view, about 10 degrees of skew. Corrected from "about 90 degrees of hip and knee flexion": the hip does not flex.
+- Range of motion at the knee: about 90 degrees, from about 90-95 degrees of flexion at the top (thighs and torso upright, shins horizontal on the pad's rear) to about 0-10 degrees at the bottom (body straight and horizontal from knee to head). Estimated from the video https://youtu.be/psdbgvbdd_M at 0:04.5 and 0:09.5, angles read off a three-quarter view, about 10 degrees of skew. The hip does not flex.
 - At the bottom the arms reach forward or rest on the handles; at the top the hands are free.
 
 ## Adjustments and fit rules
 - Roller assembly slides along a rail in 1" steps, locked by two threaded knobs and a pop pin.
 - Ankle pads adjust horizontally only; the roller heights are fixed.
-- Fit rule for `glute_ham_raise` (from the video at 0:04.5 and 0:09.5): the lower thighs lie on the pad with the kneecaps just behind its crest, on the rear curve; the ankles sit in the gap between the rollers with the soles flat on the foot plate. Corrected from "hip pad edge at the crease of the hips", which is the back-extension and sit-up setting (the hips on the pad, as in WEB3).
+- Fit rule for `glute_ham_raise` (from the video at 0:04.5 and 0:09.5): the lower thighs lie on the pad with the kneecaps just behind its crest, on the rear curve; the ankles sit in the gap between the rollers with the soles flat on the foot plate. The hip pad edge at the crease of the hips is the back-extension and sit-up setting (the hips on the pad, as in WEB3), not this one.
 - Move the rollers forward (toward the pad) for the glute-ham raise and back for back extensions and sit-ups.
 
 ## Open gaps

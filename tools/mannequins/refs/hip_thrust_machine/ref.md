@@ -39,7 +39,7 @@ Seated on a low seat, upper back against two half-round pads, a waist belt over 
 
 ## Motion
 - One carriage (back pads, belt, handles, two lever horns) on a revolute about a transverse axis at the top of the rear frame (estimated, see the table). Two more horns sit on the fixed rear frame (`GluteDrive-8`); by their place they store plates rather than load the lever, which the page's "4 horns" leaves unclear.
-- Range of motion: 20 degrees. The hips rise about 230 mm (700 to 930) on an 800 mm radius, about 17 degrees, from the HS photos and the fit rule. The video's make tilts its back pad 23 degrees (6 degrees at the top, 29 at the bottom) and its front link 16 degrees, from video https://youtu.be/ELgSmlwFsFQ at 0:16.5 and 0:18.5. Low confidence.
+- Range of motion: about 17 degrees on the PL-GLD (the HS photos and the fit rule) and about 23 degrees on the video's make; the sources disagree. On the PL-GLD the hips rise about 230 mm (700 to 930) on an 800 mm radius. The video's make tilts its back pad 23 degrees (6 degrees at the top, 29 at the bottom) and its front link 16 degrees, from video https://youtu.be/ELgSmlwFsFQ at 0:16.5 and 0:18.5. Low confidence.
 - Loads plate horns directly (no stack).
 
 ## Adjustments and fit rules

@@ -30,17 +30,17 @@ Standing (or seated on a high seat) between two levers, a handle at each side; t
 | Lever pivot | transverse, at the top of the rear upright, about 600 above the floor | estimated from `PL-SH_27`, scaled by the 1240 mm height (2.44 mm/px) |
 | Lever reach, pivot to grip centre | 760 forward, grip 100 above the pivot at rest | same photo and scale |
 | Grip height at rest (lever on its stop) | 700 | same photo and scale |
-| Grip height at the top of a shrug | 940 | estimated from `PL-SH_17` (front), scaled by the lifter at about 1.78 m; matches the mannequin's 0.93 below |
+| Grip height at the top of a shrug | 940 | estimated from `PL-SH_17` (front), scaled by the lifter, taken as a person of about 1.78 m; matches the mannequin's 0.93 below |
 | Grip height, mannequin, bottom / top | 820 / 930 | chosen from the fit rule (arms hanging straight from a 1.45 m shoulder, 0.63 m to the grip; 110 mm of shoulder rise) for the mannequin, low confidence |
 | Grip spread | 740 between grip centres | estimated from `PL-SH_17`, scaled by the 45 lb plate (450 mm), rough; the hands sit well outside the hips |
 | Handle | a post rising about 270 from each lever, the grip pointing forward | estimated from `PL-SH_27`, scaled by the 1240 mm height |
 | Plate horn | on each lever, under the handle post | `PL-SH_27`, `PL-SH_29`; the two horns on the rear uprights are storage by their place on the fixed frame |
 | Seat top above floor | 650 | estimated from `PL-SH_27` (empty, about 660) and `PL-SH_1` (seated, about 620 to 640), scaled by the 1240 mm height and the 45 lb plate |
-| Seat height range | adjustable, range not visible; the recipe keeps the seat at 650 | the seat post shows numbered holes (`strength-...-4`, `PL-SH_25`), their spacing not visible; 650 chosen from the measured seat, low confidence |
+| Seat height range | adjustable, range not visible; the recipe keeps the seat at 650 | the seat post shows numbered holes (`strength-...-4`, `PL-SH_25`), their spacing not visible; 650 kept at the measured seat, since no picture shows the travel; low confidence |
 
 ## Motion
 - Two levers, one per side, each a revolute about one transverse axis at the top of the rear upright, behind the back pad. The grips swing on a 760 mm radius, close to vertical over the shrug's small angle.
-- Range of motion: 110 mm at the grip, about 9 degrees of lever (from 16 to 25 degrees above the pivot's level, for the mannequin). The video's make: the grip rises about 40 px, 120 mm, from video https://youtu.be/2KDc6iAcrAw at 0:03.5 (bottom) and 0:02.75 (top), scaled by the lifter at about 1.75 m; about 5 degrees on its longer lever. The stop sits lower than the hanging hands, so the levers travel about 9 degrees more from rest to the start of the rep (chosen from the fit rule, low confidence).
+- Range of motion: 110 mm at the grip, about 9 degrees of lever (from 16 to 25 degrees above the pivot's level, for the mannequin). The video's make: the grip rises about 40 px, about 120 mm, from video https://youtu.be/2KDc6iAcrAw at 0:03.5 (bottom) and 0:02.75 (top), scaled by the lifter, taken as a person of about 1.78 m; about 5 degrees on its longer lever. The stop sits lower than the hanging hands, so the levers travel about 9 degrees more from rest to the start of the rep (chosen from the fit rule, low confidence).
 - Plate-loaded on the lever horns.
 
 ## Adjustments and fit rules

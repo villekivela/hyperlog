@@ -50,14 +50,14 @@ Two Rogue parts on one rig (no single Rogue/Titan/Hoist power tower gave both ba
 | Dip handle diameter | 47.6 (1 7/8 in) | Rogue Matador page |
 | Matador depth, width, height | 610 x 686 x 254 | Rogue Matador page (24, 27, 10 in) |
 | Bar (grip) height above floor | 2300 | chosen for the mannequin, low confidence: see Open gaps. The pull-up video (20:06) and the dead hang video (0:18) both show the hanging lifter's feet just clear of the floor |
-| Dip handle height above floor | about 1300 | estimated from video https://youtu.be/G7bonPtkitM at 0:06, scaled by the lifter (about 1.78 m); rough. Chosen 1300 for the mannequin |
+| Dip handle height above floor | about 1300 | estimated from video https://youtu.be/G7bonPtkitM at 0:06, scaled by the lifter, taken as a person of about 1.78 m; rough. Chosen 1300 for the mannequin |
 
 ## Motion
 Nothing moves. Hanging: the hands wrap the bar, body hangs below it, so the shoulder joint sits directly beneath the bar; pull-up end position is chin over bar; dead hang is arms straight, elbows locked. Dips: the hands rest on the two handles with arms vertical, torso upright, legs behind. The dip handles are angled for width and fixed during use.
 
 Range of motion of the lifts (the station is static; this is the body's):
 - Pull-up: the body rises about 490 mm, from arms straight to chin over the bar (video 20:06 and 20:08, scaled by the hanging lifter, bar to sole about 2.2 m; rough). Elbows from straight to about 40 degrees.
-- Dip: the shoulders drop about 290 mm, from arms locked to the shoulder about level with the elbow, elbows at about 90 degrees (close-grip dip video 0:06 and 0:05, scaled by the lifter; rough). The dip video (5:06 to 5:11) shows the same depth with a forward torso lean of about 30 degrees.
+- Dip: the shoulders drop about 290 mm, from arms locked to the shoulder about level with the elbow, elbows at about 90 degrees (close-grip dip video 0:06 and 0:05, scaled by the lifter, taken as a person of about 1.78 m; rough). The dip video (5:06 to 5:11) shows the same depth with a forward torso lean of about 30 degrees.
 - Hanging leg raise: hip from straight to about 90 to 110 degrees of flexion, legs at or above horizontal (video 4:06 and 4:33).
 
 ## Adjustments and fit rules
@@ -65,10 +65,10 @@ Range of motion of the lifts (the station is static; this is the body's):
 - Dip handle spacing is a fixed choice per rig (451 to 629 mm); close-grip dip uses the inner end.
 - Bar height: the hanging lifter's feet just clear the floor with the legs straight (pull-up 20:06, dead hang 0:18). For the mannequin (standing shoulder 1.45 m, arm to grip 0.63 m, about 0.05 m of shoulder lift when hanging), a grip at 2.30 m leaves its soles about 0.17 m and its pointed toes about 0.07 m off the floor.
 - Dip height: with the arms locked the lifter's feet hang well clear; at the bottom of the dip they come near the floor or a box, and the lifters bend the knees (close-grip dip 0:05, dip 5:06). For the mannequin, handles at 1.30 m put its shoulders at about 1.90 m locked out and its soles about 0.45 m up, 0.16 m up at the bottom.
-- Weight belt (corrected from the videos): weighted pull-ups and dips use a dip belt with a chain; the plate hangs on the chain in front of the thighs, between the legs at about mid-thigh, not at the hips (pull-up 20:06, weighted dip 1:30). The mannequin shows a plate hanging there.
+- Weight belt, as the videos show: weighted pull-ups and dips use a dip belt with a chain; the plate hangs on the chain in front of the thighs, between the legs at about mid-thigh, not at the hips (pull-up 20:06, weighted dip 1:30). The mannequin shows a plate hanging there.
 
 ## Open gaps
-- Bar and dip handle heights depend on where the gym mounted them on its rig; no maker publishes them. The bar height is chosen from the fit rule above (feet just clear, as the videos show), and the dip height is a rough estimate from one video, scaled by a person. Both low confidence.
+- Bar and dip handle heights depend on where the gym mounted them on its rig; no maker publishes them. The bar height is chosen from the fit rule above (feet just clear, as the videos show), and the dip height is a rough estimate from one video, scaled by a person of about 1.78 m. Both low confidence.
 - The Crown numbers not on the page (cross tube offset, prong lengths, wide-grip spacing) are scaled from one top-down photo by its own labelled 32 in dimension; good to about +-20 mm.
 - The chin-up video is unavailable, so the chin-up's hand position is taken from the pull-up (same bar, supinated grip).
 - Whether the owner's gym has a rig with these parts, a power tower, or a Hammer Strength or Hoist unit is unknown and stays so. The Rogue parts stand in for the type.

@@ -18,7 +18,7 @@ Seated triceps and chest dip: the user sits upright, holds two handles at lower-
 - Video viewed: `seated_dip_machine` https://youtu.be/BRueufxDP2Q, front 0:00–0:11, three-quarter front right 0:12–0:20 (frames at 0:15.5 and 0:18.5 arms straight, 0:17 and 0:17.4 bottom, 0:01, 0:02). It shows an Atlantis seated dip with a thigh hold-down roller and a fixed seat, not the Hoist; no side-on view.
 
 ## Key dimensions (mm)
-| dimension | mm | source or "estimated" |
+| Dimension | mm | Source |
 |---|---|---|
 | Footprint length | 1520 (60 in) | fitshop.com page: "(L) 152 cm"; matches the 60.00 in on the 360 Sports listing |
 | Footprint width | 1260 (49.75 in) | same two listings |
@@ -27,7 +27,7 @@ Seated triceps and chest dip: the user sits upright, holds two handles at lower-
 | Max user weight | 180 kg | fitshop.com page |
 | Seat top above floor, start | 480 | estimated from `RS-1101-01`, scaled by the 1390 mm height (1.16 mm/px), rough; the seat post close-up shows the pin in position 1 |
 | Seat top above floor, finish (carriage rocked back) | 580 at the front edge | estimated from `Hoist_RS1101_1`, scaled by the 1390 mm height (1.85 mm/px) |
-| Seat height range | adjustable, range not visible; the recipe keeps the seat at 480 (start) | the pop-pin and numbered post show the seat adjusts, the number of positions and their spacing not visible; 480 chosen from the measured seat, low confidence |
+| Seat height range | adjustable, range not visible; the recipe keeps the seat at 480 (start) | the pop-pin and numbered post show the seat adjusts, the number of positions and their spacing not visible; 480 kept at the measured seat, since no picture shows the travel; low confidence |
 | Seat depth, front edge to back pad | 420 | estimated from `Hoist_RS1101_1`, same scale |
 | Handle arm pivot | transverse, at the top of the fixed rear upright, about 880 above the floor (870 side-on, 930 from the three-quarter view), about 310 behind the back pad and 740 behind the seat front | estimated from `Hoist_RS1101_1` and `RS-1101-01`, scaled by the 1390 mm height |
 | Arm length, pivot to grip centre | 720 | estimated from `Hoist_RS1101_1`, scaled by the 1390 mm height |

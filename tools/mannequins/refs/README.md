@@ -9,10 +9,10 @@ Most makers publish a footprint, a height and a stack, but not seat heights, piv
 of motion. Those are measured from the makers' photos and the exercises' technique videos (#168):
 each such cell says "estimated from" the photo or the video at m:ss it was measured in, and the
 known size it was scaled by (a published dimension, a 450 mm bumper plate, a stack plate, or a
-person of about 1.75 m). What no picture settles is "chosen from" a named fit rule and the
-mannequin's body, at low confidence, for the owner's eye in the studio. The internet is the only
-source; no one photographs machines at the gym. Each file's last section, Open gaps, lists what
-stays chosen and why.
+person of about 1.75 m, the file naming the height used). What no picture settles is "chosen
+from" a named fit rule and the mannequin's body, at low confidence, for the owner's eye in the
+studio. The internet is the only source; no one photographs machines at the gym. Each file's last
+section, Open gaps, lists what stays chosen and why.
 
 ## Build order
 
@@ -58,15 +58,15 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
 - `kit.mjs` also lists `chest_supported_t_bar_row` and `t_bar_row` under `row_machine`. #161 moves
   both, with `kelso_shrug`, to `t_bar_row_machine`: the `t_bar_row` video shows a chest-supported
   plate-loaded machine, not a landmine or an unsupported T-bar ([ref](t_bar_row_machine/ref.md)).
-- `roman_chair_crunch` was listed under the hyperextension bench, but its video shows a knee raise
-  on a captain's chair ([ref](captains_chair/ref.md)). #161 should give it that kit.
+- `roman_chair_crunch` is a knee raise on a captain's chair, as its video shows, not an exercise on
+  the hyperextension bench ([ref](captains_chair/ref.md)). #161 should give it that kit.
 - `kit.mjs` lists `kelso_shrug` under `shrug_machine`, but the owner confirms it is done
   chest-supported on the T-bar row machine ([video](https://youtu.be/76rz0UNAlYI)). #161 should move
   it to `t_bar_row_machine` ([ref](t_bar_row_machine/ref.md)), not `row_machine`. That leaves `shrug_machine` at one exercise.
 
 ## Gaps
 
-Every dimension a maker doesn't publish is now estimated from a viewed photo or video frame, or
+Every dimension a maker doesn't publish is estimated from a viewed photo or video frame, or
 chosen from a fit rule at low confidence. What stays chosen, or rough, per machine (each file's Open
 gaps says why):
 
@@ -111,4 +111,4 @@ Across them:
 - Few technique videos use the based-on model, so most videos settle the range of motion and the fit
   rules, and the photos the sizes. Each file says which make its videos show.
 - Rep, Titan's store, Hoist and some dealer pages refused the fetch (HTTP 429 or 403), and Rogue's
-  support guides still return 403; each file says which.
+  support guides return 403; each file says which.

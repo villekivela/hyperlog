@@ -38,7 +38,7 @@ Ids: 1_arm_cable_press_around, 1_arm_katana_cable_triceps_extension, 1_leg_cable
 | Footprint, overall width | 4578 (180.25 in) | Rogue CC-1 page |
 | Footprint, depth | 1067 (42 in) | Rogue CC-1 page |
 | Overall height | 2731 (107.5 in); page also says 107.3 in = 2726 | Rogue CC-1 page (internally inconsistent); CT-1 page says 107.3 in |
-| Tower centre spacing | 2210 (87 in), measured low-row foot to low-row foot | Rogue CC-1 page |
+| Tower spacing | 2210 (87 in), measured low-row foot to low-row foot | Rogue CC-1 page |
 | Crossmember ("bridge") length | 2724 (107.25 in) | Rogue CC-1 page |
 | Frame tube | 76 x 76 (3x3 in, 11 gauge) | Rogue CC-1 page |
 | Carriage rail | 51 x 51 (2x2 in) stainless, on the front face of each tower, holes numbered 1 (bottom) to 16 (top) | Rogue CC-1 page; numbers seen in the web19 and CT-1 photos |
@@ -84,4 +84,4 @@ Placard text not available. Rules below come from the videos.
 - The pulley heights and the 130 mm pitch are estimated from three-quarter Rogue photos with no person or tape in them, scaled by the published tower height: good to about +-50 mm at the bottom and +-80 mm at the top. No spec sheet or manual with numbers was reachable (both support guides refuse the fetch).
 - The carriage height for each exercise is chosen from what the videos show on other makes (Life Fitness, Atlantis and unbranded dual-pulley machines), mapped onto the Rogue's 16 positions for the mannequin. Low confidence for the exact position number.
 - Whether the owner's gym has a Rogue CC-1, or another dual adjustable pulley, is unknown and stays so. Rogue stands in for the type.
-- The tower spacing (87 in) is from the page; how it is measured (centre to centre or foot to foot) is not stated and no photo is square enough to check it.
+- The page gives the tower spacing (87 in) from low-row foot to low-row foot, not centre to centre; no photo is square enough to measure the centres' spacing.

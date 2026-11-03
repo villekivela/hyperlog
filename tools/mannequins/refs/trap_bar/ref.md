@@ -20,7 +20,7 @@ A hexagonal frame the lifter stands inside, gripping two parallel handles at the
 - Technique videos (`exercises.json` has no video for `trap_bar_deadlift`; these were found by YouTube search):
   - Tier 1 Sports Performance, "Trap Bar Deadlift (side view)", side-on, a hex bar with 450 mm bumpers: https://youtu.be/Boeq5yeSegw at 0:02.5 (bottom) and 0:04.5 (lockout).
   - Alan Thrall, "The Trap Bar Deadlift" (several bars, front and three-quarter): https://youtu.be/TU2xZ7s4jus at 3:52 (lockout) and 5:44 (set-up at the bottom).
-- Why this model: it is the owner's brand and the only Rogue/Titan/Hoist page I found that publishes both handle heights (in a diagram) and the dual-height offset. Its frame is open (no crossbar on one side) rather than a closed hex; the lifter's stance and handle positions are the same.
+- Why this model: it is the owner's brand and the only Rogue, Titan or Hoist page found that publishes both handle heights (in a diagram) and the dual-height offset. Its frame is open (no crossbar on one side) rather than a closed hex; the lifter's stance and handle positions are the same.
 
 ## Key dimensions (mm)
 | Dimension | mm | Source |
@@ -56,7 +56,7 @@ The bar as a whole is prismatic: it rises straight up with the lifter.
 - Choose low (225 mm) or high (327 mm) handle height before the set, never both at once.
 - Handles stay parallel and 635 mm apart; the lifter's hands grip the handle centre, neutral grip (palms facing in).
 - Loaded plates rest on the floor; the frame hangs from the sleeves, so the handle heights above assume 450 mm plates.
-- Stance: the lifter stands in the middle of the frame, feet about hip width, the handle centres (the sleeve axis) over mid-foot, just in front of the ankles (Thrall video at 5:44; side-on video at 0:02.5). Corrected from "the mid-line of the feet between the handles", which said nothing front to back.
+- Stance: the lifter stands in the middle of the frame, feet about hip width, the handle centres (the sleeve axis) over mid-foot, just in front of the ankles (Thrall video at 5:44; side-on video at 0:02.5).
 - Bottom of the rep, side-on: arms vertical with the shoulders just ahead of the handles, hips a little above the knees, torso about 30 degrees above horizontal, knees about 90-100 degrees flexed (side-on video at 0:02.5).
 - Lockout: standing tall, arms straight, the handles beside the upper thigh (side-on video at 0:04.5; Thrall video at 3:52).
 - Rackable length only matters if the bar is placed in a rack (not for the deadlift).

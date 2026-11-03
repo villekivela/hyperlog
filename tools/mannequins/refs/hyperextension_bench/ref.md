@@ -1,7 +1,7 @@
 # 45-degree hyperextension bench (`hyperextension_bench`)
 
 ## Movement and exercises served
-A frame with an angled hip pad, a foot plate and a heel roller: the lifter lies face-down along the slope, thighs on the pad, and lowers and raises the torso at the hip. Serves `45_hyperextension`. `roman_chair_crunch` was listed here as done facing up on the same frame, but its video shows something else (see Motion). No part of the bench moves while in use.
+A frame with an angled hip pad, a foot plate and a heel roller: the lifter lies face-down along the slope, thighs on the pad, and lowers and raises the torso at the hip. Serves `45_hyperextension`. `roman_chair_crunch` is not done on this bench: its video (https://youtu.be/dd1WoEcQB4c at 0:03 and 0:06) shows a vertical knee raise on a captain's chair, back against an upright pad and forearms on arm pads, so it belongs to the captain's chair (see [its ref](../captains_chair/ref.md)). No part of the bench moves while in use.
 
 ## Based on
 - Brand and model: Bench Fitness REVOLVE 45 Degree Back Extension.
@@ -10,7 +10,6 @@ A frame with an angled hip pad, a foot plate and a heel roller: the lifter lies 
 - Photos viewed: page 1 of the PDF (three-quarter render and three close-ups: angle adjustment, height adjustment, heel lock); page 2 side drawing (rendered at 300 dpi and measured, scaled by the 1248 mm base length: 1.025 mm per pixel) and end view (scaled by the 666 mm base width). No separate photo links.
 - Videos viewed:
   - `45_hyperextension`: Jeff Nippard, https://youtu.be/J46aPqFl0WE?t=178 (section 2:53-3:38 downloaded): at about 2:54-2:56 bodyweight reps side-on (2:55.5 the bottom); 3:08-3:12 close-ups of the foot plate and calf roller; 3:31 (bottom) and 3:36 (top) side-on reps holding a barbell. A different maker's fixed 45-degree bench, same layout.
-  - `roman_chair_crunch`: "Roman Chair Crunch", https://youtu.be/dd1WoEcQB4c at 0:03 (knees up) and 0:06 (legs down).
 - Why not the owner's brands: Rogue sells only a reverse hyper (Z Hyper, https://www.roguefitness.com/rogue-z-hyper), not a 45-degree bench. No Hammer Strength or Hoist spec sheet with dimensions was found.
 
 ## Key dimensions (mm)
@@ -24,7 +23,7 @@ Positions are side-on: x from the bench's back end (the end with the grab handle
 | End-view extent (pads, rollers, foot plate) | 729 | spec sheet page 2 end view |
 | Weight | 60 kg | spec sheet |
 | Body angle range | 35 to 50 degrees (45 nominal) | spec sheet |
-| Body line: foot plate surface to the top end of the hip pad, along the slope | 844 to 1119 (the "height adjustment": the pad column telescopes) | spec sheet drawing; corrected from "hip pad travel" |
+| Body line: foot plate surface to the top end of the hip pad, along the slope | 844 to 1119 (the "height adjustment": the pad column telescopes) | spec sheet drawing; the figure is this body line, not a hip pad travel |
 | Hip pad top end, in the drawing | about 880 high, x about 200 | estimated from the spec sheet side drawing, scaled by the 1248 mm base |
 | Hip pad lower end, in the drawing | about 640 high, x about 455 | same drawing and scale |
 | Hip pad size | about 330 long, about 90-100 thick with its board; a rounded roll at the top end | same drawing and scale |
@@ -43,7 +42,6 @@ Positions are side-on: x from the bench's back end (the end with the grab handle
 The frame is rigid; only the setup is adjustable. The lifter's hip is a revolute joint, axis side to side, just above the top end of the hip pad.
 - Range of motion at the hip: about 55 degrees, from about 55 degrees of hip flexion at the bottom (torso about 15 degrees below horizontal with the legs about 40 degrees up the slope) to a straight line from shoulder to heel at the top. Estimated from the video https://youtu.be/J46aPqFl0WE at 3:31 (bottom) and 3:36 (top), angles read off the side-on frames, about 5-10 degrees of camera skew. The bodyweight reps at 2:55.5 go a little deeper, with the upper back rounded and the head hanging.
 - At the top the body stays in line; the video does not go past straight into back arching.
-- `roman_chair_crunch`: the video (https://youtu.be/dd1WoEcQB4c at 0:03 and 0:06) shows a vertical knee raise on a captain's chair: back against an upright back pad, forearms on two horizontal arm pads, hands on the grips at their ends, legs hanging, knees raised to above hip height. It does not use this bench. #161 should give it the captain's chair ([ref](../captains_chair/ref.md)), not this bench.
 
 ## Adjustments and fit rules
 - Body angle 35 to 50 degrees (use 45 for the animation).
@@ -56,4 +54,3 @@ The frame is rigid; only the setup is adjustable. The lifter's hip is a revolute
 - The body line and hip pad height for the mannequin are chosen from the fit rule, not measured: the bench telescopes, so any value from 844 to 1119 is real.
 - All REVOLVE sizes come from one render-based drawing; the pads' width and gap come from an end view that may not be square on.
 - The hyperextension video uses another maker's fixed bench, so only the body's range of motion and its fit on the pad are taken from it, not sizes.
-- `roman_chair_crunch` needs a captain's chair: see [its ref](../captains_chair/ref.md).

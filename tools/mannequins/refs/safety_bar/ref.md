@@ -54,7 +54,7 @@ What the videos show:
 ## Adjustments and fit rules
 - No adjustments; one bar fits all heights.
 - The yoke pad sits across the upper trapezius behind the neck, with the handle pads over the front of the shoulders. Shaft centre for the mannequin: about 1.50 m standing (shoulder joint about 1.45 m plus about 50 mm of trapezius), chosen, low confidence.
-- `safety_bar_squat`: hands on the bare grips at chin height, elbows down in front of the chest (corrected from "handles held loosely": every video shows them gripped and pulled down or held up).
+- `safety_bar_squat`: hands on the bare grips at chin height, elbows down in front of the chest. Every video shows the handles gripped and pulled down or held up, not held loosely.
 - `good_morning_barbell_safety_bar`: same grip; the lifter hinges at the hips with the handles held against the chest.
 - In the rack, hooks catch the straight shaft, not the yoke (Rogue video at 0:02 and the rack photos).
 - Plates load on the sleeve end: plate centre 140 mm below the shaft centre line. Loaded on 450 mm plates resting on the floor with the camber straight down, the shaft centre would sit about 365 mm off the floor; nothing in the exercises sets it down that way.

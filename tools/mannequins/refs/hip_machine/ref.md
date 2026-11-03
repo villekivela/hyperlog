@@ -29,7 +29,7 @@ Seated, back supported, knees bent, feet on a foot plate at the bottom of each a
 | Hoist RS-1407 L x W x H (cross-check) | 1730 x 950 x 1440 | fitshop listing |
 | Seat top (front edge) above floor | 520 | estimated from the `19-66` render and the storyblok `hip-abduction.jpg`, scaled by the 1400 mm overall height (530 and 515), rough (±50) because both are three-quarter views. The video's other make: about 620, estimated from video https://youtu.be/iGd7fQffkkM at 0:05, scaled by a 0.43 m shin |
 | Seat depth | 360 | estimated from the red-arm render `20-73`, scaled by the 1550 mm length, rough |
-| Seat height range | fixed at 520 | chosen from the measured seat top, low confidence; the roller adjustment's travel is not visible in any photo |
+| Seat height range | fixed at 520 | kept at the measured seat top, since no picture shows the roller adjustment's travel; low confidence |
 | Pivot axis | vertical, on the machine's centreline under the seat, about 140 mm behind the seat's front edge (about 220 mm in front of the backrest) | estimated from the `20-73` render (the silver hub on a vertical post under the seat front), scaled by the 1550 mm length, rough |
 | Arm reach, pivot to knee pad post | 400 | estimated from `20-73` (about 410) and `hip-abduction.jpg` (about 400), scaled by the 1550 mm length |
 | Knee pad, height x width | 280 x 160 | estimated from `hip-abduction.jpg`, scaled by the 1400 mm height, rough |

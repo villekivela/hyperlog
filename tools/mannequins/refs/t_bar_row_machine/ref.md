@@ -38,10 +38,11 @@ Photo 07 is side-on with the lever and the plate in the machine's middle plane. 
 | Foot plate | 600 x 445 (23.5 x 17.5 in) | Titan page; diamond plate, pop-pin adjustable |
 | Foot plate centre | about 410 above the floor, 520 behind the pivot; tilted 45 degrees, near square to the beam | estimated from photo 07, scaled by the 450 mm bumper; the pop-pin moves it along the beam |
 | Lever pivot | about 420 above the floor, at the top of the rear post | estimated from photo 07, scaled by the 450 mm bumper; the bolt is visible in photo 01 |
-| Pivot to handles | about 780 along the lever | estimated from photo 07, scaled by the 450 mm bumper: the hands are 365 px ahead of the pivot |
+| Pivot to handles | 780 ahead and 370 above at the bottom of the rep: an 860 mm radius, 25 degrees above horizontal | estimated from photo 07, scaled by the 450 mm bumper: the hands are 365 px ahead of the pivot and 175 px above it |
+| Handle yoke | the grips stand about 370 above the lever's line, on a U-yoke rising from the lever | estimated from photo 07, scaled by the 450 mm bumper; the yoke's shape is in photo 01 |
 | Pivot to plate centre / horn end | about 1300 / 1620 | estimated from photo 07, scaled by the 450 mm bumper |
 | Handle height, bottom of the rep | about 790 above the floor | estimated from photo 07, scaled by the 450 mm bumper; lever on its catch, 3 degrees below horizontal |
-| Handle height, top of the rep | about 1090 above the floor | from the bottom height, the 780 mm radius and the lever's travel (Motion) |
+| Handle height, top of the rep | about 1060 above the floor, 210 further back | from the 860 mm radius turned through the lever's 23 degrees (Motion) |
 | Weight sleeve (horn) | 370 long (14.5 in), 50 dia | Titan page; the overview text says 13.5 in |
 | Vertical grips | 230 long (9 in), spread 445 (17.5 in) | Titan page; neutral handles |
 | Horizontal grips | 140 long (5.5 in), spread 660 (26 in) | Titan page; wide handles |
@@ -50,10 +51,10 @@ Photo 07 is side-on with the lever and the plate in the machine's middle plane. 
 | User height range | 1500 to 1980 (4 ft 11 in to 6 ft 6 in) | Titan page |
 
 ## Motion
-- One lever pivoting low at the rear, about 420 mm above the floor at the top of the rear post (photos 01 and 07). The handles sit on a yoke about 780 mm ahead of the pivot; the horn is the lever's front end, about 1620 mm ahead of it. All three videos show the same layout: the lever runs from by the feet, under the pad, to the horn at the front.
+- One lever pivoting low at the rear, about 420 mm above the floor at the top of the rear post (photos 01 and 07). The handles sit on a yoke about 780 mm ahead of the pivot and 370 mm above it (an 860 mm radius); the horn is the lever's front end, about 1620 mm ahead of it. All three videos show the same layout: the lever runs from by the feet, under the pad, to the horn at the front.
 - The handles travel on an arc up and back toward the chest: a fixed arc, not a free bar.
 - Axis: horizontal, across the machine, at the rear.
-- Range of motion, row: the lever turns about 23 degrees, from 3 degrees below horizontal (on its catch) to 20 degrees above. Estimated from photos 02 and 03 (same camera), scaled by the 450 mm bumper: the plate's centre rises about 500 mm at a 1300 mm radius. That is about 310 mm of handle travel along the arc. Rough, the camera is three-quarter on.
+- Range of motion, row: the lever turns about 23 degrees, from 3 degrees below horizontal (on its catch) to 20 degrees above. Estimated from photos 02 and 03 (same camera), scaled by the 450 mm bumper: the plate's centre rises about 500 mm at a 1300 mm radius. That is about 345 mm of handle travel along the 860 mm arc: about 270 mm up and 210 mm back. Rough, the camera is three-quarter on.
 - Range of motion, Kelso shrug: the hands rise about 100 mm with the arms near straight. Estimated from the Kelso video at 0:07 (top) and 0:08 (bottom), measured from the pad's top end, scaled by the plate taken as 450 mm; rough, the camera pans between the frames.
 - The horn is a 50 mm sleeve for Olympic plates, 370 mm long (Titan page).
 
@@ -73,5 +74,5 @@ Photo 07 is side-on with the lever and the plate in the machine's middle plane. 
 ## Open gaps
 - Owner's machine: its make is unknown and stays so. Titan stands in for the type. The `t_bar_row` video's machine has shin rollers and a step where Titan has an inclined foot plate; the recipe follows Titan.
 - Foot plate setting for the mannequin: chosen from the fit rule (the pad's top end at the top of the sternum) and the mannequin's body, low confidence. The mannequin's ankle to the top of its sternum is about 1300 mm with the knees a little bent, so the foot plate's centre sits about 790 mm along the beam below the pad's bottom end. In photo 07 it is about 950 mm (estimated, scaled by the 450 mm bumper, rough: the pad's bottom end is hidden by the user's hip).
-- Top of the row: the lever's 20 degrees comes from a three-quarter photo, so the top handle height (about 1090 mm) is rough. The side-on photo 07 shows only the bottom.
+- Top of the row: the lever's 20 degrees comes from a three-quarter photo, so the top handle height (about 1060 mm) is rough. The side-on photo 07 shows only the bottom.
 - Kelso shrug travel: the frames pan, so the 100 mm is rough.

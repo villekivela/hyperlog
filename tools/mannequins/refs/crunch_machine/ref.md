@@ -7,7 +7,7 @@ The reference model and the technique video show two different layouts:
 - Hammer Strength Select Abdominal Crunch (the reference model, from its studio photo and its demo video): a reclined crunch. The user lies back with the hips low on an inclined seat pad, knees bent and high, ankles hooked between two rollers at the front, upper back on a back pad that is the work arm, hands on two handles beside the head pad. The back pad rotates forward about a cam axis beside the user's waist, curling the shoulders toward the knees.
 - The `machine_crunch` technique video (another make, unbranded in frame): an upright seated crunch. The user sits upright, legs out in front with the feet under a roller, holds two handles in front of the chest and curls forward, pushing the handles down.
 
-The earlier text here ("seated, feet held on supports, pad or handles at the chest") described the upright type. The recipe follows the reference model, the one with a studio photo and a demo to measure; the video's make can't be named and gives only its range of motion (Motion, last bullet).
+The recipe follows the reference model, the one with a studio photo and a demo to measure; the video's make can't be named and gives only its range of motion (Motion, last bullet).
 
 ## Based on
 - Brand and model: Hammer Strength Select Abdominal Crunch (product code HS-AB on the fitshop page).
@@ -47,7 +47,7 @@ Two scales from the 1400 mm height. In the studio photo the stack column runs fr
 ## Adjustments and fit rules
 - No adjustment is visible in the studio photo or the demo: the seat pad, back pad and rollers are fixed. The FitnessZone text says the seat adjusts by a roller mechanism, which is the same line every Select page carries (it is on the pec fly pages too); unverified for this model.
 - Fit, as the demo shows it: lie back with the hips on the seat pad's high end, the ankles hooked between the rollers, the upper back on the back pad and the hands on the handles by the head (demo 0:02 to 0:10).
-- Red indicator: the placard marks the axis of rotation. The demo puts the cam over the user's belly, so the rule is "align the waist (between the hip and the lower ribs) with the axis", as the earlier text inferred; the demo supports it, roughly.
+- Red indicator: the placard marks the axis of rotation. The demo puts the cam over the user's belly, so the rule is "align the waist (between the hip and the lower ribs) with the axis"; the demo supports it, roughly.
 
 ## Open gaps
 - The cam axis's place along the body: the cam is on the far side of the user in every view, so it is placed by eye, low confidence.

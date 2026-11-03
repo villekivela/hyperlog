@@ -3,7 +3,7 @@
 ## Movement and exercises served
 Seated shoulder abduction: the user sits facing the machine with the chest on a centre pad, the elbows bent, the outside of each upper arm under a pad on a lever arm whose pivot lines up with the shoulder joint. The arms rise out to the sides to horizontal, loaded by one weight stack.
 - `machine_lateral_raise`: seated, as above (Hammer Strength demo; technique video).
-- `standing_machine_lateral_raise`: its video shows a different machine, a standing plate-loaded one (Atlantis): the user stands beside a lever whose pivot sits in front of the shoulder at shoulder height and raises it with a straight arm by a curved handle. This seated machine cannot be used standing: the seat and chest pad are in the way and the pivots are at seated shoulder height (about 1.1 m). Draw the standing exercise on its own pose with the standing machine's geometry (Motion, last bullet), or as this kit with the seat ignored only if #161 accepts the mismatch.
+- `standing_machine_lateral_raise`: its video shows a different machine, a standing plate-loaded one (Atlantis): the user stands beside a lever whose pivot sits in front of the shoulder at shoulder height and raises it with a straight arm by a curved handle. This seated machine cannot be used standing: the seat and chest pad are in the way and the pivots are at seated shoulder height (about 1.1 m). `standing_machine_lateral_raise` uses the standing machine's geometry (Motion, last bullet): its own pose, the pivot in front of the standing shoulder at shoulder height and about 75 degrees of straight-arm travel. This kit is not reused with the seat ignored, because its pivots sit at seated shoulder height and its bent-arm pads do not match the straight-arm lift in the video.
 
 ## Based on
 - Brand and model: Hammer Strength Select Lateral Raise (product code HS-LR). Owner's preferred brand; its page gives a footprint and a stack and nothing contradicts it.
@@ -21,7 +21,7 @@ Seated shoulder abduction: the user sits facing the machine with the chest on a 
 ## Key dimensions (mm)
 Two scales, both from the 1400 mm height. In the hero photo the column runs from 55 px to its base at 1340 px (1.09 mm/px). In the demo at 0:08 the column runs from 183 px to 645 px in a 720 px frame (3.03 mm/px); the seat and the user sit nearer the camera than the column, so heights at the seat are rough.
 
-| dimension | mm | source or "estimated" |
+| Dimension | mm | Source |
 |---|---|---|
 | Footprint length | 1070 (42 in) | Life Fitness AU page |
 | Footprint width | 940 (37 in) | Life Fitness AU page |
@@ -31,7 +31,7 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 | Arm pivots (red axis dots) | about 1050 to 1100 above the floor, fixed to the frame | estimated from the hero photo (dot at 378 px: 1050) and the demo at 0:08 (dot at 282 px: 1100), scaled by the 1400 mm height |
 | Pivot spacing | about 250 to 300 side to side | estimated from the hero photo, scaled by the 1400 mm height: the dots are 215 px apart on a plate turned about 35 degrees from the camera; rough |
 | Seat top | about 480 at the setting shown | estimated from the demo at 0:08: the pivot is about 620 above the seat top (208 px), scaled by the 1400 mm height; the user's shoulder is level with the dot |
-| Seat range | not shown | chosen 400 to 560, a typical roller seat, low confidence |
+| Seat range | not shown | chosen 400 to 560 around the measured seat (480), since no picture shows the travel; it holds the mannequin's fit-rule setting (470, shoulder on the pivot); low confidence |
 | Chest pad | about 680 to 980 above the floor, about 300 tall | estimated from the hero photo, scaled by the 1400 mm height; the pad is nearer the camera than the column, so rough |
 | Pivot to arm pad centre | about 350 | estimated from the hero photo, scaled by the 1400 mm height: at rest each pad hangs about 340 px straight below its dot |
 | Arm pad | about 250 long, 100 diameter, running front to back | estimated from the hero photo, scaled by the 1400 mm height; rough |
@@ -49,12 +49,12 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 
 ## Adjustments and fit rules
 - Seat height by a lever under the seat front, roller mechanism (demo 0:01 to 0:03, page).
-- Fit rule, checked: the pivots are fixed and the seat moves, so the seat sets the shoulder to the pivot. In the demo at 0:08 the user's shoulder joint is level with the red dot (dot at 282 px, shoulder at about 280 px), seen from behind. The earlier note that the pivot rises and falls with the seat was wrong.
+- Fit rule, checked: the pivots are fixed and the seat moves, so the seat sets the shoulder to the pivot. In the demo at 0:08 the user's shoulder joint is level with the red dot (dot at 282 px, shoulder at about 280 px), seen from behind. The pivot does not move with the seat.
 - Chest on the centre pad, the outside of the upper arms under the arm pads near the elbows (demo 0:08, 0:19).
 - Pad positions are optimised for the middle deltoid (fitshop page).
 
 ## Open gaps
-- Seat range: no frame shows the seat at its ends, so it is chosen, low confidence.
+- Seat range: no frame shows the seat at its ends, so it is chosen around the measured seat, low confidence.
 - For the mannequin (seat top 0.47 m, shoulder about 1.10 m) the pivots go at 1.10 m, chosen from the fit rule; the estimates (1.05 to 1.10 m, seat about 0.48 m) agree within their error.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe may set the spacing to the mannequin's shoulders instead.
 - The standing exercise has no reference model; its geometry comes from one video of two other makes.
