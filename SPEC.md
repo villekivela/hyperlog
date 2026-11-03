@@ -1514,7 +1514,9 @@ gallery (Technique videos).
     only before the first rep it sits. The starter program's batch (#127) adds a cable column, one or
     a pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
-    row, the machine pulldown and the preacher curl.
+    row, the machine pulldown and the preacher curl. After the owner's review (2026-11-03) a flye's,
+    a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a
+    curl can stand staggered; and equipment moves a metre either way in Tune.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

@@ -8,8 +8,8 @@ export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
   bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0] },
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
-  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4] },
-  free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5] },
+  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.stagger': 0 },
+  free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5], 'feet.stagger': 0 },
   knee_lever: { 'grip.pole': [1, -0.2, -0.5], 'body.head': 0 },
   calf_raise: { 'grip.pole': [1, -0.3, -0.4] },
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
@@ -95,6 +95,8 @@ function rangeOf(path, value) {
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.05, unit: '' };
+  // Equipment stands where the pose needs it: a metre either way.
+  if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.01, unit: ' m' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.01, unit: ' m' };
 }
 
