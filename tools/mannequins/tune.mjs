@@ -127,7 +127,7 @@ function leaves(value, path, out) {
 }
 
 /** The range, step and unit that suit the number at `path`, by what it is called: a step is a degree, a millimetre or a hundredth of a ratio. */
-function rangeOf(path, value) {
+export function rangeOf(path, value) {
   const key = steps(path).filter((k) => !/^\d+$/.test(k)).at(-1);
   // A bone turns all the way round, either way.
   if (steps(path)[1] === 'offsets') return { min: -180, max: 180, step: 1, unit: '°' };
@@ -144,13 +144,15 @@ function rangeOf(path, value) {
 /** What the wrist's numbers do, [flexion, deviation], and which way each sign bends the hand. */
 const WRIST_WORDS = ['Wrist bend: + flexion / − extension', 'Wrist tilt: + radial (thumb side) / − ulnar (little-finger side)'];
 
+const END_WORDS = { top: 'Top', bottom: 'Bottom' };
+
 /** A slider's label: in words where its path doesn't say what it does, else the path. */
 export function labelOf(path) {
   const bone = path.match(/^(top|bottom)\.offsets\.(\w+)\.([012])$/);
-  if (bone) return `${bone[1] === 'top' ? 'Top' : 'Bottom'} · ${bone[2]} · ${'xyz'[Number(bone[3])]}`;
+  if (bone) return `${END_WORDS[bone[1]]} · ${bone[2]} · ${'xyz'[Number(bone[3])]}`;
   const m = path.match(/^(top|bottom)\.wrist\.([01])$/);
   if (!m) return path;
-  return `${m[1] === 'top' ? 'Top' : 'Bottom'} · ${WRIST_WORDS[Number(m[2])]}`;
+  return `${END_WORDS[m[1]]} · ${WRIST_WORDS[Number(m[2])]}`;
 }
 
 /** The headings the sliders are grouped under, in order; the less used start collapsed. */

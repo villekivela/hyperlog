@@ -140,7 +140,7 @@ An exercise's authored entry in the mannequin tool: where the body, hands and fe
 _Avoid_: Preset, keyframe
 
 **Bone offset**:
-A turn of one of the mannequin's bones that a pose keeps at the top or the bottom of the rep, on top of what the solve does, eased between the two ends. Turned in the studio.
+How far a pose turns one of the mannequin's bones at the top or the bottom of the rep, on top of what the solve does, eased between the two ends. Set in the studio.
 _Avoid_: Turn (that is a date in the rotation), override, keyframe
 
 **Framing**:

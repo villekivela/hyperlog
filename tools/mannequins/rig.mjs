@@ -56,6 +56,9 @@ function aim(rig, name, primary, secondary) {
   setWorldQuat(rig.bones[name], delta.multiply(r.wq.clone()));
 }
 
+/** `turn`, about the axes a bone had in the bind pose (its world turn there `wq`), as a turn of the bone's own. */
+const ownTurn = (wq, turn) => wq.clone().invert().multiply(turn).multiply(wq);
+
 const SPINE = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'Head'];
 // Each finger joint's curl toward the palm, from the knuckle out; the thumb first swings across
 // to the palm, then bends.
@@ -151,7 +154,7 @@ export function buildRig(root) {
         const axis = thumb && i === 0 ? th.clone().normalize().cross(palm).normalize() : dir.clone().cross(palm).normalize();
         const curl = (d) => {
           const turn = new THREE.Quaternion().setFromAxisAngle(axis, rad(d));
-          return rest[n].lq.clone().multiply(rest[n].wq.clone().invert().multiply(turn).multiply(rest[n].wq));
+          return rest[n].lq.clone().multiply(ownTurn(rest[n].wq, turn));
         };
         curls.push([bones[n], curl(thumb ? THUMB[i] : deg)]);
         palmCurls.push([bones[n], curl(thumb ? THUMB[i] : CURL_PALM[i])]);
@@ -359,26 +362,54 @@ function straightArm(sh, grip, along, L, pole, palmOf, depth, off, pull = POLE_P
   return best;
 }
 
+/** The turn the pose's offset gives bone `name` (`P.offsets`, [x, y, z] in degrees), as a turn of its own; null for none. */
+function offsetOf(rig, P, name) {
+  const o = P.offsets?.[name];
+  if (!o) return null;
+  if (!rig.bones[name]) throw new Error(`No bone ${name} to turn`);
+  return ownTurn(rig.rest[name].wq, new THREE.Quaternion().setFromEuler(new THREE.Euler(rad(o[0]), rad(o[1]), rad(o[2]), 'XYZ')));
+}
+
 /**
- * Turns each of `names` by the pose's offset for it (`P.offsets`, [x, y, z] in degrees), on top of
- * where the solve put it: about the axes the bone had in the bind pose (x across the body, y up, z
- * forward), carried with it, so its children turn with it. A turn multiplies the bone's own, so the
- * order the names come in doesn't matter; only that nothing aims them after. Returns the names done.
+ * Turns each of `names` by the pose's offset for it, on top of where the solve put it: about the
+ * axes the bone had in the bind pose (x across the body, y up, z forward), carried with it, so its
+ * children turn with it. A turn multiplies the bone's own, so the order the names come in doesn't
+ * matter; only that nothing aims them after. Returns the names done.
  */
 function offset(rig, P, names) {
   const done = [];
   for (const name of names) {
-    const o = P.offsets?.[name];
-    if (!o) continue;
-    const bone = rig.bones[name];
-    if (!bone) throw new Error(`No bone ${name} to turn`);
-    const wq = rig.rest[name].wq;
-    const turn = new THREE.Quaternion().setFromEuler(new THREE.Euler(rad(o[0]), rad(o[1]), rad(o[2]), 'XYZ'));
-    bone.quaternion.multiply(wq.clone().invert().multiply(turn).multiply(wq));
-    bone.updateMatrixWorld(true);
+    const turn = offsetOf(rig, P, name);
+    if (!turn) continue;
+    rig.bones[name].quaternion.multiply(turn);
+    rig.bones[name].updateMatrixWorld(true);
     done.push(name);
   }
   return done;
+}
+
+/**
+ * Turns a limb (`[upper, lower, end]`: the thigh, calf and foot, or the upper arm, forearm and hand)
+ * by the pose's offsets and solves it again to its contact (#164). The upper bone's turn swings the
+ * knee or elbow round the line to the contact, the lower's keeps only its twist (the contact sets
+ * how far the joint bends), and the end bone keeps its whole turn on the solve's. `endAt(end)` is
+ * where the ankle or the wrist must be with the end bone turned so. Returns the names turned.
+ */
+function offsetLimb(rig, P, [upper, lower, end], lengths, endAt, soft) {
+  if (![upper, lower, end].some((n) => P.offsets?.[n])) return [];
+  const { bones, rest } = rig;
+  const endTurn = wquat(bones[end]).multiply(offsetOf(rig, P, end) ?? new THREE.Quaternion());
+  const done = offset(rig, P, [upper, lower]);
+  setWorldQuat(bones[end], endTurn);
+  // Each bone keeps the twist it has now about its length.
+  const twistOf = (n) => rest[n].sec(rest[n].dir).clone().applyQuaternion(turnOf(rig, n));
+  const twists = [twistOf(upper), twistOf(lower)];
+  const root = wpos(bones[upper]);
+  const limb = ik(root, endAt(end), ...lengths, wpos(bones[lower]).sub(root), soft);
+  aim(rig, upper, limb.mid.clone().sub(root), twists[0]);
+  aim(rig, lower, limb.end.clone().sub(limb.mid), twists[1]);
+  setWorldQuat(bones[end], endTurn);
+  return [...done, ...(P.offsets[end] ? [end] : [])];
 }
 
 /**
@@ -434,7 +465,8 @@ export function poseRig(rig, P, near = {}) {
     const { heading, top } = P.foot ? P.foot(s) : { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
     const toe = heading.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(top, -Math.sin(L.footPitch));
     aim(rig, 'foot_' + k, toe, toe.clone().cross(top));
-    for (const n of offset(rig, P, ['thigh_', 'calf_', 'foot_'].map((b) => b + k))) turned.add(n);
+    const legBones = ['thigh_', 'calf_', 'foot_'].map((b) => b + k);
+    for (const n of offsetLimb(rig, P, legBones, [L.thigh, L.shin], () => P.ankles[i], false)) turned.add(n);
     // The arm: the bar lies across the palm at the base of the fingers, so the wrist sits short of
     // it along the fingers and off it on the back of the hand. The forearm sets both, so iterate.
     const sh = wpos(bones['upperarm_' + k]);
@@ -504,8 +536,11 @@ export function poseRig(rig, P, near = {}) {
     (P.held ??= {})[s] = handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
     aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
     aim(rig, 'hand_' + k, fingers, inward);
-    // A turned arm before the fingers close, so they close round what the hand holds where it is now.
-    for (const n of offset(rig, P, ['upperarm_', 'lowerarm_', 'hand_'].map((b) => b + k))) turned.add(n);
+    // A turned arm before the fingers close, so they close round what the hand holds where it is now:
+    // the wrist where the grip lies in the turned hand.
+    const armBones = ['upperarm_', 'lowerarm_', 'hand_'].map((b) => b + k);
+    const wristAt = (hand) => grip.clone().sub(heldAt(rig, k).sub(wpos(bones[hand])));
+    for (const n of offsetLimb(rig, P, armBones, [L.up, L.fore], wristAt, true)) turned.add(n);
     // The fingers close round what the hand holds, as far as they touch it.
     if (!P.openHands) {
       // A bar or a set handle lies its own way, slanting across the palm or not; a free handle

@@ -178,9 +178,12 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   in degrees, about the axes the bone had in the bind pose (x across the body, y up, z forward),
   carried with it, so its children turn with it. They ease between the ends like the rest, and a
   bone turned at one end alone eases from none at the other. The trunk's and the shoulder blades'
-  are turned before the limbs reach from them, so the hands and feet still hold; a limb's after
-  it is solved (a hand's before its fingers close round what it holds), and the fingers' and toes'
-  last. A hand turned this way counts as the pose setting its wrist. An entry without offsets
+  are turned before the limbs reach from them, so the hands and feet still hold. A limb's own are
+  turned and the limb is solved again to its contact (`offsetLimb` in `rig.mjs`): the thigh's or
+  the upper arm's swings the knee or the elbow round the line to the contact, the shin's or the
+  forearm's keeps only its twist (the contact sets how far the joint bends), and the foot or the
+  hand keeps its whole offset, the limb moving so the ankle stays put or the grip stays in the
+  palm, before the fingers close. The fingers' and the toes' come last. A hand turned this way counts as the pose setting its wrist. An entry without offsets
   bakes byte for byte as it did.
 - **`camera`** frames the stage: `target` is the point the camera looks at, `halfHeight` half the
   height it shows there, and `azimuth` and `elevation` the turn and tilt it opens on. A double-tap
@@ -417,7 +420,7 @@ listens on localhost only.
   `m` to the mirror bone, and `/` finds one by name; the pelvis is the first. `x` `y` `z` pick the
   axis it turns about, drawn strong on the stage with the other two faint. With the stage focused
   and the rep held at the top or the bottom, `h` `l` `H` `L` `=` `R` turn the bone as they step a
-  number, into that end's `offsets`; every frame is solved again and the checks re-run. The turn
+  number, into that end's `offsets`; every frame is solved again and the checks re-run. The offset
   is a number in the numbers panel too, under Bones. `Esc` lets the bone go.
 - **The camera** is free in the studio (`view.mjs`): it orbits on both axes, over the top and under
   the floor, round the selected bone or the body's centre, and pans, dollies and rolls, from the

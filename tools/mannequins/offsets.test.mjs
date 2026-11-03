@@ -55,3 +55,39 @@ test('a hand turned by an offset is the pose setting its wrist, so the joints ch
   const checks = checkStage(entry, stage);
   assert.ok(checks.joints.ok, `joints: frame ${checks.joints.frame}, ${checks.joints.found}`);
 });
+
+// A limb's own bones too (the spec review, #164): the limb is solved again to its contact, the knee or
+// elbow swung where the turn points it and a hand or foot keeping its turn, so it still holds and stands.
+// The thigh swings the knee out, the shin and the upper arm and forearm twist about their length,
+// and the hand turns at the wrist.
+for (const [bone, turn] of [['thigh_l', [0, 0, 10]], ['calf_r', [0, 12, 0]], ['upperarm_l', [15, 0, 0]], ['lowerarm_r', [15, 0, 0]], ['hand_l', [0, 25, 0]]]) {
+  test(`${bone} turned at the bottom still holds what the limb holds and stands on, every frame`, async () => {
+    const { stage: base } = await stageOf('barbell_squat');
+    const { entry, stage } = await stageOf('barbell_squat', { 'bottom.offsets': { [bone]: turn } });
+    base.pose(1);
+    stage.pose(1);
+    // The turn shows: the bone faces another way than the solve alone left it.
+    const moved = deg(worldTurn(base, bone).angleTo(worldTurn(stage, bone)));
+    assert.ok(moved > 3, `${bone} turned ${moved.toFixed(1)}°`);
+    const checks = checkStage(entry, stage);
+    for (const c of ['hands', 'feet']) assert.ok(checks[c].ok, `${c}: frame ${checks[c].frame}, ${checks[c].found}`);
+  });
+}
+
+test('how far a knee bends is the contact\'s: a shin turned to bend it more still stands, the knee as the solve has it', async () => {
+  const { stage: base } = await stageOf('barbell_squat');
+  const { entry, stage } = await stageOf('barbell_squat', { 'bottom.offsets': { calf_r: [10, 0, 0] } });
+  base.pose(1);
+  stage.pose(1);
+  const bend = (s) => deg(wpos(s.rig.bones.calf_r).sub(wpos(s.rig.bones.thigh_r)).angleTo(wpos(s.rig.bones.foot_r).sub(wpos(s.rig.bones.calf_r))));
+  assert.ok(Math.abs(bend(stage) - bend(base)) < 0.01, `the knee bends ${bend(stage).toFixed(2)}°, the solve's ${bend(base).toFixed(2)}°`);
+  assert.ok(checkStage(entry, stage).feet.ok);
+});
+
+test('a hand turned by an offset keeps the whole turn: the arm moves so the grip stays in the palm', async () => {
+  const { stage: base } = await stageOf('barbell_squat');
+  const { stage } = await stageOf('barbell_squat', { 'bottom.offsets': { hand_l: [0, 0, 12] } });
+  base.pose(1);
+  stage.pose(1);
+  assert.ok(Math.abs(deg(worldTurn(base, 'hand_l').angleTo(worldTurn(stage, 'hand_l'))) - 12) < 0.01);
+});

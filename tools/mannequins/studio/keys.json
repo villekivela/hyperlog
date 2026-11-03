@@ -10,7 +10,7 @@
         { "keys": "G", "command": "last", "count": true, "does": "Last item, or the item a count names" },
         { "keys": "<Tab>", "command": "focusNext", "does": "Focus: sidebar → stage → video → numbers" },
         { "keys": "<S-Tab>", "command": "focusPrevious", "does": "Focus the other way" },
-        { "keys": "/", "command": "find", "does": "Find an exercise, a kit or a number" },
+        { "keys": "/", "command": "find", "does": "Find an exercise, a kit, a number or a bone" },
         { "keys": "n", "command": "findNext", "count": true, "does": "Next match" },
         { "keys": "N", "command": "findPrevious", "count": true, "does": "Previous match" },
         { "keys": "f", "command": "filter", "does": "Filter the sidebar by name or status" }
@@ -37,7 +37,7 @@
         { "keys": "H", "command": "lessFine", "count": true, "does": "Step it down by a tenth of that" },
         { "keys": "L", "command": "moreFine", "count": true, "does": "Step it up by a tenth of that" },
         { "keys": "=", "command": "type", "does": "Type an exact value (12.5, or +2 relative), Enter to set, Esc to cancel" },
-        { "keys": "R", "command": "reset", "does": "Reset to the entry's default (a bone's turn to what is saved)" },
+        { "keys": "R", "command": "reset", "does": "Reset to the entry's default (a bone's offset to what is saved)" },
         { "keys": "p", "command": "perAngle", "does": "Tune at this bench angle only, or at all of them" },
         { "keys": "u", "command": "undo", "count": true, "does": "Undo" },
         { "keys": "<C-r>", "command": "redo", "count": true, "does": "Redo" }

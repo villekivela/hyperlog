@@ -10,6 +10,9 @@ export const HALF_FOV = 13;
 const rad = THREE.MathUtils.degToRad;
 const Y = new THREE.Vector3(0, 1, 0);
 
+/** Half the height `view` shows at its target, in metres. */
+export const halfHeightOf = (view) => view.distance * Math.tan(rad(HALF_FOV));
+
 /** The view a framing (`{ target, halfHeight, azimuth, elevation }`) opens on, not rolled. */
 export function viewOf({ target, halfHeight, azimuth, elevation }) {
   return { target: [...target], distance: halfHeight / Math.tan(rad(HALF_FOV)), azimuth, elevation, roll: 0 };
@@ -83,7 +86,7 @@ export function framingOf(view) {
   }
   return {
     target: view.target.map(round),
-    halfHeight: round(view.distance * Math.tan(rad(HALF_FOV))),
+    halfHeight: round(halfHeightOf(view)),
     azimuth: round(within(azimuth)),
     elevation: round(elevation),
   };

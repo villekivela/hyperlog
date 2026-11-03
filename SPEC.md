@@ -1656,13 +1656,16 @@ gallery (Technique videos).
       speed. Drawing the video over the stage with a matched camera waits until this has been used.
     - **Any bone, at the top and the bottom** (owner, 2026-11-03, #164): any bone (the spine's
       segments, the neck, the head, the shoulder blades, the hips, knees, ankles, wrists and
-      fingers) can be selected and turned on any axis, at the top or the bottom of the rep. The turn
+      fingers) can be selected and turned on any axis, at the top or the bottom of the rep. How far
       is saved in the entry as a bone offset on top of the solve (`top.offsets` and
       `bottom.offsets`, `{ <bone>: [x, y, z] }` in degrees about the axes the bone had in the bind
       pose: x across the body, y up, z forward). Every frame between is solved again: the two ends
-      blended, then the limbs reaching what they hold and stand on, since the trunk's and the
-      shoulder blades' turns come before the limbs are solved; the rep replays at once with the
-      checks on every frame. A hand turned this way counts as the pose setting its wrist. An entry
+      blended, then IK holding the contacts. The trunk and the shoulder blades are turned before
+      the limbs reach from them; a limb's own offsets are applied and the limb is solved again to
+      what it holds or stands on: the thigh or the upper arm swings the knee or the elbow round the
+      line to the contact, the shin or the forearm keeps only its twist (the contact sets how far
+      the joint bends), and the foot or the hand keeps its whole offset, the limb moving to hold
+      it. The rep replays at once with the checks on every frame. A hand turned this way counts as the pose setting its wrist. An entry
       without offsets bakes byte for byte as before. `[` `]` walk to the parent and the child bone,
       `{` `}` the previous and next sibling, `m` the mirror bone, `/` finds a bone by name, `x` `y`
       `z` pick the axis, and on the stage `h` `l` `H` `L` `=` `R` turn it as they step a number;
