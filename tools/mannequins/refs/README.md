@@ -22,7 +22,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | --- | --- | --- | --- |
 | 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), not yet posed |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover |
-| 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°) |
+| 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
 | 4 | [`pullup_dip_station`](pullup_dip_station/ref.md) | 16 | Rogue Crown Pull-up Bar and Monster Matador dip handles |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar |
 | 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY) |
@@ -75,7 +75,7 @@ gaps says why):
   yoke's top blocks, as photos 05 and 06 show them, where the ref's spec calls them vertical.
 - `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
   80 mm); the carriage position per exercise is chosen.
-- `smith_machine`: the 7 degree lean's direction, the bar and sleeve length and the hooks' turn are
+- `smith_machine` (built, #182): the 7 degree lean's direction, the bar and sleeve length and the hooks' turn are
   chosen; hook heights are from three-quarter renders (about ±10%). No video uses an angled smith.
 - `pullup_dip_station`: the bar height (2.30 m) is chosen and the dip handle height is rough, from one
   video. The chin-up video is unavailable.
