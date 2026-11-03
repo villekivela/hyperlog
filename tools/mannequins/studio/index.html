@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mannequin Studio</title>
 <style>
-/* Three panes: the list of everything, the one item on stage, and its numbers. The focused pane has
-   an edge in the focus colour; every control carries its key. */
+/* Four panes: the list of everything, the one item on stage, its technique video beside it, and its
+   numbers. The focused pane has an edge in the focus colour; every control carries its key. */
 :root {
   --ground: #ececef; --pane: #f8f8fa; --stage: #e3e3e8; --ink: #1c1c20; --quiet: #5f5f68; --line: #d2d2d8;
   --ok: #2f7a4f; --ok-tint: #dcefe3; --note: #8a5a00; --note-tint: #f6e9cc; --fail: #b3261e; --fail-tint: #f9dedc;
@@ -38,7 +38,7 @@
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--ground); color: var(--ink); font: 14px/1.4 var(--text); }
-.app { height: 100dvh; display: grid; grid-template-columns: 290px minmax(0, 1fr) 400px; grid-template-rows: auto minmax(0, 1fr) auto; }
+.app { height: 100dvh; display: grid; grid-template-columns: 290px minmax(0, 1fr) minmax(0, 1fr) 400px; grid-template-rows: auto minmax(0, 1fr) auto; }
 header { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--pane); }
 header h1 { font-size: 15px; font-weight: 650; margin: 0; letter-spacing: 0.01em; }
 header .message { flex: 1; min-width: 0; color: var(--quiet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -92,6 +92,21 @@ button:disabled { opacity: 0.45; cursor: default; }
 .checks li[data-ok="false"] .mark { background: var(--fail); }
 .checks li[data-ok="false"] .name { color: var(--fail); }
 .checks .found { font: 11px var(--mono); color: var(--quiet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The technique video. */
+.video { border-left: 1px solid var(--line); }
+.video .head { padding: 10px 12px 6px; display: grid; gap: 4px; }
+.video .where { font: 12px var(--mono); color: var(--quiet); font-variant-numeric: tabular-nums; display: flex; gap: 10px; flex-wrap: wrap; min-height: 18px; }
+.video .where strong { color: var(--ink); font-weight: 600; }
+.video .where [data-on="true"] { color: var(--focus); font-weight: 650; }
+.screen { position: relative; flex: 1; min-height: 0; background: #000; }
+.screen video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.screen .empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--quiet); background: var(--stage); text-align: center; padding: 24px; }
+.scrub { position: relative; padding: 8px 12px 2px; }
+.scrub input { width: 100%; margin: 0; }
+.scrub .mark { position: absolute; top: 0; height: 8px; width: 0; border-left: 2px solid var(--handle); pointer-events: none; }
+.scrub .mark::after { content: attr(data-label); position: absolute; top: -2px; left: 3px; font: 600 10px/1 var(--mono); color: var(--handle); }
+.scrub .span { position: absolute; top: 3px; height: 3px; background: var(--handle); opacity: 0.35; pointer-events: none; }
 
 /* The numbers. */
 .numbers { border-left: 1px solid var(--line); }
@@ -173,6 +188,27 @@ dialog h2 { margin: 0 0 12px; font-size: 16px; }
     </div>
     <ul class="checks" id="checks" aria-label="Checks"></ul>
   </main>
+
+  <section class="pane video" id="video" data-pane="video" aria-label="Technique video">
+    <div class="head">
+      <h2>Video <span><a id="link" target="_blank" rel="noreferrer" hidden>YouTube</a></span></h2>
+      <div class="where" id="where"></div>
+    </div>
+    <div class="screen" id="screen"><video id="footage" muted playsinline preload="auto" disablepictureinpicture></video><div class="empty" id="no-video">No exercise open.</div></div>
+    <div class="scrub" id="scrub"><input type="range" id="scrubber" min="0" max="1" step="any" value="0" tabindex="-1" aria-label="Video time"><span class="span" id="loop-span" hidden></span><span class="mark" id="mark-a" data-label="A" hidden></span><span class="mark" id="mark-b" data-label="B" hidden></span></div>
+    <div class="transport">
+      <button type="button" data-command="videoPlay">Play</button>
+      <button type="button" data-command="videoFrameBack">Frame −</button>
+      <button type="button" data-command="videoFrameOn">Frame +</button>
+      <button type="button" data-command="videoSecondBack">−1 s</button>
+      <button type="button" data-command="videoSecondOn">+1 s</button>
+      <button type="button" data-command="videoSlower">Slower</button>
+      <button type="button" data-command="videoFaster">Faster</button>
+      <button type="button" data-command="loopStart">A</button>
+      <button type="button" data-command="loopEnd">B</button>
+      <button type="button" data-command="sync">Sync</button>
+    </div>
+  </section>
 
   <aside class="pane numbers" id="numbers" data-pane="numbers" aria-label="Numbers">
     <div class="head">

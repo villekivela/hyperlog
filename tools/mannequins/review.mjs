@@ -163,6 +163,21 @@ export async function addNote(item, note, { dir = REVIEW, clips = CLIPS, at = ne
   await writeFile(notesFile(dir), out);
 }
 
+const loopsFile = (dir) => path.join(dir, 'loops.json');
+
+/**
+ * Each exercise's A–B loop on its technique video, `{ a, b }` in seconds (A the top of the rep, B
+ * the bottom, either null until set), which the studio saves so the video reopens on the same rep.
+ */
+export const readLoops = ({ dir = REVIEW } = {}) => readFile(loopsFile(dir), 'utf8').then(JSON.parse, () => ({}));
+
+/** Saves exercise `id`'s A–B loop in `dir`'s loops.json, or clears it for a null `loop`. */
+export async function setLoop(id, loop, { dir = REVIEW } = {}) {
+  const loops = await readLoops({ dir });
+  if (loop) loops[id] = { a: loop.a, b: loop.b }; else delete loops[id];
+  await writeFile(loopsFile(dir), JSON.stringify(sorted(loops), null, 2) + '\n');
+}
+
 /** Where one exercise stands: from its verdict, the fingerprint of its clip now and its open notes. */
 function stateOf(verdict, now, notes) {
   if (verdict?.ok && verdict.clip === now) return verdict.phone === now ? 'phone-checked' : 'ok';

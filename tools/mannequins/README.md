@@ -392,6 +392,16 @@ listens on localhost only.
   that, and `=` types a value (`412.5`, or `+2` and `+-2` to move it). A drag of a handle sets the
   same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
   `body.arch`), a point whole.
+- **The technique video** of an exercise with a video link in `exercises.json` is beside the
+  stage, opened at the link's timestamp. The first time it is opened the studio fetches it with
+  `yt-dlp` (the picture only, 720p at most, played muted) into a cache outside the repo,
+  `~/.cache/hyperlog/videos` (`$XDG_CACHE_HOME`, or `MANNEQUIN_VIDEOS` to move it), and reuses that
+  copy, so a video shared by several exercises is fetched once. Without a link, or offline, the
+  panel says so and the rest of the studio works as before. `[` and `]` set the loop's start (A,
+  the top of the rep) and end (B, the bottom), saved in `review/loops.json`; the video reopens on
+  them. With sync on (`gv`) and both ends set, the loop is the rep: a step or a scrub of the video
+  moves the stage, the stage's own play, holds and steps move the video, and both play at the
+  clip's tempo, slowed to the video's speed.
 - **Saving** (`:w`) writes the tuned numbers into `poses.mjs` as text (`patch.mjs`, so the comments
   stay) and re-bakes every clip in a process of its own (the kit files are shared, so one clip
   can't bake alone), then shows the new clip. A pose that fails its checks doesn't bake, any pose,
@@ -413,7 +423,7 @@ one (`5l`, `3j`). A new key goes into `keys.json`, under its group, with what it
 | Key | Does |
 | --- | --- |
 | `j` `k`, `gg` `G` | Next / previous item in the focused list (sidebar, numbers); first / last |
-| `Tab` | Cycle focus: sidebar → stage → numbers |
+| `Tab` | Cycle focus: sidebar → stage → video → numbers |
 | `/` then `n` `N` | Find an exercise, a kit or a number; next / previous match |
 | `f` | Filter the sidebar |
 | `t` / `b`, `Space`, `,` `.` | Hold at the top / the bottom; play or pause; step a frame |
@@ -424,6 +434,17 @@ one (`5l`, `3j`). A new key goes into `keys.json`, under its group, with what it
 | `u` / `Ctrl+r` | Undo / redo |
 | `:w` | Save and re-bake |
 | `o` / `a` | OK the exercise (again takes it back) / add a note |
+
+With the video focused, its own keys take over (a group in `keys.json` with `"focus": "video"`):
+
+| Key | Does |
+| --- | --- |
+| `Space` | Play / pause (the rep and the video together when synced) |
+| `h` `l` | One frame back / forward; a count multiplies |
+| `H` `L` | 1 s back / forward |
+| `<` `>` | Speed down / up: 0.25×, 0.5×, 1× |
+| `[` `]` | Set the loop's start (A, the top of the rep) / end (B, the bottom) at this frame |
+| `gv` | Sync with the rep, or not |
 
 ## Reviewing a batch
 
@@ -439,6 +460,8 @@ The owner's OK and notes are files in the repo, written by the studio:
 - **A note** (`a`) goes into `review/notes.md`, under a heading for the exercise (`## barbell_row`)
   or the kit (`## kit:cable_tower`), as a bullet with the day and, for a posed exercise, the clip
   it was left on. Read it, fix what it asks, and delete the bullet.
+- **A loop** (`[` and `]` on the technique video) goes into `review/loops.json` as
+  `{ "<id>": { "a": <s>, "b": <s> } }`, the times in the video of the rep's top and bottom.
 - **A phone check**: `npm run review -- phone <batch>` puts `phone`, the fingerprint of each
   exercise's clip now, into the batch's file, once the owner has swiped it in the debug gallery.
 
@@ -451,7 +474,8 @@ has now.
 
 - `render.mjs`: PNGs of a pose, with no GPU.
 - `studio/`: the studio. `plugin.mjs` its server, `studio.js` and `index.html` its page,
-  `keys.json` and `keys.mjs` its keymap, `vite.config.mjs` what `npm run studio` serves.
+  `keys.json` and `keys.mjs` its keymap, `video.mjs` the technique video's steps, speeds and sync,
+  `vite.config.mjs` what `npm run studio` serves.
 - `tune.mjs`, `handles.mjs`, `patch.mjs`: the studio's numbers, its drag handles, and the text patch
   a save writes into `poses.mjs`.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
@@ -467,8 +491,9 @@ has now.
   animation, `lowering`, and writes the files. `glb.mjs` moves the shared mannequin into
   `mannequin.bin` and each kit's parts into `kit_<name>.bin`.
 - `trace.mjs` and `trace/landmarks.py`: tracing a pose from footage. `traces/`: the traced angles.
-- `review.mjs`: the batches, the OKs and notes, and a batch's status. `review/<batch>.json`: each
-  batch's verdicts; `review/notes.md`: the open notes.
+- `review.mjs`: the batches, the OKs, notes and loops, and a batch's status. `review/<batch>.json`:
+  each batch's verdicts; `review/notes.md`: the open notes; `review/loops.json`: the technique
+  videos' A–B loops.
 - `model/mannequin.glb`: the mannequin, stripped to its mesh and skeleton (see `CREDITS.md`).
 
 ## A clip

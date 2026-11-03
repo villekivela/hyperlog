@@ -92,7 +92,9 @@ three.js, see its README) and committed under `app/src/main/assets/mannequins/`.
 them in Settings → Debug → Mannequin gallery. Poses are made in batches, each checked and reviewed
 in the studio (`npm run studio`, served at `http://localhost:5190/studio/`), and a batch that adds
 or changes a kit is swiped in the gallery too (the README's Making a batch). Tracing a pose from a
-clip needs Python with MediaPipe and its model, which the project doesn't install.
+clip needs Python with MediaPipe and its model, which the project doesn't install. The studio's
+technique videos need `yt-dlp` on PATH; they are cached in `~/.cache/hyperlog/videos`, never in
+the repo.
 
 ## UI work: designer and tester
 

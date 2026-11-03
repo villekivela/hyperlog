@@ -1,5 +1,5 @@
 // The studio's page (README, The studio): the sidebar of every exercise and kit, the one item on
-// stage, posed live with the tool's own modules, and its numbers. Everything is a command from
+// stage, posed live with the tool's own modules, its technique video, and its numbers. Everything is a command from
 // keys.json, so a key, a button and the help sheet all do the same thing; the mouse is optional.
 // The server (plugin.mjs) prepares each entry and writes what is saved, OK'd or noted.
 import * as THREE from 'three';
@@ -12,6 +12,7 @@ import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, tunables, tu
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
+import { faster, repAt, slower, stepFrames, stepSeconds, synced, timeAt } from './video.mjs';
 
 const keys = keymap(KEYS);
 const $ = (id) => document.getElementById(id);
@@ -19,7 +20,7 @@ const css = (name) => getComputedStyle(document.documentElement).getPropertyValu
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copy = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', error: "Can't pose" };
-const PANES = ['sidebar', 'stage', 'numbers'];
+const PANES = ['sidebar', 'stage', 'video', 'numbers'];
 
 // What the page keeps across a reload (a change to kit.mjs or poses.mjs reloads it): where it was,
 // and each item's numbers not yet saved.
@@ -46,6 +47,9 @@ const state = {
   filter: remembered.filter ?? '',
   find: null, // { matches, at }
   input: null, // what the bar or a box is taking: find, ex, type or note
+  video: null, // the item's technique video: { link, start, loop, src, fps, duration } once fetched
+  sync: remembered.sync ?? true, // the video and the rep move together, once the loop is set
+  speed: remembered.speed ?? 1,
 };
 
 function remember() {
@@ -54,6 +58,7 @@ function remember() {
   try {
     sessionStorage.setItem(MEMORY, JSON.stringify({
       current: state.current, unsaved: state.unsaved, selected: state.selected, focus: state.focus, show: state.show, filter: state.filter,
+      sync: state.sync, speed: state.speed,
     }));
   } catch { /* a private window keeps nothing; the page works without it */ }
 }
@@ -195,9 +200,13 @@ function along(seconds) {
   return 0;
 }
 
-const started = performance.now();
+// The rep's clock: seconds of the loop played, slowed with the video's speed while the two are synced.
+let clock = 0;
+let lastNow = null;
 let loopFrom = 0;
 function draw(now) {
+  clock += lastNow === null ? 0 : ((now - lastNow) / 1000) * (isSynced() ? state.speed : 1);
+  lastNow = now;
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
   if (w && h && (canvas.width !== Math.round(w * renderer.getPixelRatio()) || canvas.height !== Math.round(h * renderer.getPixelRatio()))) {
@@ -205,8 +214,9 @@ function draw(now) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-  const d = Math.min(along((now - started) / 1000 - loopFrom), 1);
+  const d = Math.min(along(clock - loopFrom), 1);
   if (state.show === 'loop') state.d = d;
+  followVideo(d);
   if (state.clip && mixer) mixer.setTime(Math.min(d, 0.9999) * duration);
   else if (live) live.stage.pose(d);
   for (const m of markers.children) m.scale.setScalar(camera.position.distanceTo(m.position) * 0.009);
@@ -475,6 +485,7 @@ async function openItem(key, { keepTuned = false } = {}) {
   paintNumbers();
   paintList();
   remember();
+  if (fresh) openVideo(item);
   if (item.entry) {
     $('empty').hidden = true;
     loadClip().catch(() => {});
@@ -638,6 +649,184 @@ function nudge(direction, fine, count) {
   changed();
 }
 
+// ---- The technique video ------------------------------------------------------------------------
+
+// Fetched by the server the first time an exercise is opened (plugin.mjs) and played muted. With
+// sync on and both ends of its loop set, A is the top of the rep and B the bottom: the stage drives
+// the video while it plays or steps, and a step or a scrub of the video moves the stage.
+const footage = $('footage');
+footage.muted = true;
+const scrubber = $('scrubber');
+/** Whether the video and the rep move together now. */
+const isSynced = () => Boolean(live && state.video?.src) && synced(state.video.loop, state.sync);
+const wholeLoop = () => synced(state.video?.loop, true);
+const timeLabel = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
+
+let asked = null; // the exercise whose video is being fetched
+async function openVideo(item) {
+  asked = item.id;
+  footage.pause();
+  footage.removeAttribute('src');
+  footage.load();
+  state.video = item.kind === 'exercise' && item.video ? { ...item.video } : null;
+  $('link').hidden = !state.video;
+  if (state.video) $('link').href = state.video.link;
+  if (!state.video) {
+    noVideo(item.kind === 'kit' ? 'A kit has no technique video.' : 'No video link for this exercise in exercises.json.');
+    return;
+  }
+  noVideo('Fetching the video… (once: it is kept in the cache)');
+  let got;
+  try {
+    got = await api(`/api/video/${item.id}`);
+  } catch (err) {
+    if (asked === item.id) noVideo(`${err.message}. The stage works without it.`);
+    return;
+  }
+  if (asked !== item.id) return;
+  Object.assign(state.video, got);
+  footage.addEventListener('loadedmetadata', () => {
+    footage.playbackRate = state.speed;
+    // On its loop's top if it has one, else at the link's timestamp; a synced video follows the stage.
+    footage.currentTime = state.video.loop?.a ?? state.video.start;
+    pushed = null;
+    paintVideo();
+  }, { once: true });
+  footage.src = got.src;
+  $('no-video').hidden = true;
+  paintVideo();
+}
+
+function noVideo(text) {
+  $('no-video').hidden = false;
+  $('no-video').textContent = text;
+  paintVideo();
+}
+
+let pushed = null; // how far down the rep the stage last moved the video to
+let lastT = 0;
+/** Each frame: the video follows the stage when synced, else it plays its A–B loop round. */
+function followVideo(d) {
+  const v = state.video;
+  if (!v?.src || footage.readyState < 1) return;
+  if (isSynced()) {
+    if (d !== pushed && !footage.seeking) {
+      footage.currentTime = timeAt(v.loop, d);
+      pushed = d;
+    }
+  } else if (!footage.paused && wholeLoop()) {
+    const [lo, hi] = [Math.min(v.loop.a, v.loop.b), Math.max(v.loop.a, v.loop.b)];
+    if (lastT < hi && footage.currentTime >= hi) footage.currentTime = lo;
+  }
+  lastT = footage.currentTime;
+  paintVideo();
+}
+
+/** Puts the video at `t`, paused; when synced, the stage goes where the video is. */
+function seekVideo(t) {
+  const v = state.video;
+  if (!v?.src) { message('No video to move'); return; }
+  footage.pause();
+  footage.currentTime = t;
+  if (isSynced()) {
+    state.d = repAt(v.loop, t);
+    pushed = state.d;
+    setShow('paused');
+    message(`the rep at frame ${Math.round(state.d * (FRAMES - 1))} of ${FRAMES - 1}`);
+  }
+  paintVideo();
+}
+
+/** Moves the video to where `to(time, video)` says, from where it is. */
+const stepVideo = (to) => (state.video?.src ? seekVideo(to(footage.currentTime, state.video)) : message('No video to move'));
+
+function playVideo() {
+  const v = state.video;
+  if (!v?.src) { message('No video to play'); return; }
+  if (isSynced()) { run('play', null); paintCommands(); return; }
+  if (!footage.paused) { footage.pause(); return; }
+  if (wholeLoop()) {
+    const [lo, hi] = [Math.min(v.loop.a, v.loop.b), Math.max(v.loop.a, v.loop.b)];
+    if (footage.currentTime < lo || footage.currentTime >= hi) footage.currentTime = lo;
+  }
+  footage.play().catch((err) => message(`The video won't play: ${err.message}`, 'error'));
+}
+
+function setSpeed(speed) {
+  state.speed = speed;
+  footage.playbackRate = speed;
+  remember();
+  paintVideo();
+  message(`${speed}×${isSynced() ? ', the rep with it' : ''}`);
+}
+
+/** Sets the loop's start (`a`, the top of the rep) or its end (`b`, the bottom) here, and saves it. */
+async function setLoopEnd(end) {
+  const v = state.video;
+  if (!v?.src) { message('No video to loop'); return; }
+  const t = Number(footage.currentTime.toFixed(3));
+  v.loop = { a: null, b: null, ...v.loop, [end]: t };
+  if (isSynced()) {
+    state.d = end === 'a' ? 0 : 1;
+    pushed = state.d;
+    setShow('paused');
+  }
+  paintVideo();
+  try {
+    await api('/api/loop', { id: state.item.id, loop: v.loop });
+    message(`${end === 'a' ? 'A, the top of the rep,' : 'B, the bottom of the rep,'} at ${timeLabel(t)}: saved in review/loops.json`);
+  } catch (err) {
+    message(err.message, 'error');
+  }
+}
+
+function toggleSync() {
+  state.sync = !state.sync;
+  remember();
+  if (state.sync && !wholeLoop()) message(`Sync is on, and waits for the loop: ${keys.keyOf('loopStart')} at the top of a rep, ${keys.keyOf('loopEnd')} at its bottom`);
+  else message(state.sync ? 'The video follows the rep, and the rep the video' : 'The video plays on its own');
+  if (isSynced()) { footage.pause(); pushed = null; }
+  paintCommands();
+  paintVideo();
+}
+
+let painted = '';
+function paintVideo() {
+  const v = state.video;
+  const t = footage.currentTime || 0;
+  const on = isSynced();
+  const where = !v?.src ? '' : [
+    `<strong>${timeLabel(t)}</strong>`, `frame ${Math.floor(t * v.fps)}`, `${state.speed}×`,
+    `A ${v.loop?.a == null ? '–' : timeLabel(v.loop.a)}`, `B ${v.loop?.b == null ? '–' : timeLabel(v.loop.b)}`,
+    `<span data-on="${on}">sync ${on ? 'on' : state.sync ? 'waits for A and B' : 'off'}</span>`,
+  ].join(' · ');
+  const key = `${where}|${v?.duration}`;
+  if (key === painted) return;
+  painted = key;
+  $('where').innerHTML = where;
+  for (const el of document.querySelectorAll('#video [data-command]')) el.disabled = !v?.src && el.dataset.command !== 'sync';
+  const duration = v?.duration || 1;
+  scrubber.max = duration;
+  scrubber.value = t;
+  scrubber.disabled = !v?.src;
+  const at = (s) => `calc(12px + (100% - 24px) * ${s / duration})`;
+  for (const end of ['a', 'b']) {
+    const mark = $(`mark-${end}`);
+    mark.hidden = v?.loop?.[end] == null || !v.src;
+    if (!mark.hidden) mark.style.left = at(v.loop[end]);
+  }
+  const span = $('loop-span');
+  span.hidden = !wholeLoop() || !v.src;
+  if (!span.hidden) {
+    span.style.left = at(Math.min(v.loop.a, v.loop.b));
+    span.style.width = `calc((100% - 24px) * ${Math.abs(v.loop.b - v.loop.a) / duration})`;
+  }
+}
+
+scrubber.addEventListener('input', () => seekVideo(Number(scrubber.value)));
+footage.addEventListener('play', () => paintCommands());
+footage.addEventListener('pause', () => paintCommands());
+
 // ---- Commands -----------------------------------------------------------------------------------
 
 function setFocus(pane) {
@@ -647,7 +836,7 @@ function setFocus(pane) {
 }
 
 function setShow(show) {
-  if (show === 'loop' && state.show !== 'loop') loopFrom = (performance.now() - started) / 1000 - loopOffset(state.d);
+  if (show === 'loop' && state.show !== 'loop') loopFrom = clock - loopOffset(state.d);
   state.show = show;
   showHandles();
   paintCommands();
@@ -939,6 +1128,16 @@ const COMMANDS = {
   cameraTop: () => turnTo(view.azimuth, 89.5),
   turnLeft: (n) => { view.azimuth += 10 * n; place(); },
   turnRight: (n) => { view.azimuth -= 10 * n; place(); },
+  videoPlay: () => playVideo(),
+  videoFrameBack: (n) => stepVideo((t, v) => stepFrames(t, -n, v.fps, v.duration)),
+  videoFrameOn: (n) => stepVideo((t, v) => stepFrames(t, n, v.fps, v.duration)),
+  videoSecondBack: (n) => stepVideo((t, v) => stepSeconds(t, -n, v.duration)),
+  videoSecondOn: (n) => stepVideo((t, v) => stepSeconds(t, n, v.duration)),
+  videoSlower: () => setSpeed(slower(state.speed)),
+  videoFaster: () => setSpeed(faster(state.speed)),
+  loopStart: () => setLoopEnd('a'),
+  loopEnd: () => setLoopEnd('b'),
+  sync: () => toggleSync(),
   ok: () => ok(),
   note: () => openNote(),
   help: () => openHelp(),
@@ -964,7 +1163,10 @@ for (const el of document.querySelectorAll('[data-command]')) {
 for (const el of document.querySelectorAll('[data-key]')) el.textContent = keys.keyOf(el.dataset.key);
 
 function paintCommands() {
-  const pressed = { holdTop: state.show === 'top', holdBottom: state.show === 'bottom', play: state.show === 'loop', clip: state.clip };
+  const pressed = {
+    holdTop: state.show === 'top', holdBottom: state.show === 'bottom', play: state.show === 'loop', clip: state.clip,
+    videoPlay: isSynced() ? state.show === 'loop' : !footage.paused, sync: state.sync,
+  };
   for (const el of document.querySelectorAll('[data-command]')) {
     if (el.dataset.command in pressed) el.setAttribute('aria-pressed', String(pressed[el.dataset.command]));
   }
@@ -995,7 +1197,7 @@ function openHelp() {
   for (const g of helpOf(KEYS)) {
     const section = document.createElement('section');
     section.innerHTML = '<h3></h3><dl></dl>';
-    section.querySelector('h3').textContent = g.name;
+    section.querySelector('h3').textContent = g.focus ? `${g.name}, with the ${g.focus} focused` : g.name;
     const dl = section.querySelector('dl');
     for (const r of g.rows) {
       const dt = document.createElement('dt');
@@ -1071,7 +1273,7 @@ document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape') { keys.reset(); $('pending').textContent = ''; return; }
   const token = tokenOf(ev);
   if (!token) return;
-  const done = keys.feed(token);
+  const done = keys.feed(token, state.focus);
   $('pending').textContent = keys.pending;
   if (done === null || done.command) ev.preventDefault();
   if (done?.command) run(done.command, done.count);

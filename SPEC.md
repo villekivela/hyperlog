@@ -1639,6 +1639,18 @@ gallery (Technique videos).
       of that), `=` types a value, `t` `b` hold the top or the bottom, `:w` saves and re-bakes, `o`
       OKs and `a` adds a note. The keymap is one file, `keys.json`; each control shows its key
       beside it, and `?` lists every key from that file.
+    - **The technique video beside the pose** (owner, 2026-11-03, #171): an exercise with a video
+      link shows the video in a panel beside the stage, opened at the link's timestamp, to compare
+      the two frame by frame. The studio fetches it with yt-dlp the first time, into a cache outside
+      the repo, and reuses that copy; a video is never committed. Without a link, or offline, the
+      panel says so and the studio works as before. The panel is a pane in the `Tab` cycle, and
+      with it focused its own keys take over: `Space` plays, `h` `l` step a frame, `H` `L` a second,
+      `<` `>` set the speed (0.25×, 0.5×, 1×), `[` `]` set the loop's start (A, the top of the rep)
+      and end (B, the bottom), and `gv` toggles sync. The A–B loop is saved per exercise beside its
+      OK and notes (`review/loops.json`), so the video reopens on the same rep. With sync on and a
+      loop set, the loop is the rep: scrubbing or stepping either one moves the other, and both play
+      together at the clip's tempo, slowed with the video's speed. Drawing the video over the stage
+      with a matched camera waits until this has been used.
   - **Batches and review:** poses are made in batches. The owner OKs each exercise in the studio, or
     leaves a note the agent reads and fixes. An OK is for the clip it was given on, and a batch isn't
     done until every exercise in it is OK. A batch that adds or changes a machine or a part is

@@ -36,27 +36,36 @@ export function labelOf(keys) {
 }
 
 /**
- * The keymap of `json` (keys.json's shape). `feed(token)` takes one key and returns the command
- * it completes, `{ command, count }` (the count typed before it, for a command that takes one,
- * else null; `command` null for a key nothing is bound to), or null while a binding is pending,
- * which `pending` shows. `:` opens the command line, whose text `ex(text)` looks up.
+ * The keymap of `json` (keys.json's shape). `feed(token, focus)` takes one key and returns the
+ * command it completes, `{ command, count }` (the count typed before it, for a command that takes
+ * one, else null; `command` null for a key nothing is bound to), or null while a binding is pending,
+ * which `pending` shows. A group with a `focus` is bound only while that pane is focused, and there
+ * its keys take over the others'. `:` opens the command line, whose text `ex(text)` looks up.
  */
 export function keymap(json) {
-  const bindings = new Map();
+  // The bindings everywhere (''), and each pane's own.
+  const scopes = new Map([['', new Map()]]);
   for (const group of json.groups) {
+    const scope = group.focus ?? '';
+    if (!scopes.has(scope)) scopes.set(scope, new Map());
     for (const b of group.keys) {
       if (/^[1-9]/.test(b.keys)) throw new Error(`${b.keys} is a count`);
-      if (bindings.has(b.keys)) throw new Error(`${b.keys} is bound twice`);
-      bindings.set(b.keys, b);
+      if (scopes.get(scope).has(b.keys)) throw new Error(`${b.keys} is bound twice`);
+      scopes.get(scope).set(b.keys, b);
     }
   }
+  const bindingsAt = (focus) => new Map([...scopes.get(''), ...(focus ? scopes.get(focus) ?? [] : [])]);
   // A binding that is the first keys of another would never wait for the rest.
   const starts = (a, b) => a.length < b.length && a.every((t, i) => t === b[i]);
-  for (const k of bindings.keys()) {
-    for (const other of bindings.keys()) {
-      if (starts(tokensOf(k), tokensOf(other))) throw new Error(`${k} starts ${other}`);
+  for (const focus of scopes.keys()) {
+    const keys = [...bindingsAt(focus).keys()];
+    for (const k of keys) {
+      for (const other of keys) {
+        if (starts(tokensOf(k), tokensOf(other))) throw new Error(`${k} starts ${other}`);
+      }
     }
   }
+  const all = [...scopes.values()].flatMap((m) => [...m.values()]);
   const ex = new Map(json.ex.map((c) => [c.name, c.command]));
   let digits = '';
   let keys = '';
@@ -67,12 +76,13 @@ export function keymap(json) {
   };
   return {
     get pending() { return digits + keys; },
-    feed(token) {
+    feed(token, focus = '') {
       if (!keys && (/^[1-9]$/.test(token) || (digits && token === '0'))) {
         digits += token;
         return null;
       }
       if (!keys && token === ':') return done('ex', null);
+      const bindings = bindingsAt(focus);
       const at = keys + token;
       const bound = bindings.get(at);
       if (bound) return done(bound.command, bound.count && digits ? Number(digits) : null);
@@ -86,17 +96,17 @@ export function keymap(json) {
     ex: (text) => ex.get(text.trim()) ?? null,
     /** The key a command is on, as the UI labels it: `:w` for a command-line one. */
     keyOf(command) {
-      for (const b of bindings.values()) if (b.command === command) return labelOf(b.keys);
+      for (const b of all) if (b.command === command) return labelOf(b.keys);
       for (const [name, c] of ex) if (c === command) return `:${name}`;
       return null;
     },
   };
 }
 
-/** The help sheet: each group of keys.json with its keys labelled, then the command line's. */
+/** The help sheet: each group of keys.json with its keys labelled (and the pane it is bound to), then the command line's. */
 export function helpOf(json) {
   return [
-    ...json.groups.map((g) => ({ name: g.name, rows: g.keys.map((b) => ({ keys: b.keys, label: labelOf(b.keys), does: b.does })) })),
-    { name: 'Commands', rows: json.ex.map((c) => ({ keys: `:${c.name}`, label: `:${c.name}`, does: c.does })) },
+    ...json.groups.map((g) => ({ name: g.name, focus: g.focus ?? null, rows: g.keys.map((b) => ({ keys: b.keys, label: labelOf(b.keys), does: b.does })) })),
+    { name: 'Commands', focus: null, rows: json.ex.map((c) => ({ keys: `:${c.name}`, label: `:${c.name}`, does: c.does })) },
   ];
 }
