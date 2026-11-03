@@ -257,11 +257,12 @@ export const POSES = {
   chest_supported_machine_row: {
     equipment: 'machine',
     motion: 'lever_handles',
-    kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.42, front: 0.13 } } },
-    body: { hip: [0.59, 0], trunk: 25 },
-    pivot: [1.67, 0.53],
-    top: { handle: [1.0, 0.8], press: 0 },
-    bottom: { handle: [0.95, 0.45], press: 1 },
+    kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.36, front: 0.085 } } },
+    body: { hip: [0.59, 0], trunk: 5 },
+    // The levers' pivot low in front of the knees, the same distance from both handles.
+    pivot: [0.45, 0.527],
+    top: { handle: [1.0, 0.62], press: 0 },
+    bottom: { handle: [0.95, 0.28], press: 1 },
     feet: { stance: 0.16, z: 0.45, toeOut: 10 },
     grip: { width: 0.22, rotate: 90, pole: [0.4, -0.6, -1] },
     camera: { target: [0, 0.8, 0.3], halfHeight: 0.92, azimuth: 66, elevation: 10 },
@@ -271,9 +272,10 @@ export const POSES = {
   machine_pulldown: {
     equipment: 'machine',
     motion: 'lever_handles',
-    kit: { pulldown_machine: { seat: [0.47, 0.02], thighPad: [0.71, 0.3] } },
+    kit: { pulldown_machine: { seat: [0.47, 0.02], thighPad: [0.66, 0.3], pad: 0.2 } },
     body: { hip: [0.56, 0], trunk: -15 },
-    pivot: [1.45, 0.85],
+    // The levers' pivot on the portal ahead of the head, the same distance from both handles.
+    pivot: [1.29, 0.85],
     top: { handle: [1.6, 0.17], press: 0 },
     bottom: { handle: [1.12, 0.12], press: 1 },
     feet: { stance: 0.16, z: 0.32, toeOut: 12 },
@@ -281,13 +283,13 @@ export const POSES = {
     camera: { target: [0, 1.1, 0.35], halfHeight: 1.15, azimuth: 62, elevation: 8 },
   },
 
-  // Seated, the upper arms down the pad: the bar curls from the arms near straight up toward the
-  // shoulders.
+  // Seated, leaning onto the pad, the chest against its back edge and the upper arms down it: the
+  // bar curls from the arms near straight up toward the shoulders.
   machine_preacher_curl: {
     equipment: 'machine',
     motion: 'arms',
-    kit: { preacher_curl_machine: { seat: [0.5, 0] } },
-    body: { hip: [0.59, 0], trunk: 5 },
+    kit: { preacher_curl_machine: { seat: [0.5, 0], pad: 0.08 } },
+    body: { hip: [0.59, 0], trunk: 20 },
     top: { upperArm: 65, forearm: 160 },
     bottom: { upperArm: 65, forearm: 72 },
     feet: { stance: 0.16, z: 0.4, toeOut: 10 },

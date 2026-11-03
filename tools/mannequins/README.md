@@ -239,8 +239,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `squat_machine` the platform, the rails along the hips' path and a carriage riding them, its
   back pad's face `pad` metres behind the hips and its handles along the grip;
   `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
-  `pulldown_machine` the thigh rollers at `thighPad` [y, z]; and `row_machine`,
-  `pulldown_machine` and `preacher_curl_machine` levers on hubs at the pose's pivot or elbows.
+  `pulldown_machine` a back pad `pad` metres behind the spine and thigh pads at `thighPad` [y, z],
+  hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
+  its front edge short of the elbows. The three are plate-loaded: `row_machine` and
+  `pulldown_machine` turn their levers on hubs at the pose's `pivot` (the row's low in front of the
+  knees, the pulldown's on a portal ahead of the head), each lever carrying a loaded horn on an
+  arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
+  elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
+  muscle works.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
