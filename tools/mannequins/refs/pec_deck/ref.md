@@ -9,11 +9,11 @@ Seated horizontal adduction (pec fly) on two lever arms that swing in a horizont
 One machine, no variants: arm pads vs handles is a hand-position difference, not a movement difference.
 
 ## Based on
-- Brand and model: Hammer Strength Select Pectoral Fly / Rear Deltoid (product code HS-PEC). Owner's preferred brand; Hammer Strength is also the only brand of the four with a combo machine on a manufacturer page that states its footprint.
+- Brand and model: Hammer Strength Select Pectoral Fly / Rear Deltoid (product code HS-PEC). Owner's preferred brand; The Hammer Strength page states the footprint; the other makers' combo machines had none.
 - Product page (Life Fitness US): https://lifefitness.com/en-us/catalog/strength-training/selectorized/hammer-strength-select-pectoral-fly
 - Australian product page (dimensions 124 x 142 x 181 cm): https://www.lifefitness.com.au/commercial/pectoral-fly-hs-pec
 - Spec sheet or manual: none found. Brochure for the whole line (no per-machine numbers, checked): https://www.lifefitness.com.au/sb-assets/292045577297161/x/d78f528b33/pm-012-hs-sel-260507.pdf
-- Photo links (all that I could get; none is side-on or a pivot close-up):
+- Photo links (all that were reachable; none is side-on or a pivot close-up):
   - Front/three-quarter hero: https://resources.fitshop.com/bilder/hammerstrength/flyreardelt/hammerstrength-pecflyreardelt-1_1600.jpg
   - Same product page it came from: https://fitshop.com/en/hammer-strength-by-life-fitness-multi-gym-select-fly-rear-delt-lf-hs-fly
   - Dealer page, photos not fetched (403): https://gymequipment.co.uk/hammer-strength-select-se-full-pectoral-fly-rear-deltoids

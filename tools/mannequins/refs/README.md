@@ -8,7 +8,7 @@ later, downscaled.
 
 Dimensions marked "estimated" or "not published" are gaps: most makers publish a footprint, a
 height and a stack, but not seat heights, pivot places or ranges of motion. Each file's last section
-lists the photos to take at Hukka to close them.
+lists the photos to take at Hukka (the owner's gym) to close them.
 
 ## Build order
 
@@ -23,9 +23,9 @@ The cable crossover, then the smith machine, then the rest by exercises served.
 | 5 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid |
 | 6 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise |
 | 7 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction |
-| 8 | [`shrug_machine`](shrug_machine/ref.md) | 2 | Hammer Strength Plate-Loaded Shrug |
-| 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar |
-| 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 2 | Bench Fitness REVOLVE 45 Degree Back Extension |
+| 8 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar |
+| 9 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 2 | Bench Fitness REVOLVE 45 Degree Back Extension |
+| 10 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug |
 | 11 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
 | 12 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip |
 | 13 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive |
@@ -48,8 +48,8 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
 - `weighted_bodyweight` is the pull-up and dip station plus a belt (its file notes the belt is drawn
   as a plate at the hips) and the hyperextension bench.
 - Nordic and reverse nordic curls need only a pad and an anchor (a note in the hyperextension file).
-- The Kelso shrug is done face down on an incline bench with dumbbells, so it needs the `bench` kit
-  rather than the shrug machine.
+- `kit.mjs` lists `kelso_shrug` under `shrug_machine`, but it is not that machine: it is done face down on an incline bench with dumbbells, so it needs the `bench` kit.
+  #161 should move it out of `MACHINES`.
 
 ## Gaps
 

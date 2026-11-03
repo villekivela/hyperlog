@@ -8,7 +8,7 @@ A frame with an angled hip pad and a heel/ankle support: the lifter lies face-do
 - Product page: none found (a guessed bench-fitness URL returned HTTP 429, so not cited).
 - Spec sheet (fetched; two pages, the second is a dimensioned side and top drawing): https://cdn.shopify.com/s/files/1/2716/9828/files/REVOLVE_45_Degree_Back_Extension_-_Spec_sheet.pdf
 - Photos: page 1 of the PDF has a three-quarter product render and three close-ups (angle adjustment pin, height adjustment, heel lock); page 2 has a side drawing and a top drawing. No separate photo links.
-- Why not the owner's brands: Rogue sells only a reverse hyper (Z Hyper, https://www.roguefitness.com/rogue-z-hyper), not a 45-degree bench. I could not find a Hammer Strength or Hoist spec sheet with dimensions.
+- Why not the owner's brands: Rogue sells only a reverse hyper (Z Hyper, https://www.roguefitness.com/rogue-z-hyper), not a 45-degree bench. No Hammer Strength or Hoist spec sheet with dimensions was found.
 
 ## Key dimensions (mm)
 | Dimension | mm | Source |

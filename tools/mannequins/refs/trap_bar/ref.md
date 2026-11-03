@@ -6,7 +6,7 @@ A hexagonal frame the lifter stands inside, gripping two parallel handles at the
 ## Based on
 - Brand and model: Rogue TB-3 Open Trap Bar (open-frame setup, rackable version for the long length).
 - Product page (fetched): https://www.roguefitness.com/rogue-tb-3-open-trap-bar
-- Spec sheet: the "Specs" block on that page plus its two dimension diagrams (handle heights, frame lengths), which I downloaded and read.
+- Spec sheet: the "Specs" block on that page plus its two dimension diagrams (handle heights, frame lengths), read from the page.
 - Photos and diagrams (all fetched from the page above; the first two are drawings with dimensions on a photo of the bar):
   - Handle heights, single and 4 in offset: https://assets.roguefitness.com/f_auto,q_auto,c_fill,g_center,w_1284,h_655,b_rgb:f8f8f8/v1/catalog/Weightlifting%20Bars%20and%20Plates/Barbells/Specialty%20Barbells/RF1129/Trap-Bar-Handle-Height-Specs_unhpk4.png
   - Open frame, whole bar (non-rackable and rackable lengths, 25 in handle spacing): https://assets.roguefitness.com/f_auto,q_auto,c_fill,g_center,w_1284,h_591/v1/catalog/Weightlifting%20Bars%20and%20Plates/Barbells/Specialty%20Barbells/RF1129/TB-3-Specs-open_vg7jz0.png
@@ -38,7 +38,7 @@ Nothing moves while lifting. The dual-height handle is a rigid pair of rollers o
 ## Adjustments and fit rules
 - Choose low (225 mm) or high (327 mm) handle height before the set, never both at once.
 - Handles stay parallel and 635 mm apart; the lifter's hands grip the handle centre.
-- Loaded plates rest on the floor; the frame sits on the plates, so handle heights above assume 450 mm plates (my inference from the 8.875 in value matching a 450 mm plate radius).
+- Loaded plates rest on the floor; the frame sits on the plates, so handle heights above assume 450 mm plates (inferred from the 8.875 in value matching a 450 mm plate radius).
 - Rackable length only matters if the bar is placed in a rack (not for the deadlift).
 
 ## Owner photos to take at Hukka

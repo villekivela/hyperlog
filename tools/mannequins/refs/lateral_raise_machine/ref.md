@@ -3,7 +3,7 @@
 ## Movement and exercises served
 Seated shoulder abduction: the user's forearms or hands press against pads on two lever arms whose pivots line up with the shoulder joints, and the arms rise out to the sides, loaded by one weight stack.
 - `machine_lateral_raise`: seated.
-- `standing_machine_lateral_raise`: the same movement. I found no source for a separate standing machine. Treat it as this machine with the user standing beside the seat (seat dropped or ignored), or as the same kit with a standing pose. Whether a standing user can actually reach the pads on the Hukka machine is unverified; see the last section.
+- `standing_machine_lateral_raise`: the same movement. No source shows a separate standing machine. Treat it as this machine with the user standing beside the seat (seat dropped or ignored), or as the same kit with a standing pose. Whether a standing user can actually reach the pads on the Hukka machine is unverified; see the last section.
 
 ## Based on
 - Brand and model: Hammer Strength Select Lateral Raise (product code HS-LR). Owner's preferred brand; its page gives a footprint and a stack and nothing contradicts it.

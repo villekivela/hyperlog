@@ -5,7 +5,7 @@ Seated triceps and chest dip: the user sits upright (or slightly reclined), hold
 - `seated_dip_machine`.
 
 ## Based on
-- Brand and model: Hoist ROC-IT RS-1101 Seated Dip (selectorized). Chosen over Hammer Strength because I found no selectorized Hammer Strength seated dip; its seated dip is the plate-loaded PL-DIP (https://www.lifefitness.com.au/commercial/seated-dip-pldip, 1680 x 1240 x 1090 mm, 130 kg, 4 horns, no range of motion given). Hoist is also the owner's brand.
+- Brand and model: Hoist ROC-IT RS-1101 Seated Dip (selectorized). Chosen over Hammer Strength because Hammer Strength has no selectorized seated dip; its seated dip is the plate-loaded PL-DIP (https://www.lifefitness.com.au/commercial/seated-dip-pldip, 1680 x 1240 x 1090 mm, 130 kg, 4 horns, no range of motion given). Hoist is also the owner's brand.
 - Dealer page with specs and images: https://www.fitshop.com/en/hoist-roc-it-101-seated-dip-h-rs-1101
 - Other dealer listing with the same width, height, length and weight: https://threesixtysports.squarespace.com/products/p/roc-it-hoist-seated-dip
 - Hoist product page: https://www.hoistfitness.com/pages/rs-1101-seated-dip (not read: HTTP 429)

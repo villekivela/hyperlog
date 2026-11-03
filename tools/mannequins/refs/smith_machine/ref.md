@@ -7,7 +7,7 @@ Barbell moves along a fixed path (about 7 degrees off vertical on the angled mod
 
 Ids: ffe_smith_machine_lunge, smith_machine_bench_press, smith_machine_incline_press, smith_machine_jm_press, smith_machine_lunge, smith_machine_rdl, smith_machine_seated_press, smith_machine_squat, split_squat_smith.
 
-Note: the issue says 8 exercises but there are 9 ids. `ffe_smith_machine_lunge` and `smith_machine_lunge` look like the same movement, the ffe_ one being the front-foot-elevated variant. No separate machine variant is needed; the difference is a platform under the front foot, not the machine.
+Note: 9 ids, 8 distinct movements. `ffe_smith_machine_lunge` and `smith_machine_lunge` look like the same movement, the ffe_ one being the front-foot-elevated variant. No separate machine variant is needed; the difference is a platform under the front foot, not the machine.
 
 ## Based on
 - Brand/model: Hammer Strength Smith Machine (angled, 7 degree; plate-loaded). Variant with vertical path: Hammer Strength Vertical Smith Machine (HSSMV).

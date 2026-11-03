@@ -38,7 +38,7 @@ Nothing moves. Hanging: the hands wrap the bar, body hangs below it, so the shou
 ## Adjustments and fit rules
 - Pull-up/chin-up variants differ only by hand position: close and neutral on the 406 mm spheres or inner grips, wide on the 813 mm spheres or the bar ends, `2_grip_pullup` mixes one overhand and one neutral.
 - Dip handle spacing is a fixed choice per rig (451 to 629 mm); close-grip dip uses the inner position.
-- The bar height is set so the lifter's feet clear the floor on dead hang; the mannequin should hang with arms fully extended and feet at least about 100 mm off the floor (my assumption).
+- The bar height is set so the lifter's feet clear the floor on dead hang; the mannequin should hang with arms fully extended and feet at least about 100 mm off the floor (assumed).
 - Weight belt: weighted pull-up, chin-up, dip load a belt or chain at the hips; no belt product was verified here, so the mannequin should only show a plate hanging from the hips (a plate disc, see the README note).
 
 ## Owner photos to take at Hukka

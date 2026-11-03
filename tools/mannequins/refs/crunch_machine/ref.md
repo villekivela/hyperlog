@@ -15,7 +15,7 @@ Seated, feet held on supports, pad or handles at the chest or shoulders; flex th
 |---|---|---|
 | Footprint L x W | 1580 x 890 | FitnessZone (62" x 35"); a Delta listing agrees |
 | Height | 1400 | same (55") |
-| Recommended live area | 1400 x 1470 | same page (70" x 58"), figures as printed |
+| Recommended live area | 1778 x 1473 | same page, printed as 70" x 58"; the page also prints 1400 x 1470 mm, which does not match the inches |
 | Weight stack | 95 kg | same |
 | Seat height, pad height, pivot location, handle positions | unknown | not published |
 

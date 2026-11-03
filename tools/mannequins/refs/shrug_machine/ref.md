@@ -3,7 +3,7 @@
 ## Movement and exercises served
 Standing or seated, handles at the sides, work arms lift vertically as the shoulders elevate. Serves `machine_shrug`.
 
-**Kelso shrug (`kelso_shrug`) is not this machine.** The Kelso shrug is done chest-supported, face down on an incline bench, with dumbbells (or a Smith bar), retracting the shoulder blades (thatfitfriend.com/kelso-shrugs, strive-workout.com/2026/03/11/kelso-shrugs, seen in search). It needs the incline bench frame plus a free weight, so the movement differs (prone, scapular retraction, no machine arm). Do not add a shrug-machine variant for it.
+**Serves `machine_shrug` only. Kelso shrug (`kelso_shrug`) is not this machine.** The Kelso shrug is done chest-supported, face down on an incline bench, with dumbbells (or a Smith bar), retracting the shoulder blades (thatfitfriend.com/kelso-shrugs, strive-workout.com/2026/03/11/kelso-shrugs, seen in search). It needs the incline bench frame plus a free weight, so the movement differs (prone, scapular retraction, no machine arm). Do not add a shrug-machine variant for it.
 
 ## Based on
 - Brand/model: Hammer Strength Plate-Loaded Seated/Standing Shrug (PL-SH).
