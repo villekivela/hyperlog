@@ -165,11 +165,14 @@ for (const id of Object.keys(POSES)) {
     const near = (a, b) => Math.max(...a.map((p, i) => p.distanceTo(b[i])));
     assert.ok(near(bones(0), joints(0)) < 0.005, 'the first frame is the top');
     assert.ok(near(bones(1 - 1e-6), joints(1)) < 0.005, 'the last frame is the bottom');
-    // Each step goes further from the top: nothing comes back up within the clip.
+    // Each step goes further from the top: nothing comes back up within the clip. The fingers are
+    // left out: they settle round the bar a millimetre or two either way as the hand turns.
     const top = play(0);
+    const names = Object.keys(rig.bones);
+    const rep = (i) => i >= names.length || !/^(index|middle|ring|pinky|thumb)_/.test(names[i]);
     let last = 0;
     for (let f = 1; f <= 30; f++) {
-      const away = play(Math.min(f / 30, 1 - 1e-6)).reduce((sum, p, i) => sum + p.distanceTo(top[i]), 0);
+      const away = play(Math.min(f / 30, 1 - 1e-6)).reduce((sum, p, i) => sum + (rep(i) ? p.distanceTo(top[i]) : 0), 0);
       assert.ok(away >= last - 1e-3, `frame ${f} is ${away.toFixed(3)} from the top, back from ${last.toFixed(3)}`);
       last = away;
     }
