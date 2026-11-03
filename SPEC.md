@@ -1532,11 +1532,19 @@ gallery (Technique videos).
       carriage on rollers under a foot plate with a heel lip; and the benches roll on front wheels,
       lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder. The
       starter batch's machines meet it too: rubber caps on every floor rail and pop-pins on the
-      adjustable seats; the leg extension's and seated curl's cable turning down to the hub over a
-      second wheel in its housing, their back pads braced to the stack's frame; the calf raise's
-      and preacher's hubs on posts and mounts, nothing hanging in the air; the hack squat's
-      carriage on bearings; the row's and pulldown's posts on floor rails; and the preacher loaded
-      with a plate a side.
+      adjustable seats; the calf raise's and preacher's hubs on posts and mounts, nothing hanging
+      in the air; the hack squat's carriage on bearings; the row's and pulldown's posts on floor
+      rails; and the preacher loaded with a plate a side.
+    - **From a real machine** (owner, 2026-11-03, #127, #149): a machine is copied from reference
+      photos of a common commercial model, looked at and never kept, not made up. The leg extension
+      and the leg curls follow the Watson line: the stack in a tower beside the user, not behind
+      them, its cable down the tower's end and along the floor to a cam on the lever at the knees;
+      the lever, its adjuster and its roller on a post on the near side. The pads follow how a body
+      sits or lies in them: both seated machines have an adjustable back pad on a pop-pin bar, from
+      the seat up to the shoulder blades; the extension's handles are beside the hips; the seated
+      curl's thigh pad lies along the thighs and carries the grips; the lying curl's bed is humped
+      at the hips, the thigh pad dropping about 20° to the knees and the longer chest pad about 10°
+      to the shoulders, with the handles under its head end.
     - **Machines from reference** (owner, 2026-11-03, #150): the hack squat and the seated calf raise
       copy a real plate-loaded machine's layout and size, after Hammer Strength's, with no photo or
       model in the repo. The hack squat, about 2.1 m long, 1.25 m wide and 1.55 m high, has its
