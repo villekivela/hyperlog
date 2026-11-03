@@ -1,0 +1,73 @@
+{
+  "back_squat_high_bar": {
+    "ok": true,
+    "note": "",
+    "clip": "a80ef884017bcac4",
+    "tuned": "{}"
+  },
+  "back_squat_low_bar": {
+    "ok": true,
+    "note": "",
+    "clip": "39a7227d11fddb24",
+    "tuned": "{}"
+  },
+  "barbell_curl": {
+    "ok": true,
+    "note": "",
+    "clip": "8183bbbbf311d33f",
+    "tuned": "{}"
+  },
+  "barbell_glute_bridge": {
+    "ok": false,
+    "note": "i cant position the barbell in bottom properly",
+    "clip": "66501838dee345e4",
+    "tuned": "{\"bar.up\":0.1116}"
+  },
+  "barbell_hip_thrust": {
+    "ok": false,
+    "note": "i cant adjust the arc of back on the bottom which would help make this more natural. also the bottom barbell position is so i cant tune it properly",
+    "clip": "992c527d69a3b6b7",
+    "tuned": "{\"bar.up\":0.1072,\"body.shoulders\":[0.5127,-0.4949],\"body.head\":15.6222,\"kit.bench.across\":-0.4604,\"grip.width\":0.3453,\"grip.rotate\":8.4497,\"kit.bench.height\":0.3923}"
+  },
+  "barbell_row": {
+    "ok": false,
+    "note": "the path arcs it should not",
+    "clip": "b0616aa41df31481",
+    "tuned": "{\"bottom.forearm\":-2,\"bottom.upperArm\":-6,\"top.forearm\":19,\"top.upperArm\":-110}"
+  },
+  "barbell_shrug": {
+    "ok": true,
+    "note": "",
+    "clip": "ab53d88317b27de9",
+    "tuned": "{}"
+  },
+  "barbell_upright_row": {
+    "ok": true,
+    "note": "",
+    "clip": "74a4869615c26680"
+  },
+  "deadlift": {
+    "ok": false,
+    "note": "cant tune this properly",
+    "clip": "bca57e93ab78296e",
+    "tuned": "{\"bar.z\":0.111,\"feet.stance\":0.1518,\"feet.kneesOut\":0.4081}"
+  },
+  "deficit_pendlay_row": {
+    "ok": false,
+    "note": "barbell path arcs",
+    "clip": "94e8a6fde20e6b18",
+    "tuned": "{}"
+  },
+  "floor_press": {
+    "ok": true,
+    "note": "",
+    "clip": "5bda57a337c1d178",
+    "tuned": "{}"
+  },
+  "front_squat": {
+    "ok": true,
+    "note": "",
+    "clip": "a6cb9b551157c750",
+    "tuned": "{}"
+  }
+}

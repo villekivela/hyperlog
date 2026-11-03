@@ -10,6 +10,7 @@ export const OPTIONAL = {
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
   arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0 },
   free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5] },
+  row: { 'grip.pole': [0.35, 0.2, -1], 'feet.y': 0 },
   knee_lever: { 'grip.pole': [1, -0.2, -0.5], 'body.head': 0 },
   calf_raise: { 'grip.pole': [1, -0.3, -0.4] },
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },

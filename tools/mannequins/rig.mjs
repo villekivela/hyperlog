@@ -135,8 +135,13 @@ export function buildRig(root) {
   // straighten it: up the spine, and behind it. The bind pose's spine curves, so it isn't the same.
   for (const n of SPINE.slice(0, 4)) aim(rig, n, UP, X);
   root.updateMatrixWorld(true);
-  const shoulders = between(rig, 'upperarm_l', 'upperarm_r').sub(between(rig, 'thigh_l', 'thigh_r'));
-  Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z });
+  const hips = between(rig, 'thigh_l', 'thigh_r');
+  const shoulders = between(rig, 'upperarm_l', 'upperarm_r').sub(hips);
+  // The same, link by link: from the hips to spine_01, on to spine_02 and spine_03, and from there
+  // to the shoulders, each [up, forward], for a spine bent link by link (an arch).
+  const joints = [hips, ...['spine_01', 'spine_02', 'spine_03'].map((n) => wpos(bones[n])), between(rig, 'upperarm_l', 'upperarm_r')];
+  const links = joints.slice(1).map((p, i) => [p.y - joints[i].y, p.z - joints[i].z]);
+  Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z, links });
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
   root.updateMatrixWorld(true);
   return rig;

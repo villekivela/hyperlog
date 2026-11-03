@@ -21,6 +21,7 @@ export const MOTION_TEMPOS = {
   // The top of these is where the muscle is shortest (the curl's heels drawn up, the raise's arm
   // out), so the lowering is the eccentric.
   arms: tempo(2, 0.3, 1, 0.6),
+  row: tempo(2, 0.3, 1, 0.6),
   free_arms: tempo(2, 0.3, 1, 0.6),
   knee_lever: tempo(2, 0.3, 1, 0.6),
   calf_raise: tempo(2, 0.5, 1, 0.6),

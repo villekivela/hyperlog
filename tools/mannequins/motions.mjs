@@ -87,11 +87,59 @@ const standingFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 
 /** In front of a seat: the knees up and a little out. */
 const seatedFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 0.25), 1, 0.6).normalize());
 
+/** How far in front of the shin's and the thigh's line a bar running past them must stay: their own depth and the bar's. */
+const SHIN_FRONT = 0.075;
+const THIGH_FRONT = 0.1;
+/** How far above and below the knee a bar counts as running past it. */
+const KNEE = 0.06;
+
+/**
+ * A pull's legs with the knees out of the bar's way: where the bar, at its height `s.bar` on its
+ * line at `bar.z`, would run into the shins or the thighs, the shins stand back, as far as it takes.
+ */
+function clearOf(e, s, L) {
+  const ankleY = (e.feet.y ?? 0) + L.ankleY;
+  // How far in front of the legs the bar runs at its height, with the shins at `shin`.
+  const room = (shin) => {
+    const hip = standingHips(e, { ...s, shin }, L);
+    const out = Math.atan(e.feet.kneesOut ?? 0);
+    const a = Math.atan2(Math.sin(rad(shin)), Math.cos(rad(shin)) * Math.cos(out));
+    const knee = V(0, ankleY + L.shin * STRAIGHT * Math.cos(a), L.shin * STRAIGHT * Math.sin(a) * Math.cos(out));
+    // Near the knee, both: the bar runs past the kneecap.
+    const rooms = [];
+    if (s.bar <= knee.y + KNEE) rooms.push(e.bar.z - knee.z * Math.min(1, (s.bar - ankleY) / (knee.y - ankleY)) - SHIN_FRONT);
+    if (s.bar >= knee.y - KNEE) rooms.push(e.bar.z - (knee.z + Math.max(0, Math.min(1, (s.bar - knee.y) / (hip.y - knee.y))) * (hip.z - knee.z)) - THIGH_FRONT);
+    return Math.min(...rooms);
+  };
+  if (room(s.shin) >= 0) return s;
+  let [lo, hi] = [-10, s.shin];
+  for (let i = 0; i < 30; i++) {
+    const m = (lo + hi) / 2;
+    if (room(m) >= 0) lo = m; else hi = m;
+  }
+  return { ...s, shin: lo };
+}
+
 /**
  * The spine's lean for a side-on trunk angle: the line from the hips to the shoulders, which is
  * what a trace sees, runs a little behind the spine.
  */
 const spineLean = (trunk, L) => rad(trunk) + Math.atan2(L.trunkBack, L.trunkUp);
+
+/**
+ * Where a spine bent by `arch` (degrees, its three links' turn up from `lean`, as `archOf`) puts
+ * the shoulders' middle from the hips' middle.
+ */
+function archedShoulders(lean, arch, L) {
+  const turns = [0, ...(arch ?? [0, 0, 0])];
+  const out = V(0, 0, 0);
+  L.links.forEach(([up, fwd], i) => {
+    const a = lean + rad(turns[i]);
+    out.y += up * Math.cos(a) - fwd * Math.sin(a);
+    out.z += up * Math.sin(a) + fwd * Math.cos(a);
+  });
+  return out;
+}
 
 /** Where the trunk puts the shoulders' middle: up the spine, and a little behind it. */
 const shouldersOf = (hipC, u, L) => hipC.clone().addScaledVector(u, L.trunkUp).addScaledVector(forwardOf(u), -L.trunkBack);
@@ -186,18 +234,33 @@ export const MOTIONS = {
    * angles, and the bar hangs below the shoulders `bar.z` in front of the ankles.
    */
   hinge(e, s, L) {
-    const hipC = standingHips(e, s, L);
-    const u = trunkUp(spineLean(s.trunk, L));
-    const f = forwardOf(u);
-    const sh = shouldersOf(hipC, u, L);
+    const hipC = standingHips(e, s.bar === undefined ? s : clearOf(e, s, L), L);
     const reach = (L.up + L.fore) * STRAIGHT + L.gripAlong;
     const dx = e.grip.width - L.shW;
-    const dz = sh.z - e.bar.z;
     // A shrug lifts the shoulders, and the bar with them.
     const lift = L.clavicle * Math.sin(rad(s.shrug ?? 0));
+    // How high the bar hangs, the arms straight, with the spine leaning `lean`.
+    const hangs = (lean) => {
+      const sh = shouldersOf(hipC, trunkUp(lean), L);
+      const dz = sh.z - e.bar.z;
+      return sh.y + lift - Math.sqrt(Math.max(0, reach * reach - dx * dx - dz * dz));
+    };
+    let lean = spineLean(s.trunk ?? 0, L);
+    if (s.bar !== undefined) {
+      // With `bar` (its height at the top and the bottom, a deadlift's on the floor) the trunk
+      // leans as far as it takes to hang the bar there.
+      let [lo, hi] = [rad(-10), rad(100)];
+      for (let i = 0; i < 40; i++) {
+        const m = (lo + hi) / 2;
+        if (hangs(m) > s.bar) lo = m; else hi = m;
+      }
+      lean = (lo + hi) / 2;
+    }
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
     return {
       hipC, u, shrug: s.shrug,
-      bar: V(0, sh.y + lift - Math.sqrt(Math.max(0, reach * reach - dx * dx - dz * dz)), e.bar.z),
+      bar: V(0, hangs(lean), e.bar.z),
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
@@ -408,6 +471,22 @@ export const MOTIONS = {
    * pulleys. Standing from side-on angles, or seated at `body.hip`; with `grip.one` one arm works and
    * the other rests.
    */
+  /**
+   * A row: the legs and trunk set from their angles, the bar on a line straight up and down at
+   * `bar.z`, at its height `bar` at the top and the bottom of the rep, the elbows toward `grip.pole`.
+   */
+  row(e, s, L) {
+    const { hipC, u, feet } = bodyOf(e, s, L);
+    const f = forwardOf(u);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      ...feet,
+      bar: V(0, s.bar, e.bar.z), grip: e.grip.width,
+      armPole: elbowsTo(e, [0.35, 0.2, -1]),
+    };
+  },
+
   free_arms(e, s, L) {
     const { hipC, u, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
@@ -568,15 +647,24 @@ export const MOTIONS = {
     // The trunk turns about the shoulder joints, which stay at `body.shoulders`: aimed past them by
     // as far as they sit behind the spine.
     const at = V(0, ...e.body.shoulders);
-    let u = at.clone().sub(hipC).normalize();
-    for (let i = 0; i < 4; i++) u = at.clone().addScaledVector(forwardOf(u), L.trunkBack).sub(hipC).normalize();
-    const lean = Math.atan2(u.z, u.y);
+    let straight = at.clone().sub(hipC).normalize();
+    for (let i = 0; i < 4; i++) straight = at.clone().addScaledVector(forwardOf(straight), L.trunkBack).sub(hipC).normalize();
+    // A back arched by `arch` (degrees for each link of the spine) turns about the hips until its
+    // shoulders lie where the straight back's do, seen from the hips.
+    const angleOf = (p) => Math.atan2(p.z, p.y);
+    const aim = angleOf(shouldersOf(hipC, straight, L).sub(hipC));
+    let lean = Math.atan2(straight.z, straight.y);
+    for (let i = 0; i < 3; i++) lean += aim - angleOf(archedShoulders(lean, s.arch, L));
+    const u = trunkUp(lean);
     const f = forwardOf(u);
     return {
       hipC, u,
-      headDir: trunkUp(lean + rad(e.body.head ?? 0)),
+      ...(s.arch ? { spine: archOf(s.arch, lean) } : {}),
+      headDir: trunkUp(lean + rad((s.arch?.[2] ?? 0) + (e.body.head ?? 0))),
       ...floorFeet(e, L, (side) => V(side * (e.feet.kneesOut ?? 0.2), 1, 0.4).normalize()),
-      bar: hipC.clone().addScaledVector(f, e.bar.up),
+      // The bar at `bar` [y, z] at the top and the bottom of the rep, or `bar.up` out from the
+      // hips square to the trunk.
+      bar: s.bar ? V(0, ...s.bar) : hipC.clone().addScaledVector(f, e.bar.up),
       grip: e.grip.width,
       armPole: elbowsTo(e, [0.6, -1, 0.2]),
     };

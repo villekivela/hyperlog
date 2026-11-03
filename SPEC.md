@@ -1520,6 +1520,9 @@ gallery (Technique videos).
     the coordinator, 2026-11-03): the high bar a little higher on the traps; the low bar across the
     rear delts, leaning further to keep it over the feet; and the front squat upright with the bar
     racked in front, the arms crossed, as the mannequin's hands can't bend back into a clean grip.
+    Rows and pulls run the bar straight up and down; Tune places the bar at the bottom of a
+    deadlift, a row and a bridge, and arches a hip thrust's back (owner, via the coordinator,
+    2026-11-03).
     The incline and decline presses (an adjustable bench is six clips, and the bench has
     no angle below flat) and the barbell lunge (a split stance) wait for a later batch.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
