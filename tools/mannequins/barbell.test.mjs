@@ -53,24 +53,31 @@ test('a hip thrust arches its back at the bottom, its shoulders still on the ben
 // on the other shoulder, over the bar, not gripping it.
 test('a front squat\'s bar rides on the front delts all through the rep', async () => {
   const stage = await buildStage(prepare('front_squat'));
+  let first;
   for (let f = 0; f < FRAMES; f++) {
     const P = stage.pose(f / (FRAMES - 1));
     const front = P.hipC.clone().set(1, 0, 0).cross(P.u).normalize();
     const off = P.bar.clone().sub(between(stage.rig, 'upperarm_l', 'upperarm_r'));
     const up = off.dot(P.u);
     const forward = off.dot(front);
-    assert.ok(up > -0.01 && up < 0.07 && forward > 0.04 && forward < 0.12, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm in front of the shoulders`);
+    // Over the front of the shoulders, as high on them as the entry puts it, and it stays there.
+    assert.ok(up > -0.01 && up < 0.13 && forward > 0.03 && forward < 0.12, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm in front of the shoulders`);
+    (first ??= [up, forward]);
+    assert.ok(Math.abs(up - first[0]) < 0.01 && Math.abs(forward - first[1]) < 0.01, `frame ${f}: the bar slid on the shoulders`);
   }
 });
 
 test('a front squat\'s hands lie open on the other shoulder, not on the bar', async () => {
-  const stage = await buildStage(prepare('front_squat'));
+  const entry = prepare('front_squat');
+  const stage = await buildStage(entry);
   const P = stage.pose(0.5);
   assert.ok(P.openHands, 'the hands grip');
+  // As far from the joint as the entry's spot on the shoulder, give or take 2 cm.
+  const spot = Math.hypot(...entry.grip.spot);
   for (const [k, s] of [['l', 1], ['r', -1]]) {
     const other = wpos(stage.rig.bones[`upperarm_${s > 0 ? 'r' : 'l'}`]);
     // The palm, at the base of the fingers, lies on the delt in front of and above the joint.
     const palm = heldAt(stage.rig, k);
-    assert.ok(palm.distanceTo(other) < 0.12, `the ${k} palm is ${(palm.distanceTo(other) * 100).toFixed(0)} cm from the other shoulder`);
+    assert.ok(palm.distanceTo(other) < spot + 0.02, `the ${k} palm is ${(palm.distanceTo(other) * 100).toFixed(0)} cm from the other shoulder`);
   }
 });

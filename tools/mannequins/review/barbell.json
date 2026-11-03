@@ -21,7 +21,7 @@
     "ok": true,
     "note": "i cant position the barbell in bottom properly",
     "clip": "30200e49bf065b0b",
-    "tuned": "{\"bar.up\":0.1116,\"bottom.bar\":[0.2241,-0.0434],\"top.bar\":[0.4714,-0.0132],\"body.shoulders\":[0.0187,-0.6085],\"body.head\":40,\"top.hip\":[0.3844,0.08]}"
+    "tuned": "{\"bar.up\":0.1116,\"bottom.bar\":[0.2241,-0.0434],\"top.bar\":[0.4514,-0.0132],\"body.shoulders\":[0.0187,-0.6085],\"body.head\":40,\"top.hip\":[0.3844,0.08]}"
   },
   "barbell_hip_thrust": {
     "ok": true,
@@ -72,9 +72,9 @@
     "tuned": "{}"
   },
   "front_squat": {
-    "ok": false,
+    "ok": true,
     "note": "the hands should not be attached to the barbell",
-    "clip": "af56acd16a2a28e7",
-    "tuned": "{}"
+    "clip": "537d30a9b9eeb01f",
+    "tuned": "{\"bar.up\":0.104,\"grip.rotate\":210,\"bar.back\":0.04,\"bottom.trunk\":25.517,\"top.trunk\":6.2702,\"top.shin\":3.388,\"top.thigh\":-11.6002,\"bottom.shin\":31.2548,\"bottom.thigh\":103.7533}"
   }
 }
