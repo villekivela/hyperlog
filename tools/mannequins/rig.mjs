@@ -236,12 +236,11 @@ export function poseRig(rig, P) {
       const knuckles = twist(fore).normalize();
       let fingers = fore.clone();
       // Only what lies its own way (a bar, a handle the pose sets) has knuckles to line up with: a
-      // free handle turns with the hand. Where the forearm runs nearly along it, no wrist can.
+      // free handle turns with the hand. As the forearm comes to run along it, the turn fades out,
+      // smoothly, so the solve settles.
       const square = fore.clone().addScaledVector(knuckles, -fore.dot(knuckles));
-      if (fixed && square.length() > 0.5) {
-        fingers = square.normalize();
-        if (fingers.angleTo(fore) > WRIST_REACH) fingers = turnToward(fore, fingers, WRIST_REACH);
-      }
+      const fade = Math.min(1, Math.max(0, (square.length() - 0.15) / 0.3));
+      if (fixed && fade > 0) fingers = turnToward(fore, square.normalize(), Math.min(fore.angleTo(square), WRIST_REACH) * keep * fade);
       const inward = twist(fingers);
       const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
       if (flex) fingers = turnToward(fingers, palm, rad(flex));
@@ -250,6 +249,9 @@ export function poseRig(rig, P) {
     };
     let wrist = grip.clone();
     let arm;
+    // How much of that turn the arm can afford: a straight arm gives some back to reach its grip.
+    let keep = 1;
+    const reach = L.up + L.fore - 1e-3;
     for (let it = 0; it < 12; it++) {
       arm = ik(sh, wrist, L.up, L.fore, P.armPole(s));
       const fingers = handOf(arm.end.clone().sub(arm.mid).normalize());
@@ -258,6 +260,7 @@ export function poseRig(rig, P) {
       // Halfway to where this pass puts the wrist: the hand's turn follows the forearm, so a full
       // step can swing back and forth.
       wrist.lerp(grip.clone().addScaledVector(fingers, -L.gripAlong).addScaledVector(palm, -L.gripOff), it ? 0.5 : 1);
+      if (wrist.distanceTo(sh) > reach) keep *= 0.8;
     }
     const a1 = arm.mid.clone().sub(sh);
     const a2 = arm.end.clone().sub(arm.mid);
