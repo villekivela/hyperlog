@@ -89,7 +89,7 @@ const seatedFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 0.
 
 /** How far in front of the shin's and the thigh's line a bar running past them must stay: their own depth and the bar's. */
 const SHIN_FRONT = 0.075;
-const THIGH_FRONT = 0.1;
+const THIGH_FRONT = 0.11;
 /** How far above and below the knee a bar counts as running past it. */
 const KNEE = 0.06;
 

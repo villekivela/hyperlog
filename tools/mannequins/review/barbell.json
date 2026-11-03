@@ -18,22 +18,22 @@
     "tuned": "{}"
   },
   "barbell_glute_bridge": {
-    "ok": false,
+    "ok": true,
     "note": "i cant position the barbell in bottom properly",
-    "clip": "66501838dee345e4",
-    "tuned": "{\"bar.up\":0.1116}"
+    "clip": "30200e49bf065b0b",
+    "tuned": "{\"bottom.bar\": [0.2241, -0.0434], \"top.bar\": [0.4714, -0.0132], \"body.shoulders\": [0.0187, -0.6085], \"body.head\": 40, \"top.hip\": [0.3844, 0.08]}"
   },
   "barbell_hip_thrust": {
-    "ok": false,
+    "ok": true,
     "note": "i cant adjust the arc of back on the bottom which would help make this more natural. also the bottom barbell position is so i cant tune it properly",
-    "clip": "992c527d69a3b6b7",
-    "tuned": "{\"bar.up\":0.1072,\"body.shoulders\":[0.5127,-0.4949],\"body.head\":15.6222,\"kit.bench.across\":-0.4604,\"grip.width\":0.3453,\"grip.rotate\":8.4497,\"kit.bench.height\":0.3923}"
+    "clip": "58206bb95d636f97",
+    "tuned": ""
   },
   "barbell_row": {
-    "ok": false,
+    "ok": true,
     "note": "the path arcs it should not",
-    "clip": "b0616aa41df31481",
-    "tuned": "{\"bottom.forearm\":-2,\"bottom.upperArm\":-6,\"top.forearm\":19,\"top.upperArm\":-110}"
+    "clip": "62520124a0e1cee2",
+    "tuned": ""
   },
   "barbell_shrug": {
     "ok": true,
@@ -44,19 +44,26 @@
   "barbell_upright_row": {
     "ok": true,
     "note": "",
-    "clip": "74a4869615c26680"
+    "clip": "74a4869615c26680",
+    "tuned": "{}"
   },
   "deadlift": {
-    "ok": false,
+    "ok": true,
     "note": "cant tune this properly",
-    "clip": "bca57e93ab78296e",
-    "tuned": "{\"bar.z\":0.111,\"feet.stance\":0.1518,\"feet.kneesOut\":0.4081}"
+    "clip": "79a1a1a6662116c4",
+    "tuned": ""
+  },
+  "deficit_deadlift": {
+    "ok": true,
+    "note": "",
+    "clip": "836abc76e2ccc74b",
+    "tuned": ""
   },
   "deficit_pendlay_row": {
-    "ok": false,
+    "ok": true,
     "note": "barbell path arcs",
-    "clip": "94e8a6fde20e6b18",
-    "tuned": "{}"
+    "clip": "1b415493ecf74488",
+    "tuned": ""
   },
   "floor_press": {
     "ok": true,
@@ -68,6 +75,6 @@
     "ok": true,
     "note": "",
     "clip": "a6cb9b551157c750",
-    "tuned": "{}"
+    "tuned": ""
   }
 }
