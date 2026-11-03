@@ -1,5 +1,5 @@
 // A 20 kg barbell with a 20 and a 10 a side, along x, on the hands' bar: collars, sleeves and
-// clamps. A free body: the hands carry it.
+// clamps. A free body: the hands carry it, or the shoulders.
 import { recipe, free } from '../recipe.mjs';
 import { along, plateGeometry, turnedPart } from '../parts.mjs';
 import { V, gripTarget } from '../rig.mjs';
@@ -25,7 +25,9 @@ export default recipe({
       stand(g) { bar = g; },
       drive(P) {
         bar.position.copy(P.bar);
-        return { points: { grips: [-1, 1].map((s) => gripTarget(P, s)) } };
+        // Where the hands hold it: none in a cross-arm rack, where the bar rides on the shoulders.
+        const onBar = (p) => Math.hypot(p.y - P.bar.y, p.z - P.bar.z) < 0.03;
+        return { points: { grips: [-1, 1].map((s) => gripTarget(P, s)).filter(onBar) } };
       },
     };
   },

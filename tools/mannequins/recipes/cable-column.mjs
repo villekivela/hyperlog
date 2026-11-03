@@ -20,7 +20,7 @@ const jointsOf = ({ twin = false } = {}) => (twin ? ['stack_l', 'stack_r'] : ['s
 
 export default recipe({
   name: 'cable_column',
-  bodies: (o) => ({ attachment: free(), ...Object.fromEntries(jointsOf(o).map((j) => [j, prismatic({ axis: UP, limits: [0, 1.5] })])) }),
+  bodies: (o) => ({ attachment: free(), ...Object.fromEntries(jointsOf(o).map((j) => [j, prismatic({ axis: UP, limits: [0, 1.2] })])) }),
   contacts: ({ attachment = 'handle', hand = 1, twin = false } = {}) => (attachment === 'rope'
     ? [{ body: 'attachment', point: 'rope', landmark: 'hands' }]
     : (twin ? [1, -1] : [hand]).map((s) => ({ body: 'attachment', point: `handle_${s < 0 ? 'r' : 'l'}`, landmark: 'hands' }))),

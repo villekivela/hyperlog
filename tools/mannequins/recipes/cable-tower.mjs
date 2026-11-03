@@ -7,7 +7,7 @@
 //
 // The attachment is a free body, carried by the hands. The stack rides its guide rods on a
 // prismatic joint, its value how far the cable is drawn out past where the stack rests, and rises
-// one for one with it.
+// one for one with it, up to 1.2 m, short of its guide rods' tops.
 import * as THREE from 'three';
 import { recipe, free, prismatic } from '../recipe.mjs';
 import {
@@ -18,7 +18,7 @@ import { V, UP, gripTarget } from '../rig.mjs';
 export default recipe({
   name: 'cable_tower',
   node: 'cable',
-  bodies: { handle: free(), stack: prismatic({ axis: UP, limits: [0, 1.5] }) },
+  bodies: { handle: free(), stack: prismatic({ axis: UP, limits: [0, 1.2] }) },
   contacts: [{ body: 'handle', point: 'grips', landmark: 'hands' }],
   stacks: [{ joint: 'stack', ratio: 1 }],
   build({ column = 0.9, pulley: [py, pz] = [2.2, 0], attachment = 'straight_bar', spread, seat = null, thighPad = null } = {}, M) {

@@ -18,7 +18,7 @@ const HACK_RAILS = 0.17;
 
 export default recipe({
   name: 'squat_machine',
-  bodies: { carriage: prismatic({ limits: [0, 0.8] }) },
+  bodies: { carriage: prismatic({ limits: [0, 0.7] }) },
   contacts: [
     { body: 'carriage', point: 'shoulderPads', landmark: 'shoulders' },
     { body: 'carriage', point: 'handles', landmark: 'hands' },

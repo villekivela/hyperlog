@@ -120,6 +120,6 @@ test('only a joint can be scrubbed, and the drive gives every joint its value', 
   const carried = recipe({ ...swing, bodies: { ...swing.bodies, bar: free() } }).make();
   carried.place({ turn: 0, lift: 0 });
   assert.throws(() => carried.scrub('bar', 1), /test_swing: bar is a free body, on no joint to scrub/);
-  const lame = recipe({ ...swing, build: (o, M) => ({ ...swing.build(o, M), drive: () => ({ joints: {} }) }) }).make();
-  assert.throws(() => lame.place({ turn: 0, lift: 0 }), /test_swing: its drive gives lever no value/);
+  const unfinished = recipe({ ...swing, build: (o, M) => ({ ...swing.build(o, M), drive: () => ({ joints: {} }) }) }).make();
+  assert.throws(() => unfinished.place({ turn: 0, lift: 0 }), /test_swing: its drive gives lever no value/);
 });

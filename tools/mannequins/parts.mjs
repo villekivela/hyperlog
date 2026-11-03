@@ -675,6 +675,41 @@ export function camCable(M, tower, camX) {
   };
 }
 
+/**
+ * The drive the leg extension and the leg curls share: the tower beside the user at `z`, its cable
+ * leaving `toward` (±1 along z) over the floor rail across at `z0` to the cam lever about the knees
+ * (`down` the shins to its roller, `behind` them for a curl), on a post on the near side, `side`.
+ * `place` sets the lever for the rep and gives the pivot and the lever's joint; `tower` is the stack
+ * the lever lifts.
+ */
+export function kneeDrive(M, { z, toward, down, behind }) {
+  const side = 0.32;
+  const tx = -0.5;
+  const tower = sideTower(M, { x: tx, z, toward });
+  const lever = camLever(M, side, { down, behind });
+  const cable = camCable(M, tower, lever.camX);
+  const z0 = tower.dropZ;
+  const post = stretchedTube(0.06, M.frame);
+  const pivotHub = hub(M, V(0, 0, 0));
+  return {
+    side, tx, z0, tower,
+    lever: lever.parts,
+    parts: [
+      ...tower.parts, ...lever.parts, ...cable.parts, post, pivotHub,
+      ...floorRail(V(tx - 0.12, 0.035, z0), V(side + 0.1, 0.035, z0), M),
+      pad(0.11, 0.012, 0.11, M.frame, V(side, 0.076, z0), { soft: 0.003, solid: false }),
+    ],
+    place(P, P0, P1) {
+      const { pivot, cam, roller } = lever.place(P, P0);
+      span(post, V(side, 0.082, z0), pivot);
+      pivotHub.position.copy(pivot).setX(side - 0.01);
+      cable.place(cam);
+      // The lever turns from the stretch, the bottom of the rep, where the stack rests.
+      return { pivot, roller, joint: { value: P.shin.angleTo(P1.shin), origin: pivot.clone().setX(0) } };
+    },
+  };
+}
+
 /** The angle of `p` about the x axis through `pivot`, side-on: what a lever there has swung. */
 export const swingOf = (pivot, p) => Math.atan2(p.y - pivot.y, p.z - pivot.z);
 

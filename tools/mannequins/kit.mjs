@@ -8,7 +8,6 @@ import * as THREE from 'three';
 import { RECIPES } from './recipes/index.mjs';
 
 export { MATERIALS } from './parts.mjs';
-export { benchHinge } from './recipes/bench.mjs';
 
 /**
  * The library's machines by kind: the kit a pose of that kind is made in, or `null` while it has

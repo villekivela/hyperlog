@@ -15,7 +15,7 @@ import { V, X, gripTarget, rad } from '../rig.mjs';
 export default recipe({
   name: 'preacher_curl_machine',
   node: 'preacher_curl',
-  bodies: { bar: revolute({ axis: V(-1, 0, 0), limits: [rad(-60), rad(120)] }) },
+  bodies: { bar: revolute({ axis: V(-1, 0, 0), limits: [rad(-30), rad(100)] }) },
   contacts: [{ body: 'bar', point: 'grips', landmark: 'hands' }],
   fit: [{ sets: 'seat', rule: "the armpits at the pad's back edge, the elbows just past its front" }],
   build({ seat = [0.5, 0], pad: deep = 0.08 } = {}, M) {

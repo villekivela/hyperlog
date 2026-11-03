@@ -56,7 +56,35 @@ const LANDMARKS = {
   shoulders: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['clavicle_' + k]), wpos(rig.bones['upperarm_' + k])] },
 };
 
+/** The nearest distance from `p` to a held part's axis: its longest extent, as a segment. */
+function toHeld(mesh, p) {
+  mesh.geometry.computeBoundingBox();
+  const box = mesh.geometry.boundingBox;
+  const size = box.getSize(new THREE.Vector3()).multiply(mesh.getWorldScale(new THREE.Vector3())).toArray();
+  const axis = size.indexOf(Math.max(...size));
+  const centre = box.getCenter(new THREE.Vector3());
+  const [a, b] = [box.min, box.max].map((end) => mesh.localToWorld(centre.clone().setComponent(axis, end.getComponent(axis))));
+  return new THREE.Line3(a, b).closestPointToPoint(p, true, new THREE.Vector3()).distanceTo(p);
+}
+
 for (const id of Object.keys(POSES).sort()) {
+  test(`${id}: each contact with the hands is on a part the hands hold`, async () => {
+    const stage = await buildStage(prepare(id));
+    for (const d of [0, 1]) {
+      stage.pose(d);
+      for (const [name, kit] of Object.entries(stage.kit.kits)) {
+        const held = [];
+        kit.group.traverse((o) => { if (o.isMesh && o.userData.held) held.push(o); });
+        for (const { point, at } of kit.contacts.filter((c) => c.landmark === 'hands')) {
+          for (const p of at) {
+            const miss = Math.min(...held.map((m) => toHeld(m, p)));
+            assert.ok(miss < 0.015, `${name}'s ${point} ${(miss * 100).toFixed(1)} cm off a held part at the ${d ? 'bottom' : 'top'}`);
+          }
+        }
+      }
+    }
+  });
+
   test(`${id}: each contact meets its landmark at the top and the bottom of the rep`, async () => {
     const stage = await buildStage(prepare(id));
     for (const d of [0, 1]) {

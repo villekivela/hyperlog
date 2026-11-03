@@ -1603,7 +1603,9 @@ gallery (Technique videos).
       or feet. A machine exercise is solved from its machine: the joint drives the rep, the limbs
       follow the contacts, and the recipe's fit rules set its adjustments (an entry can override
       them). A free weight, and a cable's attachment, is a free body on no joint, which the hands
-      carry (#159). A weight stack rises by a ratio of a joint's travel: a lever's turn on a
+      carry (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
+      besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads) or
+      the shoulders (a hack squat's pads). A weight stack rises by a ratio of a joint's travel: a lever's turn on a
       selectorised machine, and on a cable machine the stack's own joint, the cable drawn out, one
       for one. Every kit was ported to a recipe with its clips byte for byte the same.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,

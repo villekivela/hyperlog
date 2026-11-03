@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { prepare, BENCH_ANGLES } from './entries.mjs';
 import { buildStage } from './stage.mjs';
-import { benchHinge } from './kit.mjs';
+import { benchHinge } from './recipes/bench.mjs';
 import { FIXTURE } from './adjustable.fixture.mjs';
 
 const ID = 'db_incline_press';

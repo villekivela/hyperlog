@@ -18,7 +18,7 @@ import { V, X, rad } from '../rig.mjs';
 export default recipe({
   name: 'calf_raise_machine',
   node: 'calf_raise',
-  bodies: { lever: revolute({ axis: X, limits: [0, rad(30)] }) },
+  bodies: { lever: revolute({ axis: X, limits: [0, rad(25)] }) },
   contacts: [
     { body: 'lever', point: 'pads', landmark: 'thighs' },
     { body: 'lever', point: 'grips', landmark: 'hands' },

@@ -14,7 +14,7 @@ import { V, X, UP, rad } from '../rig.mjs';
 
 export default recipe({
   name: 'leg_press',
-  bodies: { sled: prismatic({ limits: [0, 0.6] }) },
+  bodies: { sled: prismatic({ axis: V(0, Math.SQRT1_2, Math.SQRT1_2), limits: [0, 0.45] }) },
   contacts: [
     { body: 'sled', point: 'plate', landmark: 'feet' },
     { body: 'frame', point: 'handles', landmark: 'hands' },

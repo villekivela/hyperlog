@@ -10,9 +10,9 @@
 // turned from the stretch, where the stack rests; the stack rises 22 cm a radian of it.
 import * as THREE from 'three';
 import { recipe } from '../recipe.mjs';
-import { floorRail, pad, part, plateGeometry, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
+import { floorRail, kneeDrive, pad, part, plateGeometry, rod, rodGeometry, span, stretchedTube, tube } from '../parts.mjs';
 import { V, X, rad } from '../rig.mjs';
-import { SEATED_FIT, kneeDrive, kneeLever, seatedKnees } from './leg-extension.mjs';
+import { SEATED_FIT, kneeLever, seatedKnees } from './leg-extension.mjs';
 
 function lying({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {}, M) {
   const tz = hz + 0.05;

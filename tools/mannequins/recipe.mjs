@@ -6,9 +6,10 @@
 // A recipe declares, as data:
 //
 // - `bodies`: each moving body by name, with its joint (`revolute`, `prismatic` or `free`) and
-//   limits. A joint's value is how far it has moved from where it rests (radians or metres).
-// - `contacts`: where a body ties to the mannequin, the body's point and the landmark it meets
-//   (`hands`, `feet`, `shins`, `thighs` or `shoulders`).
+//   limits. A joint's value is in radians or metres from where its recipe measures it: from its
+//   rest where it raises a stack, or a lever's angle up from level ahead.
+// - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
+//   landmark it meets (`hands`, `feet`, `shins`, `thighs` or `shoulders`).
 // - `stacks`: each weight stack and the joint whose travel raises it, by a ratio (metres a
 //   radian, or a metre).
 // - `fit`: its fit rules, the adjustments the machine's placard sets for the mannequin, each
@@ -41,7 +42,7 @@ export const HELD = 0.06;
 /** The mannequin's landmarks a contact can tie a body to. */
 export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'shoulders'];
 
-const declared = (v, options) => (typeof v === 'function' ? v(options) : v);
+const forOptions = (v, options) => (typeof v === 'function' ? v(options) : v);
 
 /** A rigid move about a revolute joint, or along a prismatic one, by `by`. */
 function moveOf(joint, by) {
@@ -87,10 +88,10 @@ export function recipe(def) {
   return {
     ...def,
     make(options) {
-      const bodies = declared(def.bodies ?? {}, options);
-      const stacks = declared(def.stacks ?? [], options);
-      const contacts = declared(def.contacts ?? [], options);
-      validate(name, { bodies, contacts, stacks, fit: declared(def.fit ?? [], options) });
+      const bodies = forOptions(def.bodies ?? {}, options);
+      const stacks = forOptions(def.stacks ?? [], options);
+      const contacts = forOptions(def.contacts ?? [], options);
+      validate(name, { bodies, contacts, stacks, fit: forOptions(def.fit ?? [], options) });
       const built = build(options, tones());
       const g = group(node, built.parts);
       built.stand?.(g);

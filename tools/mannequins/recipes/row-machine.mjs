@@ -11,7 +11,7 @@ import { V, rad } from '../rig.mjs';
 
 export default recipe({
   name: 'row_machine',
-  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [rad(0), rad(150)] }) },
+  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [rad(45), rad(135)] }) },
   contacts: [{ body: 'levers', point: 'handles', landmark: 'hands' }],
   fit: [{ sets: 'chest', rule: 'the chest on the pad, the arms long to the handles' }],
   build({ seat = [0.5, 0], chest = { up: 0.4, front: 0.1 } } = {}, M) {
