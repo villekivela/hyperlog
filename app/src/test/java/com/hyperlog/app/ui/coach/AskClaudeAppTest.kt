@@ -27,6 +27,7 @@ import com.hyperlog.app.MainActivity
 import com.hyperlog.app.coach.Tile
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.SessionEntity
+import com.hyperlog.app.daysBefore
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.openTab
 import com.hyperlog.app.waitFor
@@ -42,6 +43,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Instant
 import java.time.LocalDate
 
 /** Check-in without a key: the tiles, then Ask Claude and Paste reply (SPEC, Coaching → Without a key: Ask Claude). */
@@ -335,7 +337,7 @@ class AskClaudeAppTest {
     @Test
     fun easeBackInOpensCoachWithTheWordsFilledIn() {
         runStarter()
-        runBlocking { db.sessions().insertSession(SessionEntity(startedAt = System.currentTimeMillis() - 11 * DAY, finishedAt = System.currentTimeMillis() - 11 * DAY + 3_600_000)) }
+        runBlocking { db.sessions().insertSession(SessionEntity(startedAt = daysAgo(11), finishedAt = daysAgo(11) + 3_600_000)) }
         // Today reads the last session again when it shows.
         compose.openTab("Program")
         compose.waitFor("Ramp-in · weeks 1–2", substring = true)
@@ -355,7 +357,7 @@ class AskClaudeAppTest {
         // Bench at 80 × 8 four times in the last two weeks: three sessions without gain.
         runBlocking {
             listOf(12L, 9L, 6L, 3L).forEach { ago ->
-                val at = System.currentTimeMillis() - ago * DAY
+                val at = daysAgo(ago)
                 val id = db.sessions().insertSession(SessionEntity(startedAt = at, finishedAt = at + 3_600_000))
                 val bench = db.sessions().insertSessionExercise(com.hyperlog.app.data.SessionExerciseEntity(sessionId = id, exerciseId = "barbell_bench_press", position = 0))
                 db.sessions().insertSet(com.hyperlog.app.data.LoggedSetEntity(sessionExerciseId = bench, position = 0, weightKg = 80.0, fullReps = 8, partialReps = 0, rir = 2, loggedAt = at))
@@ -378,7 +380,7 @@ class AskClaudeAppTest {
         // Nine days since the last session, but you train only on the weekday two days ago: 2 days off.
         val planned = LocalDate.now().minusDays(2).dayOfWeek
         runBlocking {
-            db.sessions().insertSession(SessionEntity(startedAt = System.currentTimeMillis() - 9 * DAY, finishedAt = System.currentTimeMillis() - 9 * DAY + 3_600_000))
+            db.sessions().insertSession(SessionEntity(startedAt = daysAgo(9), finishedAt = daysAgo(9) + 3_600_000))
             com.hyperlog.app.week.WeekdayPlans(db).set(com.hyperlog.app.week.WeekdayPlan(mapOf(planned to null)))
         }
         compose.openTab("Program")
@@ -533,6 +535,6 @@ class AskClaudeAppTest {
     }
 
     private companion object {
-        const val DAY = 86_400_000L
+        fun daysAgo(days: Long) = daysBefore(Instant.now(), days)
     }
 }
