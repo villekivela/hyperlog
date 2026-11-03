@@ -223,13 +223,17 @@ const acrossOf = (P, s) => (P.across ? P.across(s) : X.clone().multiplyScalar(-s
 /** The world rotation that takes bone `name` from its bind pose to where it is now. */
 export const turnOf = (rig, name) => wquat(rig.bones[name]).multiply(rig.rest[name].wq.clone().invert());
 
-/** Where the hand on side `k` holds now: on the axis of a bar seated at its grip's landmark, off the palm's face. */
+/**
+ * Where the hand on side `k` holds now: on the axis of a bar seated at its grip's landmark, off the
+ * palm's face. A hand not yet posed holds as a pull does, a barbell's bar at the base of its fingers.
+ */
 export function heldAt(rig, k) {
   const { bones } = rig;
   const wrist = wpos(bones['hand_' + k]);
   const fingers = wpos(bones['middle_01_' + k]).sub(wrist).normalize();
   const palm = rig.faces[k].clone().applyQuaternion(turnOf(rig, 'hand_' + k));
-  return wrist.addScaledVector(fingers, rig.depth[k]).addScaledVector(palm, rig.off[k]);
+  const { depth, off } = rig.depth[k] === undefined ? seatOf(rig, k, 'base', DEFAULT_RADIUS) : { depth: rig.depth[k], off: rig.off[k] };
+  return wrist.addScaledVector(fingers, depth).addScaledVector(palm, off);
 }
 
 /**
