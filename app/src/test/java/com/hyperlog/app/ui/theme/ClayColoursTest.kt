@@ -4,7 +4,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.io.File
@@ -24,6 +26,13 @@ class ClayColoursTest {
             assertNotNull("$name in light", ClayColours.Light.colourOf(name))
             assertNotNull("$name in dark", ClayColours.Dark.colourOf(name))
         }
+    }
+
+    @Test
+    fun inDarkAPadStandsApartFromTheStage() {
+        // The owner's dark vinyl (#127): a step up from the dark stage's own tone, which it was.
+        assertEquals(Color(0xFF3A3A40), ClayColours.Dark.vinyl)
+        assertNotEquals(GraphiteDark.surfaceContainerHighest, ClayColours.Dark.vinyl)
     }
 
     /** The names of a `.glb`'s materials, from its JSON chunk. */

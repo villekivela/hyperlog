@@ -130,7 +130,7 @@ the bottom), `mannequin-gallery-dark.png` (emulator, #122).
 | Body | #BABAC1 | #C4C4CA | the mannequin's shell |
 | Joint | #9A9AA1 | #A8A8AF | the rings between its pieces, a step under the body |
 | Frame | #2E2E33 | #4A4A50 | frames and uprights, roughness 0.5 |
-| Vinyl | #1B1B1E | #2E2E33 | pads, rollers and grips, roughness 0.95 |
+| Vinyl | #1B1B1E | #3A3A40 | pads, rollers and grips, roughness 0.95 |
 | Plate | #8A8A90 | #8A8A90 | a stack's plates and every other weight, roughness 0.8 |
 | Metal | #C8C8CC | #C8C8CC | rods, bars, cables and pins, roughness 0.3 |
 | Pulley | #5C5C62 | #6E6E75 | pulleys and their housings, roughness 0.55 |
@@ -225,8 +225,9 @@ demand is a connected button group and its chips pick in primaryContainer.
   pulleys in housings and shaped bars with grips, in five tones by part. In dark the body went
   lighter (#9A9AA2 → #C4C4CA), so it stays the subject against the lighter frame. The light body
   stays #BABAC1: the issue quoted the prototype's #D2D2D8, the near-white this note's first pass
-  darkened. Dark vinyl (#2E2E33) is the dark stage's own tone, so a dark pad shows by its shading
-  and the rim light.
+  darkened. Dark vinyl was the dark stage's own tone (#2E2E33); the owner took it a step up to
+  #3A3A40 so a pad stands apart from the stage. Every weight stays in the plate tone, and the
+  pressdown's stack stays 20 cm back.
 - **Kit detail, pass 2** (owner, #127): only the lat pulldown's tower read as the prototype's B, so
   the rest came up to it: the standing tower's low pulley, the chest press's housings, brace and
   capped grips, the leg press's framed base and roller carriage, and the benches' wheels, handle

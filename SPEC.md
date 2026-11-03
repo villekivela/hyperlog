@@ -1528,8 +1528,9 @@ gallery (Technique videos).
       lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder.
     - **Tones** (owner, 2026-11-02, #127): each part is in one of five tones of the graphite
       palette, with no hue, coloured by the theme. Light, dark and roughness: frame and uprights
-      #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #2E2E33, 0.95; stack plates and every
-      other weight #8A8A90 in both, 0.8; rods, bars, cables and pins #C8C8CC in both, 0.3; pulleys
+      #2E2E33, #4A4A50, 0.5; vinyl pads and grips #1B1B1E, #3A3A40, 0.95 (dark a step up from the
+      dark stage's own #2E2E33, owner 2026-11-03); stack plates and every other weight #8A8A90 in
+      both, 0.8; rods, bars, cables and pins #C8C8CC in both, 0.3; pulleys
       and housings #5C5C62, #6E6E75, 0.55. Nothing is metallic. In dark a faint light from behind
       the kit gives the dark frame an edge against the stage.
     - **The mannequin in dark** (owner, 2026-11-02, #127) is lighter, body #C4C4CA and joints
