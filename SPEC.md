@@ -1611,7 +1611,7 @@ gallery (Technique videos).
       the arms straight, the heels as high as they rise), so a rep past them has gone too far.
     - **The smith machine's bar** (#182) is one body on a prismatic joint along rods leaning 7°, the
       tops toward the back (the ref's choice, the page not saying), its value the metres moved up
-      them from 250 mm above the floor. Its carriages and hook lugs are fixed on the bar, since a
+      them from 250 mm above the floor (the lowest stop is at 290 mm). Its carriages and hook lugs are fixed on the bar, since a
       joint turning them would be left behind by a scrub along the rods; the hooks' turn, about
       45°, stays the wrists'. A fit rule picks the notch it hangs on and the one its safety stops
       lie on, and the bar can go no lower than the stops.
