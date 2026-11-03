@@ -3,8 +3,8 @@ package com.hyperlog.app.ui.mannequin
 import android.content.Context
 import android.view.View
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -29,7 +29,7 @@ import org.robolectric.RobolectricTestRunner
 import java.nio.ByteBuffer
 
 /**
- * A 2-grip exercise's sheet (owner, #127): Wide and Narrow buttons over its mannequin, open on the
+ * A 2-grip exercise's sheet (owner, #127): "Set 1 · Wide" and "Set 2 · Narrow" under its mannequin, open on the
  * grip of the set being done, set 1 wide and set 2 narrow.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -88,30 +88,30 @@ class GripButtonsTest {
     @Test
     fun theFirstSetOpensOnTheWideGrip() {
         sheet(set = 0)
-        compose.onNodeWithText("Wide").assertIsSelected()
-        compose.onNodeWithText("Narrow").assertIsNotSelected()
+        compose.onNodeWithText("Set 1 · Wide").assertIsOn()
+        compose.onNodeWithText("Set 2 · Narrow").assertIsOff()
         assertEquals(wideCamera, loaded())
     }
 
     @Test
     fun theSecondSetOpensOnTheNarrowGrip() {
         sheet(set = 1)
-        compose.onNodeWithText("Narrow").assertIsSelected()
+        compose.onNodeWithText("Set 2 · Narrow").assertIsOn()
         assertEquals(narrowCamera, loaded())
     }
 
     @Test
     fun aTapShowsTheOtherGrip() {
         sheet(set = 1)
-        compose.onNodeWithText("Wide").performClick()
+        compose.onNodeWithText("Set 1 · Wide").performClick()
         compose.waitForIdle()
-        compose.onNodeWithText("Wide").assertIsSelected()
+        compose.onNodeWithText("Set 1 · Wide").assertIsOn()
         compose.waitUntil(5_000) { players.lastOrNull()?.camera == wideCamera }
     }
 
     @Test
     fun outsideASessionItOpensOnTheFirstGrip() {
         sheet(set = null)
-        compose.onNodeWithText("Wide").assertIsSelected()
+        compose.onNodeWithText("Set 1 · Wide").assertIsOn()
     }
 }

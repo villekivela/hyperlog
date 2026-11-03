@@ -51,9 +51,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -1046,18 +1043,21 @@ internal fun ExerciseSheet(
             // A card of the sheet, out to the cards' margin like the machine row's and the prescription's.
             com.hyperlog.app.ui.mannequin.MannequinStage(it, Modifier.padding(horizontal = CardMargin), benchAngle, lastBenchAngle, grip)
             it.grips?.let { grips ->
-                Spacer(Modifier.height(12.dp))
-                SingleChoiceSegmentedButtonRow(Modifier.padding(horizontal = CardMargin).fillMaxWidth()) {
-                    grips.forEachIndexed { i, g ->
-                        SegmentedButton(
-                            selected = g.name == grip,
-                            onClick = { grip = g.name },
-                            shape = SegmentedButtonDefaults.itemShape(i, grips.size),
-                        ) { Text(gripLabel(g.name)) }
-                    }
-                }
+                // Closer to the stage than to the name: it switches what the stage plays. Each
+                // button names its set, so the one the sheet opens on reads as the set being done.
+                // The buttons' 48 dp touch target adds 4 dp round their 40 dp, so 8 dp show above
+                // them and the stage's 16 dp below.
+                Spacer(Modifier.height(4.dp))
+                com.hyperlog.app.ui.theme.ConnectedChoice(
+                    grips.mapIndexed { i, g -> stringResource(R.string.grip_for_set, i + 1, gripLabel(g.name)) },
+                    grips.indexOfFirst { g -> g.name == grip },
+                    onSelect = { i -> grip = grips[i].name },
+                    Modifier.padding(horizontal = CardMargin),
+                    // It sits on the sheet itself, not on one of its cards.
+                    color = cs.surfaceContainerLow,
+                )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(if (it.grips != null) 12.dp else 16.dp))
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Margin)) {
             Text(interFigures(exercise.name), style = MaterialTheme.typography.headlineSmall)

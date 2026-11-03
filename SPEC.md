@@ -1522,8 +1522,9 @@ gallery (Technique videos).
     hook (a check fails one more than 1 cm off). An exercise done with a different grip set by set
     has a clip per grip (owner, 2026-11-03): the 2-Grip Lat Pulldown's set 1 wide and overhand at
     1.5 shoulder widths, set 2 narrow and underhand at shoulder width, palms to the face. Its sheet
-    shows a Wide and a Narrow button under the mannequin and opens on the grip of the set being done
-    (outside a session, the first).
+    shows a connected choice under the mannequin, each button naming its set and grip (`Set 1 ·
+    Wide`, `Set 2 · Narrow`), and opens on the grip of the set being done (outside a session, the
+    first; past the last grip, the last).
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
