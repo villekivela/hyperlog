@@ -1183,7 +1183,7 @@ function floorWheel(M, x, z) {
 const TOWER = 2.05;
 
 /**
- * A selectorized tower standing beside the user at (x, z), as on the reference machines (#149): its
+ * A selectorised tower standing beside the user at (x, z), as on the reference machines (#149): its
  * uprights either side of the stack along z and the plates facing the user, a wheel over the stack
  * under its cap and one out past the upright toward `toward` (z, ±1), the cable over both and down
  * that end to a wheel on the floor rail at `dropZ`, which turns it along the rail toward the user.
@@ -1285,7 +1285,41 @@ function camCable(M, tower, camX) {
   };
 }
 
-/** How far a seated curl's thigh pad tips toward the knees, in degrees, to lie along the thighs. */
+/**
+ * The drive the leg extension and the leg curls share: the tower beside the user at `z`, its cable
+ * leaving `toward` (±1 along z) over the floor rail across at `z0` to the cam lever about the knees
+ * (`down` the shins to its roller, `behind` them for a curl), on a post on the near side, `side`.
+ * `place` sets the lever and the stack for the rep and gives the pivot.
+ */
+function kneeDrive(M, { z, toward, down, behind }) {
+  const side = 0.32;
+  const tx = -0.5;
+  const tower = sideTower(M, { x: tx, z, toward });
+  const lever = camLever(M, side, { down, behind });
+  const cable = camCable(M, tower, lever.camX);
+  const z0 = tower.dropZ;
+  const post = stretchedTube(0.06, M.frame);
+  const pivotHub = hub(M, V(0, 0, 0));
+  return {
+    side, tx, z0,
+    parts: [
+      ...tower.parts, ...lever.parts, ...cable.parts, post, pivotHub,
+      ...floorRail(V(tx - 0.12, 0.035, z0), V(side + 0.1, 0.035, z0), M),
+      pad(0.11, 0.012, 0.11, M.frame, V(side, 0.076, z0), { soft: 0.003, solid: false }),
+    ],
+    place(P, P0, P1) {
+      const { pivot, cam } = lever.place(P, P0);
+      span(post, V(side, 0.082, z0), pivot);
+      pivotHub.position.copy(pivot).setX(side - 0.01);
+      cable.place(cam);
+      // The stack is held just off its rest at the stretch, the bottom of the rep, and rises as the
+      // knees work.
+      tower.lift(HELD + 0.22 * P.shin.angleTo(P1.shin));
+      return pivot;
+    },
+  };
+}
+
 /**
  * A leg extension or, with `curl`, a seated leg curl, laid out as the reference machines (#149):
  * the tower beside the seat, level with it, on the far side from the camera; a seat whose top is at
@@ -1300,12 +1334,8 @@ function camCable(M, tower, camX) {
 function legExtension({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl = false } = {}) {
   const M = tones();
   const [top, sz] = seat;
-  const side = 0.32;
-  const tx = -0.5;
-  const tower = sideTower(M, { x: tx, z: sz, toward: 1 });
-  const lever = camLever(M, side, { down: curl ? 0.38 : 0.35, behind: curl });
-  const cable = camCable(M, tower, lever.camX);
-  const z0 = tower.dropZ;
+  const drive = kneeDrive(M, { z: sz, toward: 1, down: curl ? 0.38 : 0.35, behind: curl });
+  const { side, tx, z0 } = drive;
   // The seat, its cushion and pan on a beam, tilted about its middle.
   const cushion = new THREE.Group();
   cushion.add(
@@ -1316,20 +1346,18 @@ function legExtension({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl 
   cushion.position.set(0, top, sz);
   cushion.rotation.x = -rad(tilt);
   cushion.updateMatrixWorld();
-  const beam = (along) => cushion.localToWorld(V(0, -0.117, along));
+  // A point on the seat, `along` it toward the knees; the beam is 0.117 under the cushion's top.
+  const seatAt = (x, y, along) => cushion.localToWorld(V(x, y, along));
+  const beam = (along) => seatAt(0, -0.117, along);
   const parts = [
-    cushion, ...tower.parts, ...lever.parts, ...cable.parts,
+    cushion, ...drive.parts,
     ...floorRail(V(0, 0.035, sz - 0.62), V(0, 0.035, z0 - 0.035), M),
-    ...floorRail(V(tx - 0.12, 0.035, z0), V(side + 0.1, 0.035, z0), M),
     ...floorRail(V(tx, 0.035, sz - 0.3), V(tx, 0.035, z0 - 0.035), M),
     // Crossed braces from the floor rail to the beam, and the beam's front out from the tower.
     tube(0.05, V(0, 0.07, sz - 0.24), beam(0.12), M.frame),
     tube(0.05, V(0, 0.07, sz + 0.2), beam(-0.12), M.frame),
     tube(0.06, V(tx + 0.035, beam(0.17).y, sz + UPRIGHTS), V(0, beam(0.17).y, sz + UPRIGHTS), M.frame),
   ];
-  const post = stretchedTube(0.06, M.frame);
-  const pivotHub = hub(M, V(0, 0, 0));
-  parts.push(post, pivotHub, pad(0.11, 0.012, 0.11, M.frame, V(side, 0.076, z0), { soft: 0.003, solid: false }));
   // The back pad, from the seat up to the shoulder blades, on a bar back from its board through a
   // sleeve on a rear upright, set by a pop-pin.
   const backRest = backPad(0.36, 0.58, M, { up: 0.21, behind });
@@ -1355,7 +1383,6 @@ function legExtension({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl 
   if (!curl) {
     // The handles: a bar across under the seat's rear, risers up its sides and grips running forward
     // beside the hips, level with the cushion's top.
-    const seatAt = (x, y, along) => cushion.localToWorld(V(x, y, along));
     parts.push(
       tube(0.04, seatAt(-0.25, -0.117, -0.16), seatAt(0.25, -0.117, -0.16), M.frame),
       ...[-1, 1].flatMap((s) => [
@@ -1382,9 +1409,9 @@ function legExtension({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl 
       span(riser, pivot, V(side, by + 0.03, above.z));
       plate.position.set(side + 0.04, (pivot.y + by) / 2, (pivot.z + above.z) / 2);
       plateKnob.position.set(side + 0.06, (pivot.y + by) / 2 + 0.05, (pivot.z + above.z) / 2);
-      grips.forEach(([g, sleeveGrip], i) => {
+      grips.forEach(([grip, sleeveGrip], i) => {
         const x = (i ? 1 : -1) * 0.09;
-        span(g, V(x, by, above.z), V(x, by + 0.15, above.z));
+        span(grip, V(x, by, above.z), V(x, by + 0.15, above.z));
         span(sleeveGrip, V(x, by + 0.04, above.z), V(x, by + 0.15, above.z));
       });
     };
@@ -1393,15 +1420,9 @@ function legExtension({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl 
   return {
     group: g,
     place(P, P0, P1) {
-      const { pivot, cam } = lever.place(P, P0);
-      span(post, V(side, 0.082, z0), pivot);
-      pivotHub.position.copy(pivot).setX(side - 0.01);
+      const pivot = drive.place(P, P0, P1);
       fitBack(P0);
       fit(P0, pivot);
-      cable.place(cam);
-      // The stack is held just off its rest at the stretch, the bottom of the rep, and rises as the
-      // knees work.
-      tower.lift(HELD + 0.22 * P.shin.angleTo(P1.shin));
     },
   };
 }
@@ -1416,13 +1437,9 @@ function legExtension({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl 
  */
 function lyingLegCurl({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {}) {
   const M = tones();
-  const side = 0.32;
-  const tx = -0.5;
   const tz = hz + 0.05;
-  const tower = sideTower(M, { x: tx, z: tz, toward: -1 });
-  const lever = camLever(M, side, { down: 0.37, behind: true });
-  const cable = camCable(M, tower, lever.camX);
-  const z0 = tower.dropZ;
+  const drive = kneeDrive(M, { z: tz, toward: -1, down: 0.37, behind: true });
+  const { side, tx, z0 } = drive;
   const apex = V(0, hy, hz);
   // A pad `length` long from the apex `way` along z (±1), sloping down `slope` degrees, on a board
   // and a beam; `at(d, h)` is the point `d` along it and `h` below its top.
@@ -1455,16 +1472,13 @@ function lyingLegCurl({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {
   // A small plate stored on a horn low on the post.
   const horn = part(rodGeometry(0.02), M.metal);
   const stored = part(plateGeometry(0.1, 0.03), M.plate, { solid: true });
-  const post = stretchedTube(0.06, M.frame);
-  const pivotHub = hub(M, V(0, 0, 0));
-  const knee = stretchedTube(0.05, M.frame);
+  // A bar from under the thigh pad's knee end out to the post.
+  const kneeBar = stretchedTube(0.05, M.frame);
   const g = group('leg_curl', [
-    thighPad.mesh, chestPad.mesh, ...tower.parts, ...lever.parts, ...cable.parts, horn, stored, post, pivotHub, knee,
+    thighPad.mesh, chestPad.mesh, ...drive.parts, horn, stored, kneeBar,
     ...floorRail(V(0, 0.035, z0 + 0.035), V(0, 0.035, head.z - 0.2), M),
     ...floorRail(V(-0.3, 0.035, head.z - 0.165), V(0.3, 0.035, head.z - 0.165), M),
-    ...floorRail(V(tx - 0.12, 0.035, z0), V(side + 0.1, 0.035, z0), M),
     ...floorRail(V(tx, 0.035, z0 + 0.035), V(tx, 0.035, tz + 0.3), M),
-    pad(0.11, 0.012, 0.11, M.frame, V(side, 0.076, z0), { soft: 0.003, solid: false }),
     tube(0.06, V(0, 0.07, hipLeg.z - 0.22), hipLeg, M.frame),
     tube(0.06, V(0, 0.07, head.z - 0.2), headLeg, M.frame),
     tube(0.05, chestPad.at(chestLength - 0.05, 0.14), V(0, handleY, handleZ), M.frame),
@@ -1477,15 +1491,11 @@ function lyingLegCurl({ hips: [hy, hz] = [0.66, 0], thigh = 21, chest = 10 } = {
   return {
     group: g,
     place(P, P0, P1) {
-      const { pivot, cam } = lever.place(P, P0);
-      span(post, V(side, 0.082, z0), pivot);
-      pivotHub.position.copy(pivot).setX(side - 0.01);
-      span(knee, kneeEnd, kneeEnd.clone().setX(side));
+      const pivot = drive.place(P, P0, P1);
+      span(kneeBar, kneeEnd, kneeEnd.clone().setX(side));
       const low = V(side, 0.07, z0).lerp(pivot, 0.3);
       span(horn, low, low.clone().add(V(0.14, 0, 0)));
       stored.position.copy(low).add(V(0.08, 0, 0));
-      cable.place(cam);
-      tower.lift(HELD + 0.22 * P.shin.angleTo(P1.shin));
     },
   };
 }

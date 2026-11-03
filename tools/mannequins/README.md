@@ -155,7 +155,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `handle: [y, z]` at the top and bottom, `press` 0 to 1; `lever`, the pivot's height above the path |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend |
-| `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles |
+| `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `knee`, degrees from straight; `body.hip`, `body.thigh` (below level); `grip.at` [y, z] the handles, `grip.across` [out, up, forward] the way their knuckles run |
 | `calf_raise` | seated, the knees under a pad, the balls of the feet on a platform's edge | `ankle`, degrees from flat, heels up positive; `feet.ball` [y, z] |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `hip: [y, z]` at the top and bottom (the rails run between them); `body.trunk`; `feet: { y, z, tilt }` place the platform; `grip.at` [up, out] from the shoulders |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `pivot: [y, z]`; `handle: [y, z]` at the top and bottom, `press` 0 to 1 |
@@ -230,11 +230,11 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
   `pulldown_machine` the thigh rollers at `thighPad` [y, z]; and `row_machine`,
   `pulldown_machine` and `preacher_curl_machine` levers on hubs at the pose's pivot or elbows.
-- The leg extension and the leg curls are laid out as real machines (#149, from photos of the Watson
-  line, looked at and never kept): a selectorized tower beside the user, its stack facing them and
-  its cable over two wheels under the cap, down its end to wheels on the floor rail and up to a cam
-  on the lever at the knees. The lever, with its adjuster plate and pop-pin and a long roller with
-  end caps, turns on a post on the near side, the camera's. The pads follow the body in them: the
+- The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
+  beside the user, its stack facing them and its cable over two wheels under the cap, down its end
+  to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
+  adjuster plate and pop-pin and a long roller with end caps, turns on a post on the near side, the
+  camera's. The pads follow the body in them: the
   seats rise with the thighs, the back pads run from the seat to the shoulder blades and slide on a
   bar set by a pop-pin, and the seated curl's thigh pad lies along the thighs and carries upright
   grips. The extension's handles run forward beside the hips. The lying curl's bed is humped at the

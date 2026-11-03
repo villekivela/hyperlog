@@ -1,4 +1,4 @@
-// The leg extension and the leg curls are built from a real machine's layout (#149): a selectorized
+// The leg extension and the leg curls are built from a real machine's layout (#149): a selectorised
 // tower standing beside the user, not behind them, and handles where the machine has them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -6,11 +6,11 @@ import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 
-const MACHINES = ['leg_extension', 'seated_leg_curl', 'lying_leg_curl'];
+const EXERCISES = ['leg_extension', 'seated_leg_curl', 'lying_leg_curl'];
 
 const world = (o) => o.getWorldPosition(new THREE.Vector3());
 
-for (const id of MACHINES) {
+for (const id of EXERCISES) {
   test(`${id}'s stack stands beside the user, level with the hips or the thighs`, async () => {
     const stage = await buildStage(prepare(id));
     const P = stage.pose(0);
@@ -36,7 +36,7 @@ function toGrip(mesh, p) {
   return new THREE.Line3(a, b).closestPointToPoint(p, true, new THREE.Vector3()).distanceTo(p);
 }
 
-for (const id of MACHINES) {
+for (const id of EXERCISES) {
   test(`${id}'s hands hold the machine's own grips`, async () => {
     const stage = await buildStage(prepare(id));
     const held = [];

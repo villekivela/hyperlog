@@ -205,7 +205,8 @@ export const POSES = {
   },
 
   // Face down along the bench, the knees at its end and the roller on the backs of the ankles:
-  // from the heels drawn up to straight legs.
+  // from the heels drawn up to straight legs. The thighs leave the hips 25° down, steeper than the
+  // pad's 21°: their front tapers toward the knees, so it lies along the pad.
   lying_leg_curl: {
     equipment: 'machine',
     motion: 'knee_lever',
