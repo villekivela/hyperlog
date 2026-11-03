@@ -88,8 +88,9 @@ the palm, knuckles along it, and rolls about it; the elbow goes round the line f
 the wrist to wherever the wrist comes out straightest, keeping to the pose's pole side, and keeping
 close to the pole where the arm was traced or the entry sets `grip.pole`. A free handle (a dumbbell,
 a stirrup) turns with the hand. Where no straight arm reaches, the wrist turns as little as it must.
-A press or a squat holds the bar low in the palm, near its heel, the fingers closed further round
-it; a pull at the fingers' roots, the palm against it.
+A press or a squat holds the bar low in the palm, near its heel; a pull at the fingers' roots, the
+palm against it. Each finger closes round what the hand holds only until its tip touches it, and
+the hands check fails fingers folded into one another (their joints under 1.3 cm apart).
 
 `top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
 degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one

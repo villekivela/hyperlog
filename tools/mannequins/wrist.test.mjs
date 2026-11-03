@@ -105,3 +105,24 @@ test('the wrist sliders reach 60° either way', () => {
   const t = tunables(prepare('barbell_squat')).find((x) => x.path === 'top.wrist.1');
   assert.ok(t.min <= -60 && t.max >= 60, `${t.min} to ${t.max}`);
 });
+
+// The owner, #127: the fingers close round the bar until they touch it and each other, no further.
+for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_pulldown', 1]]) {
+  test(`${id}'s fingers wrap the bar, touching it, none folded into the next`, async () => {
+    const { stage, P } = await posed(id, d);
+    const at = (n) => wpos(stage.rig.bones[n]);
+    const grip = gripTarget(P, 1);
+    const k = stage.rig.rest.hand_l;
+    const dir = k.across.clone().addScaledVector(k.dir.clone().normalize(), -k.across.dot(k.dir.clone().normalize())).applyQuaternion(turnOf(stage.rig, 'hand_l')).normalize();
+    const off = (p) => { const v = p.clone().sub(grip); return v.addScaledVector(dir, -v.dot(dir)).length(); };
+    const order = ['index', 'middle', 'ring', 'pinky'];
+    for (const f of order) {
+      const tip = off(at(`${f}_04_leaf_l`));
+      assert.ok(tip > 0.016 && tip < 0.035, `the ${f} fingertip ${(tip * 100).toFixed(1)} cm off the bar's axis`);
+    }
+    for (let i = 0; i < 3; i++) {
+      const gap = at(`${order[i]}_03_l`).distanceTo(at(`${order[i + 1]}_03_l`));
+      assert.ok(gap > 0.013, `the ${order[i]} and ${order[i + 1]} fingers ${(gap * 100).toFixed(1)} cm apart`);
+    }
+  });
+}
