@@ -1,7 +1,7 @@
 {
   "clips": {
     "2_grip_lat_pulldown": {
-      "clip": "2_grip_lat_pulldown.glb",
+      "clip": "2_grip_lat_pulldown_wide.glb",
       "equipment": "cable",
       "camera": {
         "target": [
@@ -22,6 +22,36 @@
       "resources": [
         "mannequin.bin",
         "kit_cable_tower.bin"
+      ],
+      "grips": [
+        {
+          "name": "wide",
+          "clip": "2_grip_lat_pulldown_wide.glb",
+          "camera": {
+            "target": [
+              0,
+              1.12,
+              0.38
+            ],
+            "halfHeight": 1.18,
+            "azimuth": 62,
+            "elevation": 8
+          }
+        },
+        {
+          "name": "narrow",
+          "clip": "2_grip_lat_pulldown_narrow.glb",
+          "camera": {
+            "target": [
+              0,
+              1.12,
+              0.38
+            ],
+            "halfHeight": 1.18,
+            "azimuth": 62,
+            "elevation": 8
+          }
+        }
       ]
     },
     "barbell_bench_press": {
