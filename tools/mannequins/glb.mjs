@@ -137,7 +137,7 @@ export function shareParts(glbs, { body, kit }) {
 
 /**
  * A clip made whole: each buffer it reads by URI, from `files` (its bytes by URI), appended to its
- * own binary chunk. Where nothing may be fetched, like the review page, a clip is parsed whole.
+ * own binary chunk. The tests parse a clip whole, from memory.
  */
 export function inlineResources(bytes, files) {
   const { json, bin } = readGlb(bytes);

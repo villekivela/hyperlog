@@ -9,10 +9,11 @@ index into `app/src/main/assets/mannequins/`. The phone only plays them.
 cd tools/mannequins
 npm ci                                  # three.js, pinned in package-lock.json
 npm run bake                            # node bake.mjs [out-dir]: check every pose, then bake them all
-npm test                                # entries, kits, checks, bake, trace and review
+npm test                                # entries, kits, checks, bake, trace, review and the studio
 npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
-npm run review -- <batch>               # a batch's review page (Reviewing a batch)
-npm run review -- status <batch>        # whether every exercise in it is OK
+npm run studio                          # the studio, at http://localhost:5190/studio/ (The studio)
+npm run review -- status <batch>        # whether every exercise in it is OK (Reviewing a batch)
+npm run review -- phone <batch>         # the owner has swiped the batch in the debug gallery
 ```
 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
@@ -28,10 +29,13 @@ machine and the rest), listed in `BATCHES` in `review.mjs`. For each batch:
 2. Trace the side-on lifts that have footage (Tracing a pose).
 3. `npm run bake`. A pose that fails its checks stops the bake and says which check, on which frame,
    found what; fix the entry and bake again.
-4. `npm run review -- <batch>` and publish the page (Reviewing a batch). Fix the entries the owner
-   leaves notes on, bake, rebuild and republish, until every exercise is OK.
-5. The owner swipes the batch once in the debug gallery (Settings → Debug → Mannequin gallery)
-   before its pull request merges.
+4. The owner reviews it in the studio (`npm run studio`, Reviewing a batch): tunes and saves, OKs
+   each exercise or leaves a note. Read `review/notes.md`, fix what each note asks, bake, delete the
+   note, and ask again, until `npm run review -- status <batch>` says the batch is done.
+5. A batch that adds or changes a kit or a part is swiped once in the debug gallery (Settings →
+   Debug → Mannequin gallery) before its pull request merges; then `npm run review -- phone
+   <batch>`. A batch that only changes poses skips it: three.js and Filament differ in lighting and
+   materials, not in joint angles.
 
 ## Adjustable-bench poses
 
@@ -72,13 +76,11 @@ db_incline_press: {
 - The bench's back pad is the node `bench_back`, with its pivot at the hinge. In the index the
   entry's own `clip` and `camera` are those of the clip nearest the typical angle, and
   `bench: { typical, hinge: [y, z], clips: { "0": { clip, camera }, … } }` lists the rest.
-- `node render.mjs <id> [out-dir] --angle <degrees>` renders one angle. In the review page each
-  setting has a toggle, **All angles** (the default) or **Per angle**: a Per angle value is tuned at
-  the angle shown, the angle buttons carry a • where something is tuned, and the OK saves it as
-  `@angles` in the verdict's tuned values, which `review apply` writes into `bench.perAngle`. Tune
-  poses the entry at the angle shown. A verdict's `clip` fingerprint covers all six clips. Tune's sliders step a centimetre, a degree or a
-  twentieth, each has a − and + beside it, a number to type into and a ↺; ←/→ or ↓/↑ step the
-  focused one (Shift for ten) and Enter presses OK.
+- `node render.mjs <id> [out-dir] --angle <degrees>` renders one angle. In the studio `<` and `>`
+  step the bench angle, and `p` makes the selected number **Per angle** (or the same at every angle
+  again): a Per angle value is tuned at the angle shown, the angle carries a • where something is
+  tuned, and a save writes it into `bench.perAngle`. The studio poses the entry at the angle shown.
+  A verdict's `clip` fingerprint covers all six clips.
 
 ## Wrists and grip turn
 
@@ -109,7 +111,7 @@ the hands check fails fingers folded into one another (their joints under 1.3 cm
 degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
 given at the bottom alone eases from straight). The joints check fails a wrist bent more than 5°
 in a pose that doesn't set its wrists. The grip's turn is `top.rotate` and `bottom.rotate`, each
-from `grip.rotate`, which stands for both ends. In Tune the wrist's two sliders at each end are
+from `grip.rotate`, which stands for both ends. In the studio the wrist's two numbers at each end are
 labelled in words, "Wrist bend: + flexion / − extension" and "Wrist tilt: + radial (thumb side) /
 − ulnar (little-finger side)", and start straight where the entry sets no wrist; a drag of the
 fingers handle bends the wrist, and a squat's elbow handle sets `grip.pole`.
@@ -121,7 +123,7 @@ order the sets take them; each grip is merged over the entry as `like:` merges, 
 the entry's own. The bake makes a clip per grip (`<id>_<grip>.glb`), checks each, and the index
 lists them in that order, `grips: [{ name, clip, camera }, …]`, the entry's own `clip` the first
 set's. The phone's sheet shows a button per grip (`wide`, `narrow`) and opens on the grip of the
-set being done. A verdict's fingerprint covers every grip's clip; Tune shows the first grip.
+set being done. A verdict's fingerprint covers every grip's clip; the studio poses the first grip.
 
 ## Pose entries
 
@@ -368,44 +370,90 @@ colours. A lying lift is seen from the head end, and equipment standing well in 
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
 Use it for a pull request's screenshots.
 
+## The studio
+
+`npm run studio` serves the tool at `http://localhost:5190/studio/` (Vite, pinned in
+`package-lock.json`, with the plugin in `studio/plugin.mjs`). It is for the owner's machine and
+listens on localhost only.
+
+- **The sidebar** lists every exercise in the library, posed or not, grouped by equipment, then
+  every kit. Each row shows its status: `no pose`, `failing` (a check fails), `notes` (an open note
+  in `review/notes.md`), `ok` (OK'd for the clip it has now), `phone-checked`, `changed` (OK'd for
+  a clip since re-baked) or `waiting`; a kit shows `notes`, `kit` or `unused`. `f` filters it by
+  name, id, equipment or status (`no pose`, `notes`).
+- **The stage** shows one item. An exercise is posed live with the tool's own modules, looping at
+  its tempo or held at the top or the bottom, with drag handles (`handles.mjs`) when held, and the
+  checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
+  the first exercise that uses it (by id) sets it up. A change to `kit.mjs` or `poses.mjs` on disk
+  reloads the page on the same item, its unsaved numbers kept.
+- **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers
+  its motion offers that the entry leaves at the default), lengths shown in millimetres. `h` and `l`
+  step the selected one a degree, a millimetre or a hundredth of a ratio, `H` and `L` a tenth of
+  that, and `=` types a value (`412.5`, or `+2` and `+-2` to move it). A drag of a handle sets the
+  same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
+  `body.arch`), a point whole.
+- **Saving** (`:w`) writes the tuned numbers into `poses.mjs` as text (`patch.mjs`, so the comments
+  stay) and re-bakes every clip in a process of its own (the kit files are shared, so one clip
+  can't bake alone), then shows the new clip. A pose that fails its checks doesn't bake, any pose,
+  and then `poses.mjs` goes back to what it was and the studio names the pose that failed. Read the diff after: a
+  comment may now describe the old number.
+
+The page imports the tool's modules through Vite, with node's `fs`, `url` and `path` stubbed out:
+the server (`ssrLoadModule`, fresh on every change) prepares each entry, so the page never reads a
+file. Nothing the Vite config imports may reach `poses.mjs` or `kit.mjs`: Vite restarts its server
+when one of those changes.
+
+### Keys
+
+Everything can be done from the keyboard, vim style, and the mouse is optional. The keymap is
+`studio/keys.json`, in vim's notation (`gg`, `<C-r>`); `studio/keys.mjs` reads it, every control
+shows its key beside it, and `?` lists every one. A count typed first repeats a command that takes
+one (`5l`, `3j`). A new key goes into `keys.json`, under its group, with what it does in words.
+
+| Key | Does |
+| --- | --- |
+| `j` `k`, `gg` `G` | Next / previous item in the focused list (sidebar, numbers); first / last |
+| `Tab` | Cycle focus: sidebar → stage → numbers |
+| `/` then `n` `N` | Find an exercise, a kit or a number; next / previous match |
+| `f` | Filter the sidebar |
+| `t` / `b`, `Space`, `,` `.` | Hold at the top / the bottom; play or pause; step a frame |
+| `c` | The baked clip, or the live pose |
+| `h` `l`, `H` `L`, `=`, `R` | Step the selected number, a tenth of a step, type a value, reset it |
+| `<` `>`, `p` | Bench angle down / up; tune the number per angle |
+| `gf` `gs` `gt`, `←` `→` | Front, side and top cameras; turn 10° |
+| `u` / `Ctrl+r` | Undo / redo |
+| `:w` | Save and re-bake |
+| `o` / `a` | OK the exercise (again takes it back) / add a note |
+
 ## Reviewing a batch
 
-`npm run review -- <batch>` checks each exercise of the batch and builds
-`review/out/<batch>/index.html` (git-ignored): one card per exercise, its clip looping at a generic
-tempo, turned by a drag, with its check results, an OK button and a note box. The clips are in the
-page, so it publishes alone. Publish it as an Artifact with the `db` capability
-(`capabilities: { db: {} }`); republish to the same page after each round of fixes.
+The owner's OK and notes are files in the repo, written by the studio:
 
-Each card has a **Tune** panel: a slider for each number of the exercise's pose entry (and the
-levers its movement offers that the entry leaves at the default), the body posed live in place of
-the clip with the tool's own modules (`bundle.mjs` bundles them, and `tune.mjs` says which numbers
-are sliders), the rep looping or held at the top or the bottom, and the automatic checks re-run on
-what it shows. Held at the top or the bottom, it also shows **drag handles** (`handles.mjs`): dots on
-the hands, elbows, feet, hips and chest, where the entry has numbers for them. A drag is saved as
-those same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
-`body.arch`), so the sliders follow it and the rig re-solves the limb. OK saves what was tuned, as `{ path: value }` in `verdicts/<id>.tuned` (JSON text;
-a point is saved whole, `top.bar`). `npm run review -- status <batch>` lists them as `tuned`, and
-`npm run review -- apply <batch>` puts them into `poses.mjs` as text (`patch.mjs`, so the comments
-stay), re-bakes, and rewrites each exercise's `clip` in `review/<batch>.json`; write the same
-`clip` into the page's `verdicts/<id>` (and clear its `tuned`) so the OK holds for the new clip.
-Read the diff after: a comment may now describe the old number.
+- **An OK** (`o`) goes into `review/<batch>.json` for the latest batch in `BATCHES` that lists the
+  exercise, as `{ "<id>": { "ok": true, "clip": "<fingerprint>", "at": "<time>" } }`, sorted by id.
+  `clip` is the fingerprint of the clip it was given on: what the clip shows, with the parts it
+  reads from the files it shares, so a kit file that grows for another exercise leaves the OK in
+  place (`clipContent` in `glb.mjs`). An OK needs the exercise saved first, and an exercise in no
+  batch can't be OK'd until it is added to one. Older verdicts also carry the review page's `note`
+  and `tuned`, which nothing reads any more.
+- **A note** (`a`) goes into `review/notes.md`, under a heading for the exercise (`## barbell_row`)
+  or the kit (`## kit:cable_tower`), as a bullet with the day and, for a posed exercise, the clip
+  it was left on. Read it, fix what it asks, and delete the bullet.
+- **A phone check**: `npm run review -- phone <batch>` puts `phone`, the fingerprint of each
+  exercise's clip now, into the batch's file, once the owner has swiped it in the debug gallery.
 
-A page holds every clip whole, so it grows about 0.9 MB a clip; keep a batch to 16 clips or so,
-under the 16 MB a published page may be.
-
-The page keeps one verdict per exercise in its database, `verdicts/<id>`:
-`{ ok, note, clip, at }`, where `clip` is the fingerprint of the clip the owner saw: what the clip
-shows, with the parts it reads from the files it shares, so a kit file that grows for another
-exercise leaves the OK in place (`clipContent` in `glb.mjs`). Read them back
-with the ArtifactData tool (`list` of `verdicts`), act on the notes, and write the verdicts to
-`review/<batch>.json` as `{ "<id>": { "ok": …, "note": …, "clip": … } }`. `npm run review --
-status <batch>` then lists each exercise as `ok`, `notes`, `changed` (OK'd on a clip since re-baked)
-or `waiting`, and exits non-zero until the batch is done: every exercise OK for the clip it has now.
+`npm run review -- status <batch>` lists each exercise as `ok`, `phone-checked`, `notes` (an open
+note, and no OK for the clip it has now), `changed` (OK'd on a clip since re-baked) or `waiting`,
+with its open notes, and exits non-zero until the batch is done: every exercise OK for the clip it
+has now.
 
 ## Files
 
 - `render.mjs`: PNGs of a pose, with no GPU.
-- `bundle.mjs`, `tune.mjs`, `handles.mjs`, `patch.mjs`: the review page's Tune panel: the modules it runs, its sliders, its drag handles, and `review apply`'s text patch.
+- `studio/`: the studio. `plugin.mjs` its server, `studio.js` and `index.html` its page,
+  `keys.json` and `keys.mjs` its keymap, `vite.config.mjs` what `npm run studio` serves.
+- `tune.mjs`, `handles.mjs`, `patch.mjs`: the studio's numbers, its drag handles, and the text patch
+  a save writes into `poses.mjs`.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses
@@ -419,8 +467,8 @@ or `waiting`, and exits non-zero until the batch is done: every exercise OK for 
   animation, `lowering`, and writes the files. `glb.mjs` moves the shared mannequin into
   `mannequin.bin` and each kit's parts into `kit_<name>.bin`.
 - `trace.mjs` and `trace/landmarks.py`: tracing a pose from footage. `traces/`: the traced angles.
-- `review.mjs` and `review/page.html`: the review page and the batches. `review/<batch>.json`: each
-  batch's verdicts.
+- `review.mjs`: the batches, the OKs and notes, and a batch's status. `review/<batch>.json`: each
+  batch's verdicts; `review/notes.md`: the open notes.
 - `model/mannequin.glb`: the mannequin, stripped to its mesh and skeleton (see `CREDITS.md`).
 
 ## A clip
@@ -437,9 +485,8 @@ marked with `extras.kit`). Each clip's glTF reads those buffers by URI, and hold
 and animation (`glb.mjs`). A kit file holds each distinct part once, however many clips read it, and
 grows when a clip's options make a part of a new size. The bake checks every clip's mannequin is
 byte for byte the same before it shares it. The phone hands each file a clip lists to gltfio's
-`ResourceLoader` (`addResourceData`) before loading the clip. The review page can't fetch anything,
-`data:` URLs included, so it and the tests merge the shared files into each clip (`inlineResources`)
-and parse it from memory.
+`ResourceLoader` (`addResourceData`) before loading the clip. The tests merge the shared files into
+each clip (`inlineResources`) and parse it from memory; the studio's page fetches them beside it.
 
 `mannequins.json`:
 

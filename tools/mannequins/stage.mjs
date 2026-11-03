@@ -92,9 +92,9 @@ function followArms(rig, frame) {
 }
 
 /**
- * Builds a resolved entry's stage, around `body` (the mannequin, already loaded: the review page's
- * Tune panel brings its own) or the one in `model/`. `pose(d)` poses the body and the kit `d` of the way down the
- * rep (0 at the top, 1 at the bottom) and returns the pose frame.
+ * Builds a resolved entry's stage, around `body` (the mannequin, already loaded: the studio's page
+ * brings its own) or the one in `model/`. `pose(d)` poses the body and the kit `d` of the way down
+ * the rep (0 at the top, 1 at the bottom) and returns the pose frame.
  */
 export async function buildStage(entry, body) {
   const scene = new THREE.Scene();

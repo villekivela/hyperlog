@@ -1598,6 +1598,15 @@ gallery (Technique videos).
     - **Each kit ships once** (#127), shared across the clips that use it the way the mannequin's
       mesh is: a clip reads its kits' parts from a file per kit, so detail costs about 110 KB per
       kind of equipment, not per clip.
+    - **Kits are recipes** (ADR 0007): parts from one library, put together by a short recipe per
+      kit, with the moving bodies on revolute or prismatic joints and contacts to the hands, shins
+      or feet. A machine exercise is solved from its machine: the joint drives the rep, the limbs
+      follow the contacts, and the recipe's fit rules set its adjustments (an entry can override
+      them).
+    - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
+      with a variant only where the movement differs. It may be modelled on one brand's design, but
+      its name and look in the app carry no brand. Its references (links, the owner's own photos, its
+      dimensions) are in `tools/mannequins/refs/`.
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
     the joints stay within range. A pose that fails one doesn't bake.
@@ -1613,24 +1622,33 @@ gallery (Technique videos).
   - **Debug builds:** a gallery in Settings swipes through every clip.
   - **Checking:** the logic (which clip, which angle, the tempo phases) is tested in the JVM
     behind a seam; the pixels are checked by the owner, not by screenshot tests.
-  - **Batches and review** (#123): poses are made in batches, the first the prototype's seven
-    exercises (squat, bench, RDL, Lat Pulldown, Triceps Pressdown, Leg Press, Machine Chest Press)
-    and the Close-Grip Lat Pulldown. One command builds a batch's review page: each exercise loops
-    and can be turned, with its check results, an OK button and a note box. The owner's notes go
-    back to the agent, which fixes the poses and republishes. An OK is for the clip it was given on,
-    and a batch isn't done until every exercise in it is OK; then the owner swipes it once in the
-    debug gallery before its pull request merges.
-  - **Tuning on the review page** (owner, 2026-11-02, #124): each exercise has a Tune panel with a
-    slider for each number of its pose entry, and the levers its movement offers that the entry
-    leaves at the default (shoulder lift, elbow flare, arch). The page poses the body live with the
-    tool's own code, bundled into it, looping or held at the top or the bottom, with the automatic
-    checks re-run on what it shows. With the rep held at the top or the bottom, dots on the body
-    (the hands, elbows, feet, hips and chest, where the entry has numbers for them) can be dragged:
-    the rig re-solves the limb live, and each drag is saved as the same pose numbers the sliders
-    set (the bar and the grip width, the elbow flare, the feet, `body.hip`, the trunk's lean or the
-    arch). OK saves the tuned values with the verdict (`verdicts/<id>`,
-    as JSON text); `review status` lists them, and `review apply <batch>` writes them into
-    `poses.mjs` (comments kept), re-bakes, and gives each its OK for the new clip.
+  - **The studio** (owner, 2026-11-03, #157): `npm run studio` serves the tool on the owner's
+    machine. A sidebar lists every exercise and every machine with its status (no pose, failing a
+    check, notes, OK, phone-checked); one is on stage at a time. An exercise is posed live with the
+    tool's own code, looping or held at the top or the bottom, with a slider for each number of its
+    pose entry, drag handles at the top and the bottom, and the automatic checks re-run on what it
+    shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes. A machine can be
+    opened on its own, its joints scrubbed, its references beside it. The sidebar holds the whole
+    library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the first
+    exercise that uses it sets it up. A change to `kit.mjs` or `poses.mjs` on disk reloads the stage
+    on the item it was showing.
+    - **Keyboard first, vim style** (owner, 2026-11-03, #158): everything in the studio can be done
+      from the keyboard, and the mouse is optional. Digits are counts (`5l` is five steps); `j` `k`
+      move through the focused list, `Tab` cycles the sidebar, the stage and the numbers, `/` finds
+      an exercise, a kit or a number, `h` `l` step the selected number (1° or 1 mm, `H` `L` a tenth
+      of that), `=` types a value, `t` `b` hold the top or the bottom, `:w` saves and re-bakes, `o`
+      OKs and `a` adds a note. The keymap is one file, `keys.json`; each control shows its key
+      beside it, and `?` lists every key from that file.
+  - **Batches and review:** poses are made in batches. The owner OKs each exercise in the studio, or
+    leaves a note the agent reads and fixes. An OK is for the clip it was given on, and a batch isn't
+    done until every exercise in it is OK. A batch that adds or changes a machine or a part is
+    swiped once in the debug gallery before its pull request merges; a batch that only changes
+    poses skips it, because three.js and Filament differ in lighting and materials, not in joint
+    angles. The OK and the notes are files in the repo (#158): the OK goes into the batch's
+    `review/<batch>.json` with the fingerprint of the clip it was given on (the latest batch that
+    lists the exercise), a note into `review/notes.md` under the exercise or kit, and a phone check
+    into the batch's file as well. `review status <batch>` reads the same files; nothing is
+    published or kept in a database.
 - **Two kinds of notes, neither written by hand:** the exercise's own technique cue comes with the
   library (seeded from the legacy notes, cleaned of program-specific advice like "dropset: …");
   program-specific cues come from the program file's slot `note` (the legacy programs had 281). The

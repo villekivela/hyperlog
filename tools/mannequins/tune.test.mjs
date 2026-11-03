@@ -1,9 +1,13 @@
-// Which numbers of a pose entry the review page's Tune panel offers as sliders, and how a tuned
-// value goes into an entry.
+// Which numbers of a pose entry the studio's numbers panel offers, and how a tuned value goes into
+// an entry.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
+import { tunables, applyTuned, atAngle, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
+import { MODEL, buildStage, parseMannequin } from './stage.mjs';
+import { turnOf } from './rig.mjs';
+import { POSES } from './poses.mjs';
 
 const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
 
@@ -46,12 +50,15 @@ test('tuned values go into a copy, arrays whole, and the entry is untouched', ()
   assert.deepEqual(entry.top.bar, [1.1, -0.23]);
 });
 
-test('each slider steps by what suits it: a centimetre, a degree, a twentieth of a ratio', () => {
+// The studio's h and l step a number by one step, H and L by a tenth of one (owner, 2026-11-03).
+test('each number steps by what suits it: a millimetre, a degree, a hundredth of a ratio', () => {
   const t = byPath(tunables(prepare('barbell_bench_press')));
-  assert.equal(t['grip.width'].step, 0.01);
-  assert.equal(t['feet.z'].step, 0.01);
+  assert.equal(t['grip.width'].step, 0.001);
+  assert.equal(t['feet.z'].step, 0.001);
   assert.equal(t['body.head'].step, 1);
-  assert.equal(t['grip.elbows'].step, 0.05);
+  assert.equal(t['grip.elbows'].step, 0.01);
+  const kit = byPath(tunables(prepare('lat_pulldown')));
+  assert.equal(kit['kit.cable_tower.column'].step, 0.001);
 });
 
 test('the numbers are grouped under short headings, the commonly tuned ones open', () => {
@@ -107,4 +114,34 @@ test('the wrist sliders are labelled in words, with the sign of each direction',
   assert.equal(labelOf('top.wrist.0'), 'Top · Wrist bend: + flexion / − extension');
   assert.equal(labelOf('bottom.wrist.1'), 'Bottom · Wrist tilt: + radial (thumb side) / − ulnar (little-finger side)');
   assert.equal(labelOf('grip.width'), 'grip.width');
+});
+
+// The owner, #127: on close_grip_bench_press the wrist sliders did nothing in the live preview.
+// Every pose with hands: each wrist number, moved from one side to the other, turns the hand.
+test('each wrist number turns the hand as the studio poses it, on every pose with hands', async () => {
+  const bytes = await readFile(MODEL);
+  const body = await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  const still = [];
+  for (const id of Object.keys(POSES)) {
+    const entry = prepare(id);
+    if (!entry.grip) continue;
+    // As the studio poses it: an adjustable bench at its typical angle.
+    const live = (tuned) => {
+      const e = applyTuned(entry, tuned);
+      return buildStage(e.bench ? atAngle(e, e.bench.typical) : e, body);
+    };
+    const wrists = tunables(entry).filter((t) => /^(top|bottom)\.wrist\.[01]$/.test(t.path));
+    assert.equal(wrists.length, 4, `${id} offers ${wrists.map((t) => t.path)}`);
+    for (const t of wrists) {
+      const d = t.path.startsWith('top') ? 0 : 1;
+      const hand = async (v) => {
+        const stage = await live(withTuned(entry, {}, t.path, v));
+        stage.pose(d);
+        return turnOf(stage.rig, 'lowerarm_l').invert().multiply(turnOf(stage.rig, 'hand_l'));
+      };
+      const turned = ((await hand(15)).angleTo(await hand(-15)) * 180) / Math.PI;
+      if (turned < 20) still.push(`${id} ${t.path}: ${turned.toFixed(0)}°`);
+    }
+  }
+  assert.deepEqual(still, [], 'from -15 to 15 the hand turned only');
 });

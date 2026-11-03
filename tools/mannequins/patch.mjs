@@ -1,4 +1,4 @@
-// Writes tuned values (`{ path: value }`, from the review page) into poses.mjs as text, so the
+// Writes tuned values (`{ path: value }`, from the studio's save) into poses.mjs as text, so the
 // comments around them stay. A number is replaced where it is, a point whole, and a key the entry
 // hasn't got is added where it belongs. Anything it can't place is an error that names it.
 

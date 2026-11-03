@@ -131,7 +131,7 @@ export async function checkPose(id, { poses, angle, grip } = {}) {
 
 /**
  * The same checks over a built stage (`buildStage`), on `frames` frames of the lowering. The
- * review page's Tune panel runs them live on fewer.
+ * studio runs them live on what it poses.
  */
 export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
   const parts = solids(kit);
