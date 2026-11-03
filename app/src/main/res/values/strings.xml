@@ -257,6 +257,9 @@
     <!-- The grips of an exercise done with a different grip set by set, over its mannequin. -->
     <string name="grip_wide">Wide</string>
     <string name="grip_narrow">Narrow</string>
+    <!-- How each grip holds the bar, under the buttons. -->
+    <string name="grip_wide_how">Overhand, 1.5× shoulder width</string>
+    <string name="grip_narrow_how">Underhand, shoulder width, palms to your face</string>
     <!-- A 2-grip exercise's button under its mannequin: "Set 1 · Wide". -->
     <string name="grip_for_set">Set %1$d · %2$s</string>
     <string name="sheet_video_at">Technique video · %1$s</string>

@@ -197,8 +197,7 @@ the mannequin is the size the owner approved; the stage gains air at its sides.
 An exercise done with a different grip set by set (the 2-Grip Lat Pulldown: set 1 wide and
 overhand, set 2 narrow and underhand) has a clip per grip, and a choice under the stage switches
 between them. Screens: `screens/mannequin-grip-set-1-light.png`, `-set-1-dark.png`,
-`-set-2-light.png`, `-set-2-dark.png`, `-past-last-light.png`, `-past-last-dark.png` (emulator,
-115 % text, #127).
+`-set-2-light.png`, `-set-2-dark.png` (emulator, 115 % text, #127).
 
 Principles:
 
@@ -207,8 +206,10 @@ Principles:
 2. **Each grip says its set.** `Set 1 · Wide`, `Set 2 · Narrow`: the grip is the set's, so the
    button names both, in the session's own words (`Set 2`, as the rest strip's `· Set 3`). The
    choice the sheet opens on then reads as "this is the set you're on", not as a default.
-3. **One control, nothing more.** No caption or help line: the note says what the grips are, the
-   mannequin shows the hands, the button says which set.
+3. **One line on how to hold it.** Under the group, the chosen grip's hold in a line
+   (`Underhand, shoulder width, palms to your face`): the tester pass found "Narrow" left out
+   underhand, the part most easily got wrong, and at phone size the clip doesn't show the palms
+   plainly. Nothing more: the button says which set.
 
 Tokens:
 
@@ -217,7 +218,8 @@ Tokens:
 | Group | `ConnectedChoice`, 12 dp in from the sheet's edges (the stage's edges) | on the sheet (`surfaceContainerLow`): the others in its well, the picked one `primaryContainer` |
 | Label | labelLarge, `Set n · Grip` | one line; `Set n` is the grip's place in the clip's list |
 | Stage → group | 8 dp | half the 16 dp to the name, so the group reads with the stage (a 4 dp spacer: the buttons' 48 dp touch target adds 4 dp round their 40 dp) |
-| Group → name | 16 dp | the stage's own gap to the name (a 12 dp spacer, for the same reason) |
+| Hold line | bodyMedium, onSurfaceVariant, on the 28 dp text edge, 4 dp under the group | the chosen grip's hold, one line at 115 % text |
+| Group → name | 16 dp | the stage's own gap to the name (a 12 dp spacer, for the same reason), below the hold line |
 
 ```
 ╭──────────────────────────────────────╮   ← the stage, 12 dp in
@@ -225,6 +227,7 @@ Tokens:
 ╰──────────────────────────────────────╯
                                              8 dp
 (████ Set 1 · Wide ████)( Set 2 · Narrow )   ← connected group, the stage's width
+ Overhand, 1.5× shoulder width               ← the chosen grip's hold
                                              16 dp
  2-Grip Lat Pulldown                         ← 28 dp text edge
 ```

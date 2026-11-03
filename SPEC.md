@@ -1523,8 +1523,9 @@ gallery (Technique videos).
     has a clip per grip (owner, 2026-11-03): the 2-Grip Lat Pulldown's set 1 wide and overhand at
     1.5 shoulder widths, set 2 narrow and underhand at shoulder width, palms to the face. Its sheet
     shows a connected choice under the mannequin, each button naming its set and grip (`Set 1 ·
-    Wide`, `Set 2 · Narrow`), and opens on the grip of the set being done (outside a session, the
-    first; past the last grip, the last). The barbell batch (#127) adds a low platform
+    Wide`, `Set 2 · Narrow`) and a line under them on how the chosen grip holds the bar (overhand
+    at 1.5 shoulder widths; underhand at shoulder width, palms to the face), and opens on the grip
+    of the set being done (outside a session, the first; past the last grip, the last). The barbell batch (#127) adds a low platform
     under the feet for a deficit, and a bench that stands across the body for a hip thrust. Its
     squats are the owner's tuned Barbell Squat changed only where the variant differs (owner, via
     the coordinator, 2026-11-03): the high bar a little higher on the traps; the low bar across the
