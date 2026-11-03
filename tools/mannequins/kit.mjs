@@ -37,6 +37,24 @@ export const MACHINES = {
 };
 
 /**
+ * The cable machines that serve exercises by a free handle at an adjustable height, with the
+ * exercises each is the machine of. Only those no pose has set up on `cable_tower` or `cable_column`
+ * are listed: a posed exercise keeps its kit (moving it would change its clip), and moves when it is
+ * posed machine-first.
+ */
+export const CABLE_MACHINES = {
+  cable_crossover: {
+    kit: 'cable_crossover',
+    exercises: [
+      '1_arm_cable_press_around', '1_arm_katana_cable_triceps_extension', '1_leg_cable_glute_kickback', 'behind_the_back_cable_lateral_raise',
+      'cable_chest_press', 'cable_crossover', 'cable_crunch', 'cable_face_pull', 'cable_hip_abduction', 'cable_pull_through', 'cable_shrug_in',
+      'cable_triceps_kickback', 'cable_woodchopper', 'cable_wrist_curl', 'cable_wrist_extension', 'cable_y_raise', 'high_cable_lateral_raise',
+      'low_to_high_cable_press', 'seated_cable_flye',
+    ],
+  },
+};
+
+/**
  * The library's equipment, each with the kits a pose in it may use. A kind with no kit yet is
  * `null`, and is listed as missing in the README; a pose can't be made in it until it has one.
  * Bodyweight needs no kit for most of its exercises.
@@ -44,7 +62,7 @@ export const MACHINES = {
 export const EQUIPMENT = {
   barbell: ['barbell', 'bench', 'platform'],
   dumbbell: ['dumbbells', 'bench'],
-  cable: ['cable_tower', 'cable_column', 'bench'],
+  cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
   bodyweight: [],
   ez_bar: null,
