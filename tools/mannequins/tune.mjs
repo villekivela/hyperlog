@@ -17,7 +17,7 @@ export const OPTIONAL = {
   lever_handles: { 'grip.rotate': 0, 'grip.pole': [0.7, -1, -0.5] },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
-  squat: { 'feet.y': 0 },
+  squat: { 'feet.y': 0, 'grip.spot': [0.02, 0.06, 0.07] },
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);

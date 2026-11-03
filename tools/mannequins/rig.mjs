@@ -179,7 +179,8 @@ export function heldAt(rig, k) {
 export function poseRig(rig, P) {
   const { bones, rest, dims: L } = rig;
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
-  for (const [b, q] of rig.curls) b.quaternion.copy(q);
+  // The fingers close round what the hand holds; an open hand (`openHands`, lying on a shoulder) keeps them straight.
+  if (!P.openHands) for (const [b, q] of rig.curls) b.quaternion.copy(q);
   rig.root.updateMatrixWorld(true);
   // The trunk: the spine rigid along u, the pelvis placed so the hip joints land on hipC.
   const pelvisDelta = frame(P.u, X).multiply(frame(rest.pelvis.dir, X).invert());

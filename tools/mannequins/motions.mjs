@@ -87,6 +87,9 @@ const standingFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 
 /** In front of a seat: the knees up and a little out. */
 const seatedFeet = (e, L) => floorFeet(e, L, (s) => V(s * (e.feet.kneesOut ?? 0.25), 1, 0.6).normalize());
 
+/** Where a cross-arm rack's hand lies on the other shoulder, from its joint: [across toward the middle, up, forward]. */
+const SPOT = [0.02, 0.06, 0.07];
+
 /** How far in front of the shin's and the thigh's line a bar running past them must stay: their own depth and the bar's. */
 const SHIN_FRONT = 0.075;
 const THIGH_FRONT = 0.11;
@@ -220,9 +223,16 @@ export const MOTIONS = {
       headDir: u.clone().add(V(0, 1.2, 0.15)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
-      // With `grip.crossed` (a front squat's cross-arm rack) each hand holds the bar over the other
-      // shoulder, `grip.width` across the middle.
-      ...(e.grip.crossed ? { hand: (side) => bar.clone().addScaledVector(X, -side * e.grip.width) } : {}),
+      // With `grip.crossed` (a front squat's cross-arm rack) the bar rides on the front delts and
+      // each hand lies open on the other shoulder, over the bar, not gripping it: at `grip.spot`
+      // [across, up, forward] from that shoulder joint, in the trunk's frame.
+      ...(e.grip.crossed ? {
+        openHands: true,
+        hand: (side) => {
+          const [across, up, forward] = e.grip.spot ?? SPOT;
+          return shouldersOf(hipC, u, L).addScaledVector(X, -side * (L.shW - across)).addScaledVector(u, up).addScaledVector(f, forward);
+        },
+      } : {}),
       // A bar on the back has the elbows down and back; `grip.pole` points them elsewhere, forward
       // for a bar racked on the front.
       armPole: e.grip.pole ? elbowsTo(e) : (side) => u.clone().multiplyScalar(-1).addScaledVector(f, -0.8).addScaledVector(X, side * 0.3).normalize(),

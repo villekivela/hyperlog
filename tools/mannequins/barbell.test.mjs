@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
-import { between } from './rig.mjs';
+import { between, heldAt, wpos } from './rig.mjs';
 import { POSES } from './poses.mjs';
 
 for (const id of ['barbell_row', 'deficit_pendlay_row', 'deadlift', 'deficit_deadlift']) {
@@ -47,4 +47,30 @@ test('a hip thrust arches its back at the bottom, its shoulders still on the ben
   // Seen from the hips, the shoulder joints are where the straight back puts them, on the bench.
   const turn = (Math.abs(Math.atan2(arched.at.z, arched.at.y) - Math.atan2(straight.at.z, straight.at.y)) * 180) / Math.PI;
   assert.ok(turn < 0.5, `the shoulders turned ${turn.toFixed(1)}° about the hips`);
+});
+
+// A cross-arm front squat (owner, #127): the bar rides on the front delts and each hand lies open
+// on the other shoulder, over the bar, not gripping it.
+test('a front squat\'s bar rides on the front delts all through the rep', async () => {
+  const stage = await buildStage(prepare('front_squat'));
+  for (let f = 0; f < FRAMES; f++) {
+    const P = stage.pose(f / (FRAMES - 1));
+    const front = P.hipC.clone().set(1, 0, 0).cross(P.u).normalize();
+    const off = P.bar.clone().sub(between(stage.rig, 'upperarm_l', 'upperarm_r'));
+    const up = off.dot(P.u);
+    const forward = off.dot(front);
+    assert.ok(up > -0.01 && up < 0.07 && forward > 0.04 && forward < 0.12, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm in front of the shoulders`);
+  }
+});
+
+test('a front squat\'s hands lie open on the other shoulder, not on the bar', async () => {
+  const stage = await buildStage(prepare('front_squat'));
+  const P = stage.pose(0.5);
+  assert.ok(P.openHands, 'the hands grip');
+  for (const [k, s] of [['l', 1], ['r', -1]]) {
+    const other = wpos(stage.rig.bones[`upperarm_${s > 0 ? 'r' : 'l'}`]);
+    // The palm, at the base of the fingers, lies on the delt in front of and above the joint.
+    const palm = heldAt(stage.rig, k);
+    assert.ok(palm.distanceTo(other) < 0.12, `the ${k} palm is ${(palm.distanceTo(other) * 100).toFixed(0)} cm from the other shoulder`);
+  }
 });
