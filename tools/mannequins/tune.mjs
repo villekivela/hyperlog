@@ -14,6 +14,8 @@ export const OPTIONAL = {
   calf_raise: { 'grip.pole': [1, -0.3, -0.4] },
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
   lever_handles: { 'grip.rotate': 0, 'grip.pole': [0.7, -1, -0.5] },
+  // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.
+  squat: { 'grip.pole': [0.3, -1, -0.8] },
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
@@ -93,6 +95,8 @@ function leaves(value, path, out) {
 function rangeOf(path, value) {
   const key = steps(path).filter((k) => !/^\d+$/.test(k)).at(-1);
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
+  // A wrist bends well past the hand's own turn to the bar.
+  if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.05, unit: '' };
   // Equipment stands where the pose needs it: a metre either way.

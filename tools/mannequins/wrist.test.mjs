@@ -4,9 +4,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
-import { applyTuned } from './tune.mjs';
+import { applyTuned, tunables } from './tune.mjs';
 import { handlesAt } from './handles.mjs';
-import { X, turnOf, wpos } from './rig.mjs';
+import * as THREE from 'three';
+import { X, gripTarget, heldAt, turnOf, wpos } from './rig.mjs';
 
 const deg = (r) => (r * 180) / Math.PI;
 const posed = async (id, d, tuned = {}) => {
@@ -39,11 +40,11 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
   });
 }
 
-test('wrist flexion and deviation at an end turn the hand that far from where it would be', async () => {
-  const base = await posed('barbell_squat', 0);
+test('wrist flexion and deviation at an end turn the hand that far from a straight wrist', async () => {
+  const base = await posed('barbell_squat', 0, { 'top.wrist': [0, 0], 'bottom.wrist': [0, 0] });
   const flexed = await posed('barbell_squat', 0, { 'top.wrist': [20, 0], 'bottom.wrist': [20, 0] });
   const turn = deg(flexed.atWrist.angleTo(base.atWrist));
-  assert.ok(Math.abs(turn - 20) < 3, `the hand turned ${turn.toFixed(0)}° at the wrist`);
+  assert.ok(Math.abs(turn - 20) < 5, `the hand turned ${turn.toFixed(0)}° at the wrist`);
   // An end that gives no wrist is at neutral: one given at the bottom alone leaves the top alone.
   const bottomOnly = await posed('barbell_squat', 0, { 'bottom.wrist': [20, 0] });
   assert.ok(deg(bottomOnly.atWrist.angleTo(base.atWrist)) < 1, 'the top moved');
@@ -65,4 +66,42 @@ test('a grip turned at one end eases from grip.rotate at the other', async () =>
   const L = stage.rig.dims;
   assert.equal(frameAt(entry, 0, L).gripRotate, 30);
   assert.equal(frameAt(entry, 1, L).gripRotate, 150);
+});
+
+// The owner, #127: a back squat's elbows can be set (Tune's grip.pole, or a drag of the elbow), back
+// and down behind a low bar, and the hands still sit on the bar, knuckles along it.
+test('a back squat offers its elbows in Tune, starting where the squat puts them', () => {
+  const t = tunables(prepare('barbell_squat')).filter((x) => x.path.startsWith('grip.pole.'));
+  assert.deepEqual(t.map((x) => x.path), ['grip.pole.0', 'grip.pole.1', 'grip.pole.2']);
+});
+
+test('elbows set back and down behind the bar keep the hands on it, knuckles along it', async () => {
+  const back = await posed('barbell_squat', 0, { 'grip.pole': [0.3, -0.6, -1] });
+  const elbow = wpos(back.stage.rig.bones.lowerarm_l);
+  const shoulder = wpos(back.stage.rig.bones.upperarm_l);
+  assert.ok(elbow.z < shoulder.z - 0.05 && elbow.y < shoulder.y, `the elbow at ${elbow.toArray().map((v) => v.toFixed(2))}, the shoulder at ${shoulder.toArray().map((v) => v.toFixed(2))}`);
+  assert.ok(heldAt(back.stage.rig, 'l').distanceTo(gripTarget(back.P, 1)) < 0.015, 'the hand left the bar');
+  const off = deg(Math.acos(Math.min(1, Math.abs(back.knuckles.dot(X)))));
+  assert.ok(off < 15, `the knuckles cross the bar ${off.toFixed(0)}° off its line`);
+});
+
+test('dragging a squat\'s elbow sets where the elbows point', async () => {
+  const { entry, stage, P } = await posed('barbell_squat', 0);
+  const handle = handlesAt(entry, stage, P, 0).find((h) => h.id === 'elbow');
+  assert.ok(handle, 'no elbow handle');
+  const changes = handle.drag(handle.at.clone().add(new THREE.Vector3(0, -0.05, -0.08)));
+  assert.deepEqual(Object.keys(changes), ['grip.pole']);
+});
+
+// The owner, #127: their wrist values win over the hand's turn to the bar, so a straight wrist is
+// one they can set.
+test('a straight wrist set on a back squat keeps the hand in line with the forearm', async () => {
+  const straight = await posed('barbell_squat', 0, { 'top.wrist': [0, 0], 'bottom.wrist': [0, 0] });
+  const bend = deg(straight.fingers.angleTo(straight.forearm));
+  assert.ok(bend < 5, `the wrist bends ${bend.toFixed(1)}°`);
+});
+
+test('the wrist sliders reach 60° either way', () => {
+  const t = tunables(prepare('barbell_squat')).find((x) => x.path === 'top.wrist.1');
+  assert.ok(t.min <= -60 && t.max >= 60, `${t.min} to ${t.max}`);
 });

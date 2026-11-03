@@ -1516,9 +1516,12 @@ gallery (Technique videos).
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
     row, the machine pulldown and the preacher curl. After the owner's review (2026-11-03) a flye's,
     a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a
-    curl can stand staggered; and equipment moves a metre either way in Tune. Every hand on a bar
-    or a set handle turns at the wrist until its knuckles lie along it, as far as a wrist bends,
-    and Tune bends the wrists and turns the grip at each end; every cable ends at its handle's
+    curl can stand staggered; and equipment moves a metre either way in Tune. Every wrist is straight
+    by default, the back of the hand in line with the forearm (owner, 2026-11-03): a bar or a set
+    handle lies across the palm, low near its heel for a press or a squat, at the fingers' roots for
+    a pull, and the hand rolls about it while the elbow moves to suit; a wrist bends only where the
+    pose sets it, and a check fails one bent more than 20° otherwise. Tune bends the wrists, turns
+    the grip at each end and points a squat's elbows; every cable ends at its handle's
     hook (a check fails one more than 1 cm off). An exercise done with a different grip set by set
     has a clip per grip (owner, 2026-11-03): the 2-Grip Lat Pulldown's set 1 wide and overhand at
     1.5 shoulder widths, set 2 narrow and underhand at shoulder width, palms to the face. Its sheet

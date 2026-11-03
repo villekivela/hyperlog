@@ -47,7 +47,7 @@ export const POSES = {
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.15, -0.23] },
+    top: { bar: [1.1, -0.23] },
     bottom: { bar: [0.71, -0.09] },
     grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
@@ -151,7 +151,7 @@ export const POSES = {
     body: { hip: [0.56, 0], trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The handles at mid-chest: out in front at the top, back to the shoulders' line at the bottom.
-    top: { handle: [0.94, 0.42], press: 0 },
+    top: { handle: [0.94, 0.38], press: 0 },
     bottom: { handle: [1.055, -0.01], press: 1 },
     lever: 0.85,
     grip: { width: 0.385 },
@@ -163,7 +163,7 @@ export const POSES = {
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides.
   close_grip_bench_press: {
     like: 'barbell_bench_press',
-    top: { bar: [1.15, -0.21] },
+    top: { bar: [1.13, -0.21] },
     bottom: { bar: [0.725, -0.05] },
     grip: { width: 0.22, elbows: 0.45 },
   },
@@ -174,8 +174,8 @@ export const POSES = {
   '2_grip_lat_pulldown': {
     like: 'lat_pulldown',
     grips: {
-      wide: { grip: { width: 0.29, rotate: 0 } },
-      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.3 }, bottom: { bar: [1.08, 0.06] } },
+      wide: { grip: { width: 0.31, rotate: 0 } },
+      narrow: { grip: { width: 0.19, rotate: 180, elbows: 0.2 }, bottom: { bar: [1.08, 0.06] } },
     },
   },
 
@@ -302,11 +302,11 @@ export const POSES = {
   bayesian_cable_curl: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_column: { at: [0.15, -0.8], pulley: 0.25, attachment: 'handle', hand: 1 } },
-    top: { shin: 10, thigh: 10, trunk: 12, upperArm: -22, forearm: 125 },
-    bottom: { shin: 10, thigh: 10, trunk: 12, upperArm: -22, forearm: -20 },
+    kit: { cable_column: { at: [0.3522, -0.8], pulley: 0.25, attachment: 'handle', hand: 1 } },
+    top: { shin: 10, thigh: 10, trunk: 20.9948, upperArm: -10.3208, forearm: 107.4867 },
+    bottom: { shin: 10, thigh: 10, trunk: 20.0502, upperArm: -34.6598, forearm: -11.2509 },
     feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: -0.32 },
-    grip: { width: 0.2, rotate: 180, one: 1, rest: [-0.2, 0.96, 0.06], pole: [0.15, -1, -0.5] },
+    grip: { width: 0.2, rotate: 180, one: 1, rest: [-0.2, 0.96, 0.12], pole: [0.15, -1, -0.5] },
     camera: { target: [0, 1.0, -0.2], halfHeight: 1.1, azimuth: 80, elevation: 8 },
   },
 
