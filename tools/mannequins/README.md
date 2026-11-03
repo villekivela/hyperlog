@@ -234,9 +234,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
   its front edge short of the elbows. The three are plate-loaded: `row_machine` and
   `pulldown_machine` turn their levers on hubs at the pose's `pivot` (the row's low in front of the
-  knees, the pulldown's on a portal ahead of the head), each lever running on past its hub to a
-  loaded horn; `preacher_curl_machine` turns its bar's levers on hubs in line with the elbows,
-  beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the muscle works.
+  knees, the pulldown's on a portal ahead of the head), each lever carrying a loaded horn on an
+  arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
+  elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
+  muscle works.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its

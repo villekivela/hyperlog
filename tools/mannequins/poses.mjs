@@ -257,7 +257,7 @@ export const POSES = {
     motion: 'lever_handles',
     kit: { row_machine: { seat: [0.5, 0], chest: { up: 0.36, front: 0.085 } } },
     body: { hip: [0.59, 0], trunk: 5 },
-    // The levers' pivot low in front of the knees, as far from each handle.
+    // The levers' pivot low in front of the knees, the same distance from both handles.
     pivot: [0.45, 0.527],
     top: { handle: [1.0, 0.62], press: 0 },
     bottom: { handle: [0.95, 0.28], press: 1 },
@@ -272,7 +272,7 @@ export const POSES = {
     motion: 'lever_handles',
     kit: { pulldown_machine: { seat: [0.47, 0.02], thighPad: [0.66, 0.3], pad: 0.2 } },
     body: { hip: [0.56, 0], trunk: -15 },
-    // The levers' pivot on the portal ahead of the head, as far from each handle.
+    // The levers' pivot on the portal ahead of the head, the same distance from both handles.
     pivot: [1.29, 0.85],
     top: { handle: [1.6, 0.17], press: 0 },
     bottom: { handle: [1.12, 0.12], press: 1 },
