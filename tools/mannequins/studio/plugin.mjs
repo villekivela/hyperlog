@@ -220,7 +220,9 @@ export function studio({
     if (!t.kit.KITS[name]) throw new Refused(`No kit ${name}`);
     const uses = usesOf(t)[name] ?? null;
     const notes = (await t.review.readNotes({ dir: t.dir }))[`kit:${name}`] ?? [];
-    return { kind: 'kit', id: name, name, uses, notes, status: kitStatus(notes.length, uses), entry: uses && t.entries.prepare(uses, t.POSES) };
+    // A kit no pose uses yet is shown alone, where its recipe can stand without one.
+    const entry = uses ? t.entries.prepare(uses, t.POSES) : t.kit.shownAlone(name);
+    return { kind: 'kit', id: name, name, uses, notes, status: kitStatus(notes.length, uses), entry };
   }
 
   // One save at a time: each patches the file as the last one left it, and bakes.

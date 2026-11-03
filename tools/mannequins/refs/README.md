@@ -20,7 +20,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 
 | # | Machine | Exercises | Based on |
 | --- | --- | --- | --- |
-| 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable) |
+| 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), not yet posed |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°) |
 | 4 | [`pullup_dip_station`](pullup_dip_station/ref.md) | 16 | Rogue Crown Pull-up Bar and Monster Matador dip handles |
@@ -55,14 +55,14 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
   hangs on the belt's chain at about mid-thigh, between the legs, as the videos show) and the
   hyperextension bench.
 - Nordic and reverse nordic curls need only a pad and an anchor (a note in the hyperextension file).
-- `kit.mjs` also lists `chest_supported_t_bar_row` and `t_bar_row` under `row_machine`. #161 moves
-  both, with `kelso_shrug`, to `t_bar_row_machine`: the `t_bar_row` video shows a chest-supported
-  plate-loaded machine, not a landmine or an unsupported T-bar ([ref](t_bar_row_machine/ref.md)).
+- `chest_supported_t_bar_row` and `t_bar_row`, with `kelso_shrug`, are on `t_bar_row_machine` (#176):
+  the `t_bar_row` video shows a chest-supported plate-loaded machine, not a landmine or an
+  unsupported T-bar ([ref](t_bar_row_machine/ref.md)).
 - `roman_chair_crunch` is a knee raise on a captain's chair, as its video shows, not an exercise on
   the hyperextension bench ([ref](captains_chair/ref.md)). #161 should give it that kit.
-- `kit.mjs` lists `kelso_shrug` under `shrug_machine`, but the owner confirms it is done
-  chest-supported on the T-bar row machine ([video](https://youtu.be/76rz0UNAlYI)). #161 should move
-  it to `t_bar_row_machine` ([ref](t_bar_row_machine/ref.md)), not `row_machine`. That leaves `shrug_machine` at one exercise.
+- `kelso_shrug` is done chest-supported on the T-bar row machine, as the owner confirms
+  ([video](https://youtu.be/76rz0UNAlYI)), so it is on `t_bar_row_machine`, not `shrug_machine`
+  ([ref](t_bar_row_machine/ref.md)). That leaves `shrug_machine` at one exercise.
 
 ## Gaps
 
@@ -70,8 +70,9 @@ Every dimension a maker doesn't publish is estimated from a viewed photo or vide
 chosen from a fit rule at low confidence. What stays chosen, or rough, per machine (each file's Open
 gaps says why):
 
-- `t_bar_row_machine`: the foot plate setting for the mannequin; the top of the row comes from a
-  three-quarter photo.
+- `t_bar_row_machine` (built, #176): the foot plate setting for the mannequin; the top of the row
+  comes from a three-quarter photo. The recipe runs the neutral grips fore and aft through the
+  yoke's top blocks, as photos 05 and 06 show them, where the ref's spec calls them vertical.
 - `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
   80 mm); the carriage position per exercise is chosen.
 - `smith_machine`: the 7 degree lean's direction, the bar and sleeve length and the hooks' turn are
