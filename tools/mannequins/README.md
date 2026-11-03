@@ -191,7 +191,11 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   `straight_bar` or `v_handle`. The cable meets the front of the pulley's wheel and runs over a
   second wheel above the stack, which stands far enough behind the pulley for it. Its weight stack
   rises as the cable is drawn out, and is held 6 cm off its rest even at the stretch (`HELD`), as
-  every working stack is. It has a high pulley only (1.5 m or more) for now.
+  every working stack is. A pose draws on its high pulley only (1.5 m or more) for now; without a
+  seat, the tower also shows its low pulley, in a housing on the floor rail in front of the stack.
+- `bench` rolls on wheels at its front foot and has a handle out of its back; the adjustable one's
+  back pad rests on a strut set in a ladder of rungs on the rail, placed for the angle the clip is
+  baked at (the phone turns the pad a few degrees either side of it at most).
 - The leg press's sled and the chest press's levers and stack move with the rep; their back pads sit
   behind the body's back at the top of the rep (`pad`, metres behind the spine).
 

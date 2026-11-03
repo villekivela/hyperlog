@@ -66,3 +66,22 @@ test('a pose can only use kits of its own equipment, and none for a kind without
   assert.throws(() => buildKit({ equipment: 'barbell', kit: { cable_tower: {} } }), /Kit "cable_tower" isn't barbell equipment/);
   assert.throws(() => buildKit({ equipment: 'trap_bar', kit: {} }), /"trap_bar" has no kit yet/);
 });
+
+// The owner's bar (#127): every machine and bench at the lat tower's detail, built in the tones
+// table's parts: a frame, vinyl pads and grips, plates, metal rods and cables, pulleys and housings.
+// A bench carries no plates of its own.
+const WEARS = {
+  cable_tower: [{ equipment: 'cable', kit: { cable_tower: { attachment: 'straight_bar' } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  chest_press: [{ equipment: 'machine', kit: { chest_press: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  leg_press: [{ equipment: 'machine', kit: { leg_press: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  bench: [{ equipment: 'barbell', kit: { bench: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
+  adjustable_bench: [{ equipment: 'dumbbell', kit: { bench: {} }, bench: { angle: 30 } }, ['frame', 'vinyl', 'metal', 'pulley']],
+};
+
+test('every machine and bench wears each tone of its parts', () => {
+  for (const [name, [entry, tones]] of Object.entries(WEARS)) {
+    const worn = new Set();
+    buildKit(entry).group.traverse((o) => { if (o.isMesh) worn.add(o.material.name); });
+    assert.deepEqual([...worn].filter((t) => tones.includes(t)).sort(), [...tones].sort(), `${name} wears ${[...worn].sort().join(', ')}`);
+  }
+});

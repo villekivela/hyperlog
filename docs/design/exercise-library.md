@@ -227,3 +227,8 @@ demand is a connected button group and its chips pick in primaryContainer.
   stays #BABAC1: the issue quoted the prototype's #D2D2D8, the near-white this note's first pass
   darkened. Dark vinyl (#2E2E33) is the dark stage's own tone, so a dark pad shows by its shading
   and the rim light.
+- **Kit detail, pass 2** (owner, #127): only the lat pulldown's tower read as the prototype's B, so
+  the rest came up to it: the standing tower's low pulley, the chest press's housings, brace and
+  capped grips, the leg press's framed base and roller carriage, and the benches' wheels, handle
+  and adjustable strut. Rendered shaded in light (`mannequin-kits-before.png`, the #123 kits;
+  `mannequin-kits-after.png`, these).
