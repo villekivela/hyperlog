@@ -21,13 +21,13 @@
     "ok": true,
     "note": "i cant position the barbell in bottom properly",
     "clip": "30200e49bf065b0b",
-    "tuned": "{\"bottom.bar\": [0.2241, -0.0434], \"top.bar\": [0.4714, -0.0132], \"body.shoulders\": [0.0187, -0.6085], \"body.head\": 40, \"top.hip\": [0.3844, 0.08]}"
+    "tuned": "{\"bar.up\":0.1116,\"bottom.bar\":[0.2241,-0.0434],\"top.bar\":[0.4714,-0.0132],\"body.shoulders\":[0.0187,-0.6085],\"body.head\":40,\"top.hip\":[0.3844,0.08]}"
   },
   "barbell_hip_thrust": {
     "ok": true,
     "note": "i cant adjust the arc of back on the bottom which would help make this more natural. also the bottom barbell position is so i cant tune it properly",
-    "clip": "58206bb95d636f97",
-    "tuned": ""
+    "clip": "dbaa544ea38b5d26",
+    "tuned": "{}"
   },
   "barbell_row": {
     "ok": true,
@@ -45,19 +45,19 @@
     "ok": true,
     "note": "",
     "clip": "74a4869615c26680",
-    "tuned": "{}"
+    "tuned": ""
   },
   "deadlift": {
     "ok": true,
     "note": "cant tune this properly",
-    "clip": "79a1a1a6662116c4",
-    "tuned": ""
+    "clip": "f9dce8e8e507b442",
+    "tuned": "{}"
   },
   "deficit_deadlift": {
     "ok": true,
     "note": "",
-    "clip": "836abc76e2ccc74b",
-    "tuned": ""
+    "clip": "078d0bf48eed5073",
+    "tuned": "{}"
   },
   "deficit_pendlay_row": {
     "ok": true,
@@ -72,9 +72,9 @@
     "tuned": "{}"
   },
   "front_squat": {
-    "ok": true,
-    "note": "",
-    "clip": "a6cb9b551157c750",
-    "tuned": ""
+    "ok": false,
+    "note": "the hands should not be attached to the barbell",
+    "clip": "af56acd16a2a28e7",
+    "tuned": "{}"
   }
 }
