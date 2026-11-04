@@ -209,8 +209,6 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   **`steady: true`** turns each from whichever end lies nearest the handle's line at the top of the
   rep, so a handle lying nearly end for end doesn't spin about itself. Every new entry whose
   handles lie across the body wants it; `db_incline_press` goes without, so its OK'd clips stay.
-- **`bench: { perAngle: null }`** on a `like:` of an adjustable-bench pose drops the settings it
-  would take per angle, which are tuned to that pose alone.
 - **`grip.rotate`** (any pose with hands) twists the forearms, in degrees: 0 overhand, 90 neutral
   (palms toward each other), 180 underhand (palms toward the face). The default is 0; the
   close-grip pulldown is 180.
@@ -265,7 +263,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
-| `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `grip.width`. The back toes stay on the floor by `offsets` on `ball_r`, as far as the heel rises |
+| `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment

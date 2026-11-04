@@ -648,15 +648,14 @@ export const POSES = {
     equipment: 'dumbbell',
     motion: 'lunge',
     kit: { dumbbells: {} },
-    // The toes stay on the floor as the heel rises: bent back at the ball as far as the foot tips.
-    top: { hip: [0.83, -0.03], trunk: 6, heel: 25, offsets: { ball_r: [-25, 0, 0] } },
-    bottom: { hip: [0.53, -0.08], trunk: 10, heel: 50, offsets: { ball_r: [-50, 0, 0] } },
-    feet: { stance: 0.1, front: 0.36, back: -0.36, toeOut: 6 },
+    top: { hip: [0.83, 0.06], trunk: 6, heel: 25 },
+    bottom: { hip: [0.53, 0.06], trunk: 10, heel: 50 },
+    feet: { stance: 0.1, front: 0.36, back: -0.3, toeOut: 6 },
     grip: { width: 0.29, rotate: 90 },
     camera: { target: [0, 0.85, 0], halfHeight: 1.05, azimuth: 78, elevation: 8 },
   },
 
-  // Hinged over in a split stance, the right foot ahead and the right hand braced on that knee: the
+  // Hinged over in a split stance, the right foot ahead and the right hand braced above that knee: the
   // left arm rows the dumbbell from hanging under the shoulder, palm in, the elbow driving back past
   // the trunk.
   single_arm_db_row: {
@@ -666,7 +665,7 @@ export const POSES = {
     top: { shin: 10, thigh: 40, trunk: 62, hand: [0.2, 0.84, 0.06] },
     bottom: { shin: 10, thigh: 40, trunk: 62, hand: [0.22, 0.5, 0.3] },
     feet: { stance: 0.15, z: -0.08, toeOut: 8, kneesOut: 0.2, stagger: -0.3 },
-    grip: { one: 1, rest: [-0.15, 0.6, 0.2], rotate: 90, pole: [0.15, 0.3, -1] },
+    grip: { one: 1, rest: [-0.135, 0.64, 0.085], rotate: 90, pole: [0.15, 0.3, -1] },
     camera: { target: [0, 0.8, 0.1], halfHeight: 0.98, azimuth: 66, elevation: 8 },
   },
 
@@ -697,15 +696,26 @@ export const POSES = {
     tempo: { bottom: 0.3 },
   },
 
-  // The incline press's bench, upright by default: the dumbbells press from beside the ears to
-  // overhead, all the way down each rep, the trunk upright against the pad. None of the incline's
-  // settings per angle, which are tuned to its own press: these numbers follow the pad at every angle.
+  // The adjustable bench, upright by default: the dumbbells press from beside the ears to overhead,
+  // all the way down each rep, the trunk upright against the pad. These numbers follow the pad at
+  // every angle. Its own entry, not `like:` the incline press, whose settings per angle would come
+  // back with the first one saved here.
   seated_db_shoulder_press: {
-    like: 'db_incline_press',
-    kit: { dumbbells: { steady: true } },
-    bench: { typical: 75, perAngle: null },
-    top: { over: [0.1, 0.62] },
-    bottom: { chest: [0.06, -0.1] },
-    grip: { width: 0.42, lockout: 0.2 },
+    equipment: 'dumbbell',
+    motion: 'dumbbell_press',
+    kit: { dumbbells: { steady: true }, bench: { hinge: -0.02 } },
+    bench: {
+      typical: 75,
+      cameras: {
+        0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
+        75: { target: [0, 1.0, 0.0], halfHeight: 1.22, azimuth: 66, elevation: 10 },
+      },
+    },
+    body: { sit: 0.15, seat: 0.06, lean: 8 },
+    feet: { stance: 0.3, z: 0.2266, toeOut: 20 },
+    top: { press: 0, over: [0.1, 0.62], rotate: 20, tilt: 11.6519 },
+    bottom: { press: 1, chest: [0.06, -0.1], rotate: 18.6834, tilt: 3.3019 },
+    grip: { width: 0.42, lockout: 0.2, elbows: 0.7975 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
 };

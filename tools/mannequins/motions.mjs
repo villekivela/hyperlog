@@ -90,7 +90,7 @@ export function frameAt(entry, d, L) {
   // The wrists' bend, [flexion, deviation] in degrees, at the top and the bottom eased between.
   if (s.wrist) P.wrist = s.wrist;
   // The bones turned on top of the solve (`poseRig`).
-  if (s.offsets) P.offsets = s.offsets;
+  if (s.offsets) P.offsets = { ...P.offsets, ...s.offsets };
   // Dumbbells hang from the hands wherever a motion puts them, a bar's two grips or its own points,
   // and turn with them.
   if (e.kit?.dumbbells) {
@@ -498,16 +498,11 @@ export const MOTIONS = {
   },
 
   /**
-   * The arms moving freely, each hand at a point in the room: `hand` [x, y, z] for the left hand at
-   * the top and the bottom of the rep, the right mirroring it: a raise, a flye, a press between two
-   * pulleys. Standing from side-on angles, or seated at `body.hip`; with `grip.one` one arm works and
-   * the other rests.
-   */
-  /**
    * A split stance, the feet planted through the rep: the left foot flat `feet.front` ahead, the
    * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
-   * floor, heels up positive. The hips drop between them along `hip` [y, z], the trunk at `trunk`,
-   * and the arms hang straight down `grip.width` either side of the middle.
+   * floor, heels up positive, its toes bent back as far so they stay down. The hips drop between
+   * them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width`
+   * either side of the middle.
    */
   lunge(e, s, L) {
     const hipC = V(0, ...s.hip);
@@ -531,9 +526,16 @@ export const MOTIONS = {
       support: (side) => (side < 0 ? { point: ball.clone().addScaledVector(top, -L.ballY), normal: top.clone() } : floor),
       hand: (side) => V(side * e.grip.width, sh.y - drop, sh.z),
       armPole: elbowsTo(e, [0.4, 0, -1]),
+      offsets: { ball_r: [-s.heel, 0, 0] },
     };
   },
 
+  /**
+   * The arms moving freely, each hand at a point in the room: `hand` [x, y, z] for the left hand at
+   * the top and the bottom of the rep, the right mirroring it: a raise, a flye, a press between two
+   * pulleys. Standing from side-on angles, or seated at `body.hip`; with `grip.one` one arm works and
+   * the other rests.
+   */
   /**
    * A row: the legs and trunk set from their angles, the bar on a line straight up and down at
    * `bar.z`, at its height `bar` at the top and the bottom of the rep, the elbows toward `grip.pole`.

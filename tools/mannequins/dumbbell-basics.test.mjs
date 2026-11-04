@@ -1,21 +1,24 @@
-// The dumbbell batch (#127): twelve lifts on the dumbbells and the bench, each passing every check
-// and doing what the library's note on it asks.
+// The dumbbell batch (#127): ten lifts on the dumbbells and the bench, each passing every check and
+// doing what the library's note on it asks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
-import { benchAngles, prepare } from './entries.mjs';
+import { BENCH_ANGLES, benchAngles, prepare, resolve } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { checkPose, CHECKS } from './checks.mjs';
-import { wpos } from './rig.mjs';
+import { heldAt, wpos } from './rig.mjs';
+import { rangeOf } from './tune.mjs';
+import { patchPoses } from './patch.mjs';
 import { BATCHES } from './review.mjs';
 import { MOTION_TEMPOS, tempoOf } from './tempo.mjs';
 
 const deg = (r) => (r * 180) / Math.PI;
 
-/** Every check on `id` passes, or the test names the ones that don't. */
-async function passes(id) {
-  const { checks } = await checkPose(id);
-  const failed = CHECKS.filter((c) => !checks[c].ok).map((c) => `${c}: ${checks[c].found} (frame ${checks[c].frame})`);
+/** Every check on `id` passes, at bench `angle` if it has one, or the test names the ones that don't. */
+async function passes(id, angle) {
+  const { checks } = await checkPose(id, { angle });
+  const failed = CHECKS.filter((c) => !checks[c].ok).map((c) => `${angle ?? ''} ${c}: ${checks[c].found} (frame ${checks[c].frame})`);
   assert.deepEqual(failed, []);
 }
 
@@ -111,7 +114,10 @@ test('db_lunge: the dumbbells hang straight down by the sides, palms in', async 
 });
 
 test('db_lateral_raise: the handle runs front to back all the way, palms in by the sides and down at the top', async () => {
-  for (const d of [0, 0.5, 1]) assert.ok((await handleTurn('db_lateral_raise', d)) > 70, `at ${d}: ${(await handleTurn('db_lateral_raise', d)).toFixed(0)}°`);
+  for (const d of [0, 0.5, 1]) {
+    const turn = await handleTurn('db_lateral_raise', d);
+    assert.ok(turn > 70, `at ${d}: ${turn.toFixed(0)}°`);
+  }
 });
 
 test('db_bicep_curl: the dumbbells stop at the shoulders, below the neck', async () => {
@@ -167,11 +173,7 @@ test('db_flye: palms in, the arms open wide on an arc, the elbows holding their 
 });
 
 test('seated_db_shoulder_press: passes every check at each bench angle', async () => {
-  for (const angle of [0, 15, 30, 45, 60, 75]) {
-    const { checks } = await checkPose('seated_db_shoulder_press', { angle });
-    const failed = CHECKS.filter((c) => !checks[c].ok).map((c) => `${angle}°, ${c}: ${checks[c].found}`);
-    assert.deepEqual(failed, []);
-  }
+  for (const angle of BENCH_ANGLES) await passes('seated_db_shoulder_press', angle);
 });
 
 test('seated_db_shoulder_press: upright by default, from beside the ears to overhead', async () => {
@@ -199,7 +201,7 @@ test('the batch lists ten lifts, each with an entry', () => {
 
 // A bell's turn between frames follows the forearm, about 8° at a curl's fastest. Past that it is
 // spinning about its own handle, which the jump check misses where the spin is steady.
-const STEP = 10;
+const MAX_TURN = 10;
 for (const id of BATCHES.dumbbell) {
   test(`${id}: no dumbbell spins about its handle`, async () => {
     for (const angle of benchAngles(id) ?? [undefined]) {
@@ -209,10 +211,48 @@ for (const id of BATCHES.dumbbell) {
         stage.pose(f / 30);
         for (const n of ['dumbbell_l', 'dumbbell_r']) {
           const q = stage.kit.group.getObjectByName(n)?.quaternion.clone();
-          if (before[n]) assert.ok(deg(q.angleTo(before[n])) < STEP, `${n} at ${angle ?? 'its'}°, frame ${f}: ${deg(q.angleTo(before[n])).toFixed(1)}°`);
+          const turn = before[n] ? deg(q.angleTo(before[n])) : 0;
+          assert.ok(turn < MAX_TURN, `${n} at ${angle ?? 'its'}°, frame ${f}: ${turn.toFixed(1)}°`);
           before[n] = q;
         }
       }
     }
   });
 }
+
+test('the studio offers the back heel in degrees', () => {
+  assert.equal(rangeOf('top.heel', 25).unit, '°');
+});
+
+test('db_lunge: the back toes stay down at whatever height the heel is tuned to', async () => {
+  const entry = prepare('db_lunge');
+  const poses = { t: { ...entry, top: { ...entry.top, heel: 40 } } };
+  const { checks } = await checkPose('t', { poses });
+  assert.ok(checks.equipment.ok, checks.equipment.found);
+});
+
+test('db_lunge: the hips drop straight down, over the front half of the stance', async () => {
+  const [top, bottom] = [await boneAt('db_lunge', 'pelvis', 0), await boneAt('db_lunge', 'pelvis', 1)];
+  assert.ok(Math.abs(top.z - bottom.z) < 0.02, `they drift ${(bottom.z - top.z).toFixed(3)} m`);
+  assert.ok(bottom.z >= 0, `at z ${bottom.z.toFixed(3)}, toward the back foot`);
+});
+
+test('single_arm_db_row: the bracing hand lies on the thigh, just above the knee', async () => {
+  const stage = await buildStage(prepare('single_arm_db_row'));
+  for (const d of [0, 1]) {
+    stage.pose(d);
+    const [hip, knee, hand] = [wpos(stage.rig.bones.thigh_r), wpos(stage.rig.bones.calf_r), heldAt(stage.rig, 'r')];
+    const line = knee.clone().sub(hip);
+    const along = hand.clone().sub(hip).dot(line) / line.lengthSq();
+    const off = hand.distanceTo(hip.clone().addScaledVector(line, along));
+    assert.ok(along > 0.6 && along < 1, `at ${d}: ${along.toFixed(2)} of the way down the thigh`);
+    assert.ok(off < 0.09, `at ${d}: ${off.toFixed(3)} m off the thigh's line`);
+  }
+});
+
+test('seated_db_shoulder_press: a setting tuned per angle in the studio leaves it no one else\'s', async () => {
+  const text = await readFile(new URL('./poses.mjs', import.meta.url), 'utf8');
+  const saved = patchPoses(text, 'seated_db_shoulder_press', { '@angles': { 'grip.width': { 0: 0.4, 75: 0.44 } } });
+  const { POSES } = await import(`data:text/javascript,${encodeURIComponent(saved)}`);
+  assert.deepEqual(Object.keys(resolve('seated_db_shoulder_press', POSES).bench.perAngle), ['grip.width']);
+});

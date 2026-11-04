@@ -23,7 +23,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
