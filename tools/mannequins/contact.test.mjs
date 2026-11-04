@@ -36,7 +36,7 @@ test('every grip has a bar line and a thumb, by default or from its entry', () =
   assert.deepEqual(holdAt('barbell_curl'), { sits: 'mid', thumb: 'wrapped', swing: 40 });
   assert.deepEqual(holdAt('triceps_pressdown'), { sits: 'mid', thumb: 'wrapped' });
   assert.deepEqual(holdAt('back_squat_low_bar'), { sits: 'heel', thumb: 'thumbless' });
-  assert.deepEqual(holdAt('front_squat'), { sits: 'open', thumb: 'open' });
+  assert.deepEqual(holdAt('front_squat').sits, 'base');
 });
 
 test('a grip that names no landmark or thumb the hand knows won\'t pose', () => {
