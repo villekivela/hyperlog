@@ -34,7 +34,7 @@ const SITS = 0.09;
 const SIDES = [{ k: 'l', s: 1 }, { k: 'r', s: -1 }];
 
 /** Where the arm on side `s` runs, and the way out of it, with the upper arm `v` out from hanging. */
-const along = (s, v) => V(s * Math.sin(v), -Math.cos(v), 0);
+const armDir = (s, v) => V(s * Math.sin(v), -Math.cos(v), 0);
 const outOf = (s, v) => V(s * Math.cos(v), Math.sin(v), 0);
 const pivotOf = (s) => V(s * SHOULDER_X, PIVOT_Y, PLANE);
 
@@ -104,14 +104,16 @@ export default recipe({
           const pivot = pivotOf(s);
           const corner = pivot.clone().addScaledVector(outOf(s, value), OUT);
           // The pad's middle, on the arm, and the grip's, ahead of it in the levers' plane.
-          const grip = corner.clone().addScaledVector(along(s, value), REACH);
+          const toGrip = armDir(s, value);
+          const grip = corner.clone().addScaledVector(toGrip, REACH);
           const pad = grip.clone().setZ(ARM_Z);
-          const toGrip = along(s, value);
+          const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(toGrip, d));
+          const [padBack, padFront] = [-PAD.length / 2, PAD.length / 2].map((d) => pad.clone().setZ(ARM_Z + d));
           span(l.out, pivot, corner);
-          span(l.down, corner, grip.clone().addScaledVector(toGrip, -GRIP));
-          span(l.grip, grip.clone().addScaledVector(toGrip, -GRIP), grip.clone().addScaledVector(toGrip, GRIP));
-          span(l.back, grip, pad.clone().setZ(ARM_Z + PAD.length / 2));
-          span(l.pad, pad.clone().setZ(ARM_Z - PAD.length / 2), pad.clone().setZ(ARM_Z + PAD.length / 2));
+          span(l.down, corner, gripFrom);
+          span(l.grip, gripFrom, gripTo);
+          span(l.back, grip, padFront);
+          span(l.pad, padBack, padFront);
           state.joints[`arm_${k}`] = { value, origin: pivot };
           state.points[`grip_${k}`] = [grip];
           state.points[`pad_${k}`] = [pad];

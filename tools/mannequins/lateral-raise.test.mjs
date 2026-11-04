@@ -41,7 +41,7 @@ test('the pads hang about 350 mm below the pivots at rest and ride up to horizon
     const { origin } = kit.joints[`arm_${k}`];
     const [rest] = contact(kit, `pad_${k}`).at;
     // The pad's middle on the arm: 350 mm from the pivot, a hand's breadth out of the arm's line.
-    close(Math.hypot(rest.x - origin.x, rest.y - origin.y), 0.35, 0.1, `${k}'s pad from the pivot`);
+    close(Math.hypot(rest.x - origin.x, rest.y - origin.y), 0.364, 0.02, `${k}'s pad from the pivot, in the levers' plane`);
     assert.ok(rest.y < origin.y - 0.3, `${k}'s pad at y ${rest.y.toFixed(2)}, not below the pivot at rest`);
     kit.scrub(`arm_${k}`, rad(90));
     const [top] = contact(kit, `pad_${k}`).at;
