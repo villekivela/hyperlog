@@ -13,6 +13,7 @@
 // hands may close round it. The checks read both, testing a cylinder as one and anything else as
 // its bounding box.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { V, X, UP, rad, sideOn } from './rig.mjs';
 
 /**
@@ -158,6 +159,63 @@ export function tubeGeometry(w, length) {
     g.rotateX(-Math.PI / 2);
     return soften(g);
   });
+}
+
+/**
+ * Hollow square tubing `w` across, `length` long along y and centred, its walls `wall` thick, with a
+ * round hole `radius` across through each of its four faces at every height in `holes` (metres from its
+ * middle), its top end closed when `capped`: an upright or a crossmember with its holes.
+ */
+export function holedTubeGeometry(w, length, holes, { wall = 0.003, radius = 0.0079, capped = false } = {}) {
+  return shape(`holed:${mm(w)}:${mm(length)}:${wall}:${radius}:${capped}:${holes.map((h) => mm(h)).join(',')}`, () => {
+    // One wall: a plate `across` wide and `length` tall, `wall` thick, with the holes through it, lying in the plane x-y with its outer face at z.
+    const plate = (across) => {
+      const s = new THREE.Shape();
+      s.moveTo(-across / 2, -length / 2);
+      s.lineTo(across / 2, -length / 2);
+      s.lineTo(across / 2, length / 2);
+      s.lineTo(-across / 2, length / 2);
+      s.closePath();
+      for (const h of holes) {
+        const c = new THREE.Path();
+        c.absarc(0, h, radius, 0, Math.PI * 2, true);
+        s.holes.push(c);
+      }
+      const g = new THREE.ExtrudeGeometry(s, { depth: wall, bevelEnabled: false, curveSegments: 6 });
+      g.translate(0, 0, -wall);
+      return g;
+    };
+    const faces = [];
+    // Front and back walls, the full width, outer faces at +z and -z.
+    const front = plate(w);
+    front.translate(0, 0, w / 2);
+    const back = plate(w);
+    back.rotateY(Math.PI);
+    back.translate(0, 0, -w / 2);
+    // Side walls, between them, outer faces at +x and -x.
+    const side = plate(w - 2 * wall);
+    side.rotateY(Math.PI / 2);
+    side.translate(w / 2, 0, 0);
+    const other = plate(w - 2 * wall);
+    other.rotateY(-Math.PI / 2);
+    other.translate(-w / 2, 0, 0);
+    faces.push(front, back, side, other);
+    if (capped) {
+      const cap = new THREE.BoxGeometry(w, wall, w);
+      cap.translate(0, length / 2 - wall / 2, 0);
+      faces.push(cap);
+    }
+    for (const g of faces) g.deleteAttribute('uv');
+    return soften(mergeGeometries(faces.map((g) => g.index ? g.toNonIndexed() : g)));
+  });
+}
+
+/** Hollow square tubing with holes from A to B, a frame's member: see `holedTubeGeometry`, `holes` measured from A. */
+export function holedTube(w, A, B, holes, material, opts = {}) {
+  const length = A.distanceTo(B);
+  const t = part(holedTubeGeometry(w, length, holes.map((h) => h - length / 2), opts), material, { solid: true });
+  orient(t, A, B);
+  return t;
 }
 
 /** A turned shape about x from a profile of [radius, x] points: a plate, a pulley wheel, a roller. */
