@@ -317,7 +317,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
 | `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
 | `shoulder_press` | Machine Shoulder Press | missing |
-| `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
+| `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | `lateral_raise_machine` (seated) |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
 | `hip_machine` | Machine Hip Abduction and Adduction | missing |
@@ -374,6 +374,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
+- `lateral_raise_machine` (#212, seated only; the standing lateral raise has its own geometry in the
+  ref and no kit yet) sets its pivots on the mannequin's shoulders, 1.10 m up, whatever the pose,
+  and the seat moves to them (`seat`, solved to 0.51 m for this mannequin, in its 0.40 to 0.56 m
+  range). Each arm is a revolute lever, `arm_l` and `arm_r`, from 10° out of hanging to horizontal,
+  with a pad under the upper arm and a grip ahead of it; the one stack hangs on `arm_l`. Shown alone
+  in the studio, its arms scrub through their limits: `npm run studio`, then the kit's row in the
+  list, from the front and the side with the camera.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
   machine-first): a pad inclined 40° on a beam held up by two posts,
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
