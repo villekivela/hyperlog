@@ -256,3 +256,14 @@ test('seated_db_shoulder_press: a setting tuned per angle in the studio leaves i
   const { POSES } = await import(`data:text/javascript,${encodeURIComponent(saved)}`);
   assert.deepEqual(Object.keys(resolve('seated_db_shoulder_press', POSES).bench.perAngle), ['grip.width']);
 });
+
+test('seated_db_shoulder_press: the arms lock out straight up at every bench angle, 85° among them', async () => {
+  assert.ok(benchAngles('seated_db_shoulder_press').includes(85));
+  for (const angle of BENCH_ANGLES) {
+    const stage = await buildStage(prepare('seated_db_shoulder_press', undefined, angle));
+    stage.pose(0);
+    const [shoulder, hand] = [wpos(stage.rig.bones.upperarm_l), wpos(stage.rig.bones.hand_l)];
+    assert.ok(hand.y - shoulder.y > 0.4, `at ${angle}°: the hand ${(hand.y - shoulder.y).toFixed(2)} m over the shoulder`);
+    assert.ok(Math.abs(hand.z - shoulder.z) < 0.15, `at ${angle}°: the hand ${(hand.z - shoulder.z).toFixed(2)} m from over the shoulder`);
+  }
+});

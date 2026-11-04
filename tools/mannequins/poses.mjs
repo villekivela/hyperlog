@@ -675,10 +675,10 @@ export const POSES = {
     equipment: 'dumbbell',
     motion: 'free_arms',
     kit: { dumbbells: { steady: true }, bench: {} },
-    body: { hip: [0.55, 0.28], trunk: -89, look: -0.27, arch: [16, -16.5, -8] },
+    body: { hip: [0.567, 0.28], trunk: -89, look: -0.27, arch: [16, -16.5, -8] },
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
-    top: { hand: [0.17, 1.13, -0.2], rotate: 20 },
-    bottom: { hand: [0.36, 0.76, -0.1], rotate: 20 },
+    top: { hand: [0.17, 1.147, -0.2], rotate: 20 },
+    bottom: { hand: [0.36, 0.777, -0.1], rotate: 20 },
     grip: { sits: 'heel', pole: [0.9, -1, 0.1] },
     // A second's pause at the bottom, the chest under tension (the library's note).
     tempo: { lowering: 2, bottom: 1, lifting: 1, top: 0.6 },
@@ -690,22 +690,27 @@ export const POSES = {
   // holding a soft bend, until the chest stretches.
   db_flye: {
     like: 'db_bench_press',
-    top: { hand: [0.17, 1.08, -0.2], rotate: 90 },
-    bottom: { hand: [0.68, 0.72, -0.17], rotate: 90 },
+    top: { hand: [0.17, 1.097, -0.2], rotate: 90 },
+    bottom: { hand: [0.68, 0.737, -0.17], rotate: 90 },
     grip: { arc: true, sits: 'base', pole: [0.5, -1, 0.3] },
     tempo: { bottom: 0.3 },
   },
 
   // The adjustable bench, upright by default: the dumbbells press from beside the ears to overhead,
-  // all the way down each rep, the trunk upright against the pad. These numbers follow the pad at
-  // every angle. Its own entry, not `like:` the incline press, whose settings per angle would come
-  // back with the first one saved here.
+  // all the way down each rep, the trunk upright against the pad. Its own entry, not `like:` the
+  // incline press, whose other settings per angle would come back with the first one saved here.
   seated_db_shoulder_press: {
     equipment: 'dumbbell',
     motion: 'dumbbell_press',
     kit: { dumbbells: { steady: true }, bench: { hinge: -0.02 } },
     bench: {
       typical: 75,
+      // The arms lock out straight up at every angle, as the incline press's do: the pair is
+      // [out, up the trunk], so a different one at each.
+      perAngle: {
+        'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167, 85: 0.056 },
+        'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624, 85: 0.643 },
+      },
       cameras: {
         0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
         75: { target: [0, 1.0, 0.0], halfHeight: 1.22, azimuth: 66, elevation: 10 },
@@ -713,7 +718,7 @@ export const POSES = {
     },
     body: { sit: 0.15, seat: 0.06, lean: 8 },
     feet: { stance: 0.3, z: 0.2266, toeOut: 20 },
-    top: { press: 0, over: [0.1, 0.62], rotate: 20, tilt: 11.6519 },
+    top: { press: 0, over: [0.167, 0.624], rotate: 20, tilt: 11.6519 },
     bottom: { press: 1, chest: [0.06, -0.1], rotate: 18.6834, tilt: 3.3019 },
     grip: { width: 0.42, lockout: 0.2, elbows: 0.7975 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },

@@ -1270,7 +1270,7 @@
       "bench": {
         "typical": 75,
         "hinge": [
-          0.4075,
+          0.4,
           -0.02
         ],
         "clips": {
@@ -1341,6 +1341,19 @@
           },
           "75": {
             "clip": "seated_db_shoulder_press_75.glb",
+            "camera": {
+              "target": [
+                0,
+                1,
+                0
+              ],
+              "halfHeight": 1.22,
+              "azimuth": 66,
+              "elevation": 10
+            }
+          },
+          "85": {
+            "clip": "seated_db_shoulder_press_85.glb",
             "camera": {
               "target": [
                 0,
