@@ -1,7 +1,8 @@
 // The studio's half on the owner's machine (README, The studio): a Vite plugin that lists every
 // exercise and kit with its status, hands the page each one's prepared entry and checks, and writes
 // what the owner does into the repo's files. A save goes into poses.mjs through patch.mjs and
-// re-bakes; an OK goes into the batch's review file and a note into review/notes.md (review.mjs).
+// re-bakes what it changed; an OK goes into the batch's review file and a note into review/notes.md
+// (review.mjs).
 // An exercise's technique video is fetched with yt-dlp the first time it is opened, into a cache
 // outside the repo, and its loop (the marks of one rep) goes into review/loops.json.
 //
@@ -10,13 +11,14 @@
 // files) is stubbed there, and never reached, since the page is handed every entry prepared.
 import { execFile } from 'node:child_process';
 import { createReadStream } from 'node:fs';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, utimes, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 // Nothing here imports poses.mjs, kit.mjs or the recipes and parts, even through another module:
 // Vite restarts its server when a file its config imports changes, and those change all the time.
 import { patchPoses } from '../patch.mjs';
+import { clipsBehind, datedBake } from './behind.mjs';
 import { checkQueue } from './checking.mjs';
 import { videoOf } from './video.mjs';
 
@@ -59,9 +61,9 @@ const STUBS = {
 };
 const STUB = '\0studio-node:';
 
-/** The full bake, in a process of its own: this one has the poses it started with loaded. */
-const bakeInChild = (clips) => new Promise((resolve, reject) => {
-  execFile(process.execPath, [path.join(TOOL, 'bake.mjs'), clips], { maxBuffer: 1 << 24 }, (err, stdout, stderr) => {
+/** The bake of poses `ids`, or of them all, in a process of its own: this one has the poses it started with loaded. */
+const bakeInChild = (clips, ids) => new Promise((resolve, reject) => {
+  execFile(process.execPath, [path.join(TOOL, 'bake.mjs'), clips, ...(ids ? ['--only', ids.join(',')] : [])], { maxBuffer: 1 << 24 }, (err, stdout, stderr) => {
     if (err) reject(new Error((stderr || err.message).trim().split('\n').filter((l) => !/^\s+at /.test(l)).slice(-3).join('\n')));
     else resolve();
   });
@@ -103,12 +105,15 @@ function refusal(req) {
 
 /**
  * The studio plugin. `posesFile`, `reviewDir` and `clips` are where the poses, the review files
- * and the baked clips are (the repo's own by default); `bake()` re-bakes every clip. `videos` is
- * the technique videos' cache, and `fetchVideo(id, dir)` fetches one into it (`ytDlp`). `check(id, t)`
- * runs a pose's checks with the tool's modules `t`.
+ * and the baked clips are (the repo's own by default); `bake(ids)` re-bakes those poses' clips, or
+ * every clip if there are none, and `behind()` says whether anything but a save has changed what
+ * they are baked from (`clipsBehind`). `videos` is the technique videos' cache, and
+ * `fetchVideo(id, dir)` fetches one into it (`ytDlp`). `check(id, t)` runs a pose's checks with the
+ * tool's modules `t`.
  */
 export function studio({
-  posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = () => bakeInChild(clips),
+  posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = (ids) => datedBake(clips, () => bakeInChild(clips, ids)),
+  behind = () => clipsBehind(clips, { tool: TOOL, also: [posesFile, LIBRARY] }),
   videos = VIDEOS, fetchVideo = ytDlp,
   check = (id, t) => t.checks.checkPose(id, { poses: t.POSES }).then((r) => r.checks),
 } = {}) {
@@ -134,10 +139,11 @@ export function studio({
   const failing = (found) => Object.values(found).some((c) => !c.ok);
   // What the studio last wrote to poses.mjs itself: the page already has it, so it needn't reload.
   let own = null;
-  // Every pose's checks start again, pose `id` first, as the page will open it.
-  const changed = (id) => {
+  // The checks of `ids`, what a save of `id` changed, start again, `id` first, as the page will open
+  // it; the rest keep theirs.
+  const changed = (ids, id) => {
     for (const m of server.moduleGraph.getModulesByFile(posesFile) ?? []) server.moduleGraph.invalidateModule(m);
-    checks.forget();
+    checks.forget(ids);
     checks.first(id);
   };
 
@@ -258,18 +264,27 @@ export function studio({
   function save(id, tuned) {
     const run = saving.then(async () => {
       baking = { ...baking, baking: id };
+      // All asked before the file changes: a tool that doesn't load refuses the save, and leaves it.
+      const ids = await refusing(async () => {
+        const { entries, POSES } = await tool();
+        return Object.keys(POSES).filter((pose) => entries.likeChain(pose, POSES).includes(id));
+      });
+      const whole = await behind();
       const before = await readFile(posesFile, 'utf8');
+      const { mtime } = await stat(posesFile);
       const after = patchPoses(before, id, tuned);
       own = after;
       await writeFile(posesFile, after);
-      changed(id);
+      changed(ids, id);
       try {
-        await bake();
+        await bake(whole ? undefined : ids);
       } catch (err) {
-        // A pose that fails its checks doesn't bake, and the file never holds one that didn't.
+        // A pose that fails its checks doesn't bake, and the file never holds one that didn't: as it
+        // was, to its date, or the clips would look behind it.
         own = before;
         await writeFile(posesFile, before);
-        changed(id);
+        await utimes(posesFile, mtime, mtime);
+        changed(ids, id);
         throw new Refused(`Not saved: the bake failed. ${err.message}`);
       }
       const t = await tool();

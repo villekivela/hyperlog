@@ -137,7 +137,7 @@ export function shareParts(glbs, { body, kit }) {
 
 /**
  * A clip made whole: each buffer it reads by URI, from `files` (its bytes by URI), appended to its
- * own binary chunk. The tests parse a clip whole, from memory.
+ * own binary chunk. The tests parse a clip whole, from memory, and `bakeOnly` shares it again.
  */
 export function inlineResources(bytes, files) {
   const { json, bin } = readGlb(bytes);

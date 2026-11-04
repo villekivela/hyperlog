@@ -36,10 +36,9 @@ export const gripsOf = (id, poses = POSES) => {
   return grips ? Object.keys(grips) : null;
 };
 
-/** The entry for `id`, with its `like:` chain merged in. */
-export function resolve(id, poses = POSES) {
+/** The poses `id` takes from, `like:` by `like:`, itself first. */
+export function likeChain(id, poses = POSES) {
   const seen = [];
-  const chain = [];
   for (let at = id; at !== undefined; at = poses[at].like) {
     if (seen.includes(at)) throw new Error(`${id}: like goes round in a circle (${[...seen, at].join(' → ')})`);
     if (!poses[at]) {
@@ -47,9 +46,13 @@ export function resolve(id, poses = POSES) {
       throw new Error(`${seen.at(-1)}: like "${at}", which has no entry`);
     }
     seen.push(at);
-    chain.unshift(poses[at]);
   }
-  const { like, ...entry } = chain.reduce(merge, {});
+  return seen;
+}
+
+/** The entry for `id`, with its `like:` chain merged in. */
+export function resolve(id, poses = POSES) {
+  const { like, ...entry } = likeChain(id, poses).reverse().map((at) => poses[at]).reduce(merge, {});
   return entry;
 }
 

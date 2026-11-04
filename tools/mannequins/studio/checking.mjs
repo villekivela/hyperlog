@@ -11,16 +11,16 @@ const READ = 4000;
  * A queue of poses to check with `check(id)`, which gives their checks. `ask(ids)` adds poses behind
  * those waiting and gives a promise of them all; `first(id)` moves one to the front and gives a
  * promise of its checks. `found(id)` is what a pose's checks found, or null until they finish, and
- * `progress()` how many of those asked for have. `forget()` starts every pose again, keeping the
- * order, for a change to what they check: a promise still waiting gets the new result. `pause()` keeps
- * the next pose from beginning, for a request that reads more than the gap allows, until the function
- * it gives is called.
+ * `progress()` how many of those asked for have. `forget(ids)` starts those poses again, every pose
+ * by default, keeping the order, for a change to what they check: a promise still waiting gets the
+ * new result, and the others keep theirs. `pause()` keeps the next pose from beginning, for a request
+ * that reads more than the gap allows, until the function it gives is called.
  */
 export function checkQueue(check) {
   const asked = new Map();
   let waiting = [];
   let current = null;
-  let version = 0;
+  let stale = false;
   let running = false;
   let pauses = 0;
 
@@ -45,11 +45,13 @@ export function checkQueue(check) {
       // other, and a pose begun between two of them would hold it up for seconds.
       do await new Promise((next) => { setTimeout(next, GAP); }); while (pauses);
       const id = waiting.shift();
-      const began = version;
       current = id;
       const found = await check(id);
       current = null;
-      if (began !== version) continue;
+      if (stale) {
+        stale = false;
+        continue;
+      }
       const entry = asked.get(id);
       entry.found = found;
       entry.settle(found);
@@ -78,11 +80,11 @@ export function checkQueue(check) {
       const all = [...asked.values()];
       return { done: all.filter((e) => e.found).length, total: all.length };
     },
-    forget() {
-      version++;
-      const finished = [...asked.keys()].filter((id) => asked.get(id).found);
+    forget(ids = [...asked.keys()]) {
+      if (ids.includes(current)) stale = true;
+      const finished = ids.filter((id) => asked.get(id)?.found);
       for (const id of finished) asked.set(id, fresh());
-      waiting = [...new Set([...(current === null ? [] : [current]), ...waiting, ...finished])];
+      waiting = [...new Set([...(stale ? [current] : []), ...waiting, ...finished])];
       run();
     },
   };
