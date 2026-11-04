@@ -375,8 +375,8 @@ export const MOTIONS = {
       ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       grip: e.grip.width,
       // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the
-      // shoulders.
-      armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
+      // shoulders. The hand on the bar outweighs it; `grip.pole` points them firmly.
+      armPole: elbowsTo(e, [e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)]),
     };
   },
 

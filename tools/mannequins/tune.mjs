@@ -6,7 +6,7 @@
 /** What a motion does that an entry may leave unsaid: a lever with a default, offered all the same. */
 export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
-  bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0] },
+  bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0], 'grip.pole': [0.2, -1, 0.55] },
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
   arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0, 'feet.stagger': 0 },
   free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5], 'feet.stagger': 0 },
@@ -52,7 +52,7 @@ const STRAIGHT_WRIST = [0, 0];
 export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.motion]?.[path]
   ?? (entry.grip && /^(top|bottom)\.wrist$/.test(path) ? STRAIGHT_WRIST : undefined)
   ?? (OFFSET.test(path) ? NO_OFFSET : undefined)
-  ?? (OFFSET.test(path.replace(/\.[012]$/, '')) ? 0 : undefined);
+  ?? (/\.\d+$/.test(path) ? baseAt(entry, path.replace(/\.\d+$/, ''))?.[Number(path.split('.').at(-1))] : undefined);
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 

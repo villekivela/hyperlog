@@ -38,8 +38,9 @@
   "close_grip_bench_press": {
     "ok": true,
     "note": "",
-    "clip": "f85fb32255cd249d",
-    "tuned": "{}"
+    "clip": "ffc1e2143fb39696",
+    "tuned": "{}",
+    "at": "2026-11-04T15:34:44.802Z"
   },
   "hack_squat": {
     "ok": true,

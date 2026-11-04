@@ -1566,6 +1566,9 @@ gallery (Technique videos).
     2026-11-03).
     The incline and decline presses (an adjustable bench is seven clips, and a decline
     needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
+    A bench press's elbows follow the hand on the bar, so the tune's `grip.elbows` is only a hint;
+    `grip.pole` points them firmly. The Close-Grip Bench Press holds its elbows beside the ribs that
+    way, its wrists otherwise as the Barbell Bench Press has them (owner, 2026-11-04).
     The power rack's batch (#196) hangs the body from the bar or rests it on the dip handles, the
     feet off the floor on every frame (a check fails a foot under 2 cm up). A pull-up rises about
     490 mm to the chin over the bar, a dip drops about 290 mm to the elbows at about 90°, and a leg

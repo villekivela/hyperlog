@@ -47,11 +47,12 @@ export const POSES = {
     // a gap under the lower back. The head lies back on the pad.
     body: { hip: [0.567, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
-    // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
-    // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.1435, -0.2] },
-    bottom: { bar: [0.727, -0.09] },
-    grip: { width: 0.4, elbows: 0.9 },
+    // A normal bench grip, about 1.5 shoulder widths. From over the shoulders, the elbows soft as the
+    // owner tuned them, to the lower chest, the elbows out under the wrists so the forearms stand
+    // vertical, the wrist easing straight. Provisional: the owner's morning look settles it (#202).
+    top: { bar: [1.1297, -0.2], wrist: [0, 25] },
+    bottom: { bar: [0.727, -0.09], wrist: [0, 0] },
+    grip: { width: 0.4, elbows: 0.9, swing: 45 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
@@ -159,12 +160,13 @@ export const POSES = {
 
   // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
 
-  // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides.
+  // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides:
+  // `grip.pole` holds them beside the ribs, where the wrist alone left them inside the chest.
   close_grip_bench_press: {
     like: 'barbell_bench_press',
-    top: { bar: [1.147, -0.21], wrist: [0, 27.7209] },
-    bottom: { bar: [0.7517, -0.063], wrist: [-53.1261, 18.2864], rotate: 17.6573 },
-    grip: { width: 0.3005, elbows: 0.2191 },
+    top: { bar: [1.147, -0.21] },
+    bottom: { bar: [0.7517, -0.063] },
+    grip: { width: 0.3005, elbows: 0.2191, pole: [0.05, -1, 0.55] },
   },
 
   // Two grips on the lat bar (owner): the first set wide and overhand, at 1.5 shoulder widths, the

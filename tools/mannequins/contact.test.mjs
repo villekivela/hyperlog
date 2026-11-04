@@ -31,7 +31,7 @@ test('every grip has a bar line and a thumb, by default or from its entry', () =
       assert.ok(['wrapped', 'thumbless', 'open'].includes(thumb), `${id}: thumb ${thumb}`);
     }
   }
-  assert.deepEqual(holdAt('barbell_bench_press'), { sits: 'heel', thumb: 'wrapped' });
+  assert.deepEqual(holdAt('floor_press'), { sits: 'heel', thumb: 'wrapped' });
   assert.deepEqual(holdAt('deadlift'), { sits: 'base', thumb: 'wrapped' });
   assert.deepEqual(holdAt('barbell_curl'), { sits: 'mid', thumb: 'wrapped', swing: 40 });
   assert.deepEqual(holdAt('triceps_pressdown'), { sits: 'mid', thumb: 'wrapped' });
