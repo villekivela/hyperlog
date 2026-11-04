@@ -59,7 +59,12 @@ What the videos show:
 - In the rack, hooks catch the straight shaft, not the yoke (Rogue video at 0:02 and the rack photos).
 - Plates load on the sleeve end: plate centre 140 mm below the shaft centre line. Loaded on 450 mm plates resting on the floor with the camber straight down, the shaft centre would sit about 365 mm off the floor; nothing in the exercises sets it down that way.
 
+## Compared in the studio (#219)
+The kit was built and set beside the photos and the Rogue video frames (1:15, 1:24 held; 0:02 racked):
+- Hung in the rack the handles drop about 410 mm below the shaft's centre (front photo WEB2, 1.36 mm per pixel, from the shaft to the grips' ends), about 51° below horizontal over a 537 mm arm, which is steeper than the 25-30° above. Held, the lifter rolls the bar forward about 25° about the shaft, which brings the handles to the 27° the published 533 mm by 254 mm give and the plate centre forward of the shaft by 140 mm times the sine of it, as the T Nation video at 0:26 shows. The recipe's option `roll` is that turn, 0 as racked.
+- The handle pads are about 70 mm across and read thicker in the photos, nearer the yoke's 100 mm; the yoke pad's ends are gathered in the photos and plain in the model; the camber bends are sharper in the photos; the model has no rack-catch plates on the shaft.
+
 ## Open gaps
-- Handle arm length and angle stay chosen from the published width and height, not measured: no side-on photo of the SB-1 was found, and every photo views the handles end-on enough to foreshorten them.
+- Handle arm length stays chosen from the published width and height and the rack photos: no side-on photo of the SB-1 was found, and every photo views the handles end-on enough to foreshorten them. The roll that brings the handles to the published angle (about 25°) is chosen the same way.
 - Yoke pad and handle pad sizes are from foreshortened three-quarter and front photos; good to about 20 mm.
 - The bar's roll on the back is the lifter's choice; the chin-height hand position comes from one demonstrator and one REP photo.

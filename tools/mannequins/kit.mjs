@@ -70,6 +70,14 @@ export const STATIONS = {
 };
 
 /**
+ * The specialty bars that serve exercises of their own, with the exercises each is the bar of. Only
+ * those no pose has set up are listed.
+ */
+export const BARS = {
+  safety_bar: { kit: 'safety_bar', exercises: ['safety_bar_squat', 'good_morning_barbell_safety_bar'] },
+};
+
+/**
  * The library's equipment, each with the kits a pose in it may use. A kind with no kit yet is
  * `null`, and is listed as missing in the README; a pose can't be made in it until it has one.
  * Bodyweight needs no kit for most of its exercises.
@@ -82,7 +90,7 @@ export const EQUIPMENT = {
   bodyweight: ['power_rack'],
   ez_bar: null,
   trap_bar: null,
-  safety_bar: null,
+  safety_bar: ['safety_bar'],
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
   weighted_bodyweight: ['power_rack'],
