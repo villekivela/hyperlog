@@ -22,20 +22,22 @@ afterEach(async () => {
   server = null;
 });
 
-/** A studio on copies of the repo's files, checking with `check(id)`. */
-async function serve(check, { bake = async () => {} } = {}) {
+/** A studio on copies of the repo's files, with the pose entries `added`, checking with `check(id)`. */
+async function serve(check, { bake = async () => {}, added = '' } = {}) {
   const poses = path.join(await mkdtemp(path.join(tmpdir(), 'studio-')), 'poses.mjs');
-  await writeFile(poses, await readFile(path.join(TOOL, 'poses.mjs'), 'utf8'));
+  await writeFile(poses, (await readFile(path.join(TOOL, 'poses.mjs'), 'utf8')).replace(/(\n  barbell_rdl: \{)/, `\n${added}$1`));
+  const plugin = studio({ posesFile: poses, reviewDir: await mkdtemp(path.join(tmpdir(), 'studio-review-')), bake, check });
   server = await createServer({
     configFile: false,
     root: TOOL,
     logLevel: 'silent',
     server: { port: 0, host: '127.0.0.1' },
-    plugins: [studio({ posesFile: poses, reviewDir: await mkdtemp(path.join(tmpdir(), 'studio-review-')), bake, check })],
+    plugins: [plugin],
   });
   await server.listen();
   const base = server.resolvedUrls.local[0].replace(/\/$/, '');
   return {
+    plugin,
     get: async (url) => (await fetch(base + url)).json(),
     post: async (url, body) => (await fetch(base + url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })).json(),
   };
@@ -107,16 +109,64 @@ test('opening another item moves it to the front of those waiting', async () => 
   await second;
 });
 
-test('after a save the saved pose is checked first, then the rest again', async () => {
+test('after a save only the saved pose is checked again', async () => {
   const began = [];
   const { get, post } = await serve(async (id) => { began.push(id); return PASSES; });
-  await get('/api/item/exercise/deadlift');
-  await until(() => began.length === POSED.length);
+  await get('/api/items?wait=1');
   began.length = 0;
-  const id = POSED.at(-1);
-  await post('/api/save', { id, tuned: { 'camera.azimuth': 12 } });
-  await until(() => began.length >= POSED.length);
-  assert.equal(began[0], id);
+  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
+  await get('/api/items?wait=1');
+  assert.deepEqual(began, ['leg_press']);
+});
+
+test('after a save the poses that take it by like: are checked again too, however far along', async () => {
+  const began = [];
+  const { get, post } = await serve(async (id) => { began.push(id); return PASSES; }, { added: "  paused_front_squat: { like: 'front_squat' }," });
+  await get('/api/items?wait=1');
+  began.length = 0;
+  await post('/api/save', { id: 'barbell_squat', tuned: { 'camera.azimuth': 12 } });
+  await get('/api/items?wait=1');
+  assert.equal(began[0], 'barbell_squat');
+  for (const id of ['back_squat_high_bar', 'back_squat_low_bar', 'front_squat', 'paused_front_squat']) assert.ok(began.includes(id), `${id} wasn't checked again`);
+  assert.ok(!began.includes('deadlift'), 'a pose that takes nothing from it was checked again');
+});
+
+test('a save bakes the pose it saved and the poses that take it by like:', async () => {
+  const baked = [];
+  const { post } = await serve(async () => PASSES, { bake: async (ids) => { baked.push(ids); } });
+  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
+  await post('/api/save', { id: 'deadlift', tuned: { 'camera.azimuth': 12 } });
+  assert.deepEqual(baked, [['leg_press'], ['deadlift', 'deficit_deadlift']]);
+});
+
+test('a change to the tool\'s code checks every pose again, and the next save bakes every clip', async () => {
+  const began = [];
+  const baked = [];
+  const { plugin, get, post } = await serve(async (id) => { began.push(id); return PASSES; }, { bake: async (ids) => { baked.push(ids); } });
+  await get('/api/items?wait=1');
+  began.length = 0;
+  await plugin.hotUpdate.call({ environment: { name: 'client' } }, { file: path.join(TOOL, 'motions.mjs'), read: async () => '' });
+  await get('/api/items?wait=1');
+  assert.deepEqual([...began].sort(), [...POSED].sort());
+  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
+  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 13 } });
+  assert.deepEqual(baked, [undefined, ['leg_press']]);
+});
+
+test('a save whose whole bake fails still bakes every clip next time', async () => {
+  const baked = [];
+  let fails = true;
+  const { plugin, post } = await serve(async () => PASSES, {
+    bake: async (ids) => {
+      baked.push(ids);
+      if (fails) throw new Error('a pose fails its checks');
+    },
+  });
+  await plugin.hotUpdate.call({ environment: { name: 'client' } }, { file: path.join(TOOL, 'motions.mjs'), read: async () => '' });
+  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
+  fails = false;
+  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 13 } });
+  assert.deepEqual(baked, [undefined, undefined]);
 });
 
 test('after a bake that fails the pose is checked first again, as it was', async () => {

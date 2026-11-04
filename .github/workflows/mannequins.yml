@@ -39,4 +39,4 @@ jobs:
       # Re-bakes every pose (failing on one that fails its checks) and compares the result with
       # the committed .glb, mannequin.bin and mannequins.json, byte for byte.
       - name: Committed clips match the tool
-        run: node --test committed.test.mjs bake.test.mjs
+        run: node --test --test-concurrency=3 committed.test.mjs bake.test.mjs

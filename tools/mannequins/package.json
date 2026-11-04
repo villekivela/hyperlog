@@ -6,7 +6,7 @@
   "scripts": {
     "bake": "node bake.mjs",
     "seats": "node bake.mjs --seats",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=3",
     "trace": "node trace.mjs",
     "review": "node review.mjs",
     "studio": "vite --config studio/vite.config.mjs"

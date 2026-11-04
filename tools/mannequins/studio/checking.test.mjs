@@ -1,7 +1,7 @@
 // What the message line says while the studio loads (#187).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mayNote, progressNote, rowAfter } from './checking.mjs';
+import { checkQueue, mayNote, progressNote, rowAfter } from './checking.mjs';
 
 test('the message line says Loading… until the checks have begun', () => {
   assert.equal(progressNote(null), 'Loading…');
@@ -46,4 +46,64 @@ test('a list refreshed under the cursor leaves it on its row, not on the item on
 test('a row the refreshed list no longer shows gives the cursor to the item on stage', () => {
   assert.equal(rowAfter(['a', 'c'], 'b', 'c'), 1);
   assert.equal(rowAfter(['a'], undefined, 'z'), -1);
+});
+
+/** A queue whose checks wait for `next(found)`, which lets the oldest go with what it found. */
+function heldQueue() {
+  const began = [];
+  const holding = [];
+  const queue = checkQueue((id) => new Promise((resolve) => {
+    began.push(id);
+    holding.push(resolve);
+  }));
+  const until = async (n) => {
+    for (let i = 0; i < 1000 && began.length < n; i++) await new Promise((r) => setTimeout(r, 5));
+    assert.equal(began.length, n, began.join());
+  };
+  return { queue, began, until, next: (found) => holding.shift()(found) };
+}
+
+test('forgetting one pose leaves the check under way on another to stand', async () => {
+  const { queue, began, until, next } = heldQueue();
+  queue.ask(['a', 'b']);
+  await until(1);
+  next('a, before');
+  await until(2);
+  queue.forget(['a']);
+  next('b, kept');
+  await until(3);
+  assert.equal(queue.found('a'), null);
+  next('a, after');
+  await queue.ask(['a', 'b']);
+  assert.equal(queue.found('a'), 'a, after');
+  assert.equal(queue.found('b'), 'b, kept');
+  assert.deepEqual(began, ['a', 'b', 'a']);
+});
+
+test('forgetting the pose under way checks it again, and only the new result counts', async () => {
+  const { queue, began, until, next } = heldQueue();
+  const all = queue.ask(['a']);
+  await until(1);
+  queue.forget(['a']);
+  next('a, before');
+  await until(2);
+  next('a, after');
+  assert.deepEqual(await all, ['a, after']);
+  assert.deepEqual(began, ['a', 'a']);
+});
+
+test('forgetting with no poses named starts every pose again', async () => {
+  const { queue, began, until, next } = heldQueue();
+  const all = queue.ask(['a', 'b']);
+  await until(1);
+  next('a');
+  await until(2);
+  next('b');
+  await all;
+  queue.forget();
+  await until(3);
+  next('a');
+  await until(4);
+  next('b');
+  assert.deepEqual(began, ['a', 'b', 'a', 'b']);
 });
