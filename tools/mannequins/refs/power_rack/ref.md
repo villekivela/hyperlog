@@ -1,7 +1,7 @@
-# Pull-up and dip station (`pullup_dip_station`)
+# Power rack (`power_rack`)
 
 ## Movement and exercises served
-A fixed overhead multi-grip bar plus a pair of dip handles, on one rig. The mannequin hangs from the bar or supports itself on the dip handles; nothing on the station moves. Serves `pullup`, `pullup_wide_grip`, `close_grip_pullup`, `neutral_grip_pullup`, `2_grip_pullup`, `chinup`, `chinup_wide_grip`, `close_grip_chinup`, `dead_hang`, `hanging_leg_raise`, `dip`, `close_grip_dip`, and the weighted versions `weighted_pullup`, `weighted_chinup`, `2_grip_pullup_weighted`, `weighted_dip`. Not this item: `bent_knee_dragon_flag`, `dragon_flag`, `lying_leg_raise` use a bench.
+A power rack with a fixed multi-grip pull-up bar and a pair of dip handles bolted on as add-ons. (The issue called this item the pull-up and dip station; it is the rack, since squats will use the same frame.) The mannequin hangs from the bar or supports itself on the dip handles; nothing on the station moves. Serves `pullup`, `pullup_wide_grip`, `close_grip_pullup`, `neutral_grip_pullup`, `2_grip_pullup`, `chinup`, `chinup_wide_grip`, `close_grip_chinup`, `dead_hang`, `hanging_leg_raise`, `dip`, `close_grip_dip`, and the weighted versions `weighted_pullup`, `weighted_chinup`, `2_grip_pullup_weighted`, `weighted_dip`. Not this item: `bent_knee_dragon_flag`, `dragon_flag`, `lying_leg_raise` use a bench.
 
 ## Based on
 Two Rogue parts on one rig (no single Rogue/Titan/Hoist power tower gave both bar and dip numbers):
@@ -26,6 +26,24 @@ Two Rogue parts on one rig (no single Rogue/Titan/Hoist power tower gave both ba
   - close_grip_dip https://youtu.be/G7bonPtkitM: whole video, frames at 0:05 (bottom) and 0:06 (top), front three-quarter, rack-mounted dip handles like the Matador.
   - chinup https://youtu.be/mRy3A_7-NA8: "This video is unavailable", not viewed.
 - Why: the owner's brand; the Crown is the only Rogue pull-up bar page that gives neutral and fat grip diameters and sphere spacing. A Rogue 70 in single bar (https://www.roguefitness.com/apo/rogue-70-single-pull-up-bar, seen in search, 1.25 in OD) is the plain fallback.
+
+## The rack both bolt to (owner, #189)
+
+The station is a rack with the pull-up bar and the dip handles as add-ons, not an invented frame. The base is one real rack, a Rogue Monster Lite power rack ([RML-390BT](https://www.roguefitness.com/eu/rogue-rml-390bt-power-rack-eu)), built from its published numbers and its product photos (side-on, with and without a bench: `XX16591/XX16591-h_vdrvgk.png`, `-WEB1_ssprd6.png`, `-WEB2_tprwqu.png`, `-WEB3_ypxqxr.png` under the same base as the Crown's), with no front feet: the half rack's feet are not this rack's.
+
+| Dimension | Value | Source |
+|---|---|---|
+| Uprights | 3 x 3 in, 11 gauge, 5/8 in holes; Westside spacing, 1 in through the bench and clean pull zone and 2 in above and below | RML-390BT page |
+| Height | 90 3/8 in; built 108 in (9 ft) | page; the 9 ft is the [Monster Lite Rig 2.0](https://support.roguefitness.com/hc/en-us/articles/47388281616404-Product-Guide-Rogue-Monster-Lite-Rig-2-0)'s standard upright, so the crossmember sits at a hole with grips near 2.30 m |
+| Width, length | 49 in by 30 in, 24 in inside depth | page (24 in depth option) |
+| Footprint | 53 in by 34 in, on a 7 in plate under each upright | page; plate size from the footprint |
+| Crossmembers | a side one near the top and one near the floor each side, bolted through an end plate; a pair of pin pipe safeties | photos |
+| Back crossmember | one 43 in across the rear uprights | not in the photos, added so the sides are tied together at the back (owner) |
+| Supplied pull-up bar | a 43 in skinny and fat pair, side to side at the top | page; the placement is read from the photos |
+
+The Crown mounts to a Monster Lite 43 in crossmember with holes (4.5 in bolts, its 38 in plate on the face), not to the uprights, so the rack carries one across the front at the 91 in hole. The Monster Lite Matador is its own product, mounted on a single upright with an anchoring system: a bracket on the upright, a stem out from it, a crosshead and a handle each end ([page](https://www.roguefitness.com/rogue-monster-lite-matador), 24 x 27 x 10 in, handles 17.75 to 24.75 in apart, 1 7/8 in across).
+
+Built in the recipe as options, `pullupBar` and `dipHandles`, both on by default. Left out: the plate horns, the J-cups and the band pegs (J-hooks for squats can follow on this frame), the bolts' nuts and the hole numbering. The end plates' size (86 mm wide, 220 mm tall, bolts 8 in apart), the pipe safeties' height and the 1 in zone's ends (11 to 35 in) are estimated from the photos.
 
 ## Key dimensions (mm)
 | Dimension | mm | Source |
@@ -68,6 +86,8 @@ Range of motion of the lifts (the station is static; this is the body's):
 - Weight belt, as the videos show: weighted pull-ups and dips use a dip belt with a chain; the plate hangs on the chain in front of the thighs, between the legs at about mid-thigh, not at the hips (pull-up 20:06, weighted dip 1:30). The mannequin shows a plate hanging there.
 
 ## Open gaps
+- The rack's height is 9 ft, not the RML-390BT's 90 3/8 in: no published 90 in rack puts a crossmember on a hole high enough for the bar height below. Whether a 9 ft Monster Lite power rack is sold is not confirmed.
+- The end plates' height and bolt spacing, the pipe safeties' height and the Matador bracket's wrap are read from photos.
 - Bar and dip handle heights depend on where the gym mounted them on its rig; no maker publishes them. The bar height is chosen from the fit rule above (feet just clear, as the videos show), and the dip height is a rough estimate from one video, scaled by a person of about 1.78 m. Both low confidence.
 - The Crown numbers not on the page (cross tube offset, prong lengths, wide-grip spacing) are scaled from one top-down photo by its own labelled 32 in dimension; good to about +-20 mm.
 - The chin-up video is unavailable, so the chin-up's hand position is taken from the pull-up (same bar, supinated grip).
