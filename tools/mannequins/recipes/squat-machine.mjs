@@ -6,24 +6,42 @@
 // a pad over each shoulder, a handle by each that lies along the hand's knuckles, and a horn a side
 // loaded with a 20. It moves as one, along the rails, with the hips.
 //
-// The carriage is a body on a prismatic joint up the rails, its value how far it is above where it
-// is at the bottom of the rep.
+// The carriage is a body on a prismatic joint up the rails, its value how far it is above its stops.
 import * as THREE from 'three';
 import { recipe, prismatic } from '../recipe.mjs';
 import { knob, movableRail, pad, padGeometry, part, plateGeometry, railCap, rodGeometry, span, stretchedTube } from '../parts.mjs';
-import { V, X } from '../rig.mjs';
+import { V, X, rad } from '../rig.mjs';
 
 /** How far either side of the middle a hack squat's rails run. */
 const HACK_RAILS = 0.17;
+// The hips on the carriage at its stops, [y, z], and the way up the rails: 36.6° from upright.
+const STOPS = [0.5416, 0.3977];
+const SLED = V(0, 0.8029, -0.5961);
+// How far up the rails from the stops the carriage is built: everything fixed is laid out from there.
+const BUILT = 0.5833;
+// The platform's face under the ankles, tilted toes up.
+const FACE = V(0, 0.2415, 0.545);
+const TILT = rad(20);
+// The handles on the carriage, from the hips, [y, z], this far either side of the middle.
+const HANDLES = [0.4392, -0.4948];
+const HANDLES_OUT = 0.3;
 
 export default recipe({
   name: 'squat_machine',
   bodies: { carriage: prismatic({ limits: [0, 0.7] }) },
   contacts: [
     { body: 'carriage', point: 'shoulderPads', landmark: 'shoulders' },
+    { body: 'carriage', point: 'backPad', landmark: 'back' },
     { body: 'carriage', point: 'handles', landmark: 'hands' },
   ],
-  fit: [{ sets: 'pad', rule: 'the back on the pad, the shoulders under their pads' }],
+  rep: { joint: 'carriage', from: 'max' },
+  fit: [{ sets: 'pad', rule: 'the back on the pad, the shoulders under their pads', solve: ({ L }) => L.back }],
+  linkage: () => ({
+    at: (value) => {
+      const hipC = V(0, ...STOPS).addScaledVector(SLED, value);
+      return { hipC, sled: SLED, face: FACE, tilt: TILT, hand: (s) => hipC.clone().add(V(s * HANDLES_OUT, ...HANDLES)) };
+    },
+  }),
   build({ pad: behind = 0.2 } = {}, M) {
     // What stands still: the base, the platform and its legs, the rails, their bracket and cap, and
     // the rear post with its brace and horns.
@@ -73,16 +91,17 @@ export default recipe({
     return {
       parts,
       bodies: { carriage: [carriage] },
-      drive(P, P0, P1) {
-        // The carriage's frame at the top of the rep: `sled` up the rails, `face` out of the back pad's
+      drive(P, P0) {
+        // The carriage's frame where it is built: `sled` up the rails, `face` out of the back pad's
         // face, from the `origin` on the pad's face at the hips.
-        const sled = P0.sled.clone();
+        const sled = SLED.clone();
+        const built = V(0, ...STOPS).addScaledVector(SLED, BUILT);
         const face = X.clone().cross(sled).normalize();
-        const origin = P0.hipC.clone().addScaledVector(face, -behind);
+        const origin = built.clone().addScaledVector(face, -behind);
         const at = (along, out, x = 0) => origin.clone().addScaledVector(sled, along).addScaledVector(face, out).setX(x);
         const facing = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, sled, face));
         const lay = (mesh, along, out, x = 0) => { mesh.position.copy(at(along, out, x)); mesh.quaternion.copy(facing); };
-        const shoulder = P0.shoulders.clone().sub(origin).dot(sled);
+        const shoulder = P0.shoulders.clone().sub(P0.hipC).add(built).sub(origin).dot(sled);
         const top = shoulder + 0.12;
         // The rails, behind the carriage, from just above the floor to a cap 30 cm past the carriage's
         // top at the top of the rep.
@@ -136,7 +155,7 @@ export default recipe({
           // The handle runs the way the pose lays the grip at the top, fixed on the carriage: the
           // wrists turn the knuckles along it. It sits on an arm back to the shoulder pad's outer side.
           const { bar, sleeve, end: knobEnd, arm } = grips[i];
-          const h = P.hand(side).sub(P.hipC).add(P0.hipC);
+          const h = P.hand(side).sub(P.hipC).add(built);
           const along = P0.across(side).normalize();
           const mount = at(shoulder + 0.11, 0.02, side * 0.225);
           const [near, far] = [-1, 1].map((k) => h.clone().addScaledVector(along, k * 0.1)).sort((a, b) => a.distanceTo(mount) - b.distanceTo(mount));
@@ -151,11 +170,11 @@ export default recipe({
           plate.position.copy(from).setX(side * 0.3);
         });
         [-0.2, top].forEach((t, k) => span(crossbars[k], at(t, -0.14, -HACK_RAILS), at(t, -0.14, HACK_RAILS)));
-        carriage.position.copy(P.hipC).sub(P0.hipC);
-        const pads = shoulderPads.map((m) => m.position.clone().add(carriage.position));
+        carriage.position.copy(P.hipC).sub(built);
+        const onCarriage = (m) => m.position.clone().add(carriage.position);
         return {
-          joints: { carriage: { value: P.hipC.clone().sub(P1.hipC).dot(sled), origin: P.hipC.clone(), axis: sled.clone() } },
-          points: { shoulderPads: pads, handles: [-1, 1].map((s) => P.hand(s).clone()) },
+          joints: { carriage: { value: P.linkage.value, origin: P.hipC.clone(), axis: sled.clone() } },
+          points: { shoulderPads: shoulderPads.map(onCarriage), backPad: [onCarriage(cushion)], handles: [-1, 1].map((s) => P.hand(s).clone()) },
         };
       },
     };

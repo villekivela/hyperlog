@@ -15,16 +15,20 @@
 // - trace: each angle the pose has a trace for is within 10° of it;
 // - contact: each hand on a bar or a handle meets it (#162): every finger and the thumb within
 //   2 mm of its surface (a wrapped thumb on a bar under 40 mm may rest on the fingers instead), and
-//   none more than 2 mm inside it; the palm, the ball of the thumb with it, within 3 mm either way.
+//   none more than 2 mm inside it; the palm, the ball of the thumb with it, within 3 mm either way;
+// - linkage: each joint stays within its limits, each contact on a jointed body stays on the path
+//   its joint gives it (a handle on its arc) within 1 mm, each hand within 1.5 cm of the handle it
+//   holds, and each pad, roller or plate within 2 cm of the limb it bears on.
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { sample } from './motions.mjs';
 import { between, gripTarget, heldAt, sideOf, turnOf, wpos } from './rig.mjs';
+import { moveOf } from './recipe.mjs';
 import { ANGLES, deg, sideAngles } from './angles.mjs';
 import { contactOf, holdsNothing, partUnder } from './grip.mjs';
 
-export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact'];
+export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact', 'linkage'];
 
 const LIMITS = {
   grip: 0.015, fingers: 0.013, foot: 0.02, inside: 0.02, floor: 0.015, wrist: 5, cable: 0.01, rack: 0.015,
@@ -32,6 +36,8 @@ const LIMITS = {
   contact: 0.002,
   // The palm's skin is measured on a grid over large triangles, so it is held to a little more.
   palm: 0.003,
+  // A machine's contacts: how far a pad may stand off its limb, and a point off its joint's path.
+  pad: 0.02, arc: 0.001,
 };
 const angle = (a, b) => deg(a.angleTo(b));
 const FINGERS = /^(hand|index|middle|ring|pinky|thumb)_/;
@@ -61,6 +67,23 @@ function depthIn(s, p) {
   const [a, b] = [(s.axis + 1) % 3, (s.axis + 2) % 3];
   return Math.min(s.half[a] - Math.hypot(q[a], q[b]), s.half[s.axis] - Math.abs(q[s.axis]));
 }
+
+/** How far a local point is from a solid part's surface, in its own units: 0 inside it. */
+function gapTo(s, p) {
+  const q = p.clone().sub(s.centre).toArray();
+  if (!s.round) return Math.hypot(...q.map((v, i) => Math.max(0, Math.abs(v) - s.half[i])));
+  const [a, b] = [(s.axis + 1) % 3, (s.axis + 2) % 3];
+  return Math.hypot(Math.max(0, Math.hypot(q[a], q[b]) - s.half[a]), Math.max(0, Math.abs(q[s.axis]) - s.half[s.axis]));
+}
+
+/** The solid part nearest world point `p`, which a contact's point lies in or on. */
+function partAt(parts, p) {
+  const gap = (s) => gapTo(s, s.mesh.worldToLocal(p.clone()));
+  return parts.reduce((a, b) => (gap(b) < gap(a) ? b : a));
+}
+
+/** The bones of each landmark a pad bears on. */
+const LIMBS = { shins: /^calf_/, thighs: /^thigh_/, feet: /^(foot|ball)_/, shoulders: /^(clavicle|upperarm)_/, chest: /^spine_0[23]$/, back: /^spine_0[23]$/, upperArms: /^upperarm_/ };
 
 /** The body's vertices, each with the bone that moves it most and whether that's a hand's. */
 function bodyVertices(rig) {
@@ -151,6 +174,48 @@ export function contactsOf({ rig, kit }, P, k) {
 }
 
 /**
+ * A check of the contacts of every kit on a joint or a frame, on one posed frame: `note(past, found)`
+ * for each. `started` keeps where each contact began, so each is held to its joint's path from there.
+ */
+function checkLinkage(kits, { rig, parts, vertices, skinned, started, limbs }, note) {
+  for (const [name, kit] of Object.entries(kits)) {
+    for (const [body, joint] of Object.entries(kit.joints)) {
+      const [min, max] = joint.limits;
+      const past = Math.max(min - joint.value, joint.value - max);
+      const shown = joint.type === 'revolute' ? `${deg(joint.value).toFixed(1)}°` : `${joint.value.toFixed(3)} m`;
+      note(past - 1e-6, `${body} at ${shown}, ${past > 1e-6 ? 'past' : 'within'} its limits`);
+    }
+    for (const c of kit.contacts) {
+      const joint = kit.joints[c.body];
+      if (c.body !== 'frame' && !joint) continue;
+      const key = `${name}.${c.point}`;
+      started[key] ??= { at: c.at.map((p) => p.clone()), value: joint?.value };
+      c.at.forEach((p, i) => {
+        const want = started[key].at[i].clone();
+        if (joint) want.applyMatrix4(moveOf(joint, joint.value - started[key].value));
+        note(p.distanceTo(want) - LIMITS.arc, `${c.point} ${(p.distanceTo(want) * 1000).toFixed(1)} mm off their arc`);
+      });
+      for (const k of ['l', 'r']) {
+        if (c.landmark === 'hands') {
+          const miss = Math.min(...c.at.map((p) => p.distanceTo(heldAt(rig, k))));
+          note(miss - LIMITS.grip, `the ${k} hand ${(miss * 100).toFixed(1)} cm off the ${c.point}`);
+          continue;
+        }
+        // The limb on this side: a spine's bones, on neither, count for both.
+        const limb = limbs[`${c.landmark}_${k}`] ??= vertices.flatMap((b, i) => (
+          LIMBS[c.landmark].test(b.bone) && (!/_[lr]$/.test(b.bone) || b.bone.endsWith(`_${k}`)) ? [i] : []));
+        let gap = Infinity;
+        for (const s of c.at.map((p) => partAt(parts, p))) {
+          const inverse = s.mesh.matrixWorld.clone().invert();
+          for (const i of limb) gap = Math.min(gap, gapTo(s, skinned[i].clone().applyMatrix4(inverse)));
+        }
+        note(gap - LIMITS.pad, `${c.point} ${(gap * 100).toFixed(1)} cm off the ${c.landmark}`);
+      }
+    }
+  }
+}
+
+/**
  * Checks a pose on every frame of its lowering. Each check reports whether it passed, its worst
  * frame, and what it found there.
  */
@@ -173,6 +238,8 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     if (past > worst[check].past) worst[check] = { past, frame, found };
   };
   const v = new THREE.Vector3();
+  const started = {};
+  const limbs = {};
   for (let f = 0; f < frames; f++) {
     const P = pose(f / (frames - 1));
     for (const k of ['l', 'r']) {
@@ -233,6 +300,7 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     for (const k of ['l', 'r']) {
       for (const c of contactsOf({ rig, kit }, P, k)) note('contact', c.past, f, c.found);
     }
+    checkLinkage(kit.kits, { rig, parts, vertices, skinned, started, limbs }, (past, found) => note('linkage', past, f, found));
     if (entry.trace) {
       const measured = posedAngles(rig);
       for (const [k, samples] of Object.entries(entry.trace.angles)) {

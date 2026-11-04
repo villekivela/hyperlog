@@ -80,6 +80,7 @@ function put(src, open, steps, value, where) {
     return put(src, found.start, rest, value, where);
   }
   const body = src.slice(open + 1, close);
+  if (!body.trim()) return `${src.slice(0, open + 1)} ${nested(steps, value)} ${src.slice(close)}`;
   if (!body.includes('\n')) return `${src.slice(0, close).replace(/\s*$/, '')}, ${nested(steps, value)} ${src.slice(close)}`;
   const indent = /\n([ \t]*)\S[^\n]*\s*$/.exec(body)?.[1] ?? '    ';
   const before = src.slice(0, close).replace(/\s*$/, '');

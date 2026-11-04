@@ -74,6 +74,8 @@ const LANDMARKS = {
   thighs: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['thigh_' + k]), wpos(rig.bones['calf_' + k])] },
   shoulders: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['clavicle_' + k]), wpos(rig.bones['upperarm_' + k])] },
   chest: { reach: 0.25, at: (rig) => [wpos(rig.bones.spine_02), wpos(rig.bones.neck_01)] },
+  back: { reach: 0.3, at: (rig) => [wpos(rig.bones.spine_02), wpos(rig.bones.neck_01)] },
+  upperArms: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['upperarm_' + k]), wpos(rig.bones['lowerarm_' + k])] },
 };
 
 /** The nearest distance from `p` to a held part's axis: its longest extent, as a segment. */
@@ -175,9 +177,8 @@ for (const id of ['machine_chest_press', 'chest_supported_machine_row', 'machine
 
 test("seated_calf_raise: the lever's upper limit is no further than the heels rise, 45° from flat", async () => {
   const entry = prepare('seated_calf_raise');
-  const highest = await buildStage({ ...entry, top: { ...entry.top, ankle: 45 } });
-  highest.pose(0);
-  const turn = highest.kit.kits.calf_raise_machine.joints.lever.value;
-  const [, max] = highest.kit.kits.calf_raise_machine.joints.lever.limits;
-  assert.ok(max <= turn + 1e-9, `the lever's upper limit ${(max * 180 / Math.PI).toFixed(1)}°, the heels highest at ${(turn * 180 / Math.PI).toFixed(1)}°`);
+  const highest = await buildStage({ ...entry, top: { ...entry.top, lever: 13 } });
+  const { heading } = highest.pose(0).foot(1);
+  const heels = (Math.atan2(-heading.y, heading.z) * 180) / Math.PI;
+  assert.ok(heels > 15 && heels <= 45, `the heels ${heels.toFixed(1)}° from flat at the lever's upper limit`);
 });

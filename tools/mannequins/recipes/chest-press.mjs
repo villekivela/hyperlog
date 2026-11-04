@@ -12,19 +12,51 @@ import {
   UPRIGHTS, WHEEL, backPad, basePlate, endCap, pad, part, pulley, rod, rodGeometry, rollerGeometry, seatOn, span, stackFrame, stretchedTube,
   tube, turnedPart, weightStack, wheelGeometry,
 } from '../parts.mjs';
-import { V, rad } from '../rig.mjs';
+import { V, rad, spineLean } from '../rig.mjs';
+
+// The levers' pivot, [y, z], how far it is down them to the handles' middle, and how far they hang
+// from straight down where they rest, the handles back at the chest (radians).
+const PIVOT = [1.8475, 0.185];
+const ARM = 0.874;
+const REST = -0.2413;
+// The handles this far either side of the middle.
+const HANDLES_OUT = 0.385;
+const SEAT = [0.47, 0.02];
+/** How far up from the hips to the shoulders a seated lifter's mid-chest is. */
+const MID_CHEST = 0.89;
+/** How far the hips sit above a seat's top. */
+const SITS = 0.09;
+/** The hips on the seat at [y, z]. */
+const hipOn = ([y, z]) => [y + SITS, z - 0.02];
 
 export default recipe({
   name: 'chest_press',
   // From the handles at the chest to the arms straight.
   bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [0, rad(26)] }) },
-  contacts: [{ body: 'levers', point: 'handles', landmark: 'hands' }],
+  rep: { joint: 'levers', from: 'max' },
+  contacts: [
+    { body: 'levers', point: 'handles', landmark: 'hands' },
+    { body: 'frame', point: 'backPad', landmark: 'back' },
+  ],
   stacks: [{ joint: 'levers', ratio: 0.5 }],
   fit: [
-    { sets: 'seat', rule: 'the handles at mid-chest' },
-    { sets: 'pad', rule: 'the back pad against the spine' },
+    {
+      sets: 'seat',
+      rule: 'the handles at mid-chest',
+      solve: ({ L, entry }) => [PIVOT[0] - ARM * Math.cos(REST) - MID_CHEST * L.trunkUp * Math.cos(spineLean(entry.body.trunk, L)) - SITS, SEAT[1]],
+    },
+    { sets: 'pad', rule: 'the back pad against the spine', solve: ({ L }) => L.back },
   ],
-  build({ seat = [0.47, 0.02], pad: behind = 0.2 } = {}, M) {
+  linkage: ({ seat = SEAT }) => ({
+    hip: hipOn(seat),
+    at: (value) => {
+      const swing = REST + value;
+      const pivot = V(0, ...PIVOT);
+      const middle = V(0, pivot.y - ARM * Math.cos(swing), pivot.z + ARM * Math.sin(swing));
+      return { pivot, swing, handle: (s) => middle.clone().setX(s * HANDLES_OUT) };
+    },
+  }),
+  build({ seat = SEAT, pad: behind = 0.2 } = {}, M) {
     const backRest = backPad(0.36, 0.64, M, { up: 0.36, behind });
     const rear = -0.55;
     const stackZ = -0.71;
@@ -82,7 +114,7 @@ export default recipe({
           },
         },
       },
-      drive(P, P0, P1) {
+      drive(P, P0) {
         const back = backRest.fit(P0);
         // The back pad's support runs straight back from its board into the column.
         span(support, back, V(0, back.y, rear - 0.05));
@@ -108,8 +140,8 @@ export default recipe({
           l.end.position.copy(h).setX(s * (Math.abs(h.x) - 0.1));
         });
         return {
-          joints: { levers: { value: Math.abs(P.swing - P1.swing), origin: P.pivot.clone() } },
-          points: { handles: [-1, 1].map((s) => P.handle(s).clone()) },
+          joints: { levers: { value: P.linkage.value, origin: P.pivot.clone() } },
+          points: { handles: [-1, 1].map((s) => P.handle(s).clone()), backPad: [backRest.mesh.position.clone()] },
         };
       },
     };

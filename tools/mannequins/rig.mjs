@@ -197,9 +197,37 @@ export function buildRig(root) {
   const joints = [hips, ...['spine_01', 'spine_02', 'spine_03'].map((n) => wpos(bones[n])), between(rig, 'upperarm_l', 'upperarm_r')];
   const links = joints.slice(1).map((p, i) => [p.y - joints[i].y, p.z - joints[i].z]);
   Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z, links });
+  // How far the skin stands off the spine's line, behind the shoulder blades and before the chest,
+  // and above the thigh's: what a pad sits against (a machine's fit rules).
+  const depths = skinExtents(rig, hips);
+  Object.assign(dims, depths);
   for (const [n, b] of Object.entries(bones)) b.quaternion.copy(rest[n].lq);
   root.updateMatrixWorld(true);
   return rig;
+}
+
+/** How far the skin reaches, standing with the spine straightened: `back` and `chest` from the line up the spine through `hips`, and `thighTop` from the thigh's axis. */
+function skinExtents(rig, hips) {
+  const at = new THREE.Vector3();
+  const out = { back: 0, chest: 0, thighTop: 0 };
+  const hip = wpos(rig.bones.thigh_l);
+  const front = wpos(rig.bones.calf_l).sub(hip).normalize().cross(X).normalize();
+  for (const m of rig.meshes) {
+    const { skinIndex, skinWeight, position } = m.geometry.attributes;
+    for (let i = 0; i < position.count; i++) {
+      let top = 0;
+      for (let j = 1; j < 4; j++) if (skinWeight.getComponent(i, j) > skinWeight.getComponent(i, top)) top = j;
+      const bone = m.skeleton.bones[skinIndex.getComponent(i, top)].name;
+      if (bone !== 'thigh_l' && !/^spine_0[23]$/.test(bone)) continue;
+      m.getVertexPosition(i, at).applyMatrix4(m.matrixWorld);
+      if (bone === 'thigh_l') out.thighTop = Math.max(out.thighTop, at.clone().sub(hip).dot(front));
+      else {
+        out.back = Math.max(out.back, hips.z - at.z);
+        out.chest = Math.max(out.chest, at.z - hips.z);
+      }
+    }
+  }
+  return out;
 }
 
 /** `from` turned `angle` radians toward `to`, in the plane of the two. */
@@ -207,6 +235,41 @@ function turnToward(from, to, angle) {
   const axis = from.clone().cross(to);
   if (axis.lengthSq() < 1e-12) return from.clone();
   return from.clone().applyAxisAngle(axis.normalize(), angle).normalize();
+}
+
+// The knee and elbow keep a hair of bend at their straightest, so the IK always knows which way
+// they bend.
+export const STRAIGHT = 0.995;
+
+/** Up a trunk leaning `lean` radians forward of upright. */
+export const trunkUp = (lean) => V(0, Math.cos(lean), Math.sin(lean));
+
+/** Forward of a trunk running up `u`. */
+export const forwardOf = (u) => X.clone().cross(u).normalize();
+
+/** A limb swung side-on `deg` degrees forward from hanging straight down. */
+export const hanging = (deg) => V(0, -Math.cos(rad(deg)), Math.sin(rad(deg)));
+
+/** A direction in the side-on plane `phi` radians round from forward (+z) toward down. */
+export const sideOn = (phi) => V(0, -Math.sin(phi), Math.cos(phi));
+
+/**
+ * The spine's lean for a side-on trunk angle: the line from the hips to the shoulders, which is
+ * what a trace sees, runs a little behind the spine.
+ */
+export const spineLean = (trunk, L) => rad(trunk) + Math.atan2(L.trunkBack, L.trunkUp);
+
+/** Where the trunk puts the shoulders' middle: up the spine, and a little behind it. */
+export const shouldersOf = (hipC, u, L) => hipC.clone().addScaledVector(u, L.trunkUp).addScaledVector(forwardOf(u), -L.trunkBack);
+
+/** Where a knee bends to between the hip joint at `hip` and the ankle, toward `pole`. */
+export function kneeAt(hip, ankle, L, pole) {
+  const d = ankle.clone().sub(hip);
+  const len = Math.min(d.length(), (L.thigh + L.shin) * STRAIGHT);
+  const along = (L.thigh ** 2 - L.shin ** 2 + len ** 2) / (2 * len);
+  const dir = d.normalize();
+  const out = pole.clone().addScaledVector(dir, -pole.dot(dir)).normalize();
+  return hip.clone().addScaledVector(dir, along).addScaledVector(out, Math.sqrt(Math.max(0, L.thigh ** 2 - along ** 2)));
 }
 
 /** The point halfway between bones `a` and `b`, where they are now. */
