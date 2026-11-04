@@ -9,6 +9,7 @@ index into `app/src/main/assets/mannequins/`. The phone only plays them.
 cd tools/mannequins
 npm ci                                  # three.js, pinned in package-lock.json
 npm run bake                            # node bake.mjs [out-dir]: check every pose, then bake them all
+npm run seats                           # solve every seat afresh into seats.json, then bake
 npm test                                # entries, kits, checks, bake, trace, review and the studio
 npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
 npm run studio                          # the studio, at http://localhost:5190/studio/ (The studio)
@@ -19,6 +20,12 @@ npm run review -- phone <batch>         # the owner has swiped the batch in the 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
 give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
 fails on any difference (`committed.test.mjs`), so bake and commit together.
+
+`seats.json` holds each seat the poses use, because solving one takes over a second and a pose needs
+two. A bake adds a seat it had to solve, a new radius or `grip.swing`, so commit the file with the
+clips. After a change to the grip solve or the mannequin, run `npm run seats`: `seats.test.mjs` fails
+on a file that no longer holds what the solve finds. The bake's order goes into the file, since a
+solve lands up to 37 µm off depending on where the rig stands, and the clips are baked from it.
 
 ## Making a batch
 
@@ -675,7 +682,7 @@ has now.
   two-bone IK for the legs and arms and a grip solve that lays the bar across the palm.
 - `grip.mjs`: how a hand meets what it holds: each motion's grip landmark and thumb, the hand's
   skin, the seat of a bar on the palm, the fingers and the thumb closed joint by joint, and the
-  measure the contact check takes.
+  measure the contact check takes. `seats.json`: each seat the poses use, solved once.
 - `kit.mjs`: the generic equipment the library uses, each kit built from its recipe, and the floor
   shadow. `recipe.mjs`: the recipe format. `recipes/`: a recipe per kit. `parts.mjs`: the part
   library, built in code from extruded, turned and swept shapes, and its five tones.

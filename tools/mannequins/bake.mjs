@@ -6,7 +6,10 @@
 // first (checks.mjs), and if any fails, nothing is written.
 //
 //   node bake.mjs [out-dir]     (default: app/src/main/assets/mannequins)
-import { writeFile, mkdir } from 'node:fs/promises';
+//
+// A seat seats.json doesn't hold is solved and added to it. `--seats` (`npm run seats`) solves every
+// seat afresh and writes the file whole, for a change to the grip solve or the mannequin.
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
@@ -15,6 +18,7 @@ import { tempoOf } from './tempo.mjs';
 import { prepare, benchAngles, gripsOf } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkPose } from './checks.mjs';
+import { forgetSeats, newSeats } from './grip.mjs';
 import { shareParts } from './glb.mjs';
 import { benchHinge } from './recipes/bench.mjs';
 import { POSES } from './poses.mjs';
@@ -22,6 +26,8 @@ import { POSES } from './poses.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** Where the clips and their index ship: the app's assets. */
 export const CLIPS = path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'mannequins');
+/** Each seat the poses use, solved once (`seatOf`). */
+const SEATS = path.join(HERE, 'seats.json');
 
 // GLTFExporter reads its blobs back through FileReader, which Node doesn't have.
 globalThis.FileReader ??= class {
@@ -33,7 +39,7 @@ globalThis.FileReader ??= class {
 const rounded = (v) => Math.round(v * 1e5) / 1e5;
 
 /** Each clip an exercise bakes: [bench angle, grip], one for each bench angle or each grip it has, or one. */
-const variantsOf = (id, poses) => (benchAngles(id) ?? [undefined]).flatMap((angle) => (gripsOf(id, poses) ?? [undefined]).map((grip) => [angle, grip]));
+export const variantsOf = (id, poses) => (benchAngles(id) ?? [undefined]).flatMap((angle) => (gripsOf(id, poses) ?? [undefined]).map((grip) => [angle, grip]));
 
 /** Throws, naming each failing check, unless the pose passes them all (at every bench angle and grip it is baked at). */
 async function mustPass(id, poses) {
@@ -151,8 +157,20 @@ export async function bakeAll(out = CLIPS, { poses = POSES } = {}) {
   return index;
 }
 
+/** Writes `seats` into seats.json, a line each, on top of what it holds unless `whole`. */
+async function writeSeats(seats, whole) {
+  const all = { ...(whole ? {} : JSON.parse(await readFile(SEATS, 'utf8'))), ...seats };
+  await writeFile(SEATS, `{\n${Object.entries(all).map(([key, offs]) => `${JSON.stringify(key)}: ${JSON.stringify(offs)}`).join(',\n')}\n}\n`);
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const out = process.argv[2] ? path.resolve(process.argv[2]) : CLIPS;
+  const args = process.argv.slice(2);
+  const whole = args.includes('--seats');
+  const dir = args.find((a) => a !== '--seats');
+  const out = dir ? path.resolve(dir) : CLIPS;
+  if (whole) forgetSeats();
   const index = await bakeAll(out);
   for (const id of Object.keys(index)) console.log(`baked ${id} → ${path.relative(process.cwd(), path.join(out, index[id].clip))}`);
+  const seats = newSeats();
+  if (whole || Object.keys(seats).length) await writeSeats(seats, whole);
 }
