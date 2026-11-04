@@ -247,8 +247,8 @@ test('an item answers as soon as its checks are done, not behind the poses after
   assert.ok(spun <= 2, `${spun} poses ran before it answered`);
 });
 
-// No deadline of its own: it waits on what happens, and the test's timeout is the only limit.
-test('a list made while the checks run waits for one pose at most', async () => {
+// It waits on what happens, not on a clock; the test's timeout only turns a hang into a failure.
+test('a list made while the checks run waits for one pose at most', { timeout: 30000 }, async () => {
   const hold = held();
   const { get } = await serve(hold.check);
   const opening = get('/api/item/exercise/deadlift');
