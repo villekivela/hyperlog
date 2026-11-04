@@ -253,6 +253,24 @@ test('the press-around turns the trunk and head into the press, on a wide stance
   assert.ok(Math.abs(left.z - right.z) > 0.1, 'one foot ahead');
 });
 
+// The owner, #197: it is a triceps extension, so the elbow stays and the forearm swings.
+test('the katana keeps its elbow in place while the forearm extends', async () => {
+  const stage = await buildStage(prepare('1_arm_katana_cable_triceps_extension'));
+  const at = (d) => {
+    stage.pose(d);
+    stage.scene.updateMatrixWorld(true);
+    return ['upperarm_l', 'lowerarm_l', 'hand_l'].map((b) => wpos(stage.rig.bones[b]));
+  };
+  const bendAt = ([shoulder, elbow, hand]) => 180 - (shoulder.sub(elbow).angleTo(hand.sub(elbow)) * 180) / Math.PI;
+  const [, start] = at(0);
+  for (let f = 1; f < FRAMES; f++) {
+    const [, elbow] = at(f / (FRAMES - 1));
+    assert.ok(elbow.distanceTo(start) < 0.03, `the elbow ${(elbow.distanceTo(start) * 100).toFixed(1)} cm from where it started, on frame ${f}`);
+  }
+  const [top, bottom] = [bendAt(at(0)), bendAt(at(1))];
+  assert.ok(bottom - top > 70, `the elbow bends from ${top.toFixed(0)}° to ${bottom.toFixed(0)}°`);
+});
+
 // The owner, #197: the toes point the way the knees do, and the knees bend well.
 test('the press-around\'s toes point where its knees do, both knees bent', async () => {
   const { at } = await posed('1_arm_cable_press_around', 0);

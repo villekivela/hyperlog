@@ -498,16 +498,17 @@ export const POSES = {
     camera: { target: [0, 1.15, 0], halfHeight: 1.3, azimuth: 12, elevation: 8 },
   },
 
-  // The right tower's low pulley to the side and behind, its cable across the body to the left hand,
-  // the elbow high: the hand lowers from the arm straight overhead to behind the head.
+  // The right tower's low pulley to the side and behind, its cable across the body to the left hand:
+  // the upper arm stays up by the head, the elbow in place, and the forearm lowers from nearly
+  // straight overhead to behind the head.
   '1_arm_katana_cable_triceps_extension': {
     equipment: 'cable',
-    motion: 'free_arms',
-    kit: { cable_crossover: { position: 1, at: [0.4, -0.7], crossed: true, hands: [1] } },
-    top: { shin: 4, thigh: 8, trunk: 8, hand: [0.2, 1.98, 0.12] },
-    bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.06, 1.62, -0.1] },
+    motion: 'arms',
+    kit: { cable_crossover: { position: 1, at: [-0.3, -1], crossed: true, hands: [1] } },
+    top: { shin: 4, thigh: 8, trunk: 8, upperArm: 150, forearm: 162 },
+    bottom: { shin: 4, thigh: 8, trunk: 8, upperArm: 150, forearm: 275 },
     feet: { stance: 0.16, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
-    grip: { one: 1, rest: [-0.25, 0.88, 0.12], pole: [0.5, 1, 0.3] },
+    grip: { width: 0.17, rotate: 90, one: 1, rest: [-0.25, 0.88, 0.12], pole: [0, 0.6, 1] },
     camera: { target: [0, 1.2, -0.2], halfHeight: 1.3, azimuth: 60, elevation: 8 },
   },
 
