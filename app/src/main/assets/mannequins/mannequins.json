@@ -441,6 +441,30 @@
         "kit_row_machine.bin"
       ]
     },
+    "chest_supported_t_bar_row": {
+      "clip": "chest_supported_t_bar_row.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.78,
+          0.3
+        ],
+        "halfHeight": 1.15,
+        "azimuth": 70,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_t_bar_row_machine.bin"
+      ]
+    },
     "close_grip_bench_press": {
       "clip": "close_grip_bench_press.glb",
       "equipment": "barbell",
@@ -748,6 +772,30 @@
         "kit_squat_machine.bin"
       ]
     },
+    "kelso_shrug": {
+      "clip": "kelso_shrug.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.78,
+          0.3
+        ],
+        "halfHeight": 1.15,
+        "azimuth": 70,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 1,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_t_bar_row_machine.bin"
+      ]
+    },
     "lat_pulldown": {
       "clip": "lat_pulldown.glb",
       "equipment": "cable",
@@ -1010,6 +1058,30 @@
       "resources": [
         "mannequin.bin",
         "kit_leg_curl.bin"
+      ]
+    },
+    "t_bar_row": {
+      "clip": "t_bar_row.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.78,
+          0.3
+        ],
+        "halfHeight": 1.15,
+        "azimuth": 70,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_t_bar_row_machine.bin"
       ]
     },
     "triceps_pressdown": {

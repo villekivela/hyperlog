@@ -1656,12 +1656,13 @@ gallery (Technique videos).
     check, notes, OK, phone-checked); one is on stage at a time. An exercise is posed live with the
     tool's own code, looping or held at the top or the bottom, with a slider for each number of its
     pose entry, drag handles at the top and the bottom, and the automatic checks re-run on what it
-    shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes. A machine can be
+    shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes what it changed, in
+    seconds, and only that pose is checked again (owner, 2026-11-04, #191). A machine can be
     opened on its own, its joints scrubbed, its references beside it. The sidebar holds the whole
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the T-bar row machine and the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until #160 poses them. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    with no body, its levers at rest (#176): the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), the smith machine (#182) and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

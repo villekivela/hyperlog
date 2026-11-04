@@ -676,6 +676,26 @@ export const MOTIONS = {
   },
 
   /**
+   * Standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips
+   * its lever carries: a chest-supported T-bar row, a Kelso shrug.
+   */
+  chest_pad(e, s, L) {
+    const { handle, across, spine, sole, soleUp, toes, ankle } = s.linkage;
+    const f = forwardOf(spine);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC: V(0, ...e.body.hip), u: spine,
+      headDir: spine.clone().addScaledVector(f, e.body?.look ?? -0.3).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * e.feet.stance)),
+      foot: (side) => ({ heading: toes.clone().applyAxisAngle(soleUp, side * toeOut), top: soleUp.clone() }),
+      kneePole: (side) => f.clone().addScaledVector(X, side * (e.feet.kneesOut ?? 0.2)).normalize(),
+      support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
+      hand: handle, across,
+      armPole: elbowsTo(e, [0.5, 0.4, -1]),
+    };
+  },
+
+  /**
    * Lying face up, the knees bent and the feet flat, the shoulder joints on the floor or across a
    * bench at `body.shoulders` [y, z], the head toward -z: the hips lift from `hip` [y, z] at the
    * bottom of the rep to `hip` at the top, each about a trunk's length from the shoulders, which the

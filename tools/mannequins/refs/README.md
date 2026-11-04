@@ -20,7 +20,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 
 | # | Machine | Exercises | Based on |
 | --- | --- | --- | --- |
-| 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), not yet posed |
+| 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), posed (#188) |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover; built (#181), 19 not yet posed on it (6 are posed on `cable_column`) |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
 | 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), not yet posed |
@@ -70,8 +70,8 @@ Every dimension a maker doesn't publish is estimated from a viewed photo or vide
 chosen from a fit rule at low confidence. What stays chosen, or rough, per machine (each file's Open
 gaps says why):
 
-- `t_bar_row_machine` (built, #176): the foot plate setting for the mannequin; the top of the row
-  comes from a three-quarter photo. The recipe runs the neutral grips fore and aft through the
+- `t_bar_row_machine` (built, #176; posed, #188): the foot plate setting for the mannequin is
+  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe runs the neutral grips fore and aft through the
   yoke's top blocks, as photos 05 and 06 show them, where the ref's spec calls them vertical.
 - `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
   80 mm); the carriage position per exercise is chosen.

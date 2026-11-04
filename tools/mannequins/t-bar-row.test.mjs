@@ -8,6 +8,10 @@ import * as THREE from 'three';
 import { KITS, buildKit, shownAlone } from './kit.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { V, buildRig, heldAt, rad, wpos } from './rig.mjs';
+import { fitted } from './fit.mjs';
+import { checkPose } from './checks.mjs';
+import { prepare } from './entries.mjs';
+import { applyTuned, tunables } from './tune.mjs';
 
 const machine = () => {
   const kit = buildKit({ equipment: 'machine', kit: { t_bar_row_machine: {} } }).kits.t_bar_row_machine;
@@ -106,51 +110,36 @@ test('its fit rule sets the foot plate along the beam, for the pad\'s top end at
   close(deg(Math.atan2(near.y - far.y, near.z - far.z)), 40, 1e-6, 'along the beam, in degrees');
 });
 
-// The lever's limits are where the body stops (#159): set up as the fit rule says, the pad's top
-// end at the top of the sternum, each grip is within the arms' reach on the catch and at the top.
-// The shoulder joints are taken 6 cm off the pad's face at its top end, the chest's half depth
-// beneath them, either side by the mannequin's shoulder width.
-test("the lever's limits keep every grip within the arms' reach of a body set up by the fit rule", async () => {
+const mannequin = async () => {
   const bytes = await readFile(MODEL);
-  const rig = buildRig(await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)));
-  rig.root.updateMatrixWorld(true);
-  const reach = (k) => wpos(rig.bones[`upperarm_${k}`]).distanceTo(wpos(rig.bones[`lowerarm_${k}`]))
-    + wpos(rig.bones[`lowerarm_${k}`]).distanceTo(wpos(rig.bones[`hand_${k}`])) + wpos(rig.bones[`hand_${k}`]).distanceTo(heldAt(rig, k));
-  const arm = Math.min(reach('l'), reach('r'));
-  const kit = machine();
-  const top = contact(kit, 'pad').at[0].clone().add(V(0, Math.sin(rad(40)), Math.cos(rad(40))).multiplyScalar(0.255));
-  const face = V(0, Math.cos(rad(40)), -Math.sin(rad(40)));
-  const shoulders = [-1, 1].map((s) => top.clone().addScaledVector(face, 0.06).setX(s * rig.dims.shW));
-  for (const limit of kit.joints.lever.limits) {
-    kit.scrub('lever', limit);
-    for (const { point, at } of kit.contacts.filter((c) => c.landmark === 'hands')) {
-      at.forEach((p, i) => {
-        const short = p.distanceTo(shoulders[i]) - arm;
-        assert.ok(short < 0.01, `the ${point} grip at ${deg(limit).toFixed(0)}°: ${(short * 100).toFixed(1)} cm past the arms' reach`);
-        assert.ok(p.y < shoulders[i].y, `the ${point} grip at ${deg(limit).toFixed(0)}°: above the shoulder`);
-      });
-    }
-  }
+  return buildRig(await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)));
+};
+
+// The rule, solved (#188): 91 cm down the beam for this mannequin, near the 95 cm the ref measures
+// on photo 07's lifter, and further for longer legs, which the pop-pin stops at its lowest hole.
+test('the fit rule solves the foot plate from the legs, as far down the beam as its pop-pin goes', async () => {
+  const { dims } = await mannequin();
+  const entry = { equipment: 'machine', kit: { t_bar_row_machine: { handles: 'neutral' } } };
+  const down = (L) => fitted(entry, L).kit.t_bar_row_machine.footPlate;
+  close(down(dims), 0.913, 0.005, 'the foot plate, in metres down the beam');
+  assert.ok(down({ ...dims, shin: dims.shin - 0.05 }) < down(dims) - 0.03, 'a shorter shin takes the plate up the beam');
+  close(down({ ...dims, shin: dims.shin + 0.3 }), 0.95, 1e-9, 'the lowest hole');
+  assert.equal(fitted({ ...entry, kit: { t_bar_row_machine: { handles: 'neutral', footPlate: 0.8 } } }, dims).kit.t_bar_row_machine.footPlate, 0.8, 'an entry\'s own setting');
 });
 
-// No pose uses it yet, so the studio shows it alone (#176): on its catch whatever the rep, its lever
-// scrubbed through its limits.
-test('the studio shows it alone, its lever on the catch through the rep and scrubbed to either limit', async () => {
-  const entry = shownAlone('t_bar_row_machine');
-  assert.ok(entry.camera, 'a framing to open on');
-  const stage = await buildStage(entry);
+// Posed, it stands in the studio as its poses set it up (#188), its lever scrubbed through its limits.
+test('the studio shows it as a pose sets it up, the plate rising with its lever', async () => {
+  assert.equal(shownAlone('t_bar_row_machine'), null, 'a posed kit has nothing to stand alone by');
+  const stage = await buildStage(prepare('chest_supported_t_bar_row'));
+  stage.pose(0);
   const kit = stage.kit.kits.t_bar_row_machine;
-  for (const d of [0, 0.5, 1]) {
-    stage.pose(d);
-    close(deg(kit.joints.lever.value), -3, 1e-9, `on the catch ${d} of the way down`);
-  }
+  close(deg(kit.joints.lever.value), -3, 1e-9, 'on the catch at the top of the clip');
   const plate = () => { let at; kit.group.traverse((o) => { if (o.material?.name === 'plate') at = o.getWorldPosition(new THREE.Vector3()); }); return at; };
   const low = plate();
   kit.scrub('lever', kit.joints.lever.limits[1]);
   stage.scene.updateMatrixWorld(true);
   // The plate's middle, 1.3 m out, rises through the lever's 23°.
   close(plate().y - low.y, 1.3 * (Math.sin(rad(20)) + Math.sin(rad(3))), 0.005, 'how far the plate rose');
-  assert.equal(shownAlone('row_machine'), null, 'a kit set up by its pose has nothing to stand alone by');
 });
 
 // The weight and the posts are on the machine's centre line.
@@ -221,4 +210,128 @@ test('each upright has two grips as the maker\'s photo shows: one back toward th
       assert.ok(axes.some((a) => a.x * side > 0.95), `no grip straight out at ${deg(limit).toFixed(0)}°`);
     }
   }
+});
+
+// Posed on it (#188): each exercise holds one pair of grips, machine-first.
+const failed = (checks) => Object.entries(checks).filter(([, c]) => !c.ok).map(([name, c]) => `${name} on frame ${c.frame}: ${c.found}`);
+
+// The T-bar row's video has the hands wider than the shoulders: on this machine, the wide grips, overhand.
+for (const [id, handles] of [['chest_supported_t_bar_row', 'neutral'], ['t_bar_row', 'wide'], ['kelso_shrug', 'wide']]) {
+  test(`${id}: passes every check, on the ${handles} grips`, async () => {
+    assert.equal(prepare(id).kit.t_bar_row_machine.handles, handles);
+    const { checks } = await checkPose(id);
+    assert.deepEqual(failed(checks), []);
+  });
+}
+
+/** The elbow's angle on side `k`, in degrees, and how far the elbow is behind the shoulder and out from it. */
+const arm = (rig, k) => {
+  const [shoulder, elbow, wrist] = ['upperarm_', 'lowerarm_', 'hand_'].map((b) => wpos(rig.bones[b + k]));
+  return { bend: deg(shoulder.clone().sub(elbow).angleTo(wrist.clone().sub(elbow))), back: shoulder.z - elbow.z, out: Math.abs(elbow.x) - Math.abs(shoulder.x) };
+};
+
+// The ref's Fit rules: the arms hang long on the catch, and at the top of the pull (the clip's
+// bottom) the elbows have gone back past the trunk, not out to the sides.
+test('every exercise on it starts from the arms long, on the catch', async () => {
+  for (const id of ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug']) {
+    const stage = await buildStage(prepare(id));
+    stage.pose(0);
+    assert.ok(arm(stage.rig, 'l').bend > 153, `${id}: the elbow bent to ${arm(stage.rig, 'l').bend.toFixed(0)}° with the arms long`);
+  }
+});
+
+test('chest_supported_t_bar_row: the elbows drive back past the trunk', async () => {
+  const stage = await buildStage(prepare('chest_supported_t_bar_row'));
+  stage.pose(1);
+  const { back, out } = arm(stage.rig, 'l');
+  assert.ok(back > 0.1, `the elbow ${(back * 100).toFixed(1)} cm behind the shoulder`);
+  assert.ok(out < 0.1, `the elbow ${(out * 100).toFixed(1)} cm out from the shoulder`);
+});
+
+// The ref's Motion: the Kelso shrug's hands rise about 100 mm against the row's 270, the arms near
+// straight, the shoulder blades pulling together; the library's note pauses it about a second.
+test('kelso_shrug: the hands rise about 100 mm on long arms, the shoulder blades doing the work', async () => {
+  const entry = prepare('kelso_shrug');
+  const stage = await buildStage(entry);
+  const { rig } = stage;
+  const shoulder = () => wpos(rig.bones.upperarm_l);
+  stage.pose(0);
+  const [start, hand] = [shoulder(), heldAt(rig, 'l')];
+  for (const d of [0, 0.5, 1]) {
+    stage.pose(d);
+    assert.ok(arm(rig, 'l').bend > 148, `the elbow bent to ${arm(rig, 'l').bend.toFixed(0)}° ${d} of the way`);
+  }
+  close(heldAt(rig, 'l').y - hand.y, 0.1, 0.015, 'how far the hands rose');
+  // Back off the pad's line, out of its face: the blades drawn together.
+  const face = V(0, Math.cos(rad(40)), -Math.sin(rad(40)));
+  const drawn = shoulder().sub(start).dot(face);
+  assert.ok(drawn > 0.07, `the shoulder drawn back ${(drawn * 100).toFixed(1)} cm`);
+  // Not an upward shrug: nothing up the spine.
+  const lifted = shoulder().sub(start).dot(V(0, Math.sin(rad(40)), Math.cos(rad(40))));
+  assert.ok(Math.abs(lifted) < 0.02, `the shoulder ${(lifted * 100).toFixed(1)} cm up the spine`);
+  assert.equal(entry.tempo.bottom, 1, 'held about a second at the squeeze');
+});
+
+// The library's note on the row: squeeze the shoulder blades at the top of the pull.
+test('the rows draw the shoulder blades together as the elbows come back', async () => {
+  for (const id of ['chest_supported_t_bar_row', 't_bar_row']) {
+    const stage = await buildStage(prepare(id));
+    const spread = (d) => { stage.pose(d); return wpos(stage.rig.bones.upperarm_l).distanceTo(wpos(stage.rig.bones.upperarm_r)); };
+    const [long, squeezed] = [spread(0), spread(1)];
+    assert.ok(squeezed < long - 0.03, `${id}: the shoulders ${(long * 100).toFixed(1)} cm apart with the arms long, ${(squeezed * 100).toFixed(1)} at the squeeze`);
+  }
+});
+
+// The machine decides (ADR 0007): whatever an entry does, the lever turns about its own pivot, and
+// the hands ride the arc its grips have.
+test('every exercise on it leaves the lever its pivot and its path', async () => {
+  const bare = machine();
+  const points = (kit, at) => { kit.scrub('lever', at); return Object.fromEntries(kit.contacts.filter((c) => c.landmark === 'hands').map((c) => [c.point, c.at.map((p) => p.clone())])); };
+  const free = points(bare, rad(10));
+  for (const id of ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug']) {
+    const stage = await buildStage(prepare(id));
+    stage.pose(0.5);
+    const kit = stage.kit.kits.t_bar_row_machine;
+    assert.ok(kit.joints.lever.origin.distanceTo(bare.joints.lever.origin) < 1e-9, `${id}: the pivot moved`);
+    for (const [point, at] of Object.entries(points(kit, rad(10)))) {
+      at.forEach((p, i) => assert.ok(p.distanceTo(free[point][i]) < 1e-6, `${id}: the ${point} grip off its path`));
+    }
+  }
+});
+
+// The studio's slider for the fit is the entry's own setting, under the path `fit` names (#160).
+test('the foot plate\'s slider moves the plate and the feet with it, and nothing the pad decides', async () => {
+  const entry = prepare('chest_supported_t_bar_row');
+  const fit = await buildStage(entry);
+  const path = 'kit.t_bar_row_machine.footPlate';
+  const solved = fit.fit[path];
+  assert.equal(typeof solved, 'number', 'the fit offers the foot plate');
+  assert.ok(tunables(applyTuned(entry, fit.fit)).some((t) => t.path === path), 'and the studio has a slider for it');
+  const moved = await buildStage(applyTuned(entry, { [path]: solved - 0.1 }));
+  assert.equal(moved.fit[path], undefined, 'nothing solved for what the slider sets');
+  const [a, b] = [fit.pose(0), moved.pose(0)];
+  const plate = (s) => contact(s.kit.kits.t_bar_row_machine, 'footPlate').at[0];
+  close(plate(fit).distanceTo(plate(moved)), 0.1, 1e-6, 'how far the plate moved');
+  close(a.ankles[0].distanceTo(b.ankles[0]), 0.1, 1e-6, 'how far the ankles moved with it');
+  close(a.hipC.distanceTo(b.hipC), 0, 1e-9, 'the hips stay on the pad');
+  const { checks } = await checkPose('chest_supported_t_bar_row', { poses: { chest_supported_t_bar_row: applyTuned(entry, { [path]: solved - 0.1 }) } });
+  assert.ok(checks.feet.ok, checks.feet.found);
+});
+
+test('a pose names the pair it holds, and the name is one the machine has', async () => {
+  const { dims } = await mannequin();
+  for (const handles of [undefined, 'narrow']) {
+    assert.throws(() => fitted({ equipment: 'machine', kit: { t_bar_row_machine: { handles } } }, dims), /No handles/);
+  }
+});
+
+// The slider's range is any kit option's, a metre either way; the pop-pin stops at its holes.
+test('the foot plate stays on its holes, wherever the slider asks for it', () => {
+  const plateAt = (footPlate) => {
+    const kit = buildKit({ equipment: 'machine', kit: { t_bar_row_machine: { footPlate } } }).kits.t_bar_row_machine;
+    kit.place({}, {}, {});
+    return contact(kit, 'footPlate').at[0];
+  };
+  close(plateAt(1.5).distanceTo(plateAt(0.95)), 0, 1e-9, 'past the lowest hole');
+  close(plateAt(-0.5).distanceTo(plateAt(0.1)), 0, 1e-9, 'past the highest hole');
 });

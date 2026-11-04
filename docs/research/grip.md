@@ -186,6 +186,7 @@ Researched 2026-11-03 for Hyperlog's mannequin studio (`tools/mannequins/`). Iss
 | calf_raise | seated_calf_raise | knee-pad handles | about 36 | 39 | finger base | wrapped | straight 0° |
 | hack_squat | hack_squat | shoulder-pad handles | about 36 | 39 | finger base | wrapped | straight 0° |
 | lever_handles | chest_supported_machine_row (`rotate` 90), machine_pulldown | lever handles | about 36 | 33 | finger base | wrapped | straight 0° |
+| chest_pad | chest_supported_t_bar_row on the neutral grips, palms facing; t_bar_row and kelso_shrug on the wide grips, overhand | lever grips | about 36 | 31 | finger base | wrapped | straight 0° |
 | bridge | barbell_glute_bridge, barbell_hip_thrust | barbell, on the hips | 28 | 28 | mid-palm | wrapped | straight 0° |
 
 The lat bar's vinyl grips run from 0.30 to 0.46 m either side of the middle, so a hand at `grip.width` 0.4 is on them and one at 0.24 or 0.19 is on the bare bar. The machines' kit diameters are their vinyl sleeves.
@@ -233,7 +234,7 @@ The lat bar's vinyl grips run from 0.30 to 0.46 m either side of the middle, so 
 | cable rotation | cable_woodchopper | one `handle`, both hands round it, one over the other | 25–45 | finger base | wrapped | straight 0° |
 | cable hip_abduction, hip_thrust; cable lateral_raise on a cuff | cable_hip_abduction, 1_leg_cable_glute_kickback, behind_the_back_cable_lateral_raise | an ankle or wrist cuff; a free hand steadies on the column | n/a | none | n/a | n/a |
 | machine vertical_push, horizontal_push | machine_shoulder_press, incline_machine_press, seated_dip_machine | press handles | about 36 | palm heel | wrapped | ext 5°; straight 0° on the dip machine |
-| machine horizontal_pull, vertical_pull, shrug | machine_row, t_bar_row, chest_supported_t_bar_row, machine_lat_pullover, kelso_shrug, machine_shrug | machine handles | about 36 | finger base | wrapped | straight 0° |
+| machine horizontal_pull, vertical_pull, shrug | machine_row, machine_lat_pullover, machine_shrug | machine handles | about 36 | finger base | wrapped | straight 0° |
 | machine chest_fly, rear_delt_fly | pec_deck, reverse_pec_deck, 1_arm_reverse_pec_deck | upright machine handles | about 36 | mid-palm | wrapped | straight 0°, `rotate` 90 |
 | machine lateral_raise | machine_lateral_raise, standing_machine_lateral_raise | handles in front of the arm pads | about 36 | finger base | wrapped | straight 0° |
 | machine squat, calf_raise | machine_squat, pendulum_squat, single_leg_leg_press, standing_calf_raise, donkey_calf_raise, leg_press_calf_press | shoulder-pad or seat handles | about 36 | finger base, as the hack squat or the leg press | wrapped | straight 0° |

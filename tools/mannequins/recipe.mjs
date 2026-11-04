@@ -19,9 +19,10 @@
 // - `rep` (a machine's): `{ joint, from }`, the joint the rep drives and the limit (`min` or `max`)
 //   the top of the rep is at, the bottom at the other; an entry's `top` and `bottom` can give their
 //   own, in degrees or metres, under the joint's name.
-// - `linkage(options)` (a machine's): the machine with no pose, the body's place on it, `hip`
-//   [y, z], and `at(value)`, what stands where with its joint at `value`, which the motion hangs the
-//   limbs from (`fit.mjs`) and `drive` finds on the frame as `P.linkage`.
+// - `linkage(options, L)` (a machine's): the machine with no pose, the body's place on it, `hip`
+//   [y, z], for a mannequin of measurements `L`, and `at(value)`, what stands where with its joint at
+//   `value`, which the motion hangs the limbs from (`fit.mjs`) and `drive` finds on the frame as
+//   `P.linkage`.
 // - `standsAlone` (optional): `{ camera }`, for a recipe that stands where it goes with no pose,
 //   its joints at rest; the studio shows it so, in that framing, while no pose uses it.
 //
