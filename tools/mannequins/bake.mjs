@@ -121,33 +121,38 @@ async function mustBake(id, poses) {
   await mustPass(id, poses);
 }
 
-/** A clip per exercise, or per bench angle for an adjustable bench, or per grip: `id`'s, baked. */
-async function bakeClips(id, poses) {
-  const baked = [];
-  for (const [angle, grip] of variantsOf(id, poses)) baked.push([clipName(id, angle, grip), id, angle, await bake(id, poses, angle, grip), grip]);
-  return baked;
+/** A clip per exercise, or per bench angle for an adjustable bench, or per grip: those of poses `ids`, baked. */
+async function bakeClips(ids, poses) {
+  const clips = [];
+  for (const id of ids) {
+    for (const [angle, grip] of variantsOf(id, poses)) clips.push({ name: clipName(id, angle, grip), id, angle, grip, ...await bake(id, poses, angle, grip) });
+  }
+  return clips;
 }
 
 /** The index's entry for exercise `id`, from its baked clips `mine`. */
 function indexEntry(id, mine, poses) {
-  if (mine[0][4] !== undefined) {
+  if (mine[0].grip !== undefined) {
     // The first set's grip is the entry's own clip; each grip's clip and camera, in set order.
-    return { ...mine[0][3].entry, grips: mine.map(([, , , b, grip]) => ({ name: grip, clip: b.entry.clip, camera: b.entry.camera })) };
+    return { ...mine[0].entry, grips: mine.map(({ grip, entry }) => ({ name: grip, clip: entry.clip, camera: entry.camera })) };
   }
-  if (mine[0][2] === undefined) return mine[0][3].entry;
+  if (mine[0].angle === undefined) return mine[0].entry;
   // Each angle's own clip and camera, the typical angle, and the hinge the back pad turns about.
   const { typical } = prepare(id, poses).bench;
   const hinge = benchHinge(prepare(id, poses).kit.bench);
-  const nearest = mine.reduce((n, m) => (Math.abs(m[2] - typical) < Math.abs(n[2] - typical) ? m : n));
+  const nearest = mine.reduce((n, m) => (Math.abs(m.angle - typical) < Math.abs(n.angle - typical) ? m : n));
   return {
-    ...nearest[3].entry,
+    ...nearest.entry,
     bench: {
       typical,
       hinge: [rounded(hinge.y), rounded(hinge.z)],
-      clips: Object.fromEntries(mine.map(([, , angle, b]) => [angle, { clip: b.entry.clip, camera: b.entry.camera }])),
+      clips: Object.fromEntries(mine.map(({ angle, entry }) => [angle, { clip: entry.clip, camera: entry.camera }])),
     },
   };
 }
+
+/** The index's entries for poses `ids`, from their baked `clips`. */
+const indexEntries = (ids, clips, poses) => Object.fromEntries(ids.map((id) => [id, indexEntry(id, clips.filter((c) => c.id === id), poses)]));
 
 const indexBytes = (index) => Buffer.from(JSON.stringify({ clips: index }, null, 2) + '\n');
 
@@ -158,12 +163,11 @@ const indexBytes = (index) => Buffer.from(JSON.stringify({ clips: index }, null,
 export async function bakeAll(out = CLIPS, { poses = POSES } = {}) {
   const ids = Object.keys(poses).sort();
   for (const id of ids) await mustBake(id, poses);
-  const baked = [];
-  for (const id of ids) baked.push(...await bakeClips(id, poses));
-  const { clips, shared } = shareParts(baked.map(([name, , , b]) => [name, b.glb]), { body: SHARED, kit: kitFile });
+  const baked = await bakeClips(ids, poses);
+  const { clips, shared } = shareParts(baked.map(({ name, glb }) => [name, glb]), { body: SHARED, kit: kitFile });
   await mkdir(out, { recursive: true });
   for (const [uri, bytes] of Object.entries(shared)) await writeFile(path.join(out, uri), bytes);
-  const index = Object.fromEntries(ids.map((id) => [id, indexEntry(id, baked.filter(([, i]) => i === id), poses)]));
+  const index = indexEntries(ids, baked, poses);
   for (const [name, glb] of clips) await writeFile(path.join(out, `${name}.glb`), glb);
   await writeFile(path.join(out, 'mannequins.json'), indexBytes(index));
   return index;
@@ -181,8 +185,9 @@ async function bakedIn(out, poses) {
     if (Object.keys(index).sort().join() !== ids.join()) return null;
     const bins = (await readdir(out)).filter((f) => f.endsWith('.bin'));
     const files = Object.fromEntries(await Promise.all(bins.map(async (f) => [f, await read(f)])));
+    const names = ids.flatMap((id) => variantsOf(id, poses).map(([angle, grip]) => clipName(id, angle, grip)));
     const clips = new Map();
-    for (const id of ids) for (const [angle, grip] of variantsOf(id, poses)) clips.set(clipName(id, angle, grip), inlineResources(await read(`${clipName(id, angle, grip)}.glb`), files));
+    for (const name of names) clips.set(name, inlineResources(await read(`${name}.glb`), files));
     return { index, clips };
   } catch {
     return null;
@@ -200,23 +205,25 @@ async function bakedIn(out, poses) {
  */
 export async function bakeOnly(ids, out = CLIPS, { poses = POSES } = {}) {
   for (const id of ids) await mustBake(id, poses);
-  const whole = async () => {
+  const bakeEverything = async () => {
     await bakeAll(out, { poses });
     return readdir(out);
   };
   const held = await bakedIn(out, poses);
-  if (!held) return whole();
-  const baked = [];
-  for (const id of ids) baked.push(...await bakeClips(id, poses));
-  for (const [name, , , b] of baked) held.clips.set(name, b.glb);
+  if (!held) return bakeEverything();
+  const baked = await bakeClips(ids, poses);
+  for (const { name, glb } of baked) held.clips.set(name, glb);
   let packed;
   try {
     packed = shareParts([...held.clips], { body: SHARED, kit: kitFile });
   } catch {
-    return whole();
+    return bakeEverything();
   }
-  const index = { ...held.index, ...Object.fromEntries(ids.map((id) => [id, indexEntry(id, baked.filter(([, i]) => i === id), poses)])) };
-  const files = { ...packed.shared, ...Object.fromEntries(packed.clips.map(([name, glb]) => [`${name}.glb`, glb])), 'mannequins.json': indexBytes(index) };
+  const files = {
+    ...packed.shared,
+    ...Object.fromEntries(packed.clips.map(([name, glb]) => [`${name}.glb`, glb])),
+    'mannequins.json': indexBytes({ ...held.index, ...indexEntries(ids, baked, poses) }),
+  };
   const written = [];
   for (const [file, bytes] of Object.entries(files)) {
     const at = path.join(out, file);

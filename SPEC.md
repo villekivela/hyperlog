@@ -1656,7 +1656,8 @@ gallery (Technique videos).
     check, notes, OK, phone-checked); one is on stage at a time. An exercise is posed live with the
     tool's own code, looping or held at the top or the bottom, with a slider for each number of its
     pose entry, drag handles at the top and the bottom, and the automatic checks re-run on what it
-    shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes. A machine can be
+    shows. A change writes into `poses.mjs`, keeping its comments, and re-bakes what it changed, in
+    seconds, and only that pose is checked again (owner, 2026-11-04, #191). A machine can be
     opened on its own, its joints scrubbed, its references beside it. The sidebar holds the whole
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint

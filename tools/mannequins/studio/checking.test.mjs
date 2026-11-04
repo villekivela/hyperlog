@@ -1,4 +1,4 @@
-// What the message line says while the studio loads (#187).
+// The queue of checks, and what the message line says of it while the studio loads (#187, #191).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkQueue, mayNote, progressNote, rowAfter } from './checking.mjs';
@@ -48,6 +48,7 @@ test('a row the refreshed list no longer shows gives the cursor to the item on s
   assert.equal(rowAfter(['a'], undefined, 'z'), -1);
 });
 
+// With the timeouts a queue that loses a pose fails, not hangs.
 /** A queue whose checks wait for `next(found)`, which lets the oldest go with what it found. */
 function heldQueue() {
   const began = [];
@@ -63,7 +64,7 @@ function heldQueue() {
   return { queue, began, until, next: (found) => holding.shift()(found) };
 }
 
-test('forgetting one pose leaves the check under way on another to stand', async () => {
+test('forgetting one pose leaves the check under way on another to stand', { timeout: 10000 }, async () => {
   const { queue, began, until, next } = heldQueue();
   queue.ask(['a', 'b']);
   await until(1);
@@ -80,7 +81,7 @@ test('forgetting one pose leaves the check under way on another to stand', async
   assert.deepEqual(began, ['a', 'b', 'a']);
 });
 
-test('forgetting the pose under way checks it again, and only the new result counts', async () => {
+test('forgetting the pose under way checks it again, and only the new result counts', { timeout: 10000 }, async () => {
   const { queue, began, until, next } = heldQueue();
   const all = queue.ask(['a']);
   await until(1);
@@ -92,7 +93,7 @@ test('forgetting the pose under way checks it again, and only the new result cou
   assert.deepEqual(began, ['a', 'a']);
 });
 
-test('forgetting with no poses named starts every pose again', async () => {
+test('forgetting with no poses named starts every pose again', { timeout: 10000 }, async () => {
   const { queue, began, until, next } = heldQueue();
   const all = queue.ask(['a', 'b']);
   await until(1);

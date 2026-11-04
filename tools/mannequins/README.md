@@ -10,7 +10,7 @@ cd tools/mannequins
 npm ci                                  # three.js, pinned in package-lock.json
 npm run bake                            # node bake.mjs [out-dir]: check every pose, then bake them all
 npm run seats                           # solve every seat afresh into seats.json, then bake
-npm test                                # entries, kits, checks, bake, trace, review and the studio, three files at a time
+npm test                                # entries, kits, checks, bake, trace, review and the studio, a few files at a time
 npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
 npm run studio                          # the studio, at http://localhost:5190/studio/ (The studio)
 npm run review -- status <batch>        # whether every exercise in it is OK (Reviewing a batch)
@@ -597,12 +597,13 @@ listens on localhost only.
   takes it by `like:`, then shows the new clip. The other clips aren't baked: they are read back and
   shared again with the new ones (`bakeOnly`), so every file comes out as a full bake writes it, and
   only a file that differs is written. A kit file changes, and the clips that read it with it, only
-  if the save changed the kit. The first save after the studio sees any other change to the tool or
-  `poses.mjs` bakes every clip, as does a save with a pose not baked yet or a changed mannequin; run
-  `npm run bake` after an edit made with the studio closed. Only the saved poses' checks run again;
-  a change to the tool's code runs them all. A pose that fails its checks
-  doesn't bake, and then `poses.mjs` goes back to what it was and the studio names the pose that
-  failed. Read the diff after: a comment may now describe the old number.
+  if the save changed the kit. A save bakes every clip when the clips are behind
+  (`studio/behind.mjs`): when anything a bake reads, the code, a recipe, a trace, the mannequin, the
+  library or `poses.mjs`, has changed since the last bake, by the files' dates. So does a save with a
+  pose not baked yet. Only the saved poses' checks run again; a change to the tool's code runs them
+  all. A pose that fails its checks doesn't bake, and then `poses.mjs` goes back to what it was and
+  the studio names the pose that failed. Read the diff after: a comment may now describe the old
+  number.
 
 The page imports the tool's modules through Vite, with node's `fs`, `url` and `path` stubbed out:
 the server (`ssrLoadModule`, fresh on every change) prepares each entry, so the page never reads a
@@ -725,7 +726,8 @@ and animation (`glb.mjs`). A kit file holds each distinct part once, however man
 grows when a clip's options make a part of a new size. The bake checks every clip's mannequin is
 byte for byte the same before it shares it. The phone hands each file a clip lists to gltfio's
 `ResourceLoader` (`addResourceData`) before loading the clip. The tests merge the shared files into
-each clip (`inlineResources`) and parse it from memory; the studio's page fetches them beside it.
+each clip (`inlineResources`) and parse it from memory, and `bakeOnly` merges them to share the clips
+again; the studio's page fetches them beside it.
 
 `mannequins.json`:
 

@@ -11,13 +11,14 @@
 // files) is stubbed there, and never reached, since the page is handed every entry prepared.
 import { execFile } from 'node:child_process';
 import { createReadStream } from 'node:fs';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, utimes, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 // Nothing here imports poses.mjs, kit.mjs or the recipes and parts, even through another module:
 // Vite restarts its server when a file its config imports changes, and those change all the time.
 import { patchPoses } from '../patch.mjs';
+import { clipsBehind, datedBake } from './behind.mjs';
 import { checkQueue } from './checking.mjs';
 import { videoOf } from './video.mjs';
 
@@ -102,24 +103,17 @@ function refusal(req) {
   return null;
 }
 
-/** Pose `id` and every pose that takes it by `like:`, however far along: what a change to it changes. */
-const takenFrom = (id, poses) => Object.keys(poses).filter((pose) => {
-  const seen = new Set();
-  for (let at = pose; at !== undefined && !seen.has(at); at = poses[at]?.like) {
-    if (at === id) return true;
-    seen.add(at);
-  }
-  return false;
-});
-
 /**
  * The studio plugin. `posesFile`, `reviewDir` and `clips` are where the poses, the review files
  * and the baked clips are (the repo's own by default); `bake(ids)` re-bakes those poses' clips, or
- * every clip if there are none. `videos` is the technique videos' cache, and `fetchVideo(id, dir)` fetches one into it (`ytDlp`). `check(id, t)`
- * runs a pose's checks with the tool's modules `t`.
+ * every clip if there are none, and `behind()` says whether anything but a save has changed what
+ * they are baked from (`clipsBehind`). `videos` is the technique videos' cache, and
+ * `fetchVideo(id, dir)` fetches one into it (`ytDlp`). `check(id, t)` runs a pose's checks with the
+ * tool's modules `t`.
  */
 export function studio({
-  posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = (ids) => bakeInChild(clips, ids),
+  posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = (ids) => datedBake(clips, () => bakeInChild(clips, ids)),
+  behind = () => clipsBehind(clips, { tool: TOOL, also: [posesFile, LIBRARY] }),
   videos = VIDEOS, fetchVideo = ytDlp,
   check = (id, t) => t.checks.checkPose(id, { poses: t.POSES }).then((r) => r.checks),
 } = {}) {
@@ -145,16 +139,12 @@ export function studio({
   const failing = (found) => Object.values(found).some((c) => !c.ok);
   // What the studio last wrote to poses.mjs itself: the page already has it, so it needn't reload.
   let own = null;
-  // Whether anything but a save has changed the tool since the last bake: the next one bakes every clip.
-  let edited = false;
-  // The checks of what a save of `id` changed start again, `id` first, as the page will open it; the
-  // rest keep theirs. Gives the poses it changed.
-  const changed = async (id) => {
+  // The checks of `ids`, what a save of `id` changed, start again, `id` first, as the page will open
+  // it; the rest keep theirs.
+  const changed = (ids, id) => {
     for (const m of server.moduleGraph.getModulesByFile(posesFile) ?? []) server.moduleGraph.invalidateModule(m);
-    const ids = takenFrom(id, (await tool()).POSES);
     checks.forget(ids);
     checks.first(id);
-    return ids;
   };
 
   async function items(wait) {
@@ -274,19 +264,27 @@ export function studio({
   function save(id, tuned) {
     const run = saving.then(async () => {
       baking = { ...baking, baking: id };
+      // All asked before the file changes: a tool that doesn't load refuses the save, and leaves it.
+      const ids = await refusing(async () => {
+        const { entries, POSES } = await tool();
+        return Object.keys(POSES).filter((pose) => entries.likeChain(pose, POSES).includes(id));
+      });
+      const whole = await behind();
       const before = await readFile(posesFile, 'utf8');
+      const { mtime } = await stat(posesFile);
       const after = patchPoses(before, id, tuned);
       own = after;
       await writeFile(posesFile, after);
-      const ids = await changed(id);
+      changed(ids, id);
       try {
-        await bake(edited ? undefined : ids);
-        edited = false;
+        await bake(whole ? undefined : ids);
       } catch (err) {
-        // A pose that fails its checks doesn't bake, and the file never holds one that didn't.
+        // A pose that fails its checks doesn't bake, and the file never holds one that didn't: as it
+        // was, to its date, or the clips would look behind it.
         own = before;
         await writeFile(posesFile, before);
-        await changed(id);
+        await utimes(posesFile, mtime, mtime);
+        changed(ids, id);
         throw new Refused(`Not saved: the bake failed. ${err.message}`);
       }
       const t = await tool();
@@ -399,10 +397,7 @@ export function studio({
       if (path.basename(file) === 'seats.json') return [];
       const isPoses = path.resolve(file) === path.resolve(posesFile);
       const saved = isPoses && (await read()) === own;
-      if (!saved && (isPoses || file.endsWith('.mjs'))) {
-        checks.forget();
-        edited = true;
-      }
+      if (!saved && (isPoses || file.endsWith('.mjs'))) checks.forget();
       if (saved && this.environment.name === 'client') return [];
     },
     configureServer(s) {

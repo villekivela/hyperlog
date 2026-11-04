@@ -49,9 +49,9 @@ async function fullBake(poses) {
 }
 
 const SQUATS = ['barbell_squat', 'back_squat_high_bar'];
-let lowerable;
+let loweredBake;
 /** A full bake of the squat lowered, the one the tests that save it compare with. */
-const fullBakeLowered = () => (lowerable ??= fullBake(lowered(POSED)));
+const fullBakeLowered = () => (loweredBake ??= fullBake(lowered(POSED)));
 
 test('a save leaves what a full bake leaves, a pose that takes it by like: included', async () => {
   const dir = await copy();
@@ -61,8 +61,9 @@ test('a save leaves what a full bake leaves, a pose that takes it by like: inclu
 
 test('a save bakes only the poses it is given, and says which files it wrote', async () => {
   const dir = await copy();
-  // The bench changed too: if its clips were baked, they would change.
-  const poses = tuned(lowered(POSED), 'db_incline_press', { top: { ...POSES.db_incline_press.top, shrug: 2 } });
+  // The bench's hinge moved too: if its clips were baked, they would change. Its per-angle settings
+  // keep most of its pose from reaching them, so it is the machine that changes.
+  const poses = tuned(lowered(POSED), 'db_incline_press', { kit: { ...POSES.db_incline_press.kit, bench: { hinge: -0.1 } } });
   const held = await readFile(path.join(dir, 'db_incline_press_30.glb'));
   const written = await bakeOnly(SQUATS, dir, { poses });
   assert.deepEqual(written.sort(), ['back_squat_high_bar.glb', 'barbell_squat.glb', 'mannequins.json']);
