@@ -117,7 +117,7 @@ test('its recipe names no brand', async () => {
   assert.doesNotMatch(source, /hammer|strength|life ?fitness|\bhs-|logo|decal/i);
 });
 
-test('the studio shows it alone, and the arms scrub', async () => {
+test('the studio shows it alone, standing at rest with both arms out', async () => {
   const entry = shownAlone('pec_deck');
   assert.ok(entry?.camera, 'a framing to open on');
   const stage = await buildStage(entry);
