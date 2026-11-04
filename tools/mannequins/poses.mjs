@@ -264,6 +264,37 @@ export const POSES = {
     camera: { target: [0, 0.8, 0.3], halfHeight: 0.92, azimuth: 66, elevation: 10 },
   },
 
+  // Standing on the foot plate, the chest on the pad, palms facing each other: from the arms long
+  // with the lever on its catch, the elbows driving back past the trunk.
+  chest_supported_t_bar_row: {
+    equipment: 'machine',
+    motion: 'chest_pad',
+    kit: { t_bar_row_machine: { grip: 'neutral' } },
+    bottom: { offsets: { clavicle_l: [0, 10, 0], clavicle_r: [0, -10, 0] } },
+    feet: { stance: 0.12, toeOut: 8 },
+    grip: { pole: [0.25, 0.6, -1] },
+    camera: { target: [0, 0.78, 0.3], halfHeight: 1.15, azimuth: 70, elevation: 8 },
+    shadow: { size: [1.1, 2.1], at: [0, 0.25] },
+  },
+
+  // The same row on the wide grips, overhand, the elbows further out; the shoulder blades let
+  // forward to reach them on the catch.
+  t_bar_row: {
+    like: 'chest_supported_t_bar_row',
+    kit: { t_bar_row_machine: { grip: 'wide' } },
+    top: { offsets: { clavicle_l: [0, -14, 0], clavicle_r: [0, 14, 0] } },
+    grip: { pole: [0.7, 0.6, -1] },
+  },
+
+  // The arms stay long and the shoulder blades do the work: they let forward on the catch and draw
+  // together a short way up the lever, held about a second there.
+  kelso_shrug: {
+    like: 't_bar_row',
+    bottom: { lever: 4.8, offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
+    grip: { pole: [0.7, 0.1, -1] },
+    tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
+  },
+
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
   machine_pulldown: {
     equipment: 'machine',

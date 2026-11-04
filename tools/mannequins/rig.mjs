@@ -196,7 +196,9 @@ export function buildRig(root) {
   // to the shoulders, each [up, forward], for a spine bent link by link (an arch).
   const joints = [hips, ...['spine_01', 'spine_02', 'spine_03'].map((n) => wpos(bones[n])), between(rig, 'upperarm_l', 'upperarm_r')];
   const links = joints.slice(1).map((p, i) => [p.y - joints[i].y, p.z - joints[i].z]);
-  Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z, links });
+  // How far up the spine from the hips the top of the sternum is, at the collarbones' roots.
+  const sternum = wpos(bones.clavicle_l).y - hips.y;
+  Object.assign(dims, { trunkUp: shoulders.y, trunkBack: -shoulders.z, links, sternum });
   // How far the skin stands off the spine's line, behind the shoulder blades and before the chest,
   // and above the thigh's: what a pad sits against (a machine's fit rules).
   const depths = skinExtents(rig, hips);

@@ -150,7 +150,7 @@ for (const id of KNEE_LEVERS) {
   });
 }
 
-for (const id of ['machine_chest_press', 'chest_supported_machine_row', 'machine_pulldown', 'machine_preacher_curl']) {
+for (const id of ['machine_chest_press', 'chest_supported_machine_row', 'machine_pulldown', 'machine_preacher_curl', 'chest_supported_t_bar_row', 't_bar_row']) {
   test(`${id}: the levers' limits keep the handles within the arms' reach`, async () => {
     const stage = await buildStage(prepare(id));
     stage.pose(0);
