@@ -80,6 +80,7 @@ const WEARS = {
   ...Object.fromEntries(['leg_extension', 'leg_curl', 'calf_raise_machine', 'squat_machine', 'row_machine', 'pulldown_machine', 'preacher_curl_machine', 't_bar_row_machine']
     .map((k) => [k, [{ equipment: 'machine', kit: { [k]: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']]])),
   lying_leg_curl: [{ equipment: 'machine', kit: { leg_curl: { lying: true } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  smith_machine: [{ equipment: 'smith_machine', kit: { smith_machine: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
   platform: [{ equipment: 'barbell', kit: { platform: {} } }, ['frame', 'vinyl']],
 };
 

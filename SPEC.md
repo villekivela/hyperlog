@@ -1609,6 +1609,12 @@ gallery (Technique videos).
       lever's turn on a selectorised machine, and on a cable machine the stack's own joint, the
       cable drawn out, one for one. A lever's limits are where the body stops (the knee straight,
       the arms straight, the heels as high as they rise), so a rep past them has gone too far.
+    - **The smith machine's bar** (#182) is one body on a prismatic joint along rods leaning 7°, the
+      tops toward the back (the ref's choice, the page not saying), its value the metres moved up
+      them from 250 mm above the floor (the lowest stop is at 290 mm). Its carriages and hook lugs are fixed on the bar, since a
+      joint turning them would be left behind by a scrub along the rods; the hooks' turn, about
+      45°, stays the wrists'. A fit rule picks the notch it hangs on and the one its safety stops
+      lie on, and the bar can go no lower than the stops.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
