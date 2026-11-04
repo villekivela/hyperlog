@@ -10,16 +10,16 @@ export const POSES = {
     // (UGwmUJkTIx8); the body keeps that shape and turns about the ankles until the bar is over
     // the middle of the feet.
     trace: 'barbell_squat',
-    top: { shin: 6, thigh: 4 },
+    top: { shin: 6, thigh: 4, wrist: [32.8668, 42.4311] },
     bottom: { shin: 47, thigh: 92 },
     // Ankles this far either side of the middle, toes turned out, knees pushed out toward the toes.
     feet: { stance: 0.17, toeOut: 18, kneesOut: 0.45 },
     // The bar on the upper back: up the trunk from the hips to just past the shoulders, and behind
     // the trunk's line. It sits about 6 cm behind the shoulder joints.
-    bar: { up: 0.02, back: 0.2 },
+    bar: { up: 0.0693, back: 0.1926 },
     // The thumbs swing further out of the palms than mid-palm's default to wrap the bar behind the
     // neck (`grip.swing`).
-    grip: { width: 0.4, swing: 50 },
+    grip: { width: 0.4, swing: 50, pole: [0.6897, -0.2026, -0.6952] },
     camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   },
 

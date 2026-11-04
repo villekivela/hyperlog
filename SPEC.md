@@ -1542,7 +1542,7 @@ gallery (Technique videos).
     round a bar lower than about 0.5 of the way from the wrist to the knuckles, and its thumb from
     coming round a press's bar below 0.65, so its heel of the palm sits there, not at a lifter's
     0.2–0.3, and the three landmarks lie close. The rope is 28 mm with 60 mm end stops, bending at each
-    fist to run through it along the knuckles, its stop against the little finger. A wrist bends only where
+    fist to run through it along the knuckles, its stop against the little finger. The owner's tuned wrist on the barbell squat (#197, 33° of flexion and 42° of radial deviation at the top) stands for the high-bar, low-bar and front squats too, by `like:`. A wrist bends only where
     the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
     frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
     wrists, with each slider named in words ("Wrist tilt: + radial (thumb side) / − ulnar
