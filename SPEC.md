@@ -1663,6 +1663,14 @@ gallery (Technique videos).
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
     with no body, its levers at rest (#176): the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) and the smith machine (#182), until they are posed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
+    - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
+      show within a few seconds. The item on stage is checked first, then every other pose one at a
+      time in the background, so the server keeps answering; opening another item or saving moves
+      that pose to the front. The list's `failing` tags and filter need every pose checked, so they
+      fill in as the run goes, each row tagged `checking` until then. The existing message line says
+      what is happening, `Loading…` and then `Checking 12 of 38`, with no new element. A plain
+      message holds the line for four seconds before the count takes it back; an error, or a save
+      under way, keeps it.
     - **Keyboard first, vim style** (owner, 2026-11-03, #158): everything in the studio can be done
       from the keyboard, and the mouse is optional. Digits are counts (`5l` is five steps); `j` `k`
       move through the focused list, `Tab` cycles the sidebar, the stage and the numbers, `/` finds

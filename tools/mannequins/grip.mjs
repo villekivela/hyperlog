@@ -5,6 +5,7 @@
 // radius, read from the kit's part under the hand, and each finger and the thumb close joint by
 // joint until they touch it. The contact check measures the same skin, as the body is drawn.
 import * as THREE from 'three';
+import KEPT from './seats.json' with { type: 'json' };
 
 /**
  * Each grip landmark's distance along the palm from the wrist joint, as a fraction of the palm's
@@ -147,7 +148,9 @@ export function nearestOf(points, cell = 0.006) {
   return (x, y, z) => {
     // Nothing within a cell of a point outside the points' box.
     if (x < lo[0] || x > hi[0] || y < lo[1] || y > hi[1] || z < lo[2] || z > hi[2]) return Infinity;
-    const [i0, j0, n0] = [Math.floor(x / cell), Math.floor(y / cell), Math.floor(z / cell)];
+    const i0 = Math.floor(x / cell);
+    const j0 = Math.floor(y / cell);
+    const n0 = Math.floor(z / cell);
     let best = Infinity;
     for (let i = i0 - 1; i <= i0 + 1; i++) {
       for (let j = j0 - 1; j <= j0 + 1; j++) {
@@ -334,23 +337,30 @@ const TILTS = Array.from({ length: 13 }, (_, i) => -30 + 5 * i);
 const RAD = Math.PI / 180;
 /** Every seat measured, by the mannequin's palm and the hand, landmark, radius and thumb. */
 const SEATS = new Map();
+/** Each seat's offs as seats.json holds them, by the same key: solving one takes over a second (#187). */
+let known = KEPT;
+/** The offs solved in this run, which seats.json didn't hold. */
+let solved = {};
+
+/** Each seat solved in this run, for seats.json: its offs, by slant and tilt, by key. */
+export const newSeats = () => ({ ...solved });
+
+/** Drops every seat, seats.json's too, so each is solved afresh. */
+export function forgetSeats() {
+  known = {};
+  solved = {};
+  SEATS.clear();
+}
 
 /** `x` along `steps` (evenly spaced, ascending) as an index with a fraction, held to its ends. */
 const stepOf = (steps, x) => Math.min(steps.length - 1.000001, Math.max(0, (x - steps[0]) / (steps[1] - steps[0])));
 
 /**
- * Where a bar of `radius` sits in hand `k` at landmark `sits`, held with `thumb` (its root swung
- * `swing`, or as the landmark has it): how far along the
- * palm from the wrist (`depth`), and how far off the palm's face so it rests on the palm's skin,
- * touching: `offAt(line)` for a bar along `line` ([along the knuckles, the fingers, the face] in the
- * hand's frame), as a straight wrist may slant it, and `off` for one along the knuckles.
+ * How far off the palm's face a bar of `radius` rests at `depth` along it, in hand `k` held at
+ * landmark `sits` with `thumb` and `swing`: by each of `SLANTS`, by each of `TILTS`.
  */
-export function seatOf(rig, k, sits, radius, thumb = 'wrapped', swing = undefined) {
-  // A seat is the mannequin's, the same for every rig built from it.
-  const key = `${rig.dims.palmLength}:${k}:${sits}:${radius}:${thumb}:${swing}`;
-  if (SEATS.has(key)) return SEATS.get(key);
+function solveSeat(rig, k, { sits, thumb, swing }, radius, depth) {
   const { fingers, normal, knuckles } = rig.hand.rest[k];
-  const depth = (GRIP_LANDMARKS[sits] ?? GRIP_LANDMARKS.base) * rig.dims.palmLength;
   // Only the skin a bar there can reach: within a few centimetres of the landmark.
   const near = (skin) => skin.filter((d) => Math.abs(d.dot(fingers) - depth) < radius + 0.06);
   const w = new THREE.Vector3();
@@ -380,7 +390,7 @@ export function seatOf(rig, k, sits, radius, thumb = 'wrapped', swing = undefine
   // At each slant, where the hand closed round a bar seated there rests on it: closing moves the
   // palm's skin as the fingers and the thumb curl, the nearer the bar the more, so home in on the
   // seat that a hand closed round it agrees with.
-  const offs = SLANTS.map((q) => {
+  return SLANTS.map((q) => {
     const line = lineAt(q, 0);
     const closed = (off) => near(palmSkin(rig, k, { sits, thumb, swing }, { depth, off, radius, line }));
     let lo = offOn(open, line) - 0.02;
@@ -392,6 +402,21 @@ export function seatOf(rig, k, sits, radius, thumb = 'wrapped', swing = undefine
     const skin = closed(hi);
     return TILTS.map((e) => offOn(skin, lineAt(q, e)));
   });
+}
+
+/**
+ * Where a bar of `radius` sits in hand `k` at landmark `sits`, held with `thumb` (its root swung
+ * `swing`, or as the landmark has it): how far along the
+ * palm from the wrist (`depth`), and how far off the palm's face so it rests on the palm's skin,
+ * touching: `offAt(line)` for a bar along `line` ([along the knuckles, the fingers, the face] in the
+ * hand's frame), as a straight wrist may slant it, and `off` for one along the knuckles.
+ */
+export function seatOf(rig, k, sits, radius, thumb = 'wrapped', swing = undefined) {
+  // A seat is the mannequin's, the same for every rig built from it.
+  const key = `${rig.dims.palmLength}:${k}:${sits}:${radius}:${thumb}:${swing}`;
+  if (SEATS.has(key)) return SEATS.get(key);
+  const depth = (GRIP_LANDMARKS[sits] ?? GRIP_LANDMARKS.base) * rig.dims.palmLength;
+  const offs = known[key] ?? (solved[key] = solveSeat(rig, k, { sits, thumb, swing }, radius, depth));
   const offAt = ([kk, ff, nn]) => {
     // A line either way along is the same line.
     if (kk < 0) [kk, ff, nn] = [-kk, -ff, -nn];
@@ -453,12 +478,14 @@ function setDigit(joints, angles, spec) {
   joints[0].bone.updateMatrixWorld(true);
 }
 
-/** Calls `each(x, y, z)` for each rigid point of `bone` where it is now. */
+/** Calls `each(x, y, z)` for each rigid point of `bone` where it is now. The solve's inner loop, so no array for each. */
 function eachPoint(rig, k, bone, each) {
   const pts = rig.hand.rigid[k][bone] ?? [];
   const e = rig.bones[bone].matrixWorld.elements;
   for (let i = 0; i < pts.length; i += 3) {
-    const [x, y, z] = [pts[i], pts[i + 1], pts[i + 2]];
+    const x = pts[i];
+    const y = pts[i + 1];
+    const z = pts[i + 2];
     each(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]);
   }
 }

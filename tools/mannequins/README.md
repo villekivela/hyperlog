@@ -9,6 +9,7 @@ index into `app/src/main/assets/mannequins/`. The phone only plays them.
 cd tools/mannequins
 npm ci                                  # three.js, pinned in package-lock.json
 npm run bake                            # node bake.mjs [out-dir]: check every pose, then bake them all
+npm run seats                           # solve every seat afresh into seats.json, then bake
 npm test                                # entries, kits, checks, bake, trace, review and the studio
 npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
 npm run studio                          # the studio, at http://localhost:5190/studio/ (The studio)
@@ -19,6 +20,12 @@ npm run review -- phone <batch>         # the owner has swiped the batch in the 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
 give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
 fails on any difference (`committed.test.mjs`), so bake and commit together.
+
+`seats.json` holds each seat the poses use, because solving one takes over a second and a pose needs
+two. A bake adds a seat it had to solve, a new radius or `grip.swing`, so commit the file with the
+clips. After a change to the grip solve or the mannequin, run `npm run seats`: `seats.test.mjs` fails
+on a file that no longer holds what the solve finds. The bake's order goes into the file, since a
+solve lands up to 37 µm off depending on where the rig stands, and the clips are baked from it.
 
 ## Making a batch
 
@@ -532,6 +539,12 @@ Use it for a pull request's screenshots.
 `package-lock.json`, with the plugin in `studio/plugin.mjs`). It is for the owner's machine and
 listens on localhost only.
 
+- **Loading:** the list and the item on stage come first. Opening an item starts the checks, that
+  item's first, then every other pose's one at a time in the background, and opening another item
+  or saving moves that pose to the front. The header's message line says `Loading…`, then
+  `Checking 12 of 38`, the rows keep their `checking` tag until theirs are done, and the list fills
+  in every couple of seconds. A plain message has the line for four seconds, then the count takes it
+  back; an error, or a save under way, keeps it. `studio/checking.mjs` is the queue.
 - **The sidebar** lists every exercise in the library, posed or not, grouped by equipment, then
   every kit. Each row shows its status: `no pose`, `failing` (a check fails), `notes` (an open note
   in `review/notes.md`), `ok` (OK'd for the clip it has now), `phone-checked`, `changed` (OK'd for
@@ -668,7 +681,8 @@ has now.
 ## Files
 
 - `render.mjs`: PNGs of a pose, with no GPU.
-- `studio/`: the studio. `plugin.mjs` its server, `studio.js` and `index.html` its page,
+- `studio/`: the studio. `plugin.mjs` its server, `checking.mjs` its queue of checks, `studio.js` and
+  `index.html` its page,
   `keys.json` and `keys.mjs` its keymap, `video.mjs` the technique video's steps, speeds and sync,
   `view.mjs` the free camera, the hands' close-ups and the plates' toggle, `bones.mjs` the walk of
   the skeleton, `vite.config.mjs` what `npm run studio` serves.
@@ -681,7 +695,7 @@ has now.
   two-bone IK for the legs and arms and a grip solve that lays the bar across the palm.
 - `grip.mjs`: how a hand meets what it holds: each motion's grip landmark and thumb, the hand's
   skin, the seat of a bar on the palm, the fingers and the thumb closed joint by joint, and the
-  measure the contact check takes.
+  measure the contact check takes. `seats.json`: each seat the poses use, solved once.
 - `kit.mjs`: the generic equipment the library uses, each kit built from its recipe, and the floor
   shadow. `recipe.mjs`: the recipe format. `recipes/`: a recipe per kit. `parts.mjs`: the part
   library, built in code from extruded, turned and swept shapes, and its five tones.

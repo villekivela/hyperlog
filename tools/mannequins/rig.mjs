@@ -343,13 +343,15 @@ function straightArm(sh, grip, along, L, pole, palmOf, depth, offAt, aimOf, pull
   // across the palm that much off the knuckles' line.
   const fingersAt = (t, q) => a.clone().multiplyScalar(Math.cos(t)).addScaledVector(b, Math.sin(t)).multiplyScalar(Math.cos(q)).addScaledVector(along, Math.sin(q));
   const wristAt = (fingers) => grip.clone().addScaledVector(fingers, -depth).addScaledVector(palmOf(fingers), -offAt(fingers));
-  const score = (t, p, q) => {
-    if (Math.abs(q) > MAX_SLANT) return null;
+  // All of an arm but its elbow's turn, which the searches below go round for each roll and slant.
+  let reached = null;
+  const reachAt = (t, q) => {
+    if (reached?.t === t && reached.q === q) return reached;
     const fingers = fingersAt(t, q);
     const end = wristAt(fingers);
     const toEnd = end.clone().sub(sh);
     const far = toEnd.length();
-    if (far < Math.abs(L.up - L.fore) + 1e-4) return null;
+    if (far < Math.abs(L.up - L.fore) + 1e-4) return (reached = { t, q, out: true });
     // Near and past the arm's reach, the arm eased toward straight and the hand short of the grip
     // by what it lacks, which costs dearly: so the hand rolls to reach where it can, and the arm
     // stays the same arm as the grip comes back into reach.
@@ -362,6 +364,12 @@ function straightArm(sh, grip, along, L, pole, palmOf, depth, offAt, aimOf, pull
     // Round the line from the shoulder to the wrist, from the pole's side.
     const u1 = pole.clone().addScaledVector(axis, -pole.dot(axis)).normalize();
     const u2 = axis.clone().cross(u1);
+    return (reached = { t, q, fingers, end, short, axis, along_, h, u1, u2 });
+  };
+  const score = (t, p, q) => {
+    if (Math.abs(q) > MAX_SLANT) return null;
+    const { out, fingers, end, short, axis, along_, h, u1, u2 } = reachAt(t, q);
+    if (out) return null;
     const mid = sh.clone().addScaledVector(axis, along_).addScaledVector(u1, h * Math.cos(p)).addScaledVector(u2, h * Math.sin(p));
     const bend = aimOf(end.clone().sub(mid).normalize()).angleTo(fingers);
     const offPole = Math.abs(Math.atan2(Math.sin(p), Math.cos(p)));
@@ -457,7 +465,8 @@ function offsetLimb(rig, P, [upper, lower, end], lengths, endAt, soft) {
  * the spine (`spine`) or lift the shoulders (`shrug`). `near` is each side's straight arm and
  * fingers' closing of a moment before (`{ l, r }`, as this returns them), for a hand followed
  * through the rep; with `at`, they're taken as they are. It returns this moment's. `holding(s)`
- * is what the hand on side `s` holds as the kit is placed for the arms (`stage.mjs`).
+ * is what the hand on side `s` holds as the kit is placed for the arms (`stage.mjs`); with `holding`
+ * false the arms are solved and the hands left as they are.
  */
 export function poseRig(rig, P, near = {}, holding = null) {
   const arms = {};
@@ -596,6 +605,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     const armBones = ['upperarm_', 'lowerarm_', 'hand_'].map((b) => b + k);
     const wristAt = (hand) => grip.clone().sub(heldAt(rig, k).sub(wpos(bones[hand])));
     for (const n of offsetLimb(rig, P, armBones, [L.up, L.fore], wristAt, true)) turned.add(n);
+    if (holding === false) continue;
     // The fingers and the thumb close round what the hand holds, joint by joint, as far as they
     // touch it: the part the stage placed under it (`holding(s)`, along its own line, in pieces), or
     // a bar of the radius the hand was seated for, along the line it lies in the hand. A hand that
