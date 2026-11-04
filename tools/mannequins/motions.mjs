@@ -492,7 +492,8 @@ export const MOTIONS = {
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
     // On a machine the bar is the machine's, and the arm reaches it from the shoulder.
     const bar = s.linkage?.bar ?? heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L);
-    const out = rad(s.armOut ?? 0);
+    // Out is away from the body, which turns a hanging arm the other way from a raised one.
+    const out = rad(s.armOut ?? 0) * (Math.abs(s.upperArm) > 90 ? 1 : -1);
     const pole = elbowsTo(e, [0.2, -1, -0.4]);
     const leaned = (p, side) => {
       const shoulder = sh.clone().addScaledVector(X, side * L.shW);

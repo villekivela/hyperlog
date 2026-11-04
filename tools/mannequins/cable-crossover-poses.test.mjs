@@ -289,13 +289,24 @@ test('the behind-the-back raise works both arms, mirrored, their cables crossing
   const { stage, hand } = await posed('behind_the_back_cable_lateral_raise', 0);
   assert.ok(Math.abs(hand('l').x + hand('r').x) < 0.01, `the hands at x ${hand('l').x.toFixed(3)} and ${hand('r').x.toFixed(3)}`);
   assert.ok(Math.abs(hand('l').y - hand('r').y) < 0.01, 'the hands at different heights');
+  assert.ok(hand('l').x > 0.3, `the left hand at x ${hand('l').x.toFixed(3)}, not out on its own side`);
   for (const { cable } of stage.kit.kits.cable_crossover.cables) assert.ok(pastTheHips(stage, cable) < 0, 'a cable in front of the hips');
+  // Long arms all through, as in its video: #206's movement check found 72° at the top, the price
+  // of an earlier fix to the wrist.
+  for (const d of [0, 0.5, 1]) {
+    stage.pose(d);
+    stage.scene.updateMatrixWorld(true);
+    const [shoulder, elbow, wrist] = ['upperarm_l', 'lowerarm_l', 'hand_l'].map((n) => wpos(stage.rig.bones[n]));
+    const bend = 180 - (shoulder.sub(elbow).angleTo(wrist.sub(elbow)) * 180) / Math.PI;
+    assert.ok(bend < 35, `the elbow bent ${bend.toFixed(0)}°, ${d} of the way down`);
+  }
   // The owner, #197: 'the wrist rotates in the middle', here at 5.6° a frame, under the limit for all.
   const steps = rollsOf(stage, 'l');
   const worst = Math.max(...steps.map(Math.abs));
   assert.ok(worst <= 4, `the hand rolls ${worst.toFixed(1)}° in a frame`);
   const net = steps.reduce((a, b) => a + b, 0);
-  assert.ok(Math.abs(net) <= 15, `the hand rolls ${net.toFixed(0)}° through the rep`);
+  // A wide swing turns the forearm some way; the lateral raises turn it about 50°.
+  assert.ok(Math.abs(net) <= 40, `the hand rolls ${net.toFixed(0)}° through the rep`);
 });
 
 // The owner, #197: the toes point the way the knees do, and the knees bend well.

@@ -248,6 +248,12 @@ test('an arm that swings side-on can lean out to the side, end by end', async ()
   };
   const [straight, leaned] = [await handX({}), await handX({ 'top.armOut': 25, 'bottom.armOut': 25 })];
   assert.ok(leaned - straight > 0.1, `the hand ${(leaned - straight).toFixed(3)} m further out`);
+  // Out is away from the body for a hanging arm too, not through it.
+  const hanging = applyTuned(prepare('bayesian_cable_curl'), { 'top.upperArm': 0, 'top.forearm': 10, 'bottom.upperArm': 0, 'bottom.forearm': 10, 'top.armOut': 40, 'bottom.armOut': 40 });
+  const stage = await buildStage(hanging);
+  stage.pose(0);
+  stage.scene.updateMatrixWorld(true);
+  assert.ok(heldAt(stage.rig, 'l').x > 0.3, `the hanging arm's hand at x ${heldAt(stage.rig, 'l').x.toFixed(3)}`);
 });
 
 // The owner, #197: a press-around's free arm braces straight out at the shoulder, on the far pulley.
