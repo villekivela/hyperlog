@@ -18,9 +18,10 @@ npm run review -- phone <batch>         # the owner has swiped the batch in the 
 ```
 
 Before a push, run the test files you touched and `committed.test.mjs`
-(`node --test committed.test.mjs <file>.test.mjs`), not `npm test`. CI runs the whole suite in its own
-`suite` job on every PR that touches `tools/mannequins/`, which takes 6–8 minutes on a quiet machine
-and 20–23 with several workers running.
+(`node --test committed.test.mjs <file>.test.mjs`), not `npm test`. CI runs the whole suite on every
+PR that touches `tools/mannequins/`, as the `suite` job's four shards (`npm test -- --test-shard=1/4`);
+each takes 2–9 minutes. The whole suite on one machine takes 6–8 minutes quiet and 20–23 with several
+workers running.
 
 A test that needs a scratch folder takes it from `scratch()` in `tmp.mjs`, which removes it when the
 test process ends, also after a failure; `tmp.test.mjs` fails on any test file that calls `mkdtemp`
