@@ -153,7 +153,7 @@ export const POSES = {
     body: { trunk: -23.5 },
     feet: { stance: 0.16, z: 0.48, toeOut: 12 },
     // The levers run limit to limit: out in front at the top, back to the shoulders' line at the bottom.
-    grip: { width: 0.385 },
+    grip: {},
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 
@@ -260,7 +260,7 @@ export const POSES = {
     top: { levers: 75.43 },
     bottom: { levers: 116.29 },
     feet: { stance: 0.16, z: 0.45, toeOut: 10 },
-    grip: { width: 0.22, rotate: 90, pole: [1.5, -0.2397, -0.287] },
+    grip: { rotate: 90, pole: [1.5, -0.2397, -0.287] },
     camera: { target: [0, 0.8, 0.3], halfHeight: 0.92, azimuth: 66, elevation: 10 },
   },
 
@@ -273,7 +273,7 @@ export const POSES = {
     top: { levers: 155.49 },
     bottom: { levers: 193.11 },
     feet: { stance: 0.16, z: 0.32, toeOut: 12 },
-    grip: { width: 0.32, pole: [0.8, -1, -0.3] },
+    grip: { pole: [0.8, -1, -0.3] },
     camera: { target: [0, 1.1, 0.35], halfHeight: 1.15, azimuth: 62, elevation: 8 },
   },
 

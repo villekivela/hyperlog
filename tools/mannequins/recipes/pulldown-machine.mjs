@@ -1,7 +1,7 @@
 // A plate-loaded iso-lateral pulldown, laid out as the Gymleco 011: a seat with a back pad behind
 // the lifter (its face `pad` metres behind the spine) and pads over the thighs at `thighPad`
 // [y, z] hanging under their bar, facing a portal ahead whose beam carries the levers' axle at the
-// pose's pivot. Each lever runs back over the seat to a handle and on past the axle to a loaded
+// pivot. Each lever runs back over the seat to a handle and on past the axle to a loaded
 // horn, whose plate rises as the handles come down. A brace from the beam to the floor
 // carries the thigh pads' bar.
 //
@@ -14,6 +14,8 @@ import { V, kneeAt, rad } from '../rig.mjs';
 // The levers' pivot on the portal, [y, z], and how far it is back along them to the handles.
 const PIVOT = [1.29, 0.85];
 const ARM = 0.7484;
+// The handles this far either side of the middle.
+const HANDLES_OUT = 0.32;
 // How far forward of the hips the thigh pads bear, half their thickness, and how far the thigh
 // tapers there from its thickest.
 const PADS_AT = 0.3;
@@ -31,6 +33,7 @@ export default recipe({
   contacts: [
     { body: 'levers', point: 'handles', landmark: 'hands' },
     { body: 'frame', point: 'thighPads', landmark: 'thighs' },
+    { body: 'frame', point: 'backPad', landmark: 'back' },
   ],
   fit: [
     {
@@ -45,7 +48,7 @@ export default recipe({
     },
     { sets: 'pad', rule: 'the back pad against the spine', solve: ({ L }) => L.back },
   ],
-  machine: ({ seat = SEAT }, { grip }) => ({ hip: hipOn(seat), at: swungHandles(PIVOT, ARM, grip.width) }),
+  linkage: ({ seat = SEAT }) => ({ hip: hipOn(seat), at: swungHandles(PIVOT, ARM, HANDLES_OUT) }),
   build({ seat = SEAT, thighPad: [ty, tz] = [0.71, 0.3], pad: behind = 0.13 } = {}, M) {
     const out = 0.42;
     const post = out - 0.07;
@@ -88,7 +91,7 @@ export default recipe({
         span(backPost, support, support.clone().setY(0.07));
         return {
           joints: { levers: joint },
-          points: { handles: [-1, 1].map((s) => P.handle(s).clone()), thighPads: thighPads.map((m) => m.position.clone()) },
+          points: { handles: [-1, 1].map((s) => P.handle(s).clone()), thighPads: thighPads.map((m) => m.position.clone()), backPad: [backRest.mesh.position.clone()] },
         };
       },
     };

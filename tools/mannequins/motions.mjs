@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
-import { fitted } from './machine.mjs';
+import { fitted } from './fit.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -71,16 +71,16 @@ export function sample(samples, d) {
 
 /**
  * The pose frame `d` of the way down the rep. An entry in a machine is fitted to the mannequin, and
- * its joint's value (`s.machine`, what the recipe has there) drives the motion.
+ * its joint's value (`s.linkage`, what the recipe has there) drives the motion.
  */
 export function frameAt(entry, d, L) {
   const e = fitted(entry, L);
   const motion = MOTIONS[e.motion];
   if (!motion) throw new Error(`No motion "${e.motion}"`);
   const s = stateAt(e, d);
-  if (e.machine) s.machine = e.machine.at(s[e.machine.joint]);
+  if (e.linkage) s.linkage = e.linkage.at(s[e.linkage.joint]);
   const P = motion(e, s, L);
-  if (e.machine) P.machine = s.machine;
+  if (e.linkage) P.linkage = s.linkage;
   // The grip's twist, overhand 0° to underhand 180°, and the handle's tilt in the hand: the entry's
   // own, or the top's and the bottom's eased between.
   const rotate = s.rotate ?? e.grip?.rotate;
@@ -380,7 +380,7 @@ export const MOTIONS = {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { plate, sled, plateUp, hand } = s.machine;
+    const { plate, sled, plateUp, hand } = s.linkage;
     const ankle = plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(sled, -L.ankleY);
     const toeOut = rad(e.feet.toeOut);
     return {
@@ -405,7 +405,7 @@ export const MOTIONS = {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { pivot, handle, swing } = s.machine;
+    const { pivot, handle, swing } = s.linkage;
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.12).normalize(),
@@ -477,7 +477,7 @@ export const MOTIONS = {
     const sh = shouldersOf(hipC, u, L);
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
     // On a machine the bar is the machine's, and the arm reaches it from the shoulder.
-    const bar = s.machine?.bar ?? heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L);
+    const bar = s.linkage?.bar ?? heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L);
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
@@ -560,8 +560,8 @@ export const MOTIONS = {
     const thighPhi = prone ? Math.PI - rad(e.body.thigh ?? 0) : rad(e.body.thigh ?? 0);
     const hip = (side) => V(side * e.feet.stance, hipC.y, hipC.z);
     const knee = (side) => hip(side).addScaledVector(sideOn(thighPhi), L.thigh * STRAIGHT);
-    const toRoller = s.machine.roller.clone().sub(knee(0));
-    const shinPhi = Math.atan2(-toRoller.y, toRoller.z) + Math.asin(s.machine.off / toRoller.length());
+    const toRoller = s.linkage.roller.clone().sub(knee(0));
+    const shinPhi = Math.atan2(-toRoller.y, toRoller.z) + Math.asin(s.linkage.off / toRoller.length());
     const shin = sideOn(shinPhi);
     const front = sideOn(shinPhi - Math.PI / 2);
     const ankles = [-1, 1].map((side) => knee(side).addScaledVector(shin, L.shin * STRAIGHT));
@@ -574,8 +574,8 @@ export const MOTIONS = {
       foot: () => ({ heading: front.clone(), top: top.clone() }),
       kneePole: (side) => sideOn(thighPhi - Math.PI / 2).addScaledVector(X, side * 0.1).normalize(),
       support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
-      hand: s.machine.hand,
-      across: s.machine.across,
+      hand: s.linkage.hand,
+      across: s.linkage.across,
       armPole: elbowsTo(e, [1, -0.2, -0.5]),
       knee: knee(0), shin, front, thigh: sideOn(thighPhi), kneeUp: sideOn(thighPhi - Math.PI / 2),
     };
@@ -591,7 +591,7 @@ export const MOTIONS = {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { value, pivot, ball, rest, hand, across } = s.machine;
+    const { value, pivot, ball, rest, hand, across } = s.linkage;
     // The sole tilted `deg` with the ankle, about the ball: its way toward the toes, and its up.
     const sole = (deg) => {
       const a = rad(deg);
@@ -634,7 +634,7 @@ export const MOTIONS = {
    * `body.trunk`, and the feet stand on the machine's platform.
    */
   hack_squat(e, s, L) {
-    const { hipC, hand, face, tilt, sled } = s.machine;
+    const { hipC, hand, face, tilt, sled } = s.linkage;
     const u = trunkUp(spineLean(e.body.trunk, L));
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
@@ -664,7 +664,7 @@ export const MOTIONS = {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { pivot, handle } = s.machine;
+    const { pivot, handle } = s.linkage;
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.15).normalize(),

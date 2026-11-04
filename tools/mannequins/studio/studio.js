@@ -9,7 +9,7 @@ import KEYS from './keys.json';
 import { helpOf, keymap, tokenOf } from './keys.mjs';
 import { FRAMES, buildStage, parseMannequin } from '../stage.mjs';
 import { checkStage, contactsOf } from '../checks.mjs';
-import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withFit, withTuned } from '../tune.mjs';
+import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
@@ -24,7 +24,7 @@ const $ = (id) => document.getElementById(id);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copy = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
-const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', contact: 'Contact', machine: 'Machine', error: "Can't pose" };
+const CHECK_NAMES = { hands: 'Hands', feet: 'Feet', equipment: 'Equipment', joints: 'Joints', trace: 'Trace', contact: 'Contact', linkage: 'Linkage', error: "Can't pose" };
 const PANES = ['sidebar', 'stage', 'video', 'numbers'];
 
 // What the page keeps across a reload (a change to a recipe, a part or poses.mjs reloads it): where
@@ -451,7 +451,7 @@ const entryNow = () => {
 };
 const valueNow = (t) => valueAt(entryNow(), t.path) ?? t.value;
 /** The entry as the sliders start from it: with what the fit solved, which it leaves unsaid. */
-const baseEntry = () => withFit(state.item.entry, state.fit);
+const baseEntry = () => applyTuned(state.item.entry, state.fit);
 // The Per angle settings, `{ path: { angle: value } }`: the tuned ones, else the entry's own. A change
 // is kept in `tuned['@angles']` only while it differs from the entry's.
 const perOf = (tuned) => tuned['@angles'] ?? state.item.entry.bench?.perAngle ?? {};

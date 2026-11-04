@@ -16,6 +16,8 @@ const SLED = V(0, Math.SQRT1_2, Math.SQRT1_2);
 const PLATE_UP = V(0, Math.SQRT1_2, -Math.SQRT1_2);
 // The foot plate's centre on its stops, [y, z].
 const PLATE = [1.1399, 0.3784];
+// How far up the rails from the stops they are hung from.
+const HUNG = 0.2771;
 // The handles by the hips, [y, z], this far either side of the middle.
 const HANDLES = [0.57, 0.12];
 const HANDLES_OUT = 0.3;
@@ -27,9 +29,10 @@ export default recipe({
   contacts: [
     { body: 'sled', point: 'plate', landmark: 'feet' },
     { body: 'frame', point: 'handles', landmark: 'hands' },
+    { body: 'frame', point: 'backPad', landmark: 'back' },
   ],
   fit: [{ sets: 'pad', rule: 'the back pad at the spine, the hips deep in the seat', solve: ({ L }) => L.back }],
-  machine: ({ seat = [0.5, 0.04] }) => ({
+  linkage: ({ seat = [0.5, 0.04] }) => ({
     hip: [seat[0] + 0.12, seat[1] - 0.04],
     at: (value) => ({
       plate: V(0, ...PLATE).addScaledVector(SLED, value), sled: SLED, plateUp: PLATE_UP,
@@ -88,7 +91,7 @@ export default recipe({
         span(support, board, V(0, 0.07, back));
         const along = P.sled;
         const up = P.plateUp;
-        const under = P0.plate.clone().addScaledVector(up, -0.3);
+        const under = V(0, ...PLATE).addScaledVector(along, HUNG).addScaledVector(up, -0.3);
         const lo = under.clone().addScaledVector(along, -0.7);
         const hi = under.clone().addScaledVector(along, 0.45);
         [-1, 1].forEach((s, i) => {
@@ -126,8 +129,8 @@ export default recipe({
         lip.position.copy(P.plate).addScaledVector(along, -0.02).addScaledVector(up, -0.245);
         lip.quaternion.copy(q);
         return {
-          joints: { sled: { value: P.machine.value, origin: P.plate.clone(), axis: along.clone() } },
-          points: { plate: [P.plate.clone()], handles: [-1, 1].map((s) => P.hand(s).clone()) },
+          joints: { sled: { value: P.linkage.value, origin: P.plate.clone(), axis: along.clone() } },
+          points: { plate: [P.plate.clone()], handles: [-1, 1].map((s) => P.hand(s).clone()), backPad: [backRest.mesh.position.clone()] },
         };
       },
     };

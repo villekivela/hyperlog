@@ -9,7 +9,8 @@
 //   limits. A joint's value is in radians or metres from where its recipe measures it: from its
 //   rest where it raises a stack, or a lever's angle up from level ahead.
 // - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
-//   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `shoulders` or `chest`).
+//   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or
+//   `upperArms`).
 // - `stacks`: each weight stack and the joint whose travel raises it, by a ratio (metres a
 //   radian, or a metre).
 // - `fit`: its fit rules, the adjustments the machine's placard sets for the mannequin, each
@@ -18,9 +19,9 @@
 // - `rep` (a machine's): `{ joint, from }`, the joint the rep drives and the limit (`min` or `max`)
 //   the top of the rep is at, the bottom at the other; an entry's `top` and `bottom` can give their
 //   own, in degrees or metres, under the joint's name.
-// - `machine(options, entry)` (a machine's): the machine with no pose, the body's place on it, `hip`
+// - `linkage(options)` (a machine's): the machine with no pose, the body's place on it, `hip`
 //   [y, z], and `at(value)`, what stands where with its joint at `value`, which the motion hangs the
-//   limbs from (`machine.mjs`) and `drive` finds on the frame as `P.machine`.
+//   limbs from (`fit.mjs`) and `drive` finds on the frame as `P.linkage`.
 // - `standsAlone` (optional): `{ camera }`, for a recipe that stands where it goes with no pose,
 //   its joints at rest; the studio shows it so, in that framing, while no pose uses it.
 //
@@ -49,7 +50,7 @@ export const free = () => ({ type: 'free' });
 export const HELD = 0.06;
 
 /** The mannequin's landmarks a contact can tie a body to. */
-export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'shoulders', 'chest'];
+export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'shoulders', 'chest', 'back', 'upperArms'];
 
 /** A declaration that may be a function of the kit's options, for `options`. */
 export const forOptions = (v, options) => (typeof v === 'function' ? v(options) : v);

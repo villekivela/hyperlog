@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { buildRig, gripTarget, poseRig } from './rig.mjs';
 import { partUnder, piecesOf } from './grip.mjs';
 import { frameAt } from './motions.mjs';
-import { fitted } from './machine.mjs';
+import { fitted } from './fit.mjs';
 import { MATERIALS, buildKit, floorShadow } from './kit.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));

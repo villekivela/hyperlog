@@ -615,6 +615,9 @@ export function sideTower(M, { x, z, toward }) {
 /** The radius of the leg machines' rollers. */
 export const ROLLER = 0.06;
 
+/** How far a cam lever's roller stands off its line: forward of it, or `behind` it. */
+const rollerOff = (behind) => (behind ? -1 : 1) * (0.05 + ROLLER);
+
 /**
  * A cam lever turning about the knees, its arm `side` metres out (x) beside the legs: down the
  * shins `down` metres to a long roller on their front or, with `behind`, the backs of the legs, an
@@ -625,7 +628,7 @@ export const ROLLER = 0.06;
 export function camLever(M, side, { down, behind }) {
   const lever = new THREE.Group();
   const out = side + 0.05;
-  const off = (behind ? -1 : 1) * (0.05 + ROLLER);
+  const off = rollerOff(behind);
   const cam = V(side - 0.06, 0.03, behind ? 0.04 : -0.04);
   // Built about the pivot: y up the shins, z the way the knees straighten.
   lever.add(
@@ -706,12 +709,12 @@ export function kneeDrive(M, { z, toward, down, behind }) {
       pad(0.11, 0.012, 0.11, M.frame, V(side, 0.076, z0), { soft: 0.003, solid: false }),
     ],
     place(P) {
-      const { pivot, cam, roller } = lever.place(P.machine);
+      const { pivot, cam, roller } = lever.place(P.linkage);
       span(post, V(side, 0.082, z0), pivot);
       pivotHub.position.copy(pivot).setX(side - 0.01);
       cable.place(cam);
       // The lever turns from the stretch, where the stack rests.
-      return { pivot, roller, joint: { value: P.machine.value, origin: pivot.clone().setX(0) } };
+      return { pivot, roller, joint: { value: P.linkage.value, origin: pivot.clone().setX(0) } };
     },
   };
 }
@@ -724,7 +727,7 @@ export function kneeDrive(M, { z, toward, down, behind }) {
  */
 export const kneeLinkage = ([y, z], { rest, way, down, behind }) => (value) => {
   const pivot = V(0, y, z);
-  const off = (behind ? -1 : 1) * (0.05 + ROLLER);
+  const off = rollerOff(behind);
   const shin = sideOn(rest + way * value);
   const front = sideOn(rest + way * value - Math.PI / 2);
   return { pivot, shin, front, off, roller: pivot.clone().addScaledVector(shin, down).addScaledVector(front, off) };

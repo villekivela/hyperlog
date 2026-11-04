@@ -323,7 +323,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   lever on a post, its pads over the knees and its handle in the hands;
   `squat_machine` the platform, the rails and a carriage riding them with the hips on it, its
   back pad's face `pad` metres behind the hips and its handles along the grip;
-  `row_machine` a chest pad, `chest: { up, front }` from the trunk at the top of the rep;
+  `row_machine` a chest pad, `chest` [up, front] from the trunk at the top of the rep;
   `pulldown_machine` a back pad `pad` metres behind the spine and thigh pads at `thighPad` [y, z],
   hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
   its front edge short of the elbows. The three are plate-loaded: `row_machine` and
@@ -372,7 +372,7 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
   arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
 - `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
-  `hands`, `feet`, `shins`, `thighs` or `shoulders`.
+  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`.
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
   value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
@@ -380,7 +380,7 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   the mannequin's measurements. An entry that sets the option overrides its rule, and a rule with no
   `solve` is only declared: the T-bar row's, until a pose stands on it.
 - `rep` (a machine's): the joint the rep drives, and which limit (`from`) is the top of the rep.
-- `machine(options, entry)` (a machine's): the machine with no pose, the `hip` its seat puts, and
+- `linkage(options)` (a machine's): the machine with no pose, the `hip` its seat puts, and
   `at(value)`, where everything the body meets is with its joint at a value.
 
 Its `build` makes the parts in the order the clip names them and says which nodes move with which
@@ -393,16 +393,18 @@ contact meets its landmark.
 
 ### Solving a machine
 
-An exercise in a recipe with a `machine` is solved from it (`machine.mjs`, ADR 0007); a free weight,
+An exercise in a recipe with a `linkage` is solved from it (`fit.mjs`, ADR 0007); a free weight,
 or a cable's attachment, stays body-first. First the entry is fitted: each fit rule sets its option
 for the mannequin, unless the entry sets it, and the seat puts `body.hip`. Then the rep drives the
 joint, eased from the top's value to the bottom's. Those are the limits by default; an entry gives its
 own range under the joint's name, in degrees or metres (`top: { levers: 75.43 }`). On each frame the
-motion reads `s.machine`, what the recipe has at that value, and hangs the body from it: the hands on
+motion reads `s.linkage`, what the recipe has at that value, and hangs the body from it: the hands on
 the handles, the feet on the plate, the shin against the roller. Everything the machine decides stays
 out of the entry, so `body.hip`, a pivot, a handle's path and the handles' place are the recipe's. A
-rep's range, where the hands and feet go on what the machine offers, and how the trunk leans are the
-entry's.
+rep's range, where the feet go, where the hands go along a bar, and how the trunk leans are the
+entry's. The frame stands where the recipe has it whatever the entry says. The pads an adjustment
+brings to the body are the exception: a back pad or a chest pad follows the trunk, as it does on the
+gym floor, and the fit rule sets how far off it stands.
 
 `buildStage` returns what the fit solved as `fit`, by the path an entry would set it at, and the
 studio offers a slider for each. A slider saved writes the override into `poses.mjs`; with none, the
@@ -435,7 +437,7 @@ bake (nor does anything else in that bake):
   the trunk, and the ankle stays between 55° and 160° from shin to foot.
 - **Contact:** every finger and the thumb of a hand on a bar or a handle meet its surface within
   2 mm, and no part of the hand is more than 2 mm inside it; the palm within 3 mm (Grips, above).
-- **Machine:** each joint stays within its limits, each point a joint carries stays on the path the
+- **Linkage:** each joint stays within its limits, each point a joint carries stays on the path the
   joint gives it (a handle on its arc) within 1 mm, each hand within 1.5 cm of the handle it holds,
   and each pad, roller and plate within 2 cm of the limb it bears on.
 - **Trace:** every traced angle is within 10° of its trace. Contacts come first (the bar over the
@@ -640,6 +642,7 @@ has now.
   a save writes into `poses.mjs`.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
+- `fit.mjs`: fits an entry on a machine to the mannequin, and gives the joint it drives.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses
   two-bone IK for the legs and arms and a grip solve that lays the bar across the palm.
 - `grip.mjs`: how a hand meets what it holds: each motion's grip landmark and thumb, the hand's

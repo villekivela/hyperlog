@@ -1,6 +1,6 @@
 // A plate-loaded chest-supported row, laid out as the Gymleco 010 Seated Row: the seat, and ahead
 // of the knees a column up from the base to the chest pad's arm, with the levers' axle across it
-// low down at the pose's pivot, braced to the base. Each lever rises from its hub to a handle and
+// low down at its pivot, braced to the base. Each lever rises from its hub to a handle and
 // runs on forward and down to a loaded horn, whose plate rises as the handles come back.
 //
 // The levers are one body on a revolute joint at the pivot, its value the arms' angle up from
@@ -12,6 +12,8 @@ import { V, rad } from '../rig.mjs';
 // The levers' pivot, [y, z], low in front of the knees, and how far it is up them to the handles.
 const PIVOT = [0.45, 0.527];
 const ARM = 0.563;
+// The handles this far either side of the middle.
+const HANDLES_OUT = 0.22;
 /** How far up from the hips to the shoulders the chest pad's middle is. */
 const PAD_UP = 0.715;
 
@@ -27,12 +29,12 @@ export default recipe({
   fit: [{
     sets: 'chest',
     rule: 'the chest on the pad, the arms long to the handles',
-    solve: ({ L }) => ({ up: PAD_UP * L.trunkUp, front: L.chest }),
+    solve: ({ L }) => [PAD_UP * L.trunkUp, L.chest],
   }],
-  machine: ({ seat = [0.5, 0] }, { grip }) => ({ hip: [seat[0] + 0.09, seat[1]], at: swungHandles(PIVOT, ARM, grip.width) }),
-  build({ seat = [0.5, 0], chest = { up: 0.4, front: 0.1 } } = {}, M) {
+  linkage: ({ seat = [0.5, 0] }) => ({ hip: [seat[0] + 0.09, seat[1]], at: swungHandles(PIVOT, ARM, HANDLES_OUT) }),
+  build({ seat = [0.5, 0], chest: [padUp, padFront] = [0.4, 0.1] } = {}, M) {
     const out = 0.33;
-    const pad_ = chestPad(M, chest);
+    const pad_ = chestPad(M, { up: padUp, front: padFront });
     const arms = levers(M, { out, horn: { length: 0.45, turn: -100 } });
     const column = stretchedTube(0.08, M.frame);
     const housing = stretchedTube(0.06, M.frame);

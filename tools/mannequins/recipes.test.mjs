@@ -74,6 +74,8 @@ const LANDMARKS = {
   thighs: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['thigh_' + k]), wpos(rig.bones['calf_' + k])] },
   shoulders: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['clavicle_' + k]), wpos(rig.bones['upperarm_' + k])] },
   chest: { reach: 0.25, at: (rig) => [wpos(rig.bones.spine_02), wpos(rig.bones.neck_01)] },
+  back: { reach: 0.3, at: (rig) => [wpos(rig.bones.spine_02), wpos(rig.bones.neck_01)] },
+  upperArms: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['upperarm_' + k]), wpos(rig.bones['lowerarm_' + k])] },
 };
 
 /** The nearest distance from `p` to a held part's axis: its longest extent, as a segment. */

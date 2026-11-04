@@ -23,11 +23,17 @@ export const kneeLever = (axis, max) => revolute({ axis, limits: [0, max] });
 // The seated machines' lever turns here, [y, z], and its roller hangs this far down it.
 const PIVOT = [0.7292, 0.3923];
 const DOWN = { extension: 0.35, curl: 0.38 };
+// Where the seat stands with nothing fitted, and the tower and the rails stand whatever the seat.
+const SEAT = [0.59, 0.1];
+// How far above the ankle each lever's roller lies on the shin.
+const ABOVE_ANKLE = { extension: 0.0773, curl: 0.0473 };
 // The side-on way down the lever at the stretch: near straight down for the extension, and for the
 // curl straight on from the thighs, a little above level.
 const STRETCH = { extension: rad(85), curl: rad(-2) };
-/** The hips on the seat at [y, z]: a little behind its middle. */
-const hipOn = ([y, z]) => [y + 0.07, z - 0.1];
+// The hips sit this far above a seat's top and behind its middle.
+const SITS = [0.07, 0.1];
+/** The hips on the seat at [y, z]. */
+const hipOn = ([y, z]) => [y + SITS[0], z - SITS[1]];
 
 /** A point on a seat at [y, z] tilted `tilt` degrees: `h` above its top and `along` it toward the knees. */
 function onSeat([y, z], tilt, h, along) {
@@ -36,10 +42,9 @@ function onSeat([y, z], tilt, h, along) {
 }
 
 /** The seated knee machines with no pose, the extension's or with `curl` the curl's. */
-export function seatedMachine({ seat = [0.59, 0.1], tilt = 10 }, curl) {
-  const lever = kneeLinkage(PIVOT, {
-    rest: curl ? STRETCH.curl : STRETCH.extension, way: curl ? 1 : -1, down: curl ? DOWN.curl : DOWN.extension, behind: curl,
-  });
+export function seatedLinkage({ seat = SEAT, tilt = 10, roller, curl = false }) {
+  const kind = curl ? 'curl' : 'extension';
+  const lever = kneeLinkage(PIVOT, { rest: STRETCH[kind], way: curl ? 1 : -1, down: roller ?? DOWN[kind], behind: curl });
   // The curl's thigh pad, over the lower half of the thighs, lying along them, with upright grips on its bar.
   const kneeUp = sideOn(-rad(tilt) - Math.PI / 2);
   const thighPad = V(0, ...PIVOT).addScaledVector(sideOn(-rad(tilt)), -0.18).addScaledVector(kneeUp, 0.125);
@@ -50,9 +55,9 @@ export function seatedMachine({ seat = [0.59, 0.1], tilt = 10 }, curl) {
 }
 
 /** The seated knee machines' parts, the extension's or with `curl` the curl's. */
-export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18, curl = false } = {}, M) {
+export function seatedKnees({ seat = SEAT, tilt = 10, pad: behind = 0.18, roller, curl = false } = {}, M) {
   const [top, sz] = seat;
-  const drive = kneeDrive(M, { z: sz, toward: 1, down: curl ? 0.38 : 0.35, behind: curl });
+  const drive = kneeDrive(M, { z: SEAT[1], toward: 1, down: roller ?? DOWN[curl ? 'curl' : 'extension'], behind: curl });
   const { side, tx, z0 } = drive;
   // The seat, its cushion and pan on a beam, tilted about its middle.
   const cushion = new THREE.Group();
@@ -69,8 +74,8 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
   const beam = (along) => seatAt(0, -0.117, along);
   const parts = [
     cushion, ...drive.parts,
-    ...floorRail(V(0, 0.035, sz - 0.62), V(0, 0.035, z0 - 0.035), M),
-    ...floorRail(V(tx, 0.035, sz - 0.3), V(tx, 0.035, z0 - 0.035), M),
+    ...floorRail(V(0, 0.035, SEAT[1] - 0.62), V(0, 0.035, z0 - 0.035), M),
+    ...floorRail(V(tx, 0.035, SEAT[1] - 0.3), V(tx, 0.035, z0 - 0.035), M),
     // Crossed braces from the floor rail to the beam, and the beam's front out from the tower.
     tube(0.05, V(0, 0.07, sz - 0.24), beam(0.12), M.frame),
     tube(0.05, V(0, 0.07, sz + 0.2), beam(-0.12), M.frame),
@@ -98,7 +103,7 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
     pin.rotation.x = -Math.PI / 2;
   };
   let fit = () => {};
-  // The frame's contact: the handles in the hands for the extension, the thigh pad on the thighs for the curl.
+  // The frame's contacts: the handles in the hands, and for the curl the thigh pad on the thighs.
   let held = () => ({});
   if (!curl) {
     // The handles: a bar across under the seat's rear, risers up its sides and grips running forward
@@ -121,7 +126,7 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
     const grips = [-1, 1].map(() => [part(rodGeometry(0.016), M.metal, { held: true }), part(rodGeometry(0.0195), M.vinyl, { held: true })]);
     parts.push(thighPad, thighBar, riser, plate, plateKnob, ...grips.flat());
     fit = (P0, pivot) => {
-      const { thighPad: above, kneeUp } = P0.machine;
+      const { thighPad: above, kneeUp } = P0.linkage;
       thighPad.position.copy(above);
       thighPad.quaternion.setFromUnitVectors(UP, kneeUp);
       const by = above.y + 0.06;
@@ -146,21 +151,25 @@ export function seatedKnees({ seat = [0.59, 0.1], tilt = 10, pad: behind = 0.18,
       const { pivot, roller, joint } = drive.place(P);
       fitBack(P0);
       fit(P0, pivot);
-      return { joints: { lever: joint }, points: { roller: [roller], ...held(P) } };
+      return { joints: { lever: joint }, points: { roller: [roller], backPad: [backRest.mesh.position.clone()], ...held(P) } };
     },
   };
 }
 
-/** The fit rules both seated knee machines share. */
-export const SEATED_FIT = [
+/** The rule both knee machines' rollers follow, `above` the ankle on a shin the length of the mannequin's. */
+export const rollerFit = (above) => ({ sets: 'roller', rule: 'the pad just above the ankle', solve: ({ L }) => L.shin * STRAIGHT - above });
+
+/** The fit rules of the seated knee machine `kind`. */
+export const seatedFit = (kind) => [
   {
     sets: 'seat',
     rule: 'the knees on the pivot axis',
     solve: ({ L, entry }) => {
       const hip = V(0, ...PIVOT).addScaledVector(sideOn(rad(entry.body.thigh)), -L.thigh * STRAIGHT);
-      return [hip.y - 0.07, hip.z + 0.1];
+      return [hip.y - SITS[0], hip.z + SITS[1]];
     },
   },
+  rollerFit(ABOVE_ANKLE[kind]),
   // The pad is tipped back onto the blades, so its middle stands a little nearer the spine than they do.
   { sets: 'pad', rule: 'the back pad on the shoulder blades', solve: ({ L }) => L.back - 0.02 },
 ];
@@ -173,9 +182,10 @@ export default recipe({
   contacts: [
     { body: 'lever', point: 'roller', landmark: 'shins' },
     { body: 'frame', point: 'handles', landmark: 'hands' },
+    { body: 'frame', point: 'backPad', landmark: 'back' },
   ],
   stacks: [{ joint: 'lever', ratio: 0.22 }],
-  fit: SEATED_FIT,
-  machine: (options) => seatedMachine(options, false),
+  fit: seatedFit('extension'),
+  linkage: seatedLinkage,
   build: (options, M) => seatedKnees({ ...options, curl: false }, M),
 });

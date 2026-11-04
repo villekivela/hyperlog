@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withFit, withTuned, labelOf } from './tune.mjs';
+import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
@@ -173,7 +173,7 @@ test('a bone\'s offset is a number per axis, in degrees under Bones, and a bone 
 const FIT = { 'kit.leg_extension.seat': [0.59, 0.1], 'kit.leg_extension.pad': 0.18, 'bottom.lever': 0 };
 
 test('a machine offers a slider for each fit rule and each end of its rep, at what was solved', () => {
-  const t = byPath(tunables(withFit(prepare('leg_extension'), FIT)));
+  const t = byPath(tunables(applyTuned(prepare('leg_extension'), FIT)));
   assert.equal(t['kit.leg_extension.seat.0'].value, 0.59);
   assert.equal(t['kit.leg_extension.pad'].value, 0.18);
   assert.equal(t['top.lever'].value, 85);
@@ -187,13 +187,26 @@ test('a machine offers a slider for each fit rule and each end of its rep, at wh
 test('fitting a slider leaves the entry alone: what isn\'t overridden is solved again', () => {
   const entry = prepare('leg_extension');
   const before = JSON.stringify(entry);
-  withFit(entry, FIT);
+  applyTuned(entry, FIT);
   assert.equal(JSON.stringify(entry), before);
 });
 
 test('a fit slider moved is an override of the whole option, and back at the solve it comes out', () => {
-  const base = withFit(prepare('leg_extension'), FIT);
+  const base = applyTuned(prepare('leg_extension'), FIT);
   const tuned = withTuned(base, {}, 'kit.leg_extension.seat.0', 0.62);
   assert.deepEqual(tuned, { 'kit.leg_extension.seat': [0.62, 0.1] });
   assert.deepEqual(withTuned(base, tuned, 'kit.leg_extension.seat.0', 0.59), {});
+});
+
+test('every fit slider of every machine saves an entry that poses', async () => {
+  for (const id of ['chest_supported_machine_row', 'machine_pulldown', 'leg_press']) {
+    const entry = prepare(id);
+    const { fit } = await buildStage(entry);
+    const base = applyTuned(entry, fit);
+    for (const { path, value } of tunables(base).filter((t) => t.path.startsWith('kit.'))) {
+      const stage = await buildStage(applyTuned(entry, withTuned(base, {}, path, value + 0.001)));
+      stage.pose(0);
+      stage.kit.group.traverse((o) => assert.ok(o.position.toArray().every(Number.isFinite), `${id}: ${path} leaves ${o.name} at ${o.position.toArray()}`));
+    }
+  }
 });

@@ -102,12 +102,6 @@ export function perAngleValue(tuned, angle) {
   return tuned[lo] + (tuned[hi] - tuned[lo]) * t;
 }
 
-/**
- * A copy of `entry` with what a machine's fit solved (`fit`, `{ path: value }`) put in: what its
- * sliders start from. The entry itself keeps leaving them to the fit, so they are solved again.
- */
-export const withFit = (entry, fit) => applyTuned(entry, fit);
-
 /** A copy of an adjustable-bench entry posed at `angle`: each per-angle setting (`bench.perAngle`) at its value there. */
 export function atAngle(entry, angle) {
   const copy = JSON.parse(JSON.stringify(entry));

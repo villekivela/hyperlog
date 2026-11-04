@@ -16,7 +16,7 @@
 // - contact: each hand on a bar or a handle meets it (#162): every finger and the thumb within
 //   2 mm of its surface (a wrapped thumb on a bar under 40 mm may rest on the fingers instead), and
 //   none more than 2 mm inside it; the palm, the ball of the thumb with it, within 3 mm either way;
-// - machine: each joint stays within its limits, each contact on a jointed body stays on the path
+// - linkage: each joint stays within its limits, each contact on a jointed body stays on the path
 //   its joint gives it (a handle on its arc) within 1 mm, each hand within 1.5 cm of the handle it
 //   holds, and each pad, roller or plate within 2 cm of the limb it bears on.
 import * as THREE from 'three';
@@ -28,7 +28,7 @@ import { moveOf } from './recipe.mjs';
 import { ANGLES, deg, sideAngles } from './angles.mjs';
 import { contactOf, holdsNothing, partUnder } from './grip.mjs';
 
-export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact', 'machine'];
+export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact', 'linkage'];
 
 const LIMITS = {
   grip: 0.015, fingers: 0.013, foot: 0.02, inside: 0.02, floor: 0.015, wrist: 5, cable: 0.01, rack: 0.015,
@@ -83,7 +83,7 @@ function partAt(parts, p) {
 }
 
 /** The bones of each landmark a pad bears on. */
-const LIMBS = { shins: /^calf_/, thighs: /^thigh_/, feet: /^(foot|ball)_/, shoulders: /^(clavicle|upperarm)_/, chest: /^spine_0[23]$/ };
+const LIMBS = { shins: /^calf_/, thighs: /^thigh_/, feet: /^(foot|ball)_/, shoulders: /^(clavicle|upperarm)_/, chest: /^spine_0[23]$/, back: /^spine_0[23]$/, upperArms: /^upperarm_/ };
 
 /** The body's vertices, each with the bone that moves it most and whether that's a hand's. */
 function bodyVertices(rig) {
@@ -175,9 +175,9 @@ export function contactsOf({ rig, kit }, P, k) {
 
 /**
  * A check of the contacts of every kit on a joint or a frame, on one posed frame: `note(past, found)`
- * for each. `first` keeps where each contact started, so each is held to its joint's path from there.
+ * for each. `started` keeps where each contact began, so each is held to its joint's path from there.
  */
-function checkContacts(kits, { rig, parts, vertices, skinned, first, limbs }, note) {
+function checkLinkage(kits, { rig, parts, vertices, skinned, started, limbs }, note) {
   for (const [name, kit] of Object.entries(kits)) {
     for (const [body, joint] of Object.entries(kit.joints)) {
       const [min, max] = joint.limits;
@@ -189,10 +189,10 @@ function checkContacts(kits, { rig, parts, vertices, skinned, first, limbs }, no
       const joint = kit.joints[c.body];
       if (c.body !== 'frame' && !joint) continue;
       const key = `${name}.${c.point}`;
-      first[key] ??= { at: c.at.map((p) => p.clone()), value: joint?.value };
+      started[key] ??= { at: c.at.map((p) => p.clone()), value: joint?.value };
       c.at.forEach((p, i) => {
-        const want = first[key].at[i].clone();
-        if (joint) want.applyMatrix4(moveOf(joint, joint.value - first[key].value));
+        const want = started[key].at[i].clone();
+        if (joint) want.applyMatrix4(moveOf(joint, joint.value - started[key].value));
         note(p.distanceTo(want) - LIMITS.arc, `${c.point} ${(p.distanceTo(want) * 1000).toFixed(1)} mm off their arc`);
       });
       for (const k of ['l', 'r']) {
@@ -238,7 +238,7 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     if (past > worst[check].past) worst[check] = { past, frame, found };
   };
   const v = new THREE.Vector3();
-  const first = {};
+  const started = {};
   const limbs = {};
   for (let f = 0; f < frames; f++) {
     const P = pose(f / (frames - 1));
@@ -300,7 +300,7 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     for (const k of ['l', 'r']) {
       for (const c of contactsOf({ rig, kit }, P, k)) note('contact', c.past, f, c.found);
     }
-    checkContacts(kit.kits, { rig, parts, vertices, skinned, first, limbs }, (past, found) => note('machine', past, f, found));
+    checkLinkage(kit.kits, { rig, parts, vertices, skinned, started, limbs }, (past, found) => note('linkage', past, f, found));
     if (entry.trace) {
       const measured = posedAngles(rig);
       for (const [k, samples] of Object.entries(entry.trace.angles)) {

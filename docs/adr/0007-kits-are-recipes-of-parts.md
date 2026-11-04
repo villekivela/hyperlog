@@ -12,7 +12,8 @@ mannequin.
   format can say what the code said. Solving machine-first comes after, as its own change.
 - **What a machine decides stays out of the entry.** A pose entry on a machine gives the rep's range
   and how the body sits. The pivot, the path and where the seat puts the hips are the recipe's, so a
-  machine's second exercise can't disagree with its first. Cables stay body-first: their attachment is
+  machine's second exercise can't put them anywhere else. A pad an adjustment brings to the body (a
+  back pad, a chest pad) still follows the trunk. Cables stay body-first: their attachment is
   a free body the hands carry, on no joint.
 - **Deterministic.** Recipes are code in the repo, so the same recipe bakes the same bytes and CI's
   re-bake check stays.
