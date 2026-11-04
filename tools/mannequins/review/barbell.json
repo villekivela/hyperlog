@@ -2,14 +2,16 @@
   "back_squat_high_bar": {
     "ok": true,
     "note": "",
-    "clip": "266909957a90ecdb",
-    "tuned": "{\"grip.pole\":[0.35,-1,-0.8]}"
+    "clip": "f9fc3061a94125eb",
+    "tuned": "{\"grip.pole\":[0.35,-1,-0.8]}",
+    "at": "2026-11-04T21:08:42.889Z"
   },
   "back_squat_low_bar": {
     "ok": true,
     "note": "the elbows cant be manipulated correctly for the hands to look natural",
-    "clip": "6b94c74d70eb0184",
-    "tuned": "{\"top.rotate\":5.6724,\"bottom.rotate\":-8.2238,\"grip.width\":0.4114,\"grip.pole\":[0.35,-1,-0.8],\"bar.back\":0.2}"
+    "clip": "7cddd9a68aa7b495",
+    "tuned": "{\"top.rotate\":5.6724,\"bottom.rotate\":-8.2238,\"grip.width\":0.4114,\"grip.pole\":[0.35,-1,-0.8],\"bar.back\":0.2}",
+    "at": "2026-11-04T21:09:25.129Z"
   },
   "barbell_curl": {
     "ok": true,
@@ -74,7 +76,8 @@
   "front_squat": {
     "ok": true,
     "note": "the hands should not be attached to the barbell",
-    "clip": "505b50440ce20acc",
-    "tuned": "{}"
+    "clip": "f8c485b6d352a8b2",
+    "tuned": "{}",
+    "at": "2026-11-04T21:24:03.590Z"
   }
 }

@@ -479,7 +479,7 @@ export function weightStack(at, M, { rodTop, toward }) {
     knob.position.set(at.x, pinY + l, at.z + toward * 0.1);
   };
   lift(0);
-  return { parts: [...plates.map((p) => p.mesh), head, stem, pin, knob, ...fixed], lift, top: (l) => V(at.x, headY + 0.025 + l, at.z) };
+  return { parts: [...plates.map((p) => p.mesh), head, stem, pin, knob, ...fixed], lift, idle() { head.userData.stack = false; }, top: (l) => V(at.x, headY + 0.025 + l, at.z) };
 }
 
 /** How far either side of a weight stack its frame's uprights stand. */

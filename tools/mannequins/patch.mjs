@@ -88,15 +88,20 @@ function put(src, open, steps, value, where) {
   return `${before}${comma}\n${indent}${nested(steps, value)},${src.slice(close).replace(/^/, '\n' + indent.slice(2))}`.replace(/\n\s*\n(\s*\})/, '\n$1');
 }
 
+/** Where entry `id`'s own literal opens in `source`, or -1. An id that starts with a digit is quoted. */
+function entryOpen(source, id) {
+  const at = new RegExp(`^  '?${id}'?: \\{`, 'm').exec(source);
+  return at ? at.index + at[0].length - 1 : -1;
+}
+
 /** `source` (poses.mjs) with the tuned values put into entry `id`'s own literal. */
 export function patchPoses(source, id, tuned) {
-  const start = new RegExp(`^  ${id}: \\{`, 'm').exec(source);
-  if (!start) throw new Error(`No pose entry ${id} in poses.mjs`);
+  if (entryOpen(source, id) < 0) throw new Error(`No pose entry ${id} in poses.mjs`);
   let out = source;
   for (const [named, value] of Object.entries(tuned)) {
     // `@angles` is an adjustable bench's per-angle settings, which the entry keeps in `bench.perAngle`.
     const p = named === '@angles' ? 'bench.perAngle' : named;
-    const open = new RegExp(`^  ${id}: \\{`, 'm').exec(out).index + `  ${id}: `.length;
+    const open = entryOpen(out, id);
     try {
       out = put(out, open, p.split('.'), value, `${id}.${p}`);
     } catch (err) {

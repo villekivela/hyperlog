@@ -14,12 +14,14 @@
       "bottom": [
         70,
         125
-      ]
+      ],
+      "open": "the owner's OK'd pose (#197): it takes the chest press's tuned trunk by like:, and the owner hasn't said to change it"
     },
     {
       "says": "the hips stay put",
       "still": "pelvis.at",
-      "within": 0.01
+      "within": 0.01,
+      "open": "the owner's OK'd pose (#197): it takes the chest press's tuned trunk by like:, and the owner hasn't said to change it"
     },
     {
       "says": "the feet stay planted",

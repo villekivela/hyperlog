@@ -51,6 +51,12 @@ export const BATCHES = {
     'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',
     'db_romanian_deadlift', 'single_arm_db_row', 'db_lunge', 'db_shrug',
   ],
+  // The cable crossover's exercises, the first of two batches (#197): those stood with the back to
+  // the towers or beside one, a handle in the hand.
+  'cable-crossover': [
+    'cable_crossover', 'cable_chest_press', 'low_to_high_cable_press', 'high_cable_lateral_raise', 'cable_y_raise',
+    'behind_the_back_cable_lateral_raise', 'cable_shrug_in', '1_arm_cable_press_around', '1_arm_katana_cable_triceps_extension',
+  ],
 };
 
 const idsOf = (name) => {
