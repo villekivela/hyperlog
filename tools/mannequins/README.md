@@ -47,14 +47,15 @@ machine and the rest), listed in `BATCHES` in `review.mjs`. For each batch:
 ## Adjustable-bench poses
 
 An exercise the library gives an **Adjustable bench** (`adjustableBench` in `exercises.json`) is
-baked at 0°, 15°, 30°, 45°, 60° and 75°, one clip each, `<id>_<angle>.glb`. Its entry has a
+baked at 0°, 15°, 30°, 45°, 60°, 75° and 85°, one clip each, `<id>_<angle>.glb`; a decline movement
+at its one setting. Its entry has a
 `bench` and a motion that follows the pad, so one entry fits every angle:
 
 ```js
 db_incline_press: {
   motion: 'dumbbell_press',
   kit: { dumbbells: {}, bench: { hinge: -0.02 } },   // the backrest turns about this z
-  bench: { typical: 30, cameras: { 0: { …camera }, 75: { …camera } }, perAngle: { 'feet.z': { 0: 0.2, 75: 0.3 } } },
+  bench: { typical: 45, cameras: { 0: { …camera }, 75: { …camera } }, perAngle: { 'feet.z': { 0: 0.2, 75: 0.3 } } },
   body: { sit: 0.15, seat: 0.06, lean: 8, head: 0 }, // see below
   top: { press: 0, over: [0.581, 0.283], rotate: 0, tilt: 0 },
   bottom: { press: 1, chest: [0.1592, -0.0137], rotate: 0, tilt: 0 },
@@ -63,7 +64,7 @@ db_incline_press: {
 ```
 
 - **The backrest's frame.** The numbers are written against the backrest, so one set holds from
-  0° to 75°. `body.sit` is how far the hips sit off the pad's face and `body.seat` how far down it
+  0° to 85°. `body.sit` is how far the hips sit off the pad's face and `body.seat` how far down it
   from the seat-back corner (the body slides down the pad, never into the seat); `body.lean` leans
   the trunk off the pad's line and `body.head` tilts the head from the trunk (0 lies along the pad).
   The hands are measured from the shoulders in the trunk's frame: `top.over` is [out from the
@@ -75,8 +76,8 @@ db_incline_press: {
   at the bottom may turn overhand at the top. (`grip.rotate` and `grip.tilt` set one for the whole
   rep, for an entry with no `top` or `bottom` of its own.)
 - **`bench.typical`** is the angle shown with none set; the bake fails without it. `bench.cameras`
-  gives the framing at the lowest and highest angle, and the angles between move steadily from one
-  to the other. `prepare(id, poses, angle)` poses the entry at an angle, its typical one by default.
+  gives the framing at some angles: those between move steadily from one to the next, and past the
+  last it holds. `prepare(id, poses, angle)` poses the entry at an angle, its typical one by default.
 - **Per angle** (`bench.perAngle`): a number that one value can't fit at every angle is tuned at
   the angles that need it, `{ path: { angle: value } }` with the path of a single number (`top.over.0`).
   Between the tuned angles it interpolates, and beyond them it holds the nearest one's.
@@ -87,7 +88,7 @@ db_incline_press: {
   step the bench angle, and `p` makes the selected number **Per angle** (or the same at every angle
   again): a Per angle value is tuned at the angle shown, the angle carries a • where something is
   tuned, and a save writes it into `bench.perAngle`. The studio poses the entry at the angle shown.
-  A verdict's `clip` fingerprint covers all six clips.
+  A verdict's `clip` fingerprint covers all seven clips.
 
 ## Wrists and grip turn
 
@@ -302,9 +303,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug | missing |
 
-- `bench` is flat, or adjustable with `angle` raising its back pad from flat; with `across: z` it
+- `bench` is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
+  tilts its seat's front from -15° to 40°, flat by default, on a joint the studio scrubs (a pose on a
+  tilted seat places its own hips, as the motions assume a flat one); with `decline`, for a decline
+  movement's entry and no other, its back pad carries the foot catch, a post out of the frame's far
+  end with two pairs of rollers, which turns with the pad, and it stands at the decline setting
+  (`DECLINE`, 15°, the lifter reversed), the one angle such a pose is baked at; with `across: z` it
   stands across the body, its middle at that z (a hip thrust's), and its own `z` then runs along it
-  (so give `z: 0` to centre it).
+  (so give `z: 0` to centre it). Its sizes are in `refs/bench/ref.md`.
 - `cable_column` is one adjustable column (or two, `twin`, mirrored at [-x, z]) standing at `at`
   [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
   toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
@@ -320,9 +326,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   rises as the cable is drawn out, and is held 6 cm off its rest even at the stretch (`HELD`), as
   every working stack is. A pose draws on its high pulley only (1.5 m or more) for now; without a
   seat, the tower also shows its low pulley, in a housing on the floor rail in front of the stack.
-- `bench` rolls on wheels at its front foot and has a handle out of its back; the adjustable one's
-  back pad rests on a strut set in a ladder of rungs on the rail, placed for the angle the clip is
-  baked at (the phone turns the pad a few degrees either side of it at most).
+- A joint may have `settings`, the angles its holes allow: the studio's row then drags, steps and
+  types onto them, and a pose or the phone can still stand it anywhere in its limits. The bench's
+  pads have them.
+- `bench` rolls on wheels at its head end, lifted by a handle under the seat's front. Its back pad
+  turns about a hinge on its underside, so its face swings out as it rises; an arc of holes hangs
+  from the pad through the slot in the spine, so nothing is set per angle and the phone can turn it
+  to any angle.
 - The machines take their seat, `seat` [y, z] (the top of its cushion), and fit the rest to the
   body: `leg_extension` and the seated `leg_curl` a seat tilted `tilt` degrees up toward the knees,
   a cam lever about the knees and a back pad `pad` metres behind the spine; the lying
@@ -404,7 +414,8 @@ Every kit is a recipe (ADR 0007): `recipes/<kit>.mjs`, over the part library in 
 with guide rods and a pin, pop-pins, bars and handles, each a function of its dimensions and tone).
 `recipe.mjs` is the format. A recipe declares, as data:
 
-- `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot) or
+- `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot, with its
+  `settings` where holes set it) or
   `prismatic` (a sled, a carriage, a stack sliding along its rails), with its `limits`; or `free`,
   on no joint, for what the hands carry (a barbell, a cable's attachment). A joint's value is how far
   it has moved from where it is measured: its rest where it has a stack, or a lever's angle up from
@@ -560,7 +571,8 @@ listens on localhost only.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
   `L` a tenth of that, `=` types it in degrees or millimetres, and `^` `$` send it to its lower or
-  upper limit; no step goes past them. A joint scrubbed is held where it is set, its stack with it,
+  upper limit; no step goes past them. A joint with `settings` lands on them however it is moved,
+  and a step is a hole. A joint scrubbed is held where it is set, its stack with it,
   while the rep its exercise poses plays round it, and `R` gives it back to the rep. A scrub is a
   view, kept nowhere: a recipe's dimensions are edited as text.
 - **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers

@@ -9,7 +9,7 @@ class BenchClipsTest {
     private val bench = BenchClips(
         typical = 30,
         hinge = listOf(0.44f, -0.1f),
-        clips = (0..75 step 15).associateWith { BenchClip("mannequins/press_$it.glb", camera) },
+        clips = (listOf(85) + (0..75 step 15)).associateWith { BenchClip("mannequins/press_$it.glb", camera) },
     )
 
     @Test
@@ -43,8 +43,8 @@ class BenchClipsTest {
 
     @Test
     fun anAnglePastTheBakedRangeUsesTheEndClipAndKeepsItsAngle() {
-        // The bench angle goes 0 to 90; the clips stop at 75.
-        assertEquals(75, bench.shown(90, null).baked)
+        // The bench angle goes 0 to 90; the clips stop at 85.
+        assertEquals(85, bench.shown(90, null).baked)
         assertEquals(90, bench.shown(90, null).angle)
     }
 

@@ -7,7 +7,7 @@ import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { wpos } from './rig.mjs';
 
-const PAD = 0.44;
+const PAD = 0.457;
 let stage;
 before(async () => { stage = await buildStage(prepare('barbell_bench_press')); });
 
