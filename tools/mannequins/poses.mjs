@@ -17,7 +17,9 @@ export const POSES = {
     // The bar on the upper back: up the trunk from the hips to just past the shoulders, and behind
     // the trunk's line. It sits about 6 cm behind the shoulder joints.
     bar: { up: 0.02, back: 0.2 },
-    grip: { width: 0.4 },
+    // The thumbs swing further out of the palms than mid-palm's default to wrap the bar behind the
+    // neck (`grip.swing`).
+    grip: { width: 0.4, swing: 50 },
     camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   },
 
@@ -47,7 +49,7 @@ export const POSES = {
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.1, -0.23] },
+    top: { bar: [1.1265, -0.2] },
     bottom: { bar: [0.71, -0.09] },
     grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
@@ -113,7 +115,7 @@ export const POSES = {
     like: 'lat_pulldown',
     grip: { width: 0.24, elbows: 0.0, rotate: 180 },
     top: { bar: [1.70, 0.02], shrug: 9 },
-    bottom: { bar: [1.14, 0.02], shrug: 0 },
+    bottom: { bar: [1.11, 0.02], shrug: 0 },
   },
 
   triceps_pressdown: {
@@ -139,7 +141,7 @@ export const POSES = {
     bottom: { knee: 100 },
     feet: { stance: 0.15, toeOut: 12, line: 0.1, down: 0.05 },
     // The hands on the handles beside the hips.
-    grip: { width: 0.3, at: [0.6, 0.12] },
+    grip: { width: 0.3, at: [0.57, 0.12] },
     camera: { target: [0, 0.74, 0.4], halfHeight: 0.98, azimuth: 118, elevation: 16 },
     shadow: { size: [1.0, 1.6], at: [0, 0.4] },
   },
@@ -193,7 +195,8 @@ export const POSES = {
     top: { knee: 10 },
     bottom: { knee: 95 },
     feet: { stance: 0.1 },
-    grip: { width: 0.25, at: [0.6, 0.05] },
+    // The handles run along the seat, which tilts 10° up toward the knees.
+    grip: { width: 0.25, at: [0.6, 0.05], across: [0, 0.1736, 0.9848] },
     camera: { target: [0, 0.62, 0.2], halfHeight: 0.82, azimuth: 70, elevation: 10 },
   },
 
@@ -237,7 +240,7 @@ export const POSES = {
     bottom: { ankle: -18 },
     feet: { stance: 0.1, ball: [0.2, 0.52] },
     pivot: [0.79, 0.88],
-    grip: { width: 0.13, at: [0.86, 0.34] },
+    grip: { width: 0.13, at: [0.86, 0.349] },
     camera: { target: [0, 0.55, 0.25], halfHeight: 0.78, azimuth: 72, elevation: 10 },
   },
 
@@ -333,7 +336,7 @@ export const POSES = {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_column: { at: [-0.6, 0.05], pulley: 0.15, attachment: 'handle', hand: 1 } },
-    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.7743, 1.5155, 0.339] },
+    top: { shin: 4, thigh: 6, trunk: 6, hand: [0.763, 1.513, 0.334] },
     bottom: { shin: 4, thigh: 6, trunk: 6, hand: [0.0309, 0.8331, 0.0938] },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
     grip: { arc: true, one: 1, rest: [-0.53, 1.12, 0.07], pole: [1, -0.2505, -0.7094] },
@@ -347,7 +350,7 @@ export const POSES = {
     motion: 'free_arms',
     kit: { cable_column: { at: [0.808, -0.45], pulley: 0.8679, twin: true } },
     top: { shin: 6, thigh: 8, trunk: 12, hand: [0.2037, 1.5397, 0.7136], rotate: 38.377 },
-    bottom: { shin: 6, thigh: 8, trunk: 12, hand: [0.7891, 1.2839, -0.0151], rotate: 210, wrist: [-7.5153, 0.8764] },
+    bottom: { shin: 6, thigh: 8, trunk: 12, hand: [0.74, 1.295, -0.012], rotate: 210, wrist: [-7.5153, 0.8764] },
     feet: { stance: 0.18, toeOut: 10, kneesOut: 0.2 },
     grip: { arc: true, rotate: 144.7937, pole: [1, -0.4, -0.6] },
     camera: { target: [0, 1.05, 0], halfHeight: 1.15, azimuth: 30, elevation: 10 },
@@ -367,16 +370,16 @@ export const POSES = {
   },
 
   // Seated against an upright bench between two low pulleys: the handles press from the shoulders
-  // to overhead.
+  // to overhead, low in the palms as a press holds them.
   cable_shoulder_press: {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
     body: { hip: [0.53, 0.17], trunk: -10 },
-    top: { hand: [0.2882, 1.6383, 0.2743] },
+    top: { hand: [0.2882, 1.627, 0.2743] },
     bottom: { hand: [0.32, 1.13, 0.18] },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
-    grip: { pole: [1, -1, 0.1] },
+    grip: { pole: [1, -1, 0.1], sits: 'heel' },
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },
   },
 
@@ -390,15 +393,16 @@ export const POSES = {
   back_squat_high_bar: {
     like: 'barbell_squat',
     bar: { up: 0.04, back: 0.2 },
-    grip: { pole: [0.35, -1, -0.8] },
+    grip: { pole: [0.35, -1, -0.8], swing: 55 },
   },
 
   // The bar low across the rear delts, a few centimetres down the back and further behind the
-  // trunk's line, so the trunk leans further to keep it over the feet; the hands wider to reach it.
+  // trunk's line, so the trunk leans further to keep it over the feet; the hands wider to reach it,
+  // the bar in the heels of the palms and the thumbs over it beside the fingers (docs/research/grip.md).
   back_squat_low_bar: {
     like: 'barbell_squat',
     bar: { up: -0.03, back: 0.2021 },
-    grip: { width: 0.4114, pole: [0.35, -1, -0.8] },
+    grip: { width: 0.4114, pole: [0.35, -1, -0.8], sits: 'heel', thumb: 'thumbless' },
     top: { rotate: 5.6724 },
     bottom: { rotate: -8.2238 },
   },
@@ -425,7 +429,8 @@ export const POSES = {
     top: { shin: 3, thigh: 3, trunk: 2, upperArm: 10, forearm: 140 },
     bottom: { shin: 3, thigh: 3, trunk: 2, upperArm: 6, forearm: 14 },
     feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
-    grip: { width: 0.2, rotate: 180 },
+    // The thumbs swing a little further out than mid-palm's default, clear of the bar as it rises.
+    grip: { width: 0.2, rotate: 180, swing: 40 },
     camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 62, elevation: 8 },
   },
 
@@ -550,7 +555,7 @@ export const POSES = {
     body: { hip: [0.13, 0.28], trunk: -89, head: 0 },
     feet: { stance: 0.2, z: 0.62, toeOut: 15 },
     top: { bar: [0.6867, -0.2], wrist: [20.1518, 38.967], rotate: -1.9755 },
-    bottom: { bar: [0.37, -0.1], rotate: -0.0269, wrist: [-22.4578, 27.202] },
+    bottom: { bar: [0.385, -0.1], rotate: -0.0269, wrist: [-22.4578, 27.202] },
     grip: { width: 0.4127, elbows: 0.4588 },
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },

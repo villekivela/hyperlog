@@ -1518,9 +1518,24 @@ gallery (Technique videos).
     a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a
     curl can stand staggered; and equipment moves a metre either way in Tune. Every wrist is straight
     by default, the back of the hand in line with the forearm (owner, 2026-11-03): a bar or a set
-    handle lies across the palm, low near its heel for a press or a squat, at the fingers' roots for
-    a pull, and the hand rolls about it while the elbow moves to suit; where a straight wrist can't
-    have its knuckles along the bar, the bar slants across the palm instead. A wrist bends only where
+    handle lies across the palm and the hand rolls about it while the elbow moves to suit; where a
+    straight wrist can't have its knuckles along the bar, the bar slants across the palm instead.
+    Every grip is solved to its bar (#162, from the grip research in `docs/research/grip.md`): each
+    names where the bar sits in the hand, in the heel of the palm for a press, mid-palm for a curl,
+    a pressdown or a squat, at the base of the fingers for a pull, or an open hand that holds
+    nothing round, and its thumb, wrapped round the bar or thumbless over it (the low-bar squat);
+    each motion has one by default and an entry can name its own. The palm rests on the bar at the
+    radius of the kit's part under the hand, and each finger and the thumb close joint by joint
+    until they touch it, the thumb lying round the bar (a wrapped thumb on a bar under 40 mm may
+    rest on the fingers where they come round it), on every frame. Whether to apply the research's
+    wrist angles (5–10° of extension for a press) is open for the owner; until then a wrist stays
+    straight unless the pose sets it. A check fails a hand that stands off its bar or sinks into it
+    by more than 2 mm (the palm, measured over large triangles, 3 mm), and the studio's hand
+    close-up marks where. The mannequin's deep palm and thick fingers keep its fingers from closing
+    round a bar lower than about 0.5 of the way from the wrist to the knuckles, and its thumb from
+    coming round a press's bar below 0.65, so its heel of the palm sits there, not at a lifter's
+    0.2–0.3, and the three landmarks lie close. The rope is 28 mm with 60 mm end stops, bending at each
+    fist to run through it along the knuckles, its stop against the little finger. A wrist bends only where
     the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
     frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
     wrists, with each slider named in words ("Wrist tilt: + radial (thumb side) / − ulnar
