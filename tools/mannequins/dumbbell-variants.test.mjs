@@ -2,7 +2,8 @@
 // or of another variant, each passing every check and doing what the library's note on it asks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BENCH_ANGLES, prepare } from './entries.mjs';
+import * as THREE from 'three';
+import { BENCH_ANGLES, benchAngles, prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { wpos } from './rig.mjs';
 import { BATCHES } from './review.mjs';
@@ -235,3 +236,18 @@ test('1_arm_overhead_db_triceps_extension: the dumbbell ends behind the head, no
   const [bell, head] = [await bellAt(id, 1), await boneAt(id, 'Head', 1)];
   assert.ok(bell.x - head.x < 0.15, `the bell ${(bell.x - head.x).toFixed(3)} m out from the head's middle`);
 });
+
+// The presses' 20° limit (README, Reviewing a movement): `grip.level` is what holds these under it.
+for (const id of ['db_guillotine_press', 'dumbbell_shoulder_press_standing', 'standing_db_arnold_press', 'arnold_press_seated', '1_arm_db_kroc_row']) {
+  test(`${id}: the dumbbell stays near level through the rep`, async () => {
+    for (const angle of benchAngles(id) ?? [undefined]) {
+      const stage = await buildStage(prepare(id, undefined, angle));
+      const bell = stage.kit.group.getObjectByName('dumbbell_l');
+      for (let f = 0; f <= 30; f++) {
+        stage.pose(f / 30);
+        const tilt = Math.abs(deg(Math.asin(new THREE.Vector3(1, 0, 0).applyQuaternion(bell.quaternion).y)));
+        assert.ok(tilt < 20, `at ${angle ?? 'its'}°, frame ${f}: ${tilt.toFixed(1)}°`);
+      }
+    }
+  });
+}
