@@ -1,15 +1,20 @@
 // Renders a pose to PNGs without a GPU, for pull requests and notes (README, Rendering a pose):
 //
 //   node render.mjs <id> [out-dir]     <id>-side.png and <id>-front.png, the top and the bottom of the rep
+//   node render.mjs --clip <clip> [out-dir] [--at <commit>]     the same of a baked clip, the top, the middle and the bottom
 //
 // Equipment far in front of the body is cut away. A flat-shaded software rasteriser: orthographic, a depth buffer, the clay colours, drawn at 2x and
 // averaged down. It shows the pose and its equipment, not the phone's lighting.
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { deflateSync } from 'node:zlib';
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
+import { openClip, poseFrame } from './glb.mjs';
+import { clipFile, clipsAt } from './numbers.mjs';
+import { wpos } from './rig.mjs';
 import { buildStage } from './stage.mjs';
 
 const PANEL = [560, 700];
@@ -50,6 +55,9 @@ const VIEWS = {
   front: { right: new THREE.Vector3(1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, 1) },
   frontLying: { right: new THREE.Vector3(-1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, -1) },
 };
+
+/** The view called `name`: a lying lift's front is from its head end. */
+const viewOf = (name, lying) => VIEWS[name === 'front' && lying ? 'frontLying' : name];
 
 /** Draws the triangles into a width x height RGB buffer, `scale` pixels per metre, centred on `centre`. */
 function draw(tris, view, centre, scale, [w, h]) {
@@ -128,19 +136,18 @@ export function png(rgb, w, h) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', head), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-/** The rep's top and bottom side by side, seen from `view`. */
-export async function renderPose(id, viewName, angle) {
-  const entry = prepare(id, undefined, angle);
-  const { scene, pose } = await buildStage(entry);
-  const view = VIEWS[viewName === 'front' && entry.body?.trunk < -45 ? 'frontLying' : viewName];
-  // A cutaway: equipment standing well in front of the body (a cable tower's column) is left out
-  // of the view, so it doesn't hide the lifter.
-  const cut = (tris) => {
-    const near = Math.max(...tris.filter((t) => t[4]).flatMap(([a, b, c]) => [a, b, c].map((p) => p.dot(view.toward))));
-    return tris.filter(([a, b, c, , body]) => body || (a.dot(view.toward) + b.dot(view.toward) + c.dot(view.toward)) / 3 < near + 0.3);
-  };
-  const shots = [0, 1].map((d) => { pose(d); return cut(triangles(scene)); });
-  // One frame for both panels: the bounds of the body and the kit at the top and the bottom.
+/**
+ * A cutaway: equipment standing well in front of the body (a cable tower's column) is left out of
+ * the view, so it doesn't hide the lifter.
+ */
+function cutaway(tris, view) {
+  const near = Math.max(...tris.filter((t) => t[4]).flatMap(([a, b, c]) => [a, b, c].map((p) => p.dot(view.toward))));
+  return tris.filter(([a, b, c, , body]) => body || (a.dot(view.toward) + b.dot(view.toward) + c.dot(view.toward)) / 3 < near + 0.3);
+}
+
+/** The `shots` side by side, seen from `view`, in one frame. */
+function sideBySide(shots, view) {
+  // One frame for all the panels: the bounds of the body and the kit in every shot.
   const box = new THREE.Box3();
   for (const tris of shots) for (const [a, b, c] of tris) if (a.y > 0.01 || b.y > 0.01) box.expandByPoint(a).expandByPoint(b).expandByPoint(c);
   const size = box.getSize(new THREE.Vector3());
@@ -150,14 +157,53 @@ export async function renderPose(id, viewName, angle) {
   const panels = shots.map((tris) => draw(tris, view, centre, scale, PANEL));
   const [w, h] = PANEL;
   const gap = 6;
-  const image = new Uint8Array((2 * w + gap) * h * 3);
+  const width = panels.length * w + (panels.length - 1) * gap;
+  const image = new Uint8Array(width * h * 3);
   for (let i = 0; i < image.length / 3; i++) image.set(GROUND, i * 3);
-  panels.forEach((p, k) => { for (let y = 0; y < h; y++) image.set(p.subarray(y * w * 3, (y + 1) * w * 3), (y * (2 * w + gap) + k * (w + gap)) * 3); });
-  return png(image, 2 * w + gap, h);
+  panels.forEach((p, k) => { for (let y = 0; y < h; y++) image.set(p.subarray(y * w * 3, (y + 1) * w * 3), (y * width + k * (w + gap)) * 3); });
+  return png(image, width, h);
+}
+
+/** The rep's top and bottom side by side, seen from `view`. */
+export async function renderPose(id, viewName, angle) {
+  const entry = prepare(id, undefined, angle);
+  const { scene, pose } = await buildStage(entry);
+  const view = viewOf(viewName, entry.body?.trunk < -45);
+  return sideBySide([0, 1].map((d) => { pose(d); return cutaway(triangles(scene), view); }), view);
+}
+
+/** The top, the middle and the bottom of the clip in `file`, side by side, seen from `view`. */
+export async function renderClip(file, viewName) {
+  const { scene, tracks } = await openClip(file);
+  const last = tracks[0].times.length - 1;
+  const shot = (f) => {
+    poseFrame(scene, tracks, f);
+    scene.traverse((m) => m.skeleton?.update());
+    return triangles(scene);
+  };
+  poseFrame(scene, tracks, 0);
+  // A lying lift's head lies toward -z, the way a pose's trunk says.
+  const spine = wpos(scene.getObjectByName('Head')).sub(wpos(scene.getObjectByName('pelvis')));
+  const view = viewOf(viewName, spine.z < -Math.abs(spine.y));
+  return sideBySide([0, Math.round(last / 2), last].map((f) => cutaway(shot(f), view)), view);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
+  if (args.includes('--clip')) {
+    const { values: { clip, at: commit }, positionals: [out = '.'] } = parseArgs({
+      allowPositionals: true,
+      options: { clip: { type: 'string' }, at: { type: 'string' } },
+    });
+    const file = await clipFile(clip, await clipsAt(commit));
+    await mkdir(out, { recursive: true });
+    for (const view of ['side', 'front']) {
+      const to = path.join(out, `${clip}-${view}.png`);
+      await writeFile(to, await renderClip(file, view));
+      console.log(`rendered ${to}`);
+    }
+    process.exit(0);
+  }
   // `--angle <degrees>` renders an adjustable-bench pose at that bench angle, its typical one by default.
   const at = args.indexOf('--angle');
   const angle = at < 0 ? undefined : Number(args.splice(at, 2)[1]);

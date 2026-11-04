@@ -15,7 +15,15 @@ npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from foo
 npm run studio                          # the studio, at http://127.0.0.1:5190/studio/ (The studio)
 npm run review -- status <batch>        # whether every exercise in it is OK (Reviewing a batch)
 npm run review -- phone <batch>         # the owner has swiped the batch in the debug gallery
+npm run numbers -- <clip>               # every frame's numbers from a baked clip (Reviewing a movement)
+npm run movement -- <id>                # a clip against its movement spec (Reviewing a movement)
 ```
+
+Before a push, run the test files you touched and `committed.test.mjs`
+(`node --test committed.test.mjs <file>.test.mjs`), not `npm test`. CI runs the whole suite on every
+PR that touches `tools/mannequins/`, as the `suite` job's four shards (`npm test -- --test-shard=1/4`);
+each takes 2–9 minutes. The whole suite on one machine takes 6–8 minutes quiet and 20–23 with several
+workers running.
 
 A test that needs a scratch folder takes it from `scratch()` in `tmp.mjs`, which removes it when the
 test process ends, also after a failure; `tmp.test.mjs` fails on any test file that calls `mkdtemp`
@@ -583,7 +591,9 @@ The first batch's traces:
 beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
 colours. A lying lift is seen from the head end, and equipment standing well in front of the body
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
-Use it for a pull request's screenshots.
+Use it for a pull request's screenshots. `node render.mjs --clip <clip> [out-dir] [--at <commit>]`
+renders a baked clip instead, at the top, the middle and the bottom of its rep, as that commit baked
+it.
 
 ## The studio
 
@@ -740,9 +750,60 @@ note, and no OK for the clip it has now), `changed` (OK'd on a clip since re-bak
 with its open notes, and exits non-zero until the batch is done: every exercise OK for the clip it
 has now.
 
+## Reviewing a movement
+
+The checks prove contact and geometry and know nothing of the movement. A **movement spec** says
+what a lift should do, and a **movement reviewer**, an agent that didn't pose it, checks a clip
+against it before the owner looks (`docs/agents/movement-reviewer.md`). A clear failure goes back to
+the worker, a doubt goes to the owner, and a clean lift needs only a sample.
+
+`specs/<id>.json` holds a lift's `sources`, the video and notes it was written from, and its
+`lines`. Each line has `says`, the movement in words, and one kind:
+
+| Kind | Example | Fails when |
+| --- | --- | --- |
+| `moves` | `{ "moves": "elbow_*", "top": [160, 180], "bottom": [30, 70] }` | the first or the last frame is out of its range |
+| `still` | `{ "still": "pelvis.at", "within": 0.01 }` | a point travels further from its first place, in metres, or a number further from its first value |
+| `path` | `{ "path": "hand_*.at", "within": 0.05 }` | a point strays further off the straight line between its ends |
+| `never` | `{ "never": "dumbbell_*.tilt", "past": 20 }` | a number passes the limit, either way; with `"perFrame": true`, its change between two frames does |
+| `reaches` | `{ "reaches": "wrist_*", "least": 10 }` | a number never gets that far |
+| `even` | `{ "even": "roll_*", "within": 10 }` | a number strays further from the straight run between its ends: a rock or a twist mid-rep |
+| `place` | `{ "place": "hand_*.at", "from": "shoulder_*.at", "axis": "z", "at": "top", "range": [-0.06, 0.06] }` | a point stands out of its range from another, in metres along x, y or z, at the `top` or the `bottom` |
+| `look` | `{ "look": "forearms", "at": ["bottom"], "view": "front" }` | never here: it waits for the reviewer's eyes |
+
+`*` stands for each side, and the worse one counts. The top is the clip's first frame and the bottom
+its last, so a raise's top is the arm up and a pull's the arm long. Whatever a spec can say exactly
+is a line of an exact kind and not a `look`, because `movement.test.mjs` holds every clip to those
+lines. A lift whose clip isn't baked yet is skipped. `"open"` on a line marks a known failure and
+says what waits on whom. It reads `OPEN`, goes to the owner and not back to the worker, and doesn't
+fail the command, and the test fails once that line passes, so the mark can't outlive the fault.
+
+`npm run numbers -- <clip>` prints every frame's numbers from a baked clip, any clip: a name such as
+`db_incline_press_45`, or an exercise's id. `--at <commit>` reads it as that commit baked it, so an
+old version needs no checkout, `--only <name,name>` keeps those numbers, and `--json` prints JSON.
+The numbers:
+
+- **Angles:** `elbow_l`, `knee_l` and `hip_l` read 180° straight; `shoulder_l` is the upper arm off
+  the trunk, 0° hanging; `wrist_l` is the bend off the forearm's line; `trunk` is the lean off
+  straight up.
+- **`roll_l`:** the hand's roll about the forearm, summed from the top.
+- **Points, in metres:** `pelvis.at`, `head.at`, and `shoulder_l.at`, `elbow_l.at`, `hand_l.at`
+  and `ankle_l.at` on each side.
+- **Each kit part that moves and keeps its size:** `dumbbell_l.at`, `.tilt` (its length off level,
+  positive with the end away from the body's middle up), `.turn` (how far it turned since the last
+  frame) and `.spin` (the part of that about its own length). A cable stretches, so it has none.
+
+`npm run movement -- <id>` judges every clip of the exercise and names the worst one on each line,
+and takes `--at` too. `node render.mjs --clip <clip> <dir>` renders a clip's top, middle and bottom,
+side and front.
+
+A limit is only as good as what set it. `even` on a bell's tilt tells a rocking press from a clean
+one better than `never` does, and a tilt limit fits presses alone: a curl's bell turns with the
+forearm, so an OK'd curl stands far past any limit a press could keep.
+
 ## Files
 
-- `render.mjs`: PNGs of a pose, with no GPU.
+- `render.mjs`: PNGs of a pose or a baked clip, with no GPU.
 - `studio/`: the studio. `plugin.mjs` its server, `checking.mjs` its queue of checks, `studio.js` and
   `index.html` its page,
   `keys.json` and `keys.mjs` its keymap, `video.mjs` the technique video's steps, speeds and sync,
@@ -770,6 +831,8 @@ has now.
 - `review.mjs`: the batches, the OKs, notes and loops, and a batch's status. `review/<batch>.json`:
   each batch's verdicts; `review/notes.md`: the open notes; `review/loops.json`: the technique
   videos' loops.
+- `numbers.mjs`: every frame's numbers from a baked clip. `movement.mjs`: a clip judged against its
+  movement spec. `specs/<id>.json`: the movement specs.
 - `model/mannequin.glb`: the mannequin, stripped to its mesh and skeleton (see `CREDITS.md`).
 
 ## A clip

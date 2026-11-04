@@ -180,3 +180,23 @@ export async function loadClip(file, resources = []) {
   const bytes = inlineResources(await readFile(file), files);
   return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
 }
+
+/** The scene and the tracks of the clip in `file`, whose shared files lie beside it. */
+export async function openClip(file) {
+  const { json } = readGlb(await readFile(file));
+  const resources = json.buffers.flatMap((b) => (b.uri ? [path.join(path.dirname(file), b.uri)] : []));
+  const { scene, animations: [{ tracks }] } = await loadClip(file, resources);
+  return { scene, tracks };
+}
+
+/** The name of the node a track moves. */
+export const nodeOfTrack = (track) => track.name.slice(0, track.name.lastIndexOf('.'));
+
+/** Puts the scene at frame `f` of the clip's tracks. */
+export function poseFrame(scene, tracks, f) {
+  for (const track of tracks) {
+    const property = track.name.slice(track.name.lastIndexOf('.') + 1);
+    scene.getObjectByName(nodeOfTrack(track))?.[property].fromArray(track.values, f * track.getValueSize());
+  }
+  scene.updateMatrixWorld(true);
+}
