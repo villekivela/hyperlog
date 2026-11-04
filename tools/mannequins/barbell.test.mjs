@@ -50,8 +50,8 @@ test('a hip thrust arches its back at the bottom, its shoulders still on the ben
 });
 
 // The owner, #197, from a reference picture: a clean grip, the hands on the bar just outside the
-// shoulders, the forearms rising to it from elbows down and forward of the shoulders.
-test('a front squat holds the bar in a clean grip, the elbows below it and forward', async () => {
+// shoulders, the forearms rising to it from elbows below the hands.
+test('a front squat holds the bar in a clean grip, each elbow below its hand', async () => {
   const stage = await buildStage(prepare('front_squat'));
   for (const d of [0, 0.5, 1]) {
     const P = stage.pose(d);
@@ -60,7 +60,8 @@ test('a front squat holds the bar in a clean grip, the elbows below it and forwa
     for (const k of ['l', 'r']) {
       const [shoulder, elbow, hand] = [`upperarm_${k}`, `lowerarm_${k}`, `hand_${k}`].map((n) => wpos(stage.rig.bones[n]));
       assert.ok(elbow.y < shoulder.y - 0.1, `the ${k} elbow ${(elbow.y - shoulder.y).toFixed(2)} m off the shoulder's height`);
-      assert.ok(elbow.z > shoulder.z + 0.08, `the ${k} elbow ${(elbow.z - shoulder.z).toFixed(2)} m ahead of the shoulder`);
+      // The owner, #197: each forearm rises to the bar from its own side, not from the middle.
+      assert.ok(Math.abs(elbow.x) > Math.abs(hand.x) - 0.04, `the ${k} elbow at x ${elbow.x.toFixed(2)}, inside the hand at ${hand.x.toFixed(2)}`);
       assert.ok(hand.y > elbow.y + 0.1, `the ${k} hand ${(hand.y - elbow.y).toFixed(2)} m above the elbow`);
       assert.ok(Math.abs(hand.x) > Math.abs(shoulder.x) - 0.08, `the ${k} hand at x ${hand.x.toFixed(2)}, inside the shoulder`);
     }
@@ -77,7 +78,7 @@ test('a front squat\'s bar rides high on the shoulders all through the rep', asy
     const up = off.dot(P.u);
     const forward = off.dot(front);
     // Over the front of the shoulders, as high on them as the entry puts it, and it stays there.
-    assert.ok(up > 0 && up < 0.2 && forward > 0.03 && forward < 0.2, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm forward`);
+    assert.ok(up > 0 && up < 0.09 && forward > 0.03 && forward < 0.2, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm forward`);
     (first ??= [up, forward]);
     assert.ok(Math.abs(up - first[0]) < 0.01 && Math.abs(forward - first[1]) < 0.01, `frame ${f}: the bar slid on the shoulders`);
   }
