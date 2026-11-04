@@ -592,7 +592,8 @@ export const POSES = {
     camera: { target: [0, 1.4, 0.1], halfHeight: 1.45, azimuth: 150, elevation: 8 },
   },
 
-  // On the cross tube's ends, outside the outer prongs.
+  // On the cross tube's ends, outside the outer prongs: the hands hang the body higher, so the
+  // chin reaches the bar on less of a rise.
   pullup_wide_grip: { like: 'pullup', kit: { power_rack: { handles: 'wide' } }, top: { rise: 0.43 }, grip: { swing: 45 } },
   // On the V's arms, leaning back about 15° (the library's note).
   close_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'close' } }, top: { trunk: -15 } },
@@ -638,13 +639,14 @@ export const POSES = {
     bottom: { sink: 0.285, over: 0.26, trunk: 30, thigh: 12, shin: 60, shrug: 6 },
     feet: { stance: 0.09, point: 30 },
     grip: { pole: [0.25, 0, -1], swing: 80 },
-    camera: { target: [0, 1.3, -0.05], halfHeight: 1.2, azimuth: 120, elevation: 8 },
+    camera: { target: [0, 1.3, 0], halfHeight: 1.2, azimuth: -60, elevation: 8 },
   },
-  // Nearer the crosshead, the legs hanging almost straight and the upper arms behind the trunk.
+  // Near the crosshead, the shoulders ahead of the hands so the hips clear it, the legs hanging
+  // almost straight and the upper arms behind the trunk.
   close_grip_dip: {
     like: 'dip',
     kit: { power_rack: { handles: 'dipClose' } },
-    top: { trunk: 4, thigh: 10, shin: 14 },
+    top: { sink: 0.005, over: 0.1, trunk: 4, thigh: 10, shin: 14 },
     bottom: { over: 0.24, trunk: 22, thigh: 16, shin: 28 },
   },
 

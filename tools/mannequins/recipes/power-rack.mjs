@@ -2,7 +2,7 @@
 // each on a 7 in base plate, the front pair 43 in apart inside and the rear pair 24 in behind them
 // inside, each side joined by a crossmember near the top and one near the floor and a pin pipe safety
 // between them. Nothing else joins the sides but a back crossmember (not in the photos) and the supplied pull-up bars, a skinny one and a fat one
-// side to side at the top, which a multi-grip bar replaces. The lifter faces the rack: the front uprights' face
+// side to side at the top, which a multi-grip bar replaces. A lifter on the bar faces the rack: the front uprights' face
 // is 230 mm ahead of the origin's z, the hang line.
 //
 // Options: `pullupBar` (on by default) bolts a multi-grip pull-up bar to the front crossmember's face:
@@ -58,9 +58,9 @@ const CROSS = { z: FRONT - 0.23, half: 0.575, bend: 0.06 };
 // along them from the cross tube.
 const HANDS = { wide: 0.48, standard: 0.305, close: 0.14, neutral: INNER.x, neutralOut: 0.08 };
 // The dip handles: from the crosshead out to the tip, 47.6 mm across; the hands rest in the middle,
-// the close grip nearer the crosshead, as near as the hips clear it. The stem and crosshead are 3 in
+// the close grip near the crosshead, as near as the hips clear it. The stem and crosshead are 3 in
 // square; the bracket is 254 mm tall.
-const DIP = { height: 51 * IN + 0.01, base: 0.2255, tip: 0.315, length: 0.44, radius: 0.0238, hand: 0.5, close: 0.35, stem: 0.17, bracket: 0.254, crosshead: 0.55 };
+const DIP = { height: 51 * IN + 0.01, base: 0.2255, tip: 0.315, length: 0.44, radius: 0.0238, hand: 0.5, close: 0.2, stem: 0.17, bracket: 0.254, crosshead: 0.55 };
 const PLATE = { width: 0.965, height: 0.0762, thick: 0.0095 };
 // Where the cross tube's straight run, which a hand can close on, ends and its bend starts.
 const CROSS_RUN = 0.54;
@@ -79,15 +79,15 @@ const towardApex = (s) => V(-s * INNER.x, 0, FRONT - CROSS.z).normalize();
  * Each pair of grips, by the name a pose's `handles` gives it: `at(side)`, where that side's hand
  * holds, and `across(side)`, the way the part runs there, thumb first in the grip's own turn: along
  * the bar toward the middle, back toward the lifter down a prong, on toward the crosshead on a dip
- * handle. `on` is the add-on that carries the pair.
+ * handle. `option` is the recipe's option for the rack add-on that carries the pair.
  */
-export const GRIPS = {
-  wide: { on: 'bar', at: onCross(HANDS.wide), across: toMiddle },
-  standard: { on: 'bar', at: onCross(HANDS.standard), across: toMiddle },
-  close: { on: 'bar', at: onV, across: towardApex },
-  neutral: { on: 'bar', at: (s) => V(s * HANDS.neutral, HIGH, CROSS.z - HANDS.neutralOut), across: () => V(0, 0, -1) },
-  dip: { on: 'dips', at: onDip(DIP.hand), across: towardBase },
-  dipClose: { on: 'dips', at: onDip(DIP.close), across: towardBase },
+const GRIPS = {
+  wide: { option: 'pullupBar', at: onCross(HANDS.wide), across: toMiddle },
+  standard: { option: 'pullupBar', at: onCross(HANDS.standard), across: toMiddle },
+  close: { option: 'pullupBar', at: onV, across: towardApex },
+  neutral: { option: 'pullupBar', at: (s) => V(s * HANDS.neutral, HIGH, CROSS.z - HANDS.neutralOut), across: () => V(0, 0, -1) },
+  dip: { option: 'dipHandles', at: onDip(DIP.hand), across: towardBase },
+  dipClose: { option: 'dipHandles', at: onDip(DIP.close), across: towardBase },
 };
 
 // Where the rack stands for a pose on the dip handles: half a turn about the upright's line, the
@@ -95,24 +95,29 @@ export const GRIPS = {
 const TURNED = { x: X, z: onDip(DIP.hand)(1).z };
 const turned = (p) => V(TURNED.x - p.x, p.y, TURNED.z - p.z);
 
+/** Whether a pose on `handles` turns the rack: one on the dip handles does. */
+const turnsRack = (handles) => GRIPS[handles]?.option === 'dipHandles';
+
 /** The pair of grips `handles` names, as the lifter meets it: the rack turned, for the dip handles, the sides swapped with it. */
-export function gripsOf(handles) {
+export function heldPair(handles) {
   const grip = GRIPS[handles];
   if (!grip) throw new Error(`No handles "${handles}": ${Object.keys(GRIPS).join(', ')}`);
-  if (grip.on !== 'dips') return grip;
+  if (!turnsRack(handles)) return grip;
   return { ...grip, at: (s) => turned(grip.at(-s)), across: (s) => grip.across(-s).multiply(V(-1, 1, -1)) };
+}
+
+/** The grips a kit of these options has contacts on: the pose's pair, or with no pose all those its rack add-ons carry. */
+function contactsOn({ handles, ...options }) {
+  if (!handles) return Object.keys(GRIPS).filter((name) => options[GRIPS[name].option] !== false);
+  heldPair(handles);
+  return [handles];
 }
 
 export default recipe({
   name: 'power_rack',
   bodies: {},
   // A pose holds one pair of grips, its `handles`; with no pose, any the rack has.
-  contacts: ({ pullupBar = true, dipHandles = true, handles } = {}) => {
-    if (handles) gripsOf(handles);
-    const carried = { bar: pullupBar, dips: dipHandles };
-    return Object.keys(GRIPS).filter((point) => carried[GRIPS[point].on] && (!handles || point === handles))
-      .map((point) => ({ body: 'frame', point, landmark: 'hands' }));
-  },
+  contacts: (options = {}) => contactsOn(options).map((point) => ({ body: 'frame', point, landmark: 'hands' })),
   build({ pullupBar = true, dipHandles = true, handles } = {}, M) {
     const sides = [-1, 1];
     // A crossmember between two uprights, from one's face to the other's, with its end plates against them.
@@ -191,20 +196,16 @@ export default recipe({
       tube(UPRIGHT.w, V(X - DIP.crosshead / 2, DIP.height - 0.01, crossZ), V(X + DIP.crosshead / 2, DIP.height - 0.01, crossZ), M.frame),
       ...sides.flatMap((s) => [rod(DIP.radius, dipBase(s), dipTip(s), M.vinyl, { held: true }), knob(M, dipTip(s), DIP.radius)]),
     ];
-    const carried = { bar: pullupBar, dips: dipHandles };
-    const points = Object.fromEntries(Object.keys(GRIPS).filter((name) => carried[GRIPS[name].on]).map((name) => {
-      const held = name === handles ? gripsOf(name) : GRIPS[name];
-      return [name, sides.map(held.at)];
-    }));
+    const points = Object.fromEntries(contactsOn({ pullupBar, dipHandles, handles }).map((name) => [name, sides.map((handles ? heldPair(name) : GRIPS[name]).at)]));
     return {
       parts: [...frame, ...bar, ...dipBar],
       stand(g) {
-        if (GRIPS[handles]?.on !== 'dips') return;
+        if (!turnsRack(handles)) return;
         g.rotation.y = Math.PI;
         g.position.set(TURNED.x, 0, TURNED.z);
       },
       drive() {
-        return { points };
+        return { points: Object.fromEntries(Object.entries(points).map(([k, v]) => [k, v.map((p) => p.clone())])) };
       },
     };
   },

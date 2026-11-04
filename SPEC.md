@@ -1561,6 +1561,11 @@ gallery (Technique videos).
     rear delts, leaning further to keep it over the feet; and the front squat upright with the bar
     racked on the front delts, the arms crossed and each hand lying open on the other shoulder, not
     gripping the bar (the mannequin's hands can't bend back into a clean grip).
+    Rows and pulls run the bar straight up and down; Tune places the bar at the bottom of a
+    deadlift, a row and a bridge, and arches a hip thrust's back (owner, via the coordinator,
+    2026-11-03).
+    The incline and decline presses (an adjustable bench is seven clips, and a decline
+    needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
     The power rack's batch (#196) hangs the body from the bar or rests it on the dip handles, the
     feet off the floor on every frame (a check fails a foot under 2 cm up). A pull-up rises about
     490 mm to the chin over the bar, a dip drops about 290 mm to the elbows at about 90°, and a leg
@@ -1568,11 +1573,6 @@ gallery (Technique videos).
     upright, as the video on rack-mounted handles shows. The 2-Grip Pull-Up is a clip a grip, as the
     pulldown: set 1 wide and overhand, set 2 narrow and underhand. The weighted lifts carry a plate
     on a dip belt's chain, plumb in front of the thighs at about mid-thigh.
-    Rows and pulls run the bar straight up and down; Tune places the bar at the bottom of a
-    deadlift, a row and a bridge, and arches a hip thrust's back (owner, via the coordinator,
-    2026-11-03).
-    The incline and decline presses (an adjustable bench is seven clips, and a decline
-    needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
@@ -1678,7 +1678,7 @@ gallery (Technique videos).
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), the smith machine (#182) and, until its poses came (#196), the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    with no body, its levers at rest (#176): the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), and the smith machine (#182), until they are posed. The power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving) was too, until its poses came (#196). The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

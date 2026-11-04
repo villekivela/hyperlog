@@ -258,8 +258,8 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
-| `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin` and `feet.point`, as for `support` |
-| `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `body.look` |
+| `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
+| `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment
@@ -415,10 +415,12 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   origin. Contacts, all hands on the frame, a pair of points each: `wide` (960 mm apart, on the cross
   tube outside the outer prongs), `standard` (610, on it between the prongs), `close` (280, on the V's
   arms), `neutral` (406, on the inner prongs, 80 mm out along them), and `dip` and `dipClose` (the
-  handles' middle, and 35% of the way out from the crosshead, as near as the hips clear it). It has no fit rule. It departs from the ref: the rack is a
+  handles' middle, 540 mm apart, and near the crosshead, 487 mm, as near as the hips clear it). It has no fit rule. It departs from the ref: the rack is a
   9 ft one so the bar sits at a hole near 2.30 m, the back crossmember isn't in the photos, the ref's
   close grip (400 mm on a cross tube between the inner prongs) is on the V because the photos show no
-  tube there, and the end plates, safeties and bracket are read from photos.
+  tube there, the cross tube is 1150 mm, between the 1060 scaled from a photo and the page's 1194, so a
+  hand on the wide grip stays on its straight run, and the end plates, safeties and bracket are read
+  from photos.
 - `dip_belt` (#196, weighted bodyweight equipment) is a belt round the hips and a 25 lb iron plate on
   its chain. A free body the hips carry, on no joint: the plate hangs plumb in front of the thighs at
   about mid-thigh however the body leans, and the chain runs to it from the belt's sides.
@@ -446,7 +448,7 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
 - `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot, with its
   `settings` where holes set it) or
   `prismatic` (a sled, a carriage, a stack sliding along its rails), with its `limits`; or `free`,
-  on no joint, for what the hands carry (a barbell, a cable's attachment). A joint's value is how far
+  on no joint, for what the mannequin carries (a barbell, a cable's attachment, a dip belt's plate). A joint's value is how far
   it has moved from where it is measured: its rest where it has a stack, or a lever's angle up from
   level ahead. A lever's limits are where the body stops, not only the machine: a leg extension's
   where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the

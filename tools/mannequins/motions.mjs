@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
-import { gripsOf } from './recipes/power-rack.mjs';
+import { heldPair } from './recipes/power-rack.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 import { fitted } from './fit.mjs';
 
@@ -262,12 +262,16 @@ function heldBody(e, s, sh, L) {
   };
 }
 
-/** How far a pair of grips is below straight arms from the shoulders, `off` to the side of them. */
-const armsDown = (e, L, grip, off = 0) => {
+/**
+ * The pair of grips a body held up by its hands holds (`kit.power_rack.handles`): the frame's hands,
+ * the point midway between them, and how far straight arms reach up or down to that point.
+ */
+function rackHold(e, L) {
+  const { at, across } = heldPair(e.kit.power_rack.handles);
   const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
-  const dx = Math.abs(grip.at(1).x - grip.at(-1).x) / 2 - L.shW;
-  return Math.sqrt(Math.max(0, reach * reach - dx * dx - off * off));
-};
+  const dx = Math.abs(at(1).x - at(-1).x) / 2 - L.shW;
+  return { hands: { hand: at, across }, middle: at(1).add(at(-1)).multiplyScalar(0.5), arms: Math.sqrt(Math.max(0, reach * reach - dx * dx)) };
+}
 
 export const MOTIONS = {
   /**
@@ -748,15 +752,9 @@ export const MOTIONS = {
    * and `rise` lifts them from there, `back` behind the grips.
    */
   hang(e, s, L) {
-    const grip = gripsOf(e.kit.power_rack.handles);
-    const middle = grip.at(1).add(grip.at(-1)).multiplyScalar(0.5);
-    const sh = V(middle.x, middle.y - armsDown(e, L, grip) + s.rise, middle.z - (s.back ?? 0));
-    return {
-      ...heldBody(e, s, sh, L),
-      hand: grip.at,
-      across: grip.across,
-      armPole: elbowsTo(e, [0.8, -1, 0.3]),
-    };
+    const { hands, middle, arms } = rackHold(e, L);
+    const sh = V(middle.x, middle.y - arms + s.rise, middle.z - (s.back ?? 0));
+    return { ...heldBody(e, s, sh, L), ...hands, armPole: elbowsTo(e, [0.8, -1, 0.3]) };
   },
 
   /**
@@ -765,15 +763,9 @@ export const MOTIONS = {
    * lowers them from there, `over` ahead of the grips.
    */
   support(e, s, L) {
-    const grip = gripsOf(e.kit.power_rack.handles);
-    const middle = grip.at(1).add(grip.at(-1)).multiplyScalar(0.5);
-    const sh = V(middle.x, middle.y + armsDown(e, L, grip) - s.sink, middle.z + (s.over ?? 0));
-    return {
-      ...heldBody(e, s, sh, L),
-      hand: grip.at,
-      across: grip.across,
-      armPole: elbowsTo(e, [0.25, 0, -1]),
-    };
+    const { hands, middle, arms } = rackHold(e, L);
+    const sh = V(middle.x, middle.y + arms - s.sink, middle.z + (s.over ?? 0));
+    return { ...heldBody(e, s, sh, L), ...hands, armPole: elbowsTo(e, [0.25, 0, -1]) };
   },
 
   /**

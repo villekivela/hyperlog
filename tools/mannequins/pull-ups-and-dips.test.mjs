@@ -93,8 +93,8 @@ test('the equipment check fails a body driven into the dip handles', async () =>
   assert.match(equipment.found, /^(thigh|calf)_/);
 });
 
-/** How far the thumb's root lies toward the body's middle from the little finger's, on a bar across the body: + overhand, - underhand. */
-const thumbIn = (rig, k) => -sideOf(rig, k) * (wpos(rig.bones[`thumb_01_${k}`]).x - wpos(rig.bones[`pinky_01_${k}`]).x);
+/** How far the thumb's root lies from the little finger's along the way the part runs toward the middle (`P.across`): + overhand, - underhand. */
+const thumbIn = (rig, P, k) => wpos(rig.bones[`thumb_01_${k}`]).sub(wpos(rig.bones[`pinky_01_${k}`])).dot(P.across(sideOf(rig, k)));
 
 for (const [id, handles] of [
   ['pullup_wide_grip', 'wide'], ['close_grip_pullup', 'close'], ['neutral_grip_pullup', 'neutral'],
@@ -106,12 +106,15 @@ for (const [id, handles] of [
   });
 }
 
-for (const [id, way, turned] of [['pullup', 'overhand', 1], ['pullup_wide_grip', 'overhand', 1], ['chinup', 'underhand', -1], ['chinup_wide_grip', 'underhand', -1]]) {
+for (const [id, way, turned] of [
+  ['pullup', 'overhand', 1], ['pullup_wide_grip', 'overhand', 1], ['close_grip_pullup', 'overhand', 1], ['weighted_pullup', 'overhand', 1],
+  ['chinup', 'underhand', -1], ['chinup_wide_grip', 'underhand', -1], ['close_grip_chinup', 'underhand', -1], ['weighted_chinup', 'underhand', -1],
+]) {
   test(`${id} is ${way}: the thumbs lie ${turned > 0 ? 'toward' : 'away from'} the middle`, async () => {
     const { rig, pose } = await buildStage(prepare(id));
     for (const d of [0, 1]) {
-      pose(d);
-      for (const k of ['l', 'r']) assert.ok(turned * thumbIn(rig, k) > 0, `the ${k} hand at ${d}: ${thumbIn(rig, k).toFixed(3)}`);
+      const P = pose(d);
+      for (const k of ['l', 'r']) assert.ok(turned * thumbIn(rig, P, k) > 0, `the ${k} hand at ${d}: ${thumbIn(rig, P, k).toFixed(3)}`);
     }
   });
 }
@@ -181,10 +184,23 @@ test('a dip faces out along the handles, its back to the upright (close-grip dip
   }
 });
 
+test('the close grips are at the handles\' inner end, under 500 mm apart, and the dip\'s further out', () => {
+  const kit = rack();
+  const spread = (name) => { const [l, r] = kit.contacts.find((c) => c.point === name).at; return r.x - l.x; };
+  assert.ok(spread('dipClose') < 0.5, `the close grips ${spread('dipClose').toFixed(3)} apart`);
+  assert.ok(spread('dip') - spread('dipClose') > 0.04, 'the two pairs barely differ');
+});
+
+test('a close-grip dip keeps the upper arms behind the trunk (the library\'s note)', async () => {
+  const { rig, pose } = await buildStage(prepare('close_grip_dip'));
+  pose(1);
+  for (const k of ['l', 'r']) assert.ok(wpos(rig.bones[`lowerarm_${k}`]).z < wpos(rig.bones[`upperarm_${k}`]).z, `the ${k} elbow is ahead of the shoulder`);
+});
+
 test('the rack stands turned only for a dip: a pull-up hangs in front of it, as it is built', () => {
-  const pose = rack({ handles: 'standard' });
-  assert.deepEqual(pose.group.position.toArray(), [0, 0, 0]);
-  assert.equal(pose.group.rotation.y, 0);
+  const pull = rack({ handles: 'standard' });
+  assert.deepEqual(pull.group.position.toArray(), [0, 0, 0]);
+  assert.equal(pull.group.rotation.y, 0);
   const dip = rack({ handles: 'dip' });
   close(Math.abs(dip.group.rotation.y), Math.PI, 1e-9, 'half a turn');
 });
@@ -210,7 +226,7 @@ for (const [id, handles, lean] of [['dip', 'dip', 30], ['close_grip_dip', 'dipCl
     pose(1);
     close(top.y - shoulders(rig).y, 0.29, 0.03, 'the drop');
     for (const k of ['l', 'r']) close(elbowBend(rig, k), 90, 15, `the ${k} elbow at the bottom, in degrees`);
-    close(shoulders(rig).y, elbowsY(rig), 0.07, 'the shoulders against the elbows');
+    assert.ok(shoulders(rig).y < elbowsY(rig) + 0.03, `the shoulders ${(shoulders(rig).y - elbowsY(rig)).toFixed(3)} above the elbows at the bottom`);
     close(leanOf(rig), lean, 8, 'the trunk\'s lean at the bottom, in degrees');
   });
 }
@@ -247,6 +263,32 @@ for (const [id, like, grip] of [
   });
 }
 
+test('the chain runs from the belt round the hips down to the plate, on every frame', async () => {
+  const { rig, kit, pose } = await buildStage(prepare('weighted_pullup'));
+  const belt = kit.kits.dip_belt;
+  const chains = [];
+  let ring;
+  belt.group.traverse((o) => {
+    if (o.isMesh && o.material?.name === 'metal') chains.push(o);
+    if (o.isMesh && o.material?.name === 'vinyl') ring = o;
+  });
+  assert.equal(chains.length, 2, 'a chain from each side of the belt');
+  assert.ok(ring, 'a belt');
+  for (const d of [0, 0.5, 1]) {
+    pose(d);
+    const hip = between(rig, 'thigh_l', 'thigh_r');
+    const box = new THREE.Box3().setFromObject(ring);
+    assert.ok(box.containsPoint(hip.clone().setY(box.getCenter(new THREE.Vector3()).y)), `the belt isn't round the hips at ${d}`);
+    close(box.getCenter(new THREE.Vector3()).y, hip.y + 0.05, 0.03, `the belt's height at ${d}`);
+    const plate = new THREE.Box3().setFromObject(plateOf(kit)).getCenter(new THREE.Vector3());
+    for (const chain of chains) {
+      const ends = [-0.5, 0.5].map((y) => chain.localToWorld(new THREE.Vector3(0, y, 0)));
+      assert.ok(Math.min(...ends.map((e) => e.distanceTo(plate))) < 1e-3, `a chain's end off the plate at ${d}`);
+      assert.ok(Math.min(...ends.map((e) => box.distanceToPoint(e))) < 0.02, `a chain's end off the belt at ${d}`);
+    }
+  }
+});
+
 test('a plate hangs plumb: its face square to the floor however the body leans', async () => {
   const { kit, pose } = await buildStage(prepare('weighted_dip'));
   for (const d of [0, 1]) {
@@ -258,6 +300,20 @@ test('a plate hangs plumb: its face square to the floor however the body leans',
 
 /** Every clip of the rack's exercises, as [id, grip]. */
 const CLIPS = STATIONS.power_rack.exercises.flatMap((id) => (gripsOf(id) ?? [undefined]).map((grip) => [id, grip]));
+
+for (const [id, grip] of CLIPS.filter(([id]) => /pullup|chinup/.test(id))) {
+  test(`${grip ? `${id} (${grip})` : id}: the chin comes over the bar, from straight arms`, async () => {
+    const { rig, pose } = await buildStage(prepare(id, undefined, undefined, grip));
+    pose(1);
+    const hang = shoulders(rig).y;
+    for (const k of ['l', 'r']) assert.ok(elbowBend(rig, k) < 15, `the ${k} elbow bent ${elbowBend(rig, k).toFixed(0)}° at the bottom`);
+    pose(0);
+    const chin = Math.min(...skinOf(rig, /^Head$/).map((p) => p.y));
+    assert.ok(chin > BAR, `the chin at ${chin.toFixed(3)}, under the bar at ${BAR.toFixed(3)}`);
+    // Wide hands hang higher, so the chin reaches the bar sooner.
+    assert.ok(shoulders(rig).y - hang > 0.43, `the rise ${(shoulders(rig).y - hang).toFixed(3)}`);
+  });
+}
 
 test('the batch is the rack\'s 16 exercises, 18 clips with the 2-grip pull-ups\' two each', () => {
   assert.deepEqual(BATCHES['power-rack'], STATIONS.power_rack.exercises);
