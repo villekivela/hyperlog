@@ -1,11 +1,11 @@
 // A save in the studio writes tuned values into poses.mjs as text, so the owner's comments stay.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, mkdtemp, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { patchPoses } from './patch.mjs';
+import { scratch } from './tmp.mjs';
 
 const SOURCE = `export const POSES = {
   one: {
@@ -50,7 +50,7 @@ test('the real poses patch and still load, with the owner\'s words kept', async 
   const real = await readFile(new URL('./poses.mjs', import.meta.url), 'utf8');
   const out = patchPoses(real, 'barbell_bench_press', { 'grip.width': 0.45, 'top.bar': [1.16, -0.23] });
   assert.ok(out.includes('A normal bench grip, about 1.5 shoulder widths'));
-  const dir = await mkdtemp(path.join(tmpdir(), 'poses-'));
+  const dir = await scratch('poses');
   await writeFile(path.join(dir, 'poses.mjs'), out);
   const { POSES } = await import(pathToFileURL(path.join(dir, 'poses.mjs')).href);
   assert.equal(POSES.barbell_bench_press.grip.width, 0.45);

@@ -3,13 +3,13 @@
 // against a check the test holds and lets go.
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import { studio } from './plugin.mjs';
 import { POSES } from '../poses.mjs';
+import { scratch } from '../tmp.mjs';
 
 const TOOL = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const POSED = Object.keys(POSES);
@@ -24,9 +24,9 @@ afterEach(async () => {
 
 /** A studio on copies of the repo's files, with the pose entries `added`, checking with `check(id)`. */
 async function serve(check, { bake = async () => {}, behind = async () => false, added = '' } = {}) {
-  const poses = path.join(await mkdtemp(path.join(tmpdir(), 'studio-')), 'poses.mjs');
+  const poses = path.join(await scratch('studio'), 'poses.mjs');
   await writeFile(poses, (await readFile(path.join(TOOL, 'poses.mjs'), 'utf8')).replace(/(\n  barbell_rdl: \{)/, `\n${added}$1`));
-  const plugin = studio({ posesFile: poses, reviewDir: await mkdtemp(path.join(tmpdir(), 'studio-review-')), bake, behind, check });
+  const plugin = studio({ posesFile: poses, reviewDir: await scratch('studio-review'), bake, behind, check });
   server = await createServer({
     configFile: false,
     root: TOOL,

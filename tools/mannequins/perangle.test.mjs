@@ -2,8 +2,7 @@
 // keyed by angle in `bench.perAngle`, and the angles between the tuned ones interpolate.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { POSES } from './poses.mjs';
@@ -12,6 +11,7 @@ import { prepare } from './entries.mjs';
 import { perAngleValue, atAngle, applyTuned, tunables, tunedAngles } from './tune.mjs';
 import { patchPoses } from './patch.mjs';
 import { checkPose } from './checks.mjs';
+import { scratch } from './tmp.mjs';
 
 const ID = 'db_incline_press';
 const withPer = (perAngle) => ({ fixture: FIXTURE, t: { like: 'fixture', bench: { perAngle } } });
@@ -65,7 +65,7 @@ test('a save writes per-angle values into the entry, keeping its comments', asyn
   const real = await readFile(new URL('./poses.mjs', import.meta.url), 'utf8');
   const out = patchPoses(real, ID, { '@angles': { 'feet.z': { 0: 0.22, 75: 0.3 }, 'bottom.chest.0': { 30: 0.5 } } });
   assert.ok(out.includes('The grip turns'), 'comments kept');
-  const dir = await mkdtemp(path.join(tmpdir(), 'poses-'));
+  const dir = await scratch('poses');
   await writeFile(path.join(dir, 'poses.mjs'), out);
   const { POSES: patched } = await import(pathToFileURL(path.join(dir, 'poses.mjs')).href);
   assert.deepEqual(patched[ID].bench.perAngle, { 'feet.z': { 0: 0.22, 75: 0.3 }, 'bottom.chest.0': { 30: 0.5 } });

@@ -3,8 +3,7 @@
 // turns to the exact angle.
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import * as THREE from 'three';
 import { bakeAll } from './bake.mjs';
@@ -12,13 +11,14 @@ import { loadClip } from './glb.mjs';
 import { benchAngles } from './entries.mjs';
 import { checkPose, CHECKS } from './checks.mjs';
 import { POSES } from './poses.mjs';
+import { scratch } from './tmp.mjs';
 
 const ANGLES = [0, 15, 30, 45, 60, 75, 85];
 const ID = 'db_incline_press';
 let out;
 let index;
 before(async () => {
-  out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  out = await scratch('mannequins');
   await bakeAll(out);
   index = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips;
 });
@@ -68,7 +68,7 @@ test('the pose passes every check at every angle', async () => {
 
 test('an adjustable-bench pose with no typical angle won\'t bake', async () => {
   const poses = { ...POSES, [ID]: { ...POSES[ID], bench: undefined } };
-  await assert.rejects(bakeAll(await mkdtemp(path.join(tmpdir(), 'mannequins-')), { poses }), new RegExp(`${ID}: .*typical`));
+  await assert.rejects(bakeAll(await scratch('mannequins'), { poses }), new RegExp(`${ID}: .*typical`));
 });
 
 test('the camera follows the bench angle: the upright 75° frames higher and wider than the lying 0°', () => {

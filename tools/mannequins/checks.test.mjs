@@ -1,12 +1,12 @@
 // The automatic checks run on every frame of every pose, and a failing pose won't bake.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { checkPose, CHECKS } from './checks.mjs';
 import { bakeAll } from './bake.mjs';
 import { POSES } from './poses.mjs';
+import { scratch } from './tmp.mjs';
 
 const failing = (report) => CHECKS.filter((c) => !report.checks[c].ok);
 
@@ -52,7 +52,7 @@ for (const [broken, entry] of Object.entries(BROKEN)) {
 }
 
 test('a pose that fails a check won\'t bake, and nothing is written', async () => {
-  const out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  const out = await scratch('mannequins');
   const poses = { ...POSES, broken: BROKEN.hands };
   await assert.rejects(bakeAll(out, { poses }), /broken fails its checks: hands/);
   assert.deepEqual(await readdir(out), []);
