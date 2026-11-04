@@ -3,8 +3,8 @@
 // is saved at the path of the number it changes, a point whole (`top.bar`), since an entry's lists
 // are replaced whole, not merged.
 
-/** Which hand a kit serves is a choice, not a place, so it has no slider. */
-const isChoice = (path) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(path);
+/** Which hand a kit serves, which tower or ankle it uses and which foot lifts are choices, not places, so they have no slider. */
+const isChoice = (path) => /^kit\.[^.]+\.(hands?(\.\d+)?|tower|ankle)$/.test(path) || path === 'feet.lift';
 
 /** Numbers not yet saved, without any choice among them, which an older slider may have left. */
 export const withoutChoices = (tuned) => Object.fromEntries(Object.entries(tuned).filter(([path]) => !isChoice(path)));
