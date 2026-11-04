@@ -10,8 +10,8 @@
 // option how far open the arms stand, in the ratchet's 10° steps.
 //
 // The user sits facing +z, the hips over the axis. The left arm (`arm_l`, at +x) and the right one
-// are on joints about the vertical, a value the angle they are open, in radians from closed:
-// parallel to the machine's length.
+// are each on a joint about the vertical. Its value is how far the arm is open, in radians from
+// closed, where the arms lie parallel to the machine's length.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import { floorRail, pad, stackFrame, tube, weightStack, rod } from '../parts.mjs';
@@ -25,6 +25,9 @@ const INNER_LEAST = 20;
 /** The start the pads' side gives, in degrees, when none is asked for. */
 const STARTS = { outer: 0, inner: 50 };
 const PADS = Object.keys(STARTS);
+
+/** The side handles: out from the centre line, up, and their length along z. */
+const HANDLE = { x: 0.24, y: 0.7, length: 0.18 };
 
 /** The seat's top, depth and front edge ahead of the axis. */
 const SEAT = { top: 0.52, depth: 0.36, front: 0.14, width: 0.36 };
@@ -111,8 +114,8 @@ export default recipe({
     frame.push(pad(SEAT.width, BACK.to - BACK.from, BACK.depth, M.vinyl, V(0, (BACK.from + BACK.to) / 2, BACK.z - BACK.depth / 2), { soft: 0.024 }));
     // The side handles beside the seat, and the brace back to the stack.
     for (const { s } of sides) {
-      frame.push(role(rod(0.015, V(s * 0.24, 0.7, 0), V(s * 0.24, 0.7, 0.18), M.vinyl, { held: true }), 'handle'));
-      frame.push(tube(0.03, V(s * 0.24, 0.7, 0), V(s * 0.24, SEAT.top - 0.09, 0), M.frame));
+      frame.push(role(rod(0.015, V(s * HANDLE.x, HANDLE.y, 0), V(s * HANDLE.x, HANDLE.y, HANDLE.length), M.vinyl, { held: true }), 'handle'));
+      frame.push(tube(0.03, V(s * HANDLE.x, HANDLE.y, 0), V(s * HANDLE.x, SEAT.top - 0.09, 0), M.frame));
     }
     frame.push(tube(0.05, V(0, 0.65, COLUMN.z), V(0, 0.65, STACK_Z), M.frame));
     const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: 0.7, toward: 1 });
@@ -152,7 +155,7 @@ export default recipe({
           const turn = (p) => p.applyAxisAngle(UP, s * value);
           points[`pad_${k}`] = [turn(V(s * FACES[pads], PAD.y, REACH))];
           points[`plate_${k}`] = [turn(V(s * KNEE.x, PLATE_TOP, REACH))];
-          points[`handle_${k}`] = [V(s * 0.24, 0.7, 0.09)];
+          points[`handle_${k}`] = [V(s * HANDLE.x, HANDLE.y, HANDLE.length / 2)];
           joints[`arm_${k}`] = { value, origin: V(0, ARM_Y[k], 0) };
         }
         return { joints, points };

@@ -413,10 +413,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   arms on one vertical axle on the centre line under the seat, 140 mm behind its front edge. Each
   arm (`arm_l`, `arm_r`, revolute about the vertical, 0 to 90° from closed, positive opening) is an
   L out from the axle and 400 mm forward to a post with a 280 by 160 mm knee pad at 560 mm and a
-  foot plate at 80 mm; the left arm rides 60 mm above the right on the shared axle. `pads`
+  foot plate at 80 mm; the right arm rides 60 mm above the left on the shared axle. `pads`
   (`outer`, the default, on the outsides of the knees for abduction, or `inner`, between them for
   adduction) and `start` (degrees, snapped to the ratchet's 10° steps; 0 for `outer`, 50 for `inner`,
-  at least 20 for `inner` so the posts clear) set it up; the fit rule names `start`. It departs from
+  at least 20 for `inner` so the posts clear) set it up; the joints run 0 to 90°, the ref's 45° of travel from a start of up to 50°, rounded down to a mechanical limit; the fit rule names `start`. It departs from
   its ref: the pads' faces are put 140 mm (`outer`) from the centre line from the mannequin's knee,
   which puts the posts about 450 mm apart rather than the ref's 250, and the weight stack stands
   still behind the backrest. The studio shows it alone.
