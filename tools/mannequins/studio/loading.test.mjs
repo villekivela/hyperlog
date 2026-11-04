@@ -3,13 +3,13 @@
 // against a check the test holds and lets go.
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import { studio } from './plugin.mjs';
 import { POSES } from '../poses.mjs';
+import { scratch } from '../tmp.mjs';
 
 const TOOL = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const POSED = Object.keys(POSES);
@@ -24,9 +24,9 @@ afterEach(async () => {
 
 /** A studio on copies of the repo's files, with the pose entries `added`, checking with `check(id)`. */
 async function serve(check, { bake = async () => {}, behind = async () => false, added = '' } = {}) {
-  const poses = path.join(await mkdtemp(path.join(tmpdir(), 'studio-')), 'poses.mjs');
+  const poses = path.join(await scratch('studio'), 'poses.mjs');
   await writeFile(poses, (await readFile(path.join(TOOL, 'poses.mjs'), 'utf8')).replace(/(\n  barbell_rdl: \{)/, `\n${added}$1`));
-  const plugin = studio({ posesFile: poses, reviewDir: await mkdtemp(path.join(tmpdir(), 'studio-review-')), bake, behind, check });
+  const plugin = studio({ posesFile: poses, reviewDir: await scratch('studio-review'), bake, behind, check });
   server = await createServer({
     configFile: false,
     root: TOOL,
@@ -247,13 +247,19 @@ test('an item answers as soon as its checks are done, not behind the poses after
   assert.ok(spun <= 2, `${spun} poses ran before it answered`);
 });
 
-test('a list made while the checks run waits for one pose at most', async () => {
-  let began = 0;
-  const { get } = await serve(async () => { began++; spin(60); return PASSES; });
-  await get('/api/item/exercise/deadlift');
-  const before = began;
-  await get('/api/items');
-  assert.ok(began - before <= 1, `${began - before} poses began while the list was made`);
+// It waits on what happens, not on a clock; the test's timeout only turns a hang into a failure.
+test('a list made while the checks run waits for one pose at most', { timeout: 30000 }, async () => {
+  const hold = held();
+  const { get } = await serve(hold.check);
+  const opening = get('/api/item/exercise/deadlift');
+  while (hold.began.length < 1) await new Promise((r) => setImmediate(r));
+  hold.next();
+  await opening;
+  // The pose under way is held, so it can't finish: a list that waited for it would never answer.
+  while (hold.began.length < 2) await new Promise((r) => setImmediate(r));
+  const items = await get('/api/items');
+  assert.equal(rowsOf(items).filter((r) => r.checking).length, POSED.length - 1);
+  assert.equal(hold.began.length, 2, `${hold.began.length - 2} poses began while the list was made`);
 });
 
 test('the studio answers between checks that hold its one thread', async () => {

@@ -12,10 +12,14 @@ npm run bake                            # node bake.mjs [out-dir]: check every p
 npm run seats                           # solve every seat afresh into seats.json, then bake
 npm test                                # entries, kits, checks, bake, trace, review and the studio, a few files at a time
 npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
-npm run studio                          # the studio, at http://localhost:5190/studio/ (The studio)
+npm run studio                          # the studio, at http://127.0.0.1:5190/studio/ (The studio)
 npm run review -- status <batch>        # whether every exercise in it is OK (Reviewing a batch)
 npm run review -- phone <batch>         # the owner has swiped the batch in the debug gallery
 ```
+
+A test that needs a scratch folder takes it from `scratch()` in `tmp.mjs`, which removes it when the
+test process ends, also after a failure; `tmp.test.mjs` fails on any test file that calls `mkdtemp`
+itself. A run leaves no `mannequins-*` folder in the temp directory.
 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
 give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
@@ -579,9 +583,9 @@ Use it for a pull request's screenshots.
 
 ## The studio
 
-`npm run studio` serves the tool at `http://localhost:5190/studio/` (Vite, pinned in
+`npm run studio` serves the tool at `http://127.0.0.1:5190/studio/` (Vite, pinned in
 `package-lock.json`, with the plugin in `studio/plugin.mjs`). It is for the owner's machine and
-listens on localhost only.
+listens on 127.0.0.1 only.
 
 - **Loading:** the list and the item on stage come first. Opening an item starts the checks, that
   item's first, then every other pose's one at a time in the background, and opening another item

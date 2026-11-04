@@ -1,8 +1,7 @@
 // Bakes every pose and reads the clips back as the phone would.
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import * as THREE from 'three';
 import { bakeAll } from './bake.mjs';
@@ -10,11 +9,12 @@ import { loadClip, readGlb } from './glb.mjs';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { POSES } from './poses.mjs';
+import { scratch } from './tmp.mjs';
 
 let out;
 let index;
 before(async () => {
-  out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  out = await scratch('mannequins');
   index = (await bakeAll(out), JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')));
 });
 
@@ -133,7 +133,7 @@ test('a kit file holds each part once, however many clips use it', async () => {
 });
 
 test('baking again gives byte-identical files', async () => {
-  const again = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  const again = await scratch('mannequins');
   await bakeAll(again);
   assert.deepEqual((await readdir(again)).sort(), (await readdir(out)).sort());
   for (const f of (await readdir(out)).sort()) {

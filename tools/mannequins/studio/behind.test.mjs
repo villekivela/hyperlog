@@ -3,10 +3,10 @@
 // Here on a tool of a few files, dated by hand.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { mkdir, rm, utimes, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { clipsBehind, datedBake } from './behind.mjs';
+import { scratch } from '../tmp.mjs';
 
 const OLD = new Date('2026-01-01');
 const BAKED = new Date('2026-02-01');
@@ -20,8 +20,8 @@ const date = (file, when) => utimes(file, when, when);
 const at = (...parts) => path.join(tool, ...parts);
 
 beforeEach(async () => {
-  tool = await mkdtemp(path.join(tmpdir(), 'behind-tool-'));
-  clips = await mkdtemp(path.join(tmpdir(), 'behind-clips-'));
+  tool = await scratch('behind-tool');
+  clips = await scratch('behind-clips');
   library = path.join(clips, 'exercises.json');
   for (const dir of ['recipes', 'traces', 'model', 'studio']) await mkdir(at(dir));
   const files = [at('motions.mjs'), at('motions.test.mjs'), at('seats.json'), at('recipes', 'bench.mjs'), at('traces', 'squat.json'), at('model', 'mannequin.glb'), at('studio', 'plugin.mjs'), library];
