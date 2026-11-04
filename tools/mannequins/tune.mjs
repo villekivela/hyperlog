@@ -134,6 +134,8 @@ export function rangeOf(path, value) {
   if (key === 'rotate') return { min: -30, max: 210, step: 1, unit: '°' };
   // A wrist bends well past the hand's own turn to the bar.
   if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
+  // A thumb's root swings from the palm to square off it, and no further (`holdOf`).
+  if (key === 'swing') return { min: 0, max: 90, step: 1, unit: '°' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
   // Equipment stands where the pose needs it: a metre either way.

@@ -194,6 +194,10 @@ _Avoid_: Hinge, axis
 Where a recipe ties a moving body, or its fixed frame, to the mannequin: handles to the hands, a pad to the shins or the thighs, a foot plate to the feet, shoulder pads to the shoulders, a chest pad to the chest. On a machine the joint drives the rep and IK holds the limbs to the contacts.
 _Avoid_: Attachment (that is a cable's handle), constraint
 
+**Grip landmark**:
+Where a bar or handle sits in a pose's hand: the heel of the palm (a press), mid-palm (a curl, a squat) or the base of the fingers (a pull); or an open hand, which holds nothing round. With the thumb, wrapped round the bar or thumbless over it, it is what the grip solve closes the hand to. Each motion has one by default; an entry can name its own.
+_Avoid_: Grip depth, grip (that is the hands' width and turn on the bar)
+
 **Fit rule**:
 How a recipe sets its adjustments for the mannequin, as the machine's placard says: the knee on the pivot axis, the handles at mid-chest, the pad just above the ankle. A pose entry can override what it sets.
 _Avoid_: Setting, preset

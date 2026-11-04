@@ -103,9 +103,45 @@ pull's bar passes them, the legs' front rounded over the kneecap and the give ea
 fails any joint whose step between two frames stands out from the steps either side of it by more
 than 2°, in every clip.
 
-A press or a squat holds the bar low in the palm, near its heel; a pull at the fingers' roots, the
-palm against it. Each finger closes round what the hand holds only until its tip touches it, and
-the hands check fails fingers folded into one another (their joints under 1.3 cm apart).
+## Grips
+
+Every grip is solved to what the hand holds (#162, `grip.mjs`, from `docs/research/grip.md`).
+Each names where the bar sits in the hand, its landmark, and the thumb:
+
+- **`grip.sits`**: `heel` (a press: the bench, the dumbbell, chest and cable shoulder presses, the
+  low-bar squat), `mid` (a curl, a pressdown, the high-bar squat, a bridge) or `base` (a pull: a
+  deadlift, a row, a pulldown, a raise, the machines' handles), each motion's by default; or `open`,
+  a hand that holds nothing round (the cross-arm front squat's).
+- **`grip.thumb`**: `wrapped` round the bar (the default) or `thumbless`, over it beside the fingers
+  (the low-bar squat).
+
+The landmarks lie along the palm from the wrist joint to the knuckles (122 mm): the heel at 0.65 of
+the way, mid-palm at 0.72, the base of the fingers at 0.8. The research puts a lifter's heel at
+0.2-0.3 and mid-palm at 0.45 of the same length, but this mannequin's palm is deep (4.5 cm, so a
+bar rests 5-8 cm off its bones) and its fingers 3.5 cm thick: they close round nothing lower than
+about 0.5, short by 24-31 mm at 0.3 and 6-9 mm at 0.45, and below 0.65 the thumb can't come round a
+press's bar as well. Its heel of the palm is as low as every digit reaches, higher than a lifter's,
+and the three landmarks lie close.
+
+The bar's radius is the kit's part under the hand (a barbell's 14 mm, a stirrup's 16.5 mm sleeve
+and the 12 mm bar past it, a chest press's 20.5 mm), and the hand is seated so its palm, the ball
+of the thumb with it, rests on that part's skin at the landmark, for the way the bar slants and
+tilts across the palm, measured on the hand as it closes round the bar, since the fingers and the
+thumb carry some of the palm's skin with them. Then each finger closes joint by joint until it touches the part: its
+joints together in a fist's proportions until a link touches, then the joints past that link,
+out to the tip. The thumb's root swings out of the palm, as far as the landmark has it (60° at the
+heel, 35° mid-palm, 25° at the base of the fingers, so it lies round the bar rather than standing
+off it) or an entry's `grip.swing`, and its other joints bend about the bar until the thumb touches
+it or, wrapped round a bar under 40 mm, the index and middle fingers where they come round it. It runs on every frame: the stage places the kit for the arms as they are and the hand
+closes on the part where it is, along its own line, in its pieces (a sleeve and the bar under it).
+Bone offsets still turn the fingers on top. The research's wrist angles (5–10° of extension for a
+press, the upright row's flexion) are an open question for the owner; until then a wrist stays
+straight unless the pose sets it (Wrists and grip turn, above).
+
+The **contact** check fails a hand that stands off its part, or sinks into it, by more than 2 mm on
+any frame: each finger and the thumb within 2 mm of its surface, and no part of the hand more than
+2 mm inside it; the palm, measured on a grid over its large triangles, within 3 mm either way. In the studio a hand's close-up marks in red where it misses on the frame shown.
+The hands check also fails fingers folded into one another (their joints under 1.3 cm apart).
 
 `top.wrist` and `bottom.wrist`, [flexion toward the palm, deviation toward the index finger] in
 degrees, set the wrist from straight, and then win: the elbow goes where the pole points it (one
@@ -163,6 +199,10 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
 - **`grip.rotate`** (any pose with hands) twists the forearms, in degrees: 0 overhand, 90 neutral
   (palms toward each other), 180 underhand (palms toward the face). The default is 0; the
   close-grip pulldown is 180.
+- **`grip.sits`** and **`grip.thumb`** (any pose with hands) say where the bar sits in the hand and
+  what the thumb does, where the motion's default doesn't suit; **`grip.swing`**, how far a wrapped
+  thumb's root swings out of the palm, in degrees from 0 to 90, where the landmark's doesn't lay
+  it round the bar (the curl's 40°, the squats' 50° and 55°) (Grips, above).
 - **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
   the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without
   one takes its motion's default (`tempo.mjs`). The bake writes it into `mannequins.json`, and the
@@ -384,6 +424,8 @@ bake (nor does anything else in that bake):
 - **Joints:** knees and elbows bend no more than 155°, a knee turns no more than 60° from the hips'
   front, a hip flexes no more than 140° or extends past 30°, the head turns no more than 60° from
   the trunk, and the ankle stays between 55° and 160° from shin to foot.
+- **Contact:** every finger and the thumb of a hand on a bar or a handle meet its surface within
+  2 mm, and no part of the hand is more than 2 mm inside it; the palm within 3 mm (Grips, above).
 - **Trace:** every traced angle is within 10° of its trace. Contacts come first (the bar over the
   feet, the hands on the bar), so a pose can drift from its trace; past 10° it fails.
 
@@ -489,7 +531,8 @@ listens on localhost only.
   keys or the mouse (drag, right-drag, wheel). `gh` `gl` close up on the left and the right hand
   where it holds and follow it through the rep, looking from the way (in front and outside, in
   front, outside, above, below, or behind and outside) that sees most of its fingertips with
-  nothing of the body or the kit shown in between, `gc` goes back to the clip's framing, and `gp`
+  nothing of the body or the kit shown in between, and mark in red where the hand misses its bar
+  past the contact check's 2 mm on the frame shown, `gc` goes back to the clip's framing, and `gp`
   hides the plates (every part in the plate tone) to see the hands on the bar; that is a view
   setting only. `:frame` saves the view as the clip's `camera` (an adjustable bench's
   `bench.cameras` at the angle shown) and re-bakes: the target, how much it shows, the turn and the
@@ -586,8 +629,10 @@ has now.
 - `poses.mjs`: the pose entries. `entries.mjs` resolves `like:` and reads traces.
 - `motions.mjs`: how a body moves through a rep, one function per motion.
 - `rig.mjs`: the rig. It measures the mannequin in its bind pose, aims each bone from it, and uses
-  two-bone IK for the legs and arms, a grip solve that lays the bar across the palm, and finger
-  curls round the bar.
+  two-bone IK for the legs and arms and a grip solve that lays the bar across the palm.
+- `grip.mjs`: how a hand meets what it holds: each motion's grip landmark and thumb, the hand's
+  skin, the seat of a bar on the palm, the fingers and the thumb closed joint by joint, and the
+  measure the contact check takes.
 - `kit.mjs`: the generic equipment the library uses, each kit built from its recipe, and the floor
   shadow. `recipe.mjs`: the recipe format. `recipes/`: a recipe per kit. `parts.mjs`: the part
   library, built in code from extruded, turned and swept shapes, and its five tones.

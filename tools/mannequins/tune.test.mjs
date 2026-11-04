@@ -8,6 +8,7 @@ import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, 
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
+import { holdOf } from './grip.mjs';
 
 const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
 
@@ -15,7 +16,7 @@ test('the bench press offers its own numbers, points one element at a time, and 
   const t = byPath(tunables(prepare('barbell_bench_press')));
   assert.equal(t['grip.width'].value, 0.4);
   assert.equal(t['feet.z'].value, 0.445);
-  assert.equal(t['top.bar.0'].value, 1.1);
+  assert.equal(t['top.bar.0'].value, 1.1265);
   assert.equal(t['body.arch.1'].value, -16.5);
   assert.ok(!Object.keys(t).some((p) => p.startsWith('camera') || p.startsWith('shadow')));
   // Metres, degrees and ratios get ranges that suit them.
@@ -47,7 +48,7 @@ test('tuned values go into a copy, arrays whole, and the entry is untouched', ()
   assert.deepEqual(tuned.top.bar, [1.2, -0.2]);
   assert.equal(tuned.grip.elbowZ, 0.5);
   assert.equal(entry.grip.width, 0.4);
-  assert.deepEqual(entry.top.bar, [1.1, -0.23]);
+  assert.deepEqual(entry.top.bar, [1.1265, -0.2]);
 });
 
 // The studio's h and l step a number by one step, H and L by a tenth of one (owner, 2026-11-03).
@@ -106,7 +107,7 @@ test('a wrist slider moved on a pose that sets no wrist puts the whole wrist in,
   assert.deepEqual(withTuned(entry, { 'top.wrist': [0, -15] }, 'top.wrist.1', 0), {});
   // Any other number, whole or in a point, goes in the same way.
   assert.deepEqual(withTuned(entry, {}, 'grip.width', 0.3), { 'grip.width': 0.3 });
-  assert.deepEqual(withTuned(entry, {}, 'top.bar.0', 1.2), { 'top.bar': [1.2, -0.23] });
+  assert.deepEqual(withTuned(entry, {}, 'top.bar.0', 1.2), { 'top.bar': [1.2, -0.2] });
 });
 
 // The owner, #127: the wrist sliders say in words which way they bend the hand, and which sign is which.
@@ -166,4 +167,17 @@ test('a bone\'s offset is a number per axis, in degrees under Bones, and a bone 
   // Reset, an axis goes back to what the entry has: none for a bone it doesn't turn.
   assert.equal(baseAt(entry, 'bottom.offsets.Head.0'), 10);
   assert.equal(baseAt(entry, 'top.offsets.clavicle_l.1'), 0);
+});
+
+// #160's worker: the thumb's swing read 50000.0 mm, and a step off a whole five wouldn't pose.
+test('a thumb\'s swing is an angle: a degree a step, 0 to 90, and every value the slider reaches poses', () => {
+  const entry = prepare('barbell_squat');
+  const swing = byPath(tunables(entry))['grip.swing'];
+  assert.deepEqual(swing, { path: 'grip.swing', value: 50, min: 0, max: 90, step: 1, unit: '°' });
+  const held = (v) => holdOf(applyTuned(entry, { 'grip.swing': v })).swing;
+  assert.equal(held(51), 51);
+  assert.equal(held(0), 0);
+  assert.equal(held(90), 90);
+  // A drag or a fine step lands between degrees: the hand takes the nearest whole one.
+  assert.equal(held(52.37), 52);
 });

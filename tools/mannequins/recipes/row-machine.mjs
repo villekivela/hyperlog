@@ -16,7 +16,7 @@ export default recipe({
   contacts: [{ body: 'levers', point: 'handles', landmark: 'hands' }],
   fit: [{ sets: 'chest', rule: 'the chest on the pad, the arms long to the handles' }],
   build({ seat = [0.5, 0], chest = { up: 0.4, front: 0.1 } } = {}, M) {
-    const out = 0.3;
+    const out = 0.33;
     const pad_ = chestPad(M, chest);
     const arms = levers(M, { out, horn: { length: 0.45, turn: -100 } });
     const column = stretchedTube(0.08, M.frame);
