@@ -1476,19 +1476,26 @@ gallery (Technique videos).
     the prescription could replace the default later; that is not part of this.
   - **Adjustable-bench exercises:** the bench sits at this session's bench angle, otherwise last
     time's, otherwise the exercise's typical angle. The pose comes from the nearest of the clips
-    baked at 15° steps from 0° to 75°, and the bench is turned to the exact angle.
+    baked at 15° steps from 0° to 75° and at 85°, and the bench is turned to the exact angle.
     - **Decisions** (#125): every exercise the library gives an **Adjustable bench** is baked at
-      the six angles, one clip each, and its entry in `mannequins.json` lists them with the typical
+      the seven angles (a decline at its one setting), one clip each, and its entry in `mannequins.json` lists them with the typical
       angle and the hinge the backrest turns about; a pose of such an exercise without a typical
       angle doesn't bake. The nearest clip is nearest in degrees among the angles the index lists
-      (the 15° step puts any angle up to 75° at most 7° from one). The bench's backrest is a part of
+      (the steps put any angle up to 85° at most 7° from one). The bench's backrest is a part of
       its own in every clip; the phone stands it at the exact angle about the hinge (the clip's own
-      angle swapped for it), and the body keeps the clip's pose. An angle past 75° (the bench angle goes to 90°)
-      plays the 75° clip with the backrest turned to the exact angle. When the angle changes in the
+      angle swapped for it), and the body keeps the clip's pose. An angle past 85° (the bench angle goes to 90°)
+      plays the 85° clip with the backrest turned to the exact angle. When the angle changes in the
       session the sheet follows it: the bench turns at once, and a different clip loads only when
       the nearest one changes. The gallery has no session, so it shows the typical angle. The
-      incline DB press's typical angle is 30°, and its framing moves steadily from the lying 0° to
-      the upright 75°.
+      incline DB press's typical angle is 45°, a bit upright (owner, 2026-11-04, #195), and its
+      framing moves steadily from the lying 0° to the upright 75°, where it holds to 85°.
+    - **The bench goes to 85°** (owner, 2026-11-04, #195): the back pad's range and the top clip are
+      85°, as the reference bench's page says; its maker's chart stops at 78°
+      (`tools/mannequins/refs/bench/ref.md`). The **foot catch** is an option of the bench, shown only in decline movements, which
+      stand and bake at the decline setting, the back pad at 15° with the lifter reversed. The seat
+      tilts from -15° to 40° in the studio and a pose can set it, flat by default; the phone turns
+      only the back pad, so a seat angle isn't logged. In the studio both pads snap to the holes
+      that set them; the clips stay at their baked angles.
     - **One pose for every angle** (owner, 2026-11-02, #125): an adjustable-bench pose is written in
       the backrest's frame (the hips off the pad's face and down it from the seat-back corner, the
       head along the pad, the hands measured from the shoulders in the trunk's frame), so one set of
@@ -1564,19 +1571,21 @@ gallery (Technique videos).
     Rows and pulls run the bar straight up and down; Tune places the bar at the bottom of a
     deadlift, a row and a bridge, and arches a hip thrust's back (owner, via the coordinator,
     2026-11-03).
-    The incline and decline presses (an adjustable bench is six clips, and the bench has
-    no angle below flat) and the barbell lunge (a split stance) wait for a later batch.
+    The incline and decline presses (an adjustable bench is seven clips, and a decline
+    needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
       selector pin; pulley wheels in housings with the cable over them; and shaped bars and handles
-      with grips. Nothing that can't be seen at phone size (bolts, seams, gussets). The lat
+      with grips. Nothing that can't be seen at phone size (bolts, seams, gussets), but for the
+      bench's base, whose tubes meet on sharp mitres with a seam and whose feet have end gussets, as
+      approved in the studio (owner, 2026-11-04, #195). The lat
       pulldown's tower is the bar every other kit meets (owner, 2026-11-03): the standing tower
       has its low pulley in a housing on the floor; the chest press has a capped column braced to
       its boom, the levers' pivot in housings, capped grips and a back pad braced to the column; the
       leg press stands on a framed base, its rails on posts, uprights and braces, its sled a
-      carriage on rollers under a foot plate with a heel lip; and the benches roll on front wheels,
-      lift by a rear handle, and the adjustable one's back pad rests on a strut in a ladder. The
+      carriage on rollers under a foot plate with a heel lip; and the benches roll on wheels at the head
+      end, lift by a handle under the seat, and the adjustable one's pads are set by arcs of holes. The
       starter batch's machines meet it too: rubber caps on every floor rail and pop-pins on the
       adjustable seats; the calf raise's and preacher's hubs on posts and mounts, nothing hanging
       in the air; the hack squat's carriage on bearings; the row's and pulldown's posts on floor

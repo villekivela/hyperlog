@@ -45,18 +45,18 @@ export const POSES = {
     // On the back along the bench, the head toward -z, the thighs near flat, the feet on the floor
     // back toward the hips. A slight arch: the upper back and the hips on the pad, the chest up and
     // a gap under the lower back. The head lies back on the pad.
-    body: { hip: [0.55, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
+    body: { hip: [0.567, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
     // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
     // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.1265, -0.2] },
-    bottom: { bar: [0.71, -0.09] },
+    top: { bar: [1.1435, -0.2] },
+    bottom: { bar: [0.727, -0.09] },
     grip: { width: 0.4, elbows: 0.9 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
 
-  // Pressed on an adjustable bench, baked at 0° to 75° (README, Adjustable-bench poses): the body
+  // Pressed on an adjustable bench, baked at 0° to 85° (README, Adjustable-bench poses): the body
   // follows the pad, so one entry fits every angle. From locked out over the shoulders, the arms
   // straight, down to the chest, the forearms upright.
   db_incline_press: {
@@ -65,13 +65,13 @@ export const POSES = {
     kit: { dumbbells: {}, bench: { hinge: -0.02 } },
     // The stage's framing at the lying and the upright ends; the angles between move steadily from one to the other.
     bench: {
-      typical: 30,
+      typical: 45,
       // Settings tuned per angle, `{ path: { angle: value } }`, and interpolated between (README, Adjustable-bench
       // poses). The top.over pair keeps the arms locking out vertically (0.64 up, 0.09 forward of the shoulders),
       // which in the trunk's frame is a different [out, up the trunk] at each angle.
       perAngle: {
-        'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167 },
-        'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624 },
+        'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167, 85: 0.056 },
+        'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624, 85: 0.643 },
         'bottom.chest.1': { 0: 0.0271, 60: -0.0878, 75: -0.1487 },
         'bottom.tilt': { 0: 3.3019 },
         'bottom.rotate': { 0: 18.6834 },
@@ -162,8 +162,8 @@ export const POSES = {
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides.
   close_grip_bench_press: {
     like: 'barbell_bench_press',
-    top: { bar: [1.13, -0.21], wrist: [0, 27.7209] },
-    bottom: { bar: [0.7347, -0.063], wrist: [-53.1261, 18.2864], rotate: 17.6573 },
+    top: { bar: [1.147, -0.21], wrist: [0, 27.7209] },
+    bottom: { bar: [0.7517, -0.063], wrist: [-53.1261, 18.2864], rotate: 17.6573 },
     grip: { width: 0.3005, elbows: 0.2191 },
   },
 
@@ -393,9 +393,9 @@ export const POSES = {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
-    body: { hip: [0.53, 0.17], trunk: -10 },
-    top: { hand: [0.2882, 1.627, 0.2743] },
-    bottom: { hand: [0.32, 1.13, 0.18] },
+    body: { hip: [0.547, 0.19], trunk: -10 },
+    top: { hand: [0.2882, 1.644, 0.2943] },
+    bottom: { hand: [0.32, 1.147, 0.2] },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
     grip: { pole: [1, -1, 0.1], sits: 'heel' },
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },

@@ -4,7 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from '../entries.mjs';
 import { buildStage } from '../stage.mjs';
-import { jointsOf, stepJoint, typedJoint, limitOf, showJoint, scrubAll, inUnits, limitsOf, stepsOf, statusOf } from './joints.mjs';
+import { jointsOf, numberRows, settled, showAlone, stepJoint, withoutBack, typedJoint, limitOf, showJoint, scrubAll, inUnits, limitsOf, stepsOf, statusOf } from './joints.mjs';
+import { buildKit } from '../kit.mjs';
 
 const rad = (d) => (d * Math.PI) / 180;
 const near = (a, b, why) => assert.ok(Math.abs(a - b) < 1e-9, `${why}: ${a}, not ${b}`);
@@ -76,4 +77,83 @@ test('the status line says where the joint is after every move, and which limit 
   assert.equal(statusOf(sled, 0.45), 'leg_press sled 450 mm, at its upper limit');
   assert.equal(statusOf(sled, stepJoint(sled, 0.45, -5)), 'leg_press sled 400 mm');
   assert.equal(statusOf(sled, 0), 'leg_press sled 0 mm, at its lower limit');
+});
+
+test('a kit is shown alone: the bench without the dumbbells its exercise holds', () => {
+  const { kits } = buildKit(prepare('db_incline_press'));
+  assert.deepEqual(Object.keys(kits).sort(), ['bench', 'dumbbells']);
+  showAlone(kits, 'bench');
+  assert.equal(kits.bench.group.visible, true);
+  assert.equal(kits.dumbbells.group.visible, false);
+});
+
+test('a joint\'s row has no number behind it: repainting the numbers passes it by', () => {
+  const number = { dataset: { path: 'grip.width' } };
+  const joint = { dataset: { joint: 'bench.back' } };
+  const width = { path: 'grip.width', value: 0.4 };
+  assert.deepEqual(numberRows([joint], []), []);
+  assert.deepEqual(numberRows([number, joint], [width]), [[number, width]]);
+});
+
+test('a scrubbed bench holds still through the studio\'s frames, its pads where they are set', async () => {
+  const stage = await posed('db_incline_press');
+  const { bench } = stage.kit.kits;
+  const nodes = { back: bench.bodies.back[0], seat: bench.bodies.seat[0] };
+  const turned = (node) => node.quaternion.clone();
+  const frame = (d) => { stage.pose(d); scrubAll(stage.kit.kits, { 'bench.back': rad(60), 'bench.seat': rad(20) }); };
+  frame(0);
+  const held = { back: turned(nodes.back), seat: turned(nodes.seat) };
+  for (let f = 0; f < 6; f++) frame(f / 6);
+  // acos near 1 leaves rounding of about 1e-8 where a spin would show a quarter turn.
+  for (const body of ['back', 'seat']) assert.ok(turned(nodes[body]).angleTo(held[body]) < 1e-6, `${body} turned on`);
+  near(bench.joints.back.value, rad(60), 'the back');
+  near(bench.joints.seat.value, rad(20), 'the seat');
+});
+
+const benchRows = async () => {
+  const rows = jointsOf((await posed('db_incline_press')).kit.kits);
+  return { back: rows.find((r) => r.body === 'back'), seat: rows.find((r) => r.body === 'seat') };
+};
+const degrees = (list) => list.map((v) => Math.round((v * 180) / Math.PI));
+
+test('the bench\'s pads have the settings its holes give them', async () => {
+  const { back, seat } = await benchRows();
+  assert.deepEqual(degrees(back.settings), [0, 8, 18, 28, 38, 48, 58, 68, 78, 85]);
+  assert.deepEqual(degrees(seat.settings), [-15, 0, 10, 20, 30, 40]);
+});
+
+test('a dragged pad settles on the nearest hole', async () => {
+  const { back, seat } = await benchRows();
+  near(settled(back, rad(31)), rad(28), 'the back, down to 28');
+  near(settled(back, rad(34)), rad(38), 'the back, up to 38');
+  near(settled(seat, rad(-9)), rad(-15), 'the seat, down to -15');
+  near(settled(seat, rad(4)), 0, 'the seat, to flat');
+});
+
+test('a step moves a pad a hole at a time, and stops at the last', async () => {
+  const { back, seat } = await benchRows();
+  near(stepJoint(seat, 0, 1), rad(10), 'up a hole');
+  near(stepJoint(seat, 0, -1), rad(-15), 'down a hole');
+  near(stepJoint(seat, 0, 2), rad(20), 'two holes');
+  near(stepJoint(back, rad(78), 1), rad(85), 'to the top');
+  near(stepJoint(back, rad(85), 3), rad(85), 'no further');
+  near(stepJoint(back, 0, 1, true), rad(8), 'a fine step is still a hole');
+  assert.deepEqual(stepsOf(back), ['a hole', 'a hole']);
+});
+
+test('a typed angle lands on the nearest hole', async () => {
+  const { seat } = await benchRows();
+  near(typedJoint(seat, '23', 0), rad(20), 'typed');
+  near(typedJoint(seat, '+7', rad(20)), rad(30), 'moved');
+  near(typedJoint(seat, '500', 0), rad(40), 'past its limit');
+});
+
+test('a joint with no holes stays free', async () => {
+  const [lever] = jointsOf((await posed('leg_extension')).kit.kits);
+  assert.equal(lever.settings, undefined);
+  near(settled(lever, rad(31.5)), rad(31.5), 'where it is put');
+});
+
+test('stepping the bench angle gives the back pad back, and keeps a seat set by hand', () => {
+  assert.deepEqual(withoutBack({ 'bench.back': 1, 'bench.seat': 0.3 }), { 'bench.seat': 0.3 });
 });

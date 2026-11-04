@@ -744,17 +744,17 @@
       ]
     },
     "db_incline_press": {
-      "clip": "db_incline_press_30.glb",
+      "clip": "db_incline_press_45.glb",
       "equipment": "dumbbell",
       "camera": {
         "target": [
           0,
-          0.868,
-          0.03
+          0.912,
+          0.02
         ],
-        "halfHeight": 1.076,
-        "azimuth": 61.2,
-        "elevation": 17.2
+        "halfHeight": 1.124,
+        "azimuth": 62.8,
+        "elevation": 14.8
       },
       "tempo": {
         "lowering": 2,
@@ -768,9 +768,9 @@
         "kit_dumbbells.bin"
       ],
       "bench": {
-        "typical": 30,
+        "typical": 45,
         "hinge": [
-          0.4075,
+          0.4,
           -0.02
         ],
         "clips": {
@@ -841,6 +841,19 @@
           },
           "75": {
             "clip": "db_incline_press_75.glb",
+            "camera": {
+              "target": [
+                0,
+                1,
+                0
+              ],
+              "halfHeight": 1.22,
+              "azimuth": 66,
+              "elevation": 10
+            }
+          },
+          "85": {
+            "clip": "db_incline_press_85.glb",
             "camera": {
               "target": [
                 0,

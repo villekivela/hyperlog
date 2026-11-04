@@ -46,6 +46,8 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
 
 ## Not here
 
+- `bench` is built, so it isn't in the list above, but it has a reference of its own, the adjustable
+  bench and its decline kit ([ref](bench/ref.md)) (#195).
 - `plate` (5 exercises) needs no reference: it is a plate in the hands. Use a 450 mm plate, the IWF
   bumper size, which Rogue's
   [Echo bumpers](https://www.roguefitness.com/eu/nl/rogue-lb-echo-bumper-plates-with-white-text)

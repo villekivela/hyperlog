@@ -101,8 +101,8 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   assert.equal(Buffer.from(await glb.arrayBuffer()).subarray(0, 4).toString(), 'glTF');
   // An adjustable bench comes at its typical angle, with a clip for each angle.
   const press = await get('/api/item/exercise/db_incline_press');
-  assert.equal(press.entry.bench.angle, 30);
-  assert.deepEqual(Object.keys(press.clip.angles), ['0', '15', '30', '45', '60', '75']);
+  assert.equal(press.entry.bench.angle, 45);
+  assert.deepEqual(Object.keys(press.clip.angles), ['0', '15', '30', '45', '60', '75', '85']);
   // A kit comes as the exercise that moves most of it sets it up, the first of those by id.
   const kit = await get('/api/item/kit/leg_extension');
   assert.equal(kit.uses, 'leg_extension');

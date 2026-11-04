@@ -476,11 +476,12 @@ export const MOTIONS = {
   dumbbell_press(e, s, L) {
     const angle = e.bench.angle;
     const a = rad(angle);
-    const { height, z: hingeZ } = benchHinge(e.kit.bench);
+    const { height, y: hingeY, z: hingeZ } = benchHinge(e.kit.bench);
     const lean = rad(angle - 90 + (e.body.lean ?? 0));
     // The corner's bisector runs (cos A/2, sin A/2) over [y, z]: `sit` off the face along it is
-    // sit / cos(A/2) long. Down the pad from the corner is [-sin A, cos A].
-    const hipC = V(0, height + e.body.sit - e.body.seat * Math.sin(a), hingeZ + e.body.sit * Math.tan(a / 2) + e.body.seat * Math.cos(a));
+    // sit / cos(A/2) long. Down the pad from the corner is [-sin A, cos A]. The hinge is on the pad's
+    // underside, so its face swings out by the pad's thickness along the same line.
+    const hipC = V(0, height + e.body.sit - e.body.seat * Math.sin(a), hingeZ + (e.body.sit + height - hingeY) * Math.tan(a / 2) + e.body.seat * Math.cos(a));
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);

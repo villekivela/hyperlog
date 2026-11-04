@@ -9,8 +9,8 @@ export const FIXTURE = {
     // The arms lock out vertically, 0.64 up and 0.09 forward of the shoulders: in the trunk's frame
     // a different [out, up the trunk] at each angle.
     perAngle: {
-      'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167 },
-      'top.over.1': { 0: 0, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624 },
+      'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167, 85: 0.056 },
+      'top.over.1': { 0: 0, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624, 85: 0.643 },
     },
     cameras: {
       0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
