@@ -7,7 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { CLIPS } from './bake.mjs';
-import { judge, markOf, readSpec, reviewMovement, specified } from './movement.mjs';
+import { judge, markOf, readSpec, reviewMovement, specified, waitsFor } from './movement.mjs';
+import { clipFile, numbersOf } from './numbers.mjs';
 import { readIndex } from './review.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -112,13 +113,15 @@ test('a line marked open keeps its verdict and says why', () => {
 });
 
 // The exact lines are automatic checks: every clip here holds to its spec. A spec's lift that isn't
-// baked yet waits for its clip. A line marked `open` is a known failure, so it must still fail: one
+// baked yet waits for its clip, and a cold spec never runs here, so CI can't show a worker what it
+// says. A line marked `open` is a known failure, so it must still fail: one
 // that passes has been fixed, and its mark should go.
 for (const id of await specified()) {
   test(`${id} moves as its spec says`, async (t) => {
     const { clips } = await readIndex(CLIPS);
-    if (!clips[id]) return t.skip('no clip yet');
     const spec = await readSpec(id);
+    const waiting = waitsFor(spec, id, clips);
+    if (waiting) return t.skip(waiting);
     const verdicts = await reviewMovement(id, CLIPS, spec);
     assert.deepEqual(verdicts.filter((v) => v.ok === false && !v.open).map((v) => `${v.says}: ${v.measured}`), []);
     assert.deepEqual(verdicts.filter((v) => v.open && v.ok).map((v) => v.says), [], 'passes now: take its open mark off');
@@ -160,4 +163,54 @@ test('a star in a place line\'s from follows the side it is measuring', () => {
   const found = one({ place: 'hand_*.at', from: 'shoulder_*.at', axis: 'z', at: 'top', range: [-0.1, 0.1] }, rows);
   assert.equal(found.ok, false);
   assert.equal(found.measured, 'hand_r.at: 50.0 cm along z at the top');
+});
+
+test('a moves line with ends takes them in either order', () => {
+  const line = { moves: 'knee_l', ends: [[160, 180], [70, 100]] };
+  assert.equal(one(line, frames('knee_l', [170, 120, 90])).ok, true);
+  assert.equal(one(line, frames('knee_l', [90, 120, 170])).ok, true);
+  assert.equal(one(line, frames('knee_l', [170, 120, 150])).ok, false);
+});
+
+test('a place line at either end passes on the end that fits', () => {
+  const rows = [{ t: 0, 'hand_l.at': [0, 1.6, 0], 'head.at': [0, 1.5, 0] }, { t: 1, 'hand_l.at': [0, 1, 0], 'head.at': [0, 1.5, 0] }];
+  const found = one({ place: 'hand_l.at', from: 'head.at', axis: 'y', at: 'either', range: [0, 0.2] }, rows);
+  assert.equal(found.ok, true);
+  assert.equal(found.measured, '10.0 cm along y at the top');
+  const lower = one({ place: 'hand_l.at', from: 'head.at', axis: 'y', at: 'either', range: [-0.6, -0.4] }, rows);
+  assert.equal(lower.ok, true);
+  assert.equal(lower.measured, '-50.0 cm along y at the bottom');
+  assert.equal(one({ place: 'hand_l.at', from: 'head.at', axis: 'y', at: 'either', range: [0.3, 0.4] }, rows).ok, false);
+});
+
+test('a travels line fails a point that doesn\'t get far enough from where it started', () => {
+  const rows = frames('ankle_l.at', [[0, 0, 0], [0, 0.3, 0.4], [0, 0.1, 0]]);
+  const found = one({ travels: 'ankle_l.at', least: 0.4 }, rows);
+  assert.equal(found.ok, true);
+  assert.equal(found.measured, '50.0 cm at frame 1');
+  assert.equal(one({ travels: 'ankle_l.at', least: 0.6 }, rows).ok, false);
+});
+
+test('a spec\'s works names the side that moves further, whichever it is', () => {
+  const rows = [{ t: 0, 'ankle_l.at': [0, 0, 0], 'ankle_r.at': [0, 0, 0], knee_l: 170, knee_r: 90 }, { t: 1, 'ankle_l.at': [0, 0, 0.01], 'ankle_r.at': [0, 0.5, 0], knee_l: 170, knee_r: 170 }];
+  const spec = { works: 'ankle', lines: [{ says: 'it kicks', moves: 'knee_{work}', top: [80, 100], bottom: [160, 180] }, { says: 'it stands', still: 'ankle_{rest}.at', within: 0.02 }] };
+  assert.deepEqual(judge(spec, rows).map((v) => v.ok), [true, true]);
+});
+
+test('every spec reads numbers a clip has, so a cold spec can\'t wait for its clip to show a typo', async () => {
+  const rows = await numbersOf(await clipFile('barbell_squat', CLIPS));
+  for (const id of await specified()) {
+    const spec = await readSpec(id);
+    // The dumbbell and the barbell a warm spec reads aren't in every clip.
+    const body = { ...spec, lines: spec.lines.filter((l) => !/dumbbell|barbell/.test(JSON.stringify(l))) };
+    const missing = judge(body, rows).filter((v) => /^no |: no /.test(v.measured));
+    assert.deepEqual(missing.map((v) => `${id}: ${v.measured}`), []);
+  }
+});
+
+test('a cold spec waits even with its clip baked, so CI can\'t show the worker its lines', () => {
+  const clips = { db_bench_press: {} };
+  assert.equal(waitsFor({ cold: 'the cold test' }, 'db_bench_press', clips), 'a cold spec judges nothing here');
+  assert.equal(waitsFor({}, 'db_bench_press', clips), null);
+  assert.equal(waitsFor({}, 'cable_crunch', clips), 'no clip yet');
 });

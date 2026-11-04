@@ -1,0 +1,96 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "No library video. Searched reference: NASM's eTCBSFlCJ_s, so weaker than the others",
+    "exercises.json has no note",
+    "docs/research/grip.md: a rope, mid-palm, the fist just above the end stop"
+  ],
+  "lines": [
+    {
+      "says": "the arms go from near straight to well bent",
+      "moves": "elbow_*",
+      "ends": [
+        [
+          145,
+          180
+        ],
+        [
+          40,
+          105
+        ]
+      ]
+    },
+    {
+      "says": "at the pulled end the elbows stand about shoulder height or above",
+      "place": "elbow_*.at",
+      "from": "shoulder_*.at",
+      "axis": "y",
+      "at": "either",
+      "range": [
+        -0.08,
+        0.15
+      ]
+    },
+    {
+      "says": "at the pulled end the hands are up by the head",
+      "place": "hand_*.at",
+      "from": "head.at",
+      "axis": "y",
+      "at": "either",
+      "range": [
+        -0.12,
+        0.2
+      ]
+    },
+    {
+      "says": "the hands make a real pull",
+      "travels": "hand_*.at",
+      "least": 0.25
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.03
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the trunk stays still: no leaning back to pull",
+      "still": "trunk",
+      "within": 8
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_*",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "at the pulled end the forearms stand up, the fists beside the ears, the elbows out wide",
+      "look": "finish",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the rope comes to the face and parts around it, not to the chest or the neck",
+      "look": "rope",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "at the long end the arms reach up toward a pulley at about head height or above",
+      "look": "reach",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}

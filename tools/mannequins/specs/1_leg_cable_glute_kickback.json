@@ -1,0 +1,102 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "technique video 3ryh7PNhz3E from 7:23",
+    "exercises.json: a cuff on the ankle, lean forward a little, kick back and slightly out, without arching the lower back",
+    "docs/research/grip.md: an ankle cuff, a free hand steadying on the column"
+  ],
+  "works": "ankle",
+  "lines": [
+    {
+      "says": "the hip opens from under the body until the thigh runs about in line with the trunk",
+      "moves": "hip_{work}",
+      "ends": [
+        [
+          95,
+          145
+        ],
+        [
+          150,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the kicking knee goes from bent to about straight",
+      "moves": "knee_{work}",
+      "ends": [
+        [
+          80,
+          150
+        ],
+        [
+          140,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the foot makes a real kick",
+      "travels": "ankle_{work}.at",
+      "least": 0.35
+    },
+    {
+      "says": "the standing foot stays planted",
+      "still": "ankle_{rest}.at",
+      "within": 0.01
+    },
+    {
+      "says": "the hands stay put on the column",
+      "still": "hand_*.at",
+      "within": 0.02
+    },
+    {
+      "says": "the trunk leans forward through the whole rep",
+      "moves": "trunk",
+      "ends": [
+        [
+          15,
+          75
+        ],
+        [
+          15,
+          75
+        ]
+      ]
+    },
+    {
+      "says": "the trunk holds its lean: the leg moves, not the back",
+      "still": "trunk",
+      "within": 10
+    },
+    {
+      "says": "the hips stay about where they are",
+      "still": "pelvis.at",
+      "within": 0.08
+    },
+    {
+      "says": "the leg kicks back and slightly out, not straight back and not out to the side",
+      "look": "direction",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "at the kick the lower back stays flat, not arched",
+      "look": "back",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the cable runs from a low pulley to a cuff on the ankle",
+      "look": "cuff",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}

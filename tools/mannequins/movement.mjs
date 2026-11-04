@@ -50,7 +50,9 @@ function offLine(points) {
 const KINDS = {
   moves(line, name, values) {
     const [top, bottom] = [values[0], values.at(-1)];
-    return { over: Math.max(outside(top, line.top), outside(bottom, line.bottom)), measured: `${shown(name, top)} at the top, ${shown(name, bottom)} at the bottom` };
+    const fit = (a, b) => Math.max(outside(top, a), outside(bottom, b));
+    const over = line.ends ? Math.min(fit(...line.ends), fit(line.ends[1], line.ends[0])) : fit(line.top, line.bottom);
+    return { over, measured: `${shown(name, top)} at the top, ${shown(name, bottom)} at the bottom` };
   },
   still(line, name, values) {
     const moved = values.map((v) => (isPoint(name) ? gap(v, values[0]) : Math.abs(v - values[0])));
@@ -59,6 +61,10 @@ const KINDS = {
   never(line, name, values) {
     const sizes = line.perFrame ? values.map((v, i) => (i ? Math.abs(v - values[i - 1]) : 0)) : values.map(Math.abs);
     return worstOf(name, sizes, line.past);
+  },
+  travels(line, name, values) {
+    const { frame, value } = furthest(values.map((v) => gap(v, values[0])));
+    return { over: line.least - value, measured: `${shown(name, value)} at frame ${frame}` };
   },
   reaches(line, name, values) {
     const { frame, value } = furthest(values.map(Math.abs));
@@ -73,15 +79,20 @@ const KINDS = {
   },
   place(line, name, values, frames) {
     const axis = 'xyz'.indexOf(line.axis);
-    const frame = line.at === 'top' ? 0 : frames.length - 1;
     const from = line.from.replace('*', /_([lr])\b/.exec(name)?.[1]);
-    const distance = values[frame][axis] - frames[frame][from][axis];
-    return { over: outside(distance, line.range), measured: `${(distance * 100).toFixed(1)} cm along ${line.axis} at the ${line.at}` };
+    const at = (end) => {
+      const frame = end === 'top' ? 0 : frames.length - 1;
+      const distance = values[frame][axis] - frames[frame][from][axis];
+      return { over: outside(distance, line.range), measured: `${(distance * 100).toFixed(1)} cm along ${line.axis} at the ${end}` };
+    };
+    if (line.at !== 'either') return at(line.at);
+    const [top, bottom] = [at('top'), at('bottom')];
+    return bottom.over < top.over ? bottom : top;
   },
 };
 
 /** What each kind of line reads: a point, a number, or either. */
-const READS = { path: 'point', place: 'point', still: 'either' };
+const READS = { path: 'point', place: 'point', travels: 'point', still: 'either' };
 
 const kindOf = (line) => {
   const kinds = [...Object.keys(KINDS), 'look'];
@@ -114,8 +125,22 @@ function judgeLine(line, frames) {
   return { says: line.says, kind, ok: worst.over <= 0, over: worst.over, measured, open: line.open };
 }
 
+/** The side of point `name` that travels further through the rep, as `{ work, rest }`. */
+function sidesOf(name, frames) {
+  const travel = (k) => Math.max(...frames.map((f) => gap(f[`${name}_${k}.at`], frames[0][`${name}_${k}.at`])));
+  return travel('l') >= travel('r') ? { work: 'l', rest: 'r' } : { work: 'r', rest: 'l' };
+}
+
+/** `line` with `{work}` and `{rest}` put as the sides `spec.works` found on `frames`. */
+function onSides(line, sides) {
+  return JSON.parse(JSON.stringify(line).replace(/\{(work|rest)\}/g, (_, side) => sides[side]));
+}
+
 /** What each line of `spec` finds on `frames`: `ok` true or false, or null for a line that waits for eyes. */
-export const judge = (spec, frames) => spec.lines.map((line) => judgeLine(line, frames));
+export function judge(spec, frames) {
+  const sides = spec.works && sidesOf(spec.works, frames);
+  return spec.lines.map((line) => judgeLine(sides ? onSides(line, sides) : line, frames));
+}
 
 /** The exercises with a movement spec. */
 export async function specified() {
@@ -123,6 +148,12 @@ export async function specified() {
 }
 
 export const readSpec = async (id) => JSON.parse(await readFile(path.join(SPECS, `${id}.json`), 'utf8'));
+
+/** Why the test doesn't hold exercise `id` to `spec`, by the index's `clips`, or null when it does. */
+export function waitsFor(spec, id, clips) {
+  if (spec.cold) return 'a cold spec judges nothing here';
+  return clips[id] ? null : 'no clip yet';
+}
 
 /** Each line of exercise `id`'s spec, on every clip it has in `clips`: the worst clip's verdict, and which it was. */
 export async function reviewMovement(id, clips, spec) {

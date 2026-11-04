@@ -23,7 +23,8 @@ any failing line, and the exercise's typical angle.
 
 1. Take each exact line's result from `movement.mjs`. Don't re-judge it, and don't loosen a limit.
    `OPEN` is a known failure the spec marks: report it as it stands, with its note.
-2. Open both renders and judge each `look` line at the frames and the view it names. Say what you
+2. Open both renders and judge each `look` line at the frames and the view it names; `ends` is the
+   top and the bottom, whichever the line is about. Say what you
    see in the picture, in one sentence, before the verdict.
 3. Read the numbers for anything the spec doesn't cover but the pictures make you doubt, such as a
    joint that looks wrong, or a number that jumps. Report that as a doubt, with the frame.

@@ -1,0 +1,112 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "No library video. Searched reference: Rob Morgan's gcGNypjIQDo, high to low, so weaker than the others",
+    "exercises.json has no note",
+    "docs/research/grip.md: one handle, both hands round it, one over the other"
+  ],
+  "lines": [
+    {
+      "says": "the arms stay long",
+      "moves": "elbow_*",
+      "ends": [
+        [
+          125,
+          180
+        ],
+        [
+          125,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the arms mostly hold their angle: the trunk turns them",
+      "still": "elbow_*",
+      "within": 30
+    },
+    {
+      "says": "the hands sweep a long way across the body",
+      "travels": "hand_*.at",
+      "least": 0.7
+    },
+    {
+      "says": "at the start the hands are together",
+      "place": "hand_l.at",
+      "from": "hand_r.at",
+      "axis": "y",
+      "at": "top",
+      "range": [
+        -0.12,
+        0.12
+      ]
+    },
+    {
+      "says": "at the finish the hands are together",
+      "place": "hand_l.at",
+      "from": "hand_r.at",
+      "axis": "y",
+      "at": "bottom",
+      "range": [
+        -0.12,
+        0.12
+      ]
+    },
+    {
+      "says": "the feet stay about where they are, a heel pivoting",
+      "still": "ankle_*.at",
+      "within": 0.05
+    },
+    {
+      "says": "the trunk stays about upright",
+      "moves": "trunk",
+      "ends": [
+        [
+          0,
+          40
+        ],
+        [
+          0,
+          40
+        ]
+      ]
+    },
+    {
+      "says": "the trunk doesn't fold: it turns",
+      "still": "trunk",
+      "within": 25
+    },
+    {
+      "says": "the hands sweep on a diagonal, from high over one shoulder to low past the opposite hip",
+      "look": "diagonal",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the trunk and the hips turn with the arms, not the arms alone",
+      "look": "turn",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the back heel lifts and the foot pivots as the body turns",
+      "look": "pivot",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "both hands hold the one handle, one over the other",
+      "look": "grip",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "technique video fGm-ef-4PVk from 10:44",
+    "exercises.json: back on the pad, sweep the handles together in front of the chest, let them pull the arms back for a deep stretch",
+    "docs/research/grip.md: a stirrup handle"
+  ],
+  "lines": [
+    {
+      "says": "the elbows stay softly bent",
+      "moves": "elbow_*",
+      "ends": [
+        [
+          110,
+          175
+        ],
+        [
+          110,
+          175
+        ]
+      ]
+    },
+    {
+      "says": "the elbows mostly hold their bend: a sweep, not a press",
+      "still": "elbow_*",
+      "within": 30
+    },
+    {
+      "says": "at the closed end the hands nearly meet",
+      "place": "hand_l.at",
+      "from": "hand_r.at",
+      "axis": "x",
+      "at": "either",
+      "range": [
+        -0.02,
+        0.3
+      ]
+    },
+    {
+      "says": "the hands make a wide sweep",
+      "travels": "hand_*.at",
+      "least": 0.35
+    },
+    {
+      "says": "the hips stay on the seat",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the head stays still",
+      "still": "head.at",
+      "within": 0.02
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the shoulders stay back on the pad",
+      "still": "shoulder_*.at",
+      "within": 0.04
+    },
+    {
+      "says": "the trunk leans back on the pad and stays there",
+      "moves": "trunk",
+      "ends": [
+        [
+          0,
+          35
+        ],
+        [
+          0,
+          35
+        ]
+      ]
+    },
+    {
+      "says": "the trunk doesn't rock",
+      "still": "trunk",
+      "within": 5
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_*",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "at the open end the arms are pulled back past the line of the chest, a deep stretch",
+      "look": "stretch",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the hands sweep at about chest height, not up to the face or down to the belly",
+      "look": "height",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the lifter sits on the bench with the back on the pad, the cables from behind",
+      "look": "setup",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}

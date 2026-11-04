@@ -756,21 +756,31 @@ the worker, a doubt goes to the owner, and a clean lift needs only a sample.
 
 | Kind | Example | Fails when |
 | --- | --- | --- |
-| `moves` | `{ "moves": "elbow_*", "top": [160, 180], "bottom": [30, 70] }` | the first or the last frame is out of its range |
+| `moves` | `{ "moves": "elbow_*", "top": [160, 180], "bottom": [30, 70] }` | the first or the last frame is out of its range; with `"ends": [[160, 180], [30, 70]]` in their place, the two ends fit the ranges in neither order |
 | `still` | `{ "still": "pelvis.at", "within": 0.01 }` | a point travels further from its first place, in metres, or a number further from its first value |
 | `path` | `{ "path": "hand_*.at", "within": 0.05 }` | a point strays further off the straight line between its ends |
 | `never` | `{ "never": "dumbbell_*.tilt", "past": 20 }` | a number passes the limit, either way; with `"perFrame": true`, its change between two frames does |
 | `reaches` | `{ "reaches": "wrist_*", "least": 10 }` | a number never gets that far |
+| `travels` | `{ "travels": "ankle_l.at", "least": 0.3 }` | a point never gets that far from its first place, in metres |
 | `even` | `{ "even": "roll_*", "within": 10 }` | a number strays further from the straight run between its ends: a rock or a twist mid-rep |
-| `place` | `{ "place": "hand_*.at", "from": "shoulder_*.at", "axis": "z", "at": "top", "range": [-0.06, 0.06] }` | a point stands out of its range from another, in metres along x, y or z, at the `top` or the `bottom` |
+| `place` | `{ "place": "hand_*.at", "from": "shoulder_*.at", "axis": "z", "at": "top", "range": [-0.06, 0.06] }` | a point stands out of its range from another, in metres along x, y or z, at the `top`, the `bottom` or `either` |
 | `look` | `{ "look": "forearms", "at": ["bottom"], "view": "front" }` | never here: it waits for the reviewer's eyes |
 
-`*` stands for each side, and the worse one counts. The top is the clip's first frame and the bottom
+`*` stands for each side, and the worse one counts. On a one-sided lift `"works": "ankle"` or
+`"hand"` finds the side that point travels further on, and `{work}` and `{rest}` in a line stand
+for it and the other. The top is the clip's first frame and the bottom
 its last, so a raise's top is the arm up and a pull's the arm long. Whatever a spec can say exactly
 is a line of an exact kind and not a `look`, because `movement.test.mjs` holds every clip to those
 lines. A lift whose clip isn't baked yet is skipped. `"open"` on a line marks a known failure and
 says what waits on whom. It reads `OPEN`, goes to the owner and not back to the worker, and doesn't
 fail the command, and the test fails once that line passes, so the mark can't outlive the fault.
+
+**A cold spec** is written before its lift is posed, by someone who hasn't seen a pose, to test the
+review itself (#197). It says `"cold": "<why>"`, so `movement.test.mjs` skips it and CI can't show
+the worker what it says; a test still runs its lines on another clip, to catch a mistyped number.
+It can't know which end the worker calls the top or which side works, so it uses `ends`, `either`
+and `works`. Don't read one while posing its lift, and don't tune a pose or a cold spec to the
+other. Take the mark off once the owner has compared the verdicts.
 
 `npm run numbers -- <clip>` prints every frame's numbers from a baked clip, any clip: a name such as
 `db_incline_press_45`, or an exercise's id. `--at <commit>` reads it as that commit baked it, so an
