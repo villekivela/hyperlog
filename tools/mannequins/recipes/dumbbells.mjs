@@ -1,5 +1,7 @@
-// A pair of hex dumbbells, one in each hand, the handle across the palm between collars. Free
-// bodies: the hands carry them.
+// Hex dumbbells, one in each hand, or with `hand` (1 the left, -1 the right) one in that hand alone,
+// the handle across the palm between collars. Free bodies: the hands carry them. With `steady`, each
+// is turned from whichever end of it lies nearest the handle's line at the top of the rep: turned
+// from the far end, a handle lying nearly end for end spins about itself from frame to frame.
 import { recipe, free } from '../recipe.mjs';
 import { along, group, hexGeometry, turnedPart } from '../parts.mjs';
 import { V, X } from '../rig.mjs';
@@ -9,7 +11,8 @@ export default recipe({
   bodies: { dumbbells: free() },
   contacts: [{ body: 'dumbbells', point: 'handles', landmark: 'hands' }],
   build(options, M) {
-    const bells = [-1, 1].map((s) => {
+    const sides = options.hand ? [options.hand] : [-1, 1];
+    const bells = sides.map((s) => {
       // Room for a whole hand between the collars.
       const parts = [along(0.016, -0.088, 0.088, M.metal, 16, { held: true })];
       for (const e of [-1, 1]) {
@@ -20,11 +23,12 @@ export default recipe({
     });
     return {
       parts: bells,
-      drive(P) {
-        [-1, 1].forEach((s, i) => {
+      drive(P, P0) {
+        sides.forEach((s, i) => {
           bells[i].position.copy(P.hand(s));
           // The handle lies along the knuckles, as the hand turned and tipped it.
-          bells[i].quaternion.setFromUnitVectors(X, (P.held?.[s] ?? P.across(s)).clone().normalize());
+          const from = options.steady && P0?.held?.[s]?.x < 0 ? X.clone().negate() : X;
+          bells[i].quaternion.setFromUnitVectors(from, (P.held?.[s] ?? P.across(s)).clone().normalize());
         });
         return { points: { handles: bells.map((b) => b.position.clone()) } };
       },

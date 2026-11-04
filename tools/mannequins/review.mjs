@@ -46,6 +46,11 @@ export const BATCHES = {
   ],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).
+  dumbbell: [
+    'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',
+    'db_romanian_deadlift', 'single_arm_db_row', 'db_lunge', 'db_shrug',
+  ],
 };
 
 const idsOf = (name) => {
