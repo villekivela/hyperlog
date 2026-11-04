@@ -17,6 +17,10 @@ npm run review -- status <batch>        # whether every exercise in it is OK (Re
 npm run review -- phone <batch>         # the owner has swiped the batch in the debug gallery
 ```
 
+A test that needs a scratch folder takes it from `scratch()` in `tmp.mjs`, which removes it when the
+test process ends, also after a failure; `tmp.test.mjs` fails on any test file that calls `mkdtemp`
+itself. A run leaves no `mannequins-*` folder in the temp directory.
+
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
 give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
 fails on any difference (`committed.test.mjs`), so bake and commit together.

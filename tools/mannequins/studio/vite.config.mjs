@@ -1,4 +1,5 @@
-// `npm run studio` (README, The studio): the tool served on the owner's machine, at 127.0.0.1 only (IPv4 loopback; `localhost` landed on IPv6 only).
+// `npm run studio` (README, The studio): the tool served on the owner's machine, on 127.0.0.1 only.
+// Not `localhost`, which landed on IPv6 only here and refused IPv4 browsers.
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { defineConfig } from 'vite';
