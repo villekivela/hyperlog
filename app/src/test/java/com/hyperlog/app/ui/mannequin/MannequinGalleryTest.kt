@@ -64,14 +64,28 @@ class MannequinGalleryTest {
             }
         }
         // The clips come in the index's order, by exercise id.
-        compose.onNodeWithText("2-Grip Lat Pulldown").assertExists()
-        compose.onNodeWithText("1 of 41").assertExists()
+        compose.onNodeWithText("1-Arm Cable Press-Around").assertExists()
+        compose.onNodeWithText("1 of 50").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
-        // A 2-grip exercise plays its first set's grip.
-        val first = Mannequins.fromAssets(context).clips.single { it.exerciseId == "2_grip_lat_pulldown" }
+        val first = Mannequins.fromAssets(context).clips.first()
         assertEquals(context.assets.open(first.file).use { it.readBytes().size }, loaded.single())
         assertEquals(first.tempo, tempos.single())
+    }
+
+    @Test
+    fun aTwoGripExercisePlaysItsFirstSetsGrip() {
+        val exercises = LibrarySeed.fromAssets(context).exercises
+        val clip = Mannequins.fromAssets(context).clips.single { it.exerciseId == "2_grip_lat_pulldown" }
+        compose.setContent {
+            CompositionLocalProvider(LocalMannequinPlayers provides factory) {
+                HyperlogTheme { MannequinGallery(Mannequins(listOf(clip)), exercises, onBack = {}) }
+            }
+        }
+        compose.onNodeWithText("2-Grip Lat Pulldown").assertExists()
+        compose.waitUntil { loaded.isNotEmpty() }
+        assertEquals(context.assets.open(clip.file).use { it.readBytes().size }, loaded.single())
+        assertEquals(clip.tempo, tempos.single())
     }
 
     private fun settings(onGallery: (() -> Unit)?) {
