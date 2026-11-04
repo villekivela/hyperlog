@@ -338,12 +338,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
   lever pivoting 420 mm up on the rear post, beside the posts, with a yoke of neutral grips (fore
   and aft through the blocks atop its uprights) and wide grips (out from them), and a plate on a
-  horn at its front end. Its lever rests on its catch, 3° below level, with no pose. Its `grip`
-  option names the pair a pose holds, `neutral` or `wide`, and its contacts tie the hands to that
-  pair (to either with no pose), the chest to the pad and the feet to the foot plate. The pad puts
+  horn at its front end. Its lever rests on its catch, 3° below level, with no pose. Its `handles`
+  option names the pair a pose holds, `neutral` or `wide`, and a pose must give it; its contacts tie
+  the hands to that pair (to either with no pose), the chest to the pad and the feet to the foot plate. The pad puts
   the hips: the spine along it, the top of the sternum at its top end, the chest pressed 5 mm into
   the vinyl. The fit rule sets `footPlate` from the legs, for knees bent to 160°, as far down the
-  beam as the pop-pin goes (950 mm): 913 mm for the mannequin, near photo 07's 950. Its grips stand
+  beam as the pop-pin goes: 913 mm for the mannequin, near photo 07's 950. The plate stays on its
+  holes, from 100 to 950 mm, wherever a slider asks for it. Its grips stand
   410 mm above the lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with
   the lever on its catch, and a neutral grip is held 115 mm back from its block, where its rear half
   starts.

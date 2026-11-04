@@ -34,13 +34,18 @@ const onBeam = (s) => TOP.clone().addScaledVector(UP_BEAM, -s).addScaledVector(F
 /** The point on the beam's middle at `z`. */
 const beamAt = (z) => onBeam((TOP.z - UNDER * FACE.z - z) / UP_BEAM.z);
 // The foot plate's face, square to the beam near enough: tilted 45°, toward the body. The pop-pin
-// sets it along the beam as far as its holes reach, down to this far below the pad's bottom end.
+// sets it along the beam as far as its holes reach, from this far below the pad's bottom end to this.
 const SOLE = V(0, Math.SQRT1_2, Math.SQRT1_2);
+const HIGHEST = 0.1;
 const LOWEST = 0.95;
+/** Where the pop-pin holds a foot plate asked for at `footPlate`: on its holes. */
+const pinned = (footPlate) => THREE.MathUtils.clamp(footPlate, HIGHEST, LOWEST);
 // The way the toes point on it, down its slope.
 const TOES = V(0, -Math.SQRT1_2, Math.SQRT1_2);
-/** The foot plate's face at its middle, `footPlate` metres down the beam from the pad's bottom end. */
-const soleAt = (footPlate) => onBeam(PAD.length + footPlate).addScaledVector(FACE, 0.28).addScaledVector(SOLE, 0.0125);
+/** The foot plate's middle, `footPlate` metres down the beam from the pad's bottom end. */
+const plateMiddleAt = (footPlate) => onBeam(PAD.length + footPlate).addScaledVector(FACE, 0.28);
+/** Its face there. */
+const soleAt = (footPlate) => plateMiddleAt(footPlate).addScaledVector(SOLE, 0.0125);
 /** The ankles' middle of a foot flat on the plate, its sole's middle on the plate's. */
 const ankleOn = (sole, L) => sole.clone().addScaledVector(SOLE, L.ankleY).addScaledVector(TOES, -L.midfoot);
 // How far the chest presses into the vinyl.
@@ -51,10 +56,12 @@ const hipsOn = (L) => TOP.clone().addScaledVector(UP_BEAM, -L.sternum).addScaled
 const KNEE = 160;
 /** How far down the beam the foot plate sets the knees a little bent, as far as its pop-pin goes. */
 const footPlateFor = (L) => {
-  const reach = Math.sqrt(L.thigh ** 2 + L.shin ** 2 - 2 * L.thigh * L.shin * Math.cos(rad(KNEE)));
-  const from = ankleOn(soleAt(0), L).sub(hipsOn(L));
-  const along = from.dot(UP_BEAM);
-  return Math.min(LOWEST, along + Math.sqrt(along ** 2 - from.lengthSq() + reach ** 2));
+  const legLength = Math.sqrt(L.thigh ** 2 + L.shin ** 2 - 2 * L.thigh * L.shin * Math.cos(rad(KNEE)));
+  // The ankles slide down the beam from where they'd stand at 0, until they are that far from the
+  // hips: the further of the two points on the beam's line where a leg's length from the hips meets it.
+  const hipsToAnkles = ankleOn(soleAt(0), L).sub(hipsOn(L));
+  const downBeam = hipsToAnkles.dot(UP_BEAM);
+  return pinned(downBeam + Math.sqrt(downBeam ** 2 - hipsToAnkles.lengthSq() + legLength ** 2));
 };
 // On the lever, in its own frame (z along it, y up from it): the yoke 760 mm along it, its cross
 // tube 150 mm above its line and its uprights 445 mm apart, each topped with a block 410 mm above
@@ -67,9 +74,10 @@ const WIDE = { out: 0.33, up: YOKE.top, length: 0.14 };
 // lever: a neutral one back toward the user's feet and a wide one straight out.
 
 const GRIP = 0.0155;
-// Where a hand holds each pair, on side `s`, and the way it lies, thumb end first, in the lever's frame.
 const TO_FEET = V(0, 0, -1);
+/** The block atop the upright on side `s`, in the lever's frame. */
 const block = (s) => V(s * NEUTRAL.out, YOKE.top, YOKE.along);
+// Where a hand holds each pair, on side `s`, and the way it lies, thumb end first, in the lever's frame.
 const PAIRS = {
   neutral: { at: (s) => block(s).addScaledVector(TO_FEET, NEUTRAL.held), across: () => TO_FEET.clone().negate() },
   wide: { at: (s) => V(s * WIDE.out, WIDE.up, YOKE.along), across: (s) => V(-s, 0, 0) },
@@ -87,9 +95,9 @@ export default recipe({
   bodies: { lever: revolute({ axis: V(-1, 0, 0), limits: LIMITS }) },
   // From on its catch, the arms long, to the handles at the chest.
   rep: { joint: 'lever', from: 'min' },
-  // A pose holds one pair of grips, its `grip`; with none, either.
-  contacts: ({ grip }) => [
-    ...['neutral', 'wide'].filter((g) => !grip || g === grip).map((point) => ({ body: 'lever', point, landmark: 'hands' })),
+  // A pose holds one pair of grips, its `handles`; with no pose, either.
+  contacts: ({ handles }) => [
+    ...Object.keys(PAIRS).filter((pair) => !handles || pair === handles).map((point) => ({ body: 'lever', point, landmark: 'hands' })),
     { body: 'frame', point: 'pad', landmark: 'chest' },
     { body: 'frame', point: 'footPlate', landmark: 'feet' },
   ],
@@ -98,23 +106,26 @@ export default recipe({
     rule: 'the pad\'s top end at the top of the sternum, the shoulders and head clear of it, the arms hanging straight to the handles on the catch, the knees a little bent',
     solve: ({ L }) => footPlateFor(L),
   }],
-  linkage: ({ footPlate, grip = 'neutral' }, L) => {
+  linkage: ({ footPlate, handles }, L) => {
+    const pair = PAIRS[handles];
+    if (!pair) throw new Error(`No handles "${handles}": ${Object.keys(PAIRS).join(' or ')}`);
     const hips = hipsOn(L);
-    const sole = soleAt(footPlate);
+    const sole = soleAt(pinned(footPlate));
     return {
       hip: [hips.y, hips.z],
       at: (value) => ({
-        pivot: PIVOT.clone(),
-        handle: (s) => turned(PAIRS[grip].at(s), value).add(PIVOT),
-        across: (s) => turned(PAIRS[grip].across(s), value),
-        along: UP_BEAM.clone(),
+        handle: (s) => turned(pair.at(s), value).add(PIVOT),
+        across: (s) => turned(pair.across(s), value),
+        spine: UP_BEAM.clone(),
         sole, soleUp: SOLE.clone(), toes: TOES.clone(), ankle: ankleOn(sole, L),
       }),
     };
   },
   // `footPlate`: how far down the beam the foot plate's middle is from the pad's bottom end, where
-  // its pop-pin holds it. `grip`: the pair a pose holds, `neutral` or `wide`.
-  build({ footPlate = 0.91 } = {}, M) {
+  // its pop-pin holds it, by default where the fit rule sets it for the mannequin. `handles`: the
+  // pair a pose holds, `neutral` or `wide`.
+  build({ footPlate: asked = 0.91 } = {}, M) {
+    const footPlate = pinned(asked);
     // The pad and its board, along the beam.
     const alongBeam = (mesh, at) => {
       mesh.position.copy(at);
@@ -160,7 +171,7 @@ export default recipe({
     // The foot plate on a sleeve round the beam, its pop-pin on the side, standing off the beam on a
     // stem far enough that its lower edge clears it.
     const sleeveAt = onBeam(PAD.length + footPlate);
-    const plateMiddle = sleeveAt.clone().addScaledVector(FACE, 0.28);
+    const plateMiddle = plateMiddleAt(footPlate);
     const sole = soleAt(footPlate);
     const plate = part(padGeometry(0.6, 0.025, 0.445, 0.006), M.frame, { solid: true });
     plate.position.copy(plateMiddle);
@@ -179,8 +190,8 @@ export default recipe({
     loaded.position.set(0, 0, HORN.plate);
     loaded.rotation.y = Math.PI / 2;
     const { along, cross } = YOKE;
-    // The neutral grip runs from its block back toward the user's feet, held this far along it;
-    // the wide grip runs out from the block's side, held in its middle.
+    // The neutral grip runs from its block back toward the user's feet; the wide grip runs out from
+    // the block's side.
     const neutralEnd = (s) => block(s).addScaledVector(TO_FEET, NEUTRAL.length);
     const wideFrom = (s) => V(s * (NEUTRAL.out + 0.03), WIDE.up, along);
     const wideTo = (s) => V(s * (WIDE.out + WIDE.length / 2), WIDE.up, along);

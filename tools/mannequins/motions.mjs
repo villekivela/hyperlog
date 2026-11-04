@@ -680,12 +680,12 @@ export const MOTIONS = {
    * its lever carries: a chest-supported T-bar row, a Kelso shrug.
    */
   chest_pad(e, s, L) {
-    const { handle, across, along, sole, soleUp, toes, ankle } = s.linkage;
-    const f = forwardOf(along);
+    const { handle, across, spine, sole, soleUp, toes, ankle } = s.linkage;
+    const f = forwardOf(spine);
     const toeOut = rad(e.feet.toeOut ?? 0);
     return {
-      hipC: V(0, ...e.body.hip), u: along,
-      headDir: along.clone().addScaledVector(f, e.body?.look ?? -0.3).normalize(),
+      hipC: V(0, ...e.body.hip), u: spine,
+      headDir: spine.clone().addScaledVector(f, e.body?.look ?? -0.3).normalize(),
       ankles: [-1, 1].map((side) => ankle.clone().setX(side * e.feet.stance)),
       foot: (side) => ({ heading: toes.clone().applyAxisAngle(soleUp, side * toeOut), top: soleUp.clone() }),
       kneePole: (side) => f.clone().addScaledVector(X, side * (e.feet.kneesOut ?? 0.2)).normalize(),

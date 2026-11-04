@@ -59,10 +59,10 @@ Photo 07 is side-on with the lever and the plate in the machine's middle plane. 
 - The horn is a 50 mm sleeve for Olympic plates, 370 mm long (Titan page).
 
 ## Handles
-- Neutral: 230 mm long, 445 mm apart, one on each upright's block, angled down and forward (away from the user).
+- Neutral: 230 mm long, 445 mm apart, one on each upright's block, running back toward the user's feet, level with the lever (the owner's live review in #176; photo 07 shows the same).
 - Wide: horizontal grips, 140 mm long, 660 mm apart.
 - Both are fixed on the Titan lever's yoke; 31 mm rubber.
-- Photos 05 and 06 and the maker's three-quarter photo show two grips on the block atop each yoke upright: a neutral one angled down and forward, and a wide one straight out, none pointing up or back; the recipe (#176) builds them so, the palms upright on the neutral grip, held on its rear half.
+- Photos 05 and 06 and the maker's three-quarter photo show two grips on the block atop each yoke upright: a neutral one and a wide one straight out, none pointing up; the recipe (#176) builds them so, the palms upright on the neutral grip, held where its rear half starts, 115 mm from the block.
 
 ## Adjustments and fit rules
 - Foot plate: pop-pin, sliding along the inclined beam (photo 10). The page names no other adjustment and the photos show the pad bolted to the beam and post, so the pad is fixed.

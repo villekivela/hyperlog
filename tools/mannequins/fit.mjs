@@ -14,8 +14,8 @@ const fits = new WeakMap();
 /**
  * The entry fitted to a mannequin of measurements `L`: its machine's options solved and its joint's
  * ends filled in (degrees for a revolute joint, metres for a prismatic one), `body.hip` where the
- * seat or the pad puts it, `linkage` the joint and what the recipe has at a value, and `fit` what was solved,
- * by the path an entry would set it at. An entry on no machine comes back as it is.
+ * seat or the pad puts it, `linkage` the joint and what the recipe has at a value, and `fit` what
+ * was solved, by the path an entry would set it at. An entry on no machine comes back as it is.
  */
 export function fitted(entry, L) {
   const name = Object.keys(entry.kit ?? {}).find((k) => RECIPES[k]?.linkage);

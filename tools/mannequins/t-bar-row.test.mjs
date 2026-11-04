@@ -119,12 +119,12 @@ const mannequin = async () => {
 // on photo 07's lifter, and further for longer legs, which the pop-pin stops at its lowest hole.
 test('the fit rule solves the foot plate from the legs, as far down the beam as its pop-pin goes', async () => {
   const { dims } = await mannequin();
-  const entry = { equipment: 'machine', kit: { t_bar_row_machine: {} } };
+  const entry = { equipment: 'machine', kit: { t_bar_row_machine: { handles: 'neutral' } } };
   const down = (L) => fitted(entry, L).kit.t_bar_row_machine.footPlate;
   close(down(dims), 0.913, 0.005, 'the foot plate, in metres down the beam');
   assert.ok(down({ ...dims, shin: dims.shin - 0.05 }) < down(dims) - 0.03, 'a shorter shin takes the plate up the beam');
   close(down({ ...dims, shin: dims.shin + 0.3 }), 0.95, 1e-9, 'the lowest hole');
-  assert.equal(fitted({ ...entry, kit: { t_bar_row_machine: { footPlate: 0.8 } } }, dims).kit.t_bar_row_machine.footPlate, 0.8, 'an entry\'s own setting');
+  assert.equal(fitted({ ...entry, kit: { t_bar_row_machine: { handles: 'neutral', footPlate: 0.8 } } }, dims).kit.t_bar_row_machine.footPlate, 0.8, 'an entry\'s own setting');
 });
 
 // Posed, it stands in the studio as its poses set it up (#188), its lever scrubbed through its limits.
@@ -215,11 +215,14 @@ test('each upright has two grips as the maker\'s photo shows: one back toward th
 // Posed on it (#188): each exercise holds one pair of grips, machine-first.
 const failed = (checks) => Object.entries(checks).filter(([, c]) => !c.ok).map(([name, c]) => `${name} on frame ${c.frame}: ${c.found}`);
 
-test('chest_supported_t_bar_row: passes every check, on the neutral grips', async () => {
-  assert.equal(prepare('chest_supported_t_bar_row').kit.t_bar_row_machine.grip, 'neutral');
-  const { checks } = await checkPose('chest_supported_t_bar_row');
-  assert.deepEqual(failed(checks), []);
-});
+// The T-bar row's video has the hands wider than the shoulders: on this machine, the wide grips, overhand.
+for (const [id, handles] of [['chest_supported_t_bar_row', 'neutral'], ['t_bar_row', 'wide'], ['kelso_shrug', 'wide']]) {
+  test(`${id}: passes every check, on the ${handles} grips`, async () => {
+    assert.equal(prepare(id).kit.t_bar_row_machine.handles, handles);
+    const { checks } = await checkPose(id);
+    assert.deepEqual(failed(checks), []);
+  });
+}
 
 /** The elbow's angle on side `k`, in degrees, and how far the elbow is behind the shoulder and out from it. */
 const arm = (rig, k) => {
@@ -229,31 +232,24 @@ const arm = (rig, k) => {
 
 // The ref's Fit rules: the arms hang long on the catch, and at the top of the pull (the clip's
 // bottom) the elbows have gone back past the trunk, not out to the sides.
-test('chest_supported_t_bar_row: from the arms long, the elbows drive back past the trunk', async () => {
+test('every exercise on it starts from the arms long, on the catch', async () => {
+  for (const id of ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug']) {
+    const stage = await buildStage(prepare(id));
+    stage.pose(0);
+    assert.ok(arm(stage.rig, 'l').bend > 153, `${id}: the elbow bent to ${arm(stage.rig, 'l').bend.toFixed(0)}° with the arms long`);
+  }
+});
+
+test('chest_supported_t_bar_row: the elbows drive back past the trunk', async () => {
   const stage = await buildStage(prepare('chest_supported_t_bar_row'));
-  stage.pose(0);
-  assert.ok(arm(stage.rig, 'l').bend > 150, `the elbow bent to ${arm(stage.rig, 'l').bend.toFixed(0)}° with the arms long`);
   stage.pose(1);
   const { back, out } = arm(stage.rig, 'l');
   assert.ok(back > 0.1, `the elbow ${(back * 100).toFixed(1)} cm behind the shoulder`);
   assert.ok(out < 0.1, `the elbow ${(out * 100).toFixed(1)} cm out from the shoulder`);
 });
 
-// The T-bar row's video has the hands wider than the shoulders: on this machine, the wide grips, overhand.
-test('t_bar_row: passes every check, on the wide grips', async () => {
-  assert.equal(prepare('t_bar_row').kit.t_bar_row_machine.grip, 'wide');
-  const { checks } = await checkPose('t_bar_row');
-  assert.deepEqual(failed(checks), []);
-});
-
 // The ref's Motion: the Kelso shrug's hands rise about 100 mm against the row's 270, the arms near
 // straight, the shoulder blades pulling together; the library's note pauses it about a second.
-test('kelso_shrug: passes every check, on the wide grips', async () => {
-  assert.equal(prepare('kelso_shrug').kit.t_bar_row_machine.grip, 'wide');
-  const { checks } = await checkPose('kelso_shrug');
-  assert.deepEqual(failed(checks), []);
-});
-
 test('kelso_shrug: the hands rise about 100 mm on long arms, the shoulder blades doing the work', async () => {
   const entry = prepare('kelso_shrug');
   const stage = await buildStage(entry);
@@ -263,7 +259,7 @@ test('kelso_shrug: the hands rise about 100 mm on long arms, the shoulder blades
   const [start, hand] = [shoulder(), heldAt(rig, 'l')];
   for (const d of [0, 0.5, 1]) {
     stage.pose(d);
-    assert.ok(arm(rig, 'l').bend > 145, `the elbow bent to ${arm(rig, 'l').bend.toFixed(0)}° ${d} of the way`);
+    assert.ok(arm(rig, 'l').bend > 148, `the elbow bent to ${arm(rig, 'l').bend.toFixed(0)}° ${d} of the way`);
   }
   close(heldAt(rig, 'l').y - hand.y, 0.1, 0.015, 'how far the hands rose');
   // Back off the pad's line, out of its face: the blades drawn together.
@@ -320,4 +316,22 @@ test('the foot plate\'s slider moves the plate and the feet with it, and nothing
   close(a.hipC.distanceTo(b.hipC), 0, 1e-9, 'the hips stay on the pad');
   const { checks } = await checkPose('chest_supported_t_bar_row', { poses: { chest_supported_t_bar_row: applyTuned(entry, { [path]: solved - 0.1 }) } });
   assert.ok(checks.feet.ok, checks.feet.found);
+});
+
+test('a pose names the pair it holds, and the name is one the machine has', async () => {
+  const { dims } = await mannequin();
+  for (const handles of [undefined, 'narrow']) {
+    assert.throws(() => fitted({ equipment: 'machine', kit: { t_bar_row_machine: { handles } } }, dims), /No handles/);
+  }
+});
+
+// The slider's range is any kit option's, a metre either way; the pop-pin stops at its holes.
+test('the foot plate stays on its holes, wherever the slider asks for it', () => {
+  const plateAt = (footPlate) => {
+    const kit = buildKit({ equipment: 'machine', kit: { t_bar_row_machine: { footPlate } } }).kits.t_bar_row_machine;
+    kit.place({}, {}, {});
+    return contact(kit, 'footPlate').at[0];
+  };
+  close(plateAt(1.5).distanceTo(plateAt(0.95)), 0, 1e-9, 'past the lowest hole');
+  close(plateAt(-0.5).distanceTo(plateAt(0.1)), 0, 1e-9, 'past the highest hole');
 });

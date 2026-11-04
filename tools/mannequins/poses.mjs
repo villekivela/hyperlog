@@ -269,7 +269,7 @@ export const POSES = {
   chest_supported_t_bar_row: {
     equipment: 'machine',
     motion: 'chest_pad',
-    kit: { t_bar_row_machine: { grip: 'neutral' } },
+    kit: { t_bar_row_machine: { handles: 'neutral' } },
     bottom: { offsets: { clavicle_l: [0, 10, 0], clavicle_r: [0, -10, 0] } },
     feet: { stance: 0.12, toeOut: 8 },
     grip: { pole: [0.25, 0.6, -1] },
@@ -281,7 +281,7 @@ export const POSES = {
   // forward to reach them on the catch.
   t_bar_row: {
     like: 'chest_supported_t_bar_row',
-    kit: { t_bar_row_machine: { grip: 'wide' } },
+    kit: { t_bar_row_machine: { handles: 'wide' } },
     top: { offsets: { clavicle_l: [0, -14, 0], clavicle_r: [0, 14, 0] } },
     grip: { pole: [0.7, 0.6, -1] },
   },
