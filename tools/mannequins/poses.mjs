@@ -62,35 +62,25 @@ export const POSES = {
   db_incline_press: {
     equipment: 'dumbbell',
     motion: 'dumbbell_press',
-    kit: { dumbbells: {}, bench: { hinge: -0.02 } },
+    kit: { dumbbells: { steady: true }, bench: { hinge: -0.02 } },
     // The stage's framing at the lying and the upright ends; the angles between move steadily from one to the other.
     bench: {
       typical: 45,
       // Settings tuned per angle, `{ path: { angle: value } }`, and interpolated between (README, Adjustable-bench
       // poses). The top.over pair keeps the arms locking out vertically (0.64 up, 0.09 forward of the shoulders),
       // which in the trunk's frame is a different [out, up the trunk] at each angle.
-      perAngle: {
-        'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167, 85: 0.056 },
-        'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624, 85: 0.643 },
-        'bottom.chest.1': { 0: 0.0271, 60: -0.0878, 75: -0.1487 },
-        'bottom.tilt': { 0: 3.3019 },
-        'bottom.rotate': { 0: 18.6834 },
-        'top.tilt': { 0: 11.6519, 75: 2.3362 },
-        'top.rotate': { 0: 20 },
-        'grip.width': { 0: 0.3541, 75: 0.3978 },
-        'bottom.chest.0': { 60: 0.1196, 75: 0.1072 },
-      },
+      perAngle: { 'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.3949, 60: 0.323, 75: 0.167, 85: 0.056 }, 'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.5057, 60: 0.56, 75: 0.624, 85: 0.643 }, 'bottom.chest.1': { 0: 0.0271, 45: -0.0778, 60: -0.0878, 75: -0.1487 }, 'bottom.tilt': { 0: 3.3019, 45: 14.5264 }, 'bottom.rotate': { 0: 18.6834, 45: 12.5977 }, 'top.tilt': { 0: 11.6519, 45: 14.0308, 75: 2.3362 }, 'top.rotate': { 0: 20, 45: 3.3179 }, 'grip.width': { 0: 0.365, 45: 0.406, 75: 0.3978 }, 'bottom.chest.0': { 45: 0.1001, 60: 0.1196, 75: 0.1072 } },
       cameras: {
         0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
         75: { target: [0, 1.0, 0.0], halfHeight: 1.22, azimuth: 66, elevation: 10 },
       },
     },
-    body: { sit: 0.15, seat: 0.06, lean: 8 },
+    body: { sit: 0.1253, seat: 0.0495, lean: 8.6694, head: -12.1074 },
     feet: { stance: 0.3, z: 0.2266, toeOut: 20 },
     // The grip turns (0 overhand, 90 neutral) and the handle tips in the hand, at the top and the bottom.
-    top: { press: 0, over: [0.56, 0.323], rotate: 20, tilt: 11.6519 },
-    bottom: { press: 1, chest: [0.2084, 0.1151], rotate: 18.6834, tilt: 3.3019 },
-    grip: { width: 0.3541, lockout: 0.26, elbows: 0.7975 },
+    top: { press: 0, over: [0.56, 0.323], rotate: 20, tilt: 11.6519, wrist: [-17.2888, 7.5586] },
+    bottom: { press: 1, chest: [0.2084, 0.1151], rotate: 18.6834, tilt: 3.3019, wrist: [-27.074, 15.5896] },
+    grip: { width: 0.3541, lockout: 0.3373, elbows: 0.7975, level: 0.7 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
 
@@ -687,6 +677,156 @@ export const POSES = {
     bottom: { bar: [0.385, -0.1], rotate: -0.0269, wrist: [-22.4578, 27.202] },
     grip: { width: 0.4127, elbows: 0.4588 },
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // The library's first dumbbell exercises (#127, the dumbbell batch): first poses for the owner to tune.
+
+  // Standing, the elbows by the sides, both arms together: the palms face the thighs at the bottom
+  // and turn up as the dumbbells curl to the shoulders.
+  db_bicep_curl: {
+    equipment: 'dumbbell',
+    motion: 'arms',
+    kit: { dumbbells: { steady: true } },
+    top: { shin: 3, thigh: 3, trunk: 2, upperArm: 7.71, forearm: 117.7825, rotate: 174.2651, wrist: [0, 0.7141] },
+    bottom: { shin: 3, thigh: 3, trunk: 2, upperArm: 4, forearm: 8, rotate: 92.7539, wrist: [0, 8.1226] },
+    feet: { stance: 0.157, toeOut: 8, kneesOut: 0.15 },
+    grip: { width: 0.2986, pole: [0.1773, -1, -0.1011], sits: 'mid' },
+    camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 62, elevation: 8 },
+  },
+
+  // The same curl with the palms facing each other all the way.
+  db_hammer_curl: {
+    like: 'db_bicep_curl',
+    top: { rotate: 90, trunk: -7.9492 },
+    bottom: { trunk: -3.9966 },
+  },
+
+  // Standing tall, the dumbbells by the sides, palms in: the shoulders shrug straight up toward the ears.
+  db_shrug: {
+    equipment: 'dumbbell',
+    motion: 'hinge',
+    kit: { dumbbells: { steady: true } },
+    top: { shin: 1, thigh: 0, trunk: 2, shrug: 22 },
+    bottom: { shin: 1, thigh: 0, trunk: 2, shrug: -4 },
+    feet: { stance: 0.13, toeOut: 6, kneesOut: 0 },
+    bar: { z: 0.02 },
+    grip: { width: 0.29, rotate: 90 },
+    // Paused at the top (the library's note).
+    tempo: { lowering: 2, bottom: 0.3, lifting: 1, top: 1 },
+    camera: { target: [0, 1.0, 0.05], halfHeight: 1.1, azimuth: 62, elevation: 8 },
+  },
+
+  // The barbell RDL's hinge, locked out at the top, the dumbbells close in front of the legs and
+  // running down them to mid-shin as the hips go back.
+  db_romanian_deadlift: {
+    equipment: 'dumbbell',
+    motion: 'hinge',
+    kit: { dumbbells: { steady: true } },
+    top: { shin: 1, thigh: 0, trunk: -3.6659, wrist: [-1.8329, 16.4124], rotate: 50.6145, shrug: 1.8364 },
+    bottom: { shin: 8, thigh: 42, trunk: 73.7411, rotate: 49.0514, shrug: -1.0467 },
+    feet: { stance: 0.12, toeOut: 6, kneesOut: 0 },
+    bar: { z: 0.1077 },
+    grip: { width: 0.2156 },
+    camera: { target: [0, 0.82, 0.05], halfHeight: 1.0, azimuth: 66, elevation: 8 },
+  },
+
+  // Standing, the dumbbells by the sides, palms in: they go out to the sides on an arc about the
+  // shoulders, the elbows a little soft, the palms down by the top.
+  db_lateral_raise: {
+    equipment: 'dumbbell',
+    motion: 'free_arms',
+    kit: { dumbbells: { steady: true } },
+    top: { shin: 4, thigh: 6, trunk: -2.5879, hand: [0.7603, 1.4651, 0.2647], wrist: [-3.8196, 16.1682], rotate: 1.7432 },
+    bottom: { shin: 4, thigh: 6, trunk: -2.162, hand: [0.2307, 0.8066, 0.1124], wrist: [-3.5596, 0] },
+    feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
+    grip: { arc: true, across: [-0.0021, -0.0007, 1.0006], pole: [0.6087, 0.1394, 0.1665] },
+    camera: { target: [0, 1.0, 0], halfHeight: 1.1, azimuth: 20, elevation: 8 },
+  },
+
+  // A split stance held through the rep, the dumbbells by the sides: the hips drop straight down
+  // between the feet until the back knee is just off the floor, the front leg doing the work.
+  db_lunge: {
+    equipment: 'dumbbell',
+    motion: 'lunge',
+    kit: { dumbbells: { steady: true } },
+    top: { hip: [0.83, 0.06], trunk: 6, heel: 25 },
+    bottom: { hip: [0.53, 0.06], trunk: 10, heel: 50 },
+    feet: { stance: 0.1, front: 0.36, back: -0.3, toeOut: 6 },
+    grip: { width: 0.29, rotate: 90 },
+    camera: { target: [0, 0.85, 0], halfHeight: 1.05, azimuth: 78, elevation: 8 },
+  },
+
+  // The right knee and hand on the flat bench, the left foot on the floor beside it, the trunk near
+  // level: the left arm rows the dumbbell from hanging under the shoulder, palm in, the elbow driving
+  // back past the trunk.
+  single_arm_db_row: {
+    equipment: 'dumbbell',
+    motion: 'bench_row',
+    kit: { dumbbells: { hand: 1, steady: true }, bench: { at: [-0.2166, 0.2573] } },
+    body: { hip: [0.9, -0.35], trunk: 78 },
+    // The right hand lies flat on the pad, the fingers forward.
+    top: { hand: [0.2518, 0.7417, -0.0807], offsets: { hand_r: [9.2944, 7.218, -70] } },
+    bottom: { hand: [0.1977, 0.376, 0.2864], offsets: { hand_r: [1.1755, 0, -70] } },
+    feet: { stance: 0.05, knee: [0.515, -0.33], point: 50, out: 0.28, z: -0.37, toeOut: 8 },
+    grip: { one: 1, rest: [-0.2444, 0.485, 0.15], pole: [0.15, 0.3, -0.2921] },
+    camera: { target: [0, 0.7, -0.18], halfHeight: 0.98, azimuth: 66, elevation: 10 },
+    shadow: { size: [1.1, 2.0], at: [0, -0.23] },
+  },
+
+  // On the back along the flat bench, as the barbell press lies, the slight arch and the feet back:
+  // the dumbbells press up and in from beside the chest to over the shoulders, the arms straight.
+  db_bench_press: {
+    equipment: 'dumbbell',
+    motion: 'free_arms',
+    kit: { dumbbells: { steady: true }, bench: {} },
+    body: { hip: [0.567, 0.28], trunk: -89, look: -0.27, arch: [16, -16.5, -8] },
+    feet: { stance: 0.325, z: 0.445, toeOut: 25 },
+    top: { hand: [0.3034, 1.1773, -0.2032], rotate: 4.1382, wrist: [-21.7749, -12.3889] },
+    bottom: { hand: [0.3335, 0.6795, -0.1601], rotate: 7.7197, wrist: [-20.6689, 5.2405] },
+    grip: { sits: 'heel', pole: [-0.0871, -1, -0.0125], level: 0.7 },
+    // A second's pause at the bottom, the chest under tension (the library's note).
+    tempo: { lowering: 2, bottom: 1, lifting: 1, top: 0.6 },
+    camera: { target: [-0.0307, 0.55, 0.0117], halfHeight: 0.98, azimuth: -12.8809, elevation: 6.7559 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // Lying the same way, palms in: the arms open wide on an arc about the shoulders, the elbows
+  // holding a soft bend, until the chest stretches.
+  db_flye: {
+    like: 'db_bench_press',
+    top: { hand: [0.1554, 1.1541, -0.2513], rotate: 99.8584, wrist: [17.6294, 9.4958] },
+    bottom: { hand: [0.68, 0.737, -0.17], rotate: 90 },
+    grip: { arc: true, sits: 'base', pole: [0.5, -1, 0.3], level: 0 },
+    tempo: { bottom: 0.3 },
+    feet: { stance: 0.2472, z: 0.4924 },
+  },
+
+  // The adjustable bench, upright by default: the dumbbells press from beside the ears to overhead,
+  // all the way down each rep, the trunk upright against the pad. Its own entry, not `like:` the
+  // incline press, whose other settings per angle would come back with the first one saved here.
+  seated_db_shoulder_press: {
+    equipment: 'dumbbell',
+    motion: 'dumbbell_press',
+    kit: { dumbbells: { steady: true }, bench: { hinge: -0.02 } },
+    bench: {
+      typical: 75,
+      // The arms lock out straight up at every angle, as the incline press's do: the pair is
+      // [out, up the trunk], so a different one at each.
+      perAngle: {
+        'top.over.0': { 0: 0.646, 15: 0.624, 30: 0.56, 45: 0.457, 60: 0.323, 75: 0.167, 85: 0.056 },
+        'top.over.1': { 0: 0.1023, 15: 0.167, 30: 0.323, 45: 0.457, 60: 0.56, 75: 0.624, 85: 0.643 },
+      },
+      cameras: {
+        0: { target: [0, 0.78, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 22 },
+        75: { target: [0, 1.0, 0.0], halfHeight: 1.22, azimuth: 66, elevation: 10 },
+      },
+    },
+    body: { sit: 0.145, seat: 0.0741, lean: 8, head: -12.9053 },
+    feet: { stance: 0.2859, z: 0.4271, toeOut: 20 },
+    top: { press: 0, over: [0.167, 0.624], rotate: 11.272, tilt: 8.6792, wrist: [-57.7759, -18.2336] },
+    bottom: { press: 1, chest: [0.1869, -0.0676], rotate: 3.4497, tilt: 12.395, wrist: [-61.5991, -19.2892] },
+    grip: { width: 0.3227, lockout: 0.2859, elbows: 0.3622 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
 };

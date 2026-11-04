@@ -1,5 +1,5 @@
 // The queue of checks, and what the message line says of it while the studio loads (#187, #191).
-import { test } from 'node:test';
+import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkQueue, mayNote, progressNote, rowAfter } from './checking.mjs';
 
@@ -107,4 +107,24 @@ test('forgetting with no poses named starts every pose again', { timeout: 10000 
   await until(4);
   next('b');
   assert.deepEqual(began, ['a', 'b', 'a', 'b']);
+});
+
+// The queue's gap between poses runs on a mocked clock, so nothing here waits on real time.
+test('a paused queue begins no pose until the function pause() gave is called', async (t) => {
+  t.after(() => mock.timers.reset());
+  mock.timers.enable({ apis: ['setTimeout'] });
+  const settle = () => new Promise((resolve) => { setImmediate(resolve); });
+  const began = [];
+  const queue = checkQueue(async (id) => { began.push(id); return { ok: true }; });
+  const resume = queue.pause();
+  queue.ask(['a']);
+  for (let gap = 0; gap < 3; gap++) {
+    mock.timers.tick(25);
+    await settle();
+    assert.deepEqual(began, [], `a pose began in gap ${gap} with the queue paused`);
+  }
+  resume();
+  mock.timers.tick(25);
+  await settle();
+  assert.deepEqual(began, ['a']);
 });

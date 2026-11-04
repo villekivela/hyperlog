@@ -2,13 +2,13 @@
 // to catch a pose edited without re-baking, or clips baked by hand.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { bakeAll, CLIPS } from './bake.mjs';
+import { scratch } from './tmp.mjs';
 
 test('the committed clips and index are byte-identical to a fresh bake', async () => {
-  const fresh = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  const fresh = await scratch('mannequins');
   await bakeAll(fresh);
   const baked = (await readdir(fresh)).sort();
   assert.deepEqual((await readdir(CLIPS)).sort(), baked, 'the committed files and the baked ones differ');

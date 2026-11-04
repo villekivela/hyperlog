@@ -12,10 +12,14 @@ npm run bake                            # node bake.mjs [out-dir]: check every p
 npm run seats                           # solve every seat afresh into seats.json, then bake
 npm test                                # entries, kits, checks, bake, trace, review and the studio, a few files at a time
 npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from footage (Tracing a pose)
-npm run studio                          # the studio, at http://localhost:5190/studio/ (The studio)
+npm run studio                          # the studio, at http://127.0.0.1:5190/studio/ (The studio)
 npm run review -- status <batch>        # whether every exercise in it is OK (Reviewing a batch)
 npm run review -- phone <batch>         # the owner has swiped the batch in the debug gallery
 ```
+
+A test that needs a scratch folder takes it from `scratch()` in `tmp.mjs`, which removes it when the
+test process ends, also after a failure; `tmp.test.mjs` fails on any test file that calls `mkdtemp`
+itself. A run leaves no `mannequins-*` folder in the temp directory.
 
 Commit the baked files with the entries that made them. Baking is deterministic: the same entries
 give byte-identical files. CI re-bakes every pose when `tools/mannequins/` or the clips change and
@@ -204,6 +208,15 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
 - **`top.shrug`, `bottom.shrug`** (pulldown) lift the shoulders, in degrees: let up into the stretch
   at the top, down again as the elbows drive down. **`grip.elbows`** turns the elbows out from the
   sides: 1 out wide, 0 straight down by the sides (a pulldown's default is 0.8; the bench's, 0.9).
+- **`kit: { dumbbells: { hand: 1 } }`** carries one dumbbell, in that hand (1 the left, -1 the
+  right), for a lift with `grip.one`. Without it the kit has one in each hand. Any motion can hold
+  dumbbells: one with a bar's two grips hangs them there instead, and they turn with the hands.
+  **`steady: true`** lays each by the palm as well as the handle's line, so it turns with the hand
+  and can't roll in it. Every dumbbell entry wants it.
+- **`grip.level`** (dumbbells) lets the wrists flow: their share of the forearms' lean, 0 to 1. The
+  hand stays square to the handle, the wrist bends with that share, and the handle tips with the
+  rest. 0 is a straight wrist, the handle tipping with the forearm; 1 holds the handle dead level.
+  It counts as the pose setting its wrists.
 - **`grip.rotate`** (any pose with hands) twists the forearms, in degrees: 0 overhand, 90 neutral
   (palms toward each other), 180 underhand (palms toward the face). The default is 0; the
   close-grip pulldown is 180.
@@ -252,12 +265,14 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
-| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend |
+| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
+| `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
+| `bench_row` | one knee and the same-side hand on a flat bench, the other foot on the floor: a 1-arm row. The right knee and hand, the left foot and arm | `body.hip`, `body.trunk`; `feet.knee` [y, z], the shin running back along the pad from it; `feet.stance`, `feet.point`, degrees the foot off the pad's end tips, `feet.out`, `feet.z`, `feet.toeOut`; `hand` [x, y, z] at the top and the bottom; `grip.one`, `grip.rest`, `grip.pole`. An offset on `hand_r` lays the resting hand flat |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment
@@ -303,7 +318,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug | missing |
 
-- `bench` is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
+- `bench` stands at `at` [x, z], where a pose needs it elsewhere: its node moves, so its parts stay
+  the ones every clip shares. It is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
   tilts its seat's front from -15° to 40°, flat by default, on a joint the studio scrubs (a pose on a
   tilted seat places its own hips, as the motions assume a flat one); with `decline`, for a decline
   movement's entry and no other, its back pad carries the foot catch, a post out of the frame's far
@@ -571,9 +587,9 @@ Use it for a pull request's screenshots.
 
 ## The studio
 
-`npm run studio` serves the tool at `http://localhost:5190/studio/` (Vite, pinned in
+`npm run studio` serves the tool at `http://127.0.0.1:5190/studio/` (Vite, pinned in
 `package-lock.json`, with the plugin in `studio/plugin.mjs`). It is for the owner's machine and
-listens on localhost only.
+listens on 127.0.0.1 only.
 
 - **Loading:** the list and the item on stage come first. Opening an item starts the checks, that
   item's first, then every other pose's one at a time in the background, and opening another item

@@ -2,10 +2,10 @@
 // smoothed, as angles only.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readdir, readFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { traceRep, trace, parseRange } from './trace.mjs';
+import { scratch } from './tmp.mjs';
 
 const TOP = { shin: 6, thigh: 4, trunk: 4, upperArm: 30, forearm: 150 };
 const BOTTOM = { shin: 47, thigh: 92, trunk: 23, upperArm: 60, forearm: 170 };
@@ -115,7 +115,7 @@ test('a time range reads as seconds or minutes and seconds', () => {
 });
 
 test('trace writes the pose\'s angles and nothing of the footage', async () => {
-  const out = await mkdtemp(path.join(tmpdir(), 'traces-'));
+  const out = await scratch('traces');
   const asked = [];
   const landmarks = async (footage, from, to) => { asked.push([footage, from, to]); return squatFootage(); };
   await trace('barbell_squat', '/footage/squat side.mp4', '0-9', { out, angles: ['shin', 'thigh'], landmarks });

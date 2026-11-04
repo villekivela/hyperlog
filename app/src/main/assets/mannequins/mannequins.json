@@ -682,6 +682,104 @@
         "kit_cable_tower.bin"
       ]
     },
+    "db_bench_press": {
+      "clip": "db_bench_press.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          -0.0307,
+          0.55,
+          0.0117
+        ],
+        "halfHeight": 0.98,
+        "azimuth": -12.8809,
+        "elevation": 6.7559
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 1,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_bench.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
+    "db_bicep_curl": {
+      "clip": "db_bicep_curl.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.05
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
+    "db_flye": {
+      "clip": "db_flye.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          -0.0307,
+          0.55,
+          0.0117
+        ],
+        "halfHeight": 0.98,
+        "azimuth": -12.8809,
+        "elevation": 6.7559
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_bench.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
+    "db_hammer_curl": {
+      "clip": "db_hammer_curl.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.05
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
     "db_incline_press": {
       "clip": "db_incline_press_45.glb",
       "equipment": "dumbbell",
@@ -806,6 +904,102 @@
           }
         }
       }
+    },
+    "db_lateral_raise": {
+      "clip": "db_lateral_raise.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 20,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
+    "db_lunge": {
+      "clip": "db_lunge.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          0.85,
+          0
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 78,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
+    "db_romanian_deadlift": {
+      "clip": "db_romanian_deadlift.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          0.82,
+          0.05
+        ],
+        "halfHeight": 1,
+        "azimuth": 66,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dumbbells.bin"
+      ]
+    },
+    "db_shrug": {
+      "clip": "db_shrug.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.05
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 1
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dumbbells.bin"
+      ]
     },
     "deadlift": {
       "clip": "deadlift.glb",
@@ -1265,6 +1459,131 @@
         "kit_calf_raise_machine.bin"
       ]
     },
+    "seated_db_shoulder_press": {
+      "clip": "seated_db_shoulder_press_75.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0
+        ],
+        "halfHeight": 1.22,
+        "azimuth": 66,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_bench.bin",
+        "kit_dumbbells.bin"
+      ],
+      "bench": {
+        "typical": 75,
+        "hinge": [
+          0.4,
+          -0.02
+        ],
+        "clips": {
+          "0": {
+            "clip": "seated_db_shoulder_press_0.glb",
+            "camera": {
+              "target": [
+                0,
+                0.78,
+                0.05
+              ],
+              "halfHeight": 0.98,
+              "azimuth": 58,
+              "elevation": 22
+            }
+          },
+          "15": {
+            "clip": "seated_db_shoulder_press_15.glb",
+            "camera": {
+              "target": [
+                0,
+                0.824,
+                0.04
+              ],
+              "halfHeight": 1.028,
+              "azimuth": 59.6,
+              "elevation": 19.6
+            }
+          },
+          "30": {
+            "clip": "seated_db_shoulder_press_30.glb",
+            "camera": {
+              "target": [
+                0,
+                0.868,
+                0.03
+              ],
+              "halfHeight": 1.076,
+              "azimuth": 61.2,
+              "elevation": 17.2
+            }
+          },
+          "45": {
+            "clip": "seated_db_shoulder_press_45.glb",
+            "camera": {
+              "target": [
+                0,
+                0.912,
+                0.02
+              ],
+              "halfHeight": 1.124,
+              "azimuth": 62.8,
+              "elevation": 14.8
+            }
+          },
+          "60": {
+            "clip": "seated_db_shoulder_press_60.glb",
+            "camera": {
+              "target": [
+                0,
+                0.956,
+                0.01
+              ],
+              "halfHeight": 1.172,
+              "azimuth": 64.4,
+              "elevation": 12.4
+            }
+          },
+          "75": {
+            "clip": "seated_db_shoulder_press_75.glb",
+            "camera": {
+              "target": [
+                0,
+                1,
+                0
+              ],
+              "halfHeight": 1.22,
+              "azimuth": 66,
+              "elevation": 10
+            }
+          },
+          "85": {
+            "clip": "seated_db_shoulder_press_85.glb",
+            "camera": {
+              "target": [
+                0,
+                1,
+                0
+              ],
+              "halfHeight": 1.22,
+              "azimuth": 66,
+              "elevation": 10
+            }
+          }
+        }
+      }
+    },
     "seated_leg_curl": {
       "clip": "seated_leg_curl.glb",
       "equipment": "machine",
@@ -1287,6 +1606,31 @@
       "resources": [
         "mannequin.bin",
         "kit_leg_curl.bin"
+      ]
+    },
+    "single_arm_db_row": {
+      "clip": "single_arm_db_row.glb",
+      "equipment": "dumbbell",
+      "camera": {
+        "target": [
+          0,
+          0.7,
+          -0.18
+        ],
+        "halfHeight": 0.98,
+        "azimuth": 66,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_bench.bin",
+        "kit_dumbbells.bin"
       ]
     },
     "t_bar_row": {

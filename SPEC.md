@@ -1566,6 +1566,16 @@ gallery (Technique videos).
     2026-11-03).
     The incline and decline presses (an adjustable bench is seven clips, and a decline
     needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
+    The dumbbell batch (#127) comes ahead of the rest of the barbell lifts (owner, 2026-11-04). Its
+    lunge is a split stance held through the rep: the feet stay planted, the back heel up on the
+    ball of the foot, and the hips drop between them. A 1-arm row carries one dumbbell, one knee and
+    the same-side hand on the flat bench and the other foot on the floor (owner, 2026-11-04). The
+    Dumbbell Bench Press's and the Incline Press's wrists flow rather than stay straight (owner,
+    2026-11-04): the hand stays square to the dumbbell, the wrist bends with the forearm's lean and
+    the dumbbell rocks a little, and one number sets the share between them. A dumbbell turns with
+    the hand holding it and never rolls in it. The goblet squat and the overhead triceps extension wait for
+    a later batch: both cup one dumbbell's head in two hands, and the hand only closes round a
+    handle so far.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

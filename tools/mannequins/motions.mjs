@@ -90,7 +90,16 @@ export function frameAt(entry, d, L) {
   // The wrists' bend, [flexion, deviation] in degrees, at the top and the bottom eased between.
   if (s.wrist) P.wrist = s.wrist;
   // The bones turned on top of the solve (`poseRig`).
-  if (s.offsets) P.offsets = s.offsets;
+  if (s.offsets) P.offsets = { ...P.offsets, ...s.offsets };
+  // Dumbbells hang from the hands wherever a motion puts them, a bar's two grips or its own points,
+  // and turn with them.
+  if (e.kit?.dumbbells) {
+    P.hand ??= (side) => P.bar.clone().addScaledVector(X, side * P.grip);
+    P.across ??= (side) => X.clone().multiplyScalar(-side);
+    P.heldFree = true;
+    // `grip.level` is the wrists' share of the forearms' lean, 0 to 1: the handles tip with the rest.
+    if (e.grip?.level) P.level = e.grip.level;
+  }
   // Where the bar sits in the hand and the thumb (`grip.mjs`); with `grip.one` the other hand rests.
   P.hold = holdOf(e);
   if (e.grip?.one) P.resting = -e.grip.one;
@@ -201,9 +210,10 @@ const placed = (e, s, L) => ({ hipC: V(0, ...e.body.hip), lean: spineLean(s.trun
 function bodyOf(e, s, L) {
   if (e.body?.hip) {
     const { hipC, lean } = placed(e, s, L);
-    return { hipC, u: trunkUp(lean), feet: seatedFeet(e, L) };
+    return { hipC, u: trunkUp(lean), lean, feet: seatedFeet(e, L) };
   }
-  return { hipC: standingHips(e, s, L), u: trunkUp(spineLean(s.trunk, L)), feet: standingFeet(e, L) };
+  const lean = spineLean(s.trunk, L);
+  return { hipC: standingHips(e, s, L), u: trunkUp(lean), lean, feet: standingFeet(e, L) };
 }
 
 /**
@@ -491,6 +501,69 @@ export const MOTIONS = {
   },
 
   /**
+   * A split stance, the feet planted through the rep: the left foot flat `feet.front` ahead, the
+   * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
+   * floor, heels up positive, its toes bent back as far so they stay down. The hips drop between
+   * them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width`
+   * either side of the middle.
+   */
+  lunge(e, s, L) {
+    const hipC = V(0, ...s.hip);
+    const lean = spineLean(s.trunk, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const a = rad(s.heel);
+    const heading = V(0, -Math.sin(a), Math.cos(a));
+    const top = V(0, Math.cos(a), Math.sin(a));
+    const ball = V(-e.feet.stance, L.ballY, e.feet.back);
+    const sh = shouldersOf(hipC, u, L);
+    const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
+    const drop = Math.sqrt(Math.max(0, reach * reach - (e.grip.width - L.shW) ** 2));
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.2).add(V(0, 0.25, 0)).normalize(),
+      ankles: [ball.clone().addScaledVector(heading, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY), V(e.feet.stance, L.ankleY, e.feet.front)],
+      foot: (side) => (side < 0 ? { heading: heading.clone(), top: top.clone() } : { heading: V(Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0), 0, 1).normalize(),
+      support: (side) => (side < 0 ? { point: ball.clone().addScaledVector(top, -L.ballY), normal: top.clone() } : floor),
+      hand: (side) => V(side * e.grip.width, sh.y - drop, sh.z),
+      armPole: elbowsTo(e, [0.4, 0, -1]),
+      offsets: { ball_r: [-s.heel, 0, 0] },
+    };
+  },
+
+  /**
+   * One knee and the same-side hand on a flat bench, the other foot on the floor: a 1-arm row. The
+   * right shin lies along the pad from `feet.knee` [y, z], its foot off the pad's end; the left foot
+   * stands `feet.out` to the side at `feet.z`. The hips are at `body.hip`, the trunk at `body.trunk`;
+   * the left hand rows between `hand` [x, y, z] at the top and the bottom, palm in, the right rests
+   * at `grip.rest`.
+   */
+  bench_row(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const knee = V(-e.feet.stance, ...e.feet.knee);
+    const ankle = knee.clone().add(V(0, 0, -L.shin * STRAIGHT));
+    const p = rad(e.feet.point ?? 20);
+    const heading = V(0, -Math.sin(p), -Math.cos(p));
+    const top = V(0, -Math.cos(p), Math.sin(p));
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      ankles: [ankle, V(e.feet.out, L.ankleY, e.feet.z)],
+      foot: (side) => (side < 0 ? { heading: heading.clone(), top: top.clone() } : { heading: V(Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) }),
+      kneePole: (side) => V(side * 0.15, 0, 1).normalize(),
+      support: (side) => (side < 0 ? { point: ankle.clone().addScaledVector(top, -L.ankleY), normal: top.clone() } : floor),
+      hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
+      across: (side) => (side === e.grip.one ? V(0, 0, 1) : X.clone().multiplyScalar(-side)),
+      armPole: elbowsTo(e, [0.15, 0.3, -1]),
+    };
+  },
+
+  /**
    * The arms moving freely, each hand at a point in the room: `hand` [x, y, z] for the left hand at
    * the top and the bottom of the rep, the right mirroring it: a raise, a flye, a press between two
    * pulleys. Standing from side-on angles, or seated at `body.hip`; with `grip.one` one arm works and
@@ -513,7 +586,7 @@ export const MOTIONS = {
   },
 
   free_arms(e, s, L) {
-    const { hipC, u, feet } = bodyOf(e, s, L);
+    const { hipC, u, lean, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
     const at = (p, side) => V(side * p[0], p[1], p[2]);
     let work = (side) => at(s.hand, side);
@@ -534,12 +607,16 @@ export const MOTIONS = {
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      spine: archOf(e.body?.arch, lean),
       ...feet,
       hand: handsOf(e, work),
       // Both hands on one bar (an upright row): it lies between them, and with a barbell the hands
       // hold it across the palm, knuckles along it.
       ...(e.grip?.one ? {} : { bar: V(0, work(1).y, work(1).z) }),
       ...(e.kit?.barbell && !e.grip?.one ? { across: (side) => X.clone().multiplyScalar(-side) } : {}),
+      // `grip.across` [x, y, z] lays the knuckles along one line through the rep: front to back for
+      // a raise, palms in by the sides and down with the arms out.
+      ...(e.grip?.across ? { across: () => V(...e.grip.across) } : {}),
       armPole: elbowsTo(e, [1, -0.3, -0.5]),
     };
   },
