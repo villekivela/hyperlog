@@ -372,20 +372,26 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
 - `pullup_dip_station` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
-  `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) stands where its
-  ref puts it, whatever the pose, and nothing on it moves: two uprights 965 mm apart, the lifter
-  facing them, the multi-grip bar bolted to their faces at 2.30 m (a plate, outer prongs 813 mm
-  apart and inner ones 406 mm, a V of about 45° to the inner ones, and a cross tube 230 mm out
-  joining each inner prong to its outer one and out past it, its ends bent back toward the plate) and a dip crossbar at 1.30 m with a handle either side, 440 mm long, splaying
-  from 451 mm apart to 630 at the tips. The cross tube's hang line is the origin. Contacts, all
-  hands on the frame, a pair of points each: `wide` (960 mm apart, on the cross tube outside the
-  outer prongs), `standard` (610, on it between the prongs), `close` (280, on the V's arms), `neutral` (406, on the inner prongs, 80 mm out
-  along them) and `dip` and `dipClose` (the handles' middle and near the crossbar). It has no
-  options and no fit rule: the ref's heights are the mannequin's, chosen. It departs from the ref:
-  the close grip is on the V's arms 280 mm apart, because the ref's 400 on a cross tube between
-  the inner prongs would put the hands on the prongs, and the photos show no cross tube there; and
-  the cross tube's ends bend back toward the plate, as the photos show, not up and out as the ref has it; and
-  the uprights, floor beams and the crossbar's plate are the library's generic ones.
+  `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
+  power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
+  `dipHandles`, both on by default). It stands where its ref puts it, whatever the pose, and nothing on
+  it moves: four hollow 3 in uprights 108 in tall with 5/8 in holes through every face (1 in apart
+  through the bench zone, 2 in elsewhere), the front pair 43 in apart inside and the rear 24 in behind
+  them, each on a 7 in plate; a side crossmember near the top and one near the floor on each side, and
+  a back one, each hollow and holed with an end plate and two bolts, all on holes; a pin pipe safety each
+  side. With no `pullupBar` it has the rack's supplied skinny and fat bar side to side; with it, a front
+  crossmember at the 91 in hole carries a plate, outer prongs 813 mm apart (2 in) and inner ones 406 mm
+  (1.25 in), a V of about 45° to the inner ones, and a cross tube 230 mm out joining each inner prong to
+  its outer one and out past it, its ends curving back toward the plate. `dipHandles` hang on the +x
+  front upright from a bracket at the 51 in hole: a stem, a crosshead and a handle either side, 440 mm
+  long, 451 mm apart at the crosshead and 630 at the tips, at 1.305 m. The cross tube's hang line is the
+  origin. Contacts, all hands on the frame, a pair of points each: `wide` (960 mm apart, on the cross
+  tube outside the outer prongs), `standard` (610, on it between the prongs), `close` (280, on the V's
+  arms), `neutral` (406, on the inner prongs, 80 mm out along them), and `dip` and `dipClose` (the
+  handles' middle and near the crosshead). It has no fit rule. It departs from the ref: the rack is a
+  9 ft one so the bar sits at a hole near 2.30 m, the back crossmember isn't in the photos, the ref's
+  close grip (400 mm on a cross tube between the inner prongs) is on the V because the photos show no
+  tube there, and the end plates, safeties and bracket are read from photos.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
