@@ -61,7 +61,8 @@ What the videos show:
 
 ## Compared in the studio (#219)
 The kit was built and set beside the photos and the Rogue video frames (1:15, 1:24 held; 0:02 racked):
-- Hung in the rack the handles drop about 410 mm below the shaft's centre (front photo WEB2, 1.36 mm per pixel, from the shaft to the grips' ends), about 51° below horizontal over a 520 mm arm, which is steeper than the 25-30° above. Held, the lifter rolls the bar forward about 25° about the shaft, which brings the handles to the 27° the published 533 mm by 254 mm give and the plate centre forward of the shaft by 140 mm times the sine of it, as the T Nation video at 0:26 shows. The recipe's option `roll` is that turn, 0 as racked.
+- Hung in the rack the handles drop about 410 mm below the shaft's centre (front photo WEB2, 1.36 mm per pixel, from the shaft to the grips' ends), about 51° below horizontal over a 520 mm arm, which is steeper than the 25-30° above. Held, the lifter rolls the bar forward about 25° about the shaft, which brings the handles to the 27° the published 533 mm by 254 mm give and the plate centre forward of the shaft by 140 mm times the sine of it; the T Nation frames at 0:26 and 0:29 show the plate standing ahead of the lifter's chest, which a straight-down camber could not do. The recipe's option `roll` is that turn, 0 as racked.
+- The grips are matte black steel in the photos, with a silver collar where they leave the pad; the model draws them in the metal tone. The yoke pad reads about 80 mm thick in the front photo (WEB2), against the 100 mm above.
 - The handle pads are about 70 mm across and read thicker in the photos, nearer the yoke's 100 mm; the yoke pad's ends are gathered in the photos and plain in the model; the camber bends are sharper in the photos; the model has no rack-catch plates on the shaft.
 
 ## Open gaps
