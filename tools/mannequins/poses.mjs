@@ -551,7 +551,7 @@ export const POSES = {
     top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702, rotate: 0, wrist: [-99.4474, -91.149] },
     bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517, rotate: 0, wrist: [-80.6189, -71.8976] },
     bar: { up: 0.0652, back: -0.0296 },
-    grip: { width: 0.27, pole: [0.2141, -0.9277, 0.3059], sits: 'base', spot: [0.2134, 0.0841, 0.1618] },
+    grip: { width: 0.27, pole: [0.2141, -0.9277, 0.3059], sits: 'base' },
   },
 
   // Standing, the elbows by the sides: the bar curls from the thighs up to the shoulders, palms up.
