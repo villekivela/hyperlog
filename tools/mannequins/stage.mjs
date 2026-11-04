@@ -51,19 +51,23 @@ const EASE_THUMB = 4;
  * of jumping. What `pose(d)` takes, by step; a side without a straight arm keeps its own.
  */
 function followArms(rig, frame, holding) {
-  const pass = (order) => {
+  const pass = (order, closing) => {
     const out = [];
     let near = {};
     for (const i of order) {
       const P = frame(i / STEPS);
-      near = out[i] = poseRig(rig, P, near, holding(P));
+      near = out[i] = poseRig(rig, P, near, closing && holding(P));
     }
     return out;
   };
   const steps = [...Array(STEPS + 1).keys()];
-  const down = pass(steps);
-  const up = pass([...steps].reverse());
+  const orders = { down: steps, up: [...steps].reverse() };
   const cost = (arms, k) => arms.reduce((sum, a) => sum + (a[k]?.cost ?? 0), 0);
+  // The arms alone settle which way each side goes, and closing the fingers is most of the work: the
+  // way kept is walked again to close them, the arms coming out the same.
+  const [down, up] = [orders.down, orders.up].map((order) => pass(order, false));
+  const way = Object.fromEntries(['l', 'r'].map((k) => [k, cost(down, k) <= cost(up, k) ? 'down' : 'up']));
+  const closed = Object.fromEntries([...new Set(Object.values(way))].map((w) => [w, pass(orders[w], true)]));
   const arms = steps.map(() => ({}));
   // Runs of steps that have a value, each averaged twice (a triangle), evenly either side and
   // narrower toward the ends, so the ends keep their own and a steady change stays as it is.
@@ -84,7 +88,7 @@ function followArms(rig, frame, holding) {
     return out;
   };
   for (const k of ['l', 'r']) {
-    const chosen = (cost(down, k) <= cost(up, k) ? down : up).map((a) => a[k]);
+    const chosen = closed[way[k]].map((a) => a[k]);
     // The arm's roll, turn and slant, the first two unwrapped so a turn past half a circle doesn't read as a jump back.
     const turns = chosen.map((a) => (a?.t === undefined ? null : [a.t, a.p, a.q]));
     for (let n = 1; n < turns.length; n++) {

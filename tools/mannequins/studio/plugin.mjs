@@ -17,6 +17,7 @@ import path from 'node:path';
 // Nothing here imports poses.mjs, kit.mjs or the recipes and parts, even through another module:
 // Vite restarts its server when a file its config imports changes, and those change all the time.
 import { patchPoses } from '../patch.mjs';
+import { checkQueue } from './checking.mjs';
 import { videoOf } from './video.mjs';
 
 const TOOL = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -103,11 +104,13 @@ function refusal(req) {
 /**
  * The studio plugin. `posesFile`, `reviewDir` and `clips` are where the poses, the review files
  * and the baked clips are (the repo's own by default); `bake()` re-bakes every clip. `videos` is
- * the technique videos' cache, and `fetchVideo(id, dir)` fetches one into it (`ytDlp`).
+ * the technique videos' cache, and `fetchVideo(id, dir)` fetches one into it (`ytDlp`). `check(id, t)`
+ * runs a pose's checks with the tool's modules `t`.
  */
 export function studio({
   posesFile = path.join(TOOL, 'poses.mjs'), reviewDir, clips = CLIPS, bake = () => bakeInChild(clips),
   videos = VIDEOS, fetchVideo = ytDlp,
+  check = (id, t) => t.checks.checkPose(id, { poses: t.POSES }).then((r) => r.checks),
 } = {}) {
   let server;
   const load = (file) => server.ssrLoadModule(path.isAbsolute(file) ? file : path.join(TOOL, file));
@@ -118,22 +121,40 @@ export function studio({
     return { entries, checks, kit, review, POSES: poses.POSES, dir: reviewDir ?? review.REVIEW };
   };
 
-  // Each posed exercise's checks, run once per version of the tool's code and poses.
-  let checked = new Map();
-  const checksOf = (t, id) => {
-    if (!checked.has(id)) checked.set(id, t.checks.checkPose(id, { poses: t.POSES }).then((r) => r.checks, (err) => ({ error: { ok: false, frame: null, found: err.message } })));
-    return checked.get(id);
-  };
-  const failing = (checks) => Object.values(checks).some((c) => !c.ok);
+  // Each posed exercise's checks, run once per version of the tool's code and poses. A plain list
+  // starts none: opening an item does, that item first, so what is on stage is never behind the rest.
+  const checks = checkQueue(async (id) => {
+    try {
+      return await check(id, await tool());
+    } catch (err) {
+      return { error: { ok: false, frame: null, found: err.message } };
+    }
+  });
+  const checkAll = (t) => checks.ask(Object.keys(t.POSES));
+  const failing = (found) => Object.values(found).some((c) => !c.ok);
   // What the studio last wrote to poses.mjs itself: the page already has it, so it needn't reload.
   let own = null;
-  const changed = () => {
-    checked = new Map();
+  // Every pose's checks start again, pose `id` first, as the page will open it.
+  const changed = (id) => {
     for (const m of server.moduleGraph.getModulesByFile(posesFile) ?? []) server.moduleGraph.invalidateModule(m);
+    checks.forget();
+    checks.first(id);
   };
 
   async function items(wait) {
     const t = await tool();
+    if (wait) await checkAll(t);
+    // It reads a file or two for each exercise, a pose under way holding up each read.
+    const resume = checks.pause();
+    try {
+      return await listOf(t);
+    } finally {
+      resume();
+    }
+  }
+
+  /** Every exercise, by equipment, and every kit, each with its status as far as the checks have got. */
+  async function listOf(t) {
     const library = await readLibrary();
     const notes = await t.review.readNotes({ dir: t.dir });
     const order = Object.keys(t.kit.EQUIPMENT);
@@ -149,8 +170,7 @@ export function studio({
         const { batch, state, notes: mine } = await t.review.reviewOf(e.id, { dir: t.dir, clips, notes });
         const row = { id: e.id, name: e.name, equipment, status: t.POSES[e.id] ? state : 'no pose', batch, notes: mine.length };
         if (!t.POSES[e.id]) return row;
-        const pending = checksOf(t, e.id);
-        const done = wait ? await pending : await Promise.race([pending, Promise.resolve(null)]);
+        const done = checks.found(e.id);
         if (!done) row.checking = true;
         else if (failing(done)) row.status = 'failing';
         return row;
@@ -200,23 +220,30 @@ export function studio({
 
   async function exercise(id) {
     const t = await tool();
+    const posed = Boolean(t.POSES[id]);
+    // Its checks first, then everything else it needs while they run: the rest start behind them,
+    // and a pose under way holds up every file read here.
+    const found = posed ? checks.first(id) : null;
+    checkAll(t);
     const library = await libraryEntry(id);
     if (!library) throw new Refused(`No exercise ${id} in the library`);
-    const { batch, state, notes } = await t.review.reviewOf(id, { dir: t.dir, clips });
-    const loop = (await t.review.readLoops({ dir: t.dir }))[id] ?? null;
+    const [{ batch, state, notes }, loops, clip, fingerprint, mine] = await Promise.all([
+      t.review.reviewOf(id, { dir: t.dir, clips }), t.review.readLoops({ dir: t.dir }),
+      posed ? clipOf(id) : null, posed ? t.review.fingerprint(id, clips).catch(() => null) : null, found,
+    ]);
+    const loop = loops[id] ?? null;
     const video = library.video ? { link: library.video, start: videoOf(library.video)?.start ?? 0, loop } : null;
     const base = { kind: 'exercise', id, name: library.name, equipment: library.equipment, batch, notes, video };
-    if (!t.POSES[id]) return { ...base, status: 'no pose', entry: null, checks: null, clip: null };
-    const checks = await checksOf(t, id);
+    if (!posed) return { ...base, status: 'no pose', entry: null, checks: null, clip: null };
     return {
-      ...base, status: failing(checks) ? 'failing' : state, checks,
-      entry: t.entries.prepare(id, t.POSES), grips: t.entries.gripsOf(id, t.POSES), clip: await clipOf(id),
-      fingerprint: await t.review.fingerprint(id, clips).catch(() => null),
+      ...base, status: failing(mine) ? 'failing' : state, checks: mine,
+      entry: t.entries.prepare(id, t.POSES), grips: t.entries.gripsOf(id, t.POSES), clip, fingerprint,
     };
   }
 
   async function kit(name) {
     const t = await tool();
+    checkAll(t);
     if (!t.kit.KITS[name]) throw new Refused(`No kit ${name}`);
     const uses = usesOf(t)[name] ?? null;
     const notes = (await t.review.readNotes({ dir: t.dir }))[`kit:${name}`] ?? [];
@@ -235,14 +262,14 @@ export function studio({
       const after = patchPoses(before, id, tuned);
       own = after;
       await writeFile(posesFile, after);
-      changed();
+      changed(id);
       try {
         await bake();
       } catch (err) {
         // A pose that fails its checks doesn't bake, and the file never holds one that didn't.
         own = before;
         await writeFile(posesFile, before);
-        changed();
+        changed(id);
         throw new Refused(`Not saved: the bake failed. ${err.message}`);
       }
       const t = await tool();
@@ -315,7 +342,7 @@ export function studio({
 
   const routes = {
     'GET /api/items': (url) => items(url.searchParams.has('wait')),
-    'GET /api/state': () => baking,
+    'GET /api/state': () => ({ ...baking, checks: checks.progress() }),
     'POST /api/save': ({ id, tuned }) => save(id, tuned),
     'POST /api/ok': async ({ id, ok }) => {
       const t = await tool();
@@ -348,12 +375,15 @@ export function studio({
     load(id) {
       return id.startsWith(STUB) ? STUBS[id.slice(STUB.length)] : null;
     },
-    // A save the studio made itself is already on the page; anything else reloads it (the page
-    // keeps its place).
+    // A save the studio made itself is already on the page, and has its checks in hand (`save`);
+    // anything else reloads the page (it keeps its place) and starts them again.
     async hotUpdate({ file, read }) {
-      if (path.resolve(file) === path.resolve(posesFile) || file.endsWith('.mjs')) checked = new Map();
-      if (this.environment.name !== 'client' || path.resolve(file) !== path.resolve(posesFile)) return;
-      if ((await read()) === own) return [];
+      // A seat a bake added is no change to what anything does, and a reload would lose the save.
+      if (path.basename(file) === 'seats.json') return [];
+      const isPoses = path.resolve(file) === path.resolve(posesFile);
+      const saved = isPoses && (await read()) === own;
+      if (!saved && (isPoses || file.endsWith('.mjs'))) checks.forget();
+      if (saved && this.environment.name === 'client') return [];
     },
     configureServer(s) {
       server = s;

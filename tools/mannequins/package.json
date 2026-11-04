@@ -5,6 +5,7 @@
   "description": "Poses Hyperlog's exercise mannequin and bakes each exercise's clip.",
   "scripts": {
     "bake": "node bake.mjs",
+    "seats": "node bake.mjs --seats",
     "test": "node --test",
     "trace": "node trace.mjs",
     "review": "node review.mjs",
