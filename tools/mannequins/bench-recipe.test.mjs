@@ -146,7 +146,7 @@ test('each leg meets the middle of its foot beam, where it crosses the beam\'s t
   const beamTop = 0.074;
   // Where the leg's edges cross the beam's top.
   const crossing = (leg) => {
-    const at = leg.geometry.attributes.position;
+    const at = leg.geometry.toNonIndexed().attributes.position;
     const p = Array.from({ length: at.count }, (_, i) => new THREE.Vector3().fromBufferAttribute(at, i).applyMatrix4(leg.matrixWorld));
     const zs = [];
     for (let i = 0; i < p.length; i += 3) {

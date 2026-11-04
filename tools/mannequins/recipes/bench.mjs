@@ -3,7 +3,7 @@
 // the hinge to the angle the pose is prepared at, which the phone turns to the exact angle.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { along, nameAll, pad, padGeometry, part, rod, rollerGeometry, tube, turnedPart, wheelGeometry } from '../parts.mjs';
+import { along, nameAll, pad, padGeometry, part, rod, rollerGeometry, soften, tube, turnedPart, wheelGeometry } from '../parts.mjs';
 import { V, X, rad } from '../rig.mjs';
 
 /** How thick and how wide the pads are, and how long the seat and the back pad. */
@@ -85,10 +85,9 @@ function arcPlate(M, { r, wide, from, to, slots, way, thick = 0.008 }) {
 /** A flat `shape` of [z, y] points, `thick` across x and centred on it, its edges eased by `ease`. */
 function profiled(shape, thick, M, ease = 0) {
   const g = new THREE.ExtrudeGeometry(shape, { depth: thick - 2 * ease, bevelEnabled: ease > 0, bevelThickness: ease, bevelSize: ease, bevelOffset: -ease, bevelSegments: 1 });
-  g.deleteAttribute('uv');
   g.translate(0, 0, -thick / 2 + ease);
   g.rotateY(-Math.PI / 2);
-  return part(g, M.frame, { solid: ease > 0 });
+  return part(soften(g), M.frame, { solid: ease > 0 });
 }
 
 /**
