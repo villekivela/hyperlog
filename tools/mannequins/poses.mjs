@@ -476,22 +476,24 @@ export const POSES = {
     camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
   },
 
-  // Feet wide and knees bent between the towers, nearer the right one, the right palm lying on the
-  // thigh: the left hand presses from beside the chest across the body past the middle, on a cable
-  // from the left tower's pulley at the hip, the trunk and head turning with it.
+  // Feet wide and knees bent over the toes, the right palm lying on the thigh, a step ahead of the
+  // towers: the left hand presses from beside the chest across the body past the middle, on a cable
+  // from the left tower's pulley at the chest, the trunk and head turning with it. The owner's tune.
   '1_arm_cable_press_around': {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: [6, 9], at: [0.25, -0.1], hands: [1] } },
+    kit: { cable_crossover: { position: 9, at: [-0.0587, 0.2719], hands: [1] } },
     top: {
-      shin: 20, thigh: 48, trunk: 6, hand: [-0.26, 1.26, 0.33],
+      shin: 20, thigh: 48, trunk: 6, hand: [-0.2583, 1.3742, 0.3897],
       offsets: { spine_01: [0, -8, 0], spine_02: [0, -8, 0], spine_03: [0, -8, 0], Head: [0, -12, 0], hand_r: [90, 0, 0] },
+      rotate: 102.6196,
     },
     bottom: {
-      shin: 20, thigh: 48, trunk: 6, hand: [0.46, 1.2, 0.09],
-      offsets: { spine_01: [0, 4, 0], spine_02: [0, 4, 0], spine_03: [0, 4, 0], Head: [0, 6, 0], hand_r: [90, 0, 0] },
+      shin: 20, thigh: 48, trunk: 6, hand: [0.2468, 1.3, 0.14],
+      offsets: { spine_01: [0, 4, 0], spine_02: [0, 4, 0], spine_03: [0, 4, 0], Head: [0, -60.8313, 0], hand_r: [90, 0, 0] },
+      rotate: 91.5454,
     },
-    feet: { stance: 0.36, kneesOut: 0, stagger: 0.14 },
+    feet: { stance: 0.36, kneesOut: 0.3676, stagger: 0.14, toeOut: 20.6543 },
     grip: { arc: true, rotate: 90, one: 1, rest: [-0.14, 0.72, -0.015], pole: [1, -0.3, -0.5], sits: 'heel' },
     camera: { target: [0, 1.15, 0], halfHeight: 1.3, azimuth: 12, elevation: 8 },
   },
