@@ -40,3 +40,25 @@ jobs:
       # the committed .glb, mannequin.bin and mannequins.json, byte for byte.
       - name: Committed clips match the tool
         run: node --test --test-concurrency=3 committed.test.mjs bake.test.mjs bake-only.test.mjs suite.test.mjs
+
+  # Every test in tools/mannequins/, so a test added with a change runs on the PR and not only on
+  # the worker's machine. A failing test fails the job, and the job is required for a merge.
+  suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tools/mannequins
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/mannequins/package-lock.json
+
+      - run: npm ci
+
+      - name: Every mannequin test
+        run: npm test
