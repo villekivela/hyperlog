@@ -8,6 +8,7 @@ import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, 
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
+import { holdOf } from './grip.mjs';
 
 const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
 
@@ -209,4 +210,17 @@ test('every fit slider of every machine saves an entry that poses', async () => 
       stage.kit.group.traverse((o) => assert.ok(o.position.toArray().every(Number.isFinite), `${id}: ${path} leaves ${o.name} at ${o.position.toArray()}`));
     }
   }
+});
+
+// #160's worker: the thumb's swing read 50000.0 mm, and a step off a whole five wouldn't pose.
+test('a thumb\'s swing is an angle: a degree a step, 0 to 90, and every value the slider reaches poses', () => {
+  const entry = prepare('barbell_squat');
+  const swing = byPath(tunables(entry))['grip.swing'];
+  assert.deepEqual(swing, { path: 'grip.swing', value: 50, min: 0, max: 90, step: 1, unit: '°' });
+  const held = (v) => holdOf(applyTuned(entry, { 'grip.swing': v })).swing;
+  assert.equal(held(51), 51);
+  assert.equal(held(0), 0);
+  assert.equal(held(90), 90);
+  // A drag or a fine step lands between degrees: the hand takes the nearest whole one.
+  assert.equal(held(52.37), 52);
 });
