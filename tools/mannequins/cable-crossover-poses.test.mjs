@@ -406,7 +406,7 @@ test('the crunch rounds the back on the knees: the hips hold, the head drops tow
   const [top, bottom] = await ends('cable_crunch', 'pelvis', 'Head', 'calf_l', 'hand_l');
   assert.ok(top.calf_l.y < 0.12, 'on the knees');
   assert.ok(top.pelvis.distanceTo(bottom.pelvis) < 0.05, 'the hips hold');
-  assert.ok(top.Head.y - bottom.Head.y > 0.25, `the head drops ${(top.Head.y - bottom.Head.y).toFixed(2)}`);
+  assert.ok(bottom.Head.y - top.Head.y > 0.25, `the head drops ${(bottom.Head.y - top.Head.y).toFixed(2)}`);
   for (const end of [top, bottom]) assert.ok(end.hand_l.distanceTo(end.Head) < 0.25, 'the hands stay by the head');
 });
 
@@ -440,8 +440,8 @@ test('the triceps kickback keeps the upper arm behind the torso, only the forear
 test('the woodchopper chops both hands from high on the left to low on the right', async () => {
   const [top, bottom] = await ends('cable_woodchopper', 'hand_l', 'hand_r');
   for (const k of ['hand_l', 'hand_r']) {
-    assert.ok(top[k].x > 0.15 && bottom[k].x < -0.1, `${k} across, ${top[k].x.toFixed(2)} to ${bottom[k].x.toFixed(2)}`);
-    assert.ok(top[k].y - bottom[k].y > 0.4, `${k} down`);
+    assert.ok(bottom[k].x > 0.15 && top[k].x < -0.1, `${k} across, ${bottom[k].x.toFixed(2)} to ${top[k].x.toFixed(2)}`);
+    assert.ok(bottom[k].y - top[k].y > 0.4, `${k} down`);
   }
 });
 
