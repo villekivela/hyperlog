@@ -98,14 +98,14 @@ test('two fit rules set the hook the bar hangs on and the notch the safety stops
 });
 
 // The lifts' bar heights (m above the floor) from the ref's Motion, for a mannequin and the bench's
-// 0.44 m pad: where each lift has the bar standing and at its lowest. The mannequin's shoulder
+// 0.457 m pad: where each lift has the bar standing and at its lowest. The mannequin's shoulder
 // joint plus 2 cm is where a squat's bar rides standing.
 test('the bar\'s limits and the hooks span every lift the ref gives, from a squat\'s 1.47 m to a bench\'s chest', async () => {
   const bytes = await readFile(MODEL);
   const rig = buildRig(await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)));
   rig.root.updateMatrixWorld(true);
   const shoulder = Math.min(...['l', 'r'].map((k) => wpos(rig.bones[`upperarm_${k}`]).y));
-  const bench = 0.44;
+  const bench = 0.457;
   const lifts = {
     squat: [1.0, shoulder + 0.02],
     lunge: [1.15, 1.57],

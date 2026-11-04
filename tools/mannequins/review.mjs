@@ -24,7 +24,7 @@ export const BATCHES = {
     'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'lat_pulldown', 'close_grip_lat_pulldown',
     'triceps_pressdown', 'leg_press', 'machine_chest_press',
   ],
-  // The adjustable-bench pose, baked at six angles (#125).
+  // The adjustable-bench pose, baked at seven angles (#125, #195).
   'adjustable-bench': ['db_incline_press'],
   // The starter program's exercises that had no pose (#127), with the machines and the cable
   // column they needed.

@@ -16,7 +16,7 @@ test('the bench press offers its own numbers, points one element at a time, and 
   const t = byPath(tunables(prepare('barbell_bench_press')));
   assert.equal(t['grip.width'].value, 0.4);
   assert.equal(t['feet.z'].value, 0.445);
-  assert.equal(t['top.bar.0'].value, 1.1265);
+  assert.equal(t['top.bar.0'].value, 1.1435);
   assert.equal(t['body.arch.1'].value, -16.5);
   assert.ok(!Object.keys(t).some((p) => p.startsWith('camera') || p.startsWith('shadow')));
   // Metres, degrees and ratios get ranges that suit them.
@@ -48,7 +48,7 @@ test('tuned values go into a copy, arrays whole, and the entry is untouched', ()
   assert.deepEqual(tuned.top.bar, [1.2, -0.2]);
   assert.equal(tuned.grip.elbowZ, 0.5);
   assert.equal(entry.grip.width, 0.4);
-  assert.deepEqual(entry.top.bar, [1.1265, -0.2]);
+  assert.deepEqual(entry.top.bar, [1.1435, -0.2]);
 });
 
 // The studio's h and l step a number by one step, H and L by a tenth of one (owner, 2026-11-03).

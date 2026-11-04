@@ -5,18 +5,20 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { POSES } from './poses.mjs';
 import { atAngle } from './tune.mjs';
+import { DECLINE } from './recipes/bench.mjs';
 
 const LIBRARY = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json');
 
-/** The bench angles an adjustable-bench pose is baked at, in degrees: 0 to 75 in 15° steps. */
-export const BENCH_ANGLES = [0, 15, 30, 45, 60, 75];
+/** The bench angles an adjustable-bench pose is baked at, in degrees: 0 to 75 in 15° steps, and the top of the back pad's range. */
+export const BENCH_ANGLES = [0, 15, 30, 45, 60, 75, 85];
 
 let adjustable;
 
-/** The angles `id` is baked at: all of them where the library gives the exercise an adjustable bench, otherwise null. */
+/** The angles `id` is baked at: where the library gives the exercise an adjustable bench, all of them, or a decline movement's one, otherwise null. */
 export function benchAngles(id) {
   adjustable ??= new Set(JSON.parse(readFileSync(LIBRARY, 'utf8')).exercises.filter((e) => e.adjustableBench).map((e) => e.id));
-  return adjustable.has(id) ? BENCH_ANGLES : null;
+  if (!adjustable.has(id)) return null;
+  return id.startsWith('decline_') ? [DECLINE] : BENCH_ANGLES;
 }
 
 /** Where `trace` writes each pose's traced angles, as `<name>.json`. */
@@ -86,7 +88,7 @@ export function prepare(id, poses = POSES, angle, grip) {
   }
   if (entry.bench) {
     // Each per-angle setting takes its value for the angle.
-    Object.assign(entry, atAngle(entry, angle ?? entry.bench.typical));
+    Object.assign(entry, atAngle(entry, angle ?? (entry.kit?.bench?.decline ? DECLINE : entry.bench.typical)));
     if (entry.bench.cameras) entry.camera = cameraAt(entry.bench.cameras, entry.bench.angle);
   }
   if (typeof entry.trace === 'string') {

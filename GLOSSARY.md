@@ -143,12 +143,16 @@ _Avoid_: Preset, keyframe
 How far a pose turns one of the mannequin's bones at the top or the bottom of the rep, on top of what the solve does, eased between the two ends. Set in the studio.
 _Avoid_: Turn (that is a date in the rotation), override, keyframe
 
+**Foot catch**:
+The bench's option for a decline movement: a post out of the back pad's far end with two pairs of rollers, over and behind which the lifter's legs hook, lying the other way round. The reference is its maker's decline kit; it is an option of the `bench` kit, not a kit of its own.
+_Avoid_: Decline kit, leg roller
+
 **Framing**:
 Where the stage's camera looks for a clip, how much it shows there, and the turn and tilt the phone opens on. The studio's `:frame` saves its view as the clip's framing.
 _Avoid_: Camera angle, view (the studio's free camera)
 
 **Clip**:
-A baked file of one exercise's lowering that the phone plays forward, holds and plays backward. An adjustable-bench exercise has one per 15° of bench angle.
+A baked file of one exercise's lowering that the phone plays forward, holds and plays backward. An adjustable-bench exercise has one per 15° and one at 85° of bench angle.
 _Avoid_: Animation, video (that is the Technique video), asset
 
 **Kit**:
