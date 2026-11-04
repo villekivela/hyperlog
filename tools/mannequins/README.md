@@ -451,7 +451,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   where its ref puts it, and the studio shows it alone (`npm run studio`, then the list's "pec deck"
   kit, marked unused). It departs from the ref: the stack stays down,
   because two arms pull it and a stack is tied to one joint; the back pad is fixed, not laid along the
-  trunk; and the seat, start angles and lever radius are the ref's chosen numbers.
+  trunk; the sweep is 120°, a little over the ref's 100° ± 15°, so the hands end about 12 cm apart
+  and not touching; it has one start (the ref's knob has five, 15° apart, chosen) and the drop arms
+  are rigid on their pins; the rear delt's straddle (300 mm behind the axes) has no fit rule until
+  it is posed; and the seat, start angle and lever radius are the ref's chosen numbers.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
