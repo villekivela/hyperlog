@@ -67,7 +67,7 @@ export const batchReviewing = (id) => Object.keys(BATCHES).findLast((name) => BA
  * typical angle), the clip of each bench angle (`angles`, by degrees, none for another pose), the
  * files they read (`shared`), and every clip file an OK names (`all`).
  */
-async function filesOf(clips, id) {
+export async function filesOf(clips, id) {
   const index = JSON.parse(await readFile(path.join(clips, 'mannequins.json'), 'utf8'));
   const entry = index.clips[id];
   const at = (f) => path.join(clips, f);

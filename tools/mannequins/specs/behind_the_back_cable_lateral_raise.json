@@ -1,0 +1,46 @@
+{
+  "id": "behind_the_back_cable_lateral_raise",
+  "sources": [
+    "technique video SgyUoY0IZ7A from 9:06",
+    "exercises.json: a cuff on the wrist, the cable behind the back, raise the arm out, not up"
+  ],
+  "lines": [
+    {
+      "says": "the arm stays long, a soft bend at the elbow through the raise",
+      "moves": "elbow_l",
+      "top": [
+        120,
+        175
+      ],
+      "bottom": [
+        100,
+        175
+      ],
+      "open": "A known failure, waiting on the owner (#206)."
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_l",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "at the top the arm reaches about shoulder height, out to the side",
+      "look": "height",
+      "at": [
+        "top"
+      ],
+      "view": "front"
+    }
+  ]
+}

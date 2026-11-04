@@ -1,0 +1,45 @@
+{
+  "id": "1_arm_cable_press_around",
+  "sources": [
+    "technique video fGm-ef-4PVk from 12:13",
+    "exercises.json: wrap the handle around and across the body past the midline"
+  ],
+  "lines": [
+    {
+      "says": "the arm presses out to near straight and folds to the chest",
+      "moves": "elbow_l",
+      "top": [
+        150,
+        180
+      ],
+      "bottom": [
+        50,
+        100
+      ]
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_l",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "at the top the hand has passed the body's middle",
+      "look": "across",
+      "at": [
+        "top"
+      ],
+      "view": "front"
+    }
+  ]
+}

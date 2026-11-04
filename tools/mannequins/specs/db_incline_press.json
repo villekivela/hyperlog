@@ -1,0 +1,104 @@
+{
+  "id": "db_incline_press",
+  "sources": [
+    "technique video dhSKkQdUzoA, its loop in review/loops.json",
+    "exercises.json: a 30° or 45° bench, a second's pause at the bottom"
+  ],
+  "lines": [
+    {
+      "says": "the elbows open to near straight at the top and close deep at the bottom, the hands beside the upper chest",
+      "moves": "elbow_*",
+      "top": [
+        155,
+        180
+      ],
+      "bottom": [
+        30,
+        75
+      ]
+    },
+    {
+      "says": "the hips stay on the pad",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the head stays on the pad",
+      "still": "head.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the shoulders stay pinned to the pad",
+      "still": "shoulder_*.at",
+      "within": 0.03
+    },
+    {
+      "says": "the hands press on a near-straight line",
+      "path": "hand_*.at",
+      "within": 0.05
+    },
+    {
+      "says": "the upper arms keep their angle to the trunk: no tuck and flare mid-rep",
+      "even": "shoulder_*",
+      "within": 15
+    },
+    {
+      "says": "each bell stays near level",
+      "never": "dumbbell_*.tilt",
+      "past": 20,
+      "open": "A known failure, waiting on the owner (#206)."
+    },
+    {
+      "says": "a bell never rocks mid-rep: its tilt runs evenly from the top to the bottom",
+      "even": "dumbbell_*.tilt",
+      "within": 10
+    },
+    {
+      "says": "a bell never spins about its handle",
+      "never": "dumbbell_*.spin",
+      "past": 5
+    },
+    {
+      "says": "a bell never turns fast",
+      "never": "dumbbell_*.turn",
+      "past": 10
+    },
+    {
+      "says": "the wrist gives under the load, never rigid",
+      "reaches": "wrist_*",
+      "least": 10
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_*",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "the hand's roll runs evenly through the rep",
+      "even": "roll_*",
+      "within": 10
+    },
+    {
+      "says": "at the bottom the forearms stand about in line with the press, under the bells",
+      "look": "forearms",
+      "at": [
+        "bottom"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the arms lock out straight up, the bells over the shoulders, at every bench angle",
+      "look": "lockout",
+      "at": [
+        "top"
+      ],
+      "view": "side"
+    }
+  ]
+}

@@ -167,6 +167,14 @@ _Avoid_: Clip (that is the baked file)
 The side-on angles of one rep's lowering, taken from footage by pose estimation, that set some of a pose's angles. The feet, hands, contacts and tempo stay authored.
 _Avoid_: Capture, keyframes
 
+**Movement spec**:
+What a lift should do, written from its technique video and research: what moves and how far, what stays still, the path of the hands or the bar, and what must never happen. One short file per exercise in the mannequin tool, each line exact or left to the reviewer's eyes.
+_Avoid_: Check (that is automatic and knows nothing of the movement), trace (that is taken from footage)
+
+**Movement reviewer**:
+An agent that didn't pose a lift and checks its clip against its movement spec, line by line, before the owner sees it. A failure goes back to the worker, a doubt goes to the owner, and a clean lift needs only a sample.
+_Avoid_: Tester (that is the UI agent), checker
+
 **Batch**:
 The poses made and reviewed together. A batch is done when the owner has OK'd every one, for the clip it has now, on the studio.
 

@@ -9,6 +9,8 @@
     "test": "node --test --test-concurrency=3",
     "trace": "node trace.mjs",
     "review": "node review.mjs",
+    "numbers": "node numbers.mjs",
+    "movement": "node movement.mjs",
     "studio": "vite --config studio/vite.config.mjs"
   },
   "dependencies": {

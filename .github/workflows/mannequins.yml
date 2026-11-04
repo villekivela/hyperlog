@@ -40,3 +40,7 @@ jobs:
       # the committed .glb, mannequin.bin and mannequins.json, byte for byte.
       - name: Committed clips match the tool
         run: node --test --test-concurrency=3 committed.test.mjs bake.test.mjs bake-only.test.mjs suite.test.mjs
+
+      # Holds each clip with a movement spec to the spec's exact lines.
+      - name: Clips move as their specs say
+        run: node --test --test-concurrency=3 movement.test.mjs numbers.test.mjs render-clip.test.mjs

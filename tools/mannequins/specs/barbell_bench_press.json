@@ -1,0 +1,98 @@
+{
+  "id": "barbell_bench_press",
+  "sources": [
+    "exercises.json: control the eccentric, 2–3 seconds down",
+    "docs/research/grip.md, 2.1: the bar in the heel of the palm, the wrist stacked over the forearm",
+    "No technique video in the library"
+  ],
+  "lines": [
+    {
+      "says": "the elbows open to near straight at the top and close to about a right angle or less at the bottom",
+      "moves": "elbow_*",
+      "top": [
+        160,
+        180
+      ],
+      "bottom": [
+        45,
+        100
+      ]
+    },
+    {
+      "says": "the hips stay on the pad",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the head stays on the pad",
+      "still": "head.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the shoulders stay pinned to the pad",
+      "still": "shoulder_*.at",
+      "within": 0.03
+    },
+    {
+      "says": "the bar travels on a near-straight line, chest to over the shoulders",
+      "path": "barbell.at",
+      "within": 0.05
+    },
+    {
+      "says": "the bar stays level",
+      "never": "barbell.tilt",
+      "past": 2
+    },
+    {
+      "says": "the bar never turns fast",
+      "never": "barbell.turn",
+      "past": 5
+    },
+    {
+      "says": "the upper arms keep their angle to the trunk: no tuck and flare mid-rep",
+      "even": "shoulder_*",
+      "within": 15,
+      "open": "A known failure, waiting on the owner (#206)."
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_*",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "the hand's roll runs evenly through the rep",
+      "even": "roll_*",
+      "within": 10
+    },
+    {
+      "says": "at the bottom the forearms stand upright under the bar",
+      "look": "forearms",
+      "at": [
+        "bottom"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "at the bottom the bar touches the lower chest",
+      "look": "touch",
+      "at": [
+        "bottom"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "at the top the bar stands over the shoulders",
+      "look": "lockout",
+      "at": [
+        "top"
+      ],
+      "view": "side"
+    }
+  ]
+}
