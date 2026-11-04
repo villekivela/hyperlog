@@ -5,7 +5,7 @@
 // radius, read from the kit's part under the hand, and each finger and the thumb close joint by
 // joint until they touch it. The contact check measures the same skin, as the body is drawn.
 import * as THREE from 'three';
-import SOLVED from './seats.json' with { type: 'json' };
+import KEPT from './seats.json' with { type: 'json' };
 
 /**
  * Each grip landmark's distance along the palm from the wrist joint, as a fraction of the palm's
@@ -338,7 +338,7 @@ const RAD = Math.PI / 180;
 /** Every seat measured, by the mannequin's palm and the hand, landmark, radius and thumb. */
 const SEATS = new Map();
 /** Each seat's offs as seats.json holds them, by the same key: solving one takes over a second (#187). */
-let known = SOLVED;
+let known = KEPT;
 /** The offs solved in this run, which seats.json didn't hold. */
 let solved = {};
 
@@ -356,8 +356,8 @@ export function forgetSeats() {
 const stepOf = (steps, x) => Math.min(steps.length - 1.000001, Math.max(0, (x - steps[0]) / (steps[1] - steps[0])));
 
 /**
- * How far off the palm's face a bar of `radius` rests at `depth` along it, in hand `k` held as
- * `hold` says: by each of `SLANTS`, by each of `TILTS`.
+ * How far off the palm's face a bar of `radius` rests at `depth` along it, in hand `k` held at
+ * landmark `sits` with `thumb` and `swing`: by each of `SLANTS`, by each of `TILTS`.
  */
 function solveSeat(rig, k, { sits, thumb, swing }, radius, depth) {
   const { fingers, normal, knuckles } = rig.hand.rest[k];
@@ -478,7 +478,7 @@ function setDigit(joints, angles, spec) {
   joints[0].bone.updateMatrixWorld(true);
 }
 
-/** Calls `each(x, y, z)` for each rigid point of `bone` where it is now. */
+/** Calls `each(x, y, z)` for each rigid point of `bone` where it is now. The solve's inner loop, so no array for each. */
 function eachPoint(rig, k, bone, each) {
   const pts = rig.hand.rigid[k][bone] ?? [];
   const e = rig.bones[bone].matrixWorld.elements;

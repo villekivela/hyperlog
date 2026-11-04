@@ -533,6 +533,12 @@ Use it for a pull request's screenshots.
 `package-lock.json`, with the plugin in `studio/plugin.mjs`). It is for the owner's machine and
 listens on localhost only.
 
+- **Loading:** the list and the item on stage come first. Opening an item starts the checks, that
+  item's first, then every other pose's one at a time in the background, and opening another item
+  or saving moves that pose to the front. The header's message line says `Loading…`, then
+  `Checking 12 of 38`, the rows keep their `checking` tag until theirs are done, and the list fills
+  in every couple of seconds. A plain message has the line for four seconds, then the count takes it
+  back; an error, or a save under way, keeps it. `studio/checking.mjs` is the queue.
 - **The sidebar** lists every exercise in the library, posed or not, grouped by equipment, then
   every kit. Each row shows its status: `no pose`, `failing` (a check fails), `notes` (an open note
   in `review/notes.md`), `ok` (OK'd for the clip it has now), `phone-checked`, `changed` (OK'd for
@@ -669,7 +675,8 @@ has now.
 ## Files
 
 - `render.mjs`: PNGs of a pose, with no GPU.
-- `studio/`: the studio. `plugin.mjs` its server, `studio.js` and `index.html` its page,
+- `studio/`: the studio. `plugin.mjs` its server, `checking.mjs` its queue of checks, `studio.js` and
+  `index.html` its page,
   `keys.json` and `keys.mjs` its keymap, `video.mjs` the technique video's steps, speeds and sync,
   `view.mjs` the free camera, the hands' close-ups and the plates' toggle, `bones.mjs` the walk of
   the skeleton, `vite.config.mjs` what `npm run studio` serves.

@@ -15,6 +15,7 @@ import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
 import { faster, repAt, slower, spanOf, stepFrames, stepSeconds, synced, timeAt, zoomOf } from './video.mjs';
 import { HALF_FOV, closeUpOf, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
+import { mayNote, progressNote, rowAfter } from './checking.mjs';
 import { skeletonOf } from './bones.mjs';
 import { inUnits, jointsOf, limitOf, limitsOf, scrubAll, showJoint, statusOf, stepJoint, stepsOf, typedJoint } from './joints.mjs';
 import { between, heldAt, turnOf, wpos } from '../rig.mjs';
@@ -81,10 +82,12 @@ function remember() {
 }
 
 let aboutView = false; // the message says where the camera is, so a move of it clears the message
+let said = 0;
 function message(text, tone = '') {
   $('message').textContent = text;
   $('message').dataset.tone = tone;
   aboutView = false;
+  said = performance.now();
 }
 
 const api = async (url, body) => {
@@ -435,10 +438,10 @@ async function saveFraming() {
     await openItem(state.current, { keepTuned: true });
     await loadClip();
     message(`The clip opens on this view now: ${path} in poses.mjs, turned ${framing.azimuth}°, tilted ${framing.elevation}°, ${Math.round(framing.halfHeight * 2000)} mm high`);
-    loadItems(true);
   } catch (err) {
     message(err.message, 'error');
   }
+  followChecks();
 }
 
 // ---- Posing live --------------------------------------------------------------------------------
@@ -693,11 +696,49 @@ function moveCursor(i) {
   openTimer = setTimeout(() => openItem(rowKey(state.rows[state.cursor])), 120);
 }
 
-async function loadItems(wait = false) {
-  state.items = await api(`/api/items${wait ? '?wait=1' : ''}`);
+async function loadItems() {
+  const under = state.rows[state.cursor] && rowKey(state.rows[state.cursor]);
+  state.items = await api('/api/items');
   paintList();
-  const at = state.rows.findIndex((r) => rowKey(r) === state.current);
+  const at = rowAfter(state.rows.map(rowKey), under, state.current);
   if (at >= 0 && at !== state.cursor) { state.cursor = at; paintList(); }
+}
+
+/** What the message line last said of the checks. */
+let checkNote = $('message').textContent;
+function noteChecks(note) {
+  const { textContent: text, dataset: { tone } } = $('message');
+  if (!mayNote({ text, tone, own: checkNote, age: performance.now() - said, note })) return;
+  checkNote = note;
+  message(note, note ? 'busy' : '');
+}
+
+let following = false;
+/**
+ * Follows the server's checks until they have all finished: the message line counts them, and the
+ * list fills in as they do, every so often, since making it holds the next pose back.
+ */
+async function followChecks() {
+  if (following) return;
+  following = true;
+  let done = null;
+  let listed = 0;
+  for (;;) {
+    const progress = (await api('/api/state').catch(() => null))?.checks;
+    if (progress) {
+      const note = progressNote(progress);
+      noteChecks(note);
+      const finished = !note;
+      if (progress.done !== done && (finished || performance.now() - listed > 2000)) {
+        done = progress.done;
+        listed = performance.now();
+        await loadItems().catch(() => {});
+      }
+      if (finished) break;
+    }
+    await new Promise((next) => { setTimeout(next, 500); });
+  }
+  following = false;
 }
 
 // ---- The item on stage --------------------------------------------------------------------------
@@ -1371,10 +1412,10 @@ async function save() {
     showWhich();
     paintCommands();
     message(`Saved and baked ${item.id}: clip ${clip.slice(0, 8)}, on stage now (${keys.keyOf('clip')} for the live pose)`);
-    loadItems(true);
   } catch (err) {
     message(err.message, 'error');
   }
+  followChecks();
 }
 
 async function ok() {
@@ -1387,7 +1428,7 @@ async function ok() {
     const { batch } = await api('/api/ok', { id: item.id, ok: !isOk });
     message(isOk ? `OK taken back (${batch})` : `OK for this clip, in review/${batch}.json`);
     await openItem(state.current, { keepTuned: true });
-    loadItems(true);
+    followChecks();
   } catch (err) {
     message(err.message, 'error');
   }
@@ -1412,7 +1453,7 @@ async function saveNote() {
     await api('/api/note', { item, text });
     message(`Note added to review/notes.md under ${item}`);
     await openItem(state.current, { keepTuned: true });
-    loadItems(true);
+    followChecks();
   } catch (err) {
     message(err.message, 'error');
   }
@@ -1785,7 +1826,7 @@ if (first) {
   await openItem(first);
 }
 // The checks of every pose, which the first list didn't wait for.
-loadItems(true).catch(() => {});
+followChecks();
 // A save still baking when the page reloaded.
 const pending = await api('/api/state').catch(() => null);
 if (pending?.baking) {
@@ -1796,7 +1837,7 @@ if (pending?.baking) {
       clearInterval(poll);
       message(s.last?.ok ? `Baked ${s.last.id}` : `The bake failed: ${s.last?.error}`, s.last?.ok ? '' : 'error');
       openItem(state.current, { keepTuned: true });
-      loadItems(true);
+      followChecks();
     }
   }, 1000);
 }
