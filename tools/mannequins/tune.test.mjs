@@ -118,7 +118,9 @@ test('the wrist sliders are labelled in words, with the sign of each direction',
 });
 
 // The owner, #127: on close_grip_bench_press the wrist sliders did nothing in the live preview.
-// Every pose with hands: each wrist number, moved from one side to the other, turns the hand.
+// Every pose with hands: each wrist number, moved from one side of where it sits to the other, turns
+// the hand. Around its own value, since one wrist number can slow another far from it: the tuned
+// squats' bend halves the tilt near straight, where no slider of theirs sits.
 test('each wrist number turns the hand as the studio poses it, on every pose with hands', async () => {
   const bytes = await readFile(MODEL);
   const body = await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
@@ -140,11 +142,11 @@ test('each wrist number turns the hand as the studio poses it, on every pose wit
         stage.pose(d);
         return turnOf(stage.rig, 'lowerarm_l').invert().multiply(turnOf(stage.rig, 'hand_l'));
       };
-      const turned = ((await hand(15)).angleTo(await hand(-15)) * 180) / Math.PI;
+      const turned = ((await hand(t.value + 15)).angleTo(await hand(t.value - 15)) * 180) / Math.PI;
       if (turned < 20) still.push(`${id} ${t.path}: ${turned.toFixed(0)}°`);
     }
   }
-  assert.deepEqual(still, [], 'from -15 to 15 the hand turned only');
+  assert.deepEqual(still, [], '15 either way the hand turned only');
 });
 
 // A bone's offset (#164) is three numbers at each end, [x, y, z] in degrees: the bones the entry
