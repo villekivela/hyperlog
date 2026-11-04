@@ -619,7 +619,8 @@ listens on 127.0.0.1 only.
 - **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers
   its motion offers that the entry leaves at the default), lengths shown in millimetres. `h` and `l`
   step the selected one a degree, a millimetre or a hundredth of a ratio, `H` and `L` a tenth of
-  that, and `=` types a value (`412.5`, or `+2` and `+-2` to move it). A drag of a handle sets the
+  that, and `=` types a value (`412.5`, or `+2` and `+-2` to move it). A carriage's `position` lands
+  on a hole of the 16, however it is set. A drag of a handle sets the
   same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
   `body.arch`), a point whole.
 - **The technique video** of an exercise with a video link in `exercises.json` is beside the

@@ -4,7 +4,7 @@
 // are replaced whole, not merged.
 
 /** Which hand a kit serves is a choice, not a place, so it has no slider. */
-const isChoice = (path) => /^kit\.[^.]+\.hand$/.test(path);
+const isChoice = (path) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(path);
 
 /** Numbers not yet saved, without any choice among them, which an older slider may have left. */
 export const withoutChoices = (tuned) => Object.fromEntries(Object.entries(tuned).filter(([path]) => !isChoice(path)));
@@ -60,6 +60,12 @@ export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.mo
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+/** `value` as the number at `path` can stand: on a whole step for one that has only those. */
+function settled(path, value) {
+  const { whole, min, max } = rangeOf(path, value);
+  return whole ? Math.min(max, Math.max(min, Math.round(value))) : value;
+}
+
 /**
  * `tuned` with a slider's `value` put at its `path`: one number of a point goes into the point,
  * which is saved whole, and a value that is what the entry already has comes out again.
@@ -69,9 +75,10 @@ export function withTuned(entry, tuned, path, value) {
   if (m) {
     const [, point, i] = m;
     const whole = JSON.parse(JSON.stringify(tuned[point] ?? baseAt(entry, point)));
-    whole[Number(i)] = value;
+    whole[Number(i)] = settled(path, value);
     return withTuned(entry, tuned, point, whole);
   }
+  if (typeof value === 'number') value = settled(path, value);
   const next = { ...tuned };
   if (same(value, baseAt(entry, path))) delete next[path]; else next[path] = value;
   return next;
@@ -147,6 +154,8 @@ export function rangeOf(path, value) {
   if (key === 'level') return { min: 0, max: 1, step: 0.05, unit: '' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
+  // A carriage stands at a hole of the 16 on its rail, a whole number however it is dragged (`settled`).
+  if (path.startsWith('kit.') && key === 'position') return { min: 1, max: 16, step: 1, unit: '', whole: true };
   // Equipment stands where the pose needs it: a metre either way.
   if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.001, unit: ' m' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.001, unit: ' m' };

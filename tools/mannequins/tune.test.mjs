@@ -226,8 +226,37 @@ test('a thumb\'s swing is an angle: a degree a step, 0 to 90, and every value th
 });
 
 test('Tune offers no slider for which hand a kit serves: it is a choice, not a place', () => {
-  for (const id of ['single_arm_db_row', 'bayesian_cable_curl']) {
+  for (const id of ['single_arm_db_row', 'bayesian_cable_curl', 'cable_y_raise']) {
     const paths = tunables(prepare(id)).map((t) => t.path);
-    assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hand$/.test(p)), [], id);
+    assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(p)), [], id);
+  }
+});
+
+// The owner, #197: the machine vanished at the first touch of `position`, a hole taken for metres.
+test('a carriage moves a hole at a time, from the first to the last', () => {
+  const t = tunables(prepare('cable_crossover')).find((n) => n.path === 'kit.cable_crossover.position');
+  assert.deepEqual({ min: t.min, max: t.max, step: t.step, unit: t.unit }, { min: 1, max: 16, step: 1, unit: '' });
+});
+
+test('a drag, a tenth of a step or a typed number lands a carriage on a hole', () => {
+  const entry = prepare('cable_crossover');
+  const at = (value) => withTuned(entry, {}, 'kit.cable_crossover.position', value)['kit.cable_crossover.position'];
+  assert.equal(at(12.6), 13);
+  assert.equal(at(13.2), 13);
+  assert.equal(at(99), 16);
+  assert.equal(at(-3), 1);
+});
+
+test('a carriage on each tower lands on a hole too', () => {
+  const entry = { ...prepare('cable_crossover'), kit: { cable_crossover: { position: [4, 12] } } };
+  const tuned = withTuned(entry, {}, 'kit.cable_crossover.position.1', 9.4);
+  assert.deepEqual(tuned['kit.cable_crossover.position'], [4, 9]);
+});
+
+test('the stage still stands with a carriage dragged anywhere along its rail', async () => {
+  const entry = prepare('cable_crossover');
+  for (const value of [1.37, 8.5, 15.001]) {
+    const stage = await buildStage(applyTuned(entry, withTuned(entry, {}, 'kit.cable_crossover.position', value)));
+    assert.ok(stage.pose(0), `dragged to ${value}`);
   }
 });
