@@ -57,7 +57,7 @@ export const mm = (v) => Math.round(v * 1e4) / 1e4;
  * Faces meeting at less than `crease` degrees share their normals, so a bevel or a rounded corner
  * shades smoothly and a flat face stays flat.
  */
-function soften(geometry, crease = 40) {
+export function soften(geometry, crease = 40) {
   const flat = geometry.index ? geometry.toNonIndexed() : geometry;
   const pos = flat.attributes.position;
   const key = (i) => `${Math.round(pos.getX(i) * 1e5)},${Math.round(pos.getY(i) * 1e5)},${Math.round(pos.getZ(i) * 1e5)}`;

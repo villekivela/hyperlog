@@ -1,5 +1,5 @@
 // Adjustable-bench poses (SPEC, Bench angle and the mannequin, #125): each is baked at 0° to 75° in
-// 15° steps, with a typical angle in the index, and the back pad is a part of its own the phone
+// 15° steps and at 85°, with a typical angle in the index, and the back pad is a part of its own the phone
 // turns to the exact angle.
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,7 +13,7 @@ import { benchAngles } from './entries.mjs';
 import { checkPose, CHECKS } from './checks.mjs';
 import { POSES } from './poses.mjs';
 
-const ANGLES = [0, 15, 30, 45, 60, 75];
+const ANGLES = [0, 15, 30, 45, 60, 75, 85];
 const ID = 'db_incline_press';
 let out;
 let index;
@@ -23,7 +23,7 @@ before(async () => {
   index = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips;
 });
 
-test('the library marks which exercises have an adjustable bench, and each is baked at six angles', () => {
+test('the library marks which exercises have an adjustable bench, and each is baked at seven angles', () => {
   assert.deepEqual(benchAngles(ID), ANGLES);
   assert.equal(benchAngles('barbell_bench_press'), null);
   assert.equal(benchAngles('barbell_squat'), null);
@@ -32,7 +32,7 @@ test('the library marks which exercises have an adjustable bench, and each is ba
 test('an adjustable-bench pose bakes a clip per angle and a typical angle into the index', async () => {
   const { bench } = index[ID];
   assert.deepEqual(Object.keys(bench.clips), ANGLES.map(String));
-  assert.ok(Number.isInteger(bench.typical) && bench.typical >= 0 && bench.typical <= 75, `typical ${bench.typical}`);
+  assert.ok(Number.isInteger(bench.typical) && bench.typical >= 0 && bench.typical <= 85, `typical ${bench.typical}`);
   assert.equal(bench.hinge.length, 2);
   for (const a of ANGLES) {
     assert.equal(bench.clips[a].clip, `${ID}_${a}.glb`);

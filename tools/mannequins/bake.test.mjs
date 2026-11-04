@@ -116,7 +116,7 @@ test('every clip shares one mannequin and one file per kit: a clip holds only it
 });
 
 test('a kit file holds each part once, however many clips use it', async () => {
-  // The six bench angles use the same dumbbells: the second angle's adds nothing to the file.
+  // The seven bench angles use the same dumbbells: the second angle's adds nothing to the file.
   const dumbbells = await readFile(path.join(out, 'kit_dumbbells.bin'));
   const views = new Set();
   for (const file of filesOf('db_incline_press')) {

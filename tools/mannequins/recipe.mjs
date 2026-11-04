@@ -6,7 +6,7 @@
 // A recipe declares, as data:
 //
 // - `bodies`: each moving body by name, with its joint (`revolute`, `prismatic` or `free`) and
-//   limits. A joint's value is in radians or metres from where its recipe measures it: from its
+//   limits, and a revolute joint's `settings` where holes set it. A joint's value is in radians or metres from where its recipe measures it: from its
 //   rest where it raises a stack, or a lever's angle up from level ahead.
 // - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
 //   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or
@@ -35,8 +35,11 @@
 import * as THREE from 'three';
 import { group, tones } from './parts.mjs';
 
-/** A body turning about `axis` (in the kit's frame) between `limits` [min, max] radians. */
-export const revolute = ({ axis, limits }) => ({ type: 'revolute', axis, limits });
+/**
+ * A body turning about `axis` (in the kit's frame) between `limits` [min, max] radians, or set by
+ * hand at one of `settings`, the radians its holes give it, where it has any.
+ */
+export const revolute = ({ axis, limits, settings }) => ({ type: 'revolute', axis, limits, ...(settings ? { settings } : {}) });
 
 /** A body sliding along `axis` between `limits` [min, max] metres. */
 export const prismatic = ({ axis, limits }) => ({ type: 'prismatic', axis, limits });
