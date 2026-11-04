@@ -1,7 +1,7 @@
 // Hex dumbbells, one in each hand, or with `hand` (1 the left, -1 the right) one in that hand alone,
 // the handle across the palm between collars. Free bodies: the hands carry them. With `steady`, each
-// is turned from whichever end of it lies nearest the handle's line at the top of the rep: turned
-// from the far end, a handle lying nearly end for end spins about itself from frame to frame.
+// is laid by the palm as well as the handle's line, so it turns with the hand and can't roll in it.
+import { Matrix4 } from 'three';
 import { recipe, free } from '../recipe.mjs';
 import { along, group, hexGeometry, turnedPart } from '../parts.mjs';
 import { V, X } from '../rig.mjs';
@@ -23,12 +23,14 @@ export default recipe({
     });
     return {
       parts: bells,
-      drive(P, P0) {
+      drive(P) {
         sides.forEach((s, i) => {
           bells[i].position.copy(P.hand(s));
           // The handle lies along the knuckles, as the hand turned and tipped it.
-          const from = options.steady && P0?.held?.[s]?.x < 0 ? X.clone().negate() : X;
-          bells[i].quaternion.setFromUnitVectors(from, (P.held?.[s] ?? P.across(s)).clone().normalize());
+          const line = (P.held?.[s] ?? P.across(s)).clone().normalize();
+          const palm = options.steady && P.palm?.[s];
+          if (palm) bells[i].quaternion.setFromRotationMatrix(new Matrix4().makeBasis(line, palm, line.clone().cross(palm)));
+          else bells[i].quaternion.setFromUnitVectors(X, line);
         });
         return { points: { handles: bells.map((b) => b.position.clone()) } };
       },

@@ -550,6 +550,18 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // arm reaches, what it holds slants across the palm rather than the wrist bending to it.
     const handOf = (fore) => {
       let fingers = fore.clone();
+      // With `P.level` the wrist takes that share of the forearm's lean, and the knuckles tip with
+      // the rest. The pose's own bend goes on top.
+      const knucklesOf = (f) => {
+        const k = twist(f);
+        return k.addScaledVector(f, -k.dot(f) / f.lengthSq()).normalize();
+      };
+      const left = knucklesOf(fingers).y * (1 - (P.level ?? 0));
+      for (let i = 0; P.level && i < 4; i++) {
+        const knuckles = knucklesOf(fingers);
+        const face = palmOf(fingers).addScaledVector(knuckles, -palmOf(fingers).dot(knuckles)).normalize();
+        fingers = fingers.clone().applyAxisAngle(face, Math.atan((left - knuckles.y) / face.clone().cross(knuckles).y));
+      }
       const inward = twist(fingers);
       const palm = rig.palms[k].clone().applyQuaternion(frame(fingers, inward).multiply(handRest));
       if (flex) fingers = turnToward(fingers, palm, rad(flex));
@@ -598,6 +610,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // The palm's normal, square to the handle.
     palmNormal.addScaledVector(handle, -palmNormal.dot(handle)).normalize();
     (P.held ??= {})[s] = fixed ? along.clone().normalize() : handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
+    (P.palm ??= {})[s] = palmNormal;
     aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
     aim(rig, 'hand_' + k, fingers, inward);
     // A turned arm before the fingers close, so they close round what the hand holds where it is now:

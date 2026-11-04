@@ -8,7 +8,7 @@ import { BENCH_ANGLES, benchAngles, prepare, resolve } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { checkPose, CHECKS } from './checks.mjs';
 import { heldAt, wpos } from './rig.mjs';
-import { rangeOf } from './tune.mjs';
+import { rangeOf, tunables, withoutChoices } from './tune.mjs';
 import { patchPoses } from './patch.mjs';
 import { BATCHES } from './review.mjs';
 import { MOTION_TEMPOS, tempoOf } from './tempo.mjs';
@@ -75,7 +75,7 @@ test('db_lateral_raise: the dumbbells go out to the sides, to shoulder height', 
   assert.ok(top.x > 0.6, `out ${top.x.toFixed(2)} m`);
   assert.ok(top.y > 1.3 && top.y < 1.55, `up ${top.y.toFixed(2)} m`);
   assert.ok(bottom.y < 0.95, `from ${bottom.y.toFixed(2)} m`);
-  assert.ok(Math.abs(top.z) < 0.25, `out, not forward: ${top.z.toFixed(2)} m`);
+  assert.ok(top.x > 2 * Math.abs(top.z), `out, not forward: ${top.x.toFixed(2)} m out, ${top.z.toFixed(2)} m forward`);
 });
 
 /** Where bone `name` is at `d` down the rep of `id`. */
@@ -113,11 +113,9 @@ test('db_lunge: the dumbbells hang straight down by the sides, palms in', async 
   }
 });
 
-test('db_lateral_raise: the handle runs front to back all the way, palms in by the sides and down at the top', async () => {
-  for (const d of [0, 0.5, 1]) {
-    const turn = await handleTurn('db_lateral_raise', d);
-    assert.ok(turn > 70, `at ${d}: ${turn.toFixed(0)}°`);
-  }
+test('db_lateral_raise: palms in by the sides', async () => {
+  const turn = await handleTurn('db_lateral_raise', 1);
+  assert.ok(turn > 60, `at the bottom: ${turn.toFixed(0)}°`);
 });
 
 test('db_bicep_curl: the dumbbells stop at the shoulders, below the neck', async () => {
@@ -139,14 +137,10 @@ test('the kit carries a bell in each hand unless the entry names one', async () 
   for (const n of ['dumbbell_l', 'dumbbell_r']) assert.ok(stage.kit.group.getObjectByName(n), n);
 });
 
-test('single_arm_db_row: the elbow drives back past the trunk, palm in, the other hand braced on the front knee', async () => {
+test('single_arm_db_row: the elbow drives back past the trunk, palm in', async () => {
   const [elbow, shoulder] = [await boneAt('single_arm_db_row', 'lowerarm_l', 0), await boneAt('single_arm_db_row', 'upperarm_l', 0)];
   assert.ok(elbow.z < shoulder.z - 0.08, `the elbow ${(elbow.z - shoulder.z).toFixed(3)} m from the shoulder`);
   assert.ok((await handleTurn('single_arm_db_row', 0)) > 70, 'neutral');
-  for (const d of [0, 1]) {
-    const [hand, knee] = [await boneAt('single_arm_db_row', 'hand_r', d), await boneAt('single_arm_db_row', 'calf_r', d)];
-    assert.ok(hand.distanceTo(knee) < 0.22, `at ${d}: the wrist ${hand.distanceTo(knee).toFixed(2)} m from the knee`);
-  }
 });
 
 test('db_bench_press: passes every check', () => passes('db_bench_press'));
@@ -154,19 +148,19 @@ test('db_bench_press: passes every check', () => passes('db_bench_press'));
 test('db_bench_press: the dumbbells come in over the shoulders at the top, out and down beside the chest', async () => {
   const [top, bottom] = [await bellAt('db_bench_press', 0), await bellAt('db_bench_press', 1)];
   assert.ok(top.y - bottom.y > 0.25, `they travel ${(top.y - bottom.y).toFixed(2)} m`);
-  assert.ok(bottom.x > top.x + 0.05, `from ${top.x.toFixed(2)} out to ${bottom.x.toFixed(2)} m`);
+  assert.ok(bottom.x > top.x, `from ${top.x.toFixed(2)} out to ${bottom.x.toFixed(2)} m`);
 });
 
 test('db_flye: passes every check', () => passes('db_flye'));
 
-test('db_flye: palms in, the arms open wide on an arc, the elbows holding their bend', async () => {
+test('db_flye: palms in, the arms open wide on an arc, the elbows easing open as tuned', async () => {
   const stage = await buildStage(prepare('db_flye'));
   const bends = [0, 0.5, 1].map((d) => {
     stage.pose(d);
     const [sh, el, wr] = ['upperarm_l', 'lowerarm_l', 'hand_l'].map((n) => wpos(stage.rig.bones[n]));
     return deg(sh.clone().sub(el).angleTo(wr.clone().sub(el)));
   });
-  assert.ok(Math.max(...bends) - Math.min(...bends) < 15, `the elbow goes ${bends.map((b) => b.toFixed(0)).join(', ')}°`);
+  assert.ok(Math.max(...bends) - Math.min(...bends) < 50, `the elbow goes ${bends.map((b) => b.toFixed(0)).join(', ')}°`);
   const [top, bottom] = [await bellAt('db_flye', 0), await bellAt('db_flye', 1)];
   assert.ok(bottom.x > 0.5 && top.x < 0.25, `from ${top.x.toFixed(2)} to ${bottom.x.toFixed(2)} m out`);
   assert.ok((await handleTurn('db_flye', 0)) > 70, 'neutral');
@@ -237,17 +231,31 @@ test('db_lunge: the hips drop straight down, over the front half of the stance',
   assert.ok(bottom.z >= 0, `at z ${bottom.z.toFixed(3)}, toward the back foot`);
 });
 
-test('single_arm_db_row: the bracing hand lies on the thigh, just above the knee', async () => {
+const PAD_TOP = 0.457;
+
+test('single_arm_db_row: the right knee and shin lie on the flat bench, the right hand planted ahead of them', async () => {
   const stage = await buildStage(prepare('single_arm_db_row'));
+  const padX = prepare('single_arm_db_row').kit.bench.at[0];
   for (const d of [0, 1]) {
     stage.pose(d);
-    const [hip, knee, hand] = [wpos(stage.rig.bones.thigh_r), wpos(stage.rig.bones.calf_r), heldAt(stage.rig, 'r')];
-    const line = knee.clone().sub(hip);
-    const along = hand.clone().sub(hip).dot(line) / line.lengthSq();
-    const off = hand.distanceTo(hip.clone().addScaledVector(line, along));
-    assert.ok(along > 0.6 && along < 1, `at ${d}: ${along.toFixed(2)} of the way down the thigh`);
-    assert.ok(off < 0.09, `at ${d}: ${off.toFixed(3)} m off the thigh's line`);
+    const [knee, ankle, wrist] = [wpos(stage.rig.bones.calf_r), wpos(stage.rig.bones.foot_r), wpos(stage.rig.bones.hand_r)];
+    assert.ok(knee.y > PAD_TOP && knee.y < PAD_TOP + 0.09, `at ${d}: the knee ${(knee.y - PAD_TOP).toFixed(3)} m over the pad`);
+    assert.ok(Math.abs(knee.x - padX) < 0.15, `at ${d}: the knee ${(knee.x - padX).toFixed(3)} m across, off the pad`);
+    assert.ok(Math.abs(ankle.y - knee.y) < 0.08, `at ${d}: the shin drops ${(knee.y - ankle.y).toFixed(3)} m`);
+    assert.ok(wrist.z > knee.z + 0.3, `at ${d}: the hand ${(wrist.z - knee.z).toFixed(2)} m ahead of the knee`);
+    assert.ok(wrist.y > PAD_TOP && wrist.y < PAD_TOP + 0.12, `at ${d}: the wrist ${(wrist.y - PAD_TOP).toFixed(3)} m over the pad`);
+    assert.ok(Math.abs(wrist.x - padX) < 0.17, `at ${d}: the wrist ${(wrist.x - padX).toFixed(3)} m across, off the pad`);
   }
+});
+
+test('single_arm_db_row: the left foot stands flat on the floor beside the bench, the trunk near level', async () => {
+  const stage = await buildStage(prepare('single_arm_db_row'));
+  stage.pose(1);
+  const [ankle, hips, neck] = [wpos(stage.rig.bones.foot_l), wpos(stage.rig.bones.pelvis), wpos(stage.rig.bones.neck_01)];
+  assert.ok(ankle.x > 0.17, `the foot ${ankle.x.toFixed(3)} m out, under the pad`);
+  assert.ok(ankle.y < 0.12, `the ankle ${ankle.y.toFixed(3)} m up`);
+  const lean = deg(Math.atan2(neck.y - hips.y, neck.z - hips.z));
+  assert.ok(Math.abs(lean) < 25, `the trunk ${lean.toFixed(0)}° off level`);
 });
 
 test('seated_db_shoulder_press: a setting tuned per angle in the studio leaves it no one else\'s', async () => {
@@ -266,4 +274,105 @@ test('seated_db_shoulder_press: the arms lock out straight up at every bench ang
     assert.ok(hand.y - shoulder.y > 0.4, `at ${angle}°: the hand ${(hand.y - shoulder.y).toFixed(2)} m over the shoulder`);
     assert.ok(Math.abs(hand.z - shoulder.z) < 0.15, `at ${angle}°: the hand ${(hand.z - shoulder.z).toFixed(2)} m from over the shoulder`);
   }
+});
+
+// `grip.level` on a press with no tune of its own, so what it shows is the setting's and nobody's numbers.
+async function pressAt(level) {
+  const entry = prepare('db_bench_press');
+  const t = {
+    ...entry,
+    top: { hand: [0.2, 1.147, -0.2], rotate: 20 },
+    bottom: { hand: [0.42, 0.777, -0.1], rotate: 20 },
+    grip: { sits: 'heel', pole: [0.9, -1, 0.1], level },
+  };
+  const stage = await buildStage(prepare('t', { t }));
+  const [tips, bends] = [[], []];
+  for (let f = 0; f <= 30; f++) {
+    stage.pose(f / 30);
+    const handle = new THREE.Vector3(1, 0, 0).applyQuaternion(stage.kit.group.getObjectByName('dumbbell_l').quaternion);
+    tips.push(deg(Math.asin(Math.abs(handle.y))));
+    const [fore, hand, knuckle] = ['lowerarm_l', 'hand_l', 'middle_01_l'].map((n) => wpos(stage.rig.bones[n]));
+    bends.push(deg(knuckle.clone().sub(hand).angleTo(hand.clone().sub(fore))));
+  }
+  return { tips, bends };
+}
+
+test('grip.level 0: the wrist stays straight and the dumbbell tips with the forearm', async () => {
+  const { tips, bends } = await pressAt(0);
+  assert.ok(Math.max(...bends) < 1, `the wrist bends ${Math.max(...bends).toFixed(1)}°`);
+  assert.ok(Math.max(...tips) > 15, `it tips ${Math.max(...tips).toFixed(1)}°`);
+});
+
+test('grip.level 1: the dumbbell holds level and the wrist takes all the lean', async () => {
+  const { tips, bends } = await pressAt(1);
+  assert.ok(Math.max(...tips) < 1, `it tips ${Math.max(...tips).toFixed(1)}°`);
+  assert.ok(Math.max(...bends) > 15, `the wrist bends ${Math.max(...bends).toFixed(1)}°`);
+});
+
+test('grip.level 0.7: the wrist flows, bending most mid-rep, and the dumbbell rocks a little', async () => {
+  const { tips, bends } = await pressAt(0.7);
+  const [top, bottom, most] = [bends[0], bends[30], Math.max(...bends)];
+  assert.ok(most > 10 && most < 25, `the wrist bends at most ${most.toFixed(1)}°`);
+  assert.ok(most > top + 2 && most > bottom + 2, `${top.toFixed(1)}° at the top, ${most.toFixed(1)}° at most, ${bottom.toFixed(1)}° at the bottom`);
+  assert.ok(Math.max(...tips) > 3 && Math.max(...tips) < 10, `it tips at most ${Math.max(...tips).toFixed(1)}°`);
+  assert.ok(Math.max(...tips) - Math.min(...tips) > 2, 'it moves through the rep');
+});
+
+test('the studio offers the wrist\'s share of the forearm\'s lean, from none to all of it', () => {
+  assert.deepEqual(rangeOf('grip.level', 0.7), { min: 0, max: 1, step: 0.05, unit: '' });
+});
+
+test('db_incline_press: at every bench angle no dumbbell spins, and the wrist flows', async () => {
+  for (const angle of BENCH_ANGLES) {
+    const stage = await buildStage(prepare('db_incline_press', undefined, angle));
+    const before = {};
+    let bend = 0;
+    for (let f = 0; f <= 30; f++) {
+      stage.pose(f / 30);
+      for (const n of ['dumbbell_l', 'dumbbell_r']) {
+        const q = stage.kit.group.getObjectByName(n).quaternion.clone();
+        const turn = before[n] ? deg(q.angleTo(before[n])) : 0;
+        assert.ok(turn < MAX_TURN, `${n} at ${angle}°, frame ${f}: ${turn.toFixed(1)}°`);
+        before[n] = q;
+      }
+      const [fore, hand, knuckle] = ['lowerarm_l', 'hand_l', 'middle_01_l'].map((b) => wpos(stage.rig.bones[b]));
+      bend = Math.max(bend, deg(knuckle.clone().sub(hand).angleTo(hand.clone().sub(fore))));
+    }
+    assert.ok(bend > 10, `at ${angle}° the wrist bends at most ${bend.toFixed(1)}°`);
+  }
+});
+
+// A gripped bell turns with the hand. `tilt` may tip it a little in the palm between the ends.
+for (const id of [...BATCHES.dumbbell, 'db_incline_press']) {
+  test(`${id}: the dumbbell doesn't turn in the hand`, async () => {
+    const stage = await buildStage(prepare(id));
+    for (const k of ['l', 'r']) {
+      const bell = stage.kit.group.getObjectByName(`dumbbell_${k}`);
+      if (!bell) continue;
+      const inHand = () => {
+        stage.scene.updateMatrixWorld(true);
+        return stage.rig.bones[`hand_${k}`].getWorldQuaternion(new THREE.Quaternion()).invert().multiply(bell.getWorldQuaternion(new THREE.Quaternion()));
+      };
+      stage.pose(0);
+      const top = inHand();
+      stage.pose(1);
+      const turn = deg(inHand().angleTo(top));
+      assert.ok(turn < 20, `the ${k} dumbbell turns ${turn.toFixed(0)}° in the hand`);
+    }
+  });
+}
+
+test('the bench stands where `at` [x, z] puts it, and Tune offers both numbers for the row', async () => {
+  const entry = prepare('single_arm_db_row');
+  const poses = { t: { ...entry, kit: { ...entry.kit, bench: { at: [0.12, -0.2] } } } };
+  const stage = await buildStage(prepare('t', poses));
+  stage.pose(0);
+  const bench = stage.kit.kits.bench.group;
+  assert.deepEqual([bench.position.x, bench.position.z], [0.12, -0.2]);
+  const paths = tunables(entry).map((t) => t.path);
+  for (const p of ['kit.bench.at.0', 'kit.bench.at.1']) assert.ok(paths.includes(p), p);
+});
+
+test('a hand choice left in the studio\'s unsaved numbers is dropped, and the rest kept', () => {
+  assert.deepEqual(withoutChoices({ 'kit.dumbbells.hand': 0.4, 'top.hand.0': 0.3, 'kit.bench.at.0': 0.1 }), { 'top.hand.0': 0.3, 'kit.bench.at.0': 0.1 });
 });

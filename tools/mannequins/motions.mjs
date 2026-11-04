@@ -97,6 +97,8 @@ export function frameAt(entry, d, L) {
     P.hand ??= (side) => P.bar.clone().addScaledVector(X, side * P.grip);
     P.across ??= (side) => X.clone().multiplyScalar(-side);
     P.heldFree = true;
+    // `grip.level` is the wrists' share of the forearms' lean, 0 to 1: the handles tip with the rest.
+    if (e.grip?.level) P.level = e.grip.level;
   }
   // Where the bar sits in the hand and the thumb (`grip.mjs`); with `grip.one` the other hand rests.
   P.hold = holdOf(e);
@@ -528,6 +530,36 @@ export const MOTIONS = {
       hand: (side) => V(side * e.grip.width, sh.y - drop, sh.z),
       armPole: elbowsTo(e, [0.4, 0, -1]),
       offsets: { ball_r: [-s.heel, 0, 0] },
+    };
+  },
+
+  /**
+   * One knee and the same-side hand on a flat bench, the other foot on the floor: a 1-arm row. The
+   * right shin lies along the pad from `feet.knee` [y, z], its foot off the pad's end; the left foot
+   * stands `feet.out` to the side at `feet.z`. The hips are at `body.hip`, the trunk at `body.trunk`;
+   * the left hand rows between `hand` [x, y, z] at the top and the bottom, palm in, the right rests
+   * at `grip.rest`.
+   */
+  bench_row(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const knee = V(-e.feet.stance, ...e.feet.knee);
+    const ankle = knee.clone().add(V(0, 0, -L.shin * STRAIGHT));
+    const p = rad(e.feet.point ?? 20);
+    const heading = V(0, -Math.sin(p), -Math.cos(p));
+    const top = V(0, -Math.cos(p), Math.sin(p));
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      ankles: [ankle, V(e.feet.out, L.ankleY, e.feet.z)],
+      foot: (side) => (side < 0 ? { heading: heading.clone(), top: top.clone() } : { heading: V(Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) }),
+      kneePole: (side) => V(side * 0.15, 0, 1).normalize(),
+      support: (side) => (side < 0 ? { point: ankle.clone().addScaledVector(top, -L.ankleY), normal: top.clone() } : floor),
+      hand: handsOf(e, (side) => V(side * s.hand[0], s.hand[1], s.hand[2])),
+      across: (side) => (side === e.grip.one ? V(0, 0, 1) : X.clone().multiplyScalar(-side)),
+      armPole: elbowsTo(e, [0.15, 0.3, -1]),
     };
   },
 

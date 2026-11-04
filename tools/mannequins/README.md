@@ -207,9 +207,12 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
 - **`kit: { dumbbells: { hand: 1 } }`** carries one dumbbell, in that hand (1 the left, -1 the
   right), for a lift with `grip.one`. Without it the kit has one in each hand. Any motion can hold
   dumbbells: one with a bar's two grips hangs them there instead, and they turn with the hands.
-  **`steady: true`** turns each from whichever end lies nearest the handle's line at the top of the
-  rep, so a handle lying nearly end for end doesn't spin about itself. Every new entry whose
-  handles lie across the body wants it; `db_incline_press` goes without, so its OK'd clips stay.
+  **`steady: true`** lays each by the palm as well as the handle's line, so it turns with the hand
+  and can't roll in it. Every dumbbell entry wants it.
+- **`grip.level`** (dumbbells) lets the wrists flow: their share of the forearms' lean, 0 to 1. The
+  hand stays square to the handle, the wrist bends with that share, and the handle tips with the
+  rest. 0 is a straight wrist, the handle tipping with the forearm; 1 holds the handle dead level.
+  It counts as the pose setting its wrists.
 - **`grip.rotate`** (any pose with hands) twists the forearms, in degrees: 0 overhand, 90 neutral
   (palms toward each other), 180 underhand (palms toward the face). The default is 0; the
   close-grip pulldown is 180.
@@ -265,6 +268,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
 | `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
+| `bench_row` | one knee and the same-side hand on a flat bench, the other foot on the floor: a 1-arm row. The right knee and hand, the left foot and arm | `body.hip`, `body.trunk`; `feet.knee` [y, z], the shin running back along the pad from it; `feet.stance`, `feet.point`, degrees the foot off the pad's end tips, `feet.out`, `feet.z`, `feet.toeOut`; `hand` [x, y, z] at the top and the bottom; `grip.one`, `grip.rest`, `grip.pole`. An offset on `hand_r` lays the resting hand flat |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment
@@ -310,7 +314,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug | missing |
 
-- `bench` is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
+- `bench` stands at `at` [x, z], where a pose needs it elsewhere: its node moves, so its parts stay
+  the ones every clip shares. It is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
   tilts its seat's front from -15° to 40°, flat by default, on a joint the studio scrubs (a pose on a
   tilted seat places its own hips, as the motions assume a flat one); with `decline`, for a decline
   movement's entry and no other, its back pad carries the foot catch, a post out of the frame's far

@@ -519,13 +519,13 @@
       "equipment": "dumbbell",
       "camera": {
         "target": [
-          0,
+          -0.0307,
           0.55,
-          0.05
+          0.0117
         ],
         "halfHeight": 0.98,
-        "azimuth": 58,
-        "elevation": 32
+        "azimuth": -12.8809,
+        "elevation": 6.7559
       },
       "tempo": {
         "lowering": 2,
@@ -568,13 +568,13 @@
       "equipment": "dumbbell",
       "camera": {
         "target": [
-          0,
+          -0.0307,
           0.55,
-          0.05
+          0.0117
         ],
         "halfHeight": 0.98,
-        "azimuth": 58,
-        "elevation": 32
+        "azimuth": -12.8809,
+        "elevation": 6.7559
       },
       "tempo": {
         "lowering": 2,
@@ -1398,12 +1398,12 @@
       "camera": {
         "target": [
           0,
-          0.8,
-          0.1
+          0.7,
+          -0.18
         ],
         "halfHeight": 0.98,
         "azimuth": 66,
-        "elevation": 8
+        "elevation": 10
       },
       "tempo": {
         "lowering": 2,
@@ -1413,6 +1413,7 @@
       },
       "resources": [
         "mannequin.bin",
+        "kit_bench.bin",
         "kit_dumbbells.bin"
       ]
     },

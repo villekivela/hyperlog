@@ -10,8 +10,8 @@
 // - joints: knees and elbows bend no further than 155°, knees point within 60° of the hips' front,
 //   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, the
 //   ankle keeps between 55° and 160° from shin to foot, and a wrist bends no more than 5° off the
-//   forearm's line unless the pose sets its wrists (an open hand, or a hand turned by a bone
-//   offset, counts as set);
+//   forearm's line unless the pose sets its wrists (an open hand, a hand turned by a bone offset,
+//   or `grip.level`, counts as set);
 // - trace: each angle the pose has a trace for is within 10° of it;
 // - contact: each hand on a bar or a handle meets it (#162): every finger and the thumb within
 //   2 mm of its surface (a wrapped thumb on a bar under 40 mm may rest on the fingers instead), and
@@ -289,7 +289,7 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     note('joints', past, f, joint);
     // A wrist the pose doesn't set stays straight (owner, #127); a hand the entry turns (a bone
     // offset, #164) is set.
-    if (!entry.top?.wrist && !entry.bottom?.wrist && !P.openHands) {
+    if (!entry.top?.wrist && !entry.bottom?.wrist && !P.openHands && !P.level) {
       for (const k of ['l', 'r']) {
         if (entry.top?.offsets?.['hand_' + k] || entry.bottom?.offsets?.['hand_' + k]) continue;
         const fore = wpos(rig.bones['hand_' + k]).sub(wpos(rig.bones['lowerarm_' + k]));

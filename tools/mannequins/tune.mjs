@@ -3,6 +3,12 @@
 // is saved at the path of the number it changes, a point whole (`top.bar`), since an entry's lists
 // are replaced whole, not merged.
 
+/** Which hand a kit serves is a choice, not a place, so it has no slider. */
+const isChoice = (path) => /^kit\.[^.]+\.hand$/.test(path);
+
+/** Numbers not yet saved, without any choice among them, which an older slider may have left. */
+export const withoutChoices = (tuned) => Object.fromEntries(Object.entries(tuned).filter(([path]) => !isChoice(path)));
+
 /** What a motion does that an entry may leave unsaid: a lever with a default, offered all the same. */
 export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
@@ -137,6 +143,8 @@ export function rangeOf(path, value) {
   if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
   // A thumb's root swings from the palm to square off it, and no further (`holdOf`).
   if (key === 'swing') return { min: 0, max: 90, step: 1, unit: '°' };
+  // The wrists' share of the forearms' lean, from none to all of it (`grip.level`).
+  if (key === 'level') return { min: 0, max: 1, step: 0.05, unit: '' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
   // Equipment stands where the pose needs it: a metre either way.
@@ -218,5 +226,6 @@ export function tunables(entry) {
     // `press` is the rep's own 0 and 1 (top and bottom), not a setting.
     .filter(([path]) => !/^(top|bottom)\.press$/.test(path) && path !== 'grip.rotate' && !(entry.motion === 'dumbbell_press' && path === 'grip.tilt'))
     .filter(([path]) => !(/^(top|bottom)\./.test(path) && traced.has(steps(path)[1])))
+    .filter(([path]) => !isChoice(path))
     .map(([path, value]) => ({ path, value, ...rangeOf(path, value) }));
 }
