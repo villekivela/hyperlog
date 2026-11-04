@@ -83,7 +83,7 @@ test('the yoke pad is 330 mm long and 100 mm across, round the shaft', () => {
 
 // The published 533 mm front to back and 254 mm high are the bar as it is held, rolled forward on the
 // shoulders; hung in a rack (the photos) the handles drop steeper, about 410 mm below the shaft's centre.
-test('hung as racked, two handles reach down and forward from the yoke ends, about 410 mm below the shaft and 340 mm ahead, tips 310 mm apart', () => {
+test('hung as racked, two handles reach down and forward from the yoke ends, about 420 mm below the shaft and 345 mm ahead, tips 310 mm apart', () => {
   const kit = bar();
   const y = centre(shaft(kit).box).y;
   const grips = held(kit);
@@ -127,6 +127,11 @@ test('the hands hold each handle on its bare grip, 150 to 180 mm long, and the s
     const length = lengthOf(g);
     assert.ok(length > 0.14 && length < 0.19, `a bare grip ${(length * 1000).toFixed(0)} mm long`);
   }
+});
+
+test('its fit rules name the two options it takes: the shaft height for the mannequin, and the roll the lifter\'s grip sets', () => {
+  assert.deepEqual(KITS.safety_bar.fit.map((f) => f.sets).sort(), ['roll', 'shaft']);
+  for (const f of KITS.safety_bar.fit) assert.ok(f.rule.length > 20, `a rule for ${f.sets}`);
 });
 
 test('nothing on it moves, and it draws only in the kits\' tones', () => {
