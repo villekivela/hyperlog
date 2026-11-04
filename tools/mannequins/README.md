@@ -295,7 +295,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `cable_crossover`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
 | `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
-| `ez_bar` | missing |
+| `ez_bar` | `ez_bar` |
 | `trap_bar` | missing |
 | `safety_bar` | missing |
 | `smith_machine` | `smith_machine`, `bench`, `platform` (a low one under the front foot, for the front-foot-elevated lunge) |
@@ -417,6 +417,16 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
+- `ez_bar` (#209, its own equipment kind; `BARS` in `kit.mjs` maps its 3 exercises, none posed yet,
+  so no clip changes) is a short Olympic-sleeved curl bar with a zigzag shaft, along x, a free body
+  the hands carry like `barbell`. It is 1384 mm long, the shaft 28.5 mm tube and 800 mm between
+  the collars: a straight 120 mm in the middle on the sleeve axis, then each side an inner and an
+  outer grip segment (17 and 32 degrees, opposite ways) and a return to the axis at the collar, 80 mm
+  from peak to trough in the horizontal plane, the outer kinks forward (+z). Each sleeve is 50 mm
+  across and 267 mm to load, behind a collar ring. Nothing on it moves. Its option `grip` (`outer` by
+  default, or `inner`) is the pair the pose's bar position is the middle of. Contacts, hands on the
+  bar: `outer` (510 mm apart) and `inner` (250), on the segments' middles. Lying on the floor with no
+  pose, it is shown alone in the studio (`npm run studio`, the `ez bar` row under kits).
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -613,7 +623,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the cable crossover, the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the cable crossover, the smith machine, the power rack and the EZ bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

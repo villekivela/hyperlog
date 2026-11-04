@@ -70,6 +70,14 @@ export const STATIONS = {
 };
 
 /**
+ * The bars that serve exercises of their own equipment kind, with the exercises each is the bar of.
+ * Only those no pose has set up are listed.
+ */
+export const BARS = {
+  ez_bar: { kit: 'ez_bar', exercises: ['ez_bar_curl', 'ez_bar_preacher_curl', 'skull_crusher'] },
+};
+
+/**
  * The library's equipment, each with the kits a pose in it may use. A kind with no kit yet is
  * `null`, and is listed as missing in the README; a pose can't be made in it until it has one.
  * Bodyweight needs no kit for most of its exercises.
@@ -80,7 +88,7 @@ export const EQUIPMENT = {
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
   bodyweight: ['power_rack'],
-  ez_bar: null,
+  ez_bar: ['ez_bar'],
   trap_bar: null,
   safety_bar: null,
   smith_machine: ['smith_machine', 'bench', 'platform'],
