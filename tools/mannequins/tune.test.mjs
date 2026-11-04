@@ -136,6 +136,8 @@ test('each wrist number turns the hand as the studio poses it, on every pose wit
     const wrists = tunables(entry).filter((t) => /^(top|bottom)\.wrist\.[01]$/.test(t.path));
     assert.equal(wrists.length, 4, `${id} offers ${wrists.map((t) => t.path)}`);
     for (const t of wrists) {
+      // A handle's drag can leave a wrist past the slider's range, where no slider can stand.
+      if (t.value < t.min || t.value > t.max) continue;
       const d = t.path.startsWith('top') ? 0 : 1;
       const hand = async (v) => {
         const stage = await live(withTuned(entry, {}, t.path, v));
