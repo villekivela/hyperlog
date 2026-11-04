@@ -697,8 +697,10 @@ function moveCursor(i) {
 }
 
 async function loadItems() {
+  const items = await api('/api/items');
+  // Read here, not before the request: the cursor may have moved while it was under way.
   const under = state.rows[state.cursor] && rowKey(state.rows[state.cursor]);
-  state.items = await api('/api/items');
+  state.items = items;
   paintList();
   const at = rowAfter(state.rows.map(rowKey), under, state.current);
   if (at >= 0 && at !== state.cursor) { state.cursor = at; paintList(); }
