@@ -21,13 +21,16 @@ const MACHINES = {
   chest_supported_machine_row: 'levers',
   machine_pulldown: 'levers',
   machine_preacher_curl: 'lever',
+  chest_supported_t_bar_row: 'lever',
+  t_bar_row: 'lever',
+  kelso_shrug: 'lever',
 };
 
 const kitOf = (stage) => Object.values(stage.kit.kits)[0];
 const eased = (t) => t * t * (3 - 2 * t);
 
 test('every machine exercise is listed here', () => {
-  assert.deepEqual(Object.keys(POSES).filter((id) => POSES[id].equipment === 'machine').sort(), Object.keys(MACHINES).sort());
+  assert.deepEqual(Object.keys(POSES).filter((id) => prepare(id).equipment === 'machine').sort(), Object.keys(MACHINES).sort());
 });
 
 for (const [id, joint] of Object.entries(MACHINES)) {

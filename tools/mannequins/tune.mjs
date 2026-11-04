@@ -15,6 +15,7 @@ export const OPTIONAL = {
   calf_raise: { 'grip.pole': [1, -0.3, -0.4] },
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
   lever_handles: { 'grip.rotate': 0, 'grip.pole': [0.7, -1, -0.5] },
+  chest_pad: { 'grip.pole': [0.5, 0.4, -1], 'body.look': -0.3, 'feet.kneesOut': 0.2 },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
   // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.

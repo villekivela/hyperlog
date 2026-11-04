@@ -1,5 +1,6 @@
 // The machine-first solve (ADR 0007, #160). An entry posed in a machine is fitted to the mannequin:
-// the recipe's fit rules set each adjustment the entry leaves unset, and the seat puts the hips.
+// the recipe's fit rules set each adjustment the entry leaves unset, and the seat or the pad puts
+// the hips.
 // Then the rep drives the recipe's joint between the top's value and the bottom's, the limits by
 // default, and the motion hangs the body from where the machine has its contacts at that value
 // (`frameAt`). A free weight or a cable, on no recipe with a `linkage`, stays body-first.
@@ -13,8 +14,8 @@ const fits = new WeakMap();
 /**
  * The entry fitted to a mannequin of measurements `L`: its machine's options solved and its joint's
  * ends filled in (degrees for a revolute joint, metres for a prismatic one), `body.hip` where the
- * seat puts it, `linkage` the joint and what the recipe has at a value, and `fit` what was solved,
- * by the path an entry would set it at. An entry on no machine comes back as it is.
+ * seat or the pad puts it, `linkage` the joint and what the recipe has at a value, and `fit` what
+ * was solved, by the path an entry would set it at. An entry on no machine comes back as it is.
  */
 export function fitted(entry, L) {
   const name = Object.keys(entry.kit ?? {}).find((k) => RECIPES[k]?.linkage);
@@ -38,7 +39,7 @@ export function fitted(entry, L) {
     ends[end] = { ...entry[end], [joint]: entry[end]?.[joint] ?? limit };
     if (entry[end]?.[joint] === undefined) fit[`${end}.${joint}`] = limit;
   }
-  const { hip, at } = recipe.linkage(options);
+  const { hip, at } = recipe.linkage(options, L);
   const result = {
     ...entry,
     ...ends,

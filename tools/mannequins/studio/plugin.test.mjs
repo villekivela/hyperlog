@@ -112,14 +112,13 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   assert.equal(typeof bench.entry.bench?.angle, 'number', `the bench as in ${bench.uses}, not adjustable`);
   const column = await get('/api/item/kit/cable_column');
   assert.equal(column.entry.kit.cable_column.twin, true, `the cable column as in ${column.uses}, one column`);
+  // Posed, the T-bar row machine comes as its exercise sets it up (#188).
+  const tBar = await get('/api/item/kit/t_bar_row_machine');
+  assert.equal(tBar.uses, 'chest_supported_t_bar_row');
   // A kit no pose uses yet comes alone, if its recipe can stand without one (#176).
-  const alone = await get('/api/item/kit/t_bar_row_machine');
-  assert.equal(alone.uses, null);
-  assert.equal(alone.status, 'unused');
-  assert.deepEqual(alone.entry.kit, { t_bar_row_machine: {} });
-  assert.equal(alone.entry.alone, true);
   const smith = await get('/api/item/kit/smith_machine');
   assert.equal(smith.uses, null);
+  assert.equal(smith.status, 'unused');
   assert.deepEqual(smith.entry.kit, { smith_machine: {} });
   assert.equal(smith.entry.alone, true);
   const none = await get('/api/item/exercise/pendulum_squat');

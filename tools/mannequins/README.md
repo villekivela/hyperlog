@@ -256,6 +256,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
+| `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
 
 ## Equipment
@@ -340,16 +341,20 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
-  machine-first; no pose stands on it yet, so it has no `machine` or `rep`): a pad inclined 40° on a beam held up by two posts,
+  machine-first): a pad inclined 40° on a beam held up by two posts,
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
   lever pivoting 420 mm up on the rear post, beside the posts, with a yoke of neutral grips (fore
   and aft through the blocks atop its uprights) and wide grips (out from them), and a plate on a
-  horn at its front end. Its lever's angle up from level is `P.lever`, and it rests on its catch,
-  3° below level, where the pose frame gives none. Its contacts tie the hands to either pair of
-  grips, the chest to the pad and the feet to the foot plate. Its grips stand 410 mm above the
-  lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with the lever on its
-  catch, and its foot plate's default (790 mm, the ref's choice for the mannequin) sits about
-  140 mm higher up the beam than photo 07's.
+  horn at its front end. Its lever rests on its catch, 3° below level, with no pose. Its `handles`
+  option names the pair a pose holds, `neutral` or `wide`, and a pose must give it; its contacts tie
+  the hands to that pair (to either with no pose), the chest to the pad and the feet to the foot plate. The pad puts
+  the hips: the spine along it, the top of the sternum at its top end, the chest pressed 5 mm into
+  the vinyl. The fit rule sets `footPlate` from the legs, for knees bent to 160°, as far down the
+  beam as the pop-pin goes: 913 mm for the mannequin, near photo 07's 950. The plate stays on its
+  holes, from 100 to 950 mm, wherever a slider asks for it. Its grips stand
+  410 mm above the lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with
+  the lever on its catch, and a neutral grip is held 115 mm back from its block, where its rear half
+  starts.
 - `cable_crossover` (#181) is the machine of the free-handle cable exercises no pose has set up on
   `cable_column` or `cable_tower` (`CABLE_MACHINES` in `kit.mjs`, 19 of its ref's 25; a posed one
   moves when it is posed machine-first, so no clip changes): two towers 2210 mm apart on the centre
@@ -413,10 +418,11 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
 - `fit`: the fit rules, each naming the option it `sets` (the seat, a pad) and how to `solve` it from
   the mannequin's measurements. An entry that sets the option overrides its rule, and a rule with no
-  `solve` is only declared: the T-bar row's, until a pose stands on it.
+  `solve` is only declared.
 - `rep` (a machine's): the joint the rep drives, and which limit (`from`) is the top of the rep.
-- `linkage(options)` (a machine's): the machine with no pose, the `hip` its seat puts, and
-  `at(value)`, where everything the body meets is with its joint at a value.
+- `linkage(options, L)` (a machine's): the machine with no pose, the `hip` its seat or its pad
+  puts for a mannequin of measurements `L`, and `at(value)`, where everything the body meets is with
+  its joint at a value.
 
 Its `build` makes the parts in the order the clip names them and says which nodes move with which
 body. Its `drive` places the parts from the pose frame and returns each joint's value and where it
@@ -549,7 +555,7 @@ listens on localhost only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the T-bar row machine and the cable crossover. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the cable crossover and the smith machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
