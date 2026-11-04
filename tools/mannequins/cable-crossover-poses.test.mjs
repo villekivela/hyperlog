@@ -199,14 +199,31 @@ test('the crossover steps forward of the pulleys and brings the handles together
   assert.ok(hand('l').z > at('pelvis').z + 0.15, 'in front of the hips');
 });
 
-test('the press-around braces the free arm on the far carriage at the shoulder, the hand pressing past the middle', async () => {
-  const { stage, hand, at } = await posed('1_arm_cable_press_around', 0);
-  const steady = stage.kit.kits.cable_crossover.contacts.find((c) => c.point === 'steady_r').at[0];
-  assert.ok(hand('r').distanceTo(steady) < 0.04, `the free hand ${hand('r').distanceTo(steady).toFixed(3)} m off the grip bar`);
-  assert.ok(Math.abs(hand('r').y - at('upperarm_r').y) < 0.1, `the free hand at ${hand('r').y.toFixed(3)} m, the shoulder at ${at('upperarm_r').y.toFixed(3)} m`);
+/** The skin of the bones `wanted` matches, as it is posed now. */
+function skinOf(stage, wanted) {
+  const out = [];
+  stage.scene.traverse((m) => {
+    if (!m.isSkinnedMesh) return;
+    const { position, skinIndex, skinWeight } = m.geometry.attributes;
+    for (let i = 0; i < position.count; i++) {
+      const main = [0, 1, 2, 3].reduce((best, n) => (skinWeight.getComponent(i, n) > skinWeight.getComponent(i, best) ? n : best), 0);
+      if (wanted.test(m.skeleton.bones[skinIndex.getComponent(i, main)].name)) out.push(m.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(m.matrixWorld));
+    }
+  });
+  return out;
+}
+
+// The owner, #197: the free hand leans on the thigh, not in the air.
+test('the press-around rests the free hand on the thigh all through the rep, the other pressing past the middle', async () => {
+  const { stage, hand } = await posed('1_arm_cable_press_around', 0);
   assert.ok(hand('l').x < -0.15, `the working hand at x ${hand('l').x.toFixed(3)}`);
-  const { position } = prepare('1_arm_cable_press_around').kit.cable_crossover;
-  assert.ok(position[0] < position[1], `the working pulley at hole ${position[0]}, the brace at ${position[1]}`);
+  for (const d of [0, 0.25, 0.5, 0.75, 1]) {
+    stage.pose(d);
+    stage.scene.updateMatrixWorld(true);
+    const thigh = skinOf(stage, /^thigh_r$/);
+    const gap = Math.min(...skinOf(stage, /^hand_r$/).flatMap((a) => thigh.map((b) => a.distanceTo(b))));
+    assert.ok(gap < 0.015, `the free hand ${(gap * 100).toFixed(1)} cm off the thigh, ${d} of the way down`);
+  }
 });
 
 // The owner, #197: the torso and head turn with the press, on a firm stance.

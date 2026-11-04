@@ -476,10 +476,9 @@ export const POSES = {
     camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
   },
 
-  // Feet wide and knees bent between the towers, nearer the right one, the right arm braced straight
-  // out on its grip bar at the shoulder: the left hand presses from beside the chest across the body
-  // past the middle, on a cable from the left tower's pulley at the hip, the trunk and head turning
-  // with it.
+  // Feet wide and knees bent between the towers, nearer the right one, the right hand resting on the
+  // thigh: the left hand presses from beside the chest across the body past the middle, on a cable
+  // from the left tower's pulley at the hip, the trunk and head turning with it.
   '1_arm_cable_press_around': {
     equipment: 'cable',
     motion: 'free_arms',
@@ -493,7 +492,7 @@ export const POSES = {
       offsets: { spine_01: [0, 4, 0], spine_02: [0, 4, 0], spine_03: [0, 4, 0], Head: [0, 6, 0] },
     },
     feet: { stance: 0.36, toeOut: 15, kneesOut: 0.2, stagger: 0.14 },
-    grip: { arc: true, rotate: 90, one: 1, rest: [-0.705, 1.42, -0.01], pole: [1, -0.3, -0.5], sits: 'heel' },
+    grip: { arc: true, rotate: 90, one: 1, rest: [-0.18, 0.8, 0.03], pole: [1, -0.3, -0.5], sits: 'heel' },
     camera: { target: [0, 1.15, 0], halfHeight: 1.3, azimuth: 12, elevation: 8 },
   },
 
