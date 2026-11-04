@@ -1661,7 +1661,7 @@ gallery (Technique videos).
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the T-bar row machine and the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), and the pull-up and dip station (#189, the station of the 16 pull-up, chin-up, hang and dip exercises, nothing on it moving), until #160 poses them. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    with no body, its levers at rest (#176): the T-bar row machine and the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until #160 poses them. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

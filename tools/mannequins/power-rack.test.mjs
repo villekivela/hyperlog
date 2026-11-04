@@ -1,4 +1,4 @@
-// The pull-up and dip station (#189), from refs/pullup_dip_station/ref.md: a bolt-together power rack
+// The power rack (#189, the issue called it the pull-up and dip station), from refs/power_rack/ref.md: a bolt-together power rack
 // with a multi-grip pull-up bar and a pair of dip handles bolted on as options. Nothing on it moves.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,22 +14,22 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const library = JSON.parse(await readFile(path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json'), 'utf8'));
 
 test('it is the kit of the 16 bodyweight and weighted bodyweight exercises the ref names, none of them posed', async () => {
-  const ref = await readFile(path.join(HERE, 'refs', 'pullup_dip_station', 'ref.md'), 'utf8');
+  const ref = await readFile(path.join(HERE, 'refs', 'power_rack', 'ref.md'), 'utf8');
   const named = [...ref.match(/Serves (.+)\. Not this item/)[1].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
   assert.equal(named.length, 16);
-  assert.deepEqual(STATIONS.pullup_dip_station, { kit: 'pullup_dip_station', exercises: named });
-  assert.ok(KITS.pullup_dip_station, 'a recipe named pullup_dip_station');
+  assert.deepEqual(STATIONS.power_rack, { kit: 'power_rack', exercises: named });
+  assert.ok(KITS.power_rack, 'a recipe named power_rack');
   for (const id of named) {
     const kind = library.exercises.find((e) => e.id === id)?.equipment;
     assert.ok(['bodyweight', 'weighted_bodyweight'].includes(kind), `${id} is ${kind}`);
-    assert.ok(EQUIPMENT[kind].includes('pullup_dip_station'), `${kind} has no pullup_dip_station kit`);
+    assert.ok(EQUIPMENT[kind].includes('power_rack'), `${kind} has no power_rack kit`);
     assert.equal(POSES[id], undefined, `${id} is posed already`);
   }
 });
 
 const IN = 0.0254;
 const station = (options = {}) => {
-  const kit = buildKit({ equipment: 'bodyweight', kit: { pullup_dip_station: options } }).kits.pullup_dip_station;
+  const kit = buildKit({ equipment: 'bodyweight', kit: { power_rack: options } }).kits.power_rack;
   kit.place({}, {}, {});
   kit.group.updateMatrixWorld(true);
   return kit;
@@ -180,14 +180,14 @@ test('the outer prongs are 2 in fat grips and the inner ones 1.25 in', () => {
 });
 
 test('its recipe names no brand', async () => {
-  const source = await readFile(path.join(HERE, 'recipes', 'pullup-dip-station.mjs'), 'utf8');
+  const source = await readFile(path.join(HERE, 'recipes', 'power-rack.mjs'), 'utf8');
   assert.doesNotMatch(source, /rogue|crown|matador|monster|titan|hoist|hammer|\blogo\b|decal/i);
 });
 
 test('the studio shows it alone, with nothing to scrub', async () => {
-  const entry = shownAlone('pullup_dip_station');
+  const entry = shownAlone('power_rack');
   assert.ok(entry?.camera, 'a framing to open on');
   const stage = await buildStage(entry);
   stage.pose(0);
-  assert.ok(stage.kit.kits.pullup_dip_station);
+  assert.ok(stage.kit.kits.power_rack);
 });

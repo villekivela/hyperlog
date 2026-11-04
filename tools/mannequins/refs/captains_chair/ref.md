@@ -3,7 +3,7 @@
 ## Movement and exercises served
 A fixed frame with an upright back pad, two horizontal arm (elbow) pads and a grip at the front end of each pad. The lifter backs against the pad, rests the forearms on the arm pads with the elbows under the shoulders, holds the grips, lets the legs hang and raises the knees. Nothing on the chair moves.
 - `roman_chair_crunch`: "Roman Chair Crunch", https://youtu.be/dd1WoEcQB4c. The video is a vertical knee raise on a captain's chair, not a crunch on the hyperextension bench, so it belongs to this chair (see `hyperextension_bench`).
-- Not this item: `hanging_leg_raise` hangs from the pull-up bar (`pullup_dip_station`). The chair below also has dip handles, but the dips stay on `pullup_dip_station`.
+- Not this item: `hanging_leg_raise` hangs from the pull-up bar (`power_rack`). The chair below also has dip handles, but the dips stay on `power_rack`.
 
 ## Based on
 - Brand and model: Life Fitness Dip/Leg Raise, LBR-LD. Chosen because Life Fitness publishes a manual with a dimensioned plan drawing (length, width, live area), which gives the arm pad, grip and back pad layout to scale. It also states the step (foot pegs), the 10 degree back pad recline and the setup for the leg raise. None of the other candidates publish more than a bounding box: Hammer Strength VKR (reseller only, 37 x 24 x 60 in, https://fitnesssuperstore.com/products/hammer-strength-vkr-vertical-knee-raise-remanufactured), Body-Solid GVKR60 (60 x 37 x 24 in, https://www.banditfitness.com/cdn/shop/files/GVKR60.pdf), Gym Gear Elite (113 x 78 x 152 cm, https://gymgear.com/cdn/shop/files/Vertical_Knee_Raise.pdf) and Titan Heavy-Duty Power Tower (arm pad 12 x 6 in, no heights). None of them gives an arm pad height or a step height.

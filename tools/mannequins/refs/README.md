@@ -23,7 +23,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), not yet posed |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover; built (#181), 19 not yet posed on it (6 are posed on `cable_column`) |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
-| 4 | [`pullup_dip_station`](pullup_dip_station/ref.md) | 16 | Rogue Crown Pull-up Bar and Monster Matador dip handles; built (#189), not yet posed |
+| 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), not yet posed |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar |
 | 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY) |
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise |
@@ -51,7 +51,7 @@ its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids incl
   [Echo bumpers](https://www.roguefitness.com/eu/nl/rogue-lb-echo-bumper-plates-with-white-text)
   keep at every weight; cast-iron plates run smaller (Rogue's
   [45 lb iron plate](https://www.roguefitness.com/ca/rogue-olympic-plates) is 445 mm, the 25 lb 277 mm).
-- `weighted_bodyweight` is the pull-up and dip station plus a dip belt (its file notes the plate
+- `weighted_bodyweight` is the power rack plus a dip belt (its file notes the plate
   hangs on the belt's chain at about mid-thigh, between the legs, as the videos show) and the
   hyperextension bench.
 - Nordic and reverse nordic curls need only a pad and an anchor (a note in the hyperextension file).
@@ -77,7 +77,7 @@ gaps says why):
   80 mm); the carriage position per exercise is chosen.
 - `smith_machine` (built, #182): the 7 degree lean's direction, the bar and sleeve length and the hooks' turn are
   chosen; hook heights are from three-quarter renders (about ±10%). No video uses an angled smith.
-- `pullup_dip_station`: the bar height (2.30 m) is chosen and the dip handle height is rough, from one
+- `power_rack`: the bar height (2.30 m) is chosen and the dip handle height is rough, from one
   video. The chin-up video is unavailable.
 - `ez_bar`: the bend angles and grip places are chosen; the zigzag depth is a rough photo estimate.
 - `pec_deck`: the seat range, the start position's step and the lever radius stay chosen or rough;

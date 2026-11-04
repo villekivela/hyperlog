@@ -1,4 +1,4 @@
-// A bolt-together power rack (refs/pullup_dip_station/ref.md): four 3 in square uprights 108 in tall,
+// A bolt-together power rack (refs/power_rack/ref.md): four 3 in square uprights 108 in tall,
 // each on a 7 in base plate, the front pair 43 in apart inside and the rear pair 24 in behind them
 // inside, each side joined by a crossmember near the top and one near the floor and a pin pipe safety
 // between them. Nothing else joins the sides but a back crossmember (not in the photos) and the supplied pull-up bars, a skinny one and a fat one
@@ -61,7 +61,7 @@ const DIP = { height: 51 * IN + 0.01, base: 0.2255, tip: 0.315, length: 0.44, ra
 const PLATE = { width: 0.965, height: 0.0762, thick: 0.0095 };
 
 export default recipe({
-  name: 'pullup_dip_station',
+  name: 'power_rack',
   // Shown alone in the studio until a pose uses it: three-quarter from the front.
   standsAlone: { camera: { target: [0, 1.37, 0.3], halfHeight: 1.65, azimuth: 145, elevation: 12 } },
   bodies: {},

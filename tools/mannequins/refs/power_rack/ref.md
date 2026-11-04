@@ -1,7 +1,7 @@
-# Pull-up and dip station (`pullup_dip_station`)
+# Power rack (`power_rack`)
 
 ## Movement and exercises served
-A fixed overhead multi-grip bar plus a pair of dip handles, on one rig. The mannequin hangs from the bar or supports itself on the dip handles; nothing on the station moves. Serves `pullup`, `pullup_wide_grip`, `close_grip_pullup`, `neutral_grip_pullup`, `2_grip_pullup`, `chinup`, `chinup_wide_grip`, `close_grip_chinup`, `dead_hang`, `hanging_leg_raise`, `dip`, `close_grip_dip`, and the weighted versions `weighted_pullup`, `weighted_chinup`, `2_grip_pullup_weighted`, `weighted_dip`. Not this item: `bent_knee_dragon_flag`, `dragon_flag`, `lying_leg_raise` use a bench.
+A power rack with a fixed multi-grip pull-up bar and a pair of dip handles bolted on as add-ons. (The issue called this item the pull-up and dip station; it is the rack, since squats will use the same frame.) The mannequin hangs from the bar or supports itself on the dip handles; nothing on the station moves. Serves `pullup`, `pullup_wide_grip`, `close_grip_pullup`, `neutral_grip_pullup`, `2_grip_pullup`, `chinup`, `chinup_wide_grip`, `close_grip_chinup`, `dead_hang`, `hanging_leg_raise`, `dip`, `close_grip_dip`, and the weighted versions `weighted_pullup`, `weighted_chinup`, `2_grip_pullup_weighted`, `weighted_dip`. Not this item: `bent_knee_dragon_flag`, `dragon_flag`, `lying_leg_raise` use a bench.
 
 ## Based on
 Two Rogue parts on one rig (no single Rogue/Titan/Hoist power tower gave both bar and dip numbers):
