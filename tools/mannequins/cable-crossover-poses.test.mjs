@@ -129,6 +129,44 @@ for (const [id, side] of [['high_cable_lateral_raise', 1], ['cable_y_raise', 1],
   });
 }
 
+// The owner, #197: 'the wrist rotates in the middle'. A smooth twist is no jump, so the clips' test
+// passes it, but the eye catches a hand rolling fast about the forearm. The shipped lateral raise's
+// fastest is 5°.
+const ROLL = 7;
+
+/** How far hand `k` rolls about its forearm from frame to frame, in degrees. */
+function rollsOf(stage, k) {
+  const { bones } = stage.rig;
+  const steps = [];
+  let last;
+  for (let f = 0; f < FRAMES; f++) {
+    stage.pose(f / (FRAMES - 1));
+    stage.scene.updateMatrixWorld(true);
+    const fore = wpos(bones[`hand_${k}`]).sub(wpos(bones[`lowerarm_${k}`])).normalize();
+    const across = wpos(bones[`index_01_${k}`]).sub(wpos(bones[`pinky_01_${k}`]));
+    across.addScaledVector(fore, -across.dot(fore)).normalize();
+    if (last) {
+      const carried = last.across.clone().applyQuaternion(new THREE.Quaternion().setFromUnitVectors(last.fore, fore));
+      steps.push((Math.atan2(carried.clone().cross(across).dot(fore), carried.dot(across)) * 180) / Math.PI);
+    }
+    last = { fore, across };
+  }
+  return steps;
+}
+
+for (const id of Object.keys(HOLES)) {
+  test(`${id}'s hand turns steadily through the rep`, async () => {
+    const entry = prepare(id);
+    const stage = await buildStage(entry);
+    const { hands = [1, -1] } = entry.kit.cable_crossover;
+    for (const side of hands) {
+      const steps = rollsOf(stage, side > 0 ? 'l' : 'r').map(Math.abs);
+      const worst = Math.max(...steps);
+      assert.ok(worst <= ROLL, `the hand rolls ${worst.toFixed(1)}° at frame ${steps.indexOf(worst) + 1}`);
+    }
+  });
+}
+
 // The library's notes, the exercises' own words.
 const posed = async (id, d) => {
   const stage = await buildStage(prepare(id));

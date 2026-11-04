@@ -427,7 +427,7 @@ export const POSES = {
     kit: { cable_crossover: { position: 5, hands: [1] } },
     top: { hand: [-0.19, 1.62, 0.5] },
     bottom: { hand: [0.33, 1.02, 0.1] },
-    grip: { one: 1, rest: [-0.25, 0.88, 0.14] },
+    grip: { arc: true, one: 1, rest: [-0.25, 0.88, 0.14] },
   },
 
   // Beside the right tower, the left hand on its cable, which crosses in front of the hips from a
@@ -457,10 +457,10 @@ export const POSES = {
   // the left arm rises from behind the hips to level with the shoulder.
   behind_the_back_cable_lateral_raise: {
     like: 'high_cable_lateral_raise',
-    kit: { cable_crossover: { position: 1, at: [0.4, -0.46] } },
-    top: { hand: [0.76, 1.44, -0.04] },
+    kit: { cable_crossover: { position: 1, at: [0.4, -0.55] } },
+    top: { hand: [0.6, 1.36, -0.02] },
     bottom: { hand: [0.2, 0.92, -0.17] },
-    grip: { rotate: -30, rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.8] },
+    grip: { rotate: -60, rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.8] },
   },
 
   // Leaning a little forward in a split stance, the left hand on a cable from a low pulley behind:
@@ -486,7 +486,7 @@ export const POSES = {
     top: { shin: 8, thigh: 16, trunk: 6, hand: [-0.26, 1.36, 0.38] },
     bottom: { shin: 8, thigh: 16, trunk: 6, hand: [0.46, 1.3, 0.14] },
     feet: { stance: 0.28, toeOut: 12, kneesOut: 0.2 },
-    grip: { one: 1, rest: [-0.705, 1.42, -0.01], pole: [1, -0.3, -0.5], sits: 'heel' },
+    grip: { arc: true, rotate: 90, one: 1, rest: [-0.705, 1.42, -0.01], pole: [1, -0.3, -0.5], sits: 'heel' },
     camera: { target: [0, 1.15, 0], halfHeight: 1.3, azimuth: 12, elevation: 8 },
   },
 
