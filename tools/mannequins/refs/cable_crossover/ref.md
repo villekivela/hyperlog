@@ -33,6 +33,10 @@ Ids: 1_arm_cable_press_around, 1_arm_katana_cable_triceps_extension, 1_leg_cable
   - cable_chest_press https://youtu.be/fOHouR0t9Cw: contact sheet of the whole video.
   - cable_y_raise https://youtu.be/xxnjF6ljHmg: whole video, contact sheet.
   - cable_shrug_in https://youtu.be/0EqU6-o3PAw: whole video, frames at 0:02, 0:05, 0:13, 0:15.
+  - cable_crunch https://youtu.be/2RrGnjxSsiA?t=124: contact sheet from there.
+  - cable_hip_abduction https://youtu.be/uqF4qttYpN8: whole video, contact sheet.
+  - cable_triceps_kickback https://youtu.be/FGJ64JyKod0: whole video, contact sheet.
+  - cable_wrist_curl https://youtu.be/S9NEwbiYEBE and cable_wrist_extension https://youtu.be/_KI-O0zMv60: whole videos.
   - 1_arm_cable_press_around https://youtu.be/fGm-ef-4PVk?t=733: 12:13 to 12:53, contact sheet, frames at 12:14, 12:16, 12:18, 12:21, 12:23, 12:25, 12:36, 12:39.
   - 1_arm_katana_cable_triceps_extension https://youtu.be/OpRMRhr0Ycc?t=295: 4:55 to 5:35, contact sheet, frames at 5:06, 5:18, 5:30. Both arms are raised at 5:18 to 5:30, and why isn't clear from the frames; the mannequin works one, as the exercise's name has it.
   - behind_the_back_cable_lateral_raise https://youtu.be/SgyUoY0IZ7A?t=546: 9:06 to 9:46, contact sheet, frames at 9:07 to 9:28. It is done with a cuff on each wrist; the mannequin holds handles.
@@ -74,18 +78,19 @@ Ids: 1_arm_cable_press_around, 1_arm_katana_cable_triceps_extension, 1_leg_cable
   - overhead_cable_triceps_extension: elbow from about 40 degrees (hands behind the head) to straight, about 140 degrees, upper arm by the ear (video 0:15 and 0:19).
 
 ## Handles
-- Carabiner on the cable end; leather triceps straps included (CC-1 page; the CT-1 hero shows them). Rope, D-handle, strap and ankle cuff are clipped on as the exercise needs.
+- Carabiner on the cable end; leather triceps straps included (CC-1 page; the CT-1 hero shows them). Rope, D-handle, strap and ankle cuff are clipped on as the exercise needs. The straight bar of the wrist curl and extension is the column's, clipped on the same way (their videos, whole).
 - Fixed knurled grip bar on each carriage (web12 close-up): a vertical handle beside the pin, used to steady the body, not loaded.
 
 ## Adjustments and fit rules
 Placard text not available. Rules below come from the videos.
 - Carriage height by exercise, for the mannequin (cable exit about 85 mm below the pin):
   - Low (position 1, exit about 260 mm): glute kickback (cable runs about level from the ankle cuff to the pulley, video 7:40), cable lateral raise (11:06), bayesian curl (cable behind the body from below the hand, 0:03), overhead triceps extension (pulley set low and the cable runs up over the shoulder, 0:03 and 0:15), wrist curl and extension, Y raise (the cable crosses the front of the body from a pulley near the floor, contact sheet of the whole video), behind-the-back lateral raise (the cable behind the body, contact sheet 9:06 to 9:46).
-  - Low, a little up (position 2 or 3, exit 400 to 530 mm): shrug-in (the cable comes up from behind to the hand beside the hip, video 0:05).
+  - Low, a little up (position 2 or 3, exit 400 to 530 mm): shrug-in (the cable comes up from behind to the hand beside the hip, video 0:05), triceps kickback (the pulley low and ahead of the lifter, who faces the machine, the free hand high on it, video).
+  - Lowest, no video (position 1 or 2): pull-through, the rope between the legs from behind. Position 1 for hip abduction, the cuff's cable level across the standing leg (video).
   - Mid-thigh to hip (about position 4 to 6, exit 650 to 900 mm): low-to-high flye and press (video 2:57, carriages at the lifter's mid-thigh), high cable lateral raise (despite the name, the pulley is at hip height and the cable crosses in front of the body, video 0:09), katana triceps extension (position 6, the owner's in the studio, where the pulley looks at 5:18; the library's note says low).
   - Chest (position 9, exit about 1320 mm): press-around. The owner set it in the studio, over the hip height the frames suggest (video 12:21). Its free palm lies on the thigh, also the owner's, where the video braces on the far pulley (12:23).
   - Shoulder (standing: position 10, exit about 1430 mm, for the mannequin's 1.45 m shoulder; seated: position 7, exit about 1050 mm, for its 1.10 m seated shoulder): cable flye, chest press, seated flye (cables run level to the hands at chest height, video 11:02).
-  - High (position 15 or 16, exit about 2100 to 2250 mm): cable crossover (pulleys above the head, video 10:20), reverse crossover (cables at about head height, arms crossed at the start, video 0:04), face pull, crunch, triceps pushdown.
+  - High (position 15 or 16, exit about 2100 to 2250 mm): cable crossover (pulleys above the head, video 10:20), reverse crossover (cables at about head height, arms crossed at the start, video 0:04), face pull, crunch, triceps pushdown, woodchopper (no video: a chop from above the shoulder across to the far knee).
 - Same height on both towers for two-arm lifts.
 - Stance: for the crossover the lifter stands near the line between the towers, feet level, hinged about 45 degrees at the hips (video 10:23, 10:26). The owner set it in the studio at position 12, exit about 1720 mm, below the high pulleys of the video. For one-arm lifts (lateral raise, kickback) the free hand holds the tower and the body leans away from or onto it (11:19, 7:40). For a press the lifter stands a step ahead of the towers, the cables coming from behind, in a split stance (cable_chest_press: the library's note gives the stance, since its frames stop at the waist). The low-to-high press is one arm at a time, up and across to eye level in front of the opposite shoulder (the library's note; it has no video). The high lateral raise and the Y raise take the far tower's cable, across the front of the body; the behind-the-back raise is both arms together, each taking the far tower's cable round behind, the lifter a step ahead of the towers' line (video 9:13, 9:16); the katana takes it across and behind; the shrug-in takes the near tower's, from behind. For the seated flye a separate bench is placed on the line, its back to the towers' line (11:02).
 - Start each set with the cable taut: the hands at the start are already short of the pulley by most of the arm's reach.

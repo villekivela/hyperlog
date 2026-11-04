@@ -240,7 +240,8 @@ function attached(kind, ankle, M) {
           const up = (P.hipC ?? foot.clone().add(UP)).clone().sub(foot).normalize();
           const at = foot.clone().addScaledVector(up, 0.08);
           span(band, foot.clone().addScaledVector(up, 0.05), foot.clone().addScaledVector(up, 0.11));
-          const hook = at.clone().addScaledVector(toward(at, exit), 0.075);
+          const away = toward(at, exit);
+          const hook = at.clone().addScaledVector(away.addScaledVector(up, -away.dot(up)).normalize(), 0.075);
           ring.position.copy(hook);
           return { hook, points: [at] };
         },

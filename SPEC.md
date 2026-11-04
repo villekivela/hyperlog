@@ -1566,6 +1566,9 @@ gallery (Technique videos).
     2026-11-03).
     The incline and decline presses (an adjustable bench is seven clips, and a decline
     needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
+    The cable crossover's lifts (#197) come in two batches: the first with the back to the towers or
+    beside one, a handle in the hand; the second facing a tower, kneeling, seated or with a leg off the
+    floor, on a rope, a straight bar or an ankle cuff. A free hand holds the tower or lies on the body.
     The dumbbell batch (#127) comes ahead of the rest of the barbell lifts (owner, 2026-11-04). Its
     lunge is a split stance held through the rep: the feet stay planted, the back heel up on the
     ball of the foot, and the hips drop between them. A 1-arm row carries one dumbbell, one knee and

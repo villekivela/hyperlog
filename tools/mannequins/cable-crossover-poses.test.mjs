@@ -24,6 +24,22 @@ const HOLES = {
   '1_arm_cable_press_around': [9, 9],
   '1_arm_katana_cable_triceps_extension': [6, 6],
 };
+/**
+ * The second batch's holes, as above: the ref's Adjustments give them, and the rest of what each
+ * asks of the body is in its own test below.
+ */
+const SECOND = {
+  '1_leg_cable_glute_kickback': [1, 1],
+  cable_crunch: [15, 16],
+  cable_face_pull: [15, 16],
+  cable_hip_abduction: [1, 1],
+  cable_pull_through: [1, 2],
+  cable_triceps_kickback: [2, 3],
+  cable_woodchopper: [15, 16],
+  cable_wrist_curl: [1, 1],
+  cable_wrist_extension: [1, 1],
+  seated_cable_flye: [7, 7],
+};
 /** Where a hole's cable leaves the lower wheel, from the ref: 350 mm up at the first, 132 mm pitch, 85 mm below the pin. */
 const exitOf = (hole) => 0.35 + (hole - 1) * 0.132 - 0.085;
 /** The two ends of a cable, in the world. */
@@ -36,6 +52,44 @@ const BATCH = BATCHES['cable-crossover'];
 test('the batch is the exercises the ref gives a hole for', () => {
   assert.deepEqual([...BATCH].sort(), Object.keys(HOLES).sort());
 });
+
+test('the second batch is the exercises the ref gives a hole for', () => {
+  assert.deepEqual([...BATCHES['cable-crossover-2']].sort(), Object.keys(SECOND).sort());
+});
+
+/** Where the far end of the cable `entry` works should end, on the posed body. */
+const endOf = (entry, rig) => {
+  const { attachment, ankle = 1, hands = [1, -1] } = entry.kit.cable_crossover;
+  if (attachment === 'cuff') return wpos(rig.bones[`foot_${ankle < 0 ? 'r' : 'l'}`]);
+  const held = hands.map((side) => heldAt(rig, side > 0 ? 'l' : 'r'));
+  return held.reduce((sum, p) => sum.add(p), V(0, 0, 0)).multiplyScalar(1 / held.length);
+};
+
+for (const [id, [low, high]] of Object.entries(SECOND)) {
+  test(`${id} stands on the crossover, its cable running from a pulley the ref gives to what it pulls on every frame`, async () => {
+    const entry = prepare(id);
+    assert.ok(entry.kit.cable_crossover, 'on the crossover');
+    const stage = await buildStage(entry);
+    const checks = checkStage(entry, stage);
+    for (const c of CHECKS) assert.ok(checks[c].ok, `${c}: frame ${checks[c].frame}, ${checks[c].found}`);
+    const { position, attachment, tower = 1, hands = [1, -1], crossed } = entry.kit.cable_crossover;
+    assert.ok(position >= low && position <= high, `hole ${position}, not ${low} to ${high}`);
+    const { cables } = stage.kit.kits.cable_crossover;
+    const working = attachment ? [cables[tower > 0 ? 0 : 1]] : hands.map((side) => cables[(crossed ? -side : side) > 0 ? 0 : 1]);
+    for (let f = 0; f < FRAMES; f++) {
+      stage.pose(f / (FRAMES - 1));
+      stage.scene.updateMatrixWorld(true);
+      for (const { cable } of working) {
+        const miss = Math.min(...endsOf(cable).map((e) => Math.abs(e.y - exitOf(position))));
+        assert.ok(miss < 1e-3, `frame ${f}: the cable leaves ${miss.toFixed(3)} m off the hole's height`);
+      }
+      if (attachment) {
+        const gap = working[0].hook().distanceTo(endOf(entry, stage.rig));
+        assert.ok(gap < 0.25, `frame ${f}: the cable ends ${gap.toFixed(3)} m from what it pulls`);
+      }
+    }
+  });
+}
 
 for (const [id, [low, high]] of Object.entries(HOLES)) {
   test(`${id} stands on the crossover, its cable running from a pulley the ref gives to the hand on every frame`, async () => {
@@ -92,7 +146,7 @@ function throughTheBody(stage, cable) {
 }
 
 // The wires aren't solid, so no other check stops a cable running through the body.
-for (const id of Object.keys(HOLES)) {
+for (const id of [...Object.keys(HOLES), ...Object.keys(SECOND)]) {
   test(`${id}'s cable runs clear of the body on every frame`, async () => {
     const entry = prepare(id);
     const stage = await buildStage(entry);
@@ -329,4 +383,82 @@ test('the katana takes a cable from the side, across the body, and extends overh
   assert.equal(entry.kit.cable_crossover.crossed, true);
   const { hand, at } = await posed('1_arm_katana_cable_triceps_extension', 0);
   assert.ok(hand('l').y > at('Head').y + 0.15, `the hand at ${hand('l').y.toFixed(3)} m, the head at ${at('Head').y.toFixed(3)} m`);
+});
+
+/** Where each named bone is at the top and the bottom of `id`'s rep. */
+async function ends(id, ...names) {
+  const stage = await buildStage(prepare(id));
+  return [0, 1].map((d) => {
+    stage.pose(d);
+    stage.scene.updateMatrixWorld(true);
+    return Object.fromEntries(names.map((n) => [n, wpos(stage.rig.bones[n]).clone()]));
+  });
+}
+
+test('the kickback drives the cuffed leg back and a little out, the other foot planted', async () => {
+  const [top, bottom] = await ends('1_leg_cable_glute_kickback', 'foot_l', 'foot_r');
+  assert.ok(top.foot_l.z < bottom.foot_l.z - 0.4, `back ${top.foot_l.z.toFixed(2)} from ${bottom.foot_l.z.toFixed(2)}`);
+  assert.ok(top.foot_l.x > bottom.foot_l.x, 'a little out');
+  assert.ok(top.foot_r.distanceTo(bottom.foot_r) < 0.01, 'the other foot stays');
+});
+
+test('the crunch rounds the back on the knees: the hips hold, the head drops toward the thighs', async () => {
+  const [top, bottom] = await ends('cable_crunch', 'pelvis', 'Head', 'calf_l', 'hand_l');
+  assert.ok(top.calf_l.y < 0.12, 'on the knees');
+  assert.ok(top.pelvis.distanceTo(bottom.pelvis) < 0.05, 'the hips hold');
+  assert.ok(top.Head.y - bottom.Head.y > 0.25, `the head drops ${(top.Head.y - bottom.Head.y).toFixed(2)}`);
+  for (const end of [top, bottom]) assert.ok(end.hand_l.distanceTo(end.Head) < 0.25, 'the hands stay by the head');
+});
+
+test('the face pull brings the hands apart to the sides of the face', async () => {
+  const [top, bottom] = await ends('cable_face_pull', 'Head', 'hand_l', 'hand_r');
+  assert.ok(top.hand_l.x - top.hand_r.x > bottom.hand_l.x - bottom.hand_r.x + 0.15, 'the hands pull apart');
+  assert.ok(Math.abs(top.hand_l.y - top.Head.y) < 0.2, 'at the height of the face');
+  assert.ok(top.hand_l.z < bottom.hand_l.z - 0.2, 'toward the face');
+});
+
+test('the hip abduction lifts the cuffed leg out to its side, away from the tower', async () => {
+  const [top, bottom] = await ends('cable_hip_abduction', 'foot_l', 'foot_r');
+  assert.ok(top.foot_l.x > bottom.foot_l.x + 0.3, `out ${top.foot_l.x.toFixed(2)} from ${bottom.foot_l.x.toFixed(2)}`);
+  assert.ok(top.foot_r.distanceTo(bottom.foot_r) < 0.01, 'the other foot stays');
+});
+
+test('the pull-through hinges back, the hands passing between the thighs', async () => {
+  const [top, bottom] = await ends('cable_pull_through', 'pelvis', 'hand_l', 'hand_r', 'calf_l', 'calf_r', 'Head');
+  assert.ok(bottom.pelvis.z < top.pelvis.z - 0.1, 'the hips go back');
+  assert.ok(top.Head.y - bottom.Head.y > 0.4, 'the trunk hinges');
+  assert.ok(bottom.hand_l.x < bottom.calf_l.x && bottom.hand_r.x > bottom.calf_r.x, 'the hands between the knees');
+});
+
+test('the triceps kickback keeps the upper arm behind the torso, only the forearm moving', async () => {
+  const [top, bottom] = await ends('cable_triceps_kickback', 'upperarm_l', 'lowerarm_l', 'hand_l');
+  for (const end of [top, bottom]) assert.ok(end.lowerarm_l.z < end.upperarm_l.z - 0.05, 'the elbow behind the shoulder');
+  assert.ok(top.lowerarm_l.distanceTo(bottom.lowerarm_l) < 0.03, 'the elbow holds');
+  assert.ok(top.hand_l.z < bottom.hand_l.z - 0.3, 'the forearm extends back');
+});
+
+test('the woodchopper chops both hands from high on the left to low on the right', async () => {
+  const [top, bottom] = await ends('cable_woodchopper', 'hand_l', 'hand_r');
+  for (const k of ['hand_l', 'hand_r']) {
+    assert.ok(top[k].x > 0.15 && bottom[k].x < -0.1, `${k} across, ${top[k].x.toFixed(2)} to ${bottom[k].x.toFixed(2)}`);
+    assert.ok(top[k].y - bottom[k].y > 0.4, `${k} down`);
+  }
+});
+
+for (const id of ['cable_wrist_curl', 'cable_wrist_extension']) {
+  test(`${id} moves the wrists alone, the forearms held`, async () => {
+    const entry = prepare(id);
+    assert.ok(Math.abs(entry.top.wrist[0] - entry.bottom.wrist[0]) > 60, 'the wrists turn through the rep');
+    const [top, bottom] = await ends(id, 'lowerarm_l', 'upperarm_l');
+    assert.ok(top.lowerarm_l.distanceTo(bottom.lowerarm_l) < 0.05, 'the elbow holds');
+    assert.ok(top.upperarm_l.distanceTo(bottom.upperarm_l) < 0.01, 'the body holds');
+  });
+}
+
+test('the seated flye sweeps wide and back to together in front of the chest, on the bench', async () => {
+  const entry = prepare('seated_cable_flye');
+  assert.ok(entry.kit.bench, 'on the bench');
+  const [top, bottom] = await ends('seated_cable_flye', 'hand_l', 'upperarm_l');
+  assert.ok(top.hand_l.x < 0.2 && top.hand_l.z > top.upperarm_l.z + 0.3, 'together in front of the chest');
+  assert.ok(bottom.hand_l.x > 0.5 && bottom.hand_l.z < bottom.upperarm_l.z + 0.1, 'wide and back for the stretch');
 });

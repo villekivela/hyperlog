@@ -221,6 +221,14 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   dumbbells: one with a bar's two grips hangs them there instead, and they turn with the hands.
   **`steady: true`** lays each by the palm as well as the handle's line, so it turns with the hand
   and can't roll in it. Every dumbbell entry wants it.
+- **`body.kneel`** (`arms`, `free_arms`, `row`) puts the body on its knees at `feet.z`, the shins
+  back along the floor and the toes tucked; `thigh` sets the hips over them.
+- **`feet.lift`** (standing `arms`, `free_arms`, `row`) takes one foot off the floor (1 the left), and
+  `top.leg`, `bottom.leg` set that leg: [back, out, bend] in degrees, the thigh from straight down,
+  behind the hip and out to its side, and the knee's bend.
+- **`grip.open`** rests both hands flat on something, holding nothing; with `grip.one` the other
+  hand goes to `grip.rest` as ever. **`grip.joined`** (`free_arms`) holds one thing in both hands,
+  that far either side of the point `hand` gives, which isn't mirrored.
 - **`grip.level`** (dumbbells) lets the wrists flow: their share of the forearms' lean, 0 to 1. The
   hand stays square to the handle, the wrist bends with that share, and the handle tips with the
   rest. 0 is a straight wrist, the handle tipping with the forearm; 1 holds the handle dead level.
@@ -405,9 +413,11 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   It departs from the ref: the stack's plates and the frame's tubes are the library's generic ones
   (twelve 26 cm plates, 76 mm tubes without the holes), the stack stands 500 mm behind the rail, the
   top wheels are 90 mm, and the 2210 mm is taken centre to centre. The handle is the
-  stirrup; the ref's ankle cuff and rope are further attachments, for the pose ticket that needs
-  them (the glute kickback's). `position` takes one number for a two-arm lift, the same hole on both
-  towers, and a pair only where the arms differ.
+  stirrup. `attachment` hangs one thing on one tower's cable in its place: a `rope` or a `bar` in
+  both hands, or a `cuff` on the `ankle` named (1 the left), and `tower` picks the cable (1 the
+  left). `faces` turns each tower round where it stands, for a lifter facing the machine. `position`
+  takes one number for a two-arm lift, the same hole on both towers, and a pair only where the arms
+  differ.
 - `smith_machine` (#182, smith machine equipment, not a machine kind) stands where its ref puts it,
   whatever the pose, and none of its nine exercises is posed yet: two guide rods 1.3 m apart leaning
   7° with their tops toward the back, a front upright either side carrying a rod and a plate of 13
