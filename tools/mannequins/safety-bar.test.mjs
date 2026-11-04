@@ -42,7 +42,7 @@ const whole = (kit) => meshes(kit).reduce((u, { box }) => u.union(box), new THRE
 const contact = (kit, point) => kit.contacts.find((c) => c.point === point);
 const held = (kit) => meshes(kit, (o) => o.userData.held);
 // A rod's diameter and length: the unit cylinder's width, and how far it is stretched.
-const diameter = ({ mesh }) => mesh.geometry.boundingBox ? mesh.geometry.boundingBox.getSize(new THREE.Vector3()).x * mesh.scale.x : (mesh.geometry.computeBoundingBox(), diameter({ mesh }));
+const diameter = ({ mesh }) => new THREE.Box3().setFromBufferAttribute(mesh.geometry.attributes.position).getSize(new THREE.Vector3()).x * mesh.scale.x;
 const lengthOf = ({ mesh }) => mesh.scale.y;
 // The shaft: the 38 mm tube along x through the middle, the longest part of the frame's tone.
 const shaft = (kit) => meshes(kit, (o) => o.material.name === 'frame' && Math.abs(size(new THREE.Box3().setFromObject(o, true)).y - 0.038) < 2e-3 && size(new THREE.Box3().setFromObject(o, true)).x > 1.2)[0];
@@ -100,8 +100,8 @@ test('rolled 25 degrees forward on the shoulders, as the lifter holds it, it is 
   const kit = bar({ roll: 25 });
   const y = centre(shaft(kit).box).y;
   const box = whole(kit);
-  close(size(box).z, 0.533, 0.02, 'front to back, the yoke\'s back to the handle tips');
-  close(y + 0.019 - box.min.y - 0.0127, 0.254, 0.03, 'from the shaft\'s top to the handle tips');
+  close(size(box).z, 0.533, 0.01, 'front to back, the yoke\'s back to the handle tips');
+  close(y + 0.019 - box.min.y - 0.0127, 0.254, 0.015, 'from the shaft\'s top to the handle tips');
   const sleeve = meshes(kit, (o) => o.material.name === 'metal' && size(new THREE.Box3().setFromObject(o, true)).x > 0.3)[0];
   close(centre(sleeve.box).z, 0.14 * Math.sin(25 * Math.PI / 180), 3e-3, 'the sleeve centre ahead of the shaft');
   close(y - centre(sleeve.box).y, 0.14 * Math.cos(25 * Math.PI / 180), 3e-3, 'the sleeve centre below the shaft');

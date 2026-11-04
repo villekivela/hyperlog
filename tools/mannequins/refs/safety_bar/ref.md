@@ -39,8 +39,8 @@ A cambered bar with a padded yoke on the shoulders and two forward handles that 
 | Handle pads | about 70 diameter, about 270 long from the yoke | estimated from the three-quarter photo (H), scaled by the 38 mm shaft at the yoke; length foreshortened, low confidence |
 | Bare grip below each handle pad | about 150-180 long | estimated from the photos H and WEB2 (both foreshortened, 134-153 projected), scaled by the 38 mm shaft; REP publishes 178 (7 in) for its handles |
 | Handle spacing, centre to centre | about 330 at the yoke, about 310 at the tips | estimated from the front photo (WEB2), scaled by the 38 mm shaft; REP publishes 330 (13 in) |
-| Handle arm, shaft centre to tip | about 500 | chosen from the 533 mm overall width less about 70 mm of yoke behind the shaft (465 mm forward) and a drop of about 235 mm (the 254 mm height less the shaft radius), low confidence |
-| Handle angle, with the sleeves hanging straight below the shaft | about 25-30 degrees below horizontal | chosen from the same width and height figures; the REP lunge photo (StudioSlider-5) shows its handles at about this angle while held, low confidence |
+| Handle arm, shaft centre to tip | about 520 | chosen: the 533 mm width held (about 465 mm forward of the shaft, with 70 mm of yoke behind) and a 235 mm drop give about 520 mm at 27°; the rack photos agree (see Compared in the studio), low confidence |
+| Handle angle, with the sleeves hanging straight below the shaft (racked) | about 51 degrees below horizontal; about 27 held, after a roll of about 25 | measured from the front photo (WEB2, about 410 mm below the shaft over a 520 mm arm); the held angle is the published width and height; the REP lunge photo (StudioSlider-5) shows its handles at about 27 while held, low confidence |
 
 ## Motion
 Nothing moves. The 140 mm camber lowers the plate centreline below the shaft, so the load sits lower and forward. No pivots on the bar itself (the Rogue page says fully welded).
@@ -61,7 +61,7 @@ What the videos show:
 
 ## Compared in the studio (#219)
 The kit was built and set beside the photos and the Rogue video frames (1:15, 1:24 held; 0:02 racked):
-- Hung in the rack the handles drop about 410 mm below the shaft's centre (front photo WEB2, 1.36 mm per pixel, from the shaft to the grips' ends), about 51° below horizontal over a 537 mm arm, which is steeper than the 25-30° above. Held, the lifter rolls the bar forward about 25° about the shaft, which brings the handles to the 27° the published 533 mm by 254 mm give and the plate centre forward of the shaft by 140 mm times the sine of it, as the T Nation video at 0:26 shows. The recipe's option `roll` is that turn, 0 as racked.
+- Hung in the rack the handles drop about 410 mm below the shaft's centre (front photo WEB2, 1.36 mm per pixel, from the shaft to the grips' ends), about 51° below horizontal over a 520 mm arm, which is steeper than the 25-30° above. Held, the lifter rolls the bar forward about 25° about the shaft, which brings the handles to the 27° the published 533 mm by 254 mm give and the plate centre forward of the shaft by 140 mm times the sine of it, as the T Nation video at 0:26 shows. The recipe's option `roll` is that turn, 0 as racked.
 - The handle pads are about 70 mm across and read thicker in the photos, nearer the yoke's 100 mm; the yoke pad's ends are gathered in the photos and plain in the model; the camber bends are sharper in the photos; the model has no rack-catch plates on the shaft.
 
 ## Open gaps

@@ -12,7 +12,7 @@
 // height. Contacts: the hands on the bare grips (`grips`) and the shoulders under the yoke pad (`yoke`).
 import * as THREE from 'three';
 import { recipe } from '../recipe.mjs';
-import { along, bent, knob, rod, turnedPart } from '../parts.mjs';
+import { along, bent, knob, rod } from '../parts.mjs';
 import { V, X, rad } from '../rig.mjs';
 
 const SHAFT = { radius: 0.019, half: 0.655 };
@@ -21,10 +21,10 @@ const SHAFT = { radius: 0.019, half: 0.655 };
 const CAMBER = { drop: 0.14, collar: 0.755 };
 const SLEEVE = { radius: 0.025, from: 0.775, to: 1.181, ring: { radius: 0.032, from: 0.755 } };
 const YOKE = { half: 0.165, radius: 0.05 };
-// A handle arm from the shaft at 165 mm out to its tip 155 mm out, 537 mm along at 51° below
-// horizontal as the bar hangs in a rack: the pad over 270 mm of it and a bare grip 177 mm long past it.
+// A handle arm from the shaft at 165 mm out to its tip 155 mm out, 520 mm along at 51° below
+// horizontal as the bar hangs in a rack: the pad over 270 mm of it and a bare grip 175 mm long past it.
 const REST = rad(51);
-const HANDLE = { base: 0.165, tip: 0.155, length: 0.537, pad: { radius: 0.035, from: 0.05, to: 0.32 }, grip: { radius: 0.0127, from: 0.36 }, hand: 0.45 };
+const HANDLE = { base: 0.165, tip: 0.155, length: 0.52, pad: { radius: 0.035, from: 0.05, to: 0.32 }, grip: { radius: 0.0127, from: 0.345 }, hand: 0.45 };
 const SHAFT_HEIGHT = 1.5;
 
 export default recipe({
@@ -35,7 +35,7 @@ export default recipe({
     { body: 'frame', point: 'grips', landmark: 'hands' },
     { body: 'frame', point: 'yoke', landmark: 'shoulders' },
   ],
-  fit: [{ sets: 'shaft', rule: 'the shaft across the upper trapezius behind the neck: about 1.50 m for a standing mannequin, the shoulder joint plus 50 mm' }],
+  fit: [{ sets: 'roll', rule: 'the lifter sets it by how they hold the bar: about 25° forward for the handles at chin height, the hands on the bare grips' }, { sets: 'shaft', rule: 'the shaft across the upper trapezius behind the neck: about 1.50 m for a standing mannequin, the shoulder joint plus 50 mm' }],
   build({ shaft: height = SHAFT_HEIGHT, roll = 0 } = {}, M) {
     const sides = [-1, 1];
     const at = (x, y = 0, z = 0) => V(x, height + y, z);

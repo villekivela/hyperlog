@@ -424,7 +424,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   so no clip changes) is a cambered bar from the ref's numbers, unloaded: a 38 mm shaft 1310 mm
   between two camber bends that carry the sleeves 140 mm below its centre line, 2362 mm long over
   the sleeves, a yoke pad 330 by 100 mm round the shaft, and two handle arms from the yoke ends, each
-  with a pad 270 mm long and a bare steel grip 177 mm long. Nothing on it moves and it fits every
+  with a pad 270 mm long and a bare steel grip 175 mm long. Nothing on it moves and it fits every
   height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
   about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
   (the shoulders).
