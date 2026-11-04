@@ -8,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
 import { CABLE_MACHINES, EQUIPMENT, KITS, buildKit, shownAlone } from './kit.mjs';
-import { buildStage } from './stage.mjs';
 import { POSES } from './poses.mjs';
 import { V } from './rig.mjs';
 
@@ -155,18 +154,13 @@ test('the hands hold the handles by their grips and steady themselves on the car
   }
 });
 
-test('the studio shows it alone, its handles hanging through the rep', async () => {
-  const entry = shownAlone('cable_crossover');
-  assert.ok(entry.camera, 'a framing to open on');
-  const stage = await buildStage(entry);
-  const kit = stage.kit.kits.cable_crossover;
-  stage.pose(0);
+test('with no hand on them its handles hang, the stacks at rest, and the studio shows it through its poses', () => {
+  assert.equal(shownAlone('cable_crossover'), null);
+  const kit = crossover();
   const hung = contact(kit, 'handle_l').at[0].clone();
-  for (const d of [0, 0.5, 1]) {
-    stage.pose(d);
-    close(kit.joints.stack_l.value, 0, 1e-9, 'the stack at rest');
-    close(contact(kit, 'handle_l').at[0].distanceTo(hung), 0, 1e-9, 'the handle, hanging where it did');
-  }
+  kit.place({}, {}, {});
+  close(kit.joints.stack_l.value, 0, 1e-9, 'the stack at rest');
+  close(contact(kit, 'handle_l').at[0].distanceTo(hung), 0, 1e-9, 'the handle, hanging where it did');
 });
 
 test('it serves the cable exercises the ref names that no pose has set up on another kit', async () => {

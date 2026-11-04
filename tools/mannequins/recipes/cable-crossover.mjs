@@ -59,8 +59,6 @@ const sides = [{ k: 'l', s: 1 }, { k: 'r', s: -1 }];
 
 export default recipe({
   name: 'cable_crossover',
-  // Shown alone in the studio until a pose uses it: three-quarter from the front and the left.
-  standsAlone: { camera: { target: [0, 1.25, 0], halfHeight: 1.75, azimuth: -35, elevation: 8 } },
   bodies: (o) => ({
     ...Object.fromEntries(sides.flatMap(({ k }) => [
       [`carriage_${k}`, prismatic({ axis: UP, limits: [0, TRAVEL] })],
@@ -79,14 +77,16 @@ export default recipe({
   // is the fit rule.
   fit: [{
     sets: 'position',
-    rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 4 to 7 from the thigh to just above the hip (the high lateral raise cable is at about 1.05 m, hole 7), 10 at the standing shoulder (7 seated), 15 or 16 for a crossover or a pushdown',
+    rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 2 or 3 for a shrug-in, 4 to 6 from the thigh to the hip (the high lateral raise cable is at hole 6), 10 at the standing shoulder (7 seated), 15 or 16 for a crossover or a pushdown',
   }],
   build({ position = 10, hands = [1, -1], at = [0, 0], crossed = false } = {}, M) {
     const holes = Array.isArray(position) ? position : [position, position];
     for (const h of holes) if (!(Number.isInteger(h) && h >= 1 && h <= POSITIONS)) throw new Error(`The cable crossover has no position ${h}; its carriage has holes 1 to ${POSITIONS}`);
     const towers = sides.map(({ k, s }, i) => buildTower(k, s, (holes[i] - 1) * PITCH, at, M));
+    /** The side of the hand on the tower at side `s`. */
+    const handOn = (s) => (crossed ? -s : s);
     // A stack on no hand's cable stays down, so it isn't a working one.
-    for (const t of towers) if (!hands.includes(crossed ? -t.s : t.s)) t.rests();
+    for (const t of towers) if (!hands.includes(handOn(t.s))) t.idle();
     // The crossmember rests on the front posts' tops and runs past them, centred on the machine.
     const bridge = tube(POST, V(at[0] - BRIDGE / 2, BEAM_Y, at[1]), V(at[0] + BRIDGE / 2, BEAM_Y, at[1]), M.frame);
     bridge.userData.bridge = true;
@@ -116,10 +116,10 @@ export default recipe({
         const points = {};
         for (const tower of towers) {
           const { k, s } = tower;
-          tower.carriage.position.y = tower.at;
+          tower.carriage.position.y = tower.raised;
           const exit = tower.exit();
           // The hand on this tower's cable, and its side's name.
-          const { k: h, s: side } = sides.find((o) => o.s === (crossed ? -s : s));
+          const { k: h, s: side } = sides.find((o) => o.s === handOn(s));
           const held = handles[h];
           let hook;
           if (held && P.hand) {
@@ -147,7 +147,7 @@ export default recipe({
           lay(tower);
           // The cable drawn out past the length that lets a hanging handle hang.
           const drawn = held && P.hand ? Math.max(0, hook.distanceTo(exit) - Math.min(HANG, exit.y - 0.05 - STIRRUP)) : 0;
-          joints[`carriage_${k}`] = { value: tower.at, origin: tower.group.position.clone() };
+          joints[`carriage_${k}`] = { value: tower.raised, origin: tower.group.position.clone() };
           joints[`swivel_${k}`] = { value: turn, origin: V(tower.group.position.x, 0, at[1] + SWIVEL_Z) };
           joints[`stack_${k}`] = { value: drawn, origin: V(tower.group.position.x, 0, at[1] + STACK_Z) };
           points[`steady_${k}`] = [tower.steady()];
@@ -231,7 +231,7 @@ function buildTower(k, s, raised, [atX, atZ], M) {
   const api = {
     k,
     s,
-    at: raised,
+    raised,
     group: tower,
     carriage,
     swivel,
@@ -243,7 +243,7 @@ function buildTower(k, s, raised, [atX, atZ], M) {
       span(rise, V(x, pin + carriage.position.y + WHEELS, atZ + SWIVEL_Z), V(x, TOP_Y, atZ + SWIVEL_Z));
     },
     steady: () => V(x + 0.125, pin + carriage.position.y, atZ + 0.09),
-    rests() { weights.head.userData.stack = false; },
+    idle: weights.idle,
     // Raises the stack `l` metres, less the hold the recipe format adds (`HELD`): the stack sits
     // down whole with no cable drawn, and rises half as far as the cable is drawn after that.
     lift(l) {

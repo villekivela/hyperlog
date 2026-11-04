@@ -404,12 +404,12 @@ export const POSES = {
   // The cable crossover's exercises (#197): first poses for the owner to tune. Body-first, the body
   // at the origin and the machine at `at`, the carriages at the holes the ref gives.
 
-  // On the line between the towers, one foot forward and hinged at the hips, the pulleys high: from
-  // the arms wide at shoulder height, the hands come down and in to meet in front of the hips.
+  // A step ahead of the towers, one foot forward and hinged at the hips, the pulleys high: from the
+  // arms wide at shoulder height, the hands come down and in to meet in front of the hips.
   cable_crossover: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 15 } },
+    kit: { cable_crossover: { position: 15, at: [0, -0.45] } },
     top: { shin: 8, thigh: 22, trunk: 30, hand: [0.05, 0.98, 0.5] },
     bottom: { shin: 8, thigh: 22, trunk: 30, hand: [0.72, 1.42, 0.2] },
     feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
@@ -418,25 +418,26 @@ export const POSES = {
   },
 
   // A step ahead of the towers in a split stance, the pulleys at the shoulders and the cables coming
-  // from behind: the handles press from beside the chest to the arms straight ahead.
+  // from behind: neutral handles press from beside the chest until the hands nearly meet.
   cable_chest_press: {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 10, at: [0, -0.6] } },
-    top: { shin: 8, thigh: 14, trunk: 12, hand: [0.1, 1.36, 0.68] },
+    top: { shin: 8, thigh: 14, trunk: 12, hand: [0.05, 1.36, 0.68] },
     bottom: { shin: 8, thigh: 14, trunk: 12, hand: [0.33, 1.3, 0.12] },
     feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
-    grip: { pole: [1, -0.2, -0.6], sits: 'heel' },
+    grip: { rotate: 90, pole: [1, -0.2, -0.6], sits: 'heel' },
     camera: { target: [0, 1.15, -0.1], halfHeight: 1.3, azimuth: 40, elevation: 8 },
   },
 
-  // The press from low: the pulleys at the thighs, the handles rising from beside the hips to the
-  // arms straight ahead and up, level with the eyes.
+  // One arm from the pulley at the thigh: the handle rises from beside the hip, up and across to eye
+  // level in front of the opposite shoulder.
   low_to_high_cable_press: {
     like: 'cable_chest_press',
-    kit: { cable_crossover: { position: 5, at: [0, -0.6] } },
-    top: { hand: [0.1, 1.62, 0.56] },
+    kit: { cable_crossover: { position: 5, hands: [1] } },
+    top: { hand: [-0.19, 1.62, 0.5] },
     bottom: { hand: [0.33, 1.02, 0.1] },
+    grip: { one: 1, rest: [-0.25, 0.88, 0.14] },
   },
 
   // Beside the right tower, the left hand on its cable, which crosses in front of the hips from a
@@ -447,25 +448,26 @@ export const POSES = {
     motion: 'free_arms',
     kit: { cable_crossover: { position: 6, at: [0.4, 0.1], crossed: true, hands: [1] } },
     top: { shin: 4, thigh: 6, trunk: 4, hand: [0.76, 1.46, 0.1] },
-    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.02, 0.92, 0.26] },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [-0.06, 0.92, 0.26] },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
     grip: { arc: true, one: 1, rotate: 30, rest: [-0.574, 1.0, 0.19], pole: [1, -0.25, -0.7] },
     camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 20, elevation: 8 },
   },
 
-  // The raise from a low pulley, up past the shoulder into the arm of a Y.
+  // The raise from a low pulley, up past the shoulder into the arm of a Y, the right hand resting at
+  // the tower's post.
   cable_y_raise: {
     like: 'high_cable_lateral_raise',
-    kit: { cable_crossover: { position: 1, at: [0.4, 0], crossed: true, hands: [1] } },
+    kit: { cable_crossover: { position: 1 } },
     top: { hand: [0.6, 1.9, 0.22] },
-    grip: { rest: [-0.3, 0.9, 0.08] },
+    grip: { rest: [-0.59, 1.15, 0.1] },
   },
 
   // A step ahead of the right tower's line, so the cable from the low pulley runs behind the body:
   // the left arm rises from behind the hips to level with the shoulder.
   behind_the_back_cable_lateral_raise: {
     like: 'high_cable_lateral_raise',
-    kit: { cable_crossover: { position: 1, at: [0.4, -0.46], crossed: true, hands: [1] } },
+    kit: { cable_crossover: { position: 1, at: [0.4, -0.46] } },
     top: { hand: [0.76, 1.44, -0.04] },
     bottom: { hand: [0.2, 0.92, -0.17] },
     grip: { rotate: -30, rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.8] },
@@ -484,25 +486,25 @@ export const POSES = {
     camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
   },
 
-  // Feet wide, the left tower behind and to the left, its pulley at the shoulder: the hand presses
-  // from beside the chest across the middle of the body, the cable lying across the chest.
+  // Feet wide, back to the left tower, its pulley at the shoulder: the hand wraps from beside the
+  // chest around and across the body past the middle, the cable lying over the arm.
   '1_arm_cable_press_around': {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 10, at: [-0.555, -0.75], hands: [1] } },
+    kit: { cable_crossover: { position: 10, at: [0, -0.6], hands: [1] } },
     top: { shin: 4, thigh: 8, trunk: 8, hand: [-0.2, 1.34, 0.5] },
     bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.44, 1.32, 0.16] },
     feet: { stance: 0.2, toeOut: 10, kneesOut: 0.2 },
-    grip: { one: 1, rest: [-0.3, 0.9, 0.1], pole: [1, -0.3, -0.5] },
+    grip: { one: 1, rest: [-0.3, 0.9, 0.1], pole: [1, -0.3, -0.5], sits: 'heel' },
     camera: { target: [0, 1.15, -0.1], halfHeight: 1.3, azimuth: 30, elevation: 8 },
   },
 
-  // Facing away from a pulley at the hips behind and beside the head's line, the elbow high: the
-  // hand lowers from the arm straight overhead to behind the head.
+  // The right tower's low pulley to the side and behind, its cable across the body to the left hand,
+  // the elbow high: the hand lowers from the arm straight overhead to behind the head.
   '1_arm_katana_cable_triceps_extension': {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 5, at: [-0.9, -0.7], hands: [1] } },
+    kit: { cable_crossover: { position: 1, at: [0.4, -0.7], crossed: true, hands: [1] } },
     top: { shin: 4, thigh: 8, trunk: 8, hand: [0.2, 1.98, 0.12] },
     bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.06, 1.62, -0.1] },
     feet: { stance: 0.16, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
