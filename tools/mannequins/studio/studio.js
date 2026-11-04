@@ -9,7 +9,7 @@ import KEYS from './keys.json';
 import { helpOf, keymap, tokenOf } from './keys.mjs';
 import { FRAMES, buildStage, parseMannequin } from '../stage.mjs';
 import { checkStage, contactsOf } from '../checks.mjs';
-import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withTuned } from '../tune.mjs';
+import { HEADINGS, applyTuned, atAngle, baseAt, headingOf, labelOf, rangeOf, tunables, tunedAngles, valueAt, withTuned, withoutChoices } from '../tune.mjs';
 import { handlesAt } from '../handles.mjs';
 import { tempoOf } from '../tempo.mjs';
 import { BENCH_ANGLES } from '../entries.mjs';
@@ -763,7 +763,7 @@ async function openItem(key, { keepTuned = false } = {}) {
   state.current = key;
   state.item = item;
   if (!keepTuned) {
-    state.tuned = state.unsaved[key] ?? {};
+    state.tuned = withoutChoices(state.unsaved[key] ?? {});
     if (fresh) { state.undo = []; state.redo = []; }
   }
   state.angle = item.entry?.bench ? (state.angle !== null && fresh === false ? state.angle : item.entry.bench.angle) : null;

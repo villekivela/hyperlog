@@ -178,7 +178,7 @@ export default recipe({
     back: revolute({ axis: X, limits: [0, rad(TOP)], settings: BACK_SETTINGS.map(rad) }),
     seat: revolute({ axis: X.clone().negate(), limits: SEAT_RANGE.map(rad), settings: SEAT_SETTINGS.map(rad) }),
   } : {}),
-  build({ decline = false, angle = decline ? DECLINE : 0, seat: tilt = 0, height = 0.457, z = -0.2105, hinge = null, adjustable = false, across = null } = {}, M) {
+  build({ decline = false, angle = decline ? DECLINE : 0, seat: tilt = 0, height = 0.457, z = -0.2105, hinge = null, adjustable = false, across = null, at = null } = {}, M) {
     const { y, z: h } = benchHinge({ height, z, hinge });
     const front = h + HINGE;
     const boss = V(0, y + BOSS[1], h + BOSS[0]);
@@ -267,6 +267,8 @@ export default recipe({
           g.rotation.y = Math.PI / 2;
           g.position.set(0, 0, across);
         }
+        // Stood elsewhere, [x, z]: the node moves, so the parts stay the ones every clip shares.
+        if (at) g.position.set(at[0], 0, at[1]);
       },
       drive() {
         if (!adjustable) return {};

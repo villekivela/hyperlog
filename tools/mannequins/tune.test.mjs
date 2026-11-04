@@ -224,3 +224,10 @@ test('a thumb\'s swing is an angle: a degree a step, 0 to 90, and every value th
   // A drag or a fine step lands between degrees: the hand takes the nearest whole one.
   assert.equal(held(52.37), 52);
 });
+
+test('Tune offers no slider for which hand a kit serves: it is a choice, not a place', () => {
+  for (const id of ['single_arm_db_row', 'bayesian_cable_curl']) {
+    const paths = tunables(prepare(id)).map((t) => t.path);
+    assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hand$/.test(p)), [], id);
+  }
+});
