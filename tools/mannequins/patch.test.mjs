@@ -41,6 +41,24 @@ test('an object the entry hasn\'t got is added, in a like or not', () => {
   assert.ok(multi.includes('    body: { arch: [16, -16.5, -8] },\n  },'), multi);
 });
 
+// The owner, #197: an id that starts with a digit is quoted in poses.mjs, and no save could find it.
+test('an entry whose id is quoted patches like any other', () => {
+  const source = SOURCE.replace('  two: {', "  '1_arm_two': {");
+  const out = patchPoses(source, '1_arm_two', { 'grip.width': 0.3 });
+  assert.equal(out, source.replace('{ width: 0.24 }', '{ width: 0.3 }'));
+  assert.ok(patchPoses(source, '1_arm_two', { 'feet.stance': 0.2 }).includes("'1_arm_two': { like: 'one', grip: { width: 0.24 }"));
+});
+
+test('the crossover\'s quoted exercises save a hole, a hand and a turn of the trunk', () => {
+  return readFile(new URL('./poses.mjs', import.meta.url), 'utf8').then((source) => {
+    const tuned = { 'kit.cable_crossover.position': [5, 9], 'top.hand': [-0.2, 1.3, 0.4], 'top.offsets.Head': [0, -20, 0] };
+    const out = patchPoses(source, '1_arm_cable_press_around', tuned);
+    assert.ok(out.includes('position: [5, 9]'));
+    assert.ok(out.includes('hand: [-0.2, 1.3, 0.4]'));
+    assert.ok(out.includes('Head: [0, -20, 0]'));
+  });
+});
+
 test('an entry or a path it can\'t place is an error naming it', () => {
   assert.throws(() => patchPoses(SOURCE, 'nine', { 'grip.width': 1 }), /nine/);
   assert.throws(() => patchPoses(SOURCE, 'one', { 'motion.speed': 1 }), /motion\.speed/);
