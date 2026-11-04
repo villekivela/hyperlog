@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
-import { EQUIPMENT, KITS, BARS, buildKit, shownAlone } from './kit.mjs';
+import { EQUIPMENT, KITS, BAR_KITS, buildKit, shownAlone } from './kit.mjs';
 import { buildStage } from './stage.mjs';
 import { POSES } from './poses.mjs';
 
@@ -17,7 +17,7 @@ test('it is the kit of the 3 EZ bar exercises the ref names, none of them posed'
   const ref = await readFile(path.join(HERE, 'refs', 'ez_bar', 'ref.md'), 'utf8');
   const named = [...ref.match(/^.*Serves .*$/m)[0].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
   assert.equal(named.length, 3);
-  assert.deepEqual(BARS.ez_bar, { kit: 'ez_bar', exercises: named });
+  assert.deepEqual(BAR_KITS.ez_bar, { kit: 'ez_bar', exercises: named });
   assert.ok(KITS.ez_bar, 'a recipe named ez_bar');
   assert.deepEqual(EQUIPMENT.ez_bar, ['ez_bar']);
   for (const id of named) {
@@ -52,12 +52,11 @@ test('it is 1384 mm long with 267 mm sleeves 50 mm across, 800 mm of shaft betwe
     close(size(box).x, 0.267, 1e-3, 'a sleeve\'s loadable length');
     close(size(box).y, 0.05, 1e-3, 'a sleeve\'s diameter');
   }
-  
+
   // The collars stand between: the shaft is 800 mm from one collar to the other.
   const collars = meshes(kit, (o) => o.material.name === 'frame').map(({ box }) => box).sort((a, b) => a.min.x - b.min.x);
   assert.equal(collars.length, 2);
   close(collars[1].min.x - collars[0].max.x, 0.8, 1e-3, 'the shaft between the collars');
-
 });
 
 test('the shaft zigzags in the bar\'s horizontal plane: 28.5 mm tube, 80 mm peak to trough, forward kinks at the outer pair', () => {

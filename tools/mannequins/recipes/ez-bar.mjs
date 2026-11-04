@@ -16,6 +16,7 @@ import { V } from '../rig.mjs';
 // ref's y reversed), in metres.
 const SHAFT = [[0, 0], [0.06, 0], [0.19, -0.04], [0.32, 0.04], [0.4, 0]];
 const RADIUS = 0.01425;
+// Where the bar's centre line rests on the floor: on its collars.
 const SLEEVE = { radius: 0.025, collar: 0.032, collarLength: 0.025, loadable: 0.267 };
 // Where a hand sits on the inner segment and on the outer one: its middle.
 const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
@@ -47,9 +48,9 @@ export default recipe({
       parts,
       stand(g) { bar = g; },
       drive(P) {
-        const [, z] = GRIPS[grip];
+        const gripZ = GRIPS[grip][1];
         // On the floor with no pose; otherwise the hands' line is the grip segments' middle.
-        if (P.bar) bar.position.copy(P.bar).setZ(P.bar.z - z);
+        if (P.bar) bar.position.copy(P.bar).setZ(P.bar.z - gripZ);
         else bar.position.set(0, SLEEVE.collar, 0);
         return { points: points(bar.position) };
       },
