@@ -240,6 +240,18 @@ test('the press-around turns the trunk and head into the press, on a wide stance
   assert.ok(Math.abs(left.z - right.z) > 0.1, 'one foot ahead');
 });
 
+// The owner, #197: both toes point the same way, and the knees bend well.
+test('the press-around stands with its feet parallel and both knees bent', async () => {
+  const { at } = await posed('1_arm_cable_press_around', 0);
+  const heading = (k) => { const v = at(`ball_${k}`).sub(at(`foot_${k}`)); return (Math.atan2(v.x, v.z) * 180) / Math.PI; };
+  assert.ok(Math.abs(heading('l') - heading('r')) < 3, `the toes at ${heading('l').toFixed(0)}° and ${heading('r').toFixed(0)}°`);
+  for (const k of ['l', 'r']) {
+    const knee = at(`calf_${k}`);
+    const bend = 180 - (at(`thigh_${k}`).sub(knee).angleTo(at(`foot_${k}`).sub(knee)) * 180) / Math.PI;
+    assert.ok(bend > 40, `the ${k} knee bent ${bend.toFixed(0)}°`);
+  }
+});
+
 test('the high lateral raise lets the hand go slightly past the midline at the bottom', async () => {
   const { hand } = await posed('high_cable_lateral_raise', 1);
   assert.ok(hand('l').x < -0.02 && hand('l').x > -0.15, `the hand at x ${hand('l').x.toFixed(3)}`);
