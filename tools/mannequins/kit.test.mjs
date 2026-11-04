@@ -77,6 +77,7 @@ const WEARS = {
   bench: [{ equipment: 'barbell', kit: { bench: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
   adjustable_bench: [{ equipment: 'dumbbell', kit: { bench: {} }, bench: { angle: 30 } }, ['frame', 'vinyl', 'metal', 'pulley']],
   cable_column: [{ equipment: 'cable', kit: { cable_column: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
+  cable_crossover: [{ equipment: 'cable', kit: { cable_crossover: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
   ...Object.fromEntries(['leg_extension', 'leg_curl', 'calf_raise_machine', 'squat_machine', 'row_machine', 'pulldown_machine', 'preacher_curl_machine', 't_bar_row_machine']
     .map((k) => [k, [{ equipment: 'machine', kit: { [k]: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']]])),
   lying_leg_curl: [{ equipment: 'machine', kit: { leg_curl: { lying: true } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
