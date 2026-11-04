@@ -55,6 +55,21 @@ export const CABLE_MACHINES = {
 };
 
 /**
+ * The stations that serve bodyweight exercises, with the exercises each is the station of. Only
+ * those no pose has set up are listed; a station is not a machine kind, because the exercises on it
+ * are classed `bodyweight` or `weighted_bodyweight`.
+ */
+export const STATIONS = {
+  power_rack: {
+    kit: 'power_rack',
+    exercises: [
+      'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
+      'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
+    ],
+  },
+};
+
+/**
  * The library's equipment, each with the kits a pose in it may use. A kind with no kit yet is
  * `null`, and is listed as missing in the README; a pose can't be made in it until it has one.
  * Bodyweight needs no kit for most of its exercises.
@@ -64,13 +79,13 @@ export const EQUIPMENT = {
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
-  bodyweight: [],
+  bodyweight: ['power_rack'],
   ez_bar: null,
   trap_bar: null,
   safety_bar: null,
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
-  weighted_bodyweight: null,
+  weighted_bodyweight: ['power_rack'],
 };
 
 /** Every kit's recipe, by name. */

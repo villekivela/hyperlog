@@ -182,6 +182,10 @@ _Avoid_: A–B loop (it has three marks), range, segment, clip (that is the bake
 A kit written as data: the parts it is made of, placed by dimensions, its fixed frame and its moving bodies on joints, with its contacts and fit rules (ADR 0007).
 _Avoid_: Blueprint, builder
 
+**Rack add-on**:
+A bar or handles that bolts to the power rack's holes as an option of its recipe: the multi-grip pull-up bar and the dip handles, with J-hooks for squats to follow. It brings its own contacts, and the rack builds without it.
+_Avoid_: Attachment (that is a cable's handle), add-on alone (that is a machine's weight)
+
 **Part**:
 One piece from the kits' shared library that a recipe places: tubing with its caps and base plates, a pad, a seat, a roller, a pulley in its housing, a cable, a stack, a pop-pin, a handle.
 _Avoid_: Component, mesh
