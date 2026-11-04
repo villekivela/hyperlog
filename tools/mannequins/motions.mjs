@@ -273,9 +273,7 @@ export const MOTIONS = {
         openHands: true,
         hand: (side) => {
           const [across, up, forward] = e.grip.spot ?? SPOT;
-          // `grip.over` lays the left arm that far over the right, each hand half of it from the other.
-          const over = (side * (e.grip.over ?? 0)) / 2;
-          return shouldersOf(hipC, u, L).addScaledVector(X, -side * (L.shW - across)).addScaledVector(u, up).addScaledVector(f, forward + over);
+          return shouldersOf(hipC, u, L).addScaledVector(X, -side * (L.shW - across)).addScaledVector(u, up).addScaledVector(f, forward);
         },
       } : {}),
       // A bar on the back has the elbows down and back; `grip.pole` points them elsewhere, forward

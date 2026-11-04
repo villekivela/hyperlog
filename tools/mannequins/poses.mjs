@@ -541,19 +541,18 @@ export const POSES = {
     bottom: { rotate: -8.2238 },
   },
 
-  // The bar racked on the front delts, the arms crossed over it, the left over the right (`grip.over`),
-  // each hand lying open on the other shoulder (`grip.spot`), not gripping the bar, the elbows high
-  // and forward (`grip.pole`). The
-  // trunk stands upright, which the traced back squat's doesn't, so it has its own shape: the
+  // The bar racked high on the front of the shoulders, the hands wrapped round it just outside them,
+  // the wrists bent back, the elbows down and forward of the shoulders, as the owner's reference has
+  // it. The trunk stands upright, which the traced back squat's doesn't, so it has its own shape: the
   // trace's legs, top and bottom, with the trunk near upright; the body turns about the ankles to
   // keep the bar over the feet, as the back squat's does.
   front_squat: {
     like: 'barbell_squat',
     trace: null,
-    top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702, rotate: 141.329 },
-    bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517, rotate: 144.2005 },
-    bar: { up: 0.074, back: 0.06 },
-    grip: { crossed: true, over: 0.12, pole: [0.35, 0.7, 1.3], rotate: 210, spot: [0.1755, 0.0695, 0.06] },
+    top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702, rotate: 0, wrist: [-60, 0] },
+    bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517, rotate: 0, wrist: [-60, 0] },
+    bar: { up: 0.14, back: -0.07 },
+    grip: { width: 0.27, pole: [0.6, -0.4, 1], sits: 'base' },
   },
 
   // Standing, the elbows by the sides: the bar curls from the thighs up to the shoulders, palms up.
