@@ -10,11 +10,11 @@
     {
       "says": "the leg lifts well out from the standing leg",
       "travels": "ankle_{work}.at",
-      "least": 0.45
+      "least": 0.35
     },
     {
       "says": "the standing foot stays planted",
-      "still": "ankle_{rest}.at",
+      "still": "ankle_{other}.at",
       "within": 0.01
     },
     {

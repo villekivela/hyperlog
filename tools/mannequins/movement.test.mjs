@@ -120,7 +120,7 @@ for (const id of await specified()) {
   test(`${id} moves as its spec says`, async (t) => {
     const { clips } = await readIndex(CLIPS);
     const spec = await readSpec(id);
-    const waiting = waitsFor(spec, id, clips);
+    const waiting = waitsFor(id, clips, spec);
     if (waiting) return t.skip(waiting);
     const verdicts = await reviewMovement(id, CLIPS, spec);
     assert.deepEqual(verdicts.filter((v) => v.ok === false && !v.open).map((v) => `${v.says}: ${v.measured}`), []);
@@ -193,24 +193,28 @@ test('a travels line fails a point that doesn\'t get far enough from where it st
 
 test('a spec\'s works names the side that moves further, whichever it is', () => {
   const rows = [{ t: 0, 'ankle_l.at': [0, 0, 0], 'ankle_r.at': [0, 0, 0], knee_l: 170, knee_r: 90 }, { t: 1, 'ankle_l.at': [0, 0, 0.01], 'ankle_r.at': [0, 0.5, 0], knee_l: 170, knee_r: 170 }];
-  const spec = { works: 'ankle', lines: [{ says: 'it kicks', moves: 'knee_{work}', top: [80, 100], bottom: [160, 180] }, { says: 'it stands', still: 'ankle_{rest}.at', within: 0.02 }] };
+  const spec = { works: 'ankle', lines: [{ says: 'it kicks', moves: 'knee_{work}', top: [80, 100], bottom: [160, 180] }, { says: 'it stands', still: 'ankle_{other}.at', within: 0.02 }] };
   assert.deepEqual(judge(spec, rows).map((v) => v.ok), [true, true]);
+});
+
+test('a spec that works a point without sides is refused', () => {
+  assert.throws(() => judge({ works: 'pelvis', lines: [] }, frames('pelvis.at', [[0, 0, 0]])), /works a point with sides, not "pelvis"/);
 });
 
 test('every spec reads numbers a clip has, so a cold spec can\'t wait for its clip to show a typo', async () => {
   const rows = await numbersOf(await clipFile('barbell_squat', CLIPS));
   for (const id of await specified()) {
     const spec = await readSpec(id);
-    // The dumbbell and the barbell a warm spec reads aren't in every clip.
-    const body = { ...spec, lines: spec.lines.filter((l) => !/dumbbell|barbell/.test(JSON.stringify(l))) };
-    const missing = judge(body, rows).filter((v) => /^no |: no /.test(v.measured));
+    // The dumbbell and the barbell a posed lift's spec reads aren't in every clip.
+    const onBody = (line) => !/dumbbell|barbell/.test(JSON.stringify({ ...line, says: '' }));
+    const missing = judge({ ...spec, lines: spec.lines.filter(onBody) }, rows).filter((v) => v.over === Infinity);
     assert.deepEqual(missing.map((v) => `${id}: ${v.measured}`), []);
   }
 });
 
 test('a cold spec waits even with its clip baked, so CI can\'t show the worker its lines', () => {
   const clips = { db_bench_press: {} };
-  assert.equal(waitsFor({ cold: 'the cold test' }, 'db_bench_press', clips), 'a cold spec judges nothing here');
-  assert.equal(waitsFor({}, 'db_bench_press', clips), null);
-  assert.equal(waitsFor({}, 'cable_crunch', clips), 'no clip yet');
+  assert.equal(waitsFor('db_bench_press', clips, { cold: 'the cold test' }), 'a cold spec judges nothing here');
+  assert.equal(waitsFor('db_bench_press', clips, {}), null);
+  assert.equal(waitsFor('cable_crunch', clips, {}), 'no clip yet');
 });

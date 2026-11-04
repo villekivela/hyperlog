@@ -34,6 +34,15 @@ const worstOf = (name, values, limit) => {
   return { over: value - limit, measured: `${shown(name, value)} at frame ${frame}` };
 };
 
+/** The furthest of `values` and where, and how far short of `least` it stops. */
+const gotTo = (name, values, least) => {
+  const { frame, value } = furthest(values);
+  return { over: least - value, measured: `${shown(name, value)} at frame ${frame}` };
+};
+
+/** Each point's distance from the first. */
+const travelled = (points) => points.map((p) => gap(p, points[0]));
+
 /** Each point's distance off the straight line from the first to the last. */
 function offLine(points) {
   const [from, to] = [points[0], points.at(-1)];
@@ -55,7 +64,7 @@ const KINDS = {
     return { over, measured: `${shown(name, top)} at the top, ${shown(name, bottom)} at the bottom` };
   },
   still(line, name, values) {
-    const moved = values.map((v) => (isPoint(name) ? gap(v, values[0]) : Math.abs(v - values[0])));
+    const moved = isPoint(name) ? travelled(values) : values.map((v) => Math.abs(v - values[0]));
     return worstOf(name, moved, line.within);
   },
   never(line, name, values) {
@@ -63,12 +72,10 @@ const KINDS = {
     return worstOf(name, sizes, line.past);
   },
   travels(line, name, values) {
-    const { frame, value } = furthest(values.map((v) => gap(v, values[0])));
-    return { over: line.least - value, measured: `${shown(name, value)} at frame ${frame}` };
+    return gotTo(name, travelled(values), line.least);
   },
   reaches(line, name, values) {
-    const { frame, value } = furthest(values.map(Math.abs));
-    return { over: line.least - value, measured: `${shown(name, value)} at frame ${frame}` };
+    return gotTo(name, values.map(Math.abs), line.least);
   },
   even(line, name, values) {
     const n = values.length - 1;
@@ -80,13 +87,13 @@ const KINDS = {
   place(line, name, values, frames) {
     const axis = 'xyz'.indexOf(line.axis);
     const from = line.from.replace('*', /_([lr])\b/.exec(name)?.[1]);
-    const at = (end) => {
+    const atEnd = (end) => {
       const frame = end === 'top' ? 0 : frames.length - 1;
       const distance = values[frame][axis] - frames[frame][from][axis];
       return { over: outside(distance, line.range), measured: `${(distance * 100).toFixed(1)} cm along ${line.axis} at the ${end}` };
     };
-    if (line.at !== 'either') return at(line.at);
-    const [top, bottom] = [at('top'), at('bottom')];
+    if (line.at !== 'either') return atEnd(line.at);
+    const [top, bottom] = [atEnd('top'), atEnd('bottom')];
     return bottom.over < top.over ? bottom : top;
   },
 };
@@ -125,15 +132,16 @@ function judgeLine(line, frames) {
   return { says: line.says, kind, ok: worst.over <= 0, over: worst.over, measured, open: line.open };
 }
 
-/** The side of point `name` that travels further through the rep, as `{ work, rest }`. */
+/** The side of point `name` that travels further through the rep, as `{ work, other }`. */
 function sidesOf(name, frames) {
-  const travel = (k) => Math.max(...frames.map((f) => gap(f[`${name}_${k}.at`], frames[0][`${name}_${k}.at`])));
-  return travel('l') >= travel('r') ? { work: 'l', rest: 'r' } : { work: 'r', rest: 'l' };
+  if (!frames[0][`${name}_l.at`]) throw new Error(`A spec works a point with sides, not "${name}"`);
+  const travel = (k) => Math.max(...travelled(frames.map((f) => f[`${name}_${k}.at`])));
+  return travel('l') >= travel('r') ? { work: 'l', other: 'r' } : { work: 'r', other: 'l' };
 }
 
-/** `line` with `{work}` and `{rest}` put as the sides `spec.works` found on `frames`. */
+/** `line` with `{work}` and `{other}` put as the sides `spec.works` found on `frames`. */
 function onSides(line, sides) {
-  return JSON.parse(JSON.stringify(line).replace(/\{(work|rest)\}/g, (_, side) => sides[side]));
+  return JSON.parse(JSON.stringify(line).replace(/\{(work|other)\}/g, (_, side) => sides[side]));
 }
 
 /** What each line of `spec` finds on `frames`: `ok` true or false, or null for a line that waits for eyes. */
@@ -150,7 +158,7 @@ export async function specified() {
 export const readSpec = async (id) => JSON.parse(await readFile(path.join(SPECS, `${id}.json`), 'utf8'));
 
 /** Why the test doesn't hold exercise `id` to `spec`, by the index's `clips`, or null when it does. */
-export function waitsFor(spec, id, clips) {
+export function waitsFor(id, clips, spec) {
   if (spec.cold) return 'a cold spec judges nothing here';
   return clips[id] ? null : 'no clip yet';
 }

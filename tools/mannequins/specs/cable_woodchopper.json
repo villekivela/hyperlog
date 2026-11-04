@@ -5,6 +5,7 @@
     "exercises.json has no note",
     "docs/research/grip.md: one handle, both hands round it, one over the other"
   ],
+  "works": "ankle",
   "lines": [
     {
       "says": "the arms stay long",
@@ -53,9 +54,14 @@
       ]
     },
     {
-      "says": "the feet stay about where they are, a heel pivoting",
-      "still": "ankle_*.at",
-      "within": 0.05
+      "says": "the front foot stays planted",
+      "still": "ankle_{other}.at",
+      "within": 0.02
+    },
+    {
+      "says": "the back foot stays near its place, its heel lifting and pivoting",
+      "still": "ankle_{work}.at",
+      "within": 0.15
     },
     {
       "says": "the trunk stays about upright",

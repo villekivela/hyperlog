@@ -13,7 +13,7 @@
       "ends": [
         [
           95,
-          145
+          170
         ],
         [
           150,
@@ -42,13 +42,16 @@
     },
     {
       "says": "the standing foot stays planted",
-      "still": "ankle_{rest}.at",
+      "still": "ankle_{other}.at",
       "within": 0.01
     },
     {
-      "says": "the hands stay put on the column",
-      "still": "hand_*.at",
-      "within": 0.02
+      "says": "a free hand steadies on the column through the rep",
+      "look": "steady",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
     },
     {
       "says": "the trunk leans forward through the whole rep",

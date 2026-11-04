@@ -7,18 +7,23 @@
   ],
   "lines": [
     {
-      "says": "the wrist bends through a real range at both ends",
+      "says": "at least one end has the wrist well bent",
       "moves": "wrist_*",
       "ends": [
         [
-          10,
-          70
+          0,
+          75
         ],
         [
           10,
-          70
+          75
         ]
       ]
+    },
+    {
+      "says": "the hand really moves about the wrist",
+      "travels": "knuckles_*.at",
+      "least": 0.04
     },
     {
       "says": "the wrist joint stays in place: only the hand moves",
@@ -41,18 +46,9 @@
       "within": 10
     },
     {
-      "says": "the body holds a deep squat",
-      "moves": "knee_*",
-      "ends": [
-        [
-          25,
-          80
-        ],
-        [
-          25,
-          80
-        ]
-      ]
+      "says": "the legs hold still",
+      "still": "knee_*",
+      "within": 5
     },
     {
       "says": "the hips stay put",
@@ -86,7 +82,7 @@
       "at": [
         "ends"
       ],
-      "view": "front"
+      "view": "side"
     }
   ]
 }

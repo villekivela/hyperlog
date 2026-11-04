@@ -767,9 +767,9 @@ the worker, a doubt goes to the owner, and a clean lift needs only a sample.
 | `look` | `{ "look": "forearms", "at": ["bottom"], "view": "front" }` | never here: it waits for the reviewer's eyes |
 
 `*` stands for each side, and the worse one counts. On a one-sided lift `"works": "ankle"` or
-`"hand"` finds the side that point travels further on, and `{work}` and `{rest}` in a line stand
-for it and the other. The top is the clip's first frame and the bottom
-its last, so a raise's top is the arm up and a pull's the arm long. Whatever a spec can say exactly
+`"hand"` finds the side that point travels further on, and `{work}` and `{other}` in a line stand
+for it and the other. The top is the clip's first frame and the bottom its last, as the pose calls
+them: a pulldown's top is the arm long, and a row's the arm bent. Whatever a spec can say exactly
 is a line of an exact kind and not a `look`, because `movement.test.mjs` holds every clip to those
 lines. A lift whose clip isn't baked yet is skipped. `"open"` on a line marks a known failure and
 says what waits on whom. It reads `OPEN`, goes to the owner and not back to the worker, and doesn't
@@ -792,7 +792,7 @@ The numbers:
   straight up.
 - **`roll_l`:** the hand's roll about the forearm, summed from the top.
 - **Points, in metres:** `pelvis.at`, `head.at`, and `shoulder_l.at`, `elbow_l.at`, `hand_l.at`
-  and `ankle_l.at` on each side.
+  (the wrist), `knuckles_l.at` and `ankle_l.at` on each side.
 - **Each kit part that moves and keeps its size:** `dumbbell_l.at`, `.tilt` (its length off level,
   positive with the end away from the body's middle up), `.turn` (how far it turned since the last
   frame) and `.spin` (the part of that about its own length). A cable stretches, so it has none.

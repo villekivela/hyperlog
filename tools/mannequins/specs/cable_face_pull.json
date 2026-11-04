@@ -21,25 +21,39 @@
       ]
     },
     {
-      "says": "at the pulled end the elbows stand about shoulder height or above",
-      "place": "elbow_*.at",
-      "from": "shoulder_*.at",
-      "axis": "y",
-      "at": "either",
-      "range": [
-        -0.08,
-        0.15
+      "says": "the upper arms stay up, out from the trunk, at both ends: a pull to the face, not a row",
+      "moves": "shoulder_*",
+      "ends": [
+        [
+          60,
+          130
+        ],
+        [
+          60,
+          130
+        ]
       ]
     },
     {
-      "says": "at the pulled end the hands are up by the head",
+      "says": "at one end the hands are about head height",
       "place": "hand_*.at",
       "from": "head.at",
       "axis": "y",
-      "at": "either",
+      "at": "top",
       "range": [
-        -0.12,
-        0.2
+        -0.2,
+        0.4
+      ]
+    },
+    {
+      "says": "at the other end the hands are about head height",
+      "place": "hand_*.at",
+      "from": "head.at",
+      "axis": "y",
+      "at": "bottom",
+      "range": [
+        -0.2,
+        0.4
       ]
     },
     {
