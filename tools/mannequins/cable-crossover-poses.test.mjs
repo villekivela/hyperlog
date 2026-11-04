@@ -21,7 +21,7 @@ const HOLES = {
   cable_y_raise: [1, 1],
   behind_the_back_cable_lateral_raise: [1, 1],
   cable_shrug_in: [2, 3],
-  '1_arm_cable_press_around': [10, 10],
+  '1_arm_cable_press_around': [4, 6],
   '1_arm_katana_cable_triceps_extension': [1, 1],
 };
 /** Where a hole's cable leaves the lower wheel, from the ref: 350 mm up at the first, 132 mm pitch, 85 mm below the pin. */
@@ -47,7 +47,11 @@ for (const [id, [low, high]] of Object.entries(HOLES)) {
     const kit = stage.kit.kits.cable_crossover;
     const { position = 10, hands = [1, -1] } = entry.kit.cable_crossover;
     const holes = Array.isArray(position) ? position : [position, position];
-    for (const h of holes) assert.ok(h >= low && h <= high, `hole ${h}, not ${low} to ${high}`);
+    // The band is for the cable a hand holds: the other tower may stand where a free hand braces.
+    for (const side of hands) {
+      const h = holes[kit.cables.indexOf(cableOf(entry, kit, side))];
+      assert.ok(h >= low && h <= high, `hole ${h}, not ${low} to ${high}`);
+    }
     for (let f = 0; f < FRAMES; f++) {
       stage.pose(f / (FRAMES - 1));
       stage.scene.updateMatrixWorld(true);
@@ -155,6 +159,16 @@ test('the crossover steps forward of the pulleys and brings the handles together
   assert.ok(at('pelvis').z > pulley + 0.05, `the hips at z ${at('pelvis').z.toFixed(3)}, the pulley at ${pulley.toFixed(3)}`);
   assert.ok(hand('l').distanceTo(hand('r')) < 0.14, 'the handles together');
   assert.ok(hand('l').z > at('pelvis').z + 0.15, 'in front of the hips');
+});
+
+test('the press-around braces the free arm on the far carriage at the shoulder, the hand pressing past the middle', async () => {
+  const { stage, hand, at } = await posed('1_arm_cable_press_around', 0);
+  const steady = stage.kit.kits.cable_crossover.contacts.find((c) => c.point === 'steady_r').at[0];
+  assert.ok(hand('r').distanceTo(steady) < 0.04, `the free hand ${hand('r').distanceTo(steady).toFixed(3)} m off the grip bar`);
+  assert.ok(Math.abs(hand('r').y - at('upperarm_r').y) < 0.1, `the free hand at ${hand('r').y.toFixed(3)} m, the shoulder at ${at('upperarm_r').y.toFixed(3)} m`);
+  assert.ok(hand('l').x < -0.15, `the working hand at x ${hand('l').x.toFixed(3)}`);
+  const { position } = prepare('1_arm_cable_press_around').kit.cable_crossover;
+  assert.ok(position[0] < position[1], `the working pulley at hole ${position[0]}, the brace at ${position[1]}`);
 });
 
 test('the high lateral raise lets the hand go slightly past the midline at the bottom', async () => {

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
+import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf, rangeOf } from './tune.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
@@ -230,6 +230,14 @@ test('Tune offers no slider for which hand a kit serves: it is a choice, not a p
     const paths = tunables(prepare(id)).map((t) => t.path);
     assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(p)), [], id);
   }
+});
+
+// The owner, #197: a press-around's free arm braces straight out at the shoulder, on the far pulley.
+test('a resting hand reaches as far as an arm does', () => {
+  const rest = (i, value) => rangeOf(`grip.rest.${i}`, value);
+  assert.ok(rest(0, -0.3).min <= -0.9, `sideways to ${rest(0, -0.3).min}`);
+  assert.ok(rest(1, 0.9).max >= 1.6, `up to ${rest(1, 0.9).max}`);
+  assert.equal(rest(0, -0.3).step, 0.001);
 });
 
 // The owner, #197: the machine vanished at the first touch of `position`, a hole taken for metres.

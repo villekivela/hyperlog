@@ -156,8 +156,8 @@ export function rangeOf(path, value) {
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
   // A carriage stands at a hole of the 16 on its rail, a whole number however it is dragged (`settled`).
   if (path.startsWith('kit.') && key === 'position') return { min: 1, max: 16, step: 1, unit: '', whole: true };
-  // Equipment stands where the pose needs it: a metre either way.
-  if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.001, unit: ' m' };
+  // Equipment stands where the pose needs it, and a resting hand reaches it: a metre either way.
+  if (path.startsWith('kit.') || key === 'rest') return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.001, unit: ' m' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.001, unit: ' m' };
 }
 

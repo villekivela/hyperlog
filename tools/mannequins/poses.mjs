@@ -476,17 +476,18 @@ export const POSES = {
     camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
   },
 
-  // Feet wide, back to the left tower, its pulley at the shoulder: the hand wraps from beside the
-  // chest around and across the body past the middle, the cable lying over the arm.
+  // Feet wide between the towers, nearer the right one, the right arm braced straight out on its
+  // grip bar at the shoulder: the left hand presses from beside the chest across the body past the
+  // middle, on a cable from the left tower's pulley at the hip.
   '1_arm_cable_press_around': {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 10, at: [0, -0.6], hands: [1] } },
-    top: { shin: 4, thigh: 8, trunk: 8, hand: [-0.2, 1.34, 0.5] },
-    bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.44, 1.32, 0.16] },
-    feet: { stance: 0.2, toeOut: 10, kneesOut: 0.2 },
-    grip: { one: 1, rest: [-0.3, 0.9, 0.1], pole: [1, -0.3, -0.5], sits: 'heel' },
-    camera: { target: [0, 1.15, -0.1], halfHeight: 1.3, azimuth: 30, elevation: 8 },
+    kit: { cable_crossover: { position: [6, 9], at: [0.25, -0.1], hands: [1] } },
+    top: { shin: 8, thigh: 16, trunk: 6, hand: [-0.26, 1.36, 0.38] },
+    bottom: { shin: 8, thigh: 16, trunk: 6, hand: [0.46, 1.3, 0.14] },
+    feet: { stance: 0.28, toeOut: 12, kneesOut: 0.2 },
+    grip: { one: 1, rest: [-0.705, 1.42, -0.01], pole: [1, -0.3, -0.5], sits: 'heel' },
+    camera: { target: [0, 1.15, 0], halfHeight: 1.3, azimuth: 12, elevation: 8 },
   },
 
   // The right tower's low pulley to the side and behind, its cable across the body to the left hand,
