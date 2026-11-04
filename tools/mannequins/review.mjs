@@ -51,6 +51,12 @@ export const BATCHES = {
     'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',
     'db_romanian_deadlift', 'single_arm_db_row', 'db_lunge', 'db_shrug',
   ],
+  // The second dumbbell batch (#127): variants of the lifts the owner has OK'd.
+  'dumbbell-variants': [
+    'super_rom_db_lateral_raise', 'bent_over_reverse_db_flye', 'db_guillotine_press', 'db_skull_crusher',
+    'dumbbell_shoulder_press_standing', 'standing_db_arnold_press', 'arnold_press_seated', 'db_walking_lunge',
+    'db_curtsy_lunge', '1_arm_db_kroc_row', 'db_triceps_kickback', '1_arm_overhead_db_triceps_extension',
+  ],
 };
 
 const idsOf = (name) => {

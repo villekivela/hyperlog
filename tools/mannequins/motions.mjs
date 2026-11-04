@@ -483,7 +483,7 @@ export const MOTIONS = {
    * of the middle; with `grip.one` one arm works and the other rests.
    */
   arms(e, s, L) {
-    const { hipC, u, feet } = bodyOf(e, s, L);
+    const { hipC, u, lean, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
@@ -492,6 +492,7 @@ export const MOTIONS = {
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      spine: archOf(e.body?.arch, lean),
       ...feet,
       bar, grip: e.grip.width,
       hand: handsOf(e, (side) => bar.clone().setX(side * e.grip.width)),
@@ -503,9 +504,9 @@ export const MOTIONS = {
   /**
    * A split stance, the feet planted through the rep: the left foot flat `feet.front` ahead, the
    * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
-   * floor, heels up positive, its toes bent back as far so they stay down. The hips drop between
-   * them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width`
-   * either side of the middle.
+   * floor, heels up positive, its toes bent back as far so they stay down; `feet.cross` steps it that
+   * far across behind the front foot (a curtsy). The hips drop between them along `hip` [y, z], the
+   * trunk at `trunk`, and the arms hang straight down `grip.width` either side of the middle.
    */
   lunge(e, s, L) {
     const hipC = V(0, ...s.hip);
@@ -515,7 +516,7 @@ export const MOTIONS = {
     const a = rad(s.heel);
     const heading = V(0, -Math.sin(a), Math.cos(a));
     const top = V(0, Math.cos(a), Math.sin(a));
-    const ball = V(-e.feet.stance, L.ballY, e.feet.back);
+    const ball = V(-e.feet.stance + (e.feet.cross ?? 0), L.ballY, e.feet.back);
     const sh = shouldersOf(hipC, u, L);
     const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
     const drop = Math.sqrt(Math.max(0, reach * reach - (e.grip.width - L.shW) ** 2));

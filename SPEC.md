@@ -1575,7 +1575,13 @@ gallery (Technique videos).
     the dumbbell rocks a little, and one number sets the share between them. A dumbbell turns with
     the hand holding it and never rolls in it. The goblet squat and the overhead triceps extension wait for
     a later batch: both cup one dumbbell's head in two hands, and the hand only closes round a
-    handle so far.
+    handle so far. The second dumbbell batch (#127) poses twelve variants of the OK'd lifts, each
+    from its technique video. The Kroc row stands, the feet staggered and the free hand braced on
+    the pad, and its trunk rocks up as the dumbbell comes in; the kickback stands the same way, one
+    arm; the 1-arm overhead extension sits against the bench's upright back. A walking lunge is held
+    in its step, at a longer stride: a clip plays its lowering backward to lift, so it can't travel.
+    The same goes for both Zottman curls, which turn the palms differently on the way up and the way
+    down, so they wait until a clip can show the two halves apart.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
