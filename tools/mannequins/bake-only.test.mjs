@@ -3,11 +3,11 @@
 // that takes it by `like:`, sharing a kit, and an adjustable bench with its clip per angle.
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { cp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { bakeAll, bakeOnly } from './bake.mjs';
 import { POSES } from './poses.mjs';
+import { scratch as makeScratch } from './tmp.mjs';
 
 const pick = (...ids) => Object.fromEntries(ids.map((id) => [id, POSES[id]]));
 const POSED = pick('barbell_squat', 'back_squat_high_bar', 'db_incline_press');
@@ -20,7 +20,7 @@ const lowered = (poses) => tuned(poses, 'barbell_squat', {
   top: { ...POSES.barbell_squat.top, rotate: (POSES.barbell_squat.top.rotate ?? 0) + 0.5 },
 });
 
-const scratch = () => mkdtemp(path.join(tmpdir(), 'mannequins-'));
+const scratch = () => makeScratch('bake-only');
 let baked;
 before(async () => {
   baked = await scratch();

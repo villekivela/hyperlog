@@ -2,17 +2,17 @@
 // overhand, set 2 narrow underhand) bakes a clip per grip, listed in the order the sets take them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, stat } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
 import { prepare } from './entries.mjs';
 import { POSES } from './poses.mjs';
+import { scratch } from './tmp.mjs';
 
 const ID = '2_grip_lat_pulldown';
 
 test('a pose with grips bakes a clip per grip, listed in the order the sets take them', async () => {
-  const out = await mkdtemp(path.join(tmpdir(), 'grips-'));
+  const out = await scratch('grips');
   await bakeAll(out, { poses: { lat_pulldown: POSES.lat_pulldown, [ID]: POSES[ID] } });
   const { clips } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8'));
   const grips = clips[ID].grips;
