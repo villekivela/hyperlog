@@ -262,13 +262,13 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `cable_crossover`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
-| `bodyweight` | none needed |
+| `bodyweight` | `pullup_dip_station` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
 | `ez_bar` | missing |
 | `trap_bar` | missing |
 | `safety_bar` | missing |
 | `smith_machine` | `smith_machine`, `bench`, `platform` (a low one under the front foot, for the front-foot-elevated lunge) |
 | `plate` | missing |
-| `weighted_bodyweight` | missing |
+| `weighted_bodyweight` | `pullup_dip_station` |
 
 The library's machines by kind (`MACHINES` in `kit.mjs`):
 
@@ -371,6 +371,20 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
+- `pullup_dip_station` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
+  `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) stands where its
+  ref puts it, whatever the pose, and nothing on it moves: two uprights 965 mm apart, the lifter
+  facing them, the multi-grip bar bolted to their faces at 2.30 m (a plate, outer prongs 813 mm
+  apart and inner ones 406 mm, a V of about 45° to the inner ones, and a cross tube 230 mm out
+  joining each inner prong to its outer one and out past it, its ends bent back toward the plate) and a dip crossbar at 1.30 m with a handle either side, 440 mm long, splaying
+  from 451 mm apart to 630 at the tips. The cross tube's hang line is the origin. Contacts, all
+  hands on the frame, a pair of points each: `wide` (960 mm apart, on the cross tube outside the
+  outer prongs), `standard` (610, on it between the prongs), `close` (280, on the V's arms), `neutral` (406, on the inner prongs, 80 mm out
+  along them) and `dip` and `dipClose` (the handles' middle and near the crossbar). It has no
+  options and no fit rule: the ref's heights are the mannequin's, chosen. It departs from the ref:
+  the close grip is on the V's arms 280 mm apart, because the ref's 400 on a cross tube between
+  the inner prongs would put the hands on the prongs, and the photos show no cross tube there; and
+  the uprights, floor beams and the crossbar's plate are the library's generic ones.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
@@ -536,7 +550,7 @@ listens on localhost only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the T-bar row machine and the cable crossover. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the T-bar row machine, the cable crossover and the pull-up and dip station. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

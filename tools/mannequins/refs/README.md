@@ -23,7 +23,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), not yet posed |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover; built (#181), 19 not yet posed on it (6 are posed on `cable_column`) |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
-| 4 | [`pullup_dip_station`](pullup_dip_station/ref.md) | 16 | Rogue Crown Pull-up Bar and Monster Matador dip handles |
+| 4 | [`pullup_dip_station`](pullup_dip_station/ref.md) | 16 | Rogue Crown Pull-up Bar and Monster Matador dip handles; built (#189), not yet posed |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar |
 | 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY) |
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise |
