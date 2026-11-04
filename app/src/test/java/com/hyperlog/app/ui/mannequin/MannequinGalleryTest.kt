@@ -65,7 +65,7 @@ class MannequinGalleryTest {
         }
         // The clips come in the index's order, by exercise id.
         compose.onNodeWithText("2-Grip Lat Pulldown").assertExists()
-        compose.onNodeWithText("1 of 41").assertExists()
+        compose.onNodeWithText("1 of 57").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
         // A 2-grip exercise plays its first set's grip.

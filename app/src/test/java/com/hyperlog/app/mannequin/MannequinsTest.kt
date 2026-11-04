@@ -52,15 +52,19 @@ class MannequinsTest {
         }
         assertEquals(
             listOf(
-                "2_grip_lat_pulldown", "back_squat_high_bar", "back_squat_low_bar", "barbell_bench_press", "barbell_curl",
-                "barbell_glute_bridge", "barbell_hip_thrust", "barbell_rdl", "barbell_row", "barbell_shrug", "barbell_squat",
-                "barbell_upright_row", "bayesian_cable_curl", "cable_flye", "cable_lateral_raise", "cable_shoulder_press",
-                "chest_supported_machine_row", "chest_supported_t_bar_row", "close_grip_bench_press",
-                "close_grip_lat_pulldown", "db_incline_press", "deadlift", "deficit_deadlift", "deficit_pendlay_row",
-                "floor_press", "front_squat", "hack_squat", "kelso_shrug", "lat_pulldown",
-                "leg_extension", "leg_press", "lying_leg_curl", "machine_chest_press", "machine_preacher_curl",
-                "machine_pulldown", "overhead_cable_triceps_extension", "reverse_cable_crossover", "seated_calf_raise",
-                "seated_leg_curl", "t_bar_row", "triceps_pressdown",
+                "2_grip_lat_pulldown", "2_grip_pullup", "2_grip_pullup_weighted", "back_squat_high_bar",
+                "back_squat_low_bar", "barbell_bench_press", "barbell_curl", "barbell_glute_bridge",
+                "barbell_hip_thrust", "barbell_rdl", "barbell_row", "barbell_shrug", "barbell_squat",
+                "barbell_upright_row", "bayesian_cable_curl", "cable_flye", "cable_lateral_raise",
+                "cable_shoulder_press", "chest_supported_machine_row", "chest_supported_t_bar_row", "chinup",
+                "chinup_wide_grip", "close_grip_bench_press", "close_grip_chinup", "close_grip_dip",
+                "close_grip_lat_pulldown", "close_grip_pullup", "db_incline_press", "dead_hang", "deadlift",
+                "deficit_deadlift", "deficit_pendlay_row", "dip", "floor_press", "front_squat", "hack_squat",
+                "hanging_leg_raise", "kelso_shrug", "lat_pulldown", "leg_extension", "leg_press", "lying_leg_curl",
+                "machine_chest_press", "machine_preacher_curl", "machine_pulldown", "neutral_grip_pullup",
+                "overhead_cable_triceps_extension", "pullup", "pullup_wide_grip", "reverse_cable_crossover",
+                "seated_calf_raise", "seated_leg_curl", "t_bar_row", "triceps_pressdown", "weighted_chinup",
+                "weighted_dip", "weighted_pullup",
             ),
             mannequins.clips.map { it.exerciseId },
         )
