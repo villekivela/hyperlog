@@ -42,7 +42,8 @@ test('every grip has a bar line and a thumb, by default or from its entry', () =
 test('a grip that names no landmark or thumb the hand knows won\'t pose', () => {
   assert.throws(() => holdOf({ motion: 'hinge', grip: { sits: 'wrist' } }), /No grip landmark "wrist"/);
   assert.throws(() => holdOf({ motion: 'hinge', grip: { thumb: 'hooked' } }), /No thumb "hooked"/);
-  assert.throws(() => holdOf({ motion: 'hinge', grip: { swing: 42 } }), /grip.swing 42/);
+  assert.throws(() => holdOf({ motion: 'hinge', grip: { swing: 91 } }), /grip.swing 91/);
+  assert.throws(() => holdOf({ motion: 'hinge', grip: { swing: -1 } }), /grip.swing -1/);
   assert.deepEqual(holdOf({ motion: 'squat', grip: { swing: 50 } }), { sits: 'mid', thumb: 'wrapped', swing: 50 });
 });
 

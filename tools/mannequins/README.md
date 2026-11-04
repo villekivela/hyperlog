@@ -201,7 +201,7 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   close-grip pulldown is 180.
 - **`grip.sits`** and **`grip.thumb`** (any pose with hands) say where the bar sits in the hand and
   what the thumb does, where the motion's default doesn't suit; **`grip.swing`**, how far a wrapped
-  thumb's root swings out of the palm, in whole fives of degrees, where the landmark's doesn't lay
+  thumb's root swings out of the palm, in degrees from 0 to 90, where the landmark's doesn't lay
   it round the bar (the curl's 40°, the squats' 50° and 55°) (Grips, above).
 - **`tempo`** (optional) is the rep in four phases, in seconds: `{ lowering, bottom, lifting, top }`,
   the lowering, the pause at the bottom, the lifting and the pause at the top. An entry without

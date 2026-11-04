@@ -26,7 +26,8 @@ const SITS = {
 /**
  * A pose's grip: where the bar sits and the thumb, the motion's by default, or the entry's own
  * `grip.sits` and `grip.thumb`, and how far a wrapped thumb's root swings out of the palm where the
- * entry sets it (`grip.swing`, in whole fives of degrees). A cross-arm rack's hands lie open.
+ * entry sets it (`grip.swing`, to the nearest degree, each one a seat to measure). A cross-arm rack's
+ * hands lie open.
  */
 export function holdOf(e) {
   const sits = e.grip?.crossed ? 'open' : e.grip?.sits ?? SITS[e.motion] ?? 'base';
@@ -35,8 +36,8 @@ export function holdOf(e) {
   const thumb = e.grip?.thumb ?? 'wrapped';
   if (!THUMBS.includes(thumb)) throw new Error(`No thumb "${thumb}": wrapped or thumbless`);
   const swing = e.grip?.swing;
-  if (swing !== undefined && !(swing >= 0 && swing <= 90 && swing % 5 === 0)) throw new Error(`grip.swing ${swing}: a whole five of degrees, 0 to 90`);
-  return swing === undefined || thumb !== 'wrapped' ? { sits, thumb } : { sits, thumb, swing };
+  if (swing !== undefined && !(swing >= 0 && swing <= 90)) throw new Error(`grip.swing ${swing}: degrees, 0 to 90`);
+  return swing === undefined || thumb !== 'wrapped' ? { sits, thumb } : { sits, thumb, swing: Math.round(swing) };
 }
 
 /**
