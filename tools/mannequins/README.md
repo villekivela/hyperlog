@@ -378,7 +378,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   ref and no kit yet) sets its pivots on the mannequin's shoulders, 1.10 m up, whatever the pose,
   and the seat moves to them (`seat`, solved to 0.51 m for this mannequin, in its 0.40 to 0.56 m
   range). Each arm is a revolute lever, `arm_l` and `arm_r`, from 10° out of hanging to horizontal,
-  with a pad under the upper arm and a grip ahead of it; the one stack hangs on `arm_l`. Shown alone
+  with a pad under the upper arm and a grip ahead of it; the one stack stands in a tower beside the user's right, as the ref's photos have it, and hangs on `arm_l`. The base is 0.94 m wide by 1.07 m long, as the ref's footprint. Shown alone
   in the studio, its arms scrub through their limits: `npm run studio`, then the kit's row in the
   list, from the front and the side with the camera.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built

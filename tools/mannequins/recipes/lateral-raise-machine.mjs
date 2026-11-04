@@ -27,7 +27,13 @@ const REACH = 0.35;
 const OUT = 0.1;
 const PAD = { length: 0.25, radius: 0.05 };
 const GRIP = 0.06;
-const STACK_Z = 0.5;
+// The stack stands in a tower beside the user, on their right, as in the ref's photos, its bridge
+// carrying the pivots across ahead of the chest.
+const TOWER_X = -0.45;
+const STACK_Z = 0.42;
+// The base runs from under the seat to 1.07 m ahead of it, as the ref's footprint does.
+const REAR = -0.36;
+const FRONT = 0.62;
 const FRAME_TOP = 1.4;
 const SEAT = 0.48;
 const SITS = 0.09;
@@ -40,8 +46,8 @@ const pivotOf = (s) => V(s * SHOULDER_X, PIVOT_Y, PLANE);
 
 export default recipe({
   name: 'lateral_raise_machine',
-  // Shown alone in the studio until a pose uses it: three-quarter from behind the seat, on the right.
-  standsAlone: { camera: { target: [0, 0.8, 0.1], halfHeight: 1.1, azimuth: -35, elevation: 12 } },
+  // Shown alone in the studio until a pose uses it: three-quarter from behind the seat, the tower on the right, as the ref's hero photo has it.
+  standsAlone: { camera: { target: [0, 0.8, 0.1], halfHeight: 1.1, azimuth: 215, elevation: 12 } },
   bodies: Object.fromEntries(SIDES.map(({ k, s }) => [`arm_${k}`, revolute({ axis: V(0, 0, s), limits: LIMITS })])),
   contacts: SIDES.flatMap(({ k }) => [
     { body: `arm_${k}`, point: `grip_${k}`, landmark: 'hands' },
@@ -54,19 +60,28 @@ export default recipe({
     solve: ({ L }) => THREE.MathUtils.clamp(PIVOT_Y - L.trunkUp - SITS, 0.4, 0.56),
   }],
   build({ seat = SEAT } = {}, M) {
-    const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: FRAME_TOP - 0.07, toward: -1 });
-    const wheel = V(0, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
+    const weights = weightStack(V(TOWER_X, 0, STACK_Z), M, { rodTop: FRAME_TOP - 0.07, toward: -1 });
+    const wheel = V(TOWER_X, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
+    // The tower's frame and pulley are built about the middle, then stood to the side.
+    const tower = [...stackFrame(STACK_Z, FRAME_TOP, M), ...pulley(V(0, wheel.y, wheel.z), M)];
+    tower.forEach((m) => { m.position.x += TOWER_X; });
     const drop = wire(M);
     const chest = V(0, 0.83, 0.13);
     const chestPad = part(new THREE.BoxGeometry(0.3, 0.3, 0.08), M.vinyl, { solid: true });
     chestPad.position.copy(chest);
-    // Hubs on the pivots, brackets to the stack frame's uprights.
-    const fixed = SIDES.flatMap(({ s }) => {
-      const at = pivotOf(s);
-      const boss = hub(M, at);
-      boss.rotation.y = Math.PI / 2;
-      return [boss, tube(0.05, V(s * UPRIGHTS, PIVOT_Y, STACK_Z), at, M.frame)];
-    });
+    // Hubs on the pivots, each on a bracket from a bridge across the machine at the tower's depth,
+    // out of the tower's near upright, with a strut down to the chest pad.
+    const bridgeAt = (x) => V(x, PIVOT_Y, STACK_Z);
+    const fixed = [
+      tube(0.06, bridgeAt(TOWER_X + UPRIGHTS), bridgeAt(SHOULDER_X), M.frame),
+      tube(0.05, bridgeAt(0), V(0, 0.95, 0.17), M.frame),
+      ...SIDES.flatMap(({ s }) => {
+        const at = pivotOf(s);
+        const boss = hub(M, at);
+        boss.rotation.y = Math.PI / 2;
+        return [boss, tube(0.05, bridgeAt(s * SHOULDER_X), at, M.frame)];
+      }),
+    ];
     const levers = SIDES.map(() => ({
       out: stretchedTube(0.04, M.frame),
       down: stretchedTube(0.04, M.frame),
@@ -78,11 +93,13 @@ export default recipe({
     return {
       parts: [
         ...seatOn(seat, 0, M, { pin: -1 }),
-        ...floorRail(V(0, 0.035, -0.35), V(0, 0.035, STACK_Z), M),
-        ...floorRail(V(-0.3, 0.035, -0.35), V(0.3, 0.035, -0.35), M),
-        ...floorRail(V(-UPRIGHTS - 0.15, 0.035, STACK_Z), V(UPRIGHTS + 0.15, 0.035, STACK_Z), M),
-        ...stackFrame(STACK_Z, FRAME_TOP, M),
-        ...weights.parts, drop, ...pulley(wheel, M),
+        ...floorRail(V(0, 0.035, REAR), V(0, 0.035, FRONT), M),
+        ...floorRail(V(-0.25, 0.035, REAR), V(0.25, 0.035, REAR), M),
+        ...floorRail(V(TOWER_X - 0.2, 0.035, FRONT), V(0.23, 0.035, FRONT), M),
+        ...floorRail(V(TOWER_X, 0.035, STACK_Z), V(TOWER_X, 0.035, FRONT), M),
+        ...floorRail(V(TOWER_X - 0.2, 0.035, STACK_Z), V(TOWER_X + 0.2, 0.035, STACK_Z), M),
+        ...tower,
+        ...weights.parts, drop,
         chestPad, tube(0.07, V(0, 0.75, chest.z + 0.04), V(0, 0.07, 0.36), M.frame),
         ...fixed, ...levers.flatMap(body),
       ],
@@ -91,7 +108,7 @@ export default recipe({
         arm_l: {
           lift(l) {
             weights.lift(l);
-            span(drop, V(0, wheel.y, STACK_Z), weights.top(l));
+            span(drop, V(TOWER_X, wheel.y, STACK_Z), weights.top(l));
           },
         },
       },

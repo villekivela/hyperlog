@@ -103,3 +103,20 @@ test('the kit is the machine of both lateral raises, shown alone, with no brand 
   const source = await readFile(new URL('./recipes/lateral-raise-machine.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /hammer|life ?fitness|atlantis|strength/i);
 });
+
+// The ref's footprint is 940 by 1070 mm, its stack a tower beside the seat (the photos, the demo video).
+test('the base is 940 by 1070 mm and the stack stands in a tower beside the user', () => {
+  const kit = machine();
+  const base = new THREE.Box3();
+  let head;
+  kit.group.traverse((o) => {
+    if (!o.isMesh) return;
+    const box = new THREE.Box3().setFromObject(o);
+    if (box.min.y < 0.1) base.union(box);
+    if (o.userData.stack) head = box.getCenter(new THREE.Vector3());
+  });
+  const size = base.getSize(new THREE.Vector3());
+  close(size.x, 0.94, 0.04, 'the footprint\'s width');
+  close(size.z, 1.07, 0.04, 'the footprint\'s length');
+  assert.ok(Math.abs(head.x) > 0.35, `the stack ${head.x.toFixed(2)} m to the side, not in front`);
+});
