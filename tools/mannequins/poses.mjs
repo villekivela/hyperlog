@@ -394,17 +394,18 @@ export const POSES = {
   // The cable crossover's exercises (#197): first poses for the owner to tune. Body-first, the body
   // at the origin and the machine at `at`, the carriages at the holes the ref gives.
 
-  // A step ahead of the towers, one foot forward and hinged at the hips, the pulleys high: from the
-  // arms wide at shoulder height, the hands come down and in to meet in front of the hips.
+  // A step ahead of the towers, feet level and deep in the hinge, the pulleys high: the arms, soft at
+  // the elbow and riding with the trunk, sweep from wide to the handles together in front of the hips.
+  // `armOut` turns about the chest's own axis, so on a hinge it passes 90 to bring the hands up wide.
   cable_crossover: {
     equipment: 'cable',
-    motion: 'free_arms',
-    kit: { cable_crossover: { position: 15, at: [0, -0.45] } },
-    top: { shin: 8, thigh: 22, trunk: 30, hand: [0.05, 0.98, 0.5] },
-    bottom: { shin: 8, thigh: 22, trunk: 30, hand: [0.72, 1.42, 0.2] },
-    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
-    grip: { arc: true, rotate: 90, pole: [1, 0.2, -0.6] },
-    camera: { target: [0, 1.25, 0.1], halfHeight: 1.45, azimuth: 30, elevation: 8 },
+    motion: 'arms',
+    kit: { cable_crossover: { position: 15, at: [0, -0.6] } },
+    top: { shin: 10, thigh: 34, trunk: 46, upperArm: 8, forearm: 33, armOut: 0 },
+    bottom: { shin: 10, thigh: 34, trunk: 46, upperArm: -30, forearm: -5, armOut: 135 },
+    feet: { stance: 0.15, toeOut: 10, kneesOut: 0.2 },
+    grip: { width: 0.06, rotate: 90, pole: [0, 0, -1] },
+    camera: { target: [0, 1.0, 0.1], halfHeight: 1.3, azimuth: 30, elevation: 8 },
   },
 
   // A step ahead of the towers in a split stance, the pulleys at the shoulders and the cables coming
