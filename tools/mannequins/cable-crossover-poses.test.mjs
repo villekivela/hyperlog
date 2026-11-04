@@ -209,6 +209,20 @@ test('the press-around braces the free arm on the far carriage at the shoulder, 
   assert.ok(position[0] < position[1], `the working pulley at hole ${position[0]}, the brace at ${position[1]}`);
 });
 
+// The owner, #197: the torso and head turn with the press, on a firm stance.
+test('the press-around turns the trunk and head into the press, on a wide stance', async () => {
+  const turn = (a, b) => (Math.atan2(a.z - b.z, a.x - b.x) * 180) / Math.PI;
+  const { at, frame } = await posed('1_arm_cable_press_around', 0);
+  const squeeze = turn(at('upperarm_l'), at('upperarm_r'));
+  assert.ok(squeeze > 15, `the shoulders turned ${squeeze.toFixed(1)}° toward the press`);
+  const bottom = await posed('1_arm_cable_press_around', 1);
+  const stretch = turn(bottom.at('upperarm_l'), bottom.at('upperarm_r'));
+  assert.ok(stretch < -5, `the shoulders turned ${stretch.toFixed(1)}° at the stretch`);
+  const [right, left] = frame.ankles;
+  assert.ok(left.x - right.x >= 0.7, `the feet ${(left.x - right.x).toFixed(2)} m apart`);
+  assert.ok(Math.abs(left.z - right.z) > 0.1, 'one foot ahead');
+});
+
 test('the high lateral raise lets the hand go slightly past the midline at the bottom', async () => {
   const { hand } = await posed('high_cable_lateral_raise', 1);
   assert.ok(hand('l').x < -0.02 && hand('l').x > -0.15, `the hand at x ${hand('l').x.toFixed(3)}`);
