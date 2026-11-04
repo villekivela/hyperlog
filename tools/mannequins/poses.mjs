@@ -460,10 +460,10 @@ export const POSES = {
     equipment: 'cable',
     motion: 'arms',
     kit: { cable_crossover: { position: 1, at: [0, -0.55], crossed: true } },
-    top: { shin: 4, thigh: 6, trunk: 10.293, upperArm: -32, forearm: -12, armOut: 84, hand: [0.8284, 1.36, -0.02], rotate: 23.606 },
-    bottom: { shin: 4, thigh: 6, trunk: 6.7603, upperArm: -32, forearm: -12, armOut: 14, rotate: 109.6875, hand: [0.2756, 0.8552, -0.235] },
+    top: { shin: 4, thigh: 6, trunk: 10.293, upperArm: -32, forearm: -12, armOut: 84, rotate: 23.606 },
+    bottom: { shin: 4, thigh: 6, trunk: 6.7603, upperArm: -32, forearm: -12, armOut: 14, rotate: 109.6875 },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
-    grip: { width: 0.19, rotate: 30, pole: [0, 0, -1], rest: [-0.2197, 0.729, 0.08] },
+    grip: { width: 0.19, rotate: 30, pole: [0, 0, -1] },
     camera: { target: [0, 1.1, -0.1], halfHeight: 1.3, azimuth: 20, elevation: 8 },
   },
 
