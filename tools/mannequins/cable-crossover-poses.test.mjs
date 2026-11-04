@@ -199,30 +199,43 @@ test('the crossover steps forward of the pulleys and brings the handles together
   assert.ok(hand('l').z > at('pelvis').z + 0.15, 'in front of the hips');
 });
 
-/** The skin of the bones `wanted` matches, as it is posed now. */
-function skinOf(stage, wanted) {
-  const out = [];
+/**
+ * The gap from the right palm's skin to the thigh's, along the palm's normal, on a ray from the
+ * middle of the palm: null when it meets no thigh, which is a palm that faces away. Below 0 it sinks in.
+ */
+function palmToThigh(stage) {
+  const { bones } = stage.rig;
+  const [wrist, knuckle] = [wpos(bones.hand_r), wpos(bones.middle_01_r)];
+  const across = wpos(bones.index_01_r).sub(wpos(bones.pinky_01_r));
+  const normal = across.cross(knuckle.clone().sub(wrist)).normalize();
+  const ray = new THREE.Ray(wrist.clone().lerp(knuckle, 0.6), normal);
+  const hit = new THREE.Vector3();
+  const at = { hand_r: [], thigh_r: [] };
   stage.scene.traverse((m) => {
     if (!m.isSkinnedMesh) return;
-    const { position, skinIndex, skinWeight } = m.geometry.attributes;
-    for (let i = 0; i < position.count; i++) {
-      const main = [0, 1, 2, 3].reduce((best, n) => (skinWeight.getComponent(i, n) > skinWeight.getComponent(i, best) ? n : best), 0);
-      if (wanted.test(m.skeleton.bones[skinIndex.getComponent(i, main)].name)) out.push(m.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(m.matrixWorld));
+    const { index, attributes: { skinIndex, skinWeight } } = m.geometry;
+    const points = [];
+    const point = (i) => (points[i] ??= m.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(m.matrixWorld));
+    for (let t = 0; t < index.count; t += 3) {
+      const [p, q, r] = [0, 1, 2].map((k) => index.getX(t + k));
+      const main = [0, 1, 2, 3].reduce((best, n) => (skinWeight.getComponent(p, n) > skinWeight.getComponent(p, best) ? n : best), 0);
+      const { name } = m.skeleton.bones[skinIndex.getComponent(p, main)];
+      if (at[name] && ray.intersectTriangle(point(p), point(q), point(r), false, hit)) at[name].push(hit.distanceTo(ray.origin));
     }
   });
-  return out;
+  return at.thigh_r.length ? Math.min(...at.thigh_r) - Math.max(0, ...at.hand_r) : null;
 }
 
-// The owner, #197: the free hand leans on the thigh, not in the air.
-test('the press-around rests the free hand on the thigh all through the rep, the other pressing past the middle', async () => {
+// The owner, #197: the free palm lies on the thigh, not its edge and not in the air.
+test('the press-around lays the free palm on the thigh all through the rep, the other hand pressing past the middle', async () => {
   const { stage, hand } = await posed('1_arm_cable_press_around', 0);
   assert.ok(hand('l').x < -0.15, `the working hand at x ${hand('l').x.toFixed(3)}`);
   for (const d of [0, 0.25, 0.5, 0.75, 1]) {
     stage.pose(d);
     stage.scene.updateMatrixWorld(true);
-    const thigh = skinOf(stage, /^thigh_r$/);
-    const gap = Math.min(...skinOf(stage, /^hand_r$/).flatMap((a) => thigh.map((b) => a.distanceTo(b))));
-    assert.ok(gap < 0.015, `the free hand ${(gap * 100).toFixed(1)} cm off the thigh, ${d} of the way down`);
+    const gap = palmToThigh(stage);
+    assert.ok(gap !== null, `the palm faces away from the thigh, ${d} of the way down`);
+    assert.ok(Math.abs(gap) < 0.005, `the palm ${(gap * 100).toFixed(1)} cm off the thigh, ${d} of the way down`);
   }
 });
 
