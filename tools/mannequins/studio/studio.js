@@ -17,7 +17,7 @@ import { faster, repAt, slower, spanOf, stepFrames, stepSeconds, synced, timeAt,
 import { HALF_FOV, closeUpOf, dolly, framingOf, halfHeightOf, orbit, pan, placeOf, roll, showPlates, viewOf } from './view.mjs';
 import { mayNote, progressNote, rowAfter } from './checking.mjs';
 import { skeletonOf } from './bones.mjs';
-import { inUnits, jointsOf, limitOf, limitsOf, scrubAll, showJoint, statusOf, stepJoint, stepsOf, typedJoint } from './joints.mjs';
+import { inUnits, jointsOf, limitOf, limitsOf, numberRows, scrubAll, settled, showAlone, showJoint, statusOf, stepJoint, stepsOf, typedJoint, withoutBack } from './joints.mjs';
 import { between, heldAt, turnOf, wpos } from '../rig.mjs';
 
 const keys = keymap(KEYS);
@@ -486,6 +486,7 @@ async function rebuild() {
     const stage = await buildStage(entry, body);
     // A kit is shown alone, as its exercise sets it up.
     body.visible = !isKit();
+    if (isKit()) showAlone(stage.kit.kits, state.item.id);
     setLive({ stage, entry });
     // The fit's numbers come with the stage: each is a slider, at what it solved.
     if (!same(stage.fit, state.fit)) {
@@ -866,8 +867,7 @@ function paintNumbers() {
 
 /** The numbers' values, marks and selection, without rebuilding the rows. */
 function paintValues() {
-  for (const row of $('sliders').querySelectorAll('.num')) {
-    const t = state.numbers.find((x) => x.path === row.dataset.path);
+  for (const [row, t] of numberRows($('sliders').querySelectorAll('.num'), state.numbers)) {
     const v = valueNow(t);
     const per = perMap()[t.path];
     row.querySelector('.value').textContent = unitOf(t).show(v);
@@ -984,7 +984,7 @@ function paintJoints() {
     range.max = j.limits[1];
     range.step = 'any';
     range.setAttribute('aria-label', jointLabel(j));
-    range.addEventListener('input', () => setJoint(j, Number(range.value)));
+    range.addEventListener('input', () => setJoint(j, settled(j, Number(range.value))));
     row.addEventListener('click', () => { setFocus('numbers'); selectJoint(j.key); });
     box.append(row);
   }
@@ -1555,6 +1555,8 @@ function turnAngle(by) {
   const next = BENCH_ANGLES[Math.max(0, Math.min(BENCH_ANGLES.length - 1, (i === -1 ? 0 : i) + by))];
   if (next === state.angle) return;
   state.angle = next;
+  // The back pad scrubbed by hand would stay where it was.
+  state.scrubs = withoutBack(state.scrubs);
   frame(cameraAtAngle());
   paintValues();
   loadClip().catch(() => {});

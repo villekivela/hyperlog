@@ -1,5 +1,5 @@
 // An adjustable-bench pose is written in the backrest's frame (README, Adjustable-bench poses), so
-// one set of numbers holds from 0° to 75°: the hips at the seat-back corner, the chest touch point
+// one set of numbers holds from 0° to 85°: the hips at the seat-back corner, the chest touch point
 // and the press path measured from the torso, the head along the pad.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,10 +19,12 @@ async function at(angle, d, id = ID, poses) {
   return { entry, P: stage.pose(d) };
 }
 
-/** The backrest's face at `angle`: the corner, and the unit vectors up the pad and out of it ([y, z]). */
+/** The backrest's face at `angle`: a point on it, and the unit vectors up the pad and out of it ([y, z]). The hinge is on the pad's underside, so the face swings out as it turns. */
 function backrest(entry, angle) {
-  const { height, z } = benchHinge(entry.kit.bench);
-  return { corner: [height, z], up: [Math.sin(rad(angle)), -Math.cos(rad(angle))], out: [Math.cos(rad(angle)), Math.sin(rad(angle))] };
+  const { height, y, z } = benchHinge(entry.kit.bench);
+  const out = [Math.cos(rad(angle)), Math.sin(rad(angle))];
+  const thick = height - y;
+  return { face: [y + thick * out[0], z + thick * out[1]], seat: height, up: [Math.sin(rad(angle)), -Math.cos(rad(angle))], out };
 }
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 
@@ -30,9 +32,9 @@ test('the hips sit the same distance off the backrest, and against the seat, at 
   const off = [];
   for (const a of BENCH_ANGLES) {
     const { entry, P } = await at(a, 0);
-    const { corner, out } = backrest(entry, a);
-    off.push(dot([P.hipC.y - corner[0], P.hipC.z - corner[1]], out));
-    assert.ok(P.hipC.y - corner[0] > 0.05, `${a}°: hips ${P.hipC.y - corner[0]} above the seat`);
+    const { face, seat, out } = backrest(entry, a);
+    off.push(dot([P.hipC.y - face[0], P.hipC.z - face[1]], out));
+    assert.ok(P.hipC.y - seat > 0.05, `${a}°: hips ${P.hipC.y - seat} above the seat`);
   }
   for (const o of off) assert.ok(Math.abs(o - off[0]) < 0.002, `distance off the pad ${off.map((v) => v.toFixed(3))}`);
 });

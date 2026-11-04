@@ -40,7 +40,7 @@ test('an entry is posed with each per-angle setting at its value for the angle, 
 });
 
 test('each baked angle gets its own value, and the pose still passes its checks', async () => {
-  const poses = withPer({ 'feet.z': { 0: 0.22, 75: 0.3 } });
+  const poses = withPer({ 'feet.z': { 0: 0.2, 75: 0.24 } });
   for (const a of [0, 45, 75]) {
     const { checks } = await checkPose('t', { poses, angle: a });
     assert.ok(Object.values(checks).every((c) => c.ok), `${a}°: ${JSON.stringify(checks)}`);
@@ -57,7 +57,7 @@ test('Tune applies tuned per-angle settings over the entry\'s, and says which an
   assert.equal(atAngle(entry, 15).feet.z, entry.feet.z);
   assert.deepEqual(tunedAngles(now), [0, 15, 60]);
   // The entry's own: the arms lock out vertically at every angle.
-  assert.deepEqual(tunedAngles(entry), [0, 15, 30, 45, 60, 75]);
+  assert.deepEqual(tunedAngles(entry), [0, 15, 30, 45, 60, 75, 85]);
   assert.ok(!tunables(now).some((t) => t.path.startsWith('bench')));
 });
 
@@ -69,5 +69,5 @@ test('a save writes per-angle values into the entry, keeping its comments', asyn
   await writeFile(path.join(dir, 'poses.mjs'), out);
   const { POSES: patched } = await import(pathToFileURL(path.join(dir, 'poses.mjs')).href);
   assert.deepEqual(patched[ID].bench.perAngle, { 'feet.z': { 0: 0.22, 75: 0.3 }, 'bottom.chest.0': { 30: 0.5 } });
-  assert.equal(patched[ID].bench.typical, 30);
+  assert.equal(patched[ID].bench.typical, 45);
 });

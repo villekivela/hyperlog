@@ -75,10 +75,10 @@ test('a save of nothing new writes nothing, a clip per bench angle included', as
 });
 
 test('a save that changes a shared kit rewrites it, and moves the clips that read it without baking them', async () => {
-  // The bench press's bench grows, and the close grip's stays as it was.
-  const pinned = { ...POSES.barbell_bench_press.kit, bench: { length: 1.2 } };
+  // The bench press's bench drops, and the close grip's stays as it was.
+  const pinned = { ...POSES.barbell_bench_press.kit, bench: { height: 0.457 } };
   const poses = { ...pick('barbell_bench_press', 'close_grip_bench_press'), close_grip_bench_press: { ...POSES.close_grip_bench_press, kit: pinned } };
-  const grown = tuned(poses, 'barbell_bench_press', { kit: { ...POSES.barbell_bench_press.kit, bench: { length: 1.22 } } });
+  const grown = tuned(poses, 'barbell_bench_press', { kit: { ...POSES.barbell_bench_press.kit, bench: { height: 0.45 } } });
   const dir = await fullBake(poses);
   const written = await bakeOnly(['barbell_bench_press'], dir, { poses: grown });
   assert.deepEqual(written.sort(), ['barbell_bench_press.glb', 'close_grip_bench_press.glb', 'kit_bench.bin']);

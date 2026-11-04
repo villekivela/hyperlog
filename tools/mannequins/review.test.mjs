@@ -172,7 +172,7 @@ test('the barbell batch is the library\'s next barbell exercises, bar three that
   // The first sixteen barbell exercises without a pose before this batch, in the library's order.
   const before = new Set([...Object.keys(POSES)].filter((id) => !BATCHES.barbell.includes(id)));
   const next = library.exercises.filter((e) => e.equipment === 'barbell' && !before.has(e.id)).slice(0, 16).map((e) => e.id);
-  // An adjustable bench is six clips, and a decline below flat; a lunge needs a split stance.
+  // An adjustable bench is seven clips, and a decline needs the foot catch; a lunge needs a split stance.
   const waiting = ['barbell_incline_press', 'barbell_lunge', 'decline_bench_press'];
   assert.deepEqual([...BATCHES.barbell].sort(), next.filter((id) => !waiting.includes(id)).sort());
   for (const id of BATCHES.barbell) assert.ok(POSES[id], `${id} has no pose`);
@@ -187,11 +187,11 @@ test('the kits batch is every exercise posed before #127, re-reviewed on the det
 
 test('an adjustable-bench pose\'s OK names the clip of every angle it is baked at', async () => {
   const dir = await reviewDir();
-  const files = ['0', '15', '30', '45', '60', '75'].map((a) => path.join(clips, `db_incline_press_${a}.glb`));
+  const files = ['0', '15', '30', '45', '60', '75', '85'].map((a) => path.join(clips, `db_incline_press_${a}.glb`));
   const { clip } = await setOk('db_incline_press', true, { dir, clips, batch: 'adjustable-bench' });
   assert.equal(clip, await sha(...files));
   assert.equal((await batchStatus('adjustable-bench', { dir, clips })).exercises[0].state, 'ok');
-  // The OK holds until any of the six is baked differently.
+  // The OK holds until any of the seven is baked differently.
   const copy = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
   for (const f of await readdir(clips)) await writeFile(path.join(copy, f), await readFile(path.join(clips, f)));
   const file = path.join(copy, 'db_incline_press_75.glb');
