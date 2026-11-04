@@ -74,3 +74,11 @@ Placard text not read. From the videos:
 - The bar's length and sleeve length are not published and no photo shows the bar straight on. Chosen: an Olympic-style bar 2100 mm long with 50 mm sleeves outside the rods, to fit inside the 2197 mm published width, low confidence.
 - All videos use vertical smith machines of other makes; the ranges of motion are the body's, not the machine's.
 - Whether the owner's gym has an angled or vertical smith, and its make, is unknown and stays so. Hammer Strength stands in for the type.
+
+## As built (#182)
+`recipes/smith-machine.mjs` follows this file, and departs where a number or a photo was missing:
+- The bar's travel starts at the lowest hook (290 mm) rather than 250 mm, as the safety stops sit on it by default. Notches are 152 mm apart from 290 mm up (13, the highest at 2.11 m); the bar hangs on the eighth, 1.35 m, for a standing squat's bar at 1.47 m.
+- The hooks are fixed on the bar, as its carriages are, at the notch it hangs on: the 45 degree turn is not a joint, as one about the bar would be left behind when the bar slides along the rods.
+- The rear uprights lean with the rods, as the black render shows, and carry four horns a side through a pad wrapped round them. The frame is 1.51 m wide over its uprights, 1.24 m deep and 2.357 m high; the bar is 2.1 m with sleeves outside the rods.
+- The crossbars are a top one between the front uprights and a middle one between the rear ones. The render's diagonal gussets and its maker's plate are left out: no brand, no decal.
+- Which way the notches open is as the black render shows: toward the bar, the teeth standing out of a spine behind the rod.

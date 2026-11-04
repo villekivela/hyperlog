@@ -68,7 +68,7 @@ export const EQUIPMENT = {
   ez_bar: null,
   trap_bar: null,
   safety_bar: null,
-  smith_machine: null,
+  smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
   weighted_bodyweight: null,
 };
