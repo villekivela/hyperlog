@@ -29,7 +29,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise |
 | 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction |
 | 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar |
-| 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension |
+| 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension; built (#220), not yet posed |
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug |
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip |
