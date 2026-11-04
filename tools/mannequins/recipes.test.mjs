@@ -112,7 +112,7 @@ for (const id of Object.keys(POSES).sort()) {
     for (const d of [0, 1]) {
       stage.pose(d);
       for (const [name, kit] of Object.entries(stage.kit.kits)) {
-        for (const { point, landmark, at } of kit.contacts) {
+        for (const { point, landmark, at } of kit.contacts.filter((c) => !c.optional)) {
           const { reach, at: segment } = LANDMARKS[landmark];
           for (const p of at) {
             const miss = Math.min(...['l', 'r'].map((k) => new THREE.Line3(...segment(stage.rig, k)).closestPointToPoint(p, true, new THREE.Vector3()).distanceTo(p)));

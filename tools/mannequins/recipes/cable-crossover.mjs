@@ -8,7 +8,9 @@
 //
 // The user stands in front of the towers (z ahead), facing away from them. The tower at +x is the
 // left one (`_l`), as the mannequin's left hand is. A tower's pieces are built in its own frame,
-// the rail on its centre line at z = 0 and its stack behind.
+// the rail on its centre line and its stack behind. `at` [x, z] is where the middle of the towers'
+// line stands, since the body stays at the origin: back for a lifter a step ahead of them, to a
+// side for one beside a tower. With `crossed`, each hand takes the far tower's cable.
 //
 // Each tower has three bodies: its carriage, whose joint is how far it stands above the lowest
 // hole; its swivel, turned about the vertical to face the cable; and its stack, whose joint is how
@@ -70,7 +72,7 @@ export default recipe({
   // The hands hold the handles; a free hand may steady itself on a carriage's fixed grip bar.
   contacts: (o) => [
     ...handsOf(o).map(({ k }) => ({ body: `handle_${k}`, point: `handle_${k}`, landmark: 'hands' })),
-    ...sides.map(({ k }) => ({ body: `carriage_${k}`, point: `steady_${k}`, landmark: 'hands' })),
+    ...sides.map(({ k }) => ({ body: `carriage_${k}`, point: `steady_${k}`, landmark: 'hands', optional: true })),
   ],
   stacks: sides.map(({ k }) => ({ joint: `stack_${k}`, ratio: RATIO })),
   // A pose sets both carriages (or each) at the hole its exercise wants, and the machine's placard
@@ -79,12 +81,12 @@ export default recipe({
     sets: 'position',
     rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 4 to 7 from the thigh to just above the hip (the high lateral raise cable is at about 1.05 m, hole 7), 10 at the standing shoulder (7 seated), 15 or 16 for a crossover or a pushdown',
   }],
-  build({ position = 10, hands = [1, -1] } = {}, M) {
+  build({ position = 10, hands = [1, -1], at = [0, 0], crossed = false } = {}, M) {
     const holes = Array.isArray(position) ? position : [position, position];
     for (const h of holes) if (!(Number.isInteger(h) && h >= 1 && h <= POSITIONS)) throw new Error(`The cable crossover has no position ${h}; its carriage has holes 1 to ${POSITIONS}`);
-    const towers = sides.map(({ k, s }, i) => buildTower(k, s, (holes[i] - 1) * PITCH, M));
+    const towers = sides.map(({ k, s }, i) => buildTower(k, s, (holes[i] - 1) * PITCH, at, M));
     // The crossmember rests on the front posts' tops and runs past them, centred on the machine.
-    const bridge = tube(POST, V(-BRIDGE / 2, BEAM_Y, 0), V(BRIDGE / 2, BEAM_Y, 0), M.frame);
+    const bridge = tube(POST, V(at[0] - BRIDGE / 2, BEAM_Y, at[1]), V(at[0] + BRIDGE / 2, BEAM_Y, at[1]), M.frame);
     bridge.userData.bridge = true;
     const handles = Object.fromEntries(handsOf({ hands }).map(({ k }) => [k, stirrup(M, `cable_handle_${k}`)]));
     const cables = Object.fromEntries(sides.map(({ k }) => [k, wire(M)]));
@@ -114,14 +116,16 @@ export default recipe({
           const { k, s } = tower;
           tower.carriage.position.y = tower.at;
           const exit = tower.exit();
-          const held = handles[k];
+          // The hand on this tower's cable, and its side's name.
+          const { k: h, s: side } = sides.find((o) => o.s === (crossed ? -s : s));
+          const held = handles[h];
           let hook;
           if (held && P.hand) {
             // The handle in the hand, turned toward the pulley as square to the grip allows: the cable
             // runs from its ring, wherever that comes to.
-            held.position.copy(P.hand(s));
-            turnTo(held, P.held?.[s] ?? X, exit.clone().sub(P.hand(s)));
-            points[`handle_${k}`] = [P.hand(s).clone()];
+            held.position.copy(P.hand(side));
+            turnTo(held, P.held?.[side] ?? X, exit.clone().sub(P.hand(side)));
+            points[`handle_${h}`] = [P.hand(side).clone()];
             hook = ringOf(held);
           } else {
             // Hanging on the cable from the lower wheel's front, its grip off the floor.
@@ -130,7 +134,7 @@ export default recipe({
             if (held) {
               held.position.copy(hang);
               held.quaternion.identity();
-              points[`handle_${k}`] = [hang.clone()];
+              points[`handle_${h}`] = [hang.clone()];
             }
             hook = V(hang.x, ring, hang.z);
           }
@@ -142,8 +146,8 @@ export default recipe({
           // The cable drawn out past the length that lets a hanging handle hang.
           const drawn = held && P.hand ? Math.max(0, hook.distanceTo(exit) - Math.min(HANG, exit.y - 0.05 - STIRRUP)) : 0;
           joints[`carriage_${k}`] = { value: tower.at, origin: tower.group.position.clone() };
-          joints[`swivel_${k}`] = { value: turn, origin: V(tower.group.position.x, 0, SWIVEL_Z) };
-          joints[`stack_${k}`] = { value: drawn, origin: V(tower.group.position.x, 0, STACK_Z) };
+          joints[`swivel_${k}`] = { value: turn, origin: V(tower.group.position.x, 0, at[1] + SWIVEL_Z) };
+          joints[`stack_${k}`] = { value: drawn, origin: V(tower.group.position.x, 0, at[1] + STACK_Z) };
           points[`steady_${k}`] = [tower.steady()];
         }
         return { joints, points };
@@ -157,11 +161,11 @@ function handsOf({ hands = [1, -1] } = {}) {
   return sides.filter(({ s }) => hands.includes(s));
 }
 
-/** One tower, side `k` (`s` its sign in x), its carriage `at` metres above the lowest hole. */
-function buildTower(k, s, at, M) {
+/** One tower, side `k` (`s` its sign in x), its carriage `raised` metres above the lowest hole, the machine standing at `at`. */
+function buildTower(k, s, raised, [atX, atZ], M) {
   const tower = new THREE.Group();
   tower.name = `cable_crossover_${k}`;
-  tower.position.x = s * TOWER_X;
+  tower.position.set(atX + s * TOWER_X, 0, atZ);
   const top = BEAM_Y;
   // The base: a floor beam from a front foot under the rail to behind the stack, a cross beam under
   // the foot and one under the stack, the post and the stack's uprights standing on them.
@@ -188,8 +192,8 @@ function buildTower(k, s, at, M) {
   const wheels = [...pulley(first, M), ...pulley(second, M)];
   // The cable's runs, in the kit's frame since the carriage and the stack move them: over the top
   // wheels, up the spindle, and down to the stack's head.
-  const x = s * TOWER_X;
-  const over = rod(WIRE, V(x, TOP_Y + WHEEL, first.z), V(x, TOP_Y + WHEEL, second.z), M.metal);
+  const x = atX + s * TOWER_X;
+  const over = rod(WIRE, V(x, TOP_Y + WHEEL, atZ + first.z), V(x, TOP_Y + WHEEL, atZ + second.z), M.metal);
   const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: top - POST / 2 - 0.2, toward: 1 });
   const drop = wire(M);
   const rise = wire(M);
@@ -225,23 +229,23 @@ function buildTower(k, s, at, M) {
   const api = {
     k,
     s,
-    at,
+    at: raised,
     group: tower,
     carriage,
     swivel,
     wires: [over, drop, rise],
     /** The lower wheel's middle, where the cable leaves, in the kit's frame. */
-    exit: () => V(x, pin + carriage.position.y - WHEELS, SWIVEL_Z),
+    exit: () => V(x, pin + carriage.position.y - WHEELS, atZ + SWIVEL_Z),
     /** Lays the cable up the spindle to the first wheel. */
     rise() {
-      span(rise, V(x, pin + carriage.position.y + WHEELS, SWIVEL_Z), V(x, TOP_Y, SWIVEL_Z));
+      span(rise, V(x, pin + carriage.position.y + WHEELS, atZ + SWIVEL_Z), V(x, TOP_Y, atZ + SWIVEL_Z));
     },
-    steady: () => V(x + 0.125, pin + carriage.position.y, 0.09),
+    steady: () => V(x + 0.125, pin + carriage.position.y, atZ + 0.09),
     // Raises the stack `l` metres, less the hold the recipe format adds (`HELD`): the stack sits
     // down whole with no cable drawn, and rises half as far as the cable is drawn after that.
     lift(l) {
       weights.lift(Math.max(0, l - HELD));
-      span(drop, V(x, TOP_Y, STACK_Z), weights.top(l).add(V(x, 0, 0)));
+      span(drop, V(x, TOP_Y, atZ + STACK_Z), weights.top(l).add(V(x, 0, atZ)));
     },
   };
   return api;

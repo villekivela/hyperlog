@@ -401,6 +401,115 @@ export const POSES = {
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },
   },
 
+  // The cable crossover's exercises (#197): first poses for the owner to tune. Body-first, the body
+  // at the origin and the machine at `at`, the carriages at the holes the ref gives.
+
+  // On the line between the towers, one foot forward and hinged at the hips, the pulleys high: from
+  // the arms wide at shoulder height, the hands come down and in to meet in front of the hips.
+  cable_crossover: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 15 } },
+    top: { shin: 8, thigh: 22, trunk: 30, hand: [0.05, 0.98, 0.5] },
+    bottom: { shin: 8, thigh: 22, trunk: 30, hand: [0.72, 1.42, 0.2] },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
+    grip: { arc: true, rotate: 90, pole: [1, 0.2, -0.6] },
+    camera: { target: [0, 1.25, 0.1], halfHeight: 1.45, azimuth: 30, elevation: 8 },
+  },
+
+  // A step ahead of the towers in a split stance, the pulleys at the shoulders and the cables coming
+  // from behind: the handles press from beside the chest to the arms straight ahead.
+  cable_chest_press: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 10, at: [0, -0.6] } },
+    top: { shin: 8, thigh: 14, trunk: 12, hand: [0.1, 1.36, 0.68] },
+    bottom: { shin: 8, thigh: 14, trunk: 12, hand: [0.33, 1.3, 0.12] },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
+    grip: { pole: [1, -0.2, -0.6], sits: 'heel' },
+    camera: { target: [0, 1.15, -0.1], halfHeight: 1.3, azimuth: 40, elevation: 8 },
+  },
+
+  // The press from low: the pulleys at the thighs, the handles rising from beside the hips to the
+  // arms straight ahead and up, level with the eyes.
+  low_to_high_cable_press: {
+    like: 'cable_chest_press',
+    kit: { cable_crossover: { position: 5, at: [0, -0.6] } },
+    top: { hand: [0.1, 1.62, 0.56] },
+    bottom: { hand: [0.33, 1.02, 0.1] },
+  },
+
+  // Beside the right tower, the left hand on its cable, which crosses in front of the hips from a
+  // pulley at hip height: the arm rises from across the body to level with the shoulder, the right
+  // hand resting at the carriage's grip bar (a resting hand doesn't close on it).
+  high_cable_lateral_raise: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 6, at: [0.4, 0.1], crossed: true, hands: [1] } },
+    top: { shin: 4, thigh: 6, trunk: 4, hand: [0.76, 1.46, 0.1] },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.02, 0.92, 0.26] },
+    feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
+    grip: { arc: true, one: 1, rest: [-0.574, 1.0, 0.19], pole: [1, -0.25, -0.7] },
+    camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 20, elevation: 8 },
+  },
+
+  // The raise from a low pulley, up past the shoulder into the arm of a Y.
+  cable_y_raise: {
+    like: 'high_cable_lateral_raise',
+    kit: { cable_crossover: { position: 1, at: [0.4, 0], crossed: true, hands: [1] } },
+    top: { hand: [0.6, 1.9, 0.22] },
+    grip: { rest: [-0.3, 0.9, 0.08] },
+  },
+
+  // A step ahead of the right tower's line, so the cable from the low pulley runs behind the body:
+  // the left arm rises from behind the hips to level with the shoulder.
+  behind_the_back_cable_lateral_raise: {
+    like: 'high_cable_lateral_raise',
+    kit: { cable_crossover: { position: 1, at: [0.4, -0.46], crossed: true, hands: [1] } },
+    top: { hand: [0.76, 1.44, -0.04] },
+    bottom: { hand: [0.2, 0.92, -0.17] },
+    grip: { rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.5] },
+  },
+
+  // Leaning a little forward in a split stance, the left hand on a cable from a low pulley behind:
+  // the arm stays long and the shoulder shrugs up and in.
+  cable_shrug_in: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 2, at: [-0.6, -0.75], hands: [1] } },
+    top: { shin: 6, thigh: 18, trunk: 14, hand: [0.25, 0.93, -0.06], offsets: { clavicle_l: [0, 0, 18] } },
+    bottom: { shin: 6, thigh: 18, trunk: 14, hand: [0.32, 0.84, -0.16], offsets: { clavicle_l: [0, 0, -10] } },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: -0.3 },
+    grip: { one: 1, rest: [-0.25, 0.86, 0.14], pole: [1, -0.3, -0.7] },
+    camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
+  },
+
+  // Feet wide, the left tower behind and to the left, its pulley at the shoulder: the hand presses
+  // from beside the chest across the middle of the body, the cable lying across the chest.
+  '1_arm_cable_press_around': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 10, at: [-0.555, -0.55], hands: [1] } },
+    top: { shin: 4, thigh: 8, trunk: 8, hand: [-0.2, 1.34, 0.5] },
+    bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.44, 1.32, 0.16] },
+    feet: { stance: 0.2, toeOut: 10, kneesOut: 0.2 },
+    grip: { one: 1, rest: [-0.3, 0.9, 0.1], pole: [1, -0.3, -0.5] },
+    camera: { target: [0, 1.15, -0.1], halfHeight: 1.3, azimuth: 30, elevation: 8 },
+  },
+
+  // Facing away from a pulley at the hips behind and beside the head's line, the elbow high: the
+  // hand lowers from the arm straight overhead to behind the head.
+  '1_arm_katana_cable_triceps_extension': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 5, at: [-0.9, -0.7], hands: [1] } },
+    top: { shin: 4, thigh: 8, trunk: 8, hand: [0.2, 1.98, 0.12] },
+    bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.06, 1.62, -0.1] },
+    feet: { stance: 0.16, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
+    grip: { one: 1, rest: [-0.25, 0.88, 0.12], pole: [0.5, 1, 0.3] },
+    camera: { target: [0, 1.2, -0.2], halfHeight: 1.3, azimuth: 60, elevation: 8 },
+  },
+
   // The library's next barbell exercises (#127, the barbell batch): first poses for the owner to tune.
 
   // The three squats are the first batch's barbell_squat, which the owner tuned, changed only where

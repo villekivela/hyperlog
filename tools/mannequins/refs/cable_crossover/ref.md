@@ -30,6 +30,12 @@ Ids: 1_arm_cable_press_around, 1_arm_katana_cable_triceps_extension, 1_leg_cable
   - 1_leg_cable_glute_kickback https://youtu.be/3ryh7PNhz3E?t=443: 7:18 to 8:03, frames at 7:40, 7:45 (side-on).
   - cable_lateral_raise https://youtu.be/SJqInYJcg5k?t=653: 10:48 to 11:33, frames at 11:06, 11:19.
   - overhead_cable_triceps_extension https://youtu.be/qIW3z-ydg-M: whole video, frames at 0:03, 0:15, 0:19.
+  - cable_chest_press https://youtu.be/fOHouR0t9Cw: contact sheet of the whole video.
+  - cable_y_raise https://youtu.be/xxnjF6ljHmg: whole video, contact sheet.
+  - cable_shrug_in https://youtu.be/0EqU6-o3PAw: whole video, frames at 0:02, 0:05, 0:13, 0:15.
+  - 1_arm_cable_press_around https://youtu.be/fGm-ef-4PVk?t=733: 12:13 to 12:53, contact sheet.
+  - 1_arm_katana_cable_triceps_extension https://youtu.be/OpRMRhr0Ycc?t=295: 4:55 to 5:35, contact sheet, frames at 5:06, 5:18, 5:30.
+  - behind_the_back_cable_lateral_raise https://youtu.be/SgyUoY0IZ7A?t=546: 9:06 to 9:46, contact sheet. It is done with a wrist cuff; the mannequin holds a handle.
 - Why not the preferred Hammer Strength HD Elite Dual Adjustable Pulley: Life Fitness lists it as discontinued and gives only overall size and stack, no spacing or pulley data (https://www.lifefitness.com/fr-fr/catalog/strength-training/cable-machines-functional-trainers/hd-elite-dual-adjustable-pulley). Rogue is an owner brand and publishes spacing, travel, ratio and stack.
 
 ## Key dimensions (mm)
@@ -61,7 +67,9 @@ Ids: 1_arm_cable_press_around, 1_arm_katana_cable_triceps_extension, 1_leg_cable
 - Range of motion of the lifts (from the videos; the cable itself has no limit within its 2743 mm):
   - cable_crossover: hands from wide at about shoulder height, arms about 80 degrees out from the torso, down and in until they cross in front of the hips: about 80 degrees of shoulder adduction (video 10:20 and 10:27).
   - cable_lateral_raise: one arm from the hand across the front of the opposite thigh up to the arm level with the shoulder: about 90 to 100 degrees of abduction (video 11:19 and 11:06).
-  - high_cable_lateral_raise: both arms from the hands at the hips up to level with the shoulders, about 90 degrees (video 0:09 and 0:18).
+  - high_cable_lateral_raise: one arm from the hand across the hips up to level with the shoulder, about 90 degrees, the free hand on the tower (video 0:09, 0:18 and 0:22).
+  - cable_y_raise: one arm from the hand across the hips up past the shoulder to the arm of a Y, about 130 degrees, the free hand on the tower (contact sheet).
+  - cable_shrug_in: one arm long, the shoulder shrugging up and in, the hand rising about 10 cm (video 0:05 and 0:13).
   - 1_leg_cable_glute_kickback: hip from about 20 degrees flexed to about 30 degrees extended, about 50 degrees, torso leaning about 45 degrees onto the tower (video 7:40 and 7:45; rough).
   - overhead_cable_triceps_extension: elbow from about 40 degrees (hands behind the head) to straight, about 140 degrees, upper arm by the ear (video 0:15 and 0:19).
 
@@ -72,12 +80,13 @@ Ids: 1_arm_cable_press_around, 1_arm_katana_cable_triceps_extension, 1_leg_cable
 ## Adjustments and fit rules
 Placard text not available. Rules below come from the videos.
 - Carriage height by exercise, for the mannequin (cable exit about 85 mm below the pin):
-  - Low (position 1, exit about 260 mm): glute kickback (cable runs about level from the ankle cuff to the pulley, video 7:40), cable lateral raise (11:06), bayesian curl (cable behind the body from below the hand, 0:03), overhead triceps extension (pulley set low and the cable runs up over the shoulder, 0:03 and 0:15), wrist curl and extension.
-  - Mid-thigh to hip (about position 4 to 6, exit 650 to 900 mm): low-to-high flye and press (video 2:57, carriages at the lifter's mid-thigh), high cable lateral raise (despite the name, the pulley is at hip height and the cable crosses in front of the body, video 0:09).
-  - Shoulder (standing: position 10, exit about 1430 mm, for the mannequin's 1.45 m shoulder; seated: position 7, exit about 1050 mm, for its 1.10 m seated shoulder): cable flye, chest press, seated flye (cables run level to the hands at chest height, video 11:02).
+  - Low (position 1, exit about 260 mm): glute kickback (cable runs about level from the ankle cuff to the pulley, video 7:40), cable lateral raise (11:06), bayesian curl (cable behind the body from below the hand, 0:03), overhead triceps extension (pulley set low and the cable runs up over the shoulder, 0:03 and 0:15), wrist curl and extension, Y raise (the cable crosses the front of the body from a pulley at the shin), behind-the-back lateral raise (the cable behind the body).
+  - Low, a little up (position 2 or 3, exit 400 to 530 mm): shrug-in (the cable comes up from behind to the hand beside the hip, video 0:05).
+  - Mid-thigh to hip (about position 4 to 6, exit 650 to 900 mm): low-to-high flye and press (video 2:57, carriages at the lifter's mid-thigh), high cable lateral raise (despite the name, the pulley is at hip height and the cable crosses in front of the body, video 0:09), katana triceps extension (the cable runs down and back from the hand to a pulley about hip height, video 5:18, 5:30; rough).
+  - Shoulder (standing: position 10, exit about 1430 mm, for the mannequin's 1.45 m shoulder; seated: position 7, exit about 1050 mm, for its 1.10 m seated shoulder): cable flye, chest press, press-around, seated flye (cables run level to the hands at chest height, video 11:02).
   - High (position 15 or 16, exit about 2100 to 2250 mm): cable crossover (pulleys above the head, video 10:20), reverse crossover (cables at about head height, arms crossed at the start, video 0:04), face pull, crunch, triceps pushdown.
 - Same height on both towers for two-arm lifts.
-- Stance: for the crossover the lifter stands on the line between the towers, one foot forward, hinged about 30 degrees at the hips (video 10:23). For one-arm lifts (lateral raise, kickback) the free hand holds the tower and the body leans away from or onto it (11:19, 7:40). For the seated flye a separate bench is placed on the line, its back to the towers' line (11:02).
+- Stance: for the crossover the lifter stands on the line between the towers, one foot forward, hinged about 30 degrees at the hips (video 10:23). For one-arm lifts (lateral raise, kickback) the free hand holds the tower and the body leans away from or onto it (11:19, 7:40). For a press the lifter stands a step ahead of the towers, the cables coming from behind (cable_chest_press; its frames stop at the waist, so the stance isn't read from them). The high lateral raise and the Y raise take the far tower's cable, across the front of the body; the behind-the-back raise takes it round behind, the lifter a step ahead of the towers' line; the shrug-in takes the near tower's, from behind. For the seated flye a separate bench is placed on the line, its back to the towers' line (11:02).
 - Start each set with the cable taut: the hands at the start are already short of the pulley by most of the arm's reach.
 
 ## Open gaps

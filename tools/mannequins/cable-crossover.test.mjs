@@ -173,7 +173,7 @@ test('it serves the cable exercises the ref names that no pose has set up on ano
   const ref = await readFile(path.join(HERE, 'refs', 'cable_crossover', 'ref.md'), 'utf8');
   const named = ref.match(/^Ids: (.+)\.$/m)[1].split(', ');
   assert.equal(named.length, 25);
-  const posed = Object.entries(POSES).filter(([, p]) => p.equipment === 'cable' && Object.keys(p.kit).some((k) => k !== 'bench')).map(([id]) => id);
+  const posed = Object.entries(POSES).filter(([, p]) => p.equipment === 'cable' && Object.keys(p.kit).some((k) => k !== 'bench' && k !== 'cable_crossover')).map(([id]) => id);
   const unposed = named.filter((id) => !posed.includes(id));
   assert.deepEqual(CABLE_MACHINES.cable_crossover, { kit: 'cable_crossover', exercises: unposed });
   assert.ok(unposed.length > 15 && unposed.length < 25, 'some of the 25 are posed already');
@@ -199,4 +199,44 @@ test('a stack at rest has its plates together, and the pinned ones part from the
   kit.group.updateMatrixWorld(true);
   close(widest(stack(1)), 0.25 + 0.003, 0.002, 'the gap once 0.5 m of cable is drawn: the pinned plates 0.25 m up');
   assert.ok(widest(stack(-1)) < 0.005, 'the other stack stays down');
+});
+
+// A lifter stands a step ahead of the towers for a press, or beside one for a one-arm raise, and the
+// body stays at the origin, so it is the machine that moves.
+test('it stands at `at`, the pulleys and the cables going with it to the hands', () => {
+  const home = crossover();
+  const moved = crossover({ at: [0.3, -0.6] });
+  const posts = boxes(moved, (o) => o.userData.post).map(centre).sort((a, b) => a.x - b.x);
+  close(posts[0].x, 0.3 - 1.105, 1e-6, 'the right tower\'s post');
+  close(posts[1].x, 0.3 + 1.105, 1e-6, 'the left tower\'s post');
+  close(posts[0].z, -0.6, 1e-6, 'the towers\' line');
+  close(centre(boxes(moved, (o) => o.userData.bridge)[0]).x, 0.3, 1e-6, 'the crossmember\'s middle');
+  assert.equal(pinAt(moved, 'l').toFixed(6), pinAt(home, 'l').toFixed(6), 'the carriage\'s height');
+  const hand = (s) => V(s * 0.3, 1.1, 0.4);
+  const P = { hand };
+  moved.place(P, P, P);
+  moved.group.updateMatrixWorld(true);
+  close(contact(moved, 'handle_l').at[0].distanceTo(hand(1)), 0, 1e-6, 'the handle, in the hand');
+  // Each cable runs from the moved pulley, 190 mm ahead of its rail, to its handle's hook.
+  for (const { cable, hook } of moved.cables) {
+    const ends = [-0.5, 0.5].map((y) => cable.localToWorld(V(0, y, 0)));
+    assert.ok(Math.min(...ends.map((e) => e.distanceTo(hook()))) < 1e-6, `${cable.name} ends off its hook`);
+    assert.ok(ends.some((e) => Math.abs(e.z - (-0.6 + 0.19)) < 1e-6), `${cable.name} doesn't start at the moved pulley`);
+  }
+});
+
+// A raise across the body: the hand takes the far tower's cable, which runs in front of the body.
+test('crossed, each hand takes the far tower\'s cable', () => {
+  const kit = crossover({ crossed: true, hands: [1] });
+  const hand = () => V(0.4, 1.2, 0.2);
+  const P = { hand };
+  kit.place(P, P, P);
+  kit.group.updateMatrixWorld(true);
+  close(contact(kit, 'handle_l').at[0].distanceTo(hand()), 0, 1e-6, 'the left hand\'s handle, in the hand');
+  assert.ok(kit.joints.stack_r.value > 0.3, 'the far tower\'s stack lifts');
+  close(kit.joints.stack_l.value, 0, 1e-9, 'the near tower\'s stack stays at rest');
+  assert.ok(kit.joints.swivel_r.value > 0, 'the far pulley turned toward the hand');
+  const [near, far] = kit.cables;
+  assert.ok(far.hook().distanceTo(hand()) < 0.2, 'the far tower\'s cable ends at the hand');
+  assert.ok(near.hook().distanceTo(hand()) > 0.3, 'the near tower\'s cable hangs');
 });

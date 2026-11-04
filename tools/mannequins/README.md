@@ -360,7 +360,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   moves when it is posed machine-first, so no clip changes): two towers 2210 mm apart on the centre
   line, a 2724 mm crossmember resting on their front posts, each tower a rail up the post's face, a
   stack behind between its uprights and a floor beam under both. `position` (1 to 16, or one per
-  tower) sets the carriage's hole, its pin 350 mm up at hole 1 and 132 mm higher for each. Each
+  tower) sets the carriage's hole, its pin 350 mm up at hole 1 and 132 mm higher for each. `at`
+  [x, z] stands the middle of the towers' line there, since the body stays at the origin: back for a
+  lifter a step ahead of them, to a side for one beside a tower. `hands` lists the hands that hold a
+  handle (1 the left), and with `crossed` each takes the far tower's cable. Each
   tower has a carriage (prismatic, up the rail), a swivel (revolute about the vertical, 180°) and a
   stack (prismatic, the cable drawn out up to 2743 mm, the stack rising half as far, 2:1), and each
   hand's handle is a free body, hanging from the cable's end where no pose holds it. Contacts tie
@@ -433,7 +436,8 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
   arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
 - `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
-  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`.
+  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`. An `optional` one
+  on the hands is a grip a free hand may use, so no hand is held to it.
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
   value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
