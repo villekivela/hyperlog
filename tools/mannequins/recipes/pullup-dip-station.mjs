@@ -7,7 +7,7 @@
 // uprights at 1.30 m with a handle either side splaying from 451 mm apart at the crossbar to 630 at
 // the tips, 440 mm out.
 //
-// Nothing moves, and the rig stands where it goes: the cross tube's hang line at the origin, the
+// Nothing moves, and the frame stands where it goes: the cross tube's hang line at the origin, the
 // uprights 230 mm behind it. A pose hangs the body from the grips or rests it on the handles.
 import { recipe } from '../recipe.mjs';
 import { basePlate, floorRail, knob, pad, rod, tube } from '../parts.mjs';
@@ -15,16 +15,20 @@ import { V } from '../rig.mjs';
 
 // The uprights' front face, behind the hang line: the bar's plate and the crossbar sit against it.
 const WALL = 0.23;
+// The hang line is this far out from the uprights' face: the cross tube's distance from the plate.
+const HANG = 0.23;
+// The dip crossbar's plate against the uprights' face.
+const BACKING = 0.04;
 const UPRIGHT = { x: 0.4825, w: 0.08, top: 2.55 };
 // The bar's grips are all at this height, on the cross tube and the prongs.
 const BAR = 2.3;
 const GRIP = 0.01588;
 // The prongs, from the plate to the centre of the sphere on their end, and their spacing.
-const OUTER = { x: 0.4065, reach: 0.32, sphere: 0.0508 };
+const OUTER = { x: 0.4065, reach: 0.32, sphere: 0.0508, radius: 0.0254 };
 const INNER = { x: 0.203, reach: 0.405, sphere: 0.0381 };
 // The cross tube is 230 mm out, a side of it running from the inner prong to 530 mm out, its end
 // bent back toward the plate 60 mm.
-const CROSS = { z: WALL - 0.23, half: 0.53, bend: 0.06 };
+const CROSS = { z: WALL - HANG, half: 0.53, bend: 0.06 };
 // Where the hands go (half the spacing): wide on the cross tube outside the outer prongs, standard
 // on it between the prongs, close on the V's arms, and neutral on the inner prongs, a little out
 // along them from the cross tube.
@@ -52,7 +56,7 @@ export default recipe({
     // Two uprights from the floor, joined at the top, each on a floor beam running back with a
     // cross beam between them, and a plate under each.
     const behind = WALL + UPRIGHT.w / 2;
-    const rig = [
+    const frame = [
       ...sides.flatMap((s) => [
         tube(UPRIGHT.w, V(s * UPRIGHT.x, FLOOR * 2, behind), V(s * UPRIGHT.x, UPRIGHT.top, behind), M.frame),
         ...floorRail(V(s * UPRIGHT.x, FLOOR, behind - 0.04), V(s * UPRIGHT.x, FLOOR, behind + 0.9), M),
@@ -65,11 +69,11 @@ export default recipe({
     // The bar: a plate on the uprights' faces, the prongs out from it to a sphere each, the V, and
     // the cross tube across them with its ends bent.
     const prongEnd = (p) => V(0, BAR, WALL - p.reach);
-    const spheres = [[OUTER, 0], [INNER, 0]].flatMap(([p]) => sides.map((s) => knob(M, prongEnd(p).setX(s * p.x), p.sphere)));
+    const spheres = [OUTER, INNER].flatMap((p) => sides.map((s) => knob(M, prongEnd(p).setX(s * p.x), p.sphere)));
     const bar = [
-      pad(0.965, 0.19, 0.0095, M.frame, V(0, BAR, WALL + 0.0048), { soft: 0.002 }),
+      pad(2 * UPRIGHT.x, 0.19, 0.0095, M.frame, V(0, BAR, WALL + 0.0048), { soft: 0.002 }),
       ...sides.flatMap((s) => [
-        rod(GRIP, V(s * OUTER.x, BAR, WALL), prongEnd(OUTER).setX(s * OUTER.x), M.frame, { held: true }),
+        rod(OUTER.radius, V(s * OUTER.x, BAR, WALL), prongEnd(OUTER).setX(s * OUTER.x), M.frame, { held: true }),
         rod(GRIP, V(s * INNER.x, BAR, WALL), prongEnd(INNER).setX(s * INNER.x), M.frame, { held: true }),
         rod(GRIP, V(0, BAR, WALL), V(s * INNER.x, BAR, CROSS.z), M.frame, { held: true }),
         rod(GRIP, V(s * INNER.x, BAR, CROSS.z), V(s * CROSS.half, BAR, CROSS.z), M.frame, { held: true }),
@@ -80,10 +84,10 @@ export default recipe({
 
     // The dip handles: a plate against the uprights' faces and a handle either side of the middle,
     // splaying toward their tips.
-    const base = (s) => V(s * DIP.base, DIP.height, WALL - 0.04);
-    const tip = (s) => V(s * DIP.tip, DIP.height, WALL - 0.04 - DIP.length);
+    const base = (s) => V(s * DIP.base, DIP.height, WALL - BACKING);
+    const tip = (s) => V(s * DIP.tip, DIP.height, WALL - BACKING - DIP.length);
     const handles = [
-      pad(2 * UPRIGHT.x, DIP.plate, 0.04, M.frame, V(0, DIP.height - DIP.plate / 2 - DIP.radius, WALL - 0.02), { soft: 0.004 }),
+      pad(2 * UPRIGHT.x, DIP.plate, BACKING, M.frame, V(0, DIP.height - DIP.plate / 2 - DIP.radius, WALL - BACKING / 2), { soft: 0.004 }),
       ...sides.flatMap((s) => [
         rod(DIP.radius, base(s), tip(s), M.vinyl, { held: true }),
         knob(M, tip(s), DIP.radius),
@@ -102,7 +106,7 @@ export default recipe({
       dipClose: pair((s) => along(s, DIP.close)),
     };
     return {
-      parts: [...rig, ...bar, ...handles],
+      parts: [...frame, ...bar, ...handles],
       drive() {
         const fresh = {};
         for (const [k, v] of Object.entries(points)) fresh[k] = v.map((p) => p.clone());

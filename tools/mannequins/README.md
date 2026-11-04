@@ -384,6 +384,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   options and no fit rule: the ref's heights are the mannequin's, chosen. It departs from the ref:
   the close grip is on the V's arms 280 mm apart, because the ref's 400 on a cross tube between
   the inner prongs would put the hands on the prongs, and the photos show no cross tube there; and
+  the cross tube's ends bend back toward the plate, as the photos show, not up and out as the ref has it; and
   the uprights, floor beams and the crossbar's plate are the library's generic ones.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end

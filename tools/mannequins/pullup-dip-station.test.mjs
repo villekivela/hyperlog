@@ -96,6 +96,14 @@ test('every grip is on a held part, the bar\'s 32 mm and the dip handles\' 48', 
   }
 });
 
+test('the outer prongs are 2 in fat grips and the inner ones 1.25 in', () => {
+  const kit = station();
+  const widths = (x) => held(kit).map((m) => new THREE.Box3().setFromObject(m)).filter((b) => Math.abs((b.min.x + b.max.x) / 2 - x) < 0.01 && b.max.z - b.min.z > 0.3).map((b) => (b.max.x - b.min.x) * 1000);
+  for (const w of widths(0.4065)) close(w, 50.8, 0.6, 'the outer prong\'s diameter, in mm');
+  for (const w of widths(0.203)) close(w, 31.75, 0.6, 'the inner prong\'s diameter, in mm');
+  assert.ok(widths(0.4065).length && widths(0.203).length, 'no prongs found');
+});
+
 test('the rig stands on the floor under the bar and the plate, with no fit rule', () => {
   const kit = station();
   assert.deepEqual(KITS.pullup_dip_station.fit ?? [], []);
