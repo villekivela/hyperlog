@@ -266,7 +266,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `ez_bar` | missing |
 | `trap_bar` | missing |
 | `safety_bar` | missing |
-| `smith_machine` | missing |
+| `smith_machine` | `smith_machine`, `bench`, `platform` (a low one under the front foot, for the front-foot-elevated lunge) |
 | `plate` | missing |
 | `weighted_bodyweight` | missing |
 
@@ -343,6 +343,18 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with the lever on its
   catch, and its foot plate's default (790 mm, the ref's choice for the mannequin) sits about
   140 mm higher up the beam than photo 07's.
+- `smith_machine` (#182, smith machine equipment, not a machine kind) stands where its ref puts it,
+  whatever the pose, and none of its nine exercises is posed yet: two guide rods 1.3 m apart leaning
+  7° with their tops toward the back, a front upright either side carrying a rod and a plate of 13
+  hook notches 152 mm apart behind it, a rear upright either side wrapped in a pad with four plate
+  horns through its outer face, on floor beams 1.24 m long. The bar is one body on a prismatic joint
+  along the rods, its value the metres it has moved up them from 250 mm above the floor (0.04 to
+  1.81 m); its carriages and their hook lugs are fixed on it, so no second joint is left behind by
+  a scrub. Its options: `hook`, the notch the bar hangs on, numbered from the lowest (7 by default,
+  at 1.35 m, one notch under a standing squat's bar), and `stops`, the notch the safety stops lie
+  on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
+  the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
+  kits (`bench`, `platform`).
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its

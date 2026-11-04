@@ -15,8 +15,10 @@ import rowMachine from './row-machine.mjs';
 import pulldownMachine from './pulldown-machine.mjs';
 import preacherCurl from './preacher-curl.mjs';
 import tBarRowMachine from './t-bar-row-machine.mjs';
+import smithMachine from './smith-machine.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
   pulldownMachine, preacherCurl, tBarRowMachine,
+  smithMachine,
 ].map((r) => [r.name, r]));
