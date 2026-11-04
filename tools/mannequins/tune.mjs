@@ -4,7 +4,7 @@
 // are replaced whole, not merged.
 
 /** Which hand a kit serves is a choice, not a place, so it has no slider. */
-const isChoice = (path) => /^kit\.[^.]+\.hand$/.test(path);
+const isChoice = (path) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(path);
 
 /** Numbers not yet saved, without any choice among them, which an older slider may have left. */
 export const withoutChoices = (tuned) => Object.fromEntries(Object.entries(tuned).filter(([path]) => !isChoice(path)));
@@ -14,7 +14,7 @@ export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
   bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0], 'grip.pole': [0.2, -1, 0.55] },
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
-  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0, 'feet.stagger': 0 },
+  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0, 'feet.stagger': 0, 'top.armOut': 0, 'bottom.armOut': 0 },
   free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5], 'feet.stagger': 0 },
   row: { 'grip.pole': [0.35, 0.2, -1], 'feet.y': 0 },
   knee_lever: { 'grip.pole': [1, -0.2, -0.5], 'body.head': 0 },
@@ -31,7 +31,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'point', 'heel']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'armOut', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel', 'point']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -62,6 +62,12 @@ export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.mo
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+/** `value` as the number at `path` can stand: on a whole step for one that has only those. */
+function settled(path, value) {
+  const { whole, min, max } = rangeOf(path, value);
+  return whole ? Math.min(max, Math.max(min, Math.round(value))) : value;
+}
+
 /**
  * `tuned` with a slider's `value` put at its `path`: one number of a point goes into the point,
  * which is saved whole, and a value that is what the entry already has comes out again.
@@ -71,9 +77,10 @@ export function withTuned(entry, tuned, path, value) {
   if (m) {
     const [, point, i] = m;
     const whole = JSON.parse(JSON.stringify(tuned[point] ?? baseAt(entry, point)));
-    whole[Number(i)] = value;
+    whole[Number(i)] = settled(path, value);
     return withTuned(entry, tuned, point, whole);
   }
+  if (typeof value === 'number') value = settled(path, value);
   const next = { ...tuned };
   if (same(value, baseAt(entry, path))) delete next[path]; else next[path] = value;
   return next;
@@ -149,8 +156,10 @@ export function rangeOf(path, value) {
   if (key === 'level') return { min: 0, max: 1, step: 0.05, unit: '' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
   if (RATIOS.has(key)) return { min: -1, max: 1.5, step: 0.01, unit: '' };
-  // Equipment stands where the pose needs it: a metre either way.
-  if (path.startsWith('kit.')) return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.001, unit: ' m' };
+  // A carriage stands at a hole of the 16 on its rail, a whole number however it is dragged (`settled`).
+  if (path.startsWith('kit.') && key === 'position') return { min: 1, max: 16, step: 1, unit: '', whole: true };
+  // Equipment stands where the pose needs it, and a resting hand reaches it: a metre either way.
+  if (path.startsWith('kit.') || key === 'rest') return { min: Math.round((value - 1) * 100) / 100, max: Math.round((value + 1) * 100) / 100, step: 0.001, unit: ' m' };
   return { min: Math.round((value - 0.3) * 100) / 100, max: Math.round((value + 0.3) * 100) / 100, step: 0.001, unit: ' m' };
 }
 
@@ -193,7 +202,7 @@ export function headingOf(path) {
     : section === 'feet' ? 'Feet'
     : section === 'body' || ['trunk', 'shrug', 'head', 'arch', 'lean'].includes(key) ? 'Torso'
     : ['bar', 'over', 'chest', 'hand', 'handle', 'press', 'lever', 'levers', 'sled', 'carriage'].includes(key) || section === 'bar' ? 'Bar'
-    : ['upperArm', 'forearm'].includes(key) ? 'Arms'
+    : ['upperArm', 'forearm', 'armOut'].includes(key) ? 'Arms'
     : ['shin', 'thigh', 'knee'].includes(key) ? 'Legs'
     : 'Other';
   return HEADINGS.find((h) => h.name === name);

@@ -10,16 +10,16 @@ export const POSES = {
     // (UGwmUJkTIx8); the body keeps that shape and turns about the ankles until the bar is over
     // the middle of the feet.
     trace: 'barbell_squat',
-    top: { shin: 6, thigh: 4 },
+    top: { shin: 6, thigh: 4, wrist: [32.8668, 42.4311] },
     bottom: { shin: 47, thigh: 92 },
     // Ankles this far either side of the middle, toes turned out, knees pushed out toward the toes.
     feet: { stance: 0.17, toeOut: 18, kneesOut: 0.45 },
     // The bar on the upper back: up the trunk from the hips to just past the shoulders, and behind
     // the trunk's line. It sits about 6 cm behind the shoulder joints.
-    bar: { up: 0.02, back: 0.2 },
+    bar: { up: 0.0693, back: 0.1926 },
     // The thumbs swing further out of the palms than mid-palm's default to wrap the bar behind the
     // neck (`grip.swing`).
-    grip: { width: 0.4, swing: 50 },
+    grip: { width: 0.4, swing: 50, pole: [0.6897, -0.2026, -0.6952] },
     camera: { target: [0, 0.87, 0], halfHeight: 1.02, azimuth: 62, elevation: 8 },
   },
 
@@ -393,6 +393,132 @@ export const POSES = {
     camera: { target: [0, 0.95, 0.15], halfHeight: 1.0, azimuth: 30, elevation: 10 },
   },
 
+  // The cable crossover's exercises (#197): first poses for the owner to tune. Body-first, the body
+  // at the origin and the machine at `at`, the carriages at the holes the ref gives.
+
+  // A step ahead of the towers, feet level and deep in the hinge, the pulleys high: the arms, soft at
+  // the elbow and riding with the trunk, sweep from wide to the handles together in front of the hips.
+  // `armOut` turns about the chest's own axis, so on a hinge it passes 90 to bring the hands up wide.
+  cable_crossover: {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_crossover: { position: 12, at: [0, -0.0813] } },
+    top: { shin: 10, thigh: 34, trunk: 42.4716, upperArm: 8, forearm: 33, armOut: 0, rotate: 90.8789 },
+    bottom: { shin: 10, thigh: 34, trunk: 41.9058, upperArm: -30, forearm: -5, armOut: 135, rotate: 17.5049 },
+    feet: { stance: 0.15, toeOut: 10, kneesOut: 0.2 },
+    grip: { width: 0.06, rotate: 90, pole: [0, 0, -1] },
+    camera: { target: [0, 1.0, 0.1], halfHeight: 1.3, azimuth: 30, elevation: 8 },
+  },
+
+  // A step ahead of the towers in a split stance, the pulleys at the shoulders and the cables coming
+  // from behind: neutral handles press from beside the chest until the hands nearly meet.
+  cable_chest_press: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 10, at: [0, -0.6] } },
+    top: { shin: 8, thigh: 14, trunk: 12, hand: [0.0925, 1.36, 0.68], rotate: 30.8936, wrist: [-54.8547, 0] },
+    bottom: { shin: 8, thigh: 14, trunk: -7.8149, hand: [0.33, 1.3, 0.12], rotate: 41.25 },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
+    grip: { rotate: 90, pole: [1, -0.2, -0.6], sits: 'heel' },
+    camera: { target: [0, 1.15, -0.1], halfHeight: 1.3, azimuth: 40, elevation: 8 },
+  },
+
+  // One arm from the pulley at the thigh: the handle rises from beside the hip, up and across to eye
+  // level in front of the opposite shoulder.
+  low_to_high_cable_press: {
+    like: 'cable_chest_press',
+    kit: { cable_crossover: { position: 5, hands: [1] } },
+    top: { hand: [-0.19, 1.62, 0.5] },
+    bottom: { hand: [0.33, 1.02, 0.1] },
+    grip: { arc: true, one: 1, rest: [-0.25, 0.88, 0.14] },
+  },
+
+  // Beside the right tower, the left hand on its cable, which crosses in front of the hips from a
+  // pulley at hip height: the arm rises from across the body to level with the shoulder, the right
+  // hand resting at the carriage's grip bar (a resting hand doesn't close on it).
+  high_cable_lateral_raise: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 6, at: [0.4, 0.1], crossed: true, hands: [1] } },
+    top: { shin: 4, thigh: 6, trunk: 4, hand: [0.76, 1.46, 0.1] },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [-0.06, 0.92, 0.26] },
+    feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
+    grip: { arc: true, one: 1, rotate: 30, rest: [-0.574, 1.0, 0.19], pole: [1, -0.25, -0.7] },
+    camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 20, elevation: 8 },
+  },
+
+  // The raise from a low pulley, up past the shoulder into the arm of a Y, the right hand resting at
+  // the tower's post.
+  cable_y_raise: {
+    like: 'high_cable_lateral_raise',
+    kit: { cable_crossover: { position: 1 } },
+    top: { hand: [0.6, 1.9, 0.22] },
+    grip: { rest: [-0.59, 1.15, 0.1] },
+  },
+
+  // Both arms together, a step ahead of the towers, each hand on the far tower's low cable, so the
+  // two cross behind the body: the arms, long and held in shape, swing out from beside the hips to
+  // level with the shoulders.
+  behind_the_back_cable_lateral_raise: {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_crossover: { position: 1, at: [0, -0.55], crossed: true } },
+    top: { shin: 4, thigh: 6, trunk: 10.293, upperArm: -32, forearm: -12, armOut: 84, rotate: 23.606 },
+    bottom: { shin: 4, thigh: 6, trunk: 6.7603, upperArm: -32, forearm: -12, armOut: 14, rotate: 109.6875 },
+    feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
+    grip: { width: 0.19, rotate: 30, pole: [0, 0, -1] },
+    camera: { target: [0, 1.1, -0.1], halfHeight: 1.3, azimuth: 20, elevation: 8 },
+  },
+
+  // Leaning a little forward in a split stance, the left hand on a cable from a low pulley behind:
+  // the arm stays long and the shoulder shrugs up and in.
+  cable_shrug_in: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 2, at: [-0.6, -0.75], hands: [1] } },
+    top: { shin: 6, thigh: 18, trunk: 21.7969, hand: [0.315, 0.93, -0.2311], offsets: { clavicle_l: [0, 0, 18] } },
+    bottom: { shin: 6, thigh: 18, trunk: 22.9443, hand: [0.32, 0.8373, -0.2472], offsets: { clavicle_l: [0, 0, -10] } },
+    feet: { stance: 0.14, toeOut: 10, kneesOut: 0.2, stagger: -0.3 },
+    grip: { one: 1, rest: [-0.25, 0.86, 0.14], pole: [1, -0.3, -0.7] },
+    camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
+  },
+
+  // Feet wide and knees bent over the toes, the right palm lying on the thigh, a step behind the
+  // towers' line: the left hand presses from beside the chest across the body past the middle, on a cable
+  // from the left tower's pulley at the chest, the trunk and head turning with it. The owner's tune.
+  '1_arm_cable_press_around': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 9, at: [-0.0587, 0.2719], hands: [1] } },
+    top: {
+      shin: 20, thigh: 48, trunk: 6, hand: [-0.2583, 1.3742, 0.3897],
+      offsets: { spine_01: [0, -8, 0], spine_02: [0, -8, 0], spine_03: [0, -8, 0], Head: [0, -12, 0], hand_r: [90, 0, 0] },
+      rotate: 102.6196,
+    },
+    bottom: {
+      shin: 20, thigh: 48, trunk: 6, hand: [0.2468, 1.3, 0.14],
+      offsets: { spine_01: [0, 4, 0], spine_02: [0, 4, 0], spine_03: [0, 4, 0], Head: [0, -60.8313, 0], hand_r: [90, 0, 0] },
+      rotate: 91.5454,
+    },
+    feet: { stance: 0.36, kneesOut: 0.3676, stagger: 0.14, toeOut: 20.6543 },
+    grip: { arc: true, rotate: 90, one: 1, rest: [-0.14, 0.72, -0.015], pole: [1, -0.3, -0.5], sits: 'heel' },
+    camera: { target: [0, 1.15, 0], halfHeight: 1.3, azimuth: 12, elevation: 8 },
+  },
+
+  // The right tower's pulley at the hip, to the side and behind, its cable across the body to the left hand:
+  // the upper arm stays up and out to the side, the elbow in place, and the forearm lowers from
+  // nearly straight overhead, the arm of a Y, to behind the head.
+  '1_arm_katana_cable_triceps_extension': {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_crossover: { position: 6, at: [0.4242, -0.7972], crossed: true, hands: [1] } },
+    top: { shin: 4, thigh: 8, trunk: 8, upperArm: 165, forearm: 175, armOut: 20, rotate: -24.6899, wrist: [0, 7.7161] },
+    bottom: { shin: 4, thigh: 8, trunk: 8, upperArm: 165, forearm: 290, armOut: 20, rotate: 6.0718 },
+    feet: { stance: 0.16, toeOut: 10, kneesOut: 0.2, stagger: 0.3 },
+    grip: { width: 0.17, rotate: 90, one: 1, rest: [-0.25, 0.88, 0.12], pole: [0.6925, 1, 0.3] },
+    camera: { target: [0, 1.2, -0.2], halfHeight: 1.3, azimuth: 60, elevation: 8 },
+  },
+
   // The library's next barbell exercises (#127, the barbell batch): first poses for the owner to tune.
 
   // The three squats are the first batch's barbell_squat, which the owner tuned, changed only where
@@ -417,18 +543,17 @@ export const POSES = {
     bottom: { rotate: -8.2238 },
   },
 
-  // The bar racked on the front delts, the arms crossed over it, each hand lying open on the other
-  // shoulder (`grip.spot`), not gripping the bar, the elbows high and forward (`grip.pole`). The
-  // trunk stands upright, which the traced back squat's doesn't, so it has its own shape: the
+  // The bar racked high on the front of the shoulders, the hands wrapped round it just outside them,
+  // the wrists bent back, each elbow down under its hand, as the owner's reference has it. The trunk stands upright, which the traced back squat's doesn't, so it has its own shape: the
   // trace's legs, top and bottom, with the trunk near upright; the body turns about the ankles to
   // keep the bar over the feet, as the back squat's does.
   front_squat: {
     like: 'barbell_squat',
     trace: null,
-    top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702, rotate: 141.329 },
-    bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517, rotate: 144.2005 },
-    bar: { up: 0.074, back: 0.06 },
-    grip: { crossed: true, pole: [0.35, 0.0896, 1.3], rotate: 210, spot: [0.1755, 0.0695, 0.1018] },
+    top: { shin: 3.388, thigh: -11.6002, trunk: 6.2702, rotate: 0, wrist: [-99.4474, -91.149] },
+    bottom: { shin: 31.2548, thigh: 103.7533, trunk: 25.517, rotate: 0, wrist: [-80.6189, -71.8976] },
+    bar: { up: 0.0652, back: -0.0296 },
+    grip: { width: 0.27, pole: [0.2141, -0.9277, 0.3059], sits: 'base' },
   },
 
   // Standing, the elbows by the sides: the bar curls from the thighs up to the shoulders, palms up.

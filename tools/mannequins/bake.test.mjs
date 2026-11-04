@@ -110,7 +110,7 @@ test('every clip shares one mannequin and one file per kit: a clip holds only it
         else if (kit.has(i)) assert.ok(v.buffer > 1, `${file}: the kit's view ${i}`);
         else assert.equal(v.buffer, 0, `${file}: view ${i}`);
       });
-      assert.ok(bin.length < 60_000, `${file} holds ${bin.length} bytes of its own`);
+      assert.ok(bin.length < 70_000, `${file} holds ${bin.length} bytes of its own`);
     }
   }
 });

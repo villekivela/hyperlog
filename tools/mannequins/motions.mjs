@@ -48,6 +48,8 @@ export function stateAt(e, d) {
   const turn = e.grip?.rotate ?? 0;
   if (e.top?.rotate === undefined && e.bottom?.rotate !== undefined) s.rotate = lerp(turn, e.bottom.rotate, t);
   if (e.top?.rotate !== undefined && e.bottom?.rotate === undefined) s.rotate = lerp(e.top.rotate, turn, t);
+  // An arm's lean out to the side, given at one end alone, eases from none at the other.
+  if (e.top?.armOut !== undefined || e.bottom?.armOut !== undefined) s.armOut = lerp(e.top?.armOut ?? 0, e.bottom?.armOut ?? 0, t);
   for (const [k, samples] of Object.entries(e.trace?.angles ?? {})) s[k] = sample(samples, d);
   // Each bone's offset, [x, y, z] in degrees, eased between the ends; a bone turned at one end
   // alone eases from none at the other.
@@ -530,7 +532,8 @@ export const MOTIONS = {
    * The arms swinging side-on, the upper arms and the forearms forward from hanging by `upperArm`
    * and `forearm` degrees: a curl, a preacher curl, an extension overhead. Standing from side-on
    * angles, or seated at `body.hip`. The hands hold a bar, a rope or handles `grip.width` either side
-   * of the middle; with `grip.one` one arm works and the other rests.
+   * of the middle; with `grip.one` one arm works and the other rests. `armOut` leans the arm out to
+   * the side from that plane, in degrees about the shoulder: a Y overhead.
    */
   arms(e, s, L) {
     const { hipC, u, feet } = bodyOf(e, s, L);
@@ -539,13 +542,20 @@ export const MOTIONS = {
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
     // On a machine the bar is the machine's, and the arm reaches it from the shoulder.
     const bar = s.linkage?.bar ?? heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L);
+    // Out is away from the body, which turns a hanging arm the other way from a raised one.
+    const out = rad(s.armOut ?? 0) * (Math.abs(s.upperArm) > 90 ? 1 : -1);
+    const pole = elbowsTo(e, [0.2, -1, -0.4]);
+    const leaned = (p, side) => {
+      const shoulder = sh.clone().addScaledVector(X, side * L.shW);
+      return p.sub(shoulder).applyAxisAngle(f, -side * out).add(shoulder);
+    };
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
       ...feet,
       bar, grip: e.grip.width,
-      hand: handsOf(e, (side) => bar.clone().setX(side * e.grip.width)),
-      armPole: elbowsTo(e, [0.2, -1, -0.4]),
+      hand: handsOf(e, (side) => (out ? leaned(bar.clone().setX(side * e.grip.width), side) : bar.clone().setX(side * e.grip.width))),
+      armPole: out ? (side) => pole(side).applyAxisAngle(f, -side * out) : pole,
       elbow, upper: hanging(s.upperArm),
     };
   },

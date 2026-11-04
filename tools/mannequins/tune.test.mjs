@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
-import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf } from './tune.mjs';
+import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf, rangeOf } from './tune.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
-import { turnOf } from './rig.mjs';
+import { heldAt, turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
 import { holdOf } from './grip.mjs';
 
@@ -125,7 +125,9 @@ test('the wrist sliders are labelled in words, with the sign of each direction',
 });
 
 // The owner, #127: on close_grip_bench_press the wrist sliders did nothing in the live preview.
-// Every pose with hands: each wrist number, moved from one side to the other, turns the hand.
+// Every pose with hands: each wrist number, moved from one side of where it sits to the other, turns
+// the hand. Around its own value, since one wrist number can slow another far from it: the tuned
+// squats' bend halves the tilt near straight, where no slider of theirs sits.
 test('each wrist number turns the hand as the studio poses it, on every pose with hands', async () => {
   const bytes = await readFile(MODEL);
   const body = await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
@@ -141,17 +143,19 @@ test('each wrist number turns the hand as the studio poses it, on every pose wit
     const wrists = tunables(entry).filter((t) => /^(top|bottom)\.wrist\.[01]$/.test(t.path));
     assert.equal(wrists.length, 4, `${id} offers ${wrists.map((t) => t.path)}`);
     for (const t of wrists) {
+      // A handle's drag can leave a wrist past the slider's range, where no slider can stand.
+      if (t.value < t.min || t.value > t.max) continue;
       const d = t.path.startsWith('top') ? 0 : 1;
       const hand = async (v) => {
         const stage = await live(withTuned(entry, {}, t.path, v));
         stage.pose(d);
         return turnOf(stage.rig, 'lowerarm_l').invert().multiply(turnOf(stage.rig, 'hand_l'));
       };
-      const turned = ((await hand(15)).angleTo(await hand(-15)) * 180) / Math.PI;
+      const turned = ((await hand(t.value + 15)).angleTo(await hand(t.value - 15)) * 180) / Math.PI;
       if (turned < 20) still.push(`${id} ${t.path}: ${turned.toFixed(0)}°`);
     }
   }
-  assert.deepEqual(still, [], 'from -15 to 15 the hand turned only');
+  assert.deepEqual(still, [], '15 either way the hand turned only');
 });
 
 // A bone's offset (#164) is three numbers at each end, [x, y, z] in degrees: the bones the entry
@@ -246,8 +250,67 @@ test('resetting a number of a point the entry leaves unset takes it back, and it
 });
 
 test('Tune offers no slider for which hand a kit serves: it is a choice, not a place', () => {
-  for (const id of ['single_arm_db_row', 'bayesian_cable_curl']) {
+  for (const id of ['single_arm_db_row', 'bayesian_cable_curl', 'cable_y_raise']) {
     const paths = tunables(prepare(id)).map((t) => t.path);
-    assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hand$/.test(p)), [], id);
+    assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(p)), [], id);
+  }
+});
+
+// The owner, #197: an arm in the `arms` motion leans out to the side, at either end of the rep.
+test('an arm that swings side-on can lean out to the side, end by end', async () => {
+  const entry = prepare('overhead_cable_triceps_extension');
+  const paths = tunables(entry).map((t) => t.path);
+  assert.ok(paths.includes('top.armOut') && paths.includes('bottom.armOut'), 'no slider for it');
+  assert.equal(rangeOf('top.armOut', 0).unit, '°');
+  const handX = async (tuned) => {
+    const stage = await buildStage(applyTuned(entry, tuned));
+    stage.pose(0);
+    stage.scene.updateMatrixWorld(true);
+    return heldAt(stage.rig, 'l').x;
+  };
+  const [straight, leaned] = [await handX({}), await handX({ 'top.armOut': 25, 'bottom.armOut': 25 })];
+  assert.ok(leaned - straight > 0.1, `the hand ${(leaned - straight).toFixed(3)} m further out`);
+  // Out is away from the body for a hanging arm too, not through it.
+  const hanging = applyTuned(prepare('bayesian_cable_curl'), { 'top.upperArm': 0, 'top.forearm': 10, 'bottom.upperArm': 0, 'bottom.forearm': 10, 'top.armOut': 40, 'bottom.armOut': 40 });
+  const stage = await buildStage(hanging);
+  stage.pose(0);
+  stage.scene.updateMatrixWorld(true);
+  assert.ok(heldAt(stage.rig, 'l').x > 0.3, `the hanging arm's hand at x ${heldAt(stage.rig, 'l').x.toFixed(3)}`);
+});
+
+// The owner, #197: a press-around's free arm braces straight out at the shoulder, on the far pulley.
+test('a resting hand reaches as far as an arm does', () => {
+  const rest = (i, value) => rangeOf(`grip.rest.${i}`, value);
+  assert.ok(rest(0, -0.3).min <= -0.9, `sideways to ${rest(0, -0.3).min}`);
+  assert.ok(rest(1, 0.9).max >= 1.6, `up to ${rest(1, 0.9).max}`);
+  assert.equal(rest(0, -0.3).step, 0.001);
+});
+
+// The owner, #197: the machine vanished at the first touch of `position`, a hole taken for metres.
+test('a carriage moves a hole at a time, from the first to the last', () => {
+  const t = tunables(prepare('cable_crossover')).find((n) => n.path === 'kit.cable_crossover.position');
+  assert.deepEqual({ min: t.min, max: t.max, step: t.step, unit: t.unit }, { min: 1, max: 16, step: 1, unit: '' });
+});
+
+test('a drag, a tenth of a step or a typed number lands a carriage on a hole', () => {
+  const entry = prepare('cable_crossover');
+  const at = (value) => withTuned(entry, {}, 'kit.cable_crossover.position', value)['kit.cable_crossover.position'];
+  assert.equal(at(12.6), 13);
+  assert.equal(at(13.2), 13);
+  assert.equal(at(99), 16);
+  assert.equal(at(-3), 1);
+});
+
+test('a carriage on each tower lands on a hole too', () => {
+  const entry = { ...prepare('cable_crossover'), kit: { cable_crossover: { position: [4, 12] } } };
+  const tuned = withTuned(entry, {}, 'kit.cable_crossover.position.1', 9.4);
+  assert.deepEqual(tuned['kit.cable_crossover.position'], [4, 9]);
+});
+
+test('the stage still stands with a carriage dragged anywhere along its rail', async () => {
+  const entry = prepare('cable_crossover');
+  for (const value of [1.37, 8.5, 15.001]) {
+    const stage = await buildStage(applyTuned(entry, withTuned(entry, {}, 'kit.cable_crossover.position', value)));
+    assert.ok(stage.pose(0), `dragged to ${value}`);
   }
 });

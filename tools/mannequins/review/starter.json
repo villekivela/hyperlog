@@ -45,8 +45,9 @@
   "hack_squat": {
     "ok": true,
     "note": "cant rotate wrist to align with the grips, machine looks pretty smallo and bad get better model",
-    "clip": "5f9ecb2a84742f7a",
-    "tuned": "{\"grip.rotate\":0,\"feet.stance\":0.148,\"feet.z\":0.545,\"feet.y\":0.2415,\"bottom.hip\":[0.5416,0.27],\"top.hip\":[1.01,0.05]}"
+    "clip": "3c4a708ac16c4601",
+    "tuned": "{\"grip.rotate\":0,\"feet.stance\":0.148,\"feet.z\":0.545,\"feet.y\":0.2415,\"bottom.hip\":[0.5416,0.27],\"top.hip\":[1.01,0.05]}",
+    "at": "2026-11-04T21:10:45.911Z"
   },
   "leg_extension": {
     "ok": true,
