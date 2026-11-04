@@ -85,6 +85,8 @@ export default recipe({
     const holes = Array.isArray(position) ? position : [position, position];
     for (const h of holes) if (!(Number.isInteger(h) && h >= 1 && h <= POSITIONS)) throw new Error(`The cable crossover has no position ${h}; its carriage has holes 1 to ${POSITIONS}`);
     const towers = sides.map(({ k, s }, i) => buildTower(k, s, (holes[i] - 1) * PITCH, at, M));
+    // A stack on no hand's cable stays down, so it isn't a working one.
+    for (const t of towers) if (!hands.includes(crossed ? -t.s : t.s)) t.rests();
     // The crossmember rests on the front posts' tops and runs past them, centred on the machine.
     const bridge = tube(POST, V(at[0] - BRIDGE / 2, BEAM_Y, at[1]), V(at[0] + BRIDGE / 2, BEAM_Y, at[1]), M.frame);
     bridge.userData.bridge = true;
@@ -241,6 +243,7 @@ function buildTower(k, s, raised, [atX, atZ], M) {
       span(rise, V(x, pin + carriage.position.y + WHEELS, atZ + SWIVEL_Z), V(x, TOP_Y, atZ + SWIVEL_Z));
     },
     steady: () => V(x + 0.125, pin + carriage.position.y, atZ + 0.09),
+    rests() { weights.head.userData.stack = false; },
     // Raises the stack `l` metres, less the hold the recipe format adds (`HELD`): the stack sits
     // down whole with no cable drawn, and rises half as far as the cable is drawn after that.
     lift(l) {

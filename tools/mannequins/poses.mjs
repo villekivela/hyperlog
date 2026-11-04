@@ -449,7 +449,7 @@ export const POSES = {
     top: { shin: 4, thigh: 6, trunk: 4, hand: [0.76, 1.46, 0.1] },
     bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.02, 0.92, 0.26] },
     feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
-    grip: { arc: true, one: 1, rest: [-0.574, 1.0, 0.19], pole: [1, -0.25, -0.7] },
+    grip: { arc: true, one: 1, rotate: 30, rest: [-0.574, 1.0, 0.19], pole: [1, -0.25, -0.7] },
     camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 20, elevation: 8 },
   },
 
@@ -468,7 +468,7 @@ export const POSES = {
     kit: { cable_crossover: { position: 1, at: [0.4, -0.46], crossed: true, hands: [1] } },
     top: { hand: [0.76, 1.44, -0.04] },
     bottom: { hand: [0.2, 0.92, -0.17] },
-    grip: { rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.5] },
+    grip: { rotate: -30, rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.8] },
   },
 
   // Leaning a little forward in a split stance, the left hand on a cable from a low pulley behind:
@@ -489,7 +489,7 @@ export const POSES = {
   '1_arm_cable_press_around': {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 10, at: [-0.555, -0.55], hands: [1] } },
+    kit: { cable_crossover: { position: 10, at: [-0.555, -0.75], hands: [1] } },
     top: { shin: 4, thigh: 8, trunk: 8, hand: [-0.2, 1.34, 0.5] },
     bottom: { shin: 4, thigh: 8, trunk: 8, hand: [0.44, 1.32, 0.16] },
     feet: { stance: 0.2, toeOut: 10, kneesOut: 0.2 },
