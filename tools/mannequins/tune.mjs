@@ -18,12 +18,14 @@ export const OPTIONAL = {
   chest_pad: { 'grip.pole': [0.5, 0.4, -1], 'body.look': -0.3, 'feet.kneesOut': 0.2 },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
+  hang: { 'body.look': 0.1, 'feet.kneesOut': 0 },
+  support: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.
   squat: { 'feet.y': 0, 'grip.spot': [0.02, 0.06, 0.07], 'grip.pole': [0.3, -1, -0.8] },
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'point']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';

@@ -578,4 +578,79 @@ export const POSES = {
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
+
+  // Hanging from the rack's bar, a little wider than the shoulders: from straight arms, the
+  // shoulders let up under the bar, to the chin over it, the chest leaning back to it.
+  pullup: {
+    equipment: 'bodyweight',
+    motion: 'hang',
+    kit: { power_rack: { handles: 'standard' } },
+    top: { rise: 0.485, back: 0.13, trunk: -8, thigh: 4, shin: 8, shrug: -12 },
+    bottom: { rise: 0.006, back: 0, trunk: 0, thigh: 2, shin: 4, shrug: 13 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.8, -1, 0.3] },
+    camera: { target: [0, 1.4, 0.1], halfHeight: 1.45, azimuth: 150, elevation: 8 },
+  },
+
+  // On the cross tube's ends, outside the outer prongs.
+  pullup_wide_grip: { like: 'pullup', kit: { power_rack: { handles: 'wide' } }, top: { rise: 0.43 }, grip: { swing: 45 } },
+  // On the V's arms, leaning back about 15° (the library's note).
+  close_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'close' } }, top: { trunk: -15 } },
+  // On the inner prongs, the palms facing.
+  neutral_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'neutral' } }, top: { rise: 0.495 } },
+  // The pull-up's grips turned underhand, the elbows coming down in front.
+  chinup: { like: 'pullup', grip: { rotate: 180, pole: [0.3, -1, 0.6] } },
+  chinup_wide_grip: { like: 'chinup', kit: { power_rack: { handles: 'wide' } }, top: { rise: 0.43 } },
+  close_grip_chinup: { like: 'chinup', kit: { power_rack: { handles: 'close' } }, top: { rise: 0.495 } },
+
+  // A clip a grip, as the 2-grip pulldown: set 1 overhand about 1.5 shoulder widths apart on the
+  // cross tube, set 2 underhand on the V, as near shoulder width as the bar has.
+  '2_grip_pullup': {
+    like: 'pullup',
+    grips: {
+      wide: {},
+      narrow: { kit: { power_rack: { handles: 'close' } }, grip: { rotate: 180, pole: [0.3, -1, 0.6] }, top: { rise: 0.495 } },
+    },
+  },
+
+  // Held at the bottom of the pull-up: nothing moves but the hands closing.
+  dead_hang: {
+    like: 'pullup',
+    top: { rise: 0.006, back: 0, trunk: 0, thigh: 2, shin: 4, shrug: 13 },
+  },
+
+  // The arms straight and the shoulders under the bar: the legs come up straight past level, the
+  // hips swinging forward of the shoulders.
+  hanging_leg_raise: {
+    like: 'pullup',
+    top: { rise: 0.006, back: 0, trunk: -10, thigh: 108, shin: -108, shrug: 13 },
+    camera: { target: [0, 1.5, 0.3], halfHeight: 1.35, azimuth: 110, elevation: 8 },
+  },
+
+  // Between the dip handles, the back to the upright and facing out along them: from locked arms
+  // down to the elbows at about 90°, the forearms near upright and the trunk leaning forward, the
+  // knees bent and the feet behind.
+  dip: {
+    equipment: 'bodyweight',
+    motion: 'support',
+    kit: { power_rack: { handles: 'dip' } },
+    top: { sink: -0.004, over: 0, trunk: 8, thigh: 8, shin: 45, shrug: -6 },
+    bottom: { sink: 0.285, over: 0.26, trunk: 30, thigh: 12, shin: 60, shrug: 6 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.25, 0, -1], swing: 80 },
+    camera: { target: [0, 1.3, -0.05], halfHeight: 1.2, azimuth: 120, elevation: 8 },
+  },
+  // Nearer the crosshead, the legs hanging almost straight and the upper arms behind the trunk.
+  close_grip_dip: {
+    like: 'dip',
+    kit: { power_rack: { handles: 'dipClose' } },
+    top: { trunk: 4, thigh: 10, shin: 14 },
+    bottom: { over: 0.24, trunk: 22, thigh: 16, shin: 28 },
+  },
+
+  // The plain lift with a plate on a dip belt's chain.
+  weighted_pullup: { like: 'pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
+  weighted_chinup: { like: 'chinup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
+  '2_grip_pullup_weighted': { like: '2_grip_pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
+  weighted_dip: { like: 'dip', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
 };

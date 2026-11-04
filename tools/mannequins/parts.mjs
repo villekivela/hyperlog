@@ -497,8 +497,8 @@ export function stackFrame(z, top, M) {
 }
 
 /** A shaped tube along a smooth path through `points`. */
-export function bent(key, points, radius, material, opts) {
-  const g = shape(key, () => soften(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3), 16, radius, 12, false)));
+export function bent(key, points, radius, material, { segments = 16, ...opts } = {}) {
+  const g = shape(key, () => soften(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3), segments, radius, 12, false)));
   return part(g, material, opts);
 }
 

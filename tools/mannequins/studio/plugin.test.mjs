@@ -115,6 +115,12 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   // Posed, the T-bar row machine comes as its exercise sets it up (#188).
   const tBar = await get('/api/item/kit/t_bar_row_machine');
   assert.equal(tBar.uses, 'chest_supported_t_bar_row');
+  // Posed, the power rack comes as its first exercise by id sets it up, and the dip belt with a weighted lift (#196).
+  const rack = await get('/api/item/kit/power_rack');
+  assert.equal(rack.uses, '2_grip_pullup');
+  assert.equal(rack.entry.alone, undefined);
+  const belt = await get('/api/item/kit/dip_belt');
+  assert.ok(belt.entry.kit.dip_belt, `the dip belt in ${belt.uses}`);
   // A kit no pose uses yet comes alone, if its recipe can stand without one (#176).
   const smith = await get('/api/item/kit/smith_machine');
   assert.equal(smith.uses, null);

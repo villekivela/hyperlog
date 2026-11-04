@@ -55,9 +55,9 @@ export const CABLE_MACHINES = {
 };
 
 /**
- * The stations that serve bodyweight exercises, with the exercises each is the station of. Only
- * those no pose has set up are listed; a station is not a machine kind, because the exercises on it
- * are classed `bodyweight` or `weighted_bodyweight`.
+ * The stations that serve bodyweight exercises, with the exercises each is the station of. A
+ * station is not a machine kind, because the exercises on it are classed `bodyweight` or
+ * `weighted_bodyweight`.
  */
 export const STATIONS = {
   power_rack: {
@@ -85,7 +85,7 @@ export const EQUIPMENT = {
   safety_bar: null,
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
-  weighted_bodyweight: ['power_rack'],
+  weighted_bodyweight: ['power_rack', 'dip_belt'],
 };
 
 /** Every kit's recipe, by name. */

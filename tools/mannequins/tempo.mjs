@@ -30,6 +30,9 @@ export const MOTION_TEMPOS = {
   lever_handles: tempo(1, 0.3, 2, 0.5),
   chest_pad: tempo(1, 0.3, 2, 0.5),
   bridge: tempo(2, 0.3, 1, 0.6),
+  // Lowered from the bar: the clip's first half is the eccentric.
+  hang: tempo(2, 0.3, 1, 0.6),
+  support: tempo(2, 0.3, 1, 0.6),
 };
 
 /** The entry's tempo: its own, otherwise its movement's. */
