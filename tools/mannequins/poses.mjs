@@ -927,11 +927,13 @@ export const POSES = {
     top: { hip: [0.8, 0.03], heel: 32 },
     bottom: { hip: [0.56, 0.03], heel: 50 },
     feet: { front: 0.26, back: -0.3, cross: 0.34 },
-    camera: { target: [0, 0.85, 0], halfHeight: 1.05, azimuth: 150, elevation: 8 },
+    camera: { target: [0.17, 0.85, 0], halfHeight: 1.05, azimuth: 150, elevation: 8 },
+    shadow: { size: [0.9, 1.8], at: [0.17, 0] },
   },
 
   // The 1-arm row on its feet: the right foot ahead beside the bench's end, the left back, the right
   // hand braced on the pad. Heavy, with some body English: the trunk rocks up as the dumbbell comes in.
+  // `level` holds the bell near level (7° to 9°), which a straight wrist would tip to 22° to 29°.
   '1_arm_db_kroc_row': {
     like: 'single_arm_db_row',
     motion: 'free_arms',
@@ -949,8 +951,8 @@ export const POSES = {
   db_triceps_kickback: {
     like: '1_arm_db_kroc_row',
     motion: 'arms',
-    top: { shin: 16, thigh: 55, trunk: 62, upperArm: -78, forearm: -80, rotate: 90, wrist: [0, 0], offsets: { hand_r: [-30, -32, -100] } },
-    bottom: { shin: 16, thigh: 55, trunk: 62, upperArm: -78, forearm: -10, rotate: 90, wrist: [0, 0], offsets: { hand_r: [-30, -32, -100] } },
+    top: { trunk: 62, upperArm: -78, forearm: -80, rotate: 90, wrist: [0, 0], offsets: { hand_r: [-30, -32, -100] } },
+    bottom: { trunk: 62, upperArm: -78, forearm: -10, rotate: 90, wrist: [0, 0], offsets: { hand_r: [-30, -32, -100] } },
     grip: { width: 0.25, across: null, pole: [-0.1, 0.8, -0.8], level: 0 },
   },
 
@@ -961,9 +963,9 @@ export const POSES = {
     kit: { dumbbells: { hand: 1 }, bench: { angle: 85, hinge: -0.02 } },
     body: { hip: [0.522, 0.15], trunk: 3 },
     top: { upperArm: 168, forearm: 182, rotate: 90, wrist: [0, 0] },
-    bottom: { upperArm: 168, forearm: 285, rotate: 90, wrist: [0, 0] },
+    bottom: { upperArm: 168, forearm: 263, rotate: 90, wrist: [0, 0] },
     feet: { stance: 0.2859, z: 0.4271, toeOut: 20 },
-    grip: { width: 0.2, one: 1, rest: [0.13, 1.0, 0.27], pole: [0.02, 0.5, 1], sits: 'mid' },
+    grip: { width: 0.1, one: 1, rest: [0.13, 1.0, 0.27], pole: [0.02, 0.5, 1], sits: 'mid' },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.22, azimuth: 66, elevation: 10 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },

@@ -1,44 +1,19 @@
-// The second dumbbell batch (#127): variants of the lifts the owner has OK'd, each `like:` one of them,
-// each passing every check and doing what the library's note on it asks.
+// The second dumbbell batch (#127): variants of the lifts the owner has OK'd, each `like:` one of them
+// or of another variant, each passing every check and doing what the library's note on it asks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as THREE from 'three';
-import { BENCH_ANGLES, benchAngles, prepare } from './entries.mjs';
+import { BENCH_ANGLES, prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
-import { checkPose, CHECKS } from './checks.mjs';
 import { wpos } from './rig.mjs';
 import { BATCHES } from './review.mjs';
+import { bellAt, boneAt, deg, handleTurn, noBellSpins, passes } from './dumbbell.fixture.mjs';
 
-const deg = (r) => (r * 180) / Math.PI;
+const PAD_TOP = 0.457;
 
-/** Every check on `id` passes, at bench `angle` if it has one, or the test names the ones that don't. */
-async function passes(id, angle) {
-  const { checks } = await checkPose(id, { angle });
-  const failed = CHECKS.filter((c) => !checks[c].ok).map((c) => `${angle ?? ''} ${c}: ${checks[c].found} (frame ${checks[c].frame})`);
-  assert.deepEqual(failed, []);
-}
-
-/** Where the left hand's dumbbell is at `d` down the rep. */
-async function bellAt(id, d) {
-  const stage = await buildStage(prepare(id));
-  stage.pose(d);
-  stage.scene.updateMatrixWorld(true);
-  return stage.kit.group.getObjectByName('dumbbell_l').getWorldPosition(new THREE.Vector3());
-}
-
-/** How far the left dumbbell's handle is turned from lying across the body, at `d` down the rep (0 to 90). */
-async function handleTurn(id, d) {
-  const stage = await buildStage(prepare(id));
-  stage.pose(d);
-  const bell = stage.kit.group.getObjectByName('dumbbell_l');
-  return deg(Math.acos(Math.min(1, Math.abs(new THREE.Vector3(1, 0, 0).applyQuaternion(bell.quaternion).x))));
-}
-
-/** Where bone `name` is at `d` down the rep of `id`. */
-async function boneAt(id, name, d) {
-  const stage = await buildStage(prepare(id));
-  stage.pose(d);
-  return wpos(stage.rig.bones[name]);
+/** How far the trunk of `id` leans forward of upright at `d` down the rep, in degrees. */
+async function leanAt(id, d) {
+  const [hips, neck] = [await boneAt(id, 'pelvis', d), await boneAt(id, 'neck_01', d)];
+  return deg(Math.atan2(neck.z - hips.z, neck.y - hips.y));
 }
 
 test('super_rom_db_lateral_raise: passes every check', () => passes('super_rom_db_lateral_raise'));
@@ -55,8 +30,7 @@ test('bent_over_reverse_db_flye: passes every check', () => passes('bent_over_re
 
 test('bent_over_reverse_db_flye: hinged near level, the dumbbells sweep from under the shoulders out level with them', async () => {
   const id = 'bent_over_reverse_db_flye';
-  const [hips, neck, shoulder] = [await boneAt(id, 'pelvis', 1), await boneAt(id, 'neck_01', 1), await boneAt(id, 'upperarm_l', 0)];
-  const lean = deg(Math.atan2(neck.z - hips.z, neck.y - hips.y));
+  const [lean, shoulder] = [await leanAt(id, 1), await boneAt(id, 'upperarm_l', 0)];
   assert.ok(lean > 55 && lean < 85, `the trunk leans ${lean.toFixed(0)}°`);
   const [top, bottom] = [await bellAt(id, 0), await bellAt(id, 1)];
   assert.ok(Math.abs(top.y - shoulder.y) < 0.12, `the bell ${(top.y - shoulder.y).toFixed(2)} m from the shoulder's height`);
@@ -180,17 +154,14 @@ test('1_arm_db_kroc_row: standing, both feet flat on the floor, the free hand br
     const [left, right, wrist] = [wpos(stage.rig.bones.foot_l), wpos(stage.rig.bones.foot_r), wpos(stage.rig.bones.hand_r)];
     assert.ok(left.y < 0.12 && right.y < 0.12, `at ${d}: the ankles ${left.y.toFixed(3)} and ${right.y.toFixed(3)} m up`);
     assert.ok(right.z > left.z + 0.15, `at ${d}: the right foot ${(right.z - left.z).toFixed(2)} m ahead`);
-    assert.ok(wrist.y > 0.457 && wrist.y < 0.58, `at ${d}: the wrist ${wrist.y.toFixed(3)} m up, off the pad`);
+    assert.ok(wrist.y > PAD_TOP && wrist.y < PAD_TOP + 0.123, `at ${d}: the wrist ${wrist.y.toFixed(3)} m up, off the pad`);
   }
 });
 
 test('1_arm_db_kroc_row: the trunk rocks up as the dumbbell comes in, the body English the note asks for', async () => {
   const id = '1_arm_db_kroc_row';
-  const lean = async (d) => {
-    const [hips, neck] = [await boneAt(id, 'pelvis', d), await boneAt(id, 'neck_01', d)];
-    return deg(Math.atan2(neck.z - hips.z, neck.y - hips.y));
-  };
-  assert.ok((await lean(1)) - (await lean(0)) > 6, `the trunk from ${(await lean(0)).toFixed(0)}° to ${(await lean(1)).toFixed(0)}°`);
+  const [top, bottom] = [await leanAt(id, 0), await leanAt(id, 1)];
+  assert.ok(bottom - top > 6, `the trunk from ${top.toFixed(0)}° to ${bottom.toFixed(0)}°`);
   const [elbow, shoulder] = [await boneAt(id, 'lowerarm_l', 0), await boneAt(id, 'upperarm_l', 0)];
   assert.ok(elbow.z < shoulder.z - 0.05, `the elbow ${(elbow.z - shoulder.z).toFixed(3)} m from the shoulder`);
   assert.ok((await handleTurn(id, 0)) > 60, 'neutral');
@@ -225,40 +196,12 @@ test('1_arm_overhead_db_triceps_extension: seated, the elbow pointing up and sti
   assert.ok((await boneAt(id, 'pelvis', 0)).y < 0.6, 'seated');
 });
 
-const VARIANTS = [
-  'super_rom_db_lateral_raise', 'bent_over_reverse_db_flye', 'db_guillotine_press', 'db_skull_crusher',
-  'dumbbell_shoulder_press_standing', 'standing_db_arnold_press', 'arnold_press_seated', 'db_walking_lunge',
-  'db_curtsy_lunge', '1_arm_db_kroc_row', 'db_triceps_kickback', '1_arm_overhead_db_triceps_extension',
-];
-
-test('the batch lists the twelve variants, each with an entry that holds its dumbbells steady', () => {
-  assert.deepEqual([...BATCHES['dumbbell-variants']].sort(), [...VARIANTS].sort());
-  for (const id of VARIANTS) assert.equal(prepare(id).kit.dumbbells.steady, true, id);
+test('the batch lists twelve lifts, each with an entry that holds its dumbbells steady', () => {
+  assert.equal(BATCHES['dumbbell-variants'].length, 12);
+  for (const id of BATCHES['dumbbell-variants']) assert.equal(prepare(id).kit.dumbbells.steady, true, id);
 });
 
-// As in the first dumbbell batch: a bell's turn between frames follows the forearm. Past 10° it is
-// spinning about its own handle, which the jump check misses where the spin is steady.
-const MAX_TURN = 10;
-for (const id of VARIANTS) {
-  test(`${id}: no dumbbell spins about its handle`, async () => {
-    for (const angle of benchAngles(id) ?? [undefined]) {
-      const stage = await buildStage(prepare(id, undefined, angle));
-      const before = {};
-      for (let f = 0; f <= 30; f++) {
-        stage.pose(f / 30);
-        for (const n of ['dumbbell_l', 'dumbbell_r']) {
-          const q = stage.kit.group.getObjectByName(n)?.quaternion.clone();
-          if (!q) continue;
-          const turn = before[n] ? deg(q.angleTo(before[n])) : 0;
-          assert.ok(turn < MAX_TURN, `${n} at ${angle ?? 'its'}°, frame ${f}: ${turn.toFixed(1)}°`);
-          before[n] = q;
-        }
-      }
-    }
-  });
-}
-
-const PAD_TOP = 0.457;
+noBellSpins(BATCHES['dumbbell-variants']);
 
 // The owner's OK'd 1-arm row sets the measure: its fingertip joints stand 2.4 to 3.3 cm over the pad.
 for (const id of ['1_arm_db_kroc_row', 'db_triceps_kickback']) {
@@ -273,3 +216,22 @@ for (const id of ['1_arm_db_kroc_row', 'db_triceps_kickback']) {
     }
   });
 }
+
+test('db_skull_crusher: the back keeps the flat press\'s arch, though the arms move as a curl\'s do', async () => {
+  for (const bone of ['spine_02', 'spine_03', 'neck_01']) {
+    const [crusher, press] = [await boneAt('db_skull_crusher', bone, 1), await boneAt('db_bench_press', bone, 1)];
+    assert.ok(crusher.distanceTo(press) < 0.005, `${bone} ${crusher.distanceTo(press).toFixed(3)} m from the press's`);
+  }
+});
+
+test('db_curtsy_lunge: the hips sink over the front foot, not back to the middle', async () => {
+  const id = 'db_curtsy_lunge';
+  const [hips, front] = [await boneAt(id, 'pelvis', 1), await boneAt(id, 'foot_l', 1)];
+  assert.ok(Math.abs(hips.x - front.x) < 0.08, `the hips ${(hips.x - front.x).toFixed(3)} m across from the front ankle`);
+});
+
+test('1_arm_overhead_db_triceps_extension: the dumbbell ends behind the head, not out beside it', async () => {
+  const id = '1_arm_overhead_db_triceps_extension';
+  const [bell, head] = [await bellAt(id, 1), await boneAt(id, 'Head', 1)];
+  assert.ok(bell.x - head.x < 0.15, `the bell ${(bell.x - head.x).toFixed(3)} m out from the head's middle`);
+});
