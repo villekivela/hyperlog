@@ -76,7 +76,8 @@
   "front_squat": {
     "ok": true,
     "note": "the hands should not be attached to the barbell",
-    "clip": "505b50440ce20acc",
-    "tuned": "{}"
+    "clip": "f8c485b6d352a8b2",
+    "tuned": "{}",
+    "at": "2026-11-04T21:24:03.590Z"
   }
 }
