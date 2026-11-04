@@ -453,14 +453,17 @@ export const POSES = {
     grip: { rest: [-0.59, 1.15, 0.1] },
   },
 
-  // A step ahead of the right tower's line, so the cable from the low pulley runs behind the body:
-  // the left arm rises from behind the hips to level with the shoulder.
+  // Both arms together, a step ahead of the towers, each hand on the far tower's low cable, so the
+  // two cross behind the body: the arms rise from hanging by the hips to level with the shoulders.
   behind_the_back_cable_lateral_raise: {
-    like: 'high_cable_lateral_raise',
-    kit: { cable_crossover: { position: 1, at: [0.4, -0.55] } },
-    top: { hand: [0.6, 1.36, -0.02] },
-    bottom: { hand: [0.2, 0.92, -0.17] },
-    grip: { rotate: -60, rest: [-0.3, 0.9, 0.08], pole: [1, -0.25, -0.8] },
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 1, at: [0, -0.55], crossed: true } },
+    top: { shin: 4, thigh: 6, trunk: 4, hand: [0.6, 1.36, -0.02], rotate: -30 },
+    bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.27, 0.86, -0.08], rotate: 30 },
+    feet: { stance: 0.15, toeOut: 8, kneesOut: 0.2 },
+    grip: { arc: true, pole: [1, -0.25, -0.8] },
+    camera: { target: [0, 1.1, -0.1], halfHeight: 1.3, azimuth: 20, elevation: 8 },
   },
 
   // Leaning a little forward in a split stance, the left hand on a cable from a low pulley behind:

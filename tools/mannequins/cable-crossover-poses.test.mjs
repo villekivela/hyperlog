@@ -281,6 +281,23 @@ test('the katana leans its arm out to the side, the elbow wide', async () => {
   assert.ok(hand('l').x - shoulder.x > 0.15, `the hand ${(hand('l').x - shoulder.x).toFixed(3)} m out from the shoulder`);
 });
 
+// The owner, #197, as its video has it: both arms rise together, each on the far tower's cable.
+test('the behind-the-back raise works both arms, mirrored, their cables crossing behind the body', async () => {
+  const entry = prepare('behind_the_back_cable_lateral_raise');
+  assert.ok(!entry.grip.one, 'one arm works alone');
+  assert.equal(entry.kit.cable_crossover.crossed, true);
+  const { stage, hand } = await posed('behind_the_back_cable_lateral_raise', 0);
+  assert.ok(Math.abs(hand('l').x + hand('r').x) < 0.01, `the hands at x ${hand('l').x.toFixed(3)} and ${hand('r').x.toFixed(3)}`);
+  assert.ok(Math.abs(hand('l').y - hand('r').y) < 0.01, 'the hands at different heights');
+  for (const { cable } of stage.kit.kits.cable_crossover.cables) assert.ok(pastTheHips(stage, cable) < 0, 'a cable in front of the hips');
+  // The owner, #197: 'the wrist rotates in the middle', here at 5.6° a frame, under the limit for all.
+  const steps = rollsOf(stage, 'l');
+  const worst = Math.max(...steps.map(Math.abs));
+  assert.ok(worst <= 4, `the hand rolls ${worst.toFixed(1)}° in a frame`);
+  const net = steps.reduce((a, b) => a + b, 0);
+  assert.ok(Math.abs(net) <= 15, `the hand rolls ${net.toFixed(0)}° through the rep`);
+});
+
 // The owner, #197: the toes point the way the knees do, and the knees bend well.
 test('the press-around\'s toes point where its knees do, both knees bent', async () => {
   const { at } = await posed('1_arm_cable_press_around', 0);
