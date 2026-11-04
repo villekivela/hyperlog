@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { prepare } from './entries.mjs';
 import { tunables, applyTuned, atAngle, baseAt, headingOf, HEADINGS, withTuned, labelOf, rangeOf } from './tune.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
-import { turnOf } from './rig.mjs';
+import { heldAt, turnOf } from './rig.mjs';
 import { POSES } from './poses.mjs';
 import { holdOf } from './grip.mjs';
 
@@ -232,6 +232,22 @@ test('Tune offers no slider for which hand a kit serves: it is a choice, not a p
     const paths = tunables(prepare(id)).map((t) => t.path);
     assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(p)), [], id);
   }
+});
+
+// The owner, #197: an arm in the `arms` motion leans out to the side, at either end of the rep.
+test('an arm that swings side-on can lean out to the side, end by end', async () => {
+  const entry = prepare('overhead_cable_triceps_extension');
+  const paths = tunables(entry).map((t) => t.path);
+  assert.ok(paths.includes('top.armOut') && paths.includes('bottom.armOut'), 'no slider for it');
+  assert.equal(rangeOf('top.armOut', 0).unit, '°');
+  const handX = async (tuned) => {
+    const stage = await buildStage(applyTuned(entry, tuned));
+    stage.pose(0);
+    stage.scene.updateMatrixWorld(true);
+    return heldAt(stage.rig, 'l').x;
+  };
+  const [straight, leaned] = [await handX({}), await handX({ 'top.armOut': 25, 'bottom.armOut': 25 })];
+  assert.ok(leaned - straight > 0.1, `the hand ${(leaned - straight).toFixed(3)} m further out`);
 });
 
 // The owner, #197: a press-around's free arm braces straight out at the shoulder, on the far pulley.

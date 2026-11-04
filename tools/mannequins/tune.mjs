@@ -14,7 +14,7 @@ export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
   bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0] },
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
-  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0, 'feet.stagger': 0 },
+  arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0, 'feet.stagger': 0, 'top.armOut': 0, 'bottom.armOut': 0 },
   free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5], 'feet.stagger': 0 },
   row: { 'grip.pole': [0.35, 0.2, -1], 'feet.y': 0 },
   knee_lever: { 'grip.pole': [1, -0.2, -0.5], 'body.head': 0 },
@@ -29,7 +29,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'armOut', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -200,7 +200,7 @@ export function headingOf(path) {
     : section === 'feet' ? 'Feet'
     : section === 'body' || ['trunk', 'shrug', 'head', 'arch', 'lean'].includes(key) ? 'Torso'
     : ['bar', 'over', 'chest', 'hand', 'handle', 'press', 'lever', 'levers', 'sled', 'carriage'].includes(key) || section === 'bar' ? 'Bar'
-    : ['upperArm', 'forearm'].includes(key) ? 'Arms'
+    : ['upperArm', 'forearm', 'armOut'].includes(key) ? 'Arms'
     : ['shin', 'thigh', 'knee'].includes(key) ? 'Legs'
     : 'Other';
   return HEADINGS.find((h) => h.name === name);

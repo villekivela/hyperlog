@@ -271,6 +271,15 @@ test('the katana keeps its elbow in place while the forearm extends', async () =
   assert.ok(bottom - top > 70, `the elbow bends from ${top.toFixed(0)}° to ${bottom.toFixed(0)}°`);
 });
 
+// The owner, #197, from the video: from the front the arm finishes in a Y, leaning out to the side,
+// with the elbow out wide.
+test('the katana leans its arm out to the side, the elbow wide', async () => {
+  const { hand, at } = await posed('1_arm_katana_cable_triceps_extension', 0);
+  const [shoulder, elbow] = [at('upperarm_l'), at('lowerarm_l')];
+  assert.ok(elbow.x - shoulder.x > 0.05, `the elbow ${(elbow.x - shoulder.x).toFixed(3)} m out from the shoulder`);
+  assert.ok(hand('l').x - shoulder.x > 0.15, `the hand ${(hand('l').x - shoulder.x).toFixed(3)} m out from the shoulder`);
+});
+
 // The owner, #197: the toes point the way the knees do, and the knees bend well.
 test('the press-around\'s toes point where its knees do, both knees bent', async () => {
   const { at } = await posed('1_arm_cable_press_around', 0);
