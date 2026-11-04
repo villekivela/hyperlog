@@ -1,0 +1,58 @@
+{
+  "sources": [
+    "exercises.json: one arm from a low pulley, up and across to about eye level, in front of the opposite shoulder",
+    "No technique video in the library"
+  ],
+  "lines": [
+    {
+      "says": "the arm presses up to near straight from a bent elbow by the hip",
+      "moves": "elbow_l",
+      "top": [
+        145,
+        180
+      ],
+      "bottom": [
+        70,
+        125
+      ]
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_l",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "at the top the hand is at about eye level",
+      "place": "hand_l.at",
+      "from": "head.at",
+      "axis": "y",
+      "at": "top",
+      "range": [
+        0,
+        0.2
+      ]
+    },
+    {
+      "says": "at the top the hand is in front of the opposite shoulder",
+      "place": "hand_l.at",
+      "from": "shoulder_r.at",
+      "axis": "x",
+      "at": "top",
+      "range": [
+        -0.12,
+        0.12
+      ]
+    }
+  ]
+}

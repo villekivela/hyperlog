@@ -1,5 +1,5 @@
-// Scratch folders for the tests. Each is removed when the process ends, also when a test failed,
-// so a suite run leaves nothing in the temp directory.
+// Scratch folders, for the tests and for an old commit's clips. Each is removed when the process
+// ends, also when a test failed, so a suite run leaves nothing in the temp directory.
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';

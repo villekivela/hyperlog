@@ -1658,6 +1658,14 @@ gallery (Technique videos).
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
     the joints stay within range. A pose that fails one doesn't bake.
+  - **Movement review** (the owner's idea, 2026-11-04, #206): the checks know nothing of the movement, so a
+    lift can have a movement spec, written from its technique video and research: what moves and how
+    far, what stays still, the path of the hands or the bar, and what must never happen. What a spec
+    can say exactly is an automatic check on every frame of the clip; the rest waits for a movement
+    reviewer, an agent that didn't pose the lift, reading the numbers and the renders at the top, the
+    middle and the bottom. A clear failure goes back to the worker, a doubt goes to the owner, and a
+    clean lift needs only a sample. A spec line a clip is known to fail is marked open, with what
+    waits on whom, and goes to the owner; it stays in the spec until the pose or the line changes.
   - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
     estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
     one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its
