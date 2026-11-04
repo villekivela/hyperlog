@@ -113,7 +113,7 @@ export function buildRig(root) {
     up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
     // From the wrist to the knuckles: a grip's landmarks lie along it (`grip.mjs`).
     palmLength,
-    trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
+    trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), hipW: Math.abs(rest.thigh_l.p.x), ankleY: rest.foot_l.p.y,
     // How far the foot pitches down from the ankle to the ball, standing flat.
     footPitch: Math.atan2(-footRest.y, Math.hypot(footRest.x, footRest.z)),
     // How far the middle of the sole is in front of the ankle joint.

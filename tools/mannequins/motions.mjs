@@ -8,7 +8,7 @@
 // the ankle, `thigh` puts the hip behind the knee, `trunk` leans the shoulders forward of the hips,
 // `upperArm` and `forearm` swing the elbow and the hand forward from hanging straight down.
 import * as THREE from 'three';
-import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
+import { STRAIGHT, UP, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 import { fitted } from './fit.mjs';
@@ -105,6 +105,8 @@ export function frameAt(entry, d, L) {
   // Where the bar sits in the hand and the thumb (`grip.mjs`); with `grip.one` the other hand rests.
   P.hold = holdOf(e);
   if (e.grip?.one) P.resting = -e.grip.one;
+  // With `grip.open` both hands rest flat on something, a post or a frame, and hold nothing.
+  if (e.grip?.open) P.openHands = true;
   // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
   if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;
@@ -205,9 +207,72 @@ function archedShoulders(lean, arch, L) {
 /** The hip centre and the spine's lean of a body placed on a seat or a bench: `body.hip` is [y, z]. */
 const placed = (e, s, L) => ({ hipC: V(0, ...e.body.hip), lean: spineLean(s.trunk ?? e.body.trunk, L) });
 
+/** How high a kneeling knee's joint sits off the floor. */
+const KNEE_Y = 0.07;
+/** Which way a tucked foot runs from the ankle to the ball and its top faces, in the side-on plane. */
+const TOES = V(0, -1, -0.25).normalize();
+const INSTEP = V(0, -0.25, 1).normalize();
+/** How far a tucked foot's toes bend back from it, to lie on the floor. */
+const TUCK = 72;
+
 /**
- * A body standing from its side-on angles, or seated at `body.hip` when the entry gives one: the
- * hip centre, the trunk's direction and the feet.
+ * Kneeling: the knees on the floor at `feet.z`, `feet.stance` either side, the hips over them, back
+ * by `s.thigh` degrees, the shins lying back along the floor and the toes tucked under.
+ */
+function kneeling(e, s, L) {
+  const z = e.feet.z ?? 0;
+  const hipC = V(0, KNEE_Y + L.thigh * STRAIGHT * Math.cos(rad(s.thigh)), z - L.thigh * STRAIGHT * Math.sin(rad(s.thigh)));
+  const ankleY = L.ballY - TOES.y * Math.hypot(L.ballAhead, L.ankleY - L.ballY);
+  const ankles = [-1, 1].map((side) => V(side * e.feet.stance, ankleY, z - Math.sqrt((L.shin * STRAIGHT) ** 2 - (ankleY - KNEE_Y) ** 2)));
+  return {
+    hipC,
+    feet: {
+      ankles,
+      toeOut: 0,
+      // The foot's own pitch taken out, so its toes point where they're tucked.
+      foot: () => ({
+        heading: TOES.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(INSTEP, Math.sin(L.footPitch)),
+        top: INSTEP.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(TOES, -Math.sin(L.footPitch)),
+      }),
+      kneePole: () => V(0, -0.6, 1).normalize(),
+      support: () => null,
+      offsets: { ball_l: [-TUCK, 0, 0], ball_r: [-TUCK, 0, 0] },
+    },
+  };
+}
+
+/**
+ * With `feet.lift` (1 the left foot, -1 the right) that leg leaves the floor and `s.leg` [back, out,
+ * bend] sets it, in degrees: the thigh from straight down, behind the hip and out to its side, and
+ * the knee's bend. The other foot stands as it did.
+ */
+function liftedFeet(e, s, L, hipC, feet) {
+  const side = e.feet.lift;
+  if (!side) return feet;
+  const [back, out, bend] = s.leg.map(rad);
+  const thigh = V(side * Math.sin(out) * Math.cos(back), -Math.cos(out) * Math.cos(back), -Math.sin(back));
+  const behind = V(-side * Math.sin(out) * Math.sin(back), Math.cos(out) * Math.sin(back), -Math.cos(back));
+  const shin = thigh.clone().multiplyScalar(Math.cos(bend)).addScaledVector(behind, Math.sin(bend));
+  const front = thigh.clone().multiplyScalar(Math.sin(bend)).addScaledVector(behind, -Math.cos(bend));
+  const knee = hipC.clone().addScaledVector(X, side * L.hipW).addScaledVector(thigh, L.thigh * STRAIGHT);
+  const ankles = [...feet.ankles];
+  ankles[side < 0 ? 0 : 1] = knee.addScaledVector(shin, L.shin * STRAIGHT);
+  const planted = (k) => {
+    const t = rad(feet.toeOut ?? 0) * k;
+    return { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
+  };
+  return {
+    ...feet,
+    ankles,
+    foot: (k) => (k === side ? { heading: front.clone(), top: shin.clone().negate() } : planted(k)),
+    kneePole: (k) => (k === side ? behind.clone().negate() : feet.kneePole(k)),
+    support: (k) => (k === side ? null : feet.support(k)),
+  };
+}
+
+/**
+ * A body standing from its side-on angles, seated at `body.hip` when the entry gives one, or with
+ * `body.kneel` on its knees: the hip centre, the trunk's direction and the feet.
  */
 function bodyOf(e, s, L) {
   if (e.body?.hip) {
@@ -215,7 +280,9 @@ function bodyOf(e, s, L) {
     return { hipC, u: trunkUp(lean), lean, feet: seatedFeet(e, L) };
   }
   const lean = spineLean(s.trunk, L);
-  return { hipC: standingHips(e, s, L), u: trunkUp(lean), lean, feet: standingFeet(e, L) };
+  if (e.body?.kneel) return { ...kneeling(e, s, L), u: trunkUp(lean), lean };
+  const hipC = standingHips(e, s, L);
+  return { hipC, u: trunkUp(lean), lean, feet: liftedFeet(e, s, L, hipC, standingFeet(e, L)) };
 }
 
 /**
@@ -598,7 +665,9 @@ export const MOTIONS = {
   free_arms(e, s, L) {
     const { hipC, u, lean, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
-    const at = (p, side) => V(side * p[0], p[1], p[2]);
+    // With `grip.joined` both hands hold one thing, that far either side of the point `hand` gives.
+    const joined = e.grip?.joined;
+    const at = (p, side) => (joined ? V(p[0] + side * joined, p[1], p[2]) : V(side * p[0], p[1], p[2]));
     let work = (side) => at(s.hand, side);
     if (e.grip?.arc) {
       // With `grip.arc` (a flye, a raise) the hand sweeps an arc about its shoulder from the top's
@@ -622,7 +691,7 @@ export const MOTIONS = {
       hand: handsOf(e, work),
       // Both hands on one bar (an upright row): it lies between them, and with a barbell the hands
       // hold it across the palm, knuckles along it.
-      ...(e.grip?.one ? {} : { bar: V(0, work(1).y, work(1).z) }),
+      ...(e.grip?.one ? {} : { bar: V(joined ? s.hand[0] : 0, work(1).y, work(1).z) }),
       ...(e.kit?.barbell && !e.grip?.one ? { across: (side) => X.clone().multiplyScalar(-side) } : {}),
       // `grip.across` [x, y, z] lays the knuckles along one line through the rep: front to back for
       // a raise, palms in by the sides and down with the arms out.

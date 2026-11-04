@@ -260,7 +260,10 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
       const height = (p) => p.clone().sub(plane.point).dot(plane.normal);
       const ankle = wpos(rig.bones['foot_' + k]);
       const ball = wpos(rig.bones['ball_' + k]);
-      const off = Math.max(ankle.distanceTo(target), Math.abs(height(ankle) - restAnkle), Math.abs(height(ball) - restBall));
+      // A foot on nothing, lifted or lying back from a knee, only has its place to keep.
+      const off = plane
+        ? Math.max(ankle.distanceTo(target), Math.abs(height(ankle) - restAnkle), Math.abs(height(ball) - restBall))
+        : ankle.distanceTo(target);
       note('feet', off - LIMITS.foot, f, `the ${k} foot ${(off * 100).toFixed(1)} cm off where it stands`);
     }
     const skinned = vertices.map((b) => b.mesh.getVertexPosition(b.i, new THREE.Vector3()).applyMatrix4(b.mesh.matrixWorld));
