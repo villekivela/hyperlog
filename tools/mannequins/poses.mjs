@@ -476,8 +476,8 @@ export const POSES = {
     camera: { target: [0, 1.0, -0.3], halfHeight: 1.25, azimuth: 55, elevation: 8 },
   },
 
-  // Feet wide and knees bent over the toes, the right palm lying on the thigh, a step ahead of the
-  // towers: the left hand presses from beside the chest across the body past the middle, on a cable
+  // Feet wide and knees bent over the toes, the right palm lying on the thigh, a step behind the
+  // towers' line: the left hand presses from beside the chest across the body past the middle, on a cable
   // from the left tower's pulley at the chest, the trunk and head turning with it. The owner's tune.
   '1_arm_cable_press_around': {
     equipment: 'cable',
