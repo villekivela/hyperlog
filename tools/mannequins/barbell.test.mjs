@@ -49,6 +49,23 @@ test('a hip thrust arches its back at the bottom, its shoulders still on the ben
   assert.ok(turn < 0.5, `the shoulders turned ${turn.toFixed(1)}° about the hips`);
 });
 
+// The owner, #197: the crossed hands clipped through each other, the two sides being exact mirrors.
+test('a front squat lays one arm over the other, the forearms and hands clear of each other', async () => {
+  const stage = await buildStage(prepare('front_squat'));
+  const apart = ([a, b], [c, d]) => {
+    let near = Infinity;
+    for (let i = 0; i <= 20; i++) for (let j = 0; j <= 20; j++) near = Math.min(near, a.clone().lerp(b, i / 20).distanceTo(c.clone().lerp(d, j / 20)));
+    return near;
+  };
+  for (const d of [0, 0.25, 0.5, 0.75, 1]) {
+    stage.pose(d);
+    stage.scene.updateMatrixWorld(true);
+    const [el, hl, ml, er, hr, mr] = ['lowerarm_l', 'hand_l', 'middle_01_l', 'lowerarm_r', 'hand_r', 'middle_01_r'].map((n) => wpos(stage.rig.bones[n]));
+    const gap = Math.min(apart([el, hl], [er, hr]), apart([hl, ml], [hr, mr]), apart([el, hl], [hr, mr]), apart([er, hr], [hl, ml]));
+    assert.ok(gap > 0.05, `the arms' middles ${(gap * 100).toFixed(1)} cm apart, ${d} of the way down`);
+  }
+});
+
 // A cross-arm front squat (owner, #127): the bar rides on the front delts and each hand lies open
 // on the other shoulder, over the bar, not gripping it.
 test('a front squat\'s bar rides on the front delts all through the rep', async () => {
@@ -72,9 +89,11 @@ test('a front squat\'s hands lie open on the other shoulder, not on the bar', as
   const stage = await buildStage(entry);
   const P = stage.pose(0.5);
   assert.ok(P.openHands, 'the hands grip');
-  // As far from the joint as the entry's spot on the shoulder, give or take 2 cm.
-  const spot = Math.hypot(...entry.grip.spot);
+  // As far from the joint as the entry's spot on the shoulder, give or take 2 cm, half of `grip.over`
+  // forward of it on the arm on top and back from it on the other.
+  const [across, up, forward] = entry.grip.spot;
   for (const [k, s] of [['l', 1], ['r', -1]]) {
+    const spot = Math.hypot(across, up, forward + (s * entry.grip.over) / 2);
     const other = wpos(stage.rig.bones[`upperarm_${s > 0 ? 'r' : 'l'}`]);
     // The palm, at the base of the fingers, lies on the delt in front of and above the joint.
     const palm = heldAt(stage.rig, k);
