@@ -1542,7 +1542,7 @@ gallery (Technique videos).
     round a bar lower than about 0.5 of the way from the wrist to the knuckles, and its thumb from
     coming round a press's bar below 0.65, so its heel of the palm sits there, not at a lifter's
     0.2–0.3, and the three landmarks lie close. The rope is 28 mm with 60 mm end stops, bending at each
-    fist to run through it along the knuckles, its stop against the little finger. A wrist bends only where
+    fist to run through it along the knuckles, its stop against the little finger. The owner's tuned wrist on the barbell squat (#197, 33° of flexion and 42° of radial deviation at the top) stands for the high-bar, low-bar and front squats too, by `like:`. A wrist bends only where
     the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
     frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
     wrists, with each slider named in words ("Wrist tilt: + radial (thumb side) / − ulnar
@@ -1559,8 +1559,8 @@ gallery (Technique videos).
     squats are the owner's tuned Barbell Squat changed only where the variant differs (owner, via
     the coordinator, 2026-11-03): the high bar a little higher on the traps; the low bar across the
     rear delts, leaning further to keep it over the feet; and the front squat upright with the bar
-    racked on the front delts, the arms crossed and each hand lying open on the other shoulder, not
-    gripping the bar (the mannequin's hands can't bend back into a clean grip).
+    racked high on the front of the shoulders in a clean grip, the hands wrapped round it just outside
+    them and the elbows down and forward (owner, from a reference picture, #197).
     Rows and pulls run the bar straight up and down; Tune places the bar at the bottom of a
     deadlift, a row and a bridge, and arches a hip thrust's back (owner, via the coordinator,
     2026-11-03).
@@ -1695,7 +1695,7 @@ gallery (Technique videos).
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower), the smith machine (#182) and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    with no body, its levers at rest (#176): the smith machine (#182) and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

@@ -56,7 +56,7 @@ test('wrist flexion and deviation at an end turn the hand that far from a straig
   const turn = deg(flexed.atWrist.angleTo(base.atWrist));
   assert.ok(Math.abs(turn - 20) < 5, `the hand turned ${turn.toFixed(0)}° at the wrist`);
   // An end that gives no wrist is at neutral: one given at the bottom alone leaves the top alone.
-  const bottomOnly = await posed('barbell_squat', 0, { 'bottom.wrist': [20, 0] });
+  const bottomOnly = await posed('barbell_squat', 0, { 'top.wrist': null, 'bottom.wrist': [20, 0] });
   assert.ok(deg(bottomOnly.atWrist.angleTo(base.atWrist)) < 1, 'the top moved');
 });
 
@@ -91,7 +91,7 @@ test('a back squat offers its elbows in Tune, starting where the squat puts them
 test('elbows set back and down behind the bar keep the hands on it, the wrist straight', async () => {
   // The bar seated on the palm's skin (#162) holds the hand 6-7 cm off it, so the elbows go back
   // only a little way behind the shoulders before the hand would leave the bar.
-  const back = await posed('barbell_squat', 0, { 'grip.pole': [0.3, -0.4, -1] });
+  const back = await posed('barbell_squat', 0, { 'top.wrist': null, 'grip.pole': [0.3, -0.4, -1] });
   const elbow = wpos(back.stage.rig.bones.lowerarm_l);
   const shoulder = wpos(back.stage.rig.bones.upperarm_l);
   assert.ok(elbow.z < shoulder.z - 0.01 && elbow.y < shoulder.y, `the elbow at ${elbow.toArray().map((v) => v.toFixed(2))}, the shoulder at ${shoulder.toArray().map((v) => v.toFixed(2))}`);
@@ -145,7 +145,7 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
 // check's 2 mm (#162); the barbell squat's wrapped thumb comes off its bar when tilted so.
 test('12° of ulnar tilt at a low-bar squat\'s bottom is 12° in the baked clip', async () => {
   const out = await scratch('mannequins');
-  const poses = { barbell_squat: POSES.barbell_squat, back_squat_low_bar: applyTuned(POSES.back_squat_low_bar, { 'bottom.wrist': [0, -12] }) };
+  const poses = { barbell_squat: POSES.barbell_squat, back_squat_low_bar: applyTuned(POSES.back_squat_low_bar, { 'top.wrist': null, 'bottom.wrist': [0, -12] }) };
   await bakeAll(out, { poses });
   const { clip, resources } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips.back_squat_low_bar;
   const gltf = await loadClip(path.join(out, clip), resources.map((r) => path.join(out, r)));

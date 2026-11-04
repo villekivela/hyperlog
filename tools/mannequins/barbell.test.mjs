@@ -49,9 +49,26 @@ test('a hip thrust arches its back at the bottom, its shoulders still on the ben
   assert.ok(turn < 0.5, `the shoulders turned ${turn.toFixed(1)}° about the hips`);
 });
 
-// A cross-arm front squat (owner, #127): the bar rides on the front delts and each hand lies open
-// on the other shoulder, over the bar, not gripping it.
-test('a front squat\'s bar rides on the front delts all through the rep', async () => {
+// The owner, #197, from a reference picture: a clean grip, the hands on the bar just outside the
+// shoulders, the forearms rising to it from elbows below the hands.
+test('a front squat holds the bar in a clean grip, each elbow below its hand', async () => {
+  const stage = await buildStage(prepare('front_squat'));
+  for (const d of [0, 0.5, 1]) {
+    const P = stage.pose(d);
+    stage.scene.updateMatrixWorld(true);
+    assert.ok(!P.openHands, 'the hands lie open');
+    for (const k of ['l', 'r']) {
+      const [shoulder, elbow, hand] = [`upperarm_${k}`, `lowerarm_${k}`, `hand_${k}`].map((n) => wpos(stage.rig.bones[n]));
+      assert.ok(elbow.y < shoulder.y - 0.1, `the ${k} elbow ${(elbow.y - shoulder.y).toFixed(2)} m off the shoulder's height`);
+      // The owner, #197: each forearm rises to the bar from its own side, not from the middle.
+      assert.ok(Math.abs(elbow.x) > Math.abs(hand.x) - 0.04, `the ${k} elbow at x ${elbow.x.toFixed(2)}, inside the hand at ${hand.x.toFixed(2)}`);
+      assert.ok(hand.y > elbow.y + 0.1, `the ${k} hand ${(hand.y - elbow.y).toFixed(2)} m above the elbow`);
+      assert.ok(Math.abs(hand.x) > Math.abs(shoulder.x) - 0.08, `the ${k} hand at x ${hand.x.toFixed(2)}, inside the shoulder`);
+    }
+  }
+});
+
+test('a front squat\'s bar rides high on the shoulders all through the rep', async () => {
   const stage = await buildStage(prepare('front_squat'));
   let first;
   for (let f = 0; f < FRAMES; f++) {
@@ -61,14 +78,17 @@ test('a front squat\'s bar rides on the front delts all through the rep', async 
     const up = off.dot(P.u);
     const forward = off.dot(front);
     // Over the front of the shoulders, as high on them as the entry puts it, and it stays there.
-    assert.ok(up > -0.01 && up < 0.13 && forward > 0.03 && forward < 0.12, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm in front of the shoulders`);
+    assert.ok(up > 0 && up < 0.09 && forward > 0.03 && forward < 0.2, `frame ${f}: the bar ${(up * 100).toFixed(1)} cm up and ${(forward * 100).toFixed(1)} cm forward`);
     (first ??= [up, forward]);
     assert.ok(Math.abs(up - first[0]) < 0.01 && Math.abs(forward - first[1]) < 0.01, `frame ${f}: the bar slid on the shoulders`);
   }
 });
 
-test('a front squat\'s hands lie open on the other shoulder, not on the bar', async () => {
-  const entry = prepare('front_squat');
+// A cross-arm hold (#127): no pose takes it now, the front squat having a clean grip, but `grip.crossed`
+// still lays each hand open on the other shoulder, over the bar, not gripping it.
+test('a cross-arm hold lays each hand open on the other shoulder, not on the bar', async () => {
+  const held = { ...POSES.front_squat, grip: { crossed: true, pole: [0.35, 0.0896, 1.3], rotate: 210, spot: [0.1755, 0.0695, 0.1018] }, bar: { up: 0.074, back: 0.06 } };
+  const entry = prepare('front_squat', { ...POSES, front_squat: held });
   const stage = await buildStage(entry);
   const P = stage.pose(0.5);
   assert.ok(P.openHands, 'the hands grip');

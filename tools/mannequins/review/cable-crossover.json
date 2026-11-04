@@ -1,0 +1,47 @@
+{
+  "1_arm_cable_press_around": {
+    "ok": true,
+    "clip": "75d1fce4a5a0552c",
+    "at": "2026-11-04T17:52:59.263Z"
+  },
+  "1_arm_katana_cable_triceps_extension": {
+    "ok": true,
+    "clip": "6c7cec4646047339",
+    "at": "2026-11-04T19:50:59.008Z"
+  },
+  "behind_the_back_cable_lateral_raise": {
+    "ok": true,
+    "clip": "e731f7d4d50e312e",
+    "at": "2026-11-04T20:15:36.491Z"
+  },
+  "cable_chest_press": {
+    "ok": true,
+    "clip": "1cfc448470ad9675",
+    "at": "2026-11-04T20:19:22.127Z"
+  },
+  "cable_crossover": {
+    "ok": true,
+    "clip": "28e76f34f7907db5",
+    "at": "2026-11-04T20:47:50.676Z"
+  },
+  "cable_shrug_in": {
+    "ok": true,
+    "clip": "e324368beb850d7d",
+    "at": "2026-11-04T20:50:48.810Z"
+  },
+  "cable_y_raise": {
+    "ok": true,
+    "clip": "01e14b677fc65eac",
+    "at": "2026-11-04T20:51:22.798Z"
+  },
+  "high_cable_lateral_raise": {
+    "ok": true,
+    "clip": "3189ff70943367aa",
+    "at": "2026-11-04T20:52:09.113Z"
+  },
+  "low_to_high_cable_press": {
+    "ok": true,
+    "clip": "c8318575c83a0936",
+    "at": "2026-11-04T20:52:51.593Z"
+  }
+}
