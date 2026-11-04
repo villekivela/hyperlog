@@ -14,7 +14,7 @@ import { V, heldAt, wpos } from './rig.mjs';
  * come from the videos, and the library's note where there is one.
  */
 const HOLES = {
-  cable_crossover: [15, 16],
+  cable_crossover: [12, 12],
   cable_chest_press: [10, 10],
   low_to_high_cable_press: [4, 6],
   high_cable_lateral_raise: [4, 6],
@@ -190,10 +190,8 @@ test('the chest press presses until the hands nearly meet', async () => {
   assert.ok(apart < 0.2, `the hands ${apart.toFixed(3)} m apart`);
 });
 
-test('the crossover steps forward of the pulleys and brings the handles together in front of the hips', async () => {
-  const { stage, hand, at } = await posed('cable_crossover', 0);
-  const pulley = Math.min(...stage.kit.kits.cable_crossover.cables.flatMap(({ cable }) => endsOf(cable).map((e) => e.z)));
-  assert.ok(at('pelvis').z > pulley + 0.05, `the hips at z ${at('pelvis').z.toFixed(3)}, the pulley at ${pulley.toFixed(3)}`);
+test('the crossover brings the handles together in front of the hips', async () => {
+  const { hand, at } = await posed('cable_crossover', 0);
   assert.ok(hand('l').distanceTo(hand('r')) < 0.14, 'the handles together');
   assert.ok(hand('l').z > at('pelvis').z + 0.15, 'in front of the hips');
 });

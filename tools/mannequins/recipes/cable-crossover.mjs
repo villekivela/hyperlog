@@ -77,7 +77,7 @@ export default recipe({
   // is the fit rule.
   fit: [{
     sets: 'position',
-    rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 2 or 3 for a shrug-in, 4 to 6 from the thigh to the hip (the high lateral raise cable is at hole 6), 10 at the standing shoulder (7 seated), 15 or 16 for a crossover or a pushdown',
+    rule: 'the carriage at the hole where the cable meets the hand level with its start: hole 1 for a curl or a kickback, 2 or 3 for a shrug-in, 4 to 6 from the thigh to the hip (the high lateral raise cable is at hole 6), 9 or 10 at the chest and shoulder (7 seated), 12 for a crossover, 15 or 16 for a pushdown',
   }],
   build({ position = 10, hands = [1, -1], at = [0, 0], crossed = false } = {}, M) {
     const holes = Array.isArray(position) ? position : [position, position];
