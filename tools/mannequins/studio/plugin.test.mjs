@@ -5,13 +5,13 @@
 // nowhere.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import { studio, VIDEOS } from './plugin.mjs';
 import { KITS } from '../kit.mjs';
+import { scratch } from '../tmp.mjs';
 
 const TOOL = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const LIBRARY = JSON.parse(await readFile(path.join(TOOL, '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json'), 'utf8'));
@@ -30,10 +30,10 @@ let offline = false;
 const BYTES = Buffer.from('not really an mp4, but bytes to serve');
 
 before(async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'studio-'));
+  const dir = await scratch('studio');
   poses = path.join(dir, 'poses.mjs');
-  review = await mkdtemp(path.join(tmpdir(), 'studio-review-'));
-  videos = await mkdtemp(path.join(tmpdir(), 'studio-videos-'));
+  review = await scratch('studio-review');
+  videos = await scratch('studio-videos');
   // The squat's hands a metre off its bar: the hands check fails it.
   await writeFile(poses, ORIGINAL.replace(/(\n  barbell_rdl: \{)/, "\n  barbell_lunge: { like: 'barbell_squat', grip: { width: 1.4 } },$1"));
   server = await createServer({
@@ -137,7 +137,7 @@ test('a save writes the tuned numbers into poses.mjs with its comments kept, the
   assert.equal(res.status, 200, await res.clone().text());
   const after = await readFile(poses, 'utf8');
   const before = ORIGINAL.replace(/(\n  barbell_rdl: \{)/, "\n  barbell_lunge: { like: 'barbell_squat', grip: { width: 1.4 } },$1");
-  assert.equal(after, before.replace('grip: { width: 0.4, elbows: 0.9 }', 'grip: { width: 0.45, elbows: 0.9 }'));
+  assert.equal(after, before.replace('grip: { width: 0.4, elbows: 0.9, swing: 45 }', 'grip: { width: 0.45, elbows: 0.9, swing: 45 }'));
   assert.deepEqual(baked, [after]);
   // The studio poses from the file as it is now.
   assert.equal((await get('/api/item/exercise/barbell_bench_press')).entry.grip.width, 0.45);

@@ -244,3 +244,10 @@ test('resetting a number of a point the entry leaves unset takes it back, and it
     assert.ok(listed(back).includes(path), `${path} has no slider after a reset`);
   }
 });
+
+test('Tune offers no slider for which hand a kit serves: it is a choice, not a place', () => {
+  for (const id of ['single_arm_db_row', 'bayesian_cable_curl']) {
+    const paths = tunables(prepare(id)).map((t) => t.path);
+    assert.deepEqual(paths.filter((p) => /^kit\.[^.]+\.hand$/.test(p)), [], id);
+  }
+});

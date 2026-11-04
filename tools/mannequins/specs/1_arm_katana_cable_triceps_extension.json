@@ -1,0 +1,54 @@
+{
+  "sources": [
+    "technique video OpRMRhr0Ycc from 4:55",
+    "exercises.json: extend overhead, stretching the long head"
+  ],
+  "lines": [
+    {
+      "says": "the forearm opens to near straight overhead and folds deep behind the head",
+      "moves": "elbow_l",
+      "top": [
+        150,
+        180
+      ],
+      "bottom": [
+        40,
+        80
+      ]
+    },
+    {
+      "says": "the elbow stays in place: only the forearm swings",
+      "still": "elbow_l.at",
+      "within": 0.03
+    },
+    {
+      "says": "the upper arm stays up by the head",
+      "still": "shoulder_l",
+      "within": 10
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_l",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "at the bottom the hand is behind the head, the elbow pointing up",
+      "look": "stretch",
+      "at": [
+        "bottom"
+      ],
+      "view": "side"
+    }
+  ]
+}

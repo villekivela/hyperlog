@@ -4,17 +4,17 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
 import { BATCHES, addNote, batchStatus, batchReviewing, phoneChecked, readNotes, setOk } from './review.mjs';
 import { clipContent, readGlb, writeGlb } from './glb.mjs';
 import { POSES } from './poses.mjs';
+import { scratch } from './tmp.mjs';
 
 let clips;
 before(async () => {
-  clips = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  clips = await scratch('mannequins');
   await bakeAll(clips);
 });
 
@@ -29,7 +29,7 @@ const sha = async (...files) => {
   }
   return hash.digest('hex').slice(0, 16);
 };
-const reviewDir = () => mkdtemp(path.join(tmpdir(), 'review-'));
+const reviewDir = () => scratch('review');
 const json = async (file) => JSON.parse(await readFile(file, 'utf8'));
 
 test('the first batch is the prototype\'s seven exercises and the close-grip pulldown', () => {
@@ -136,7 +136,7 @@ test('an OK holds when another exercise\'s parts join the kit file its clip shar
   // A cable exercise baked before the pulldowns, at a column of its own: its parts go into the
   // cable tower's file ahead of theirs.
   const poses = { ...POSES, a_cable_row: { like: 'lat_pulldown', kit: { cable_tower: { column: 1.1 } } } };
-  const again = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  const again = await scratch('mannequins');
   await bakeAll(again, { poses });
   assert.notEqual((await readFile(path.join(again, 'kit_cable_tower.bin'))).length, (await readFile(path.join(clips, 'kit_cable_tower.bin'))).length);
   const { done, exercises } = await batchStatus('prototype', { dir, clips: again });
@@ -192,7 +192,7 @@ test('an adjustable-bench pose\'s OK names the clip of every angle it is baked a
   assert.equal(clip, await sha(...files));
   assert.equal((await batchStatus('adjustable-bench', { dir, clips })).exercises[0].state, 'ok');
   // The OK holds until any of the seven is baked differently.
-  const copy = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  const copy = await scratch('mannequins');
   for (const f of await readdir(clips)) await writeFile(path.join(copy, f), await readFile(path.join(clips, f)));
   const file = path.join(copy, 'db_incline_press_75.glb');
   const baked = readGlb(await readFile(file));

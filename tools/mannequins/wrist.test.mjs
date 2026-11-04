@@ -7,14 +7,14 @@ import { buildStage } from './stage.mjs';
 import { applyTuned, tunables } from './tune.mjs';
 import { handlesAt } from './handles.mjs';
 import * as THREE from 'three';
-import { mkdtemp, readFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { bakeAll } from './bake.mjs';
 import { loadClip } from './glb.mjs';
 import { POSES } from './poses.mjs';
 import { contactsOf } from './checks.mjs';
 import { X, gripTarget, heldAt, turnOf, wpos } from './rig.mjs';
+import { scratch } from './tmp.mjs';
 
 const deg = (r) => (r * 180) / Math.PI;
 const posed = async (id, d, tuned = {}) => {
@@ -144,7 +144,7 @@ for (const [id, d] of [['barbell_squat', 0], ['barbell_bench_press', 1], ['lat_p
 // On the low-bar squat, 12°: the hand, tilted on the bar it holds, still meets it within the contact
 // check's 2 mm (#162); the barbell squat's wrapped thumb comes off its bar when tilted so.
 test('12° of ulnar tilt at a low-bar squat\'s bottom is 12° in the baked clip', async () => {
-  const out = await mkdtemp(path.join(tmpdir(), 'mannequins-'));
+  const out = await scratch('mannequins');
   const poses = { barbell_squat: POSES.barbell_squat, back_squat_low_bar: applyTuned(POSES.back_squat_low_bar, { 'bottom.wrist': [0, -12] }) };
   await bakeAll(out, { poses });
   const { clip, resources } = JSON.parse(await readFile(path.join(out, 'mannequins.json'), 'utf8')).clips.back_squat_low_bar;

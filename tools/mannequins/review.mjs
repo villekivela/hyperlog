@@ -51,6 +51,11 @@ export const BATCHES = {
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
     'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
   ],
+  // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).
+  dumbbell: [
+    'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',
+    'db_romanian_deadlift', 'single_arm_db_row', 'db_lunge', 'db_shrug',
+  ],
 };
 
 const idsOf = (name) => {
@@ -62,13 +67,16 @@ const idsOf = (name) => {
 /** The batch exercise `id` is reviewed in now: the latest in BATCHES that lists it, or null. */
 export const batchReviewing = (id) => Object.keys(BATCHES).findLast((name) => BATCHES[name].includes(id)) ?? null;
 
+/** The index of the clips in `clips`. */
+export const readIndex = async (clips) => JSON.parse(await readFile(path.join(clips, 'mannequins.json'), 'utf8'));
+
 /**
  * The files of the clip `id`, from the index in `clips`: its own `clip` (an adjustable bench's
  * typical angle), the clip of each bench angle (`angles`, by degrees, none for another pose), the
  * files they read (`shared`), and every clip file an OK names (`all`).
  */
-async function filesOf(clips, id) {
-  const index = JSON.parse(await readFile(path.join(clips, 'mannequins.json'), 'utf8'));
+export async function filesOf(clips, id) {
+  const index = await readIndex(clips);
   const entry = index.clips[id];
   const at = (f) => path.join(clips, f);
   const angles = Object.fromEntries(Object.entries(entry.bench?.clips ?? {}).map(([a, c]) => [a, { file: at(c.clip), camera: c.camera }]));

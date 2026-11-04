@@ -1576,6 +1576,16 @@ gallery (Technique videos).
     upright, as the video on rack-mounted handles shows. The 2-Grip Pull-Up is a clip a grip, as the
     pulldown: set 1 wide and overhand, set 2 narrow and underhand. The weighted lifts carry a plate
     on a dip belt's chain, plumb in front of the thighs at about mid-thigh.
+    The dumbbell batch (#127) comes ahead of the rest of the barbell lifts (owner, 2026-11-04). Its
+    lunge is a split stance held through the rep: the feet stay planted, the back heel up on the
+    ball of the foot, and the hips drop between them. A 1-arm row carries one dumbbell, one knee and
+    the same-side hand on the flat bench and the other foot on the floor (owner, 2026-11-04). The
+    Dumbbell Bench Press's and the Incline Press's wrists flow rather than stay straight (owner,
+    2026-11-04): the hand stays square to the dumbbell, the wrist bends with the forearm's lean and
+    the dumbbell rocks a little, and one number sets the share between them. A dumbbell turns with
+    the hand holding it and never rolls in it. The goblet squat and the overhead triceps extension wait for
+    a later batch: both cup one dumbbell's head in two hands, and the hand only closes round a
+    handle so far.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a
@@ -1658,6 +1668,14 @@ gallery (Technique videos).
   - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
     the joints stay within range. A pose that fails one doesn't bake.
+  - **Movement review** (the owner's idea, 2026-11-04, #206): the checks know nothing of the movement, so a
+    lift can have a movement spec, written from its technique video and research: what moves and how
+    far, what stays still, the path of the hands or the bar, and what must never happen. What a spec
+    can say exactly is an automatic check on every frame of the clip; the rest waits for a movement
+    reviewer, an agent that didn't pose the lift, reading the numbers and the renders at the top, the
+    middle and the bottom. A clear failure goes back to the worker, a doubt goes to the owner, and a
+    clean lift needs only a sample. A spec line a clip is known to fail is marked open, with what
+    waits on whom, and goes to the owner; it stays in the spec until the pose or the line changes.
   - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
     estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
     one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its
