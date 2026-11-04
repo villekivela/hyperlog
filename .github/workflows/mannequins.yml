@@ -42,10 +42,15 @@ jobs:
         run: node --test --test-concurrency=3 committed.test.mjs bake.test.mjs bake-only.test.mjs suite.test.mjs
 
   # Every test in tools/mannequins/, so a test added with a change runs on the PR and not only on
-  # the worker's machine. A failing test fails the job, and the job is required for a merge.
+  # the worker's machine. A failing test fails its shard, and the shards are required for a merge.
+  # One runner took 21.5 minutes, so the files are split across four.
   suite:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: tools/mannequins
@@ -60,5 +65,5 @@ jobs:
 
       - run: npm ci
 
-      - name: Every mannequin test
-        run: npm test
+      - name: Every mannequin test, shard ${{ matrix.shard }} of 4
+        run: npm test -- --test-shard=${{ matrix.shard }}/4
