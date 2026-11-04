@@ -15,7 +15,6 @@ import {
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
-const IN = 0.0254;
 // The axes: 1.62 m up, either side of the centre line, over the shoulders' place (z 0). A lever is
 // 0.48 m, and at rest points this far behind straight out to its side.
 const AXIS = { x: 0.2, y: 1.62, z: 0 };
@@ -27,7 +26,7 @@ const SWEEP = rad(120);
 const GRIP_Y = 1.05;
 const GRIP = 0.017;
 const GRIP_OFF = 0.07;
-// The seat's top and z, its range, and how far the hips sit above it.
+// The seat's top and z ([y, z]), its range, and how far the hips sit above it.
 const SEAT = [0.42, 0.02];
 const SEAT_RANGE = [0.4, 0.56];
 const SITS = 0.09;
@@ -61,6 +60,7 @@ export default recipe({
   ],
   build({ seat = SEAT } = {}, M) {
     const sides = [-1, 1];
+    const axisOf = (s) => V(s * AXIS.x, AXIS.y, AXIS.z);
     const padY = seat[0] + BACK.above + BACK.height / 2;
     const padZ = BACK.face - BACK.thick / 2;
     const unit = V(0, TOP - 0.07, 0);
@@ -100,28 +100,28 @@ export default recipe({
       const foot = end.clone().setY(GRIP_Y - 0.12);
       const top = end.clone().setY(GRIP_Y + 0.12);
       // The grip stands this far in along the lever from the drop arm, joined to it by a stub at each end.
-      const inward = V(s * AXIS.x, AXIS.y, AXIS.z).sub(end).setY(0).normalize().multiplyScalar(GRIP_OFF);
+      const inward = axisOf(s).sub(end).setY(0).normalize().multiplyScalar(GRIP_OFF);
       const lever = part(rodGeometry(0.025), M.frame);
-      span(lever, V(s * AXIS.x, AXIS.y, AXIS.z), end);
+      span(lever, axisOf(s), end);
       const drop = part(rodGeometry(0.022), M.frame);
       span(drop, end, foot);
       const vertical = part(rodGeometry(GRIP), M.vinyl, { held: true });
       span(vertical, foot.clone().add(inward), top.clone().add(inward));
-      const across = [foot, top].map((from) => {
+      const stubs = [foot, top].map((from) => {
         const stub = part(rodGeometry(GRIP), M.vinyl, { held: true });
         span(stub, from, from.clone().add(inward));
         return stub;
       });
-      const hub = turnedPart(wheelGeometry(0.035, 0.05), M.pulley, V(s * AXIS.x, AXIS.y, AXIS.z), { solid: false });
+      const hub = turnedPart(wheelGeometry(0.035, 0.05), M.pulley, axisOf(s), { solid: false });
       const pin = turnedPart(rollerGeometry(0.03, 0.05), M.pulley, end, { solid: false });
-      return { body: [hub, lever, pin, drop, vertical, ...across], point: end.clone().add(inward).setY(GRIP_Y) };
+      return { body: [hub, lever, pin, drop, vertical, ...stubs], point: end.clone().add(inward).setY(GRIP_Y) };
     });
     return {
       parts: [...frame, ...arms.flatMap((a) => a.body)],
       bodies: { left: arms[0].body, right: arms[1].body },
       drive() {
         return {
-          joints: Object.fromEntries(sides.map((s, i) => [['left', 'right'][i], { value: 0, origin: V(s * AXIS.x, AXIS.y, AXIS.z) }])),
+          joints: Object.fromEntries(sides.map((s, i) => [['left', 'right'][i], { value: 0, origin: axisOf(s) }])),
           points: { leftGrip: [arms[0].point.clone()], rightGrip: [arms[1].point.clone()], backPad: [V(0, padY, padZ)] },
         };
       },

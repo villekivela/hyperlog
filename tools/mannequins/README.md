@@ -448,7 +448,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   hands meet in front of the chest) and the rear delt fly (the hands sweep out to the shoulders' line).
   Contacts: `leftGrip` and `rightGrip` (hands) on the arms, `backPad` (back) on the frame. Its one
   fit rule sets `seat`, `[y, z]`, so the shoulders are level with the grips, 0.40 to 0.56 m up. It stands
-  where its ref puts it, and the studio shows it alone (`npm run studio`, then the list's "pec deck" kit, marked unused). It departs from the ref: the stack stays down,
+  where its ref puts it, and the studio shows it alone (`npm run studio`, then the list's "pec deck"
+  kit, marked unused). It departs from the ref: the stack stays down,
   because two arms pull it and a stack is tied to one joint; the back pad is fixed, not laid along the
   trunk; and the seat, start angles and lever radius are the ref's chosen numbers.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
