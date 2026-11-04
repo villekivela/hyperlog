@@ -7,22 +7,23 @@
 // reads it as that commit baked it, and `--only` keeps those numbers. A point is in metres, and
 // everything else in degrees.
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, promisify } from 'node:util';
 import * as THREE from 'three';
 import { deg } from './angles.mjs';
 import { CLIPS } from './bake.mjs';
-import { loadClip, readGlb } from './glb.mjs';
+import { nodeOfTrack, openClip, poseFrame } from './glb.mjs';
+import { readIndex } from './review.mjs';
+import { wpos } from './rig.mjs';
 import { scratch } from './tmp.mjs';
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-const at = (scene, name) => scene.getObjectByName(name).getWorldPosition(new THREE.Vector3());
+const at = (scene, name) => wpos(scene.getObjectByName(name));
 
 /** The angle at `b` on the way from `a` to `c`: 180° is a straight limb. */
-const inside = (a, b, c) => deg(a.clone().sub(b).angleTo(c.clone().sub(b)));
+const jointAngle = (a, b, c) => deg(a.clone().sub(b).angleTo(c.clone().sub(b)));
 
 /** Where each named point of the body is, by the bone it sits on. */
 const POINTS = { pelvis: 'pelvis', head: 'Head' };
@@ -53,8 +54,8 @@ function measure(scene, hands) {
     const [shoulder, elbow, wrist] = [`upperarm_${k}`, `lowerarm_${k}`, `hand_${k}`].map((b) => at(scene, b));
     const [hip, knee, ankle] = [`thigh_${k}`, `calf_${k}`, `foot_${k}`].map((b) => at(scene, b));
     const fore = wrist.clone().sub(elbow).normalize();
-    row[`elbow_${k}`] = inside(shoulder, elbow, wrist);
-    row[`knee_${k}`] = inside(hip, knee, ankle);
+    row[`elbow_${k}`] = jointAngle(shoulder, elbow, wrist);
+    row[`knee_${k}`] = jointAngle(hip, knee, ankle);
     row[`hip_${k}`] = deg(spine.angleTo(knee.clone().sub(hip)));
     row[`shoulder_${k}`] = 180 - deg(spine.angleTo(elbow.clone().sub(shoulder)));
     row[`wrist_${k}`] = deg(at(scene, `middle_01_${k}`).sub(wrist).angleTo(fore));
@@ -81,41 +82,22 @@ function turned(before, now) {
  */
 function measurePart(part, seen) {
   const now = part.getWorldQuaternion(new THREE.Quaternion());
-  const where = part.getWorldPosition(new THREE.Vector3());
+  const where = wpos(part);
   const length = new THREE.Vector3(1, 0, 0).applyQuaternion(now);
-  const out = seen?.out ?? (Math.sign(length.x) * (where.x < 0 ? -1 : 1) || 1);
-  const numbers = { at: where.toArray(), tilt: out * deg(Math.asin(length.y)), ...turned(seen?.now ?? now, now) };
-  return { seen: { now, out }, numbers };
+  const outward = seen?.outward ?? (Math.sign(length.x) * (where.x < 0 ? -1 : 1) || 1);
+  const numbers = { at: where.toArray(), tilt: outward * deg(Math.asin(length.y)), ...turned(seen?.now ?? now, now) };
+  return { seen: { now, outward }, numbers };
 }
 
 /** The parts of the kit that move and keep their size: a bell or a bar, not a cable stretching. */
 function movingParts(scene, tracks) {
   const kit = scene.getObjectByName('kit');
-  const nameOf = (track) => track.name.slice(0, track.name.lastIndexOf('.'));
-  const stretching = new Set(tracks.filter((t) => t.name.endsWith('.scale')).map(nameOf));
-  const names = new Set(tracks.map(nameOf).filter((n) => !stretching.has(n)));
+  const stretching = new Set(tracks.filter((t) => t.name.endsWith('.scale')).map(nodeOfTrack));
+  const names = new Set(tracks.map(nodeOfTrack).filter((n) => !stretching.has(n)));
   return [...names].flatMap((n) => {
     const part = kit?.getObjectByName(n);
     return part ? [part] : [];
   });
-}
-
-/** Puts the scene at frame `f` of the clip's tracks. */
-export function poseFrame(scene, tracks, f) {
-  for (const track of tracks) {
-    const dot = track.name.lastIndexOf('.');
-    const size = track.getValueSize();
-    scene.getObjectByName(track.name.slice(0, dot))?.[track.name.slice(dot + 1)].fromArray(track.values, f * size);
-  }
-  scene.updateMatrixWorld(true);
-}
-
-/** The scene and the tracks of the clip in `file`, whose shared files lie beside it. */
-export async function openClip(file) {
-  const { json } = readGlb(await readFile(file));
-  const resources = json.buffers.flatMap((b) => (b.uri ? [path.join(path.dirname(file), b.uri)] : []));
-  const { scene, animations: [{ tracks }] } = await loadClip(file, resources);
-  return { scene, tracks };
 }
 
 /** The numbers of each frame of the clip in `file`. */
@@ -124,7 +106,7 @@ export async function numbersOf(file) {
   const parts = movingParts(scene, tracks);
   const last = new Map();
   const hands = {};
-  const frames = [...tracks[0].times].map((t, f) => {
+  return [...tracks[0].times].map((t, f) => {
     poseFrame(scene, tracks, f);
     const row = { t, ...measure(scene, hands) };
     for (const part of parts) {
@@ -134,7 +116,6 @@ export async function numbersOf(file) {
     }
     return row;
   });
-  return { frames };
 }
 
 /** The folder holding the clips of `commit`, unpacked into a scratch folder; the clips here without one. */
@@ -149,20 +130,21 @@ export async function clipsAt(commit) {
 
 /** The file of `clip` in `clips`: a clip's name, or an exercise's id. */
 export async function clipFile(clip, clips) {
-  const { clips: index } = JSON.parse(await readFile(path.join(clips, 'mannequins.json'), 'utf8'));
-  return path.join(clips, index[clip]?.clip ?? `${clip}.glb`);
+  const index = await readIndex(clips);
+  return path.join(clips, index.clips[clip]?.clip ?? `${clip}.glb`);
 }
 
 const cell = (v) => (Array.isArray(v) ? v.map((x) => x.toFixed(3)).join(' ') : v.toFixed(1));
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { values: { at, only, json }, positionals: [clip] } = parseArgs({
+  const { values: { at: commit, only, json }, positionals: [clip] } = parseArgs({
     allowPositionals: true,
     options: { at: { type: 'string' }, only: { type: 'string' }, json: { type: 'boolean' } },
   });
   if (!clip) throw new Error('usage: node numbers.mjs <clip> [--at <commit>] [--only <name,name>] [--json]');
-  const { frames } = await numbersOf(await clipFile(clip, await clipsAt(at)));
+  const frames = await numbersOf(await clipFile(clip, await clipsAt(commit)));
   const names = only?.split(',') ?? Object.keys(frames[0]).filter((k) => k !== 't');
+  for (const name of names) if (frames[0][name] === undefined) throw new Error(`No ${name} in this clip: ${Object.keys(frames[0]).join(', ')}`);
   if (json) console.log(JSON.stringify(frames.map((f) => Object.fromEntries(['t', ...names].map((k) => [k, f[k]])))));
   else {
     console.log(['frame', ...names].join('\t'));

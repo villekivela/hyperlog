@@ -1,5 +1,4 @@
 {
-  "id": "low_to_high_cable_press",
   "sources": [
     "exercises.json: one arm from a low pulley, up and across to about eye level, in front of the opposite shoulder",
     "No technique video in the library"
@@ -34,12 +33,26 @@
       "past": 7
     },
     {
-      "says": "at the top the hand is at eye level in front of the opposite shoulder",
-      "look": "finish",
-      "at": [
-        "top"
-      ],
-      "view": "front"
+      "says": "at the top the hand is at about eye level",
+      "place": "hand_l.at",
+      "from": "head.at",
+      "axis": "y",
+      "at": "top",
+      "range": [
+        0,
+        0.2
+      ]
+    },
+    {
+      "says": "at the top the hand is in front of the opposite shoulder",
+      "place": "hand_l.at",
+      "from": "shoulder_r.at",
+      "axis": "x",
+      "at": "top",
+      "range": [
+        -0.12,
+        0.12
+      ]
     }
   ]
 }

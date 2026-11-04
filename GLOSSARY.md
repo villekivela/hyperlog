@@ -169,7 +169,7 @@ _Avoid_: Capture, keyframes
 
 **Movement spec**:
 What a lift should do, written from its technique video and research: what moves and how far, what stays still, the path of the hands or the bar, and what must never happen. One short file per exercise in the mannequin tool, each line exact or left to the reviewer's eyes.
-_Avoid_: Check (that is automatic and knows nothing of the movement), trace (that is taken from footage)
+_Avoid_: Trace (that is taken from footage), technique note (that is the library's cue)
 
 **Movement reviewer**:
 An agent that didn't pose a lift and checks its clip against its movement spec, line by line, before the owner sees it. A failure goes back to the worker, a doubt goes to the owner, and a clean lift needs only a sample.

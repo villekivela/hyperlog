@@ -15,6 +15,8 @@ npm run trace -- <pose> <footage> <from>-<to> [--angles …]   # angles from foo
 npm run studio                          # the studio, at http://127.0.0.1:5190/studio/ (The studio)
 npm run review -- status <batch>        # whether every exercise in it is OK (Reviewing a batch)
 npm run review -- phone <batch>         # the owner has swiped the batch in the debug gallery
+npm run numbers -- <clip>               # every frame's numbers from a baked clip (Reviewing a movement)
+npm run movement -- <id>                # a clip against its movement spec (Reviewing a movement)
 ```
 
 A test that needs a scratch folder takes it from `scratch()` in `tmp.mjs`, which removes it when the
@@ -579,7 +581,9 @@ The first batch's traces:
 beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
 colours. A lying lift is seen from the head end, and equipment standing well in front of the body
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
-Use it for a pull request's screenshots.
+Use it for a pull request's screenshots. `node render.mjs --clip <clip> [out-dir] [--at <commit>]`
+renders a baked clip instead, at the top, the middle and the bottom of its rep, as that commit baked
+it.
 
 ## The studio
 
@@ -752,17 +756,20 @@ the worker, a doubt goes to the owner, and a clean lift needs only a sample.
 | `never` | `{ "never": "dumbbell_*.tilt", "past": 20 }` | a number passes the limit, either way; with `"perFrame": true`, its change between two frames does |
 | `reaches` | `{ "reaches": "wrist_*", "least": 10 }` | a number never gets that far |
 | `even` | `{ "even": "roll_*", "within": 10 }` | a number strays further from the straight run between its ends: a rock or a twist mid-rep |
+| `place` | `{ "place": "hand_*.at", "from": "shoulder_*.at", "axis": "z", "at": "top", "range": [-0.06, 0.06] }` | a point stands out of its range from another, in metres along x, y or z, at the `top` or the `bottom` |
 | `look` | `{ "look": "forearms", "at": ["bottom"], "view": "front" }` | never here: it waits for the reviewer's eyes |
 
 `*` stands for each side, and the worse one counts. The top is the clip's first frame and the bottom
 its last, so a raise's top is the arm up and a pull's the arm long. Whatever a spec can say exactly
 is a line of an exact kind and not a `look`, because `movement.test.mjs` holds every clip to those
-lines. A lift whose clip isn't baked yet is skipped. `"open"` on a line marks a known failure that
-waits on the owner; the test fails once that line passes, so the mark can't outlive the fault.
+lines. A lift whose clip isn't baked yet is skipped. `"open"` on a line marks a known failure and
+says what waits on whom. It reads `OPEN`, goes to the owner and not back to the worker, and doesn't
+fail the command, and the test fails once that line passes, so the mark can't outlive the fault.
 
 `npm run numbers -- <clip>` prints every frame's numbers from a baked clip, any clip: a name such as
 `db_incline_press_45`, or an exercise's id. `--at <commit>` reads it as that commit baked it, so an
-old version needs no checkout. The numbers:
+old version needs no checkout, `--only <name,name>` keeps those numbers, and `--json` prints JSON.
+The numbers:
 
 - **Angles:** `elbow_l`, `knee_l` and `hip_l` read 180° straight; `shoulder_l` is the upper arm off
   the trunk, 0° hanging; `wrist_l` is the bend off the forearm's line; `trunk` is the lean off

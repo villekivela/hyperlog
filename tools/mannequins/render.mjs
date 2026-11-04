@@ -12,7 +12,9 @@ import { parseArgs } from 'node:util';
 import { deflateSync } from 'node:zlib';
 import * as THREE from 'three';
 import { prepare } from './entries.mjs';
-import { clipFile, clipsAt, openClip, poseFrame } from './numbers.mjs';
+import { openClip, poseFrame } from './glb.mjs';
+import { clipFile, clipsAt } from './numbers.mjs';
+import { wpos } from './rig.mjs';
 import { buildStage } from './stage.mjs';
 
 const PANEL = [560, 700];
@@ -53,6 +55,9 @@ const VIEWS = {
   front: { right: new THREE.Vector3(1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, 1) },
   frontLying: { right: new THREE.Vector3(-1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, -1) },
 };
+
+/** The view called `name`: a lying lift's front is from its head end. */
+const viewOf = (name, lying) => VIEWS[name === 'front' && lying ? 'frontLying' : name];
 
 /** Draws the triangles into a width x height RGB buffer, `scale` pixels per metre, centred on `centre`. */
 function draw(tris, view, centre, scale, [w, h]) {
@@ -163,7 +168,7 @@ function sideBySide(shots, view) {
 export async function renderPose(id, viewName, angle) {
   const entry = prepare(id, undefined, angle);
   const { scene, pose } = await buildStage(entry);
-  const view = VIEWS[viewName === 'front' && entry.body?.trunk < -45 ? 'frontLying' : viewName];
+  const view = viewOf(viewName, entry.body?.trunk < -45);
   return sideBySide([0, 1].map((d) => { pose(d); return cutaway(triangles(scene), view); }), view);
 }
 
@@ -178,8 +183,8 @@ export async function renderClip(file, viewName) {
   };
   poseFrame(scene, tracks, 0);
   // A lying lift's head lies toward -z, the way a pose's trunk says.
-  const spine = scene.getObjectByName('Head').getWorldPosition(new THREE.Vector3()).sub(scene.getObjectByName('pelvis').getWorldPosition(new THREE.Vector3()));
-  const view = VIEWS[viewName === 'front' && spine.z < -Math.abs(spine.y) ? 'frontLying' : viewName];
+  const spine = wpos(scene.getObjectByName('Head')).sub(wpos(scene.getObjectByName('pelvis')));
+  const view = viewOf(viewName, spine.z < -Math.abs(spine.y));
   return sideBySide([0, Math.round(last / 2), last].map((f) => cutaway(shot(f), view)), view);
 }
 

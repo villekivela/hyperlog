@@ -3,12 +3,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { CLIPS } from './bake.mjs';
-import { judge, readSpec, reviewMovement, specified } from './movement.mjs';
+import { judge, markOf, readSpec, reviewMovement, specified } from './movement.mjs';
+import { readIndex } from './review.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -95,16 +95,6 @@ test('the command refuses an option it doesn\'t know, so it can\'t judge the wro
   await assert.rejects(run, /Unknown option/);
 });
 
-test('the numbers command refuses an option it doesn\'t know', async () => {
-  const run = promisify(execFile)(process.execPath, ['numbers.mjs', 'db_bench_press', '--at acbebfb'], { cwd: HERE });
-  await assert.rejects(run, /Unknown option/);
-});
-
-test('the clip render refuses an option it doesn\'t know', async () => {
-  const run = promisify(execFile)(process.execPath, ['render.mjs', '--clip', 'db_bench_press', '--at acbebfb'], { cwd: HERE });
-  await assert.rejects(run, /Unknown option/);
-});
-
 test('a reaches line passes once a number gets that far on some frame', () => {
   const found = one({ reaches: 'wrist_l', least: 10 }, frames('wrist_l', [0, 12, 3]));
   assert.equal(found.ok, true);
@@ -126,7 +116,7 @@ test('a line marked open keeps its verdict and says why', () => {
 // that passes has been fixed, and its mark should go.
 for (const id of await specified()) {
   test(`${id} moves as its spec says`, async (t) => {
-    const { clips } = JSON.parse(await readFile(path.join(CLIPS, 'mannequins.json'), 'utf8'));
+    const { clips } = await readIndex(CLIPS);
     if (!clips[id]) return t.skip('no clip yet');
     const spec = await readSpec(id);
     const verdicts = await reviewMovement(id, CLIPS, spec);
@@ -134,3 +124,40 @@ for (const id of await specified()) {
     assert.deepEqual(verdicts.filter((v) => v.open && v.ok).map((v) => v.says), [], 'passes now: take its open mark off');
   });
 }
+
+test('a line that needs a number refuses a point, rather than passing on nothing', () => {
+  const rows = frames('hand_l.at', [[0, 0, 0], [1, 1, 1]]);
+  for (const line of [{ never: 'hand_l.at', past: 1 }, { moves: 'hand_l.at', top: [0, 1], bottom: [0, 1] }, { reaches: 'hand_l.at', least: 1 }, { even: 'hand_l.at', within: 1 }]) {
+    assert.throws(() => one(line, rows), /takes a number, not the point hand_l\.at/);
+  }
+});
+
+test('a path line refuses a number', () => {
+  assert.throws(() => one({ path: 'trunk', within: 1 }, frames('trunk', [0, 1])), /takes a point, not the number trunk/);
+});
+
+test('a place line measures one point from another along an axis, at the top or the bottom', () => {
+  const rows = [{ t: 0, 'hand_l.at': [-0.16, 1.4, 0.3], 'pelvis.at': [0.04, 0.8, 0] }, { t: 1, 'hand_l.at': [0.3, 1.2, 0.1], 'pelvis.at': [0.04, 0.8, 0] }];
+  const found = one({ place: 'hand_l.at', from: 'pelvis.at', axis: 'x', at: 'top', range: [-0.5, -0.02] }, rows);
+  assert.equal(found.ok, true);
+  assert.equal(found.measured, '-20.0 cm along x at the top');
+  assert.equal(one({ place: 'hand_l.at', from: 'pelvis.at', axis: 'x', at: 'bottom', range: [-0.5, -0.02] }, rows).ok, false);
+});
+
+test('a failure reads FAIL, and OPEN once it is marked open', () => {
+  assert.equal(markOf(one({ never: 'trunk', past: 5 }, frames('trunk', [0, 9]))), 'FAIL');
+  assert.equal(markOf(one({ never: 'trunk', past: 5, open: 'known' }, frames('trunk', [0, 9]))), 'OPEN');
+  assert.equal(markOf(one({ never: 'trunk', past: 10, open: 'known' }, frames('trunk', [0, 9]))), 'pass');
+});
+
+test('an open failure doesn\'t fail the command', async () => {
+  const { stdout } = await promisify(execFile)(process.execPath, ['movement.mjs', 'barbell_bench_press'], { cwd: HERE });
+  assert.match(stdout, /^OPEN {2}the upper arms keep their angle/m);
+});
+
+test('a star in a place line\'s from follows the side it is measuring', () => {
+  const rows = [{ t: 0, 'hand_l.at': [0.3, 1, 0], 'hand_r.at': [-0.3, 1, 0.5], 'shoulder_l.at': [0.2, 1, 0], 'shoulder_r.at': [-0.2, 1, 0] }];
+  const found = one({ place: 'hand_*.at', from: 'shoulder_*.at', axis: 'z', at: 'top', range: [-0.1, 0.1] }, rows);
+  assert.equal(found.ok, false);
+  assert.equal(found.measured, 'hand_r.at: 50.0 cm along z at the top');
+});

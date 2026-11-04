@@ -1,8 +1,8 @@
 {
-  "id": "db_incline_press",
   "sources": [
     "technique video dhSKkQdUzoA, its loop in review/loops.json",
-    "exercises.json: a 30° or 45° bench, a second's pause at the bottom"
+    "exercises.json: a 30° or 45° bench, a second's pause at the bottom",
+    "docs/research/grip.md, 2.1: a press loads the palm heel along the forearm"
   ],
   "lines": [
     {
@@ -51,7 +51,7 @@
       "says": "each bell stays near level",
       "never": "dumbbell_*.tilt",
       "past": 20,
-      "open": "A known failure, waiting on the owner (#206)."
+      "open": "The 0° clip alone, 21.9° against 20, and the owner OK'd it. The limit was fitted to db_bench_press, so the limit may be what's wrong: the owner's call."
     },
     {
       "says": "a bell never rocks mid-rep: its tilt runs evenly from the top to the bottom",

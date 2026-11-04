@@ -1,8 +1,8 @@
 {
-  "id": "1_arm_cable_press_around",
   "sources": [
     "technique video fGm-ef-4PVk from 12:13",
-    "exercises.json: wrap the handle around and across the body past the midline"
+    "exercises.json: wrap the handle around and across the body past the midline",
+    "docs/research/grip.md: a cable handle at the finger base"
   ],
   "lines": [
     {
@@ -35,11 +35,14 @@
     },
     {
       "says": "at the top the hand has passed the body's middle",
-      "look": "across",
-      "at": [
-        "top"
-      ],
-      "view": "front"
+      "place": "hand_l.at",
+      "from": "pelvis.at",
+      "axis": "x",
+      "at": "top",
+      "range": [
+        -0.6,
+        -0.02
+      ]
     }
   ]
 }

@@ -1,8 +1,8 @@
 {
-  "id": "db_bench_press",
   "sources": [
     "technique video qmyToaabqdQ, its loop in review/loops.json",
-    "exercises.json: a second's pause at the bottom, the chest under tension"
+    "exercises.json: a second's pause at the bottom, the chest under tension",
+    "docs/research/grip.md, 2.1: a press loads the palm heel along the forearm"
   ],
   "lines": [
     {
@@ -101,11 +101,14 @@
     },
     {
       "says": "the bells press up over the shoulders, not over the face or the belly",
-      "look": "lockout",
-      "at": [
-        "top"
-      ],
-      "view": "side"
+      "place": "hand_*.at",
+      "from": "shoulder_*.at",
+      "axis": "z",
+      "at": "top",
+      "range": [
+        -0.06,
+        0.06
+      ]
     }
   ]
 }

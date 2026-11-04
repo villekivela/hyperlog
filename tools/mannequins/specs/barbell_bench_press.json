@@ -1,5 +1,4 @@
 {
-  "id": "barbell_bench_press",
   "sources": [
     "exercises.json: control the eccentric, 2–3 seconds down",
     "docs/research/grip.md, 2.1: the bar in the heel of the palm, the wrist stacked over the forearm",
@@ -57,7 +56,7 @@
       "says": "the upper arms keep their angle to the trunk: no tuck and flare mid-rep",
       "even": "shoulder_*",
       "within": 15,
-      "open": "A known failure, waiting on the owner (#206)."
+      "open": "#196 has this lift live with the owner. The upper arm tucks to 51° mid-rep, between 91° and 80°, and the elbow swings 18 cm toward the feet and back."
     },
     {
       "says": "the wrist never twists mid-rep",
@@ -88,11 +87,14 @@
     },
     {
       "says": "at the top the bar stands over the shoulders",
-      "look": "lockout",
-      "at": [
-        "top"
-      ],
-      "view": "side"
+      "place": "barbell.at",
+      "from": "shoulder_l.at",
+      "axis": "z",
+      "at": "top",
+      "range": [
+        -0.06,
+        0.06
+      ]
     }
   ]
 }
