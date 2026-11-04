@@ -1668,7 +1668,9 @@ gallery (Technique videos).
       time in the background, so the server keeps answering; opening another item or saving moves
       that pose to the front. The list's `failing` tags and filter need every pose checked, so they
       fill in as the run goes, each row tagged `checking` until then. The existing message line says
-      what is happening, `Loading…` and then `Checking 12 of 38`, with no new element.
+      what is happening, `Loading…` and then `Checking 12 of 38`, with no new element. A plain
+      message holds the line for four seconds before the count takes it back; an error, or a save
+      under way, keeps it.
     - **Keyboard first, vim style** (owner, 2026-11-03, #158): everything in the studio can be done
       from the keyboard, and the mouse is optional. Digits are counts (`5l` is five steps); `j` `k`
       move through the focused list, `Tab` cycles the sidebar, the stage and the numbers, `/` finds
