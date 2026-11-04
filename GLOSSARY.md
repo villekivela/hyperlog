@@ -202,6 +202,10 @@ _Avoid_: Mechanism, rig (that is the mannequin's)
 Where a bar or handle sits in a pose's hand: the heel of the palm (a press), mid-palm (a curl, a squat) or the base of the fingers (a pull); or an open hand, which holds nothing round. With the thumb, wrapped round the bar or thumbless over it, it is what the grip solve closes the hand to. Each motion has one by default; an entry can name its own.
 _Avoid_: Grip depth, grip (that is the hands' width and turn on the bar)
 
+**Seat** (of a bar):
+Where a bar of some radius rests on the palm at a grip landmark, for every way it can slant across the hand. It belongs to the mannequin, not to a pose, so each is solved once and kept in `seats.json`. Not a machine's seat, which a body sits on.
+_Avoid_: Palm offset
+
 **Fit rule**:
 How a recipe sets its adjustments for the mannequin, as the machine's placard says: the knee on the pivot axis, the handles at mid-chest, the pad just above the ankle. A pose entry can override what it sets.
 _Avoid_: Setting, preset
