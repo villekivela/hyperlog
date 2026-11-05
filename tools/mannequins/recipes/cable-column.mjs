@@ -2,7 +2,9 @@
 // front whose pulley swivels toward the cable, standing at `at` [x, z] and facing the middle of
 // the room. `attachment` is `handle` (a stirrup in the hand on side `hand`, 1 the left) or `rope`
 // (its two ends in both hands). With `twin`, a second column stands mirrored at [-x, z] for the
-// other hand, a stirrup in each; with `crossed` too, each hand takes the far column's cable.
+// other hand, a stirrup in each; with `crossed` too, each hand takes the far column's cable. With
+// `through`, the forearm goes through each stirrup: its ring lies behind the wrist, that many
+// degrees back along the forearm from straight behind the palm, and the cable leaves it there.
 //
 // The handles or the rope are a free body, carried by the hands. Each column's stack rides its
 // guide rods on a prismatic joint (`stack`, or `stack_l` and `stack_r` for the column at +x and the
@@ -13,7 +15,7 @@ import { recipe, free, prismatic } from '../recipe.mjs';
 import {
   STIRRUP, floorRail, knob, nameAll, pad, part, pulley, rod, rodGeometry, ropeParts, span, stackFrame, stirrup, turnTo, weightStack,
 } from '../parts.mjs';
-import { V, X, UP } from '../rig.mjs';
+import { V, X, UP, rad } from '../rig.mjs';
 
 /** Each column's joint, by column: the one at +x first. */
 const stacksOf = ({ twin = false } = {}) => (twin ? ['stack_l', 'stack_r'] : ['stack']);
@@ -26,7 +28,7 @@ export default recipe({
     : (twin ? [1, -1] : [hand]).map((s) => ({ body: 'attachment', point: `handle_${s < 0 ? 'r' : 'l'}`, landmark: 'hands' }))),
   stacks: (o) => stacksOf(o).map((joint) => ({ joint, ratio: 1 })),
   build(options, M) {
-    const { at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'handle', hand = 1, twin = false, crossed = false } = options ?? {};
+    const { at = [0.8, 0], pulley: carriageY = 0.2, attachment = 'handle', hand = 1, twin = false, crossed = false, through } = options ?? {};
     const height = 2.15;
     const stackZ = -0.16;
     const columns = (twin ? [1, -1] : [1]).map((mirror) => {
@@ -92,6 +94,11 @@ export default recipe({
     // The column a hand's cable runs to.
     const columnOf = (s) => (twin ? columns[(crossed ? -s : s) > 0 ? 0 : 1] : columns[0]);
     const jointOf = (c) => joints[columns.indexOf(c)];
+    // The way a hand's stirrup lies from the hand: toward the pulley, or with the forearm through
+    // it, back past the wrist once the hand is posed.
+    const wayOf = (P, s, c) => (through !== undefined && P.palm?.[s]
+      ? P.palm[s].clone().multiplyScalar(-Math.cos(rad(through))).addScaledVector(P.fingers[s], -Math.sin(rad(through)))
+      : c.exit.clone().sub(P.hand(s)));
     // Where each cable hooks on: a stirrup's ring, or the rope's.
     const hookOn = rope
       ? [{ cable: cables[0], hook: () => rope.ring.getWorldPosition(V(0, 0, 0)) }]
@@ -105,7 +112,7 @@ export default recipe({
       }
       return handles.map(({ s }) => {
         const c = columnOf(s);
-        const toward = c.exit.clone().sub(P.hand(s)).normalize();
+        const toward = wayOf(P, s, c).normalize();
         return { c, s, hook: P.hand(s).clone().addScaledVector(toward, STIRRUP) };
       });
     };
@@ -126,11 +133,11 @@ export default recipe({
         hooks.forEach(({ c, s, hook }, i) => {
           let at = hook;
           if (handles) {
-            // The stirrup in the hand, turned toward the pulley as square to the grip allows: the
-            // cable runs from its ring, wherever that comes to.
+            // The stirrup in the hand, turned its way as square to the handle allows: the cable runs
+            // from its ring, wherever that comes to.
             const { handle } = handles.find((h) => h.s === s);
             handle.position.copy(P.hand(s));
-            turnTo(handle, P.held?.[s] ?? X, c.exit.clone().sub(P.hand(s)));
+            turnTo(handle, P.held?.[s] ?? X, wayOf(P, s, c));
             handle.updateMatrixWorld(true);
             at = handle.localToWorld(V(0, STIRRUP, 0));
             points[`handle_${s < 0 ? 'r' : 'l'}`] = [P.hand(s).clone()];

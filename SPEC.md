@@ -1519,7 +1519,9 @@ gallery (Technique videos).
     stretch, and rises as it works; and a working stack is never fully down at the stretch (owner,
     via the coordinator, 2026-11-03): it stays a few centimetres off its rest all through the rep, as
     only before the first rep it sits. The starter program's batch (#127) adds a cable column, one or
-    a pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
+    a pair, with its pulley at any height and a stirrup handle or a rope (on the cable shoulder press
+    the forearm goes through the stirrup, its ring behind the wrist, so the cable runs behind the
+    arm to the low pulley, as the lift's video shows; #240), and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
     row, the machine pulldown and the preacher curl. After the owner's review (2026-11-03) a flye's,
     a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a

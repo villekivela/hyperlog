@@ -396,7 +396,7 @@ export const POSES = {
   cable_shoulder_press: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
+    kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true, through: 30 } },
     body: { hip: [0.547, 0.19], trunk: -10 },
     top: { hand: [0.2882, 1.644, 0.2943] },
     bottom: { hand: [0.32, 1.147, 0.2] },

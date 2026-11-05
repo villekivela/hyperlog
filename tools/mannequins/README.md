@@ -354,6 +354,10 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   [x, z] and facing the middle of the room, its carriage `pulley` metres up, its pulley swivelling
   toward the cable. `attachment` is `handle` (a stirrup in the hand on side `hand`) or `rope`; with
   `twin`, a stirrup in each hand, each on its own column's cable, or the far one's with `crossed`.
+  A stirrup lies toward the pulley, or with `through` (degrees) the forearm goes through it, as a
+  low-pulley press holds it: its ring lies behind the wrist, that far back along the forearm from
+  straight behind the palm (30 puts it about level with the wrist joint), and the cable leaves it
+  there, behind the arm.
   Its stack is lowest where the cable is drawn least, at whichever end of the rep that is, so it
   rises through a raise or a flye whose top is the hands' far point, and even there it is held 6 cm
   off its rest (`HELD`), as a working stack is; the leg machines' stacks are held the same way. A
