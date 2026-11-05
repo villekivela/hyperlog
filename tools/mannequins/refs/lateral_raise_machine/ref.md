@@ -41,11 +41,11 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 - Range of motion: about 80 degrees per arm, from the upper arms hanging about 10 degrees out from the sides (pads below the pivots) to the upper arms horizontal, pads on top of the arms. Estimated from the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09, where at the top the elbows reach shoulder height or a little above; give or take 10 degrees.
 - The two arms rise together in both videos; the page does not say whether they are linked.
 - Both arms load the one 95 kg stack through cable and pulleys (11 cm and 15 cm pulleys, per the page).
-- Each grip pivots to fit users (page text): a small revolute at each hand. The hands hold the grips at the pads' front ends with the elbows bent about 90 degrees (demo 0:09, 0:15).
+- Each grip pivots to fit users (page text). It hangs inboard of the pad from a bracket at the pad's front end, in line with the upper arm (hero photo), and the hands hold it with the elbows bent about 90 degrees (demo 0:09, 0:15).
 - Standing machine (the `standing_machine_lateral_raise` video, not this machine): one lever per side, its pivot in front of the standing user's shoulder at shoulder height, a curved handle at about arm's length. The straight arm rises from the hand by the hip (7:08, 7:19) to about horizontal (7:06): about 75 degrees.
 
 ## Handles
-- One grip at the front end of each arm pad, pivoting (page). The elbows rest on the pads and the hands hold the grips; the pads, not the hands, take the load.
+- One grip at the front end of each arm pad, hanging inboard of it, pivoting (page). The elbows rest on the pads and the hands hold the grips; the pads, not the hands, take the load.
 
 ## Adjustments and fit rules
 - Seat height by a lever under the seat front, roller mechanism (demo 0:01 to 0:03, page).
@@ -53,8 +53,25 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 - Chest on the centre pad, the outside of the upper arms under the arm pads near the elbows (demo 0:08, 0:19).
 - Pad positions are optimised for the middle deltoid (fitshop page).
 
+## Measured part list (#241)
+Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09. Scaled by the 1400 mm height, which the lifter agrees with: seated, his head reaches about the machine's top. The hero's camera works out at about 21 degrees off the machine's line and 13 degrees up: on those, the spine from the post's foot to the tower comes to 1070 mm, the published length. Against a seated lifter: the pivots level with the shoulders, the grips at the elbows, the chest pad's top just under the plate.
+
+| Part | Where it sits | Was in the kit | Now |
+|---|---|---|---|
+| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
+| Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
+| Plate and drum | a plate across the top of the post, the pivots on it, a round drum behind | a bridge and a hub on each pivot | as measured |
+| Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, a beam back along the pad | a thin dog-leg | as measured |
+| Wedges | one over each pivot, running fore and aft ahead of the drum, a valley between, part of the lever | missing | as measured |
+| Arm pads | about 300 long, 140 through, on the outside of the upper arm at the elbow | 250 long, 100 through, past the elbow | as measured |
+| Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
+| Chest pad | its top just under the plate, at about 1060 | centred at 830, on the belly | centred at 910 |
+| Seat | behind the post, front edge just short of it | on its own post, under the hips | as measured |
+| Stack travel | about 240 | about 280 | as measured |
+
 ## Open gaps
 - Seat range: no frame shows the seat at its ends, so it is chosen around the measured seat, low confidence.
 - For the mannequin (seat top 0.47 m, shoulder about 1.10 m) the pivots go at 1.10 m, chosen from the fit rule; the estimates (1.05 to 1.10 m, seat about 0.48 m) agree within their error.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
-- The standing exercise has no reference model; its geometry comes from one video of two other makes.
+- The standing exercise has no reference model; its geometry comes from one video of two other makes. It needs a kit of its own, so it stays unposed: the owner's call (#241).
+- Left plain: a square tower where the real one has a rounded corner, an even stack where the real one is narrow over wide, no pulley plate or cable from the levers, round pads where the real ones are D sections.

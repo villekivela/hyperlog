@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
-import { KITS, MACHINES, buildKit, shownAlone } from './kit.mjs';
+import { KITS, MACHINES, buildKit } from './kit.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { buildRig, rad, wpos } from './rig.mjs';
 import { checkPose } from './checks.mjs';
@@ -96,12 +96,8 @@ test('its fit rule sets the seat so the shoulder meets the fixed pivot, in the s
   assert.ok(seat >= 0.4 && seat <= 0.56, `the seat at ${seat}, outside its 0.40 to 0.56 range`);
 });
 
-test('the kit is the machine of both lateral raises, shown alone, with no brand in the recipe', async () => {
+test('the kit is the machine of both lateral raises, with no brand in the recipe', async () => {
   assert.deepEqual(MACHINES.lateral_raise_machine, { kit: 'lateral_raise_machine', exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] });
-  const alone = shownAlone('lateral_raise_machine');
-  assert.deepEqual(alone.kit, { lateral_raise_machine: {} });
-  assert.equal(alone.alone, true);
-  assert.equal(alone.equipment, 'machine');
   const source = await readFile(new URL('./recipes/lateral-raise-machine.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /hammer|life ?fitness|atlantis|strength/i);
 });

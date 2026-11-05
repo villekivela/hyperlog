@@ -83,8 +83,6 @@ function legAt(s, value) {
 
 export default recipe({
   name: 'lateral_raise_machine',
-  // Shown alone in the studio until a pose uses it: three-quarter from behind the seat, the tower on the right, as the ref's hero photo has it.
-  standsAlone: { camera: { target: [0, 0.8, 0.1], halfHeight: 1.1, azimuth: 215, elevation: 12 } },
   bodies: Object.fromEntries(SIDES.map(({ k, s }) => [`arm_${k}`, revolute({ axis: V(0, 0, s), limits: LIMITS })])),
   contacts: SIDES.flatMap(({ k }) => [
     { body: `arm_${k}`, point: `grip_${k}`, landmark: 'hands', hand: k },
