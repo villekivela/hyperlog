@@ -323,7 +323,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `hip_machine` | Machine Hip Abduction and Adduction | missing |
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
-| `crunch_machine` | Machine Crunch | missing |
+| `crunch_machine` | Machine Crunch | `crunch_machine` |
 | `shrug_machine` | Machine Shrug | missing |
 
 - `bench` stands at `at` [x, z], where a pose needs it elsewhere: its node moves, so its parts stay
@@ -420,6 +420,20 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
+- `crunch_machine` (#233, a machine kind, not yet posed, so no clip changes) stands where its ref puts it,
+  whatever the pose, with nothing to fit: the ref's machine has no adjustment, so it declares no fit
+  rule. A seat pad 600 mm long inclined 15°, rising toward the head to 530 mm up, on two posts and a
+  diagonal; a back pad level at rest 660 mm up on an arm that turns about a cam axis 780 mm up beside
+  the waist, with a head pad 50 mm above its far end and two vertical handles 400 mm apart; two pairs of
+  foot rollers, at 360 and 600 mm, on a post at the front; and a 12-plate stack behind them, its cable
+  running from the cam to the stack. The arm is one body on a revolute joint, its value the degrees of
+  curl from rest (0 to 40°); the stack rises 190 mm a radian of it. Its contacts tie the hands to the
+  handles, the upper back (`shoulders`) to the back pad, the thighs to the seat's high end and the feet
+  between the rollers. It departs from the ref: the front frame is a straight post, not the photo's curve,
+  the stack and its frame are the library's generic ones (twelve 26 cm plates, 76 mm tubes), the stack
+  stands 860 mm behind the axis to hold the 1.58 m footprint, and the cam's cable runs straight from
+  its top wheel to the cam's rim. The studio shows it alone, three-quarter from the front, its arm
+  scrubbed by `h` `l` or `$`: `npm run studio`, filter `crunch`, open the kit `crunch machine`.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
