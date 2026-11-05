@@ -396,14 +396,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   muscle works.
 - `lateral_raise_machine` (#212, #241, seated only; `machine_lateral_raise` is posed, and
   `standing_machine_lateral_raise` stays unposed, as its video shows another, standing machine that
-  has no kit) sets its pivots on the mannequin's shoulders, 1.10 m up, whatever the pose, and the seat
-  moves to them (`seat`, solved to 0.51 m for this mannequin, in its 0.40 to 0.56 m range). One post
-  leans forward from the floor between the legs and carries the seat, the chest pad, and a plate and
-  drum the pivots turn on. The tower stands at the far end of a spine 1.07 m long, past the arms' reach,
+  has no kit) sets its pivots on the mannequin's shoulders, 1.15 m up, whatever the pose, and the seat
+  moves to them (`seat`, solved to 0.56 m for this mannequin, in its 0.44 to 0.62 m range). One post
+  leans forward from the floor between the legs and carries the seat, the chest pad, and the bar, plate
+  and drum the pivots turn on. The tower stands at the far end of a spine 1.07 m long, past the arms' reach,
   its broad face across the machine and to the lifter's right, with a beam from the post. Each arm is a
   revolute lever, `arm_l` and `arm_r`, from 10° out of hanging to horizontal: a heavy strut flaring out
   to a knee, a beam back along a pad on the outside of the upper arm, and a wedge over the pivot, running
-  fore and aft ahead of the drum. The grip pivots on a bracket, in line with the upper arm at the
+  fore and aft ahead of the drum, the pair a tight V. The grip pivots on a bracket, in line with the upper arm at the
   elbow's distance, and holds one line through the rep; the line stays under 0.9 of vertical, past
   which `straightArm` measures the hand's roll in another basis. The linkage gives `lever_handles` the
   way the elbow goes (`elbow`). Each arm's contacts name their `hand`, and `seatTop` holds the thighs

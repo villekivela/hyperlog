@@ -5,7 +5,7 @@
 // carries the seat, the chest pad and the plate the pivots turn on. The weight stack stands in a tower
 // at the far end of the base, past the arms' reach, its broad face across the machine, to the right.
 //
-// The pivots are fixed on the frame, 1.10 m up and on the mannequin's shoulders, and the seat moves to
+// The pivots are fixed on the frame, 1.15 m up and on the mannequin's shoulders, and the seat moves to
 // them. Each lever is a body on a revolute joint, its value the upper arm's angle out from hanging,
 // from 10° to horizontal. The arms rise together in both of the ref's videos, so the stack hangs
 // on the left arm's joint. The grips pivot on the levers, holding one line through the rep, and the
@@ -19,7 +19,7 @@ import { V, rad } from '../rig.mjs';
 const LIMITS = [rad(10), rad(90)];
 // How far the stack rises, in metres a radian of the left arm.
 const STACK_RATIO = 0.17;
-const PIVOT_Y = 1.1;
+const PIVOT_Y = 1.15;
 // The mannequin's shoulders, which the ref lets set the pivots' spacing.
 const SHOULDER_X = 0.192;
 // The levers lie in a plane this far ahead of the hips, in front of the forearms' hands; the upper
@@ -37,7 +37,7 @@ const PAD = { length: 0.3, radius: 0.07 };
 // aft ahead of the drum, a valley between the two.
 const KNEE_OUT = 0.205;
 const LEVER_WIDTH = 0.06;
-const WEDGE = { length: 0.28, width: 0.11, height: 0.1, over: 0.13, in: 0.03, tilt: rad(22) };
+const WEDGE = { length: 0.28, width: 0.11, height: 0.1, over: 0.15, in: 0.1, tilt: rad(28) };
 const GRIP = 0.075;
 // The tower stands ahead of the lifter, its near end about on the centre line, as in the ref's photos.
 const TOWER_X = -0.24;
@@ -48,9 +48,9 @@ const REAR = -0.1;
 const POST = { foot: V(0, 0.07, 0.06), top: V(0, PIVOT_Y + 0.03, PLANE + 0.06) };
 const postZ = (y) => POST.foot.z + ((y - POST.foot.y) / (POST.top.y - POST.foot.y)) * (POST.top.z - POST.foot.z);
 // The seat stands behind the post, its front edge just short of it.
-const SEAT_Z = -0.06;
+const SEAT_Z = -0.08;
 const FRAME_TOP = 1.4;
-const SEAT = 0.48;
+const SEAT = 0.55;
 const BEAM_Y = 0.85;
 const SITS = 0.09;
 // How far along z the hips sit, the chest on its pad.
@@ -92,8 +92,8 @@ export default recipe({
   rep: { joint: 'arm_l', from: 'min' },
   fit: [{
     sets: 'seat',
-    rule: 'the seat so the shoulder joint is level with the fixed pivots, in its range of 0.40 to 0.56 m',
-    solve: ({ L }) => THREE.MathUtils.clamp(PIVOT_Y - L.trunkUp - SITS, 0.4, 0.56),
+    rule: 'the seat so the shoulder joint is level with the fixed pivots, in its range of 0.44 to 0.62 m',
+    solve: ({ L }) => THREE.MathUtils.clamp(PIVOT_Y - L.trunkUp - SITS, 0.44, 0.62),
   }],
   linkage: ({ seat = SEAT }) => ({
     hip: [seat + SITS, HIP_Z],
@@ -112,17 +112,18 @@ export default recipe({
     const tower = [...stackFrame(STACK_Z, FRAME_TOP, M), ...pulley(V(0, wheel.y, wheel.z), M)];
     tower.forEach((m) => { m.position.x += TOWER_X; });
     const drop = wire(M);
-    const chest = V(0, 0.91, 0.13);
+    const chest = V(0, 0.96, 0.13);
     // The mounting plate's face, where the tubing lands: 14 mm proud of the pad's front.
     const FACE = chest.z + 0.04 + 0.014;
     const chestPad = pad(0.24, 0.3, 0.08, M.vinyl, chest, { soft: 0.02 });
-    // The pivots' plate across the post's top, and the drum behind it.
+    // The pivots' bar across the post's top, the plate behind it, and the drum behind that.
     const housings = [];
     const fixed = [
       pad(0.2, 0.22, 0.014, M.frame, V(0, chest.y, FACE - 0.007), { soft: 0.004 }),
       tube(0.05, V(0, chest.y, FACE), V(0, chest.y, postZ(chest.y)), M.frame),
       pad(2 * SHOULDER_X + 0.26, 0.09, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.04), { soft: 0.006 }),
-      rod(0.17, V(0, PIVOT_Y, PLANE + 0.05), V(0, PIVOT_Y, PLANE + 0.09), M.frame),
+      pad(0.42, 0.34, 0.02, M.frame, V(0, PIVOT_Y + 0.02, PLANE + 0.06), { soft: 0.008 }),
+      rod(0.17, V(0, PIVOT_Y, PLANE + 0.07), V(0, PIVOT_Y, PLANE + 0.095), M.frame),
       ...SIDES.flatMap(({ s }) => {
         const joint = pivotJoint(M, pivotOf(s), V(0, 0, 1));
         housings.push(joint.housing);
@@ -158,6 +159,8 @@ export default recipe({
         // The beam from the post to the tower.
         tube(0.06, V(0, BEAM_Y, postZ(BEAM_Y)), V(TOWER_X + UPRIGHTS, BEAM_Y, STACK_Z), M.frame),
         ...tower,
+        // The header across the tower's top.
+        pad(2 * UPRIGHTS + 0.07, 0.2, 0.05, M.frame, V(TOWER_X, FRAME_TOP - 0.1, STACK_Z - 0.01), { soft: 0.02 }),
         ...weights.parts, drop,
         chestPad,
         ...fixed, ...housings, ...levers.flatMap((l) => body(l, 0).slice(1)),

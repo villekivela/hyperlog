@@ -54,24 +54,24 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 - Pad positions are optimised for the middle deltoid (fitshop page).
 
 ## Measured part list (#241)
-Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09. Scaled by the 1400 mm height, which the lifter agrees with: seated, his head reaches about the machine's top. The hero's camera works out at about 21 degrees off the machine's line and 13 degrees up: on those, the spine from the post's foot to the tower comes to 1070 mm, the published length. Against a seated lifter: the pivots level with the shoulders, the grips at the elbows, the chest pad's top just under the plate.
+Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09. Scaled by the 1400 mm height, which the lifter agrees with: seated, his head reaches about the machine's top. The hero's camera works out at about 21 degrees off the machine's line and 13 degrees up: on those, the spine from the post's foot to the tower comes to 1070 mm, the published length. Against a seated lifter: the pivots level with the shoulders, the grips at the elbows, the chest pad's top just under the bar. Shares of the tower's height, from the demo: seat 39%, pivots 82%, which put the thighs sloping down from a high seat; that is why the kit stands 50 mm above the table's estimates.
 
 | Part | Where it sits | Was in the kit | Now |
 |---|---|---|---|
-| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
+| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
 | Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
-| Plate and drum | a plate across the top of the post, the pivots on it, a round drum behind | a bridge and a hub on each pivot | as measured |
+| Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate with a rounded top behind that, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
 | Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, a beam back along the pad | a thin dog-leg | as measured |
-| Wedges | one over each pivot, running fore and aft ahead of the drum, a valley between, part of the lever | missing | as measured |
+| Wedges | a tight V over the pivots, running fore and aft ahead of the drum, a valley between, part of the levers | missing | as measured |
 | Arm pads | about 300 long, 140 through, on the outside of the upper arm at the elbow | 250 long, 100 through, past the elbow | as measured |
 | Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
-| Chest pad | its top just under the plate, at about 1060 | centred at 830, on the belly | centred at 910 |
-| Seat | behind the post, front edge just short of it | on its own post, under the hips | as measured |
+| Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
+| Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin, range 440 to 620 chosen |
 | Stack travel | about 240 | about 280 | as measured |
 
 ## Open gaps
 - Seat range: no frame shows the seat at its ends, so it is chosen around the measured seat, low confidence.
-- For the mannequin (seat top 0.47 m, shoulder about 1.10 m) the pivots go at 1.10 m, chosen from the fit rule; the estimates (1.05 to 1.10 m, seat about 0.48 m) agree within their error.
+- The pivots stand at 1.15 m and the seat at 0.56 m for the mannequin, above the table's estimates (1.05 to 1.10 m, about 0.48 m), from their shares of the tower in the demo; the shoulder stays on the pivot.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
 - The standing exercise has no reference model; its geometry comes from one video of two other makes. It needs a kit of its own, so it stays unposed: the owner's call (#241).
 - Left plain: a square tower where the real one has a rounded corner, an even stack where the real one is narrow over wide, no pulley plate or cable from the levers, round pads where the real ones are D sections.

@@ -319,7 +319,7 @@ export const POSES = {
     motion: 'lever_handles',
     kit: { lateral_raise_machine: {} },
     body: { trunk: 0, look: 0 },
-    feet: { stance: 0.17, z: 0.34, toeOut: 10 },
+    feet: { stance: 0.17, z: 0.3, toeOut: 10 },
     grip: { pole: [0, -1, 0] },
     camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 215, elevation: 12 },
   },

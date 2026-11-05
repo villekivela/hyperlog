@@ -22,7 +22,7 @@ const deg = (r) => (r * 180) / Math.PI;
 const close = (a, b, within, why) => assert.ok(Math.abs(a - b) <= within, `${why}: ${a.toFixed(3)}, not ${b} ± ${within}`);
 const SIDES = [['l', 1], ['r', -1]];
 
-test('each arm turns about a front-to-back axis 1.10 m up, from 10° out of hanging to horizontal', () => {
+test('each arm turns about a front-to-back axis 1.15 m up, from 10° out of hanging to horizontal', () => {
   const kit = machine();
   for (const [k, s] of SIDES) {
     const joint = kit.joints[`arm_${k}`];
@@ -30,7 +30,7 @@ test('each arm turns about a front-to-back axis 1.10 m up, from 10° out of hang
     close(deg(joint.limits[0]), 10, 1e-9, `${k}'s lower limit, in degrees`);
     close(deg(joint.limits[1]), 90, 1e-9, `${k}'s upper limit, in degrees`);
     close(joint.value, joint.limits[0], 1e-9, `${k} unposed, at rest`);
-    close(joint.origin.y, 1.1, 1e-9, `${k}'s pivot height`);
+    close(joint.origin.y, 1.15, 1e-9, `${k}'s pivot height`);
     // On the mannequin's shoulders (0.192 m out), where the ref lets the recipe set the spacing.
     close(joint.origin.x, s * 0.192, 0.005, `${k}'s pivot, out from the middle`);
     close(Math.abs(joint.axis.z), 1, 1e-9, `${k}'s axis, front to back`);
@@ -92,8 +92,8 @@ test('its fit rule sets the seat so the shoulder meets the fixed pivot, in the s
   const { dims } = buildRig(await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)));
   const seat = KITS.lateral_raise_machine.fit[0].solve({ L: dims });
   // The ref measures the seat at 0.48 m and has the mannequin's setting at about 0.47.
-  close(seat, 0.48, 0.05, 'the seat top, in metres');
-  assert.ok(seat >= 0.4 && seat <= 0.56, `the seat at ${seat}, outside its 0.40 to 0.56 range`);
+  close(seat, 0.55, 0.02, 'the seat top, in metres');
+  assert.ok(seat >= 0.44 && seat <= 0.62, `the seat at ${seat}, outside its 0.44 to 0.62 range`);
 });
 
 test('the kit is the machine of both lateral raises, with no brand in the recipe', async () => {
@@ -247,6 +247,36 @@ test('the chest pad bears on the chest: its top just under the plate, level with
   assert.ok(pad.y + 0.15 > 1, `the pad's top at ${(pad.y + 0.15).toFixed(2)} m`);
   assert.ok(pad.y + 0.15 < machineKit.joints.arm_l.origin.y, 'and under the pivots');
   close(pad.y, chest.y, 0.1, 'its middle level with the chest');
+});
+
+test('the wedges stand in a tight V, their middles about half the pivots\' spacing apart', () => {
+  const kit = machine();
+  const middleOf = (k) => {
+    let box = null;
+    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) box = new THREE.Box3().setFromObject(o, true); }));
+    return box.getCenter(new THREE.Vector3());
+  };
+  const apart = middleOf('l').x - middleOf('r').x;
+  const spacing = kit.joints.arm_l.origin.x - kit.joints.arm_r.origin.x;
+  assert.ok(apart < 0.65 * spacing, `the wedges ${apart.toFixed(2)} m apart against the pivots' ${spacing.toFixed(2)}`);
+});
+
+test('from the lifter\'s side a plate stands in front of the drum', () => {
+  const kit = machine();
+  const panels = boxes(kit).filter(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.03 && b.max.y - b.min.y > 0.25 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.4);
+  const drum = boxes(kit).find(({ box: b }) => Math.abs((b.max.x - b.min.x) - (b.max.y - b.min.y)) < 0.01 && b.max.x - b.min.x > 0.3);
+  assert.ok(panels.length && drum, 'a plate and a drum');
+  assert.ok(panels[0].box.max.z <= drum.box.min.z + 0.005, 'the plate on the lifter\'s side of the drum');
+});
+
+// The demo at 0:08 and the technique video at 0:02: the thighs slope down from a high seat, the
+// knees below the hips, as the shares of the tower's height say: seat 39%, pivots 82%.
+test('the seat and the pivots stand high enough that the thighs slope down', async () => {
+  const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
+  pose(0);
+  const drop = wpos(rig.bones.thigh_l).y - wpos(rig.bones.calf_l).y;
+  assert.ok(drop > 0.08, `the knee ${drop.toFixed(2)} m below the hip`);
+  close(kit.kits.lateral_raise_machine.joints.arm_l.origin.y / 1.4, 0.82, 0.015, 'the pivots\' share of the tower');
 });
 
 // #241: a body fits it. The checks hold the hands on the grips, the upper arms on the pads, the chest
