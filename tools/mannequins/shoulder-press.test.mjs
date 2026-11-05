@@ -103,7 +103,9 @@ test('the stack stands beside the lifter, on their right, clear of the legs ahea
   assert.ok(head.x < -0.6, `the stack head at x ${head.x.toFixed(2)}, not out beside the arm`);
   // The shins and feet of a seated lifter fill the middle ahead of the seat, from 0.35 m on.
   kit.group.traverse((o) => {
-    if (!o.isMesh || Math.abs(new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).x) > 0.3) return;
-    assert.ok(new THREE.Box3().setFromObject(o).max.z < 0.6 || new THREE.Box3().setFromObject(o).min.y > 0.5, 'a part stands in the legs\' way');
+    if (!o.isMesh) return;
+    const part = new THREE.Box3().setFromObject(o);
+    if (Math.abs(part.getCenter(new THREE.Vector3()).x) > 0.3) return;
+    assert.ok(part.max.z < 0.6 || part.min.y > 0.5, 'a part stands in the legs\' way');
   });
 });

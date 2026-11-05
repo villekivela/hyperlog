@@ -3,7 +3,7 @@
 // joined by a crossbar behind the pad, pivots about one transverse axis at grip height, 980 mm up;
 // each arm runs forward 900 mm past the shoulder to a bar grip (overhand) with a neutral grip beside
 // it. The weight stack stands in its own frame beside the lifter, on their right, level with the seat
-// and clear of the legs (the demo at 0:08); a crank behind the pivot draws a cable down to the floor,
+// and clear of the legs (the ref's photos and video); a crank behind the pivot draws a cable down to the floor,
 // along it and out to the stack, so the stack rises as the yoke does. The whole stands 1.5 m deep,
 // 1.63 m tall.
 //
@@ -13,7 +13,7 @@
 // `P.yoke` is the joint's value; the yoke rests at the bottom where the pose frame gives none.
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, floorRail, hub, padGeometry, part, plateGeometry, pulley, rod, rodGeometry, seatOn, span, stackFrame, stretchedTube, tube,
+  WHEEL, floorRail, hub, padGeometry, part, pulley, rodGeometry, seatOn, span, stackFrame, stretchedTube, tube,
   weightStack,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
@@ -30,7 +30,7 @@ const BAR = 0.1;
 // The seat's top, [y, z]: the grips are level with the shoulders at the start, 0.63 m above it.
 const SEAT = [0.35, 0.02];
 const PAD = { top: 1.27, long: 0.83, w: 0.36, deep: 0.08, z: -0.27, lean: rad(10) };
-// The stack beside the lifter (their right is -x), in its frame up to 1.63 m, and the crank behind the pivot.
+// The stack beside the lifter (their right is -x), in its frame up to 1.58 m (1.63 m with its cap), and the crank behind the pivot.
 const STACK = [-0.85, 0.12];
 const FRONT = 0.55;
 const FRAME_TOP = 1.58;
@@ -116,7 +116,7 @@ export default recipe({
       drive(P) {
         const value = P.yoke ?? 0;
         const ahead = V(0, Math.sin(value), Math.cos(value));
-          // The grips' middle is REACH out; the arm ends at the neutral grip's front.
+        // The grips' middle is REACH out; the arm ends at the neutral grip's front.
         const end = pivot.clone().addScaledVector(ahead, REACH + NEUTRAL / 2);
         const points = [];
         span(crossbar, pivot.clone().setX(-ARMS_OUT), pivot.clone().setX(ARMS_OUT));
@@ -125,7 +125,7 @@ export default recipe({
         knob.position.copy(tip);
         for (const a of arms) {
           const at = (p, x) => p.clone().setX(a.s * x);
-          const neutral = end.clone().addScaledVector(ahead, -NEUTRAL / 2);
+          const gripMiddle = end.clone().addScaledVector(ahead, -NEUTRAL / 2);
           a.boss.position.copy(at(pivot, ARMS_OUT));
           span(a.arm, at(pivot, ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.05), ARMS_OUT));
           // The neutral grip inboard of the arm, joined to it by a stub at its front end.
@@ -134,7 +134,7 @@ export default recipe({
           // The bar grip across the end, beyond the neutral grip.
           const tipAt = end.clone().addScaledVector(ahead, 0.05);
           span(a.bar, at(tipAt, ARMS_OUT), at(tipAt, ARMS_OUT - BAR));
-          points.push(at(neutral, GRIPS_OUT));
+          points.push(at(gripMiddle, GRIPS_OUT));
         }
         span(down, knob.position, low[0].clone().setY(0.1 + WHEEL));
         span(along, low[0].clone().setY(0.1 + WHEEL), low[1].clone().setY(0.1 + WHEEL));
