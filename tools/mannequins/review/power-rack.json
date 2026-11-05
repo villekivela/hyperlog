@@ -1,0 +1,82 @@
+{
+  "2_grip_pullup": {
+    "ok": true,
+    "clip": "82f0f5ca5e2bb10d",
+    "at": "2026-11-05T07:41:22.078Z"
+  },
+  "2_grip_pullup_weighted": {
+    "ok": true,
+    "clip": "c2956a794ccf7d2b",
+    "at": "2026-11-05T07:45:17.521Z"
+  },
+  "chinup": {
+    "ok": true,
+    "clip": "068e980146fb1b41",
+    "at": "2026-11-05T07:41:42.017Z"
+  },
+  "chinup_wide_grip": {
+    "ok": true,
+    "clip": "61c93e0485d09c47",
+    "at": "2026-11-05T07:44:52.536Z"
+  },
+  "close_grip_chinup": {
+    "ok": true,
+    "clip": "510633c0f6ec9810",
+    "at": "2026-11-05T07:41:54.842Z"
+  },
+  "close_grip_dip": {
+    "ok": true,
+    "clip": "dcab75d034531eac",
+    "at": "2026-11-05T07:46:20.939Z"
+  },
+  "close_grip_pullup": {
+    "ok": true,
+    "clip": "0d0996785f9ea940",
+    "at": "2026-11-05T07:46:48.594Z"
+  },
+  "dead_hang": {
+    "ok": true,
+    "clip": "8d74ef46b93fa95a",
+    "at": "2026-11-05T07:43:34.305Z"
+  },
+  "dip": {
+    "ok": true,
+    "clip": "13bb631c758c11ff",
+    "at": "2026-11-05T07:46:33.909Z"
+  },
+  "hanging_leg_raise": {
+    "ok": true,
+    "clip": "b1a160e0b19ac5d5",
+    "at": "2026-11-05T07:44:11.325Z"
+  },
+  "neutral_grip_pullup": {
+    "ok": true,
+    "clip": "428e4e321c4fa0a6",
+    "at": "2026-11-05T07:44:23.529Z"
+  },
+  "pullup": {
+    "ok": true,
+    "clip": "3c4631526783e7d2",
+    "at": "2026-11-05T07:44:34.014Z"
+  },
+  "pullup_wide_grip": {
+    "ok": true,
+    "clip": "7a182adc424a32ba",
+    "at": "2026-11-05T07:44:59.506Z"
+  },
+  "weighted_chinup": {
+    "ok": true,
+    "clip": "d9b15ac037918574",
+    "at": "2026-11-05T07:45:23.167Z"
+  },
+  "weighted_dip": {
+    "ok": true,
+    "clip": "22e01c45f6a34991",
+    "at": "2026-11-05T07:45:54.046Z"
+  },
+  "weighted_pullup": {
+    "ok": true,
+    "clip": "d7786c93067dc7c7",
+    "at": "2026-11-05T07:46:05.980Z"
+  }
+}

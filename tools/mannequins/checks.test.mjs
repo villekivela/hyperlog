@@ -33,14 +33,18 @@ const BROKEN = {
   trace: { like: 'barbell_squat', trace: { angles: { trunk: Array(31).fill(-10) } } },
   // An index finger turned off the bar, past the solve, and the thumb that rested on it off with it.
   gap: { like: 'deadlift', top: { offsets: { index_02_l: [0, 0, 30] } }, bottom: { offsets: { index_02_l: [0, 0, 30] } } },
+  // The free arm's elbow sent back, which takes the forearm through the neck.
+  neck: { like: 'cable_triceps_kickback', kit: { cable_crossover: { turn: 0, at: [-0.84, 0.6] } }, top: { trunk: 12, armOut: 0 }, bottom: { trunk: 12, armOut: 0 }, feet: { stagger: 0.08 }, grip: { rest: [0.235, 1.62, 0.43], restPole: [0, 0, -1], restOn: 0 } },
+  // A cable running down past the face.
+  head: { like: 'cable_crunch', top: { hand: [0.12, 0.8, 0.66] }, bottom: { hand: [0.09, 1.1, 0.36] }, kit: { cable_crossover: { at: [-1.105, 0.95] } }, grip: { via: [0.105, 0.95, 0.51] } },
   // A ring finger turned into the bar.
   sink: { like: 'deadlift', top: { offsets: { ring_01_l: [0, 0, -40] } }, bottom: { offsets: { ring_01_l: [0, 0, -40] } } },
 };
 
 // The floor is a solid part like any other: the equipment check fails a body that sinks into it.
 // A hand that stands off its bar or sinks into it fails the contact check (#162).
-const CHECKED = { floor: 'equipment', gap: 'contact', sink: 'contact' };
-const FOUND = { floor: /into the floor/, gap: /the l (index finger|thumb) [\d.]+ mm off barbell/, sink: /ring_0\d_l [\d.]+ mm into barbell/ };
+const CHECKED = { floor: 'equipment', gap: 'contact', sink: 'contact', neck: 'joints', head: 'equipment' };
+const FOUND = { floor: /into the floor/, neck: /into the (neck_01|Head)/, head: /cm from the (neck_01|Head)/, gap: /the l (index finger|thumb) [\d.]+ mm off barbell/, sink: /ring_0\d_l [\d.]+ mm into barbell/ };
 
 for (const [broken, entry] of Object.entries(BROKEN)) {
   const check = CHECKED[broken] ?? broken;
