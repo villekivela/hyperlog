@@ -18,6 +18,8 @@ export const MOTION_TEMPOS = {
   pressdown: tempo(1, 0.2, 2, 0.5),
   leg_press: tempo(2, 0.3, 1, 0.6),
   chest_press: tempo(2, 0.3, 1, 0.6),
+  // Pushed down to the hips for the 1 s and let up in 2: the lowering is the return.
+  dip_machine: tempo(2, 0.3, 1, 0.6),
   // The top of these is where the muscle is shortest (the curl's heels drawn up, the raise's arm
   // out), so the lowering is the eccentric.
   arms: tempo(2, 0.3, 1, 0.6),

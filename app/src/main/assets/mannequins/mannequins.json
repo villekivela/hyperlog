@@ -2198,6 +2198,30 @@
         }
       }
     },
+    "seated_dip_machine": {
+      "clip": "seated_dip_machine.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.1
+        ],
+        "halfHeight": 1,
+        "azimuth": 56,
+        "elevation": 12
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dip_machine.bin"
+      ]
+    },
     "seated_leg_curl": {
       "clip": "seated_leg_curl.glb",
       "equipment": "machine",
