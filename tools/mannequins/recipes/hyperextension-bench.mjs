@@ -38,6 +38,9 @@ export default recipe({
   ],
   build(_, M) {
     const sides = [-1, 1];
+    // Across the bench: each pad's middle, and each roller's.
+    const padX = (s) => (s * (PAD.gap + PAD.width)) / 2;
+    const rollerX = (s) => s * (ROLLER.gap / 2 + ROLLER.length / 2);
     const at = (from, ...moves) => moves.reduce((p, [d, k]) => p.addScaledVector(d, k), from.clone());
     const railTop = RAIL + TUBE / 2;
 
@@ -50,7 +53,7 @@ export default recipe({
     // The hip pads, each on a board, their top face on the slope through the pads' top end.
     const padAt = (x) => at(TOP, [S, PAD.length / 2], [N, -PAD.thick / 2]).setX(x);
     const pads = sides.flatMap((s) => {
-      const x = s * (PAD.gap + PAD.width) / 2;
+      const x = padX(s);
       const hip = pad(PAD.width, PAD.thick, PAD.length, M.vinyl, V(0, 0, 0), { soft: 0.03 });
       hip.userData.pad = 'hip';
       const board = pad(PAD.width - 0.02, PAD.board, PAD.length - 0.04, M.frame, V(0, 0, 0), { soft: 0.003 });
@@ -93,7 +96,7 @@ export default recipe({
     const heel = at(sole, [N, PLATE.length / 2]);
     const axle = at(sole, [face, ROLLER.up], [N, ROLLER.off]);
     const rollers = sides.map((s) => {
-      const r = turnedPart(rollerGeometry(ROLLER.radius, ROLLER.length), M.vinyl, axle.clone().setX(s * (ROLLER.gap / 2 + ROLLER.length / 2)));
+      const r = turnedPart(rollerGeometry(ROLLER.radius, ROLLER.length), M.vinyl, axle.clone().setX(rollerX(s)));
       r.userData.pad = 'heel';
       return r;
     });
@@ -103,9 +106,9 @@ export default recipe({
     ];
 
     const contactPoints = {
-      thighPad: sides.map((s) => at(TOP, [S, PAD.length / 2]).setX(s * (PAD.gap + PAD.width) / 2)),
+      thighPad: sides.map((s) => padAt(padX(s)).addScaledVector(N, PAD.thick / 2)),
       footPlate: [sole.clone()],
-      heelRollers: sides.map((s) => axle.clone().setX(s * (ROLLER.gap / 2 + ROLLER.length / 2))),
+      heelRollers: sides.map((s) => axle.clone().setX(rollerX(s))),
     };
     return {
       parts: [...frame, ...upright, ...pads, ...handles, ...ends, plate, post, ...roll, ...rollers],
