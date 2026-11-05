@@ -171,6 +171,9 @@ _Avoid_: Capture, keyframes
 What a lift should do, written from its technique video and research: what moves and how far, what stays still, the path of the hands or the bar, and what must never happen. One short file per exercise in the mannequin tool, each line exact or left to the reviewer's eyes.
 _Avoid_: Trace (that is taken from footage), technique note (that is the library's cue)
 
+**Cold spec**:
+A movement spec written before its lift is posed, by someone who hasn't seen a pose, and hidden from the worker who poses it. It tests the review, so neither is tuned to the other.
+
 **Movement reviewer**:
 An agent that didn't pose a lift and checks its clip against its movement spec, line by line, before the owner sees it. A failure goes back to the worker, a doubt goes to the owner, and a clean lift needs only a sample.
 _Avoid_: Tester (that is the UI agent), checker
