@@ -15,7 +15,7 @@
 import * as THREE from 'three';
 import { recipe, revolute, moveOf } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, along, floorRail, mitered, pad, part, pivotJoint, popPin, pulley, rod, rodGeometry, span, stackFrame, tube, weightStack, wire,
+  UPRIGHTS, WHEEL, along, floorRail, mitered, pad, part, pivotJoint, pulley, rod, rodGeometry, span, stackFrame, tube, weightStack, wire,
 } from '../parts.mjs';
 import { V, X, rad } from '../rig.mjs';
 
@@ -55,6 +55,9 @@ const SITS = 0.09;
 
 /** Names what a part is, for the tests and the studio. */
 const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
+/** Marks a part only the checks need: the bake leaves it out of the clip. */
+const proxy = (mesh) => { mesh.userData.proxy = true; return mesh; };
+
 /**
  * A bent tube through `points`, mitred, and straight tubes just inside it for the checks: a mitred
  * tube is built in the world, so its bounding box would stand in for it, and over a diagonal that fills
@@ -62,7 +65,7 @@ const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
  */
 const bent = (points, w, material, name) => [
   role(mitered(points, w, material, { solid: false }), name),
-  ...points.slice(1).map((p, i) => tube(w * 0.7, points[i], p, material)),
+  ...points.slice(1).map((p, i) => proxy(tube(w * 0.7, points[i], p, material))),
 ];
 const dir = (deg) => V(0, Math.sin(rad(deg)), Math.cos(rad(deg)));
 /** The arm's tube from the pivot to the swivel, at the start: what the grip's place leaves after the bar's reach. */
@@ -188,19 +191,16 @@ export default recipe({
       role(pad(SEAT.width, 0.075, SEAT.size, M.vinyl, V(0, SEAT.top - 0.0375, SEAT.z), { soft: 0.035 }), 'seat'),
       pad(SEAT.width - 0.06, 0.012, SEAT.size - 0.06, M.frame, V(0, SEAT.top - 0.081, SEAT.z), { soft: 0.003 }),
       tube(0.06, V(0, 0.2, SEAT.z), V(0, SEAT.top - 0.087, SEAT.z), M.frame),
-      popPin(V(0, 0.33, SEAT.z + 0.03), 1, M),
       tube(0.05, V(-FEET.apart - 0.03, FEET.y - 0.09, FEET.z - 0.17), V(FEET.apart + 0.03, FEET.y - 0.09, FEET.z - 0.17), M.frame),
     ];
     const padAt = faceFrom.clone().addScaledVector(padUp, FACE.length / 2 + 0.02).addScaledVector(padOut, -FACE.thick / 2);
     const cushion = role(pad(FACE.width, FACE.length, FACE.thick, M.vinyl, padAt, { soft: 0.025 }), 'backPad');
     cushion.rotation.x = -FACE.lean;
-    const board = pad(FACE.width - 0.06, FACE.length - 0.08, 0.012, M.frame, padAt.clone().addScaledVector(padOut, -FACE.thick / 2 - 0.006), { soft: 0.003 });
-    board.rotation.x = -FACE.lean;
-    carriage.push(cushion, board);
+    carriage.push(cushion);
     for (const s of sides) {
       const plate = role(pad(FEET.width, 0.02, FEET.length, M.vinyl, plateCentre(s), { soft: 0.008, solid: true }), 'footplate');
       plate.rotation.x = -FEET.tilt;
-      carriage.push(plate, rod(0.015, plateCentre(s).addScaledVector(plateOut, -0.03), V(s * FEET.apart, FEET.y - 0.09, FEET.z - 0.17), M.metal, { solid: false }));
+      carriage.push(plate);
     }
 
     // The arms: one mitred tube each from the pivot, to the elbow, to the grip bar's end, with a grip
@@ -213,13 +213,12 @@ export default recipe({
         joint,
         tube: bent([V(s * TUBE_X, ...PIVOT), bar.from.clone().setX(s * TUBE_X), bar.from], 0.045, M.frame, 'lever'),
         collar: rod(0.03, bar.from, at(0.025), M.metal, { solid: true }),
-        grip: rod(0.02, at(BAR.grip - 0.075), at(BAR.grip + 0.075), M.metal, { held: true }),
+        grip: proxy(rod(0.02, at(BAR.grip - 0.075), at(BAR.grip + 0.075), M.metal, { held: true })),
         sleeve: rod(0.0235, at(BAR.grip - 0.075), at(BAR.grip + 0.075), M.vinyl, { held: true }),
-        cap: rod(0.025, at(BAR.grip + 0.075), at(BAR.grip + 0.1), M.vinyl, { solid: false }),
       };
     });
     const armParts = levers.flatMap((l) => [l.joint.housing, ...l.tube, l.collar]);
-    const gripParts = levers.flatMap((l) => [l.grip, l.sleeve, l.cap]);
+    const gripParts = levers.flatMap((l) => [l.grip, l.sleeve]);
     // The pivot's axles are the frame's.
     levers.forEach((l) => frame.push(...l.joint.fixed));
 
