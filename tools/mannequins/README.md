@@ -320,7 +320,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
-| `hip_machine` | Machine Hip Abduction and Adduction | missing |
+| `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
@@ -408,6 +408,21 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   stirrup; the ref's ankle cuff and rope are further attachments, for the pose ticket that needs
   them (the glute kickback's). `position` takes one number for a two-arm lift, the same hole on both
   towers, and a pair only where the arms differ.
+- `hip_machine` (#214, built, none of its two exercises posed yet, so no clip changes) is the one
+  hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, a
+  rear leg behind it, and a tall tower with the weight stack standing ahead of the posts, as the
+  maker's photos show, on a floor beam 1.55 m long. Two arms turn on one vertical axle on the centre
+  line under the seat, 140 mm behind its front edge. Each arm (`arm_l`, `arm_r`, revolute about the
+  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 400 mm forward to a
+  post with a 280 by 160 mm knee pad at 560 mm and a foot plate at 80 mm; the right arm rides 60 mm
+  above the left on the shared axle. `pads` (`outer`, the default, on the outsides of the knees for
+  abduction, or `inner`, between them for adduction) and `start` (degrees, snapped to the ratchet's
+  10° steps; 0 for `outer`, 50 for `inner`, at least 10 for `inner` so the pads clear) set it up; the
+  fit rule names `start`. It departs from its ref: the pads' faces are put 140 mm (`outer`) from the
+  centre line from the mannequin's knee, which puts the posts about 450 mm apart rather than the
+  ref's 250 (the photos show each post outside its pad, so 250 can't hold with an 80 mm pad); the
+  joints stop at the ratchet's 50°, a 40 to 50° travel, the ref's 45° read from another make's video;
+  the stack's travel isn't drawn. The studio shows it alone.
 - `smith_machine` (#182, smith machine equipment, not a machine kind) stands where its ref puts it,
   whatever the pose, and none of its nine exercises is posed yet: two guide rods 1.3 m apart leaning
   7° with their tops toward the back, a front upright either side carrying a rod and a plate of 13
@@ -627,7 +642,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the EZ bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack, the EZ bar and the hip machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
