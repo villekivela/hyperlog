@@ -317,7 +317,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
 | `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
 | `shoulder_press` | Machine Shoulder Press | missing |
-| `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
+| `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | `lateral_raise_machine` (seated) |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
 | `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
@@ -374,6 +374,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   arm out from its hub; `preacher_curl_machine` turns its bar's levers on hubs in line with the
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
+- `lateral_raise_machine` (#212, seated only; the standing lateral raise has its own geometry in the
+  ref and no kit yet) sets its pivots on the mannequin's shoulders, 1.10 m up, whatever the pose,
+  and the seat moves to them (`seat`, solved to 0.51 m for this mannequin, in its 0.40 to 0.56 m
+  range). Each arm is a revolute lever, `arm_l` and `arm_r`, from 10° out of hanging to horizontal,
+  with a pad under the upper arm and a grip ahead of it; the one stack stands in a tower beside the user's right, as the ref's photos have it, and hangs on `arm_l`. The base is 0.94 m wide by 1.07 m long, as the ref's footprint. Shown alone
+  in the studio, its arms scrub through their limits: `npm run studio`, then the kit's row in the
+  list, from the front and the side with the camera.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
   machine-first): a pad inclined 40° on a beam held up by two posts,
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
@@ -503,6 +510,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 Every kit is a recipe (ADR 0007): `recipes/<kit>.mjs`, over the part library in `parts.mjs`
 (tubing with its caps and base plates, pads, seats, rollers, pulleys in housings, cables, stacks
 with guide rods and a pin, pop-pins, bars and handles, each a function of its dimensions and tone).
+A pivot is `pivotJoint(M, at, axis)`: a bearing housing on the moving arm round an axle the frame holds
+(#212, used by `lateral_raise_machine` first). Bent tubing is `mitered(points, w, material, { ends })`: one
+square length swept along the points, each bend cut on its bisector, not two lapped lengths.
 `recipe.mjs` is the format. A recipe declares, as data:
 
 - `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot, with its
@@ -660,7 +670,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack, the EZ bar, the hip machine, the safety bar and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the lateral raise machine, the power rack, the EZ bar, the hip machine, the safety bar and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

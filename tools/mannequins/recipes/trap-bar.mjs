@@ -10,7 +10,7 @@
 // moves while lifting: the whole bar rises with the lifter, which a pose carries. Contacts: the hands
 // at the handles' centres (`grips`).
 import { recipe } from '../recipe.mjs';
-import { along, rod, turnedPart, plateGeometry, frameRingGeometry, part } from '../parts.mjs';
+import { along, rod, turnedPart, plateGeometry, mitered } from '../parts.mjs';
 import { V } from '../rig.mjs';
 
 const PLANE = 0.225;
@@ -35,13 +35,13 @@ export default recipe({
     if (y === undefined) throw new Error(`trap_bar: no handle height "${handle}"`);
     const at = (x, z, height = PLANE) => V(x, height, z);
     const parts = [];
-    // The frame: one mitred ring through the two corners and the four vertices.
+    // The frame: a tube mitred at each of the two corners and four vertices, closed on itself.
     const { vertex } = FRAME;
     // Where an arm's middle is, `z` from the sleeve axis: the handle's braces end on it, inside the ring.
     const armAt = (z) => FRAME.corner - z * (FRAME.corner - vertex.x) / vertex.z;
-    const ring = part(frameRingGeometry([[FRAME.corner, 0], [vertex.x, vertex.z], [-vertex.x, vertex.z], [-FRAME.corner, 0], [-vertex.x, -vertex.z], [vertex.x, -vertex.z]], FRAME.w, FRAME.w), M.frame, { solid: true });
-    ring.position.y = PLANE;
-    parts.push(ring);
+    // From the middle of the front crossmember round through the corners and back, the two ends flush.
+    const round = [[0, vertex.z], [vertex.x, vertex.z], [FRAME.corner, 0], [vertex.x, -vertex.z], [-vertex.x, -vertex.z], [-FRAME.corner, 0], [-vertex.x, vertex.z], [0, vertex.z]];
+    parts.push(mitered(round.map(([x, z]) => at(x, z)), FRAME.w, M.frame));
     for (const s of sides) {
       // The corner's stub out to the sleeve.
       parts.push(rod(FRAME.w / 2, at(s * FRAME.corner, 0), at(s * SLEEVE.from, 0), M.frame, { solid: true }));
