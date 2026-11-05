@@ -13,6 +13,7 @@
 // shoulders, to 40° at the top, 580 mm higher and about 200 mm further back. A pose's solve (the
 // `linkage`) sets the seat so the shoulders are at the grips' height at the bottom, and hangs the
 // body from the grips.
+import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import {
   WHEEL, backPad, floorRail, hub, mitered, part, pivotJoint, pad, pulley, rod, rodGeometry, seatOn, span, stretchedTube, tube, weightStack,
@@ -136,32 +137,41 @@ export default recipe({
     // it, and on each side an arm forward to its bar grip and neutral grip.
     const bearings = [-1, 1].map((s) => pivotJoint(M, V(s * BEARING_OUT, PIVOT[0], PIVOT[1]), V(1, 0, 0)));
     frame.push(...bearings.flatMap((b) => b.fixed));
-    const crossbar = stretchedTube(0.1, M.metal);
+    // The yoke's Y: a beam out along the crossbar behind the pad and angled forward at each end, built at
+    // the bottom of the rep and turned about the pivot, then an arm a side straight ahead to the grips.
+    // The bent beam is behind the lifter and stands clear of the body, so only the arms are solid.
+    const [y0, z0] = PIVOT;
+    const beam = role(mitered([
+      V(-ARMS_OUT, y0, z0 + 0.45), V(-ARMS_OUT, y0, z0 + 0.3), V(-BEARING_OUT, y0, z0), V(BEARING_OUT, y0, z0), V(ARMS_OUT, y0, z0 + 0.3), V(ARMS_OUT, y0, z0 + 0.45),
+    ], 0.09, M.metal, { solid: false }), 'yokeBeam');
     const crank = stretchedTube(0.06, M.metal);
     const knob = hub(M, V(0, 0, 0));
     const arms = [-1, 1].map((s) => ({
       s,
-      arm: stretchedTube(0.08, M.metal),
       // The overhand bar across the arm's end, and the neutral grip beside it, pointing forward, with a horn up at its end.
+      arm: stretchedTube(0.09, M.metal),
       bar: role(part(rodGeometry(0.0175), M.vinyl, { held: true }), 'barGrip'),
       neutral: role(part(rodGeometry(0.0205), M.vinyl, { held: true }), 'neutralGrip'),
       horn: part(rodGeometry(0.0175), M.vinyl),
       stub: part(rodGeometry(0.02), M.metal),
     }));
-    const moving = [...bearings.map((b) => b.housing), crossbar, crank, knob, ...arms.flatMap((a) => [a.arm, a.bar, a.neutral, a.horn, a.stub])];
+    const moving = [...bearings.map((b) => b.housing), beam, crank, knob, ...arms.flatMap((a) => [a.arm, a.bar, a.neutral, a.horn, a.stub])];
     const place = (value) => {
       const { pivot, ahead } = yokeAt(value);
       const upward = V(0, Math.cos(value), -Math.sin(value));
       const end = pivot.clone().addScaledVector(ahead, REACH + NEUTRAL / 2);
       const points = [];
-      span(crossbar, pivot.clone().setX(-ARMS_OUT), pivot.clone().setX(ARMS_OUT));
+      // The beam turned about the pivot, `value` up from level ahead (a turn about x of -value).
+      const turn = new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -value);
+      beam.quaternion.copy(turn);
+      beam.position.copy(pivot).sub(pivot.clone().applyQuaternion(turn));
       const tip = pivot.clone().addScaledVector(ahead, -CRANK);
       span(crank, pivot, tip);
       knob.position.copy(tip);
       for (const a of arms) {
         const at = (p, x) => p.clone().setX(a.s * x);
+        span(a.arm, at(pivot.clone().addScaledVector(ahead, 0.45), ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.09), ARMS_OUT));
         const gripMiddle = end.clone().addScaledVector(ahead, -NEUTRAL / 2);
-        span(a.arm, at(pivot, ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.09), ARMS_OUT));
         // The neutral grip inboard of the arm, joined to it by a stub at its front end, a horn up from its front.
         span(a.neutral, at(end.clone().addScaledVector(ahead, -NEUTRAL), GRIPS_OUT), at(end, GRIPS_OUT));
         span(a.stub, at(end, ARMS_OUT), at(end, GRIPS_OUT));
