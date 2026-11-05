@@ -22,6 +22,7 @@ export const OPTIONAL = {
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
   lever_handles: { 'grip.rotate': 0, 'grip.pole': [0.7, -1, -0.5] },
   chest_pad: { 'grip.pole': [0.5, 0.4, -1], 'body.look': -0.3, 'feet.kneesOut': 0.2 },
+  hip_thrust: { 'grip.pole': [0.5, -1, -0.5], 'body.look': 0.3, 'feet.kneesOut': 0.15 },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
   hang: { 'body.look': 0.1, 'feet.kneesOut': 0 },

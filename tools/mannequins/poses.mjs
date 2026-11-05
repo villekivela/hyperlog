@@ -287,6 +287,18 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
+  // Seated, the upper back on the carriage's pads and the belt over the hips, the feet flat on the
+  // platform, the hands on the handles by the hips: the hips drop to the seat and drive up until the
+  // thighs are level.
+  machine_hip_thrust: {
+    equipment: 'machine',
+    motion: 'hip_thrust',
+    kit: { hip_thrust_machine: {} },
+    feet: { stance: 0.1, toeOut: 8 },
+    grip: { pole: [0.5, -1, -0.5] },
+    camera: { target: [0, 0.75, 0.1], halfHeight: 1.0, azimuth: 70, elevation: 8 },
+  },
+
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
   machine_pulldown: {
     equipment: 'machine',
