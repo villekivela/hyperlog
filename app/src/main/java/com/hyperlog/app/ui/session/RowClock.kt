@@ -50,16 +50,19 @@ internal fun rowClock(session: ActiveSession, now: Long): RowClock? {
 
 private fun drained(leftMs: Long, totalMs: Long) = if (totalMs <= 0) 0f else (leftMs.toFloat() / totalMs).coerceIn(0f, 1f)
 
-/** The row's fill and the colour of what is written on it, for a clock of [kind]. */
+/**
+ * The row's fill and the colour of what is written on it, for a clock of [kind]. The fill is a
+ * tint of the role's colour, so the ink is readable on it and on the bare row the fill drains away
+ * from; only a reached hold fills the row solid.
+ */
 @Composable
 internal fun ClockKind.colours(): Pair<Color, Color> {
     val cs = MaterialTheme.colorScheme
     return when (this) {
-        // Rest is the one clock that matters between sets: primary container, so it reads from across the gym.
-        ClockKind.Rest -> cs.primaryContainer to cs.onPrimaryContainer
+        ClockKind.Rest -> cs.primary.copy(alpha = 0.24f) to cs.onSurface
         ClockKind.Over -> Color.Transparent to cs.onSurfaceVariant
-        ClockKind.Breath -> cs.tertiaryContainer to cs.onTertiaryContainer
-        ClockKind.Hold -> cs.secondaryContainer to cs.onSecondaryContainer
+        ClockKind.Breath -> cs.tertiary.copy(alpha = 0.28f) to cs.onSurface
+        ClockKind.Hold -> cs.secondary.copy(alpha = 0.24f) to cs.onSurface
         ClockKind.HoldReached -> cs.primary to cs.onPrimary
     }
 }

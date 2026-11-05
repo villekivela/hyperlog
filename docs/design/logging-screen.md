@@ -90,9 +90,9 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | Keys | surfaceContainerHighest |
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
-| Next row, resting | the row drains in primaryContainer across its width, text and digits in onPrimaryContainer; no fill after rest, the digits in onSurfaceVariant |
-| Next row, breathing | drains in tertiaryContainer |
-| Next row, holding | fills in secondaryContainer toward the target; primary, text in onPrimary, once reached |
+| Next row, resting | the row drains in primary at 24% across its width, name and digits in onSurface so they read on the fill and off it; no fill after rest, the digits in onSurfaceVariant |
+| Next row, breathing | drains in tertiary at 28% |
+| Next row, holding | fills in secondary at 24% toward the target; solid primary, text in onPrimary, once reached |
 | Day done strip | primaryContainer, rounded 28 dp at the top; its records in onPrimaryContainer, the set line at 80% |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
@@ -260,12 +260,12 @@ field it shows → instead.
 
 **Timer (owner, 2026-11-05).** The Next row at the bottom is the session's only clock, 64 dp tall
 or more with the text size. During rest its whole width drains from full to empty in
-primaryContainer, the next exercise's name on it and the time left in headlineMedium digits at the
+a primary tint, the next exercise's name on it and the time left in headlineMedium digits at the
 end, so a glance tells how far through the rest you are. The set table stays visible, with the pad
 shown or hidden. Tapping the digits (48 dp tall at least) opens the rest sheet: −15, the time, +15,
 End rest; tapping the rest of the row goes to the next exercise, as without a clock. After rest the
 row has no fill and counts up (`+0:12`) in onSurfaceVariant until the next set is logged. Before a
-myo mini-set the row is a 15 s breathing countdown, drained in tertiaryContainer; the digits can't
+myo mini-set the row is a 15 s breathing countdown, drained in a tertiary tint; the digits can't
 be tapped, and it goes away at zero.
 
 **Sheets** (modal bottom sheets, surfaceContainerLow, 28 dp text edge). Their rows sit in
