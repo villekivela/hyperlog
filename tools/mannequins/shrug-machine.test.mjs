@@ -92,3 +92,33 @@ test('a fit rule sets the seat, at its measured 650 mm by default', () => {
   const top = (kit) => { let y; kit.group.traverse((o) => { if (o.isMesh && o.userData.role === 'seat') y = new THREE.Box3().setFromObject(o).max.y; }); return y; };
   close(top(machine({ seat: 0.7 })), 0.7, 0.01, 'the seat set to 700 mm');
 });
+
+const roled = (kit, name) => { const found = []; kit.group.traverse((o) => { if (o.isMesh && o.userData.role === name) found.push(o); }); return found; };
+
+test('the backrest beam and its column are cut to meet on a mitre, flush at the back and the top', () => {
+  const kit = machine();
+  const [column] = roled(kit, 'backColumn');
+  const [beam] = roled(kit, 'backBeam');
+  assert.ok(column && beam, 'a backColumn and a backBeam');
+  const [c, b] = [column, beam].map((o) => new THREE.Box3().setFromObject(o));
+  close(c.max.y, b.max.y, 0.001, 'the column\'s top against the beam\'s top');
+  close(c.min.z, b.min.z, 0.001, 'the column\'s back against the beam\'s back');
+  // The beam runs from the column to the pad's back, and the column stands on the floor beam.
+  assert.ok(b.max.z > c.max.z + 0.1, 'the beam reaches forward of the column');
+});
+
+test('each handle turns from its round post into the grip through a round elbow, with no tube end showing', () => {
+  const kit = machine();
+  const elbows = roled(kit, 'elbow');
+  assert.equal(elbows.length, 2, 'an elbow a side');
+  const ends = grips(kit);
+  for (const [i, elbow] of elbows.entries()) {
+    const at = new THREE.Box3().setFromObject(elbow).getCenter(new THREE.Vector3());
+    const side = at.x < 0 ? 0 : 1;
+    // On the grip's line, behind its middle by half its length.
+    close(at.x, ends[side].x, 1e-6, `elbow ${i} across`);
+    close(Math.hypot(at.y - ends[side].y, at.z - ends[side].z), 0.07, 0.003, `elbow ${i} behind the grip's middle`);
+    // Wider than the grip and the post, so both end inside it.
+    assert.ok(new THREE.Box3().setFromObject(elbow).getSize(new THREE.Vector3()).x > 0.04, 'the elbow is wider than the grip');
+  }
+});

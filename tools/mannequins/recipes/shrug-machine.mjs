@@ -11,7 +11,8 @@
 // pose: `P.levers` is the joint's value, or the levers rest on their stop where the pose frame
 // gives none.
 import { recipe, revolute } from '../recipe.mjs';
-import { floorRail, hub, padGeometry, part, plateGeometry, rod, rodGeometry, seatOn, span, stretchedTube, tube } from '../parts.mjs';
+import * as THREE from 'three';
+import { floorRail, hub, knob, padGeometry, part, plateGeometry, rod, rodGeometry, seatOn, soften, span, stretchedTube, tube } from '../parts.mjs';
 import { V } from '../rig.mjs';
 
 // The levers' pivot, [y, z], and the grips' reach from it: 760 ahead and 100 above on the stop.
@@ -31,6 +32,15 @@ const FRONT = 0.22;
 const PAD = { top: 1.24, long: 0.5, w: 0.36, deep: 0.08, z: -0.36 };
 // The horns reach to 760 either side of the middle, with a plate on each at `plateAt`.
 const HORN = { out: 0.76, plateAt: 0.45 };
+
+/** A length of tubing `thick` across x, its section the polygon of [z, y] points, its edges eased. */
+function cut(points, thick, M) {
+  const ease = 0.0015;
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape(points.map(([z, y]) => new THREE.Vector2(z, y))), { depth: thick - 2 * ease, bevelEnabled: true, bevelThickness: ease, bevelSize: ease, bevelOffset: -ease, bevelSegments: 1 });
+  g.translate(0, 0, -thick / 2 + ease);
+  g.rotateY(-Math.PI / 2);
+  return part(soften(g), M.frame, { solid: true });
+}
 
 /** Names what a part is, for the tests and the studio. */
 const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
@@ -60,8 +70,14 @@ export default recipe({
     }
     // The pad's column up the middle of the cross beam, braced forward to the pad's board.
     const padY = PAD.top - PAD.long / 2;
-    frame.push(tube(0.07, V(0, 0.07, PIVOT[1]), V(0, PAD.top - 0.1, PIVOT[1]), M.frame));
-    frame.push(tube(0.05, V(0, PAD.top - 0.1, PIVOT[1]), V(0, PAD.top - 0.1, PAD.z - PAD.deep / 2), M.frame));
+    // Up the middle from the cross beam and forward to the pad's back, the two tubes cut to meet on a
+    // mitre at the corner.
+    const T = 0.06;
+    const [column, beamY, reach] = [PIVOT[1], PAD.top - 0.1, PAD.z - PAD.deep / 2 - 0.006];
+    const outer = [column - T / 2, beamY + T / 2];
+    const inner = [column + T / 2, beamY - T / 2];
+    frame.push(role(cut([[column - T / 2, 0.07], [column + T / 2, 0.07], inner, outer], T, M), 'backColumn'));
+    frame.push(role(cut([outer, inner, [reach, beamY - T / 2], [reach, beamY + T / 2]], T, M), 'backBeam'));
     const back = part(padGeometry(PAD.w, PAD.long, PAD.deep, 0.025), M.vinyl, { solid: true });
     back.position.set(0, padY, PAD.z);
     frame.push(role(back, 'backPad'));
@@ -76,12 +92,14 @@ export default recipe({
       s,
       boss: hub(M, V(s * GRIPS_OUT, PIVOT[0], PIVOT[1])),
       arm: stretchedTube(0.05, M.frame),
-      post: stretchedTube(0.04, M.frame),
+      post: part(rodGeometry(0.02), M.frame, { solid: true }),
+      elbow: role(knob(M, V(0, 0, 0), 0.0225, M.frame), 'elbow'),
+      cap: knob(M, V(0, 0, 0), 0.0175),
       grip: part(rodGeometry(0.0175), M.vinyl, { held: true }),
       horn: role(part(rodGeometry(0.025), M.metal), 'horn'),
       plate: part(plateGeometry(0.17, 0.04), M.plate, { solid: true }),
     }));
-    const moving = levers.flatMap((l) => [l.boss, l.arm, l.post, l.grip, l.horn, l.plate]);
+    const moving = levers.flatMap((l) => [l.boss, l.arm, l.post, l.elbow, l.grip, l.cap, l.horn, l.plate]);
     return {
       parts: [...frame, ...moving],
       bodies: { levers: moving },
@@ -100,7 +118,10 @@ export default recipe({
           l.boss.position.copy(at(pivot));
           span(l.arm, at(pivot), foot);
           span(l.post, foot, heel);
-          span(l.grip, heel, grip.clone().addScaledVector(ahead, GRIP / 2));
+          const tip = grip.clone().addScaledVector(ahead, GRIP / 2);
+          span(l.grip, heel, tip);
+          l.elbow.position.copy(heel);
+          l.cap.position.copy(tip);
           span(l.horn, foot, foot.clone().setX(l.s * HORN.out));
           l.plate.position.copy(foot).setX(l.s * HORN.plateAt);
           points.push(grip);
