@@ -29,7 +29,7 @@ const GRIPS_OUT = 0.35;
 const ARMS_OUT = 0.45;
 const BEARING_OUT = 0.3;
 const NEUTRAL = 0.12;
-const BAR = 0.1;
+const BAR = 0.13;
 // The seat's top and its z; the hips sit this far above it and a little behind its middle.
 const SEAT = [0.35, 0.02];
 const SITS = 0.09;
@@ -152,7 +152,7 @@ export default recipe({
       arm: stretchedTube(0.09, M.metal),
       bar: role(part(rodGeometry(0.0175), M.vinyl, { held: true }), 'barGrip'),
       neutral: role(part(rodGeometry(0.0205), M.vinyl, { held: true }), 'neutralGrip'),
-      horn: part(rodGeometry(0.0175), M.vinyl),
+      horn: part(rodGeometry(0.0205), M.vinyl),
       stub: part(rodGeometry(0.02), M.metal),
     }));
     const moving = [...bearings.map((b) => b.housing), beam, crank, knob, ...arms.flatMap((a) => [a.arm, a.bar, a.neutral, a.horn, a.stub])];
@@ -176,7 +176,7 @@ export default recipe({
         span(a.neutral, at(end.clone().addScaledVector(ahead, -NEUTRAL), GRIPS_OUT), at(end, GRIPS_OUT));
         span(a.stub, at(end, ARMS_OUT), at(end, GRIPS_OUT));
         const hornFoot = end.clone().addScaledVector(ahead, 0.02);
-        span(a.horn, at(hornFoot, GRIPS_OUT), at(hornFoot.clone().addScaledVector(upward, 0.1), GRIPS_OUT - 0.03));
+        span(a.horn, at(hornFoot, GRIPS_OUT), at(hornFoot.clone().addScaledVector(upward, 0.13), GRIPS_OUT - 0.05));
         // The bar grip across the end, beyond the neutral grip.
         const tipAt = end.clone().addScaledVector(ahead, 0.09);
         span(a.bar, at(tipAt, ARMS_OUT), at(tipAt, ARMS_OUT - BAR));

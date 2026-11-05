@@ -283,6 +283,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
+| `shoulder_press` | seated against a back pad, pressing neutral grips on a yoke that pivots behind it | `yoke`, degrees up from level ahead; `feet.stance`, `feet.z`, `feet.toeOut`; `body.trunk` |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `armOut`, degrees the arm leans out to the side about the shoulder, away from the body whether it is raised or hanging (a Y overhead, a lateral raise), easing from none at an end without one; `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
@@ -488,19 +489,20 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
   about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
   (the shoulders).
-- `shoulder_press` (#225, the machine kind of `machine_shoulder_press`, not yet posed, so no clip changes)
-  stands where its ref puts it, whatever the pose: a seat at 350 mm against a back pad 830 mm long
-  reclined 10°, topping out at 1.27 m, on a column up from a rear cross beam, with the weight stack
-  in its own frame beside the lifter, on their right and level with the seat, 1.63 m tall. The yoke (two side arms joined by a crossbar
-  behind the pad) is one body on a revolute joint about the axle at the column's top, 980 mm up, its
-  value the angle up from level ahead of the line to the grips: 0° at the bottom of the rep, the
-  grips 980 mm up and 700 apart, 900 mm ahead of the pivot, to 40° at the top, 580 mm higher and
-  about 200 mm further back. Each arm ends in a bar grip (overhand) with a neutral grip beside it;
-  the contact ties the hands to the neutral grips. A crank behind the pivot draws a cable under the
-  floor to the stack, which rises with the yoke. Its one option is `seat`, the seat's top (0.35 m,
-  the fit rule's height, in a range of 330 to 500 mm that no picture shows). In the studio it
-  stands alone, three-quarter from the front: run `cd tools/mannequins && npm run studio`, open
-  `shoulder press` under Kits, and the joint's slider scrubs the yoke through its limits.
+- `shoulder_press` (#225, the machine kind of `machine_shoulder_press`, posed with the `shoulder_press`
+  motion in the `shoulder-press` batch) has a seat solved for the mannequin (about 0.4 m: the shoulders level
+  with the grips at the bottom of the rep, in a range of 330 to 500 mm) against a back pad that follows the spine, on a post up from a rear frame; two
+  bearing posts behind the pad carry the yoke 980 mm up, each braced by a rake leg down and forward
+  to the seat's front. The yoke is a Y: a beam behind the pad angled forward at each end, then an arm a
+  side straight ahead, one body on a revolute joint about the bearings, its value the angle up from
+  level ahead of the line to the grips: 0° at the bottom of the rep, the grips 980 mm up and 700 apart,
+  900 mm ahead of the pivot, to 40° at the top, 580 mm higher and about 200 mm further back. Each arm ends in
+  a bar grip (overhand) and a neutral grip with a horn above it; the contact ties the hands to the neutral
+  grips, and the back to the pad. A crank behind the pivot draws a cable under the floor to the stack, in a
+  portal frame 1.63 m tall beside the lifter, on their right, its front level with the grips; the stack
+  rises with the yoke. Options: `seat`, the seat's top, and `pad`, how far behind the spine the pad's face
+  stands, each solved for the mannequin. In the studio, `npm run studio`, open `Machine Shoulder Press`
+  to see the pose, or `shoulder press` under Kits for the machine alone, and scrub the yoke.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, all posed on it, #196) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -717,7 +719,7 @@ The first batch's traces:
 
 ## Rendering a pose
 
-`node render.mjs <id> [out-dir]` writes `<id>-side.png` and `<id>-front.png`, the top of the rep
+`node render.mjs <id> [out-dir]` writes `<id>-side.png` and `<id>-front.png` (`--view threeQuarter` the whole machine from the front left, as a product photo), the top of the rep
 beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
 colours. A lying lift is seen from the head end, and equipment standing well in front of the body
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
@@ -747,7 +749,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the shoulder press, the lateral raise machine, the EZ bar, the hip machine, the safety bar, the hyperextension bench and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the lateral raise machine, the EZ bar, the hip machine, the safety bar, the hyperextension bench and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
