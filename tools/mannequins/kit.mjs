@@ -67,6 +67,7 @@ export const STATIONS = {
       'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
     ],
   },
+  hyperextension_bench: { kit: 'hyperextension_bench', exercises: ['45_hyperextension'] },
 };
 
 /**
@@ -95,7 +96,7 @@ export const EQUIPMENT = {
   safety_bar: ['safety_bar'],
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
-  weighted_bodyweight: ['power_rack'],
+  weighted_bodyweight: ['power_rack', 'hyperextension_bench'],
 };
 
 /** Every kit's recipe, by name. */
