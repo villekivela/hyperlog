@@ -22,7 +22,7 @@ const SITS = {
   squat: 'mid', hinge: 'base', bench_press: 'heel', pulldown: 'base', pressdown: 'mid', leg_press: 'base',
   chest_press: 'heel', dumbbell_press: 'heel', arms: 'mid', row: 'base', free_arms: 'base', knee_lever: 'base',
   calf_raise: 'base', hack_squat: 'base', lever_handles: 'base', chest_pad: 'base', bridge: 'mid', lunge: 'base', bench_row: 'base',
-  hang: 'base', support: 'heel',
+  hang: 'base', support: 'heel', glute_ham_raise: 'open',
 };
 
 /**

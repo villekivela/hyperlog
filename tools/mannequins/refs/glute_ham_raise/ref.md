@@ -32,10 +32,14 @@ Measured in the WEB3 photo in the machine's centre plane, scaled by the publishe
 | Ankle roller length / diameter | 216 / 127 | Rogue page (8.5" x 5"); 123 diameter estimated from WEB3 |
 | Roller vertical spacing, centre to centre | 203 | Rogue page (8"), leaving a 76 mm gap |
 | Roller heights | upper centre about 1175, lower about 970; the gap between them about 20 below the pad top | estimated from WEB3, same scale |
-| Foot plate | about 345 tall, from about 890 to 1235 off the floor, just behind the rollers (centre about 120 behind the roller centres); 4.8 thick | size and place estimated from WEB3, same scale; thickness from the Rogue page (0.1875") |
+| Foot plate | about 345 tall, from about 890 to 1235 off the floor, just behind the rollers (centre about 150 behind the roller centres); 4.8 thick | size and place estimated from WEB3, same scale; thickness from the Rogue page (0.1875") |
 | Pad rear edge to foot plate, in the WEB3 setting | about 430 | estimated from WEB3, same scale |
 | Roller slide adjustment | 25 mm steps; about 12-14 holes, so about 300 of travel | steps from the Rogue page (1" increments); holes counted in WEB1 (4 and 8 visible either side of the slide, a few under it), low confidence |
-| For the mannequin: pad rear edge to foot plate | 450 | chosen from the fit rule below (knee just behind the pad's rear curve, shin horizontal, 0.43 m shin plus 0.08 m ankle to sole), low confidence |
+| Frame sections | 2 by 3 in tube ("2x3 Gauge Steel"); the rails 3 in tall and 2 in across, the uprights' wide face to the side, the spine 3 in tall | Rogue page and WEB1's callout; read off H and WEB1 |
+| Rail tops, spine, uprights | the rails' tops about 76 off the floor; the rear upright 19 in over them, to the spine's top; the front upright 29 in over them, to the pad plate's underside at about 836 | the manual's part names (19 in, 29 in) with H and WEB2, low confidence |
+| Rollers' centres behind the pads, ahead of the plate | about 150 ahead of the plate's middle: the foot lies on the plate, and the lower roller sits ahead of the instep | estimated again from H and the video (0:04.5), the first reading of about 120 leaving the lower roller in the foot; low confidence |
+| Knee on the pads (the lifter) | the knee joint about 50 above the crest, 50 behind it; the thighs lie on the crest at the bottom | estimated from the video at 0:04.5 and 0:09.5; low confidence |
+| Plate to pads, most forward hole | face about 300 behind the pad rear edge (a chosen end of the travel); 12 holes of 25.4 back | chosen; the mannequin's own shin picks the hole by the fit rule below (hole 1 for a 0.43 m shin: a face about 325 behind) |
 
 ## Motion
 - Machine is static; no moving bodies. The user's hinge axis is the knee, resting on the back of the pad; the hip stays straight through the rep (the exercise note says "Keep your hips straight").
@@ -45,10 +49,10 @@ Measured in the WEB3 photo in the machine's centre plane, scaled by the publishe
 ## Adjustments and fit rules
 - Roller assembly slides along a rail in 1" steps, locked by two threaded knobs and a pop pin.
 - Ankle pads adjust horizontally only; the roller heights are fixed.
-- Fit rule for `glute_ham_raise` (from the video at 0:04.5 and 0:09.5): the lower thighs lie on the pad with the kneecaps just behind its crest, on the rear curve; the ankles sit in the gap between the rollers with the soles flat on the foot plate. The hip pad edge at the crease of the hips is the back-extension and sit-up setting (the hips on the pad, as in WEB3), not this one.
+- Fit rule for `glute_ham_raise` (from the video at 0:04.5 and 0:09.5): the knees rest on the pad's crest, just behind it, with the thighs lying along it at the bottom; the shin slopes gently down and back to an ankle in the gap between the rollers, the sole flat on the foot plate. The recipe solves the hole from the mannequin's shin: the knee 50 behind the crest, the ankle in the gap, the sole on the plate. The hip pad edge at the crease of the hips is the back-extension and sit-up setting (the hips on the pad, as in WEB3), not this one.
 - Move the rollers forward (toward the pad) for the glute-ham raise and back for back extensions and sit-ups.
 
 ## Open gaps
 - Pad length and height are from photos taken off side-on, good to about 10%. The pad width and gap are chosen, not measured.
-- The mannequin's pad-to-foot-plate distance is chosen from its shin length. The photos show other settings: WEB3 is a back-extension setting, and the video is another maker's machine.
+- The mannequin's pad-to-foot-plate distance is chosen from its shin length, by the fit rule above, and the knee's height over the crest is chosen at low confidence. The photos show other settings: WEB3 is a back-extension setting, and the video is another maker's machine.
 - Total roller travel is a count of holes in one photo.
