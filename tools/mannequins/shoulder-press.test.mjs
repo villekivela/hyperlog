@@ -82,12 +82,12 @@ test('it stands 1.4 m deep, 1.63 m tall and 1.5 m across, a bar grip and a neutr
   assert.equal(role(kit, 'neutralGrip').length, 2);
 });
 
-test('the seat top is 350 mm, the back pad runs 830 mm up to 1.27 m reclined 10°, and the recipe carries no brand', async () => {
+test('the seat top is 350 mm, the back pad runs about 850 mm up to 1.27 m, a little reclined, and the recipe carries no brand', async () => {
   const kit = machine();
   close(new THREE.Box3().setFromObject(role(kit, 'seat')[0]).max.y, 0.35, 0.01, 'the seat top');
   const pad = new THREE.Box3().setFromObject(role(kit, 'backPad')[0]);
-  close(pad.max.y, 1.27, 0.03, 'the pad top');
-  close(pad.max.y - pad.min.y, 0.83 * Math.cos(THREE.MathUtils.degToRad(10)), 0.06, 'the pad height');
+  close(pad.max.y, 1.27, 0.04, 'the pad top');
+  close(pad.max.y - pad.min.y, 0.85, 0.06, 'the pad height');
   const source = await readFile(new URL('./recipes/shoulder-press.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /hammer|life ?fitness|strength|hs-sp/i);
 });

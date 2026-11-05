@@ -15,7 +15,7 @@
 // body from the grips.
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  WHEEL, backPad, floorRail, mitered, part, pivotJoint, pad, pulley, rod, rodGeometry, seatOn, span, stretchedTube, tube, weightStack,
+  WHEEL, backPad, floorRail, hub, mitered, part, pivotJoint, pad, pulley, rod, rodGeometry, seatOn, span, stretchedTube, tube, weightStack,
 } from '../parts.mjs';
 import { V, rad, spineLean } from '../rig.mjs';
 
@@ -25,15 +25,15 @@ const REACH = 0.9;
 const TOP = Math.asin(0.58 / REACH);
 // The neutral grips this far either side of the middle (700 apart), the arms and the bearings outside them.
 const GRIPS_OUT = 0.35;
-const ARMS_OUT = 0.44;
+const ARMS_OUT = 0.45;
 const BEARING_OUT = 0.3;
 const NEUTRAL = 0.12;
-const BAR = 0.12;
+const BAR = 0.1;
 // The seat's top and its z; the hips sit this far above it and a little behind its middle.
 const SEAT = [0.35, 0.02];
 const SITS = 0.09;
 const hipOn = (top) => [top + SITS, SEAT[1] - 0.02];
-const PAD = { long: 0.83, w: 0.44, lean: rad(-6.5) };
+const PAD = { long: 0.86, w: 0.44, lean: rad(-6.5) };
 // The stack beside the lifter (their right is -x): the portal's middle [x, z], its half width and depth, and its top.
 const TOWER = { at: [-0.75, -0.05], halfW: 0.2, halfD: 0.2, top: 1.58, post: 0.08 };
 const FRONT = 0.3;
@@ -92,18 +92,18 @@ export default recipe({
     // The bearing posts, and the rake leg from each down and forward to the front foot.
     for (const s of [-1, 1]) {
       frame.push(tube(0.09, V(s * BEARING_OUT, 0.07, PIVOT[1]), V(s * BEARING_OUT, PIVOT[0] - 0.09, PIVOT[1]), M.frame));
-      frame.push(tube(0.08, V(s * BEARING_OUT, PIVOT[0] - 0.3, PIVOT[1] + 0.03), V(s * BEARING_OUT, 0.07, FRONT), M.frame));
+      frame.push(tube(0.08, V(s * BEARING_OUT, PIVOT[0] - 0.3, PIVOT[1] + 0.03), V(s * BEARING_OUT, 0.07, SEAT[1] + 0.05), M.frame));
     }
     // The back pad on its post: it follows the trunk, as a fixed pad meets the back on the gym floor,
     // and with no pose stands reclined `PAD.lean` from the hips on the seat.
     const hip = V(0, ...hipOn(seatTop));
     const rest = { hipC: hip, u: V(0, Math.cos(PAD.lean), Math.sin(PAD.lean)) };
-    const backRest = backPad(PAD.w, PAD.long, M, { up: PAD.long / 2 + 0.03, behind });
+    const backRest = backPad(PAD.w, PAD.long, M, { up: PAD.long / 2 - 0.04, behind });
     role(backRest.mesh.children[0], 'backPad');
     const support = stretchedTube(0.07, M.frame);
     frame.push(backRest.mesh, support);
     // The seat on its post, in a housing at its front.
-    const [cushion, ...seatParts] = seatOn(seatTop, SEAT[1], M, { w: 0.38, d: 0.4, pin: 1 });
+    const [cushion, ...seatParts] = seatOn(seatTop, SEAT[1], M, { w: 0.44, d: 0.4, pin: 1 });
     frame.push(role(cushion, 'seat'), ...seatParts);
     frame.push(pad(0.2, 0.12, 0.16, M.frame, V(0, seatTop - 0.16, SEAT[1] + 0.12), { soft: 0.012 }));
 
@@ -138,7 +138,7 @@ export default recipe({
     frame.push(...bearings.flatMap((b) => b.fixed));
     const crossbar = stretchedTube(0.1, M.metal);
     const crank = stretchedTube(0.06, M.metal);
-    const knob = part(rodGeometry(0.02), M.metal);
+    const knob = hub(M, V(0, 0, 0));
     const arms = [-1, 1].map((s) => ({
       s,
       arm: stretchedTube(0.08, M.metal),
@@ -161,13 +161,14 @@ export default recipe({
       for (const a of arms) {
         const at = (p, x) => p.clone().setX(a.s * x);
         const gripMiddle = end.clone().addScaledVector(ahead, -NEUTRAL / 2);
-        span(a.arm, at(pivot, ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.05), ARMS_OUT));
+        span(a.arm, at(pivot, ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.09), ARMS_OUT));
         // The neutral grip inboard of the arm, joined to it by a stub at its front end, a horn up from its front.
         span(a.neutral, at(end.clone().addScaledVector(ahead, -NEUTRAL), GRIPS_OUT), at(end, GRIPS_OUT));
         span(a.stub, at(end, ARMS_OUT), at(end, GRIPS_OUT));
-        span(a.horn, at(end, GRIPS_OUT), at(end.clone().addScaledVector(upward, 0.07), GRIPS_OUT));
+        const hornFoot = end.clone().addScaledVector(ahead, 0.02);
+        span(a.horn, at(hornFoot, GRIPS_OUT), at(hornFoot.clone().addScaledVector(upward, 0.1), GRIPS_OUT - 0.03));
         // The bar grip across the end, beyond the neutral grip.
-        const tipAt = end.clone().addScaledVector(ahead, 0.05);
+        const tipAt = end.clone().addScaledVector(ahead, 0.09);
         span(a.bar, at(tipAt, ARMS_OUT), at(tipAt, ARMS_OUT - BAR));
         points.push(at(gripMiddle, GRIPS_OUT));
       }

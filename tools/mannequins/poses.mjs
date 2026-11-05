@@ -154,7 +154,7 @@ export const POSES = {
     motion: 'shoulder_press',
     kit: { shoulder_press: {} },
     body: { trunk: -18 },
-    feet: { stance: 0.17, z: 0.48, toeOut: 12 },
+    feet: { stance: 0.17, z: 0.42, toeOut: 12 },
     grip: {},
     camera: { target: [-0.1, 0.98, 0.1], halfHeight: 1.2, azimuth: 56, elevation: 12 },
   },
