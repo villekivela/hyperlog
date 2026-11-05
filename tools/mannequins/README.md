@@ -297,7 +297,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
 | `ez_bar` | `ez_bar` |
 | `trap_bar` | `trap_bar` |
-| `safety_bar` | missing |
+| `safety_bar` | `safety_bar` |
 | `smith_machine` | `smith_machine`, `bench`, `platform` (a low one under the front foot, for the front-foot-elevated lunge) |
 | `plate` | missing |
 | `weighted_bodyweight` | `power_rack` |
@@ -455,6 +455,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   default, or `inner`) is the pair the pose's bar position is the middle of. Contacts, hands on the
   bar: `outer` (510 mm apart) and `inner` (250), on the segments' middles. Lying on the floor with no
   pose, it is shown alone in the studio (`npm run studio`, the `ez bar` row under kits).
+- `safety_bar` (#219, safety_bar equipment; `BARS` in `kit.mjs` maps its two exercises, none posed yet,
+  so no clip changes) is a cambered bar from the ref's numbers, unloaded: a 38 mm shaft 1310 mm
+  between two camber bends that carry the sleeves 140 mm below its centre line, 2362 mm long over
+  the sleeves, a yoke pad 330 by 100 mm round the shaft, and two handle arms from the yoke ends, each
+  with a pad 270 mm long and a bare steel grip 175 mm long. Nothing on it moves and it fits every
+  height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
+  about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
+  (the shoulders).
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -652,7 +660,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack, the EZ bar, the hip machine and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack, the EZ bar, the hip machine, the safety bar and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

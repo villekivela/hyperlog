@@ -76,6 +76,7 @@ export const STATIONS = {
 export const BARS = {
   trap_bar: { kit: 'trap_bar', exercises: ['trap_bar_deadlift'] },
   ez_bar: { kit: 'ez_bar', exercises: ['ez_bar_curl', 'ez_bar_preacher_curl', 'skull_crusher'] },
+  safety_bar: { kit: 'safety_bar', exercises: ['safety_bar_squat', 'good_morning_barbell_safety_bar'] },
 };
 
 /**
@@ -91,7 +92,7 @@ export const EQUIPMENT = {
   bodyweight: ['power_rack'],
   ez_bar: ['ez_bar'],
   trap_bar: ['trap_bar'],
-  safety_bar: null,
+  safety_bar: ['safety_bar'],
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
   weighted_bodyweight: ['power_rack'],
