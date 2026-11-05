@@ -285,7 +285,7 @@ test('the wedges stand over the plate, on the lifter\'s side of it, and it stand
   assert.ok(w.max.z <= plate.min.z + 0.005, 'on the lifter\'s side of it, so it drops in front of it as the arm rises');
   assert.ok(w.max.z - w.min.z > 2.2 * (w.max.x - w.min.x), 'a long slab, about 2.5 to 1, not a block');
   assert.ok(w.max.z - w.min.z > 0.3, 'about as long as an arm pad');
-  close(w.max.y - kit.joints.arm_l.origin.y, 0.24, 0.04, 'its top over the pivot, as the hero photo has it');
+  close(w.max.y - kit.joints.arm_l.origin.y, 0.2, 0.03, 'its top over the pivot, close over it as the demo has it');
 });
 
 test('the beam runs the pad\'s whole length, tight against it', () => {
@@ -309,7 +309,7 @@ test('the whole lever is solid to the body: strut, beam, bracket and wedge', () 
     const { origin } = kit.joints[`arm_${k}`];
     assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y > origin.y), `${k}'s wedge`);
     assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y <= origin.y && b.max.x - b.min.x < 0.1 && b.max.y - b.min.y < 0.1), `${k}'s beam`);
-    assert.ok(solid.filter((b) => b.max.z - b.min.z < 0.1 && b.max.y - b.min.y > 0.2).length >= 1, `${k}'s strut`);
+    assert.ok(solid.filter((b) => b.max.z - b.min.z < 0.2 && b.max.y - b.min.y > 0.2).length >= 1, `${k}'s strut`);
   }
 });
 
@@ -323,6 +323,44 @@ test('a pulley block stands between the post and the tower, on the centre line, 
     const c = b.getCenter(new THREE.Vector3());
     assert.ok(Math.abs(c.x) < 0.06, `on the centre line, at x ${c.x.toFixed(2)}`);
     assert.ok(c.z > 0.3 && c.z < 0.7 && c.y < 0.8, `between the post and the tower, at z ${c.z.toFixed(2)}`);
+  }
+});
+
+/** The pulley block as it stands now: everything of the pulleys' tone. */
+const blockOf = (kit) => boxes(kit).filter(({ mesh }) => mesh.material?.name === 'pulley' && !mesh.userData.solid).reduce((all, { box: b }) => all.union(b), new THREE.Box3());
+
+test('the pulley block is a broad bowtie out in the gap, from the seat\'s height down, its cables straight up and down', () => {
+  const kit = machine();
+  const block = blockOf(kit);
+  assert.ok(block.max.x - block.min.x > 0.14, 'broad, facing along the machine');
+  assert.ok(block.max.y < 0.65 && block.min.y < 0.32, `from ${block.max.y.toFixed(2)} m down to ${block.min.y.toFixed(2)} m`);
+  const middle = block.getCenter(new THREE.Vector3()).z;
+  assert.ok(middle > 0.38 && middle < 0.6, `out in the gap, at z ${middle.toFixed(2)}`);
+  const cables = boxes(kit).filter(({ mesh, box: b }) => mesh.material?.name === 'metal' && b.max.x - b.min.x < 0.02 && b.max.z - b.min.z < 0.02 && Math.abs(b.getCenter(new THREE.Vector3()).z - middle) < 0.02);
+  assert.ok(cables.some(({ box: b }) => b.max.y > 1), 'a cable straight up to the levers');
+  assert.ok(cables.some(({ box: b }) => b.min.y < 0.1), 'and one straight down to the base');
+  const leaning = boxes(kit).filter(({ mesh, box: b }) => mesh.material?.name === 'metal' && b.max.z - b.min.z > 0.3 && b.max.y - b.min.y > 0.1 && b.max.y < 0.9);
+  assert.deepEqual(leaning.map(({ mesh }) => mesh.name), [], 'no cable across the open air');
+});
+
+test('the block rises with the rep, its cables following it', async () => {
+  const { pose, kit } = await buildStage(prepare('machine_lateral_raise'));
+  const blockY = () => blockOf(kit.kits.lateral_raise_machine).getCenter(new THREE.Vector3()).y;
+  pose(0);
+  const low = blockY();
+  pose(1);
+  close(blockY() - low, 0.12, 0.03, 'its rise, half the stack\'s');
+});
+
+// The hero photo and the demo at 0:08: the wedge sits close over the pivot, and the lever rakes
+// toward the tower as it comes down.
+test('the lever rakes toward the tower as it comes down, its wedge close over the pivot', () => {
+  const kit = machine();
+  for (const [k] of SIDES) {
+    const { origin } = kit.joints[`arm_${k}`];
+    const reach = Math.max(...boxes(kit).filter(({ mesh }) => kit.bodies[`arm_${k}`].includes(mesh)).map(({ box: b }) => b.max.z));
+    assert.ok(reach > origin.z + 0.09, `${k}'s lever reaches ${(reach - origin.z).toFixed(2)} m toward the tower from its pivot`);
+    assert.ok(wedgeOf(kit, k).min.y < origin.y + 0.1, `${k}'s wedge starts ${(wedgeOf(kit, k).min.y - origin.y).toFixed(2)} m over the pivot`);
   }
 });
 

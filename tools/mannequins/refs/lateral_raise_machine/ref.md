@@ -61,13 +61,13 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 | Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
 | Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
 | Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate mostly covered by the wedges, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
-| Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, a beam back along the pad | a thin dog-leg | as measured |
+| Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, raking toward the tower on the way, a beam back along the pad | a thin dog-leg | as measured |
 | Wedges | long slabs about as long as the arm pads, a tight V over the pivots, running fore and aft on the lifter's side of the plate, a valley between, the struts carrying on into them; they drop in front of the plate as the arms rise | missing | as measured |
 | Arm pads | about 300 long, 140 through, on the outside of the upper arm at the elbow | 250 long, 100 through, past the elbow | as measured |
 | Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
 | Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
 | Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin |
-| Pulley block | two pulleys on a plate between the post and the tower, the cable up to the levers and on to the stack | missing, one pulley at the tower's top | as measured, its cable fixed; only the length at the stack moves |
+| Pulley block | a broad bowtie plate with two pulleys out in the gap between the post and the tower, from the seat's height down, cables straight up to the levers and down to the base, rising with the rep | missing, one pulley at the tower's top | as measured, a plain plate rising half the stack's travel |
 | Stack travel | about 240, estimated from the demo at 0:08 and 0:09: 17% of the tower | about 280 | as measured |
 
 ## Open gaps

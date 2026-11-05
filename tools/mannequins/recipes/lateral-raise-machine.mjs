@@ -9,8 +9,8 @@
 // The pivots are fixed on the frame, 1.15 m up and on the mannequin's shoulders, and the seat moves to
 // them. Each lever is a body on a revolute joint, its value the upper arm's angle out from hanging,
 // from 10° to horizontal. The arms rise together in both of the ref's videos, so the stack hangs on
-// the left arm's joint. The grips pivot on the levers, holding one line through the rep. The cable
-// over the pulley block stands still, and only the length from the stack's head up to the tower's top moves. The standing lateral raise, which the ref
+// the left arm's joint. The grips pivot on the levers, holding one line through the rep. The pulley
+// block rises with the stack. The standing lateral raise, which the ref
 // gives its own geometry, is listed with this kit's exercises but needs a kit of its own.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
@@ -38,9 +38,11 @@ const PAD = { length: 0.3, radius: 0.07 };
 // runs back from the knee along the pad's outside. The wedge stands over the pivot, running fore and
 // aft between the bar and the plate, a valley between the two, so it drops in front of the plate.
 const KNEE_OUT = 0.195;
+// The strut rakes toward the tower on its way down to the knee.
+const KNEE_Z = PLANE + 0.12;
 const LEVER_WIDTH = 0.06;
 const WEDGE_Z = PLANE + 0.04;
-const WEDGE = { length: 0.33, width: 0.1, height: 0.12, over: 0.18, in: 0.1, tilt: rad(28) };
+const WEDGE = { length: 0.33, width: 0.1, height: 0.12, over: 0.125, in: 0.1, tilt: rad(28) };
 const GRIP = 0.075;
 // The tower stands ahead of the lifter, its near end about on the centre line, as in the ref's photos.
 const TOWER_X = -0.24;
@@ -55,8 +57,9 @@ const SEAT_Z = -0.08;
 const FRAME_TOP = 1.4;
 const SEAT = 0.55;
 const BEAM_Y = 0.85;
-// The pulley block between the post and the tower: its two wheels' heights, and where it stands.
-const BLOCK = { y: [0.42, 0.6], z: 0.42 };
+// The pulley block out in the gap between the post and the tower: its two wheels' heights, where it
+// stands, its plate, and its share of the stack's rise.
+const BLOCK = { y: [0.33, 0.48], z: 0.46, width: 0.18, height: 0.34, rise: 0.5 };
 const SITS = 0.09;
 // How far along z the hips sit, the chest on its pad.
 const HIP_Z = -0.07;
@@ -78,7 +81,7 @@ function legAt(s, value) {
   // Where the lever turns back along the pad, the pad's middle out of the arm's line, and the grip on
   // that line, hung inboard of the pad from a bracket, ahead of it in the levers' plane.
   const root = corner.clone().addScaledVector(toGrip, REACH);
-  const knee = pivot.clone().addScaledVector(toGrip, REACH + 0.03).addScaledVector(outOf(s, value), KNEE_OUT);
+  const knee = pivot.clone().addScaledVector(toGrip, REACH + 0.03).addScaledVector(outOf(s, value), KNEE_OUT).setZ(KNEE_Z);
   const grip = pivot.clone().addScaledVector(toGrip, GRIP_REACH);
   // The bracket's end, on the lever and clear of the thumb, and a stem down to the grip, which pivots
   // on it and so holds its own line.
@@ -121,12 +124,20 @@ export default recipe({
     const tower = stackFrame(STACK_Z, FRAME_TOP, M);
     tower.forEach((m) => { m.position.x += TOWER_X; });
     const drop = wire(M);
-    // The cable from the levers' stub down over the block's wheels and along to the tower's foot.
-    const [lowWheel, highWheel] = BLOCK.y.map((y) => V(0, y, BLOCK.z));
-    const toLevers = wire(M);
-    span(toLevers, highWheel.clone().setY(highWheel.y + WHEEL), V(0, PIVOT_Y - 0.1, BLOCK.z));
-    const toTower = wire(M);
-    span(toTower, lowWheel.clone().setY(lowWheel.y - WHEEL), V(TOWER_X, 0.1, STACK_Z));
+    // The block, and its cables straight up to the levers' stub and straight down to the spine.
+    const block = new THREE.Group();
+    block.add(
+      // A bowtie: a broad plate at each wheel, and a narrow waist between them.
+      ...BLOCK.y.map((y, i) => pad(BLOCK.width, BLOCK.height / 2 - 0.03, 0.014, M.pulley, V(0, y + (i ? 0.02 : -0.02), BLOCK.z), { soft: 0.005, solid: false })),
+      pad(0.07, BLOCK.height, 0.014, M.pulley, V(0, (BLOCK.y[0] + BLOCK.y[1]) / 2, BLOCK.z), { soft: 0.005, solid: false }),
+      ...BLOCK.y.map((y) => wheelAt(M, V(0, y, BLOCK.z + 0.02), { aboutZ: true })),
+    );
+    const [toLevers, toBase] = [wire(M), wire(M)];
+    const blockAt = (l) => {
+      block.position.y = BLOCK.rise * l;
+      span(toLevers, V(0, BLOCK.y[1] + WHEEL + block.position.y, BLOCK.z), V(0, PIVOT_Y - 0.1, BLOCK.z));
+      span(toBase, V(0, BLOCK.y[0] - WHEEL + block.position.y, BLOCK.z), V(0, 0.07, BLOCK.z));
+    };
     const chest = V(0, 0.96, 0.13);
     // The mounting plate's face, where the tubing lands: 14 mm proud of the pad's front.
     const FACE = chest.z + 0.04 + 0.014;
@@ -137,7 +148,7 @@ export default recipe({
       pad(0.2, 0.22, 0.014, M.frame, V(0, chest.y, FACE - 0.007), { soft: 0.004 }),
       tube(0.05, V(0, chest.y, FACE), V(0, chest.y, postZ(chest.y)), M.frame),
       pad(2 * SHOULDER_X + 0.12, 0.09, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.04), { soft: 0.006 }),
-      pad(0.36, 0.28, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.39), { soft: 0.009 }),
+      pad(0.36, 0.22, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.39), { soft: 0.009 }),
       rod(0.16, V(0, PIVOT_Y, PLANE + 0.4), V(0, PIVOT_Y, PLANE + 0.45), M.frame),
       tube(0.06, V(0, PIVOT_Y - 0.1, postZ(PIVOT_Y - 0.1)), V(0, PIVOT_Y - 0.1, PLANE + 0.38), M.frame),
       ...SIDES.flatMap(({ s }) => {
@@ -162,8 +173,8 @@ export default recipe({
         arm.add(tube(LEVER_WIDTH - 0.01, leg.pivot, leg.knee, M.frame), tube(LEVER_WIDTH - 0.01, leg.knee, beamEnd, M.frame));
         return arm;
       })(legAt(s, LIMITS[0])),
-      bracket: part(rodGeometry(0.012), M.metal, { solid: true }),
-      stem: part(rodGeometry(0.008), M.metal),
+      bracket: part(rodGeometry(0.012), M.frame, { solid: true }),
+      stem: part(rodGeometry(0.008), M.frame),
       pad: part(rodGeometry(PAD.radius), M.vinyl, { solid: true }),
       grip: part(rodGeometry(0.0175), M.vinyl, { held: true }),
     }));
@@ -180,10 +191,7 @@ export default recipe({
         ...floorRail(V(0, 0.035, REAR), V(0, 0.035, STACK_Z), M),
         ...floorRail(V(-0.1, 0.035, REAR), V(0.1, 0.035, REAR), M),
         ...floorRail(V(TOWER_X - 0.23, 0.035, STACK_Z), V(TOWER_X + 0.27, 0.035, STACK_Z), M),
-        // The pulley block, hung from the beam.
-        pad(0.016, BLOCK.y[1] - BLOCK.y[0] + 0.16, 0.13, M.pulley, V(0.03, (BLOCK.y[0] + BLOCK.y[1]) / 2, BLOCK.z), { soft: 0.004, solid: false }),
-        wheelAt(M, lowWheel), wheelAt(M, highWheel), toLevers, toTower,
-        tube(0.03, V(0, BLOCK.y[1] + 0.07, BLOCK.z), V(0, BEAM_Y, BLOCK.z), M.frame),
+        block, toLevers, toBase,
         // The beam from the post to the tower.
         tube(0.06, V(0, BEAM_Y, postZ(BEAM_Y)), V(TOWER_X + UPRIGHTS, BEAM_Y, STACK_Z), M.frame),
         ...tower,
@@ -201,6 +209,7 @@ export default recipe({
             const l = raised - STACK_RATIO * LIMITS[0];
             weights.lift(l);
             span(drop, cableTop, weights.top(l));
+            blockAt(l);
           },
         },
       },
