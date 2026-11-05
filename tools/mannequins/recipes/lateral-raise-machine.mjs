@@ -11,7 +11,7 @@
 // listed with this kit's exercises but has none yet.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { UPRIGHTS, WHEEL, floorRail, hub, part, pulley, rodGeometry, seatOn, span, stackFrame, stretchedTube, tube, weightStack, wire } from '../parts.mjs';
+import { UPRIGHTS, WHEEL, floorRail, mitered, pad, part, pivotJoint, pulley, rodGeometry, seatOn, span, stackFrame, tube, weightStack, wire } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
 const LIMITS = [rad(10), rad(90)];
@@ -44,6 +44,19 @@ const armDir = (s, v) => V(s * Math.sin(v), -Math.cos(v), 0);
 const outOf = (s, v) => V(s * Math.cos(v), Math.sin(v), 0);
 const pivotOf = (s) => V(s * SHOULDER_X, PIVOT_Y, PLANE);
 
+/** Where side `s`'s lever runs with the upper arm `value` out from hanging. */
+function legAt(s, value) {
+  const pivot = pivotOf(s);
+  const corner = pivot.clone().addScaledVector(outOf(s, value), OUT);
+  const toGrip = armDir(s, value);
+  // The pad's middle, on the arm, and the grip's, ahead of it in the levers' plane.
+  const grip = corner.clone().addScaledVector(toGrip, REACH);
+  const pad = grip.clone().setZ(ARM_Z);
+  const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(toGrip, d));
+  const [padBack, padFront] = [-PAD.length / 2, PAD.length / 2].map((d) => pad.clone().setZ(ARM_Z + d));
+  return { pivot, corner, grip, pad, gripFrom, gripTo, padBack, padFront };
+}
+
 export default recipe({
   name: 'lateral_raise_machine',
   // Shown alone in the studio until a pose uses it: three-quarter from behind the seat, the tower on the right, as the ref's hero photo has it.
@@ -67,29 +80,33 @@ export default recipe({
     tower.forEach((m) => { m.position.x += TOWER_X; });
     const drop = wire(M);
     const chest = V(0, 0.83, 0.13);
+    // The mounting plate's face, where the tubing lands: 14 mm proud of the pad's front.
+    const FACE = chest.z + 0.04 + 0.014;
     const chestPad = part(new THREE.BoxGeometry(0.3, 0.3, 0.08), M.vinyl, { solid: true });
     chestPad.position.copy(chest);
     // Hubs on the pivots, each on a bracket from a bridge across the machine at the tower's depth,
     // out of the tower's near upright, with a strut down to the chest pad.
+    const housings = [];
     const bridgeAt = (x) => V(x, PIVOT_Y, STACK_Z);
     const fixed = [
-      tube(0.06, bridgeAt(TOWER_X + UPRIGHTS), bridgeAt(SHOULDER_X), M.frame),
-      tube(0.05, bridgeAt(0), V(0, 0.95, 0.17), M.frame),
+      // The bridge turns forward at the left pivot, mitred, to its hub.
+      mitered([pivotOf(1), bridgeAt(SHOULDER_X), bridgeAt(TOWER_X + UPRIGHTS)], 0.06, M.frame),
+      mitered([bridgeAt(0), V(0, 0.9, FACE)], 0.05, M.frame, { ends: [null, V(0, 0, 1)] }),
+      pad(0.2, 0.22, 0.014, M.frame, V(0, chest.y, FACE - 0.007), { soft: 0.004 }),
       ...SIDES.flatMap(({ s }) => {
         const at = pivotOf(s);
-        const boss = hub(M, at);
-        boss.rotation.y = Math.PI / 2;
-        return [boss, tube(0.05, bridgeAt(s * SHOULDER_X), at, M.frame)];
+        const joint = pivotJoint(M, at, V(0, 0, 1));
+        housings.push(joint.housing);
+        return [...joint.fixed, ...(s < 0 ? [tube(0.05, bridgeAt(s * SHOULDER_X), at, M.frame)] : [])];
       }),
     ];
-    const levers = SIDES.map(() => ({
-      out: stretchedTube(0.04, M.frame),
-      down: stretchedTube(0.04, M.frame),
-      back: stretchedTube(0.04, M.frame),
+    // The lever's tubing is one length bent twice, mitred, built at rest and turned about the pivot.
+    const levers = SIDES.map(({ s }) => ({
+      arm: ((leg) => mitered([leg.pivot, leg.corner, leg.grip, leg.padFront], 0.04, M.frame))(legAt(s, LIMITS[0])),
       pad: part(rodGeometry(PAD.radius), M.vinyl, { solid: true }),
       grip: part(rodGeometry(0.0175), M.vinyl, { held: true }),
     }));
-    const body = (l) => [l.out, l.down, l.back, l.pad, l.grip];
+    const body = (l, i) => [housings[i], l.arm, l.pad, l.grip];
     return {
       parts: [
         ...seatOn(seat, 0, M, { pin: -1 }),
@@ -100,10 +117,12 @@ export default recipe({
         ...floorRail(V(TOWER_X - 0.2, 0.035, STACK_Z), V(TOWER_X + 0.2, 0.035, STACK_Z), M),
         ...tower,
         ...weights.parts, drop,
-        chestPad, tube(0.07, V(0, 0.75, chest.z + 0.04), V(0, 0.07, 0.36), M.frame),
-        ...fixed, ...levers.flatMap(body),
+        chestPad,
+        // A post up from the floor beam against the plate's face, short of the strut's landing.
+        tube(0.06, V(0, 0.07, FACE + 0.03), V(0, 0.8, FACE + 0.03), M.frame),
+        ...fixed, ...housings, ...levers.flatMap((l) => body(l, 0).slice(1)),
       ],
-      bodies: Object.fromEntries(SIDES.map(({ k }, i) => [`arm_${k}`, body(levers[i])])),
+      bodies: Object.fromEntries(SIDES.map(({ k }, i) => [`arm_${k}`, body(levers[i], i)])),
       stacks: {
         arm_l: {
           lift(l) {
@@ -118,18 +137,11 @@ export default recipe({
         const state = { joints: {}, points: {} };
         SIDES.forEach(({ k, s }, i) => {
           const l = levers[i];
-          const pivot = pivotOf(s);
-          const corner = pivot.clone().addScaledVector(outOf(s, value), OUT);
-          // The pad's middle, on the arm, and the grip's, ahead of it in the levers' plane.
-          const toGrip = armDir(s, value);
-          const grip = corner.clone().addScaledVector(toGrip, REACH);
-          const pad = grip.clone().setZ(ARM_Z);
-          const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(toGrip, d));
-          const [padBack, padFront] = [-PAD.length / 2, PAD.length / 2].map((d) => pad.clone().setZ(ARM_Z + d));
-          span(l.out, pivot, corner);
-          span(l.down, corner, gripFrom);
+          const { pivot, grip, pad, gripFrom, gripTo, padBack, padFront } = legAt(s, value);
+          // The lever, built at rest, turned about its pivot.
+          l.arm.quaternion.setFromAxisAngle(V(0, 0, s), value - LIMITS[0]);
+          l.arm.position.copy(pivot).sub(pivot.clone().applyQuaternion(l.arm.quaternion));
           span(l.grip, gripFrom, gripTo);
-          span(l.back, grip, padFront);
           span(l.pad, padBack, padFront);
           state.joints[`arm_${k}`] = { value, origin: pivot };
           state.points[`grip_${k}`] = [grip];

@@ -467,6 +467,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 Every kit is a recipe (ADR 0007): `recipes/<kit>.mjs`, over the part library in `parts.mjs`
 (tubing with its caps and base plates, pads, seats, rollers, pulleys in housings, cables, stacks
 with guide rods and a pin, pop-pins, bars and handles, each a function of its dimensions and tone).
+A pivot is `pivotJoint(M, at, axis)`: a bearing housing on the moving arm round an axle the frame holds
+(#212, used by `lateral_raise_machine` first). Bent tubing is `mitered(points, w, material, { ends })`: one
+square length swept along the points, each bend cut on its bisector, not two lapped lengths.
 `recipe.mjs` is the format. A recipe declares, as data:
 
 - `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot, with its
