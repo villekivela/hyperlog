@@ -21,7 +21,7 @@ concurrency:
 jobs:
   rebake:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: tools/mannequins
@@ -46,7 +46,7 @@ jobs:
   # One runner took 21.5 minutes, so the files are split across four.
   suite:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:

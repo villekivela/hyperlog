@@ -21,15 +21,15 @@ export const MACHINES = {
   leg_extension: { kit: 'leg_extension', exercises: ['leg_extension'] },
   leg_curl: { kit: 'leg_curl', exercises: ['lying_leg_curl', 'seated_leg_curl'] },
   glute_ham_raise: { kit: null, exercises: ['glute_ham_raise'] },
-  pec_deck: { kit: null, exercises: ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'] },
+  pec_deck: { kit: 'pec_deck', exercises: ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'] },
   row_machine: { kit: 'row_machine', exercises: ['machine_row', 'chest_supported_machine_row'] },
   t_bar_row_machine: { kit: 't_bar_row_machine', exercises: ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'] },
   pulldown_machine: { kit: 'pulldown_machine', exercises: ['machine_pulldown', 'machine_lat_pullover'] },
   shoulder_press: { kit: null, exercises: ['machine_shoulder_press'] },
-  lateral_raise_machine: { kit: null, exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
+  lateral_raise_machine: { kit: 'lateral_raise_machine', exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
   preacher_curl_machine: { kit: 'preacher_curl_machine', exercises: ['machine_preacher_curl'] },
   dip_machine: { kit: null, exercises: ['seated_dip_machine'] },
-  hip_machine: { kit: null, exercises: ['machine_hip_abduction', 'machine_adduction'] },
+  hip_machine: { kit: 'hip_machine', exercises: ['machine_hip_abduction', 'machine_adduction'] },
   hip_thrust_machine: { kit: null, exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
   crunch_machine: { kit: 'crunch_machine', exercises: ['machine_crunch'] },
@@ -55,9 +55,9 @@ export const CABLE_MACHINES = {
 };
 
 /**
- * The stations that serve bodyweight exercises, with the exercises each is the station of. Only
- * those no pose has set up are listed; a station is not a machine kind, because the exercises on it
- * are classed `bodyweight` or `weighted_bodyweight`.
+ * The stations that serve bodyweight exercises, with the exercises each is the station of. A
+ * station is not a machine kind, because the exercises on it are classed `bodyweight` or
+ * `weighted_bodyweight`.
  */
 export const STATIONS = {
   power_rack: {
@@ -67,6 +67,17 @@ export const STATIONS = {
       'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
     ],
   },
+  hyperextension_bench: { kit: 'hyperextension_bench', exercises: ['45_hyperextension'] },
+};
+
+/**
+ * The specialty bars that serve exercises of their own, with the exercises each is the bar of. Only
+ * those no pose has set up are listed.
+ */
+export const BARS = {
+  trap_bar: { kit: 'trap_bar', exercises: ['trap_bar_deadlift'] },
+  ez_bar: { kit: 'ez_bar', exercises: ['ez_bar_curl', 'ez_bar_preacher_curl', 'skull_crusher'] },
+  safety_bar: { kit: 'safety_bar', exercises: ['safety_bar_squat', 'good_morning_barbell_safety_bar'] },
 };
 
 /**
@@ -80,12 +91,12 @@ export const EQUIPMENT = {
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
   bodyweight: ['power_rack'],
-  ez_bar: null,
-  trap_bar: null,
-  safety_bar: null,
+  ez_bar: ['ez_bar'],
+  trap_bar: ['trap_bar'],
+  safety_bar: ['safety_bar'],
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
-  weighted_bodyweight: ['power_rack'],
+  weighted_bodyweight: ['power_rack', 'dip_belt', 'hyperextension_bench'],
 };
 
 /** Every kit's recipe, by name. */

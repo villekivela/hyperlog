@@ -1,0 +1,86 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "technique video uqF4qttYpN8",
+    "exercises.json has no note",
+    "docs/research/grip.md: an ankle cuff, a free hand steadying on the column"
+  ],
+  "works": "ankle",
+  "lines": [
+    {
+      "says": "the leg lifts well out from the standing leg",
+      "travels": "ankle_{work}.at",
+      "least": 0.35
+    },
+    {
+      "says": "the standing foot stays planted",
+      "still": "ankle_{other}.at",
+      "within": 0.01
+    },
+    {
+      "says": "the lifting knee stays from soft to straight",
+      "moves": "knee_{work}",
+      "ends": [
+        [
+          110,
+          180
+        ],
+        [
+          110,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the trunk leans in through the whole rep",
+      "moves": "trunk",
+      "ends": [
+        [
+          10,
+          60
+        ],
+        [
+          10,
+          60
+        ]
+      ]
+    },
+    {
+      "says": "the trunk mostly holds its lean as the leg lifts",
+      "still": "trunk",
+      "within": 15
+    },
+    {
+      "says": "the leg rises out to the side, not forward or back",
+      "look": "direction",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the lifter stands side-on to the tower, the far leg working and the near hand steadying on the column",
+      "look": "setup",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the cable runs from a low pulley across the standing leg to a cuff on the ankle",
+      "look": "cuff",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the toes stay about forward, not turned up to the ceiling",
+      "look": "toes",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}
