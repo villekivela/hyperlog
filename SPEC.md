@@ -1651,6 +1651,11 @@ gallery (Technique videos).
       joint turning them would be left behind by a scrub along the rods; the hooks' turn, about
       45°, stays the wrists'. A fit rule picks the notch it hangs on and the one its safety stops
       lie on, and the bar can go no lower than the stops.
+    - **The shrug machine's levers** (#223) are one body on a revolute joint about the axle at the top
+      of the rear uprights, 600 mm up and 760 mm behind the grips, its value the angle up from level
+      ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of a shrug (940 mm up).
+      The seat stays at 650 mm, the ref's one measured height; the handles are fixed. It is unposed, so
+      no clip changes.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
@@ -1689,7 +1694,7 @@ gallery (Technique videos).
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the smith machine (#182) and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    with no body, its levers at rest (#176): the smith machine (#182), the shrug machine (#223) and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

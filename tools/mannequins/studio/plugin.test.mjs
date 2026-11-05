@@ -121,6 +121,10 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   assert.equal(smith.status, 'unused');
   assert.deepEqual(smith.entry.kit, { smith_machine: {} });
   assert.equal(smith.entry.alone, true);
+  // The shrug machine, unposed, comes alone too (#223).
+  const shrug = await get('/api/item/kit/shrug_machine');
+  assert.equal(shrug.uses, null);
+  assert.equal(shrug.entry.alone, true);
   const none = await get('/api/item/exercise/pendulum_squat');
   assert.equal(none.entry, null);
   assert.equal(none.status, 'no pose');

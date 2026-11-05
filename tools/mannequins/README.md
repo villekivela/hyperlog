@@ -324,7 +324,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
-| `shrug_machine` | Machine Shrug | missing |
+| `shrug_machine` | Machine Shrug | `shrug_machine` |
 
 - `bench` stands at `at` [x, z], where a pose needs it elsewhere: its node moves, so its parts stay
   the ones every clip shares. It is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
@@ -420,6 +420,16 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
+- `shrug_machine` (#223, the machine kind of `machine_shrug`, not yet posed, so no clip changes) stands
+  where its ref puts it, whatever the pose: a rear cross beam and two side beams 1.02 m deep on the
+  floor, a post at each end carrying the levers' axle 600 mm up, a back pad topping out at 1.24 m
+  on a column up the middle, and a seat at 650 mm. The two levers are one body on a revolute joint
+  about that axle, its value the angle up from level ahead of the line to the grips: 7.5° on the
+  stop, the grips 700 mm up and 740 apart, 760 ahead of the pivot, to 26.3° at the top of a shrug,
+  940 mm up. Each lever carries a handle post rising 270 mm with the grip pointing forward, and a
+  plate horn under the post reaching out to 760 mm from the middle. The contact ties the hands to
+  the grips. Serve it with `npm run studio` and open `shrug machine` under Kits: it stands alone,
+  three-quarter from the front, and the joint's slider scrubs the levers through their limits.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -617,7 +627,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the shrug machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
