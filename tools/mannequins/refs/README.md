@@ -34,7 +34,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip |
 | 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive |
-| 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD; built (#230), not yet posed |
+| 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD; built and posed (#230) |
 | 16 | [`crunch_machine`](crunch_machine/ref.md) | 1 | Hammer Strength Select Abdominal Crunch |
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar; built (#234), not yet posed |
 | 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD) |
