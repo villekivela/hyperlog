@@ -10,8 +10,8 @@
 // stack stays down: two arms pull it and the recipe format ties a stack to one joint.
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, basePlate, bent, endCap, pad, part, pulley, rod, rodGeometry, rollerGeometry, seatOn, span, stackFrame, tube, turnedPart,
-  weightStack, wheelGeometry,
+  UPRIGHTS, WHEEL, basePlate, bent, endCap, knob, pad, part, pulley, rod, rodGeometry, seatOn, span, stackFrame, tube,
+  weightStack,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
@@ -79,10 +79,9 @@ export default recipe({
       tube(0.09, V(0, 0.035, COLUMN_Z), V(0, unit.y, COLUMN_Z), M.frame),
       tube(0.08, V(0, unit.y, COLUMN_Z), V(0, unit.y, unit.z), M.frame),
       pad(2 * AXIS.x + 0.14, 0.14, 0.18, M.frame, unit, { soft: 0.02 }),
-      // An axle under the unit at each axis, and a round cap on its foot.
+      // An axle down from the unit at each axis, through the lever's hub.
       ...sides.flatMap((s) => [
-        rod(0.012, V(s * AXIS.x, AXIS.y - 0.03, AXIS.z), V(s * AXIS.x, unit.y - 0.07, AXIS.z), M.metal),
-        turnedPart(wheelGeometry(0.03, 0.012), M.pulley, V(s * AXIS.x, AXIS.y - 0.035, AXIS.z), { solid: false }),
+        rod(0.012, V(s * AXIS.x, AXIS.y - 0.06, AXIS.z), V(s * AXIS.x, unit.y - 0.07, AXIS.z), M.metal),
       ]),
       // The stack behind, tied to the column at its top, its cable over a wheel to the column.
       ...stackFrame(STACK_Z, FRAME_TOP, M),
@@ -110,9 +109,17 @@ export default recipe({
       const handle = bent(`pec_deck_handle:${s}`, [
         at(0, top.y), at(0.03, top.y), at(GRIP_OFF, top.y - 0.03), at(GRIP_OFF, foot.y + 0.03), at(0.03, foot.y), at(0, foot.y),
       ], GRIP, M.vinyl, { held: true });
-      const hub = turnedPart(wheelGeometry(0.035, 0.05), M.pulley, axisOf(s), { solid: false });
-      const pin = turnedPart(rollerGeometry(0.03, 0.05), M.pulley, end, { solid: false });
-      return { body: [hub, lever, pin, drop, handle], point: end.clone().add(inward).setY(GRIP_Y) };
+      // The hub is a short vertical cylinder on the axle, the lever through its middle. The pin is a
+      // cylinder across the lever's end, centred on the drop arm, which hangs from it.
+      const hub = part(rodGeometry(0.04, 20), M.pulley);
+      span(hub, axisOf(s).setY(AXIS.y - 0.045), axisOf(s).setY(AXIS.y + 0.045));
+      const across = V(0, 1, 0).cross(end.clone().sub(axisOf(s))).setY(0).normalize().multiplyScalar(0.03);
+      const pin = part(rodGeometry(0.03, 20), M.pulley);
+      span(pin, end.clone().sub(across), end.clone().add(across));
+      // The arm's foot is a dome under the handle.
+      const dome = knob(M, foot, 0.022);
+      dome.material = M.frame;
+      return { body: [hub, lever, pin, drop, dome, handle], point: end.clone().add(inward).setY(GRIP_Y) };
     });
     return {
       parts: [...frame, ...arms.flatMap((a) => a.body)],
