@@ -70,7 +70,7 @@ test('one stack: the arms lift it, and it hangs on one arm', () => {
   assert.ok(at() > low + 0.15, `the stack rose ${((at() - low) * 100).toFixed(0)} cm`);
 });
 
-test('the hands hold a grip ahead of each pad, the upper arms lie on the pads, the chest on its pad', () => {
+test('the hands hold a grip ahead of each pad, the arms lie on the pads, the chest on its pad', () => {
   const kit = machine();
   const held = [];
   kit.group.traverse((o) => { if (o.isMesh && o.userData.held) held.push(o); });
@@ -82,7 +82,7 @@ test('the hands hold a grip ahead of each pad, the upper arms lie on the pads, t
     assert.ok(held.some((m) => new THREE.Box3().setFromObject(m).distanceToPoint(p) < 1e-6), `no held part at ${k}'s grip`);
     const [pad] = contact(kit, `pad_${k}`).at;
     assert.ok(p.z > pad.z + 0.1, `${k}'s grip at z ${p.z.toFixed(2)}, not ahead of its pad at ${pad.z.toFixed(2)}`);
-    assert.equal(contact(kit, `pad_${k}`).landmark, 'upperArms');
+    assert.equal(contact(kit, `pad_${k}`).landmark, 'forearms');
     assert.equal(contact(kit, `pad_${k}`).body, `arm_${k}`);
     assert.ok(s * pad.x > 0);
   }
@@ -439,6 +439,54 @@ test('the cables run clear of the beam', () => {
   assert.ok(beam, 'the beam');
 });
 
+// The owner, in the studio: the grips are fixed to the arms and don't turn on them. The hand and the
+// wrist follow.
+test('each grip is rigid on its arm: it turns with the lever, and the bracket joins the arm to its end', () => {
+  const kit = machine();
+  const gripOf = (k) => kit.bodies[`arm_${k}`].find((n) => n.userData.held);
+  const lineOf = (k) => {
+    const g = gripOf(k);
+    g.updateWorldMatrix(true, false);
+    return g.localToWorld(new THREE.Vector3(0, 0.5, 0)).sub(g.localToWorld(new THREE.Vector3(0, -0.5, 0))).normalize();
+  };
+  for (const [k] of SIDES) {
+    const at = (v) => { kit.scrub(`arm_${k}`, rad(v)); return lineOf(k); };
+    const [low, high] = [at(10), at(90)];
+    close(low.angleTo(high), rad(80), rad(0.5), `${k}'s grip turns with its lever`);
+    assert.ok(Math.abs(low.y) < 0.9 && Math.abs(high.y) < 0.9, 'and its line stays clear of straight up, where the arm solve changes basis');
+    const bracket = kit.bodies[`arm_${k}`].find((n) => n.name === `lateral_raise_bracket_${k}`);
+    const end = bracket.localToWorld(new THREE.Vector3(0, 0.5, 0));
+    const other = bracket.localToWorld(new THREE.Vector3(0, -0.5, 0));
+    const g = gripOf(k);
+    const tips = [0.5, -0.5].map((y) => g.localToWorld(new THREE.Vector3(0, y, 0)));
+    const gap = Math.min(...tips.flatMap((t) => [t.distanceTo(end), t.distanceTo(other)]));
+    assert.ok(gap < 0.01, `${k}'s bracket ${(gap * 100).toFixed(1)} cm from its grip's end`);
+  }
+  assert.equal(kit.group.getObjectByName('lateral_raise_stem_l'), undefined, 'no stem to pivot on');
+});
+
+// The owner's bar (#241): no open tube end, and a post cut flat on what it stands on.
+test('no tube on it stands open, and the post stands flat on the spine', () => {
+  const kit = machine();
+  const rims = [];
+  kit.group.traverse((o) => {
+    if (!o.isMesh || !o.geometry.index) return;
+    const seen = new Map();
+    const i = o.geometry.index.array;
+    const p = o.geometry.attributes.position;
+    const key = (n) => `${p.getX(n).toFixed(4)},${p.getY(n).toFixed(4)},${p.getZ(n).toFixed(4)}`;
+    for (let t = 0; t < i.length; t += 3) for (const [a, b] of [[i[t], i[t + 1]], [i[t + 1], i[t + 2]], [i[t + 2], i[t]]]) {
+      const e = [key(a), key(b)].sort().join('|');
+      seen.set(e, (seen.get(e) ?? 0) + 1);
+    }
+    if ([...seen.values()].some((n) => n === 1) && o.geometry.type !== 'ExtrudeGeometry') rims.push(o.name);
+  });
+  assert.equal(kit.group.getObjectByName('lateral_raise_arch')?.geometry.type === 'TubeGeometry', false);
+  assert.ok(!rims.includes('lateral_raise_arch'), 'the arch is capped');
+  const post = boxes(kit).find(({ mesh, box: b }) => !mesh.userData.solid && b.min.y < 0.12 && b.max.y > 1 && b.max.x - b.min.x < 0.12).box;
+  close(post.min.y, 0.07, 0.002, 'the post\'s foot flat on the spine\'s top');
+});
+
 // #241: a body fits it. The checks hold the hands on the grips, the upper arms on the pads, the chest
 // on its pad, the thighs on the seat and nothing through the body, on every frame of the rep.
 const fails = async (id) => Object.entries((await checkPose(id)).checks).filter(([, c]) => !c.ok).map(([k, c]) => `${k}: ${c.found} (frame ${c.frame})`);
@@ -492,14 +540,10 @@ test('machine_lateral_raise: the hips sit on the seat through the rep, neither a
 
 // The checks test the skin's vertices against each part, and a thin rod can run through a limb
 // between them, so the bracket is held clear of the arm's bones.
-test('machine_lateral_raise: each grip\'s bracket and stem stay clear of the arm through the rep', async () => {
+test('machine_lateral_raise: each grip\'s bracket stays clear of the arm through the rep', async () => {
   const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
   const brackets = {};
-  const stems = {};
-  kit.group.traverse((o) => {
-    const m = /^lateral_raise_(bracket|stem)_(.)/.exec(o.name);
-    if (m) (m[1] === 'bracket' ? brackets : stems)[m[2]] = o;
-  });
+  kit.group.traverse((o) => { const m = /^lateral_raise_bracket_(.)/.exec(o.name); if (m) brackets[m[1]] = o; });
   for (let d = 0; d <= 1; d += 0.1) {
     pose(d);
     for (const [k] of SIDES) {
@@ -507,19 +551,11 @@ test('machine_lateral_raise: each grip\'s bracket and stem stay clear of the arm
       const along = new THREE.Line3(a, b);
       const bones = ['upperarm', 'lowerarm', 'hand'].map((n) => wpos(rig.bones[`${n}_${k}`]));
       for (const limb of [new THREE.Line3(bones[0], bones[1]), new THREE.Line3(bones[1], bones[2])]) {
-        for (let t = 0; t <= 1; t += 0.1) {
+        // Its foot is at the grip, where the hand is meant to be.
+        for (let t = 0; t <= 0.8; t += 0.1) {
           const p = along.at(t, new THREE.Vector3());
           const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
           assert.ok(p.distanceTo(q) > 0.1, `${k}'s bracket ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
-        }
-        // The stem's foot is in the fist, on the grip, so only its upper length is held clear.
-        const hand = wpos(rig.bones[`hand_${k}`]);
-        const [top, foot] = [0.5, -0.5].map((y) => stems[k].localToWorld(new THREE.Vector3(0, y, 0)));
-        const stem = hand.distanceTo(top) > hand.distanceTo(foot) ? new THREE.Line3(top, foot) : new THREE.Line3(foot, top);
-        for (let t = 0; t <= 0.8; t += 0.2) {
-          const p = stem.at(t, new THREE.Vector3());
-          const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
-          assert.ok(p.distanceTo(q) > 0.1, `${k}'s stem ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
         }
       }
     }

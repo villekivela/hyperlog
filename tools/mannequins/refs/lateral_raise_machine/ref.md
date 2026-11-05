@@ -41,11 +41,11 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 - Range of motion: about 80 degrees per arm, from the upper arms hanging about 10 degrees out from the sides (pads below the pivots) to the upper arms horizontal, pads on top of the arms. Estimated from the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09, where at the top the elbows reach shoulder height or a little above; give or take 10 degrees.
 - The two arms rise together in both videos; the page does not say whether they are linked.
 - Both arms load the one 95 kg stack through cable and pulleys (11 cm and 15 cm pulleys, per the page).
-- Each grip pivots to fit users (page text). It hangs inboard of the pad and ahead of it, in line with the upper arm (hero photo), and the hands hold it with the elbows bent about 90 degrees (demo 0:09, 0:15). The kit hangs it from the beam, 80 mm ahead of the pad's front end, where the mannequin's forearm reaches.
+- The page says each grip pivots to fit users. The owner overrides that (#241): the kit's grips are fixed rigid to the arms, and the hand and wrist follow. Each hangs inboard of the pad and ahead of it, in line with the upper arm (hero photo), and the hands hold it with the elbows bent about 90 degrees (demo 0:09, 0:15). The kit hangs it from the beam, 80 mm ahead of the pad's front end, where the mannequin's forearm reaches.
 - Standing machine (the `standing_machine_lateral_raise` video, not this machine): one lever per side, its pivot in front of the standing user's shoulder at shoulder height, a curved handle at about arm's length. The straight arm rises from the hand by the hip (7:08, 7:19) to about horizontal (7:06): about 75 degrees.
 
 ## Handles
-- One grip ahead of each arm pad, hanging inboard of it, pivoting (page). The elbows rest on the pads and the hands hold the grips; the pads, not the hands, take the load.
+- One grip ahead of each arm pad, hanging inboard of it, fixed to the arm (the owner, #241; the page has it pivot). The elbows rest on the pads and the hands hold the grips; the pads, not the hands, take the load.
 
 ## Adjustments and fit rules
 - Seat height by a lever under the seat front, roller mechanism (demo 0:01 to 0:03, page).
@@ -64,7 +64,7 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 | Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, raking toward the tower on the way, a beam back along the pad | a thin dog-leg | as measured |
 | Wedges | long slabs about as long as the arm pads, a tight V over the pivots, running fore and aft on the lifter's side of the plate, a valley between them all the way through the sweep, the struts carrying on into them; they drop in front of the plate as the arms rise | missing | as measured |
 | Arm pads | about 360 long, 150 through, on the outside of the upper arm at the elbow, little bare beam ahead of them | 250 long, 100 through, past the elbow | as measured |
-| Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
+| Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, fixed to the arm (owner, #241) | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, rigid on the bracket, a little past the arm's line, turning with the lever |
 | Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
 | Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin |
 | Pulley block | a broad bowtie plate with two pulleys out in the gap between the post and the tower, from the seat's height down, cables straight up to the levers and down to the base, rising with the rep (the kit's run up to a bar under the plate, either side of the beam) | missing, one pulley at the tower's top | as measured, a bowtie of flat plates rising half the stack's travel |

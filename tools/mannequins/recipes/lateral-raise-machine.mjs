@@ -9,12 +9,12 @@
 // The pivots are fixed on the frame, 1.15 m up and on the mannequin's shoulders, and the seat moves to
 // them. Each lever is a body on a revolute joint, its value the upper arm's angle out from hanging,
 // from 10° to horizontal. The arms rise together in both of the ref's videos, so the stack hangs on
-// the left arm's joint. The grips pivot on the levers, holding one line through the rep. The pulley
+// the left arm's joint. The grips are fixed to the levers and turn with them. The pulley
 // block rises with the stack. The standing lateral raise, which the ref gives its own geometry, is
 // listed with this kit's exercises but needs a kit of its own.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { WHEEL, bent, floorRail, mitered, pad, part, pivotJoint, rod, rodGeometry, span, tube, weightStack, wheelAt, wire } from '../parts.mjs';
+import { WHEEL, curvedTube, floorRail, mitered, pad, part, pivotJoint, rod, rodGeometry, span, tube, weightStack, wheelAt, wire } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
 const LIMITS = [rad(10), rad(90)];
@@ -31,8 +31,7 @@ const ARM_Z = -0.06;
 // The grip hangs at the elbow's distance, so the forearm lies square to the upper arm.
 const REACH = 0.3;
 const GRIP_REACH = 0.255;
-// How far short of the grip's middle the bracket meets the arm's line.
-const MOUNT_OFF = 0.13;
+const GRIP_TILT = rad(18);
 const OUT = 0.115;
 const PAD = { length: 0.36, radius: 0.075 };
 // The strut runs from the pivot to a knee this far out of the arm's line, flaring about 40°, and a beam
@@ -81,8 +80,12 @@ const armDir = (s, v) => V(s * Math.sin(v), -Math.cos(v), 0);
 const outOf = (s, v) => V(s * Math.cos(v), Math.sin(v), 0);
 const pivotOf = (s) => V(s * SHOULDER_X, PIVOT_Y, PLANE);
 
-/** The line side `s`'s grip holds as it pivots on its lever: leaning out at the top, whatever the arm's angle. */
-const gripLine = (s) => V(s * 0.55, 0.83, 0).normalize();
+/**
+ * The line of side `s`'s grip, fixed to its lever (owner, #241), with the upper arm `value` out from
+ * hanging: a little past the arm's own line, so it never stands within 26° of straight up, where the
+ * arm solve measures the hand's roll in another basis.
+ */
+const gripLine = (s, value) => armDir(s, value + GRIP_TILT).negate();
 
 /** Where side `s`'s lever runs with the upper arm `value` out from hanging. */
 function legAt(s, value) {
@@ -94,13 +97,10 @@ function legAt(s, value) {
   const root = corner.clone().addScaledVector(toGrip, REACH);
   const knee = pivot.clone().addScaledVector(toGrip, REACH + 0.03).addScaledVector(outOf(s, value), KNEE_OUT).setZ(KNEE_Z);
   const grip = pivot.clone().addScaledVector(toGrip, GRIP_REACH);
-  // The bracket's end, on the arm's line and clear of the thumb, and a stem down to the grip, which
-  // pivots on it and so holds its own line.
-  const mount = pivot.clone().addScaledVector(toGrip, GRIP_REACH - MOUNT_OFF);
   const pad = root.clone().setZ(ARM_Z);
-  const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(gripLine(s), d));
+  const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(gripLine(s, value), d));
   const [padBack, padFront] = [-PAD.length / 2, PAD.length / 2].map((d) => pad.clone().setZ(ARM_Z + d));
-  return { pivot, knee, grip, mount, pad, gripFrom, gripTo, padBack, padFront };
+  return { pivot, knee, grip, pad, gripFrom, gripTo, padBack, padFront };
 }
 
 export default recipe({
@@ -108,7 +108,8 @@ export default recipe({
   bodies: Object.fromEntries(SIDES.map(({ k, s }) => [`arm_${k}`, revolute({ axis: V(0, 0, s), limits: LIMITS })])),
   contacts: SIDES.flatMap(({ k }) => [
     { body: `arm_${k}`, point: `grip_${k}`, landmark: 'hands', hand: k },
-    { body: `arm_${k}`, point: `pad_${k}`, landmark: 'upperArms', hand: k },
+    // The pad bears on the elbow and the forearm, as the ref's lifter's does at the top of the rep.
+    { body: `arm_${k}`, point: `pad_${k}`, landmark: 'forearms', hand: k },
   ]).concat([{ body: 'frame', point: 'chestPad', landmark: 'chest' }, { body: 'frame', point: 'seatTop', landmark: 'thighs' }]),
   stacks: [{ joint: 'arm_l', ratio: STACK_RATIO }],
   rep: { joint: 'arm_l', from: 'min' },
@@ -123,7 +124,7 @@ export default recipe({
       pivot: pivotOf(1),
       handle: (s) => legAt(s, value).grip,
       // A neutral grip, the index finger up its line.
-      across: gripLine,
+      across: (s) => gripLine(s, value),
       elbow: (s) => armDir(s, value).add(V(0, 0, -0.3)).normalize(),
     }),
   }),
@@ -134,10 +135,10 @@ export default recipe({
     // The tower: the inner upright straight up, and the outer one swept round into the top in one arch.
     const [outer, inner] = [TOWER_X - TOWER_HALF, TOWER_X + TOWER_HALF];
     const archY = FRAME_TOP - 0.035;
-    const arch = bent('lateral_raise_arch', [
+    const arch = curvedTube([
       V(outer, ARCH_FROM, STACK_Z), V(outer, ARCH_FROM + 0.08, STACK_Z), V(outer + 0.03, archY - 0.09, STACK_Z), V(outer + 0.1, archY - 0.02, STACK_Z),
       V(outer + 0.2, archY, STACK_Z), V(inner, archY, STACK_Z),
-    ], 0.035, M.frame);
+    ], 0.07, M.frame);
     arch.name = 'lateral_raise_arch';
     const tower = [
       tube(0.07, V(inner, 0.07, STACK_Z), V(inner, archY, STACK_Z), M.frame),
@@ -200,19 +201,20 @@ export default recipe({
         arm.add(proxy(tube(LEVER_WIDTH - 0.01, leg.pivot, leg.knee, M.frame)), proxy(tube(LEVER_WIDTH - 0.01, leg.knee, beamEnd, M.frame)));
         return arm;
       })(legAt(s, LIMITS[0])),
-      bracket: Object.assign(part(rodGeometry(0.012), M.frame, { solid: true }), { name: `lateral_raise_bracket_${k}` }),
-      stem: Object.assign(part(rodGeometry(0.008), M.frame), { name: `lateral_raise_stem_${k}` }),
+      bracket: Object.assign(part(rodGeometry(0.016), M.frame, { solid: true }), { name: `lateral_raise_bracket_${k}` }),
       pad: part(rodGeometry(PAD.radius), M.vinyl, { solid: true }),
       grip: part(rodGeometry(0.0175), M.vinyl, { held: true }),
     }));
-    const body = (l, i) => [housings[i], l.arm, l.bracket, l.stem, l.pad, l.grip];
+    const body = (l, i) => [housings[i], l.arm, l.bracket, l.pad, l.grip];
     return {
       parts: [
         // The seat, cantilevered back from the post.
         pad(0.32, 0.075, 0.3, M.vinyl, V(0, seat - 0.0375, SEAT_Z), { soft: 0.024 }),
         pad(0.26, 0.012, 0.24, M.frame, V(0, seat - 0.081, SEAT_Z), { soft: 0.003 }),
         tube(0.05, V(0, seat - 0.11, SEAT_Z), V(0, seat - 0.11, postZ(seat - 0.11)), M.frame),
-        tube(0.07, POST.foot, POST.top, M.frame),
+        // Cut flat on the spine's top; a tube inside it is what the body meets.
+        mitered([POST.foot, POST.top], 0.07, M.frame, { solid: false, ends: [V(0, 1, 0), null] }),
+        proxy(tube(0.06, POST.foot.clone().lerp(POST.top, 0.04), POST.top, M.frame)),
         // The floor: a spine from the rear foot to the tower, across which the tower stands.
         ...floorRail(V(0, 0.035, REAR), V(0, 0.035, STACK_Z), M),
         ...floorRail(V(-0.1, 0.035, REAR), V(0.1, 0.035, REAR), M),
@@ -245,13 +247,12 @@ export default recipe({
         const state = { joints: {}, points: {} };
         SIDES.forEach(({ k, s }, i) => {
           const l = levers[i];
-          const { pivot, knee, grip, mount, pad, gripFrom, gripTo, padBack, padFront } = legAt(s, value);
+          const { pivot, knee, grip, pad, gripFrom, gripTo, padBack, padFront } = legAt(s, value);
           // The lever, built at rest, turned about its pivot.
           l.arm.quaternion.setFromAxisAngle(V(0, 0, s), value - LIMITS[0]);
           l.arm.position.copy(pivot).sub(pivot.clone().applyQuaternion(l.arm.quaternion));
           span(l.grip, gripFrom, gripTo);
-          span(l.bracket, knee.clone().setZ(PLANE), mount);
-          span(l.stem, mount, grip);
+          span(l.bracket, knee.clone().setZ(PLANE), gripFrom);
           span(l.pad, padBack, padFront);
           state.joints[`arm_${k}`] = { value, origin: pivot };
           state.points[`grip_${k}`] = [grip];

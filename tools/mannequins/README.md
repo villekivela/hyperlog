@@ -406,8 +406,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   and `arm_r`, from 10° out of hanging to horizontal: a heavy strut flaring out to a knee, raking toward
   the tower, a beam back along a pad on the outside of the upper arm, and a long wedge over the pivot,
   running fore and aft between the bar and the plate, the pair a tight V, the strut carrying on into it.
-  The grip pivots on a stem off a bracket from the beam, in line with the upper arm at the elbow's
-  distance, and holds one line through the rep; the line stays under 0.9 of vertical, past which
+  The grip is fixed to the lever on a bracket from the beam (owner, #241), at
+  the elbow's distance, 18° past the arm's line so its line stays clear of 0.9 of vertical, past which
   `straightArm` measures the hand's roll in another basis. The linkage gives `lever_handles` the way the
   elbow goes (`elbow`). Each arm's contacts name their `hand`, and `seatTop` holds the thighs to the
   seat. The stack hangs on `arm_l`. A broad block of two pulleys stands in the gap between the post and
