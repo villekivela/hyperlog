@@ -569,14 +569,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `dip_machine` (#226, a machine kind; `seated_dip_machine`, its one exercise, is posed on it, in the
   `dip-machine` batch; serve it with `npm run studio`, `f`, `dip_machine`, and `j` to its kit row)
   is laid out from the ref's photos, read again for where each part sits against the seat
-  (`refs/dip_machine/ref.md`, Where the parts sit). Three joints, all about x: `arms` (0 to 40°, the
+  (`refs/dip_machine/ref.md`, Where the parts sit). Two joints, both about x: `arms` (0 to 40°, the
   radians the handles have gone down from the start; the pose drives it, the top of the rep at 40°,
-  the arms straight down), `carriage` (0 to 12°, the radians the seat, back pad and footplates have
-  rocked back about a pivot under the seat; the pose drives it at 0.3 of the arms') and `grips` (the
-  swivel at each arm's end, which turns the bar from 15° up at the start to 30° at the finish so the
-  hand keeps it square to the forearm; the pose drives it, and a scrub of the arms carries the grips
-  along, keeping their swivel). The arms hang on a pivot 880 mm up on a leaning rear upright, each
-  one tube out to an elbow, the grips 440 mm apart, 790 up at the start and 500 at the finish. The
+  the arms straight down) and `carriage` (0 to 12°, the radians the seat, back pad and footplates have
+  rocked back about a pivot under the seat; the pose drives it at 0.3 of the arms'). The grip bars run
+  up and forward 40° at the start and level at the finish, as the ref's do: square enough to the forearm
+  through the rep for a straight wrist, and with the elbows back and under the shoulders (a bar at 15°
+  put them 21 cm out). The arms hang on a pivot 880 mm up on a leaning rear upright, each
+  one tube out to a collar and a 0.28 m bar, the grips 440 mm apart, 790 up at the start and 500 at the finish. The
   seat top is 480 mm, the back pad 0.72 m tall from the seat's rear edge, the footplates 180 mm up at
   the start. The stack (twelve plates, 0.3 m a radian of the arms) stands on the user's right (-x) in a
   shroud open toward the seat, its plates facing it. Contacts: `handles` (hands, a pair, on the arms),

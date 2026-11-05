@@ -22,15 +22,13 @@ import { V, X, rad } from '../rig.mjs';
 // The arms' pivot, [y, z]: 880 above the floor, 740 behind the seat's front edge.
 const PIVOT = [0.88, -0.54];
 // The grip's middle is GRIP.reach from the pivot, GRIP.angle degrees above level at the start. The
-// grip bar runs BAR.angle degrees up from level at the start, 0.17 m of it forward of its swivel to the
-// grip's middle; each arm's tube runs from the pivot to the swivel, the rest of that distance.
+// grip bar runs BAR.angle degrees up from level at the start (the ref's 40°, level at the finish, as the
+// arms turn 40°), 0.1 m of it forward of its collar to the grip's middle; each arm's tube runs from the
+// pivot to the collar, the rest of that distance. A bar at that pitch is square enough to the forearm
+// through the rep for a straight wrist, and keeps the elbows back, not flared.
 const GRIP = { reach: 0.5, angle: -10 };
-const BAR = { length: 0.2, angle: 15, grip: 0.1 };
-// The grips swivel at the arms' ends, as the ref's do, and turn the bar up from 15° at the start to 30°
-// at the finish, which keeps it square to the forearm; their joint's value is the angle they have
-// turned back against the arms' turn, so a bar held at the start's pitch would have value `v`.
-const SWIVEL = { start: 15, finish: 30 };
-// The grips are 250 mm either side of the middle; the arm tubes run outside them, 330 mm, and jog in at the swivel.
+const BAR = { length: 0.3, angle: 40, grip: 0.1 };
+// The grips are 250 mm either side of the middle; the arm tubes run outside them, 330 mm, and jog in at the collar.
 const ARMS_X = 0.22;
 const TUBE_X = ARMS_X + 0.08;
 const ARMS = [0, rad(40)];
@@ -68,7 +66,7 @@ const bent = (points, w, material, name) => [
   ...points.slice(1).map((p, i) => proxy(tube(w * 0.7, points[i], p, material))),
 ];
 const dir = (deg) => V(0, Math.sin(rad(deg)), Math.cos(rad(deg)));
-/** The arm's tube from the pivot to the swivel, at the start: what the grip's place leaves after the bar's reach. */
+/** The arm's tube from the pivot to the collar, at the start: what the grip's place leaves after the bar's reach. */
 const LEVER = dir(GRIP.angle).multiplyScalar(GRIP.reach).addScaledVector(dir(BAR.angle), -BAR.grip);
 
 const pivot = V(0, ...PIVOT);
@@ -76,22 +74,12 @@ const rockAt = V(0, ...ROCK);
 const jointOf = (type, origin, axis) => ({ type, origin, axis });
 const armsJoint = jointOf('revolute', pivot, V(1, 0, 0));
 const carriageJoint = jointOf('revolute', rockAt, V(-1, 0, 0));
-/** How far the grips have turned back against the arms by the time the arms have gone down `value`. */
-const swivelAt = (value) => value + rad(SWIVEL.start + ((SWIVEL.finish - SWIVEL.start) * value) / ARMS[1] - BAR.angle);
-const GRIPS_TURN = swivelAt(ARMS[1]);
 
 /** The arm's elbow, and the grip bar's middle and its direction, at the start (`dip` degrees down by none). */
 const elbow = (s) => pivot.clone().add(LEVER).setX(s * ARMS_X);
 const gripBar = (s) => ({ from: elbow(s), dir: dir(BAR.angle) });
 /** The grip's middle on side `s` at the start. */
 const gripAt = (s) => gripBar(s).from.addScaledVector(dir(BAR.angle), BAR.grip);
-const swivelJoint = jointOf('revolute', gripAt(0), V(-1, 0, 0));
-/** The grips' place at the arms' `value`: turned about their swivel, then carried by the arms. */
-const swungBy = (value) => {
-  const swung = moveOf(armsJoint, value);
-  const turned = moveOf(swivelJoint, swivelAt(value));
-  return { move: swung.clone().multiply(turned), swung };
-};
 
 /** The pad's unit direction up its face, and out from it, at the start, in [y, z]. */
 const padUp = V(0, Math.cos(FACE.lean), -Math.sin(FACE.lean));
@@ -109,7 +97,6 @@ export default recipe({
   bodies: {
     arms: revolute({ axis: V(1, 0, 0), limits: ARMS }),
     carriage: revolute({ axis: V(-1, 0, 0), limits: CARRIAGE }),
-    grips: revolute({ axis: V(-1, 0, 0), limits: [0, GRIPS_TURN] }),
   },
   // The top of the rep is the arms straight down at the hips, the bottom the handles at the chest.
   rep: { joint: 'arms', from: 'max' },
@@ -128,7 +115,7 @@ export default recipe({
       hip: [hipY, hipZ],
       at: (value) => {
         const rock = moveOf(carriageJoint, value * COUPLE);
-        const { move } = swungBy(value);
+        const swing = moveOf(armsJoint, value);
         const turned = (p) => p.clone().applyMatrix4(rock);
         const bent = (v) => v.clone().transformDirection(rock);
         return {
@@ -137,8 +124,8 @@ export default recipe({
           hipC: turned(hip),
           // How far the pad has leant back from upright, radians.
           lean: FACE.lean + value * COUPLE,
-          hand: (s) => gripAt(s).applyMatrix4(move),
-          across: () => dir(BAR.angle).transformDirection(move),
+          hand: (s) => gripAt(s).applyMatrix4(swing),
+          across: () => dir(BAR.angle).transformDirection(swing),
           plate: turned(plateCentre(0)),
           plateOut: bent(plateOut),
           plateUp: bent(plateUp),
@@ -213,18 +200,17 @@ export default recipe({
         joint,
         tube: bent([V(s * TUBE_X, ...PIVOT), bar.from.clone().setX(s * TUBE_X), bar.from], 0.045, M.frame, 'lever'),
         collar: rod(0.03, bar.from, at(0.025), M.metal, { solid: true }),
-        grip: proxy(rod(0.02, at(BAR.grip - 0.075), at(BAR.grip + 0.075), M.metal, { held: true })),
-        sleeve: rod(0.0235, at(BAR.grip - 0.075), at(BAR.grip + 0.075), M.vinyl, { held: true }),
+        grip: proxy(rod(0.02, at(BAR.grip - 0.075), at(BAR.length - 0.02), M.metal, { held: true })),
+        sleeve: rod(0.0235, at(BAR.grip - 0.075), at(BAR.length - 0.02), M.vinyl, { held: true }),
       };
     });
-    const armParts = levers.flatMap((l) => [l.joint.housing, ...l.tube, l.collar]);
-    const gripParts = levers.flatMap((l) => [l.grip, l.sleeve]);
+    const armParts = levers.flatMap((l) => [l.joint.housing, ...l.tube, l.collar, l.grip, l.sleeve]);
     // The pivot's axles are the frame's.
     levers.forEach((l) => frame.push(...l.joint.fixed));
 
     // Where each moving part rests at the start: a joint's value moves it from there, whole.
     const rest = new Map();
-    for (const node of [...armParts, ...gripParts, ...carriage]) { node.updateMatrix(); rest.set(node, node.matrix.clone()); }
+    for (const node of [...armParts, ...carriage]) { node.updateMatrix(); rest.set(node, node.matrix.clone()); }
     const lay = (nodes, move) => nodes.forEach((n) => rest.get(n).clone().premultiply(move).decompose(n.position, n.quaternion, n.scale));
     const start = {
       handles: sides.map((s) => gripAt(s)),
@@ -232,22 +218,9 @@ export default recipe({
       footplates: sides.map((s) => plateCentre(s)),
     };
 
-    // The grips are laid by the arms' move and their own swivel; after a scrub of either, `follow` lays
-    // them again from where the arms are, keeping the swivel they had, and puts the swivel joint's
-    // axis through the collar where it now is.
-    const armsNow = new THREE.Matrix4();
-    const swivelAxis = gripAt(0);
-    const lays = (arms, swivel) => {
-      lay(armParts, arms);
-      lay(gripParts, arms.clone().multiply(swivel));
-      armsNow.copy(arms);
-      swivelAxis.copy(gripAt(0)).applyMatrix4(arms);
-    };
-    const moveOfNode = (node) => { node.updateMatrix(); return node.matrix.clone().multiply(rest.get(node).clone().invert()); };
-
     return {
-      parts: [...frame, tower, ...carriage, ...armParts, ...gripParts],
-      bodies: { arms: armParts, carriage, grips: gripParts },
+      parts: [...frame, tower, ...carriage, ...armParts],
+      bodies: { arms: armParts, carriage },
       stacks: {
         arms: {
           lift(l) {
@@ -256,25 +229,16 @@ export default recipe({
           },
         },
       },
-      follow() {
-        const swivel = armsNow.clone().invert().multiply(moveOfNode(gripParts[0]));
-        lays(moveOfNode(armParts[0]), swivel);
-      },
       drive(P) {
         const value = P.linkage?.value ?? 0;
+        const arms = moveOf(armsJoint, value);
         const rocked = moveOf(carriageJoint, value * COUPLE);
-        const { swung } = swungBy(value);
-        const turned = moveOf(swivelJoint, swivelAt(value));
-        lays(swung, turned);
+        lay(armParts, arms);
         lay(carriage, rocked);
         const on = (points, move) => points.map((p) => p.clone().applyMatrix4(move));
         return {
-          joints: {
-            arms: { value, origin: pivot.clone() },
-            grips: { value: swivelAt(value), origin: swivelAxis },
-            carriage: { value: value * COUPLE, origin: rockAt.clone() },
-          },
-          points: { handles: on(on(start.handles, turned), swung), backPad: on(start.backPad, rocked), footplates: on(start.footplates, rocked) },
+          joints: { arms: { value, origin: pivot.clone() }, carriage: { value: value * COUPLE, origin: rockAt.clone() } },
+          points: { handles: on(start.handles, arms), backPad: on(start.backPad, rocked), footplates: on(start.footplates, rocked) },
         };
       },
     };

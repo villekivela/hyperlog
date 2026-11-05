@@ -51,9 +51,9 @@ test('no brand, logo or decal is named in the recipe', async () => {
   }
 });
 
-test('it has three joints: the arms 0 to 40°, the carriage 0 to 12°, and the grips that swivel on the arms', () => {
+test('it has two joints: the arms 0 to 40° and the carriage 0 to 12°', () => {
   const { joints } = machine();
-  assert.deepEqual(Object.keys(joints).sort(), ['arms', 'carriage', 'grips']);
+  assert.deepEqual(Object.keys(joints).sort(), ['arms', 'carriage']);
   for (const j of Object.values(joints)) {
     assert.equal(j.type, 'revolute');
     close(Math.abs(j.axis.clone().normalize().x), 1, 1e-9, 'a transverse axis');
@@ -65,7 +65,7 @@ test('it has three joints: the arms 0 to 40°, the carriage 0 to 12°, and the g
 
 test('every joint scrubs through its limits and is held there', () => {
   const kit = machine();
-  for (const body of ['arms', 'carriage', 'grips']) {
+  for (const body of ['arms', 'carriage']) {
     const [min, max] = kit.joints[body].limits;
     kit.scrub(body, max);
     assert.equal(kit.joints[body].value, max);
@@ -76,20 +76,21 @@ test('every joint scrubs through its limits and is held there', () => {
   }
 });
 
-test('scrubbing the arms carries the grips, and the grips turn about their own middle', () => {
+test('scrubbing the arms carries the grips with them, level at the finish and 40° up at the start', () => {
   const kit = machine();
-  const held = () => meshes(kit, (o) => o.userData.held)[0].box;
-  const first = held().getCenter(new THREE.Vector3());
+  const bar = () => {
+    const { box } = meshes(kit, (o) => o.userData.held)[0];
+    const sleeve = meshes(kit, (o) => o.userData.held)[0].mesh;
+    const axis = new THREE.Vector3(0, 1, 0).applyQuaternion(sleeve.getWorldQuaternion(new THREE.Quaternion()));
+    return { y: box.getCenter(new THREE.Vector3()).y, pitch: Math.abs((Math.atan2(axis.y, Math.hypot(axis.x, axis.z)) * 180) / Math.PI) };
+  };
+  const start = bar();
   kit.scrub('arms', rad(40));
   kit.group.updateMatrixWorld(true);
-  const dropped = held().getCenter(new THREE.Vector3());
-  assert.ok(first.y - dropped.y > 0.25, `the grips dropped ${(first.y - dropped.y).toFixed(2)} m with the arms`);
-  const before = held().getSize(new THREE.Vector3());
-  kit.scrub('grips', rad(30));
-  kit.group.updateMatrixWorld(true);
-  close(held().getCenter(new THREE.Vector3()).distanceTo(dropped), 0, 0.005, 'the grip\'s middle, which the swivel turns about');
-  const after = held().getSize(new THREE.Vector3());
-  assert.ok(Math.abs(after.y - before.y) > 0.01, 'the bar turned');
+  const finish = bar();
+  assert.ok(start.y - finish.y > 0.25, `the grips dropped ${(start.y - finish.y).toFixed(2)} m with the arms`);
+  close(start.pitch, 40, 1, 'the bar\'s pitch at the start');
+  close(finish.pitch, 0, 1, 'the bar\'s pitch at the finish');
 });
 
 test('the arms hang on a pivot 880 mm up on a rear upright, grips 440 apart, 790 mm at the start and 500 at the finish', () => {
@@ -173,6 +174,18 @@ test('the feet stay on the footplates, which rise as the carriage rocks', () => 
     return midY(plates);
   });
   assert.ok(Math.max(...heights) - Math.min(...heights) > 0.1, 'the plates rise with the carriage');
+});
+
+test('the elbows stay back and down through the rep, not flared out or up beside the shoulders', () => {
+  frames(() => {
+    for (const k of ['l', 'r']) {
+      const shoulder = bone(`upperarm_${k}`);
+      const elbow = bone(`lowerarm_${k}`);
+      assert.ok(Math.abs(elbow.x) - Math.abs(shoulder.x) < 0.12, `the ${k} elbow ${((Math.abs(elbow.x) - Math.abs(shoulder.x)) * 100).toFixed(0)} cm out of the shoulder`);
+      assert.ok(shoulder.y - elbow.y > 0.08, `the ${k} elbow only ${((shoulder.y - elbow.y) * 100).toFixed(0)} cm under the shoulder`);
+      assert.ok(Math.abs(elbow.x) > 0.15, `the ${k} elbow at the body's side, not across it`);
+    }
+  });
 });
 
 test('both hands stay closed on the grips from the top of the rep to the bottom', () => {
