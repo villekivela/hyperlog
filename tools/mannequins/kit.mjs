@@ -75,6 +75,7 @@ export const STATIONS = {
  * those no pose has set up are listed.
  */
 export const BARS = {
+  trap_bar: { kit: 'trap_bar', exercises: ['trap_bar_deadlift'] },
   ez_bar: { kit: 'ez_bar', exercises: ['ez_bar_curl', 'ez_bar_preacher_curl', 'skull_crusher'] },
   safety_bar: { kit: 'safety_bar', exercises: ['safety_bar_squat', 'good_morning_barbell_safety_bar'] },
 };
@@ -91,7 +92,7 @@ export const EQUIPMENT = {
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
   bodyweight: ['power_rack'],
   ez_bar: ['ez_bar'],
-  trap_bar: null,
+  trap_bar: ['trap_bar'],
   safety_bar: ['safety_bar'],
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
