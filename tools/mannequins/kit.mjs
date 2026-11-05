@@ -68,7 +68,6 @@ export const STATIONS = {
     ],
   },
   hyperextension_bench: { kit: 'hyperextension_bench', exercises: ['45_hyperextension'] },
-  captains_chair: { kit: 'captains_chair', exercises: ['roman_chair_crunch'] },
 };
 
 /**

@@ -307,7 +307,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `cable_crossover`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
-| `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
+| `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips, `captains_chair` for the roman chair crunch; none needed for the rest |
 | `ez_bar` | `ez_bar` |
 | `trap_bar` | `trap_bar` |
 | `safety_bar` | `safety_bar` |

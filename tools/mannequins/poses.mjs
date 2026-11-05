@@ -914,6 +914,20 @@ export const POSES = {
     bottom: { over: 0.24, trunk: 22, thigh: 16, shin: 28 },
   },
 
+  // A knee raise on the captain's chair: the forearms on the arm pads, the hands on the grips, the
+  // back to the back pad leaning 10°, the legs hanging free. The knees come up past the hips (video,
+  // 0:03), bent about 60°.
+  roman_chair_crunch: {
+    equipment: 'bodyweight',
+    motion: 'chair',
+    kit: { captains_chair: {} },
+    top: { trunk: -10, thigh: 112, shin: -52, shrug: 0, back: 0.04 },
+    bottom: { trunk: -10, thigh: 5, shin: 15, shrug: 0, back: 0.04 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.3, -1, -0.1] },
+    camera: { target: [0, 1.0, 0.3], halfHeight: 1.2, azimuth: 35, elevation: 10 },
+  },
+
   // The plain lift with a plate on a dip belt's chain.
   weighted_pullup: { like: 'pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
   weighted_chinup: { like: 'chinup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },

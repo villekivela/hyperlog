@@ -10,14 +10,14 @@
 // under the shoulders, and the lifter faces +z with the back against the back pad.
 import * as THREE from 'three';
 import { recipe } from '../recipe.mjs';
-import { bent, knob, pad, part, rod, tube } from '../parts.mjs';
+import { knob, mitered, pad, part, rod, tube } from '../parts.mjs';
 import { V } from '../rig.mjs';
 
 const ELBOW = 0.41;
 /** A point `r` metres from the rear, `y` up, `x` across. */
 const at = (x, r, y) => V(x, y, r - ELBOW);
 const SIDE = 0.32;
-const RAIL = { length: 1.054, width: 0.1, height: 0.05 };
+const RAIL = { length: 1.054, width: 0.1, height: 0.06 };
 // The arm pads: 250 long from 330 from the rear, 120 wide, 80 thick, tops at 1380, their middles 560 apart.
 const ARM = { from: 0.33, length: 0.25, width: 0.12, thick: 0.08, top: 1.38, x: 0.28 };
 // The back pad: 290 wide and 550 tall from 1000 up, 70 thick, reclined 10°, its face 360 from the rear at its bottom edge.
@@ -27,15 +27,30 @@ const GRIP = { radius: 0.0165, hub: { r: 0.70, y: 1.32, x: 0.285 }, top: { r: 0.
 const DIP = { r: 0.93, y: 1.2, x: 0.30 };
 // A rubber cap closes each rail's end.
 const CAP = 0.016;
-const PEG = { x: 0.325, y: 0.28, from: 0.60, to: 0.75, radius: 0.02 };
+const PEG = { x: 0.325, y: 0.28, from: 0.60, to: 0.75, radius: 0.025 };
 // The straight tube's ends: on the rail's front half and the rear post's top, behind the back pad's face.
-const POST = { foot: { r: 0.74, y: 0.1 }, top: { r: 0.24, y: 1.33 } };
-const BEND = [{ r: 0.14, y: 0.1 }, { r: 0.62, y: 0.93 }, { r: 0.70, y: 1.12 }, { r: 0.70, y: 1.3 }];
+const POST = { foot: { r: 0.74, y: 0.1 }, top: { r: 0.20, y: 1.27 } };
+// The bent tube, from the rail's rear half up and forward, round to upright under the hub.
+const BEND = [{ r: 0.14, y: 0.1 }, { r: 0.58, y: 0.88 }, { r: 0.65, y: 1.0 }, { r: 0.69, y: 1.1 }, { r: 0.70, y: 1.2 }, { r: 0.70, y: 1.27 }];
+// The frame's tubes are 60 mm across (the photos), the top rails and the back support's cross tube as thick.
+const TUBE = 0.06;
+
+/**
+ * What the lifter meets: where an elbow rests on each pad (`elbow(side)`, the pad's middle across, its
+ * top plus the joint's lift, the way along the pad left to the pose, which finds it from the hands),
+ * the grips (`at(side)`, where the hand closes, and `across(side)`, up the grip, which the thumb lies
+ * along), the chair's back pad's lean, and the elbow's lift above a pad's top.
+ */
+export const HOLD = {
+  padX: ARM.x,
+  padTop: ARM.top,
+  elbowLift: 0.04,
+  at: (side) => at(side * (GRIP.hub.x + (GRIP.top.x - GRIP.hub.x) * GRIP.hand), GRIP.hub.r + (GRIP.top.r - GRIP.hub.r) * GRIP.hand, GRIP.hub.y + (GRIP.top.y - GRIP.hub.y) * GRIP.hand),
+  across: (side) => at(side * GRIP.top.x, GRIP.top.r, GRIP.top.y).sub(at(side * GRIP.hub.x, GRIP.hub.r, GRIP.hub.y)).normalize(),
+};
 
 export default recipe({
   name: 'captains_chair',
-  // Shown alone in the studio until a pose uses it: three-quarter from the front.
-  standsAlone: { camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 145, elevation: 12 } },
   bodies: {},
   contacts: [
     { body: 'frame', point: 'armPads', landmark: 'forearms' },
@@ -53,12 +68,16 @@ export default recipe({
     back.rotation.x = -BACK.recline;
     const backBoard = pad(BACK.width - 0.04, BACK.height - 0.04, 0.012, M.frame, at(0, faceAt(middle), middle).addScaledVector(normal, -(BACK.thick + 0.006)), { soft: 0.003 });
     backBoard.rotation.x = -BACK.recline;
-    const hand = (s) => at(s * (GRIP.hub.x + (GRIP.top.x - GRIP.hub.x) * GRIP.hand), GRIP.hub.r + (GRIP.top.r - GRIP.hub.r) * GRIP.hand, GRIP.hub.y + (GRIP.top.y - GRIP.hub.y) * GRIP.hand);
+    // The upright's middle line, behind the pad's board, at height y.
+    const upright = (y) => at(0, faceAt(y) - BACK.thick / Math.cos(BACK.recline) - 0.012 - 0.03, y);
+    const hand = HOLD.at;
     const armMiddle = ARM.from + ARM.length / 2;
     const parts = [
       back, backBoard,
-      // The back support, across the rear posts behind the pad.
-      tube(0.05, at(-SIDE, POST.top.r, POST.top.y - 0.05), at(SIDE, POST.top.r, POST.top.y - 0.05), M.frame),
+      // The back support: a cross tube between the rear posts' tops and one upright from its middle, leaning
+      // back with the pad bolted to its face.
+      tube(TUBE, at(-SIDE, POST.top.r, POST.top.y), at(SIDE, POST.top.r, POST.top.y), M.frame),
+      mitered([upright(BACK.bottom + 0.28), upright(BACK.bottom + 0.44)], 0.05, M.frame),
       // The foot brace.
       tube(0.05, at(-SIDE, 0.55, 0.06), at(SIDE, 0.55, 0.06), M.frame),
       ...sides.flatMap((s) => {
@@ -69,14 +88,14 @@ export default recipe({
         const peg = rod(PEG.radius, at(s * PEG.x, PEG.from, PEG.y), at(s * PEG.x, PEG.to, PEG.y), M.vinyl);
         peg.userData.peg = true;
         return [
-          tube(RAIL.width, at(x, CAP, RAIL.height / 2), at(x, RAIL.length - CAP, RAIL.height / 2), M.frame),
+          pad(RAIL.width, RAIL.height, RAIL.length - 2 * CAP, M.frame, at(x, RAIL.length / 2, RAIL.height / 2), { soft: 0.02 }),
           ...[0, RAIL.length].map((r) => pad(0.016, RAIL.height, RAIL.width, M.vinyl, at(x, r ? RAIL.length - CAP / 2 : CAP / 2, RAIL.height / 2), { soft: 0.005, solid: false }).rotateY(Math.PI / 2)),
           // The straight tube, up and back to the rear post.
-          tube(0.05, at(x, POST.foot.r, POST.foot.y), at(x, POST.top.r, POST.top.y), M.frame),
+          mitered([at(x, POST.foot.r, POST.foot.y), at(x, POST.top.r, POST.top.y)], TUBE, M.frame),
           // The bent tube, inside it, up and forward and upright under the arm pad's front end.
-          bent(`captains_bend:${s}`, BEND.map(({ r, y }) => at(x - s * 0.05, r, y)), 0.025, M.frame, { solid: true }),
+          mitered(BEND.map(({ r, y }) => at(x - s * 0.06, r, y)), TUBE, M.frame),
           // The pad's support, from the rear post to the hub.
-          tube(0.05, at(x, POST.top.r, ARM.top - ARM.thick - 0.025), at(x, GRIP.hub.r, ARM.top - ARM.thick - 0.025), M.frame),
+          mitered([at(x, POST.top.r, ARM.top - ARM.thick - TUBE / 2), at(x, GRIP.hub.r, ARM.top - ARM.thick - TUBE / 2)], TUBE, M.frame),
           pad(ARM.width, ARM.thick, ARM.length, M.vinyl, at(s * ARM.x, armMiddle, ARM.top - ARM.thick / 2), { soft: 0.02 }),
           peg,
           // The knee raise grip, and the dip handle forward from the hub.

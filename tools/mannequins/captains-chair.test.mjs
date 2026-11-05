@@ -9,7 +9,7 @@ import path from 'node:path';
 import * as THREE from 'three';
 import { EQUIPMENT, KITS, STATIONS, buildKit, shownAlone } from './kit.mjs';
 import { buildStage } from './stage.mjs';
-import { POSES } from './poses.mjs';
+import { prepare } from './entries.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const library = JSON.parse(await readFile(path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json'), 'utf8'));
@@ -32,15 +32,15 @@ const size = (b) => b.getSize(new THREE.Vector3());
 const centre = (b) => b.getCenter(new THREE.Vector3());
 const rear = (z) => z + REAR;
 
-test('it is the kit of roman_chair_crunch, which the ref names, and that exercise is not posed', async () => {
+test('it is the kit of roman_chair_crunch, which the ref names, and that exercise is posed on it', async () => {
   const ref = await readFile(path.join(HERE, 'refs', 'captains_chair', 'ref.md'), 'utf8');
   const named = [...ref.match(/## Movement and exercises served[\s\S]*?\n## /)[0].matchAll(/^- `([^`]+)`:/gm)].map((m) => m[1]);
   assert.deepEqual(named, ['roman_chair_crunch']);
-  assert.deepEqual(STATIONS.captains_chair, { kit: 'captains_chair', exercises: named });
+  assert.equal(STATIONS.captains_chair, undefined, 'only the unposed are listed');
   assert.ok(KITS.captains_chair, 'a recipe named captains_chair');
   const kind = library.exercises.find((e) => e.id === 'roman_chair_crunch')?.equipment;
   assert.ok(EQUIPMENT[kind].includes('captains_chair'), `${kind} has no captains_chair kit`);
-  assert.equal(POSES.roman_chair_crunch, undefined, 'roman_chair_crunch is posed already');
+  assert.deepEqual(prepare('roman_chair_crunch').kit, { captains_chair: {} });
 });
 
 test('it stands 1054 mm long by 736 wide on two floor rails 640 apart, 1550 tall to the back pad', () => {
@@ -130,15 +130,44 @@ test('two foot pegs 650 apart on the side frames, about 280 up, under the front 
   close(Math.abs(centre(pegs[0].box).x - centre(pegs[1].box).x), 0.65, 0.01, 'the pegs apart');
 });
 
+// What the manual's page 8 (the assembly views) and the renders show: the frame is stout tube, a thick top
+// rail carries each arm pad, and the back pad is bolted to one upright standing on a cross tube between the rear posts.
+test('a 60 mm top rail runs under each arm pad, from the rear post to the hub', () => {
+  const rails = meshes(chair(), (o) => o.material.name === 'frame' && new THREE.Box3().setFromObject(o).min.y > 1 && size(new THREE.Box3().setFromObject(o)).z > 0.45 && size(new THREE.Box3().setFromObject(o)).y < 0.12 && size(new THREE.Box3().setFromObject(o)).x < 0.12);
+  assert.equal(rails.length, 2);
+  for (const { box } of rails) {
+    close(size(box).x, 0.06, 0.005, 'a rail\'s width');
+    close(size(box).y, 0.06, 0.005, 'a rail\'s height');
+    close(box.max.y, 1.30, 0.01, 'the rail\'s top, under the pad');
+    close(rear(box.min.z), 0.20, 0.03, 'the rail\'s rear end, at the post');
+    close(rear(box.max.z), 0.70, 0.04, 'the rail\'s front end, at the hub');
+  }
+});
+
+test('the back pad is bolted to one central upright that leans back with it, on a cross tube joining the rear posts', () => {
+  const kit = chair();
+  const cross = meshes(kit, (o) => o.material.name === 'frame' && size(new THREE.Box3().setFromObject(o)).x > 0.6 && size(new THREE.Box3().setFromObject(o)).y < 0.08);
+  assert.ok(cross.some(({ box }) => rear(box.min.z) < 0.25 && box.min.y > 1.15), 'a cross tube across the rear posts');
+  const upright = meshes(kit, (o) => o.material.name === 'frame' && Math.abs(centre(new THREE.Box3().setFromObject(o)).x) < 0.01 && size(new THREE.Box3().setFromObject(o)).y > 0.15 && size(new THREE.Box3().setFromObject(o)).x < 0.08);
+  assert.equal(upright.length, 1, 'one upright');
+  const { box } = upright[0];
+  assert.ok(box.max.y > 1.4 && box.min.y < 1.3, `from ${box.min.y.toFixed(2)} to ${box.max.y.toFixed(2)} up`);
+  const [back] = meshes(kit, (o) => o.material.name === 'vinyl' && size(new THREE.Box3().setFromObject(o)).y > 0.5);
+  assert.ok(box.max.z < back.box.max.z - 0.03, 'the upright stands behind the pad');
+});
+
+test('the foot pegs are 50 mm thick rubber, the thickness the renders show', () => {
+  for (const { box } of meshes(chair(), (o) => o.userData.peg)) close(size(box).y, 0.05, 0.003, 'a peg\'s thickness');
+});
+
 test('its recipe names no brand', async () => {
   const source = await readFile(path.join(HERE, 'recipes', 'captains-chair.mjs'), 'utf8');
   assert.doesNotMatch(source, /life ?fitness|lbr|axiom|atlantis|hammer|\blogo\b|decal/i);
 });
 
-test('the studio shows it alone, with nothing to scrub', async () => {
-  const entry = shownAlone('captains_chair');
-  assert.ok(entry?.camera, 'a framing to open on');
-  const stage = await buildStage(entry);
+test('the chair is shown by its exercise, not alone', async () => {
+  assert.equal(shownAlone('captains_chair'), null);
+  const stage = await buildStage(prepare('roman_chair_crunch'));
   stage.pose(0);
   assert.ok(stage.kit.kits.captains_chair);
 });
