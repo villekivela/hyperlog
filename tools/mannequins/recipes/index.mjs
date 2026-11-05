@@ -27,7 +27,6 @@ import safetyBar from './safety-bar.mjs';
 import trapBar from './trap-bar.mjs';
 import hyperextensionBench from './hyperextension-bench.mjs';
 import pecDeck from './pec-deck.mjs';
-import shoulderPress from './shoulder-press.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
