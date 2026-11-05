@@ -607,9 +607,9 @@ export function turnTo(object, along, toward) {
   object.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, x.clone().cross(y)));
 }
 
-/** A round knob, `r` across, at `at`. */
-export function knob(M, at, r = 0.016) {
-  const k = part(shape(`knob:${r}`, () => { const g = new THREE.SphereGeometry(r, 14, 10); g.deleteAttribute('uv'); return g; }), M.vinyl);
+/** A round knob, `r` across, at `at`, in vinyl unless `material` says. */
+export function knob(M, at, r = 0.016, material = M.vinyl) {
+  const k = part(shape(`knob:${r}`, () => { const g = new THREE.SphereGeometry(r, 14, 10); g.deleteAttribute('uv'); return g; }), material);
   k.position.copy(at);
   return k;
 }
