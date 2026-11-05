@@ -555,6 +555,28 @@ export const MOTIONS = {
   },
 
   /**
+   * Seated against a back pad, pressing two neutral grips on a yoke that pivots behind the pad: the
+   * hands close on grips that run forward along the yoke's own line, palms facing, elbows below
+   * the hands.
+   */
+  shoulder_press(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const { pivot, handle, swing, ahead } = s.linkage;
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.3).normalize(),
+      ...seatedFeet(e, L),
+      hand: handle,
+      // The knuckles run along the grip, which points the yoke's way.
+      across: () => ahead.clone(),
+      armPole: (side) => V(side * 0.6, -1, -0.3).normalize(),
+      pivot, handle, swing,
+    };
+  },
+
+  /**
    * Pressing dumbbells on an adjustable bench at `bench.angle`, written in the backrest's frame so
    * one entry fits every angle: the back along the pad, and the hips `body.sit` off its face and
    * `body.seat` down it from the seat-back corner (the body slides down the pad, never into the

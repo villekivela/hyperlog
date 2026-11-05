@@ -53,6 +53,8 @@ const VIEWS = {
   side: { right: new THREE.Vector3(0, 0, -1), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(1, 0, 0) },
   // Along the body's length from the head end for a lying lift, from the front for the rest.
   front: { right: new THREE.Vector3(1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, 1) },
+  // From in front and to the lifter's left, as a product photo is taken, with the whole machine in.
+  threeQuarter: { right: new THREE.Vector3(0.82, 0, -0.57), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0.57, 0, 0.82), whole: true },
   frontLying: { right: new THREE.Vector3(-1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, -1) },
 };
 
@@ -141,6 +143,7 @@ export function png(rgb, w, h) {
  * the view, so it doesn't hide the lifter.
  */
 function cutaway(tris, view) {
+  if (view.whole) return tris;
   const near = Math.max(...tris.filter((t) => t[4]).flatMap(([a, b, c]) => [a, b, c].map((p) => p.dot(view.toward))));
   return tris.filter(([a, b, c, , body]) => body || (a.dot(view.toward) + b.dot(view.toward) + c.dot(view.toward)) / 3 < near + 0.3);
 }
@@ -150,8 +153,10 @@ function sideBySide(shots, view) {
   // One frame for all the panels: the bounds of the body and the kit in every shot.
   const box = new THREE.Box3();
   for (const tris of shots) for (const [a, b, c] of tris) if (a.y > 0.01 || b.y > 0.01) box.expandByPoint(a).expandByPoint(b).expandByPoint(c);
-  const size = box.getSize(new THREE.Vector3());
-  const span = [Math.abs(size.dot(view.right)), Math.abs(size.dot(view.up))];
+  // How far the box reaches along the view's right and up, from its corners, so a turned view holds it whole.
+  const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
+  const reach = (axis) => Math.max(...corners.map((c) => c.dot(axis))) - Math.min(...corners.map((c) => c.dot(axis)));
+  const span = [reach(view.right), reach(view.up)];
   const scale = Math.min((PANEL[0] * 0.9) / span[0], (PANEL[1] * 0.9) / span[1]);
   const centre = box.getCenter(new THREE.Vector3());
   const panels = shots.map((tris) => draw(tris, view, centre, scale, PANEL));
@@ -207,10 +212,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // `--angle <degrees>` renders an adjustable-bench pose at that bench angle, its typical one by default.
   const at = args.indexOf('--angle');
   const angle = at < 0 ? undefined : Number(args.splice(at, 2)[1]);
+  const viewAt = args.indexOf('--view');
+  const only = viewAt < 0 ? null : args.splice(viewAt, 2)[1];
   const [id, out = '.'] = args;
-  if (!id) throw new Error('usage: node render.mjs <id> [out-dir] [--angle <degrees>]');
+  if (!id) throw new Error('usage: node render.mjs <id> [out-dir] [--angle <degrees>] [--view side|front|threeQuarter]');
   await mkdir(out, { recursive: true });
-  for (const view of ['side', 'front']) {
+  for (const view of only ? [only] : ['side', 'front']) {
     const file = path.join(out, `${id}${angle === undefined ? '' : `-${angle}`}-${view}.png`);
     await writeFile(file, await renderPose(id, view, angle));
     console.log(`rendered ${file}`);

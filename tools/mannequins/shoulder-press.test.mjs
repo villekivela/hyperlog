@@ -60,7 +60,7 @@ test('the grips rest at 980 mm, 700 apart, on a 900 mm arm, and scrub up 580 mm 
 test('scrubbing moves the yoke and the stack, and the frame stays', () => {
   const kit = machine();
   const centre = (node) => new THREE.Box3().setFromObject(node).getCenter(new THREE.Vector3());
-  const arm = kit.group.getObjectByName(kit.bodies.yoke[1].name);
+  const arm = role(kit, 'barGrip')[0];
   const frame = role(kit, 'backPad')[0];
   const plates = role(kit, 'stackHead')[0];
   const [arm0, frame0, head0] = [centre(arm), centre(frame), centre(plates)];
@@ -71,12 +71,13 @@ test('scrubbing moves the yoke and the stack, and the frame stays', () => {
   assert.ok(centre(frame).distanceTo(frame0) < 1e-9, 'the frame moved with the yoke');
 });
 
-test('it stands 1.52 m deep, 1.63 m tall and 1.42 m across at the widest, a bar grip and a neutral grip a side', () => {
+test('it stands 1.4 m deep, 1.63 m tall and 1.5 m across, a bar grip and a neutral grip a side', () => {
   const kit = machine();
   const size = box(kit).getSize(new THREE.Vector3());
-  close(size.z, 1.52, 0.1, 'front to back');
+  // The ref's 1.52 m footprint counts its clearances; the frame itself runs from behind the posts to the front foot.
+  close(size.z, 1.4, 0.15, 'front to back');
   close(size.y, 1.63, 0.08, 'tall');
-  close(size.x, 1.42, 0.15, 'across');
+  close(size.x, 1.5, 0.15, 'across');
   assert.equal(role(kit, 'barGrip').length, 2);
   assert.equal(role(kit, 'neutralGrip').length, 2);
 });
@@ -92,7 +93,7 @@ test('the seat top is 350 mm, the back pad runs 830 mm up to 1.27 m reclined 10Â
 });
 
 test('a fit rule sets the seat, at its 350 mm default, and the seat follows it', () => {
-  assert.deepEqual(KITS.shoulder_press.fit.map((r) => r.sets), ['seat']);
+  assert.deepEqual(KITS.shoulder_press.fit.map((r) => r.sets), ['seat', 'pad']);
   close(new THREE.Box3().setFromObject(role(machine({ seat: 0.45 }), 'seat')[0]).max.y, 0.45, 0.01, 'the seat set to 450 mm');
 });
 

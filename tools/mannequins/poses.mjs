@@ -148,6 +148,17 @@ export const POSES = {
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 
+  // Seated against the pad, 10° back, the neutral grips pressed from shoulder level to the arms near straight overhead.
+  machine_shoulder_press: {
+    equipment: 'machine',
+    motion: 'shoulder_press',
+    kit: { shoulder_press: {} },
+    body: { trunk: -18 },
+    feet: { stance: 0.17, z: 0.48, toeOut: 12 },
+    grip: {},
+    camera: { target: [-0.1, 0.98, 0.1], halfHeight: 1.2, azimuth: 56, elevation: 12 },
+  },
+
   // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
 
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides:
