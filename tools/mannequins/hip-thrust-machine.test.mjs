@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
 import { EQUIPMENT, KITS, MACHINES, buildKit, shownAlone } from './kit.mjs';
-import { buildStage } from './stage.mjs';
-import { rad } from './rig.mjs';
+import { MODEL, buildStage, parseMannequin } from './stage.mjs';
+import { buildRig, rad, wpos } from './rig.mjs';
 
 const machine = (options = {}) => {
   const kit = buildKit({ equipment: 'machine', kit: { hip_thrust_machine: options } }).kits.hip_thrust_machine;
@@ -159,4 +159,19 @@ test('the studio shows it on its own, the carriage scrubbed through its limits',
 test('the recipe names no maker, model or finish', async () => {
   const source = await readFile(new URL('./recipes/hip-thrust-machine.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /hammer|life ?fitness|glute ?drive|PL-GLD|line-x|strength|logo|decal/i);
+});
+
+// The ref: "at the top the shoulder blades are on the back pad's top edge", the torso level, the hips
+// at the belt. So the pad is a trunk's length behind the belt, not hard against it.
+test('the back pad is a trunk\'s length behind the belt, where the mannequin\'s upper back lies', async () => {
+  const bytes = await readFile(MODEL);
+  const rig = buildRig(await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)));
+  const [hips, mid, neck] = ['pelvis', 'spine_02', 'neck_01'].map((n) => wpos(rig.bones[n]));
+  const kit = machine();
+  const belt = contact(kit, 'belt').at[0];
+  const back = contact(kit, 'pad').at[0];
+  const behind = belt.z - back.z;
+  assert.ok(behind > hips.distanceTo(mid) * 0.8 && behind < hips.distanceTo(neck), `the pad ${behind.toFixed(2)} m behind the belt, the trunk ${hips.distanceTo(mid).toFixed(2)} to ${hips.distanceTo(neck).toFixed(2)} m`);
+  // The torso rises about 17° from the belt to the pad's top edge (700 to 830 mm).
+  close(deg(Math.atan2(back.y - belt.y, behind)), 17, 8, 'the torso\'s rise to the pad, in degrees');
 });

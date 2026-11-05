@@ -1,0 +1,105 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "No library video. Searched reference: IU-ERkjTKXA, so weaker than the others",
+    "exercises.json has no note",
+    "docs/research/grip.md: a rope, mid-palm, the fist just above the end stop"
+  ],
+  "lines": [
+    {
+      "says": "the hips hinge from near straight to deeply folded",
+      "moves": "hip_*",
+      "ends": [
+        [
+          150,
+          180
+        ],
+        [
+          50,
+          115
+        ]
+      ]
+    },
+    {
+      "says": "the trunk goes from near upright to well forward",
+      "moves": "trunk",
+      "ends": [
+        [
+          0,
+          25
+        ],
+        [
+          45,
+          100
+        ]
+      ]
+    },
+    {
+      "says": "the knees stay soft: a hinge, not a squat",
+      "moves": "knee_*",
+      "ends": [
+        [
+          140,
+          180
+        ],
+        [
+          115,
+          175
+        ]
+      ]
+    },
+    {
+      "says": "the arms stay long",
+      "moves": "elbow_*",
+      "ends": [
+        [
+          150,
+          180
+        ],
+        [
+          150,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the arms hold their angle: the hips pull, not the arms",
+      "still": "elbow_*",
+      "within": 12
+    },
+    {
+      "says": "the hips drive back and through",
+      "travels": "pelvis.at",
+      "least": 0.05
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the lifter faces away from the tower, the cable running between the legs from a low pulley",
+      "look": "setup",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "at the hinge the back stays flat, not rounded",
+      "look": "back",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the hands pass between the legs at the hinge and rise to the front of the hips",
+      "look": "hands",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    }
+  ]
+}

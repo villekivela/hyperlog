@@ -115,18 +115,23 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   // Posed, the T-bar row machine comes as its exercise sets it up (#188).
   const tBar = await get('/api/item/kit/t_bar_row_machine');
   assert.equal(tBar.uses, 'chest_supported_t_bar_row');
+  // Posed, the power rack comes as its first exercise by id sets it up, and the dip belt with a weighted lift (#196).
+  const rack = await get('/api/item/kit/power_rack');
+  assert.equal(rack.uses, '2_grip_pullup');
+  assert.equal(rack.entry.alone, undefined);
+  const belt = await get('/api/item/kit/dip_belt');
+  assert.ok(belt.entry.kit.dip_belt, `the dip belt in ${belt.uses}`);
   // A kit no pose uses yet comes alone, if its recipe can stand without one (#176).
   const smith = await get('/api/item/kit/smith_machine');
   assert.equal(smith.uses, null);
   assert.equal(smith.status, 'unused');
   assert.deepEqual(smith.entry.kit, { smith_machine: {} });
   assert.equal(smith.entry.alone, true);
-  // So is the hip thrust machine (#229), its carriage there to scrub through its limits.
-  const thrust = await get('/api/item/kit/hip_thrust_machine');
-  assert.equal(thrust.uses, null);
-  assert.equal(thrust.status, 'unused');
-  assert.deepEqual(thrust.entry.kit, { hip_thrust_machine: {} });
-  assert.equal(thrust.entry.alone, true);
+  // So is the lateral raise machine, until its exercises are posed (#212).
+  const raise = await get('/api/item/kit/lateral_raise_machine');
+  assert.equal(raise.uses, null);
+  assert.deepEqual(raise.entry.kit, { lateral_raise_machine: {} });
+  assert.equal(raise.entry.alone, true);
   const none = await get('/api/item/exercise/pendulum_squat');
   assert.equal(none.entry, null);
   assert.equal(none.status, 'no pose');
@@ -137,7 +142,7 @@ test('a save writes the tuned numbers into poses.mjs with its comments kept, the
   assert.equal(res.status, 200, await res.clone().text());
   const after = await readFile(poses, 'utf8');
   const before = ORIGINAL.replace(/(\n  barbell_rdl: \{)/, "\n  barbell_lunge: { like: 'barbell_squat', grip: { width: 1.4 } },$1");
-  assert.equal(after, before.replace('grip: { width: 0.4, elbows: 0.9 }', 'grip: { width: 0.45, elbows: 0.9 }'));
+  assert.equal(after, before.replace('grip: { width: 0.4, elbows: 0.9, swing: 45 }', 'grip: { width: 0.45, elbows: 0.9, swing: 45 }'));
   assert.deepEqual(baked, [after]);
   // The studio poses from the file as it is now.
   assert.equal((await get('/api/item/exercise/barbell_bench_press')).entry.grip.width, 0.45);
