@@ -164,13 +164,17 @@ export default recipe({
         const arm = mitered([leg.pivot, leg.knee, beamEnd], LEVER_WIDTH, M.frame, { solid: false });
         const wedgeRoot = leg.pivot.clone().add(V(-s * WEDGE.in, WEDGE.over, 0)).setZ(WEDGE_Z);
         const wedge = pad(WEDGE.width, WEDGE.height, WEDGE.length, M.vinyl, wedgeRoot.clone().setZ(WEDGE_Z + WEDGE.length / 2), { soft: 0.02 });
-        wedge.name = `lateral_raise_wedge:${s}`;
+        wedge.name = `lateral_raise_wedge_${s < 0 ? 'r' : 'l'}`;
         wedge.rotation.z = s * WEDGE.tilt;
         // The strut carries on past the pivot into the wedge.
         arm.add(wedge, tube(0.05, leg.pivot.clone().setZ(WEDGE_Z), wedgeRoot, M.frame));
         // A box round the whole bent tube would stand in the body's way, so a tube inside each
-        // length is what the body meets.
-        arm.add(tube(LEVER_WIDTH - 0.01, leg.pivot, leg.knee, M.frame), tube(LEVER_WIDTH - 0.01, leg.knee, beamEnd, M.frame));
+        // length is what the body meets; the clip leaves them out.
+        arm.add(...[[leg.pivot, leg.knee], [leg.knee, beamEnd]].map(([a, b]) => {
+          const core = tube(LEVER_WIDTH - 0.01, a, b, M.frame);
+          core.userData.proxy = true;
+          return core;
+        }));
         return arm;
       })(legAt(s, LIMITS[0])),
       bracket: part(rodGeometry(0.012), M.frame, { solid: true }),
@@ -178,7 +182,7 @@ export default recipe({
       pad: part(rodGeometry(PAD.radius), M.vinyl, { solid: true }),
       grip: part(rodGeometry(0.0175), M.vinyl, { held: true }),
     }));
-    levers.forEach((l, i) => { l.bracket.name = `lateral_raise_bracket:${SIDES[i].k}`; });
+    levers.forEach((l, i) => { l.bracket.name = `lateral_raise_bracket_${SIDES[i].k}`; });
     const body = (l, i) => [housings[i], l.arm, l.bracket, l.stem, l.pad, l.grip];
     return {
       parts: [

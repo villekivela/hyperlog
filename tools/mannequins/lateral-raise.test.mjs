@@ -9,6 +9,9 @@ import { MODEL, buildStage, parseMannequin } from './stage.mjs';
 import { buildRig, rad, wpos } from './rig.mjs';
 import { checkPose } from './checks.mjs';
 import { prepare } from './entries.mjs';
+import { openClip, poseFrame } from './glb.mjs';
+import { CLIPS } from './bake.mjs';
+import path from 'node:path';
 
 const machine = () => {
   const kit = buildKit({ equipment: 'machine', kit: { lateral_raise_machine: {} } }).kits.lateral_raise_machine;
@@ -420,7 +423,7 @@ test('machine_lateral_raise: the hips sit on the seat through the rep, neither a
 test('machine_lateral_raise: each grip\'s bracket stays clear of the arm through the rep', async () => {
   const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
   const brackets = {};
-  kit.group.traverse((o) => { const m = /^lateral_raise_bracket:(.)/.exec(o.name); if (m) brackets[m[1]] = o; });
+  kit.group.traverse((o) => { const m = /^lateral_raise_bracket_(.)/.exec(o.name); if (m) brackets[m[1]] = o; });
   for (let d = 0; d <= 1; d += 0.1) {
     pose(d);
     for (const [k] of SIDES) {
@@ -435,6 +438,28 @@ test('machine_lateral_raise: each grip\'s bracket stays clear of the arm through
           assert.ok(p.distanceTo(q) > 0.1, `${k}'s bracket ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
         }
       }
+    }
+  }
+});
+
+// The posed stage isn't what ships. A part whose name a track can't bind to stays at its rest in the
+// clip, so the clip's own nodes are held to the pose, at the middle and the end of the rep.
+test('machine_lateral_raise: the baked clip shows every part of the kit where the pose has it', async () => {
+  const { pose, kit } = await buildStage(prepare('machine_lateral_raise'));
+  const { scene, tracks } = await openClip(path.join(CLIPS, 'machine_lateral_raise.glb'));
+  const last = tracks[0].times.length - 1;
+  const live = [];
+  kit.group.traverse((o) => { if (o.isMesh && !o.userData.proxy) live.push(o); });
+  for (const f of [Math.round(last / 2), last]) {
+    pose(f / last);
+    kit.group.updateMatrixWorld(true);
+    poseFrame(scene, tracks, f);
+    for (const o of live) {
+      const baked = scene.getObjectByName(o.name);
+      assert.ok(baked, `${o.name} is in the clip`);
+      const at = baked.getWorldPosition(new THREE.Vector3());
+      const want = o.getWorldPosition(new THREE.Vector3());
+      assert.ok(at.distanceTo(want) < 0.005, `${o.name} ${(at.distanceTo(want) * 100).toFixed(1)} cm off the pose at frame ${f}`);
     }
   }
 });
