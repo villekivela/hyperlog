@@ -428,8 +428,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   stop, the grips 700 mm up and 740 apart, 760 ahead of the pivot, to 26.3° at the top of a shrug,
   940 mm up. Each lever carries a handle post rising 270 mm with the grip pointing forward, and a
   plate horn under the post reaching out to 760 mm from the middle. The contact ties the hands to
-  the grips. Serve it with `npm run studio` and open `shrug machine` under Kits: it stands alone,
-  three-quarter from the front, and the joint's slider scrubs the levers through their limits.
+  the grips. Its one option is `seat`, the seat's top (0.65 m, the ref's measured height). In the studio it stands alone, three-quarter from the front, and the joint's slider scrubs the
+  levers through their limits.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,

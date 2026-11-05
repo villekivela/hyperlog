@@ -25,13 +25,13 @@ test('the shrug machine is the kit of the shrug machine kind, and serves machine
   assert.ok(EQUIPMENT.machine.includes('shrug_machine'));
 });
 
-test('the studio shows it alone, from the side of a three-quarter view', () => {
+test('the studio shows it alone while no pose uses it', () => {
   const entry = shownAlone('shrug_machine');
   assert.equal(entry.alone, true);
   assert.deepEqual(entry.kit, { shrug_machine: {} });
 });
 
-test('both levers are one revolute joint about a transverse axis, 16° to 26° up from level ahead at the grips', () => {
+test('both levers are one revolute joint about a transverse axis, 7.5° to 26.3° up from level ahead', () => {
   const { levers } = machine().joints;
   assert.equal(levers.type, 'revolute');
   assert.equal(Math.abs(levers.axis.x), 1);
@@ -57,12 +57,14 @@ test('the grips rest at 700 mm, 740 apart, 760 ahead of the pivot, and scrub to 
 
 test('scrubbing moves the levers, and the frame stays', () => {
   const kit = machine();
-  const frame = new THREE.Box3().setFromObject(kit.group.getObjectByName(kit.bodies.levers[1].name));
-  const before = frame.getCenter(new THREE.Vector3());
+  const centre = (node) => new THREE.Box3().setFromObject(node).getCenter(new THREE.Vector3());
+  const lever = kit.group.getObjectByName(kit.bodies.levers[1].name);
+  const frame = kit.group.getObjectByName(kit.group.children.find((o) => !kit.bodies.levers.some((b) => b.name === o.name)).name);
+  const [lever0, frame0] = [centre(lever), centre(frame)];
   kit.scrub('levers', 0.4);
   kit.group.updateMatrixWorld(true);
-  const after = new THREE.Box3().setFromObject(kit.group.getObjectByName(kit.bodies.levers[1].name)).getCenter(new THREE.Vector3());
-  assert.ok(after.distanceTo(before) > 0.01, 'a lever part did not move');
+  assert.ok(centre(lever).distanceTo(lever0) > 0.01, 'a lever part did not move');
+  assert.ok(centre(frame).distanceTo(frame0) < 1e-9, 'the frame moved with the levers');
 });
 
 test('it stands 1.02 m deep, 1.24 m tall and about 1.52 m across, a plate horn on each lever', () => {
@@ -82,4 +84,11 @@ test('the seat top is 650 mm, and the recipe carries no brand', async () => {
   close(seat, 0.65, 0.01, 'the seat top');
   const source = await readFile(new URL('./recipes/shrug-machine.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /hammer|life ?fitness|strength|pl-sh/i);
+});
+
+test('a fit rule sets the seat, at its measured 650 mm by default', () => {
+  const rules = KITS.shrug_machine.fit;
+  assert.deepEqual(rules.map((r) => r.sets), ['seat']);
+  const top = (kit) => { let y; kit.group.traverse((o) => { if (o.isMesh && o.userData.role === 'seat') y = new THREE.Box3().setFromObject(o).max.y; }); return y; };
+  close(top(machine({ seat: 0.7 })), 0.7, 0.01, 'the seat set to 700 mm');
 });

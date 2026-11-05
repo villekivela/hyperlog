@@ -29,8 +29,8 @@ const FRAME_OUT = 0.45;
 const SEAT = [0.65, -0.1];
 const FRONT = 0.22;
 const PAD = { top: 1.24, long: 0.5, w: 0.36, deep: 0.08, z: -0.36 };
-// The horns reach to 760 either side of the middle, with a plate on each.
-const HORN = { out: 0.76, plate: 0.45 };
+// The horns reach to 760 either side of the middle, with a plate on each at `plateAt`.
+const HORN = { out: 0.76, plateAt: 0.45 };
 
 /** Names what a part is, for the tests and the studio. */
 const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
@@ -42,7 +42,13 @@ export default recipe({
   standsAlone: { camera: { target: [0, 0.65, -0.3], halfHeight: 1.0, azimuth: -40, elevation: 14 } },
   bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [STOP, TOP] }) },
   contacts: [{ body: 'levers', point: 'grips', landmark: 'hands' }],
-  build(_options, M) {
+  // Only the seat adjusts (the ref's page FAQ); the handles are fixed. Seated, the shoulders sit
+  // about 0.63 m above the grips, which puts the seat near its top; standing needs none.
+  fit: [{
+    sets: 'seat',
+    rule: "the seat top at 650 mm, the ref's measured seat, the one height no photo shows the travel of; a seated lifter's shoulders 0.63 m above the grips",
+  }],
+  build({ seat: seatTop = SEAT[0] } = {}, M) {
     const sides = [-1, 1];
     const frame = [];
     // The rear cross beam and a side beam each way, forward to the front feet; a post up from the
@@ -60,7 +66,7 @@ export default recipe({
     back.position.set(0, padY, PAD.z);
     frame.push(role(back, 'backPad'));
     // The seat on its post, a beam under it along the middle.
-    const [cushion, ...seat] = seatOn(SEAT[0], SEAT[1], M, { pin: 1 });
+    const [cushion, ...seat] = seatOn(seatTop, SEAT[1], M, { pin: 1 });
     frame.push(role(cushion, 'seat'), ...seat);
     frame.push(...floorRail(V(0, 0.035, PIVOT[1]), V(0, 0.035, SEAT[1] + 0.1), M));
     // The pivot's axle between the uprights, behind the levers.
@@ -96,7 +102,7 @@ export default recipe({
           span(l.post, foot, heel);
           span(l.grip, heel, grip.clone().addScaledVector(ahead, GRIP / 2));
           span(l.horn, foot, foot.clone().setX(l.s * HORN.out));
-          l.plate.position.copy(foot).setX(l.s * HORN.plate);
+          l.plate.position.copy(foot).setX(l.s * HORN.plateAt);
           points.push(grip);
         }
         return { joints: { levers: { value, origin: pivot } }, points: { grips: points } };

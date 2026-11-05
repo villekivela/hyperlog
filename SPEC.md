@@ -1654,7 +1654,7 @@ gallery (Technique videos).
     - **The shrug machine's levers** (#223) are one body on a revolute joint about the axle at the top
       of the rear uprights, 600 mm up and 760 mm behind the grips, its value the angle up from level
       ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of a shrug (940 mm up).
-      The seat stays at 650 mm, the ref's one measured height; the handles are fixed. It is unposed, so
+      The seat is the one adjustment (`seat`, its top in metres), kept at 650 mm, the ref's one measured height, since no picture shows its travel; the handles are fixed. It is unposed, so
       no clip changes.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
