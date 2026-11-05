@@ -1856,6 +1856,30 @@
         "kit_chest_press.bin"
       ]
     },
+    "machine_crunch": {
+      "clip": "machine_crunch.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.78,
+          0.05
+        ],
+        "halfHeight": 0.78,
+        "azimuth": 40,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.5,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_crunch_machine.bin"
+      ]
+    },
     "machine_preacher_curl": {
       "clip": "machine_preacher_curl.glb",
       "equipment": "machine",

@@ -210,7 +210,7 @@ Where a recipe's moving body turns (revolute: a lever, a pec deck's arm) or slid
 _Avoid_: Hinge, axis
 
 **Contact**:
-Where a recipe ties a moving body, or its fixed frame, to the mannequin: handles to the hands, a pad to the shins or the thighs, a foot plate to the feet, shoulder pads to the shoulders, a chest pad to the chest. On a machine the joint drives the rep and IK holds the limbs to the contacts.
+Where a recipe ties a moving body, or its fixed frame, to the mannequin: handles to the hands, a pad to the shins or the thighs, a foot plate to the feet, shoulder pads to the shoulders, a chest pad to the chest, a seat to the hips. On a machine the joint drives the rep and IK holds the limbs to the contacts.
 _Avoid_: Attachment (that is a cable's handle), constraint
 
 **Linkage**:

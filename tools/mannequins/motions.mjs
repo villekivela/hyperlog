@@ -910,6 +910,41 @@ export const MOTIONS = {
   },
 
   /**
+   * Lying face up on a machine's seat pad, the back on the pad its arm carries, the knees high and the
+   * ankles hooked between its rollers, the hands on the handles by the head: a machine crunch. The seat
+   * puts the hips, the pad the trunk, and the knees bend as far as the ankles at the rollers need.
+   */
+  reclined_crunch(e, s, L) {
+    const { handle, across, spine, ankle } = s.linkage;
+    const f = forwardOf(spine);
+    const hipC = V(0, ...e.body.hip);
+    const stance = e.feet.stance;
+    const pole = (side) => V(side * (e.feet.kneesOut ?? 0.15), 1, e.feet.kneesFwd ?? 0).normalize();
+    const ankles = [-1, 1].map((side) => ankle.clone().setX(side * stance));
+    // The shin and the foot: the toes up and toward the feet end, the foot's top toward the knee.
+    const knees = [-1, 1].map((side, i) => kneeAt(hipC.clone().setX(side * stance), ankles[i], L, pole(side)));
+    const shin = ankles[0].clone().sub(knees[0]).normalize();
+    const phi = Math.atan2(-shin.y, shin.z);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    // The sole lies on a plane tilted `feet.dorsi` degrees from square to the shin, the toes lifted toward the knee.
+    const dorsi = rad(e.feet.dorsi ?? 35);
+    const square = sideOn(phi - Math.PI / 2);
+    const heading = square.clone().multiplyScalar(Math.cos(dorsi)).addScaledVector(shin.clone().negate(), Math.sin(dorsi));
+    const top = shin.clone().negate().multiplyScalar(Math.cos(dorsi)).addScaledVector(square, -Math.sin(dorsi));
+    return {
+      hipC, u: spine,
+      headDir: spine.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      ankles,
+      foot: (side) => ({ heading: heading.clone().applyAxisAngle(top, side * toeOut), top: top.clone() }),
+      kneePole: pole,
+      support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
+      offFloor: true,
+      hand: handle, across,
+      armPole: elbowsTo(e, [0.8, 0.8, 0.3]),
+    };
+  },
+
+  /**
    * Hanging from a rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a
    * leg raise. The shoulders hang straight-armed under `kit.power_rack.handles`, the pair of grips,
    * and `rise` lifts them from there, `back` behind the grips.

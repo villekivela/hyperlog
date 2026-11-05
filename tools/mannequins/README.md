@@ -290,6 +290,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
+| `reclined_crunch` | lying face up on a machine's inclined seat, the back on the pad its arm carries, the knees high and the ankles hooked between its rollers, the hands on the handles by the head: a machine crunch | `arm`, degrees of curl from rest; `feet.stance`, `feet.toeOut`, `feet.dorsi` (degrees the toes lift toward the knee, 35), `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
 | `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
 | `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
@@ -488,20 +489,25 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
   about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
   (the shoulders).
-- `crunch_machine` (#233, a machine kind, not yet posed, so no clip changes) stands where its ref puts it,
+- `crunch_machine` (#233, a machine kind; `machine_crunch` is posed on it) stands where its ref puts it,
   whatever the pose, with nothing to fit: the ref's machine has no adjustment, so it declares no fit
-  rule. A seat pad 600 mm long inclined 15°, rising toward the head to 530 mm up, on two posts and a
-  diagonal; a back pad level at rest 660 mm up on an arm that turns about a cam axis 780 mm up beside
-  the waist, with a head pad 50 mm above its far end and two vertical handles 400 mm apart; two pairs of
-  foot rollers, at 360 and 600 mm, on a post at the front; and a 12-plate stack behind them, its cable
-  running from the cam to the stack. The arm is one body on a revolute joint, its value the degrees of
-  curl from rest (0 to 40°); the stack rises 190 mm a radian of it. Its contacts tie the hands to the
-  handles, the upper back (`back`) to the back pad, the thighs to the seat's high end and the feet
-  between the rollers. It departs from the ref: the front frame is a straight post, not the photo's curve,
-  the stack and its frame are the library's generic ones (twelve 26 cm plates, 76 mm tubes), the stack
-  stands 860 mm behind the axis to hold the 1.58 m footprint, and the cam's cable runs straight from
-  its top wheel to the cam's rim. The studio shows it alone, three-quarter from the front, its arm
-  scrubbed by `h` `l` or `$`: `npm run studio`, filter `crunch`, open the kit `crunch machine`.
+  rule. The mannequin lies face up with its head toward -z, so the machine's head end is -z and its
+  feet end, with the rollers and the stack, +z. A seat pad 600 mm long inclined 15°, rising toward the
+  head to 530 mm up, on two posts and a diagonal; a back pad level at rest 660 mm up on an arm that
+  turns about a cam axis 780 mm up, its hub 270 mm out to the left of the middle, outside the hips, so
+  the arm reaches in under the pad from one side and nothing crosses the body; a head pad 50 mm above
+  the pad's far end, two vertical handles 400 mm apart, a cam disc outside the upright and its cable
+  to a 12-plate stack at the feet end; and two pairs of foot rollers, at 360 and 600 mm, on a kinked
+  post at the front. The arm is one body on a revolute joint, its value the degrees of curl from
+  rest (0 to 40°); the stack rises 190 mm a radian of it. Its contacts tie the hands to the handles,
+  the upper back (`back`) to the back pad, the hips (`hips`, the pelvis: a landmark added for it)
+  to the seat's high end and the feet between the rollers. The pad puts the trunk: the hips lie on the
+  seat, and the shoulders on the pad, sliding along it as it turns. It departs from the ref: the
+  front frame is a kinked post, not the photo's curve, the stack and its frame are the library's
+  generic ones (twelve 26 cm plates, 76 mm tubes), the stack stands 860 mm behind the axis to hold
+  the 1.58 m footprint, and the cam's cable runs straight from its top wheel to the cam's rim. The
+  pose is `machine_crunch`, motion `reclined_crunch`: `npm run studio`, `Machine Crunch`; the kit
+  alone is `crunch machine` under kits.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, all posed on it, #196) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,

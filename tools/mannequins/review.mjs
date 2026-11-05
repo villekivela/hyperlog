@@ -46,6 +46,8 @@ export const BATCHES = {
   ],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The crunch machine's one exercise, a reclined crunch on its inclined seat (#233).
+  'crunch-machine': ['machine_crunch'],
   // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).
   'power-rack': [
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',

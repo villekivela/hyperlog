@@ -287,6 +287,18 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
+  // Lying back on the crunch machine's seat, the ankles hooked between its rollers and the hands on
+  // the handles by the head: from the back on the pad, the arm at rest, the shoulders curl up toward
+  // the knees through the arm's 40°.
+  machine_crunch: {
+    equipment: 'machine',
+    motion: 'reclined_crunch',
+    kit: { crunch_machine: {} },
+    feet: { stance: 0.1, toeOut: 0 },
+    camera: { target: [0, 0.78, 0.05], halfHeight: 0.78, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.2, 2.0], at: [0, 0.2] },
+  },
+
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
   machine_pulldown: {
     equipment: 'machine',
