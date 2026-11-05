@@ -401,6 +401,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   (`hips`, a landmark added for it: the pelvis to the thigh) and the feet to the platform. It has no
   seat, pad or platform adjustment; its one fit rule, unsolved, is the `strap` option, `short` or
   `long`, the loop of the dual-loop waist strap, the long one lifting the belt 40 mm higher. Where
+  Serve it with `npm run studio` and pick `hip thrust machine` under Kits (or filter `hip thrust`):
+  the carriage's joint scrubs from -12.7° to 3.5°. The 1020 mm height is at the bottom of the rep;
+  the handles rise to about 1.25 m at the top. Where
   it departs from the ref's photos: straight carriage arms and handles where the photos curve
   them, full round pad cylinders for the half-rounds, a flat strap, and a plain frame for the
   rear arch.

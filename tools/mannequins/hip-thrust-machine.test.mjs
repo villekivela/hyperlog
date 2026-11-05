@@ -40,6 +40,7 @@ test('the carriage turns on a transverse pivot about 880 mm up and 800 mm behind
   close(carriage.origin.y, 0.88, 0.01, 'the pivot\'s height');
   const belt = contact(kit, 'belt').at[0];
   close(belt.z - carriage.origin.z, 0.8, 0.02, 'how far behind the belt the pivot is');
+  // The ref says about 17°; its 700 to 930 mm on an 800 mm radius comes to 16.2°.
   close(deg(carriage.limits[1] - carriage.limits[0]), 17, 1, 'the range, in degrees');
   close(carriage.value, carriage.limits[0], 1e-9, 'unposed, on its stop at the bottom');
 });

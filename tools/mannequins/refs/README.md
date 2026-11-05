@@ -99,7 +99,7 @@ gaps says why):
   the Hoist.
 - `hip_thrust_machine`: the hips' top height is chosen from the fit rule; the pivot's place and
   radius are rough, hidden in the only side-on photo. Built (#229) from the photos, a seat, a platform and one
-  carriage; the pads' fore-and-aft place is by eye and no pose has tuned the range yet.
+  carriage, its two rear-frame horns read as plate storage; the pads' fore-and-aft place is by eye and no pose has tuned the range yet.
 - `glute_ham_raise`: the pad width and the mannequin's pad-to-plate distance are chosen; pad sizes
   are good to about 10%.
 - `crunch_machine`: the axis's place along the body is by eye and the handle spacing is chosen. The

@@ -21,9 +21,9 @@ import { V, X, rad } from '../rig.mjs';
 // 930 mm at the top.
 const PIVOT = V(0, 0.88, -0.8);
 const BELT = { z: 0, bottom: 0.7, top: 0.93 };
-const reach = Math.hypot(BELT.z - PIVOT.z, BELT.bottom - PIVOT.y);
+const REACH = Math.hypot(BELT.z - PIVOT.z, BELT.bottom - PIVOT.y);
 /** The carriage's angle up from level ahead that has the belt `y` up. */
-const angleFor = (y) => Math.asin((y - PIVOT.y) / reach);
+const angleFor = (y) => Math.asin((y - PIVOT.y) / REACH);
 const LIMITS = [angleFor(BELT.bottom), angleFor(BELT.top)];
 const LONG = 0.04;
 // The seat top 470 mm up, its front 30 mm ahead of the belt; the platform's back edge 220 mm ahead of that.
@@ -31,15 +31,16 @@ const SEAT = { top: 0.47, front: 0.03, d: 0.33, w: 0.4 };
 // The platform: 450 mm up in the middle, 400 deep and 600 wide, tilted 15° toes up, its face turned back to the seat.
 const PLATFORM = { top: 0.45, depth: 0.4, width: 0.6, thick: 0.04, tilt: rad(15), z: SEAT.front + 0.22 + 0.2 * Math.cos(rad(15)) };
 const FACE = V(0, Math.cos(PLATFORM.tilt), -Math.sin(PLATFORM.tilt));
-// The rear posts, leaning forward from their feet to the axle, and the footprint's ends: 1.73 m.
+// The rear posts, leaning forward from their feet to the axle.
 const POST = { x: 0.42, foot: -0.92, w: 0.06, top: 0.96 };
 const postZ = (y) => POST.foot + (PIVOT.z - 0.012 - POST.foot) * ((y - 0.07) / (PIVOT.y - 0.07));
+// The footprint: the rear rail's half-width (1.49 m across with its caps) and the front rail's z (1.73 m long).
 const WIDTH = 0.729;
 const FRONT = 0.73;
 // The carriage: an arm each side at 330 mm, to the belt and on down to a horn mount, with the pad
 // rolls 260 across 230 behind the belt, and a handle each side beside the hips.
 const ARM = { x: 0.33, w: 0.06 };
-const HORN = { y: 0.62, z: 0.14, to: 0.7, plate: 0.55 };
+const HORN = { y: 0.62, z: 0.14, to: 0.7, plateX: 0.55 };
 const PAD = { radius: 0.13, z: -0.23, from: 0.025, to: 0.285 };
 const HANDLE = { x: 0.34, z: -0.04, from: 0.73, top: 1.02, radius: 0.016 };
 const STOP = { z: -0.5 };
@@ -94,9 +95,10 @@ export default recipe({
     platform.position.copy(platformMid).addScaledVector(FACE, -PLATFORM.thick / 2);
     platform.quaternion.setFromAxisAngle(X, -PLATFORM.tilt);
     const legAt = (z) => PLATFORM.top - (PLATFORM.z - z) * Math.tan(PLATFORM.tilt) - PLATFORM.thick - 0.01;
-    const legs = sides.flatMap((s) => [PLATFORM.z - 0.15, PLATFORM.z + 0.15].map((z) => tube(0.06, V(s * 0.25, 0.07, z), V(s * 0.25, legAt(z), z), M.frame)));
-    const legRails = [PLATFORM.z - 0.15, PLATFORM.z + 0.15].map((z) => tube(0.05, V(-0.25, 0.035, z), V(0.25, 0.035, z), M.frame));
-    const feet = sides.flatMap((s) => [PLATFORM.z - 0.15, PLATFORM.z + 0.15].map((z) => basePlate(s * 0.25, z, M)));
+    const legZs = [PLATFORM.z - 0.15, PLATFORM.z + 0.15];
+    const legs = sides.flatMap((s) => legZs.map((z) => tube(0.06, V(s * 0.25, 0.07, z), V(s * 0.25, legAt(z), z), M.frame)));
+    const legRails = legZs.map((z) => tube(0.05, V(-0.25, 0.035, z), V(0.25, 0.035, z), M.frame));
+    const feet = sides.flatMap((s) => legZs.map((z) => basePlate(s * 0.25, z, M)));
     // The carriage's stop, a post on the beam with a rubber bumper under its crossbar.
     const stopTop = armY(STOP.z) - 0.025 - 0.03;
     const stop = [
@@ -120,7 +122,7 @@ export default recipe({
         tube(0.05, local(V(s * HANDLE.x, armY(HANDLE.z), HANDLE.z)), local(V(s * HANDLE.x, HANDLE.from, HANDLE.z)), M.frame),
       );
       const plate = part(plateGeometry(0.225, 0.06), M.plate, { solid: true });
-      plate.position.copy(local(V(s * HORN.plate, HORN.y, HORN.z)));
+      plate.position.copy(local(V(s * HORN.plateX, HORN.y, HORN.z)));
       onArm.push(plate);
       // The two pads, each a round cushion across the machine, a gap between for the spine.
       const roll = rod(PAD.radius, local(V(s * PAD.from, BELT.bottom, PAD.z)), local(V(s * PAD.to, BELT.bottom, PAD.z)), M.vinyl, { solid: true });
