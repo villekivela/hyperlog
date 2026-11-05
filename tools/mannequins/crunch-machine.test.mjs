@@ -1,6 +1,6 @@
 // The crunch machine (#233), from refs/crunch_machine/ref.md: a reclined crunch on an inclined seat
 // pad, the back pad on an arm turning about a cam axis beside the waist, the ankles hooked between
-// rollers, a stack at the feet end. The mannequin lies face up with its head toward -z, so the head
+// rollers, a stack beside the seat. The mannequin lies face up with its head toward -z, so the head
 // end of the machine is -z and the feet end +z.
 //
 // The first half tests the machine alone; the second poses `machine_crunch` on it and holds the
@@ -53,10 +53,10 @@ test('the arm turns about the cam axis 780 mm up, 40° from its rest with the ba
   close(arm.origin.y, 0.78, 0.03, 'the cam axis\'s height');
 });
 
-test('it stands 1.58 m by 890 mm and 1.4 m tall, the ref\'s footprint and height', () => {
+test('it stands 1.58 m long, a metre wide with its stack beside the seat, and 1.4 m tall', () => {
   const size = boxOf(machine().group).getSize(new THREE.Vector3());
   close(size.z, 1.58, 0.12, 'its length');
-  close(size.x, 0.89, 0.06, 'its width');
+  close(size.x, 1.01, 0.06, 'its width');
   close(size.y, 1.4, 0.04, 'its height');
 });
 

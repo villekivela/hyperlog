@@ -532,9 +532,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   to the seat's high end and the feet between the rollers. The pad puts the trunk: the hips lie on the
   seat, and the shoulders on the pad, sliding along it as it turns. It departs from the ref: the
   front frame is a kinked post, not the photo's curve, the stack and its frame are the library's
-  generic ones (twelve 26 cm plates, 76 mm tubes), the stack stands 860 mm behind the axis, 240 mm
-  out to the cam's side as the photo and the demo show it (the lifter's legs in front of it), and the cam's cable runs
-  straight from its top wheel to the cam's rim. The
+  generic ones (twelve 26 cm plates, 76 mm tubes), the stack stands beside the seat on the cam's side
+  (owner's layout), its column 560 mm toward the feet from the axis and turned 90° so the plates' broad face looks out, and the
+  cam's cable runs in the cam's plane, outside the guide rods, from its top wheel to the cam's rim. The
   pose is `machine_crunch`, motion `reclined_crunch`: `npm run studio`, `Machine Crunch`; the kit
   alone is `crunch machine` under kits.
 - `shrug_machine` (#223, the machine kind of `machine_shrug`, not yet posed, so no clip changes) stands

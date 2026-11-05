@@ -2,7 +2,7 @@
 // on an inclined seat pad, the ankles hooked between two pairs of rollers on the front frame, the
 // upper back on a back pad that is the work arm and the hands on two vertical handles beside the head
 // pad. The arm turns about a cam axis beside the waist, curling the shoulders toward the knees, and a
-// cable from the cam raises a weight stack at the feet end.
+// cable from the cam raises a weight stack beside the seat.
 //
 // The mannequin lies face up with its head toward -z, so the head end of the machine is toward -z and
 // the feet end, with the rollers and the stack, toward +z. Everything below is laid out with `z` in
@@ -12,11 +12,11 @@
 //
 // The seat pad is inclined as the photo shows it, and the pads and the handles stand where the demo's
 // lifter lies on them (see the ref's Open gaps); the front frame and the stack are placed from the
-// footprint, 1.58 m by 890 mm.
+// footprint, 1.58 m long; the stack stands beside the seat on the cam side, turned 90°.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, basePlate, endCap, hub, mitered, padGeometry, part, pivotJoint, pulley, rod, rollerGeometry, span, tube,
+  UPRIGHTS, WHEEL, basePlate, endCap, hub, mitered, pad, padGeometry, part, pivotJoint, pulley, rod, rollerGeometry, span, tube,
   turnedPart, weightStack, wheelGeometry, wire,
 } from '../parts.mjs';
 import { V, X, forwardOf, rad } from '../rig.mjs';
@@ -67,14 +67,21 @@ const UP_HANDLE = at(0, Math.cos(HANDLE.lean), Math.sin(HANDLE.lean));
 const onHandle = (s, d) => at(s * HANDLE.x, HANDLE.from, HANDLE.z).addScaledVector(UP_HANDLE, d);
 // The cam, a 250 mm disc outside the upright, on the far side from the camera in the ref's photo;
 // the cable leaves its rim up and toward the feet.
-const CAM = { x: -0.405, radius: 0.25, rim: at(-0.405, 0.17, -0.18) };
+const CAM = { x: -0.5, radius: 0.25, rim: at(-0.5, 0.17, -0.18) };
 // The upright beside the hub carries the axle, between the arm and the cam.
-const POST = { x: -0.34, top: 0.88 };
+const POST = { x: -0.43, top: 0.88 };
 // The front frame stands 680 mm from the axis toward the feet, its rollers at 360 and 600 mm.
 const FRONT = { z: -0.68, rollers: [0.36, 0.6], roller: 0.045, wide: 0.17, out: 0.14 };
-const STACK_Z = -0.86;
-// The stack stands out to the cam's side of the feet end, as the photo and the demo show it, the lifter's legs in front of it.
-const STACK_X = -0.24;
+// The stack stands beside the seat on the cam's side, in the cam's plane, turned 90° so its broad face looks out from the lifter:
+// its column 560 mm toward the feet, clear of the cam and of the knees.
+const STACK_Z = -0.56;
+const STACK_X = CAM.x + 0.04;
+// The cable runs in the cam's plane, 40 mm outside the column, clear of the guide rods, and drops onto the head plate's outer end.
+const CABLE_X = CAM.x;
+// Its frame stands a hand's breadth inboard of the column, so the cable, in the cam's plane, passes outside it to the pulley;
+// the floor runner sits between, under the frame's feet and the rods'.
+const PORTAL_X = STACK_X + 0.03;
+const FLOOR_X = STACK_X + 0.03;
 const FRAME_TOP = 1.365;
 // The cam winds the cable 250 mm a radian.
 const RATIO = CAM.radius;
@@ -168,11 +175,12 @@ export default recipe({
 
     const base = [
       // A beam down the middle from the stack to the axis's crossbar, a crossbar there and one at the front frame.
-      tube(0.07, at(0, 0.035, STACK_Z), at(0, 0.035, 0), M.frame),
-      tube(0.07, at(-0.42, 0.035, 0), at(0.42, 0.035, 0), M.frame),
+      tube(0.07, at(0, 0.035, FRONT.z), at(0, 0.035, 0), M.frame),
+      // The crossbar at the axis turns, mitered, along the floor under the stack's two uprights.
+      mitered([at(0.42, 0.035, 0), at(FLOOR_X, 0.035, 0), at(FLOOR_X, 0.035, STACK_Z - UPRIGHTS - 0.04)], 0.07, M.frame),
       tube(0.07, at(-0.3, 0.035, FRONT.z), at(0.3, 0.035, FRONT.z), M.frame),
-      tube(0.07, at(STACK_X - UPRIGHTS - 0.03, 0.035, STACK_Z), at(0.06, 0.035, STACK_Z), M.frame),
-      ...[-1, 1].flatMap((s) => [endCap(s * 0.42, 0, M), endCap(s * 0.3, -FRONT.z, M), endCap(s < 0 ? STACK_X - UPRIGHTS - 0.03 : 0.06, -STACK_Z, M)]),
+      endCap(0.42, 0, M), endCap(-0.3, -FRONT.z, M), endCap(0.3, -FRONT.z, M),
+      pad(0.07, 0.074, 0.016, M.vinyl, V(FLOOR_X, 0.037, -STACK_Z + UPRIGHTS + 0.04 + 0.008), { soft: 0.005, solid: false }),
     ];
     // The seat on a runner across the floor under its legs: each leg runs from the runner up to the seat's underside and
     // bends there, mitered, into a rail along the incline; a diagonal from the front crossbar's middle meets a cross rail.
@@ -205,17 +213,29 @@ export default recipe({
     ]);
     // The stack and its frame, a wheel at the top and the cable down to the stack's head plate.
     const wheel = at(STACK_X, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
-    const weights = weightStack(at(STACK_X, 0, STACK_Z), M, { rodTop: 1.3, toward: -1 });
+    // The plates, rods and pin are built square to z at the origin, then the group is turned 90° onto the stack's column so
+    // the plates' broad face looks out along x, the pin's knob out from the lifter.
+    const column = new THREE.Group();
+    const weights = weightStack(V(0, 0, 0), M, { rodTop: 1.33, toward: -1 });
+    column.add(...weights.parts);
+    column.rotation.y = Math.PI / 2;
+    column.position.set(STACK_X, 0, -STACK_Z);
+    column.updateMatrix();
     const drop = wire(M);
     const camCable = wire(M);
     camCable.userData.role = 'cable';
-    // The stack's frame: an upright either side joined across the top, one mitred length.
+    // The stack's frame: an upright either side of the column joined across the top, one mitred length.
     const sz = -STACK_Z;
     const frameOfStack = [
-      mitered([V(STACK_X - UPRIGHTS, 0.035, sz), V(STACK_X - UPRIGHTS, FRAME_TOP, sz), V(STACK_X + UPRIGHTS, FRAME_TOP, sz), V(STACK_X + UPRIGHTS, 0.035, sz)], 0.07, M.frame),
-      ...[-1, 1].map((k) => basePlate(STACK_X + k * UPRIGHTS, sz, M)),
+      mitered([V(PORTAL_X, 0.035, sz - UPRIGHTS), V(PORTAL_X, FRAME_TOP, sz - UPRIGHTS), V(PORTAL_X, FRAME_TOP, sz + UPRIGHTS), V(PORTAL_X, 0.035, sz + UPRIGHTS)], 0.07, M.frame),
+      // A top plate out from the frame's bar over the column: the rods end in it and the pulley hangs from it.
+      pad(0.135, 0.035, 0.36, M.frame, V(STACK_X - 0.0025, FRAME_TOP - 0.0175, sz), { soft: 0.004 }),
     ];
-    const stackParts = [...frameOfStack, ...pulley(wheel, M), basePlate(STACK_X, -STACK_Z, M), ...weights.parts, drop, camCable];
+    // The pulley is laid out about x = 0 (its housing's sides stand either side of it), then carried onto the stack's column.
+    const topPulley = new THREE.Group();
+    topPulley.add(...pulley(wheel.clone().setX(0), M));
+    topPulley.position.x = CABLE_X;
+    const stackParts = [...frameOfStack, topPulley, column, drop, camCable];
 
     // The arm, built in its frame about the axis, at rest.
     const arm = new THREE.Group();
@@ -262,7 +282,12 @@ export default recipe({
 
     const layCable = () => {
       arm.updateMatrix();
-      span(camCable, V(STACK_X, wheel.y + WHEEL, wheel.z), CAM.rim.clone().applyMatrix4(arm.matrix));
+      // The cable meets the pulley's upper head-side tangent, where it wraps over the wheel.
+      const rim = CAM.rim.clone().applyMatrix4(arm.matrix);
+      const from = Math.atan2(rim.y - wheel.y, rim.z - wheel.z);
+      const off = Math.acos(WHEEL / Math.hypot(rim.y - wheel.y, rim.z - wheel.z));
+      const tangent = [from + off, from - off].map((a) => V(CABLE_X, wheel.y + WHEEL * Math.sin(a), wheel.z + WHEEL * Math.cos(a))).sort((a, b) => b.y - a.y)[0];
+      span(camCable, tangent, rim);
     };
     layCable();
 
@@ -273,7 +298,7 @@ export default recipe({
         arm: {
           lift(l) {
             weights.lift(l);
-            span(drop, V(STACK_X, wheel.y, -STACK_Z), weights.top(l));
+            span(drop, V(CABLE_X, wheel.y, -STACK_Z), weights.top(l).applyMatrix4(column.matrix).setX(CABLE_X));
           },
         },
       },
