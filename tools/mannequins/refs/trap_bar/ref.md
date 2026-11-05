@@ -62,6 +62,15 @@ The bar as a whole is prismatic: it rises straight up with the lifter.
 - Rackable length only matters if the bar is placed in a rack (not for the deadlift).
 - The built-in deadlift jack (the L-shaped feet behind the handles) is for loading plates, not for lifting; it can be left out of the model.
 
+## Compared in the studio (#234)
+The kit was set beside the straight-down photo, the open and closed three-quarter photo, the Standing loop at 0:03, and the side-on and Thrall frames (0:02.5, 0:04.5; 3:52, 5:44), from the side, the front and three-quarter:
+- The plan agrees with the OPEN photo: two corners on the sleeve axis, arms to a front crossmember, the rear open. The kit's rear is open behind the lifter, which settles the gap on which side is open; it does not change the lift.
+- Front, the Standing frame shows the same thing as the model: the crossmember level with the sleeves and the handles rising from the corners, inside plates that stand outboard on the floor. The loop's bar has three plates a side; the model has one by default (option `plates`).
+- The photos show the handles as knurled steel rollers on a flip bracket of two plates that run from the corner hub, a pair of short rollers where the dual handle is set; the model draws one plain metal handle on two braces, and posts under it where it is high.
+- The photos show a hub at each corner where the arms meet the sleeve, a stop ring on the sleeve, a rear deadlift jack and a roll-marked crossmember; the model has none of them (the jack was left out on purpose).
+- The arms' tube reads fatter and the corners softer in the photos than the model's 60 mm square tube with sharp mitres.
+- The side-on video's bar is a hex bar with 450 mm bumpers, whose frame sits at the sleeve height, as the model's does.
+
 ## Open gaps
 - The lockout height for the mannequin is chosen from its arm length; the video gives one lifter's 640 mm.
 - Which side of the open frame faces the lifter's front: the page's wording contradicts itself ("eliminates the rear crossmember" and "without working around a front crossmember"). It does not change the lift.
