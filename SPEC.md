@@ -1679,6 +1679,18 @@ gallery (Technique videos).
       joint turning them would be left behind by a scrub along the rods; the hooks' turn, about
       45°, stays the wrists'. A fit rule picks the notch it hangs on and the one its safety stops
       lie on, and the bar can go no lower than the stops.
+    - **The shoulder press** (#225) is a machine-first exercise (`machine_shoulder_press`, the `shoulder-press`
+      batch): the lifter sits on the seat, the back on the pad, the feet on the floor, both hands closed on
+      the overhand grips (palms forward, wrists straight), a level bar a side across the machine, which the yoke carries from level with the shoulders to the arms near straight
+      overhead. The yoke is one body on a revolute joint about the bearings behind the back pad, 980 mm up,
+      its value the angle up from level ahead: 0° at the bottom of the rep (the grips 700 apart on a 900 mm
+      arm) to 40° at the top (580 mm higher, about 200 mm further back). It lifts its stack, which stands
+      beside the lifter, on their right, its front level with the grips (the demo's front view). The seat is
+      the one adjustment (`seat`, its top in metres), solved from the mannequin so the shoulders are level
+      with the grips at the bottom, held to the ref's range of 330 to 500 mm; the pad follows the spine. The
+      kit stands 1.52 m deep, 1.63 m tall and 1.42 m across, a closed tower with a rounded header, a Y yoke of
+      flat arms ending in curved hook grips. It was built from where the ref's photos put each part, and
+      reviewed against them by a reviewer who had not seen how it was built, until it found nothing that matters.
     - **The shrug machine's levers** (#223) are one body on a revolute joint about the axle at the top
       of the rear uprights, 600 mm up and 760 mm behind the grips, its value the angle up from level
       ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of a shrug (940 mm up).
