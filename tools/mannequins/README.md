@@ -321,7 +321,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
 | `hip_machine` | Machine Hip Abduction and Adduction | missing |
-| `hip_thrust_machine` | Machine Hip Thrust | missing |
+| `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (not yet posed) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug | missing |
@@ -389,6 +389,21 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   410 mm above the lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with
   the lever on its catch, and a neutral grip is held 115 mm back from its block, where its rear half
   starts.
+- `hip_thrust_machine` (#229) stands where its ref puts it, whatever the pose, and is shown alone
+  until the machine hip thrust is posed on it: a seat 470 mm up, a separate foot platform 450 mm
+  up and 400 deep, 220 mm ahead of the seat and tilted 15° toes up, and one carriage, a revolute
+  joint (`carriage`, degrees up from level ahead) on an axle through the tops of two rear posts,
+  880 mm up and 800 mm behind the belt. The carriage carries two round back pads 260 mm across with
+  a gap for the spine, a waist belt, two upright handles beside the hips and two plate horns with a
+  plate each, resting on a stop at the bottom of the rep (belt 700 mm up, pads' top 830) and rising
+  through 16° to the top (belt 930 mm); two more horns on the rear posts store plates. Its
+  contacts tie the hands to the handles, the upper back to the pads (`back`), the belt to the hips
+  (`hips`, a landmark added for it: the pelvis to the thigh) and the feet to the platform. It has no
+  seat, pad or platform adjustment; its one fit rule, unsolved, is the `strap` option, `short` or
+  `long`, the loop of the dual-loop waist strap, the long one lifting the belt 40 mm higher. Where
+  it departs from the ref's photos: straight carriage arms and handles where the photos curve
+  them, full round pad cylinders for the half-rounds, a flat strap, and a plain frame for the
+  rear arch.
 - `cable_crossover` (#181) is the machine of the free-handle cable exercises no pose has set up on
   `cable_column` or `cable_tower` (`CABLE_MACHINES` in `kit.mjs`, 19 of its ref's 25; a posed one
   moves when it is posed machine-first, so no clip changes): two towers 2210 mm apart on the centre
@@ -617,7 +632,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the hip thrust machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

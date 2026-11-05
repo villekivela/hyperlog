@@ -33,7 +33,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug |
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip |
-| 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive |
+| 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive; built (#229), not yet posed |
 | 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD |
 | 16 | [`crunch_machine`](crunch_machine/ref.md) | 1 | Hammer Strength Select Abdominal Crunch |
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar |
@@ -98,7 +98,8 @@ gaps says why):
 - `dip_machine`: the seat positions, grip spread and carriage pivot stay chosen; no front view of
   the Hoist.
 - `hip_thrust_machine`: the hips' top height is chosen from the fit rule; the pivot's place and
-  radius are rough, hidden in the only side-on photo.
+  radius are rough, hidden in the only side-on photo. Built (#229) from the photos, a seat, a platform and one
+  carriage; the pads' fore-and-aft place is by eye and no pose has tuned the range yet.
 - `glute_ham_raise`: the pad width and the mannequin's pad-to-plate distance are chosen; pad sizes
   are good to about 10%.
 - `crunch_machine`: the axis's place along the body is by eye and the handle spacing is chosen. The

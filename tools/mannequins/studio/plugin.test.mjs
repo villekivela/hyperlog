@@ -121,6 +121,12 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   assert.equal(smith.status, 'unused');
   assert.deepEqual(smith.entry.kit, { smith_machine: {} });
   assert.equal(smith.entry.alone, true);
+  // So is the hip thrust machine (#229), its carriage there to scrub through its limits.
+  const thrust = await get('/api/item/kit/hip_thrust_machine');
+  assert.equal(thrust.uses, null);
+  assert.equal(thrust.status, 'unused');
+  assert.deepEqual(thrust.entry.kit, { hip_thrust_machine: {} });
+  assert.equal(thrust.entry.alone, true);
   const none = await get('/api/item/exercise/pendulum_squat');
   assert.equal(none.entry, null);
   assert.equal(none.status, 'no pose');
