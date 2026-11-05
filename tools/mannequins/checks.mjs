@@ -83,7 +83,7 @@ function partAt(parts, p) {
 }
 
 /** The bones of each landmark a pad bears on. */
-const LIMBS = { shins: /^calf_/, thighs: /^thigh_/, feet: /^(foot|ball)_/, shoulders: /^(clavicle|upperarm)_/, chest: /^spine_0[23]$/, back: /^spine_0[23]$/, upperArms: /^upperarm_/ };
+const LIMBS = { shins: /^calf_/, thighs: /^thigh_/, feet: /^(foot|ball)_/, shoulders: /^(clavicle|upperarm)_/, chest: /^spine_0[23]$/, back: /^spine_0[23]$/, upperArms: /^upperarm_/, forearms: /^lowerarm_/ };
 
 /** The body's vertices, each with the bone that moves it most and whether that's a hand's. */
 function bodyVertices(rig) {

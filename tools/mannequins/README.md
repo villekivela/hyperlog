@@ -294,7 +294,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `cable_crossover`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
-| `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
+| `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips, `captains_chair` for the roman chair crunch; none needed for the rest |
 | `ez_bar` | missing |
 | `trap_bar` | missing |
 | `safety_bar` | missing |
@@ -462,6 +462,19 @@ Every kit is a recipe (ADR 0007): `recipes/<kit>.mjs`, over the part library in 
 with guide rods and a pin, pop-pins, bars and handles, each a function of its dimensions and tone).
 `recipe.mjs` is the format. A recipe declares, as data:
 
+- `captains_chair` (#237, bodyweight equipment; `STATIONS` in `kit.mjs` maps its one exercise,
+  `roman_chair_crunch`, not posed yet, so no clip changes) is a captain's chair, a knee raise station,
+  from `refs/captains_chair/ref.md`. Nothing on it moves: two floor rails 1054 mm long, 640 apart, with
+  a foot brace; in each side plane an X of a straight tube (rail front half to a rear post) and a bent
+  one (rail rear half, up and forward, upright under the arm pad's front); a back pad 290 by 550 mm,
+  reclined 10°, on a tube across the rear posts; two flat arm pads (250 by 120 by 80 mm, 560 apart, tops
+  at 1.38 m); a knee raise grip 230 mm long rising from a hub at each pad's front end, leaning back 15°
+  and inward, with a dip handle forward of the hub (the dips are served by `power_rack`); a foot peg
+  each side at 280 mm. The elbows' place, on the arm pads' rear halves, is the origin, the lifter
+  facing +z. Contacts, on the frame: `armPads` (forearms, a pair, on the pad tops), `grips` (hands, a
+  pair, on the grips at 1.43 m) and `backPad` (back, on the pad's face). To see it, run the studio
+  (`npm run studio`) and open the kit `captains_chair`; it is shown alone until a pose uses it. Its
+  heights are rough (±50 mm, one three-quarter render in the ref) and the arm pads are flat.
 - `bodies`: each moving body and its joint, `revolute` (a lever turning about its pivot, with its
   `settings` where holes set it) or
   `prismatic` (a sled, a carriage, a stack sliding along its rails), with its `limits`; or `free`,
@@ -471,7 +484,7 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
   arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
 - `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
-  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`. An `optional` one
+  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back`, `upperArms` or `forearms`. An `optional` one
   on the hands is a grip a free hand may use, so no hand is held to it.
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
@@ -617,7 +630,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the captain's chair. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
