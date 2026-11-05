@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
 import { KITS, MACHINES, buildKit } from './kit.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
-import { buildRig, rad, wpos } from './rig.mjs';
+import { V, buildRig, rad, wpos } from './rig.mjs';
 import { checkPose } from './checks.mjs';
 import { prepare } from './entries.mjs';
 import { openClip, poseFrame } from './glb.mjs';
@@ -381,6 +381,19 @@ test('the pads are long, and little bare beam runs ahead of them', () => {
     const bare = Math.max(...cores.map((b) => b.max.z)) - pad.max.z;
     assert.ok(bare < 0.8 * length, `${(bare / length).toFixed(2)} of a pad's length of bare beam ahead of it`);
   }
+});
+
+// The hero photo: the tower is one arch, its outer top corner swept round.
+test('the tower\'s outer top corner is swept round, and its top stands level with the machine\'s', () => {
+  const kit = machine();
+  const stack = stackOf(kit).getCenter(new THREE.Vector3());
+  const tower = boxes(kit).filter(({ box: b }) => b.max.y > 1.25 && b.min.z > stack.z - 0.1).reduce((all, { box: b }) => all.union(b), new THREE.Box3());
+  assert.ok(tower.max.x - tower.min.x > 0.48, `the tower ${(tower.max.x - tower.min.x).toFixed(2)} m across`);
+  close(tower.max.y, 1.4, 0.04, 'its top');
+  const corner = V(tower.min.x + 0.02, tower.max.y - 0.02, stack.z);
+  // The arch's own box takes in the corner it sweeps round.
+  const filled = boxes(kit).filter(({ mesh, box: b }) => mesh.name !== 'lateral_raise_arch' && b.containsPoint(corner));
+  assert.deepEqual(filled.map(({ mesh }) => mesh.name), [], 'nothing square in the corner');
 });
 
 // #241: a body fits it. The checks hold the hands on the grips, the upper arms on the pads, the chest

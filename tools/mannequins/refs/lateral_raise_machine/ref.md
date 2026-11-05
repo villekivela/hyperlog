@@ -58,7 +58,7 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 
 | Part | Where it sits, estimated from those frames | Was in the kit | Now |
 |---|---|---|---|
-| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
+| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, one arch with its outer top corner swept round, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
 | Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
 | Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate mostly covered by the wedges, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
 | Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, raking toward the tower on the way, a beam back along the pad | a thin dog-leg | as measured |
@@ -75,4 +75,4 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 - The pivots stand at 1.15 m and the seat at 0.56 m for the mannequin, above the table's estimates (1.05 to 1.10 m, about 0.48 m), from their shares of the tower in the demo; the shoulder stays on the pivot.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
 - The standing exercise has no reference model; its geometry comes from one video of two other makes. It needs a kit of its own, so it stays unposed: the owner's call (#241).
-- Left plain: a square tower, 17% narrower than the real rounded one (the shared stack frame), an even stack where the real one is narrow over wide, round pads where the real ones are D sections. The pivots stand wider than the photo's, on the mannequin's shoulders, which is what keeps the pads on the arms.
+- Left plain: an even stack where the real one is narrow over wide, round pads where the real ones are D sections. The pivots stand wider than the photo's, on the mannequin's shoulders, which is what keeps the pads on the arms.

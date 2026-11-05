@@ -14,7 +14,7 @@
 // gives its own geometry, is listed with this kit's exercises but needs a kit of its own.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { UPRIGHTS, WHEEL, floorRail, mitered, pad, part, pivotJoint, rod, rodGeometry, span, stackFrame, tube, weightStack, wheelAt, wire } from '../parts.mjs';
+import { WHEEL, bent, floorRail, mitered, pad, part, pivotJoint, rod, rodGeometry, span, tube, weightStack, wheelAt, wire } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
 const LIMITS = [rad(10), rad(90)];
@@ -45,7 +45,10 @@ const WEDGE_Z = PLANE + 0.04;
 const WEDGE = { length: 0.33, width: 0.1, height: 0.12, over: 0.125, in: 0.1, tilt: rad(28) };
 const GRIP = 0.075;
 // The tower stands ahead of the lifter, its near end about on the centre line, as in the ref's photos.
-const TOWER_X = -0.24;
+const TOWER_X = -0.225;
+// Each upright's centre from the tower's, and the corner of the arch that joins them at the top.
+const TOWER_HALF = 0.215;
+const ARCH_FROM = 1.15;
 const STACK_Z = 0.87;
 // The base's rear foot, under the seat: from it to the tower is the ref's 1.07 m footprint.
 const REAR = -0.1;
@@ -120,9 +123,19 @@ export default recipe({
     const weights = weightStack(V(TOWER_X, 0, STACK_Z), M, { rodTop: FRAME_TOP - 0.03, toward: -1 });
     // The cable's top, under the tower's top bar.
     const cableTop = V(TOWER_X, FRAME_TOP - 0.1, STACK_Z);
-    // The tower's frame is built about the middle, then stood to the side.
-    const tower = stackFrame(STACK_Z, FRAME_TOP, M);
-    tower.forEach((m) => { m.position.x += TOWER_X; });
+    // The tower: the inner upright straight up, and the outer one swept round into the top in one arch.
+    const [outer, inner] = [TOWER_X - TOWER_HALF, TOWER_X + TOWER_HALF];
+    const archY = FRAME_TOP - 0.035;
+    const arch = bent('lateral_raise_arch', [
+      V(outer, ARCH_FROM, STACK_Z), V(outer, ARCH_FROM + 0.08, STACK_Z), V(outer + 0.03, archY - 0.09, STACK_Z), V(outer + 0.1, archY - 0.02, STACK_Z),
+      V(outer + 0.2, archY, STACK_Z), V(inner, archY, STACK_Z),
+    ], 0.035, M.frame);
+    arch.name = 'lateral_raise_arch';
+    const tower = [
+      tube(0.07, V(inner, 0.07, STACK_Z), V(inner, archY, STACK_Z), M.frame),
+      tube(0.07, V(outer, 0.07, STACK_Z), V(outer, ARCH_FROM, STACK_Z), M.frame),
+      arch,
+    ];
     const drop = wire(M);
     // The block, and its cables straight up to the levers' stub and straight down to the spine.
     const block = new THREE.Group();
@@ -194,13 +207,13 @@ export default recipe({
         // The floor: a spine from the rear foot to the tower, across which the tower stands.
         ...floorRail(V(0, 0.035, REAR), V(0, 0.035, STACK_Z), M),
         ...floorRail(V(-0.1, 0.035, REAR), V(0.1, 0.035, REAR), M),
-        ...floorRail(V(TOWER_X - 0.23, 0.035, STACK_Z), V(TOWER_X + 0.27, 0.035, STACK_Z), M),
+        ...floorRail(V(outer - 0.03, 0.035, STACK_Z), V(inner + 0.03, 0.035, STACK_Z), M),
         block, toLevers, toBase,
         // The beam from the post to the tower.
-        tube(0.06, V(0, BEAM_Y, postZ(BEAM_Y)), V(TOWER_X + UPRIGHTS, BEAM_Y, STACK_Z), M.frame),
+        tube(0.06, V(0, BEAM_Y, postZ(BEAM_Y)), V(inner, BEAM_Y, STACK_Z), M.frame),
         ...tower,
         // The header across the tower's top.
-        pad(2 * UPRIGHTS + 0.07, 0.2, 0.05, M.frame, V(TOWER_X, FRAME_TOP - 0.1, STACK_Z - 0.01), { soft: 0.02 }),
+        pad(inner - outer - 0.12, 0.19, 0.05, M.frame, V((inner + outer + 0.12) / 2, FRAME_TOP - 0.115, STACK_Z - 0.01), { soft: 0.02 }),
         ...weights.parts, drop,
         chestPad,
         ...fixed, ...housings, ...levers.flatMap((l) => body(l, 0).slice(1)),
