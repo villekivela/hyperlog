@@ -32,9 +32,9 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension; built (#220), not yet posed |
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug; built (#223), not yet posed |
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
-| 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip |
-| 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive |
-| 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD |
+| 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip; built and posed (#226) |
+| 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive; built and posed (#229) |
+| 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD; built and posed (#230) |
 | 16 | [`crunch_machine`](crunch_machine/ref.md) | 1 | Hammer Strength Select Abdominal Crunch |
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar; built (#234), not yet posed |
 | 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD); built and posed (#237) |
@@ -99,9 +99,11 @@ gaps says why):
 - `dip_machine`: the seat positions, grip spread and carriage pivot stay chosen; no front view of
   the Hoist.
 - `hip_thrust_machine`: the hips' top height is chosen from the fit rule; the pivot's place and
-  radius are rough, hidden in the only side-on photo.
-- `glute_ham_raise`: the pad width and the mannequin's pad-to-plate distance are chosen; pad sizes
-  are good to about 10%.
+  radius are rough, hidden in the only side-on photo. Built and posed (#229) from the photos, a seat, a platform and one
+  carriage, its two rear-frame horns read as plate storage; the pads' fore-and-aft place (480 mm behind the hips) is by eye, and the range is 23°, the video make's, because the glutes rest on the seat at the bottom.
+- `glute_ham_raise` (built, #230): the pad width and the mannequin's pad-to-plate distance are chosen; pad sizes
+  are good to about 10%. The base's rails, crossmembers, uprights and the pad plate are read from the
+  photos (no dimension is published but the footprint and two heights).
 - `crunch_machine`: the axis's place along the body is by eye and the handle spacing is chosen. The
   recipe is Hammer Strength's reclined crunch; the technique video shows an upright one.
 - `trap_bar`: the lockout height is chosen from the mannequin's arm; the frame's plan comes from one
