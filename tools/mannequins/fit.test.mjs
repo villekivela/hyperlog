@@ -25,6 +25,7 @@ const MACHINES = {
   t_bar_row: 'lever',
   kelso_shrug: 'lever',
   seated_dip_machine: 'arms',
+  machine_hip_thrust: 'carriage',
 };
 
 const kitOf = (stage) => Object.values(stage.kit.kits)[0];
