@@ -52,7 +52,8 @@ class MannequinsTest {
         }
         assertEquals(
             listOf(
-                "1_arm_cable_press_around", "1_arm_katana_cable_triceps_extension", "1_leg_cable_glute_kickback",
+                "1_arm_cable_press_around", "1_arm_katana_cable_triceps_extension", "1_arm_reverse_pec_deck",
+                "1_leg_cable_glute_kickback",
                 "2_grip_lat_pulldown", "2_grip_pullup", "2_grip_pullup_weighted", "back_squat_high_bar",
                 "back_squat_low_bar", "barbell_bench_press", "barbell_curl", "barbell_glute_bridge",
                 "barbell_hip_thrust", "barbell_rdl", "barbell_row", "barbell_shrug", "barbell_squat",
@@ -68,7 +69,8 @@ class MannequinsTest {
                 "front_squat", "hack_squat", "hanging_leg_raise", "high_cable_lateral_raise", "kelso_shrug",
                 "lat_pulldown", "leg_extension", "leg_press", "low_to_high_cable_press", "lying_leg_curl",
                 "machine_chest_press", "machine_preacher_curl", "machine_pulldown", "neutral_grip_pullup",
-                "overhead_cable_triceps_extension", "pullup", "pullup_wide_grip", "reverse_cable_crossover",
+                "overhead_cable_triceps_extension", "pec_deck", "pullup", "pullup_wide_grip", "reverse_cable_crossover",
+                "reverse_pec_deck",
                 "seated_cable_flye", "seated_calf_raise", "seated_db_shoulder_press", "seated_leg_curl",
                 "single_arm_db_row", "t_bar_row", "triceps_pressdown", "weighted_chinup", "weighted_dip",
                 "weighted_pullup",

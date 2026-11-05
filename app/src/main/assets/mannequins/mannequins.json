@@ -48,6 +48,30 @@
         "kit_cable_crossover.bin"
       ]
     },
+    "1_arm_reverse_pec_deck": {
+      "clip": "1_arm_reverse_pec_deck.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.95,
+          0.1
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 140,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_pec_deck.bin"
+      ]
+    },
     "1_leg_cable_glute_kickback": {
       "clip": "1_leg_cable_glute_kickback.glb",
       "equipment": "cable",
@@ -1952,6 +1976,30 @@
         "kit_cable_column.bin"
       ]
     },
+    "pec_deck": {
+      "clip": "pec_deck.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.95,
+          0.1
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 40,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_pec_deck.bin"
+      ]
+    },
     "pullup": {
       "clip": "pullup.glb",
       "equipment": "bodyweight",
@@ -2022,6 +2070,30 @@
       "resources": [
         "mannequin.bin",
         "kit_cable_column.bin"
+      ]
+    },
+    "reverse_pec_deck": {
+      "clip": "reverse_pec_deck.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.95,
+          0.1
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 140,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_pec_deck.bin"
       ]
     },
     "seated_cable_flye": {

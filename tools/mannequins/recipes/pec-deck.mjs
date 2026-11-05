@@ -1,8 +1,9 @@
 // A seated pec deck (refs/pec_deck/ref.md): a seat and a back pad leaning back 7° in front of a tower
 // that holds the weight stack, and an arch from the tower's top forward to an overhead unit with a
-// vertical axis either side, 0.4 m apart. A lever swings from each in a horizontal plane, 0.48 m out
-// to a pin, and a drop arm hangs from the pin. A vertical grip bends out of the drop arm square to
-// the lever, ahead of it with the arm out, and a short level grip stands on the other side. The pec
+// vertical axis either side, 0.4 m apart, between two flat plates. A lever swings from each in a
+// horizontal plane, 0.5 m out to a pin, and a drop arm hangs from the pin. A vertical grip hangs like
+// a cane out of the drop arm, square to the lever, ahead of it with the arm out, and a short level
+// grip stands on the other side. One post leaning back from the floor carries the seat and the pad. The pec
 // fly holds the vertical grips, back on the pad; the rear delt fly (`facing: 'pad'`) straddles the
 // same seat with the chest on the pad and holds the short ones, so the kit stands turned round the
 // mannequin, which always faces +z.
@@ -14,24 +15,24 @@
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, bent, endCap, knob, pad, part, pivotJoint, pulley, rod, rodGeometry, seatOn, span, stackFrame, tube,
+  UPRIGHTS, WHEEL, bent, endCap, knob, pad, part, pivotJoint, pulley, rod, rodGeometry, span, stackFrame, tube,
   weightStack, wire,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
 // The axes: 1.62 m up, either side of the centre line, over the shoulders of a back on the pad. A
-// lever is 0.48 m, and at rest points this far behind straight out to its side.
+// lever is 0.5 m, and at rest points this far behind straight out to its side.
 const AXIS = { x: 0.2, y: 1.62, z: -0.1 };
-const LEVER = 0.48;
+const LEVER = 0.5;
 const REST = { fly: rad(-10), rear: rad(-45) };
 // From the rest to past the hands nearly touching in front of the chest (the ref's ROM, a little
 // over), or past the arms in line with the shoulders.
 const SWEEP = { fly: rad(120), rear: rad(60) };
 // The vertical grip's middle is fixed at 1.05 m, and the seat moves. Each grip's middle stands this
-// far off the drop arm, the short one a little lower, at the drop arm's foot.
+// far off the drop arm, the short one a little lower, near the drop arm's foot.
 const GRIP_Y = 1.05;
-const SHORT_Y = 0.99;
-const FOOT_Y = 0.93;
+const SHORT_Y = 1.03;
+const FOOT_Y = 0.97;
 const GRIP = 0.017;
 const GRIP_OFF = 0.1;
 const SHORT_LENGTH = 0.15;
@@ -41,13 +42,15 @@ const SEAT_RANGE = [0.4, 0.56];
 const SITS = 0.09;
 // The back pad: 0.3 wide, 0.59 tall, its bottom 0.05 above the seat, its face there at `face`.
 const BACK = { width: 0.3, height: 0.59, thick: 0.08, above: 0.05, face: -0.16, lean: rad(7) };
-// The tower's uprights and stack, the bar across their front that carries the pad, and its top.
+// The tower's uprights and stack, and its top.
 const TOWER_Z = -0.4;
-const BAR_Z = TOWER_Z + 0.095;
 const FRAME_TOP = 1.5;
+// The unit's two plates, above and below the levers, and how high the rear braces meet the tower.
+const PLATES = [1.535, 1.695];
+const BRACE_Y = 0.45;
 // The base's feet: its depth is the ref's 1.245 m footprint, feet included.
-const FRONT_Z = 0.265;
-const REAR_Z = -0.91;
+const FRONT_Z = 0.32;
+const REAR_Z = -0.855;
 const TOP = 1.8;
 // How far the stack rises, in metres a radian of the left arm's sweep.
 const STACK_RATIO = 0.09;
@@ -127,8 +130,7 @@ export default recipe({
     const sides = [-1, 1];
     const axisOf = (s) => V(s * AXIS.x, AXIS.y, AXIS.z);
     const back = padOf(seat[0]);
-    const barY = back.at.y;
-    const unit = V(0, TOP - 0.07, AXIS.z);
+    const archY = TOP - 0.045;
     const wheel = V(0, FRAME_TOP - 0.035 - WHEEL - 0.02, TOWER_Z);
     const pivots = Object.fromEntries(sides.map((s) => [s, pivotJoint(M, axisOf(s), V(0, 1, 0))]));
     const padPart = pad(BACK.width, BACK.height, BACK.thick, M.vinyl, back.at, { soft: 0.025 });
@@ -138,25 +140,34 @@ export default recipe({
     const weights = weightStack(V(0, 0, TOWER_Z), M, { rodTop: FRAME_TOP - 0.05, toward: 1 });
     const drop = wire(M);
     const frame = [
-      ...seatOn(seat[0], seat[1], M, { pin: 1 }),
+      pad(0.36, 0.075, 0.38, M.vinyl, V(0, seat[0] - 0.0375, seat[1]), { soft: 0.024 }),
+      pad(0.3, 0.012, 0.32, M.frame, V(0, seat[0] - 0.081, seat[1]), { soft: 0.003 }),
       padPart, padBoard,
-      tube(0.05, back.at.clone().addScaledVector(back.out, -BACK.thick / 2 - 0.012), V(0, barY, BAR_Z), M.frame),
-      tube(0.07, V(-UPRIGHTS - 0.035, barY, BAR_Z), V(UPRIGHTS + 0.035, barY, BAR_Z), M.frame),
+      // The post from the floor beam up under the seat's back edge, behind the pad's face to its board.
+      tube(0.07, V(0, 0.07, -0.02), V(0, seat[0] + 0.2, BACK.face - 0.11), M.frame),
       // The floor: a beam from the front foot to the rear one, a foot across each end.
       tube(0.07, V(0, 0.035, REAR_Z), V(0, 0.035, FRONT_Z), M.frame),
       ...[FRONT_Z, REAR_Z].map((z) => tube(0.07, V(-0.3, 0.035, z), V(0.3, 0.035, z), M.frame)),
       tube(0.07, V(-UPRIGHTS - 0.035, 0.035, TOWER_Z), V(UPRIGHTS + 0.035, 0.035, TOWER_Z), M.frame),
       ...sides.flatMap((s) => [
         endCap(s * 0.3, FRONT_Z, M), endCap(s * 0.3, REAR_Z, M),
-        // A strut down and back from each upright to the rear foot.
-        tube(0.06, V(s * UPRIGHTS, 0.75, TOWER_Z - 0.035), V(s * 0.27, 0.06, REAR_Z), M.frame),
+        // A brace curving down and back from each upright to the rear foot.
+        bent(`pec_deck_brace:${s}`, [
+          V(s * UPRIGHTS, BRACE_Y, TOWER_Z - 0.03), V(s * UPRIGHTS, BRACE_Y - 0.01, TOWER_Z - 0.1), V(s * 0.23, 0.26, TOWER_Z - 0.26), V(s * 0.27, 0.06, REAR_Z),
+        ], 0.03, M.frame),
       ]),
       // The tower with the stack in it, and the arch from its top forward to the overhead unit.
       ...stackFrame(TOWER_Z, FRAME_TOP, M),
-      bent('pec_deck_arch', [V(0, FRAME_TOP, TOWER_Z - 0.04), V(0, 1.64, TOWER_Z - 0.04), V(0, unit.y, TOWER_Z + 0.08), V(0, unit.y, AXIS.z - 0.1), unit], 0.045, M.frame),
-      pad(2 * AXIS.x + 0.14, 0.14, 0.18, M.frame, unit, { soft: 0.02 }),
-      // The axle down from the unit at each axis, through the lever's housing.
-      ...sides.flatMap((s) => pivots[s].fixed),
+      bent('pec_deck_arch', [
+        V(0, FRAME_TOP, TOWER_Z - 0.04), V(0, 1.66, TOWER_Z - 0.04), V(0, archY, TOWER_Z + 0.08), V(0, archY, AXIS.z - 0.14), V(0, PLATES[1] + 0.01, AXIS.z - 0.03),
+      ], 0.045, M.frame),
+      // The unit: two flat plates on the axles, a tab standing on each.
+      ...PLATES.map((y) => pad(2 * AXIS.x + 0.14, 0.014, 0.14, M.frame, V(0, y, AXIS.z), { soft: 0.003 })),
+      ...sides.flatMap((s) => [
+        ...pivots[s].fixed,
+        rod(0.014, V(s * AXIS.x, PLATES[0], AXIS.z), V(s * AXIS.x, PLATES[1], AXIS.z), M.metal),
+        pad(0.06, TOP - PLATES[1], 0.012, M.pulley, V(s * AXIS.x, (TOP + PLATES[1]) / 2, AXIS.z), { soft: 0.003, solid: false }),
+      ]),
       ...pulley(wheel, M),
       ...weights.parts,
       drop,
@@ -172,10 +183,11 @@ export default recipe({
       // against the tube and not the box round both.
       const lever = tube(0.045, axisOf(s), end, M.frame);
       const dropArm = tube(0.045, end, foot, M.frame);
-      // One bent tube: out of the drop arm at the top, along, down the grip, and back into the arm at the foot.
+      // One bent tube out of the drop arm at the top, along, and down the grip to its free foot. Its
+      // shape is keyed by the facing, as the arm rests at a different angle in each.
       const off = (along, y) => end.clone().addScaledVector(ahead, along).setY(y);
-      const handle = bent(`pec_deck_handle:${s}`, [
-        off(0, top.y), off(0.04, top.y), off(GRIP_OFF, top.y - 0.03), off(GRIP_OFF, foot.y + 0.03), off(0.04, foot.y), off(0, foot.y),
+      const handle = bent(`pec_deck_handle:${m}:${s}`, [
+        off(0, top.y), off(0.04, top.y), off(GRIP_OFF, top.y - 0.03), off(GRIP_OFF, GRIP_Y), off(GRIP_OFF, GRIP_Y - 0.09),
       ], GRIP - 0.004, M.metal);
       const sleeve = rod(GRIP, off(GRIP_OFF, GRIP_Y - 0.08), off(GRIP_OFF, GRIP_Y + 0.08), M.vinyl, { held: true });
       const short = rod(GRIP, off(0, SHORT_Y), off(-GRIP_OFF - SHORT_LENGTH / 2 + 0.015, SHORT_Y), M.vinyl, { held: true });

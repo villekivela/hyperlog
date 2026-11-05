@@ -296,7 +296,7 @@ export const POSES = {
     body: { trunk: -7 },
     top: { left: 107 },
     bottom: { left: 0 },
-    feet: { stance: 0.17, z: 0.42, toeOut: 12 },
+    feet: { stance: 0.17, z: 0.45, toeOut: 12 },
     grip: { pole: [1, -0.25, -0.3] },
     camera: { target: [0, 0.95, 0.1], halfHeight: 1.05, azimuth: 40, elevation: 10 },
     shadow: { size: [1.5, 1.6], at: [0, -0.2] },
@@ -307,12 +307,12 @@ export const POSES = {
   reverse_pec_deck: {
     equipment: 'machine',
     motion: 'lever_handles',
-    kit: { pec_deck: { facing: 'pad', hips: 0.05 } },
-    body: { trunk: 14, look: 0 },
+    kit: { pec_deck: { facing: 'pad', hips: -0.02 } },
+    body: { trunk: 7, look: 0 },
     top: { left: 55 },
     bottom: { left: 0 },
     feet: { stance: 0.24, z: 0.2, toeOut: 15, kneesOut: 0.5 },
-    grip: { pole: [1, 0.1, -0.4] },
+    grip: { pole: [1, -0.6, -0.1] },
     camera: { target: [0, 0.95, 0.1], halfHeight: 1.05, azimuth: 140, elevation: 10 },
     shadow: { size: [1.5, 1.6], at: [0, 0.2] },
   },
@@ -320,7 +320,7 @@ export const POSES = {
   // The same with one arm, the other hand on the thigh.
   '1_arm_reverse_pec_deck': {
     like: 'reverse_pec_deck',
-    kit: { pec_deck: { facing: 'pad', hips: 0.05, one: true } },
+    kit: { pec_deck: { facing: 'pad', hips: -0.02, one: true } },
     grip: { one: 1, rest: [-0.2, 0.68, 0.22] },
   },
 
