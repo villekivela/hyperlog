@@ -13,7 +13,7 @@
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, basePlate, endCap, hub, padGeometry, part, plateGeometry, pulley, rod, rollerGeometry, span, stackFrame, tube,
+  UPRIGHTS, WHEEL, basePlate, endCap, hub, padGeometry, part, pulley, rod, rollerGeometry, span, stackFrame, tube,
   turnedPart, weightStack, wheelGeometry, wire,
 } from '../parts.mjs';
 import { V, X, rad } from '../rig.mjs';
@@ -32,7 +32,7 @@ const SEAT_ALONG = V(0, Math.sin(INCLINE), Math.cos(INCLINE));
 /** The seat's face `s` metres down it from its high end. */
 const seatAt = (s) => V(0, SEAT.highY, SEAT.highZ).addScaledVector(SEAT_ALONG, -s);
 // The arm, built in its own frame about the axis at rest: z toward the head, y up, the back pad's face
-// level 120 mm under the axis (660 mm up), 400 mm long from 100 mm out, a head pad 50 mm above it at the far end.
+// level 120 mm under the axis (660 mm up), 430 mm long from 100 mm out, a head pad 50 mm above it at the far end.
 const BACK = { from: 0.1, length: 0.43, width: 0.34, thick: 0.08, top: -0.12 };
 const HEAD = { z: 0.61, length: 0.12, width: 0.26, thick: 0.07, raised: 0.05 };
 // The arm's tube runs under the pad's board.
@@ -61,7 +61,7 @@ export default recipe({
   // ankles between the rollers. The ref has no adjustment to fit.
   contacts: [
     { body: 'arm', point: 'handles', landmark: 'hands' },
-    { body: 'arm', point: 'backPad', landmark: 'shoulders' },
+    { body: 'arm', point: 'backPad', landmark: 'back' },
     { body: 'frame', point: 'seat', landmark: 'thighs' },
     { body: 'frame', point: 'rollers', landmark: 'feet' },
   ],
@@ -79,14 +79,13 @@ export default recipe({
     /** The seat's underside, the board's face, at z. */
     const under = (z) => seatAt((SEAT.highZ - z) / SEAT_ALONG.z).addScaledVector(SEAT_UP, -SEAT.thick - 0.012).y;
 
-    const ux = UPRIGHTS;
     const base = [
       // A beam down the middle from the stack to the axis's crossbar, a crossbar there and one at the front frame.
       tube(0.07, V(0, 0.035, STACK_Z), V(0, 0.035, 0), M.frame),
       tube(0.07, V(-0.42, 0.035, 0), V(0.42, 0.035, 0), M.frame),
       tube(0.07, V(-0.3, 0.035, FRONT.z), V(0.3, 0.035, FRONT.z), M.frame),
-      tube(0.07, V(-ux - 0.15, 0.035, STACK_Z), V(ux + 0.15, 0.035, STACK_Z), M.frame),
-      ...[-1, 1].flatMap((s) => [endCap(s * 0.42, 0, M), endCap(s * 0.3, FRONT.z, M), endCap(s * (ux + 0.15), STACK_Z, M)]),
+      tube(0.07, V(-UPRIGHTS - 0.15, 0.035, STACK_Z), V(UPRIGHTS + 0.15, 0.035, STACK_Z), M.frame),
+      ...[-1, 1].flatMap((s) => [endCap(s * 0.42, 0, M), endCap(s * 0.3, FRONT.z, M), endCap(s * (UPRIGHTS + 0.15), STACK_Z, M)]),
     ];
     // The seat on two rear posts and a diagonal from the front crossbar's middle up under it.
     const seatFrame = [

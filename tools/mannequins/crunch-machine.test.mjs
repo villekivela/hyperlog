@@ -121,7 +121,7 @@ test('the hips lie on the seat\'s high end and the upper back on the back pad', 
   assert.equal(seat.body, 'frame');
   close(seat.at[0].y, 0.53, 0.03, 'the seat\'s high end, top');
   const back = contact(kit, 'backPad');
-  assert.equal(back.landmark, 'shoulders');
+  assert.equal(back.landmark, 'back');
   assert.equal(back.body, 'arm');
   close(back.at[0].distanceTo(centre(only(kit, 'backPad'))), 0, 0.05, 'on the back pad');
 });

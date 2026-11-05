@@ -428,7 +428,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   foot rollers, at 360 and 600 mm, on a post at the front; and a 12-plate stack behind them, its cable
   running from the cam to the stack. The arm is one body on a revolute joint, its value the degrees of
   curl from rest (0 to 40°); the stack rises 190 mm a radian of it. Its contacts tie the hands to the
-  handles, the upper back (`shoulders`) to the back pad, the thighs to the seat's high end and the feet
+  handles, the upper back (`back`) to the back pad, the thighs to the seat's high end and the feet
   between the rollers. It departs from the ref: the front frame is a straight post, not the photo's curve,
   the stack and its frame are the library's generic ones (twelve 26 cm plates, 76 mm tubes), the stack
   stands 860 mm behind the axis to hold the 1.58 m footprint, and the cam's cable runs straight from
