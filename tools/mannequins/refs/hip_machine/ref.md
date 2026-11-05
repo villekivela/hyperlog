@@ -30,12 +30,12 @@ Seated, back supported, knees bent, feet on a foot plate at the bottom of each a
 | Seat top (front edge) above floor | 520 | estimated from the `19-66` render and the storyblok `hip-abduction.jpg`, scaled by the 1400 mm overall height (530 and 515), rough (±50) because both are three-quarter views. The video's other make: about 620, estimated from video https://youtu.be/iGd7fQffkkM at 0:05, scaled by a 0.43 m shin |
 | Seat depth | 360 | estimated from the red-arm render `20-73`, scaled by the 1550 mm length, rough |
 | Seat height range | fixed at 520 | kept at the measured seat top, since no picture shows the roller adjustment's travel; low confidence |
-| Pivot axis | vertical, on the machine's centreline under the seat, about 140 mm behind the seat's front edge (about 220 mm in front of the backrest) | estimated from the `20-73` render (the silver hub on a vertical post under the seat front), scaled by the 1550 mm length, rough |
-| Arm reach, pivot to knee pad post | 400 | estimated from `20-73` (about 410) and `hip-abduction.jpg` (about 400), scaled by the 1550 mm length |
+| Pivot axis | vertical, on the machine's centreline under the seat, about 140 mm behind the seat's front edge by the renders, 240 in the kit, under the hips (about 220 mm in front of the backrest) | estimated from the `20-73` render (the silver hub on a vertical post under the seat front), scaled by the 1550 mm length, rough |
+| Arm reach, pivot to knee pad post | 400 by the photos; 430 in the kit, for the hips under the axis | estimated from `20-73` (about 410) and `hip-abduction.jpg` (about 400), scaled by the 1550 mm length |
 | Knee pad, height x width | 280 x 160 | estimated from `hip-abduction.jpg`, scaled by the 1400 mm height, rough |
 | Knee pad centre above floor | 560 | estimated from `hip-abduction.jpg` (pad spans about 420 to 700), scaled by the 1400 mm height, rough; matches the seated knee of the mannequin (0.56 m) |
-| Pad spacing, arms closed | 250 between the post centres | chosen from the knee rule (pads touching the outside of the mannequin's knees), low confidence |
-| Foot plate above floor | 80 | estimated from `hip-abduction.jpg` (an L-bracket at the foot of each post), scaled by the 1400 mm height, rough |
+| Pad spacing, arms closed | 250 between the post centres by the fit rule; 460 in the kit | chosen from the knee rule (pads touching the outside of the mannequin's knees), low confidence |
+| Foot plate above floor | 80 by the photo; 100 in the kit, so it clears the floor beam | estimated from `hip-abduction.jpg` (an L-bracket at the foot of each post), scaled by the 1400 mm height, rough |
 
 ## Motion
 - Two arms, one per leg, each a horizontal beam from the hub forward to a vertical post carrying the knee pad, with a foot plate at the post's foot. Both arms turn about the one vertical axis at the hub (the photos show a single hub on the centreline, not one axis per hip). The lower leg rides with the arm, so the knee and foot swing together.
@@ -58,11 +58,14 @@ Where each main part sits, from the `19-66` render, the `31-16` render and the s
 | Guide rods | up from the stack to a head block under the top | stopped short of everything | up into a bar between the uprights at 1175 |
 | Spine | one tube raked back behind the backrest, flat top a little under the pad's, kinked just behind the seat and down to a cross member | a straight vertical leg, the pad standing off it | as measured, 80 mm, flush on the pad's back |
 | Rear legs | two, from under the seat's back edge out and back to the rear foot, a cross member between them | none | as measured, from 190 out at 430 up to 300 out on the rear rail |
-| Grips | a hoop round the back of the spine at seat height, its sides running forward beside the seat | handles 180 mm above the seat on struts ending in the air | as measured, grips 240 out at 540 up, each half of the hoop ending in the spine |
+| Grips | a hoop behind the spine at seat height, its sides running forward beside the seat | handles 180 mm above the seat on struts ending in the air | as measured, grips 240 out at 540 up, each half of the hoop ending in the spine |
 | Axle | up from the base to the seat's rail | stopped 150 mm under the seat | as measured, up to the seat's bracket |
 | Axis and arms | the placard's rule puts the axis under the hip joints; the renders read about 140 behind the seat's front edge, 400 to the post | 140, 400 | 240 behind the front edge, under the mannequin's hips on the back pad, as the rule has it, and 430 to the post so the pads still meet the knees |
 | Tower brace | a diagonal from the tower's side down to the floor beam | none | from the beam up to the rear upright at 450, kept short so the foot plates clear it |
-| Foot plate | at the foot of each post, under the whole foot | centred on the ankle, the toes over its end | 70 mm further forward |
+| Foot plate | at the foot of each post, under the whole foot | centred on the ankle, the toes over its end, and dipping into the floor beam | 130 by 260, its middle 100 ahead of the ankle, its top at 100 so it and the post's foot clear the beam they swing over |
+| Seat | on a rail under it, 520 up, 360 deep | on a bracket from a straight leg | as measured, on a bracket from the spine and a beam between the legs |
+| Knee pads | 280 by 160, their middle at 560, on a post at the end of each arm | as measured | as measured, their faces 145 from the centre line with the arms closed, so the post centres stand 460 apart (the table's 250 can't hold with the post outside its pad) |
+| Stack | broad face to the side, between the tower's uprights | as measured | as measured, on the left arm's joint, and rising through the rep |
 
 The photos' rear foot is two flat plates on a low beam; the kit keeps the floor rail its footprint test measures. The grips stay on the hoop's sides behind the thighs' sweep, and the kit's hoop ends in the spine's sides where the photos' passes behind it.
 

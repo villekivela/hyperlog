@@ -342,7 +342,7 @@ export const POSES = {
     like: 'machine_hip_abduction',
     kit: { hip_machine: { pads: 'inner' } },
     top: { arm_l: 50 },
-    bottom: { arm_l: 10 },
+    bottom: { arm_l: 12 },
   },
 
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.

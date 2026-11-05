@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
 import { EQUIPMENT, KITS, MACHINES, buildKit } from './kit.mjs';
-import { rad, wpos } from './rig.mjs';
+import { V, rad, wpos } from './rig.mjs';
 import { buildStage } from './stage.mjs';
 import { checkPose } from './checks.mjs';
 import { prepare } from './entries.mjs';
@@ -93,7 +93,7 @@ test('the arm\'s pad swings 430 mm out from the axis in a circle, and the scrub 
   assert.equal(kit.joints.arm_l.value, 0);
 });
 
-test('closed, the pads press the outsides of the knees 430 mm ahead of the axis and 560 mm up, the plates 80 mm up', () => {
+test('closed, the pads press the outsides of the knees 430 mm ahead of the axis and 560 mm up, the plates 100 mm up', () => {
   const kit = machine();
   for (const [k, s] of [['l', 1], ['r', -1]]) {
     const pad = contact(kit, `pad_${k}`);
@@ -103,7 +103,7 @@ test('closed, the pads press the outsides of the knees 430 mm ahead of the axis 
     close(pad.at[0].z - kit.joints[`arm_${k}`].origin.z, 0.43, 0.02, 'the pad\'s reach');
     const plate = contact(kit, `plate_${k}`);
     assert.equal(plate.landmark, 'feet');
-    close(plate.at[0].y, 0.08, 0.01, 'the plate\'s height');
+    close(plate.at[0].y, 0.1, 0.01, 'the plate\'s height');
     close(plate.at[0].z, pad.at[0].z, 0.03, 'the plate under the pad\'s post');
   }
   assert.equal(contact(kit, 'seat').landmark, 'thighs');
@@ -123,6 +123,9 @@ test('the start angle moves the arms in 10° steps; adduction puts the pads betw
   const plain = contact(machine({ start: 40 }), 'pad_l').at[0];
   assert.ok(pad.x < plain.x - 0.05, 'an inner pad lies nearer the centre line than an outer one');
   assert.throws(() => machine({ pads: 'upside' }), /pads/);
+  const shut = machine({ pads: 'inner', start: 0 });
+  assert.equal(shut.joints.arm_l.value, rad(20), 'the first step that clears the posts');
+  assert.equal(shut.joints.arm_l.limits[0], rad(12), 'the arms close past it, as far as the posts clear');
 });
 
 test('the weight stack tower stands ahead of the lifter past the posts, and is the tallest part; the backrest leans back', () => {
@@ -171,33 +174,49 @@ test('machine_adduction: the knees start apart and squeeze together', async () =
   assert.ok(open > apart() + 0.3, `the knees from ${open.toFixed(2)} to ${apart().toFixed(2)} m apart`);
 });
 
+// Straight up from under the hips, the skin meets the seat's top, on the seat.
 test('machine_hip_abduction and machine_adduction: the hips sit on the seat through the rep', async () => {
   for (const id of ['machine_hip_abduction', 'machine_adduction']) {
     const { pose, rig, kit } = await buildStage(prepare(id));
-    const seat = contact(kit.kits.hip_machine, 'seat').at[0].y;
+    const seat = unite(boxes(kit.kits.hip_machine, role('seat')));
     for (const d of [0, 0.5, 1]) {
       pose(d);
-      close(wpos(rig.bones.pelvis).y - seat, 0.072, 0.015, `${id}: the hips over the seat, ${d} of the way`);
+      const under = wpos(rig.bones.thigh_l).setX(0.06);
+      assert.ok(under.z > seat.min.z && under.z < seat.max.z, `${id}: the hips over the seat, at z ${under.z.toFixed(2)}`);
+      const ray = new THREE.Raycaster(under.clone().setY(0), V(0, 1, 0));
+      const [skin] = rig.meshes.flatMap((m) => { m.computeBoundingSphere?.(); m.computeBoundingBox?.(); return ray.intersectObject(m, false); }).map((h) => h.point.y).sort((x, y) => x - y);
+      close(skin, seat.max.y, 0.03, `${id}: the skin on the seat's top, ${d} of the way`);
     }
   }
 });
 
-test('each arm turns with its joint on every part of the rep, the feet riding their plates', async () => {
-  const { pose, rig, kit } = await buildStage(prepare('machine_hip_abduction'));
-  const hip = kit.kits.hip_machine;
-  for (const d of [0, 0.5, 1]) {
-    pose(d);
-    for (const [k, s] of [['l', 1], ['r', -1]]) {
-      const arm = hip.bodies[`arm_${k}`][0];
-      close(arm.rotation.y, s * hip.joints[`arm_${k}`].value, 1e-6, `arm ${k}, ${d} of the way`);
-      const plate = contact(hip, `plate_${k}`).at[0];
-      const foot = wpos(rig.bones[`foot_${k}`]);
-      assert.ok(Math.hypot(foot.x - plate.x, foot.z - plate.z) < 0.03, `the ${k} foot on its plate, ${d} of the way`);
+test('each arm carries its pad with the knee, and the whole foot stands on its plate, through the rep', async () => {
+  for (const id of ['machine_hip_abduction', 'machine_adduction']) {
+    const { pose, rig, kit } = await buildStage(prepare(id));
+    const hip = kit.kits.hip_machine;
+    for (const d of [0, 0.5, 1]) {
+      pose(d);
+      kit.group.updateMatrixWorld(true);
+      for (const k of ['l', 'r']) {
+        const arm = hip.bodies[`arm_${k}`][0];
+        const pad = arm.children.find(role('pad'));
+        const knee = wpos(rig.bones[`calf_${k}`]);
+        const off = pad.getWorldPosition(new THREE.Vector3()).setY(knee.y).distanceTo(knee);
+        assert.ok(off < 0.12, `${id}: the ${k} pad ${(off * 100).toFixed(0)} cm from its knee, ${d} of the way`);
+        const plate = arm.children.find(role('footPlate'));
+        plate.geometry.computeBoundingBox();
+        const toLocal = plate.matrixWorld.clone().invert();
+        for (const bone of [`foot_${k}`, `ball_${k}`, `ball_leaf_${k}`]) {
+          const at = wpos(rig.bones[bone]).applyMatrix4(toLocal);
+          const { min, max } = plate.geometry.boundingBox;
+          assert.ok(at.x > min.x && at.x < max.x && at.z > min.z && at.z < max.z, `${id}: ${bone} off its plate, ${d} of the way`);
+        }
+      }
     }
   }
 });
 
-test('the arms never meet the frame, and the handles stand behind the legs\' sweep', () => {
+test('the handles stand behind the legs\' sweep', () => {
   const kit = machine();
   const handles = boxes(kit, role('handle'));
   const seat = unite(boxes(kit, role('seat')));
@@ -236,8 +255,6 @@ for (const id of ['machine_hip_abduction', 'machine_adduction']) {
 
 // The owner's bar (#241): no open tube end, mitred joints, every support reaching the floor or its frame.
 test('no tube on it stands open: every bent length is capped', () => {
-  const open = [];
-  machine().group.traverse((o) => { if (o.isMesh && o.geometry.type === 'TubeGeometry') open.push(o.name); });
   // `bent` softens its tube into a plain geometry, so an open one shows by its rim: an edge on one face.
   const rims = [];
   machine().group.traverse((o) => {
@@ -253,7 +270,7 @@ test('no tube on it stands open: every bent length is capped', () => {
     // Extrusions, cylinders and spheres close by construction: only the seam of their vertices shows here.
     if ([...seen.values()].some((n) => n === 1) && !['ExtrudeGeometry', 'CylinderGeometry', 'SphereGeometry'].includes(o.geometry.type)) rims.push(o.name);
   });
-  assert.deepEqual([...open, ...rims], []);
+  assert.deepEqual(rims, []);
 });
 
 test('the tower\'s front upright sweeps over the top in one length, as wide all the way, down to the floor', () => {
@@ -271,6 +288,44 @@ test('a diagonal brace stands from the floor beam up to the tower\'s rear uprigh
   close(brace.min.y, 0.07, 0.002, 'cut flat on the beam');
   close(brace.max.z, 0.66 - 0.035, 0.01, 'cut flat on the upright\'s face');
   assert.ok(brace.max.y > 0.4 && brace.max.z - brace.min.z > 0.08, 'leaning up to it');
+});
+
+/** Whether any vertex of `moving` lies in the box of `fixed`, in `fixed`'s own frame. */
+const reaches = (moving, fixed) => {
+  fixed.geometry.computeBoundingBox();
+  const local = fixed.matrixWorld.clone().invert().multiply(moving.matrixWorld);
+  const p = moving.geometry.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) if (fixed.geometry.boundingBox.containsPoint(v.fromBufferAttribute(p, i).applyMatrix4(local))) return true;
+  return false;
+};
+
+for (const pads of ['outer', 'inner']) {
+  test(`with the pads ${pads}, the arms clear the floor beam, the frame and each other through their whole travel`, () => {
+    const kit = machine({ pads });
+    const [low, high] = kit.joints.arm_l.limits;
+    const moving = new Set();
+    for (const k of ['l', 'r']) kit.bodies[`arm_${k}`][0].traverse((o) => { if (o.isMesh) moving.add(o); });
+    const solid = (o) => o.userData.solid;
+    const arms = [...moving].filter(solid);
+    const fixed = meshes(kit, (o) => solid(o) && !moving.has(o) && o.userData.role !== 'axle');
+    for (const v of [low, (low + high) / 2, high]) {
+      kit.scrub('arm_l', v);
+      kit.scrub('arm_r', v);
+      kit.group.updateMatrixWorld(true);
+      const deg = (v / DEG).toFixed(0);
+      for (const m of moving) assert.ok(new THREE.Box3().setFromObject(m).min.y >= 0.07, `${m.name} in the floor beam at ${deg}°`);
+      for (const m of arms) for (const f of fixed) assert.ok(!reaches(m, f) && !reaches(f, m), `${m.name} meets ${f.name} at ${deg}°`);
+      const [a, b] = boxes(kit, role('post'));
+      assert.ok(!a.intersectsBox(b), `the posts meet at ${deg}°`);
+    }
+  });
+}
+
+test('each arm\'s L is one mitred length', () => {
+  const bars = meshes(machine(), role('armBar'));
+  assert.equal(bars.length, 2);
+  for (const m of bars) assert.notEqual(m.geometry.type, 'ExtrudeGeometry', 'one bent length, not two lapped tubes');
 });
 
 // The frame behind the seat, from the photos (refs/hip_machine/ref.md, part list).
@@ -304,7 +359,7 @@ test('two rear legs splay out and back from under the seat to the rear rail, the
   assert.ok(cross.max.x > 0.2 && cross.min.x < -0.2, 'from leg to leg');
 });
 
-test('the grips run beside the seat at its height, and the hoop that carries them goes round the spine', () => {
+test('the grips run beside the seat at its height, and the hoop that carries them runs back behind the seat and in to the spine', () => {
   const kit = machine();
   const grips = boxes(kit, role('handle'));
   assert.equal(grips.length, 2);
