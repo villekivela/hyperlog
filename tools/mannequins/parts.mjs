@@ -589,12 +589,12 @@ export function knob(M, at, r = 0.016) {
 }
 
 /**
- * A rope for two hands: each strand from the ring to the fist, through it, and out to its end stop,
+ * A rope for the `hands` named: each strand from the ring to the fist, through it, and out to its end stop,
  * 28 mm rope with 60 mm stops (docs/research/grip.md, section 4.4). `lay` runs it from `hook` to `P`'s
- * hands.
+ * hands, and `reversed` runs it through each fist the other way.
  */
-export function ropeParts(M) {
-  const strands = [-1, 1].map((s) => ({
+export function ropeParts(M, { reversed = false, hands = [-1, 1] } = {}) {
+  const strands = hands.map((s) => ({
     s, strand: part(rodGeometry(0.014, 12), M.vinyl), fist: part(rodGeometry(0.014, 12), M.vinyl, { held: true }), end: knob(M, V(0, 0, 0), 0.03),
   }));
   const ring = clevis(M, 0);
@@ -608,7 +608,7 @@ export function ropeParts(M) {
       // the little finger's, where its end stop sits against the hand.
       strands.forEach(({ s, strand, fist, end }) => {
         const h = P.hand(s);
-        const across = (P.held?.[s] ?? h.clone().sub(hook)).clone().normalize();
+        const across = (P.held?.[s] ?? h.clone().sub(hook)).clone().normalize().multiplyScalar(reversed ? -1 : 1);
         const into = h.clone().addScaledVector(across, 0.05);
         const out = h.clone().addScaledVector(across, -0.06);
         span(strand, hook, into);

@@ -533,20 +533,22 @@ export const POSES = {
     camera: { target: [0, 0.85, 0.1], halfHeight: 1.15, azimuth: 70, elevation: 8 },
   },
 
-  // On the knees facing the left tower, the rope from a high pulley held beside the head, which the
-  // hands stay at: the hips hold still and the back rounds, the elbows coming down toward the thighs.
+  // On the knees facing the left tower, the rope from a high pulley coming over the crown, its ends
+  // back past the fists: the hands stay at the back and top of the head, the hips hold still and the
+  // back rounds, the elbows coming down toward the thighs. The owner's, in the studio.
   cable_crunch: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 15, faces: true, attachment: 'rope', at: [-1.105, 0.95] } },
+    kit: { cable_crossover: { position: 15, faces: true, attachment: 'rope', reversed: true, at: [-1.105, 1.25] } },
     body: { kneel: true },
     top: {
-      thigh: 6, trunk: 40, hand: [0.12, 0.8, 0.66],
-      offsets: { spine_01: [8, 0, 0], spine_02: [8, 0, 0], spine_03: [8, 0, 0] },
+      thigh: 6, trunk: 58, hand: [0.125, 0.535, 0.7372],
+      offsets: { spine_01: [12, 0, 0], spine_02: [12, 0, 0], spine_03: [12, 0, 0] },
+      rotate: -11.2573,
     },
-    bottom: { thigh: 2, trunk: 16, hand: [0.09, 1.1, 0.36] },
+    bottom: { thigh: 2, trunk: 16, hand: [0.1, 1.33, 0.27] },
     feet: { stance: 0.13 },
-    grip: { rotate: 90, pole: [0.5, -0.4, 1] },
+    grip: { rotate: 90, via: [0.115, 1.0, 0.67], pole: [1, 0.2, 1] },
     camera: { target: [0, 0.65, 0.15], halfHeight: 1.05, azimuth: 70, elevation: 8 },
   },
 
@@ -582,7 +584,7 @@ export const POSES = {
   cable_pull_through: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_crossover: { position: 1, attachment: 'rope', at: [-1.105, -1.05] } },
+    kit: { cable_crossover: { position: 1, attachment: 'rope', reversed: true, at: [-1.105, -1.05] } },
     body: { look: 0.02 },
     top: { shin: 4, thigh: 8, trunk: 6, upperArm: 6, forearm: 8 },
     bottom: { shin: 12, thigh: 44, trunk: 58, upperArm: -30, forearm: -26 },
@@ -591,16 +593,18 @@ export const POSES = {
     camera: { target: [0, 0.8, -0.2], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
-  // Facing the left tower, the right hand high on its post, the left on the low cable with the upper
-  // arm held behind the trunk: the forearm extends from the chest down and back.
+  // Turned 45° to the left tower, the right hand gripping its post with the arm long, leaning back on it,
+  // the left hand on a single-ended rope from the chest-high pulley, the upper arm held behind the
+  // trunk and out: the forearm extends from the chest down and back. The owner's turn, lean, rope
+  // and hole.
   cable_triceps_kickback: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_crossover: { position: 3, faces: true, hands: [1], at: [-0.84, 0.6] } },
-    top: { shin: 5, thigh: 12, trunk: 12, upperArm: -28, forearm: -26 },
-    bottom: { shin: 5, thigh: 12, trunk: 12, upperArm: -28, forearm: 70 },
-    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.2, stagger: 0.08 },
-    grip: { width: 0.165, rotate: 90, one: 1, rest: [0.235, 1.62, 0.43], pole: [0, 0, -1] },
+    kit: { cable_crossover: { position: 9, faces: true, turn: -45, attachment: 'rope', hands: [1], at: [-0.8105, 0.6427] } },
+    top: { shin: 5, thigh: 6, trunk: -17.5977, upperArm: -28, forearm: -26, armOut: 32 },
+    bottom: { shin: 5, thigh: 6, trunk: -16.875, upperArm: -28, forearm: 70, armOut: 32 },
+    feet: { stance: 0.15, toeOut: 16, kneesOut: 0.2, stagger: 0.12 },
+    grip: { width: 0.2, rotate: 90, one: 1, rest: [-0.2801, 1.55, 0.457], restOn: 0.05, pole: [0, 0, -1], restPole: [1, -1, 0.3] },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.25, azimuth: 65, elevation: 8 },
   },
 
@@ -652,8 +656,8 @@ export const POSES = {
     motion: 'free_arms',
     kit: { bench: { angle: 80 }, cable_crossover: { position: 7, at: [0, -0.75] } },
     body: { hip: [0.547, 0.19], trunk: -10 },
-    top: { hand: [0.1, 1.12, 0.7], rotate: 60 },
-    bottom: { hand: [0.72, 1.1, -0.04], rotate: 120 },
+    top: { hand: [0.1, 1.12, 0.7], rotate: 60, wrist: [0, 2.8308] },
+    bottom: { hand: [0.72, 1.1, -0.04], rotate: -30, wrist: [0, 13.9563] },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
     grip: { arc: true, rotate: 90, pole: [1, -0.8, -0.2] },
     camera: { target: [0, 0.95, 0.2], halfHeight: 1.05, azimuth: 28, elevation: 10 },

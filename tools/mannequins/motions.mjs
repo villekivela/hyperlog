@@ -15,6 +15,8 @@ import { fitted } from './fit.mjs';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
+/** The curve through `a` at 0, `m` at a half and `b` at 1. */
+const curved = (a, m, b, t) => (1 - t) * (1 - 2 * t) * a + 4 * t * (1 - t) * m + t * (2 * t - 1) * b;
 const floor = { point: V(0, 0, 0), normal: V(0, 1, 0) };
 
 /** How far along the palm from the wrist the pose's grip sits: its landmark's (`grip.mjs`). */
@@ -41,6 +43,9 @@ export function stateAt(e, d) {
     const b = e.bottom?.[k] ?? a;
     s[k] = Array.isArray(a) ? a.map((v, i) => lerp(v, b[i], t)) : lerp(a, b, t);
   }
+  // With `grip.via` the hand curves through that point at the middle of the rep, for one that rides
+  // something swinging on an arc, as the head does in a crunch.
+  if (e.grip?.via) s.hand = e.grip.via.map((m, i) => curved(e.top.hand[i], m, e.bottom.hand[i], t));
   // A wrist's bend given at the bottom alone eases from straight at the top, and a grip's turn
   // given at one end alone from the entry's own `grip.rotate` at the other.
   if (e.bottom?.wrist && !e.top?.wrist) s.wrist = e.bottom.wrist.map((v) => v * t);
@@ -105,6 +110,8 @@ export function frameAt(entry, d, L) {
   // Where the bar sits in the hand and the thumb (`grip.mjs`); with `grip.one` the other hand rests.
   P.hold = holdOf(e);
   if (e.grip?.one) P.resting = -e.grip.one;
+  // `grip.restOn` is the radius of what that hand rests on, to close round it.
+  if (e.grip?.restOn) P.restOn = e.grip.restOn;
   // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
   if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;
@@ -285,10 +292,16 @@ function bodyOf(e, s, L) {
  */
 const handsOf = (e, work) => (side) => (e.grip?.one && side !== e.grip.one ? V(...e.grip.rest) : work(side));
 
-/** Elbows toward `grip.pole` [out, up, forward], the out mirrored for each side, or toward `fallback`. */
+/**
+ * Elbows toward `grip.pole` [out, up, forward], the out mirrored for each side, or toward `fallback`.
+ * With `grip.one` the resting arm's goes toward `grip.restPole`, where it gives one.
+ */
 const elbowsTo = (e, fallback) => {
-  const [x, y, z] = e.grip?.pole ?? fallback;
-  return (side) => V(side * x, y, z).normalize();
+  const pole = e.grip?.pole ?? fallback;
+  return (side) => {
+    const [x, y, z] = e.grip?.one && side !== e.grip.one ? e.grip.restPole ?? pole : pole;
+    return V(side * x, y, z).normalize();
+  };
 };
 
 /** The spine's segments for an arch: each of `spine_01`..`spine_03` turned `arch` degrees up from the spine's lean. */

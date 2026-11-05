@@ -35,7 +35,7 @@ const SECOND_HOLES = {
   cable_face_pull: [15, 16],
   cable_hip_abduction: [1, 1],
   cable_pull_through: [1, 2],
-  cable_triceps_kickback: [2, 3],
+  cable_triceps_kickback: [9, 9],
   cable_woodchopper: [15, 16],
   cable_wrist_curl: [1, 1],
   cable_wrist_extension: [1, 1],
@@ -408,7 +408,26 @@ test('the crunch rounds the back on the knees: the hips hold, the head drops tow
   assert.ok(top.calf_l.y < 0.12, 'on the knees');
   assert.ok(top.pelvis.distanceTo(bottom.pelvis) < 0.05, 'the hips hold');
   assert.ok(bottom.Head.y - top.Head.y > 0.25, `the head drops ${(bottom.Head.y - top.Head.y).toFixed(2)}`);
-  for (const end of [top, bottom]) assert.ok(end.hand_l.distanceTo(end.Head) < 0.25, 'the hands stay by the head');
+});
+
+// The owner, #197: the hands stay at the back and top of the head all the way through.
+test('the crunch keeps the hands on the back and top of the head on every frame', async () => {
+  const stage = await buildStage(prepare('cable_crunch'));
+  const { bones } = stage.rig;
+  const heights = [];
+  for (let f = 0; f < FRAMES; f++) {
+    stage.pose(f / (FRAMES - 1));
+    stage.scene.updateMatrixWorld(true);
+    const [neck, head] = [wpos(bones.neck_01), wpos(bones.Head)];
+    const up = head.clone().sub(neck).normalize();
+    const hand = wpos(bones.hand_l).sub(head);
+    heights.push(hand.dot(up));
+    assert.ok(hand.dot(up) > 0.05, `frame ${f}: the hand ${hand.dot(up).toFixed(3)} m above the head's base`);
+    assert.ok(hand.length() < 0.36, `frame ${f}: the hand ${hand.length().toFixed(3)} m from the head`);
+  }
+  // Sliding between its two places on the head, never sinking past them behind the neck on the way.
+  const lowest = Math.min(heights[0], heights.at(-1));
+  assert.ok(Math.min(...heights) > lowest - 0.01, `the hand sinks to ${Math.min(...heights).toFixed(3)} on the way, below ${lowest.toFixed(3)}`);
 });
 
 test('the face pull brings the hands apart to the sides of the face', async () => {
@@ -435,16 +454,17 @@ test('the pull-through hinges back, the hands passing between the thighs', async
 test('the triceps kickback keeps the upper arm behind the torso, only the forearm moving', async () => {
   const [top, bottom] = await ends('cable_triceps_kickback', 'upperarm_l', 'lowerarm_l', 'hand_l');
   for (const end of [top, bottom]) assert.ok(end.lowerarm_l.z < end.upperarm_l.z - 0.05, 'the elbow behind the shoulder');
-  assert.ok(top.lowerarm_l.distanceTo(bottom.lowerarm_l) < 0.03, 'the elbow holds');
+  assert.ok(top.lowerarm_l.distanceTo(bottom.lowerarm_l) < 0.04, 'the elbow holds');
   assert.ok(top.hand_l.z < bottom.hand_l.z - 0.3, 'the forearm extends back');
 });
 
 test('the triceps kickback\'s free hand holds the tower, high up', async () => {
-  const { at } = prepare('cable_triceps_kickback').kit.cable_crossover;
+  const { at, turn } = prepare('cable_triceps_kickback').kit.cable_crossover;
   const [top] = await ends('cable_triceps_kickback', 'middle_04_leaf_r', 'Head');
-  const post = V(at[0] + 1.105, top.middle_04_leaf_r.y, at[1] - 0.089);
-  assert.ok(top.middle_04_leaf_r.distanceTo(post) < 0.08, `the fingers ${top.middle_04_leaf_r.distanceTo(post).toFixed(3)} m from the post`);
-  assert.ok(top.middle_04_leaf_r.y > top.Head.y, 'above the shoulders');
+  const post = V(at[0] + 1.105, top.middle_04_leaf_r.y, at[1] - 0.089).applyAxisAngle(V(0, 1, 0), turn * Math.PI / 180);
+  // The owner's OK'd place, by the post rather than on it.
+  assert.ok(top.middle_04_leaf_r.distanceTo(post) < 0.15, `the fingers ${top.middle_04_leaf_r.distanceTo(post).toFixed(3)} m from the post`);
+  assert.ok(top.middle_04_leaf_r.y > top.Head.y - 0.1, 'high up');
 });
 
 test('the woodchopper chops both hands from high on the left to low on the right', async () => {

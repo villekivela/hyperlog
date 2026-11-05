@@ -1658,7 +1658,7 @@ gallery (Technique videos).
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
       dimensions) are in `tools/mannequins/refs/`.
-  - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
+  - **Automatic checks** (#123) run on every frame of every pose, and catch a forearm in the head or the neck and a cable against them (owner, #197): the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
     the joints stay within range. A pose that fails one doesn't bake.
   - **Movement review** (the owner's idea, 2026-11-04, #206): the checks know nothing of the movement, so a

@@ -286,6 +286,67 @@ test('with no pose a rope hangs from its cable, the ring at the cable\'s end', (
   assert.ok(kit.cables[0].hook().distanceTo(middle) < 0.2, `the cable ends ${kit.cables[0].hook().distanceTo(middle).toFixed(3)} m from the rope`);
 });
 
+test('turned, the whole machine swings about the body, its cables pulling just as they did', () => {
+  const quarter = (p) => V(-p.z, p.y, p.x);
+  const hand = V(0.4, 1.2, 0.5);
+  const pulled = (options, at, along) => {
+    const kit = crossover({ hands: [1], ...options });
+    const P = { hand: () => at.clone(), held: { 1: along, [-1]: along } };
+    kit.place(P, P, P);
+    kit.group.updateMatrixWorld(true);
+    return kit;
+  };
+  const straight = pulled({}, hand, V(1, 0, 0));
+  const turned = pulled({ turn: -90 }, quarter(hand), quarter(V(1, 0, 0)));
+  close(turned.joints.stack_l.value, straight.joints.stack_l.value, 0.002, 'the same cable drawn');
+  close(turned.joints.swivel_l.value, straight.joints.swivel_l.value, 0.002, 'the swivel turned the same');
+  const tower = (kit) => centre(unite(boxes(kit, (o) => o.name.startsWith('cable_crossover_l'))));
+  const [a, b] = [tower(straight), tower(turned)];
+  assert.ok(quarter(a).distanceTo(b) < 0.01, `the tower at ${b.toArray().map((n) => n.toFixed(2))}`);
+  const ends = [-0.5, 0.5].map((y) => turned.cables[0].cable.localToWorld(V(0, y, 0)).y);
+  close(Math.min(...ends), Math.min(...[-0.5, 0.5].map((y) => straight.cables[0].cable.localToWorld(V(0, y, 0)).y)), 0.002, 'the cable as low');
+});
+
+test('a rope for one hand is a single strand, one end stop, the cable at that hand', () => {
+  const kit = crossover({ attachment: 'rope', hands: [1], tower: 1 });
+  const hand = V(0.3, 1.0, 0.1);
+  const P = { hand: (s) => (s === 1 ? hand : V(-0.3, 1.0, 0.1)), held: { 1: V(0, 1, 0), [-1]: V(0, 1, 0) } };
+  kit.place(P, P, P);
+  kit.group.updateMatrixWorld(true);
+  const rope = contact(kit, 'attachment');
+  assert.equal(rope.landmark, 'hands');
+  assert.equal(rope.at.length, 1);
+  assert.ok(rope.at[0].distanceTo(hand) < 0.01, 'at that hand');
+  assert.equal(boxes(kit, (o) => o.geometry.type === 'SphereGeometry').filter((b) => b.getSize(new THREE.Vector3()).x > 0.05).length, 1);
+  assert.ok(kit.cables[0].hook().distanceTo(hand) < 0.25, 'the cable at the hand');
+  assert.ok(kit.joints.stack_l.value > 0.1, 'the cable drawn');
+});
+
+// The strands' order is in every rope clip's bytes, so an OK's fingerprint hangs on it (#197).
+test('a two-hand rope keeps its strands in one order, whichever way the hands are listed', () => {
+  const stops = (hands) => {
+    const kit = crossover({ attachment: 'rope', tower: 1, hands });
+    const P = { hand: (s) => V(s * 0.1, 1.2, 0.3), held: { [-1]: V(0, 1, 0), 1: V(0, 1, 0) } };
+    kit.place(P, P, P);
+    kit.group.updateMatrixWorld(true);
+    return boxes(kit, (o) => o.geometry.type === 'SphereGeometry').filter((b) => b.getSize(new THREE.Vector3()).x > 0.05).map((b) => Math.sign(centre(b).x));
+  };
+  assert.deepEqual(stops([1, -1]), [-1, 1]);
+  assert.deepEqual(stops([-1, 1]), [-1, 1]);
+});
+
+test('a reversed rope runs through the fists the other way, its end stops past the index fingers', () => {
+  const stops = (options) => {
+    const kit = crossover({ attachment: 'rope', tower: 1, ...options });
+    const P = { hand: (s) => V(s * 0.1, 1.2, 0.3), held: { [-1]: V(0, 1, 0), 1: V(0, 1, 0) } };
+    kit.place(P, P, P);
+    kit.group.updateMatrixWorld(true);
+    return boxes(kit, (o) => o.geometry.type === 'SphereGeometry').filter((b) => b.getSize(new THREE.Vector3()).x > 0.05).map((b) => centre(b).y);
+  };
+  for (const y of stops({})) assert.ok(y < 1.15, `past the little finger, at ${y.toFixed(3)}`);
+  for (const y of stops({ reversed: true })) assert.ok(y > 1.25, `past the index finger, at ${y.toFixed(3)}`);
+});
+
 test('a cuff runs along the shin, wherever the hips are', () => {
   const kit = crossover({ attachment: 'cuff', tower: 1, ankle: 1 });
   const ankle = V(0.1, 0.5, -0.5);

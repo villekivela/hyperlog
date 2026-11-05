@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { CHECKS, checkPose } from './checks.mjs';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
+import { stateAt } from './motions.mjs';
 import { POSES } from './poses.mjs';
 import { wpos } from './rig.mjs';
 
@@ -76,4 +77,25 @@ test('joined hands sit either side of one point, off the middle, not mirrored', 
   assert.ok(l.x > 0.2 && r.x > 0.15, `both hands on the left at the top: ${l.x.toFixed(3)}, ${r.x.toFixed(3)}`);
   const c = at(1);
   assert.ok(wpos(c.hand_l).x < -0.1 && wpos(c.hand_r).x < -0.2, `both hands on the right at the bottom: ${wpos(c.hand_l).x.toFixed(3)}, ${wpos(c.hand_r).x.toFixed(3)}`);
+});
+
+test('a hand given a point to pass through curves through it at the middle of the rep', async () => {
+  const entry = {
+    equipment: 'cable', motion: 'free_arms', feet: { stance: 0.16 }, grip: { via: [0.3, 1.2, 0.5], pole: [1, -0.3, -0.5] },
+    top: { shin: 4, thigh: 6, trunk: 4, hand: [0.3, 1.0, 0.3] }, bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.3, 1.0, 0.3] },
+  };
+  assert.deepEqual(stateAt(entry, 0.5).hand, [0.3, 1.2, 0.5]);
+  assert.deepEqual(stateAt(entry, 0).hand, [0.3, 1.0, 0.3]);
+  assert.deepEqual(stateAt(entry, 1).hand, [0.3, 1.0, 0.3]);
+});
+
+test('a resting hand given a bar to grip closes round it, and an open one stays open', async () => {
+  const entry = {
+    equipment: 'cable', motion: 'free_arms', feet: { stance: 0.12 }, grip: { one: 1, rest: [-0.25, 1.2, 0.35], pole: [1, -0.3, -0.5], rotate: 90 },
+    top: { shin: 4, thigh: 6, trunk: 4, hand: [0.3, 1.0, 0.3] }, bottom: { shin: 4, thigh: 6, trunk: 4, hand: [0.3, 1.0, 0.3] },
+  };
+  const reach = (bones) => wpos(bones.middle_04_leaf_r).distanceTo(wpos(bones.hand_r));
+  const relaxed = reach((await staged(entry))(0));
+  const gripped = reach((await staged({ ...entry, grip: { ...entry.grip, restOn: 0.03 } }))(0));
+  assert.ok(gripped < relaxed - 0.02, `fingers ${gripped.toFixed(3)} from the wrist, relaxed ${relaxed.toFixed(3)}`);
 });

@@ -622,9 +622,12 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // The fingers and the thumb close round what the hand holds, joint by joint, as far as they
     // touch it: the part the stage placed under it (`holding(s)`, along its own line, in pieces), or
     // a bar of the radius the hand was seated for, along the line it lies in the hand. A hand that
-    // holds nothing lies open, or relaxed where it rests (`P.resting`).
-    const bar = holdsNothing(P, s) ? null
-      : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
+    // holds nothing lies open, or relaxed where it rests (`P.resting`), unless it rests on a bar of
+    // the radius `P.restOn` gives, a tower's post, which it closes round.
+    const rests = P.restOn && P.resting === s;
+    const bar = rests ? { at: grip, along: P.held[s].clone(), radius: P.restOn }
+      : holdsNothing(P, s) ? null
+        : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
     if (bar) (arms[k] ??= {}).fingers = closeHand(rig, k, bar, hold, near[k]?.at ? near[k].fingers : null);
     else relaxHand(rig, k, hold.sits === 'open');
   }
