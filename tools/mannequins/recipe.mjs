@@ -10,7 +10,7 @@
 //   rest where it raises a stack, or a lever's angle up from level ahead.
 // - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
 //   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `knees` (a thigh's lower end and the shin's top), `shoulders`, `chest`, `back`, `upperArms` or
-//   `forearms`).
+//   `forearms`), and `hand` (`l` or `r`) where one arm's grip holds one hand.
 // - `stacks`: each weight stack and the joint whose travel raises it, by a ratio (metres a
 //   radian, or a metre).
 // - `fit`: its fit rules, the adjustments the machine's placard sets for the mannequin, each
