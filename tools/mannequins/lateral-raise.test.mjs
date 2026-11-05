@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import * as THREE from 'three';
 import { KITS, MACHINES, buildKit } from './kit.mjs';
 import { MODEL, buildStage, parseMannequin } from './stage.mjs';
@@ -11,7 +12,6 @@ import { checkPose } from './checks.mjs';
 import { prepare } from './entries.mjs';
 import { openClip, poseFrame } from './glb.mjs';
 import { CLIPS } from './bake.mjs';
-import path from 'node:path';
 
 const machine = () => {
   const kit = buildKit({ equipment: 'machine', kit: { lateral_raise_machine: {} } }).kits.lateral_raise_machine;
@@ -111,6 +111,15 @@ const boxes = (kit) => {
   kit.group.traverse((o) => { if (o.isMesh) out.push({ mesh: o, box: new THREE.Box3().setFromObject(o, true) }); });
   return out;
 };
+/** The boxes of arm `k`'s stand-ins for its bent tube: the strut and the beam. */
+const coresOf = (kit, k) => {
+  const cores = [];
+  kit.group.updateMatrixWorld(true);
+  kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.userData.proxy) cores.push(new THREE.Box3().setFromObject(o, true)); }));
+  return cores;
+};
+/** Everything of the pulleys' tone, the block's plates and wheels. */
+const blockParts = (kit) => boxes(kit).filter(({ mesh }) => mesh.material?.name === 'pulley' && !mesh.userData.solid);
 /** Arm `k`'s wedge, as it stands now. */
 const wedgeOf = (kit, k) => {
   let box = null;
@@ -298,7 +307,7 @@ test('the beam runs the pad\'s whole length, tight against it', () => {
     const pad = contact(kit, `pad_${k}`).at[0];
     const back = Math.min(...arm.filter(({ box: b }) => b.max.z - b.min.z > 0.3).map(({ box: b }) => b.min.z));
     assert.ok(back < pad.z - 0.1, `${k}'s beam back to z ${back.toFixed(2)}, the pad's middle at ${pad.z.toFixed(2)}`);
-    const beam = arm.find(({ box: b }) => b.max.z - b.min.z > 0.3).box;
+    const beam = coresOf(kit, k).reduce((a, b) => (b.max.z - b.min.z > a.max.z - a.min.z ? b : a));
     assert.ok(beam.distanceToPoint(pad) < 0.1, `${k}'s beam ${beam.distanceToPoint(pad).toFixed(2)} m from the pad's middle: tight against it`);
   }
 });
@@ -313,6 +322,7 @@ test('the whole lever is solid to the body: strut, beam, bracket and wedge', () 
     assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y > origin.y), `${k}'s wedge`);
     assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y <= origin.y && b.max.x - b.min.x < 0.1 && b.max.y - b.min.y < 0.1), `${k}'s beam`);
     assert.ok(solid.some((b) => b.max.y - b.min.y > 0.2 && b.max.x - b.min.x > 0.15), `${k}'s strut`);
+    assert.ok(kit.bodies[`arm_${k}`].some((n) => n.name === `lateral_raise_bracket_${k}` && n.userData.solid), `${k}'s bracket`);
   }
 });
 
@@ -320,7 +330,7 @@ test('the whole lever is solid to the body: strut, beam, bracket and wedge', () 
 // to the levers and on to the stack.
 test('a pulley block stands between the post and the tower, on the centre line, clear of the legs', () => {
   const kit = machine();
-  const wheels = boxes(kit).filter(({ mesh }) => mesh.material?.name === 'pulley' && !mesh.userData.solid);
+  const wheels = blockParts(kit);
   assert.ok(wheels.length >= 2, 'its pulleys');
   for (const { box: b } of wheels) {
     const c = b.getCenter(new THREE.Vector3());
@@ -329,8 +339,8 @@ test('a pulley block stands between the post and the tower, on the centre line, 
   }
 });
 
-/** The pulley block as it stands now: everything of the pulleys' tone. */
-const blockOf = (kit) => boxes(kit).filter(({ mesh }) => mesh.material?.name === 'pulley' && !mesh.userData.solid).reduce((all, { box: b }) => all.union(b), new THREE.Box3());
+/** The pulley block as it stands now. */
+const blockOf = (kit) => blockParts(kit).reduce((all, { box: b }) => all.union(b), new THREE.Box3());
 
 test('the pulley block is a broad bowtie out in the gap, from the seat\'s height down, its cables straight up and down', () => {
   const kit = machine();
@@ -340,7 +350,7 @@ test('the pulley block is a broad bowtie out in the gap, from the seat\'s height
   const middle = block.getCenter(new THREE.Vector3()).z;
   assert.ok(middle > 0.38 && middle < 0.6, `out in the gap, at z ${middle.toFixed(2)}`);
   const cables = boxes(kit).filter(({ mesh, box: b }) => mesh.material?.name === 'metal' && b.max.x - b.min.x < 0.02 && b.max.z - b.min.z < 0.02 && Math.abs(b.getCenter(new THREE.Vector3()).z - middle) < 0.02);
-  assert.ok(cables.some(({ box: b }) => b.max.y > 1), 'a cable straight up to the levers');
+  assert.ok(cables.some(({ box: b }) => b.max.y > 0.95), 'a cable straight up toward the levers');
   assert.ok(cables.some(({ box: b }) => b.min.y < 0.1), 'and one straight down to the base');
   const leaning = boxes(kit).filter(({ mesh, box: b }) => mesh.material?.name === 'metal' && b.max.z - b.min.z > 0.3 && b.max.y - b.min.y > 0.1 && b.max.y < 0.9);
   assert.deepEqual(leaning.map(({ mesh }) => mesh.name), [], 'no cable across the open air');
@@ -349,10 +359,19 @@ test('the pulley block is a broad bowtie out in the gap, from the seat\'s height
 test('the block rises with the rep, its cables following it', async () => {
   const { pose, kit } = await buildStage(prepare('machine_lateral_raise'));
   const blockY = () => blockOf(kit.kits.lateral_raise_machine).getCenter(new THREE.Vector3()).y;
+  // Each cable's low end, by its box: the one to the base's top end, the ones to the levers' bottom.
+  const ends = () => {
+    const wires = boxes(kit.kits.lateral_raise_machine).filter(({ mesh, box: b }) => mesh.material?.name === 'metal' && b.max.x - b.min.x < 0.02 && b.max.z - b.min.z < 0.02 && b.max.y - b.min.y > 0.1 && b.min.z > 0.4 && b.max.z < 0.5);
+    return { up: wires.find(({ box: b }) => b.max.y > 0.9).box.min.y, down: wires.find(({ box: b }) => b.min.y < 0.1).box.max.y };
+  };
   pose(0);
   const low = blockY();
+  const start = ends();
   pose(1);
-  close(blockY() - low, 0.12, 0.03, 'its rise, half the stack\'s');
+  const rise = blockY() - low;
+  close(rise, 0.12, 0.03, 'its rise, half the stack\'s');
+  close(ends().up - start.up, rise, 0.005, 'the cable up from it follows');
+  close(ends().down - start.down, rise, 0.005, 'and the cable down from it');
 });
 
 // The hero photo and the demo at 0:08: the wedge sits close over the pivot, and the lever rakes
@@ -362,23 +381,19 @@ test('the lever rakes toward the tower as it comes down, its wedge close over th
   for (const [k] of SIDES) {
     const { origin } = kit.joints[`arm_${k}`];
     // Measured on the strut itself: the lever's own box takes in the wedge it carries.
-    const cores = [];
-    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.userData.proxy) cores.push(new THREE.Box3().setFromObject(o, true)); }));
-    const reach = Math.max(...cores.map((b) => b.max.z));
+    const reach = Math.max(...coresOf(kit, k).map((b) => b.max.z));
     assert.ok(reach > origin.z + 0.14 && reach < origin.z + 0.22, `${k}'s lever reaches ${(reach - origin.z).toFixed(2)} m toward the tower from its pivot`);
     assert.ok(wedgeOf(kit, k).min.y < origin.y + 0.1, `${k}'s wedge starts ${(wedgeOf(kit, k).min.y - origin.y).toFixed(2)} m over the pivot`);
   }
 });
 
-test('the pads are long, and little bare beam runs ahead of them', () => {
+test('the pads are long, and the bare beam ahead of them is shorter than they are', () => {
   const kit = machine();
   for (const [k] of SIDES) {
     const pad = boxes(kit).filter(({ mesh }) => kit.bodies[`arm_${k}`].includes(mesh)).find(({ box: b }) => b.distanceToPoint(contact(kit, `pad_${k}`).at[0]) < 1e-3 && b.max.z - b.min.z < 0.5 && b.max.y - b.min.y < 0.2).box;
-    const cores = [];
-    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.userData.proxy) cores.push(new THREE.Box3().setFromObject(o, true)); }));
     const length = pad.max.z - pad.min.z;
     assert.ok(length > 0.34, `${k}'s pad ${length.toFixed(2)} m long`);
-    const bare = Math.max(...cores.map((b) => b.max.z)) - pad.max.z;
+    const bare = Math.max(...coresOf(kit, k).map((b) => b.max.z)) - pad.max.z;
     assert.ok(bare < 0.8 * length, `${(bare / length).toFixed(2)} of a pad's length of bare beam ahead of it`);
   }
 });
@@ -394,6 +409,34 @@ test('the tower\'s outer top corner is swept round, and its top stands level wit
   // The arch's own box takes in the corner it sweeps round.
   const filled = boxes(kit).filter(({ mesh, box: b }) => mesh.name !== 'lateral_raise_arch' && b.containsPoint(corner));
   assert.deepEqual(filled.map(({ mesh }) => mesh.name), [], 'nothing square in the corner');
+  const arch = kit.group.getObjectByName('lateral_raise_arch');
+  const skin = arch.geometry.attributes.position;
+  const v = new THREE.Vector3();
+  let nearest = Infinity;
+  for (let i = 0; i < skin.count; i++) nearest = Math.min(nearest, v.fromBufferAttribute(skin, i).applyMatrix4(arch.matrixWorld).distanceTo(corner));
+  assert.ok(nearest > 0.05, `the arch's skin ${(nearest * 100).toFixed(1)} cm from the square corner`);
+});
+
+// The ref: a valley between the wedges. They swing inward as the arms rise, so it has to hold all the way.
+test('the wedges never meet, and clear the plate\'s stub, through the whole sweep', () => {
+  const kit = machine();
+  const stub = boxes(kit).find(({ box: b }) => b.max.x - b.min.x < 0.1 && b.min.y > 0.9 && b.max.y < 1.15 && b.max.z - b.min.z > 0.2).box;
+  for (let v = 10; v <= 90; v += 10) {
+    kit.scrub('arm_l', rad(v));
+    kit.scrub('arm_r', rad(v));
+    const [l, r] = [wedgeOf(kit, 'l'), wedgeOf(kit, 'r')];
+    assert.ok(l.min.x >= r.max.x - 0.002, `the wedges overlap by ${((r.max.x - l.min.x) * 100).toFixed(1)} cm at ${v}°`);
+    assert.ok(!l.intersectsBox(stub) && !r.intersectsBox(stub), `a wedge meets the plate's stub at ${v}°`);
+  }
+});
+
+test('the cables run clear of the beam', () => {
+  const kit = machine();
+  const beam = boxes(kit).find(({ box: b }) => b.min.y > 0.7 && b.max.y < 1 && b.max.z - b.min.z > 0.4).box;
+  const up = boxes(kit).filter(({ mesh, box: b }) => mesh.material?.name === 'metal' && b.max.x - b.min.x < 0.02 && b.max.z - b.min.z < 0.02 && b.max.y > 0.9 && b.min.z > 0.4 && b.max.z < 0.5);
+  assert.ok(up.length, 'a cable up past the beam');
+  for (const { box: b } of up) assert.ok(Math.abs(b.getCenter(new THREE.Vector3()).x) > 0.04, `a cable at x ${b.getCenter(new THREE.Vector3()).x.toFixed(3)} runs through the beam`);
+  assert.ok(beam, 'the beam');
 });
 
 // #241: a body fits it. The checks hold the hands on the grips, the upper arms on the pads, the chest
@@ -449,23 +492,34 @@ test('machine_lateral_raise: the hips sit on the seat through the rep, neither a
 
 // The checks test the skin's vertices against each part, and a thin rod can run through a limb
 // between them, so the bracket is held clear of the arm's bones.
-test('machine_lateral_raise: each grip\'s bracket stays clear of the arm through the rep', async () => {
+test('machine_lateral_raise: each grip\'s bracket and stem stay clear of the arm through the rep', async () => {
   const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
   const brackets = {};
-  kit.group.traverse((o) => { const m = /^lateral_raise_bracket_(.)/.exec(o.name); if (m) brackets[m[1]] = o; });
+  const stems = {};
+  kit.group.traverse((o) => {
+    const m = /^lateral_raise_(bracket|stem)_(.)/.exec(o.name);
+    if (m) (m[1] === 'bracket' ? brackets : stems)[m[2]] = o;
+  });
   for (let d = 0; d <= 1; d += 0.1) {
     pose(d);
     for (const [k] of SIDES) {
       const [a, b] = [-0.5, 0.5].map((y) => brackets[k].localToWorld(new THREE.Vector3(0, y, 0)));
-      // The end at the grip is where the hand is meant to be, so the hand's own length is left out.
       const along = new THREE.Line3(a, b);
       const bones = ['upperarm', 'lowerarm', 'hand'].map((n) => wpos(rig.bones[`${n}_${k}`]));
       for (const limb of [new THREE.Line3(bones[0], bones[1]), new THREE.Line3(bones[1], bones[2])]) {
-        for (let t = 0; t <= 0.8; t += 0.1) {
+        for (let t = 0; t <= 1; t += 0.1) {
           const p = along.at(t, new THREE.Vector3());
           const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
           assert.ok(p.distanceTo(q) > 0.1, `${k}'s bracket ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
         }
+        // The stem's foot is in the fist, on the grip, so only its upper length is held clear.
+        const [top, foot] = [0.5, -0.5].map((y) => stems[k].localToWorld(new THREE.Vector3(0, y, 0)));
+        const stem = new THREE.Line3(top, foot);
+        const hand = wpos(rig.bones[`hand_${k}`]);
+        const upper = hand.distanceTo(top) > hand.distanceTo(foot) ? 0 : 1;
+        const p = stem.at(upper ? 0.9 : 0.1, new THREE.Vector3());
+        const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
+        assert.ok(p.distanceTo(q) > 0.05, `${k}'s stem ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
       }
     }
   }

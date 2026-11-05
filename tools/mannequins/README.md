@@ -395,21 +395,22 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
 - `lateral_raise_machine` (#212, #241, seated only; `machine_lateral_raise` is posed, and
-  `standing_machine_lateral_raise` stays unposed, as its video shows another, standing machine that
-  has no kit) sets its pivots on the mannequin's shoulders, 1.15 m up, whatever the pose, and the seat
-  moves to them (`seat`, solved to 0.56 m for this mannequin, in its 0.44 to 0.62 m range). One post
-  leans forward from the floor between the legs and carries the seat, the chest pad and the bar the pivots
-  turn on, with a plate and drum on a stub ahead of it. The tower stands at the far end of a spine 1.07 m long, past the arms' reach,
-  its broad face across the machine and to the lifter's right, with a beam from the post. Each arm is a
-  revolute lever, `arm_l` and `arm_r`, from 10° out of hanging to horizontal: a heavy strut flaring out
-  to a knee, a beam back along a pad on the outside of the upper arm, and a long wedge over the pivot,
-  running fore and aft between the bar and the plate, the pair a tight V, the strut carrying on into it. The grip pivots on a bracket, in line with the upper arm at the
-  elbow's distance, and holds one line through the rep; the line stays under 0.9 of vertical, past
-  which `straightArm` measures the hand's roll in another basis. The linkage gives `lever_handles` the
-  way the elbow goes (`elbow`). Each arm's contacts name their `hand`, and `seatTop` holds the thighs
-  to the seat.
-  The stack hangs on `arm_l`. A broad block of two pulleys stands in the gap between the post and the
-  tower, its cables straight up and down, and rises at half the stack's rate.
+  `standing_machine_lateral_raise` stays unposed, as its video shows another, standing machine that has
+  no kit) sets its pivots on the mannequin's shoulders, 1.15 m up, whatever the pose, and the seat moves
+  to them (`seat`, solved to 0.56 m for this mannequin, in its 0.44 to 0.62 m range). One post leans
+  forward from the floor between the legs and carries the seat, the chest pad and the bar the pivots
+  turn on, with a plate and drum on a stub ahead of it. The tower stands at the far end of a spine 1.07
+  m long, past the arms' reach, its broad face across the machine and to the lifter's right, an arch
+  with its outer corner swept round, with a beam from the post. Each arm is a revolute lever, `arm_l`
+  and `arm_r`, from 10° out of hanging to horizontal: a heavy strut flaring out to a knee, raking toward
+  the tower, a beam back along a pad on the outside of the upper arm, and a long wedge over the pivot,
+  running fore and aft between the bar and the plate, the pair a tight V, the strut carrying on into it.
+  The grip pivots on a stem off a bracket from the beam, in line with the upper arm at the elbow's
+  distance, and holds one line through the rep; the line stays under 0.9 of vertical, past which
+  `straightArm` measures the hand's roll in another basis. The linkage gives `lever_handles` the way the
+  elbow goes (`elbow`). Each arm's contacts name their `hand`, and `seatTop` holds the thighs to the
+  seat. The stack hangs on `arm_l`. A broad block of two pulleys stands in the gap between the post and
+  the tower, its cables straight up and down, and rises at half the stack's rate.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
   machine-first): a pad inclined 40° on a beam held up by two posts,
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one
