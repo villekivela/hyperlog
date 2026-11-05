@@ -1,9 +1,10 @@
 // A plate-loaded hip thrust machine (refs/hip_thrust_machine/ref.md): the body sits on a low seat
 // with its upper back against two round pads and a waist belt over the hips, the feet flat on a
 // separate platform ahead, tilted 15° toes up, and drives the hips up until the thighs are level.
-// The pads, the belt, two upright handles and two plate horns all ride on one carriage: an arm each
-// side, bent twice, turning on an axle through the tops of two rear posts, behind the lifter.
-// Two more horns on the rear posts store plates.
+// The two back pads stand fixed on the frame; the belt, two upright handles and two plate horns ride
+// on one carriage: an arm each side, bent, turning on an axle through the tops of two rear posts,
+// behind the lifter. The hips push the belt up while the back stays on the pads, so the body turns
+// over them. Two more horns on the rear posts store plates.
 //
 // Read from the photos (build/hip-thrust-refs/notes.md, scaled by the 450 mm plate), from the hip
 // joint at z = 0 with the lifter facing +z: the seat's front edge 140 mm ahead, the platform's back
@@ -11,18 +12,18 @@
 // 200 mm behind, the rear posts and the axle 820 mm behind.
 //
 // The carriage's joint is its angle up from level ahead, as a lever's: negative at the bottom of the
-// rep, where it rests on a stop, with the hip joint 650 mm up and the belt over it, rising to 930
-// mm at the top. The rest of the machine stands where the ref puts it, whatever the pose: it has no
+// rep, where it rests on a stop, with the hip joint 600 mm up (the glutes on the seat) and the belt
+// over it, rising to 930 mm at the top. The rest of the machine stands where the ref puts it, whatever the pose: it has no
 // seat, pad or platform adjustment.
 //
 // Option `strap`: `short` or `long`, the loop of the dual-loop waist strap the belt hangs on. The
 // long one lifts the belt 40 mm higher over the hips, a higher lift-off point.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { basePlate, floorRail, mitered, pad, padGeometry, part, pivotJoint, plateGeometry, rod, seatOn, span, tube } from '../parts.mjs';
+import { basePlate, floorRail, hub, mitered, pad, padGeometry, part, pivotJoint, plateGeometry, rod, seatOn, span, tube } from '../parts.mjs';
 import { V, X, forwardOf, rad } from '../rig.mjs';
 
-// The pivot, 880 mm up and 820 mm behind the hips; the hip joint 650 mm up at the bottom of the rep
+// The pivot, 880 mm up and 820 mm behind the hips; the hip joint 600 mm up at the bottom of the rep
 // (the belt over it) and 930 mm at the top, thighs level.
 const PIVOT = V(0, 0.88, -0.82);
 const HIPS = { z: 0, bottom: 0.6, top: 0.93 };
@@ -31,35 +32,35 @@ const REACH = Math.hypot(HIPS.z - PIVOT.z, HIPS.bottom - PIVOT.y);
 const angleFor = (y) => Math.asin((y - PIVOT.y) / REACH);
 const LIMITS = [angleFor(HIPS.bottom), angleFor(HIPS.top)];
 const LONG = 0.04;
-// The seat top 470 mm up, its front 140 mm ahead of the hips; the platform's back edge 220 mm ahead of that.
+// The seat top 500 mm up, its front 140 mm ahead of the hips; the platform's back edge 220 mm ahead of that.
 const SEAT = { top: 0.5, front: 0.14, d: 0.38, w: 0.4 };
-// The platform: 450 mm up in the middle, 400 deep and 600 wide, tilted 15° toes up, its face turned back to the seat.
-const PLATFORM = { top: 0.45, depth: 0.4, width: 0.6, thick: 0.04, tilt: rad(15), z: SEAT.front + 0.22 + 0.2 * Math.cos(rad(15)) };
+// The platform: 450 mm up in the middle, 400 deep and 800 wide, tilted 15° toes up, its face turned back to the seat.
+const PLATFORM = { top: 0.45, depth: 0.4, width: 0.8, thick: 0.04, tilt: rad(15), z: SEAT.front + 0.22 + 0.2 * Math.cos(rad(15)) };
 const FACE = V(0, Math.cos(PLATFORM.tilt), -Math.sin(PLATFORM.tilt));
 // The rear posts, leaning forward from their feet to the axle.
-const POST = { x: 0.42, foot: -0.91, w: 0.06, top: 0.96 };
+const POST = { x: 0.61, foot: -0.91, w: 0.06, top: 0.96 };
 const postZ = (y) => POST.foot + (PIVOT.z - 0.012 - POST.foot) * ((y - 0.07) / (PIVOT.y - 0.07));
 // The footprint: the rear rail's half-width (1.49 m across with its caps) and the front rail's z (1.73 m long).
 const WIDTH = 0.729;
 const FRONT = 0.74;
-// The carriage's arm each side at 330 mm: from the axle to the pad's centre, down to the horn, and
-// on to the belt's anchor beside the hips. The pad rolls are 260 across 430 behind the hips; each
-// handle stands 340 mm out and 200 behind; each horn carries its plate 550 mm out.
-const ARM = { x: 0.33, w: 0.06 };
-const PAD = V(0, 0.7, -0.43);
-const HORN = { y: 0.5, z: -0.18, to: 0.7, plateX: 0.55 };
+// The carriage's arm each side at 530 mm: from the axle down to the horn and on to the belt's anchor
+// beside the hips. The pad rolls are 260 across, fixed 430 behind the hips; each handle stands 320 mm
+// out and 200 behind, gripped low on it; each horn carries its plate 690 mm out.
+const ARM = { x: 0.53, w: 0.06 };
+const PAD = V(0, 0.7, -0.48);
+const HORN = { y: 0.5, z: -0.18, to: 0.745, plateX: 0.69 };
 const ANCHOR = V(0, 0.6, 0);
-const PAD_ROLL = { radius: 0.13, from: 0.025, to: 0.285 };
-const HANDLE = { x: 0.34, z: -0.2, top: 1.02, radius: 0.016, grip: 0.86 };
-const STOP = { z: -0.6 };
+const PAD_ROLL = { radius: 0.13, from: 0.03, to: 0.18 };
+const HANDLE = { x: 0.32, z: -0.12, top: 1.02, radius: 0.016, grip: 0.74 };
 // How far the shoulder blades stand out of the back past the spine's own depth, where they meet the pads.
-const SCAPULA = 0.065;
-// The strap over the hips: a padded roll 80 mm across, laid on the body (a belt hangs from its arms and
-// lies where the hips are): this far up the belly from the hip joint and up the spine, from the pose.
-const STRAP = { radius: 0.04, f: 0.11, u: 0.16 };
+const SCAPULA = 0.08;
+// The belt over the hips: a padded band 480 mm across, 100 deep and 70 thick, laid on the body (a belt hangs from
+// the arms and lies where the hips are): this far up the belly from the hip joint and up the spine,
+// from the pose.
+const STRAP = { width: 0.48, thick: 0.06, deep: 0.1, f: 0.14, u: 0.14 };
+// The spine's lean at the bottom, as the belt hangs at rest: 43° up from level, back.
+const REST_SPINE = V(0, Math.sin(rad(43)), -Math.cos(rad(43)));
 const SIDES = [-1, 1];
-/** The point on the arm's line from the axle to the pad's centre at `z`. */
-const armY = (z) => PIVOT.y + ((PAD.y - PIVOT.y) * (z - PIVOT.z)) / (PAD.z - PIVOT.z);
 /** Names what a part is, for the tests and the studio. */
 const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
 /** A carriage point turned to where it stands with the carriage `value` up from level. */
@@ -80,8 +81,7 @@ export default recipe({
   rep: { joint: 'carriage', from: 'max' },
   contacts: [
     { body: 'carriage', point: 'handles', landmark: 'hands' },
-    { body: 'carriage', point: 'pad', landmark: 'back' },
-    { body: 'carriage', point: 'belt', landmark: 'hips' },
+    { body: 'frame', point: 'pad', landmark: 'back' },
     { body: 'frame', point: 'platform', landmark: 'feet' },
   ],
   fit: [{
@@ -94,7 +94,7 @@ export default recipe({
       const hip = turned(V(0, HIPS.bottom, HIPS.z), value);
       // The spine runs from the hips to lie along the pad's round top, its line a pad's radius, the
       // back's own depth and the shoulder blades' above the pad's centre.
-      const toPad = turned(PAD, value).sub(hip);
+      const toPad = PAD.clone().sub(hip);
       const lean = Math.atan2(toPad.y, toPad.z) - Math.asin((PAD_ROLL.radius + L.trunkBack + SCAPULA) / toPad.length());
       const across = V(0, 1, 0).applyAxisAngle(X, -(value - LIMITS[0]));
       return {
@@ -118,14 +118,15 @@ export default recipe({
       tube(0.07, V(0, 0.035, POST.foot - 0.01), V(0, 0.035, FRONT), M.frame),
       ...floorRail(V(-0.3, 0.035, FRONT), V(0.3, 0.035, FRONT), M),
     ];
-    const axle = pivotJoint(M, PIVOT, X);
     const posts = SIDES.flatMap((s) => [
       tube(POST.w, V(s * POST.x, 0.07, postZ(0.07)), V(s * POST.x, POST.top, postZ(POST.top)), M.frame),
       // A plate horn out of each post's outer face, for storing plates.
       role(rod(0.025, V(s * (POST.x + POST.w / 2), 0.55, postZ(0.55)), V(s * WIDTH, 0.55, postZ(0.55)), M.metal), 'horn'),
     ]);
-    const crossbar = tube(0.05, V(-POST.x, POST.top - 0.02, postZ(POST.top)), V(POST.x, POST.top - 0.02, postZ(POST.top)), M.frame);
-    const through = rod(0.02, PIVOT.clone().setX(-POST.x - 0.03), PIVOT.clone().setX(POST.x + 0.03), M.metal);
+    // The posts are tied low, below the lifter's head and shoulders, and the axle is a stub each side
+    // through the arm's housing into the post, not a rod across the machine behind the head.
+    const crossbar = tube(0.05, V(-POST.x, 0.3, postZ(0.3)), V(POST.x, 0.3, postZ(0.3)), M.frame);
+    const axles = SIDES.map((s) => pivotJoint(M, PIVOT.clone().setX(s * ARM.x), X));
 
     // The seat on its post, and the platform on two legs a side, standing apart from the machine.
     const [cushion, ...seat] = seatOn(SEAT.top, SEAT.front - SEAT.d / 2, M, { w: SEAT.w, d: SEAT.d });
@@ -135,64 +136,72 @@ export default recipe({
     platform.quaternion.setFromAxisAngle(X, -PLATFORM.tilt);
     const legAt = (z) => PLATFORM.top - (PLATFORM.z - z) * Math.tan(PLATFORM.tilt) - PLATFORM.thick - 0.01;
     const legZs = [PLATFORM.z - 0.15, PLATFORM.z + 0.15];
-    const legs = SIDES.flatMap((s) => legZs.map((z) => tube(0.06, V(s * 0.25, 0.07, z), V(s * 0.25, legAt(z), z), M.frame)));
-    const legRails = legZs.map((z) => tube(0.05, V(-0.25, 0.035, z), V(0.25, 0.035, z), M.frame));
-    const feet = SIDES.flatMap((s) => legZs.map((z) => basePlate(s * 0.25, z, M)));
-    // The carriage's stop, a post on the beam with a rubber bumper under its crossbar.
-    const stopTop = armY(STOP.z) - 0.025 - 0.03;
+    const legs = SIDES.flatMap((s) => legZs.map((z) => tube(0.06, V(s * 0.35, 0.07, z), V(s * 0.35, legAt(z), z), M.frame)));
+    const legRails = legZs.map((z) => tube(0.05, V(-0.35, 0.035, z), V(0.35, 0.035, z), M.frame));
+    const feet = SIDES.flatMap((s) => legZs.map((z) => basePlate(s * 0.35, z, M)));
+    // The two back pads, fixed: round cushions across the machine with a gap between for the spine, on
+    // a crossbar held up by a post from the beam, between them.
+    const pads = SIDES.map((s) => role(rod(PAD_ROLL.radius, V(s * PAD_ROLL.from, PAD.y, PAD.z), V(s * PAD_ROLL.to, PAD.y, PAD.z), M.vinyl, { solid: true }), 'backPad'));
+    const padFrame = [
+      tube(0.06, V(0, 0.07, PAD.z), V(0, PAD.y - 0.025, PAD.z), M.frame),
+      // Through the pad rolls' middles, inside them: not a solid for the contact to land on.
+      tube(0.05, V(-PAD_ROLL.to, PAD.y, PAD.z), V(PAD_ROLL.to, PAD.y, PAD.z), M.frame, { solid: false }),
+    ];
+    // The carriage's stops: a rail across the floor and a post up from it under each arm at the horn,
+    // each with a rubber bumper the arm rests on.
+    const stopTop = HORN.y - ARM.w / 2 - 0.03;
     const stop = [
-      tube(0.06, V(0, 0.07, STOP.z), V(0, stopTop, STOP.z), M.frame),
-      pad(0.1, 0.03, 0.1, M.vinyl, V(0, stopTop + 0.015, STOP.z), { soft: 0.008 }),
+      ...floorRail(V(-(ARM.x + 0.05), 0.035, HORN.z), V(ARM.x + 0.05, 0.035, HORN.z), M),
+      ...SIDES.flatMap((s) => [
+        tube(0.06, V(s * ARM.x, 0.07, HORN.z), V(s * ARM.x, stopTop, HORN.z), M.frame),
+        pad(0.1, 0.03, 0.1, M.vinyl, V(s * ARM.x, stopTop + 0.015, HORN.z), { soft: 0.008 }),
+      ]),
     ];
 
-    // The carriage: an arm each side from the axle through the pad's centre and the horn to the
-    // belt's anchor (one length, mitred, not a solid: the checks take a solid for its box, and a bent
-    // length's box is far wider than it), a crossbar at the stop and one through the pad rolls, the
-    // belt strap, two handles, two loaded horns.
+    // The carriage: an arm each side from the axle through the horn to the belt's anchor (one length,
+    // mitred, not a solid: the checks take a solid for its box, and a bent length's box is far wider
+    // than it), the belt, two handles, two loaded horns.
     const carriage = new THREE.Group();
     const onArm = [];
-    // At rest, hung from its anchors over the hips: the roll's middle on the belly, `STRAP.f` up it.
-    const rest = V(0, HIPS.bottom + lift, HIPS.z).addScaledVector(V(0, 0.906, 0.423), STRAP.f).addScaledVector(V(0, 0.423, -0.906), STRAP.u);
-    const strapRoll = rod(STRAP.radius, local(rest).setX(-(ARM.x - 0.04)), local(rest).setX(ARM.x - 0.04), M.vinyl, { solid: true });
-    // A side strap from each anchor on its arm to the roll's end, laid again each frame.
+    // At rest, hung from its anchors over the hips: the band's middle on the belly, `STRAP.f` out of it.
+    const onBody = (hip, u, long) => hip.clone().addScaledVector(forwardOf(u), STRAP.f + long).addScaledVector(u, STRAP.u);
+    const rest = onBody(V(0, HIPS.bottom, HIPS.z), REST_SPINE, lift);
+    const band = pad(STRAP.width, STRAP.thick, STRAP.deep, M.vinyl, local(rest), { soft: 0.008, solid: false });
+    // A side strap from each anchor on its arm to the band's end, laid again each frame.
     const straps = SIDES.map(() => rod(0.012, V(0, 0, 0), V(0, 1, 0), M.metal));
-    const layStraps = (middle) => SIDES.forEach((s, i) => {
-      strapRoll.position.copy(middle);
-      span(straps[i], local(V(s * ARM.x, ANCHOR.y, ANCHOR.z)), middle.clone().setX(s * (ARM.x - 0.04)));
-    });
-    layStraps(local(rest));
+    /** Lays the band at `middle` (the carriage's frame) lying along the spine `u`, and its straps. */
+    const layBelt = (middle, u) => {
+      const f = forwardOf(u);
+      band.position.copy(middle);
+      band.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, f, u.clone().negate())).premultiply(carriage.quaternion.clone().invert());
+      SIDES.forEach((s, i) => span(straps[i], local(V(s * ARM.x, ANCHOR.y, ANCHOR.z)), middle.clone().add(V(s * (STRAP.width / 2 - 0.02), 0, 0))));
+    };
     for (const s of SIDES) {
       const at = (p) => p.clone().setX(s * ARM.x);
       onArm.push(
-        mitered([at(PIVOT), at(PAD), at(V(0, HORN.y, HORN.z)), at(ANCHOR)].map(local), ARM.w, M.frame, { solid: false }),
+        mitered([at(PIVOT), at(V(0, HORN.y, HORN.z)), at(ANCHOR)].map(local), ARM.w, M.frame, { solid: false }),
         role(rod(0.025, local(at(V(0, HORN.y, HORN.z))), local(V(s * HORN.to, HORN.y, HORN.z)), M.metal), 'horn'),
         rod(HANDLE.radius, local(V(s * HANDLE.x, HANDLE.grip - 0.2, HANDLE.z)), local(V(s * HANDLE.x, HANDLE.top - 0.002, HANDLE.z)), M.vinyl, { held: true }),
         tube(0.05, local(V(s * HANDLE.x, HORN.y + 0.03, HANDLE.z)), local(V(s * HANDLE.x, HANDLE.grip - 0.2, HANDLE.z)), M.frame),
+        // The handle's stand, out of the arm: across to the handle's foot.
+        tube(0.05, local(V(s * ARM.x, HORN.y + 0.03, HANDLE.z)), local(V(s * HANDLE.x, HORN.y + 0.03, HANDLE.z)), M.frame),
       );
       const plate = part(plateGeometry(0.225, 0.06), M.plate, { solid: true });
       plate.position.copy(local(V(s * HORN.plateX, HORN.y, HORN.z)));
       onArm.push(plate);
-      // The two pads, each a round cushion across the machine, a gap between for the spine.
-      onArm.push(role(rod(PAD_ROLL.radius, local(V(s * PAD_ROLL.from, PAD.y, PAD.z)), local(V(s * PAD_ROLL.to, PAD.y, PAD.z)), M.vinyl, { solid: true }), 'backPad'));
     }
     onArm.push(
-      // Through the pad rolls' middles, inside them: not a solid for the contact to land on.
-      tube(0.05, local(V(-ARM.x, PAD.y, PAD.z)), local(V(ARM.x, PAD.y, PAD.z)), M.frame, { solid: false }),
-      tube(0.05, local(V(-ARM.x, armY(STOP.z), STOP.z)), local(V(ARM.x, armY(STOP.z), STOP.z)), M.frame),
-      role(strapRoll, 'strap'), ...straps,
+      role(band, 'strap'), ...straps,
     );
-    // The bearing housing turns with the carriage, built in its frame.
-    carriage.add(pivotJoint(M, local(PIVOT), X).housing, ...onArm);
+    // The bearing housings turn with the carriage, built in its frame.
+    carriage.add(...SIDES.flatMap((s) => [pivotJoint(M, local(PIVOT).setX(s * ARM.x), X).housing, hub(M, local(PIVOT).setX(s * (ARM.x - 0.045)))]), ...onArm);
 
     // The contacts' points where they stand at the bottom of the rep, in the carriage's frame.
     const grips = SIDES.map((s) => local(gripAt(s)));
-    // The belt's contact is where the strap hangs at rest, on the carriage.
-    const belt = local(rest);
-    const back = local(PAD);
     const surface = platformMid.clone();
 
     return {
-      parts: [role(cushion, 'seat'), ...seat, role(platform, 'platform'), ...legs, ...legRails, ...feet, ...base, ...posts, crossbar, through, ...axle.fixed, ...stop, carriage],
+      parts: [role(cushion, 'seat'), ...seat, role(platform, 'platform'), ...legs, ...legRails, ...feet, ...base, ...posts, crossbar, ...axles.flatMap((a) => a.fixed), ...pads, ...padFrame, ...stop, carriage],
       bodies: { carriage: [carriage] },
       drive(P) {
         const value = P.linkage?.value ?? LIMITS[0];
@@ -200,14 +209,11 @@ export default recipe({
         carriage.rotation.set(-(value - LIMITS[0]), 0, 0);
         carriage.updateMatrix();
         // The belt lies on the body where the pose puts it, else as it hangs.
-        if (P.hipC && P.u) {
-          const f = forwardOf(P.u);
-          layStraps(P.hipC.clone().addScaledVector(f, STRAP.f).addScaledVector(P.u, STRAP.u).applyMatrix4(carriage.matrix.clone().invert()));
-        } else layStraps(local(rest));
+        layBelt(local(rest), REST_SPINE);
         const onCarriage = (ps) => ps.map((p) => p.clone().applyMatrix4(carriage.matrix));
         return {
           joints: { carriage: { value, origin: PIVOT.clone() } },
-          points: { handles: onCarriage(grips), pad: onCarriage([back]), belt: onCarriage([belt]), platform: [surface.clone()] },
+          points: { handles: onCarriage(grips), pad: [PAD.clone().setX((PAD_ROLL.from + PAD_ROLL.to) / 2)], platform: [surface.clone()] },
         };
       },
     };

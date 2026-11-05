@@ -118,10 +118,10 @@ test('nothing passes through the body: no skin lies inside the carriage\'s arms 
   // part that isn't a solid is tested as the mesh it is: a skin vertex inside it (an odd number of
   // surface crossings along +x) passes through it.
   const parts = [];
-  kit.group.traverse((o) => { if (o.isMesh && !o.userData.solid) parts.push(new THREE.Mesh(o.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))); });
+  kit.group.traverse((o) => { if (o.isMesh && !o.userData.solid && o.userData.role !== 'strap') parts.push(new THREE.Mesh(o.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))); });
   assert.ok(parts.length > 4, 'the arms and the other thin parts were found');
   const original = [];
-  kit.group.traverse((o) => { if (o.isMesh && !o.userData.solid) original.push(o); });
+  kit.group.traverse((o) => { if (o.isMesh && !o.userData.solid && o.userData.role !== 'strap') original.push(o); });
   const ray = new THREE.Raycaster();
   const body = skin(/./);
   for (const d of DS) {
@@ -139,4 +139,30 @@ test('nothing passes through the body: no skin lies inside the carriage\'s arms 
     });
   }
   assert.ok(body.length > 1000);
+});
+
+// The belt is soft: padding laid over the hips that gives under the body, so the checks don't take
+// it for a solid. It must still lie on the body: no more than 3 cm of the skin in it, and no more
+// than 3 cm between it and the hips.
+test('the belt lies on the hips all through the rep, giving under the body by no more than 3 cm', () => {
+  const [band] = (() => { const out = []; kit.group.traverse((o) => { if (o.isMesh && o.userData.role === 'strap') out.push(o); }); return out; })();
+  band.geometry.computeBoundingBox();
+  const half = band.geometry.boundingBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+  const body = vertices.filter((v) => /^(pelvis|spine_01|thigh_)/.test(v.bone));
+  for (const d of DS) {
+    stage.pose(d);
+    kit.group.updateMatrixWorld(true);
+    const inverse = band.matrixWorld.clone().invert();
+    let deepest = 0;
+    let gap = Infinity;
+    for (const v of body) {
+      const p = v.m.getVertexPosition(v.i, new THREE.Vector3()).applyMatrix4(v.m.matrixWorld).applyMatrix4(inverse);
+      if (Math.abs(p.x) > half.x) continue;
+      const q = [half.x - Math.abs(p.x), half.y - Math.abs(p.y), half.z - Math.abs(p.z)];
+      if (Math.min(...q) > 0) deepest = Math.max(deepest, Math.min(...q));
+      else gap = Math.min(gap, Math.hypot(...q.map((x) => Math.max(0, -x))));
+    }
+    assert.ok(deepest < 0.03, `the skin ${(deepest * 100).toFixed(1)} cm into the belt at ${d.toFixed(2)} of the rep`);
+    assert.ok(deepest > 0 || gap < 0.03, `the belt ${(gap * 100).toFixed(1)} cm off the hips at ${d.toFixed(2)} of the rep`);
+  }
 });

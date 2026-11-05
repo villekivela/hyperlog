@@ -1,7 +1,7 @@
 # Hip thrust machine (`hip_thrust_machine`)
 
 ## Movement and exercises served
-Seated on a low seat, upper back against two half-round pads, a waist belt over the hips; feet flat on a separate angled platform in front; drive the hips up until the torso and thighs are level. The pads, belt, handles and plate horns ride on one lever (the carriage). Serves `machine_hip_thrust`.
+Seated on a low seat, upper back against two half-round pads, a waist belt over the hips; feet flat on a separate angled platform in front; drive the hips up until the torso and thighs are level. The belt, handles and plate horns ride on one lever (the carriage); the two back pads stand fixed on the frame (#229: an independent review of the model against these photos found a lever that carried the pads would carry the lifter's back, and the photos show the pads on frame posts), so the hips push the belt up and the body turns over the pads. Serves `machine_hip_thrust`.
 
 ## Based on
 - Brand/model: Hammer Strength Plate-Loaded Glute Drive (PL-GLD).
@@ -47,6 +47,13 @@ Seated on a low seat, upper back against two half-round pads, a waist belt over 
 - Dual-loop waist strap gives a higher lift-off point (the placard close-up shows the two loop sizes); half-round back pads leave a spinal relief gap.
 - Heels sit on the 15 degree Line-X platform.
 - Checked against the video (0:16.5 top, 0:18.5 bottom): at the top the shoulder blades are on the back pad's top edge, the torso and thighs are level, the shins are upright and the feet are flat on the platform; at the bottom the hips drop toward the seat, the torso tilts back about 30 degrees and the knees bend past 90 degrees. The hands hold the handles beside the hips. The HS photos match: at the top (`glutedrive-7`) the torso is level on the pads with the belt across the hip crease.
+
+## Measured positions (#229)
+Read from `glutedrive-5` (scale: the 45 lb plate, 450 mm, about 255 px), from the lifter's hip joint, z forward:
+the seat's front edge 140 mm ahead and its top 460 mm up (the model uses 500 so the glutes rest on it at the bottom);
+the platform's back edge 350 mm ahead, 450 mm up; the pad's centre 440 mm behind and 700 mm up; a plate's centre
+180 mm behind and 480 mm up; the handles 200 mm behind, tops 1040 mm up; the rear arch 880 mm behind. The video's
+frames (0:16.5, 0:18.5): torso about 50° above level at the bottom and level at the top, hands at hip height.
 
 ## Open gaps
 - No side-on photo of the PL-GLD at the top of the rep, so the hip height there is chosen from the fit rule.

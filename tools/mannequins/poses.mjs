@@ -295,7 +295,7 @@ export const POSES = {
     motion: 'hip_thrust',
     kit: { hip_thrust_machine: {} },
     feet: { stance: 0.1, toeOut: 8 },
-    grip: { pole: [0.5, -1, -0.5] },
+    grip: { pole: [0.8, -0.3, 0.3] },
     camera: { target: [0, 0.75, 0.1], halfHeight: 1.0, azimuth: 70, elevation: 8 },
   },
 

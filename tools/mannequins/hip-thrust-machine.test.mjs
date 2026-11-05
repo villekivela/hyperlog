@@ -48,14 +48,16 @@ test('the carriage turns on a transverse pivot about 880 mm up and 820 mm behind
   close(carriage.value, carriage.limits[0], 1e-9, 'unposed, on its stop at the bottom');
 });
 
-test('the pads rise with the carriage, and the carriage holds at its limits', () => {
+test('the handles and belt rise with the carriage while the back pads stay put, and the carriage holds at its limits', () => {
   const kit = machine();
   const [pad] = roles(kit, 'backPad');
   const padAt = box(pad).max.y;
+  const grip = contact(kit, 'handles').at[0].y;
   kit.scrub('carriage', 99);
   close(deg(kit.joints.carriage.value), deg(kit.joints.carriage.limits[1]), 1e-9, 'held at its upper limit');
   kit.group.updateMatrixWorld(true);
-  assert.ok(box(pad).max.y > padAt + 0.1, 'the pad rose with the carriage');
+  assert.ok(contact(kit, 'handles').at[0].y > grip + 0.15, 'the handles rose with the carriage');
+  close(box(pad).max.y, padAt, 1e-9, 'the pad stayed where it was');
   kit.scrub('carriage', -99);
   close(kit.joints.carriage.value, kit.joints.carriage.limits[0], 1e-9, 'held at its lower limit');
 });
@@ -85,7 +87,8 @@ test('the parts stand where the photos put them, from the hip joint', () => {
     close(hip - c.z, 0.2, 0.08, 'a plate\'s centre, behind the hips');
     close(c.y, 0.5, 0.08, 'a plate\'s centre height');
   }
-  for (const p of contact(kit, 'handles').at) close(hip - p.z, 0.2, 0.06, 'a handle, behind the hips');
+  // The photos put the handles 200 mm behind the hips; the video lifter grips at the hips: between.
+  for (const p of contact(kit, 'handles').at) close(hip - p.z, 0.15, 0.07, 'a handle, behind the hips');
   let rear = Infinity;
   kit.group.traverse((o) => { if (o.isMesh) rear = Math.min(rear, box(o).min.z); });
   close(hip - rear, 0.97, 0.1, 'the rear frame\'s back, behind the hips');
@@ -119,21 +122,19 @@ test('two round back pads 260 mm across leave a gap, their top 830 mm up at the 
   close(Math.max(a.max.y, b.max.y), 0.83, 0.01, 'the pads\' top');
   assert.ok(b.min.x - a.max.x > 0.02, 'a gap between the pads for the spine');
   const back = contact(kit, 'pad');
-  assert.equal(back.body, 'carriage');
+  assert.equal(back.body, 'frame');
   assert.equal(back.landmark, 'back');
 });
 
-test('the belt and the handles ride on the carriage, the hands holding two upright grips beside the hips', () => {
+test('the handles ride on the carriage, the hands holding two upright grips beside the hips', () => {
   const kit = machine();
-  const belt = contact(kit, 'belt');
-  assert.equal(belt.body, 'carriage');
-  assert.equal(belt.landmark, 'hips');
+  assert.equal(roles(kit, 'strap').length, 1, 'a belt');
   const handles = contact(kit, 'handles');
   assert.equal(handles.body, 'carriage');
   assert.equal(handles.landmark, 'hands');
   const [l, r] = handles.at;
   close(Math.abs(l.x), Math.abs(r.x), 1e-9, 'the grips are mirrored');
-  assert.ok(Math.abs(l.x - r.x) > 0.5 && Math.abs(l.x - r.x) < 0.8, `the grips ${Math.abs(l.x - r.x).toFixed(2)} m apart`);
+  assert.ok(Math.abs(l.x - r.x) > 0.5 && Math.abs(l.x - r.x) < 0.95, `the grips ${Math.abs(l.x - r.x).toFixed(2)} m apart`);
   const held = [];
   kit.group.traverse((o) => { if (o.isMesh && o.userData.held) held.push(o); });
   for (const p of handles.at) assert.ok(held.some((m) => box(m).distanceToPoint(p) < 1e-6), 'no held part at a grip');
@@ -159,9 +160,8 @@ test('four plate horns: two on the carriage, loaded with 450 mm plates, two on t
 
 test('its strap option is a fit rule: the long loop lifts the belt off higher', () => {
   assert.deepEqual(KITS.hip_thrust_machine.fit.map((f) => f.sets), ['strap']);
-  const short = contact(machine({ strap: 'short' }), 'belt').at[0];
-  const long = contact(machine({ strap: 'long' }), 'belt').at[0];
-  assert.ok(long.y > short.y + 0.02, `the long loop at ${long.y.toFixed(3)}, the short at ${short.y.toFixed(3)}`);
+  const height = (options) => box(roles(machine(options), 'strap')[0]).getCenter(new THREE.Vector3()).y;
+  assert.ok(height({ strap: 'long' }) > height({ strap: 'short' }) + 0.02, 'the long loop sits higher');
 });
 
 test('the recipe names no maker, model or finish', async () => {

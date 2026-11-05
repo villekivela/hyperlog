@@ -75,7 +75,6 @@ const LANDMARKS = {
   shoulders: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['clavicle_' + k]), wpos(rig.bones['upperarm_' + k])] },
   chest: { reach: 0.25, at: (rig) => [wpos(rig.bones.spine_02), wpos(rig.bones.neck_01)] },
   back: { reach: 0.3, at: (rig) => [wpos(rig.bones.spine_02), wpos(rig.bones.neck_01)] },
-  hips: { reach: 0.2, at: (rig, k) => [wpos(rig.bones.pelvis), wpos(rig.bones['thigh_' + k])] },
   upperArms: { reach: 0.25, at: (rig, k) => [wpos(rig.bones['upperarm_' + k]), wpos(rig.bones['lowerarm_' + k])] },
 };
 
