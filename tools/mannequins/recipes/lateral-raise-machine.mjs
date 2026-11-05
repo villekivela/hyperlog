@@ -77,10 +77,12 @@ function legAt(s, value) {
   const root = corner.clone().addScaledVector(toGrip, REACH);
   const knee = pivot.clone().addScaledVector(toGrip, REACH + 0.03).addScaledVector(outOf(s, value), KNEE_OUT);
   const grip = pivot.clone().addScaledVector(toGrip, GRIP_REACH);
+  // The bracket's end, on the lever: the grip pivots there, so it holds its own line.
+  const mount = pivot.clone().addScaledVector(toGrip, GRIP_REACH - GRIP);
   const pad = root.clone().setZ(ARM_Z);
   const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(gripLine(s), d));
   const [padBack, padFront] = [-PAD.length / 2, PAD.length / 2].map((d) => pad.clone().setZ(ARM_Z + d));
-  return { pivot, knee, grip, pad, gripFrom, gripTo, padBack, padFront };
+  return { pivot, knee, grip, mount, pad, gripFrom, gripTo, padBack, padFront };
 }
 
 export default recipe({
@@ -193,12 +195,12 @@ export default recipe({
         const state = { joints: {}, points: {} };
         SIDES.forEach(({ k, s }, i) => {
           const l = levers[i];
-          const { pivot, knee, grip, pad, gripFrom, gripTo, padBack, padFront } = legAt(s, value);
+          const { pivot, knee, grip, mount, pad, gripFrom, gripTo, padBack, padFront } = legAt(s, value);
           // The lever, built at rest, turned about its pivot.
           l.arm.quaternion.setFromAxisAngle(V(0, 0, s), value - LIMITS[0]);
           l.arm.position.copy(pivot).sub(pivot.clone().applyQuaternion(l.arm.quaternion));
           span(l.grip, gripFrom, gripTo);
-          span(l.bracket, knee, gripTo);
+          span(l.bracket, knee, mount);
           span(l.pad, padBack, padFront);
           state.joints[`arm_${k}`] = { value, origin: pivot };
           state.points[`grip_${k}`] = [grip];
