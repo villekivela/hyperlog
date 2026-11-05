@@ -28,10 +28,13 @@ const DIP = { r: 0.93, y: 1.2, x: 0.30 };
 // A rubber cap closes each rail's end.
 const CAP = 0.016;
 const PEG = { x: 0.325, y: 0.28, from: 0.58, to: 0.76, radius: 0.025 };
+// Both tubes stand on the rail, their flat ends cut level and sunk 15 mm into it, side by side across its width.
+const SUNK = RAIL.height - 0.015;
+const LANE = 0.0175;
 // The straight tube's ends: on the rail's front half and the rear post's top, behind the back pad's face.
-const POST = { foot: { r: 0.74, y: 0.1 }, top: { r: 0.20, y: 1.27 } };
+const POST = { foot: { r: 0.74, y: SUNK }, top: { r: 0.20, y: 1.27 } };
 // The bent tube, from the rail's rear half up and forward, round to upright under the hub.
-const BEND = [{ r: 0.14, y: 0.1 }, { r: 0.58, y: 0.88 }, { r: 0.65, y: 1.0 }, { r: 0.69, y: 1.1 }, { r: 0.70, y: 1.2 }, { r: 0.70, y: 1.27 }];
+const BEND = [{ r: 0.14, y: SUNK }, { r: 0.58, y: 0.88 }, { r: 0.65, y: 1.0 }, { r: 0.69, y: 1.1 }, { r: 0.70, y: 1.2 }, { r: 0.70, y: 1.27 }];
 // The frame's tubes are 65 mm across (the photos), the top rails and the back support's cross tube as thick.
 const TUBE = 0.065;
 
@@ -91,9 +94,9 @@ export default recipe({
           pad(RAIL.width, RAIL.height, RAIL.length - 2 * CAP, M.frame, at(x, RAIL.length / 2, RAIL.height / 2), { soft: 0.02 }),
           ...[0, RAIL.length].map((r) => pad(0.016, RAIL.height, RAIL.width, M.vinyl, at(x, r ? RAIL.length - CAP / 2 : CAP / 2, RAIL.height / 2), { soft: 0.005, solid: false }).rotateY(Math.PI / 2)),
           // The straight tube, up and back to the rear post.
-          mitered([at(x, POST.foot.r, POST.foot.y), at(x, POST.top.r, POST.top.y)], TUBE, M.frame),
+          mitered([at(x + s * LANE, POST.foot.r, POST.foot.y), at(x + s * LANE, POST.top.r, POST.top.y)], TUBE, M.frame, { ends: [V(0, 1, 0)] }),
           // The bent tube, inside it, up and forward and upright under the arm pad's front end.
-          mitered(BEND.map(({ r, y }) => at(x - s * 0.06, r, y)), TUBE, M.frame),
+          mitered(BEND.map(({ r, y }) => at(x - s * LANE, r, y)), TUBE, M.frame, { ends: [V(0, 1, 0)] }),
           // The pad's support, from the rear post to the hub.
           mitered([at(x, POST.top.r, ARM.top - ARM.thick - TUBE / 2), at(x, GRIP.hub.r, ARM.top - ARM.thick - TUBE / 2)], TUBE, M.frame),
           pad(ARM.width, ARM.thick, ARM.length, M.vinyl, at(s * ARM.x, armMiddle, ARM.top - ARM.thick / 2), { soft: 0.02 }),

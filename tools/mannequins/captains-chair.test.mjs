@@ -156,6 +156,36 @@ test('the back pad is bolted to one central upright that leans back with it, on 
   assert.ok(box.max.z < back.box.max.z - 0.03, 'the upright stands behind the pad');
 });
 
+// The ref's photos show every tube welded to the next: the legs stand on the floor rails and the top rails sit on the legs.
+const corners = (mesh) => {
+  const p = mesh.geometry.attributes.position, v = new THREE.Vector3(), out = [];
+  for (let i = 0; i < p.count; i++) out.push(v.fromBufferAttribute(p, i).applyMatrix4(mesh.matrixWorld).clone());
+  return out;
+};
+test('each leg tube stands on its floor rail, its end sunk into it, and reaches the top rail it carries', () => {
+  const kit = chair();
+  const frame = meshes(kit, (o) => o.material.name === 'frame');
+  const rails = frame.filter(({ box }) => size(box).z > 1 && size(box).y < 0.15);
+  const legs = frame.filter(({ box }) => size(box).y > 0.8 && size(box).x < 0.15);
+  const tops = frame.filter(({ box }) => box.min.y > 1.1 && size(box).z > 0.45 && size(box).y < 0.12 && size(box).x < 0.12);
+  assert.equal(rails.length, 2);
+  assert.equal(legs.length, 4, 'two legs a side');
+  assert.equal(tops.length, 2);
+  for (const { mesh, box } of legs) {
+    const rail = rails.find((r) => Math.sign(centre(r.box).x) === Math.sign(centre(box).x));
+    const down = corners(mesh).filter((p) => p.y < rail.box.max.y + 0.02);
+    assert.ok(down.length > 0, 'a leg end at the rail');
+    for (const p of down) {
+      assert.ok(p.x >= rail.box.min.x - 1e-3 && p.x <= rail.box.max.x + 1e-3, `the leg end's x ${p.x.toFixed(3)} is within the rail's width`);
+      assert.ok(p.z >= rail.box.min.z && p.z <= rail.box.max.z, 'and its length');
+    }
+    assert.ok(box.min.y < rail.box.max.y - 0.01, `sunk into the rail: ${box.min.y.toFixed(3)} under ${rail.box.max.y.toFixed(3)}`);
+    const top = tops.find((r) => Math.sign(centre(r.box).x) === Math.sign(centre(box).x));
+    const up = corners(mesh).filter((p) => p.y > box.max.y - 0.02);
+    assert.ok(up.some((p) => top.box.expandByScalar(0.001).containsPoint(p)), 'a leg end inside the top rail it carries');
+  }
+});
+
 test('the foot pegs are 50 mm thick rubber, the thickness the renders show', () => {
   for (const { box } of meshes(chair(), (o) => o.userData.peg)) close(size(box).y, 0.05, 0.003, 'a peg\'s thickness');
 });
