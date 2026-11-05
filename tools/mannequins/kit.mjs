@@ -90,7 +90,7 @@ export const EQUIPMENT = {
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
-  bodyweight: ['power_rack'],
+  bodyweight: ['power_rack', 'captains_chair'],
   ez_bar: ['ez_bar'],
   trap_bar: ['trap_bar'],
   safety_bar: ['safety_bar'],
