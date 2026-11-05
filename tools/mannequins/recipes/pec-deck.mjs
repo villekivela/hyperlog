@@ -103,7 +103,7 @@ export default recipe({
     ];
   },
   stacks: [{ joint: 'left', ratio: STACK_RATIO }],
-  rep: { joint: 'left', from: 'max' },
+  rep: { joint: 'left', from: 'min' },
   fit: [
     {
       sets: 'seat',

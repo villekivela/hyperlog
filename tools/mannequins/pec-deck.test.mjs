@@ -69,7 +69,7 @@ test('the tower is narrow across and deep fore and aft, the stack\'s broad face 
 
 test('seated, the lifter stands to the machine as the demo\'s does: the shoulders 55% of its height, the pad\'s top 60%', async () => {
   const { pose, rig, kit } = await buildStage(prepare('pec_deck'));
-  pose(1);
+  pose(0);
   const top = new THREE.Box3().setFromObject(kit.kits.pec_deck.group).max.y;
   close(wpos(rig.bones.upperarm_l).y / top, 0.55, 0.02, 'the shoulders\' share');
   let pad = null;
@@ -280,12 +280,12 @@ test('pec_deck: the body fits the machine through the whole rep', async () => {
 
 test('pec_deck: seated on the pad, the hands meet in front of the chest and open level with the shoulders', async () => {
   const { pose, rig } = await buildStage(prepare('pec_deck'));
-  pose(0);
+  pose(1);
   const [l, r] = ['l', 'r'].map((k) => heldAt(rig, k));
-  assert.ok(l.distanceTo(r) < 0.16, `the hands ${(l.distanceTo(r) * 100).toFixed(0)} cm apart at the top`);
+  assert.ok(l.distanceTo(r) < 0.16, `the hands ${(l.distanceTo(r) * 100).toFixed(0)} cm apart at the squeeze`);
   const chest = wpos(rig.bones.spine_03);
   assert.ok(l.z > chest.z + 0.3, 'in front of the chest');
-  pose(1);
+  pose(0);
   const [lo, ro] = ['l', 'r'].map((k) => heldAt(rig, k));
   const shoulder = wpos(rig.bones.upperarm_l);
   assert.ok(lo.distanceTo(ro) > 1.2, `the hands ${lo.distanceTo(ro).toFixed(2)} m apart when open`);
@@ -300,18 +300,17 @@ test('reverse_pec_deck: the body fits the machine through the whole rep', async 
 test('reverse_pec_deck: chest to the pad on the same seat, the arms open from ahead until in line with the shoulders', async () => {
   const { pose, rig, kit } = await buildStage(prepare('reverse_pec_deck'));
   const padAt = kit.kits.pec_deck.contacts.find((c) => c.point === 'backPad').at[0];
-  pose(1);
+  pose(0);
   const shoulder = wpos(rig.bones.upperarm_l);
   assert.ok(padAt.z > shoulder.z, 'the pad ahead of the body');
   const reach = heldAt(rig, 'l');
   assert.ok(reach.z > shoulder.z + 0.25, `the hand ${(reach.z - shoulder.z).toFixed(2)} m ahead of the shoulder at the stretch`);
-  pose(0);
+  pose(1);
   const open = heldAt(rig, 'l');
   close(open.z, wpos(rig.bones.upperarm_l).z, 0.1, 'the hand in line with the shoulder at the end');
   close(open.y, wpos(rig.bones.upperarm_l).y, 0.05, 'the hand level with the shoulder');
   const [shoulderAt, elbow, wrist] = ['upperarm_l', 'lowerarm_l', 'hand_l'].map((b) => wpos(rig.bones[b]));
-  assert.ok(elbow.y < shoulderAt.y + 0.02, 'the elbow no higher than the shoulder: a line, not an inverted V');
-  assert.ok(shoulderAt.y - elbow.y < 0.1, `the elbow ${(shoulderAt.y - elbow.y).toFixed(2)} m below the shoulder: nearly a straight arm, as in the demo`);
+  close(elbow.y, shoulderAt.y, 0.05, 'the elbow level with the shoulder: a line, as in the demo, not a V');
   const bend = elbow.clone().sub(shoulderAt).angleTo(wrist.clone().sub(elbow));
   assert.ok(bend < rad(65), `the elbow bent ${(bend * 180 / Math.PI).toFixed(0)}°`);
 });
@@ -331,7 +330,7 @@ test('reverse_pec_deck: the hips stay on the seat through the rep, and the pad\'
 test('1_arm_reverse_pec_deck: one arm opens, and the other arm of the machine stays at its rest', async () => {
   assert.deepEqual(await fails('1_arm_reverse_pec_deck'), []);
   const { pose, kit } = await buildStage(prepare('1_arm_reverse_pec_deck'));
-  pose(0);
+  pose(1);
   const { left, right } = kit.kits.pec_deck.joints;
   assert.ok(left.value > rad(40), 'the working arm is open');
   assert.equal(right.value, 0, 'the other stays');
@@ -347,5 +346,19 @@ test('1_arm_reverse_pec_deck: the free hand rests on its thigh, and the working 
     assert.ok(free.distanceTo(wpos(rig.bones.calf_r)) < 0.3, 'by the knee');
     const grip = kit.kits.pec_deck.contacts.find((c) => c.point === 'leftShort').at[0];
     close(heldAt(rig, 'l').distanceTo(grip), 0, 0.015, 'the working hand on its grip');
+  }
+});
+
+// A clip opens at the stretch, as a row's does, so the tempo's slow half is the eccentric.
+test('each lift opens at the stretch and closes at the squeeze, the stack rising between', async () => {
+  for (const id of IDS) {
+    const { pose, kit } = await buildStage(prepare(id));
+    pose(0);
+    const stretch = kit.kits.pec_deck.joints.left.value;
+    const low = head(kit.kits.pec_deck).max.y;
+    pose(1);
+    assert.equal(stretch, 0, `${id} opens on the arm's rest`);
+    assert.ok(kit.kits.pec_deck.joints.left.value > rad(50), `${id} ends swept in`);
+    assert.ok(head(kit.kits.pec_deck).max.y > low + 0.05, `${id} raises the stack`);
   }
 });

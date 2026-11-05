@@ -287,15 +287,14 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
-  // Back on the leaning pad, the hands on the vertical grips: from together in front of the chest,
-  // the arms opening long and a little bent until the hands are level with the shoulders.
+  // Back on the leaning pad, the hands on the vertical grips: from level with the shoulders, the arms
+  // long and a little bent, sweeping together in front of the chest.
   pec_deck: {
     equipment: 'machine',
     motion: 'lever_handles',
     kit: { pec_deck: {} },
     body: { trunk: -7 },
-    top: { left: 104 },
-    bottom: { left: 0 },
+    bottom: { left: 104 },
     feet: { stance: 0.17, z: 0.38, toeOut: 12 },
     grip: { pole: [1, -0.25, -0.3] },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 40, elevation: 10 },
@@ -303,16 +302,15 @@ export const POSES = {
   },
 
   // Astride the same seat, the chest on the pad, the hands overhand on the short grips: from the arms
-  // in line with the shoulders, forward until they reach ahead of the chest.
+  // reaching ahead of the chest, sweeping out until they are in line with the shoulders.
   reverse_pec_deck: {
     equipment: 'machine',
     motion: 'lever_handles',
     kit: { pec_deck: { facing: 'pad', hips: -0.02 } },
     body: { trunk: 7, look: 0 },
-    top: { left: 57 },
-    bottom: { left: 0 },
+    bottom: { left: 57, wrist: [0, -10] },
     feet: { stance: 0.2, z: 0.2, toeOut: 15, kneesOut: 0.4 },
-    grip: { pole: [0.4, 0.05, -1] },
+    grip: { pole: [0.4, 0.1, -1] },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 140, elevation: 10 },
     shadow: { size: [1.5, 1.6], at: [0, 0.2] },
   },
