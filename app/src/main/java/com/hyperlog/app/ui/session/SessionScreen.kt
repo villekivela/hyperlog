@@ -83,6 +83,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.domain.Field
@@ -781,7 +782,7 @@ internal fun NextLine(
             Text(
                 clock.time,
                 Modifier.then(if (rest) Modifier.clickable(onClickLabel = stringResource(R.string.rest_title), onClick = onClock) else Modifier).heightIn(min = 48.dp).padding(horizontal = 8.dp).wrapContentHeight(Alignment.CenterVertically).testTag(ClockDigitsTag),
-                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"), color = ink, maxLines = 1,
+                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum", letterSpacing = 1.5.sp), color = ink, maxLines = 1,
             )
         } else {
             SymbolIcon(symbol, description ?: stringResource(R.string.session_list), tint = cs.onSurfaceVariant)
