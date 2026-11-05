@@ -67,6 +67,7 @@ export const STATIONS = {
       'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
     ],
   },
+  captains_chair: { kit: 'captains_chair', exercises: ['roman_chair_crunch'] },
 };
 
 /**
@@ -79,13 +80,13 @@ export const EQUIPMENT = {
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
-  bodyweight: ['power_rack'],
+  bodyweight: ['power_rack', 'captains_chair'],
   ez_bar: null,
   trap_bar: null,
   safety_bar: null,
   smith_machine: ['smith_machine', 'bench', 'platform'],
   plate: null,
-  weighted_bodyweight: ['power_rack'],
+  weighted_bodyweight: ['power_rack', 'captains_chair'],
 };
 
 /** Every kit's recipe, by name. */
