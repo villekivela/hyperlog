@@ -52,6 +52,15 @@ The RS-2101 listing at 72 x 52.75 x 52.25 in is the plate-loaded RPL-5101 footpr
 - Fit rule, checked against the video: at the bottom of the rep the hands are at the lower chest, the elbows bent about 90 degrees and pointing back, the torso upright with a slight forward lean (0:17.4); at the top the arms are straight and the hands beside the hips (0:15.5). On the Hoist the torso also tilts back with the carriage, which the Atlantis does not do.
 - Anchor to the floor: the assembly manual warns the unit can tip.
 
+## Where the parts sit (read again from the photos, #226)
+Read from `Hoist_RS1101_1` (side-on, finish; about 1.17 mm a pixel, scaled by the 1390 mm height) and `RS-1101-01` (three-quarter, start), in the seat's frame (z forward from the seat's middle, y up from the floor), at the start unless said:
+- **Seat:** 400 mm square-ish and round-cornered, top 480; the back pad's face starts at its rear edge. The seat tilts down toward the back by about 12° at the finish, as the carriage rocks.
+- **Back pad:** 700 mm tall (260-300 wide), its bottom at the seat's rear, leaning about 4-6° back at the start and about 15° at the finish (measured on the side-on photo; the 18° above is the placard's); its top at about 1.25 m. It stands on a thick curved tube that runs down behind the seat's rear and forward under it to the footplate beam.
+- **Rear upright:** a tube leaning back about 10°, from the floor 430 mm behind the seat's middle to the arm pivot, 880 up and 540 behind the seat's middle (310 behind the pad's face); a diagonal brace from the pivot housing down and forward to the floor beam 300 mm behind the pivot's foot.
+- **Arms:** from the pivot, each a curved tube that drops steeply (about 65° below level at the finish) for about 0.45 m to an elbow outside the seat, then a straight grip bar, forward, level at the finish and about 40° up at the start; the grips swivel. At the finish the grip is about 200 mm ahead of the hips and about level with the seat's front edge.
+- **Footplates:** big discs, tilted so they face the shins (about 55° from level at the start), 120 up at the start and 420 at the finish, their centres 0.5 m ahead of the seat's front; the beam under them joins the carriage's tube.
+- **Stack tower:** beside the seat on the user's right, 0.48 m deep (front to back), from about 50 mm behind the seat's front edge forward to about 430 mm ahead of it, 0.40 m across, 1.39 m tall: a domed shroud open on the side facing the seat, so the plates face the user, the selector pin on that face. Its inner edge is level with the seat's edge; the footplates stand just ahead of its front.
+
 ## Open gaps
 - The seat's adjustment positions are not visible; the seat stays fixed at the measured height.
 - Grip spread is chosen; no front view of the Hoist was found.

@@ -71,6 +71,10 @@ async function bake(id, poses, angle, grip) {
   // Sample the lowering. Every bone that turns gets a track, and so does every part of the kit
   // that moves, turns or stretches; the pelvis always moves.
   const bones = Object.values(rig.bones);
+  // A part marked `proxy` is for the checks (a straight stand-in inside a bent tube): the clip leaves it out.
+  const proxies = [];
+  kit.group.traverse((o) => { if (o.userData.proxy) proxies.push(o); });
+  proxies.forEach((o) => o.parent.remove(o));
   const parts = [];
   kit.group.traverse((o) => { if (o !== kit.group) parts.push(o); });
   const times = [];
