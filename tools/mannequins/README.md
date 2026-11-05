@@ -294,6 +294,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
 | `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
+| `glute_ham_raise` | kneeling on a glute-ham developer's pads, the soles on its plate, the body lowering about the knees with the hips straight; the hands hang, then rest on its handles | `lean`, the thigh's and spine's lean from upright, in degrees, at the top and the bottom; `body.look`; `feet.stance`. The knee, the ankle and the handles are the recipe's |
 | `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.cross`, how far the back foot steps across behind the front one (a curtsy); `feet.hips`, how far the hips and arms move across with it; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
 | `bench_row` | one knee and the same-side hand on a flat bench, the other foot on the floor: a 1-arm row. The right knee and hand, the left foot and arm | `body.hip`, `body.trunk`; `feet.knee` [y, z], the shin running back along the pad from it; `feet.stance`, `feet.point`, degrees the foot off the pad's end tips, `feet.out`, `feet.z`, `feet.toeOut`; `hand` [x, y, z] at the top and the bottom; `grip.one`, `grip.rest`, `grip.pole`. An offset on `hand_r` lays the resting hand flat |
 | `bridge` | lying face up, the knees bent: a glute bridge, a hip thrust (the upper back across a bench) | `hip: [y, z]` at the top and bottom, each a trunk's length from `body.shoulders` [y, z], the shoulder joints, which the trunk turns about; `bar: [y, z]` at the top and bottom (or `bar.up` over the hips, square to the trunk); `arch` [3 degrees] at the top and bottom bends the spine's links, the shoulders kept where the straight back's are |
@@ -326,7 +327,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | `squat_machine` |
 | `leg_extension` | Leg Extension | `leg_extension` |
 | `leg_curl` | Lying and Seated Leg Curl | `leg_curl` (`lying` for the lying one) |
-| `glute_ham_raise` | Glute-Ham Raise | missing |
+| `glute_ham_raise` | Glute-Ham Raise | `glute_ham_raise` (posed, #230) |
 | `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | `pec_deck` |
 | `row_machine` | Machine Row, Chest-Supported Machine Row | `row_machine` |
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
@@ -610,6 +611,27 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   the grip at the finish with the wrists straight; the footplates 0.42 m ahead of the seat's front,
   not 0.5; the carriage rocks 12°, not 20°, since the photo's pad leans about 15° at the finish; and
   the tower, tubes, seat and base are simplified from the ref's shroud and sloped frame.
+- `glute_ham_raise` (#230, a machine kind: `MACHINES` in `kit.mjs`; posed, one clip) is a glute-ham developer from its ref,
+  standing with the lifter facing +z and the origin on the floor under the pads' rear edge. Nothing on it moves, so it
+  is a **static** machine: its recipe has a `linkage` and no `rep`, and `fitted()` solves its options for the mannequin
+  once and gives the motion one place (the knee, the ankle, the sole, the handles). The frame is 2 by 3 in steel: two floor
+  rails 45 in apart outside and 1740 mm long with rubber caps, a crossmember under each upright, a front upright up to
+  the pad bracket (the manual's 29 in part) with a handle each side under it at 820 mm, out past both ends, a rear upright
+  19 in tall, and a spine joining them. Two half-round pads (230 wide with 40 between, 500 long, 230 tall, crest 1092 mm up)
+  each stand in a row of five slices, a box each, which is how the checks follow their curve. The ankle assembly's sleeve
+  slides on the spine, pinned: a mast between two pairs of foam rollers (216 by 127 mm, 203 apart, a 76 mm gap for the
+  ankles, their centres 150 mm ahead of the plate's middle) and the 345 mm foot plate, its top 1245 mm up. The option
+  `slide` (0 to 12) counts 1 in steps back from the most forward hole, the plate's face 300 mm behind the pads' rear edge
+  (chosen, the ref gives none), 1 by default. Its fit rule sets `slide` from the mannequin's shin and ankle height: the knee
+  joint 50 mm above the crest and 50 mm behind it, the ankle in the roller gap, the sole on the plate. Contacts, all on the
+  frame, a pair of points each: `thighPad` (the `knees` landmark, on the crest), `ankleRollers`, `footPlate`, and
+  `handles` (optional: the hands are free at the top). The `glute_ham_raise` motion lowers the body about the knees, the
+  thighs and the spine one line (`lean`, degrees from upright, 0 to 78: the mannequin's knee straightens no further than
+  its legs' cap allows, so the body ends about 12° above level, the thighs on the crest), the hands hanging until the body
+  is nearly level, then resting on the handles' ends. `npm run movement -- glute_ham_raise` judges its clip. It departs
+  from the ref: the rails, crossmembers, braces and bracket are read from the photos, with no brand or mark on them, the
+  rollers sit further from the plate than the ref's first reading (the foot needs the room), and the knee's height over
+  the crest is chosen. Nothing pivots on it, so it uses no `pivotJoint`; its tubes meet square, not bent, so no `mitered`.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
@@ -643,7 +665,7 @@ square length swept along the points, each bend cut on its bisector, not two lap
   where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
   arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
 - `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
-  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`. An `optional` one
+  `hands`, `feet`, `shins`, `thighs`, `knees` (a thigh's lower end and the shin's top, for a pad the knees kneel on), `shoulders`, `chest`, `back` or `upperArms`. An `optional` one
   on the hands is a grip a free hand may use, so no hand is held to it.
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
