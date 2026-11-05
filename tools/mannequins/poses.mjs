@@ -846,11 +846,11 @@ export const POSES = {
 
   // The second dumbbell batch (#127): variants of the lifts above, first poses for the owner to tune.
 
-  // The lateral raise's arc carried on past the shoulders, the arms long, until the dumbbells meet overhead.
+  // The lateral raise's arc carried on past the shoulders, the arms long, until the dumbbells are overhead.
   super_rom_db_lateral_raise: {
     like: 'db_lateral_raise',
-    top: { hand: [0.09, 2.08, -0.035], wrist: [0, 0], rotate: 0 },
-    bottom: { hand: [0.35, 0.81, -0.035], wrist: [0, 0] },
+    top: { hand: [0.3167, 2.08, 0.0401], wrist: [0, 0], rotate: 0 },
+    bottom: { hand: [0.35, 0.81, 0.0403], wrist: [0, 0] },
     grip: { pole: [0, 0, -1] },
     camera: { target: [0, 1.15, 0], halfHeight: 1.25, azimuth: 20, elevation: 8 },
   },
@@ -859,8 +859,8 @@ export const POSES = {
   // sweep out wide on a long arm until they stand level with the shoulders.
   bent_over_reverse_db_flye: {
     like: 'db_lateral_raise',
-    top: { shin: 14, thigh: 48, trunk: 70, hand: [0.8, 1.0, 0.3], wrist: [0, 0], rotate: 0 },
-    bottom: { shin: 14, thigh: 48, trunk: 70, hand: [0.26, 0.37, 0.31], wrist: [0, 0] },
+    top: { shin: 14, thigh: 48, trunk: 70, hand: [0.8, 1.0, 0.3], wrist: [0, 0], rotate: -66 },
+    bottom: { shin: 14, thigh: 48, trunk: 70, hand: [0.26, 0.37, 0.31], wrist: [0, 0], rotate: -83 },
     grip: { pole: [0, 1, -0.3], across: [0, 0, 1] },
     camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 30, elevation: 10 },
   },
@@ -924,48 +924,54 @@ export const POSES = {
   // The lunge with the back foot stepped across behind the front one, sinking into the front hip.
   db_curtsy_lunge: {
     like: 'db_lunge',
-    top: { hip: [0.8, 0.03], heel: 32 },
+    top: { hip: [0.77, 0.03], heel: 36 },
     bottom: { hip: [0.56, 0.03], heel: 50 },
-    feet: { front: 0.26, back: -0.3, cross: 0.34 },
-    camera: { target: [0.17, 0.85, 0], halfHeight: 1.05, azimuth: 150, elevation: 8 },
-    shadow: { size: [0.9, 1.8], at: [0.17, 0] },
+    feet: { front: 0.26, back: -0.3, cross: 0.5, hips: 0.12 },
+    camera: { target: [0.12, 0.85, 0], halfHeight: 1.05, azimuth: 150, elevation: 8 },
+    shadow: { size: [0.9, 1.8], at: [0.12, 0] },
   },
 
-  // The 1-arm row on its feet: the right foot ahead beside the bench's end, the left back, the right
-  // hand braced on the pad. Heavy, with some body English: the trunk rocks up as the dumbbell comes in.
-  // `level` holds the bell near level (7° to 9°), which a straight wrist would tip to 22° to 29°.
+  // The 1-arm row loosened on purpose, momentum heaving a heavier bell: the trunk rocks up and twists
+  // about the spine as it comes in, the chest open to the rowing arm at the top, that shoulder hanging
+  // low and forward at the bottom. The bell travels further and comes up fast. `level` holds it near
+  // level through all that.
   '1_arm_db_kroc_row': {
     like: 'single_arm_db_row',
-    motion: 'free_arms',
-    kit: { bench: { at: [-0.4, 0.75] } },
-    body: null,
-    top: { shin: 16, thigh: 55, trunk: 58, hand: [0.24, 0.74, 0.14], offsets: { hand_r: [2, 0, -100] } },
-    bottom: { shin: 16, thigh: 55, trunk: 66, hand: [0.22, 0.36, 0.36], offsets: { hand_r: [2, 0, -100] } },
-    feet: { stance: 0.14, stagger: -0.34, z: 0, toeOut: 8, kneesOut: 0.1 },
-    grip: { rest: [-0.33, 0.495, 0.45], across: [0, 0, 1], level: 0.7 },
+    kit: { dumbbells: { heavy: true } },
+    top: { trunk: 60, hand: [0.27, 0.86, -0.1], offsets: { spine_01: [0, 10, 0], spine_02: [0, 10, 0], spine_03: [0, 10, 0] } },
+    bottom: { trunk: 84, hand: [0.17, 0.3, 0.33], offsets: { spine_01: [0, -10, 0], spine_02: [0, -10, 0], spine_03: [0, -10, 0] } },
+    grip: { level: 0.7, rest: [-0.2444, 0.5, 0.15] },
+    tempo: { lowering: 1.5, bottom: 0.1, lifting: 0.6, top: 0.2 },
   },
 
-  // Hinged in a split stance, the right hand braced on the pad: the left upper arm stays back along
-  // the trunk, and the forearm swings from hanging to straight out behind. The clip's top is the arm
-  // long, the triceps shortest.
+  // As the video has it: a long split, the front knee bent and the back leg near straight, the right
+  // hand over the top of the bench's near-upright back. The left upper arm stays up level with the
+  // back, and the forearm swings from hanging to straight out behind: the clip's top is the arm long.
+  // The bench stands off to the right, so its rear frame runs beside the front foot, not under it.
   db_triceps_kickback: {
-    like: '1_arm_db_kroc_row',
+    like: 'single_arm_db_row',
     motion: 'arms',
-    top: { trunk: 62, upperArm: -78, forearm: -80, rotate: 90, wrist: [0, 0], offsets: { hand_r: [-30, -32, -100] } },
-    bottom: { trunk: 62, upperArm: -78, forearm: -10, rotate: 90, wrist: [0, 0], offsets: { hand_r: [-30, -32, -100] } },
-    grip: { width: 0.25, across: null, pole: [-0.1, 0.8, -0.8], level: 0 },
+    kit: { bench: { angle: 85, hinge: -0.02, at: [-0.48, 0.8] } },
+    body: null,
+    top: { shin: 12, thigh: 52, trunk: 54, upperArm: -92, forearm: -88, rotate: 90, wrist: [0, 0], offsets: { hand_r: [80, 40, 0] } },
+    bottom: { shin: 12, thigh: 52, trunk: 54, upperArm: -92, forearm: -6, rotate: 90, wrist: [0, 0], offsets: { hand_r: [80, 40, 0] } },
+    feet: { stance: 0.14, stagger: -0.78, z: -0.31, toeOut: 8, kneesOut: 0.1 },
+    grip: { width: 0.25, rest: [-0.36, 1.285, 0.7], pole: [-0.1, 0.8, -0.8], level: 0 },
+    camera: { target: [0, 0.8, 0.15], halfHeight: 1.1, azimuth: 80, elevation: 8 },
+    shadow: { size: [1.1, 2.2], at: [-0.1, 0.15] },
   },
 
-  // Seated against the bench's upright back, the right arm across the body: the left elbow points
-  // up and stays, and the forearm lowers the dumbbell behind the head until the triceps stretch.
+  // Seated against the bench's upright back, the right palm flat on the chest, its elbow turned down
+  // from under the pole the working arm needs: the left elbow points up and stays, and the forearm
+  // lowers the dumbbell behind the head until the triceps stretch.
   '1_arm_overhead_db_triceps_extension': {
     like: 'db_bicep_curl',
     kit: { dumbbells: { hand: 1 }, bench: { angle: 85, hinge: -0.02 } },
     body: { hip: [0.522, 0.15], trunk: 3 },
-    top: { upperArm: 168, forearm: 182, rotate: 90, wrist: [0, 0] },
-    bottom: { upperArm: 168, forearm: 263, rotate: 90, wrist: [0, 0] },
+    top: { upperArm: 168, forearm: 182, rotate: 90, wrist: [0, 0], offsets: { upperarm_r: [0, 0, 100], hand_r: [120, 40, 0] }, trunk: -3.7671 },
+    bottom: { upperArm: 168, forearm: 263, rotate: 90, wrist: [0, 0], offsets: { upperarm_r: [0, 0, 100], hand_r: [120, 40, 0] }, trunk: -4.2407 },
     feet: { stance: 0.2859, z: 0.4271, toeOut: 20 },
-    grip: { width: 0.1, one: 1, rest: [0.13, 1.0, 0.27], pole: [0.02, 0.5, 1], sits: 'mid' },
+    grip: { width: 0.1, one: 1, rest: [0.09, 1.0, 0.3], pole: [0.02, 0.5, 1], sits: 'mid' },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.22, azimuth: 66, elevation: 10 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },

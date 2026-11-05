@@ -1577,11 +1577,14 @@ gallery (Technique videos).
     a later batch: both cup one dumbbell's head in two hands, and the hand only closes round a
     handle so far. The second dumbbell batch (#127) poses twelve variants of the OK'd lifts, from
     their technique videos where the library has one (the standing press and the seated Arnold press
-    have none, so they follow the seated press and the standing Arnold). The Kroc row stands, the
-    feet staggered and the free hand braced on the pad, and its trunk rocks up as the dumbbell comes
-    in; the kickback stands the same way, one arm; the 1-arm overhead extension sits against the
-    bench's upright back, the dumbbell behind the head and only as deep as the pad's top allows. The
-    curtsy lunge's hips move over the feet. The standing press, both Arnold presses and the Kroc row
+    have none, so they follow the seated press and the standing Arnold). The Kroc row is the 1-arm
+    row loosened on purpose (owner, 2026-11-05): one knee and hand on the bench as that row has them,
+    but a heavy dumbbell with bigger heads, a longer path, a fast lift, and a trunk that rocks and
+    twists, the chest open to the rowing arm at the top and that shoulder hanging low at the bottom.
+    The kickback follows its video (owner, 2026-11-05): a long split, one arm, the free hand over
+    the top of the bench's near-upright back; the 1-arm overhead extension sits against that upright
+    back, the free palm on the chest, the dumbbell behind the head and only as deep as the pad's top allows. The
+    curtsy lunge's back foot lands well past the line through the hips, which stay over the front foot. The standing press, both Arnold presses and the Kroc row
     let the wrists flow as the bench presses do, so their dumbbells stay near level. A walking lunge
     is held in its step, at a longer stride: a clip plays its lowering backward to lift, so it can't
     travel. The same goes for both Zottman curls, which turn the palms differently on the way up and

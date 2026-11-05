@@ -1,0 +1,62 @@
+{
+  "1_arm_db_kroc_row": {
+    "ok": true,
+    "clip": "916f526a9dbff6cd",
+    "at": "2026-11-05T08:28:29.630Z"
+  },
+  "1_arm_overhead_db_triceps_extension": {
+    "ok": true,
+    "clip": "dc54ef5e90e785c0",
+    "at": "2026-11-05T08:45:28.524Z"
+  },
+  "arnold_press_seated": {
+    "ok": true,
+    "clip": "6be61bbb0540659d",
+    "at": "2026-11-05T10:35:08.844Z"
+  },
+  "bent_over_reverse_db_flye": {
+    "ok": true,
+    "clip": "55a3891df850bc03",
+    "at": "2026-11-05T08:53:39.205Z"
+  },
+  "db_curtsy_lunge": {
+    "ok": true,
+    "clip": "205fe440081473d1",
+    "at": "2026-11-05T08:57:48.740Z"
+  },
+  "db_guillotine_press": {
+    "ok": true,
+    "clip": "544aa5ae081e863a",
+    "at": "2026-11-05T09:00:42.310Z"
+  },
+  "db_skull_crusher": {
+    "ok": true,
+    "clip": "9d98c0b2ca26989e",
+    "at": "2026-11-05T09:00:57.689Z"
+  },
+  "db_triceps_kickback": {
+    "ok": true,
+    "clip": "0584ec86f6dad59d",
+    "at": "2026-11-05T10:34:53.751Z"
+  },
+  "db_walking_lunge": {
+    "ok": true,
+    "clip": "af693845acb7d897",
+    "at": "2026-11-05T10:34:59.530Z"
+  },
+  "dumbbell_shoulder_press_standing": {
+    "ok": true,
+    "clip": "2c7cffa5e5850bd6",
+    "at": "2026-11-05T10:35:21.952Z"
+  },
+  "standing_db_arnold_press": {
+    "ok": true,
+    "clip": "701c2a14832a356d",
+    "at": "2026-11-05T10:35:16.057Z"
+  },
+  "super_rom_db_lateral_raise": {
+    "ok": true,
+    "clip": "72409485480d9eff",
+    "at": "2026-11-05T10:37:37.004Z"
+  }
+}

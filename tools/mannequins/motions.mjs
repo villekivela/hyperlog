@@ -515,11 +515,11 @@ export const MOTIONS = {
    * A split stance, the feet planted through the rep: the left foot flat `feet.front` ahead, the
    * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
    * floor, heels up positive, its toes bent back as far so they stay down; `feet.cross` steps it that
-   * far across behind the front foot (a curtsy), the hips moving half as far to stay over the feet.
+   * far across behind the front foot (a curtsy), and `feet.hips` moves the hips and arms that far toward it.
    * The hips drop between them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width` either side of the middle.
    */
   lunge(e, s, L) {
-    const hipC = V((e.feet.cross ?? 0) / 2, ...s.hip);
+    const hipC = V(e.feet.hips ?? 0, ...s.hip);
     const lean = spineLean(s.trunk, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);

@@ -7,6 +7,7 @@ import { BENCH_ANGLES, benchAngles, prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { wpos } from './rig.mjs';
 import { BATCHES } from './review.mjs';
+import { tempoOf } from './tempo.mjs';
 import { bellAt, boneAt, deg, handleTurn, noBellSpins, passes } from './dumbbell.fixture.mjs';
 
 const PAD_TOP = 0.457;
@@ -19,11 +20,11 @@ async function leanAt(id, d) {
 
 test('super_rom_db_lateral_raise: passes every check', () => passes('super_rom_db_lateral_raise'));
 
-test('super_rom_db_lateral_raise: the dumbbells go on past the shoulders until they meet overhead', async () => {
+test('super_rom_db_lateral_raise: the dumbbells go on past the shoulders until they are overhead', async () => {
   const [top, bottom] = [await bellAt('super_rom_db_lateral_raise', 0), await bellAt('super_rom_db_lateral_raise', 1)];
   const head = await boneAt('super_rom_db_lateral_raise', 'Head', 0);
   assert.ok(top.y > head.y + 0.15, `the bell ${(top.y - head.y).toFixed(2)} m over the head`);
-  assert.ok(top.x < 0.2, `the bell ${top.x.toFixed(2)} m out at the top`);
+  assert.ok(top.x < 0.4, `the bell ${top.x.toFixed(2)} m out at the top`);
   assert.ok(bottom.y < 0.95, `from ${bottom.y.toFixed(2)} m`);
 });
 
@@ -146,23 +147,37 @@ test('db_walking_lunge: at the bottom the back knee hangs just off the floor', a
 
 test('1_arm_db_kroc_row: passes every check', () => passes('1_arm_db_kroc_row'));
 
-test('1_arm_db_kroc_row: standing, both feet flat on the floor, the free hand braced on the pad, one dumbbell', async () => {
+test('1_arm_db_kroc_row: the right knee and hand on the bench, as the 1-arm row\'s are, one dumbbell', async () => {
   const id = '1_arm_db_kroc_row';
   const stage = await buildStage(prepare(id));
   assert.equal(stage.kit.group.getObjectByName('dumbbell_r'), undefined, 'the right hand holds none');
   for (const d of [0, 1]) {
     stage.pose(d);
-    const [left, right, wrist] = [wpos(stage.rig.bones.foot_l), wpos(stage.rig.bones.foot_r), wpos(stage.rig.bones.hand_r)];
-    assert.ok(left.y < 0.12 && right.y < 0.12, `at ${d}: the ankles ${left.y.toFixed(3)} and ${right.y.toFixed(3)} m up`);
-    assert.ok(right.z > left.z + 0.15, `at ${d}: the right foot ${(right.z - left.z).toFixed(2)} m ahead`);
+    const [knee, ankle, left, wrist] = ['calf_r', 'foot_r', 'foot_l', 'hand_r'].map((n) => wpos(stage.rig.bones[n]));
+    assert.ok(knee.y > PAD_TOP && knee.y < PAD_TOP + 0.09, `at ${d}: the knee ${(knee.y - PAD_TOP).toFixed(3)} m over the pad`);
+    assert.ok(Math.abs(ankle.y - knee.y) < 0.08, `at ${d}: the shin drops ${(knee.y - ankle.y).toFixed(3)} m, off the pad`);
+    assert.ok(left.y < 0.12, `at ${d}: the left ankle ${left.y.toFixed(3)} m up`);
     assert.ok(wrist.y > PAD_TOP && wrist.y < PAD_TOP + 0.123, `at ${d}: the wrist ${wrist.y.toFixed(3)} m up, off the pad`);
   }
 });
 
+test('1_arm_db_kroc_row: the braced hand points along the bench, as the 1-arm row\'s does', async () => {
+  const stage = await buildStage(prepare('1_arm_db_kroc_row'));
+  for (const d of [0, 0.5, 1]) {
+    stage.pose(d);
+    const [wrist, knuckle] = [wpos(stage.rig.bones.hand_r), wpos(stage.rig.bones.middle_01_r)];
+    const heading = deg(Math.atan2(knuckle.x - wrist.x, knuckle.z - wrist.z));
+    assert.ok(Math.abs(heading) < 30, `at ${d}: the fingers point ${heading.toFixed(0)}° off the bench's line`);
+  }
+});
+
 test('1_arm_db_kroc_row: the trunk rocks up as the dumbbell comes in, the body English the note asks for', async () => {
+  const [top, bottom] = [await leanAt('1_arm_db_kroc_row', 0), await leanAt('1_arm_db_kroc_row', 1)];
+  assert.ok(bottom - top > 18, `the trunk from ${top.toFixed(0)}° to ${bottom.toFixed(0)}°`);
+});
+
+test('1_arm_db_kroc_row: the elbow drives back past the trunk, palm in', async () => {
   const id = '1_arm_db_kroc_row';
-  const [top, bottom] = [await leanAt(id, 0), await leanAt(id, 1)];
-  assert.ok(bottom - top > 6, `the trunk from ${top.toFixed(0)}° to ${bottom.toFixed(0)}°`);
   const [elbow, shoulder] = [await boneAt(id, 'lowerarm_l', 0), await boneAt(id, 'upperarm_l', 0)];
   assert.ok(elbow.z < shoulder.z - 0.05, `the elbow ${(elbow.z - shoulder.z).toFixed(3)} m from the shoulder`);
   assert.ok((await handleTurn(id, 0)) > 60, 'neutral');
@@ -204,20 +219,6 @@ test('the batch lists twelve lifts, each with an entry that holds its dumbbells 
 
 noBellSpins(BATCHES['dumbbell-variants']);
 
-// The owner's OK'd 1-arm row sets the measure: its fingertip joints stand 2.4 to 3.3 cm over the pad.
-for (const id of ['1_arm_db_kroc_row', 'db_triceps_kickback']) {
-  test(`${id}: the braced hand lies level on the pad, as the 1-arm row's does`, async () => {
-    const stage = await buildStage(prepare(id));
-    for (const d of [0, 0.5, 1]) {
-      stage.pose(d);
-      const tips = ['index_03_r', 'middle_03_r', 'ring_03_r', 'pinky_03_r'].map((n) => wpos(stage.rig.bones[n]).y - PAD_TOP);
-      const [low, high] = [Math.min(...tips), Math.max(...tips)];
-      assert.ok(low > 0.015 && high < 0.045, `at ${d}: the fingertips ${low.toFixed(3)} to ${high.toFixed(3)} m over the pad`);
-      assert.ok(high - low < 0.02, `at ${d}: the hand rolls ${(high - low).toFixed(3)} m across`);
-    }
-  });
-}
-
 test('db_skull_crusher: the back keeps the flat press\'s arch, though the arms move as a curl\'s do', async () => {
   for (const bone of ['spine_02', 'spine_03', 'neck_01']) {
     const [crusher, press] = [await boneAt('db_skull_crusher', bone, 1), await boneAt('db_bench_press', bone, 1)];
@@ -251,3 +252,107 @@ for (const id of ['db_guillotine_press', 'dumbbell_shoulder_press_standing', 'st
     }
   });
 }
+
+/** How far a trunk near level is twisted about the spine at `d` down the rep, in degrees: positive with the left shoulder up. */
+async function shouldersTurn(id, d) {
+  const [left, right] = [await boneAt(id, 'upperarm_l', d), await boneAt(id, 'upperarm_r', d)];
+  return deg(Math.atan2(left.y - right.y, left.x - right.x));
+}
+
+test('1_arm_db_kroc_row: the trunk twists, the chest open to the rowing arm at the top and the shoulder reaching at the bottom', async () => {
+  const [top, bottom] = [await shouldersTurn('1_arm_db_kroc_row', 0), await shouldersTurn('1_arm_db_kroc_row', 1)];
+  assert.ok(top > 22, `at the top the shoulders turn ${top.toFixed(1)}°`);
+  assert.ok(bottom < -22, `at the bottom the shoulders turn ${bottom.toFixed(1)}°`);
+});
+
+test('db_triceps_kickback: the trunk stays square, taking no twist from the Kroc row', async () => {
+  for (const d of [0, 1]) {
+    const turn = await shouldersTurn('db_triceps_kickback', d);
+    assert.ok(Math.abs(turn) < 3, `at ${d}: the shoulders turn ${turn.toFixed(1)}°`);
+  }
+});
+
+test('1_arm_db_kroc_row: looser than the 1-arm row, the dumbbell travelling further and heaved up fast', async () => {
+  const travel = async (id) => (await bellAt(id, 0)).distanceTo(await bellAt(id, 1));
+  const [kroc, row] = [await travel('1_arm_db_kroc_row'), await travel('single_arm_db_row')];
+  assert.ok(kroc > row + 0.08, `the bell travels ${kroc.toFixed(2)} m, the row's ${row.toFixed(2)} m`);
+  const [fast, strict] = [tempoOf(prepare('1_arm_db_kroc_row')), tempoOf(prepare('single_arm_db_row'))];
+  assert.ok(fast.lifting < strict.lifting * 0.75, `lifted in ${fast.lifting} s, the row in ${strict.lifting} s`);
+});
+
+/** The left dumbbell's size at rest: [along the handle, across its head], in metres. */
+async function bellSize(id) {
+  const stage = await buildStage(prepare(id));
+  const bell = stage.kit.group.getObjectByName('dumbbell_l');
+  bell.quaternion.identity();
+  bell.updateMatrixWorld(true);
+  const size = new THREE.Box3().setFromObject(bell).getSize(new THREE.Vector3());
+  return [size.x, size.y];
+}
+
+test('1_arm_db_kroc_row: the dumbbell is a heavy one, its heads bigger with the handle left as it is', async () => {
+  const [[long, wide], [rowLong, rowWide]] = [await bellSize('1_arm_db_kroc_row'), await bellSize('single_arm_db_row')];
+  assert.ok(wide > rowWide * 1.3, `the head ${wide.toFixed(3)} m across, the row's ${rowWide.toFixed(3)} m`);
+  assert.ok(long > rowLong + 0.05, `the bell ${long.toFixed(3)} m long, the row's ${rowLong.toFixed(3)} m`);
+});
+
+test('1_arm_overhead_db_triceps_extension: the resting arm lies across the body, its elbow down by the ribs', async () => {
+  const id = '1_arm_overhead_db_triceps_extension';
+  const [elbow, shoulder, wrist] = [await boneAt(id, 'lowerarm_r', 1), await boneAt(id, 'upperarm_r', 1), await boneAt(id, 'hand_r', 1)];
+  assert.ok(elbow.y < shoulder.y - 0.15, `the elbow ${(elbow.y - shoulder.y).toFixed(2)} m from the shoulder's height`);
+  assert.ok(elbow.z - shoulder.z < 0.2, `the elbow ${(elbow.z - shoulder.z).toFixed(2)} m ahead of the shoulder`);
+  assert.ok(wrist.x > -0.05, `the hand ${wrist.x.toFixed(2)} m across`);
+});
+
+test('1_arm_overhead_db_triceps_extension: the resting palm lies on the chest, the fingers pointing across it', async () => {
+  const stage = await buildStage(prepare('1_arm_overhead_db_triceps_extension'));
+  stage.pose(1);
+  const [wrist, knuckle, tip, index, pinky] = ['hand_r', 'middle_01_r', 'middle_03_r', 'index_01_r', 'pinky_01_r'].map((n) => wpos(stage.rig.bones[n]).clone());
+  const fingers = knuckle.clone().sub(wrist).normalize();
+  const palm = fingers.clone().cross(index.clone().sub(pinky)).normalize();
+  if (palm.dot(tip.clone().sub(knuckle)) < 0) palm.negate();
+  assert.ok(palm.z < -0.8, `the palm faces ${palm.toArray().map((v) => v.toFixed(2))}, not the chest`);
+  assert.ok(fingers.x > 0.7, `the fingers point ${fingers.toArray().map((v) => v.toFixed(2))}, not across`);
+  assert.ok(knuckle.y > 0.93 && knuckle.y < 1.1, `the hand ${knuckle.y.toFixed(2)} m up, not on the chest`);
+  assert.ok(knuckle.z < 0.4, `the knuckles at z ${knuckle.z.toFixed(2)}, off the chest`);
+});
+
+test('db_curtsy_lunge: the back foot lands well out past the line through the hips', async () => {
+  const id = 'db_curtsy_lunge';
+  const [ball, hips] = [await boneAt(id, 'ball_r', 1), await boneAt(id, 'pelvis', 1)];
+  assert.ok(ball.x - hips.x > 0.2, `the back ball ${(ball.x - hips.x).toFixed(2)} m past the hips`);
+});
+
+test('db_triceps_kickback: the bench\'s back stands near upright ahead, the right hand over its top, as in the video', async () => {
+  const id = 'db_triceps_kickback';
+  assert.ok(prepare(id).kit.bench.angle >= 80, 'the back pad near upright');
+  const stage = await buildStage(prepare(id));
+  const back = new THREE.Box3().setFromObject(stage.kit.group.getObjectByName('bench') ?? stage.kit.group);
+  for (const d of [0, 1]) {
+    stage.pose(d);
+    const [wrist, shoulder] = [wpos(stage.rig.bones.hand_r), wpos(stage.rig.bones.upperarm_r)];
+    assert.ok(Math.abs(wrist.y - back.max.y) < 0.12, `at ${d}: the wrist ${(wrist.y - back.max.y).toFixed(3)} m from the pad's top`);
+    assert.ok(wrist.z > shoulder.z + 0.35, `at ${d}: the hand ${(wrist.z - shoulder.z).toFixed(2)} m ahead of the shoulder`);
+    // Our back pad stands taller than the video's, so the arm reaches up a little to its top.
+    assert.ok(Math.abs(wrist.y - shoulder.y) < 0.28, `at ${d}: the arm reaches out near level, ${(wrist.y - shoulder.y).toFixed(2)} m off`);
+  }
+});
+
+test('db_triceps_kickback: a long split, the front knee bent and the back leg near straight', async () => {
+  const id = 'db_triceps_kickback';
+  const stage = await buildStage(prepare(id));
+  stage.pose(1);
+  const bend = (hip, knee, ankle) => deg(hip.clone().sub(knee).angleTo(ankle.clone().sub(knee)));
+  const [hipL, kneeL, ankleL, hipR, kneeR, ankleR] = ['thigh_l', 'calf_l', 'foot_l', 'thigh_r', 'calf_r', 'foot_r'].map((n) => wpos(stage.rig.bones[n]).clone());
+  assert.ok(ankleR.z - ankleL.z > 0.6, `the feet ${(ankleR.z - ankleL.z).toFixed(2)} m apart`);
+  assert.ok(bend(hipL, kneeL, ankleL) > 155, `the back knee at ${bend(hipL, kneeL, ankleL).toFixed(0)}°`);
+  assert.ok(bend(hipR, kneeR, ankleR) < 145, `the front knee at ${bend(hipR, kneeR, ankleR).toFixed(0)}°`);
+});
+
+test('db_triceps_kickback: the upper arm stays up level with the back, the forearm hanging at the bottom', async () => {
+  const id = 'db_triceps_kickback';
+  const [shoulder, elbow, wrist] = [await boneAt(id, 'upperarm_l', 1), await boneAt(id, 'lowerarm_l', 1), await boneAt(id, 'hand_l', 1)];
+  assert.ok(elbow.y > shoulder.y - 0.05, `the elbow ${(elbow.y - shoulder.y).toFixed(2)} m from the shoulder's height`);
+  const bendAt = deg(shoulder.clone().sub(elbow).angleTo(wrist.clone().sub(elbow)));
+  assert.ok(bendAt < 110, `the elbow closes to ${bendAt.toFixed(0)}°`);
+});
