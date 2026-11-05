@@ -291,6 +291,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
+| `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
 | `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
 | `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.cross`, how far the back foot steps across behind the front one (a curtsy); `feet.hips`, how far the hips and arms move across with it; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
@@ -335,7 +336,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
 | `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
-| `hip_thrust_machine` | Machine Hip Thrust | missing |
+| `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
 | `shrug_machine` | Machine Shrug | `shrug_machine` |
@@ -414,6 +415,26 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   410 mm above the lever's line, which is where the ref's 780 mm ahead and 370 mm up put them with
   the lever on its catch, and a neutral grip is held 115 mm back from its block, where its rear half
   starts.
+- `hip_thrust_machine` (#229) stands where its ref and the photos' measurements put it
+  (`build/hip-thrust-refs/notes.md` while it was built, each part read off the photos against the
+  450 mm plate, from the hip joint at z = 0): a seat 500 mm up, its front edge 140 mm ahead of the
+  hips; a foot platform 800 mm wide, 450 mm up and 400 deep, 220 mm ahead of the seat and tilted 15°
+  toes up; two round back pads 260 mm across, **fixed** on the frame 480 mm behind the hips with a
+  gap for the spine, their top 830 mm up; and one carriage (`carriage`, a revolute joint, degrees up
+  from level ahead) on stub axles through the tops of two rear posts, 880 mm up and 820 mm behind the
+  hips, carrying the belt, two upright handles and two plate horns with a 450 mm plate each, resting
+  on a stop at the bottom of the rep and turning 23° to the top. Two more horns on the rear posts store
+  plates. The hips push the belt up while the back stays on the pads, so the body turns over them: the
+  hip joint rises from 600 mm (the glutes on the seat) to 930 mm (the thighs level, the shins upright)
+  as the torso goes from about 45° above level to about level. The belt is a soft padded band, so the
+  checks don't take it for a solid and a test holds it to the body instead (3 cm either way). Its
+  contacts tie the hands to the handles, the upper back to the pads (`back`) and the feet to the
+  platform. It has no seat, pad or platform adjustment; its one fit rule, unsolved, is the `strap`
+  option, `short` or `long`, the loop of the dual-loop waist strap, the long one lifting the belt 40
+  mm higher. The `hip_thrust` motion hangs the body from it: the hips on the carriage, the spine
+  along the pads, the feet flat on the platform, the hands on the handles. Where it departs from the
+  photos: straight carriage arms and handles where the photos curve them, round pad cylinders for
+  the half-rounds, the platform on four legs for an A-frame, and no band pegs.
 - `cable_crossover` (#181) is the machine of the free-handle cable exercises no pose has set up on
   `cable_column` or `cable_tower` (`CABLE_MACHINES` in `kit.mjs`, 19 of its ref's 25; a posed one
   moves when it is posed machine-first, so no clip changes): two towers 2210 mm apart on the centre

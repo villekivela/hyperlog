@@ -911,6 +911,28 @@ export const MOTIONS = {
   },
 
   /**
+   * Seated on a low seat, the upper back against the pads of a carriage that turns about a pivot
+   * behind the body, a belt over the hips, the feet flat on a platform ahead, the hands on the
+   * handles the carriage carries: a machine hip thrust. The hips ride the carriage, and the spine
+   * runs from them along the pads.
+   */
+  hip_thrust(e, s, L) {
+    const { hip, spine, handle, across, sole, soleUp, toes, ankle } = s.linkage;
+    const f = forwardOf(spine);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC: hip.clone(), u: spine,
+      headDir: spine.clone().addScaledVector(f, e.body?.look ?? 0.3).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * e.feet.stance)),
+      foot: (side) => ({ heading: toes.clone().applyAxisAngle(soleUp, side * toeOut), top: soleUp.clone() }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.15), 1, 0.5).normalize(),
+      support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
+      hand: handle, across,
+      armPole: elbowsTo(e, [0.5, -1, -0.5]),
+    };
+  },
+
+  /**
    * Hanging from a rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a
    * leg raise. The shoulders hang straight-armed under `kit.power_rack.handles`, the pair of grips,
    * and `rise` lifts them from there, `back` behind the grips.
