@@ -186,6 +186,18 @@ test('a brace runs out and down each side of the tower from about a quarter of t
   assert.equal(braces.length, 2, 'one a side, running out sideways');
 });
 
+// The owner, in the studio: each brace's foot sits flush on its bar, past neither its end nor its top.
+test('each rear brace lands flush on its beam: no overhang past the end, no daylight under the foot', () => {
+  const kit = deck();
+  const braces = boxes(kit).filter(({ box: b }) => b.max.y > 0.3 && b.max.y < 0.55 && b.max.z < -0.3 && b.max.x - b.min.x > 0.25);
+  const beam = boxes(kit).find(({ box: b }) => b.max.y < 0.08 && b.max.x - b.min.x > 0.7).box;
+  assert.equal(braces.length, 2, 'one a side');
+  for (const { box: b } of braces) {
+    close(b.min.y, beam.max.y, 0.002, 'the foot on the beam\'s top');
+    assert.ok(b.max.x <= beam.max.x + 1e-3 && b.min.x >= beam.min.x - 1e-3, `the foot past the beam's end, ${b.min.x.toFixed(3)} to ${b.max.x.toFixed(3)} against ${beam.min.x.toFixed(3)} to ${beam.max.x.toFixed(3)}`);
+  }
+});
+
 test('no crossbar runs across the tower\'s window: the pad is carried on the seat\'s post', () => {
   const across = boxes(deck()).filter(({ box }) => box.min.y > 0.3 && box.max.y < 1.2 && box.min.x < -0.2 && box.max.x > 0.2 && box.max.z < -0.25);
   assert.deepEqual(across.map(({ mesh }) => mesh.name), []);

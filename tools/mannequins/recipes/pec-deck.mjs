@@ -171,9 +171,9 @@ export default recipe({
       tube(0.07, V(-REAR.out, 0.035, REAR.z), V(REAR.out, 0.035, REAR.z), M.frame),
       ...sides.flatMap((s) => [
         pad(0.12, 0.03, 0.2, M.frame, V(s * REAR.out, 0.015, REAR.z), { soft: 0.006 }),
-        // A brace curving out and down from the rear upright to the beam's end.
+        // A brace curving out and down from the rear upright, its foot cut flat on the beam's top.
         curvedTube([
-          V(s * 0.06, BRACE_Y, REAR.z), V(s * 0.14, BRACE_Y - 0.02, REAR.z), V(s * 0.3, 0.24, REAR.z), V(s * REAR.out, 0.05, REAR.z),
+          V(s * 0.06, BRACE_Y, REAR.z), V(s * 0.14, BRACE_Y - 0.02, REAR.z), V(s * 0.28, 0.24, REAR.z), V(s * (REAR.out - 0.045), 0.07, REAR.z),
         ], 0.06, M.frame, { ends: [V(1, 0, 0), V(0, 1, 0)] }),
       ]),
       // The tower with the stack in it, and the arch from its back up over and forward to the unit.
