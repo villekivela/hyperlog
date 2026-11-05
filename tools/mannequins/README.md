@@ -295,9 +295,9 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `cable_crossover`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
 | `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
-| `ez_bar` | missing |
+| `ez_bar` | `ez_bar` |
 | `trap_bar` | missing |
-| `safety_bar` | missing |
+| `safety_bar` | `safety_bar` |
 | `smith_machine` | `smith_machine`, `bench`, `platform` (a low one under the front foot, for the front-foot-elevated lunge) |
 | `plate` | missing |
 | `weighted_bodyweight` | `power_rack`, `hyperextension_bench` for the 45° hyperextension |
@@ -320,7 +320,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
-| `hip_machine` | Machine Hip Abduction and Adduction | missing |
+| `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
@@ -408,6 +408,21 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   stirrup; the ref's ankle cuff and rope are further attachments, for the pose ticket that needs
   them (the glute kickback's). `position` takes one number for a two-arm lift, the same hole on both
   towers, and a pair only where the arms differ.
+- `hip_machine` (#214, built, none of its two exercises posed yet, so no clip changes) is the one
+  hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, a
+  rear leg behind it, and a tall tower with the weight stack standing ahead of the posts, as the
+  maker's photos show, on a floor beam 1.55 m long. Two arms turn on one vertical axle on the centre
+  line under the seat, 140 mm behind its front edge. Each arm (`arm_l`, `arm_r`, revolute about the
+  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 400 mm forward to a
+  post with a 280 by 160 mm knee pad at 560 mm and a foot plate at 80 mm; the right arm rides 60 mm
+  above the left on the shared axle. `pads` (`outer`, the default, on the outsides of the knees for
+  abduction, or `inner`, between them for adduction) and `start` (degrees, snapped to the ratchet's
+  10° steps; 0 for `outer`, 50 for `inner`, at least 10 for `inner` so the pads clear) set it up; the
+  fit rule names `start`. It departs from its ref: the pads' faces are put 140 mm (`outer`) from the
+  centre line from the mannequin's knee, which puts the posts about 450 mm apart rather than the
+  ref's 250 (the photos show each post outside its pad, so 250 can't hold with an 80 mm pad); the
+  joints stop at the ratchet's 50°, a 40 to 50° travel, the ref's 45° read from another make's video;
+  the stack's travel isn't drawn. The studio shows it alone.
 - `smith_machine` (#182, smith machine equipment, not a machine kind) stands where its ref puts it,
   whatever the pose, and none of its nine exercises is posed yet: two guide rods 1.3 m apart leaning
   7° with their tops toward the back, a front upright either side carrying a rod and a plate of 13
@@ -420,6 +435,24 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
+- `ez_bar` (#209, its own equipment kind; `BARS` in `kit.mjs` maps its 3 exercises, none posed yet,
+  so no clip changes) is a short Olympic-sleeved curl bar with a zigzag shaft, along x, a free body
+  the hands carry like `barbell`. It is 1384 mm long, the shaft dark 28.5 mm tube and 800 mm between
+  the collars: a straight middle on the sleeve axis (120 mm corner to corner), then each side an
+  inner and an outer grip segment (about 17 and 32 degrees, opposite ways) with rounded bends and a
+  return to the axis at the collar, 80 mm from peak to trough in the horizontal plane, the outer bend
+  forward (+z). Each sleeve is chrome, 50 mm across and 267 mm to load, behind a wider chrome flange. Nothing on it moves. Its option `grip` (`outer` by
+  default, or `inner`) is the pair the pose's bar position is the middle of. Contacts, hands on the
+  bar: `outer` (510 mm apart) and `inner` (250), on the segments' middles. Lying on the floor with no
+  pose, it is shown alone in the studio (`npm run studio`, the `ez bar` row under kits).
+- `safety_bar` (#219, safety_bar equipment; `BARS` in `kit.mjs` maps its two exercises, none posed yet,
+  so no clip changes) is a cambered bar from the ref's numbers, unloaded: a 38 mm shaft 1310 mm
+  between two camber bends that carry the sleeves 140 mm below its centre line, 2362 mm long over
+  the sleeves, a yoke pad 330 by 100 mm round the shaft, and two handle arms from the yoke ends, each
+  with a pad 270 mm long and a bare steel grip 175 mm long. Nothing on it moves and it fits every
+  height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
+  about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
+  (the shoulders).
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -633,7 +666,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the hyperextension bench. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack, the EZ bar, the hip machine, the safety bar and the hyperextension bench. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

@@ -24,11 +24,11 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover; built (#181), 19 not yet posed on it (6 are posed on `cable_column`) |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
 | 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), not yet posed |
-| 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar |
+| 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar; built (#209), not yet posed |
 | 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY) |
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise |
-| 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction |
-| 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar |
+| 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction; built (#214), not yet posed |
+| 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar; built (#219), not yet posed |
 | 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension; built (#220), not yet posed |
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug |
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
@@ -86,10 +86,11 @@ gaps says why):
   no top or straight-front view.
 - `lateral_raise_machine`: the seat range is chosen and the pivot spacing is rough. The standing
   exercise's video shows another, standing machine, with no reference model of its own.
-- `hip_machine`: the seat range, closed pad spacing and the range of motion stay chosen or rough; no
+- `hip_machine` (built, #214): the seat range, closed pad spacing and the range of motion stay chosen or rough; no
   side-on photo, and the video is another make.
-- `safety_bar`: the handle arms' length and angle are chosen from the published width and height;
-  no side-on photo exists.
+- `safety_bar`: the handle arms' length and angle are chosen; the published width and height fit the
+  bar held, rolled about 25° forward, and the photos show the rack's steeper hang. No side-on photo
+  exists.
 - `hyperextension_bench`: the body line and pad height are chosen (the bench telescopes); all sizes
   come from one spec drawing.
 - `shrug_machine`: the seat range and the bottom of the rep are chosen; no photo shows the bottom.
