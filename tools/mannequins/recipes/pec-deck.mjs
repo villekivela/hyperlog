@@ -1,5 +1,6 @@
-// A seated pec deck (refs/pec_deck/ref.md): a seat and a back pad leaning back 7° in front of a tower
-// that holds the weight stack, and an arch from the tower's top forward to an overhead unit with a
+// A seated pec deck (refs/pec_deck/ref.md): a seat and a back pad leaning back 7° in front of a tower,
+// narrow across and deep fore and aft, with the weight stack's broad face looking to the side, and an
+// arch from the tower's back over its top and forward to an overhead unit with a
 // vertical axis either side, 0.4 m apart, between two flat plates. A lever swings from each in a
 // horizontal plane, 0.55 m out to a pin, and a drop arm hangs from the pin. A vertical grip hangs like
 // a cane out of the drop arm, square to the lever, ahead of it with the arm out, and a short level
@@ -15,7 +16,7 @@
 import * as THREE from 'three';
 import { HELD, recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, bent, knob, mitered, pad, part, pivotJoint, pulley, rod, rodGeometry, span, stackFrame, tube,
+  WHEEL, bent, knob, pad, part, pivotJoint, pulley, rod, rodGeometry, span, tube,
   weightStack, wire,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
@@ -39,23 +40,24 @@ const SHORT_LENGTH = 0.15;
 // The seat's top and z ([y, z]), its range, and how far the hips sit above it.
 const SEAT = [0.5, 0.02];
 const SEAT_RANGE = [0.44, 0.62];
-const SITS = 0.09;
+const SITS = 0.095;
 // The back pad: 0.3 wide, 0.65 tall, its bottom 0.05 above the seat, its face there at `face`.
 const BACK = { width: 0.3, height: 0.65, thick: 0.08, above: 0.05, face: -0.16, lean: rad(7) };
-// The tower's uprights and stack, and its top.
-const TOWER_Z = -0.4;
+// The tower: two uprights, one ahead of the other, the stack turned between them, and its top.
+const TOWER = { width: 0.13, depth: 0.07, spread: 0.19 };
+const STACK_Z = -0.53;
 const FRAME_TOP = 1.66;
 // The unit's two plates, above and below the levers, and how high the rear braces meet the tower.
 const PLATES = [1.69, 1.9];
 const BRACE_Y = 0.46;
-// The base's small feet: its depth is the ref's 1.245 m footprint, feet included.
-const FOOT = { width: 0.34, depth: 0.12 };
-const FRONT_Z = 0.325;
-const REAR_Z = -0.8;
+// The base: a spine from a small foot under the seat to the rear beam, which runs out each side
+// from the tower's back. The ref's 1.245 m footprint runs from there to the arms swept forward.
+const FRONT_FOOT = { width: 0.24, depth: 0.12, z: 0.05 };
+const REAR = { z: STACK_Z - TOWER.spread, out: 0.42 };
 const TOP = 2;
 // How far the stack rises, in metres a radian of the left arm's sweep.
 const STACK_RATIO = 0.09;
-// The arch's square tube.
+// The arch's tube.
 const ARCH = 0.09;
 
 const mode = ({ facing }) => (facing === 'pad' ? 'rear' : 'fly');
@@ -134,13 +136,18 @@ export default recipe({
     const axisOf = (s) => V(s * AXIS.x, AXIS.y, AXIS.z);
     const back = padOf(seat[0]);
     const archY = TOP - ARCH / 2;
-    const wheel = V(0, FRAME_TOP - 0.035 - WHEEL - 0.02, TOWER_Z);
+    const wheel = V(0, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z);
     const pivots = Object.fromEntries(sides.map((s) => [s, pivotJoint(M, axisOf(s), V(0, 1, 0))]));
     const padPart = pad(BACK.width, BACK.height, BACK.thick, M.vinyl, back.at, { soft: 0.025 });
     padPart.name = 'pec_deck_back';
     const padBoard = pad(BACK.width - 0.04, BACK.height - 0.04, 0.012, M.frame, back.at.clone().addScaledVector(back.out, -BACK.thick / 2 - 0.006), { soft: 0.003 });
     for (const p of [padPart, padBoard]) p.rotation.x = -BACK.lean;
-    const weights = weightStack(V(0, 0, TOWER_Z), M, { rodTop: FRAME_TOP - 0.05, toward: 1 });
+    const weights = weightStack(V(0, 0, 0), M, { rodTop: FRAME_TOP - 0.05, toward: 1 });
+    // The stack is built across the kit, so a group turns it to lie fore and aft.
+    const stack = new THREE.Group();
+    stack.add(...weights.parts);
+    stack.position.z = STACK_Z;
+    stack.rotation.y = Math.PI / 2;
     const drop = wire(M);
     const frame = [
       pad(0.36, 0.075, 0.38, M.vinyl, V(0, seat[0] - 0.0375, seat[1]), { soft: 0.024 }),
@@ -148,23 +155,27 @@ export default recipe({
       padPart, padBoard,
       // The post from the floor beam up under the seat's back edge, behind the pad's face to its board.
       tube(0.07, V(0, 0.07, -0.065), V(0, seat[0] + 0.2, BACK.face - 0.11), M.frame),
-      // The floor: a beam from the front foot to the rear one, a small foot at each end.
-      tube(0.07, V(0, 0.035, REAR_Z), V(0, 0.035, FRONT_Z), M.frame),
-      ...[FRONT_Z, REAR_Z].map((z) => pad(FOOT.width, 0.03, FOOT.depth, M.frame, V(0, 0.015, z), { soft: 0.006 })),
-      tube(0.07, V(-UPRIGHTS - 0.035, 0.035, TOWER_Z), V(UPRIGHTS + 0.035, 0.035, TOWER_Z), M.frame),
+      // The floor: the spine, its small foot, and the rear beam with a foot at each end.
+      tube(0.07, V(0, 0.035, REAR.z), V(0, 0.035, FRONT_FOOT.z), M.frame),
+      pad(FRONT_FOOT.width, 0.03, FRONT_FOOT.depth, M.frame, V(0, 0.015, FRONT_FOOT.z), { soft: 0.006 }),
+      tube(0.07, V(-REAR.out, 0.035, REAR.z), V(REAR.out, 0.035, REAR.z), M.frame),
       ...sides.flatMap((s) => [
-        // A brace curving down and back from each upright to the rear foot.
+        pad(0.12, 0.03, 0.2, M.frame, V(s * REAR.out, 0.015, REAR.z), { soft: 0.006 }),
+        // A brace curving out and down from the rear upright to the beam's end.
         bent(`pec_deck_brace:${s}`, [
-          V(s * UPRIGHTS, BRACE_Y, TOWER_Z - 0.03), V(s * UPRIGHTS, BRACE_Y - 0.01, TOWER_Z - 0.1), V(s * 0.17, 0.26, TOWER_Z - 0.24), V(s * 0.12, 0.05, REAR_Z),
+          V(s * 0.06, BRACE_Y, REAR.z), V(s * 0.14, BRACE_Y - 0.02, REAR.z), V(s * 0.3, 0.24, REAR.z), V(s * REAR.out, 0.05, REAR.z),
         ], 0.03, M.frame),
       ]),
-      // The tower with the stack in it, and the arch from its top forward to the overhead unit.
-      ...stackFrame(TOWER_Z, FRAME_TOP, M),
-      mitered([V(0, FRAME_TOP, TOWER_Z - 0.04), V(0, archY, TOWER_Z - 0.04), V(0, archY, AXIS.z)], ARCH, M.frame),
+      // The tower with the stack in it, and the arch from its back up over and forward to the unit.
+      ...[-1, 1].map((d) => pad(TOWER.width, FRAME_TOP, TOWER.depth, M.frame, V(0, FRAME_TOP / 2, STACK_Z + d * TOWER.spread), { soft: 0.01 })),
+      pad(TOWER.width, 0.07, 2 * TOWER.spread + TOWER.depth, M.frame, V(0, FRAME_TOP, STACK_Z), { soft: 0.01 }),
+      bent('pec_deck_arch', [
+        V(0, FRAME_TOP, REAR.z), V(0, 1.8, REAR.z), V(0, 1.905, REAR.z + 0.05), V(0, archY, REAR.z + 0.17), V(0, archY, -0.3), V(0, archY, AXIS.z),
+      ], ARCH / 2, M.frame),
       // The unit: two flat plates on the axles, a bearing on each plate, a tab on the upper one, and a
       // rail from the lower plate back to the tower's top.
       ...PLATES.map((y) => pad(2 * AXIS.x + 0.14, 0.014, 0.14, M.frame, V(0, y, AXIS.z), { soft: 0.003 })),
-      tube(0.05, V(0, PLATES[0], AXIS.z), V(0, PLATES[0], TOWER_Z), M.frame),
+      tube(0.05, V(0, PLATES[0], AXIS.z), V(0, PLATES[0], STACK_Z + TOWER.spread), M.frame),
       ...sides.flatMap((s) => {
         const on = (y) => V(s * AXIS.x, y, AXIS.z);
         return [
@@ -176,7 +187,7 @@ export default recipe({
         ];
       }),
       ...pulley(wheel, M),
-      ...weights.parts,
+      stack,
       drop,
     ];
     // Each arm at its rest: the lever out from its axis, a round pin at its end, the drop arm down to
@@ -227,7 +238,7 @@ export default recipe({
             // A machine no one is on has its stack sat down.
             const l = posed ? raised : raised - HELD;
             weights.lift(l);
-            span(drop, V(0, wheel.y, TOWER_Z), weights.top(l));
+            span(drop, V(0, wheel.y, STACK_Z), weights.top(l).setZ(STACK_Z));
           },
         },
       },

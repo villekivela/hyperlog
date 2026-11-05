@@ -24,7 +24,7 @@ One machine, no variants: which grip the hand takes is a hand-position differenc
   - `1_arm_reverse_pec_deck`: https://youtu.be/WkI6IHmYORY, viewed whole (0:28), side-on. Another machine: the user sits sideways on the seat and sweeps one straight arm from across the chest (0:07) out to the side and back, grip at shoulder height.
 
 ## Scale (#241)
-The table below was scaled by the published 1800 mm. The demo's lifter says the machine is taller: seated at 0:25 his head reaches 71% of the machine's height, his shoulders 55% and the pad's top 60%, and standing at 0:21, nearer the camera, he still comes well short of its top. At 1800 mm his seated head would be 1280 mm up and he would be about 1.55 m tall. The sister HS-PEC is published at 206 cm. The kit is built to the lifter, since that is what a body has to fit: 2000 mm, every number scaled from the photo taken about 1.11 times the table's, and the mannequin then lands on the same three shares. The footprint keeps its published depth; the width, set by the lever, is 1560 mm against the page's 1420.
+The table below was scaled by the published 1800 mm. The demo's lifter says the machine is taller: seated at 0:25 his head reaches 71% of the machine's height, his shoulders 55% and the pad's top 60%, and standing at 0:21, nearer the camera, he still comes well short of its top. At 1800 mm his seated head would be 1280 mm up and he would be about 1.55 m tall. The sister HS-PEC is published at 206 cm. The kit is built to the lifter, since that is what a body has to fit: 2000 mm, every number scaled from the photo taken about 1.11 times the table's, and the mannequin then lands on the same three shares. The page's 1245 mm fits from the tower's back to the arms swept forward, not a base that long: the kit is 1300 mm that way, and 1560 mm wide with the arms out against the page's 1420.
 
 ## Key dimensions (mm)
 Frame 0:23 of the demo is the measuring frame: near side-on, the machine's top (the pivot unit) at 62 px and the floor at the seat post at 650 px in a 720 px frame, so the 1800 mm height gives 3.06 mm/px in the column's plane. The user standing in frame 0:21 (518 px, taken as 1.75 m) gives 3.38 mm/px in his nearer plane. The studio photo, scaled by the same 1800 mm (1395 px), checks the heights.
@@ -71,21 +71,22 @@ Where each main part sits, from the studio photo and the demo at 0:21, 0:25, 0:2
 | Part | Where it sits | Was in the kit | Now |
 |---|---|---|---|
 | Overall height | head 71%, shoulders 55%, pad top 60% of it, for a seated lifter | 1800 | 2000 |
-| Stack and tower | the stack between the tower's two uprights, right behind the pad | a column behind the pad, the stack in a second frame behind it | in the tower, 240 behind the pad's face at the seat, the tower's top at 1660 |
+| Stack and tower | narrow across and deep fore and aft, right behind the pad: at 0:28 the pad is nearly edge-on while the stack and placard stand face-on, so the stack's broad face looks to the side | a column behind the pad, the stack across the machine in a second frame behind it | two uprights 130 wide, 380 apart fore and aft, the stack turned between them, the tower's top at 1660 |
 | Overhead unit | an open skeleton of flat plates above and below the levers, on two axles with bearings, a tab on each, over the shoulders; the lower level runs back to the tower | one solid block | plates at 1690 and 1900, bearings, tabs, and a rail back to the tower |
-| Arch | flat on top, a tight rear corner, level into the unit | a boom from a column | a square tube, its top at 2000 |
+| Arch | from the tower's back, up round a rounded corner and level forward into the unit | a boom from a column | a bent tube, its top at 2000 |
 | Levers | 1800 up, about 550 long | 1620, 480 | as measured |
 | Vertical grip | a cane from the drop arm's top, square to the lever, foot free, 100 off the drop arm, its middle level with the shoulders at 1100 | a U along the lever, 70 inward, the hand 410 from the axis | as measured, the hand 560 from the axis |
 | Short grip | level, the other side of the drop arm from the vertical grip, a little below it, at 1080 | missing | as measured |
 | Seat | top at 500 for the mannequin, range 440 to 620 chosen | 420, range 400 to 560 | as measured |
 | Back pad | 650 tall, leans back about 7 degrees, carried on the seat's post | upright, 590, on a tube to the column | as measured |
 | Post | one post leaning back about 18 degrees from the floor beam, up behind the seat to the pad | a vertical post under the middle of the seat | as measured |
-| Rear braces | from the tower about 460 up, curving down and back to the rear foot | a straight strut from 750 | as measured |
-| Base | a narrow spine with a small foot at each end, 1245 in all | wide cross-beams | as measured |
+| Rear braces | from the rear upright about 460 up, curving down and out to each end of the rear beam (the photo shows one side; the other is mirrored) | a straight strut back from 750 | as measured |
+| Base | a spine from a small foot under the seat to a rear beam that runs out each side at the tower's back | wide cross-beams, 1245 long | as measured |
 
 ## Open gaps
 - Seat range and the start positions' angles: no frame shows the seat at its ends or the knob's steps, so both are chosen, low confidence.
 - The lever radius comes from the published width, not a frame. The demo has no view from above or straight from the front.
+- How far the rear beam runs out (420 each side, chosen) and whether it runs both ways: only the near side shows.
 - The published 1800 mm height against the 2000 mm the demo's lifter gives (Scale). No page explains it; the demo's red-framed machine may be an earlier build.
 - The levers stay straight and level, and the drop arms round; the real ones slope a little and are flat bars. Neither changes how the machine fits a body.
 - The mannequin's arms stay more bent than the demo's, about 58 degrees at the elbow at the rear delt's end. They lie level, as the demo's do, but a straighter arm needs a lever longer than the footprint allows.

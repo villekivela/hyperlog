@@ -529,8 +529,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   its chain. A free body the hips carry, on no joint: the plate hangs plumb in front of the thighs at
   about mid-thigh however the body leans, and the chain runs to it from the belt's sides.
 - `pec_deck` (#208, #241, a machine kind: `MACHINES` in `kit.mjs` maps its 3 exercises, all posed) is a
-  seat and a 300 mm back pad leaning back 7° on one post, in front of a tower holding the stack. An arch
-  from the tower's top carries an open overhead unit 2.0 m up, built to the ref's lifter and not its
+  seat and a 300 mm back pad leaning back 7° on one post, in front of a tower narrow across and deep
+  fore and aft, the stack's broad face looking to the side, on a spine with a rear beam out each side. An
+  arch from the tower's back carries an open overhead unit 2.0 m up, built to the ref's lifter and not its
   published 1.8 m: two flat plates on two axles, 0.2 m either side of the centre line, over the shoulders
   of a back on the pad, and a rail back to the tower. A lever 0.55 m long swings from each axle 1.8 m up, a pin across its end and a drop arm hanging from it. A vertical grip hangs like a
   cane 100 mm off the drop arm, square to the lever, its middle at 1.1 m, and a short level grip stands

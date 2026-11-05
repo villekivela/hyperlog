@@ -42,12 +42,29 @@ const rad = (d) => (d * Math.PI) / 180;
 
 // The page gives 1.80 m and 1.42 m, but the demo's lifter stands against a taller machine: his head
 // seated is 71% of its height, his shoulders 55%, the pad's top 60%. It is built to the lifter.
-test('it is 2.0 m tall, as the demo has it against its lifter, 1.56 m wide with the arms out and 1.245 m deep', () => {
-  const b = box(deck());
+test('it is 2.0 m tall, as the demo has it against its lifter, 1.56 m wide with the arms out, and 1.3 m from the tower\'s back to the arms swept forward', () => {
+  const kit = deck();
+  const b = box(kit);
   close(b.max.y, 2.0, 0.01, 'the overall height');
   close(b.min.y, 0, 0.01, 'on the floor');
   close(b.max.x - b.min.x, 1.56, 0.03, 'the width');
-  close(b.max.z - b.min.z, 1.245, 0.02, 'the depth');
+  kit.scrub('left', rad(104));
+  kit.scrub('right', rad(104));
+  kit.group.updateMatrixWorld(true);
+  const forward = box(kit);
+  close(forward.max.z - forward.min.z, 1.3, 0.03, 'the depth, the page\'s 1.245 m at this scale');
+});
+
+// The demo at 0:28: the pad nearly edge-on while the stack and the placard stand face-on.
+test('the tower is narrow across and deep fore and aft, the stack\'s broad face looking to the side', () => {
+  const kit = deck();
+  const stack = head(kit);
+  assert.ok(stack.max.z - stack.min.z > 2 * (stack.max.x - stack.min.x), 'the stack long fore and aft');
+  const uprights = boxes(kit).filter(({ mesh, box: b }) => mesh.userData.solid && b.max.y - b.min.y > 1.3 && b.max.z < -0.2);
+  assert.equal(uprights.length, 2, 'two uprights');
+  for (const { box: b } of uprights) assert.ok(b.max.x - b.min.x < 0.15 && b.min.x > -0.08, 'each on the centre line, about 130 mm across');
+  const [front, rear] = uprights.map(({ box: b }) => b.getCenter(new THREE.Vector3()).z).sort((a, c) => c - a);
+  close(front - rear, 0.38, 0.03, 'one ahead of the other');
 });
 
 test('seated, the lifter stands to the machine as the demo\'s does: the shoulders 55% of its height, the pad\'s top 60%', async () => {
@@ -60,17 +77,20 @@ test('seated, the lifter stands to the machine as the demo\'s does: the shoulder
   close(pad.max.y / top, 0.6, 0.02, 'the pad top\'s share');
 });
 
-test('the base is a narrow spine with small feet: open floor either side of it', () => {
+test('the base ends at a small foot under the seat, and its rear beam runs out to each side at the tower', () => {
   const low = boxes(deck()).filter(({ box: b }) => b.max.y < 0.12);
   assert.ok(low.length, 'parts on the floor');
-  for (const { box: b } of low) assert.ok(b.max.x - b.min.x < 0.5, `a part ${(b.max.x - b.min.x).toFixed(2)} m across on the floor`);
+  assert.ok(Math.max(...low.map(({ box: b }) => b.max.z)) < 0.2, 'nothing on the floor ahead of the seat\'s front');
+  const rear = low.filter(({ box: b }) => b.max.z < -0.5);
+  assert.ok(Math.max(...rear.map(({ box: b }) => b.max.x)) > 0.38, 'the rear beam out to the side');
+  assert.ok(Math.min(...rear.map(({ box: b }) => b.min.x)) < -0.38, 'and to the other');
 });
 
 test('the lower plate runs back to the tower\'s top, and the arch comes level into the unit', () => {
   const kit = deck();
-  const rail = boxes(kit).find(({ box: b }) => b.min.y > 1.6 && b.max.y < 1.75 && b.max.x - b.min.x < 0.1 && b.max.z - b.min.z > 0.25);
+  const rail = boxes(kit).find(({ box: b }) => b.min.y > 1.6 && b.max.y < 1.75 && b.max.x - b.min.x < 0.1 && b.max.z - b.min.z > 0.15);
   assert.ok(rail, 'a rail from the unit to the tower');
-  assert.ok(rail.box.min.z < -0.35, `the rail reaches the tower, to z ${rail.box.min.z.toFixed(2)}`);
+  assert.ok(rail.box.min.z < -0.25, `the rail reaches the tower, to z ${rail.box.min.z.toFixed(2)}`);
 });
 
 test('the empty machine\'s stack sits down as one block', () => {
@@ -161,10 +181,9 @@ test('the overhead unit is open: flat plates on the two axles, nothing thick bet
   for (const { box } of across) assert.ok(box.max.y - box.min.y < 0.03, `a part ${(box.max.y - box.min.y).toFixed(2)} m thick across the unit`);
 });
 
-test('the rear braces meet the tower about a quarter of the way up', () => {
-  const behind = boxes(deck()).filter(({ box }) => box.min.z < -0.6 && box.max.z < -0.3);
-  assert.ok(behind.length, 'something behind the tower');
-  for (const { box } of behind) assert.ok(box.max.y < 0.5, `a part behind the tower ${box.max.y.toFixed(2)} m up`);
+test('a brace runs out and down each side of the tower from about a quarter of the way up', () => {
+  const braces = boxes(deck()).filter(({ box: b }) => b.max.y > 0.3 && b.max.y < 0.55 && b.max.z < -0.3 && b.max.x - b.min.x > 0.25 && (b.min.x > 0.02 || b.max.x < -0.02));
+  assert.equal(braces.length, 2, 'one a side, running out sideways');
 });
 
 test('no crossbar runs across the tower\'s window: the pad is carried on the seat\'s post', () => {
@@ -181,7 +200,7 @@ const head = (kit) => {
 
 test('the stack stands in the tower right behind the pad, with no column between them', () => {
   const { z } = head(deck()).getCenter(new THREE.Vector3());
-  assert.ok(z > -0.46 && z < -0.3, `the stack at z ${z.toFixed(2)}, not just behind the pad`);
+  assert.ok(z > -0.56 && z < -0.42, `the stack at z ${z.toFixed(2)}, not in the tower behind the pad`);
 });
 
 test('the stack rises as the arms come in', () => {
@@ -240,7 +259,7 @@ test('the seat goes where the grips meet the shoulders, within its 0.44 to 0.62 
   assert.match(rule.rule, /shoulder/);
   const { rig } = await buildStage(prepare('machine_chest_press'));
   const [y] = rule.solve({ L: rig.dims, entry: { body: {} } });
-  close(y + 0.09 + rig.dims.trunkUp, 1.1, 0.001, 'the shoulders at the grips');
+  close(y + 0.095 + rig.dims.trunkUp, 1.1, 0.001, 'the shoulders at the grips');
   assert.ok(y >= 0.44 && y <= 0.62);
   const [tall] = rule.solve({ L: { ...rig.dims, trunkUp: 0.3 }, entry: { body: {} } });
   assert.equal(tall, 0.62, 'the seat stops at its highest');
