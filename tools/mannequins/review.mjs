@@ -46,6 +46,8 @@ export const BATCHES = {
   ],
   // The lateral raise machine's seated raise, posed to prove a body fits it (#241).
   'lateral-raise': ['machine_lateral_raise'],
+  // The 45 degree hyperextension on its bench, posed to prove a body fits it (#241).
+  'hyperextension-bench': ['45_hyperextension'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
   // The hip thrust machine's exercise (#229).

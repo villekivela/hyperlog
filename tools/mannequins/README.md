@@ -290,6 +290,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
+| `back_extension` | face down along a hyperextension bench, the trunk hinging at the hips, the arms crossed on the chest | `lean`, degrees from upright forward, at `top` and `bottom`; the recipe's `linkage` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
@@ -597,22 +598,24 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   joints, so no seat, no floor contact and no pivot to hold: the feet hang 0.24 m clear of the floor. It
   stands in the studio under its exercise. Heights are rough (±50 mm, one three-quarter render in the ref)
   and the arm pads are flat.
-- `hyperextension_bench` (#220, weighted bodyweight equipment; `STATIONS` in `kit.mjs` maps its one
-  exercise, `45_hyperextension`, not posed yet, so no clip changes) is a rigid 45° back extension
-  bench. The lifter lies face down and faces -z; the origin is on the floor under the hip pads' top
-  end, which is 825 mm high, with the feet toward +z. A 1248 mm rail of 75 mm tube lies on two cross
-  feet 666 mm across; a column leans up from it parallel to the slope to a bracket under two hip pads
-  (210 mm wide, 55 mm apart, 330 mm long, 90 mm thick, sloping down at 45° toward the feet), with a
-  strut under it and a pair of grab handles at 690 mm reaching 50 mm past the back end. A foot plate
-  (470 by 330 mm) sits square to the body line, its surface 900 mm down the slope from the pads' top
-  end on a post from the rail, and two heel rollers (190 mm long, 130 across) on an axle through a
-  post from the plate's heel end, 195 mm up the body line from the plate and 210 mm off it. Contacts,
-  on the frame: `thighPad` (thighs, each pad's middle), `footPlate` (feet) and `heelRollers`
-  (shins, each roller's centre). It has no fit rule and no options. It departs from the ref: the body
-  line and pad height are chosen (the real bench telescopes, 844-1119 mm), so the plate stands about
-  180 mm nearer the pads than in the drawing, which is at 40°; and the angle and height collars, the
-  heel lock, the holes down the rail and the pads' rolled top end are left out. The studio shows it
-  alone: `npm run studio`, then the `hyperextension bench` row under Kits.
+- `hyperextension_bench` (#220, #241, weighted bodyweight equipment; `STATIONS` in `kit.mjs` maps its
+  one exercise, `45_hyperextension`, posed on the `back_extension` motion) is a rigid 45° back
+  extension bench. The lifter lies face down and faces +z; the origin is on the floor under the hip
+  pads' top end, which is 825 mm high, with the feet toward -z. A 1248 mm holed rail of 75 mm tube
+  stands 35 mm off the floor on two flat feet 666 mm across, its open ends capped. A sleeved column
+  leans up at 45° from a pivot 790 mm from the head end, a strut from a pivot at 218 mm, mitred over at
+  its top, holds it, and both stand on clevises on the rail. Two hip pads (210 mm wide, 55 mm apart, 330 mm long,
+  90 mm thick, sloping down at 45° toward the feet) lie on a carriage flush on the column, a bar across
+  it carrying a pair of grab handles at 690 mm, reaching 50 mm past the head end. A foot plate (470 by
+  330 mm) sits square to the body line, its surface 900 mm down the slope from the pads' top end, on a
+  stub and a post from the rail. The post runs on as one mitred arm behind the plate and up the body
+  line to a cross tube, and two heel rollers (190 mm long, 130 across) turn on an axle through it, 195
+  mm up the body line from the plate and 240 mm off it. Contacts, on the frame: `thighPad` (thighs,
+  each pad's middle), `footPlate` (feet) and `heelRollers` (shins, each roller's centre). The linkage
+  gives `back_extension` the hips, the ankle and the sole. It has no fit rule and no options. It
+  departs from the ref: the body line and pad height are chosen (the real bench telescopes, 844-1119
+  mm), and the transport wheels and foot-end handle, the angle collars and the pads' rolled top end
+  are left out.
 - `dip_machine` (#226, a machine kind; `seated_dip_machine`, its one exercise, is posed on it, in the
   `dip-machine` batch; serve it with `npm run studio`, `f`, `dip_machine`, and `j` to its kit row)
   is laid out from the ref's photos, read again for where each part sits against the seat

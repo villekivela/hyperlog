@@ -285,6 +285,30 @@
         }
       ]
     },
+    "45_hyperextension": {
+      "clip": "45_hyperextension.glb",
+      "equipment": "weighted_bodyweight",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.05
+        ],
+        "halfHeight": 0.95,
+        "azimuth": 80,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.7
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_hyperextension_bench.bin"
+      ]
+    },
     "arnold_press_seated": {
       "clip": "arnold_press_seated_75.glb",
       "equipment": "dumbbell",
