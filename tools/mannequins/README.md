@@ -337,7 +337,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | `lateral_raise_machine` (seated posed, #241; standing has no kit) |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | `dip_machine` |
-| `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
+| `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` (posed, #241) |
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
@@ -471,12 +471,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   way. `position`
   takes one number for a two-arm lift, the same hole on both towers, and a pair only where the arms
   differ.
-- `hip_machine` (#214, built, none of its two exercises posed yet, so no clip changes) is the one
-  hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, a
-  rear leg behind it, and a tall tower with the weight stack standing ahead of the posts, as the
-  maker's photos show, on a floor beam 1.55 m long. Two arms turn on one vertical axle on the centre
-  line under the seat, 140 mm behind its front edge. Each arm (`arm_l`, `arm_r`, revolute about the
-  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 400 mm forward to a
+- `hip_machine` (#214, #241, both exercises posed on the `leg_arms` motion) is the one hip abduction
+  and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, flush on a spine
+  that rakes up from a cross member between two splayed rear legs, a hoop round the spine carrying a
+  grip each side of the seat, and a tall tower, its front upright swept over the top in one length,
+  with the weight stack standing ahead of the posts, as the maker's photos show, on a floor beam
+  1.55 m long. Two arms turn on one vertical axle on the centre line under the hips, 240 mm behind
+  the seat's front edge. Each arm (`arm_l`, `arm_r`, revolute about the
+  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 430 mm forward to a
   post with a 280 by 160 mm knee pad at 560 mm and a foot plate at 80 mm; the right arm rides 60 mm
   above the left on the shared axle. `pads` (`outer`, the default, on the outsides of the knees for
   abduction, or `inner`, between them for adduction) and `start` (degrees, snapped to the ratchet's

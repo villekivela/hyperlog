@@ -25,6 +25,8 @@ const MACHINES = {
   t_bar_row: 'lever',
   kelso_shrug: 'lever',
   machine_lateral_raise: 'arm_l',
+  machine_hip_abduction: 'arm_l',
+  machine_adduction: 'arm_l',
   seated_dip_machine: 'arms',
   machine_hip_thrust: 'carriage',
 };

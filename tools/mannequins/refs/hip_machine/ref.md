@@ -49,6 +49,23 @@ Seated, back supported, knees bent, feet on a foot plate at the bottom of each a
 - Placard rule (from the page): align the red axis marker with the hip joint. The video agrees: its make's pivot column sits under the seat just in front of the backrest, under the hip, and the lifter keeps his back on the pad and holds the side handles. On the HS-HAB the single axis is on the centreline, so it can sit under the midpoint between the hips, not under either hip joint.
 - The knee pads press on the outside of the knee (abduction) or the inside (adduction), the feet sit on the foot plates, the shins upright beside the posts. The video's make instead has the legs out in front on foot bars with the pads at the outer knee; the HS-HAB renders show the bent-knee setup.
 
+## Measured part list (#241)
+Where each main part sits, from the `19-66` render, the `31-16` render and the storyblok `hip-abduction.jpg`, all three-quarter from the front left, and the video at 0:12 to 0:16. Scaled by the 1400 mm height and the 1550 mm length.
+
+| Part | Where it sits, estimated from those pictures | Was in the kit | Now |
+|---|---|---|---|
+| Tower | the front upright sweeps over the top in one length, as wide all the way, down onto the rear upright, the stack between them | a thin bent tube rising out of a wider upright | as measured, 130 by 70 mm, a 200 mm corner |
+| Guide rods | up from the stack to a head block under the top | stopped short of everything | up into a bar between the uprights at 1175 |
+| Spine | one tube raked back behind the backrest, flat top a little under the pad's, kinked just behind the seat and down to a cross member | a straight vertical leg, the pad standing off it | as measured, 80 mm, flush on the pad's back |
+| Rear legs | two, from under the seat's back edge out and back to the rear foot, a cross member between them | none | as measured, from 190 out at 430 up to 300 out on the rear rail |
+| Grips | a hoop round the back of the spine at seat height, its sides running forward beside the seat | handles 180 mm above the seat on struts ending in the air | as measured, grips 240 out at 540 up, each half of the hoop ending in the spine |
+| Axle | up from the base to the seat's rail | stopped 150 mm under the seat | as measured, up to the seat's bracket |
+| Axis and arms | the placard's rule puts the axis under the hip joints; the renders read about 140 behind the seat's front edge, 400 to the post | 140, 400 | 240 behind the front edge, under the mannequin's hips on the back pad, as the rule has it, and 430 to the post so the pads still meet the knees |
+| Tower brace | a diagonal from the tower's side down to the floor beam | none | from the beam up to the rear upright at 450, kept short so the foot plates clear it |
+| Foot plate | at the foot of each post, under the whole foot | centred on the ankle, the toes over its end | 70 mm further forward |
+
+The photos' rear foot is two flat plates on a low beam; the kit keeps the floor rail its footprint test measures. The grips stay on the hoop's sides behind the thighs' sweep, and the kit's hoop ends in the spine's sides where the photos' passes behind it.
+
 ## Open gaps
 - No side-on or top-down photo of the HS-HAB or HS-HAD was found, so the seat height, pad heights, arm reach and pivot position are proportions from three-quarter renders, rough.
 - The seat's adjustment range is chosen as fixed: no picture shows it.

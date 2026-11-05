@@ -16,6 +16,7 @@ export const MOTION_TEMPOS = {
   dumbbell_press: tempo(2, 0.3, 1, 0.7),
   pulldown: tempo(1, 0.3, 2, 0.5),
   pressdown: tempo(1, 0.2, 2, 0.5),
+  leg_arms: tempo(1, 0.3, 2, 0.5),
   leg_press: tempo(2, 0.3, 1, 0.6),
   chest_press: tempo(2, 0.3, 1, 0.6),
   // Pushed down to the hips for the 1 s and let up in 2: the lowering is the return.

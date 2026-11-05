@@ -657,15 +657,16 @@ export function ropeParts(M, { reversed = false, hands = [-1, 1] } = {}) {
  * Square tubing `w` across, its corners rounded, swept along the polyline `points`, each bend cut
  * on its bisector so the two lengths meet in a mitre, not a lap. Built in the world, where the
  * points are. `ends` gives the plane's normal each end is cut square to, where a length lands on a
- * face (`[start, end]`), in place of square to its own length.
+ * face (`[start, end]`), in place of square to its own length. `wide` makes the tube that much
+ * across its side, for a box section.
  */
-export function mitered(points, w, material, { solid = true, ends = [] } = {}) {
+export function mitered(points, w, material, { solid = true, ends = [], wide = w } = {}) {
   const r = w * 0.28;
   const profile = [];
   for (const [cx, cy, from] of [[1, 1, 0], [-1, 1, 90], [-1, -1, 180], [1, -1, 270]]) {
     for (let k = 0; k <= 3; k++) {
       const a = ((from + k * 30) * Math.PI) / 180;
-      profile.push([cx * (w / 2 - r) + r * Math.cos(a), cy * (w / 2 - r) + r * Math.sin(a)]);
+      profile.push([cx * (wide / 2 - r) + r * Math.cos(a), cy * (w / 2 - r) + r * Math.sin(a)]);
     }
   }
   const n = points.length - 1;

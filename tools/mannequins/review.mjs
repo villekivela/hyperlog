@@ -46,6 +46,8 @@ export const BATCHES = {
   ],
   // The lateral raise machine's seated raise, posed to prove a body fits it (#241).
   'lateral-raise': ['machine_lateral_raise'],
+  // The hip machine's abduction and adduction, posed to prove a body fits it (#241).
+  'hip-machine': ['machine_hip_abduction', 'machine_adduction'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
   // The hip thrust machine's exercise (#229).
