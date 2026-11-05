@@ -46,6 +46,11 @@ export const BATCHES = {
   ],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).
+  'power-rack': [
+    'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
+    'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
+  ],
   // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).
   dumbbell: [
     'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',
@@ -56,6 +61,12 @@ export const BATCHES = {
   'cable-crossover': [
     'cable_crossover', 'cable_chest_press', 'low_to_high_cable_press', 'high_cable_lateral_raise', 'cable_y_raise',
     'behind_the_back_cable_lateral_raise', 'cable_shrug_in', '1_arm_cable_press_around', '1_arm_katana_cable_triceps_extension',
+  ],
+  // The second of the two (#197): those that face a tower, kneel, sit or lift a leg, on a rope, a
+  // bar or a cuff.
+  'cable-crossover-2': [
+    '1_leg_cable_glute_kickback', 'cable_crunch', 'cable_face_pull', 'cable_hip_abduction', 'cable_pull_through',
+    'cable_triceps_kickback', 'cable_woodchopper', 'cable_wrist_curl', 'cable_wrist_extension', 'seated_cable_flye',
   ],
 };
 

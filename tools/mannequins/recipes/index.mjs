@@ -18,10 +18,18 @@ import tBarRowMachine from './t-bar-row-machine.mjs';
 import cableCrossover from './cable-crossover.mjs';
 import smithMachine from './smith-machine.mjs';
 import powerRack from './power-rack.mjs';
+import dipBelt from './dip-belt.mjs';
+import lateralRaiseMachine from './lateral-raise-machine.mjs';
+import hipMachine from './hip-machine.mjs';
+import ezBar from './ez-bar.mjs';
+import safetyBar from './safety-bar.mjs';
+import trapBar from './trap-bar.mjs';
+import hyperextensionBench from './hyperextension-bench.mjs';
+import pecDeck from './pec-deck.mjs';
 import dipMachine from './dip-machine.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
   pulldownMachine, preacherCurl, tBarRowMachine, cableCrossover,
-  smithMachine, powerRack, dipMachine,
+  smithMachine, powerRack, dipBelt, ezBar, hipMachine, safetyBar, lateralRaiseMachine, hyperextensionBench, pecDeck, trapBar, dipMachine,
 ].map((r) => [r.name, r]));
