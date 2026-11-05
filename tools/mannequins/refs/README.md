@@ -82,8 +82,9 @@ gaps says why):
 - `power_rack`: the bar height (2.30 m) is chosen and the dip handle height is rough, from one
   video. The chin-up video is unavailable.
 - `ez_bar`: the bend angles and grip places are chosen; the zigzag depth is a rough photo estimate.
-- `pec_deck` (built, #208): the seat range, the start position's step and the lever radius stay chosen or rough;
-  no top or straight-front view.
+- `pec_deck` (built, #208; posed, #241): built at 2.0 m to the demo's lifter against the page's 1.8 m; the seat
+  range, the start position's step, the lever radius and the rear beam's reach stay chosen or rough; no top or
+  straight-front view.
 - `lateral_raise_machine`: the seat range is chosen and the pivot spacing is rough. The standing
   exercise's video shows another, standing machine, with no reference model of its own.
 - `hip_machine` (built, #214): the seat range, closed pad spacing and the range of motion stay chosen or rough; no

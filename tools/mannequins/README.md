@@ -538,16 +538,17 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   fore and aft, the stack's broad face looking to the side, on a spine with a rear beam out each side. An
   arch from the tower's back carries an open overhead unit 2.0 m up, built to the ref's lifter and not its
   published 1.8 m: two flat plates on two axles, 0.2 m either side of the centre line, over the shoulders
-  of a back on the pad, and a rail back to the tower. A lever 0.55 m long swings from each axle 1.8 m up, a pin across its end and a drop arm hanging from it. A vertical grip hangs like a
-  cane 100 mm off the drop arm, square to the lever, its middle at 1.1 m, and a short level grip stands
+  of a back on the pad, and a rail back to the tower. A lever 0.55 m long swings from each axle 1.8 m up,
+  a pin across its end and a drop arm hanging from it. A vertical grip hangs like a cane 100 mm off the
+  drop arm, square to the lever, its middle at 1.1 m, and a short level grip stands
   on the other side. Each arm is its own body on a revolute joint (`left`, `right`), its value how far it
   has swept from its rest. The stack hangs on `left`, as the arms move together. The pec fly rests a
-  little behind the shoulder line and sweeps 0 to 120°, the hands meeting at 104°. With `facing: 'pad'`
+  little behind the shoulder line and sweeps 0 to 110°, the hands meeting at 104°. With `facing: 'pad'`
   the kit stands turned round the mannequin, which always faces +z: the rear delt fly rests 45° behind
   that line, the levers past the tower's sides, and sweeps 0 to 60°, the arms in line with the shoulders
   at 57°. `hips` sets how far along the seat that lifter sits, and `one` keeps the right arm at rest for
   a one-arm lift. Contacts: the hands on `leftGrip` and `rightGrip`, or `leftShort` and `rightShort`
-  facing the pad, each naming its `hand`, and `backPad` on the frame, the back or the chest. Its one fit
+  facing the pad, each naming its `hand`, `backPad` on the frame, the back or the chest, and `seatTop`, the thighs. Its one fit
   rule sets `seat`, `[y, z]`, so the shoulders are level with the grips, 0.44 to 0.62 m up. It departs
   from the ref: it has one start for each exercise (the ref's knob has five, 15° apart, chosen), the
   drop arms are rigid on their pins, and the seat range and lever radius are chosen numbers.

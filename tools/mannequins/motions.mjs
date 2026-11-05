@@ -884,7 +884,7 @@ export const MOTIONS = {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.15).normalize(),
       ...seatedFeet(e, L),
-      hand: handle,
+      hand: handsOf(e, handle),
       across,
       armPole: elbowsTo(e, [0.7, -1, -0.5]),
       pivot, handle,

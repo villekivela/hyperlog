@@ -33,7 +33,7 @@ Frame 0:23 of the demo is the measuring frame: near side-on, the machine's top (
 |---|---|---|
 | Footprint length | 1245 (49 in) | Life Fitness US page, "Size (L x W x H)" |
 | Footprint width | 1420 (56 in) | Life Fitness US page |
-| Overall height | 1800 (71 in) published; built at 2000 | Life Fitness US page for HS-FLY (180 cm, read again #241). The demo disagrees: see Scale below |
+| Overall height | 1800 (71 in) published; built at 2000 | Life Fitness US page for HS-FLY (180 cm, read again #241). The demo disagrees: see Scale above |
 | Recommended live area | 2610 x 1730 | Life Fitness US page (103 x 68 in) |
 | Machine weight / stack | 263 kg / 138 kg (295 lb) | Life Fitness US page |
 | Seat top | about 440 at the setting shown | estimated from the demo video at 0:21 (empty seat), scaled by the 1800 mm height; the seat is nearer the camera than the column, so it may be 20 mm less |
@@ -51,7 +51,7 @@ Frame 0:23 of the demo is the measuring frame: near side-on, the machine's top (
 - Each drop arm hangs from its lever on a horizontal pin at the lever's end (the round cap in the studio photo); the page says the arms pivot to fit users, so the drop can swing a little fore and aft. Its range is not shown.
 - Range of motion, pec fly: about 100 degrees per arm, from the hands level with the shoulders and a little behind them (demo 0:25) to the hands nearly touching in front of the chest (demo 0:28). Estimated from those frames and the `pec_deck` video at 2:42 and 2:46; the views are oblique, so give or take 15 degrees.
 - Range of motion, rear delt: about 55 degrees per arm on this machine, from the levers about 45 degrees behind the shoulder line, past the sides of the tower, the hands well ahead of the chest and about 1 m apart (demo 0:35) to the arms straight out to the sides in line with the shoulders (demo 0:40). The levers can't pass the tower, so the hands never come together here. The `reverse_pec_deck` video (10:26 to 10:28) shows hands together on another machine.
-- Start position: a knob on the pivot unit picks one of five start angles (demo 0:14 to 0:18; page: five-position start). The angle between the positions is not shown; chosen 15 degrees, low confidence. The recipe uses one start, set by the fit rule (the arms a little behind the shoulder line), so the step only places the other four.
+- Start position: a knob on the pivot unit picks one of five start angles (demo 0:14 to 0:18; page: five-position start). The angle between the positions is not shown; chosen 15 degrees, low confidence. The recipe uses one start for each exercise, the arms a little behind the shoulder line for the pec fly and 45 degrees behind it for the rear delt, so the step only places the other three.
 - Both arms pull the one 138 kg stack through cable and pulleys (11 cm and 15 cm pulleys, page).
 
 ## Handles
@@ -66,7 +66,7 @@ Frame 0:23 of the demo is the measuring frame: near side-on, the machine's top (
 - Built-in foot bar: on the HS-PEC only. The HS-FLY has none (studio photo, demo); the user's feet are on the floor.
 
 ## Measured part list (#241)
-Where each main part sits, from the studio photo and the demo at 0:21, 0:25, 0:28, 0:35 and 0:40, as the kit now has it at the 2000 mm scale. Heights are from the floor.
+Where each main part sits, from the studio photo and the demo at 0:21, 0:25, 0:28, 0:35 and 0:40, as the kit now has it at the 2000 mm scale. Each is estimated from those frames and scaled by the lifter (Scale). Against a seated lifter: the seat top 500 up, the shoulders and the vertical grips 600 above it, the pad from 50 to 700 above it, the levers 700 above the shoulders, the axes over the shoulders. Heights in the table are from the floor.
 
 | Part | Where it sits | Was in the kit | Now |
 |---|---|---|---|
@@ -87,6 +87,7 @@ Where each main part sits, from the studio photo and the demo at 0:21, 0:25, 0:2
 - Seat range and the start positions' angles: no frame shows the seat at its ends or the knob's steps, so both are chosen, low confidence.
 - The lever radius comes from the published width, not a frame. The demo has no view from above or straight from the front.
 - How far the rear beam runs out (420 each side, chosen) and whether it runs both ways: only the near side shows.
+- The two rests stand 35 degrees apart (0:25 and 0:35) though the page says nothing is adjusted between the exercises: either the knob is moved off camera or an arm can swing back past its stop. The kit gives each exercise its own rest.
 - The published 1800 mm height against the 2000 mm the demo's lifter gives (Scale). No page explains it; the demo's red-framed machine may be an earlier build.
 - The levers stay straight and level, and the drop arms round; the real ones slope a little and are flat bars. Neither changes how the machine fits a body.
 - The mannequin's arms stay more bent than the demo's, about 58 degrees at the elbow at the rear delt's end. They lie level, as the demo's do, but a straighter arm needs a lever longer than the footprint allows.

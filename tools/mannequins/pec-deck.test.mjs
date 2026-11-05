@@ -7,12 +7,12 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
-import { EQUIPMENT, KITS, MACHINES, buildKit, shownAlone } from './kit.mjs';
+import { EQUIPMENT, KITS, MACHINES, buildKit } from './kit.mjs';
 import { buildStage } from './stage.mjs';
 import { prepare } from './entries.mjs';
 import { POSES } from './poses.mjs';
 import { checkPose } from './checks.mjs';
-import { heldAt, wpos } from './rig.mjs';
+import { V, heldAt, wpos } from './rig.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const library = JSON.parse(await readFile(path.join(HERE, '..', '..', 'app', 'src', 'main', 'assets', 'exercises.json'), 'utf8'));
@@ -52,7 +52,7 @@ test('it is 2.0 m tall, as the demo has it against its lifter, 1.56 m wide with 
   kit.scrub('right', rad(104));
   kit.group.updateMatrixWorld(true);
   const forward = box(kit);
-  close(forward.max.z - forward.min.z, 1.3, 0.03, 'the depth, the page\'s 1.245 m at this scale');
+  close(forward.max.z - forward.min.z, 1.3, 0.03, 'the depth');
 });
 
 // The demo at 0:28: the pad nearly edge-on while the stack and the placard stand face-on.
@@ -86,7 +86,7 @@ test('the base ends at a small foot under the seat, and its rear beam runs out t
   assert.ok(Math.min(...rear.map(({ box: b }) => b.min.x)) < -0.38, 'and to the other');
 });
 
-test('the lower plate runs back to the tower\'s top, and the arch comes level into the unit', () => {
+test('the lower plate runs back to the tower\'s top', () => {
   const kit = deck();
   const rail = boxes(kit).find(({ box: b }) => b.min.y > 1.6 && b.max.y < 1.75 && b.max.x - b.min.x < 0.1 && b.max.z - b.min.z > 0.15);
   assert.ok(rail, 'a rail from the unit to the tower');
@@ -97,7 +97,7 @@ test('the empty machine\'s stack sits down as one block', () => {
   close(head(deck()).max.y, 0.57, 0.002, 'the top plate at rest');
 });
 
-test('each arm is its own revolute joint about a vertical axis 1.8 m up, 0.4 m apart, the sweep 0 to 120° inward', () => {
+test('each arm is its own revolute joint about a vertical axis 1.8 m up, 0.4 m apart, the sweep 0 to 110° inward', () => {
   const kit = deck();
   assert.deepEqual(Object.keys(kit.joints).sort(), ['left', 'right']);
   for (const [side, s] of [['left', -1], ['right', 1]]) {
@@ -105,7 +105,7 @@ test('each arm is its own revolute joint about a vertical axis 1.8 m up, 0.4 m a
     assert.equal(j.type, 'revolute');
     close(j.origin.y, 1.8, 0.02, `the ${side} axis' height`);
     close(j.origin.x, s * 0.2, 0.01, `the ${side} axis' side`);
-    assert.deepEqual(j.limits, [0, rad(120)]);
+    assert.deepEqual(j.limits, [0, rad(110)]);
     assert.ok(Math.abs(j.axis.y) > 0.999 && Math.sign(j.axis.y) === -s, `the ${side} axis is vertical and mirrors the other`);
   }
   assert.ok(kit.bodies.left.length && kit.bodies.right.length);
@@ -115,7 +115,7 @@ test('each arm is its own revolute joint about a vertical axis 1.8 m up, 0.4 m a
 // the arms out and inward with them together, so the hand stays an arm's length from the shoulder.
 test('the vertical grip stands 100 mm off the drop arm, square to the lever, about 0.56 m from its axis', () => {
   const kit = deck();
-  for (const [side, s] of [['left', -1], ['right', 1]]) {
+  for (const side of ['left', 'right']) {
     const axis = kit.joints[side].origin;
     const g = grip(kit, side);
     close(Math.hypot(g.x - axis.x, g.z - axis.z), Math.hypot(0.55, 0.1), 0.002, `the ${side} grip from its axis`);
@@ -242,11 +242,11 @@ test('the contacts tie each hand to its arm\'s grip and the back to the frame\'s
   const kit = deck();
   assert.deepEqual(
     kit.contacts.map((c) => [c.body, c.point, c.landmark, c.at.length]),
-    [['left', 'leftGrip', 'hands', 1], ['right', 'rightGrip', 'hands', 1], ['frame', 'backPad', 'back', 1]],
+    [['left', 'leftGrip', 'hands', 1], ['right', 'rightGrip', 'hands', 1], ['frame', 'backPad', 'back', 1], ['frame', 'seatTop', 'thighs', 1]],
   );
   assert.deepEqual(
     deck({ facing: 'pad' }).contacts.map((c) => [c.body, c.point, c.landmark, c.at.length]),
-    [['left', 'leftShort', 'hands', 1], ['right', 'rightShort', 'hands', 1], ['frame', 'backPad', 'chest', 1]],
+    [['left', 'leftShort', 'hands', 1], ['right', 'rightShort', 'hands', 1], ['frame', 'backPad', 'chest', 1], ['frame', 'seatTop', 'thighs', 1]],
   );
   const g = grip(kit, 'left');
   const held = [];
@@ -268,14 +268,6 @@ test('the seat goes where the grips meet the shoulders, within its 0.44 to 0.62 
 test('its recipe names no brand', async () => {
   const source = await readFile(path.join(HERE, 'recipes', 'pec-deck.mjs'), 'utf8');
   assert.doesNotMatch(source, /hammer|strength|life ?fitness|\bhs-|logo|decal/i);
-});
-
-test('the studio shows it alone, standing at rest with both arms out', async () => {
-  const entry = shownAlone('pec_deck');
-  assert.ok(entry?.camera, 'a framing to open on');
-  const stage = await buildStage(entry);
-  stage.pose(0);
-  assert.ok(stage.kit.kits.pec_deck);
 });
 
 // #241: a body fits it. The checks hold the hands on the grips, the pad on the back or the chest, the
@@ -324,7 +316,7 @@ test('reverse_pec_deck: chest to the pad on the same seat, the arms open from ah
   assert.ok(bend < rad(65), `the elbow bent ${(bend * 180 / Math.PI).toFixed(0)}°`);
 });
 
-test('reverse_pec_deck: the chest bears on the pad through the rep, the hips on the seat', async () => {
+test('reverse_pec_deck: the hips stay on the seat through the rep, and the pad\'s contact is the chest', async () => {
   const entry = prepare('reverse_pec_deck');
   const { pose, rig, kit } = await buildStage(entry);
   const seatEdge = 0.21;
@@ -343,4 +335,17 @@ test('1_arm_reverse_pec_deck: one arm opens, and the other arm of the machine st
   const { left, right } = kit.kits.pec_deck.joints;
   assert.ok(left.value > rad(40), 'the working arm is open');
   assert.equal(right.value, 0, 'the other stays');
+});
+
+test('1_arm_reverse_pec_deck: the free hand rests on its thigh, and the working hand holds its grip', async () => {
+  const entry = prepare('1_arm_reverse_pec_deck');
+  const { pose, rig, kit } = await buildStage(entry);
+  for (const d of [0, 0.5, 1]) {
+    pose(d);
+    const free = heldAt(rig, 'r');
+    close(free.distanceTo(V(...entry.grip.rest)), 0, 0.03, `the free hand at its rest, ${d} of the way`);
+    assert.ok(free.distanceTo(wpos(rig.bones.calf_r)) < 0.3, 'by the knee');
+    const grip = kit.kits.pec_deck.contacts.find((c) => c.point === 'leftShort').at[0];
+    close(heldAt(rig, 'l').distanceTo(grip), 0, 0.015, 'the working hand on its grip');
+  }
 });

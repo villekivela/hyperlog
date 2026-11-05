@@ -25,16 +25,18 @@ import { V, rad } from '../rig.mjs';
 // lever is 0.55 m, and at rest points this far behind straight out to its side.
 const AXIS = { x: 0.2, y: 1.8, z: -0.1 };
 const LEVER = 0.55;
-const REST = { fly: rad(-10), rear: rad(-45) };
-// From the rest to past the hands nearly touching in front of the chest (the ref's ROM, a little
-// over), or past the arms in line with the shoulders.
-const SWEEP = { fly: rad(120), rear: rad(60) };
+// Each way of using it: the levers' rest, the sweep from there, to the grips about to meet or past
+// the arms in line with the shoulders, the grip the hands hold, and what lies on the pad.
+const MODES = {
+  fly: { rest: rad(-10), sweep: rad(110), held: 'Grip', on: 'back' },
+  rear: { rest: rad(-45), sweep: rad(60), held: 'Short', on: 'chest' },
+};
 // The vertical grip's middle is fixed at 1.1 m, and the seat moves. Each grip's middle stands this
 // far off the drop arm, the short one a little lower, near the drop arm's foot.
 const GRIP_Y = 1.1;
 const SHORT_Y = 1.08;
 const FOOT_Y = 1.02;
-const GRIP = 0.017;
+const GRIP_RADIUS = 0.017;
 const GRIP_OFF = 0.1;
 const SHORT_LENGTH = 0.15;
 // The seat's top and z ([y, z]), its range, and how far the hips sit above it.
@@ -54,11 +56,12 @@ const BRACE_Y = 0.46;
 // from the tower's back. The ref's 1.245 m footprint runs from there to the arms swept forward.
 const FRONT_FOOT = { width: 0.24, depth: 0.12, z: 0.05 };
 const REAR = { z: STACK_Z - TOWER.spread, out: 0.42 };
+// The top of the arch, the machine's height.
 const TOP = 2;
 // How far the stack rises, in metres a radian of the left arm's sweep.
 const STACK_RATIO = 0.09;
 // The arch's tube.
-const ARCH = 0.09;
+const ARCH_RADIUS = 0.045;
 
 const mode = ({ facing }) => (facing === 'pad' ? 'rear' : 'fly');
 /** The way a lever on side `s` runs at angle `a` from straight out, and the way square to it, ahead of it at 0. */
@@ -71,8 +74,10 @@ function gripAt(s, a, m) {
   const end = V(s * AXIS.x, 0, AXIS.z).addScaledVector(leverDir(s, a), LEVER);
   return m === 'rear' ? end.addScaledVector(aheadOf(s, a), -GRIP_OFF).setY(SHORT_Y) : end.addScaledVector(aheadOf(s, a), GRIP_OFF).setY(GRIP_Y);
 }
+/** How far the arm on side `s` has swept with the rep at `value`: with `one`, the right arm stays. */
+const sweptBy = ({ one }, s, value) => (one && s > 0 ? 0 : value);
 const jointsOf = (options) => {
-  const limits = [0, SWEEP[mode(options)]];
+  const limits = [0, MODES[mode(options)].sweep];
   return { left: revolute({ axis: V(0, 1, 0), limits }), right: revolute({ axis: V(0, -1, 0), limits }) };
 };
 /** The pad's middle on the seat at `seatY`, and the way out of its face. */
@@ -85,17 +90,16 @@ const padOf = (seatY) => {
 
 export default recipe({
   name: 'pec_deck',
-  // Shown alone in the studio until a pose uses it: three-quarter from the front.
-  standsAlone: { camera: { target: [0, 0.9, -0.1], halfHeight: 1.2, azimuth: 145, elevation: 12 } },
   bodies: jointsOf,
   contacts: (options) => {
     const rear = mode(options) === 'rear';
-    const held = rear ? 'Short' : 'Grip';
+    const { held, on } = MODES[mode(options)];
     return [
       // Turned round, the kit's left arm is on the mannequin's left.
       { body: 'left', point: `left${held}`, landmark: 'hands', hand: rear ? 'l' : 'r' },
       { body: 'right', point: `right${held}`, landmark: 'hands', hand: rear ? 'r' : 'l', ...(options.one ? { optional: true } : {}) },
-      { body: 'frame', point: 'backPad', landmark: mode(options) === 'rear' ? 'chest' : 'back' },
+      { body: 'frame', point: 'backPad', landmark: on },
+      { body: 'frame', point: 'seatTop', landmark: 'thighs' },
     ];
   },
   stacks: [{ joint: 'left', ratio: STACK_RATIO }],
@@ -108,16 +112,16 @@ export default recipe({
     },
   ],
   linkage: (options, L) => {
-    const { seat = SEAT } = options;
+    const { seat = SEAT, hips = 0 } = options;
     const m = mode(options);
     const at = standing(options);
     // The kit's side each hand is on: turned round, the kit's left is the mannequin's.
     const kitSide = (side) => (m === 'rear' ? -side : side);
-    const hip = m === 'rear' ? seat[1] + options.hips : BACK.face + L.trunkBack + 0.02;
+    const hip = m === 'rear' ? seat[1] + hips : BACK.face + L.trunkBack + 0.02;
     return {
       hip: [seat[0] + SITS, m === 'rear' ? -hip : hip],
       at: (value) => {
-        const angle = (side) => REST[m] + (options.one && kitSide(side) > 0 ? 0 : value);
+        const angle = (side) => MODES[m].rest + sweptBy(options, kitSide(side), value);
         return {
           pivot: at(V(0, AXIS.y, AXIS.z)),
           handle: (side) => at(gripAt(kitSide(side), angle(side), m)),
@@ -130,12 +134,12 @@ export default recipe({
   build(options, M) {
     const { seat = SEAT } = options;
     const m = mode(options);
-    const rest = REST[m];
+    const { rest, held } = MODES[m];
     const at = standing(options);
     const sides = [-1, 1];
     const axisOf = (s) => V(s * AXIS.x, AXIS.y, AXIS.z);
     const back = padOf(seat[0]);
-    const archY = TOP - ARCH / 2;
+    const archY = TOP - ARCH_RADIUS;
     const wheel = V(0, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z);
     const pivots = Object.fromEntries(sides.map((s) => [s, pivotJoint(M, axisOf(s), V(0, 1, 0))]));
     const padPart = pad(BACK.width, BACK.height, BACK.thick, M.vinyl, back.at, { soft: 0.025 });
@@ -171,7 +175,7 @@ export default recipe({
       pad(TOWER.width, 0.07, 2 * TOWER.spread + TOWER.depth, M.frame, V(0, FRAME_TOP, STACK_Z), { soft: 0.01 }),
       bent('pec_deck_arch', [
         V(0, FRAME_TOP, REAR.z), V(0, 1.8, REAR.z), V(0, 1.905, REAR.z + 0.05), V(0, archY, REAR.z + 0.17), V(0, archY, -0.3), V(0, archY, AXIS.z),
-      ], ARCH / 2, M.frame),
+      ], ARCH_RADIUS, M.frame),
       // The unit: two flat plates on the axles, a bearing on each plate, a tab on the upper one, and a
       // rail from the lower plate back to the tower's top.
       ...PLATES.map((y) => pad(2 * AXIS.x + 0.14, 0.014, 0.14, M.frame, V(0, y, AXIS.z), { soft: 0.003 })),
@@ -206,9 +210,9 @@ export default recipe({
       const off = (along, y) => end.clone().addScaledVector(ahead, along).setY(y);
       const handle = bent(`pec_deck_handle:${m}:${s}`, [
         off(0, top.y), off(0.04, top.y), off(GRIP_OFF, top.y - 0.03), off(GRIP_OFF, GRIP_Y), off(GRIP_OFF, GRIP_Y - 0.09),
-      ], GRIP - 0.004, M.metal);
-      const sleeve = rod(GRIP, off(GRIP_OFF, GRIP_Y - 0.08), off(GRIP_OFF, GRIP_Y + 0.08), M.vinyl, { held: true });
-      const short = rod(GRIP, off(0, SHORT_Y), off(-GRIP_OFF - SHORT_LENGTH / 2 + 0.015, SHORT_Y), M.vinyl, { held: true });
+      ], GRIP_RADIUS - 0.004, M.metal);
+      const sleeve = rod(GRIP_RADIUS, off(GRIP_OFF, GRIP_Y - 0.08), off(GRIP_OFF, GRIP_Y + 0.08), M.vinyl, { held: true });
+      const short = rod(GRIP_RADIUS, off(0, SHORT_Y), off(-GRIP_OFF - SHORT_LENGTH / 2 + 0.015, SHORT_Y), M.vinyl, { held: true });
       // The pin is a cylinder across the lever's end, centred on the drop arm, which hangs from it.
       const across = V(0, 1, 0).cross(end.clone().sub(axisOf(s))).setY(0).normalize().multiplyScalar(0.03);
       const pin = part(rodGeometry(0.03, 20), M.pulley);
@@ -220,7 +224,7 @@ export default recipe({
       return { s, nodes, base: nodes.map((n) => ({ p: n.position.clone(), q: n.quaternion.clone() })) };
     });
     let posed = false;
-    /** Lays arm `a` swept `value` from its rest, in the kit's own frame. */
+    /** Lays an arm swept `value` from its rest, in the kit's own frame. */
     const swing = ({ s, nodes, base }, value) => {
       const turn = new THREE.Quaternion().setFromAxisAngle(V(0, -s, 0), value);
       const o = axisOf(s);
@@ -249,15 +253,15 @@ export default recipe({
         // Without a pose the arms rest.
         posed = Boolean(P.linkage);
         const value = P.linkage?.value ?? 0;
-        const values = { left: value, right: options.one ? 0 : value };
         const named = (s) => (s < 0 ? 'left' : 'right');
-        const held = m === 'rear' ? 'Short' : 'Grip';
+        const values = Object.fromEntries(sides.map((s) => [named(s), sweptBy(options, s, value)]));
         arms.forEach((a) => swing(a, values[named(a.s)]));
         return {
           joints: Object.fromEntries(arms.map(({ s }) => [named(s), { value: values[named(s)], origin: at(axisOf(s)) }])),
           points: {
             ...Object.fromEntries(arms.map(({ s }) => [`${named(s)}${held}`, [at(gripAt(s, rest + values[named(s)], m))]])),
             backPad: [at(back.at)],
+            seatTop: [at(V(0, seat[0] - 0.0375, seat[1]))],
           },
         };
       },

@@ -320,7 +320,7 @@ export const POSES = {
   // The same with one arm, the other hand on the thigh.
   '1_arm_reverse_pec_deck': {
     like: 'reverse_pec_deck',
-    kit: { pec_deck: { facing: 'pad', hips: -0.02, one: true } },
+    kit: { pec_deck: { one: true } },
     grip: { one: 1, rest: [-0.2, 0.74, 0.22] },
   },
 
