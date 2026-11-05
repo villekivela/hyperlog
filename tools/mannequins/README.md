@@ -311,7 +311,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `squat_machine` | Hack Squat, Pendulum Squat, Machine Squat | `squat_machine` |
 | `leg_extension` | Leg Extension | `leg_extension` |
 | `leg_curl` | Lying and Seated Leg Curl | `leg_curl` (`lying` for the lying one) |
-| `glute_ham_raise` | Glute-Ham Raise | missing |
+| `glute_ham_raise` | Glute-Ham Raise | `glute_ham_raise` (none posed yet) |
 | `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | missing |
 | `row_machine` | Machine Row, Chest-Supported Machine Row | `row_machine` |
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
@@ -441,6 +441,25 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   9 ft one so the bar sits at a hole near 2.30 m, the back crossmember isn't in the photos, the ref's
   close grip (400 mm on a cross tube between the inner prongs) is on the V because the photos show no
   tube there, and the end plates, safeties and bracket are read from photos.
+- `glute_ham_raise` (#230, a machine kind; its one exercise isn't posed yet, so no clip changes) is a
+  glute-ham developer from its ref, standing with the lifter facing +z and the origin on the floor under
+  the pads' rear edge. Nothing on it moves. Two half-round pads (230 wide with 40 between, 500 long, 230
+  tall, flat side down on a plate) with their crest 1092 mm up, on a front upright 29 in tall with a
+  handle each side under them at 820 mm, out past both ends; a rear upright 19 in tall and a spine
+  joining them; two floor rails 45 in apart and 1740 mm long with rubber caps, and a crossmember under
+  each upright. The ankle assembly's sleeve slides on the spine, pinned: a mast between two pairs of
+  foam rollers (216 by 127 mm, 203 mm apart, a 76 mm gap for the ankles) and, 120 mm behind their
+  centres, the 345 mm foot plate whose face is 450 mm behind the pads' rear edge, its top 1245 mm
+  up. The option `slide` (0 to 12) counts 1 in steps back from the most forward hole, the plate's
+  face 348 mm behind the pads' rear edge (chosen, the ref gives none); its default 4 is the ref's 450 mm,
+  and further back is for back extensions and sit-ups. Its fit rule sets `slide` from the mannequin's
+  shin: the plate a shin and 80 mm to the sole behind the knee, which rests 60 mm ahead of the pads'
+  rear edge, to the nearest hole. (`fitted()` only runs a recipe with a linkage, so the posing ticket
+  wires it in.) Contacts, all on the frame, a pair of points each: `thighPad` (on each pad's rear curve,
+  60 mm ahead of its edge), `ankleRollers` (in the gap), `footPlate` and `handles`, which is optional
+  as the hands are free at the top. It departs
+  from the ref: the rails, crossmembers, braces and the pad plate are read from the photos, with no brand
+  or mark on them, and the roller pairs' axles run through the mast.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
@@ -617,7 +636,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the glute-ham developer. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

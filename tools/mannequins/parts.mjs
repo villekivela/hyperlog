@@ -151,6 +151,24 @@ export function padGeometry(w, h, d, soft) {
   });
 }
 
+/**
+ * A half-round pad `w` (x) wide, `length` (z) long and `h` (y) tall, centred: flat side down, the
+ * top a half ellipse curving front to back, the pad of a glute-ham bench.
+ */
+export function halfRoundGeometry(w, length, h) {
+  return shape(`half_round:${mm(w)}:${mm(length)}:${mm(h)}`, () => {
+    const s = new THREE.Shape();
+    s.moveTo(-length / 2, 0);
+    s.absellipse(0, 0, length / 2, h, Math.PI, 0, true, 0);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: false, curveSegments: 24 });
+    // Extruded along z from the shape's x-y plane: turn it so the shape's x runs along z and its depth along x.
+    g.translate(0, -h / 2, -w / 2);
+    g.rotateY(-Math.PI / 2);
+    return soften(g);
+  });
+}
+
 /** Square tubing `w` across, its corners rounded, `length` long along y and centred. */
 export function tubeGeometry(w, length) {
   return shape(`tube:${mm(w)}:${mm(length)}`, () => {

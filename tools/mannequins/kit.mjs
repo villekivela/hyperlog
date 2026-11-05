@@ -20,7 +20,7 @@ export const MACHINES = {
   squat_machine: { kit: 'squat_machine', exercises: ['hack_squat', 'pendulum_squat', 'machine_squat'] },
   leg_extension: { kit: 'leg_extension', exercises: ['leg_extension'] },
   leg_curl: { kit: 'leg_curl', exercises: ['lying_leg_curl', 'seated_leg_curl'] },
-  glute_ham_raise: { kit: null, exercises: ['glute_ham_raise'] },
+  glute_ham_raise: { kit: 'glute_ham_raise', exercises: ['glute_ham_raise'] },
   pec_deck: { kit: null, exercises: ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'] },
   row_machine: { kit: 'row_machine', exercises: ['machine_row', 'chest_supported_machine_row'] },
   t_bar_row_machine: { kit: 't_bar_row_machine', exercises: ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'] },

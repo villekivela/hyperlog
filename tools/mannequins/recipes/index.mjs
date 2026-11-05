@@ -18,9 +18,10 @@ import tBarRowMachine from './t-bar-row-machine.mjs';
 import cableCrossover from './cable-crossover.mjs';
 import smithMachine from './smith-machine.mjs';
 import powerRack from './power-rack.mjs';
+import gluteHamRaise from './glute-ham-raise.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
   pulldownMachine, preacherCurl, tBarRowMachine, cableCrossover,
-  smithMachine, powerRack,
+  smithMachine, powerRack, gluteHamRaise,
 ].map((r) => [r.name, r]));
