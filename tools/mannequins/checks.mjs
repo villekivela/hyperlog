@@ -6,12 +6,14 @@
 //   on, ankle and ball at their standing heights within 2 cm;
 // - equipment: no part of the body is more than 2 cm inside a solid part of the kit (only the
 //   hands close round what they hold), and never through a thin one, nor more than 1.5 cm into the
-//   floor; and every cable ends within 1 cm of its handle's hook;
+//   floor; every cable ends within 1 cm of its handle's hook, and stays 2 cm clear of the head and
+//   the neck;
 // - joints: knees and elbows bend no further than 155°, knees point within 60° of the hips' front,
 //   hips flex no more than 140° or extend past 30°, the head turns within 60° of the trunk, the
 //   ankle keeps between 55° and 160° from shin to foot, and a wrist bends no more than 5° off the
 //   forearm's line unless the pose sets its wrists (an open hand, a hand turned by a bone offset,
-//   or `grip.level`, counts as set);
+//   or `grip.level`, counts as set), and no forearm or hand is more than 1 cm inside the head or
+//   the neck;
 // - trace: each angle the pose has a trace for is within 10° of it;
 // - contact: each hand on a bar or a handle meets it (#162): every finger and the thumb within
 //   2 mm of its surface (a wrapped thumb on a bar under 40 mm may rest on the fingers instead), and
@@ -37,10 +39,13 @@ const LIMITS = {
   // The palm's skin is measured on a grid over large triangles, so it is held to a little more.
   palm: 0.003,
   // A machine's contacts: how far a pad may stand off its limb, and a point off its joint's path.
-  pad: 0.02, arc: 0.001,
+  pad: 0.02, arc: 0.001, neck: 0.01, wire: 0.02,
 };
 const angle = (a, b) => deg(a.angleTo(b));
 const FINGERS = /^(hand|index|middle|ring|pinky|thumb)_/;
+/** What can reach the head and the neck, and the bones that are them. */
+const FOREARM = /^(lowerarm|hand|index|middle|ring|pinky|thumb)_/;
+const NECK = /^(neck_\d+|Head)$/;
 
 /** Each solid part of the kit, with what it takes to test a point against it. */
 function solids(kit) {
@@ -84,6 +89,28 @@ function partAt(parts, p) {
 
 /** The bones of each landmark a pad bears on. */
 const LIMBS = { shins: /^calf_/, thighs: /^thigh_/, feet: /^(foot|ball)_/, shoulders: /^(clavicle|upperarm)_/, chest: /^spine_0[23]$/, back: /^spine_0[23]$/, upperArms: /^upperarm_/ };
+
+/**
+ * The head and the neck, each as the ellipsoid inside its vertices' box in its own bone's frame, so
+ * it turns with the bone. `skinned` is the vertices posed now.
+ */
+function headAndNeck(rig, vertices, skinned) {
+  const boxes = {};
+  vertices.forEach((b, i) => {
+    if (!NECK.test(b.bone)) return;
+    const local = rig.bones[b.bone].worldToLocal(skinned[i].clone());
+    (boxes[b.bone] ??= new THREE.Box3()).expandByPoint(local);
+  });
+  return Object.entries(boxes).map(([name, box]) => ({
+    name, bone: rig.bones[name], centre: box.getCenter(new THREE.Vector3()), half: box.getSize(new THREE.Vector3()).multiplyScalar(0.5),
+  }));
+}
+
+/** How deep world point `p` is inside ellipsoid `e`: negative when outside. */
+function depthInside(e, p) {
+  const q = e.bone.worldToLocal(p.clone()).sub(e.centre).divide(e.half);
+  return (1 - q.length()) * Math.min(e.half.x, e.half.y, e.half.z);
+}
 
 /** The body's vertices, each with the bone that moves it most and whether that's a hand's. */
 function bodyVertices(rig) {
@@ -235,6 +262,7 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
   const vertices = bodyVertices(rig);
   const restAnkle = rig.rest.foot_l.p.y;
   const restBall = rig.rest.ball_l.p.y;
+  let neck = null;
   const worst = Object.fromEntries(CHECKS.map((c) => [c, { past: -Infinity, frame: null, found: 'nothing to check' }]));
   const note = (check, past, frame, found) => {
     if (past > worst[check].past) worst[check] = { past, frame, found };
@@ -267,6 +295,7 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
       note('feet', off - LIMITS.foot, f, `the ${k} foot ${(off * 100).toFixed(1)} cm off where it stands`);
     }
     const skinned = vertices.map((b) => b.mesh.getVertexPosition(b.i, new THREE.Vector3()).applyMatrix4(b.mesh.matrixWorld));
+    neck ??= headAndNeck(rig, vertices, skinned);
     // The floor is solid too: the soles may press into it a little, nothing more.
     vertices.forEach((b, i) => {
       if (skinned[i].y < 0) note('equipment', -skinned[i].y - LIMITS.floor, f, `${b.bone} ${(-skinned[i].y * 100).toFixed(1)} cm into the floor`);
@@ -289,7 +318,21 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
       const at = hook();
       const miss = Math.min(...[-0.5, 0.5].map((y) => cable.localToWorld(new THREE.Vector3(0, y, 0)).distanceTo(at)));
       note('equipment', miss - LIMITS.cable, f, `${cable.name} ends ${(miss * 100).toFixed(1)} cm off its handle`);
+      // The wires aren't solid, so the parts above don't stop one running through the head.
+      const wire = new THREE.Line3(...[-0.5, 0.5].map((y) => cable.localToWorld(new THREE.Vector3(0, y, 0))));
+      vertices.forEach((b, i) => {
+        if (!NECK.test(b.bone)) return;
+        const gap = wire.closestPointToPoint(skinned[i], true, v).distanceTo(skinned[i]);
+        note('equipment', LIMITS.wire - gap, f, `${cable.name} ${(gap * 100).toFixed(1)} cm from the ${b.bone}`);
+      });
     }
+    vertices.forEach((b, i) => {
+      if (!FOREARM.test(b.bone)) return;
+      for (const e of neck) {
+        const depth = depthInside(e, skinned[i]);
+        note('joints', depth - LIMITS.neck, f, `${b.bone} ${(depth * 100).toFixed(1)} cm into the ${e.name}`);
+      }
+    });
     const [joint, past] = jointsPast(rig);
     note('joints', past, f, joint);
     // A wrist the pose doesn't set stays straight (owner, #127); a hand the entry turns (a bone
