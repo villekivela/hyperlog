@@ -154,3 +154,10 @@ test('the command keeps the numbers it is asked for, as JSON', async () => {
 test('the command refuses a number the clip doesn\'t have, and names those it does', async () => {
   await assert.rejects(run('db_bench_press', '--only', 'elbow'), /No elbow in this clip: .*elbow_l/);
 });
+
+test('the knuckles give where the hand ends, so a wrist that moves moves them', async () => {
+  const frames = await numbersFrom([turning('hand_l', X, [0, 45, 90])]);
+  // The knuckles are 0.1 m past the wrist, which stands at 0.9 m: a turn of 90° lays them level.
+  assert.deepEqual(frames[0]['knuckles_l.at'].map((v) => Math.round(v * 100)), [20, 80, 0]);
+  assert.deepEqual(frames[2]['knuckles_l.at'].map((v) => Math.round(v * 100)), [20, 90, -10]);
+});
