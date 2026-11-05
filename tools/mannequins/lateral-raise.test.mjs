@@ -184,7 +184,7 @@ test('each grip stands on the arm\'s own line, inboard of its pad, at the elbow,
       const p = contact(kit, `pad_${k}`).at[0];
       close(Math.hypot(g.x - origin.x, g.y - origin.y), 0.255, 0.01, `${k}'s grip from the pivot at ${v}°`);
       close(Math.atan2(s * (g.x - origin.x), origin.y - g.y), rad(v), 0.01, `${k}'s grip on the arm's line at ${v}°`);
-      close(Math.hypot(g.x - p.x, g.y - p.y), Math.hypot(0.11, 0.045), 0.01, `${k}'s pad 110 mm out of the grip's line at ${v}°`);
+      close(Math.hypot(g.x - p.x, g.y - p.y), Math.hypot(0.115, 0.045), 0.01, `${k}'s pad 115 mm out of the grip's line at ${v}°`);
     }
   }
 });
@@ -365,8 +365,21 @@ test('the lever rakes toward the tower as it comes down, its wedge close over th
     const cores = [];
     kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.userData.proxy) cores.push(new THREE.Box3().setFromObject(o, true)); }));
     const reach = Math.max(...cores.map((b) => b.max.z));
-    assert.ok(reach > origin.z + 0.28, `${k}'s lever reaches ${(reach - origin.z).toFixed(2)} m toward the tower from its pivot`);
+    assert.ok(reach > origin.z + 0.14 && reach < origin.z + 0.22, `${k}'s lever reaches ${(reach - origin.z).toFixed(2)} m toward the tower from its pivot`);
     assert.ok(wedgeOf(kit, k).min.y < origin.y + 0.1, `${k}'s wedge starts ${(wedgeOf(kit, k).min.y - origin.y).toFixed(2)} m over the pivot`);
+  }
+});
+
+test('the pads are long, and little bare beam runs ahead of them', () => {
+  const kit = machine();
+  for (const [k] of SIDES) {
+    const pad = boxes(kit).filter(({ mesh }) => kit.bodies[`arm_${k}`].includes(mesh)).find(({ box: b }) => b.distanceToPoint(contact(kit, `pad_${k}`).at[0]) < 1e-3 && b.max.z - b.min.z < 0.5 && b.max.y - b.min.y < 0.2).box;
+    const cores = [];
+    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.userData.proxy) cores.push(new THREE.Box3().setFromObject(o, true)); }));
+    const length = pad.max.z - pad.min.z;
+    assert.ok(length > 0.34, `${k}'s pad ${length.toFixed(2)} m long`);
+    const bare = Math.max(...cores.map((b) => b.max.z)) - pad.max.z;
+    assert.ok(bare < 0.8 * length, `${(bare / length).toFixed(2)} of a pad's length of bare beam ahead of it`);
   }
 });
 

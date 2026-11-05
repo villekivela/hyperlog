@@ -26,20 +26,20 @@ const SHOULDER_X = 0.192;
 // The levers lie in the plane z = PLANE, in front of the hands, and the arm pads' middles at z = ARM_Z,
 // by the upper arms.
 const PLANE = 0.2;
-const ARM_Z = -0.12;
-// Pivot to the pad's middle along the arm, and out of the arm's line; the pad 300 long, 140 across.
+const ARM_Z = -0.06;
+// Pivot to the pad's middle along the arm, and out of the arm's line; the pad 360 long, 150 across.
 // The grip hangs at the elbow's distance, so the forearm lies square to the upper arm.
 const REACH = 0.3;
 const GRIP_REACH = 0.255;
 const MOUNT = 0.13;
-const OUT = 0.11;
-const PAD = { length: 0.3, radius: 0.07 };
+const OUT = 0.115;
+const PAD = { length: 0.36, radius: 0.075 };
 // The strut runs from the pivot to a knee this far out of the arm's line, flaring about 40°, and a beam
 // runs back from the knee along the pad's outside. The wedge stands over the pivot, running fore and
 // aft between the bar and the plate, a valley between the two, so it drops in front of the plate.
 const KNEE_OUT = 0.195;
 // The strut rakes toward the tower on its way down to the knee.
-const KNEE_Z = PLANE + 0.3;
+const KNEE_Z = PLANE + 0.17;
 const LEVER_WIDTH = 0.06;
 const WEDGE_Z = PLANE + 0.04;
 const WEDGE = { length: 0.33, width: 0.1, height: 0.12, over: 0.125, in: 0.1, tilt: rad(28) };

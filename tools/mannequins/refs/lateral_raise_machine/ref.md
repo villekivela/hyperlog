@@ -34,7 +34,7 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 | Seat range | not shown | chosen 440 to 620 from the fit rule (the shoulder on the pivot), since no picture shows the travel; it holds the mannequin's setting (556); low confidence |
 | Chest pad | about 680 to 980 above the floor, about 300 tall | estimated from the hero photo, scaled by the 1400 mm height; the pad is nearer the camera than the column, so rough |
 | Pivot to arm pad centre | about 350 by the photo; 300 in the kit | estimated from the hero photo, scaled by the 1400 mm height: at rest each pad hangs about 340 px straight below its dot. The kit puts it at the elbow, as the ref's Adjustments say, for the mannequin's 274 mm upper arm |
-| Arm pad | about 300 long, 140 through, running front to back | estimated from the hero photo and the demo, scaled by the 1400 mm height; rough |
+| Arm pad | about 360 long, 150 through, running front to back | estimated from the hero photo and the demo, scaled by the 1400 mm height; rough |
 
 ## Motion
 - Left arm and right arm: each revolute about a horizontal axis pointing front to back, through the red dot (the page marks the axis of rotation with a red indicator). Each lever is a dog-leg: from the pivot out and down, then back in under the arm to the pad, so at rest the pad hangs below the pivot (hero photo).
@@ -63,7 +63,7 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 | Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate mostly covered by the wedges, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
 | Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, raking toward the tower on the way, a beam back along the pad | a thin dog-leg | as measured |
 | Wedges | long slabs about as long as the arm pads, a tight V over the pivots, running fore and aft on the lifter's side of the plate, a valley between, the struts carrying on into them; they drop in front of the plate as the arms rise | missing | as measured |
-| Arm pads | about 300 long, 140 through, on the outside of the upper arm at the elbow | 250 long, 100 through, past the elbow | as measured |
+| Arm pads | about 360 long, 150 through, on the outside of the upper arm at the elbow, little bare beam ahead of them | 250 long, 100 through, past the elbow | as measured |
 | Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
 | Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
 | Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin |
