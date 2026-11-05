@@ -513,13 +513,14 @@ test('machine_lateral_raise: each grip\'s bracket and stem stay clear of the arm
           assert.ok(p.distanceTo(q) > 0.1, `${k}'s bracket ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
         }
         // The stem's foot is in the fist, on the grip, so only its upper length is held clear.
-        const [top, foot] = [0.5, -0.5].map((y) => stems[k].localToWorld(new THREE.Vector3(0, y, 0)));
-        const stem = new THREE.Line3(top, foot);
         const hand = wpos(rig.bones[`hand_${k}`]);
-        const upper = hand.distanceTo(top) > hand.distanceTo(foot) ? 0 : 1;
-        const p = stem.at(upper ? 0.9 : 0.1, new THREE.Vector3());
-        const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
-        assert.ok(p.distanceTo(q) > 0.05, `${k}'s stem ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
+        const [top, foot] = [0.5, -0.5].map((y) => stems[k].localToWorld(new THREE.Vector3(0, y, 0)));
+        const stem = hand.distanceTo(top) > hand.distanceTo(foot) ? new THREE.Line3(top, foot) : new THREE.Line3(foot, top);
+        for (let t = 0; t <= 0.8; t += 0.2) {
+          const p = stem.at(t, new THREE.Vector3());
+          const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
+          assert.ok(p.distanceTo(q) > 0.1, `${k}'s stem ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
+        }
       }
     }
   }
