@@ -148,6 +148,19 @@ export const POSES = {
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 
+  // Seated against the carriage's back pad, the feet on its plates, the hands on the grips: the
+  // arms from straight down at the hips (the top) to the handles at the lower chest (the bottom),
+  // the carriage rocking back with them.
+  seated_dip_machine: {
+    equipment: 'machine',
+    motion: 'dip_machine',
+    kit: { dip_machine: {} },
+    body: {},
+    feet: { stance: 0.13, toeOut: 8, down: 0.04 },
+    grip: {},
+    camera: { target: [0, 0.8, 0.1], halfHeight: 1.0, azimuth: 56, elevation: 12 },
+  },
+
   // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
 
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides:
@@ -299,6 +312,18 @@ export const POSES = {
     grip: { rotate: 180, swing: 48 },
     camera: { target: [-0.12, 0.7, 0.12], halfHeight: 1.1, azimuth: 58, elevation: 11 },
     shadow: { size: [1.2, 2.0], at: [0, 0.2] },
+  },
+
+  // Seated, the upper back on the carriage's pads and the belt over the hips, the feet flat on the
+  // platform, the hands on the handles by the hips: the hips drop to the seat and drive up until the
+  // thighs are level.
+  machine_hip_thrust: {
+    equipment: 'machine',
+    motion: 'hip_thrust',
+    kit: { hip_thrust_machine: {} },
+    feet: { stance: 0.1, toeOut: 8 },
+    grip: { pole: [0.8, -0.3, 0.3] },
+    camera: { target: [0, 0.75, 0.1], halfHeight: 1.0, azimuth: 70, elevation: 8 },
   },
 
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
@@ -928,6 +953,20 @@ export const POSES = {
     bottom: { over: 0.24, trunk: 22, thigh: 16, shin: 28 },
   },
 
+  // A knee raise on the captain's chair: the forearms on the arm pads, the hands on the grips, the
+  // back to the back pad leaning 10°, the legs hanging free. The knees come up past the hips (video,
+  // 0:03), bent about 60°.
+  roman_chair_crunch: {
+    equipment: 'bodyweight',
+    motion: 'chair',
+    kit: { captains_chair: {} },
+    top: { trunk: -10, thigh: 112, shin: -52, shrug: 0, back: 0.04 },
+    bottom: { trunk: -10, thigh: 5, shin: 15, shrug: 0, back: 0.04 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.3, -1, -0.1] },
+    camera: { target: [0, 1.0, 0.3], halfHeight: 1.2, azimuth: 35, elevation: 10 },
+  },
+
   // The plain lift with a plate on a dip belt's chain.
   weighted_pullup: { like: 'pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
   weighted_chinup: { like: 'chinup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
@@ -1214,5 +1253,17 @@ export const POSES = {
     grip: { width: 0.1, one: 1, rest: [0.09, 1.0, 0.3], pole: [0.02, 0.5, 1], sits: 'mid' },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.22, azimuth: 66, elevation: 10 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // The glute-ham raise on its developer (#230): kneeling on the pads, the soles on the plate, the body
+  // lowering about the knees from upright to level, the hips straight. Machine-first on a static kit.
+  glute_ham_raise: {
+    equipment: 'machine',
+    motion: 'glute_ham_raise',
+    kit: { glute_ham_raise: {} },
+    top: { lean: 0 },
+    bottom: { lean: 78 },
+    camera: { target: [0, 1.0, 0.45], halfHeight: 1.0, azimuth: 62, elevation: 8 },
+    shadow: { size: [1.6, 1.3], at: [0, 0.25] },
   },
 };

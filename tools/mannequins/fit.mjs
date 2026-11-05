@@ -30,6 +30,19 @@ export function fitted(entry, L) {
     options[sets] = solve({ L, options, entry });
     fit[`kit.${name}.${sets}`] = options[sets];
   }
+  // A machine with nothing on it that moves (no `rep`) has one place for the body: its linkage is that, whatever the value.
+  if (!recipe.rep) {
+    const { hip, at } = recipe.linkage(options, L);
+    const result = {
+      ...entry,
+      kit: { ...entry.kit, [name]: options },
+      body: { ...entry.body, ...(hip ? { hip } : {}) },
+      linkage: { joint: null, at: () => ({ value: 0, ...at() }) },
+      fit,
+    };
+    fits.set(entry, { L, result });
+    return result;
+  }
   const { joint, from } = recipe.rep;
   const { type, limits } = forOptions(recipe.bodies, options)[joint];
   const shown = (v) => (type === 'revolute' ? deg(v) : v);

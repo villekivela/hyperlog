@@ -193,6 +193,10 @@ _Avoid_: A–B loop (it has three marks), range, segment, clip (that is the bake
 A kit written as data: the parts it is made of, placed by dimensions, its fixed frame and its moving bodies on joints, with its contacts and fit rules (ADR 0007).
 _Avoid_: Blueprint, builder
 
+**Static machine**:
+A machine with nothing on it that moves (the glute-ham developer): its recipe has a linkage and no rep, so the machine-first solve sets its options for the mannequin once and gives the motion one place for the knees, the ankles and the hands.
+_Avoid_: Fixed kit, stationary
+
 **Rack add-on**:
 A bar or handles that bolts to the power rack's holes as an option of its recipe: the multi-grip pull-up bar and the dip handles, with J-hooks for squats to follow. It brings its own contacts, and the rack builds without it.
 _Avoid_: Attachment (that is a cable's handle), add-on alone (that is a machine's weight)

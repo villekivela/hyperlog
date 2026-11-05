@@ -1962,6 +1962,30 @@
         "kit_barbell.bin"
       ]
     },
+    "glute_ham_raise": {
+      "clip": "glute_ham_raise.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.45
+        ],
+        "halfHeight": 1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 3,
+        "bottom": 0.5,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_glute_ham_raise.bin"
+      ]
+    },
     "hack_squat": {
       "clip": "hack_squat.glb",
       "equipment": "machine",
@@ -2226,6 +2250,30 @@
         "kit_crunch_machine.bin"
       ]
     },
+    "machine_hip_thrust": {
+      "clip": "machine_hip_thrust.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.1
+        ],
+        "halfHeight": 1,
+        "azimuth": 70,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.5,
+        "lifting": 1,
+        "top": 1
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_hip_thrust_machine.bin"
+      ]
+    },
     "machine_preacher_curl": {
       "clip": "machine_preacher_curl.glb",
       "equipment": "machine",
@@ -2392,6 +2440,30 @@
       "resources": [
         "mannequin.bin",
         "kit_cable_column.bin"
+      ]
+    },
+    "roman_chair_crunch": {
+      "clip": "roman_chair_crunch.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.3
+        ],
+        "halfHeight": 1.2,
+        "azimuth": 35,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_captains_chair.bin"
       ]
     },
     "seated_cable_flye": {
@@ -2567,6 +2639,30 @@
           }
         }
       }
+    },
+    "seated_dip_machine": {
+      "clip": "seated_dip_machine.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.1
+        ],
+        "halfHeight": 1,
+        "azimuth": 56,
+        "elevation": 12
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dip_machine.bin"
+      ]
     },
     "seated_leg_curl": {
       "clip": "seated_leg_curl.glb",
