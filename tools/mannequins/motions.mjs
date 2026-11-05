@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
 import { heldPair } from './recipes/power-rack.mjs';
+import { HOLD as CHAIR } from './recipes/captains-chair.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 import { fitted } from './fit.mjs';
 
@@ -1022,6 +1023,22 @@ export const MOTIONS = {
     const { hands, middle, arms } = rackHold(e, L);
     const sh = V(middle.x, middle.y + arms - s.sink, middle.z + (s.over ?? 0));
     return { ...heldBody(e, s, sh, L), ...hands, armPole: elbowsTo(e, [0.25, 0, -1]) };
+  },
+
+  /**
+   * On a captain's chair: the forearms on the arm pads, the upper arms upright, the hands closed on
+   * the grips ahead of the elbows, the back to the back pad and the legs hanging free. The elbows sit
+   * on the pads as far behind the grips as the forearms reach, and the shoulders stand over them.
+   */
+  chair(e, s, L) {
+    const fore = L.fore * STRAIGHT + depthOf(e, L);
+    const upper = L.up * STRAIGHT;
+    const grip = CHAIR.at(1);
+    const ey = CHAIR.padTop + CHAIR.elbowLift;
+    const along = Math.sqrt(Math.max(0, fore * fore - (grip.y - ey) ** 2 - (grip.x - CHAIR.padX) ** 2));
+    const ez = grip.z - along + (s.back ?? 0);
+    const sh = V(0, ey + Math.sqrt(Math.max(0, upper * upper - (L.shW - CHAIR.padX) ** 2)), ez);
+    return { ...heldBody(e, s, sh, L), hand: CHAIR.at, across: CHAIR.across, armPole: elbowsTo(e, [0.3, -1, -0.1]) };
   },
 
   /**

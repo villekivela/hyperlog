@@ -53,6 +53,8 @@ export const BATCHES = {
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
     'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
   ],
+  // The captain's chair's one exercise, a knee raise with the forearms on the pads (#237).
+  'captains-chair': ['roman_chair_crunch'],
   // The glute-ham developer's one exercise (#230), kneeling on its pads with the ankles in its rollers.
   'glute-ham-raise': ['glute_ham_raise'],
   // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).

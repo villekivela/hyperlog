@@ -28,6 +28,7 @@ export const OPTIONAL = {
   glute_ham_raise: { 'body.look': 0.25 },
   hang: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   support: { 'body.look': 0.1, 'feet.kneesOut': 0 },
+  chair: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.
   squat: { 'feet.y': 0, 'grip.spot': [0.02, 0.06, 0.07], 'grip.pole': [0.3, -1, -0.8] },
 };

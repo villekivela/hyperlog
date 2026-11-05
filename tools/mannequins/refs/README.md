@@ -37,7 +37,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD; built and posed (#230) |
 | 16 | [`crunch_machine`](crunch_machine/ref.md) | 1 | Hammer Strength Select Abdominal Crunch |
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar; built (#234), not yet posed |
-| 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD) |
+| 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD); built and posed (#237) |
 
 The cable crossover serves the 25 cable exercises that use a free handle at an adjustable height.
 The other 16 cable exercises (the pulldowns, the seated rows, the pressdown and the rest named in
@@ -109,7 +109,7 @@ gaps says why):
 - `trap_bar`: the lockout height is chosen from the mannequin's arm; the frame's plan comes from one
   corner photo, mirrored. The kit is closed at the rear, as the TB-1's page shows, and has no brackets or
   jack: the handles are braced straight to the corners.
-- `captains_chair`: the plan is scaled from the manual's drawing, but every height is rough (about
+- `captains_chair` (built and posed, #237): the plan is scaled from the manual's drawing, but every height is rough (about
   ±50 mm, one three-quarter render, no side view); the arm pads' tilt is chosen flat. The video's
   chair is a lower make with no visible step.
 

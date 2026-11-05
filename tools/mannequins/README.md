@@ -294,6 +294,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
 | `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
+| `chair` | on a captain's chair: the forearms on the arm pads, the upper arms upright, the hands closed on the grips, the back to the back pad, the legs hanging free: a knee raise | `kit.captains_chair`; `back`, metres the shoulders stand ahead of where the hands' reach puts them, to set the back against the pad; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
 | `glute_ham_raise` | kneeling on a glute-ham developer's pads, the soles on its plate, the body lowering about the knees with the hips straight; the hands hang, then rest on its handles | `lean`, the thigh's and spine's lean from upright, in degrees, at the top and the bottom; `body.look`; `feet.stance`. The knee, the ankle and the handles are the recipe's |
 | `lunge` | a split stance, the feet planted through the rep, the dumbbells hanging by the sides | `hip: [y, z]`, `trunk` and `heel`, degrees the back heel stands off the floor, at the top and the bottom; `feet.front` and `feet.back`, the left ankle ahead and the right ball behind; `feet.cross`, how far the back foot steps across behind the front one (a curtsy); `feet.hips`, how far the hips and arms move across with it; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.width`; `grip.pole`. The back toes bend as far as the heel rises, so they stay on the floor |
 | `bench_row` | one knee and the same-side hand on a flat bench, the other foot on the floor: a 1-arm row. The right knee and hand, the left foot and arm | `body.hip`, `body.trunk`; `feet.knee` [y, z], the shin running back along the pad from it; `feet.stance`, `feet.point`, degrees the foot off the pad's end tips, `feet.out`, `feet.z`, `feet.toeOut`; `hand` [x, y, z] at the top and the bottom; `grip.one`, `grip.rest`, `grip.pole`. An offset on `hand_r` lays the resting hand flat |
@@ -310,7 +311,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `dumbbell` | `dumbbells`, `bench` |
 | `cable` | `cable_tower` (with a seat and thigh pad for a pulldown), `cable_column`, `cable_crossover`, `bench` |
 | `machine` | the machine kits by kind, below; the kinds marked missing have none yet |
-| `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips; none needed for the rest |
+| `bodyweight` | `power_rack` for the pull-ups, chin-ups, hangs and dips, `captains_chair` for the roman chair crunch; none needed for the rest |
 | `ez_bar` | `ez_bar` |
 | `trap_bar` | `trap_bar` |
 | `safety_bar` | `safety_bar` |
@@ -572,6 +573,20 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   and not touching; it has one start (the ref's knob has five, 15° apart, chosen) and the drop arms
   are rigid on their pins; the rear delt's straddle (300 mm behind the axes) has no fit rule until
   it is posed; and the seat, start angle and lever radius are the ref's chosen numbers.
+- `captains_chair` (#237, bodyweight equipment; posed by `roman_chair_crunch`, a knee raise on the `chair`
+  motion) is a captain's chair from `refs/captains_chair/ref.md`, its parts placed from the photos
+  written there. Nothing on it moves: two floor rails 1054 mm long, 640 apart, with a foot brace; in each
+  side plane an X of 65 mm mitered tubes, a straight one from the rail's front half to a rear post and a bent
+  one from its rear half, forward and upright under the grip's hub; a 65 mm top rail under each arm pad from
+  the post to the hub; a back pad 290 by 550 mm, reclined 10°, bolted to one upright standing on a cross tube
+  between the rear posts; two flat arm pads (250 by 120 by 80 mm, 560 apart, tops at 1.38 m); a knee raise
+  grip 230 mm long rising from a hub at each pad's front end, leaning back 15° and inward, with a dip handle
+  forward of the hub (the dips are `power_rack`'s); a foot peg each side at 280 mm. The elbows' place, on the
+  arm pads' rear halves, is the origin, the lifter facing +z. Contacts, on the frame: `armPads` (forearms,
+  a pair), `grips` (hands, a pair, on the grips at 1.43 m) and `backPad` (back). It has no fit rule and no
+  joints, so no seat, no floor contact and no pivot to hold: the feet hang 0.24 m clear of the floor. It
+  stands in the studio under its exercise. Heights are rough (±50 mm, one three-quarter render in the ref)
+  and the arm pads are flat.
 - `hyperextension_bench` (#220, weighted bodyweight equipment; `STATIONS` in `kit.mjs` maps its one
   exercise, `45_hyperextension`, not posed yet, so no clip changes) is a rigid 45° back extension
   bench. The lifter lies face down and faces -z; the origin is on the floor under the hip pads' top
