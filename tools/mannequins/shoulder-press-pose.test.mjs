@@ -81,3 +81,13 @@ test('no part of the kit flips between two frames of the rep (a cable laid exact
     });
   }
 });
+
+test('the back stays on the pad through the whole press: the spine does not leave it between the top and the bottom', () => {
+  const at = (d) => {
+    stage.pose(d);
+    const pad = kitOf(stage).contacts.find((c) => c.landmark === 'back').at[0];
+    return ['spine_01', 'spine_02', 'spine_03'].map((b) => wpos(stage.rig.bones[b]).sub(pad));
+  };
+  const [top, bottom] = [at(0), at(1)];
+  top.forEach((p, i) => assert.ok(p.distanceTo(bottom[i]) < 0.01, `${['low', 'mid', 'high'][i]} spine ${(p.distanceTo(bottom[i]) * 100).toFixed(1)} cm from where it was against the pad`));
+});

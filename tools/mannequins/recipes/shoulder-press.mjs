@@ -30,6 +30,8 @@ const ARMS_OUT = 0.45;
 const BEARING_OUT = 0.3;
 const NEUTRAL = 0.12;
 const BAR = 0.13;
+/** The arms run this far below the grips' line, so the grips stand proud of them. */
+const DROP = 0.055;
 // The seat's top and its z; the hips sit this far above it and a little behind its middle.
 const SEAT = [0.35, 0.02];
 /** The seat's top, held to its range, 330 to 500 mm. */
@@ -38,7 +40,7 @@ const SITS = 0.09;
 const hipOn = (top) => [top + SITS, SEAT[1] - 0.02];
 const PAD = { long: 0.86, w: 0.44, lean: rad(-6.5) };
 // The stack beside the lifter (their right is -x): the portal's middle [x, z], its half width and depth, and its top.
-const TOWER = { at: [-0.72, -0.05], halfW: 0.19, halfD: 0.2, top: 1.56, post: 0.08 };
+const TOWER = { at: [-0.75, -0.05], halfW: 0.19, halfD: 0.2, top: 1.56, post: 0.08 };
 const FRONT = 0.56;
 const REAR = -0.92;
 const CRANK = 0.12;
@@ -126,11 +128,13 @@ export default recipe({
     frame.push(portal(tz + TOWER.halfD), portal(tz - TOWER.halfD));
     for (const s of [-1, 1]) {
       frame.push(...floorRail(V(tx + s * TOWER.halfW, 0.035, tz - TOWER.halfD), V(tx + s * TOWER.halfW, 0.035, tz + TOWER.halfD), M));
+      // The side facing the lifter is open, as the photos show, the stack and its rods in view.
+      if (s > 0) continue;
       const side = pad(0.012, TOWER.top - 0.2, 2 * TOWER.halfD - 0.04, M.frame, V(tx + s * TOWER.halfW, (TOWER.top + 0.1) / 2, tz), { soft: 0.004, solid: false });
       frame.push(role(side, 'towerPanel'));
     }
     frame.push(role(pad(2 * TOWER.halfW - 0.04, TOWER.top - 0.2, 0.012, M.frame, V(tx, (TOWER.top + 0.1) / 2, tz - TOWER.halfD), { soft: 0.004, solid: false }), 'towerPanel'));
-    frame.push(role(pad(2 * TOWER.halfW + 0.1, 0.22, 2 * TOWER.halfD + 0.1, M.frame, V(tx, TOWER.top - 0.01, tz), { soft: 0.06, solid: false }), 'header'));
+    frame.push(role(pad(2 * TOWER.halfW + 0.1, 0.16, 2 * TOWER.halfD + 0.1, M.frame, V(tx, TOWER.top - 0.01, tz), { soft: 0.05, solid: false }), 'header'));
     frame.push(pad(0.3, 0.1, 0.012, M.vinyl, V(tx, TOWER.top - 0.01, tz + TOWER.halfD + 0.056), { soft: 0.003, solid: false }));
     frame.push(...floorRail(V(tx, 0.035, tz + TOWER.halfD), V(BEARING_OUT, 0.035, FRONT - 0.2), M));
     const weights = weightStack(V(tx, 0, tz), M, { rodTop: TOWER.top - 0.12, toward: 1 });
@@ -151,8 +155,9 @@ export default recipe({
     // the bottom of the rep and turned about the pivot, then an arm a side straight ahead to the grips.
     // The bent beam is behind the lifter and stands clear of the body, so only the arms are solid.
     const [y0, z0] = PIVOT;
+    const yb = y0 - DROP;
     const beam = role(mitered([
-      V(-ARMS_OUT, y0, z0 + 0.45), V(-ARMS_OUT, y0, z0 + 0.3), V(-BEARING_OUT, y0, z0), V(BEARING_OUT, y0, z0), V(ARMS_OUT, y0, z0 + 0.3), V(ARMS_OUT, y0, z0 + 0.45),
+      V(-ARMS_OUT, yb, z0 + 0.45), V(-ARMS_OUT, yb, z0 + 0.3), V(-BEARING_OUT, yb, z0), V(BEARING_OUT, yb, z0), V(ARMS_OUT, yb, z0 + 0.3), V(ARMS_OUT, yb, z0 + 0.45),
     ], 0.07, M.metal, { solid: false, tall: 0.12 }), 'yokeBeam');
     const crank = stretchedTube(0.06, M.metal);
     const knob = hub(M, V(0, 0, 0));
@@ -165,7 +170,7 @@ export default recipe({
       // The curved hook beyond the grip, built at the bottom of the rep and turned with the beam.
       hook: role(bent(`shoulder_press_hook_${s}`, [
         V(s * GRIPS_OUT, y0, z0 + REACH + NEUTRAL / 2 - 0.02), V(s * GRIPS_OUT, y0, z0 + REACH + NEUTRAL / 2 + 0.03),
-        V(s * (GRIPS_OUT - 0.01), y0 + 0.045, z0 + REACH + NEUTRAL / 2 + 0.06), V(s * (GRIPS_OUT - 0.03), y0 + 0.1, z0 + REACH + NEUTRAL / 2 + 0.045),
+        V(s * (GRIPS_OUT - 0.01), y0 + 0.05, z0 + REACH + NEUTRAL / 2 + 0.07), V(s * (GRIPS_OUT - 0.045), y0 + 0.13, z0 + REACH + NEUTRAL / 2 + 0.05),
       ], 0.0205, M.vinyl, { segments: 12 }), 'hook'),
       stub: part(rodGeometry(0.02), M.metal),
     }));
@@ -185,11 +190,12 @@ export default recipe({
       knob.position.copy(tip);
       for (const a of arms) {
         const at = (p, x) => p.clone().setX(a.s * x);
-        span(a.arm, at(pivot.clone().addScaledVector(ahead, 0.45), ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.09), ARMS_OUT));
+        const drop = V(0, Math.cos(value), -Math.sin(value)).multiplyScalar(-DROP);
+        span(a.arm, at(pivot.clone().addScaledVector(ahead, 0.45).add(drop), ARMS_OUT), at(end.clone().addScaledVector(ahead, 0.09).add(drop), ARMS_OUT));
         const gripMiddle = end.clone().addScaledVector(ahead, -NEUTRAL / 2);
         // The neutral grip inboard of the arm, joined to it by a stub at its front end, a horn up from its front.
         span(a.neutral, at(end.clone().addScaledVector(ahead, -NEUTRAL), GRIPS_OUT), at(end, GRIPS_OUT));
-        span(a.stub, at(end, ARMS_OUT), at(end, GRIPS_OUT));
+        span(a.stub, at(end.clone().add(drop), ARMS_OUT), at(end, GRIPS_OUT));
         // The bar grip across the end, beyond the neutral grip.
         const tipAt = end.clone().addScaledVector(ahead, 0.09);
         span(a.bar, at(tipAt, ARMS_OUT), at(tipAt, ARMS_OUT - BAR));

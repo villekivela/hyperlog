@@ -117,9 +117,9 @@ test('the seat can go no lower than 330 mm and no higher than 500 mm', () => {
   close(top(0.4), 0.4, 0.01, 'a seat inside the range');
 });
 
-test('the tower is closed: a panel each side and behind, under a rounded header', () => {
+test('the tower is closed on its outer side and behind, open toward the lifter, under a rounded header', () => {
   const kit = machine();
-  assert.equal(role(kit, 'towerPanel').length, 3);
+  assert.equal(role(kit, 'towerPanel').length, 2);
   const [header] = role(kit, 'header');
   const b = new THREE.Box3().setFromObject(header);
   close(b.max.y, 1.63, 0.03, 'the header\'s top');
