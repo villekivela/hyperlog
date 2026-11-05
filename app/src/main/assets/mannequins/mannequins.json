@@ -54,10 +54,10 @@
       "camera": {
         "target": [
           0,
-          0.95,
-          0.1
+          1.05,
+          0.05
         ],
-        "halfHeight": 1.05,
+        "halfHeight": 1.12,
         "azimuth": 140,
         "elevation": 10
       },
@@ -1982,10 +1982,10 @@
       "camera": {
         "target": [
           0,
-          0.95,
-          0.1
+          1.05,
+          0.05
         ],
-        "halfHeight": 1.05,
+        "halfHeight": 1.12,
         "azimuth": 40,
         "elevation": 10
       },
@@ -2078,10 +2078,10 @@
       "camera": {
         "target": [
           0,
-          0.95,
-          0.1
+          1.05,
+          0.05
         ],
-        "halfHeight": 1.05,
+        "halfHeight": 1.12,
         "azimuth": 140,
         "elevation": 10
       },

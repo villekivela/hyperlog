@@ -40,21 +40,50 @@ const grip = (kit, side) => kit.contacts.find((c) => c.point === `${side}Grip`).
 const swept = (kit, side, to) => { kit.scrub(side, to); kit.group.updateMatrixWorld(true); return grip(kit, side); };
 const rad = (d) => (d * Math.PI) / 180;
 
-test('it is 1.80 m tall, and 1.42 m wide by 1.245 m deep on the floor with the arms out', () => {
+// The page gives 1.80 m and 1.42 m, but the demo's lifter stands against a taller machine: his head
+// seated is 71% of its height, his shoulders 55%, the pad's top 60%. It is built to the lifter.
+test('it is 2.0 m tall, as the demo has it against its lifter, 1.56 m wide with the arms out and 1.245 m deep', () => {
   const b = box(deck());
-  close(b.max.y, 1.8, 0.01, 'the overall height');
+  close(b.max.y, 2.0, 0.01, 'the overall height');
   close(b.min.y, 0, 0.01, 'on the floor');
-  close(b.max.x - b.min.x, 1.42, 0.05, 'the width');
-  close(b.max.z - b.min.z, 1.245, 0.06, 'the depth');
+  close(b.max.x - b.min.x, 1.56, 0.03, 'the width');
+  close(b.max.z - b.min.z, 1.245, 0.02, 'the depth');
 });
 
-test('each arm is its own revolute joint about a vertical axis 1.62 m up, 0.4 m apart, the sweep 0 to 120° inward', () => {
+test('seated, the lifter stands to the machine as the demo\'s does: the shoulders 55% of its height, the pad\'s top 60%', async () => {
+  const { pose, rig, kit } = await buildStage(prepare('pec_deck'));
+  pose(1);
+  const top = new THREE.Box3().setFromObject(kit.kits.pec_deck.group).max.y;
+  close(wpos(rig.bones.upperarm_l).y / top, 0.55, 0.02, 'the shoulders\' share');
+  let pad = null;
+  kit.group.traverse((o) => { if (o.name === 'pec_deck_back') pad = new THREE.Box3().setFromObject(o); });
+  close(pad.max.y / top, 0.6, 0.02, 'the pad top\'s share');
+});
+
+test('the base is a narrow spine with small feet: open floor either side of it', () => {
+  const low = boxes(deck()).filter(({ box: b }) => b.max.y < 0.12);
+  assert.ok(low.length, 'parts on the floor');
+  for (const { box: b } of low) assert.ok(b.max.x - b.min.x < 0.5, `a part ${(b.max.x - b.min.x).toFixed(2)} m across on the floor`);
+});
+
+test('the lower plate runs back to the tower\'s top, and the arch comes level into the unit', () => {
+  const kit = deck();
+  const rail = boxes(kit).find(({ box: b }) => b.min.y > 1.6 && b.max.y < 1.75 && b.max.x - b.min.x < 0.1 && b.max.z - b.min.z > 0.25);
+  assert.ok(rail, 'a rail from the unit to the tower');
+  assert.ok(rail.box.min.z < -0.35, `the rail reaches the tower, to z ${rail.box.min.z.toFixed(2)}`);
+});
+
+test('the empty machine\'s stack sits down as one block', () => {
+  close(head(deck()).max.y, 0.57, 0.002, 'the top plate at rest');
+});
+
+test('each arm is its own revolute joint about a vertical axis 1.8 m up, 0.4 m apart, the sweep 0 to 120° inward', () => {
   const kit = deck();
   assert.deepEqual(Object.keys(kit.joints).sort(), ['left', 'right']);
   for (const [side, s] of [['left', -1], ['right', 1]]) {
     const j = kit.joints[side];
     assert.equal(j.type, 'revolute');
-    close(j.origin.y, 1.62, 0.03, `the ${side} axis' height`);
+    close(j.origin.y, 1.8, 0.02, `the ${side} axis' height`);
     close(j.origin.x, s * 0.2, 0.01, `the ${side} axis' side`);
     assert.deepEqual(j.limits, [0, rad(120)]);
     assert.ok(Math.abs(j.axis.y) > 0.999 && Math.sign(j.axis.y) === -s, `the ${side} axis is vertical and mirrors the other`);
@@ -64,12 +93,12 @@ test('each arm is its own revolute joint about a vertical axis 1.62 m up, 0.4 m 
 
 // The demo at 0:25 and 0:28: the grip bends out of the drop arm square to the lever, ahead of it with
 // the arms out and inward with them together, so the hand stays an arm's length from the shoulder.
-test('the vertical grip stands 100 mm off the drop arm, square to the lever, about 0.51 m from its axis', () => {
+test('the vertical grip stands 100 mm off the drop arm, square to the lever, about 0.56 m from its axis', () => {
   const kit = deck();
   for (const [side, s] of [['left', -1], ['right', 1]]) {
     const axis = kit.joints[side].origin;
     const g = grip(kit, side);
-    close(Math.hypot(g.x - axis.x, g.z - axis.z), Math.hypot(0.5, 0.1), 0.002, `the ${side} grip from its axis`);
+    close(Math.hypot(g.x - axis.x, g.z - axis.z), Math.hypot(0.55, 0.1), 0.002, `the ${side} grip from its axis`);
     assert.ok(g.z > axis.z - 0.02, `the ${side} grip stands ahead of the lever, at z ${g.z.toFixed(3)}`);
   }
 });
@@ -80,8 +109,8 @@ test('a short level grip stands on the other side of the drop arm, at the vertic
   for (const side of ['left', 'right']) {
     const axis = kit.joints[side].origin;
     const p = kit.contacts.find((c) => c.point === `${side}Short`).at[0];
-    close(Math.hypot(p.x - axis.x, p.z - axis.z), Math.hypot(0.5, 0.1), 0.002, `the ${side} short grip from its axis`);
-    assert.ok(p.y < 1.05, 'below the vertical grip\'s middle');
+    close(Math.hypot(p.x - axis.x, p.z - axis.z), Math.hypot(0.55, 0.1), 0.002, `the ${side} short grip from its axis`);
+    assert.ok(p.y < 1.1, 'below the vertical grip\'s middle');
   }
   const held = [];
   kit.group.traverse((o) => { if (o.isMesh && o.userData.held) held.push(new THREE.Box3().setFromObject(o)); });
@@ -162,19 +191,19 @@ test('the stack rises as the arms come in', () => {
   assert.ok(head(kit).max.y > rest + 0.1, `the stack rose ${((head(kit).max.y - rest) * 1000).toFixed(0)} mm`);
 });
 
-test('the grips are vertical, at 1.05 m: out at the sides, a little behind the shoulders, at rest; close in front of the chest at the end', () => {
+test('the grips are vertical, at 1.10 m: out at the sides, a little behind the shoulders, at rest; close in front of the chest at the end', () => {
   const kit = deck();
   for (const [side, s] of [['left', -1], ['right', 1]]) {
     const g = grip(kit, side);
-    close(g.y, 1.05, 0.02, 'the grip\'s height');
-    assert.ok(s * g.x > 0.55 && s * g.x < 0.72, `the ${side} hand ${g.x.toFixed(2)} m out at rest`);
+    close(g.y, 1.1, 0.02, 'the grip\'s height');
+    assert.ok(s * g.x > 0.65 && s * g.x < 0.8, `the ${side} hand ${g.x.toFixed(2)} m out at rest`);
     assert.ok(g.z < -0.06 && g.z > -0.3, `the ${side} hand ${g.z.toFixed(2)} m, level with the shoulders or a little behind`);
   }
-  const l = swept(kit, 'left', rad(107));
-  const r = swept(kit, 'right', rad(107));
+  const l = swept(kit, 'left', rad(104));
+  const r = swept(kit, 'right', rad(104));
   assert.ok(r.x - l.x < 0.13 && r.x - l.x > 0, `the hands ${((r.x - l.x) * 100).toFixed(0)} cm apart at the end`);
-  assert.ok(l.z > 0.3 && l.z < 0.5, 'in front of the chest');
-  close(l.y, 1.05, 1e-6, 'still at shoulder height');
+  assert.ok(l.z > 0.3 && l.z < 0.55, 'in front of the chest');
+  close(l.y, 1.1, 1e-6, 'still at shoulder height');
 });
 
 test('a grip stays on its circle through the sweep, and the arms are independent', () => {
@@ -183,7 +212,7 @@ test('a grip stays on its circle through the sweep, and the arms are independent
   const rest = grip(kit, 'left').clone();
   for (const v of [0, 30, 60, 110]) {
     const g = swept(kit, 'right', rad(v));
-    close(Math.hypot(g.x - right.x, g.z - right.z), Math.hypot(0.5, 0.1), 0.002, `the right grip at ${v}°, from its axis`);
+    close(Math.hypot(g.x - right.x, g.z - right.z), Math.hypot(0.55, 0.1), 0.002, `the right grip at ${v}°, from its axis`);
   }
   assert.ok(grip(kit, 'left').distanceTo(rest) < 1e-9, 'the left arm did not move');
   assert.equal(kit.joints.left.value, 0);
@@ -206,15 +235,15 @@ test('the contacts tie each hand to its arm\'s grip and the back to the frame\'s
   assert.ok(held.some((b) => b.distanceToPoint(g) < 1e-3 && b.max.y - b.min.y > 0.1), 'a vertical held grip at the hand');
 });
 
-test('the seat goes where the grips meet the shoulders, within its 0.40 to 0.56 m range', async () => {
+test('the seat goes where the grips meet the shoulders, within its 0.44 to 0.62 m range', async () => {
   const rule = KITS.pec_deck.fit.find((f) => f.sets === 'seat');
   assert.match(rule.rule, /shoulder/);
   const { rig } = await buildStage(prepare('machine_chest_press'));
   const [y] = rule.solve({ L: rig.dims, entry: { body: {} } });
-  close(y + 0.09 + rig.dims.trunkUp, 1.05, 0.001, 'the shoulders at the grips');
-  assert.ok(y >= 0.4 && y <= 0.56);
-  const [tall] = rule.solve({ L: { ...rig.dims, trunkUp: 0.4 }, entry: { body: {} } });
-  assert.equal(tall, 0.56, 'the seat stops at its highest');
+  close(y + 0.09 + rig.dims.trunkUp, 1.1, 0.001, 'the shoulders at the grips');
+  assert.ok(y >= 0.44 && y <= 0.62);
+  const [tall] = rule.solve({ L: { ...rig.dims, trunkUp: 0.3 }, entry: { body: {} } });
+  assert.equal(tall, 0.62, 'the seat stops at its highest');
 });
 
 test('its recipe names no brand', async () => {
@@ -269,8 +298,11 @@ test('reverse_pec_deck: chest to the pad on the same seat, the arms open from ah
   const open = heldAt(rig, 'l');
   close(open.z, wpos(rig.bones.upperarm_l).z, 0.1, 'the hand in line with the shoulder at the end');
   close(open.y, wpos(rig.bones.upperarm_l).y, 0.05, 'the hand level with the shoulder');
-  const elbow = wpos(rig.bones.lowerarm_l);
-  assert.ok(elbow.y < wpos(rig.bones.upperarm_l).y + 0.02, 'the elbow no higher than the shoulder: a line, not an inverted V');
+  const [shoulderAt, elbow, wrist] = ['upperarm_l', 'lowerarm_l', 'hand_l'].map((b) => wpos(rig.bones[b]));
+  assert.ok(elbow.y < shoulderAt.y + 0.02, 'the elbow no higher than the shoulder: a line, not an inverted V');
+  assert.ok(shoulderAt.y - elbow.y < 0.1, `the elbow ${(shoulderAt.y - elbow.y).toFixed(2)} m below the shoulder: nearly a straight arm, as in the demo`);
+  const bend = elbow.clone().sub(shoulderAt).angleTo(wrist.clone().sub(elbow));
+  assert.ok(bend < rad(65), `the elbow bent ${(bend * 180 / Math.PI).toFixed(0)}°`);
 });
 
 test('reverse_pec_deck: the chest bears on the pad through the rep, the hips on the seat', async () => {

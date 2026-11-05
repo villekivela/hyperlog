@@ -294,11 +294,11 @@ export const POSES = {
     motion: 'lever_handles',
     kit: { pec_deck: {} },
     body: { trunk: -7 },
-    top: { left: 107 },
+    top: { left: 104 },
     bottom: { left: 0 },
-    feet: { stance: 0.17, z: 0.45, toeOut: 12 },
+    feet: { stance: 0.17, z: 0.435, toeOut: 12 },
     grip: { pole: [1, -0.25, -0.3] },
-    camera: { target: [0, 0.95, 0.1], halfHeight: 1.05, azimuth: 40, elevation: 10 },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 40, elevation: 10 },
     shadow: { size: [1.5, 1.6], at: [0, -0.2] },
   },
 
@@ -309,11 +309,11 @@ export const POSES = {
     motion: 'lever_handles',
     kit: { pec_deck: { facing: 'pad', hips: -0.02 } },
     body: { trunk: 7, look: 0 },
-    top: { left: 55 },
+    top: { left: 57 },
     bottom: { left: 0 },
     feet: { stance: 0.24, z: 0.2, toeOut: 15, kneesOut: 0.5 },
-    grip: { pole: [1, -0.6, -0.1] },
-    camera: { target: [0, 0.95, 0.1], halfHeight: 1.05, azimuth: 140, elevation: 10 },
+    grip: { pole: [0.4, 0.05, -1] },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 140, elevation: 10 },
     shadow: { size: [1.5, 1.6], at: [0, 0.2] },
   },
 
@@ -321,7 +321,7 @@ export const POSES = {
   '1_arm_reverse_pec_deck': {
     like: 'reverse_pec_deck',
     kit: { pec_deck: { facing: 'pad', hips: -0.02, one: true } },
-    grip: { one: 1, rest: [-0.2, 0.68, 0.22] },
+    grip: { one: 1, rest: [-0.2, 0.74, 0.22] },
   },
 
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
