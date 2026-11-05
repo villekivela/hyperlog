@@ -712,8 +712,9 @@ export const POSES = {
   // On the cross tube's ends, outside the outer prongs: the hands hang the body higher, so the
   // chin reaches the bar on less of a rise.
   pullup_wide_grip: { like: 'pullup', kit: { power_rack: { handles: 'wide' } }, top: { rise: 0.43 }, grip: { swing: 45 } },
-  // On the V's arms, leaning back about 15° (the library's note).
-  close_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'close' } }, top: { trunk: -15 } },
+  // On the cross tube hard by the inner prongs, leaning back about 15° (the library's note): the
+  // V's arms turn an overhand hand palm out.
+  close_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'narrow' } }, top: { trunk: -15 } },
   // On the inner prongs, the palms facing.
   neutral_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'neutral' } }, top: { rise: 0.495 } },
   // The pull-up's grips turned underhand, the elbows coming down in front.

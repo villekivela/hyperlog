@@ -113,7 +113,7 @@ test('the pin pipe safeties run between the uprights\' faces, not through them, 
 test('nothing on it moves, and each hand grip is a contact on the frame: a pair of points', () => {
   const kit = station();
   assert.deepEqual(Object.keys(kit.joints), []);
-  assert.deepEqual(kit.contacts.map((c) => c.point), ['wide', 'standard', 'close', 'neutral', 'dip', 'dipClose']);
+  assert.deepEqual(kit.contacts.map((c) => c.point), ['wide', 'standard', 'narrow', 'close', 'neutral', 'dip', 'dipClose']);
   for (const c of kit.contacts) {
     assert.equal(c.body, 'frame');
     assert.equal(c.landmark, 'hands');
@@ -121,18 +121,18 @@ test('nothing on it moves, and each hand grip is a contact on the frame: a pair 
     assert.ok(c.at[0].x < c.at[1].x, `${c.point}: left hand first`);
   }
   assert.deepEqual(station({ pullupBar: false, dipHandles: false }).contacts, []);
-  assert.deepEqual(station({ dipHandles: false }).contacts.map((c) => c.point), ['wide', 'standard', 'close', 'neutral']);
+  assert.deepEqual(station({ dipHandles: false }).contacts.map((c) => c.point), ['wide', 'standard', 'narrow', 'close', 'neutral']);
 });
 
 test('the multi-grip bar is bolted on at the 91 in hole: wide 960 mm apart, standard 610, close 280 on the V, neutral 406 on the inner prongs', () => {
   const kit = station();
-  for (const [point, spread] of [['wide', 0.96], ['standard', 0.61], ['close', 0.28], ['neutral', 0.406]]) {
+  for (const [point, spread] of [['wide', 0.96], ['standard', 0.61], ['narrow', 0.544], ['close', 0.28], ['neutral', 0.406]]) {
     const [l, r] = contact(kit, point).at;
     close(r.x - l.x, spread, 0.002, `the ${point} grips' spread`);
     close(l.y, 91 * IN, 1e-3, `the ${point} grips' height, the 91 in hole`);
     close(l.x + r.x, 0, 1e-6, `${point} about the centre line`);
   }
-  for (const point of ['wide', 'standard']) close(contact(kit, point).at[0].z, 0, 1e-6, `${point} hangs on the cross tube, at the origin`);
+  for (const point of ['wide', 'standard', 'narrow']) close(contact(kit, point).at[0].z, 0, 1e-6, `${point} hangs on the cross tube, at the origin`);
   assert.ok(contact(kit, 'close').at[0].z > 0.05, 'the close grips are on the V, nearer the rack than the cross tube');
   assert.ok(contact(kit, 'neutral').at[0].z < 0, 'the neutral grips are further out the prongs, toward the lifter');
 });
@@ -157,7 +157,7 @@ test('the dip handles hang on the +x front upright from a bracket at the 51 in h
 test('every grip is on a held part: the bar\'s 31.75 mm, the dip handles\' 47.6', () => {
   const kit = station();
   const parts = held(kit);
-  for (const [point, mm] of [['wide', 31.75], ['standard', 31.75], ['close', 31.75], ['neutral', 31.75], ['dip', 47.6], ['dipClose', 47.6]]) {
+  for (const [point, mm] of [['wide', 31.75], ['standard', 31.75], ['narrow', 31.75], ['close', 31.75], ['neutral', 31.75], ['dip', 47.6], ['dipClose', 47.6]]) {
     for (const p of contact(kit, point).at) {
       const on = parts.filter(({ box }) => box.distanceToPoint(p) < 1e-6);
       assert.ok(on.length, `no held part at the ${point} grip`);

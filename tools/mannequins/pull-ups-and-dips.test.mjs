@@ -22,10 +22,10 @@ const rack = (options = {}) => {
 };
 
 test('a pose holds one pair of grips, its handles: the contacts tie the hands to that pair alone', () => {
-  for (const handles of ['wide', 'standard', 'close', 'neutral', 'dip', 'dipClose']) {
+  for (const handles of ['wide', 'standard', 'narrow', 'close', 'neutral', 'dip', 'dipClose']) {
     assert.deepEqual(rack({ handles }).contacts.map((c) => c.point), [handles]);
   }
-  assert.throws(() => rack({ handles: 'narrow' }), /No handles "narrow"/);
+  assert.throws(() => rack({ handles: 'tiny' }), /No handles "tiny"/);
 });
 
 test('every grip has a round part under the hand for the fingers to close on', () => {
@@ -97,7 +97,7 @@ test('the equipment check fails a body driven into the dip handles', async () =>
 const thumbIn = (rig, P, k) => wpos(rig.bones[`thumb_01_${k}`]).sub(wpos(rig.bones[`pinky_01_${k}`])).dot(P.across(sideOf(rig, k)));
 
 for (const [id, handles] of [
-  ['pullup_wide_grip', 'wide'], ['close_grip_pullup', 'close'], ['neutral_grip_pullup', 'neutral'],
+  ['pullup_wide_grip', 'wide'], ['close_grip_pullup', 'narrow'], ['neutral_grip_pullup', 'neutral'],
   ['chinup', 'standard'], ['chinup_wide_grip', 'wide'], ['close_grip_chinup', 'close'],
 ]) {
   test(`${id} hangs from the ${handles} grips and passes every check`, async () => {
@@ -118,6 +118,19 @@ for (const [id, way, turned] of [
     }
   });
 }
+
+test('the close-grip pull-up turns its hands as the pull-up does, overhand through the rep, where the V would turn the palms out', async () => {
+  const offSquare = async (id) => {
+    const { rig, pose } = await buildStage(prepare(id));
+    return [0, 0.25, 0.5, 0.75, 1].map((d) => {
+      pose(d);
+      const thumb = wpos(rig.bones.thumb_01_l).sub(wpos(rig.bones.pinky_01_l));
+      return degrees(Math.atan2(Math.abs(thumb.z), -sideOf(rig, 'l') * thumb.x));
+    });
+  };
+  const pull = await offSquare('pullup');
+  (await offSquare('close_grip_pullup')).forEach((off, i) => close(off, pull[i], 15, `the hand off square at step ${i}, against the pull-up's`));
+});
 
 test('the neutral grip turns the palms to each other: the thumbs lie back toward the lifter', async () => {
   const { rig, pose } = await buildStage(prepare('neutral_grip_pullup'));
@@ -196,6 +209,19 @@ test('a close-grip dip keeps the upper arms behind the trunk (the library\'s not
   pose(1);
   for (const k of ['l', 'r']) assert.ok(wpos(rig.bones[`lowerarm_${k}`]).z < wpos(rig.bones[`upperarm_${k}`]).z, `the ${k} elbow is ahead of the shoulder`);
 });
+
+for (const id of ['dip', 'close_grip_dip', 'weighted_dip']) {
+  test(`${id} holds the handles neutral, the thumbs forward: out along them, the way the lifter faces`, async () => {
+    const { rig, pose } = await buildStage(prepare(id));
+    for (const d of [0, 1]) {
+      pose(d);
+      for (const k of ['l', 'r']) {
+        const ahead = wpos(rig.bones[`thumb_01_${k}`]).z - wpos(rig.bones[`pinky_01_${k}`]).z;
+        assert.ok(ahead > 0.05, `the ${k} thumb ${ahead.toFixed(3)} ahead of the little finger at ${d}`);
+      }
+    }
+  });
+}
 
 test('the rack stands turned only for a dip: a pull-up hangs in front of it, as it is built', () => {
   const pull = rack({ handles: 'standard' });

@@ -440,8 +440,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   front upright from a bracket at the 51 in hole: a stem, a crosshead and a handle either side, 440 mm
   long, 451 mm apart at the crosshead and 630 at the tips, at 1.305 m. The cross tube's hang line is the
   origin. Contacts, all hands on the frame, a pair of points each: `wide` (960 mm apart, on the cross
-  tube outside the outer prongs), `standard` (610, on it between the prongs), `close` (280, on the V's
-  arms), `neutral` (406, on the inner prongs, 80 mm out along them), and `dip` and `dipClose` (the
+  tube outside the outer prongs), `standard` (610, on it between the prongs), `narrow` (544, on it hard by the inner prong, the
+  nearest an overhand grip gets), `close` (280, on the V's arms, an underhand grip's: they run too far
+  off square for an overhand hand), `neutral` (406, on the inner prongs, 80 mm out along them), and `dip` and `dipClose` (the
   handles' middle, 540 mm apart, and near the crosshead, 487 mm, as near as the hips clear it). It has no fit rule. It departs from the ref: the rack is a
   9 ft one so the bar sits at a hole near 2.30 m, the back crossmember isn't in the photos, the ref's
   close grip (400 mm on a cross tube between the inner prongs) is on the V because the photos show no

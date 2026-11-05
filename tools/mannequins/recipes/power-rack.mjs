@@ -54,9 +54,10 @@ const OUTER = { x: 0.4065, reach: 0.32, sphere: 0.0508, radius: 0.0254 };
 const INNER = { x: 0.203, reach: 0.405, sphere: 0.0381 };
 const CROSS = { z: FRONT - 0.23, half: 0.575, bend: 0.06 };
 // Where the hands go (half the spacing): wide on the cross tube outside the outer prongs, standard
-// on it between the prongs, close on the V's arms, and neutral on the inner prongs, a little out
-// along them from the cross tube.
-const HANDS = { wide: 0.48, standard: 0.305, close: 0.14, neutral: INNER.x, neutralOut: 0.08 };
+// on it between the prongs, narrow on it hard by the inner prong, the nearest an overhand grip gets,
+// close on the V's arms, which run too far off square for an overhand hand, and neutral on the inner
+// prongs, a little out along them from the cross tube.
+const HANDS = { wide: 0.48, standard: 0.305, narrow: 0.272, close: 0.14, neutral: INNER.x, neutralOut: 0.08 };
 // The dip handles: from the crosshead out to the tip, 47.6 mm across; the hands rest in the middle,
 // the close grip near the crosshead, as near as the hips clear it. The stem and crosshead are 3 in
 // square; the bracket is 254 mm tall.
@@ -78,12 +79,13 @@ const towardApex = (s) => V(-s * INNER.x, 0, FRONT - CROSS.z).normalize();
 /**
  * Each pair of grips, by the name a pose's `handles` gives it: `at(side)`, where that side's hand
  * holds, and `across(side)`, the way the part runs there, thumb first in the grip's own turn: along
- * the bar toward the middle, back toward the lifter down a prong, on toward the crosshead on a dip
- * handle. `option` is the recipe's option for the rack add-on that carries the pair.
+ * the bar toward the middle, back toward the lifter down a prong, ahead of the lifter along a dip
+ * handle, which the rack turned behind them keeps pointing forward. `option` is the recipe's option for the rack add-on that carries the pair.
  */
 const GRIPS = {
   wide: { option: 'pullupBar', at: onCross(HANDS.wide), across: toMiddle },
   standard: { option: 'pullupBar', at: onCross(HANDS.standard), across: toMiddle },
+  narrow: { option: 'pullupBar', at: onCross(HANDS.narrow), across: toMiddle },
   close: { option: 'pullupBar', at: onV, across: towardApex },
   neutral: { option: 'pullupBar', at: (s) => V(s * HANDS.neutral, HIGH, CROSS.z - HANDS.neutralOut), across: () => V(0, 0, -1) },
   dip: { option: 'dipHandles', at: onDip(DIP.hand), across: towardBase },
@@ -103,7 +105,7 @@ export function heldPair(handles) {
   const grip = GRIPS[handles];
   if (!grip) throw new Error(`No handles "${handles}": ${Object.keys(GRIPS).join(', ')}`);
   if (!turnsRack(handles)) return grip;
-  return { ...grip, at: (s) => turned(grip.at(-s)), across: (s) => grip.across(-s).multiply(V(-1, 1, -1)) };
+  return { ...grip, at: (s) => turned(grip.at(-s)), across: (s) => grip.across(-s) };
 }
 
 /** The grips a kit of these options has contacts on: the pose's pair, or with no pose all those its rack add-ons carry. */
