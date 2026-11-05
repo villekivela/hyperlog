@@ -28,7 +28,7 @@ export const MACHINES = {
   shoulder_press: { kit: null, exercises: ['machine_shoulder_press'] },
   lateral_raise_machine: { kit: 'lateral_raise_machine', exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
   preacher_curl_machine: { kit: 'preacher_curl_machine', exercises: ['machine_preacher_curl'] },
-  dip_machine: { kit: null, exercises: ['seated_dip_machine'] },
+  dip_machine: { kit: 'dip_machine', exercises: ['seated_dip_machine'] },
   hip_machine: { kit: 'hip_machine', exercises: ['machine_hip_abduction', 'machine_adduction'] },
   hip_thrust_machine: { kit: 'hip_thrust_machine', exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },

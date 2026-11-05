@@ -73,9 +73,9 @@ class MannequinsTest {
                 "machine_chest_press", "machine_hip_thrust", "machine_preacher_curl", "machine_pulldown",
                 "neutral_grip_pullup", "overhead_cable_triceps_extension", "pec_deck", "pullup", "pullup_wide_grip",
                 "reverse_cable_crossover", "reverse_pec_deck", "seated_cable_flye", "seated_calf_raise",
-                "seated_db_shoulder_press", "seated_leg_curl", "single_arm_db_row", "standing_db_arnold_press",
-                "super_rom_db_lateral_raise", "t_bar_row", "triceps_pressdown", "weighted_chinup", "weighted_dip",
-                "weighted_pullup",
+                "seated_db_shoulder_press", "seated_dip_machine", "seated_leg_curl", "single_arm_db_row",
+                "standing_db_arnold_press", "super_rom_db_lateral_raise", "t_bar_row", "triceps_pressdown",
+                "weighted_chinup", "weighted_dip", "weighted_pullup",
             ),
             mannequins.clips.map { it.exerciseId },
         )

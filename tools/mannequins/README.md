@@ -334,7 +334,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `shoulder_press` | Machine Shoulder Press | missing |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | `lateral_raise_machine` (seated) |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
-| `dip_machine` | Seated Machine Dip | missing |
+| `dip_machine` | Seated Machine Dip | `dip_machine` |
 | `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
@@ -589,6 +589,27 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   180 mm nearer the pads than in the drawing, which is at 40°; and the angle and height collars, the
   heel lock, the holes down the rail and the pads' rolled top end are left out. The studio shows it
   alone: `npm run studio`, then the `hyperextension bench` row under Kits.
+- `dip_machine` (#226, a machine kind; `seated_dip_machine`, its one exercise, is posed on it, in the
+  `dip-machine` batch; serve it with `npm run studio`, `f`, `dip_machine`, and `j` to its kit row)
+  is laid out from the ref's photos, read again for where each part sits against the seat
+  (`refs/dip_machine/ref.md`, Where the parts sit). Two joints, both about x: `arms` (0 to 40°, the
+  radians the handles have gone down from the start; the pose drives it, the top of the rep at 40°,
+  the arms straight down) and `carriage` (0 to 12°, the radians the seat, back pad and footplates have
+  rocked back about a pivot under the seat; the pose drives it at 0.3 of the arms'). The grip bars run
+  up and forward 40° at the start and level at the finish, as the ref's do: square enough to the forearm
+  through the rep for a straight wrist, and with the elbows back and under the shoulders (a bar at 15°
+  put them 21 cm out). The arms hang on a pivot 880 mm up on a leaning rear upright, each
+  one tube out to a collar and a 0.28 m bar, the grips 440 mm apart, 790 up at the start and 500 at the finish. The
+  seat top is 480 mm, the back pad 0.72 m tall from the seat's rear edge, the footplates 180 mm up at
+  the start. The stack (twelve plates, 0.3 m a radian of the arms) stands on the user's right (-x) in a
+  shroud open toward the seat, its plates facing it. Contacts: `handles` (hands, a pair, on the arms),
+  `backPad` (back) and `footplates` (feet, a pair), the last two on the carriage. It has no fit rule:
+  the seat is fixed at the measured height. The frame stands where the ref puts it and the parts are
+  laid by a rigid move at each joint's value, so a scrub never leaves one behind. It departs from the
+  ref where the mannequin's body asks: the arms are 0.5 m to the grip, not 0.72, so a hand can reach
+  the grip at the finish with the wrists straight; the footplates 0.42 m ahead of the seat's front,
+  not 0.5; the carriage rocks 12°, not 20°, since the photo's pad leans about 15° at the finish; and
+  the tower, tubes, seat and base are simplified from the ref's shroud and sloped frame.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
