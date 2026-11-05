@@ -1666,7 +1666,7 @@ gallery (Technique videos).
       lie on, and the bar can go no lower than the stops.
     - **The shoulder press** (#225) is a machine-first exercise (`machine_shoulder_press`, the `shoulder-press`
       batch): the lifter sits on the seat, the back on the pad, the feet on the floor, both hands closed on
-      the neutral grips, which the yoke carries from level with the shoulders to the arms near straight
+      the overhand grips (palms forward, wrists straight), a level bar a side across the machine, which the yoke carries from level with the shoulders to the arms near straight
       overhead. The yoke is one body on a revolute joint about the bearings behind the back pad, 980 mm up,
       its value the angle up from level ahead: 0° at the bottom of the rep (the grips 700 apart on a 900 mm
       arm) to 40° at the top (580 mm higher, about 200 mm further back). It lifts its stack, which stands

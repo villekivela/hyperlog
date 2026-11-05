@@ -91,3 +91,14 @@ test('the back stays on the pad through the whole press: the spine does not leav
   const [top, bottom] = [at(0), at(1)];
   top.forEach((p, i) => assert.ok(p.distanceTo(bottom[i]) < 0.01, `${['low', 'mid', 'high'][i]} spine ${(p.distanceTo(bottom[i]) * 100).toFixed(1)} cm from where it was against the pad`));
 });
+
+test('the grips are overhand: on every frame the palms face forward, one hand either side of the middle', () => {
+  for (const d of frames) {
+    const P = stage.pose(d);
+    for (const [side, palm] of Object.entries(P.palm)) {
+      const hand = P.hand(Number(side));
+      assert.ok(Math.sign(hand.x) === Math.sign(side), `side ${side}'s hand is at x ${hand.x.toFixed(2)}`);
+      assert.ok(palm.z > 0.8 && palm.y < 0.4, `the palm at ${d} faces ${palm.toArray().map((v) => v.toFixed(2))}, not forward, or well up`);
+    }
+  }
+});

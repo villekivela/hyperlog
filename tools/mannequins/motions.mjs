@@ -441,7 +441,7 @@ export const MOTIONS = {
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
-      armPole: (side) => V(side * 0.4, 0, -1).normalize(),
+      armPole: (side) => V(side * 0.6, -0.6, -0.3).normalize(),
     };
   },
 
@@ -504,7 +504,7 @@ export const MOTIONS = {
       ...standingFeet(e, L),
       bar: heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L),
       grip: e.grip.width,
-      armPole: (side) => V(side * 0.2, -1, -0.4).normalize(),
+      armPole: (side) => V(side * 0.6, -0.6, -0.3).normalize(),
     };
   },
 
@@ -549,7 +549,7 @@ export const MOTIONS = {
       // Horizontal handles, held like a bar: the knuckles run along them.
       hand: handle,
       across: (side) => X.clone().multiplyScalar(-side),
-      armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
+      armPole: (side) => V(side * 0.6, -0.6, -0.3).normalize(),
       pivot, handle, swing,
     };
   },
@@ -569,9 +569,9 @@ export const MOTIONS = {
       headDir: u.clone().addScaledVector(f, 0.3).normalize(),
       ...seatedFeet(e, L),
       hand: handle,
-      // The knuckles run along the grip, which points the yoke's way.
-      across: () => ahead.clone(),
-      armPole: (side) => V(side * 0.6, -1, -0.3).normalize(),
+      // The knuckles run along the handle, a bar lying level across the machine, so the palms face forward.
+      across: (side) => X.clone().multiplyScalar(-side),
+      armPole: (side) => V(side * 0.6, -1, 0.05).normalize(),
       pivot, handle, swing,
     };
   },

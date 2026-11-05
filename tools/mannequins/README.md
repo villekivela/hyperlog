@@ -283,7 +283,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
-| `shoulder_press` | seated against a back pad, pressing neutral grips on a yoke that pivots behind it | `yoke`, degrees up from level ahead; `feet.stance`, `feet.z`, `feet.toeOut`; `body.trunk` |
+| `shoulder_press` | seated against a back pad, pressing overhand grips on a yoke that pivots behind it | `yoke`, degrees up from level ahead; `feet.stance`, `feet.z`, `feet.toeOut`; `body.trunk` |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `armOut`, degrees the arm leans out to the side about the shoulder, away from the body whether it is raised or hanging (a Y overhead, a lateral raise), easing from none at an end without one; `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
@@ -498,8 +498,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   then a flat arm (70 by 120 mm) a side straight ahead, one body on a revolute joint about the bearings,
   its value the angle up from level ahead of the line to the grips: 0° at the bottom of the rep, the grips
   980 mm up and 700 apart, 900 mm ahead of the pivot, to 40° at the top, 580 mm higher and about 200 mm
-  further back. Each arm ends in a bar grip (overhand) and a neutral grip with a curved hook beyond it;
-  the contact ties the hands to the neutral grips, and the back to the pad. A crank behind the pivot draws a
+  further back. Each arm ends in one level bar across the machine (overhand, palms forward, wrists straight) on a short stub from the arm's end;
+  the contact ties the hands to the grips, and the back to the pad. A crank behind the pivot draws a
   cable under the floor to the stack, in a closed tower 1.63 m tall (panels each side and behind, a rounded
   header over a placard) beside the lifter, on their right, its front level with the grips; the stack
   rises with the yoke. Options: `seat`, the seat's top, and `pad`, how far behind the spine the pad's face

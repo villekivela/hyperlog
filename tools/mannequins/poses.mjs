@@ -155,7 +155,9 @@ export const POSES = {
     kit: { shoulder_press: {} },
     body: { trunk: -18 },
     feet: { stance: 0.17, z: 0.42, toeOut: 12 },
-    grip: {},
+    // The bar sits at the base of the fingers and at the bottom, where the hands are close to the shoulders, the wrist flexes 12° toward the bar so the fingers close round its front; at the top the wrist is straight.
+    grip: { sits: 'base' },
+    bottom: { wrist: [-12, 0] },
     camera: { target: [-0.1, 0.98, 0.1], halfHeight: 1.2, azimuth: 56, elevation: 12 },
   },
 

@@ -73,7 +73,7 @@ chosen from a fit rule at low confidence. What stays chosen, or rough, per machi
 gaps says why):
 
 - `t_bar_row_machine` (built, #176; posed, #188): the foot plate setting for the mannequin is
-  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe runs the neutral grips fore and aft through the
+  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe lays one bar grip a side across the machine, held overhand, as the owner asked, where the ref shows neutral grips fore and aft through the
   yoke's top blocks, as photos 05 and 06 show them, where the ref's spec calls them vertical.
 - `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
   80 mm); the carriage position per exercise is chosen.
