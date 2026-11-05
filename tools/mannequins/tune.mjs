@@ -153,6 +153,8 @@ export function rangeOf(path, value) {
   if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
   // A thumb's root swings from the palm to square off it, and no further (`holdOf`).
   if (key === 'swing') return { min: 0, max: 90, step: 1, unit: '°' };
+  // A stirrup the forearm goes through lies from straight behind the palm to along the forearm.
+  if (key === 'through') return { min: 0, max: 90, step: 1, unit: '°' };
   // The wrists' share of the forearms' lean, from none to all of it (`grip.level`).
   if (key === 'level') return { min: 0, max: 1, step: 0.05, unit: '' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };
