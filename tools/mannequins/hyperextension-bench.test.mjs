@@ -169,8 +169,10 @@ test('a sleeved column rises at 45 degrees from a pivot 790 mm from the head end
   assert.ok(size(carriage.box).x > 0.44, 'under both pads');
   const hit = along(carriage.mesh.getWorldPosition(new THREE.Vector3()), N.clone().negate(), inner.mesh);
   assert.ok(hit && hit.distance < 0.01, `the carriage ${hit ? (hit.distance * 100).toFixed(1) : 'nowhere'} cm off the column`);
-  const under = along(carriage.mesh.getWorldPosition(new THREE.Vector3()).addScaledVector(S, 0.12), N.clone().negate(), sleeve.mesh);
-  assert.ok(!under || under.distance > 0.005, 'the sleeve stops short of the carriage');
+  // From above the carriage's end, so a sleeve run into it can't hide the ray's start.
+  const over = carriage.mesh.getWorldPosition(new THREE.Vector3()).addScaledVector(S, 0.12).addScaledVector(N, 0.02);
+  const under = along(over, N.clone().negate(), sleeve.mesh);
+  assert.ok(!under || under.distance > 0.024, 'the sleeve stops short of the carriage');
 });
 
 test('a strut stands from a pivot 218 mm from the head end, mitred over at its top in one length to the column', () => {
@@ -276,6 +278,13 @@ test('45_hyperextension: the thighs lie on the pads, the whole foot on the plate
       const [skin] = skinDown(rig, face.clone().addScaledVector(out, -0.01), face.clone().addScaledVector(out, 1));
       assert.ok(skin, `a thigh over the ${side} pad, ${d} of the way`);
       close(skin.distanceTo(face), 0, 0.03, `the ${side} thigh on its pad, ${d} of the way`);
+      // Square off the plate, under the ball of the foot: the sole's skin on its surface.
+      const ball = wpos(rig.bones[`ball_${side}`]);
+      const sole = contact(k, 'footPlate').at[0];
+      const onPlate = ball.clone().addScaledVector(S, ball.clone().sub(sole).dot(S.clone().negate()));
+      const [skin2] = skinDown(rig, onPlate.clone().addScaledVector(S, 0.002), onPlate.clone().addScaledVector(S, -1));
+      assert.ok(skin2, `a sole over the plate, ${d} of the way`);
+      close(skin2.distanceTo(onPlate), 0, 0.008, `the ${side} sole on the plate, ${d} of the way`);
       const toLocal = plate.matrixWorld.clone().invert();
       const { min, max } = plate.geometry.boundingBox;
       for (const bone of [`foot_${side}`, `ball_${side}`, `ball_leaf_${side}`]) {

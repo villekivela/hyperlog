@@ -43,7 +43,7 @@ const POST_X = 1.108;
 const ARM = 0.06;
 const STUB_X = 1.024;
 // Where the hips and the ankles lie, off the pad's top face and past its top end.
-const HIP = { past: 0.05, off: 0.1 };
+const HIP = { past: 0.03, off: 0.1 };
 const ANKLE_OFF = 0.14;
 
 /** A point along the column, `t` down the slope from level with the pads' top end. */

@@ -64,7 +64,7 @@ Where each main part sits, from the spec sheet's side drawing at 300 dpi (1.025 
 | Roller arm | from the post on behind the plate, then up the body line, a cross tube along the body's normal carrying the axle | a post rising from the plate's heel end | one mitred arm, the cross tube on it |
 | Heel rollers | axle 158 up the body line from the plate, 240 off it, adjustable | 195 and 210 | 195 and 250: the lock moves it along the arm, so both come from the mannequin's calf, near the drawing's |
 
-Against the lifter: the pads' top end lies under the top of the thighs, the hips about 50 past it; the plate under the whole foot; the rollers on the back of the lower calf, above the heel; the handles ahead of the chest.
+Against the lifter: the pads' top end lies under the top of the thighs, the hips about 30 past it; the plate under the whole foot; the rollers on the back of the lower calf, above the heel; the handles ahead of the chest.
 
 The kit's z runs the other way from the drawing's depth, as the rig has every lifter face +z. The pads' top face stands 150 over the column's line, against about 110 in the drawing, to fit the carriage. The transport wheels at the head end and the handle at the foot end are left out.
 
