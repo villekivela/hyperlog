@@ -1616,6 +1616,30 @@
         "kit_barbell.bin"
       ]
     },
+    "glute_ham_raise": {
+      "clip": "glute_ham_raise.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.45
+        ],
+        "halfHeight": 1,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 3,
+        "bottom": 0.5,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_glute_ham_raise.bin"
+      ]
+    },
     "hack_squat": {
       "clip": "hack_squat.glb",
       "equipment": "machine",

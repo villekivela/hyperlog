@@ -913,10 +913,11 @@ export const MOTIONS = {
    * Kneeling on a glute-ham developer's pads, the ankles in its rollers and the soles on its plate,
    * the knees where `s.linkage` has them: the body, hips straight, thighs and trunk in one line,
    * lowers about the knees. `lean` is that line's lean from upright forward, in degrees, from the
-   * top to the bottom. The arms hang straight down, the hands open.
+   * top to the bottom. The arms hang straight down, the hands open, until the body is nearly level;
+   * then they reach to rest on the ends of the handles.
    */
   glute_ham_raise(e, s, L) {
-    const { knee, ankle, sole, soleUp, toes } = s.linkage;
+    const { knee, ankle, handle, sole, soleUp, toes } = s.linkage;
     // The thigh's way, and the spine's, which runs on from it with the hips straight: the line from the hips to the shoulders leans as the thigh does.
     const thigh = trunkUp(rad(s.lean));
     const u = trunkUp(spineLean(s.lean, L));
@@ -924,6 +925,10 @@ export const MOTIONS = {
     const across = e.feet?.stance ?? L.hipW;
     const hipC = knee.clone().addScaledVector(thigh, L.thigh);
     const sh = shouldersOf(hipC, u, L);
+    const hanging = V(0, -(L.up + L.fore) * STRAIGHT, 0.04);
+    // How far the hands have gone to the handles: none until the body is past 55% of its way down, all of it at the bottom.
+    const done = Math.min(1, Math.max(0, (s.lean - e.top.lean) / (e.bottom.lean - e.top.lean)));
+    const rest = smooth(Math.min(1, Math.max(0, (done - 0.55) / 0.45)));
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
@@ -933,7 +938,7 @@ export const MOTIONS = {
       kneePole: () => V(0, -0.4, 1).normalize(),
       support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
       openHands: true,
-      hand: (side) => sh.clone().addScaledVector(X, side * L.shW).add(V(0, -(L.up + L.fore) * STRAIGHT, 0.04)),
+      hand: (side) => hanging.clone().addScaledVector(X, side * L.shW).add(sh).lerp(handle(side), rest),
       armPole: elbowsTo(e, [0.3, 0, -1]),
     };
   },
