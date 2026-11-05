@@ -107,10 +107,10 @@ test('its fit rule names the handle height it sets', () => {
   assert.ok(KITS.trap_bar.fit[0].rule.length > 20);
 });
 
-test('nothing on it moves, and it draws only in the kits\' tones', () => {
+test('nothing on it moves, and it draws only in the frame, metal and plate tones', () => {
   const kit = bar();
   assert.deepEqual(Object.keys(kit.bodies), []);
-  const tones = new Set(['frame', 'vinyl', 'plate', 'metal', 'pulley']);
+  const tones = new Set(['frame', 'plate', 'metal']);
   for (const { mesh } of meshes(kit)) assert.ok(tones.has(mesh.material.name), `${mesh.name} is ${mesh.material.name}`);
 });
 

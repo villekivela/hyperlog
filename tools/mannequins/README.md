@@ -423,7 +423,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `trap_bar` (#234, trap_bar equipment; `BARS` in `kit.mjs` maps its one exercise, none posed yet, so no
   clip changes) is an open hexagonal trap bar from the ref's numbers: a 60 mm square frame whose two
   corners are 934 mm apart on the sleeve axis, arms to a front crossmember 510 mm wide (the rear is
-  open, behind the lifter), 650 mm across the frame, and two 406 mm sleeves to 1875 mm over all.
+  open, behind the lifter), 652 mm across the frame, and two 406 mm sleeves to 1875 mm over all.
   The frame, the sleeves and the low handles' centres are one plane 225 mm up, so a 450 mm plate
   rests on the floor. Two 127 mm handles stand 635 mm apart, braced to the corners. Options:
   `handle`, `'low'` (225 mm) or `'high'` (327 mm, 102 mm above, on posts), and `plates`, the 450 mm

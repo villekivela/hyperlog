@@ -64,7 +64,7 @@ test('every kit builds, each part in one of the tones the phone colours', () => 
 
 test('a pose can only use kits of its own equipment, and none for a kind without one', () => {
   assert.throws(() => buildKit({ equipment: 'barbell', kit: { cable_tower: {} } }), /Kit "cable_tower" isn't barbell equipment/);
-  assert.throws(() => buildKit({ equipment: 'trap_bar', kit: {} }), /"trap_bar" has no kit yet/);
+  assert.throws(() => buildKit({ equipment: 'ez_bar', kit: {} }), /"ez_bar" has no kit yet/);
 });
 
 // The owner's bar (#127): every machine and bench at the lat tower's detail, built in the tones

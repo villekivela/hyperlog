@@ -16,9 +16,10 @@ const PLANE = 0.225;
 const HANDLE = { low: PLANE, high: PLANE + 0.102 };
 const GRIP = { radius: 0.017, half: 0.0635, spacing: 0.635 };
 // The frame's tube is 60 mm square; its corners are 467 mm from the middle along the sleeve axis,
-// and its front and rear vertices 300 mm to either side of it, 255 mm out.
+// and its front and rear vertices about 300 mm to either side of it, 255 mm out.
 const FRAME = { w: 0.06, corner: 0.467, vertex: { x: 0.255, z: 0.3005 } };
 const SLEEVE = { radius: 0.025, from: 0.532, to: 0.938 };
+const BRACE = 0.012;
 const PLATE = { radius: 0.225, thick: 0.045, gap: 0.01 };
 
 export default recipe({
@@ -44,8 +45,8 @@ export default recipe({
       const x = s * GRIP.spacing / 2;
       parts.push(rod(GRIP.radius, at(x, -GRIP.half, y), at(x, GRIP.half, y), M.metal, { held: true }));
       for (const z of sides) {
-        parts.push(rod(0.012, at(s * FRAME.corner, z * GRIP.half), at(x, z * GRIP.half), M.frame, { solid: true }));
-        if (y > PLANE) parts.push(rod(0.012, at(x, z * GRIP.half), at(x, z * GRIP.half, y), M.frame, { solid: true }));
+        parts.push(rod(BRACE, at(s * FRAME.corner, z * GRIP.half), at(x, z * GRIP.half), M.frame, { solid: true }));
+        if (y > PLANE) parts.push(rod(BRACE, at(x, z * GRIP.half), at(x, z * GRIP.half, y), M.frame, { solid: true }));
       }
       const sleeve = along(SLEEVE.radius, ...[s * SLEEVE.from, s * SLEEVE.to].sort((a, b) => a - b), M.metal, 24, { solid: true });
       sleeve.position.y = PLANE;

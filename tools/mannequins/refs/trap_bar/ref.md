@@ -73,5 +73,5 @@ The kit was set beside the straight-down photo, the open and closed three-quarte
 
 ## Open gaps
 - The lockout height for the mannequin is chosen from its arm length; the video gives one lifter's 640 mm.
-- Which side of the open frame faces the lifter's front: the page's wording contradicts itself ("eliminates the rear crossmember" and "without working around a front crossmember"). It does not change the lift.
+- Which side of the open frame faces the lifter's front: the page's wording contradicts itself. The kit chose the crossmember in front and the rear open (#234); it does not change the lift.
 - The frame's hex corner spacing and arm angle come from one straight-down photo of one corner; the far side is taken as a mirror image.
