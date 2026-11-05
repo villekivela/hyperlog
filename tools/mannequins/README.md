@@ -319,7 +319,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `shoulder_press` | Machine Shoulder Press | missing |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
-| `dip_machine` | Seated Machine Dip | missing |
+| `dip_machine` | Seated Machine Dip | `dip_machine` (not yet posed) |
 | `hip_machine` | Machine Hip Abduction and Adduction | missing |
 | `hip_thrust_machine` | Machine Hip Thrust | missing |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
@@ -441,6 +441,25 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   9 ft one so the bar sits at a hole near 2.30 m, the back crossmember isn't in the photos, the ref's
   close grip (400 mm on a cross tube between the inner prongs) is on the V because the photos show no
   tube there, and the end plates, safeties and bracket are read from photos.
+- `dip_machine` (#226, a machine kind; `seated_dip_machine` is not posed yet, so no clip changes) stands
+  where its ref puts it, whatever the pose, both joints at their start, and the studio shows it alone
+  (`npm run studio`, then `f` and `dip_machine`, the kit row). Two bodies on independent revolute joints
+  about x: `arms` (0 to 40°, the value the radians the handles have gone down from the start) and
+  `carriage` (0 to 20°, the radians the seat, back pad and footplates have rocked back about a pivot
+  under the seat). A pose will drive the carriage at about half the arms' angle; the format has no
+  coupled joint, so the two are scrubbed separately. The arms hang on a pivot 880 mm up on a leaning
+  rear upright, 740 mm behind the seat's front edge, each 720 mm to the grip's middle, 5° above level at
+  the start, a grip bar 35° up from the arm, the grips 500 mm apart, 940 mm up at the start and 470 at the
+  finish. The seat top is 480 mm (580 at its front edge at the finish), the footplates 120 mm up at the
+  start and 420 at the finish. The stack (twelve plates, raised 0.3 m a radian of the arms) stands on the
+  user's right (-x) in a frame of two uprights, as the ref's photos show it. The footprint is 1.52 by
+  1.26 m and the height 1.39 m. Contacts: `handles` (hands, a pair, on the arms), `backPad` (back) and
+  `footplates` (feet, a pair), the last two on the carriage. It has no fit rule yet (the seat is fixed at
+  the measured height). It departs from the ref: the stack tower is an open frame, not the shroud; the
+  arm tubes and the rear upright are straight, not curved; the seat is a rectangular cushion, not round;
+  the base is a floor beam and two cross beams, not the sloped frame; there is no placard; and the back
+  pad leans 6° at the start and turns the full 20° with the carriage, where the ref gives 18° at the
+  finish.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
@@ -617,7 +636,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the dip machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
