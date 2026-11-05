@@ -442,7 +442,7 @@ export const MOTIONS = {
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
-      armPole: (side) => V(side * 0.6, -0.6, -0.3).normalize(),
+      armPole: (side) => V(side * 0.4, 0, -1).normalize(),
     };
   },
 
@@ -505,7 +505,7 @@ export const MOTIONS = {
       ...standingFeet(e, L),
       bar: heldPast(e, elbow, s.forearm, s.rotate ?? e.grip.rotate ?? 0, L),
       grip: e.grip.width,
-      armPole: (side) => V(side * 0.6, -0.6, -0.3).normalize(),
+      armPole: (side) => V(side * 0.2, -1, -0.4).normalize(),
     };
   },
 
@@ -550,7 +550,7 @@ export const MOTIONS = {
       // Horizontal handles, held like a bar: the knuckles run along them.
       hand: handle,
       across: (side) => X.clone().multiplyScalar(-side),
-      armPole: (side) => V(side * 0.6, -0.6, -0.3).normalize(),
+      armPole: (side) => V(side * 0.7, -1, -0.5).normalize(),
       pivot, handle, swing,
     };
   },
