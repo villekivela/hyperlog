@@ -37,8 +37,8 @@ const PAD = { w: 0.23, gap: 0.04, length: 0.5, height: 0.23, top: 1.092, plate: 
 const PAD_X = (PAD.w + PAD.gap) / 2;
 const SLICES = 5;
 // Where the knee's joint comes to rest, at low confidence (the video's frames, the pads' crest at 1.092):
-// 40 mm above the crest, its kneecap on it, and 50 mm behind the crest's line.
-const KNEE = { z: 0.2, rise: 0.06 };
+// 50 mm above the crest, its kneecap on it, and 50 mm behind the crest's line.
+const KNEE = { z: 0.2, rise: 0.05 };
 // A handle each side under the pads, 820 mm up, out past both ends.
 const HANDLE = { x: 0.2, y: 0.82, from: -0.1, to: 0.6, radius: 0.016 };
 // The ankle assembly: the foot plate 345 tall to 1245 mm, the rollers' centres 120 mm ahead of its middle, the

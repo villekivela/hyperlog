@@ -1,6 +1,6 @@
 // Renders a pose to PNGs without a GPU, for pull requests and notes (README, Rendering a pose):
 //
-//   node render.mjs <id> [out-dir]     <id>-side.png and <id>-front.png, the top and the bottom of the rep
+//   node render.mjs <id> [out-dir]     <id>-side.png and <id>-front.png, the top and the bottom of the rep (and -three.png with --three)
 //   node render.mjs --clip <clip> [out-dir] [--at <commit>]     the same of a baked clip, the top, the middle and the bottom
 //
 // Equipment far in front of the body is cut away. A flat-shaded software rasteriser: orthographic, a depth buffer, the clay colours, drawn at 2x and
@@ -48,12 +48,21 @@ function triangles(scene) {
   return out;
 }
 
+/** The view from front-left, 38° up from the side-on one's way and 22° above level. */
+function threeQuarter() {
+  const toward = new THREE.Vector3(0.6, 0.38, 0.7).normalize();
+  const right = new THREE.Vector3(0, 1, 0).cross(toward).normalize();
+  return { right, up: toward.clone().cross(right).normalize(), toward };
+}
+
 /** The view: `right`, `up` and `toward` (to the camera) as unit vectors. */
 const VIEWS = {
   side: { right: new THREE.Vector3(0, 0, -1), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(1, 0, 0) },
   // Along the body's length from the head end for a lying lift, from the front for the rest.
   front: { right: new THREE.Vector3(1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, 1) },
   frontLying: { right: new THREE.Vector3(-1, 0, 0), up: new THREE.Vector3(0, 1, 0), toward: new THREE.Vector3(0, 0, -1) },
+  // From the front and the left, a little above: the angle a product photo shows a machine at (`--three`).
+  three: threeQuarter(),
 };
 
 /** The view called `name`: a lying lift's front is from its head end. */
@@ -150,8 +159,10 @@ function sideBySide(shots, view) {
   // One frame for all the panels: the bounds of the body and the kit in every shot.
   const box = new THREE.Box3();
   for (const tris of shots) for (const [a, b, c] of tris) if (a.y > 0.01 || b.y > 0.01) box.expandByPoint(a).expandByPoint(b).expandByPoint(c);
-  const size = box.getSize(new THREE.Vector3());
-  const span = [Math.abs(size.dot(view.right)), Math.abs(size.dot(view.up))];
+  // What the box covers seen from `view`: its corners' spread along the view's right and up.
+  const corners = [0, 1].flatMap((x) => [0, 1].flatMap((y) => [0, 1].map((z) => new THREE.Vector3(x ? box.max.x : box.min.x, y ? box.max.y : box.min.y, z ? box.max.z : box.min.z))));
+  const along = (axis) => { const at = corners.map((p) => p.dot(axis)); return Math.max(...at) - Math.min(...at); };
+  const span = [along(view.right), along(view.up)];
   const scale = Math.min((PANEL[0] * 0.9) / span[0], (PANEL[1] * 0.9) / span[1]);
   const centre = box.getCenter(new THREE.Vector3());
   const panels = shots.map((tris) => draw(tris, view, centre, scale, PANEL));
@@ -165,11 +176,11 @@ function sideBySide(shots, view) {
 }
 
 /** The rep's top and bottom side by side, seen from `view`. */
-export async function renderPose(id, viewName, angle) {
+export async function renderPose(id, viewName, angle, { kitOnly = false } = {}) {
   const entry = prepare(id, undefined, angle);
   const { scene, pose } = await buildStage(entry);
   const view = viewOf(viewName, entry.body?.trunk < -45);
-  return sideBySide([0, 1].map((d) => { pose(d); return cutaway(triangles(scene), view); }), view);
+  return sideBySide([0, 1].map((d) => { pose(d); const tris = cutaway(triangles(scene), view); return kitOnly ? tris.filter((t) => !t[4]) : tris; }), view);
 }
 
 /** The top, the middle and the bottom of the clip in `file`, side by side, seen from `view`. */
@@ -207,12 +218,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // `--angle <degrees>` renders an adjustable-bench pose at that bench angle, its typical one by default.
   const at = args.indexOf('--angle');
   const angle = at < 0 ? undefined : Number(args.splice(at, 2)[1]);
+  const kitOnly = args.includes('--kit');
+  if (kitOnly) args.splice(args.indexOf('--kit'), 1);
+  const three = args.includes('--three');
+  if (three) args.splice(args.indexOf('--three'), 1);
   const [id, out = '.'] = args;
-  if (!id) throw new Error('usage: node render.mjs <id> [out-dir] [--angle <degrees>]');
+  if (!id) throw new Error('usage: node render.mjs <id> [out-dir] [--angle <degrees>] [--three] [--kit]');
   await mkdir(out, { recursive: true });
-  for (const view of ['side', 'front']) {
+  for (const view of three ? ['side', 'front', 'three'] : ['side', 'front']) {
     const file = path.join(out, `${id}${angle === undefined ? '' : `-${angle}`}-${view}.png`);
-    await writeFile(file, await renderPose(id, view, angle));
+    await writeFile(file, await renderPose(id, view, angle, { kitOnly }));
     console.log(`rendered ${file}`);
   }
 }

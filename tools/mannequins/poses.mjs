@@ -1077,7 +1077,7 @@ export const POSES = {
     motion: 'glute_ham_raise',
     kit: { glute_ham_raise: {} },
     top: { lean: 0 },
-    bottom: { lean: 72 },
+    bottom: { lean: 78 },
     camera: { target: [0, 1.0, 0.45], halfHeight: 1.0, azimuth: 62, elevation: 8 },
     shadow: { size: [1.6, 1.3], at: [0, 0.25] },
   },
