@@ -37,7 +37,7 @@ test('each arm turns about a front-to-back axis 1.15 m up, from 10° out of hang
   }
 });
 
-test('the pads hang about 350 mm below the pivots at rest and ride up to horizontal, out at the sides', () => {
+test('the pads hang about 320 mm from the pivots at rest and ride up to horizontal, out at the sides', () => {
   const kit = machine();
   for (const [k, s] of SIDES) {
     const { origin } = kit.joints[`arm_${k}`];
@@ -67,7 +67,7 @@ test('one stack: the arms lift it, and it hangs on one arm', () => {
   assert.ok(at() > low + 0.15, `the stack rose ${((at() - low) * 100).toFixed(0)} cm`);
 });
 
-test('the hands hold a grip at each pad\'s front end, the upper arms lie on the pads, the chest on its pad', () => {
+test('the hands hold a grip ahead of each pad, the upper arms lie on the pads, the chest on its pad', () => {
   const kit = machine();
   const held = [];
   kit.group.traverse((o) => { if (o.isMesh && o.userData.held) held.push(o); });
@@ -91,7 +91,7 @@ test('its fit rule sets the seat so the shoulder meets the fixed pivot, in the s
   const bytes = await readFile(MODEL);
   const { dims } = buildRig(await parseMannequin(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)));
   const seat = KITS.lateral_raise_machine.fit[0].solve({ L: dims });
-  // The ref measures the seat at 0.48 m and has the mannequin's setting at about 0.47.
+  // The pivots at 1.15 m put the mannequin's seat at 39% of the tower, as the demo has it.
   close(seat, 0.55, 0.02, 'the seat top, in metres');
   assert.ok(seat >= 0.44 && seat <= 0.62, `the seat at ${seat}, outside its 0.44 to 0.62 range`);
 });
@@ -108,13 +108,15 @@ const boxes = (kit) => {
   kit.group.traverse((o) => { if (o.isMesh) out.push({ mesh: o, box: new THREE.Box3().setFromObject(o, true) }); });
   return out;
 };
-/** Arm `k`'s wedge: the longest fore and aft of what its lever carries. */
+/** Arm `k`'s wedge, as it stands now. */
 const wedgeOf = (kit, k) => {
-  const carried = [];
+  let box = null;
   kit.group.updateMatrixWorld(true);
-  kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) carried.push(new THREE.Box3().setFromObject(o, true)); }));
-  return carried.reduce((a, b) => (b.max.z - b.min.z > a.max.z - a.min.z ? b : a));
+  kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (/^lateral_raise_wedge/.test(o.name)) box = new THREE.Box3().setFromObject(o, true); }));
+  return box;
 };
+/** The plate behind the wedges: a wide flat panel high on the machine. */
+const plateOf = (kit) => boxes(kit).find(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.02 && b.max.y - b.min.y > 0.2 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.7)?.box;
 const stackOf = (kit) => {
   let found = null;
   kit.group.traverse((o) => { if (o.userData.stack) found = o; });
@@ -139,7 +141,8 @@ test('the base is 1070 mm long and within 940 mm wide, the tower at its far end,
 
 test('nothing fixed stands in the arms\' way, from rest to level', () => {
   const kit = machine();
-  const own = new Set([...kit.bodies.arm_l, ...kit.bodies.arm_r]);
+  const own = new Set();
+  [...kit.bodies.arm_l, ...kit.bodies.arm_r].forEach((n) => n.traverse((o) => own.add(o)));
   const fixed = boxes(kit).filter(({ mesh }) => mesh.userData.solid && !own.has(mesh));
   for (const v of [10, 50, 90]) {
     kit.scrub('arm_l', rad(v));
@@ -183,10 +186,6 @@ test('each grip stands on the arm\'s own line, inboard of its pad, at the elbow,
   }
 });
 
-test('the empty machine\'s stack sits down as one block', () => {
-  close(stackOf(machine()).max.y, 0.57, 0.002, 'the top plate at rest');
-});
-
 // The hero photo and the demo at 0:08: each lever runs on past its pivot into a wedge, the highest
 // thing on the lifter's side, and swings down out of the way as the arms rise.
 test('each lever carries a wedge up past its pivot, which swings down as the arm rises', () => {
@@ -199,8 +198,9 @@ test('each lever carries a wedge up past its pivot, which swings down as the arm
   for (const [k] of SIDES) {
     const y = kit.joints[`arm_${k}`].origin.y;
     assert.ok(wedgeTop(k) > y + 0.15, `${k}'s lever tops out ${(wedgeTop(k) - y).toFixed(2)} m over its pivot at rest`);
+    const rest = wedgeOf(kit, k).getCenter(new THREE.Vector3()).y;
     kit.scrub(`arm_${k}`, rad(90));
-    kit.group.updateMatrixWorld(true);
+    assert.ok(wedgeOf(kit, k).getCenter(new THREE.Vector3()).y < rest - 0.1, `${k}'s wedge swings down`);
   }
 });
 
@@ -239,8 +239,8 @@ test('the wedges run fore and aft ahead of the plate, a valley between them, cle
   assert.ok(l.min.z > face, `ahead of the face, at z ${l.min.z.toFixed(2)} against ${face.toFixed(2)}`);
 });
 
-// The hero photo: the pad's top stands just under the pivots' plate and it overlaps the plate's panel.
-test('the chest pad bears on the chest: its top just under the plate, level with the sternum', async () => {
+// The hero photo: the pad's top stands just under the pivots' bar.
+test('the chest pad bears on the chest: its top just under the pivots, level with the sternum', async () => {
   const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
   const machineKit = kit.kits.lateral_raise_machine;
   pose(0);
@@ -261,10 +261,10 @@ test('the wedges stand in a tight V, their middles about half the pivots\' spaci
 
 test('from the lifter\'s side a plate stands in front of the drum', () => {
   const kit = machine();
-  const panels = boxes(kit).filter(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.02 && b.max.y - b.min.y > 0.2 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.6);
+  const plate = plateOf(kit);
   const drum = boxes(kit).find(({ box: b }) => Math.abs((b.max.x - b.min.x) - (b.max.y - b.min.y)) < 0.01 && b.max.x - b.min.x > 0.3);
-  assert.ok(panels.length && drum, 'a plate and a drum');
-  assert.ok(panels[0].box.max.z <= drum.box.min.z + 0.005, 'the plate on the lifter\'s side of the drum');
+  assert.ok(plate && drum, 'a plate and a drum');
+  assert.ok(plate.max.z <= drum.box.min.z + 0.005, 'the plate on the lifter\'s side of the drum');
 });
 
 // The demo at 0:08 and the technique video at 0:02: the thighs slope down from a high seat, the
@@ -279,7 +279,7 @@ test('the seat and the pivots stand high enough that the thighs slope down', asy
 
 test('the wedges stand over the plate, on the lifter\'s side of it, and it stands no higher than they do', () => {
   const kit = machine();
-  const plate = boxes(kit).find(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.02 && b.max.y - b.min.y > 0.2 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.6).box;
+  const plate = plateOf(kit);
   const w = wedgeOf(kit, 'l');
   assert.ok(w.max.y > plate.max.y + 0.05, `the wedge tops out ${(w.max.y - plate.max.y).toFixed(2)} m over the plate`);
   assert.ok(w.max.z <= plate.min.z + 0.005, 'on the lifter\'s side of it, so it drops in front of it as the arm rises');
@@ -295,6 +295,21 @@ test('the beam runs the pad\'s whole length, tight against it', () => {
     const pad = contact(kit, `pad_${k}`).at[0];
     const back = Math.min(...arm.filter(({ box: b }) => b.max.z - b.min.z > 0.3).map(({ box: b }) => b.min.z));
     assert.ok(back < pad.z - 0.1, `${k}'s beam back to z ${back.toFixed(2)}, the pad's middle at ${pad.z.toFixed(2)}`);
+    const beam = arm.find(({ box: b }) => b.max.z - b.min.z > 0.3).box;
+    assert.ok(beam.distanceToPoint(pad) < 0.1, `${k}'s beam ${beam.distanceToPoint(pad).toFixed(2)} m from the pad's middle: tight against it`);
+  }
+});
+
+// The checks test the body against what is solid, so all of each lever has to be.
+test('the whole lever is solid to the body: strut, beam, bracket and wedge', () => {
+  const kit = machine();
+  for (const [k] of SIDES) {
+    const solid = [];
+    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.userData.solid) solid.push(new THREE.Box3().setFromObject(o, true)); }));
+    const { origin } = kit.joints[`arm_${k}`];
+    assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y > origin.y), `${k}'s wedge`);
+    assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y <= origin.y && b.max.x - b.min.x < 0.1 && b.max.y - b.min.y < 0.1), `${k}'s beam`);
+    assert.ok(solid.filter((b) => b.max.z - b.min.z < 0.1 && b.max.y - b.min.y > 0.2).length >= 1, `${k}'s strut`);
   }
 });
 
@@ -321,4 +336,54 @@ test('machine_lateral_raise: the upper arms rise from by the sides to level, the
   const high = armAt();
   assert.ok(Math.abs(high.shoulder.y - high.elbow.y) < 0.04, `the elbow ${(high.elbow.y - high.shoulder.y).toFixed(2)} m off the shoulder's height at the top`);
   for (const { bend } of [low, high]) assert.ok(bend > rad(60) && bend < rad(115), `the elbow bent ${(bend * 180 / Math.PI).toFixed(0)}°`);
+});
+
+test('machine_lateral_raise: each lever turns with its joint on every part of the rep, and neither is left behind', async () => {
+  const { pose, kit } = await buildStage(prepare('machine_lateral_raise'));
+  const machineKit = kit.kits.lateral_raise_machine;
+  for (const d of [0, 0.5, 1]) {
+    pose(d);
+    for (const [k, s] of SIDES) {
+      const lever = machineKit.bodies[`arm_${k}`].find((n) => n.children.length);
+      const turned = 2 * Math.atan2(lever.quaternion.z, lever.quaternion.w) * s;
+      close(turned, machineKit.joints[`arm_${k}`].value - rad(10), 1e-6, `${k}'s lever ${d} of the way`);
+    }
+  }
+});
+
+test('machine_lateral_raise: the hips sit on the seat through the rep, neither above it nor sunk in', async () => {
+  const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
+  const seatTop = () => contact(kit.kits.lateral_raise_machine, 'seatTop').at[0].y + 0.0375;
+  for (const d of [0, 0.5, 1]) {
+    pose(d);
+    // The pelvis bone stands 72 mm over the cushion's top, the hips' skin on it.
+    close(wpos(rig.bones.pelvis).y - seatTop(), 0.072, 0.015, `the hips over the seat, ${d} of the way`);
+  }
+  const hip = wpos(rig.bones.pelvis);
+  const seat = contact(kit.kits.lateral_raise_machine, 'seatTop').at[0];
+  close(hip.z, seat.z, 0.1, 'and along it');
+});
+
+// The checks test the skin's vertices against each part, and a thin rod can run through a limb
+// between them, so the bracket is held clear of the arm's bones.
+test('machine_lateral_raise: each grip\'s bracket stays clear of the arm through the rep', async () => {
+  const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
+  const brackets = {};
+  kit.group.traverse((o) => { const m = /^lateral_raise_bracket:(.)/.exec(o.name); if (m) brackets[m[1]] = o; });
+  for (let d = 0; d <= 1; d += 0.1) {
+    pose(d);
+    for (const [k] of SIDES) {
+      const [a, b] = [-0.5, 0.5].map((y) => brackets[k].localToWorld(new THREE.Vector3(0, y, 0)));
+      // The end at the grip is where the hand is meant to be, so the hand's own length is left out.
+      const along = new THREE.Line3(a, b);
+      const bones = ['upperarm', 'lowerarm', 'hand'].map((n) => wpos(rig.bones[`${n}_${k}`]));
+      for (const limb of [new THREE.Line3(bones[0], bones[1]), new THREE.Line3(bones[1], bones[2])]) {
+        for (let t = 0; t <= 0.8; t += 0.1) {
+          const p = along.at(t, new THREE.Vector3());
+          const q = limb.closestPointToPoint(p, true, new THREE.Vector3());
+          assert.ok(p.distanceTo(q) > 0.1, `${k}'s bracket ${(p.distanceTo(q) * 100).toFixed(1)} cm from the arm's bone, ${d.toFixed(1)} of the way`);
+        }
+      }
+    }
+  }
 });

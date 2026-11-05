@@ -918,6 +918,7 @@ export const MOTIONS = {
       across,
       // A pad on the upper arm, where a machine has one, says where the elbow goes.
       armPole: elbow ?? elbowsTo(e, [0.7, -1, -0.5]),
+      ...(elbow ? { armTraced: true } : {}),
       pivot, handle,
     };
   },

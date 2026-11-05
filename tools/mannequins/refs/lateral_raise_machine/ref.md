@@ -31,21 +31,21 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 | Arm pivots (red axis dots) | about 1050 to 1100 above the floor, fixed to the frame | estimated from the hero photo (dot at 378 px: 1050) and the demo at 0:08 (dot at 282 px: 1100), scaled by the 1400 mm height |
 | Pivot spacing | about 250 to 300 side to side | estimated from the hero photo, scaled by the 1400 mm height: the dots are 215 px apart on a plate turned about 35 degrees from the camera; rough |
 | Seat top | about 480 at the setting shown | estimated from the demo at 0:08: the pivot is about 620 above the seat top (208 px), scaled by the 1400 mm height; the user's shoulder is level with the dot |
-| Seat range | not shown | chosen 400 to 560 around the measured seat (480), since no picture shows the travel; it holds the mannequin's fit-rule setting (470, shoulder on the pivot); low confidence |
+| Seat range | not shown | chosen 440 to 620 from the fit rule (the shoulder on the pivot), since no picture shows the travel; it holds the mannequin's setting (556); low confidence |
 | Chest pad | about 680 to 980 above the floor, about 300 tall | estimated from the hero photo, scaled by the 1400 mm height; the pad is nearer the camera than the column, so rough |
-| Pivot to arm pad centre | about 350 | estimated from the hero photo, scaled by the 1400 mm height: at rest each pad hangs about 340 px straight below its dot |
-| Arm pad | about 250 long, 100 diameter, running front to back | estimated from the hero photo, scaled by the 1400 mm height; rough |
+| Pivot to arm pad centre | about 350 by the photo; 300 in the kit | estimated from the hero photo, scaled by the 1400 mm height: at rest each pad hangs about 340 px straight below its dot. The kit puts it at the elbow, as the ref's Adjustments say, for the mannequin's 274 mm upper arm |
+| Arm pad | about 300 long, 140 through, running front to back | estimated from the hero photo and the demo, scaled by the 1400 mm height; rough |
 
 ## Motion
 - Left arm and right arm: each revolute about a horizontal axis pointing front to back, through the red dot (the page marks the axis of rotation with a red indicator). Each lever is a dog-leg: from the pivot out and down, then back in under the arm to the pad, so at rest the pad hangs below the pivot (hero photo).
 - Range of motion: about 80 degrees per arm, from the upper arms hanging about 10 degrees out from the sides (pads below the pivots) to the upper arms horizontal, pads on top of the arms. Estimated from the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09, where at the top the elbows reach shoulder height or a little above; give or take 10 degrees.
 - The two arms rise together in both videos; the page does not say whether they are linked.
 - Both arms load the one 95 kg stack through cable and pulleys (11 cm and 15 cm pulleys, per the page).
-- Each grip pivots to fit users (page text). It hangs inboard of the pad from a bracket at the pad's front end, in line with the upper arm (hero photo), and the hands hold it with the elbows bent about 90 degrees (demo 0:09, 0:15).
+- Each grip pivots to fit users (page text). It hangs inboard of the pad and ahead of it, in line with the upper arm (hero photo), and the hands hold it with the elbows bent about 90 degrees (demo 0:09, 0:15). The kit hangs it off the lever's knee, 170 mm ahead of the pad's front end, where the mannequin's forearm reaches.
 - Standing machine (the `standing_machine_lateral_raise` video, not this machine): one lever per side, its pivot in front of the standing user's shoulder at shoulder height, a curved handle at about arm's length. The straight arm rises from the hand by the hip (7:08, 7:19) to about horizontal (7:06): about 75 degrees.
 
 ## Handles
-- One grip at the front end of each arm pad, hanging inboard of it, pivoting (page). The elbows rest on the pads and the hands hold the grips; the pads, not the hands, take the load.
+- One grip ahead of each arm pad, hanging inboard of it, pivoting (page). The elbows rest on the pads and the hands hold the grips; the pads, not the hands, take the load.
 
 ## Adjustments and fit rules
 - Seat height by a lever under the seat front, roller mechanism (demo 0:01 to 0:03, page).
@@ -56,7 +56,7 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 ## Measured part list (#241)
 Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and the technique video at 0:02 and 0:09. Scaled by the 1400 mm height, which the lifter agrees with: seated, his head reaches about the machine's top. The hero's camera works out at about 21 degrees off the machine's line and 13 degrees up: on those, the spine from the post's foot to the tower comes to 1070 mm, the published length. Against a seated lifter: the pivots level with the shoulders, the grips at the elbows, the chest pad's top just under the bar. Shares of the tower's height, from the demo: seat 39%, pivots 82%, which put the thighs sloping down from a high seat; that is why the kit stands 50 mm above the table's estimates.
 
-| Part | Where it sits | Was in the kit | Now |
+| Part | Where it sits, estimated from those frames | Was in the kit | Now |
 |---|---|---|---|
 | Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
 | Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
@@ -66,8 +66,8 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 | Arm pads | about 300 long, 140 through, on the outside of the upper arm at the elbow | 250 long, 100 through, past the elbow | as measured |
 | Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
 | Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
-| Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin, range 440 to 620 chosen |
-| Stack travel | about 240 | about 280 | as measured |
+| Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin |
+| Stack travel | about 240, estimated from the demo at 0:08 and 0:09: 17% of the tower | about 280 | as measured |
 
 ## Open gaps
 - Seat range: no frame shows the seat at its ends, so it is chosen around the measured seat, low confidence.
