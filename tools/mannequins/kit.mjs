@@ -33,7 +33,7 @@ export const MACHINES = {
   hip_thrust_machine: { kit: 'hip_thrust_machine', exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
   crunch_machine: { kit: null, exercises: ['machine_crunch'] },
-  shrug_machine: { kit: null, exercises: ['machine_shrug'] },
+  shrug_machine: { kit: 'shrug_machine', exercises: ['machine_shrug'] },
 };
 
 /**
