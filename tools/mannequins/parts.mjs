@@ -589,6 +589,37 @@ export function knob(M, at, r = 0.016) {
 }
 
 /**
+ * A rope for the `hands` named: each strand from the ring to the fist, through it, and out to its end stop,
+ * 28 mm rope with 60 mm stops (docs/research/grip.md, section 4.4). `lay` runs it from `hook` to `P`'s
+ * hands, and `reversed` runs it through each fist the other way.
+ */
+export function ropeParts(M, { reversed = false, hands = [-1, 1] } = {}) {
+  const strands = hands.map((s) => ({
+    s, strand: part(rodGeometry(0.014, 12), M.vinyl), fist: part(rodGeometry(0.014, 12), M.vinyl, { held: true }), end: knob(M, V(0, 0, 0), 0.03),
+  }));
+  const ring = clevis(M, 0);
+  return {
+    ring,
+    parts: [...strands.flatMap(({ strand, fist, end }) => [strand, fist, end]), ring],
+    lay(hook, P) {
+      ring.position.copy(hook);
+      // The rope bends at the fist: it runs through it along the knuckles (`P.held`, from the
+      // little finger's side to the index finger's), in at the index finger's side and out at
+      // the little finger's, where its end stop sits against the hand.
+      strands.forEach(({ s, strand, fist, end }) => {
+        const h = P.hand(s);
+        const across = (P.held?.[s] ?? h.clone().sub(hook)).clone().normalize().multiplyScalar(reversed ? -1 : 1);
+        const into = h.clone().addScaledVector(across, 0.05);
+        const out = h.clone().addScaledVector(across, -0.06);
+        span(strand, hook, into);
+        span(fist, into, out);
+        end.position.copy(out).addScaledVector(across, -0.03);
+      });
+    },
+  };
+}
+
+/**
  * Square tubing `w` across, its corners rounded, swept along the polyline `points`, each bend cut
  * on its bisector so the two lengths meet in a mitre, not a lap. Built in the world, where the
  * points are. `ends` gives the plane's normal each end is cut square to, where a length lands on a

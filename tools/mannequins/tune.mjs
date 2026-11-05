@@ -3,8 +3,8 @@
 // is saved at the path of the number it changes, a point whole (`top.bar`), since an entry's lists
 // are replaced whole, not merged.
 
-/** Which hand a kit serves is a choice, not a place, so it has no slider. */
-const isChoice = (path) => /^kit\.[^.]+\.hands?(\.\d+)?$/.test(path);
+/** Which hand a kit serves, which tower or ankle it uses and which foot lifts are choices, not places, so they have no slider. */
+const isChoice = (path) => /^kit\.[^.]+\.(hands?(\.\d+)?|tower|ankle)$/.test(path) || path === 'feet.lift';
 
 /** Numbers not yet saved, without any choice among them, which an older slider may have left. */
 export const withoutChoices = (tuned) => Object.fromEntries(Object.entries(tuned).filter(([path]) => !isChoice(path)));
@@ -29,7 +29,7 @@ export const OPTIONAL = {
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'armOut', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'armOut', 'leg', 'turn', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -201,7 +201,7 @@ export function headingOf(path) {
     : section === 'body' || ['trunk', 'shrug', 'head', 'arch', 'lean'].includes(key) ? 'Torso'
     : ['bar', 'over', 'chest', 'hand', 'handle', 'press', 'lever', 'levers', 'sled', 'carriage'].includes(key) || section === 'bar' ? 'Bar'
     : ['upperArm', 'forearm', 'armOut'].includes(key) ? 'Arms'
-    : ['shin', 'thigh', 'knee'].includes(key) ? 'Legs'
+    : ['shin', 'thigh', 'knee', 'leg'].includes(key) ? 'Legs'
     : 'Other';
   return HEADINGS.find((h) => h.name === name);
 }

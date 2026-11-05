@@ -229,6 +229,12 @@ test('a thumb\'s swing is an angle: a degree a step, 0 to 90, and every value th
   assert.equal(held(52.37), 52);
 });
 
+test('Tune offers no slider for which tower, ankle or foot a lift uses: each is a choice, not a place', () => {
+  const paths = tunables(prepare('cable_hip_abduction')).map((t) => t.path);
+  for (const path of ['kit.cable_crossover.tower', 'kit.cable_crossover.ankle', 'feet.lift']) assert.ok(!paths.includes(path), path);
+  assert.ok(paths.some((p) => /^top\.leg/.test(p)), 'the leg itself is tuned');
+});
+
 test('Tune offers no slider for which hand a kit serves: it is a choice, not a place', () => {
   for (const id of ['single_arm_db_row', 'bayesian_cable_curl', 'cable_y_raise']) {
     const paths = tunables(prepare(id)).map((t) => t.path);

@@ -221,6 +221,17 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   dumbbells: one with a bar's two grips hangs them there instead, and they turn with the hands.
   **`steady: true`** lays each by the palm as well as the handle's line, so it turns with the hand
   and can't roll in it. Every dumbbell entry wants it.
+- **`body.kneel`** (`arms`, `free_arms`, `row`) puts the body on its knees at `feet.z`, the shins
+  back along the floor and the toes tucked; `thigh` sets the hips over them.
+- **`feet.lift`** (standing `arms`, `free_arms`, `row`) takes one foot off the floor (1 the left), and
+  `top.leg`, `bottom.leg` set that leg: [back, out, bend] in degrees, the thigh from straight down,
+  behind the hip and out to its side, and the knee's bend.
+- **`grip.restOn`** closes `grip.one`'s resting hand round a bar of that radius, a tower's post, where
+  it would otherwise lie relaxed. **`grip.restPole`** points that arm's elbow, as `grip.pole` does the
+  working arm's.
+- **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
+  `hand` gives, which isn't mirrored. **`grip.via`** [x, y, z] (`free_arms`) curves the hand through
+  that point at the middle of the rep, for a hand riding something that swings on an arc.
 - **`grip.level`** (dumbbells) lets the wrists flow: their share of the forearms' lean, 0 to 1. The
   hand stays square to the handle, the wrist bends with that share, and the handle tips with the
   rest. 0 is a straight wrist, the handle tipping with the forearm; 1 holds the handle dead level.
@@ -412,9 +423,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   It departs from the ref: the stack's plates and the frame's tubes are the library's generic ones
   (twelve 26 cm plates, 76 mm tubes without the holes), the stack stands 500 mm behind the rail, the
   top wheels are 90 mm, and the 2210 mm is taken centre to centre. The handle is the
-  stirrup; the ref's ankle cuff and rope are further attachments, for the pose ticket that needs
-  them (the glute kickback's). `position` takes one number for a two-arm lift, the same hole on both
-  towers, and a pair only where the arms differ.
+  stirrup. `attachment` hangs one thing on one tower's cable in its place: a `rope` or a `bar` in
+  both hands, or a `cuff` on the `ankle` named (1 the left), and `tower` picks the cable (1 the
+  left). A rope with one of `hands` is a single strand for that hand, and a `reversed` one runs through the
+  fists the other way, its ends past the index fingers. `faces` turns each tower round where it stands, for a lifter facing the machine, and `turn`
+  swings the whole machine that many degrees about the body, as if the lifter stood turned the other
+  way. `position`
+  takes one number for a two-arm lift, the same hole on both towers, and a pair only where the arms
+  differ.
 - `hip_machine` (#214, built, none of its two exercises posed yet, so no clip changes) is the one
   hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, a
   rear leg behind it, and a tall tower with the weight stack standing ahead of the posts, as the
@@ -615,13 +631,16 @@ the colours in it are the light theme's, which the phone replaces.
 bake (nor does anything else in that bake):
 
 - **Hands:** each hand holds its grip, within 1.5 cm.
-- **Feet:** each foot stands where the pose puts it, flat on the floor or on its plate, within 2 cm.
+- **Feet:** each foot stands where the pose puts it, flat on the floor or on its plate, within 2 cm; a
+  foot on nothing, lifted or tucked behind a knee, only has to be where the pose puts it.
 - **Equipment:** no limb is more than 2 cm inside a solid part of the kit (a pad gives that much),
   and none passes into a thin part like a bar at all. Only the hands close round what they hold.
-  The floor counts as solid: nothing goes more than 1.5 cm into it.
+  The floor counts as solid: nothing goes more than 1.5 cm into it. Every cable stays 2 cm clear of
+  the head and the neck.
 - **Joints:** knees and elbows bend no more than 155°, a knee turns no more than 60° from the hips'
   front, a hip flexes no more than 140° or extends past 30°, the head turns no more than 60° from
-  the trunk, and the ankle stays between 55° and 160° from shin to foot.
+  the trunk, the ankle stays between 55° and 160° from shin to foot, and no forearm or hand goes more
+  than 1 cm into the head or the neck.
 - **Contact:** every finger and the thumb of a hand on a bar or a handle meet its surface within
   2 mm, and no part of the hand is more than 2 mm inside it; the palm within 3 mm (Grips, above).
 - **Linkage:** each joint stays within its limits, each point a joint carries stays on the path the
