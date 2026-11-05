@@ -1,0 +1,103 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "technique video FGJ64JyKod0",
+    "exercises.json: keep your upper arm behind your torso throughout the ROM",
+    "docs/research/grip.md: a stirrup handle"
+  ],
+  "works": "hand",
+  "lines": [
+    {
+      "says": "the elbow goes from well bent to about straight",
+      "moves": "elbow_{work}",
+      "ends": [
+        [
+          40,
+          100
+        ],
+        [
+          150,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the elbow stays in place: only the forearm swings",
+      "still": "elbow_{work}.at",
+      "within": 0.04
+    },
+    {
+      "says": "the upper arm holds its angle to the trunk",
+      "still": "shoulder_{work}",
+      "within": 12
+    },
+    {
+      "says": "the upper arm stands off the trunk",
+      "moves": "shoulder_{work}",
+      "ends": [
+        [
+          15,
+          70
+        ],
+        [
+          15,
+          70
+        ]
+      ]
+    },
+    {
+      "says": "the trunk stands about upright",
+      "moves": "trunk",
+      "ends": [
+        [
+          0,
+          25
+        ],
+        [
+          0,
+          25
+        ]
+      ]
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the wrist never twists mid-rep",
+      "never": "roll_{work}",
+      "perFrame": true,
+      "past": 7
+    },
+    {
+      "says": "the upper arm stays behind the torso through the whole rep, not beside it or in front",
+      "look": "upper",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the free hand steadies on the column, high up",
+      "look": "free",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
+    },
+    {
+      "says": "the cable comes from in front of the lifter to the hand",
+      "look": "cable",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}
