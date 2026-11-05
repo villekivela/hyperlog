@@ -143,8 +143,8 @@ export default recipe({
     const frame = [];
     frame.push(...floorRail(V(0, 0.035, FLOOR.rear), V(0, 0.035, FLOOR.front), M));
     frame.push(...floorRail(V(-FLOOR.half + 0.016, 0.035, rear), V(FLOOR.half - 0.016, 0.035, rear), M));
-    frame.push(role(mitered([V(0, 0.07, -0.43), V(0, PIVOT[0] - 0.05, PIVOT[1] - 0.02)], 0.08, M.frame), 'upright'));
-    frame.push(tube(0.05, V(0, 0.07, -0.3), V(0, PIVOT[0] - 0.12, PIVOT[1] + 0.03), M.frame));
+    // The rear upright runs up into the crosshead, which it ends inside: no square end shows under it.
+    frame.push(...bent([V(0, 0.07, -0.5), V(0, PIVOT[0] - 0.01, PIVOT[1] - 0.005)], 0.08, M.frame, 'upright'));
     frame.push(role(tube(0.08, V(-0.34, PIVOT[0], PIVOT[1]), V(0.34, PIVOT[0], PIVOT[1]), M.frame), 'crosshead'));
     // The carriage's own pivot is a block on the floor beam, the axle through it fixed.
     frame.push(tube(0.08, V(0, 0.07, ROCK[1]), V(0, ROCK[0] - 0.04, ROCK[1]), M.frame));
@@ -163,7 +163,7 @@ export default recipe({
       pad(0.02, 1.25, STACK.across, M.pulley, V(-deep, 0.66, 0), { soft: 0.004, solid: true }),
       pad(STACK.deep, 1.25, 0.02, M.pulley, V(0, 0.66, -across), { soft: 0.004, solid: true }),
       pad(STACK.deep + 0.04, 0.07, STACK.across + 0.04, M.frame, V(0, STACK.cap, 0), { soft: 0.02, solid: true }),
-      tube(0.07, V(0, 0.035, 0), V(0, 0.035, across + 0.02), M.frame),
+      tube(0.07, V(0, 0.035, 0), V(0, 0.035, -STACK.x), M.frame),
     );
     const drop = wire(M);
     tower.add(drop);
@@ -171,14 +171,16 @@ export default recipe({
     // The carriage: a heavy tube from the pad's foot down and forward under the seat to the foot beam,
     // the seat on its post, the pad on its board, a footplate each side on a stem off the beam.
     const seatFront = SEAT.z + SEAT.size / 2;
-    const spine = [V(0, 0.5, -0.38), V(0, 0.3, -0.36), V(0, 0.2, -0.2), V(0, 0.17, 0.2), V(0, 0.17, FEET.z - 0.05)];
+    // The foot beam lies just behind the plates' backs (the side away from the feet) and holds them both.
+    const beam = plateCentre(0).addScaledVector(plateOut, -0.06);
+    const spine = [V(0, 0.5, -0.36), V(0, 0.3, -0.34), V(0, 0.2, -0.2), V(0, 0.17, 0.2), V(0, beam.y, beam.z)];
     const carriage = [
       ...bent(spine, 0.07, M.frame, 'spine'),
       ...pivotJoint(M, rockAt, X).fixed,
       role(pad(SEAT.width, 0.075, SEAT.size, M.vinyl, V(0, SEAT.top - 0.0375, SEAT.z), { soft: 0.035 }), 'seat'),
       pad(SEAT.width - 0.06, 0.012, SEAT.size - 0.06, M.frame, V(0, SEAT.top - 0.081, SEAT.z), { soft: 0.003 }),
       tube(0.06, V(0, 0.2, SEAT.z), V(0, SEAT.top - 0.087, SEAT.z), M.frame),
-      tube(0.05, V(-FEET.apart - 0.03, FEET.y - 0.09, FEET.z - 0.17), V(FEET.apart + 0.03, FEET.y - 0.09, FEET.z - 0.17), M.frame),
+      tube(0.05, beam.clone().setX(-FEET.apart - 0.02), beam.clone().setX(FEET.apart + 0.02), M.frame),
     ];
     const padAt = faceFrom.clone().addScaledVector(padUp, FACE.length / 2 + 0.02).addScaledVector(padOut, -FACE.thick / 2);
     const cushion = role(pad(FACE.width, FACE.length, FACE.thick, M.vinyl, padAt, { soft: 0.025 }), 'backPad');
