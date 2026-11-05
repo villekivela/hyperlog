@@ -62,6 +62,12 @@ export const BATCHES = {
     'cable_crossover', 'cable_chest_press', 'low_to_high_cable_press', 'high_cable_lateral_raise', 'cable_y_raise',
     'behind_the_back_cable_lateral_raise', 'cable_shrug_in', '1_arm_cable_press_around', '1_arm_katana_cable_triceps_extension',
   ],
+  // The second of the two (#197): those that face a tower, kneel, sit or lift a leg, on a rope, a
+  // bar or a cuff.
+  'cable-crossover-2': [
+    '1_leg_cable_glute_kickback', 'cable_crunch', 'cable_face_pull', 'cable_hip_abduction', 'cable_pull_through',
+    'cable_triceps_kickback', 'cable_woodchopper', 'cable_wrist_curl', 'cable_wrist_extension', 'seated_cable_flye',
+  ],
 };
 
 const idsOf = (name) => {

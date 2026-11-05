@@ -28,8 +28,9 @@
   "barbell_hip_thrust": {
     "ok": true,
     "note": "i cant adjust the arc of back on the bottom which would help make this more natural. also the bottom barbell position is so i cant tune it properly",
-    "clip": "a036361cea8113d9",
-    "tuned": "{}"
+    "clip": "fd0f8c69b04f72cc",
+    "tuned": "{}",
+    "at": "2026-11-05T08:06:26.300Z"
   },
   "barbell_row": {
     "ok": true,

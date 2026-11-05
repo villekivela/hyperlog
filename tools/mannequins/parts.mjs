@@ -588,9 +588,110 @@ export function knob(M, at, r = 0.016) {
   return k;
 }
 
+/**
+ * A rope for the `hands` named: each strand from the ring to the fist, through it, and out to its end stop,
+ * 28 mm rope with 60 mm stops (docs/research/grip.md, section 4.4). `lay` runs it from `hook` to `P`'s
+ * hands, and `reversed` runs it through each fist the other way.
+ */
+export function ropeParts(M, { reversed = false, hands = [-1, 1] } = {}) {
+  const strands = hands.map((s) => ({
+    s, strand: part(rodGeometry(0.014, 12), M.vinyl), fist: part(rodGeometry(0.014, 12), M.vinyl, { held: true }), end: knob(M, V(0, 0, 0), 0.03),
+  }));
+  const ring = clevis(M, 0);
+  return {
+    ring,
+    parts: [...strands.flatMap(({ strand, fist, end }) => [strand, fist, end]), ring],
+    lay(hook, P) {
+      ring.position.copy(hook);
+      // The rope bends at the fist: it runs through it along the knuckles (`P.held`, from the
+      // little finger's side to the index finger's), in at the index finger's side and out at
+      // the little finger's, where its end stop sits against the hand.
+      strands.forEach(({ s, strand, fist, end }) => {
+        const h = P.hand(s);
+        const across = (P.held?.[s] ?? h.clone().sub(hook)).clone().normalize().multiplyScalar(reversed ? -1 : 1);
+        const into = h.clone().addScaledVector(across, 0.05);
+        const out = h.clone().addScaledVector(across, -0.06);
+        span(strand, hook, into);
+        span(fist, into, out);
+        end.position.copy(out).addScaledVector(across, -0.03);
+      });
+    },
+  };
+}
+
+/**
+ * Square tubing `w` across, its corners rounded, swept along the polyline `points`, each bend cut
+ * on its bisector so the two lengths meet in a mitre, not a lap. Built in the world, where the
+ * points are. `ends` gives the plane's normal each end is cut square to, where a length lands on a
+ * face (`[start, end]`), in place of square to its own length.
+ */
+export function mitered(points, w, material, { solid = true, ends = [] } = {}) {
+  const r = w * 0.28;
+  const profile = [];
+  for (const [cx, cy, from] of [[1, 1, 0], [-1, 1, 90], [-1, -1, 180], [1, -1, 270]]) {
+    for (let k = 0; k <= 3; k++) {
+      const a = ((from + k * 30) * Math.PI) / 180;
+      profile.push([cx * (w / 2 - r) + r * Math.cos(a), cy * (w / 2 - r) + r * Math.sin(a)]);
+    }
+  }
+  const n = points.length - 1;
+  const dirs = points.slice(1).map((p, i) => p.clone().sub(points[i]).normalize());
+  // A side and an up for each length, carried round each bend so the section follows it.
+  const up = Math.abs(dirs[0].y) < 0.99 ? V(0, 1, 0) : V(0, 0, 1);
+  const u0 = up.addScaledVector(dirs[0], -up.dot(dirs[0])).normalize();
+  const frames = [{ u: u0, s: u0.clone().cross(dirs[0]) }];
+  for (let i = 1; i < n; i++) {
+    const q = new THREE.Quaternion().setFromUnitVectors(dirs[i - 1], dirs[i]);
+    frames.push({ u: frames[i - 1].u.clone().applyQuaternion(q), s: frames[i - 1].s.clone().applyQuaternion(q) });
+  }
+  // Each point's section: the length before it (the first, at the start) laid on the bisector's
+  // plane, or the end's own plane at the ends.
+  const rings = points.map((P, k) => {
+    const i = Math.max(k - 1, 0);
+    const plane = k === 0 ? ends[0] ?? dirs[0] : k === n ? ends[1] ?? dirs[i] : dirs[i].clone().add(dirs[k]).normalize();
+    return profile.map(([x, y]) => {
+      const Q = P.clone().addScaledVector(frames[i].s, x).addScaledVector(frames[i].u, y);
+      return Q.addScaledVector(dirs[i], P.clone().sub(Q).dot(plane) / dirs[i].dot(plane));
+    });
+  });
+  const m = profile.length;
+  const position = rings.flat().flatMap((p) => p.toArray());
+  const index = [];
+  for (let k = 0; k < n; k++) {
+    for (let i = 0; i < m; i++) {
+      const [a, b, c, d] = [k * m + i, k * m + ((i + 1) % m), (k + 1) * m + i, (k + 1) * m + ((i + 1) % m)];
+      index.push(a, b, c, b, d, c);
+    }
+  }
+  // Flat caps on their own vertices, so the ends keep a crisp edge.
+  for (const [k, flip] of [[0, true], [n, false]]) {
+    const at = position.length / 3;
+    const centre = points[k];
+    position.push(...centre.toArray(), ...rings[k].flatMap((p) => p.toArray()));
+    for (let i = 0; i < m; i++) index.push(at, at + 1 + (flip ? (i + 1) % m : i), at + 1 + (flip ? i : (i + 1) % m));
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return part(g, material, { solid });
+}
+
 /** A lever's hub at `at`, about x: a turned boss in the pulley tone. */
 export const hub = (M, at) => turnedPart(wheelGeometry(0.055, 0.05), M.pulley, at, { solid: false });
 
+
+/**
+ * A pivot at `at`, turning about `axis` (a unit vector): a bearing housing round the axle, `housing`,
+ * which belongs to the moving body, and the axle through it, `fixed`, which the frame holds.
+ */
+export function pivotJoint(M, at, axis) {
+  const on = (from, to) => [from, to].map((d) => at.clone().addScaledVector(axis, d));
+  return {
+    housing: rod(0.04, ...on(-0.03, 0.03), M.frame),
+    fixed: [rod(0.014, ...on(-0.07, 0.08), M.metal)],
+  };
+}
 
 /** A weight plate on a horn, the horn from `from` out along x on side `side`; `place(from)` moves both. */
 export function loadedHorn(M, side) {
