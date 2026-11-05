@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { HELD, recipe, revolute } from '../recipe.mjs';
 import {
-  WHEEL, bent, knob, pad, part, pivotJoint, pulley, rod, rodGeometry, span, tube,
+  WHEEL, bent, knob, mitered, pad, part, pivotJoint, pulley, rod, rodGeometry, span, tube,
   weightStack, wire,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
@@ -201,10 +201,10 @@ export default recipe({
       const ahead = aheadOf(s, rest);
       const foot = end.clone().setY(FOOT_Y);
       const top = end.clone().setY(GRIP_Y + 0.12);
-      // The lever and the drop arm meet under the pin, each its own solid so the body is tested
-      // against the tube and not the box round both.
-      const lever = tube(0.045, axisOf(s), end, M.frame);
-      const dropArm = tube(0.045, end, foot, M.frame);
+      // The lever and the drop arm are one square tube bent at the pin, cut on the bisector. A box
+      // round both would stand in the body's way, so a tube inside the drop arm is what the body meets.
+      const arm = mitered([axisOf(s), end, foot], 0.045, M.frame, { solid: false });
+      const dropCore = tube(0.04, end, foot, M.frame);
       // One bent tube out of the drop arm at the top, along, and down the grip to its free foot. Its
       // shape is keyed by the facing, as the arm rests at a different angle in each.
       const off = (along, y) => end.clone().addScaledVector(ahead, along).setY(y);
@@ -220,7 +220,7 @@ export default recipe({
       // The arm's foot is a dome under the handle.
       const dome = knob(M, foot, 0.022);
       dome.material = M.frame;
-      const nodes = [pivots[s].housing, lever, dropArm, pin, dome, handle, sleeve, short];
+      const nodes = [pivots[s].housing, arm, dropCore, pin, dome, handle, sleeve, short];
       return { s, nodes, base: nodes.map((n) => ({ p: n.position.clone(), q: n.quaternion.clone() })) };
     });
     let posed = false;
