@@ -2024,6 +2024,30 @@
         "kit_cable_column.bin"
       ]
     },
+    "roman_chair_crunch": {
+      "clip": "roman_chair_crunch.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.3
+        ],
+        "halfHeight": 1.2,
+        "azimuth": 35,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_captains_chair.bin"
+      ]
+    },
     "seated_cable_flye": {
       "clip": "seated_cable_flye.glb",
       "equipment": "cable",

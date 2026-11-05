@@ -64,6 +64,16 @@ Nothing on the chair moves. The lifter's body during `roman_chair_crunch` (video
 - Getting on: stand on the pegs, facing out, back to the pad, and put the forearms on the pads (manual page 11: "Position forearms on padded parallel bars and grasp handles. Lean back onto the padded surface and maintain an upright posture with legs hanging"). The video's lifter starts from the floor instead (0:00). The pegs sit outside the hanging legs (650 apart, on the side frames), so the legs swing forward between them.
 - Back pad: the top at 1.55 m comes to about 0.17 m below the hanging mannequin's shoulder, and the bottom at 1.00 m reaches below its hip. In the video a dark edge beside the lifter's shoulder at 0:00 is probably the pad's top. The lifter hides the rest of the pad, so its height there is not measured.
 
+## Parts against the lifter, read from the photos (#237)
+Read from the silver, black and tan renders, the assembly manual's pages 8 and 10 and the video's frames at 0:00, 0:03 and 0:06; each place is relative to the lifter standing on the chair, the elbows on the arm pads (the model's origin).
+- Frame: stout tubes about 60 mm across, round, the X crossing low, about 40 percent up. The straight tube runs from the rail's front half up and back to the rear post; the bent one from the rail's rear half up, forward and round to upright under the grip's hub. Page 8, step 1.
+- Top rail: a tube about 60 mm across runs along each side from the rear post's top to the hub, level under the arm pad, which sits on a plate on it. Page 8, step 2.
+- Back support: one upright, oval, about 50 mm thick, from the middle of a cross tube between the two rear posts' tops, leaning back with the pad; the pad bolts to its face (page 8, "Install Pads"). The posts stand beside and behind the pad, never in front of the lifter's back.
+- Arm pads: flat on the top rails, about 250 by 120 by 80 mm, the lifter's elbows on their rear halves, the forearms along them and the fists at the pads' front ends (video, 0:00 and 0:03).
+- Grips: each rises from a hub at the rail's front end, leaning back, level with the fist above the pad; the dip handle goes forward from the same hub (silver render).
+- Foot pegs: a short thick rubber peg each side, forward from the straight tube low down; the lifter doesn't use them (video).
+- Legs: hang between the side frames, 0.24 m clear of the floor at the model's size, past the pegs; the knees come up past the hands at the top (video, 0:03).
+
 ## Open gaps
 - No side view of the Life Fitness chair exists online. All five photos are the same three-quarter render, and the manual has only a plan drawing. So every height (arm pads, grips, back pad, pegs) is a rough estimate from a perspective render, about +-50 mm, and the peg height about +-50 mm or worse. The plan-view numbers (pad length, spacing, grip and pad positions) are good to about +-15 mm.
 - The arm pads' tilt ("angled elbow pads") is not visible in the renders and stays flat in the model.

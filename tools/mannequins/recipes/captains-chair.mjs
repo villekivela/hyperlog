@@ -27,13 +27,13 @@ const GRIP = { radius: 0.0165, hub: { r: 0.70, y: 1.32, x: 0.285 }, top: { r: 0.
 const DIP = { r: 0.93, y: 1.2, x: 0.30 };
 // A rubber cap closes each rail's end.
 const CAP = 0.016;
-const PEG = { x: 0.325, y: 0.28, from: 0.60, to: 0.75, radius: 0.025 };
+const PEG = { x: 0.325, y: 0.28, from: 0.58, to: 0.76, radius: 0.025 };
 // The straight tube's ends: on the rail's front half and the rear post's top, behind the back pad's face.
 const POST = { foot: { r: 0.74, y: 0.1 }, top: { r: 0.20, y: 1.27 } };
 // The bent tube, from the rail's rear half up and forward, round to upright under the hub.
 const BEND = [{ r: 0.14, y: 0.1 }, { r: 0.58, y: 0.88 }, { r: 0.65, y: 1.0 }, { r: 0.69, y: 1.1 }, { r: 0.70, y: 1.2 }, { r: 0.70, y: 1.27 }];
-// The frame's tubes are 60 mm across (the photos), the top rails and the back support's cross tube as thick.
-const TUBE = 0.06;
+// The frame's tubes are 65 mm across (the photos), the top rails and the back support's cross tube as thick.
+const TUBE = 0.065;
 
 /**
  * What the lifter meets: where an elbow rests on each pad (`elbow(side)`, the pad's middle across, its

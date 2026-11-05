@@ -51,6 +51,18 @@ test('both hands stay closed on the grips, the forearms on the arm pads and the 
   }
 });
 
+test('the upper arms stand within 20° of upright, the elbows a little wider than the shoulders (ref: video, 0:00, 0:03, 0:06)', async () => {
+  const { rig, pose } = await buildStage(prepare(ID));
+  for (const t of FRAMES) {
+    pose(t);
+    for (const k of ['l', 'r']) {
+      const upper = wpos(rig.bones[`lowerarm_${k}`]).sub(wpos(rig.bones[`upperarm_${k}`]));
+      const lean = degrees(upper.angleTo(new THREE.Vector3(0, -1, 0)));
+      assert.ok(lean < 20, `the ${k} upper arm ${lean.toFixed(0)}° off upright at ${t}`);
+    }
+  }
+});
+
 test('the shoulders stay put through the rep: only the legs move', async () => {
   const { rig, pose } = await buildStage(prepare(ID));
   pose(0);
@@ -93,6 +105,34 @@ test('the whole body clears the chair on every frame, its frame and its pegs too
       const box = new THREE.Box3().setFromObject(mesh).expandByScalar(-0.012);
       const inside = points.filter((p) => box.containsPoint(p));
       assert.equal(inside.length, 0, `${inside.length} skin points in a frame part at ${t}`);
+    }
+  }
+});
+
+test('the legs and body clear the dip handles on every frame', async () => {
+  const { rig, kit, pose } = await buildStage(prepare(ID));
+  const handles = [];
+  kit.kits.captains_chair.group.traverse((o) => { if (o.isMesh && o.userData.held && new THREE.Box3().setFromObject(o).max.y < 1.4) handles.push(o); });
+  assert.equal(handles.length, 2, 'a dip handle each side');
+  const skinOf = () => {
+    const out = [];
+    for (const m of rig.meshes) {
+      const { skinIndex, skinWeight, position } = m.geometry.attributes;
+      for (let i = 0; i < position.count; i++) {
+        let best = 0;
+        for (let j = 1; j < 4; j++) if (skinWeight.getComponent(i, j) > skinWeight.getComponent(i, best)) best = j;
+        if (!/hand|thumb|index|middle|ring|pinky/.test(m.skeleton.bones[skinIndex.getComponent(i, best)].name)) out.push(m.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(m.matrixWorld));
+      }
+    }
+    return out;
+  };
+  for (const t of FRAMES) {
+    pose(t);
+    const points = skinOf();
+    for (const handle of handles) {
+      const box = new THREE.Box3().setFromObject(handle);
+      const near = Math.min(...points.map((p) => box.distanceToPoint(p)));
+      assert.ok(near > 0.004, `${near.toFixed(3)} m from a dip handle at ${t}`);
     }
   }
 });

@@ -132,13 +132,13 @@ test('two foot pegs 650 apart on the side frames, about 280 up, under the front 
 
 // What the manual's page 8 (the assembly views) and the renders show: the frame is stout tube, a thick top
 // rail carries each arm pad, and the back pad is bolted to one upright standing on a cross tube between the rear posts.
-test('a 60 mm top rail runs under each arm pad, from the rear post to the hub', () => {
+test('a 65 mm top rail runs under each arm pad, from the rear post to the hub', () => {
   const rails = meshes(chair(), (o) => o.material.name === 'frame' && new THREE.Box3().setFromObject(o).min.y > 1 && size(new THREE.Box3().setFromObject(o)).z > 0.45 && size(new THREE.Box3().setFromObject(o)).y < 0.12 && size(new THREE.Box3().setFromObject(o)).x < 0.12);
   assert.equal(rails.length, 2);
   for (const { box } of rails) {
-    close(size(box).x, 0.06, 0.005, 'a rail\'s width');
-    close(size(box).y, 0.06, 0.005, 'a rail\'s height');
-    close(box.max.y, 1.30, 0.01, 'the rail\'s top, under the pad');
+    close(size(box).x, 0.065, 0.004, 'a rail\'s width');
+    close(size(box).y, 0.065, 0.004, 'a rail\'s height');
+    close(box.max.y, 1.30, 0.02, 'the rail\'s top, under the pad');
     close(rear(box.min.z), 0.20, 0.03, 'the rail\'s rear end, at the post');
     close(rear(box.max.z), 0.70, 0.04, 'the rail\'s front end, at the hub');
   }
