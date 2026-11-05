@@ -148,6 +148,19 @@ export const POSES = {
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 
+  // Seated against the carriage's back pad, the feet on its plates, the hands on the grips: the
+  // arms from straight down at the hips (the top) to the handles at the lower chest (the bottom),
+  // the carriage rocking back with them.
+  seated_dip_machine: {
+    equipment: 'machine',
+    motion: 'dip_machine',
+    kit: { dip_machine: {} },
+    body: {},
+    feet: { stance: 0.13, toeOut: 8, down: 0.04 },
+    grip: {},
+    camera: { target: [0, 0.8, 0.1], halfHeight: 1.0, azimuth: 56, elevation: 12 },
+  },
+
   // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
 
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides:

@@ -555,6 +555,36 @@ export const MOTIONS = {
   },
 
   /**
+   * Seated against a back pad that leans back as the machine's carriage rocks, the feet on its
+   * footplates, which rise with it, the hands on the grips of the arms pushed down to the hips: a
+   * seated dip. The linkage gives the hips, the pad's lean and where the grips and the footplates are,
+   * each at the arms' value; the ankles stand `feet.down` below the plate's middle, on its face.
+   */
+  dip_machine(e, s, L) {
+    const { hipC, lean, hand, across, plate, plateOut, plateUp } = s.linkage;
+    // The spine lies along the pad, whose face the back's depth off it touches all the way up.
+    const u = trunkUp(-lean + rad(e.body.trunk ?? 0));
+    const f = forwardOf(u);
+    const ankle = plate.clone().addScaledVector(plateOut, L.ankleY + 0.01).addScaledVector(plateUp, -e.feet.down);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.12).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * e.feet.stance)),
+      foot: (side) => ({
+        heading: plateUp.clone().multiplyScalar(Math.cos(toeOut)).addScaledVector(X, side * Math.sin(toeOut)),
+        top: plateOut.clone(),
+      }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.2), 1, 0.4).normalize(),
+      support: () => ({ point: plate.clone(), normal: plateOut.clone() }),
+      hand, across,
+      armPole: (side) => V(side * 0.1, 0.2, -1).normalize(),
+      // The elbows go back, held to the pole as a lifter's are (the arms are a dip's, not a press's).
+      armTraced: true,
+    };
+  },
+
+  /**
    * Pressing dumbbells on an adjustable bench at `bench.angle`, written in the backrest's frame so
    * one entry fits every angle: the back along the pad, and the hips `body.sit` off its face and
    * `body.seat` down it from the seat-back corner (the body slides down the pad, never into the

@@ -78,6 +78,8 @@ export const BATCHES = {
     '1_leg_cable_glute_kickback', 'cable_crunch', 'cable_face_pull', 'cable_hip_abduction', 'cable_pull_through',
     'cable_triceps_kickback', 'cable_woodchopper', 'cable_wrist_curl', 'cable_wrist_extension', 'seated_cable_flye',
   ],
+  // The seated dip machine's one exercise, machine-first (#226).
+  'dip-machine': ['seated_dip_machine'],
 };
 
 const idsOf = (name) => {
