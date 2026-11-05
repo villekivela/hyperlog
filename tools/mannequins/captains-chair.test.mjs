@@ -110,7 +110,7 @@ test('a knee raise grip each side rises 230 long from a hub 700 from the rear at
     close(box.min.y, 1.32, 0.03, 'the hub\'s height');
     close(box.max.y, 1.55, 0.03, 'the grip\'s top');
   }
-  close(Math.abs(centre(grips[0].box).x - centre(grips[1].box).x) , 0.535, 0.03, 'the grips between base (570) and top (500)');
+  close(Math.abs(centre(grips[0].box).x - centre(grips[1].box).x), 0.535, 0.03, 'the grips between base (570) and top (500)');
   for (const p of contact(kit, 'grips').at) {
     close(rear(p.z), 0.67, 0.01, 'the hand from the rear');
     close(p.y, 1.43, 0.01, 'the hand\'s height');
