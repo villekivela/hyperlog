@@ -24,6 +24,7 @@ export const OPTIONAL = {
   chest_pad: { 'grip.pole': [0.5, 0.4, -1], 'body.look': -0.3, 'feet.kneesOut': 0.2 },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
+  glute_ham_raise: { 'body.look': 0.25 },
   hang: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   support: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.

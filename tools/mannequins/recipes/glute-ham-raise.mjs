@@ -16,7 +16,7 @@
 // that place; `linkage` says where the knee, the ankle and the sole are for a mannequin of measurements `L`.
 import { recipe } from '../recipe.mjs';
 import { halfRoundGeometry, knob, pad, rod, rollerGeometry, tube, turnedPart } from '../parts.mjs';
-import { STRAIGHT, V } from '../rig.mjs';
+import { V } from '../rig.mjs';
 
 const IN = 0.0254;
 const STEP = IN;
@@ -35,20 +35,28 @@ const SPINE = { y: REAR.top - 0.0254, w: 0.0508 };
 // crest 1092 mm up.
 const PAD = { w: 0.23, gap: 0.04, length: 0.5, height: 0.23, top: 1.092, plate: 0.026 };
 const PAD_X = (PAD.w + PAD.gap) / 2;
-// The kneecaps rest on the pads' rear curve, this far ahead of their rear edge: chosen, at low
-// confidence, so the ref's 0.43 m shin and 80 mm ankle give its 450 mm setting.
-const KNEE = 0.06;
+const SLICES = 5;
+// Where the knee's joint comes to rest, at low confidence (the video's frames, the pads' crest at 1.092):
+// 40 mm above the crest, its kneecap on it, and 50 mm behind the crest's line.
+const KNEE = { z: 0.2, rise: 0.06 };
 // A handle each side under the pads, 820 mm up, out past both ends.
 const HANDLE = { x: 0.2, y: 0.82, from: -0.1, to: 0.6, radius: 0.016 };
 // The ankle assembly: the foot plate 345 tall to 1245 mm, the rollers' centres 120 mm ahead of its middle, the
 // lower roller 203 mm under the upper. Its face is `FORWARD` behind the pads' rear edge at the most forward hole.
-const FORWARD = 0.45 - DEFAULT * STEP;
+const FORWARD = 0.3;
 const PLATE = { thick: 0.0048, height: 0.345, top: 1.245, width: 0.5 };
-const ROLLER = { r: 0.0635, w: 0.216, ahead: 0.12, spacing: 0.203, x: PAD_X };
+const ROLLER = { r: 0.0635, w: 0.216, ahead: 0.15, spacing: 0.203, x: PAD_X };
 const GAP_Y = PLATE.top - PLATE.height / 2;
 const SLEEVE = { w: 0.07, length: 0.12 };
-// From the ankle's bone to the sole.
-const ANKLE = 0.08;
+
+/** Where the plate's face is at hole `slide`. */
+const faceOf = (slide) => -FORWARD - slide * STEP;
+/** The knee and the ankle of a lifter whose shin is `L.shin` and ankle joint `L.ankleY` above the sole, at hole `slide`: the shin from the knee on the pads down to the ankle in the roller gap. */
+function legAt(slide, L) {
+  const ankle = V(0, GAP_Y, faceOf(slide) + L.ankleY);
+  const ky = PAD.top + KNEE.rise;
+  return { ankle, knee: V(0, ky, ankle.z + Math.sqrt(L.shin ** 2 - (ky - ankle.y) ** 2)) };
+}
 
 export default recipe({
   name: 'glute_ham_raise',
@@ -56,7 +64,7 @@ export default recipe({
   standsAlone: { camera: { target: [0, 0.65, -0.05], halfHeight: 1.1, azimuth: 145, elevation: 12 } },
   bodies: {},
   contacts: [
-    { body: 'frame', point: 'thighPad', landmark: 'thighs' },
+    { body: 'frame', point: 'thighPad', landmark: 'knees' },
     { body: 'frame', point: 'ankleRollers', landmark: 'shins' },
     { body: 'frame', point: 'footPlate', landmark: 'feet' },
     // The hands are free at the top of the rep, and rest on the handles or reach forward at the bottom.
@@ -64,16 +72,21 @@ export default recipe({
   ],
   fit: [{
     sets: 'slide',
-    rule: 'the knee just behind the pads\' crest with the shin level, the soles flat on the plate',
+    rule: 'the knee on the pads\' crest, just behind it, the ankle in the roller gap and the sole on the plate',
     solve: ({ L }) => {
-      const behind = L.shin * STRAIGHT + ANKLE - KNEE;
-      return Math.min(MOST, Math.max(0, Math.round((behind - FORWARD) / STEP)));
+      const flat = legAt(0, L);
+      return Math.min(MOST, Math.max(0, Math.round((flat.knee.z - KNEE.z) / STEP)));
     },
   }],
+  // Static: nothing on it moves, so its place for the lifter is one set of points (`at` needs no value).
+  linkage: ({ slide = DEFAULT }, L) => {
+    const { knee, ankle } = legAt(slide, L);
+    return { at: () => ({ knee, ankle, sole: V(0, ankle.y, faceOf(slide)), soleUp: V(0, 0, 1), toes: V(0, -1, 0) }) };
+  },
   build({ slide = DEFAULT } = {}, M) {
     if (!Number.isInteger(slide) || slide < 0 || slide > MOST) throw new Error(`glute_ham_raise: slide ${slide} isn't a step from 0 to ${MOST}`);
     const sides = [-1, 1];
-    const face = -FORWARD - slide * STEP;
+    const face = faceOf(slide);
     const plateZ = face - PLATE.thick / 2;
     const rollerZ = plateZ + ROLLER.ahead;
     const rollerY = [GAP_Y + ROLLER.spacing / 2, GAP_Y - ROLLER.spacing / 2];
@@ -95,7 +108,10 @@ export default recipe({
 
     const pads = [
       pad(PAD.w * 2 + PAD.gap + 0.07, PAD.plate, PAD.length - 0.04, M.frame, V(0, PAD.top - PAD.height - PAD.plate / 2, FRONT.z), { soft: 0.003 }),
-      ...sides.map((s) => turnedPart(halfRoundGeometry(PAD.w, PAD.length, PAD.height), M.vinyl, V(s * PAD_X, PAD.top - PAD.height / 2, PAD.length / 2), { solid: true })),
+      // Each pad a row of slices along its length, one box each for the checks to measure the curve by.
+      ...sides.flatMap((s) => Array.from({ length: SLICES }, (_, i) => turnedPart(
+        halfRoundGeometry(PAD.w, PAD.length, PAD.height, i / SLICES, (i + 1) / SLICES), M.vinyl, V(s * PAD_X, PAD.top - PAD.height, PAD.length / 2), { solid: true },
+      ))),
       tube(0.04, V(-HANDLE.x, HANDLE.y - 0.035, FRONT.z), V(HANDLE.x, HANDLE.y - 0.035, FRONT.z), M.frame),
       ...sides.map((s) => rod(HANDLE.radius, V(s * HANDLE.x, HANDLE.y, HANDLE.from), V(s * HANDLE.x, HANDLE.y, HANDLE.to), M.frame, { held: true })),
     ];
@@ -118,13 +134,11 @@ export default recipe({
       ]),
     ];
 
-    // Where the lifter meets it: the thighs on the pads' rear curve at the knee, the ankles between the
+    // Where the lifter meets it: the thighs on the pads' crest (they rest there once lowered, and the knees sit just behind it), the ankles between the
     // rollers, the soles on the plate, the hands on the handles' front ends.
-    const crest = PAD.top - PAD.height;
-    const curve = crest + PAD.height * Math.sqrt(1 - ((PAD.length / 2 - KNEE) / (PAD.length / 2)) ** 2);
     const pair = (at) => sides.map(at);
     const points = {
-      thighPad: pair((s) => V(s * PAD_X, curve, KNEE)),
+      thighPad: pair((s) => V(s * PAD_X, PAD.top, PAD.length / 2)),
       ankleRollers: pair((s) => V(s * ROLLER.x, GAP_Y, rollerZ)),
       footPlate: pair((s) => V(s * ROLLER.x, GAP_Y - 0.05, face)),
       handles: pair((s) => V(s * HANDLE.x, HANDLE.y, PAD.length)),

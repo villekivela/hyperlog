@@ -152,18 +152,26 @@ export function padGeometry(w, h, d, soft) {
 }
 
 /**
- * A half-round pad `w` (x) wide, `length` (z) long and `h` (y) tall, centred: flat side down, the
- * top a half ellipse curving front to back, the pad of a glute-ham bench.
+ * A half-round pad `w` (x) wide, `length` (z) long and `h` (y) tall: flat side down, the top a half
+ * ellipse curving front to back, the pad of a glute-ham bench. `from` and `to` (0 to 1, along `length`)
+ * cut a slice of it, so a pad built of slices has a box for each, which is how the checks measure its
+ * curve. Centred across x and along z on the whole pad, standing on y = 0.
  */
-export function halfRoundGeometry(w, length, h) {
-  return shape(`half_round:${mm(w)}:${mm(length)}:${mm(h)}`, () => {
+export function halfRoundGeometry(w, length, h, from = 0, to = 1) {
+  return shape(`half_round:${mm(w)}:${mm(length)}:${mm(h)}:${mm(from)}:${mm(to)}`, () => {
+    const a = length / 2;
+    const top = (z) => h * Math.sqrt(Math.max(0, 1 - (z / a) ** 2));
+    const [z0, z1] = [from, to].map((t) => -a + t * length);
+    const steps = Math.max(2, Math.ceil(24 * (to - from)));
     const s = new THREE.Shape();
-    s.moveTo(-length / 2, 0);
-    s.absellipse(0, 0, length / 2, h, Math.PI, 0, true, 0);
+    s.moveTo(z0, 0);
+    s.lineTo(z0, top(z0));
+    for (let k = 1; k <= steps; k++) s.lineTo(z0 + ((z1 - z0) * k) / steps, top(z0 + ((z1 - z0) * k) / steps));
+    s.lineTo(z1, 0);
     s.closePath();
-    const g = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: false, curveSegments: 24 });
-    // Extruded along z from the shape's x-y plane: turn it so the shape's x runs along z and its depth along x.
-    g.translate(0, -h / 2, -w / 2);
+    const g = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: false });
+    // Extruded along z from the shape's x-y plane (its x the pad's length, its y up): turn the length onto z.
+    g.translate(0, 0, -w / 2);
     g.rotateY(-Math.PI / 2);
     return soften(g);
   });

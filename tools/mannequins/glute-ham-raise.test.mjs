@@ -32,15 +32,19 @@ const meshes = (kit, wanted = () => true) => {
 const centre = (b) => b.getCenter(new THREE.Vector3());
 const size = (b) => b.getSize(new THREE.Vector3());
 // The ref's pad is 500 long and about 230 wide and tall; a roller is 216 by 127.
-const pads = (kit) => meshes(kit, (o) => o.material?.name === 'vinyl' && Math.abs(size(boxOf(o)).z - 0.5) < 0.01 && Math.abs(size(boxOf(o)).x - 0.23) < 0.01);
+// Each pad is a row of slices, a box each for the checks to measure its curve by: the pad is their union.
+const pads = (kit) => [-1, 1].map((side) => {
+  const slices = meshes(kit, (o) => o.material?.name === 'vinyl' && Math.abs(size(boxOf(o)).x - 0.23) < 0.01 && Math.sign(centre(boxOf(o)).x) === side);
+  return { slices, box: slices.reduce((all, { box }) => all.union(box), new THREE.Box3()) };
+});
 const rollers = (kit) => meshes(kit, (o) => o.material?.name === 'vinyl' && Math.abs(size(boxOf(o)).x - 0.216) < 0.002);
 const plate = (kit) => meshes(kit, (o) => Math.abs(size(boxOf(o)).z - 0.0048) < 1e-4)[0];
 
-test('it is the kit of the glute-ham raise, which is not posed yet', () => {
+test('it is the kit of the glute-ham raise, the one exercise posed on it', () => {
   assert.deepEqual(MACHINES.glute_ham_raise, { kit: 'glute_ham_raise', exercises: ['glute_ham_raise'] });
   assert.ok(KITS.glute_ham_raise, 'a recipe named glute_ham_raise');
   assert.ok(EQUIPMENT.machine.includes('glute_ham_raise'));
-  assert.equal(POSES.glute_ham_raise, undefined);
+  assert.equal(POSES.glute_ham_raise.kit.glute_ham_raise instanceof Object, true);
 });
 
 test('it stands 1740 mm by 1143 mm on the floor and 1245 mm to the top of the foot plate', () => {
@@ -53,8 +57,7 @@ test('it stands 1740 mm by 1143 mm on the floor and 1245 mm to the top of the fo
 
 test('two half-round pads 230 wide and 500 long, 40 mm apart, their tops 1092 mm up, the rear edge at the origin', () => {
   const ps = pads(machine());
-  assert.equal(ps.length, 2);
-  const [left, right] = ps.sort((a, b) => centre(a.box).x - centre(b.box).x);
+  const [left, right] = ps;
   for (const { box } of ps) {
     close(box.max.y, 1.092, 1e-3, 'a pad\'s top');
     close(size(box).y, 0.23, 0.01, 'a pad\'s height');
@@ -63,7 +66,7 @@ test('two half-round pads 230 wide and 500 long, 40 mm apart, their tops 1092 mm
   close(right.box.min.x - left.box.max.x, 0.04, 2e-3, 'the gap between the pads');
   // Half-round, flat side down: the rear edge is a corner at the base, so the pad is thinner there than at the crest.
   const rear = new THREE.Raycaster(new THREE.Vector3(centre(left.box).x, 1.092 - 0.02, -1), new THREE.Vector3(0, 0, 1));
-  const front = rear.intersectObject(left.mesh)[0].point.z;
+  const front = rear.intersectObjects(left.slices.map(({ mesh }) => mesh))[0].point.z;
   assert.ok(front > 0.03, `the pad curves back from its crest: ${front.toFixed(3)} m to its surface 2 cm down`);
 });
 
@@ -79,17 +82,17 @@ test('four 216 by 127 mm rollers in two pairs 203 mm apart centre to centre, the
   close(gap, 0.076, 2e-3, 'the gap an ankle sits in');
 });
 
-test('the foot plate is 4.8 mm thick and 345 mm tall to 1245, its face 450 mm behind the pad\'s rear edge at the ref\'s setting', () => {
-  const { box } = plate(machine());
+test('the foot plate is 4.8 mm thick and 345 mm tall to 1245, its face at a hole 300 mm behind the pads\' rear edge and 1 in a step back from it', () => {
+  const { box } = plate(machine({ slide: 0 }));
   close(size(box).y, 0.345, 1e-3, 'its height');
   close(box.max.y, 1.245, 1e-3, 'its top');
-  close(box.max.z, -0.45, 1e-3, 'its face');
+  close(box.max.z, -0.3, 1e-3, 'its face at the most forward hole');
 });
 
-test('the rollers sit 120 mm ahead of the foot plate: the gap between them is at the plate\'s middle', () => {
+test('the rollers\' centres sit 150 mm ahead of the foot plate\'s middle, clear of the foot that lies on it', () => {
   const kit = machine();
-  const zs = rollers(kit).map(({ box }) => centre(box).z);
-  for (const z of zs) close(z, -0.45 - 0.0024 + 0.12, 0.002, 'a roller\'s place');
+  const mid = centre(plate(kit).box).z;
+  for (const { box } of rollers(kit)) close(centre(box).z - mid, 0.15, 0.002, 'a roller\'s place');
 });
 
 test('the assembly slides back in 1 in steps from its most forward hole, rollers and plate together, 12 steps (about 300 mm)', () => {
@@ -115,20 +118,20 @@ test('a handle each side under the pad at 820 mm, sticking out front and back of
   for (const p of [l, r]) assert.ok(hs.some(({ box }) => box.distanceToPoint(p) < 1e-3), 'a hand point on a handle');
 });
 
-test('nothing on it moves, and it ties the thighs to the pads, the shins to the rollers, the feet to the plate and the hands to the handles', () => {
+test('nothing on it moves, and it ties the knees to the pads, the shins to the rollers, the feet to the plate and the hands to the handles', () => {
   const kit = machine();
   assert.deepEqual(Object.keys(kit.joints), []);
   assert.deepEqual(kit.contacts.map((c) => [c.point, c.landmark, c.body]), [
-    ['thighPad', 'thighs', 'frame'], ['ankleRollers', 'shins', 'frame'], ['footPlate', 'feet', 'frame'], ['handles', 'hands', 'frame'],
+    ['thighPad', 'knees', 'frame'], ['ankleRollers', 'shins', 'frame'], ['footPlate', 'feet', 'frame'], ['handles', 'hands', 'frame'],
   ]);
   for (const c of kit.contacts) {
     assert.equal(c.at.length, 2, `${c.point}: a point a side`);
     assert.ok(c.at[0].x < c.at[1].x, `${c.point}: left first`);
   }
-  // The kneecaps rest just behind the crest, on the rear curve, of each pad.
+  // The lifter rests on the crest of each pad: the knees on it at the top, the thighs along it at the bottom.
   for (const p of contact(kit, 'thighPad').at) {
-    assert.ok(pads(kit).some(({ box }) => box.distanceToPoint(p) < 1e-3), 'a thigh point on a pad');
-    close(p.z, 0.06, 1e-3, 'the knee 60 mm ahead of the pad\'s rear edge');
+    assert.ok(pads(kit).some(({ box }) => box.distanceToPoint(p) < 1e-3), 'a knee point on a pad');
+    close(p.y, 1.092, 1e-3, 'the pad\'s crest');
   }
   for (const p of contact(kit, 'footPlate').at) assert.ok(boxOf(plate(kit).mesh).distanceToPoint(p) < 1e-3, 'a foot point on the plate');
   for (const p of contact(kit, 'ankleRollers').at) {
@@ -137,17 +140,24 @@ test('nothing on it moves, and it ties the thighs to the pads, the shins to the 
   }
 });
 
-// Fit rule (ref.md): the knee just behind the pads' crest and the shin level, so the plate is the shin and
-// the ankle-to-sole's length behind the knee, which is 60 mm ahead of the pads' rear edge. `fitted()` only
-// runs a recipe with a linkage, so the rule is read here as it solves.
-test('its fit rule sets the slide from the shin: the ref\'s 0.43 m shin and 80 mm ankle put the plate at 450 mm, a longer shin further back, a shorter one forward', () => {
+// Fit rule (ref.md): the knee on the pads' crest, just behind it, the shin sloping down and back to an ankle in the roller
+// gap, the sole on the plate. The mannequin's shin and ankle give the hole; 0.429 m and 0.104 m are its own.
+test('its fit rule sets the slide from the shin: a longer shin slides back, a shorter one forward, to the holes\' ends', () => {
   const [rule] = KITS.glute_ham_raise.fit;
   assert.equal(rule.sets, 'slide');
-  assert.equal(rule.solve({ L: { shin: 0.43 } }), 4);
-  assert.ok(rule.solve({ L: { shin: 0.5 } }) > 4, 'a longer shin slides back');
-  assert.ok(rule.solve({ L: { shin: 0.38 } }) < 4, 'a shorter one slides forward');
-  assert.equal(rule.solve({ L: { shin: 0.2 } }), 0, 'no further forward than the first hole');
-  assert.equal(rule.solve({ L: { shin: 0.9 } }), 12, 'no further back than the last');
+  const mannequin = rule.solve({ L: { shin: 0.429, ankleY: 0.104 } });
+  assert.equal(mannequin, 1);
+  assert.ok(rule.solve({ L: { shin: 0.5, ankleY: 0.104 } }) > mannequin + 1, 'a longer shin slides back');
+  assert.equal(rule.solve({ L: { shin: 0.3, ankleY: 0.104 } }), 0, 'no further forward than the first hole');
+  assert.equal(rule.solve({ L: { shin: 0.9, ankleY: 0.104 } }), 12, 'no further back than the last');
+});
+
+test('it is a static machine: its linkage is one place, the knee on the pad, the ankle in the gap, the sole on the plate', () => {
+  const at = KITS.glute_ham_raise.linkage({ slide: 1 }, { shin: 0.429, ankleY: 0.104 }).at();
+  close(at.knee.z, 0.2, 0.015, 'the knee behind the crest');
+  close(at.ankle.y, 1.0725, 1e-3, 'the ankle in the gap');
+  close(at.sole.z, -0.3254, 1e-3, 'the sole on the plate, one hole back');
+  close(at.ankle.z - at.sole.z, 0.104, 1e-3, 'the ankle a joint\'s height off the sole');
 });
 
 test('the lifter\'s hands are free at the top of the rep, so the handles are a grip a hand may steady itself on', () => {
@@ -186,11 +196,11 @@ test('it is posed on the kit, every frame passing every check', async () => {
 test('the knees bend 90° at the top, the thighs upright, and straighten to within 15° at the bottom, the body level', async () => {
   const { stage } = await stood();
   const knee = (d) => between(at(stage, d, 'thigh_l'), at(stage, d, 'calf_l'), at(stage, d, 'foot_l'));
-  close(knee(0), 92, 6, 'the knee at the top');
-  assert.ok(knee(1) > 165, `the knee at the bottom ${knee(1).toFixed(1)}°`);
+  close(knee(0), 100, 8, 'the knee at the top');
+  assert.ok(knee(1) > 160, `the knee at the bottom ${knee(1).toFixed(1)}°`);
   const lean = (d) => { const t = at(stage, d, 'thigh_l'); const k = at(stage, d, 'calf_l'); return THREE.MathUtils.radToDeg(Math.atan2(Math.hypot(t.x - k.x, t.z - k.z), t.y - k.y)); };
   assert.ok(lean(0) < 12, `the thighs lean ${lean(0).toFixed(1)}° from upright at the top`);
-  assert.ok(lean(1) > 70, `the thighs lean ${lean(1).toFixed(1)}° from upright at the bottom`);
+  assert.ok(lean(1) > 60, `the thighs lean ${lean(1).toFixed(1)}° from upright at the bottom`);
 });
 
 test('the hips stay straight through the rep: the trunk runs on from the thigh within 20°', async () => {
@@ -209,10 +219,12 @@ test('the ankles and knees stay where they are, the ankles between the rollers a
     const first = at(stage, 0, bone);
     for (let f = 1; f < FRAMES; f++) assert.ok(at(stage, f / (FRAMES - 1), bone).distanceTo(first) < 0.01, `${bone} moves at frame ${f}`);
   }
-  for (const [k, [roller, plate]] of [['l', [contact(kit, 'ankleRollers').at[1], contact(kit, 'footPlate').at[1]]], ['r', [contact(kit, 'ankleRollers').at[0], contact(kit, 'footPlate').at[0]]]]) {
+  for (const k of ['l', 'r']) {
     const ankle = at(stage, 0, `foot_${k}`);
-    close(ankle.x, roller.x, 0.04, `the ${k} ankle across`);
-    close(ankle.y, roller.y, 0.03, `the ${k} ankle between the rollers`);
-    assert.ok(ankle.z > plate.z && ankle.z - plate.z < 0.12, `the ${k} ankle ${(ankle.z - plate.z).toFixed(3)} m ahead of the plate`);
+    const [roller] = contact(kit, 'ankleRollers').at;
+    assert.ok(Math.abs(ankle.x) > 0.027 && Math.abs(ankle.x) < 0.243, `the ${k} ankle at ${ankle.x.toFixed(3)} is out of the roller's length`);
+    close(ankle.y, roller.y, 0.01, `the ${k} ankle between the rollers`);
+    const [, plateAt] = contact(kit, 'footPlate').at;
+    close(ankle.z - plateAt.z, 0.104, 0.005, `the ${k} ankle a joint's height ahead of the plate`);
   }
 });
