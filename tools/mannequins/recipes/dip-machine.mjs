@@ -11,7 +11,8 @@
 // it whatever the pose, both joints at their start; no pose uses it yet, so the drive has no
 // fit rules to solve. The seat is fixed at the ref's measured height.
 //
-// The weight stack stands to the user's right (-x, the user facing +z), as the ref's photos show it, its frame a pair of
+// The weight stack stands to the user's right (-x, the user facing +z), as the
+// ref's photos show it, its frame a pair of
 // uprights on a base beam out from the middle one. No brand, logo or decal is drawn on it.
 import { recipe, revolute } from '../recipe.mjs';
 import {
@@ -34,7 +35,7 @@ const SEAT = { top: 0.48, z: -0.01, w: 0.4, d: 0.42 };
 const FEET = { y: 0.12, z: 0.7, apart: 0.2 };
 // The back pad leans 6° back of upright at the start.
 const PAD = { lean: rad(6), up: 0.4, w: 0.36, length: 0.62 };
-const TOWER = { x: -0.4, z: 0.45, top: 1.355 };
+const STACK = { x: -0.4, z: 0.45, top: 1.355 };
 const FLOOR = { rear: -0.57, front: 0.86, half: 0.6 };
 /** How far the stack's cable draws it up for a radian of the arms. */
 const RATIO = 0.3;
@@ -66,14 +67,14 @@ export default recipe({
   build(_options, M) {
     const sides = [-1, 1];
     const rear = FLOOR.rear + 0.05;
-    const wheel = V(TOWER.x, TOWER.top - 0.035 - WHEEL - 0.02, TOWER.z + WHEEL);
+    const wheel = V(STACK.x, STACK.top - 0.035 - WHEEL - 0.02, STACK.z + WHEEL);
 
     // The frame: a floor beam along the machine, a rear cross beam and a front one, the rear upright
     // leaning back up to the arms' pivot with a brace to it, and the housing round the pivot.
     const frame = [];
     const [spine, ...spineCaps] = floorRail(V(0, 0.035, FLOOR.rear), V(0, 0.035, FLOOR.front), M);
     const [cross, ...crossCaps] = floorRail(V(-FLOOR.half + 0.016, 0.035, rear), V(FLOOR.half - 0.016, 0.035, rear), M);
-    const [front, ...frontCaps] = floorRail(V(0.3, 0.035, FLOOR.front - 0.035), V(TOWER.x - 0.2, 0.035, FLOOR.front - 0.035), M);
+    const [front, ...frontCaps] = floorRail(V(0.3, 0.035, FLOOR.front - 0.035), V(STACK.x - 0.2, 0.035, FLOOR.front - 0.035), M);
     frame.push(spine, ...spineCaps, cross, ...crossCaps, front, ...frontCaps);
     frame.push(role(tube(0.08, V(0, 0.07, -0.4), V(0, PIVOT[0] - 0.05, PIVOT[1]), M.frame), 'upright'));
     frame.push(tube(0.05, V(0, 0.07, 0.0), V(0, PIVOT[0] - 0.2, PIVOT[1] + 0.05), M.frame));
@@ -87,11 +88,10 @@ export default recipe({
 
     // The stack's tower to the user's right, its base beam out from the spine, a cable wheel on top.
     const tower = [
-      ...stackFrame(TOWER.z, TOWER.top, M).map((m) => { m.position.x += TOWER.x; return m; }),
-      ...pulley(wheel.clone().setX(0), M).map((m) => { m.position.x += TOWER.x; return m; }),
-      tube(0.07, V(0, 0.035, TOWER.z), V(TOWER.x - 0.19, 0.035, TOWER.z), M.frame),
+      ...[...stackFrame(STACK.z, STACK.top, M), ...pulley(wheel.clone().setX(0), M)].map((m) => { m.position.x += STACK.x; return m; }),
+      tube(0.07, V(0, 0.035, STACK.z), V(STACK.x - 0.19, 0.035, STACK.z), M.frame),
     ];
-    const weights = weightStack(V(TOWER.x, 0, TOWER.z), M, { rodTop: 1.3, toward: -1 });
+    const weights = weightStack(V(STACK.x, 0, STACK.z), M, { rodTop: 1.3, toward: -1 });
     const drop = part(rodGeometry(0.0045, 8), M.metal);
 
     // The carriage: a spine from the pivot forward to the foot beam, the seat on its post, the back
@@ -148,7 +148,7 @@ export default recipe({
         arms: {
           lift(l) {
             weights.lift(l);
-            span(drop, V(TOWER.x, wheel.y, TOWER.z), weights.top(l));
+            span(drop, V(STACK.x, wheel.y, STACK.z), weights.top(l));
           },
         },
       },

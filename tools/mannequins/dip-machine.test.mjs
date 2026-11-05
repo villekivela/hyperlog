@@ -9,7 +9,6 @@ import path from 'node:path';
 import * as THREE from 'three';
 import { EQUIPMENT, KITS, MACHINES, buildKit, shownAlone } from './kit.mjs';
 import { POSES } from './poses.mjs';
-import { buildStage } from './stage.mjs';
 import { rad } from './rig.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
