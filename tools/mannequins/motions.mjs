@@ -939,7 +939,13 @@ export const MOTIONS = {
       kneePole: () => V(0, -0.4, 1).normalize(),
       support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
       openHands: true,
-      hand: (side) => hanging.clone().addScaledVector(X, side * L.shW).add(sh).lerp(handle(side), rest),
+      // Never past what the arm reaches (a little short of straight, which the elbow would flip at), so the elbow turns steadily.
+      hand: (side) => {
+        const shoulder = sh.clone().addScaledVector(X, side * L.shW);
+        const at = shoulder.clone().add(hanging).lerp(handle(side), rest);
+        const way = at.clone().sub(shoulder);
+        return shoulder.add(way.setLength(Math.min(way.length(), (L.up + L.fore) * 0.96)));
+      },
       armPole: elbowsTo(e, [0.3, 0, -1]),
     };
   },
