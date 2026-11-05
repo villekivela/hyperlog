@@ -10,7 +10,7 @@
 // stack stays down: two arms pull it and the recipe format ties a stack to one joint.
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, basePlate, bent, endCap, knob, pad, part, pulley, rod, rodGeometry, seatOn, span, stackFrame, tube,
+  UPRIGHTS, WHEEL, basePlate, bent, endCap, knob, mitered, pad, part, pivotJoint, pulley, rod, rodGeometry, seatOn, span, stackFrame, tube,
   weightStack,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
@@ -65,6 +65,7 @@ export default recipe({
     const padZ = BACK.face - BACK.thick / 2;
     const unit = V(0, TOP - 0.07, 0);
     const wheel = V(0, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
+    const pivots = Object.fromEntries(sides.map((s) => [s, pivotJoint(M, axisOf(s), V(0, 1, 0))]));
     const frame = [
       ...seatOn(seat[0], seat[1], M, { pin: 1 }),
       pad(BACK.width, BACK.height, BACK.thick, M.vinyl, V(0, padY, padZ), { soft: 0.025 }),
@@ -79,10 +80,8 @@ export default recipe({
       tube(0.09, V(0, 0.035, COLUMN_Z), V(0, unit.y, COLUMN_Z), M.frame),
       tube(0.08, V(0, unit.y, COLUMN_Z), V(0, unit.y, unit.z), M.frame),
       pad(2 * AXIS.x + 0.14, 0.14, 0.18, M.frame, unit, { soft: 0.02 }),
-      // An axle down from the unit at each axis, through the lever's hub.
-      ...sides.flatMap((s) => [
-        rod(0.012, V(s * AXIS.x, AXIS.y - 0.06, AXIS.z), V(s * AXIS.x, unit.y - 0.07, AXIS.z), M.metal),
-      ]),
+      // The axle down from the unit at each axis, through the lever's housing.
+      ...sides.flatMap((s) => pivots[s].fixed),
       // The stack behind, tied to the column at its top, its cable over a wheel to the column.
       ...stackFrame(STACK_Z, FRAME_TOP, M),
       tube(0.06, V(0, FRAME_TOP, STACK_Z + 0.035), V(0, FRAME_TOP, COLUMN_Z - 0.045), M.frame),
@@ -92,7 +91,7 @@ export default recipe({
       ...weightStack(V(0, 0, STACK_Z), M, { rodTop: 1.5, toward: 1 }).parts,
     ];
     // Each arm at rest: the lever out from its axis, a round pin at its end, the drop arm down to the
-    // vertical grip, and the short horizontal grip across the foot, reaching toward the middle.
+    // vertical grip, bent out of the drop arm in a U.
     const rest = (s) => V(s * AXIS.x + s * LEVER * Math.cos(REST), AXIS.y, AXIS.z + LEVER * Math.sin(REST));
     const arms = sides.map((s) => {
       const end = rest(s);
@@ -100,26 +99,21 @@ export default recipe({
       const top = end.clone().setY(GRIP_Y + 0.12);
       // The grip stands this far in along the lever from the drop arm.
       const inward = axisOf(s).sub(end).setY(0).normalize().multiplyScalar(GRIP_OFF);
-      const lever = part(rodGeometry(0.025), M.frame);
-      span(lever, axisOf(s), end);
-      const drop = part(rodGeometry(0.022), M.frame);
-      span(drop, end, foot);
+      // The lever and the drop arm are one square tube bent at the pin, cut on the bisector.
+      const arm = mitered([axisOf(s), end, foot], 0.045, M.frame);
       // One bent tube: out of the drop arm at the top, along, down the grip, and back into the arm at the foot.
       const at = (along, y) => end.clone().addScaledVector(inward.clone().normalize(), along).setY(y);
       const handle = bent(`pec_deck_handle:${s}`, [
         at(0, top.y), at(0.03, top.y), at(GRIP_OFF, top.y - 0.03), at(GRIP_OFF, foot.y + 0.03), at(0.03, foot.y), at(0, foot.y),
       ], GRIP, M.vinyl, { held: true });
-      // The hub is a short vertical cylinder on the axle, the lever through its middle. The pin is a
-      // cylinder across the lever's end, centred on the drop arm, which hangs from it.
-      const hub = part(rodGeometry(0.04, 20), M.pulley);
-      span(hub, axisOf(s).setY(AXIS.y - 0.045), axisOf(s).setY(AXIS.y + 0.045));
+      // The pin is a cylinder across the lever's end, centred on the drop arm, which hangs from it.
       const across = V(0, 1, 0).cross(end.clone().sub(axisOf(s))).setY(0).normalize().multiplyScalar(0.03);
       const pin = part(rodGeometry(0.03, 20), M.pulley);
       span(pin, end.clone().sub(across), end.clone().add(across));
       // The arm's foot is a dome under the handle.
       const dome = knob(M, foot, 0.022);
       dome.material = M.frame;
-      return { body: [hub, lever, pin, drop, dome, handle], point: end.clone().add(inward).setY(GRIP_Y) };
+      return { body: [pivots[s].housing, arm, pin, dome, handle], point: end.clone().add(inward).setY(GRIP_Y) };
     });
     return {
       parts: [...frame, ...arms.flatMap((a) => a.body)],
