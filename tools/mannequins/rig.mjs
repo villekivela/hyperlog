@@ -611,6 +611,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     palmNormal.addScaledVector(handle, -palmNormal.dot(handle)).normalize();
     (P.held ??= {})[s] = fixed ? along.clone().normalize() : handle.applyAxisAngle(palmNormal, -s * rad(P.gripTilt ?? 0));
     (P.palm ??= {})[s] = palmNormal;
+    (P.fingers ??= {})[s] = fingers.clone().normalize();
     aim(rig, 'lowerarm_' + k, a2, twist(a2.clone().normalize()));
     aim(rig, 'hand_' + k, fingers, inward);
     // A turned arm before the fingers close, so they close round what the hand holds where it is now:

@@ -1519,7 +1519,9 @@ gallery (Technique videos).
     stretch, and rises as it works; and a working stack is never fully down at the stretch (owner,
     via the coordinator, 2026-11-03): it stays a few centimetres off its rest all through the rep, as
     only before the first rep it sits. The starter program's batch (#127) adds a cable column, one or
-    a pair, with its pulley at any height and a stirrup handle or a rope, and the hack squat's sled,
+    a pair, with its pulley at any height and a stirrup handle or a rope (on the cable shoulder press
+    the forearm goes through the stirrup, its ring behind the wrist, so the cable runs behind the
+    arm to the low pulley, as the lift's video shows; #240), and the hack squat's sled,
     the leg extension, the leg curl (seated and lying), the seated calf raise, the chest-supported
     row, the machine pulldown and the preacher curl. After the owner's review (2026-11-03) a flye's,
     a raise's and a reverse crossover's hands sweep an arc about the shoulder, the elbow held; a
@@ -1588,7 +1590,20 @@ gallery (Technique videos).
     the dumbbell rocks a little, and one number sets the share between them. A dumbbell turns with
     the hand holding it and never rolls in it. The goblet squat and the overhead triceps extension wait for
     a later batch: both cup one dumbbell's head in two hands, and the hand only closes round a
-    handle so far.
+    handle so far. The second dumbbell batch (#127) poses twelve variants of the OK'd lifts, from
+    their technique videos where the library has one (the standing press and the seated Arnold press
+    have none, so they follow the seated press and the standing Arnold). The Kroc row is the 1-arm
+    row loosened on purpose (owner, 2026-11-05): one knee and hand on the bench as that row has them,
+    but a heavy dumbbell with bigger heads, a longer path, a fast lift, and a trunk that rocks and
+    twists, the chest open to the rowing arm at the top and that shoulder hanging low at the bottom.
+    The kickback follows its video (owner, 2026-11-05): a long split, one arm, the free hand over
+    the top of the bench's near-upright back; the 1-arm overhead extension sits against that upright
+    back, the free palm on the chest, the dumbbell behind the head and only as deep as the pad's top allows. The
+    curtsy lunge's back foot lands well past the line through the hips, which stay over the front foot. The standing press, both Arnold presses and the Kroc row
+    let the wrists flow as the bench presses do, so their dumbbells stay near level. A walking lunge
+    is held in its step, at a longer stride: a clip plays its lowering backward to lift, so it can't
+    travel. The same goes for both Zottman curls, which turn the palms differently on the way up and
+    the way down, so they wait until a clip can show the two halves apart.
     - **Detail** (owner, 2026-11-02, #127, from the machines prototype): every kit is built in code,
       with nothing imported, at one level: rounded, bevelled tubing with base plates; soft padded
       seats and rollers; a weight stack of separate plates with guide rods, a top plate and a

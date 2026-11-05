@@ -181,7 +181,7 @@ Researched 2026-11-03 for Hyperlog's mannequin studio (`tools/mannequins/`). Iss
 | row | barbell_row, deficit_pendlay_row | barbell | 28 | 28 | finger base | wrapped | straight 0° |
 | free_arms | barbell_upright_row | barbell | 28 | 28 | finger base | wrapped | 0° at the bottom to flexion 30° at the top |
 | free_arms | cable_flye, reverse_cable_crossover, cable_lateral_raise | `handle` (stirrup), one a hand on a `twin` column | 25–45 | 33 | finger base | wrapped | straight 0° |
-| free_arms | cable_shoulder_press | `handle` (stirrup), one a hand on a `twin` column | 25–45 | 33 | palm heel | wrapped | ext 10° |
+| free_arms | cable_shoulder_press | `handle` (stirrup, the forearm through it), one a hand on a `twin` column | 25–45 | 33 | palm heel | wrapped | ext 10° |
 | knee_lever | leg_extension, seated_leg_curl, lying_leg_curl | seat or front handles | about 36 | 39 | finger base | wrapped | straight 0° |
 | calf_raise | seated_calf_raise | knee-pad handles | about 36 | 39 | finger base | wrapped | straight 0° |
 | hack_squat | hack_squat | shoulder-pad handles | about 36 | 39 | finger base | wrapped | straight 0° |

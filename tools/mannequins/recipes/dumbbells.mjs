@@ -1,6 +1,7 @@
 // Hex dumbbells, one in each hand, or with `hand` (1 the left, -1 the right) one in that hand alone,
 // the handle across the palm between collars. Free bodies: the hands carry them. With `steady`, each
 // is laid by the palm as well as the handle's line, so it turns with the hand and can't roll in it.
+// With `heavy`, the heads are bigger, for a lift done with a big dumbbell; the handle stays.
 import { Matrix4 } from 'three';
 import { recipe, free } from '../recipe.mjs';
 import { along, group, hexGeometry, turnedPart } from '../parts.mjs';
@@ -17,7 +18,8 @@ export default recipe({
       const parts = [along(0.016, -0.088, 0.088, M.metal, 16, { held: true })];
       for (const e of [-1, 1]) {
         parts.push(along(0.024, ...(e < 0 ? [-0.092, -0.084] : [0.084, 0.092]), M.metal, 20, { solid: true }));
-        parts.push(turnedPart(hexGeometry(0.06, 0.06), M.plate, V(e * 0.118, 0, 0)));
+        const [radius, length] = options.heavy ? [0.085, 0.1] : [0.06, 0.06];
+        parts.push(turnedPart(hexGeometry(radius, length), M.plate, V(e * (0.088 + length / 2), 0, 0)));
       }
       return group(`dumbbell_${s < 0 ? 'r' : 'l'}`, parts);
     });
