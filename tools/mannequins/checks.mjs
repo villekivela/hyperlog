@@ -114,7 +114,7 @@ function depthInside(e, p) {
 }
 
 /** The body's vertices, each with the bone that moves it most and whether that's a hand's. */
-function bodyVertices(rig) {
+export function bodyVertices(rig) {
   const out = [];
   for (const m of rig.meshes) {
     const { skinIndex, skinWeight, position } = m.geometry.attributes;

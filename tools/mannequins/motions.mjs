@@ -640,7 +640,7 @@ export const MOTIONS = {
    * the side from that plane, in degrees about the shoulder: a Y overhead.
    */
   arms(e, s, L) {
-    const { hipC, u, feet } = bodyOf(e, s, L);
+    const { hipC, u, lean, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
@@ -656,6 +656,7 @@ export const MOTIONS = {
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      spine: archOf(e.body?.arch, lean),
       ...feet,
       bar, grip: e.grip.width,
       hand: handsOf(e, (side) => (out ? leaned(bar.clone().setX(side * e.grip.width), side) : bar.clone().setX(side * e.grip.width))),
@@ -667,19 +668,19 @@ export const MOTIONS = {
   /**
    * A split stance, the feet planted through the rep: the left foot flat `feet.front` ahead, the
    * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
-   * floor, heels up positive, its toes bent back as far so they stay down. The hips drop between
-   * them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width`
-   * either side of the middle.
+   * floor, heels up positive, its toes bent back as far so they stay down; `feet.cross` steps it that
+   * far across behind the front foot (a curtsy), and `feet.hips` moves the hips and arms that far toward it.
+   * The hips drop between them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width` either side of the middle.
    */
   lunge(e, s, L) {
-    const hipC = V(0, ...s.hip);
+    const hipC = V(e.feet.hips ?? 0, ...s.hip);
     const lean = spineLean(s.trunk, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const a = rad(s.heel);
     const heading = V(0, -Math.sin(a), Math.cos(a));
     const top = V(0, Math.cos(a), Math.sin(a));
-    const ball = V(-e.feet.stance, L.ballY, e.feet.back);
+    const ball = V(-e.feet.stance + (e.feet.cross ?? 0), L.ballY, e.feet.back);
     const sh = shouldersOf(hipC, u, L);
     const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
     const drop = Math.sqrt(Math.max(0, reach * reach - (e.grip.width - L.shW) ** 2));
@@ -691,7 +692,7 @@ export const MOTIONS = {
       foot: (side) => (side < 0 ? { heading: heading.clone(), top: top.clone() } : { heading: V(Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) }),
       kneePole: (side) => V(side * (e.feet.kneesOut ?? 0), 0, 1).normalize(),
       support: (side) => (side < 0 ? { point: ball.clone().addScaledVector(top, -L.ballY), normal: top.clone() } : floor),
-      hand: (side) => V(side * e.grip.width, sh.y - drop, sh.z),
+      hand: (side) => V(hipC.x + side * e.grip.width, sh.y - drop, sh.z),
       armPole: elbowsTo(e, [0.4, 0, -1]),
       offsets: { ball_r: [-s.heel, 0, 0] },
     };

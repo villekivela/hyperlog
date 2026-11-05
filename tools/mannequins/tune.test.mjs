@@ -96,6 +96,12 @@ test('equipment moves a metre either way, a body point only 30 cm', () => {
   assert.ok(hand.max - hand.value <= 0.31, `a hand moves to ${hand.max}`);
 });
 
+// #240: how far back the stirrup lies is an angle, not a place, so it isn't a kit's metre either way.
+test('a stirrup the forearm goes through lies back in degrees, from straight behind the palm to along the forearm', () => {
+  const t = byPath(tunables(prepare('cable_shoulder_press')))['kit.cable_column.through'];
+  assert.deepEqual([t.min, t.max, t.step, t.unit], [0, 90, 1, '°']);
+});
+
 test('every pose offers its grip\'s turn at the top and the bottom, each from grip.rotate', () => {
   const t = byPath(tunables(prepare('reverse_cable_crossover')));
   const rotate = prepare('reverse_cable_crossover').grip.rotate ?? 0;
