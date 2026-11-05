@@ -263,7 +263,7 @@ test('the wedges stand in a tight V, their middles about half the pivots\' spaci
 
 test('from the lifter\'s side a plate stands in front of the drum', () => {
   const kit = machine();
-  const panels = boxes(kit).filter(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.03 && b.max.y - b.min.y > 0.25 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.4);
+  const panels = boxes(kit).filter(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.02 && b.max.y - b.min.y > 0.2 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.6);
   const drum = boxes(kit).find(({ box: b }) => Math.abs((b.max.x - b.min.x) - (b.max.y - b.min.y)) < 0.01 && b.max.x - b.min.x > 0.3);
   assert.ok(panels.length && drum, 'a plate and a drum');
   assert.ok(panels[0].box.max.z <= drum.box.min.z + 0.005, 'the plate on the lifter\'s side of the drum');
@@ -277,6 +277,31 @@ test('the seat and the pivots stand high enough that the thighs slope down', asy
   const drop = wpos(rig.bones.thigh_l).y - wpos(rig.bones.calf_l).y;
   assert.ok(drop > 0.08, `the knee ${drop.toFixed(2)} m below the hip`);
   close(kit.kits.lateral_raise_machine.joints.arm_l.origin.y / 1.4, 0.82, 0.015, 'the pivots\' share of the tower');
+});
+
+test('the wedges stand over the plate, on the lifter\'s side of it, and it stands no higher than they do', () => {
+  const kit = machine();
+  const wedge = (k) => {
+    let box = null;
+    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) box = new THREE.Box3().setFromObject(o, true); }));
+    return box;
+  };
+  const plate = boxes(kit).find(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.02 && b.max.y - b.min.y > 0.2 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.6).box;
+  const w = wedge('l');
+  assert.ok(w.max.y > plate.max.y + 0.05, `the wedge tops out ${(w.max.y - plate.max.y).toFixed(2)} m over the plate`);
+  assert.ok(w.max.z <= plate.min.z + 0.005, 'on the lifter\'s side of it, so it drops in front of it as the arm rises');
+  assert.ok(w.max.y - w.min.y > 0.14, 'a big block');
+  close(w.max.y - kit.joints.arm_l.origin.y, 0.24, 0.04, 'its top over the pivot, as the hero photo has it');
+});
+
+test('the beam runs the pad\'s whole length, tight against it', () => {
+  const kit = machine();
+  for (const [k] of SIDES) {
+    const arm = boxes(kit).filter(({ mesh }) => kit.bodies[`arm_${k}`].includes(mesh));
+    const pad = contact(kit, `pad_${k}`).at[0];
+    const back = Math.min(...arm.filter(({ box: b }) => b.max.z - b.min.z > 0.3).map(({ box: b }) => b.min.z));
+    assert.ok(back < pad.z - 0.1, `${k}'s beam back to z ${back.toFixed(2)}, the pad's middle at ${pad.z.toFixed(2)}`);
+  }
 });
 
 // #241: a body fits it. The checks hold the hands on the grips, the upper arms on the pads, the chest

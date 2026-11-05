@@ -13,7 +13,7 @@
 // listed with this kit's exercises but has none yet.
 import * as THREE from 'three';
 import { HELD, recipe, revolute } from '../recipe.mjs';
-import { UPRIGHTS, WHEEL, floorRail, mitered, pad, part, pivotJoint, pulley, rod, rodGeometry, span, stackFrame, tube, weightStack, wire } from '../parts.mjs';
+import { UPRIGHTS, WHEEL, floorRail, mitered, pad, part, pivotJoint, rod, rodGeometry, span, stackFrame, tube, weightStack, wire } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
 const LIMITS = [rad(10), rad(90)];
@@ -34,10 +34,10 @@ const OUT = 0.11;
 const PAD = { length: 0.3, radius: 0.07 };
 // The strut runs from the pivot to a knee this far out of the arm's line, flaring about 40°, and a beam
 // runs back from the knee along the pad's outside. The wedge stands over the pivot, running fore and
-// aft ahead of the drum, a valley between the two.
-const KNEE_OUT = 0.205;
+// aft between the bar and the plate, a valley between the two, so it drops in front of the plate.
+const KNEE_OUT = 0.195;
 const LEVER_WIDTH = 0.06;
-const WEDGE = { length: 0.28, width: 0.11, height: 0.1, over: 0.15, in: 0.1, tilt: rad(28) };
+const WEDGE = { length: 0.2, width: 0.14, height: 0.15, over: 0.17, in: 0.075, tilt: rad(28) };
 const GRIP = 0.075;
 // The tower stands ahead of the lifter, its near end about on the centre line, as in the ref's photos.
 const TOWER_X = -0.24;
@@ -108,22 +108,23 @@ export default recipe({
   build({ seat = SEAT } = {}, M) {
     const weights = weightStack(V(TOWER_X, 0, STACK_Z), M, { rodTop: FRAME_TOP - 0.03, toward: -1 });
     const wheel = V(TOWER_X, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
-    // The tower's frame and pulley are built about the middle, then stood to the side.
-    const tower = [...stackFrame(STACK_Z, FRAME_TOP, M), ...pulley(V(0, wheel.y, wheel.z), M)];
+    // The tower's frame is built about the middle, then stood to the side.
+    const tower = stackFrame(STACK_Z, FRAME_TOP, M);
     tower.forEach((m) => { m.position.x += TOWER_X; });
     const drop = wire(M);
     const chest = V(0, 0.96, 0.13);
     // The mounting plate's face, where the tubing lands: 14 mm proud of the pad's front.
     const FACE = chest.z + 0.04 + 0.014;
     const chestPad = pad(0.24, 0.3, 0.08, M.vinyl, chest, { soft: 0.02 });
-    // The pivots' bar across the post's top, the plate behind it, and the drum behind that.
+    // The pivots' bar across the post's top, then the wedges' room, then the plate on a stub, and the drum.
     const housings = [];
     const fixed = [
       pad(0.2, 0.22, 0.014, M.frame, V(0, chest.y, FACE - 0.007), { soft: 0.004 }),
       tube(0.05, V(0, chest.y, FACE), V(0, chest.y, postZ(chest.y)), M.frame),
       pad(2 * SHOULDER_X + 0.26, 0.09, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.04), { soft: 0.006 }),
-      pad(0.42, 0.34, 0.02, M.frame, V(0, PIVOT_Y + 0.02, PLANE + 0.06), { soft: 0.008 }),
-      rod(0.17, V(0, PIVOT_Y, PLANE + 0.07), V(0, PIVOT_Y, PLANE + 0.095), M.frame),
+      pad(0.36, 0.28, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.27), { soft: 0.009 }),
+      rod(0.16, V(0, PIVOT_Y, PLANE + 0.28), V(0, PIVOT_Y, PLANE + 0.33), M.frame),
+      tube(0.06, V(0, PIVOT_Y - 0.1, postZ(PIVOT_Y - 0.1)), V(0, PIVOT_Y - 0.1, PLANE + 0.26), M.frame),
       ...SIDES.flatMap(({ s }) => {
         const joint = pivotJoint(M, pivotOf(s), V(0, 0, 1));
         housings.push(joint.housing);
@@ -133,8 +134,8 @@ export default recipe({
     // The lever's tubing is one length bent twice, mitred, built at rest and turned about the pivot.
     const levers = SIDES.map(({ s }) => ({
       arm: ((leg) => {
-        const arm = mitered([leg.pivot, leg.knee, leg.knee.clone().setZ(ARM_Z + 0.04)], LEVER_WIDTH, M.frame, { solid: false });
-        const wedge = pad(WEDGE.width, WEDGE.height, WEDGE.length, M.vinyl, leg.pivot.clone().add(V(-s * WEDGE.in, WEDGE.over, 0)).setZ(PLANE + 0.1 + WEDGE.length / 2), { soft: 0.02, solid: false });
+        const arm = mitered([leg.pivot, leg.knee, leg.knee.clone().setZ(ARM_Z - PAD.length / 2 + 0.02)], LEVER_WIDTH, M.frame, { solid: false });
+        const wedge = pad(WEDGE.width, WEDGE.height, WEDGE.length, M.vinyl, leg.pivot.clone().add(V(-s * WEDGE.in, WEDGE.over, 0)).setZ(PLANE + 0.04 + WEDGE.length / 2), { soft: 0.02, solid: false });
         wedge.rotation.z = s * WEDGE.tilt;
         arm.add(wedge);
         return arm;
