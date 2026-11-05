@@ -28,9 +28,10 @@ import safetyBar from './safety-bar.mjs';
 import trapBar from './trap-bar.mjs';
 import hyperextensionBench from './hyperextension-bench.mjs';
 import pecDeck from './pec-deck.mjs';
+import hipThrustMachine from './hip-thrust-machine.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
   pulldownMachine, preacherCurl, tBarRowMachine, cableCrossover,
-  smithMachine, powerRack, dipBelt, ezBar, hipMachine, safetyBar, lateralRaiseMachine, hyperextensionBench, pecDeck, trapBar, shrugMachine, gluteHamRaise,
+  smithMachine, powerRack, dipBelt, ezBar, hipMachine, safetyBar, lateralRaiseMachine, hyperextensionBench, pecDeck, trapBar, shrugMachine, hipThrustMachine, gluteHamRaise,
 ].map((r) => [r.name, r]));
