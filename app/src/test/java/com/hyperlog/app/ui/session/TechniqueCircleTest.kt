@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -23,6 +25,7 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.theme.techniqueColor
+import kotlin.math.abs
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -88,6 +91,20 @@ class TechniqueCircleTest {
 
     @Test
     fun eachTechniqueSetIsItsColourWithNoNumberInDark() = check(dark = true)
+
+    @Test
+    fun eachTechniqueSymbolIsCentredInItsCircle() {
+        show(dark = false)
+        val names = listOf("Drop set", "Myo-reps", "Lengthened partials", "Iso hold", "To failure")
+        techniques.forEachIndexed { i, _ ->
+            val tag = compose.onNodeWithTag(indexTag("${i + 2}"), useUnmergedTree = true).getBoundsInRoot()
+            val icon = compose.onNode(hasContentDescription(names[i]), useUnmergedTree = true).getBoundsInRoot()
+            // The circle sits at the column's start, IndexSize across, in the middle of the row.
+            val dx = (icon.left + icon.right) / 2 - (tag.left + IndexSize / 2)
+            val dy = (icon.top + icon.bottom) / 2 - (tag.top + tag.bottom) / 2
+            assertTrue("${names[i]} is $dx across and $dy down from its circle's centre", abs(dx.value) <= 0.5f && abs(dy.value) <= 0.5f)
+        }
+    }
 
     @Test
     fun aPlainSetKeepsItsNumberAndNoTechniqueColour() {

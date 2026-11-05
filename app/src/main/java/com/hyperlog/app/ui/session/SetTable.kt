@@ -797,7 +797,10 @@ private fun RowScope.IndexCell(
                 }
             }
             technique?.let {
-                SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(IndexIcon), tint = ink)
+                // Over the circle, centred in it: the column is wider than the circle.
+                Box(Modifier.size(IndexSize), contentAlignment = Alignment.Center) {
+                    SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(IndexIcon), tint = ink)
+                }
             }
             // The record's trophy on the lower corner, the technique's sibling: in ink, not the accent.
             // A disc of full ink, ringed in the row's surface so it stands off the circle in dark too.
