@@ -82,6 +82,7 @@ class NextRowClockRenders {
 
     @Test fun restPad() = render("rest-pad", session(restLeftMs = 130_000))
     @Test fun restPadHidden() = render("rest-pad-hidden", session(padVisible = false, restLeftMs = 130_000))
+    @Test fun restStart() = render("rest-start", session(restLeftMs = 179_000))
     @Test fun restLow() = render("rest-low", session(restLeftMs = 25_000))
     @Test fun afterRest() = render("after-rest", session(restLeftMs = -12_000))
     @Test fun breathing() = render("breathing", session(restLeftMs = 9_000, totalMs = 15_000, breathing = true))
