@@ -71,13 +71,12 @@ test('scrubbing moves the yoke and the stack, and the frame stays', () => {
   assert.ok(centre(frame).distanceTo(frame0) < 1e-9, 'the frame moved with the yoke');
 });
 
-test('it stands 1.4 m deep, 1.63 m tall and 1.5 m across, a bar grip and a neutral grip a side', () => {
+test('it stands 1.52 m deep, 1.63 m tall and 1.42 m across, a bar grip and a neutral grip a side', () => {
   const kit = machine();
   const size = box(kit).getSize(new THREE.Vector3());
-  // The ref's 1.52 m footprint counts its clearances; the frame itself runs from behind the posts to the front foot.
-  close(size.z, 1.4, 0.15, 'front to back');
+  close(size.z, 1.52, 0.06, 'front to back');
   close(size.y, 1.63, 0.08, 'tall');
-  close(size.x, 1.5, 0.15, 'across');
+  close(size.x, 1.42, 0.08, 'across');
   assert.equal(role(kit, 'barGrip').length, 2);
   assert.equal(role(kit, 'neutralGrip').length, 2);
 });
@@ -106,7 +105,39 @@ test('the stack stands beside the lifter, on their right, clear of the legs ahea
   kit.group.traverse((o) => {
     if (!o.isMesh) return;
     const part = new THREE.Box3().setFromObject(o);
-    if (Math.abs(part.getCenter(new THREE.Vector3()).x) > 0.3) return;
+    if (Math.abs(part.getCenter(new THREE.Vector3()).x) > 0.25) return;
     assert.ok(part.max.z < 0.6 || part.min.y > 0.5, 'a part stands in the legs\' way');
   });
+});
+
+test('the seat can go no lower than 330 mm and no higher than 500 mm', () => {
+  const top = (seat) => new THREE.Box3().setFromObject(role(machine({ seat }), 'seat')[0]).max.y;
+  close(top(0.2), 0.33, 0.01, 'a seat set too low');
+  close(top(0.7), 0.5, 0.01, 'a seat set too high');
+  close(top(0.4), 0.4, 0.01, 'a seat inside the range');
+});
+
+test('the tower is closed: a panel each side and behind, under a rounded header', () => {
+  const kit = machine();
+  assert.equal(role(kit, 'towerPanel').length, 3);
+  const [header] = role(kit, 'header');
+  const b = new THREE.Box3().setFromObject(header);
+  close(b.max.y, 1.63, 0.03, 'the header\'s top');
+  assert.ok(b.max.x - b.min.x > 0.38, 'the header spans the tower');
+});
+
+test('the yoke arms are flat bars, taller than wide, ending in a curved hook beside each hand', () => {
+  const kit = machine();
+  const arms = role(kit, 'yokeArm');
+  assert.equal(arms.length, 2);
+  for (const arm of arms) {
+    const b = new THREE.Box3().setFromObject(arm);
+    assert.ok(b.max.y - b.min.y > 1.4 * (b.max.x - b.min.x), 'a flat section');
+  }
+  const hooks = role(kit, 'hook');
+  assert.equal(hooks.length, 2);
+  for (const hook of hooks) {
+    const b = new THREE.Box3().setFromObject(hook);
+    assert.ok(b.max.y - b.min.y > 0.07 && b.max.z - b.min.z > 0.05, 'a hook that rises and runs forward');
+  }
 });

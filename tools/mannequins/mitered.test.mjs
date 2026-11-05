@@ -39,3 +39,11 @@ test('a pivot joint is a housing round the axle, and the axle runs through it pa
   assert.ok(axle.min.z < h.min.z && axle.max.z > h.max.z, 'the axle shows at both ends');
   assert.ok(h.max.x - h.min.x > axle.max.x - axle.min.x, 'the housing is wider than the axle');
 });
+
+test('a flat section is `tall` high and `w` wide, level along a level run', () => {
+  const flat = mitered([V(0, 1, 0), V(0, 1, 0.6), V(0.3, 1, 0.9)], 0.06, new THREE.MeshBasicMaterial(), { tall: 0.12 });
+  const b = box(flat);
+  assert.ok(Math.abs(b.max.y - b.min.y - 0.12) < 1e-6, `${((b.max.y - b.min.y) * 100).toFixed(1)} cm high`);
+  const side = new THREE.Box3().setFromObject(mitered([V(0, 1, 0), V(0, 1, 0.6)], 0.06, new THREE.MeshBasicMaterial(), { tall: 0.12 }));
+  assert.ok(Math.abs(side.max.x - side.min.x - 0.06) < 1e-6, 'and 6 cm wide');
+});

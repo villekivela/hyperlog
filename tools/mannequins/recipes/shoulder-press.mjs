@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  WHEEL, backPad, floorRail, hub, mitered, part, pivotJoint, pad, pulley, rod, rodGeometry, seatOn, span, stretchedTube, tube, weightStack,
+  WHEEL, backPad, bent, floorRail, hub, mitered, padGeometry, part, pivotJoint, pad, pulley, rodGeometry, seatOn, span, stretchedTube, tube, weightStack,
 } from '../parts.mjs';
 import { V, rad, spineLean } from '../rig.mjs';
 
@@ -32,12 +32,14 @@ const NEUTRAL = 0.12;
 const BAR = 0.13;
 // The seat's top and its z; the hips sit this far above it and a little behind its middle.
 const SEAT = [0.35, 0.02];
+/** The seat's top, held to its range, 330 to 500 mm. */
+const inRange = (top) => Math.min(0.5, Math.max(0.33, top));
 const SITS = 0.09;
 const hipOn = (top) => [top + SITS, SEAT[1] - 0.02];
 const PAD = { long: 0.86, w: 0.44, lean: rad(-6.5) };
 // The stack beside the lifter (their right is -x): the portal's middle [x, z], its half width and depth, and its top.
-const TOWER = { at: [-0.75, -0.05], halfW: 0.2, halfD: 0.2, top: 1.58, post: 0.08 };
-const FRONT = 0.3;
+const TOWER = { at: [-0.72, -0.05], halfW: 0.19, halfD: 0.2, top: 1.56, post: 0.08 };
+const FRONT = 0.56;
 const REAR = -0.92;
 const CRANK = 0.12;
 
@@ -72,23 +74,23 @@ export default recipe({
       rule: "the shoulders level with the grips at the bottom of the rep, the seat's top that far below them (350 mm for the mannequin, in a range of 330 to 500)",
       solve: ({ L, entry }) => {
         const lean = spineLean(entry.body.trunk, L);
-        return PIVOT[0] - (L.trunkUp * Math.cos(lean) + L.trunkBack * Math.sin(lean)) - SITS;
+        return inRange(PIVOT[0] - (L.trunkUp * Math.cos(lean) + L.trunkBack * Math.sin(lean)) - SITS);
       },
     },
     { sets: 'pad', rule: 'the back pad against the spine', solve: ({ L }) => L.back },
   ],
   linkage: ({ seat = SEAT[0] }) => ({
-    hip: hipOn(seat),
+    hip: hipOn(inRange(seat)),
     at: (value) => yokeAt(value),
   }),
-  build({ seat: seatTop = SEAT[0], pad: behind = 0.2 } = {}, M) {
+  build({ seat = SEAT[0], pad: behind = 0.2 } = {}, M) {
+    const seatTop = inRange(seat);
     const frame = [];
     const [tx, tz] = TOWER.at;
     // The rear frame's floor: a cross beam under the posts, a cross beam at the front foot, and a
     // beam down the middle between them for the seat and the pad's posts.
     frame.push(...floorRail(V(-0.45, 0.035, REAR), V(0.45, 0.035, REAR), M));
-    frame.push(...floorRail(V(-0.3, 0.035, FRONT), V(0.3, 0.035, FRONT), M));
-    frame.push(...floorRail(V(0, 0.035, REAR), V(0, 0.035, FRONT), M));
+    frame.push(...floorRail(V(0, 0.035, REAR), V(0, 0.035, FRONT - 0.2), M));
     for (const s of [-1, 1]) frame.push(...floorRail(V(s * BEARING_OUT, 0.035, REAR), V(s * BEARING_OUT, 0.035, FRONT), M));
     // The bearing posts, and the rake leg from each down and forward to the front foot.
     for (const s of [-1, 1]) {
@@ -108,22 +110,30 @@ export default recipe({
     frame.push(role(cushion, 'seat'), ...seatParts);
     frame.push(pad(0.2, 0.12, 0.16, M.frame, V(0, seatTop - 0.16, SEAT[1] + 0.12), { soft: 0.012 }));
 
-    // The tower: two portals, front and rear, each an inverted U with its top corners cut, tied across
-    // the top and along the floor, with a placard on the front.
+    // The tower: a closed frame. Two portals, front and rear, each an inverted U with a rounded top, tied
+    // along the floor and across the top, a panel each side and behind, and a rounded header over it
+    // all carrying the placard.
+    const arc = (x, y, z, sign) => Array.from({ length: 5 }, (_, i) => {
+      const t = (i / 4) * (Math.PI / 2);
+      return V(x + sign * 0.12 * (1 - Math.cos(t)), y + 0.12 * Math.sin(t), z);
+    });
     const portal = (z) => {
       const x0 = tx - TOWER.halfW;
       const x1 = tx + TOWER.halfW;
-      const top = TOWER.top;
-      return mitered([V(x0, 0.06, z), V(x0, top - 0.1, z), V(x0 + 0.1, top, z), V(x1 - 0.1, top, z), V(x1, top - 0.1, z), V(x1, 0.06, z)], TOWER.post, M.frame);
+      const turn = TOWER.top - 0.12;
+      return mitered([V(x0, 0.06, z), ...arc(x0, turn, z, 1), ...arc(x1, turn, z, -1).reverse(), V(x1, 0.06, z)], TOWER.post, M.frame);
     };
     frame.push(portal(tz + TOWER.halfD), portal(tz - TOWER.halfD));
     for (const s of [-1, 1]) {
       frame.push(...floorRail(V(tx + s * TOWER.halfW, 0.035, tz - TOWER.halfD), V(tx + s * TOWER.halfW, 0.035, tz + TOWER.halfD), M));
-      frame.push(tube(TOWER.post, V(tx + s * (TOWER.halfW - 0.0), TOWER.top - 0.03, tz - TOWER.halfD), V(tx + s * TOWER.halfW, TOWER.top - 0.03, tz + TOWER.halfD), M.frame));
+      const side = pad(0.012, TOWER.top - 0.2, 2 * TOWER.halfD - 0.04, M.frame, V(tx + s * TOWER.halfW, (TOWER.top + 0.1) / 2, tz), { soft: 0.004, solid: false });
+      frame.push(role(side, 'towerPanel'));
     }
-    frame.push(...floorRail(V(tx, 0.035, tz + TOWER.halfD), V(0.3, 0.035, FRONT), M));
-    frame.push(pad(0.34, 0.12, 0.012, M.vinyl, V(tx, TOWER.top - 0.17, tz + TOWER.halfD + 0.046), { soft: 0.003, solid: false }));
-    const weights = weightStack(V(tx, 0, tz), M, { rodTop: TOWER.top - 0.04, toward: 1 });
+    frame.push(role(pad(2 * TOWER.halfW - 0.04, TOWER.top - 0.2, 0.012, M.frame, V(tx, (TOWER.top + 0.1) / 2, tz - TOWER.halfD), { soft: 0.004, solid: false }), 'towerPanel'));
+    frame.push(role(pad(2 * TOWER.halfW + 0.1, 0.22, 2 * TOWER.halfD + 0.1, M.frame, V(tx, TOWER.top - 0.01, tz), { soft: 0.06, solid: false }), 'header'));
+    frame.push(pad(0.3, 0.1, 0.012, M.vinyl, V(tx, TOWER.top - 0.01, tz + TOWER.halfD + 0.056), { soft: 0.003, solid: false }));
+    frame.push(...floorRail(V(tx, 0.035, tz + TOWER.halfD), V(BEARING_OUT, 0.035, FRONT - 0.2), M));
+    const weights = weightStack(V(tx, 0, tz), M, { rodTop: TOWER.top - 0.12, toward: 1 });
     role(weights.parts.find((p) => p.userData.stack), 'stackHead');
     frame.push(...weights.parts);
     // The cable's two floor pulleys, under the crank's tip at rest and at the stack's foot, and its
@@ -143,28 +153,33 @@ export default recipe({
     const [y0, z0] = PIVOT;
     const beam = role(mitered([
       V(-ARMS_OUT, y0, z0 + 0.45), V(-ARMS_OUT, y0, z0 + 0.3), V(-BEARING_OUT, y0, z0), V(BEARING_OUT, y0, z0), V(ARMS_OUT, y0, z0 + 0.3), V(ARMS_OUT, y0, z0 + 0.45),
-    ], 0.09, M.metal, { solid: false }), 'yokeBeam');
+    ], 0.07, M.metal, { solid: false, tall: 0.12 }), 'yokeBeam');
     const crank = stretchedTube(0.06, M.metal);
     const knob = hub(M, V(0, 0, 0));
     const arms = [-1, 1].map((s) => ({
       s,
       // The overhand bar across the arm's end, and the neutral grip beside it, pointing forward, with a horn up at its end.
-      arm: stretchedTube(0.09, M.metal),
+      arm: role(part(padGeometry(0.07, 1, 0.12, 0.012), M.metal, { solid: true }), 'yokeArm'),
       bar: role(part(rodGeometry(0.0175), M.vinyl, { held: true }), 'barGrip'),
       neutral: role(part(rodGeometry(0.0205), M.vinyl, { held: true }), 'neutralGrip'),
-      horn: part(rodGeometry(0.0205), M.vinyl),
+      // The curved hook beyond the grip, built at the bottom of the rep and turned with the beam.
+      hook: role(bent(`shoulder_press_hook_${s}`, [
+        V(s * GRIPS_OUT, y0, z0 + REACH + NEUTRAL / 2 - 0.02), V(s * GRIPS_OUT, y0, z0 + REACH + NEUTRAL / 2 + 0.03),
+        V(s * (GRIPS_OUT - 0.01), y0 + 0.045, z0 + REACH + NEUTRAL / 2 + 0.06), V(s * (GRIPS_OUT - 0.03), y0 + 0.1, z0 + REACH + NEUTRAL / 2 + 0.045),
+      ], 0.0205, M.vinyl, { segments: 12 }), 'hook'),
       stub: part(rodGeometry(0.02), M.metal),
     }));
-    const moving = [...bearings.map((b) => b.housing), beam, crank, knob, ...arms.flatMap((a) => [a.arm, a.bar, a.neutral, a.horn, a.stub])];
+    const moving = [...bearings.map((b) => b.housing), beam, crank, knob, ...arms.map((a) => a.hook), ...arms.flatMap((a) => [a.arm, a.bar, a.neutral, a.stub])];
     const place = (value) => {
       const { pivot, ahead } = yokeAt(value);
-      const upward = V(0, Math.cos(value), -Math.sin(value));
       const end = pivot.clone().addScaledVector(ahead, REACH + NEUTRAL / 2);
       const points = [];
       // The beam turned about the pivot, `value` up from level ahead (a turn about x of -value).
       const turn = new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -value);
-      beam.quaternion.copy(turn);
-      beam.position.copy(pivot).sub(pivot.clone().applyQuaternion(turn));
+      for (const turning of [beam, ...arms.map((a) => a.hook)]) {
+        turning.quaternion.copy(turn);
+        turning.position.copy(pivot).sub(pivot.clone().applyQuaternion(turn));
+      }
       const tip = pivot.clone().addScaledVector(ahead, -CRANK);
       span(crank, pivot, tip);
       knob.position.copy(tip);
@@ -175,8 +190,6 @@ export default recipe({
         // The neutral grip inboard of the arm, joined to it by a stub at its front end, a horn up from its front.
         span(a.neutral, at(end.clone().addScaledVector(ahead, -NEUTRAL), GRIPS_OUT), at(end, GRIPS_OUT));
         span(a.stub, at(end, ARMS_OUT), at(end, GRIPS_OUT));
-        const hornFoot = end.clone().addScaledVector(ahead, 0.02);
-        span(a.horn, at(hornFoot, GRIPS_OUT), at(hornFoot.clone().addScaledVector(upward, 0.13), GRIPS_OUT - 0.05));
         // The bar grip across the end, beyond the neutral grip.
         const tipAt = end.clone().addScaledVector(ahead, 0.09);
         span(a.bar, at(tipAt, ARMS_OUT), at(tipAt, ARMS_OUT - BAR));
@@ -204,7 +217,7 @@ export default recipe({
       drive(P, P0) {
         const { value, points } = place(P.linkage?.value ?? P.yoke ?? 0);
         const board = backRest.fit(P0?.hipC ? P0 : rest);
-        span(support, V(0, 0.07, PIVOT[1] + 0.3), board.clone().addScaledVector(rest.u, -0.1));
+        span(support, V(0, seatTop - 0.1, SEAT[1] - 0.14), board.clone().addScaledVector(rest.u, -0.22));
         weights.lift(0);
         return {
           joints: { yoke: { value, origin: V(0, ...PIVOT) } },

@@ -490,16 +490,18 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
   (the shoulders).
 - `shoulder_press` (#225, the machine kind of `machine_shoulder_press`, posed with the `shoulder_press`
-  motion in the `shoulder-press` batch) has a seat solved for the mannequin (about 0.4 m: the shoulders level
-  with the grips at the bottom of the rep, in a range of 330 to 500 mm) against a back pad that follows the spine, on a post up from a rear frame; two
-  bearing posts behind the pad carry the yoke 980 mm up, each braced by a rake leg down and forward
-  to the seat's front. The yoke is a Y: a beam behind the pad angled forward at each end, then an arm a
-  side straight ahead, one body on a revolute joint about the bearings, its value the angle up from
-  level ahead of the line to the grips: 0° at the bottom of the rep, the grips 980 mm up and 700 apart,
-  900 mm ahead of the pivot, to 40° at the top, 580 mm higher and about 200 mm further back. Each arm ends in
-  a bar grip (overhand) and a neutral grip with a horn above it; the contact ties the hands to the neutral
-  grips, and the back to the pad. A crank behind the pivot draws a cable under the floor to the stack, in a
-  portal frame 1.63 m tall beside the lifter, on their right, its front level with the grips; the stack
+  motion in the `shoulder-press` batch) has a seat solved for the mannequin (about 0.4 m: the shoulders
+  level with the grips at the bottom of the rep) and held to its range of 330 to 500 mm, against a back pad
+  that follows the spine, on a short post from the seat's rear. Two bearing posts behind the pad carry the
+  yoke 980 mm up, each braced by a rake leg down and forward to the seat's front; side rails run on to a
+  front foot, the whole 1.52 m deep. The yoke is a Y: a flat beam behind the pad angled forward at each end,
+  then a flat arm (70 by 120 mm) a side straight ahead, one body on a revolute joint about the bearings,
+  its value the angle up from level ahead of the line to the grips: 0° at the bottom of the rep, the grips
+  980 mm up and 700 apart, 900 mm ahead of the pivot, to 40° at the top, 580 mm higher and about 200 mm
+  further back. Each arm ends in a bar grip (overhand) and a neutral grip with a curved hook beyond it;
+  the contact ties the hands to the neutral grips, and the back to the pad. A crank behind the pivot draws a
+  cable under the floor to the stack, in a closed tower 1.63 m tall (panels each side and behind, a rounded
+  header over a placard) beside the lifter, on their right, its front level with the grips; the stack
   rises with the yoke. Options: `seat`, the seat's top, and `pad`, how far behind the spine the pad's face
   stands, each solved for the mannequin. In the studio, `npm run studio`, open `Machine Shoulder Press`
   to see the pose, or `shoulder press` under Kits for the machine alone, and scrub the yoke.

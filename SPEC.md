@@ -1672,8 +1672,10 @@ gallery (Technique videos).
       arm) to 40° at the top (580 mm higher, about 200 mm further back). It lifts its stack, which stands
       beside the lifter, on their right, its front level with the grips (the demo's front view). The seat is
       the one adjustment (`seat`, its top in metres), solved from the mannequin so the shoulders are level
-      with the grips at the bottom; the pad follows the spine. The kit was rebuilt from where the ref's
-      photos put each part, and reviewed against them by a reviewer who had not seen how it was built.
+      with the grips at the bottom, held to the ref's range of 330 to 500 mm; the pad follows the spine. The
+      kit stands 1.52 m deep, 1.63 m tall and 1.42 m across, a closed tower with a rounded header, a Y yoke of
+      flat arms ending in curved hook grips. It was built from where the ref's photos put each part, and
+      reviewed against them by a reviewer who had not seen how it was built, until it found nothing that matters.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
