@@ -150,8 +150,8 @@ export default recipe({
     return {
       parts: [
         // The seat, cantilevered back from the post.
-        pad(0.38, 0.075, 0.3, M.vinyl, V(0, seat - 0.0375, SEAT_Z), { soft: 0.024 }),
-        pad(0.3, 0.012, 0.24, M.frame, V(0, seat - 0.081, SEAT_Z), { soft: 0.003 }),
+        pad(0.32, 0.075, 0.3, M.vinyl, V(0, seat - 0.0375, SEAT_Z), { soft: 0.024 }),
+        pad(0.26, 0.012, 0.24, M.frame, V(0, seat - 0.081, SEAT_Z), { soft: 0.003 }),
         tube(0.05, V(0, seat - 0.11, SEAT_Z), V(0, seat - 0.11, postZ(seat - 0.11)), M.frame),
         tube(0.07, POST.foot, POST.top, M.frame),
         // The floor: a spine from the rear foot to the tower, across which the tower stands.

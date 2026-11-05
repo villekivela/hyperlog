@@ -60,9 +60,9 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 |---|---|---|---|
 | Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
 | Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
-| Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate with a rounded top behind that, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
+| Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate mostly covered by the wedges, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
 | Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, a beam back along the pad | a thin dog-leg | as measured |
-| Wedges | a tight V over the pivots, running fore and aft ahead of the drum, a valley between, part of the levers | missing | as measured |
+| Wedges | long slabs about as long as the arm pads, a tight V over the pivots, running fore and aft on the lifter's side of the plate, a valley between, the struts carrying on into them; they drop in front of the plate as the arms rise | missing | as measured |
 | Arm pads | about 300 long, 140 through, on the outside of the upper arm at the elbow | 250 long, 100 through, past the elbow | as measured |
 | Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
 | Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
@@ -74,4 +74,4 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 - The pivots stand at 1.15 m and the seat at 0.56 m for the mannequin, above the table's estimates (1.05 to 1.10 m, about 0.48 m), from their shares of the tower in the demo; the shoulder stays on the pivot.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
 - The standing exercise has no reference model; its geometry comes from one video of two other makes. It needs a kit of its own, so it stays unposed: the owner's call (#241).
-- Left plain: a square tower where the real one has a rounded corner, an even stack where the real one is narrow over wide, no pulley plate or cable from the levers, round pads where the real ones are D sections.
+- Left plain: a square tower, 17% narrower than the real rounded one (the shared stack frame), an even stack where the real one is narrow over wide, no pulley plate or cable from the levers, round pads where the real ones are D sections. The pivots stand wider than the photo's, on the mannequin's shoulders, which is what keeps the pads on the arms.
