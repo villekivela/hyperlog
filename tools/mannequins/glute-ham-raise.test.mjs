@@ -7,7 +7,10 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
 import { EQUIPMENT, KITS, MACHINES, buildKit, shownAlone } from './kit.mjs';
-import { buildStage } from './stage.mjs';
+import { buildStage, FRAMES } from './stage.mjs';
+import { prepare } from './entries.mjs';
+import { CHECKS, checkStage } from './checks.mjs';
+import { wpos } from './rig.mjs';
 import { POSES } from './poses.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -162,4 +165,54 @@ test('the studio shows it alone, with nothing to scrub', async () => {
   const stage = await buildStage(entry);
   stage.pose(0);
   assert.ok(stage.kit.kits.glute_ham_raise);
+});
+
+// The exercise on the kit (#230): the lifter kneels on the pads, the shins level back to the rollers with the soles
+// on the plate, and the body, hips straight, lowers about the knees from upright to level.
+const stood = async () => {
+  const entry = prepare('glute_ham_raise');
+  return { entry, stage: await buildStage(entry) };
+};
+const at = (stage, d, bone) => { stage.pose(d); stage.scene.updateMatrixWorld(true); return wpos(stage.rig.bones[bone]); };
+const between = (a, b, c) => THREE.MathUtils.radToDeg(a.clone().sub(b).angleTo(c.clone().sub(b)));
+
+test('it is posed on the kit, every frame passing every check', async () => {
+  const { entry, stage } = await stood();
+  assert.deepEqual(Object.keys(entry.kit), ['glute_ham_raise']);
+  const checks = checkStage(entry, stage);
+  for (const c of CHECKS) assert.ok(checks[c].ok, `${c}: frame ${checks[c].frame}, ${checks[c].found}`);
+});
+
+test('the knees bend 90° at the top, the thighs upright, and straighten to within 15° at the bottom, the body level', async () => {
+  const { stage } = await stood();
+  const knee = (d) => between(at(stage, d, 'thigh_l'), at(stage, d, 'calf_l'), at(stage, d, 'foot_l'));
+  close(knee(0), 92, 6, 'the knee at the top');
+  assert.ok(knee(1) > 165, `the knee at the bottom ${knee(1).toFixed(1)}°`);
+  const lean = (d) => { const t = at(stage, d, 'thigh_l'); const k = at(stage, d, 'calf_l'); return THREE.MathUtils.radToDeg(Math.atan2(Math.hypot(t.x - k.x, t.z - k.z), t.y - k.y)); };
+  assert.ok(lean(0) < 12, `the thighs lean ${lean(0).toFixed(1)}° from upright at the top`);
+  assert.ok(lean(1) > 70, `the thighs lean ${lean(1).toFixed(1)}° from upright at the bottom`);
+});
+
+test('the hips stay straight through the rep: the trunk runs on from the thigh within 20°', async () => {
+  const { stage } = await stood();
+  for (let f = 0; f < FRAMES; f++) {
+    const d = f / (FRAMES - 1);
+    const angle = between(at(stage, d, 'calf_l'), at(stage, d, 'thigh_l'), at(stage, d, 'spine_03'));
+    assert.ok(angle > 160, `frame ${f}: the hip at ${angle.toFixed(1)}°`);
+  }
+});
+
+test('the ankles and knees stay where they are, the ankles between the rollers and the soles on the plate', async () => {
+  const { stage } = await stood();
+  const kit = stage.kit.kits.glute_ham_raise;
+  for (const bone of ['foot_l', 'foot_r', 'calf_l', 'calf_r']) {
+    const first = at(stage, 0, bone);
+    for (let f = 1; f < FRAMES; f++) assert.ok(at(stage, f / (FRAMES - 1), bone).distanceTo(first) < 0.01, `${bone} moves at frame ${f}`);
+  }
+  for (const [k, [roller, plate]] of [['l', [contact(kit, 'ankleRollers').at[1], contact(kit, 'footPlate').at[1]]], ['r', [contact(kit, 'ankleRollers').at[0], contact(kit, 'footPlate').at[0]]]]) {
+    const ankle = at(stage, 0, `foot_${k}`);
+    close(ankle.x, roller.x, 0.04, `the ${k} ankle across`);
+    close(ankle.y, roller.y, 0.03, `the ${k} ankle between the rollers`);
+    assert.ok(ankle.z > plate.z && ankle.z - plate.z < 0.12, `the ${k} ankle ${(ankle.z - plate.z).toFixed(3)} m ahead of the plate`);
+  }
 });

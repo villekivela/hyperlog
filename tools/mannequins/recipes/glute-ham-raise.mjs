@@ -6,10 +6,14 @@
 // the plate. Nothing on it moves.
 //
 // The assembly slides back along the spine in 1 in steps, locked by a pop pin: `slide` counts the steps
-// from the most forward hole (0 to 12, about 300 mm), where the plate's face is 348 mm behind the pads'
-// rear edge (a chosen place, the ref gives none). The fit rule sets it from the shin: the plate a shin
-// and the ankle to the sole behind the knee, which rests 60 mm ahead of the pads' rear edge. That is
-// 450 mm for the ref's 0.43 m shin, step 4, the default. Back extensions and sit-ups want it further back.
+// from the most forward hole (0 to 12, about 300 mm), where the plate's face is 300 mm behind the pads'
+// rear edge (a chosen place, the ref gives none).
+//
+// The lifter's knees rest on the pads' crest (the video's frames at 0:04.5 and 0:09.5, the sit-up photo's
+// pad under the thighs): the knee's joint a leg's thickness above the crest and just behind it, the thighs
+// lying along the pads at the bottom of the rep, the shin sloping gently down and back to the ankle in
+// the roller gap, the sole on the plate. The fit rule sets `slide` from the shin so the knee comes to
+// that place; `linkage` says where the knee, the ankle and the sole are for a mannequin of measurements `L`.
 import { recipe } from '../recipe.mjs';
 import { halfRoundGeometry, knob, pad, rod, rollerGeometry, tube, turnedPart } from '../parts.mjs';
 import { STRAIGHT, V } from '../rig.mjs';
@@ -17,17 +21,16 @@ import { STRAIGHT, V } from '../rig.mjs';
 const IN = 0.0254;
 const STEP = IN;
 const MOST = 12;
-// The ref's setting, 450 mm, is the fifth hole.
-const DEFAULT = 4;
+const DEFAULT = 1;
 // The base: two floor rails 45 in apart outside, 1740 mm long, with a rubber cap on each end.
 const RAIL = { w: 0.0635, x: 0.5715 - 0.0318, rear: -0.76, front: 0.98, cap: 0.01 };
 const BEAM = 0.0635;
-// Each upright stands on a crossmember between the rails: the front one under the pads, up to the pad
-// plate at 836 mm (the manual's 29 in part with the plate on it, about 30 in over the rails), the rear
-// 19 in tall, with the spine bolted to them both.
-const FRONT = { z: 0.25, top: 0.836 };
-const REAR = { z: -0.7, top: 19 * IN };
-const SPINE = { y: 0.43, w: 0.0508 };
+// Each upright stands on a crossmember between the rails, the manual's 29 in front and 19 in rear
+// parts standing on the rails' tops: the front one up to the pad plate, the rear one to the spine,
+// which is bolted to the two.
+const FRONT = { z: 0.25, top: BEAM + 29 * IN };
+const REAR = { z: -0.7, top: BEAM + 19 * IN };
+const SPINE = { y: REAR.top - 0.0254, w: 0.0508 };
 // The pads: two, 230 wide with 40 between, 500 long and 230 tall, flat side down on a plate, their
 // crest 1092 mm up.
 const PAD = { w: 0.23, gap: 0.04, length: 0.5, height: 0.23, top: 1.092, plate: 0.026 };
