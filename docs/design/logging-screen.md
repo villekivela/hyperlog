@@ -90,8 +90,9 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | Keys | surfaceContainerHighest |
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
-| Rest pill | primaryContainer, time left laid over it in onPrimaryContainer at 16%; surfaceContainerHighest after rest |
-| Breathing pill | tertiaryContainer |
+| Next row, resting | the row drains in primaryContainer across its width, text and digits in onPrimaryContainer; no fill after rest, the digits in onSurfaceVariant |
+| Next row, breathing | drains in tertiaryContainer |
+| Next row, holding | fills in secondaryContainer toward the target; primary, text in onPrimary, once reached |
 | Day done strip | primaryContainer, rounded 28 dp at the top; its records in onPrimaryContainer, the set line at 80% |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
@@ -114,7 +115,7 @@ Two fixed scales sit outside the theme:
 
 ```
  status bar
- Barbell Bench Press              (⏱ 1:42)  ⋮   ← name opens the exercise sheet; pill the rest sheet
+ Barbell Bench Press                        ⋮   ← name opens the exercise sheet
  ╭────────────────────────╮
  │ ⇄ for DB Bench Press   │                      ← outlined chip, only for a swap (or `1a + Leg Curl`)
  ╰────────────────────────╯
@@ -146,8 +147,8 @@ circles, `○` a check to do, `(✓)` a done check.
 
 ## Components
 
-**Header.** The exercise name (headlineSmall, ellipsized; a tap opens the exercise sheet), the one
-clock (rest, breathing or hold pill) and ⋮ on one row, at least 64 dp. Under it, only when they
+**Header.** The exercise name (headlineSmall, ellipsized; a tap opens the exercise sheet) and ⋮ on
+one row, at least 64 dp, with the whole width for the name: the clock is on the Next row. Under it, only when they
 apply, outlined chips: `swap_horiz` and `for <planned exercise>` for a swapped slot, `1a + <partner>`
 for a superset (both when both apply). They say what the slot is, and a tap acts on it: the swap
 chip opens Swap (while the exercise can still be swapped), the superset chip brings the partner on
@@ -257,11 +258,15 @@ Keys: digits, backspace, − and + (one ladder rung for weight, one rep for reps
 `.` (weight only) and ✓. ✓ is one key, the same size as the others, filled primary. On the weight
 field it shows → instead.
 
-**Timer.** A 48 dp pill in the header, primaryContainer, so rest reads from across the gym. It
-drains left to right during rest. After rest it counts
-up (`+0:12`) in a muted container until the next set is logged. Before a myo mini-set it is a
-15 s breathing countdown with an `air` symbol. Tapping it during rest opens the rest sheet:
-−15, the time, +15, End rest.
+**Timer (owner, 2026-11-05).** The Next row at the bottom is the session's only clock, 64 dp tall
+or more with the text size. During rest its whole width drains from full to empty in
+primaryContainer, the next exercise's name on it and the time left in headlineMedium digits at the
+end, so a glance tells how far through the rest you are. The set table stays visible, with the pad
+shown or hidden. Tapping the digits (48 dp tall at least) opens the rest sheet: −15, the time, +15,
+End rest; tapping the rest of the row goes to the next exercise, as without a clock. After rest the
+row has no fill and counts up (`+0:12`) in onSurfaceVariant until the next set is logged. Before a
+myo mini-set the row is a 15 s breathing countdown, drained in tertiaryContainer; the digits can't
+be tapped, and it goes away at zero.
 
 **Sheets** (modal bottom sheets, surfaceContainerLow, 28 dp text edge). Their rows sit in
 surfaceContainerHighest groups 12 dp in, with the picked or current row in secondaryContainer
@@ -367,10 +372,10 @@ buttons this way: the way out first, the action last, at the right.
   row shows the target; during it, the done ones and the active one. The weight is muted and can't be tapped.
 - **Iso hold**: one sub-row, its value in seconds (`20 s`); the weight is the set's, muted.
   The strip reads `pan_tool` Hold 20 s, a tonal **Start** / **Stop**, and Finish set. While it
-  runs, the header pill shows `pan_tool` and the time held, filling toward the target, and turns
-  primary when it's reached.
-- **Breathing pill**: `air` and the 15 s countdown, drained like rest; it can't be tapped, and it
-  goes away at zero.
+  runs, the Next row shows the time held, filling toward the target, and turns primary with one
+  buzz when it's reached.
+- **Breathing countdown**: the 15 s countdown on the Next row, drained like rest; its digits can't be tapped,
+  and it goes away at zero.
 - **Set sheet** (tap the index circle of a set still to do): "Set 3", then
   "Intensity technique" with radio rows None and the five techniques (name, its numbers, its
   symbol in tertiary at the end). Picking one applies it and closes. For a unilateral exercise's

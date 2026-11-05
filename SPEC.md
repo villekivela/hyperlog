@@ -853,6 +853,14 @@ each planned day with the training day it lands on, and never changes the day:
      technique's tall pill is never cut by a row shape.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
+     - **The Next row is the session's clock** (owner, 2026-11-05): the header has no timer. During
+       rest the whole row drains from full to empty with the time left in large digits, and the set
+       table stays visible, with the pad shown or hidden. A tap on the digits opens the rest sheet
+       (+15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
+       is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
+       still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
+       row; the hold fills toward its target instead of draining. The lock screen notification and
+       the rest rules don't change.
    - **Plate calculator** for barbell and plate-loaded exercises.
      - Barbell exercises use the gym's plates; machines whose ladder is plates use the gym's too,
        or their own pairs if they have them. While
