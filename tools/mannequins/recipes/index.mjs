@@ -20,9 +20,10 @@ import smithMachine from './smith-machine.mjs';
 import powerRack from './power-rack.mjs';
 import hipMachine from './hip-machine.mjs';
 import ezBar from './ez-bar.mjs';
+import safetyBar from './safety-bar.mjs';
 
 export const RECIPES = Object.fromEntries([
   barbell, dumbbells, bench, platform, cableTower, cableColumn, legPress, chestPress, legExtension, legCurl, calfRaise, squatMachine, rowMachine,
   pulldownMachine, preacherCurl, tBarRowMachine, cableCrossover,
-  smithMachine, powerRack, ezBar, hipMachine,
+  smithMachine, powerRack, ezBar, hipMachine, safetyBar,
 ].map((r) => [r.name, r]));
