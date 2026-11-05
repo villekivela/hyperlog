@@ -855,9 +855,9 @@ each planned day with the training day it lands on, and never changes the day:
      the technique and opens the set's sheet.
    - **The active row has no highlight.** The row being done (a set, a drop, a mini-set, a hold,
      a warm-up on the pad or a row being corrected) sits flat like the others; its kg and reps
-     are outlined cells, the focused one outlined in primary. A set's index circle is filled with
-     primary while it is being done, and stays so through its drops or mini-sets, so a
-     technique's tall pill is never cut by a row shape.
+     are outlined cells, the focused one outlined in primary. A plain set's index circle is filled with
+     primary while it is being done; a technique set's keeps its colour, through its drops or
+     mini-sets too, so a technique's tall pill is never cut by a row shape.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
    - **Plate calculator** for barbell and plate-loaded exercises.

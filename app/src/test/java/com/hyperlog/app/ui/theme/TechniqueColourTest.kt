@@ -60,7 +60,7 @@ class TechniqueColourTest {
     @Test
     fun theIconKeepsThreeToOneOnItsColour() {
         for (dark in listOf(false, true)) for (kind in TechniqueKind.entries) {
-            val ratio = contrast(onTechniqueColor(kind, dark), techniqueColor(kind, dark))
+            val ratio = contrast(onTechniqueColor(dark), techniqueColor(kind, dark))
             assertTrue("$kind (dark=$dark) icon is $ratio:1", ratio >= 3f)
         }
     }

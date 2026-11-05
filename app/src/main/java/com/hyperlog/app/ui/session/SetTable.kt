@@ -521,7 +521,7 @@ private fun ActiveSetRow(
 ) {
     RowFrame(RowHeight) {
         if (editing) EditCell(stringResource(R.string.correct_set_editing, i + 1))
-        else IndexCell("${i + 1}", Tone.Active, technique, join, RowHeight,
+        else IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Active, technique, join, RowHeight,
             onClick = { table.onSetOptions(i) }, description = stringResource(R.string.set_options_description, i + 1), bold = true)
         LastCell(last)
         EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
@@ -554,7 +554,7 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
     // Anything logged can be tapped and corrected.
     RowFrame(RowHeight, onClick = onClick, clickLabel = correct,
         modifier = if (onClick != null) Modifier.semantics { contentDescription = correct } else Modifier) {
-        IndexCell("${i + 1}", if (open) Tone.Active else if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight, bold = open,
+        IndexCell("${i + 1}", if (technique != null) Tone.Technique else if (open) Tone.Active else Tone.Plain, technique, join, RowHeight, bold = open,
             record = table.current.recordAt(i))
         LastCell(last)
         ValueText(formatKg(set.weightKg), ColKg, color)
@@ -752,6 +752,7 @@ private fun RowScope.IndexCell(
     val dark = isDarkSurface()
     val pillTechnique = technique ?: LocalPillTechnique.current
     val pill = pillTechnique?.let { techniqueColor(it.kind, dark) } ?: cs.tertiaryContainer
+    val pillInk = if (pillTechnique != null) onTechniqueColor(dark) else cs.onTertiaryContainer
     val fill = when (tone) {
         Tone.Plain -> cs.surfaceContainerHighest
         Tone.Active -> cs.primary
@@ -760,7 +761,7 @@ private fun RowScope.IndexCell(
     val ink = when (tone) {
         Tone.Plain -> cs.onSurfaceVariant
         Tone.Active -> cs.onPrimary
-        Tone.Technique -> pillTechnique?.let { onTechniqueColor(it.kind, dark) } ?: cs.onTertiaryContainer
+        Tone.Technique -> pillInk
     }
     Box(
         Modifier.width(ColIndex).fillMaxHeight().then(if (label != null) Modifier.testTag(indexTag(label)) else Modifier).drawBehind {
@@ -790,7 +791,7 @@ private fun RowScope.IndexCell(
                     Text(
                         label,
                         style = MaterialTheme.typography.titleSmall,
-                        color = if (join == Join.None || tone == Tone.Active) ink else cs.onTertiaryContainer,
+                        color = ink,
                         fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
                     )
                 }
@@ -814,7 +815,7 @@ private fun RowScope.IndexCell(
                 Modifier.align(Alignment.BottomStart).padding(bottom = 8.dp).size(IndexSize).clip(CircleShape)
                     .clickable(onClickLabel = text, onClick = add).semantics { contentDescription = text },
                 contentAlignment = Alignment.Center,
-            ) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = pillTechnique?.let { onTechniqueColor(it.kind, dark) } ?: cs.onTertiaryContainer) }
+            ) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = pillInk) }
         }
     }
 }

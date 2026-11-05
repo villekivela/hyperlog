@@ -19,6 +19,5 @@ fun techniqueColor(kind: TechniqueKind, dark: Boolean): Color = Color(
     },
 )
 
-/** The icon on a technique's fill: white in light, near-black in dark. */
-@Suppress("UNUSED_PARAMETER")
-fun onTechniqueColor(kind: TechniqueKind, dark: Boolean): Color = if (dark) Color(0xFF141416) else Color(0xFFFFFFFF)
+/** The icon on any technique's fill: white in light, near-black in dark. */
+fun onTechniqueColor(dark: Boolean): Color = if (dark) Color(0xFF141416) else Color(0xFFFFFFFF)

@@ -49,9 +49,6 @@ enum class TechniqueLook(val kind: TechniqueKind, val symbol: Symbol, @StringRes
 /** The symbol a technique is shown with. */
 fun Technique.symbol(): Symbol = TechniqueLook.of(kind).symbol
 
-/** The technique whose symbol is [symbol]. */
-private fun TechniqueLook.Companion.of(symbol: Symbol): TechniqueLook = TechniqueLook.entries.first { it.symbol == symbol }
-
 /** The technique's name in the set sheet: `Drop set`, `Myo-reps`… */
 @Composable
 fun techniqueName(technique: Technique): String = stringResource(TechniqueLook.of(technique.kind).label)
@@ -73,7 +70,7 @@ fun techniqueText(technique: Technique): String = when (technique) {
 
 /**
  * Sets summed up in one line: `1 × 4–6 [1] · ↘ 2 × 6–8 [1]`, each target RIR an outlined chip, a
- * back-off run marked with `south_east` and each technique's symbol after its run, in tertiary.
+ * back-off run marked with `south_east` and each technique's symbol after its run, in the technique's colour.
  */
 @Composable
 fun SetSummary(
@@ -84,6 +81,7 @@ fun SetSummary(
 ) {
     val chunks = planChunks(sets)
     val symbols = mutableMapOf<String, Symbol>()
+    val kinds = mutableMapOf<String, TechniqueKind>()
     val chips = mutableSetOf<RirChipKey>()
     val parts = chunks.map { c ->
         if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
@@ -101,6 +99,7 @@ fun SetSummary(
             c.techniques.distinct().forEach { t ->
                 val key = t.symbol().name
                 symbols[key] = t.symbol()
+                kinds[key] = t.kind
                 append(" ")
                 appendInlineContent(key, t.symbol().name)
             }
@@ -109,7 +108,7 @@ fun SetSummary(
     val dark = isDarkSurface()
     val inline = symbols.mapValues { (key, symbol) ->
         InlineTextContent(Placeholder(1.2.em, 1.2.em, PlaceholderVerticalAlign.Center)) {
-            SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else techniqueColor(TechniqueLook.of(symbol).kind, dark))
+            SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else techniqueColor(kinds.getValue(key), dark))
         }
     } + rirChipContent(chips, style.fontSize)
     Text(text, modifier, style = style, color = color, inlineContent = inline, maxLines = 2, overflow = TextOverflow.Ellipsis)

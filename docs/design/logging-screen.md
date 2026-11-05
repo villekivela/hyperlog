@@ -76,7 +76,7 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | Screen and table | surface (the one screen that keeps it, so the pad stands off it); rows flat on it |
 | Active row | no fill: its cells outlined in outline, the index circle primary |
 | Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
-| Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a set through its drops or mini-sets |
+| Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a plain set through its drops or mini-sets; a technique set keeps its colour throughout |
 | Technique set | circle and tall pill in the technique's colour (`techniqueColor`), its symbol in `onTechniqueColor` filling the circle; no number, no badge |
 | Record set | a 16 dp onSurface disc on the index circle's lower corner, ringed 1.5 dp in surface, its 11 dp `trophy` cut out in surface |
 | Record mark in set text | `trophy` at 1.2 em after the RIR chip, in the text's own colour |
@@ -165,11 +165,10 @@ trend symbol, and the old app's set for a machine with no history on it (`histor
 (only once there is history), `kg`, `Reps` (`L / R` for a split set), `RIR`, blank over ✓.
 
 **Index column.** A 32 dp circle: `W` for a warm-up, the set number for a work set
-(surfaceContainerHighest, onSurfaceVariant). In the active row it is filled with primary, with a
-bold onPrimary number, technique or not; a set keeps it primary while its drops, mini-sets or hold
-are done. A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to
-failure) has a tertiaryContainer circle and the technique's Material Symbol as a 16 dp tertiary
-badge on its top corner (`trending_down`, `repeat`, `unfold_less`, `pan_tool`,
+(surfaceContainerHighest, onSurfaceVariant). In the active row a plain set is filled with primary, with a
+bold onPrimary number. A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to
+failure) has no number: its circle is the technique's colour, active or not, with the technique's
+Material Symbol filling it (`trending_down`, `repeat`, `unfold_less`, `pan_tool`,
 `local_fire_department`), described by the technique's name, so it reads without colour. A set with
 drops, mini-sets or a hold grows its circle into one tall pill down the column through those rows;
 `+` at the pill's foot adds a drop to a drop set, before the set or
@@ -300,7 +299,7 @@ in ink.
   under it.
 - *Set table.* The trophy sits in a 16 dp disc of full ink (onSurface) on the index circle's lower
   corner, ringed 1.5 dp in the row's surface so it stands off the grey circle; the owner asked for
-  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It is the technique badge's sibling (the technique's symbol now fills the circle), so a drop set
+  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It sits on the circle's lower corner, where the technique's symbol no longer does, so a drop set
   that is also a record carries both. It shows from the moment the set logs; correcting the set
   moves it.
 - *Set text* (Session done, History's past session, the session list): the trophy after the set's
