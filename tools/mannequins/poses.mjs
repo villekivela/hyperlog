@@ -520,16 +520,16 @@ export const POSES = {
   // The crossover's second batch (#197): the lifts that face a tower, kneel, sit or lift a leg, and
   // those on a rope, a bar or a cuff. First poses for the owner to tune.
 
-  // Facing the left tower, hinged forward with both hands flat on its post, a cuff on the left ankle
+  // Facing the left tower, leaning forward with both hands flat on its post, a cuff on the left ankle
   // and the pulley at its lowest: the leg kicks back and a little out from under the hips.
   '1_leg_cable_glute_kickback': {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 1, faces: true, attachment: 'cuff', ankle: 1, at: [-1.105, 0.98] } },
-    top: { shin: 6, thigh: 18, trunk: 42, hand: [0.07, 1.22, 0.8], leg: [48, 8, 25] },
-    bottom: { shin: 6, thigh: 18, trunk: 42, hand: [0.07, 1.22, 0.8], leg: [-12, 2, 60] },
+    top: { shin: 6, thigh: 18, trunk: 32, hand: [0.07, 1.3, 0.74], leg: [58, 8, 25] },
+    bottom: { shin: 6, thigh: 18, trunk: 32, hand: [0.07, 1.3, 0.74], leg: [8, 2, 60] },
     feet: { stance: 0.09, toeOut: 6, lift: 1 },
-    grip: { open: true, pole: [1, -0.4, -0.3] },
+    grip: { sits: 'open', pole: [1, -0.4, -0.3] },
     camera: { target: [0, 0.85, 0.1], halfHeight: 1.15, azimuth: 70, elevation: 8 },
   },
 
@@ -570,10 +570,10 @@ export const POSES = {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 1, faces: true, attachment: 'cuff', tower: -1, ankle: 1, at: [0.82, 0.75] } },
-    top: { shin: 3, thigh: 6, trunk: 26, hand: [0.25, 1.0, 0.12], leg: [4, 38, 8] },
-    bottom: { shin: 3, thigh: 6, trunk: 26, hand: [0.25, 1.0, 0.12], leg: [-22, 8, 62] },
+    top: { shin: 3, thigh: 6, trunk: 26, hand: [0.25, 1.0, 0.12], leg: [-8, 38, 30] },
+    bottom: { shin: 3, thigh: 6, trunk: 26, hand: [0.25, 1.0, 0.12], leg: [-16, 8, 58] },
     feet: { stance: 0.09, toeOut: 6, lift: 1 },
-    grip: { open: true, one: 1, rest: [-0.27, 1.12, 0.52], pole: [1, -0.2, -0.8] },
+    grip: { sits: 'open', one: 1, rest: [-0.27, 1.12, 0.52], pole: [1, -0.2, -0.8] },
     camera: { target: [0, 0.85, 0.1], halfHeight: 1.15, azimuth: 15, elevation: 8 },
   },
 
@@ -585,7 +585,7 @@ export const POSES = {
     kit: { cable_crossover: { position: 1, attachment: 'rope', at: [-1.105, -1.05] } },
     body: { look: 0.02 },
     top: { shin: 4, thigh: 8, trunk: 6, upperArm: 6, forearm: 8 },
-    bottom: { shin: 12, thigh: 44, trunk: 68, upperArm: -14, forearm: -10 },
+    bottom: { shin: 12, thigh: 44, trunk: 58, upperArm: -30, forearm: -26 },
     feet: { stance: 0.25, toeOut: 16, kneesOut: 0.3 },
     grip: { width: 0.08, rotate: 90, pole: [0.4, 0, -1] },
     camera: { target: [0, 0.8, -0.2], halfHeight: 1.15, azimuth: 65, elevation: 8 },
@@ -596,27 +596,28 @@ export const POSES = {
   cable_triceps_kickback: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_crossover: { position: 3, faces: true, hands: [1], at: [-0.75, 0.72] } },
+    kit: { cable_crossover: { position: 3, faces: true, hands: [1], at: [-0.84, 0.6] } },
     top: { shin: 5, thigh: 12, trunk: 12, upperArm: -28, forearm: -26 },
     bottom: { shin: 5, thigh: 12, trunk: 12, upperArm: -28, forearm: 70 },
-    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.2, stagger: 0.2 },
-    grip: { width: 0.165, rotate: 90, one: 1, rest: [0.12, 1.74, 0.46], pole: [0, 0, -1] },
+    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.2, stagger: 0.08 },
+    grip: { width: 0.165, rotate: 90, one: 1, rest: [0.235, 1.62, 0.43], pole: [0, 0, -1] },
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.25, azimuth: 65, elevation: 8 },
   },
 
-  // Side-on to the left tower, the rope from a high pulley in both hands: the arms stay long and chop
-  // down across the body to outside the right knee, the trunk and head turning with them.
+  // Side-on to the left tower, the rope from a high pulley in both hands: the arms chop down across
+  // the body toward the outside of the right knee, the knees bending and the trunk and head turning
+  // with them.
   cable_woodchopper: {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 15, attachment: 'rope', at: [-0.05, -0.1] } },
     top: {
-      shin: 14, thigh: 30, trunk: 24, hand: [-0.3, 0.9, 0.46],
-      offsets: { spine_01: [0, -7, 0], spine_02: [0, -7, 0], spine_03: [0, -7, 0], Head: [0, -10, 0] },
+      shin: 18, thigh: 46, trunk: 34, hand: [-0.24, 0.76, 0.44],
+      offsets: { spine_01: [0, -10, 0], spine_02: [0, -10, 0], spine_03: [0, -10, 0], Head: [0, -10, 0] },
     },
     bottom: {
-      shin: 6, thigh: 10, trunk: 4, hand: [0.42, 1.6, 0.36],
-      offsets: { spine_01: [0, 10, 0], spine_02: [0, 10, 0], spine_03: [0, 10, 0], Head: [0, 10, 0] },
+      shin: 6, thigh: 10, trunk: 4, hand: [0.42, 1.58, 0.4],
+      offsets: { spine_01: [0, 12, 0], spine_02: [0, 12, 0], spine_03: [0, 12, 0], Head: [0, 10, 0] },
     },
     feet: { stance: 0.24, toeOut: 14, kneesOut: 0.25 },
     grip: { joined: 0.05, rotate: 90, pole: [1, -0.5, -0.4] },
@@ -629,8 +630,8 @@ export const POSES = {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 1, faces: true, attachment: 'bar', at: [-1.105, 0.78] } },
-    top: { shin: 34, thigh: 88, trunk: 34, hand: [0.14, 0.683, 0.423], wrist: [38, 0], rotate: 184.5 },
-    bottom: { shin: 34, thigh: 88, trunk: 34, hand: [0.14, 0.58, 0.475], wrist: [-38, 0], rotate: 181 },
+    top: { shin: 34, thigh: 88, trunk: 34, hand: [0.19, 0.683, 0.423], wrist: [38, 0], rotate: 184.5 },
+    bottom: { shin: 34, thigh: 88, trunk: 34, hand: [0.19, 0.58, 0.475], wrist: [-38, 0], rotate: 181 },
     feet: { stance: 0.2, toeOut: 16, kneesOut: 0.45 },
     grip: { rotate: 180, thumb: 'thumbless', pole: [0.1, -1, -0.5] },
     camera: { target: [0, 0.5, 0.2], halfHeight: 0.9, azimuth: 65, elevation: 8 },
@@ -639,8 +640,8 @@ export const POSES = {
   // The curl turned over, the palms down: the backs of the hands rise toward the forearms.
   cable_wrist_extension: {
     like: 'cable_wrist_curl',
-    top: { hand: [0.14, 0.598, 0.458], wrist: [-38, 0], rotate: 0 },
-    bottom: { hand: [0.14, 0.521, 0.455], wrist: [32, 0], rotate: 0 },
+    top: { hand: [0.19, 0.598, 0.458], wrist: [-38, 0], rotate: 0 },
+    bottom: { hand: [0.19, 0.521, 0.455], wrist: [32, 0], rotate: 0 },
     grip: { rotate: 0, thumb: 'wrapped' },
   },
 
@@ -649,10 +650,10 @@ export const POSES = {
   seated_cable_flye: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { bench: { angle: 80 }, cable_crossover: { position: 7, at: [0, -0.6] } },
+    kit: { bench: { angle: 80 }, cable_crossover: { position: 7, at: [0, -0.75] } },
     body: { hip: [0.547, 0.19], trunk: -10 },
-    top: { hand: [0.08, 1.12, 0.66], rotate: 60 },
-    bottom: { hand: [0.62, 1.1, -0.04], rotate: 120 },
+    top: { hand: [0.1, 1.12, 0.7], rotate: 60 },
+    bottom: { hand: [0.72, 1.1, -0.04], rotate: 120 },
     feet: { stance: 0.18, z: 0.5, toeOut: 12 },
     grip: { arc: true, rotate: 90, pole: [1, -0.8, -0.2] },
     camera: { target: [0, 0.95, 0.2], halfHeight: 1.05, azimuth: 28, elevation: 10 },

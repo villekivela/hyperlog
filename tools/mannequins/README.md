@@ -226,9 +226,8 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
 - **`feet.lift`** (standing `arms`, `free_arms`, `row`) takes one foot off the floor (1 the left), and
   `top.leg`, `bottom.leg` set that leg: [back, out, bend] in degrees, the thigh from straight down,
   behind the hip and out to its side, and the knee's bend.
-- **`grip.open`** rests both hands flat on something, holding nothing; with `grip.one` the other
-  hand goes to `grip.rest` as ever. **`grip.joined`** (`free_arms`) holds one thing in both hands,
-  that far either side of the point `hand` gives, which isn't mirrored.
+- **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
+  `hand` gives, which isn't mirrored.
 - **`grip.level`** (dumbbells) lets the wrists flow: their share of the forearms' lean, 0 to 1. The
   hand stays square to the handle, the wrist bends with that share, and the handle tips with the
   rest. 0 is a straight wrist, the handle tipping with the forearm; 1 holds the handle dead level.
@@ -539,7 +538,8 @@ the colours in it are the light theme's, which the phone replaces.
 bake (nor does anything else in that bake):
 
 - **Hands:** each hand holds its grip, within 1.5 cm.
-- **Feet:** each foot stands where the pose puts it, flat on the floor or on its plate, within 2 cm.
+- **Feet:** each foot stands where the pose puts it, flat on the floor or on its plate, within 2 cm; a
+  foot on nothing, lifted or tucked behind a knee, only has to be where the pose puts it.
 - **Equipment:** no limb is more than 2 cm inside a solid part of the kit (a pad gives that much),
   and none passes into a thin part like a bar at all. Only the hands close round what they hold.
   The floor counts as solid: nothing goes more than 1.5 cm into it.

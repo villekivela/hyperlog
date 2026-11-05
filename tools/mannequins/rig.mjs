@@ -511,7 +511,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // The foot flat on what it stands on, the sole as in the bind pose: heading along the floor,
     // turned out, or along the plate it's on.
     const t = rad(P.toeOut ?? 0) * s;
-    const { heading, top } = P.foot ? P.foot(s) : { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
+    const { heading, top } = P.foot?.(s) ?? { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
     const toe = heading.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(top, -Math.sin(L.footPitch));
     aim(rig, 'foot_' + k, toe, toe.clone().cross(top));
     const legBones = ['thigh_', 'calf_', 'foot_'].map((b) => b + k);

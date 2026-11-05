@@ -1,5 +1,5 @@
 // The shapes a cable lift asks of the body beyond standing and sitting: kneeling, one leg off the
-// floor, both hands resting, and both hands together on one thing.
+// floor, and both hands together on one thing.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CHECKS, checkPose } from './checks.mjs';
@@ -62,18 +62,6 @@ test('a leg lifted out goes to its own side', async () => {
   const out = wpos(at(0).foot_r).x;
   const in_ = wpos(at(1).foot_r).x;
   assert.ok(out < in_ - 0.3, `the right foot out to ${out.toFixed(3)} from ${in_.toFixed(3)}`);
-});
-
-test('both hands can rest open on something, holding nothing', async () => {
-  const entry = {
-    equipment: 'cable', motion: 'free_arms', feet: { stance: 0.12 }, grip: { open: true, pole: [1, -0.3, -0.5] },
-    top: { shin: 4, thigh: 6, trunk: 10, hand: [0.2, 1.3, 0.45] }, bottom: { shin: 4, thigh: 6, trunk: 10, hand: [0.2, 1.3, 0.45] },
-  };
-  assert.deepEqual(failing(await checkPose('shape', poses(entry))), []);
-  const reach = (bones) => wpos(bones.index_04_leaf_l).distanceTo(wpos(bones.hand_l));
-  const open = reach((await staged(entry))(0));
-  const closed = reach((await staged({ ...entry, grip: { pole: entry.grip.pole } }))(0));
-  assert.ok(open > closed + 0.02, `fingers ${open.toFixed(3)} out, closed ${closed.toFixed(3)}`);
 });
 
 test('joined hands sit either side of one point, off the middle, not mirrored', async () => {

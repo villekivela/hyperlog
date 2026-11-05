@@ -279,6 +279,24 @@ for (const [attachment, part] of [['rope', 'held rope'], ['bar', 'held bar']]) {
   });
 }
 
+test('with no pose a rope hangs from its cable, the ring at the cable\'s end', () => {
+  const kit = crossover({ attachment: 'rope', tower: 1 });
+  const [l, r] = contact(kit, 'attachment').at;
+  const middle = l.clone().add(r).multiplyScalar(0.5);
+  assert.ok(kit.cables[0].hook().distanceTo(middle) < 0.2, `the cable ends ${kit.cables[0].hook().distanceTo(middle).toFixed(3)} m from the rope`);
+});
+
+test('a cuff runs along the shin, wherever the hips are', () => {
+  const kit = crossover({ attachment: 'cuff', tower: 1, ankle: 1 });
+  const ankle = V(0.1, 0.5, -0.5);
+  const shin = V(0, 0.6, 0.8);
+  const P = { ankles: [V(-0.1, 0.08, 0), ankle], hipC: V(0, 0.9, 0), foot: () => ({ heading: V(0, -0.8, 0.6), top: shin }) };
+  kit.place(P, P, P);
+  kit.group.updateMatrixWorld(true);
+  const off = contact(kit, 'attachment').at[0].clone().sub(ankle);
+  assert.ok(off.clone().cross(shin).length() < 0.005, `the cuff ${off.clone().cross(shin).length().toFixed(3)} m off the shin`);
+});
+
 test('a cuff rides on an ankle, its cable from the tower named', () => {
   const kit = crossover({ attachment: 'cuff', tower: 1, ankle: 1 });
   const ankle = V(0.1, 0.3, -0.4);

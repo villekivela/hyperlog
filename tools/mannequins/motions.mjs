@@ -8,7 +8,7 @@
 // the ankle, `thigh` puts the hip behind the knee, `trunk` leans the shoulders forward of the hips,
 // `upperArm` and `forearm` swing the elbow and the hand forward from hanging straight down.
 import * as THREE from 'three';
-import { STRAIGHT, UP, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
+import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 import { fitted } from './fit.mjs';
@@ -105,8 +105,6 @@ export function frameAt(entry, d, L) {
   // Where the bar sits in the hand and the thumb (`grip.mjs`); with `grip.one` the other hand rests.
   P.hold = holdOf(e);
   if (e.grip?.one) P.resting = -e.grip.one;
-  // With `grip.open` both hands rest flat on something, a post or a frame, and hold nothing.
-  if (e.grip?.open) P.openHands = true;
   // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
   if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;
@@ -257,14 +255,10 @@ function liftedFeet(e, s, L, hipC, feet) {
   const knee = hipC.clone().addScaledVector(X, side * L.hipW).addScaledVector(thigh, L.thigh * STRAIGHT);
   const ankles = [...feet.ankles];
   ankles[side < 0 ? 0 : 1] = knee.addScaledVector(shin, L.shin * STRAIGHT);
-  const planted = (k) => {
-    const t = rad(feet.toeOut ?? 0) * k;
-    return { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
-  };
   return {
     ...feet,
     ankles,
-    foot: (k) => (k === side ? { heading: front.clone(), top: shin.clone().negate() } : planted(k)),
+    foot: (k) => (k === side ? { heading: front.clone(), top: shin.clone().negate() } : feet.foot?.(k)),
     kneePole: (k) => (k === side ? behind.clone().negate() : feet.kneePole(k)),
     support: (k) => (k === side ? null : feet.support(k)),
   };
