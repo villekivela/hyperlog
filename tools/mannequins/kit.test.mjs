@@ -64,7 +64,13 @@ test('every kit builds, each part in one of the tones the phone colours', () => 
 
 test('a pose can only use kits of its own equipment, and none for a kind without one', () => {
   assert.throws(() => buildKit({ equipment: 'barbell', kit: { cable_tower: {} } }), /Kit "cable_tower" isn't barbell equipment/);
-  assert.throws(() => buildKit({ equipment: 'ez_bar', kit: {} }), /"ez_bar" has no kit yet/);
+  // A made-up kind that has none, so no kit a real kind gets later can break this.
+  EQUIPMENT.kind_without_a_kit = null;
+  try {
+    assert.throws(() => buildKit({ equipment: 'kind_without_a_kit', kit: {} }), /"kind_without_a_kit" has no kit yet/);
+  } finally {
+    delete EQUIPMENT.kind_without_a_kit;
+  }
 });
 
 // The owner's bar (#127): every machine and bench at the lat tower's detail, built in the tones
