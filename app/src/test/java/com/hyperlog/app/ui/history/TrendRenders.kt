@@ -56,4 +56,24 @@ class TrendRenders {
         File(out).mkdirs()
         File(out, "${if (dark) "dark" else "light"}-exercise-progress.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
+
+    @Test
+    fun twoMachines() {
+        assumeTrue(out != null)
+        val dark = System.getenv("DARK") == "1"
+        RuntimeEnvironment.setQualifiers(if (dark) "+night" else "+notnight")
+        val day = LocalDate.of(2026, 9, 1)
+        fun line(machine: String, id: Long, base: Double) = TrendLine(machine, id, (0 until 4).map { i ->
+            val s = LoggedSet(base + 5 * i, 10, 0, 1)
+            TrendPoint(id * 10 + i, day.plusDays(5L * i), s, s.weightKg * (1 + s.fullReps / 30.0))
+        })
+        val cable = Exercise("cable_row", "Cable Row", Equipment.Cable, MovementPattern.HorizontalPull, GripDemand.Low, listOf("Back"))
+        compose.setContent {
+            HyperlogTheme { ExerciseTrendScreen(ExerciseTrend(cable, listOf(line("Cable left · Harbour", 1, 40.0), line("Cable right · Harbour", 2, 30.0))), hasBodyweight = false, onOpenSession = {}, onBack = {}) }
+        }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(out).mkdirs()
+        File(out, "${if (dark) "dark" else "light"}-exercise-progress-two-machines.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
 }
