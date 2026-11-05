@@ -1,0 +1,88 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "technique video _KI-O0zMv60",
+    "exercises.json: smooth, controlled reps",
+    "docs/research/grip.md: the wrist through its own range"
+  ],
+  "lines": [
+    {
+      "says": "at least one end has the wrist well bent",
+      "moves": "wrist_*",
+      "ends": [
+        [
+          0,
+          75
+        ],
+        [
+          10,
+          75
+        ]
+      ]
+    },
+    {
+      "says": "the hand really moves about the wrist",
+      "travels": "knuckles_*.at",
+      "least": 0.04
+    },
+    {
+      "says": "the wrist joint stays in place: only the hand moves",
+      "still": "hand_*.at",
+      "within": 0.02
+    },
+    {
+      "says": "the elbows stay in place",
+      "still": "elbow_*.at",
+      "within": 0.02
+    },
+    {
+      "says": "the elbows hold their angle",
+      "still": "elbow_*",
+      "within": 8
+    },
+    {
+      "says": "the hand doesn't roll about the forearm",
+      "still": "roll_*",
+      "within": 10
+    },
+    {
+      "says": "the legs hold still",
+      "still": "knee_*",
+      "within": 5
+    },
+    {
+      "says": "the hips stay put",
+      "still": "pelvis.at",
+      "within": 0.01
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the palms face down, the back of the hand lifting toward the forearm at one end and dropping at the other",
+      "look": "palms",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the forearms rest on the thighs, the hands past the knees",
+      "look": "forearms",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the bar runs from a low pulley in front of the lifter, both hands on it",
+      "look": "bar",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}

@@ -11,7 +11,7 @@
 import * as THREE from 'three';
 import { recipe, free, prismatic } from '../recipe.mjs';
 import {
-  STIRRUP, clevis, floorRail, knob, nameAll, pad, part, pulley, rod, rodGeometry, span, stackFrame, stirrup, turnTo, weightStack,
+  STIRRUP, floorRail, knob, nameAll, pad, part, pulley, rod, rodGeometry, ropeParts, span, stackFrame, stirrup, turnTo, weightStack,
 } from '../parts.mjs';
 import { V, X, UP } from '../rig.mjs';
 
@@ -82,15 +82,8 @@ export default recipe({
     let rope = null;
     let handles = null;
     if (attachment === 'rope') {
-      // Each strand down from the ring to the fist, through it, and out to its end stop: 28 mm rope
-      // with 60 mm stops (docs/research/grip.md, section 4.4).
-      const strands = [-1, 1].map((s) => ({
-        s, strand: part(rodGeometry(0.014, 12), M.vinyl), fist: part(rodGeometry(0.014, 12), M.vinyl, { held: true }), end: knob(M, V(0, 0, 0), 0.03),
-      }));
-      strands.forEach(({ strand, fist, end }) => ends.push(strand, fist, end));
-      const ring = clevis(M, 0);
-      ends.push(ring);
-      rope = { strands, ring };
+      rope = ropeParts(M);
+      ends.push(...rope.parts);
     } else if (attachment === 'handle') {
       handles = (twin ? [1, -1] : [hand]).map((s) => ({ s, handle: stirrup(M, `cable_handle_${s < 0 ? 'r' : 'l'}`) }));
       handles.forEach(({ handle }) => ends.push(handle));
@@ -147,20 +140,7 @@ export default recipe({
           span(cables[columns.indexOf(c)], at, c.exit);
         });
         if (rope) {
-          const { hook } = hooks[0];
-          rope.ring.position.copy(hook);
-          // The rope bends at the fist: it runs through it along the knuckles (`P.held`, from the
-          // little finger's side to the index finger's), in at the index finger's side and out at
-          // the little finger's, where its end stop sits against the hand.
-          rope.strands.forEach(({ s, strand, fist, end }) => {
-            const h = P.hand(s);
-            const across = (P.held?.[s] ?? h.clone().sub(hook)).clone().normalize();
-            const into = h.clone().addScaledVector(across, 0.05);
-            const out = h.clone().addScaledVector(across, -0.06);
-            span(strand, hook, into);
-            span(fist, into, out);
-            end.position.copy(out).addScaledVector(across, -0.03);
-          });
+          rope.lay(hooks[0].hook, P);
           points.rope = [-1, 1].map((s) => P.hand(s).clone());
         }
         return { joints: out, points };

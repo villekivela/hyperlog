@@ -1,7 +1,7 @@
 // The recipe format (ADR 0007): a kit is a fixed frame of parts from the library (parts.mjs) and
 // moving bodies, each on a joint: revolute (a lever turning about its pivot) or prismatic (a sled
 // or a carriage sliding along its rails), with the limits it moves between. A free weight is a
-// free body, on no joint, carried by the hands.
+// free body, on no joint, carried by the mannequin.
 //
 // A recipe declares, as data:
 //
@@ -44,7 +44,7 @@ export const revolute = ({ axis, limits, settings }) => ({ type: 'revolute', axi
 /** A body sliding along `axis` between `limits` [min, max] metres. */
 export const prismatic = ({ axis, limits }) => ({ type: 'prismatic', axis, limits });
 
-/** A body on no joint: a free weight, where the hands carry it. */
+/** A body on no joint: a free weight, where the mannequin carries it. */
 export const free = () => ({ type: 'free' });
 
 /**
@@ -126,7 +126,7 @@ export function recipe(def) {
         joints,
         /** Each body on a joint, by name: the nodes that move with it. */
         bodies: built.bodies ?? {},
-        /** Whether it has a free body, which the hands carry. */
+        /** Whether it has a free body, which the mannequin carries. */
         free: Object.values(bodies).some((b) => b.type === 'free'),
         /** Each contact, with where its point is now (`at`, a point a side where the body has two). */
         get contacts() {

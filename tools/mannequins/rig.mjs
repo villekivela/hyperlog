@@ -113,7 +113,7 @@ export function buildRig(root) {
     up: len('upperarm_l', 'lowerarm_l'), fore: len('lowerarm_l', 'hand_l'),
     // From the wrist to the knuckles: a grip's landmarks lie along it (`grip.mjs`).
     palmLength,
-    trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), ankleY: rest.foot_l.p.y,
+    trunk: shMid.y - hipMid.y, shW: Math.abs(rest.upperarm_l.p.x), hipW: Math.abs(rest.thigh_l.p.x), ankleY: rest.foot_l.p.y,
     // How far the foot pitches down from the ankle to the ball, standing flat.
     footPitch: Math.atan2(-footRest.y, Math.hypot(footRest.x, footRest.z)),
     // How far the middle of the sole is in front of the ankle joint.
@@ -511,7 +511,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // The foot flat on what it stands on, the sole as in the bind pose: heading along the floor,
     // turned out, or along the plate it's on.
     const t = rad(P.toeOut ?? 0) * s;
-    const { heading, top } = P.foot ? P.foot(s) : { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
+    const { heading, top } = P.foot?.(s) ?? { heading: V(Math.sin(t), 0, Math.cos(t)), top: UP };
     const toe = heading.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(top, -Math.sin(L.footPitch));
     aim(rig, 'foot_' + k, toe, toe.clone().cross(top));
     const legBones = ['thigh_', 'calf_', 'foot_'].map((b) => b + k);
@@ -622,9 +622,12 @@ export function poseRig(rig, P, near = {}, holding = null) {
     // The fingers and the thumb close round what the hand holds, joint by joint, as far as they
     // touch it: the part the stage placed under it (`holding(s)`, along its own line, in pieces), or
     // a bar of the radius the hand was seated for, along the line it lies in the hand. A hand that
-    // holds nothing lies open, or relaxed where it rests (`P.resting`).
-    const bar = holdsNothing(P, s) ? null
-      : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
+    // holds nothing lies open, or relaxed where it rests (`P.resting`), unless it rests on a bar of
+    // the radius `P.restOn` gives, a tower's post, which it closes round.
+    const rests = P.restOn && P.resting === s;
+    const bar = rests ? { at: grip, along: P.held[s].clone(), radius: P.restOn }
+      : holdsNothing(P, s) ? null
+        : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
     if (bar) (arms[k] ??= {}).fingers = closeHand(rig, k, bar, hold, near[k]?.at ? near[k].fingers : null);
     else relaxHand(rig, k, hold.sits === 'open');
   }
