@@ -31,6 +31,7 @@ const ARM_Z = -0.12;
 // The grip hangs at the elbow's distance, so the forearm lies square to the upper arm.
 const REACH = 0.3;
 const GRIP_REACH = 0.255;
+const MOUNT = 0.13;
 const OUT = 0.11;
 const PAD = { length: 0.3, radius: 0.07 };
 // The strut runs from the pivot to a knee this far out of the arm's line, flaring about 40°, and a beam
@@ -77,8 +78,9 @@ function legAt(s, value) {
   const root = corner.clone().addScaledVector(toGrip, REACH);
   const knee = pivot.clone().addScaledVector(toGrip, REACH + 0.03).addScaledVector(outOf(s, value), KNEE_OUT);
   const grip = pivot.clone().addScaledVector(toGrip, GRIP_REACH);
-  // The bracket's end, on the lever: the grip pivots there, so it holds its own line.
-  const mount = pivot.clone().addScaledVector(toGrip, GRIP_REACH - GRIP);
+  // The bracket's end, on the lever and clear of the thumb, and a stem down to the grip, which pivots
+  // on it and so holds its own line.
+  const mount = pivot.clone().addScaledVector(toGrip, GRIP_REACH - MOUNT);
   const pad = root.clone().setZ(ARM_Z);
   const [gripFrom, gripTo] = [-GRIP, GRIP].map((d) => grip.clone().addScaledVector(gripLine(s), d));
   const [padBack, padFront] = [-PAD.length / 2, PAD.length / 2].map((d) => pad.clone().setZ(ARM_Z + d));
@@ -153,11 +155,12 @@ export default recipe({
         return arm;
       })(legAt(s, LIMITS[0])),
       bracket: part(rodGeometry(0.012), M.metal, { solid: true }),
+      stem: part(rodGeometry(0.008), M.metal),
       pad: part(rodGeometry(PAD.radius), M.vinyl, { solid: true }),
       grip: part(rodGeometry(0.0175), M.vinyl, { held: true }),
     }));
     levers.forEach((l, i) => { l.bracket.name = `lateral_raise_bracket:${SIDES[i].k}`; });
-    const body = (l, i) => [housings[i], l.arm, l.bracket, l.pad, l.grip];
+    const body = (l, i) => [housings[i], l.arm, l.bracket, l.stem, l.pad, l.grip];
     return {
       parts: [
         // The seat, cantilevered back from the post.
@@ -201,6 +204,7 @@ export default recipe({
           l.arm.position.copy(pivot).sub(pivot.clone().applyQuaternion(l.arm.quaternion));
           span(l.grip, gripFrom, gripTo);
           span(l.bracket, knee, mount);
+          span(l.stem, mount, grip);
           span(l.pad, padBack, padFront);
           state.joints[`arm_${k}`] = { value, origin: pivot };
           state.points[`grip_${k}`] = [grip];
