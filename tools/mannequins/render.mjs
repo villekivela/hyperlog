@@ -42,7 +42,7 @@ function triangles(scene) {
     const count = index ? index.count : n;
     for (let i = 0; i < count; i += 3) {
       const [a, b, c] = [0, 1, 2].map((k) => points[index ? index.getX(i + k) : i + k]);
-      out.push([a, b, c, rgb, m.isSkinnedMesh]);
+      out.push([a, b, c, rgb, m.isSkinnedMesh, m]);
     }
   });
   return out;
@@ -147,11 +147,20 @@ export function png(rgb, w, h) {
 
 /**
  * A cutaway: equipment standing well in front of the body (a cable tower's column) is left out of
- * the view, so it doesn't hide the lifter.
+ * the view, so it doesn't hide the lifter. It goes a part at a time, by the part's mean depth: a part
+ * cut triangle by triangle across the limit shows a sawtooth edge it doesn't have.
  */
-function cutaway(tris, view) {
+export function cutaway(tris, view) {
   const near = Math.max(...tris.filter((t) => t[4]).flatMap(([a, b, c]) => [a, b, c].map((p) => p.dot(view.toward))));
-  return tris.filter(([a, b, c, , body]) => body || (a.dot(view.toward) + b.dot(view.toward) + c.dot(view.toward)) / 3 < near + 0.3);
+  const depths = new Map();
+  for (const [a, b, c, , body, part] of tris) {
+    if (body) continue;
+    const d = depths.get(part) ?? { sum: 0, n: 0 };
+    d.sum += (a.dot(view.toward) + b.dot(view.toward) + c.dot(view.toward)) / 3;
+    d.n += 1;
+    depths.set(part, d);
+  }
+  return tris.filter(([, , , , body, part]) => body || depths.get(part).sum / depths.get(part).n < near + 0.3);
 }
 
 /** The `shots` side by side, seen from `view`, in one frame. */

@@ -1,13 +1,14 @@
 // A baked clip rendered at the top, the middle and the bottom of its rep, for the movement reviewer.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from 'three';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { inflateSync } from 'node:zlib';
 import { CLIPS } from './bake.mjs';
-import { renderClip } from './render.mjs';
+import { renderClip, cutaway } from './render.mjs';
 
 /** A PNG's size and its rows of RGB pixels, each row's filter byte taken off. */
 function read(png) {
@@ -29,4 +30,22 @@ test('a clip renders as three panels, and the rep moves across them', async () =
 test('the command refuses an option it doesn\'t know', async () => {
   const cwd = path.dirname(fileURLToPath(import.meta.url));
   await assert.rejects(promisify(execFile)(process.execPath, ['render.mjs', '--clip', 'db_bench_press', '--at acbebfb'], { cwd }), /Unknown option/);
+});
+
+// A part standing across the cut's depth goes whole or stays whole: cut triangle by triangle, its
+// edge renders as a sawtooth.
+test('the cutaway takes whole parts, never a part in half', () => {
+  const view = { toward: new THREE.Vector3(0, 0, 1) };
+  const at = (z) => new THREE.Vector3(0, 0, z);
+  const tri = (z, part, body = false) => [at(z), at(z), at(z), [0, 0, 0], body, part];
+  const body = tri(0, 'body', true);
+  // Its faces either side of the limit, 0.3 m in front of the body.
+  const straddling = [tri(0.28, 'arch'), tri(0.34, 'arch')];
+  const far = [tri(0.9, 'column'), tri(1, 'column')];
+  const near = [tri(0.1, 'seat')];
+  const kept = cutaway([body, ...straddling, ...far, ...near], view).map((t) => t[5]);
+  assert.equal(kept.filter((p) => p === 'arch').length % 2, 0, 'the arch whole, or not at all');
+  assert.equal(kept.includes('column'), false, 'what stands well in front goes');
+  assert.equal(kept.includes('seat'), true, 'what stands behind the limit stays');
+  assert.equal(kept.includes('body'), true);
 });

@@ -528,6 +528,14 @@ export function bent(key, points, radius, material, { segments = 16, ...opts } =
   return part(g, material, opts);
 }
 
+/**
+ * A square tube along a smooth path through `points`: `mitered` in short lengths, so its ends are
+ * capped and each can be cut to what it lands on (`ends`), where a `bent` tube stands open.
+ */
+export const curvedTube = (points, w, material, { steps = 20, ...opts } = {}) => mitered(
+  new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3).getPoints(steps), w, material, { solid: false, ...opts },
+);
+
 /** The ring the cable hooks onto, standing at `y` over an attachment's middle. */
 export function clevis(M, y) {
   const ring = part(shape('clevis', () => soften(new THREE.TorusGeometry(0.016, 0.0045, 8, 18))), M.metal);
