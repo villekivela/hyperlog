@@ -44,6 +44,8 @@ export const BATCHES = {
     'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'db_incline_press', 'lat_pulldown', 'close_grip_lat_pulldown',
     'triceps_pressdown', 'leg_press', 'machine_chest_press',
   ],
+  // The pec deck's three exercises, posed to prove a body fits it (#241).
+  'pec-deck': ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
   // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).

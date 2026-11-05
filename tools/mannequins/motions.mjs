@@ -878,12 +878,13 @@ export const MOTIONS = {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { pivot, handle } = s.linkage;
+    const { pivot, handle, across } = s.linkage;
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.15).normalize(),
       ...seatedFeet(e, L),
       hand: handle,
+      across,
       armPole: elbowsTo(e, [0.7, -1, -0.5]),
       pivot, handle,
     };

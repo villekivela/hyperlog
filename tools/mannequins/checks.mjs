@@ -225,8 +225,8 @@ function checkLinkage(kits, { rig, parts, vertices, skinned, started, limbs }, n
       });
       for (const k of ['l', 'r']) {
         if (c.landmark === 'hands') {
-          // A grip a free hand may steady itself on holds no hand to it.
-          if (c.optional) continue;
+          // A grip a free hand may steady itself on holds no hand to it, and one arm's grip the other hand.
+          if (c.optional || (c.hand && c.hand !== k)) continue;
           const miss = Math.min(...c.at.map((p) => p.distanceTo(heldAt(rig, k))));
           note(miss - LIMITS.grip, `the ${k} hand ${(miss * 100).toFixed(1)} cm off the ${c.point}`);
           continue;

@@ -287,6 +287,43 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
+  // Back on the leaning pad, the hands on the vertical grips: from together in front of the chest,
+  // the arms opening long and a little bent until the hands are level with the shoulders.
+  pec_deck: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: {} },
+    body: { trunk: -7 },
+    top: { left: 107 },
+    bottom: { left: 0 },
+    feet: { stance: 0.17, z: 0.42, toeOut: 12 },
+    grip: { pole: [1, -0.25, -0.3] },
+    camera: { target: [0, 0.95, 0.1], halfHeight: 1.05, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.5, 1.6], at: [0, -0.2] },
+  },
+
+  // Astride the same seat, the chest on the pad, the hands overhand on the short grips: from the arms
+  // in line with the shoulders, forward until they reach ahead of the chest.
+  reverse_pec_deck: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: { facing: 'pad', hips: 0.05 } },
+    body: { trunk: 14, look: 0 },
+    top: { left: 55 },
+    bottom: { left: 0 },
+    feet: { stance: 0.24, z: 0.2, toeOut: 15, kneesOut: 0.5 },
+    grip: { pole: [1, 0.1, -0.4] },
+    camera: { target: [0, 0.95, 0.1], halfHeight: 1.05, azimuth: 140, elevation: 10 },
+    shadow: { size: [1.5, 1.6], at: [0, 0.2] },
+  },
+
+  // The same with one arm, the other hand on the thigh.
+  '1_arm_reverse_pec_deck': {
+    like: 'reverse_pec_deck',
+    kit: { pec_deck: { facing: 'pad', hips: 0.05, one: true } },
+    grip: { one: 1, rest: [-0.2, 0.68, 0.22] },
+  },
+
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
   machine_pulldown: {
     equipment: 'machine',
