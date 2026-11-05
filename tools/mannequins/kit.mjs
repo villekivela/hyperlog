@@ -29,7 +29,7 @@ export const MACHINES = {
   lateral_raise_machine: { kit: null, exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
   preacher_curl_machine: { kit: 'preacher_curl_machine', exercises: ['machine_preacher_curl'] },
   dip_machine: { kit: null, exercises: ['seated_dip_machine'] },
-  hip_machine: { kit: null, exercises: ['machine_hip_abduction', 'machine_adduction'] },
+  hip_machine: { kit: 'hip_machine', exercises: ['machine_hip_abduction', 'machine_adduction'] },
   hip_thrust_machine: { kit: null, exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
   crunch_machine: { kit: null, exercises: ['machine_crunch'] },
@@ -75,6 +75,7 @@ export const STATIONS = {
  */
 export const BARS = {
   trap_bar: { kit: 'trap_bar', exercises: ['trap_bar_deadlift'] },
+  ez_bar: { kit: 'ez_bar', exercises: ['ez_bar_curl', 'ez_bar_preacher_curl', 'skull_crusher'] },
 };
 
 /**
@@ -88,7 +89,7 @@ export const EQUIPMENT = {
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
   bodyweight: ['power_rack'],
-  ez_bar: null,
+  ez_bar: ['ez_bar'],
   trap_bar: ['trap_bar'],
   safety_bar: null,
   smith_machine: ['smith_machine', 'bench', 'platform'],
