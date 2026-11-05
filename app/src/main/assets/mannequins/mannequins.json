@@ -2207,13 +2207,13 @@
       "equipment": "machine",
       "camera": {
         "target": [
-          0,
-          0.78,
-          0.05
+          -0.12,
+          0.7,
+          0.12
         ],
-        "halfHeight": 0.78,
-        "azimuth": 40,
-        "elevation": 10
+        "halfHeight": 1.1,
+        "azimuth": 58,
+        "elevation": 11
       },
       "tempo": {
         "lowering": 1,

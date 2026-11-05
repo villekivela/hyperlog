@@ -64,6 +64,8 @@ const POST = { x: -0.34, top: 0.88 };
 // The front frame stands 680 mm from the axis toward the feet, its rollers at 360 and 600 mm.
 const FRONT = { z: -0.68, rollers: [0.36, 0.6], roller: 0.045, wide: 0.17, out: 0.14 };
 const STACK_Z = -0.86;
+// The stack stands out to the cam's side of the feet end, as the photo and the demo show it, the lifter's legs in front of it.
+const STACK_X = -0.24;
 const FRAME_TOP = 1.365;
 // The cam winds the cable 250 mm a radian.
 const RATIO = CAM.radius;
@@ -110,7 +112,7 @@ function trunkAt(hipC, value, L) {
 export default recipe({
   name: 'crunch_machine',
   // Shown alone in the studio until a pose uses it: three-quarter from the feet end, as the ref's photo is.
-  standsAlone: { camera: { target: [0, 0.75, 0.1], halfHeight: 1.1, azimuth: 45, elevation: 14 } },
+  standsAlone: { camera: { target: [-0.12, 0.7, 0.12], halfHeight: 1.1, azimuth: 58, elevation: 12 } },
   bodies: { arm: revolute({ axis: V(1, 0, 0), limits: LIMITS }) },
   // From lying back, the back pad level, to the shoulders curled up toward the knees.
   rep: { joint: 'arm', from: 'min' },
@@ -160,8 +162,8 @@ export default recipe({
       tube(0.07, at(0, 0.035, STACK_Z), at(0, 0.035, 0), M.frame),
       tube(0.07, at(-0.42, 0.035, 0), at(0.42, 0.035, 0), M.frame),
       tube(0.07, at(-0.3, 0.035, FRONT.z), at(0.3, 0.035, FRONT.z), M.frame),
-      tube(0.07, at(-UPRIGHTS - 0.15, 0.035, STACK_Z), at(UPRIGHTS + 0.15, 0.035, STACK_Z), M.frame),
-      ...[-1, 1].flatMap((s) => [endCap(s * 0.42, 0, M), endCap(s * 0.3, -FRONT.z, M), endCap(s * (UPRIGHTS + 0.15), -STACK_Z, M)]),
+      tube(0.07, at(STACK_X - UPRIGHTS - 0.03, 0.035, STACK_Z), at(0.06, 0.035, STACK_Z), M.frame),
+      ...[-1, 1].flatMap((s) => [endCap(s * 0.42, 0, M), endCap(s * 0.3, -FRONT.z, M), endCap(s < 0 ? STACK_X - UPRIGHTS - 0.03 : 0.06, -STACK_Z, M)]),
     ];
     // The seat on two rear posts and a diagonal from the front crossbar's middle up under it.
     const seatFrame = [
@@ -186,12 +188,14 @@ export default recipe({
       }),
     ]);
     // The stack and its frame, a wheel at the top and the cable down to the stack's head plate.
-    const wheel = at(0, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
-    const weights = weightStack(at(0, 0, STACK_Z), M, { rodTop: 1.3, toward: -1 });
+    const wheel = at(STACK_X, FRAME_TOP - 0.035 - WHEEL - 0.02, STACK_Z + WHEEL);
+    const weights = weightStack(at(STACK_X, 0, STACK_Z), M, { rodTop: 1.3, toward: -1 });
     const drop = wire(M);
     const camCable = wire(M);
     camCable.userData.role = 'cable';
-    const stackParts = [...stackFrame(-STACK_Z, FRAME_TOP, M), ...pulley(wheel, M), basePlate(0, -STACK_Z, M), ...weights.parts, drop, camCable];
+    const frameOfStack = stackFrame(-STACK_Z, FRAME_TOP, M);
+    frameOfStack.forEach((m) => { m.position.x += STACK_X; });
+    const stackParts = [...frameOfStack, ...pulley(wheel, M), basePlate(STACK_X, -STACK_Z, M), ...weights.parts, drop, camCable];
 
     // The arm, built in its frame about the axis, at rest.
     const arm = new THREE.Group();
@@ -234,7 +238,7 @@ export default recipe({
 
     const layCable = () => {
       arm.updateMatrix();
-      span(camCable, V(0, wheel.y + WHEEL, wheel.z), CAM.rim.clone().applyMatrix4(arm.matrix));
+      span(camCable, V(STACK_X, wheel.y + WHEEL, wheel.z), CAM.rim.clone().applyMatrix4(arm.matrix));
     };
     layCable();
 
@@ -245,7 +249,7 @@ export default recipe({
         arm: {
           lift(l) {
             weights.lift(l);
-            span(drop, V(0, wheel.y, -STACK_Z), weights.top(l));
+            span(drop, V(STACK_X, wheel.y, -STACK_Z), weights.top(l));
           },
         },
       },

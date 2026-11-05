@@ -295,7 +295,7 @@ export const POSES = {
     motion: 'reclined_crunch',
     kit: { crunch_machine: {} },
     feet: { stance: 0.1, toeOut: 0 },
-    camera: { target: [0, 0.78, 0.05], halfHeight: 0.78, azimuth: 40, elevation: 10 },
+    camera: { target: [-0.12, 0.7, 0.12], halfHeight: 1.1, azimuth: 58, elevation: 11 },
     shadow: { size: [1.2, 2.0], at: [0, 0.2] },
   },
 
