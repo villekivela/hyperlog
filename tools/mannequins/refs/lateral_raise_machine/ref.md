@@ -58,7 +58,7 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 
 | Part | Where it sits, estimated from those frames | Was in the kit | Now |
 |---|---|---|---|
-| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, one arch with its outer top corner swept round, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 240 to the right |
+| Tower and stack | at the far end of the spine, ahead of the lifter, broad face across the machine, its near end about on the centre line, one arch with its outer top corner swept round, a solid header | beside the lifter's right, in the arm's path | 940 ahead of the hips, 225 to the right, 500 across |
 | Post | one post leaning forward from the floor between the legs, carrying the seat, the chest pad and the plate | a seat post, and a bridge from the tower | as measured, a beam from it to the tower at 850 |
 | Bar, plate and drum | a bar across the top of the post with the pivots on it, a plate mostly covered by the wedges, a round drum behind the plate | a bridge and a hub on each pivot | pivots at 1150, plate and drum as measured |
 | Levers | a heavy strut flaring about 40 degrees from the pivot to a knee, raking toward the tower on the way, a beam back along the pad | a thin dog-leg | as measured |
