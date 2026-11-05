@@ -1566,6 +1566,19 @@ gallery (Technique videos).
     2026-11-03).
     The incline and decline presses (an adjustable bench is seven clips, and a decline
     needs the foot catch) and the barbell lunge (a split stance) wait for a later batch.
+    A bench press's elbows follow the hand on the bar, so the tune's `grip.elbows` is only a hint;
+    `grip.pole` points them firmly. The Close-Grip Bench Press holds its elbows beside the ribs that
+    way, its wrists otherwise as the Barbell Bench Press has them (owner, 2026-11-04).
+    The power rack's batch (#196) hangs the body from the bar or rests it on the dip handles, the
+    feet off the floor on every frame (a check fails a foot under 2 cm up). A pull-up rises about
+    490 mm to the chin over the bar, a dip drops about 290 mm to the elbows at about 90°, and a leg
+    raise flexes the hip about 100°. A dip faces out along the handles, the lifter's back to the
+    upright, as the video on rack-mounted handles shows. The 2-Grip Pull-Up is a clip a grip, as the
+    pulldown: set 1 wide and overhand, set 2 narrow and underhand. The weighted lifts carry a plate
+    on a dip belt's chain, plumb in front of the thighs at about mid-thigh.
+    The cable crossover's lifts (#197) come in two batches: the first with the back to the towers or
+    beside one, a handle in the hand; the second facing a tower, kneeling, seated or with a leg off the
+    floor, on a rope, a straight bar or an ankle cuff. A free hand holds the tower or lies on the body.
     The dumbbell batch (#127) comes ahead of the rest of the barbell lifts (owner, 2026-11-04). Its
     lunge is a split stance held through the rep: the feet stay planted, the back heel up on the
     ball of the foot, and the hips drop between them. A 1-arm row carries one dumbbell, one knee and
@@ -1662,7 +1675,7 @@ gallery (Technique videos).
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its
       dimensions) are in `tools/mannequins/refs/`.
-  - **Automatic checks** (#123) run on every frame of every pose: the hands hold their grip, the feet
+  - **Automatic checks** (#123) run on every frame of every pose, and catch a forearm in the head or the neck and a cable against them (owner, #197): the hands hold their grip, the feet
     stay on the floor or plate, no limb passes through the equipment or into the floor (#127), and
     the joints stay within range. A pose that fails one doesn't bake.
   - **Movement review** (the owner's idea, 2026-11-04, #206): the checks know nothing of the movement, so a
@@ -1673,6 +1686,8 @@ gallery (Technique videos).
     middle and the bottom. A clear failure goes back to the worker, a doubt goes to the owner, and a
     clean lift needs only a sample. A spec line a clip is known to fail is marked open, with what
     waits on whom, and goes to the owner; it stays in the spec until the pose or the line changes.
+    The review is tested cold (owner, 2026-11-04, #197): the second batch's specs are written before
+    its poses and hidden from their worker, and the verdicts are written down before the owner looks.
   - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
     estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
     one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its
@@ -1696,7 +1711,7 @@ gallery (Technique videos).
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the smith machine (#182), the shoulder press (#225) and the power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving), until they are posed. The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
+    with no body, its levers at rest (#176): the smith machine (#182), the shoulder press (#225), the lateral raise machine (#212, seated, its arms scrubbing from 10° out to horizontal), the hip machine (#214, one machine for abduction and adduction: two arms on one vertical axle, a start angle in 10° steps), the hyperextension bench (#220, the rigid 45° bench of the 45° hyperextension), the EZ bar (#209, a zigzag curl bar the hands carry, for the 3 EZ bar exercises, lying on the floor) and the safety squat bar (#219, the bar of the safety bar squat and the safety bar good morning, unloaded, hung as in a rack unless a roll is set, nothing on it moving), the pec deck (#208, the machine of the pec deck and the two reverse pec decks, each arm on its own joint about a vertical axis) and the trap bar (#234, the bar of the trap bar deadlift: a closed hexagonal frame of 38 mm tube with two parallel handles, low or high, on 450 mm plates, nothing on it moving; serve it with `npm run studio` and open `trap bar` under Kits), until they are posed. The power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving) was too, until its poses came (#196). The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand, then those facing a tower, kneeling, seated or with a leg off the floor, on a rope, a bar or a cuff. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. A change to a recipe, a part or `poses.mjs` on disk reloads the
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

@@ -27,7 +27,7 @@ const jointAngle = (a, b, c) => deg(a.clone().sub(b).angleTo(c.clone().sub(b)));
 
 /** Where each named point of the body is, by the bone it sits on. */
 const POINTS = { pelvis: 'pelvis', head: 'Head' };
-for (const k of ['l', 'r']) Object.assign(POINTS, { [`shoulder_${k}`]: `upperarm_${k}`, [`elbow_${k}`]: `lowerarm_${k}`, [`hand_${k}`]: `hand_${k}`, [`ankle_${k}`]: `foot_${k}` });
+for (const k of ['l', 'r']) Object.assign(POINTS, { [`shoulder_${k}`]: `upperarm_${k}`, [`elbow_${k}`]: `lowerarm_${k}`, [`hand_${k}`]: `hand_${k}`, [`knuckles_${k}`]: `middle_01_${k}`, [`ankle_${k}`]: `foot_${k}` });
 
 const UP = new THREE.Vector3(0, 1, 0);
 

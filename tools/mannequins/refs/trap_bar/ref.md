@@ -62,7 +62,17 @@ The bar as a whole is prismatic: it rises straight up with the lifter.
 - Rackable length only matters if the bar is placed in a rack (not for the deadlift).
 - The built-in deadlift jack (the L-shaped feet behind the handles) is for loading plates, not for lifting; it can be left out of the model.
 
+## Compared in the studio (#234)
+The kit was set beside the straight-down photo, the open and closed three-quarter photo, the Standing loop at 0:03, and the side-on and Thrall frames (0:02.5, 0:04.5; 3:52, 5:44), from the side, the front and three-quarter:
+- Closed after the owner's review (#234): the TB-1 Trap Bar 2.0 page (https://www.roguefitness.com/eu/rogue-tb-1-trap-bar-2-0-eu, sold in the EU where the open bar is not) shows a closed hexagon with mitred, gusseted corners, fixed knurled single-height handles 25 in apart and 1.34 in across, 1.5 in (38 mm) square tube, 16 in of sleeve and 89 x 28.5 in over all. The kit's frame is now one mitred ring of 38 mm tube with a rear crossmember; the TB-3's numbers still set the rest.
+- The plan agrees with the OPEN photo: two corners on the sleeve axis, arms to a front crossmember, the rear open. The kit's rear is open behind the lifter, which settles the gap on which side is open; it does not change the lift.
+- Front, the Standing frame shows the same thing as the model: the crossmember level with the sleeves and the handles rising from the corners, inside plates that stand outboard on the floor. The loop's bar has three plates a side; the model has one by default (option `plates`).
+- The photos show the handles as knurled steel rollers on a flip bracket of two plates that run from the corner hub, a pair of short rollers where the dual handle is set; the model draws one plain metal handle on two braces, and posts under it where it is high.
+- The photos show a hub at each corner where the arms meet the sleeve, a stop ring on the sleeve, a rear deadlift jack and a roll-marked crossmember; the model has none of them (the jack was left out on purpose).
+- The arms' tube reads fatter and the corners softer in the photos than the model's 60 mm square tube with sharp mitres.
+- The side-on video's bar is a hex bar with 450 mm bumpers, whose frame sits at the sleeve height, as the model's does.
+
 ## Open gaps
 - The lockout height for the mannequin is chosen from its arm length; the video gives one lifter's 640 mm.
-- Which side of the open frame faces the lifter's front: the page's wording contradicts itself ("eliminates the rear crossmember" and "without working around a front crossmember"). It does not change the lift.
+- Which side of the open frame faces the lifter's front: the page's wording contradicts itself. The kit chose the crossmember in front and the rear open (#234); it does not change the lift.
 - The frame's hex corner spacing and arm angle come from one straight-down photo of one corner; the far side is taken as a mirror image.

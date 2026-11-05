@@ -24,14 +24,14 @@ const REACH = 0.9;
 const TOP = Math.asin(0.58 / REACH);
 // The hands' neutral grips this far either side of the middle (700 apart), the arms outside them.
 const GRIPS_OUT = 0.35;
-const ARMS_OUT = 0.42;
+const ARMS_OUT = 0.45;
 const NEUTRAL = 0.12;
 const BAR = 0.1;
 // The seat's top, [y, z]: the grips are level with the shoulders at the start, 0.63 m above it.
 const SEAT = [0.35, 0.02];
-const PAD = { top: 1.27, long: 0.83, w: 0.36, deep: 0.08, z: -0.27, lean: rad(10) };
+const PAD = { top: 1.27, long: 0.83, w: 0.44, deep: 0.1, z: -0.27, lean: rad(10) };
 // The stack beside the lifter (their right is -x), in its frame up to 1.58 m (1.63 m with its cap), and the crank behind the pivot.
-const STACK = [-0.85, 0.12];
+const STACK = [-0.78, 0.12];
 const FRONT = 0.55;
 const FRAME_TOP = 1.58;
 const CRANK = 0.12;
@@ -62,7 +62,9 @@ export default recipe({
     frame.push(...floorRail(V(STACK[0], 0.035, STACK[1] - 0.1), V(STACK[0], 0.035, FRONT), M));
     frame.push(...floorRail(V(STACK[0], 0.035, FRONT), V(-0.4, 0.035, FRONT), M));
     // A column up from the cross beam behind the pad to the pivot box, braced to the pad's board.
-    frame.push(tube(0.09, V(0, 0.07, PIVOT[1]), V(0, PIVOT[0] + 0.1, PIVOT[1]), M.frame));
+    frame.push(tube(0.14, V(0, 0.07, PIVOT[1]), V(0, PIVOT[0] + 0.12, PIVOT[1]), M.frame));
+    // The raked leg from the column's top down and forward to the seat's base, as the photos show.
+    frame.push(tube(0.1, V(0, PIVOT[0] - 0.1, PIVOT[1] + 0.05), V(0, 0.1, SEAT[1] - 0.05), M.frame));
     const padAt = V(0, PAD.top - (PAD.long / 2) * Math.cos(PAD.lean), PAD.z);
     const back = part(padGeometry(PAD.w, PAD.long, PAD.deep, 0.025), M.vinyl, { solid: true });
     back.position.copy(padAt);
@@ -85,13 +87,13 @@ export default recipe({
     const [down, along, rise] = [0, 1, 2].map(() => part(rodGeometry(0.0045, 8), M.metal));
     frame.push(down, along, rise);
     const sides = [-1, 1];
-    const crossbar = part(rodGeometry(0.03), M.metal, { solid: true });
-    const crank = stretchedTube(0.04, M.metal);
+    const crossbar = stretchedTube(0.09, M.metal);
+    const crank = stretchedTube(0.06, M.metal);
     const knob = hub(M, V(0, 0, 0));
     const arms = sides.map((s) => ({
       s,
       boss: hub(M, V(s * ARMS_OUT, PIVOT[0], PIVOT[1])),
-      arm: stretchedTube(0.05, M.metal),
+      arm: stretchedTube(0.09, M.metal),
       // The overhand bar across the arm's end, and the neutral grip beside it, pointing forward.
       bar: role(part(rodGeometry(0.0175), M.vinyl, { held: true }), 'barGrip'),
       neutral: role(part(rodGeometry(0.0175), M.vinyl, { held: true }), 'neutralGrip'),

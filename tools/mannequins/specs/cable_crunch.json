@@ -1,0 +1,96 @@
+{
+  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
+  "sources": [
+    "technique video 2RrGnjxSsiA from 2:04",
+    "exercises.json: round your back as you crunch",
+    "docs/research/grip.md: a rope, mid-palm, the fist just above the end stop"
+  ],
+  "lines": [
+    {
+      "says": "the trunk folds from near upright to well forward",
+      "moves": "trunk",
+      "ends": [
+        [
+          0,
+          45
+        ],
+        [
+          55,
+          130
+        ]
+      ]
+    },
+    {
+      "says": "the body kneels",
+      "moves": "knee_*",
+      "ends": [
+        [
+          70,
+          125
+        ],
+        [
+          70,
+          125
+        ]
+      ]
+    },
+    {
+      "says": "the knees hold their angle",
+      "still": "knee_*",
+      "within": 10
+    },
+    {
+      "says": "the feet stay planted",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the hips stay about over the knees: the trunk folds, the hips don't sit back",
+      "still": "pelvis.at",
+      "within": 0.08
+    },
+    {
+      "says": "the arms stay bent, the hands by the head",
+      "moves": "elbow_*",
+      "ends": [
+        [
+          25,
+          100
+        ],
+        [
+          25,
+          100
+        ]
+      ]
+    },
+    {
+      "says": "the arms hold their angle: the abs pull, not the arms",
+      "still": "elbow_*",
+      "within": 15
+    },
+    {
+      "says": "the back rounds, the spine curling over, rather than a flat back hinging at the hips",
+      "look": "round",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the hands hold the rope beside the head and travel with it",
+      "look": "hands",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the lifter kneels facing the tower, the rope down from a high pulley",
+      "look": "setup",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}

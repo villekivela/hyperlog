@@ -64,7 +64,13 @@ test('every kit builds, each part in one of the tones the phone colours', () => 
 
 test('a pose can only use kits of its own equipment, and none for a kind without one', () => {
   assert.throws(() => buildKit({ equipment: 'barbell', kit: { cable_tower: {} } }), /Kit "cable_tower" isn't barbell equipment/);
-  assert.throws(() => buildKit({ equipment: 'trap_bar', kit: {} }), /"trap_bar" has no kit yet/);
+  // A made-up kind that has none, so no kit a real kind gets later can break this.
+  EQUIPMENT.kind_without_a_kit = null;
+  try {
+    assert.throws(() => buildKit({ equipment: 'kind_without_a_kit', kit: {} }), /"kind_without_a_kit" has no kit yet/);
+  } finally {
+    delete EQUIPMENT.kind_without_a_kit;
+  }
 });
 
 // The owner's bar (#127): every machine and bench at the lat tower's detail, built in the tones
@@ -78,7 +84,7 @@ const WEARS = {
   adjustable_bench: [{ equipment: 'dumbbell', kit: { bench: {} }, bench: { angle: 30 } }, ['frame', 'vinyl', 'metal', 'pulley']],
   cable_column: [{ equipment: 'cable', kit: { cable_column: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
   cable_crossover: [{ equipment: 'cable', kit: { cable_crossover: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
-  ...Object.fromEntries(['leg_extension', 'leg_curl', 'calf_raise_machine', 'squat_machine', 'row_machine', 'pulldown_machine', 'preacher_curl_machine', 't_bar_row_machine', 'shoulder_press']
+  ...Object.fromEntries(['leg_extension', 'leg_curl', 'calf_raise_machine', 'squat_machine', 'row_machine', 'pulldown_machine', 'preacher_curl_machine', 't_bar_row_machine', 'hip_machine', 'lateral_raise_machine', 'shoulder_press']
     .map((k) => [k, [{ equipment: 'machine', kit: { [k]: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']]])),
   lying_leg_curl: [{ equipment: 'machine', kit: { leg_curl: { lying: true } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
   smith_machine: [{ equipment: 'smith_machine', kit: { smith_machine: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
