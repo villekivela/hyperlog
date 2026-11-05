@@ -316,7 +316,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `row_machine` | Machine Row, Chest-Supported Machine Row | `row_machine` |
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
 | `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
-| `shoulder_press` | Machine Shoulder Press | missing |
+| `shoulder_press` | Machine Shoulder Press | `shoulder_press` |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | missing |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | missing |
@@ -420,6 +420,19 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   on (0), below which the bar can't go. Its contacts tie the hands and the shoulders (the bar on
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
+- `shoulder_press` (#225, the machine kind of `machine_shoulder_press`, not yet posed, so no clip changes)
+  stands where its ref puts it, whatever the pose: a seat at 350 mm against a back pad 830 mm long
+  reclined 10°, topping out at 1.27 m, on a column up from a rear cross beam, with the weight stack
+  in its own frame beside the lifter, on their right and level with the seat, 1.63 m tall. The yoke (two side arms joined by a crossbar
+  behind the pad) is one body on a revolute joint about the axle at the column's top, 980 mm up, its
+  value the angle up from level ahead of the line to the grips: 0° at the bottom of the rep, the
+  grips 980 mm up and 700 apart, 900 mm ahead of the pivot, to 40° at the top, 580 mm higher and
+  about 200 mm further back. Each arm ends in a bar grip (overhand) with a neutral grip beside it;
+  the contact ties the hands to the neutral grips. A crank behind the pivot draws a cable under the
+  floor to the stack, which rises with the yoke. Its one option is `seat`, the seat's top (0.35 m,
+  the fit rule's height, in a range of 330 to 500 mm that no picture shows). In the studio it
+  stands alone, three-quarter from the front: run `cd tools/mannequins && npm run studio`, open
+  `shoulder press` under Kits, and the joint's slider scrubs the yoke through its limits.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, none posed yet, so no clip changes) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -617,7 +630,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine and the power rack. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the shoulder press. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
