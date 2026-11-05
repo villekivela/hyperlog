@@ -37,7 +37,7 @@ const PAD = { length: 0.3, radius: 0.07 };
 // aft between the bar and the plate, a valley between the two, so it drops in front of the plate.
 const KNEE_OUT = 0.195;
 const LEVER_WIDTH = 0.06;
-const WEDGE = { length: 0.2, width: 0.14, height: 0.15, over: 0.17, in: 0.075, tilt: rad(28) };
+const WEDGE = { length: 0.33, width: 0.1, height: 0.12, over: 0.18, in: 0.1, tilt: rad(28) };
 const GRIP = 0.075;
 // The tower stands ahead of the lifter, its near end about on the centre line, as in the ref's photos.
 const TOWER_X = -0.24;
@@ -121,10 +121,10 @@ export default recipe({
     const fixed = [
       pad(0.2, 0.22, 0.014, M.frame, V(0, chest.y, FACE - 0.007), { soft: 0.004 }),
       tube(0.05, V(0, chest.y, FACE), V(0, chest.y, postZ(chest.y)), M.frame),
-      pad(2 * SHOULDER_X + 0.26, 0.09, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.04), { soft: 0.006 }),
-      pad(0.36, 0.28, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.27), { soft: 0.009 }),
-      rod(0.16, V(0, PIVOT_Y, PLANE + 0.28), V(0, PIVOT_Y, PLANE + 0.33), M.frame),
-      tube(0.06, V(0, PIVOT_Y - 0.1, postZ(PIVOT_Y - 0.1)), V(0, PIVOT_Y - 0.1, PLANE + 0.26), M.frame),
+      pad(2 * SHOULDER_X + 0.12, 0.09, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.04), { soft: 0.006 }),
+      pad(0.36, 0.28, 0.02, M.frame, V(0, PIVOT_Y, PLANE + 0.39), { soft: 0.009 }),
+      rod(0.16, V(0, PIVOT_Y, PLANE + 0.4), V(0, PIVOT_Y, PLANE + 0.45), M.frame),
+      tube(0.06, V(0, PIVOT_Y - 0.1, postZ(PIVOT_Y - 0.1)), V(0, PIVOT_Y - 0.1, PLANE + 0.38), M.frame),
       ...SIDES.flatMap(({ s }) => {
         const joint = pivotJoint(M, pivotOf(s), V(0, 0, 1));
         housings.push(joint.housing);
@@ -137,7 +137,8 @@ export default recipe({
         const arm = mitered([leg.pivot, leg.knee, leg.knee.clone().setZ(ARM_Z - PAD.length / 2 + 0.02)], LEVER_WIDTH, M.frame, { solid: false });
         const wedge = pad(WEDGE.width, WEDGE.height, WEDGE.length, M.vinyl, leg.pivot.clone().add(V(-s * WEDGE.in, WEDGE.over, 0)).setZ(PLANE + 0.04 + WEDGE.length / 2), { soft: 0.02, solid: false });
         wedge.rotation.z = s * WEDGE.tilt;
-        arm.add(wedge);
+        // The strut carries on past the pivot into the wedge.
+        arm.add(wedge, tube(0.05, leg.pivot.clone().setZ(PLANE + 0.04), leg.pivot.clone().add(V(-s * WEDGE.in, WEDGE.over, 0)).setZ(PLANE + 0.04), M.frame, { solid: false }));
         return arm;
       })(legAt(s, LIMITS[0])),
       bracket: part(rodGeometry(0.012), M.metal),

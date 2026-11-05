@@ -108,6 +108,13 @@ const boxes = (kit) => {
   kit.group.traverse((o) => { if (o.isMesh) out.push({ mesh: o, box: new THREE.Box3().setFromObject(o, true) }); });
   return out;
 };
+/** Arm `k`'s wedge: the longest fore and aft of what its lever carries. */
+const wedgeOf = (kit, k) => {
+  const carried = [];
+  kit.group.updateMatrixWorld(true);
+  kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) carried.push(new THREE.Box3().setFromObject(o, true)); }));
+  return carried.reduce((a, b) => (b.max.z - b.min.z > a.max.z - a.min.z ? b : a));
+};
 const stackOf = (kit) => {
   let found = null;
   kit.group.traverse((o) => { if (o.userData.stack) found = o; });
@@ -224,13 +231,8 @@ test('a posed stack is held just off its rest at the stretch, and rises about 24
 test('the wedges run fore and aft ahead of the plate, a valley between them, clear of the lifter\'s face', async () => {
   const { pose, rig, kit } = await buildStage(prepare('machine_lateral_raise'));
   const machineKit = kit.kits.lateral_raise_machine;
-  const wedges = () => ['arm_l', 'arm_r'].map((k) => {
-    const found = [];
-    machineKit.bodies[k].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) found.push(new THREE.Box3().setFromObject(o, true)); }));
-    return found[0];
-  });
   pose(0);
-  const [l, r] = wedges();
+  const [l, r] = ['l', 'r'].map((k) => wedgeOf(machineKit, k));
   assert.ok(l.max.z - l.min.z > 0.2, 'long fore and aft');
   assert.ok(l.min.x > 0.02 && r.max.x < -0.02, `a valley on the midline: ${l.min.x.toFixed(2)}, ${r.max.x.toFixed(2)}`);
   const face = wpos(rig.bones.Head).z + 0.15;
@@ -251,11 +253,7 @@ test('the chest pad bears on the chest: its top just under the plate, level with
 
 test('the wedges stand in a tight V, their middles about half the pivots\' spacing apart', () => {
   const kit = machine();
-  const middleOf = (k) => {
-    let box = null;
-    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) box = new THREE.Box3().setFromObject(o, true); }));
-    return box.getCenter(new THREE.Vector3());
-  };
+  const middleOf = (k) => wedgeOf(kit, k).getCenter(new THREE.Vector3());
   const apart = middleOf('l').x - middleOf('r').x;
   const spacing = kit.joints.arm_l.origin.x - kit.joints.arm_r.origin.x;
   assert.ok(apart < 0.65 * spacing, `the wedges ${apart.toFixed(2)} m apart against the pivots' ${spacing.toFixed(2)}`);
@@ -281,16 +279,12 @@ test('the seat and the pivots stand high enough that the thighs slope down', asy
 
 test('the wedges stand over the plate, on the lifter\'s side of it, and it stands no higher than they do', () => {
   const kit = machine();
-  const wedge = (k) => {
-    let box = null;
-    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.isMesh && o.parent === n && n !== o) box = new THREE.Box3().setFromObject(o, true); }));
-    return box;
-  };
   const plate = boxes(kit).find(({ box: b }) => b.max.x - b.min.x > b.max.y - b.min.y + 0.02 && b.max.y - b.min.y > 0.2 && b.max.z - b.min.z < 0.05 && b.min.y > 0.8 && b.max.z < 0.6).box;
-  const w = wedge('l');
+  const w = wedgeOf(kit, 'l');
   assert.ok(w.max.y > plate.max.y + 0.05, `the wedge tops out ${(w.max.y - plate.max.y).toFixed(2)} m over the plate`);
   assert.ok(w.max.z <= plate.min.z + 0.005, 'on the lifter\'s side of it, so it drops in front of it as the arm rises');
-  assert.ok(w.max.y - w.min.y > 0.14, 'a big block');
+  assert.ok(w.max.z - w.min.z > 2.2 * (w.max.x - w.min.x), 'a long slab, about 2.5 to 1, not a block');
+  assert.ok(w.max.z - w.min.z > 0.3, 'about as long as an arm pad');
   close(w.max.y - kit.joints.arm_l.origin.y, 0.24, 0.04, 'its top over the pivot, as the hero photo has it');
 });
 
