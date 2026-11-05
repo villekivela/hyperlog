@@ -25,8 +25,11 @@ test('every pose finds its seats in seats.json, at every bench angle and grip', 
 
 test('seats.json holds what the solve finds', async () => {
   const table = JSON.parse(await readFile(new URL('./seats.json', import.meta.url), 'utf8'));
-  // A solve moves with where the rig stands, a bent wrist most: this pose's are straight.
-  const { rig } = await buildStage(prepare('barbell_bench_press', POSES));
+  // A solve moves with where the rig stands, a bent wrist most: this pose, its wrists straight.
+  const straight = structuredClone(prepare('barbell_bench_press', POSES));
+  delete straight.top.wrist;
+  delete straight.bottom.wrist;
+  const { rig } = await buildStage(straight);
   forgetSeats();
   for (const key of Object.keys(table)) {
     const [, k, sits, radius, thumb, swing] = key.split(':');

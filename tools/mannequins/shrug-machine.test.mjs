@@ -95,16 +95,14 @@ test('a fit rule sets the seat, at its measured 650 mm by default', () => {
 
 const roled = (kit, name) => { const found = []; kit.group.traverse((o) => { if (o.isMesh && o.userData.role === name) found.push(o); }); return found; };
 
-test('the backrest beam and its column are cut to meet on a mitre, flush at the back and the top', () => {
-  const kit = machine();
-  const [column] = roled(kit, 'backColumn');
-  const [beam] = roled(kit, 'backBeam');
-  assert.ok(column && beam, 'a backColumn and a backBeam');
-  const [c, b] = [column, beam].map((o) => new THREE.Box3().setFromObject(o));
-  close(c.max.y, b.max.y, 0.001, 'the column\'s top against the beam\'s top');
-  close(c.min.z, b.min.z, 0.001, 'the column\'s back against the beam\'s back');
-  // The beam runs from the column to the pad's back, and the column stands on the floor beam.
-  assert.ok(b.max.z > c.max.z + 0.1, 'the beam reaches forward of the column');
+test('the backrest column and beam are one run of tubing mitred at the corner, flush at the back and the top', () => {
+  const [run] = roled(machine(), 'backFrame');
+  assert.ok(run, 'a backFrame');
+  const b = new THREE.Box3().setFromObject(run);
+  // The 6 cm tubing's outer corner is the corner of the L: no step at the back or the top.
+  close(b.min.z, -0.76 - 0.03, 0.001, 'the back of the column');
+  close(b.max.y, 1.14 + 0.03, 0.001, 'the top of the beam');
+  close(b.max.z, -0.406, 0.002, 'the beam\'s end, at the pad\'s back');
 });
 
 test('each handle turns from its round post into the grip through a round elbow, with no tube end showing', () => {
