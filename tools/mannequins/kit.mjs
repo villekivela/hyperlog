@@ -70,10 +70,10 @@ export const STATIONS = {
 };
 
 /**
- * The bars that serve exercises of their own equipment kind, with the exercises each is the bar of.
- * Only those no pose has set up are listed.
+ * The specialty bars that serve exercises of their own, with the exercises each is the bar of. Only
+ * those no pose has set up are listed.
  */
-export const BAR_KITS = {
+export const BARS = {
   ez_bar: { kit: 'ez_bar', exercises: ['ez_bar_curl', 'ez_bar_preacher_curl', 'skull_crusher'] },
 };
 

@@ -1,7 +1,27 @@
 {
+  "barbell_squat": {
+    "ok": true,
+    "clip": "3f218c910925c831",
+    "at": "2026-11-04T15:57:24.013Z"
+  },
+  "close_grip_lat_pulldown": {
+    "ok": true,
+    "clip": "9ff370b4b3b4477c",
+    "at": "2026-11-04T20:51:46.257Z"
+  },
   "db_incline_press": {
     "ok": true,
     "clip": "6409127e82e4e276",
     "at": "2026-11-04T14:08:46.546Z"
+  },
+  "lat_pulldown": {
+    "ok": true,
+    "clip": "a40679291cf85b30",
+    "at": "2026-11-04T20:52:29.104Z"
+  },
+  "triceps_pressdown": {
+    "ok": true,
+    "clip": "a8c3fadd608cb06f",
+    "at": "2026-11-04T20:52:58.276Z"
   }
 }

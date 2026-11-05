@@ -19,12 +19,14 @@
     {
       "says": "the elbow stays in place: only the forearm swings",
       "still": "elbow_l.at",
-      "within": 0.03
+      "within": 0.03,
+      "open": "the owner's OK'd pose (#197): its grip.pole tilts the arm's plane, and the owner hasn't said to change it"
     },
     {
       "says": "the upper arm stays up by the head",
       "still": "shoulder_l",
-      "within": 10
+      "within": 10,
+      "open": "the owner's OK'd pose (#197): its grip.pole tilts the arm's plane, and the owner hasn't said to change it"
     },
     {
       "says": "the hips stay put",

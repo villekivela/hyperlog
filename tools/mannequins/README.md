@@ -131,7 +131,7 @@ Each names where the bar sits in the hand, its landmark, and the thumb:
 - **`grip.sits`**: `heel` (a press: the bench, the dumbbell, chest and cable shoulder presses, the
   low-bar squat), `mid` (a curl, a pressdown, the high-bar squat, a bridge) or `base` (a pull: a
   deadlift, a row, a pulldown, a raise, the machines' handles), each motion's by default; or `open`,
-  a hand that holds nothing round (the cross-arm front squat's).
+  a hand that holds nothing round (a cross-arm hold's, `grip.crossed`).
 - **`grip.thumb`**: `wrapped` round the bar (the default) or `thumbless`, over it beside the fingers
   (the low-bar squat).
 
@@ -272,8 +272,8 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
-| `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
-| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
+| `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `armOut`, degrees the arm leans out to the side about the shoulder, away from the body whether it is raised or hanging (a Y overhead, a lateral raise), easing from none at an end without one; `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative) |
+| `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
@@ -394,11 +394,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   moves when it is posed machine-first, so no clip changes): two towers 2210 mm apart on the centre
   line, a 2724 mm crossmember resting on their front posts, each tower a rail up the post's face, a
   stack behind between its uprights and a floor beam under both. `position` (1 to 16, or one per
-  tower) sets the carriage's hole, its pin 350 mm up at hole 1 and 132 mm higher for each. Each
+  tower) sets the carriage's hole, its pin 350 mm up at hole 1 and 132 mm higher for each. `at`
+  [x, z] stands the middle of the towers' line there, since the body stays at the origin: back for a
+  lifter a step ahead of them, to a side for one beside a tower. `hands` lists the hands that hold a
+  handle (1 the left), and with `crossed` each takes the far tower's cable. Each
   tower has a carriage (prismatic, up the rail), a swivel (revolute about the vertical, 180°) and a
   stack (prismatic, the cable drawn out up to 2743 mm, the stack rising half as far, 2:1), and each
   hand's handle is a free body, hanging from the cable's end where no pose holds it. Contacts tie
-  the hands to the handles and to each carriage's fixed grip bar; the fit rule sets `position`.
+  the hands to the handles, and `optional` ones to each carriage's fixed grip bar, which a free hand may use; the fit rule sets `position`.
   It departs from the ref: the stack's plates and the frame's tubes are the library's generic ones
   (twelve 26 cm plates, 76 mm tubes without the holes), the stack stands 500 mm behind the rail, the
   top wheels are 90 mm, and the 2210 mm is taken centre to centre. The handle is the
@@ -419,11 +422,11 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   kits (`bench`, `platform`).
 - `ez_bar` (#209, its own equipment kind; `BARS` in `kit.mjs` maps its 3 exercises, none posed yet,
   so no clip changes) is a short Olympic-sleeved curl bar with a zigzag shaft, along x, a free body
-  the hands carry like `barbell`. It is 1384 mm long, the shaft 28.5 mm tube and 800 mm between
-  the collars: a straight 120 mm in the middle on the sleeve axis, then each side an inner and an
-  outer grip segment (17 and 32 degrees, opposite ways) and a return to the axis at the collar, 80 mm
-  from peak to trough in the horizontal plane, the outer kinks forward (+z). Each sleeve is 50 mm
-  across and 267 mm to load, behind a collar ring. Nothing on it moves. Its option `grip` (`outer` by
+  the hands carry like `barbell`. It is 1384 mm long, the shaft dark 28.5 mm tube and 800 mm between
+  the collars: a straight middle on the sleeve axis (120 mm corner to corner), then each side an
+  inner and an outer grip segment (about 17 and 32 degrees, opposite ways) with rounded bends and a
+  return to the axis at the collar, 80 mm from peak to trough in the horizontal plane, the outer bend
+  forward (+z). Each sleeve is chrome, 50 mm across and 267 mm to load, behind a wider chrome flange. Nothing on it moves. Its option `grip` (`outer` by
   default, or `inner`) is the pair the pose's bar position is the middle of. Contacts, hands on the
   bar: `outer` (510 mm apart) and `inner` (250), on the segments' middles. Lying on the floor with no
   pose, it is shown alone in the studio (`npm run studio`, the `ez bar` row under kits).
@@ -478,7 +481,8 @@ with guide rods and a pin, pop-pins, bars and handles, each a function of its di
   where the knee is straight, a curl's at the checks' deepest bend, a lever in the hands where the
   arms are straight, the calf raise's where the heels are as high as they rise (45° from flat).
 - `contacts`: where a body (or the `frame`) ties to the mannequin: a named point and its landmark,
-  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`.
+  `hands`, `feet`, `shins`, `thighs`, `shoulders`, `chest`, `back` or `upperArms`. An `optional` one
+  on the hands is a grip a free hand may use, so no hand is held to it.
 - `stacks`: each weight stack, the joint whose travel raises it and the `ratio` (metres a radian, or
   a metre). A working stack is held 6 cm off its rest (`HELD`), and rises `ratio` times its joint's
   value from there; a cable machine's stack rides its own joint, the cable drawn out, one for one.
@@ -496,7 +500,7 @@ is, and each contact's point. A kit's `scrub(body, value)` moves a
 joint's body rigidly to a value within its limits, its stack with it. `recipes.test.mjs` checks
 every posed exercise against its recipes: the joints stay within their limits through the rep, a
 scrub from the bottom of the rep to the top's value puts each body where the top has it, and each
-contact meets its landmark.
+contact but an `optional` one meets its landmark.
 
 ### Solving a machine
 
@@ -623,7 +627,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the cable crossover, the smith machine, the power rack and the EZ bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the power rack and the EZ bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
@@ -635,7 +639,9 @@ listens on 127.0.0.1 only.
 - **The numbers** are the exercise's pose entry, one row each (`tune.mjs` says which, and the levers
   its motion offers that the entry leaves at the default), lengths shown in millimetres. `h` and `l`
   step the selected one a degree, a millimetre or a hundredth of a ratio, `H` and `L` a tenth of
-  that, and `=` types a value (`412.5`, or `+2` and `+-2` to move it). A drag of a handle sets the
+  that, and `=` types a value (`412.5`, or `+2` and `+-2` to move it). A carriage's `position` lands
+  on a hole of the 16, however it is set, and a resting hand's `grip.rest` reaches a metre either
+  way. A drag of a handle sets the
   same numbers (`top.bar` and `grip.width`, `grip.elbows`, `feet.z`, `body.hip`, `trunk`,
   `body.arch`), a point whole.
 - **The technique video** of an exercise with a video link in `exercises.json` is beside the

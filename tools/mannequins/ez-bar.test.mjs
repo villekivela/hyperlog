@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
-import { EQUIPMENT, KITS, BAR_KITS, buildKit, shownAlone } from './kit.mjs';
+import { EQUIPMENT, KITS, BARS, buildKit, shownAlone } from './kit.mjs';
 import { buildStage } from './stage.mjs';
 import { POSES } from './poses.mjs';
 
@@ -17,7 +17,7 @@ test('it is the kit of the 3 EZ bar exercises the ref names, none of them posed'
   const ref = await readFile(path.join(HERE, 'refs', 'ez_bar', 'ref.md'), 'utf8');
   const named = [...ref.match(/^.*Serves .*$/m)[0].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
   assert.equal(named.length, 3);
-  assert.deepEqual(BAR_KITS.ez_bar, { kit: 'ez_bar', exercises: named });
+  assert.deepEqual(BARS.ez_bar, { kit: 'ez_bar', exercises: named });
   assert.ok(KITS.ez_bar, 'a recipe named ez_bar');
   assert.deepEqual(EQUIPMENT.ez_bar, ['ez_bar']);
   for (const id of named) {
@@ -54,7 +54,7 @@ test('it is 1384 mm long with 267 mm sleeves 50 mm across, 800 mm of shaft betwe
   }
 
   // The collars stand between: the shaft is 800 mm from one collar to the other.
-  const collars = meshes(kit, (o) => o.material.name === 'frame').map(({ box }) => box).sort((a, b) => a.min.x - b.min.x);
+  const collars = meshes(kit, (o) => o.material.name === 'metal' && Math.abs(size(new THREE.Box3().setFromObject(o, true)).y - 0.064) < 1e-3).map(({ box }) => box).sort((a, b) => a.min.x - b.min.x);
   assert.equal(collars.length, 2);
   close(collars[1].min.x - collars[0].max.x, 0.8, 1e-3, 'the shaft between the collars');
 });
@@ -62,7 +62,7 @@ test('it is 1384 mm long with 267 mm sleeves 50 mm across, 800 mm of shaft betwe
 test('the shaft zigzags in the bar\'s horizontal plane: 28.5 mm tube, 80 mm peak to trough, forward kinks at the outer pair', () => {
   const kit = bar();
   const held = meshes(kit, (o) => o.userData.held);
-  assert.equal(held.length, 7, 'the centre section and three segments a side: inner grip, outer grip, the return');
+  assert.equal(held.filter((m) => m.mesh.geometry.type === 'CylinderGeometry').length, 7, 'the centre section and three straight segments a side: inner grip, outer grip, the return');
   const whole = held.reduce((u, { box }) => u.union(box), new THREE.Box3());
   // Peak to trough, tube included: the centre line's 80 mm plus a 28.5 mm tube.
   // A slanted tube's flat end sits a little inside its round bend.
@@ -72,7 +72,8 @@ test('the shaft zigzags in the bar\'s horizontal plane: 28.5 mm tube, 80 mm peak
   const middle = held.filter(({ box }) => Math.abs(centre(box).x) < 0.01);
   assert.equal(middle.length, 1);
   close(centre(middle[0].box).z, 0, 1e-3, 'the centre section lies on the sleeve axis');
-  close(size(middle[0].box).x, 0.12, 2e-3, 'the centre section\'s length');
+  // 120 mm corner to corner; the straight tube stops 20 mm short of each corner, where the bend begins.
+  close(size(middle[0].box).x, 0.08, 2e-3, 'the centre section\'s straight length');
 });
 
 test('the hands go on the outer pair 510 mm apart or the inner pair 250 mm apart, on the segments', () => {
@@ -131,4 +132,13 @@ test('with grip "inner" the bar is carried so the inner pair is at the hands\' l
   close((l.z + r.z) / 2, 0.3, 1e-6, 'the hands\' z, on the inner pair');
   const [ol, or] = contact(kit, 'outer').at;
   assert.ok((ol.z + or.z) / 2 > 0.3 + 0.01, 'the outer kinks are forward of the inner pair');
+});
+
+test('the bends are rounded tubes, not kinks, and the shaft is dark with the collars and sleeves in chrome', () => {
+  const kit = bar();
+  const bends = meshes(kit, (o) => o.userData.held && o.geometry.type !== 'CylinderGeometry');
+  assert.equal(bends.length, 6, 'three bends a side');
+  for (const { mesh } of meshes(kit, (o) => o.userData.held)) assert.equal(mesh.material.name, 'frame', 'the shaft is the dark tone');
+  const chrome = meshes(kit, (o) => o.material.name === 'metal');
+  assert.equal(chrome.length, 4, 'a collar and a sleeve a side');
 });
