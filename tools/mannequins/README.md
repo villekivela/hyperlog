@@ -407,7 +407,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   elbow's distance, and holds one line through the rep; the line stays under 0.9 of vertical, past
   which `straightArm` measures the hand's roll in another basis. The linkage gives `lever_handles` the
   way the elbow goes (`elbow`). Each arm's contacts name their `hand`, and `seatTop` holds the thighs
-  to the seat. The stack hangs on `arm_l`.
+  to the seat.
+  The stack hangs on `arm_l`. A block of two pulleys stands between the post and the tower, its cable
+  fixed.
 - `t_bar_row_machine` stands where its ref puts it, whatever the pose (the first machine built
   machine-first): a pad inclined 40° on a beam held up by two posts,
   a foot plate `footPlate` metres down the beam from the pad's bottom end on its pop-pin, and one

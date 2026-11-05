@@ -313,6 +313,19 @@ test('the whole lever is solid to the body: strut, beam, bracket and wedge', () 
   }
 });
 
+// The hero photo: a block of two pulleys stands between the post and the tower, the cable up from it
+// to the levers and on to the stack.
+test('a pulley block stands between the post and the tower, on the centre line, clear of the legs', () => {
+  const kit = machine();
+  const wheels = boxes(kit).filter(({ mesh }) => mesh.material?.name === 'pulley' && !mesh.userData.solid);
+  assert.ok(wheels.length >= 2, 'its pulleys');
+  for (const { box: b } of wheels) {
+    const c = b.getCenter(new THREE.Vector3());
+    assert.ok(Math.abs(c.x) < 0.06, `on the centre line, at x ${c.x.toFixed(2)}`);
+    assert.ok(c.z > 0.3 && c.z < 0.7 && c.y < 0.8, `between the post and the tower, at z ${c.z.toFixed(2)}`);
+  }
+});
+
 // #241: a body fits it. The checks hold the hands on the grips, the upper arms on the pads, the chest
 // on its pad, the thighs on the seat and nothing through the body, on every frame of the rep.
 const fails = async (id) => Object.entries((await checkPose(id)).checks).filter(([, c]) => !c.ok).map(([k, c]) => `${k}: ${c.found} (frame ${c.frame})`);

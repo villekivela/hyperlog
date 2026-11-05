@@ -67,6 +67,7 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 | Grips | hanging inboard of the pad on a bracket, in line with the upper arm at the elbow's distance, pivoting | in line with the pad, so the hand stood out of the arm's line and the arm could not lie level | as measured, holding one line through the rep |
 | Chest pad | its top just under the bar | centred at 830, on the belly | centred at 960 |
 | Seat | behind the post, front edge just short of it, top at 39% of the tower | on its own post, at 480 | as measured, 556 for the mannequin |
+| Pulley block | two pulleys on a plate between the post and the tower, the cable up to the levers and on to the stack | missing, one pulley at the tower's top | as measured, its cable fixed; only the length at the stack moves |
 | Stack travel | about 240, estimated from the demo at 0:08 and 0:09: 17% of the tower | about 280 | as measured |
 
 ## Open gaps
@@ -74,4 +75,4 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 - The pivots stand at 1.15 m and the seat at 0.56 m for the mannequin, above the table's estimates (1.05 to 1.10 m, about 0.48 m), from their shares of the tower in the demo; the shoulder stays on the pivot.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
 - The standing exercise has no reference model; its geometry comes from one video of two other makes. It needs a kit of its own, so it stays unposed: the owner's call (#241).
-- Left plain: a square tower, 17% narrower than the real rounded one (the shared stack frame), an even stack where the real one is narrow over wide, no pulley plate or cable from the levers, round pads where the real ones are D sections. The pivots stand wider than the photo's, on the mannequin's shoulders, which is what keeps the pads on the arms.
+- Left plain: a square tower, 17% narrower than the real rounded one (the shared stack frame), an even stack where the real one is narrow over wide, round pads where the real ones are D sections. The pivots stand wider than the photo's, on the mannequin's shoulders, which is what keeps the pads on the arms.
