@@ -300,7 +300,7 @@ Every kind of equipment in the library, and the generic kits a pose in it can us
 | `safety_bar` | `safety_bar` |
 | `smith_machine` | `smith_machine`, `bench`, `platform` (a low one under the front foot, for the front-foot-elevated lunge) |
 | `plate` | missing |
-| `weighted_bodyweight` | `power_rack` |
+| `weighted_bodyweight` | `power_rack`, `hyperextension_bench` for the 45° hyperextension |
 
 The library's machines by kind (`MACHINES` in `kit.mjs`):
 
@@ -484,8 +484,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `pec_deck` (#208, a machine kind: `MACHINES` in `kit.mjs` maps its 3 exercises, none posed yet, so no
   clip changes) is a seat and a 300 mm back pad in front of a column, with an overhead unit on it
   1.80 m up and a weight stack behind. An axle hangs from the unit 0.2 m either side of the centre line,
-  1.62 m up, and a lever arm 0.48 m long swings from each, a pin at its end and a drop arm hanging from
-  it to a vertical grip at 1.05 m with a short horizontal grip across its foot. Each arm is its own
+  1.62 m up, and a lever arm 0.48 m long swings from each, a pin across its end and a drop arm hanging from
+  it, the two one mitred square tube, with a U handle bent out of the arm as the vertical grip at 1.05 m. Each arm is its own
   body on a revolute joint (`left`, `right`), 0 to 120° swept in from out at the sides, a little behind
   the shoulder line; the ref has the arms independent, unverified. The one rest suits the pec fly (the
   hands meet in front of the chest) and the rear delt fly (the hands sweep out to the shoulders' line).
@@ -498,6 +498,22 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   and not touching; it has one start (the ref's knob has five, 15° apart, chosen) and the drop arms
   are rigid on their pins; the rear delt's straddle (300 mm behind the axes) has no fit rule until
   it is posed; and the seat, start angle and lever radius are the ref's chosen numbers.
+- `hyperextension_bench` (#220, weighted bodyweight equipment; `STATIONS` in `kit.mjs` maps its one
+  exercise, `45_hyperextension`, not posed yet, so no clip changes) is a rigid 45° back extension
+  bench. The lifter lies face down and faces -z; the origin is on the floor under the hip pads' top
+  end, which is 825 mm high, with the feet toward +z. A 1248 mm rail of 75 mm tube lies on two cross
+  feet 666 mm across; a column leans up from it parallel to the slope to a bracket under two hip pads
+  (210 mm wide, 55 mm apart, 330 mm long, 90 mm thick, sloping down at 45° toward the feet), with a
+  strut under it and a pair of grab handles at 690 mm reaching 50 mm past the back end. A foot plate
+  (470 by 330 mm) sits square to the body line, its surface 900 mm down the slope from the pads' top
+  end on a post from the rail, and two heel rollers (190 mm long, 130 across) on an axle through a
+  post from the plate's heel end, 195 mm up the body line from the plate and 210 mm off it. Contacts,
+  on the frame: `thighPad` (thighs, each pad's middle), `footPlate` (feet) and `heelRollers`
+  (shins, each roller's centre). It has no fit rule and no options. It departs from the ref: the body
+  line and pad height are chosen (the real bench telescopes, 844-1119 mm), so the plate stands about
+  180 mm nearer the pads than in the drawing, which is at 40°; and the angle and height collars, the
+  heel lock, the holes down the rail and the pads' rolled top end are left out. The studio shows it
+  alone: `npm run studio`, then the `hyperextension bench` row under Kits.
 - The leg extension and the leg curls are laid out as the Watson line's (#149): a selectorised tower
   beside the user, its stack facing them and its cable over two wheels under the cap, down its end
   to wheels on the floor rail and up to a cam on the lever at the knees. The lever, with its
@@ -677,7 +693,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the lateral raise machine, the power rack, the EZ bar, the hip machine and the safety bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the lateral raise machine, the power rack, the EZ bar, the hip machine, the safety bar and the hyperextension bench. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
