@@ -22,8 +22,9 @@ const DEFAULT = 4;
 // The base: two floor rails 45 in apart outside, 1740 mm long, with a rubber cap on each end.
 const RAIL = { w: 0.0635, x: 0.5715 - 0.0318, rear: -0.76, front: 0.98, cap: 0.01 };
 const BEAM = 0.0635;
-// Each upright stands on a crossmember between the rails: the front one under the pads (29 in
-// to the pad plate), the rear 19 in tall, with the spine bolted to them both.
+// Each upright stands on a crossmember between the rails: the front one under the pads, up to the pad
+// plate at 836 mm (the manual's 29 in part with the plate on it, about 30 in over the rails), the rear
+// 19 in tall, with the spine bolted to them both.
 const FRONT = { z: 0.25, top: 0.836 };
 const REAR = { z: -0.7, top: 19 * IN };
 const SPINE = { y: 0.43, w: 0.0508 };
@@ -31,7 +32,8 @@ const SPINE = { y: 0.43, w: 0.0508 };
 // crest 1092 mm up.
 const PAD = { w: 0.23, gap: 0.04, length: 0.5, height: 0.23, top: 1.092, plate: 0.026 };
 const PAD_X = (PAD.w + PAD.gap) / 2;
-// The kneecaps rest on the pads' rear curve, this far ahead of their rear edge.
+// The kneecaps rest on the pads' rear curve, this far ahead of their rear edge: chosen, at low
+// confidence, so the ref's 0.43 m shin and 80 mm ankle give its 450 mm setting.
 const KNEE = 0.06;
 // A handle each side under the pads, 820 mm up, out past both ends.
 const HANDLE = { x: 0.2, y: 0.82, from: -0.1, to: 0.6, radius: 0.016 };

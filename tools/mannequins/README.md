@@ -444,7 +444,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `glute_ham_raise` (#230, a machine kind; its one exercise isn't posed yet, so no clip changes) is a
   glute-ham developer from its ref, standing with the lifter facing +z and the origin on the floor under
   the pads' rear edge. Nothing on it moves. Two half-round pads (230 wide with 40 between, 500 long, 230
-  tall, flat side down on a plate) with their crest 1092 mm up, on a front upright 29 in tall with a
+  tall, flat side down on a plate) with their crest 1092 mm up, on a front upright up to the pad plate at 836 mm (the manual's 29 in part with the plate on it) with a
   handle each side under them at 820 mm, out past both ends; a rear upright 19 in tall and a spine
   joining them; two floor rails 45 in apart and 1740 mm long with rubber caps, and a crossmember under
   each upright. The ankle assembly's sleeve slides on the spine, pinned: a mast between two pairs of

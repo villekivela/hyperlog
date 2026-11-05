@@ -141,7 +141,7 @@ test('its fit rule sets the slide from the shin: the ref\'s 0.43 m shin and 80 m
   const [rule] = KITS.glute_ham_raise.fit;
   assert.equal(rule.sets, 'slide');
   assert.equal(rule.solve({ L: { shin: 0.43 } }), 4);
-    assert.ok(rule.solve({ L: { shin: 0.5 } }) > 4, 'a longer shin slides back');
+  assert.ok(rule.solve({ L: { shin: 0.5 } }) > 4, 'a longer shin slides back');
   assert.ok(rule.solve({ L: { shin: 0.38 } }) < 4, 'a shorter one slides forward');
   assert.equal(rule.solve({ L: { shin: 0.2 } }), 0, 'no further forward than the first hole');
   assert.equal(rule.solve({ L: { shin: 0.9 } }), 12, 'no further back than the last');
