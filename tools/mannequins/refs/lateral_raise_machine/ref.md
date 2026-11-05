@@ -56,5 +56,5 @@ Two scales, both from the 1400 mm height. In the hero photo the column runs from
 ## Open gaps
 - Seat range: no frame shows the seat at its ends, so it is chosen around the measured seat, low confidence.
 - For the mannequin (seat top 0.47 m, shoulder about 1.10 m) the pivots go at 1.10 m, chosen from the fit rule; the estimates (1.05 to 1.10 m, seat about 0.48 m) agree within their error.
-- The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe may set the spacing to the mannequin's shoulders instead.
+- The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
 - The standing exercise has no reference model; its geometry comes from one video of two other makes.

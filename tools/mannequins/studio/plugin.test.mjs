@@ -121,6 +121,11 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   assert.equal(smith.status, 'unused');
   assert.deepEqual(smith.entry.kit, { smith_machine: {} });
   assert.equal(smith.entry.alone, true);
+  // So is the lateral raise machine, until its exercises are posed (#212).
+  const raise = await get('/api/item/kit/lateral_raise_machine');
+  assert.equal(raise.uses, null);
+  assert.deepEqual(raise.entry.kit, { lateral_raise_machine: {} });
+  assert.equal(raise.entry.alone, true);
   const none = await get('/api/item/exercise/pendulum_squat');
   assert.equal(none.entry, null);
   assert.equal(none.status, 'no pose');
