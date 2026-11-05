@@ -22,6 +22,7 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -103,4 +104,42 @@ class NextRowClockTest {
         compose.onAllNodesWithContentDescription("Breathe").assertCountEquals(0)
     }
 
+}
+
+/** The clock's numbers, at the row's seam: how full the row is and what it reads. */
+class RowClockTest {
+    private fun session(restEndsAt: Long? = null, total: Long = 0, breathing: Boolean = false, holdStartedAt: Long? = null, followUp: FollowUp? = null) =
+        ActiveSession(
+            id = 1, startedAt = 0, exercises = emptyList(), currentId = null, entry = null, padVisible = true,
+            restEndsAt = restEndsAt, restTotalMs = total, breathing = breathing, holdStartedAt = holdStartedAt, followUp = followUp,
+        )
+
+    @Test
+    fun restDrainsFromFullToEmpty() {
+        val s = session(restEndsAt = 100_000, total = 100_000)
+        assertEquals(1f, rowClock(s, 0)!!.fraction, 0.001f)
+        assertEquals(0.25f, rowClock(s, 75_000)!!.fraction, 0.001f)
+        assertEquals("0:25", rowClock(s, 75_000)!!.time)
+    }
+
+    @Test
+    fun afterRestItCountsUpWithNothingFilled() {
+        val c = rowClock(session(restEndsAt = 100_000, total = 100_000), 112_000)!!
+        assertEquals(ClockKind.Over, c.kind)
+        assertEquals("+0:12", c.time)
+        assertEquals(0f, c.fraction, 0f)
+    }
+
+    @Test
+    fun theHoldFillsTowardItsTarget() {
+        val s = session(holdStartedAt = 0, followUp = FollowUp.Hold(20, HoldPosition.Stretch))
+        assertEquals(0.5f, rowClock(s, 10_000)!!.fraction, 0.001f)
+        assertEquals(ClockKind.HoldReached, rowClock(s, 20_000)!!.kind)
+    }
+
+    @Test
+    fun nothingRunsNothingShows() {
+        assertEquals(null, rowClock(session(), 0))
+        assertEquals(null, rowClock(session(restEndsAt = 5_000, total = 15_000, breathing = true), 6_000))
+    }
 }

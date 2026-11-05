@@ -780,7 +780,7 @@ internal fun NextLine(
             val rest = clock.kind == ClockKind.Rest || clock.kind == ClockKind.Over
             Text(
                 clock.time,
-                Modifier.then(if (rest) Modifier.clickable(onClick = onClock) else Modifier).heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically).testTag(ClockDigitsTag),
+                Modifier.then(if (rest) Modifier.clickable(onClickLabel = stringResource(R.string.rest_title), onClick = onClock) else Modifier).heightIn(min = 48.dp).padding(horizontal = 8.dp).wrapContentHeight(Alignment.CenterVertically).testTag(ClockDigitsTag),
                 style = MaterialTheme.typography.headlineMedium, color = ink, maxLines = 1,
             )
         } else {

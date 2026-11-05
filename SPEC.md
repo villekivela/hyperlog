@@ -301,7 +301,7 @@ logging, and computed loads where it needs them.
   mini-set row shows the first one's target; the pad reads "Mini-set N". There is no `+` on a myo
   pill. Programs and stored sets that still carry `maxMiniSets` load, and it is ignored.
 - **Iso hold**: the hold follows the set's full reps as its own sub-row. **Start** on the pad's
-  strip runs a hold timer in the header pill, filling toward the target and buzzing when it is
+  strip runs a hold timer on the Next row, filling toward the target and buzzing when it is
   reached; ✓ (or Stop) records the whole seconds held. Seconds can be typed instead.
 - **Lengthened partials**: the first ✓ moves to partials entry, prefilled with the target count if
   the program gives one; the second ✓ logs.
@@ -856,7 +856,7 @@ each planned day with the training day it lands on, and never changes the day:
      - **The Next row is the session's clock** (owner, 2026-11-05): the header has no timer. During
        rest the whole row drains from full to empty with the time left in large digits, and the set
        table stays visible, with the pad shown or hidden. A tap on the digits opens the rest sheet
-       (+15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
+       (−15, +15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
        is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
        still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
        row; the hold fills toward its target instead of draining. The lock screen notification and
@@ -892,7 +892,7 @@ each planned day with the training day it lands on, and never changes the day:
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
      set rows (index, last time, kg, reps, RIR, check) flat on the screen with no card behind them,
      techniques and their planned drops/mini-sets visible before the set, and a compact in-app pad
-     drawn like the system number keyboard. The top is the exercise name with the rest pill and ⋮,
+     drawn like the system number keyboard. The top is the exercise name with ⋮,
      the swap or superset chip, and the why-line. **Next** is the pad's top row, on the pad's
      surface, and stays at the bottom as the same row when the pad is hidden.
    - **Rest rules**: no rest before drops, between myo mini-sets (a short breathing countdown
