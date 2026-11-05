@@ -68,3 +68,16 @@ test('the elbows stay below the hands at the bottom of the rep', () => {
   stage.pose(1);
   for (const k of ['l', 'r']) assert.ok(wpos(stage.rig.bones[`lowerarm_${k}`]).y < wpos(stage.rig.bones[`hand_${k}`]).y, `the ${k} elbow below its hand`);
 });
+
+test('no part of the kit flips between two frames of the rep (a cable laid exactly plumb would)', () => {
+  const turned = new Map();
+  for (const d of frames) {
+    stage.pose(d);
+    kitOf(stage).group.traverse((o) => {
+      if (!o.isMesh) return;
+      const before = turned.get(o);
+      if (before) assert.ok(before.angleTo(o.quaternion) < Math.PI / 4, `${o.name} turned ${(before.angleTo(o.quaternion) * 180 / Math.PI).toFixed(0)}° between two frames`);
+      turned.set(o, o.quaternion.clone());
+    });
+  }
+});

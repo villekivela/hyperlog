@@ -128,7 +128,7 @@ export default recipe({
     frame.push(...weights.parts);
     // The cable's two floor pulleys, under the crank's tip at rest and at the stack's foot, and its
     // three runs: down from the crank, along the floor, and up to the head.
-    const low = [V(0, 0.1, PIVOT[1] - CRANK), V(tx, 0.1, tz)];
+    const low = [V(0, 0.1, PIVOT[1] - CRANK + 0.06), V(tx, 0.1, tz)];
     frame.push(...low.flatMap((at) => pulley(at, M)));
     const [down, along, rise] = [0, 1, 2].map(() => part(rodGeometry(0.0045, 8), M.metal));
     frame.push(down, along, rise);
