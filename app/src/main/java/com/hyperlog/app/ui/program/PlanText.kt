@@ -25,6 +25,8 @@ import com.hyperlog.app.ui.session.RirChipKey
 import com.hyperlog.app.ui.session.appendRir
 import com.hyperlog.app.ui.session.rirChipContent
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.session.isDarkSurface
+import com.hyperlog.app.ui.theme.techniqueColor
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
 /**
@@ -46,6 +48,9 @@ enum class TechniqueLook(val kind: TechniqueKind, val symbol: Symbol, @StringRes
 
 /** The symbol a technique is shown with. */
 fun Technique.symbol(): Symbol = TechniqueLook.of(kind).symbol
+
+/** The technique whose symbol is [symbol]. */
+private fun TechniqueLook.Companion.of(symbol: Symbol): TechniqueLook = TechniqueLook.entries.first { it.symbol == symbol }
 
 /** The technique's name in the set sheet: `Drop set`, `Myo-reps`… */
 @Composable
@@ -101,10 +106,10 @@ fun SetSummary(
             }
         }
     }
-    val tertiary = MaterialTheme.colorScheme.tertiary
+    val dark = isDarkSurface()
     val inline = symbols.mapValues { (key, symbol) ->
         InlineTextContent(Placeholder(1.2.em, 1.2.em, PlaceholderVerticalAlign.Center)) {
-            SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else tertiary)
+            SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else techniqueColor(TechniqueLook.of(symbol).kind, dark))
         }
     } + rirChipContent(chips, style.fontSize)
     Text(text, modifier, style = style, color = color, inlineContent = inline, maxLines = 2, overflow = TextOverflow.Ellipsis)

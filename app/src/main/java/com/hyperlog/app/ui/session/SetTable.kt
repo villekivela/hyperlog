@@ -2,6 +2,8 @@ package com.hyperlog.app.ui.session
 
 import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.figureMedium
+import com.hyperlog.app.ui.theme.onTechniqueColor
+import com.hyperlog.app.ui.theme.techniqueColor
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,7 +35,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -416,8 +420,12 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
         }
         else -> Unit
     }
-    return out
+    // Every row of the group draws its pill in the technique's colour.
+    return out.map { item -> SubItem(item.key, item.active) { CompositionLocalProvider(LocalPillTechnique provides technique) { item.content() } } }
 }
+
+/** The technique whose pill a sub-row's index column draws; null outside a technique's rows. */
+private val LocalPillTechnique = compositionLocalOf<Technique?> { null }
 
 private fun seconds(s: Int) = "$s s"
 
@@ -721,16 +729,16 @@ private fun RowScope.EntryCells(entry: SetEntry, flagged: Boolean, actions: PadA
 }
 
 /**
- * The index column: `W` or the set number on a circle. A set with a technique is tinted, with
- * the technique's symbol as a badge on its corner, and joins its drops or mini-sets in one tall
- * pill ([join]); `+` at the pill's foot adds a drop.
+ * The index column: `W` or the set number on a circle. A set with a technique has no number: its
+ * circle is the technique's colour with the technique's symbol filling it, and joins its drops
+ * or mini-sets in one tall pill of that colour ([join]); `+` at the pill's foot adds a drop.
  */
 @Composable
 private fun RowScope.IndexCell(
     label: String?,
     tone: Tone,
-    /** The set's technique, drawn as a badge on the circle's corner; null for none. */
-    badge: Technique?,
+    /** The set's technique, drawn as its colour and symbol filling the circle; null for none. */
+    technique: Technique?,
     join: Join,
     rowHeight: Dp,
     onClick: (() -> Unit)? = null,
@@ -741,17 +749,19 @@ private fun RowScope.IndexCell(
     record: Record? = null,
 ) {
     val cs = MaterialTheme.colorScheme
+    val dark = isDarkSurface()
+    val pillTechnique = technique ?: LocalPillTechnique.current
+    val pill = pillTechnique?.let { techniqueColor(it.kind, dark) } ?: cs.tertiaryContainer
     val fill = when (tone) {
         Tone.Plain -> cs.surfaceContainerHighest
         Tone.Active -> cs.primary
-        Tone.Technique -> cs.tertiaryContainer
+        Tone.Technique -> pill
     }
     val ink = when (tone) {
         Tone.Plain -> cs.onSurfaceVariant
         Tone.Active -> cs.onPrimary
-        Tone.Technique -> cs.onTertiaryContainer
+        Tone.Technique -> pillTechnique?.let { onTechniqueColor(it.kind, dark) } ?: cs.onTertiaryContainer
     }
-    val pill = cs.tertiaryContainer
     Box(
         Modifier.width(ColIndex).fillMaxHeight().then(if (label != null) Modifier.testTag(indexTag(label)) else Modifier).drawBehind {
             val w = IndexSize.toPx()
@@ -775,19 +785,18 @@ private fun RowScope.IndexCell(
                     .then(if (description != null && onClick != null) Modifier.semantics { contentDescription = description } else Modifier.clearAndSetSemantics { }),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (join == Join.None || tone == Tone.Active) ink else cs.onTertiaryContainer,
-                    fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
-                )
+                // A technique set shows its symbol alone, so it reads without colour; the number is gone.
+                if (technique == null) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if (join == Join.None || tone == Tone.Active) ink else cs.onTertiaryContainer,
+                        fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
+                    )
+                }
             }
-            // The technique's symbol on the circle's corner, so a technique reads without colour.
-            badge?.let {
-                Box(
-                    Modifier.offset(x = IndexSize - 14.dp, y = -(IndexSize / 2) + 2.dp).size(16.dp).clip(CircleShape).background(cs.tertiary),
-                    contentAlignment = Alignment.Center,
-                ) { SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(12.dp), tint = cs.onTertiary) }
+            technique?.let {
+                SymbolIcon(it.symbol(), techniqueName(it), Modifier.size(IndexIcon), tint = ink)
             }
             // The record's trophy on the lower corner, the technique's sibling: in ink, not the accent.
             // A disc of full ink, ringed in the row's surface so it stands off the circle in dark too.
@@ -805,7 +814,7 @@ private fun RowScope.IndexCell(
                 Modifier.align(Alignment.BottomStart).padding(bottom = 8.dp).size(IndexSize).clip(CircleShape)
                     .clickable(onClickLabel = text, onClick = add).semantics { contentDescription = text },
                 contentAlignment = Alignment.Center,
-            ) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = cs.onTertiaryContainer) }
+            ) { SymbolIcon(Symbol.Add, null, Modifier.size(20.dp), tint = pillTechnique?.let { onTechniqueColor(it.kind, dark) } ?: cs.onTertiaryContainer) }
         }
     }
 }

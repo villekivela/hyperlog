@@ -37,7 +37,13 @@ configuration, iOS, web, any server.
   Sessions | Progress and Program's blocks (the owner on #138, replacing #58's white card in light). Tertiary follows primary;
   secondary and tertiaryContainer (advice cards, technique pills) are greys of their own step. The
   RIR, progression, plate and error colours stay fixed; a coloured accent would have to keep 30° of
-  hue from each of them, and a neutral one never competes. Light and dark follow the system
+  hue from each of them, and a neutral one never competes. **Technique colours** are the exception
+  (owner, #248): the technique's circle holds an icon and the RIR chip a number, so they don't keep
+  the 30° rule and red and teal may share hues with the chip. Red for a drop set, teal for
+  lengthened partials, violet for myo-reps, orange for to failure, blue for an iso hold; darker in
+  light, lighter in dark, each at 3:1 on every neutral surface (`TechniqueColourTest`). The colour
+  shows wherever the technique's icon does: its set's index circle, the tall pill joining its drops
+  or mini-sets, the Program plan text, the set sheet's list and the pad's strip. Light and dark follow the system
   setting; there is no in-app theme picker. **On the accent** (a primaryContainer card or strip:
   the hero, the gym's setup card, Claude's reply, Day done), a filled button or a picked choice is
   onPrimaryContainer with the card's accent for its words, as the hero's Start, and the choices not
@@ -839,10 +845,11 @@ each planned day with the training day it lands on, and never changes the day:
      logged, so takebacks stay in order, nor as a double tap within a second of logging it);
      earlier rows are fixed by tapping the row. The check of a drop, mini-set or hold being done logs it as shown.
    - **The index column** shows `W` for a warm-up and the set number for a work set, on a circle.
-     A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
-     a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
-     reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
-     or mini-sets join it in one tall pill down the index column, with `+` at a drop
+     A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to failure) has
+     no number: its circle is the technique's colour (Palette → Technique colours) with the
+     technique's Material Symbol filling it, so it reads without colour too. Nothing else is added
+     to the row: no words, no badge. A back-off set has no mark: its lowered weight shows it. A set's drops
+     or mini-sets join it in one tall pill of its colour down the index column, with `+` at a drop
      set's foot to add another drop, before the set or while it is under way. Before a myo-reps set,
      one muted planned mini-set row shows in its pill; myo-reps have no `+` and no maximum. A tap on a circle explains
      the technique and opens the set's sheet.

@@ -43,7 +43,7 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Sub-row | 48 dp | Drops, myo mini-sets, holds, Add set |
 | Label row | 32 dp | Column heads |
 | Columns | 40 · flex · 72 · 80 · 36 · 40 dp | Index, Last, kg, Reps, RIR, ✓ |
-| Index circle | 32 dp; badge 16 dp on its top corner | `W` or the set number; a technique's symbol |
+| Index circle | 32 dp; a technique's symbol 24 dp inside it | `W` or the set number; a technique set shows its symbol alone, no number |
 | Check | 28 dp circle (24 dp on sub-rows), 2 dp ring | Still to do (ring), done (filled) |
 | Cell | 48 dp tall (40 on sub-rows), 12 dp radius, 4 dp inside its column, 1 dp outline (2 dp focused), 8 dp inner padding | Tappable value in the active row; a value or placeholder too wide for the padding (`10–12`) steps its size down to fit |
 | Chip | 32 dp, 8 dp radius, 1 dp outline | Swap or superset, under the name |
@@ -77,7 +77,7 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | Active row | no fill: its cells outlined in outline, the index circle primary |
 | Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
 | Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a set through its drops or mini-sets |
-| Technique set | tertiaryContainer circle and tall pill, onTertiaryContainer; the badge tertiary with its symbol in onTertiary |
+| Technique set | circle and tall pill in the technique's colour (`techniqueColor`), its symbol in `onTechniqueColor` filling the circle; no number, no badge |
 | Record set | a 16 dp onSurface disc on the index circle's lower corner, ringed 1.5 dp in surface, its 11 dp `trophy` cut out in surface |
 | Record mark in set text | `trophy` at 1.2 em after the RIR chip, in the text's own colour |
 | Check | outlineVariant ring to do, primary ring on the row a tap logs, filled primary with an onPrimary `check` when done |
@@ -127,7 +127,7 @@ Two fixed scales sit outside the theme:
  (①)     97.5 × 6   │100│  ┃ 6 ┃   ▐1▌     ◯     ← active: no fill; outlined cells, the focused one in
                      └───┘  ┗━━━┛                    primary; the circle filled primary; ◯ logs it as shown
  (2)     87.5 × 8     90    6–8    [1]      ○    ← upcoming: planned weight, target as placeholders
- (3)ᵈ                 25   8–10    [0]      ○    ← technique set: tinted circle, badge ᵈ on its corner,
+  ᵈ                   25   8–10    [0]      ○    ← technique set: coloured circle holding the symbol, no number,
  ┃                  17.5      6    [0]      ○       its drops in one tall pill down the column,
  +                  12.5      6    [0]      ○       `+` at its foot adds a drop
 ░░░░░░░░░░░░░░░░░░░░░░░ fade ░░░░░░░░░░░░░░░░░░   ← the list scrolls as one; fades where it has more
@@ -300,7 +300,7 @@ in ink.
   under it.
 - *Set table.* The trophy sits in a 16 dp disc of full ink (onSurface) on the index circle's lower
   corner, ringed 1.5 dp in the row's surface so it stands off the grey circle; the owner asked for
-  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It is the technique badge's sibling (that one is violet, on the upper corner), so a drop set
+  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It is the technique badge's sibling (the technique's symbol now fills the circle), so a drop set
   that is also a record carries both. It shows from the moment the set logs; correcting the set
   moves it.
 - *Set text* (Session done, History's past session, the session list): the trophy after the set's
@@ -358,7 +358,7 @@ buttons this way: the way out first, the action last, at the right.
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 
 **Intensity techniques** (built in ticket #10).
-- Every set's technique is on its index circle (tint and badge), and its drops, mini-sets or
+- Every set's technique is on its index circle (its colour and symbol, no number), and its drops, mini-sets or
   hold follow as 48 dp sub-rows in its tall pill from the start, in the order they'll be done.
   Planned sub-rows are muted prefills (drop weights computed from the set's planned or typed weight,
   live), done ones end in a filled check.
