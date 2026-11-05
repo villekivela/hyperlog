@@ -32,8 +32,11 @@ const MACHINES = {
 const kitOf = (stage) => Object.values(stage.kit.kits)[0];
 const eased = (t) => t * t * (3 - 2 * t);
 
+// A machine with nothing on it that moves (no `rep`, no joint) is fitted and solved the same way, once, with no value to drive.
+const STATIC = ['glute_ham_raise'];
+
 test('every machine exercise is listed here', () => {
-  assert.deepEqual(Object.keys(POSES).filter((id) => prepare(id).equipment === 'machine').sort(), Object.keys(MACHINES).sort());
+  assert.deepEqual(Object.keys(POSES).filter((id) => prepare(id).equipment === 'machine').sort(), [...Object.keys(MACHINES), ...STATIC].sort());
 });
 
 for (const [id, joint] of Object.entries(MACHINES)) {
