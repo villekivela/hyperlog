@@ -162,6 +162,33 @@ export function tubeGeometry(w, length) {
 }
 
 /**
+ * A closed frame of square tubing `w` across and `height` high, one piece: the polygon through
+ * `points` ([x, z], in order, symmetric about z = 0) as the tube's middle, every corner mitred, laid
+ * flat and centred on y = 0.
+ */
+export function frameRingGeometry(points, w, height) {
+  return shape(`ring:${points.map(([x, z]) => `${mm(x)},${mm(z)}`).join(':')}:${mm(w)}:${mm(height)}`, () => {
+    const n = points.length;
+    const unit = (a, b) => { const d = [b[0] - a[0], b[1] - a[1]]; const l = Math.hypot(...d); return [d[0] / l, d[1] / l]; };
+    // Each corner moved `by` to the outside (negative: inside), along the mitre of its two edges.
+    const offset = (by) => points.map((p, i) => {
+      const [ax, az] = unit(points[(i + n - 1) % n], p);
+      const [bx, bz] = unit(p, points[(i + 1) % n]);
+      const nx = (az + bz), nz = -(ax + bx);
+      const scale = by / ((nx * az + nz * -ax) || 1);
+      return [p[0] + nx * scale, p[1] + nz * scale];
+    });
+    const trace = (path) => new THREE.Path(path.map(([x, z]) => new THREE.Vector2(x, z)).concat([new THREE.Vector2(path[0][0], path[0][1])]));
+    const outline = new THREE.Shape(trace(offset(w / 2)).getPoints());
+    outline.holes.push(new THREE.Path(trace(offset(-w / 2)).getPoints().reverse()));
+    const g = new THREE.ExtrudeGeometry(outline, { depth: height, bevelEnabled: false });
+    g.translate(0, 0, -height / 2);
+    g.rotateX(-Math.PI / 2);
+    return soften(g);
+  });
+}
+
+/**
  * Hollow square tubing `w` across, `length` long along y and centred, its walls `wall` thick, with a
  * round hole `radius` across through each of its four faces at every height in `holes` (metres from its
  * middle), its top end closed when `capped`: an upright or a crossmember with its holes.

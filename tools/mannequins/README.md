@@ -421,11 +421,12 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   the upper back) to the bar. The bench and the front-foot-elevated lunge's platform are separate
   kits (`bench`, `platform`).
 - `trap_bar` (#234, trap_bar equipment; `BARS` in `kit.mjs` maps its one exercise, none posed yet, so no
-  clip changes) is an open hexagonal trap bar from the ref's numbers: a 60 mm square frame whose two
-  corners are 934 mm apart on the sleeve axis, arms to a front crossmember 510 mm wide (the rear is
-  open, behind the lifter), 652 mm across the frame, and two 406 mm sleeves to 1875 mm over all.
+  clip changes) is a closed hexagonal trap bar from the ref's numbers, closed as the owner's second
+  reference (a TB-1 page, a closed hex of 38 mm square tube) shows: one mitred ring of 38 mm square
+  tube whose two corners are 934 mm apart on the sleeve axis, a front and a rear crossmember 510 mm
+  wide, 652 mm across the frame, and two 406 mm sleeves to 1875 mm over all.
   The frame, the sleeves and the low handles' centres are one plane 225 mm up, so a 450 mm plate
-  rests on the floor. Two 127 mm handles stand 635 mm apart, braced to the corners. Options:
+  rests on the floor. Two 127 mm handles stand 635 mm apart, braced to the arms. Options:
   `handle`, `'low'` (225 mm) or `'high'` (327 mm, 102 mm above, on posts), and `plates`, the 450 mm
   plates a side (one). Nothing on it moves; a pose will carry the bar up with the hands. Contact:
   `grips` (the hands, at the handles' centres).

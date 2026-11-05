@@ -104,7 +104,7 @@ gaps says why):
 - `crunch_machine`: the axis's place along the body is by eye and the handle spacing is chosen. The
   recipe is Hammer Strength's reclined crunch; the technique video shows an upright one.
 - `trap_bar`: the lockout height is chosen from the mannequin's arm; the frame's plan comes from one
-  corner photo, mirrored. The kit leaves the rear of the open frame open, and has no brackets or
+  corner photo, mirrored. The kit is closed at the rear, as the TB-1's page shows, and has no brackets or
   jack: the handles are braced straight to the corners.
 - `captains_chair`: the plan is scaled from the manual's drawing, but every height is rough (about
   ±50 mm, one three-quarter render, no side view); the arm pads' tilt is chosen flat. The video's

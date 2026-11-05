@@ -64,7 +64,7 @@ test('the high handles are 102 mm above the low ones, straight above them', () =
   });
 });
 
-test('it is 1875 mm long over the sleeves and 652 mm across the open frame, with the sleeves 406 mm long', () => {
+test('it is 1875 mm long over the sleeves and 652 mm across the frame, with the sleeves 406 mm long', () => {
   const kit = bar();
   const all = meshes(kit, (o) => o.material.name !== 'plate').reduce((u, { box }) => u.union(box), new THREE.Box3());
   close(size(all).x, 1.875, 5e-3, 'the overall length');
