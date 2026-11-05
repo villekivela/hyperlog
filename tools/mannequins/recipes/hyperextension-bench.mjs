@@ -25,21 +25,26 @@ const BASE = { head: 0.358, length: 1.248, width: 0.666, foot: 0.09, thick: 0.03
 const RAIL = BASE.thick + TUBE / 2;
 const RAIL_TOP = BASE.thick + TUBE;
 const PAD = { width: 0.21, gap: 0.055, length: 0.33, thick: 0.09, board: 0.012 };
-const PLATE = { width: 0.47, length: 0.33, thick: 0.03, up: 0.06 };
-// The heel rollers: 190 mm long, 130 across, 195 up the body line from the plate and 240 off it.
-const ROLLER = { length: 0.19, radius: 0.065, up: 0.195, off: 0.24, gap: 0.11 };
+const PLATE = { width: 0.47, length: 0.33, thick: 0.02, up: 0.075 };
+// The heel rollers: 190 mm long, 130 across, 195 up the body line from the plate and 250 off it.
+const ROLLER = { length: 0.19, radius: 0.065, up: 0.195, off: 0.25, gap: 0.11 };
 const HANDLE = { height: 0.69, x: 0.29, past: 0.05, radius: 0.016 };
+// The holes down the rail, from its head end.
+const RAIL_HOLES = { first: 0.06, pitch: 0.07, count: 17 };
+// A sleeve's width, on the column and the strut.
+const SLEEVE = 0.09;
 // The column's line stands this far under the pads' top face; `PIVOT_Y` is where it and the strut turn.
-const COLUMN = { under: 0.15, sleeve: 0.5, hole: 0.07 };
+const COLUMN = { under: 0.15, sleeve: 0.45 };
 const PIVOT_Y = 0.181;
-// The strut's pivot and top, and where its stub meets the column, from the head end, as the drawing has them.
-const STRUT = { foot: 0.218, top: [0.412, 0.408], column: 0.476 };
+// The strut's pivot from the head end, its top, and the height it meets the column at, as the drawing has them.
+const STRUT = { foot: 0.218, top: { x: 0.412, y: 0.408 }, columnY: 0.476, sleeve: 0.55, overlap: 0.1 };
 // The post under the plate's heel end and the stub under its toe end, from the head end.
 const POST_X = 1.108;
+const ARM = 0.06;
 const STUB_X = 1.024;
 // Where the hips and the ankles lie, off the pad's top face and past its top end.
 const HIP = { past: 0.05, off: 0.1 };
-const ANKLE_OFF = 0.13;
+const ANKLE_OFF = 0.14;
 
 /** A point along the column, `t` down the slope from level with the pads' top end. */
 const columnAt = (t) => TOP.clone().addScaledVector(N, -COLUMN.under).addScaledVector(S, t);
@@ -85,7 +90,7 @@ export default recipe({
 
     // The base: a holed rail on a flat foot at each end.
     const [headEnd, footEnd] = [BASE.head, BASE.head - BASE.length];
-    const holes = Array.from({ length: 17 }, (_h, i) => 0.06 + i * COLUMN.hole);
+    const holes = Array.from({ length: RAIL_HOLES.count }, (_h, i) => RAIL_HOLES.first + i * RAIL_HOLES.pitch);
     const frame = [
       ...[headEnd - BASE.foot / 2, footEnd + BASE.foot / 2].map((z) => pad(BASE.width, BASE.thick, BASE.foot, M.frame, V(0, BASE.thick / 2, z), { soft: 0.004 })),
       role(holedTube(TUBE, V(0, RAIL, headEnd), V(0, RAIL, footEnd), holes, M.frame), 'rail'),
@@ -102,26 +107,27 @@ export default recipe({
     const foot = columnDown(PIVOT_Y);
     const column = [
       ...clevis(columnAt(foot).z, 'column'),
-      role(tube(0.09, columnAt(foot), columnAt(foot - COLUMN.sleeve), M.frame), 'columnSleeve'),
+      role(tube(SLEEVE, columnAt(foot), columnAt(foot - COLUMN.sleeve), M.frame), 'columnSleeve'),
       role(tube(TUBE, columnAt(foot - COLUMN.sleeve + 0.05), columnAt(0.02), M.frame), 'column'),
     ];
 
     // The strut: a sleeve up from its pivot, its knob on it, and a tube out of that, mitred over to the column.
     const strutFoot = V(0, PIVOT_Y, fromHead(STRUT.foot));
-    const strutTop = V(0, STRUT.top[1], fromHead(STRUT.top[0]));
-    const strutMiddle = strutFoot.clone().lerp(strutTop, 0.55);
-    const strutEnd = columnAt(columnDown(STRUT.column));
+    const strutTop = V(0, STRUT.top.y, fromHead(STRUT.top.x));
+    const strutMiddle = strutFoot.clone().lerp(strutTop, STRUT.sleeve);
+    const strutTube = strutFoot.clone().lerp(strutTop, STRUT.sleeve - STRUT.overlap);
+    const strutEnd = columnAt(columnDown(STRUT.columnY));
     const strut = [
       ...clevis(strutFoot.z, 'strut'),
-      tube(0.09, strutFoot, strutMiddle, M.frame),
-      role(mitered([strutFoot.clone().lerp(strutTop, 0.45), strutTop, strutEnd], 0.065, M.frame, { solid: false }), 'strut'),
-      proxy(tube(0.055, strutFoot.clone().lerp(strutTop, 0.45), strutTop, M.frame)),
+      tube(SLEEVE, strutFoot, strutMiddle, M.frame),
+      role(mitered([strutTube, strutTop, strutEnd], 0.065, M.frame, { solid: false }), 'strut'),
+      proxy(tube(0.055, strutTube, strutTop, M.frame)),
       proxy(tube(0.055, strutTop, strutEnd, M.frame)),
       knob(M, strutMiddle.clone().setX(0.06), 0.02),
     ];
 
     // The hip pads, each on a board on the one carriage, their top face on the slope through the
-    // pads' top end, a roll at that end.
+    // pads' top end.
     const padAt = (x) => at(TOP, [S, PAD.length / 2], [N, -PAD.thick / 2]).setX(x);
     const pads = sides.flatMap((s) => {
       const x = padX(s);
@@ -144,19 +150,21 @@ export default recipe({
     const plateMiddle = at(sole, [N, PLATE.up], [FACE, -PLATE.thick / 2]);
     const plate = lay(pad(PLATE.width, PLATE.thick, PLATE.length, M.frame, V(0, 0, 0), { soft: 0.004 }), plateMiddle, FACE, N.clone().negate());
     plate.userData.pad = 'foot';
-    const plateBack = (z) => sole.y + (sole.z - z) - PLATE.thick / Math.SQRT1_2;
+    // The height at depth `z` of a plane `behind` the plate's surface.
+    const behindPlate = (z, behind) => sole.y + (sole.z - z) - behind / Math.SQRT1_2;
 
     // A stub under its toe end, and the post under its heel end, running on as one mitred arm behind
     // the plate and up the body line. A tube inside each length is what the body meets.
     const stubZ = fromHead(STUB_X);
     const postZ = fromHead(POST_X);
-    const postTop = V(0, plateBack(postZ), postZ);
-    const elbow = at(sole, [N, ROLLER.off + 0.03], [FACE, -0.04]);
+    const armOff = PLATE.thick + ARM / 2;
+    const postTop = V(0, behindPlate(postZ, armOff), postZ);
+    const elbow = at(sole, [N, ROLLER.off + 0.01], [FACE, -armOff]);
     const armEnd = at(elbow, [FACE, ROLLER.up + 0.1]);
     const postFoot = V(0, RAIL_TOP, postZ);
     const supports = [
-      role(mitered([V(0, RAIL_TOP, stubZ), V(0, plateBack(stubZ) + 0.01, stubZ)], 0.05, M.frame, { solid: false, ends: [UP, FACE] }), 'plateStub'),
-      role(mitered([postFoot, postTop, elbow, armEnd], 0.06, M.frame, { solid: false, ends: [UP, null] }), 'rollerArm'),
+      role(mitered([V(0, RAIL_TOP, stubZ), V(0, behindPlate(stubZ, PLATE.thick), stubZ)], 0.05, M.frame, { solid: false, ends: [UP, FACE] }), 'plateStub'),
+      role(mitered([postFoot, postTop, elbow, armEnd], ARM, M.frame, { solid: false, ends: [UP, null] }), 'rollerArm'),
       proxy(tube(0.05, postFoot.clone().setY(RAIL_TOP + 0.01), postTop, M.frame)),
       proxy(tube(0.05, postTop, elbow, M.frame)),
       proxy(tube(0.05, elbow, armEnd, M.frame)),

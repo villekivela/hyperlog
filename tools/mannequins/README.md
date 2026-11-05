@@ -290,7 +290,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
-| `back_extension` | face down along a hyperextension bench, the trunk hinging at the hips, the arms crossed on the chest | `lean`, degrees from upright forward, at `top` and `bottom`; the recipe's `linkage` |
+| `back_extension` | face down along a hyperextension bench, the trunk hinging at the hips, the arms crossed on the chest | `lean`, degrees from upright forward, at `top` and `bottom`; the recipe's `linkage`; `feet.stance`, `body.look`, `grip.pole` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
@@ -610,7 +610,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   330 mm) sits square to the body line, its surface 900 mm down the slope from the pads' top end, on a
   stub and a post from the rail. The post runs on as one mitred arm behind the plate and up the body
   line to a cross tube, and two heel rollers (190 mm long, 130 across) turn on an axle through it, 195
-  mm up the body line from the plate and 240 mm off it. Contacts, on the frame: `thighPad` (thighs,
+  mm up the body line from the plate and 250 mm off it. Contacts, on the frame: `thighPad` (thighs,
   each pad's middle), `footPlate` (feet) and `heelRollers` (shins, each roller's centre). The linkage
   gives `back_extension` the hips, the ankle and the sole. It has no fit rule and no options. It
   departs from the ref: the body line and pad height are chosen (the real bench telescopes, 844-1119
@@ -841,7 +841,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the EZ bar, the hip machine, the safety bar, the hyperextension bench, the trap bar and the shrug machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the EZ bar, the hip machine, the safety bar, the trap bar and the shrug machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
