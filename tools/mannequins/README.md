@@ -409,17 +409,20 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   them (the glute kickback's). `position` takes one number for a two-arm lift, the same hole on both
   towers, and a pair only where the arms differ.
 - `hip_machine` (#214, built, none of its two exercises posed yet, so no clip changes) is the one
-  hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest behind it, and two
-  arms on one vertical axle on the centre line under the seat, 140 mm behind its front edge. Each
-  arm (`arm_l`, `arm_r`, revolute about the vertical, 0 to 90° from closed, positive opening) is an
-  L out from the axle and 400 mm forward to a post with a 280 by 160 mm knee pad at 560 mm and a
-  foot plate at 80 mm; the right arm rides 60 mm above the left on the shared axle. `pads`
-  (`outer`, the default, on the outsides of the knees for abduction, or `inner`, between them for
-  adduction) and `start` (degrees, snapped to the ratchet's 10° steps; 0 for `outer`, 50 for `inner`,
-  at least 20 for `inner` so the posts clear) set it up; the joints run 0 to 90°, the ref's 45° of travel from a start of up to 50°, rounded down to a mechanical limit; the fit rule names `start`. It departs from
-  its ref: the pads' faces are put 140 mm (`outer`) from the centre line from the mannequin's knee,
-  which puts the posts about 450 mm apart rather than the ref's 250, and the weight stack stands
-  still behind the backrest. The studio shows it alone.
+  hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, a
+  rear leg behind it, and a tall tower with the weight stack standing ahead of the posts, as the
+  maker's photos show, on a floor beam 1.55 m long. Two arms turn on one vertical axle on the centre
+  line under the seat, 140 mm behind its front edge. Each arm (`arm_l`, `arm_r`, revolute about the
+  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 400 mm forward to a
+  post with a 280 by 160 mm knee pad at 560 mm and a foot plate at 80 mm; the right arm rides 60 mm
+  above the left on the shared axle. `pads` (`outer`, the default, on the outsides of the knees for
+  abduction, or `inner`, between them for adduction) and `start` (degrees, snapped to the ratchet's
+  10° steps; 0 for `outer`, 50 for `inner`, at least 10 for `inner` so the pads clear) set it up; the
+  fit rule names `start`. It departs from its ref: the pads' faces are put 140 mm (`outer`) from the
+  centre line from the mannequin's knee, which puts the posts about 450 mm apart rather than the
+  ref's 250 (the photos show each post outside its pad, so 250 can't hold with an 80 mm pad); the
+  joints stop at the ratchet's 50°, a 40 to 50° travel, the ref's 45° read from another make's video;
+  the stack's travel isn't drawn. The studio shows it alone.
 - `smith_machine` (#182, smith machine equipment, not a machine kind) stands where its ref puts it,
   whatever the pose, and none of its nine exercises is posed yet: two guide rods 1.3 m apart leaning
   7° with their tops toward the back, a front upright either side carrying a rod and a plate of 13

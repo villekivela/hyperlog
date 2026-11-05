@@ -54,7 +54,7 @@ test('the seat top is 520 mm up and 360 deep, its front edge 140 mm ahead of the
   close(seat.max.z, 0.14, 0.01, 'the seat\'s front edge ahead of the axis');
 });
 
-test('each arm turns about the one vertical axis on the centre line, 0 to 90° from closed, opening outward', () => {
+test('each arm turns about the one vertical axis on the centre line, 0 to 50° from closed, opening outward', () => {
   const kit = machine();
   assert.deepEqual(Object.keys(kit.joints).sort(), ['arm_l', 'arm_r']);
   for (const [name, s] of [['arm_l', 1], ['arm_r', -1]]) {
@@ -63,7 +63,7 @@ test('each arm turns about the one vertical axis on the centre line, 0 to 90° f
     close(Math.abs(j.axis.y), 1, 1e-9, `${name}'s axis, vertical`);
     close(j.origin.x, 0, 1e-9, `${name}'s axis on the centre line`);
     close(j.origin.z, 0, 1e-9, `${name}'s axis`);
-    assert.deepEqual(j.limits, [0, rad(90)]);
+    assert.deepEqual(j.limits, [0, rad(50)]);
     // Opening is positive for both: the pad moves out, away from the centre line.
     const before = contact(kit, `pad_${name.at(-1)}`).at[0].x;
     kit.scrub(name, rad(45));
@@ -83,7 +83,7 @@ test('the arm\'s pad swings 400 mm out from the axis in a circle, and the scrub 
   close(Math.atan2(open.x, open.z) - Math.atan2(closed.x, closed.z), rad(45), 1e-6, 'the pad\'s turn');
   assert.equal(kit.joints.arm_l.value, rad(45));
   kit.scrub('arm_l', rad(500));
-  assert.equal(kit.joints.arm_l.value, rad(90));
+  assert.equal(kit.joints.arm_l.value, rad(50));
   kit.scrub('arm_l', -1);
   assert.equal(kit.joints.arm_l.value, 0);
 });
@@ -111,13 +111,23 @@ test('the start angle moves the arms in 10° steps; adduction puts the pads betw
   const kit = machine({ start: 30 });
   close(kit.joints.arm_l.value, rad(30), 1e-9, 'the arm at its start');
   assert.equal(machine({ start: 34 }).joints.arm_l.value, rad(30));
-  assert.equal(machine({ start: 999 }).joints.arm_l.value, rad(90));
+  assert.equal(machine({ start: 999 }).joints.arm_l.value, rad(50));
   const inner = machine({ pads: 'inner', start: 40 });
   assert.equal(inner.joints.arm_l.value, rad(40));
   const pad = contact(inner, 'pad_l').at[0];
   const plain = contact(machine({ start: 40 }), 'pad_l').at[0];
   assert.ok(pad.x < plain.x - 0.05, 'an inner pad lies nearer the centre line than an outer one');
   assert.throws(() => machine({ pads: 'upside' }), /pads/);
+});
+
+test('the weight stack tower stands ahead of the lifter past the posts, and is the tallest part; the backrest leans back', () => {
+  const kit = machine();
+  const plates = unite(boxes(kit, (o) => o.material?.name === 'plate'));
+  assert.ok(centre(plates).z > 0.8, `the stack at z ${centre(plates).z.toFixed(2)}, not ahead of the posts`);
+  const back = unite(boxes(kit, role('backrest')));
+  assert.ok(back.max.y > 1.0 && back.max.y < 1.4, 'a backrest short of the tower');
+  const lean = machine().contacts.find((c) => c.point === 'back').at[0];
+  assert.ok(lean.z < -0.22, 'the back pad\'s middle leans behind its foot');
 });
 
 test('no brand or maker appears in the recipe', async () => {

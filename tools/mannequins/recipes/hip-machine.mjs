@@ -1,9 +1,9 @@
 // A selectorized hip abduction / adduction machine (refs/hip_machine/ref.md): the lifter sits on a
-// seat 520 mm up, back on a pad, knees bent and feet on a plate at the foot of each arm's post, a
-// knee pad on the post at knee height. The two arms turn about one vertical axis on the centre
+// seat 520 mm up, back on a reclined pad, knees bent and feet on a plate at the foot of each arm's
+// post, a knee pad on the post at knee height. The two arms turn about one vertical axis on the centre
 // line under the seat, 140 mm behind its front edge; each is an L, a bar out from the axle and a
-// bar forward to a post 400 mm ahead of it, and the lower leg rides with it. A weight stack stands
-// behind the backrest; its travel isn't drawn.
+// bar forward to a post 400 mm ahead of it, and the lower leg rides with it. A tall tower with the
+// weight stack stands ahead of the posts, as the maker's photos show; the stack's travel isn't drawn.
 //
 // One machine: abduction has the pads on the outsides of the knees and the arms closed, adduction
 // has them between the knees and the arms open. The `pads` option says which side, the `start`
@@ -18,10 +18,10 @@ import { floorRail, pad, stackFrame, tube, weightStack, rod } from '../parts.mjs
 import { UP, V, rad } from '../rig.mjs';
 
 /** The arms' range from closed, and the ratchet's step, in degrees. */
-const OPEN = 90;
+const OPEN = 50;
 const STEP = 10;
 /** The least an arm stands open with the pads between the knees, so the posts clear each other. */
-const INNER_LEAST = 20;
+const INNER_LEAST = 10;
 /** The start the pads' side gives, in degrees, when none is asked for. */
 const STARTS = { outer: 0, inner: 50 };
 const PADS = Object.keys(STARTS);
@@ -31,11 +31,13 @@ const HANDLE = { x: 0.24, y: 0.7, length: 0.18 };
 
 /** The seat's top, depth and front edge ahead of the axis. */
 const SEAT = { top: 0.52, depth: 0.36, front: 0.14, width: 0.36 };
-/** The backrest's face, behind the axis, and the column it stands on. */
-const BACK = { z: -0.22, depth: 0.08, from: 0.62, to: 1.12 };
-const COLUMN = { z: -0.33, top: 1.4 };
-/** The stack stands behind the column. */
-const STACK_Z = -0.62;
+/** The backrest's foot, behind the axis, its length, and how far it leans back from upright. */
+const BACK = { z: -0.22, depth: 0.08, from: 0.62, length: 0.5, lean: rad(15) };
+/** The rear leg behind the backrest, and the tower's top. */
+const LEG = { z: -0.5, top: 1.0 };
+const TOWER = 1.365;
+/** The tower with the stack stands ahead of the posts. */
+const STACK_Z = 0.92;
 /** The arms: each at its own height on the one axle, 400 mm from it to the post. */
 const ARM_Y = { l: 0.18, r: 0.24 };
 const REACH = 0.4;
@@ -75,7 +77,7 @@ const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
 export default recipe({
   name: 'hip_machine',
   // Shown alone in the studio until a pose uses it: three-quarter from the front.
-  standsAlone: { camera: { target: [0, 0.7, 0.1], halfHeight: 1.0, azimuth: -40, elevation: 14 } },
+  standsAlone: { camera: { target: [0, 0.7, 0.2], halfHeight: 1.2, azimuth: -40, elevation: 14 } },
   bodies: (options) => {
     const { least } = setting(options);
     return Object.fromEntries(sides.map(({ k, s }) => [`arm_${k}`, revolute({ axis: UP.clone().multiplyScalar(s), limits: [rad(least), rad(OPEN)] })]));
@@ -102,25 +104,29 @@ export default recipe({
     const frame = [];
     const mesh = (m, name) => { frame.push(role(m, name)); };
     // The base: a floor beam the length of the machine, a cross beam under the foot and one under the stack.
-    frame.push(...floorRail(V(0, 0.035, -0.67), V(0, 0.035, 0.8), M));
+    frame.push(...floorRail(V(0, 0.035, -0.5), V(0, 0.035, 0.97), M));
     frame.push(...floorRail(V(-0.33, 0.035, STACK_Z), V(0.33, 0.035, STACK_Z), M));
-    frame.push(...floorRail(V(-0.33, 0.035, 0.65), V(0.33, 0.035, 0.65), M));
+    frame.push(...floorRail(V(-0.33, 0.035, -0.45), V(0.33, 0.035, -0.45), M));
+    const backMiddle = V(0, BACK.from + BACK.length / 2 * Math.cos(BACK.lean), BACK.z - BACK.length / 2 * Math.sin(BACK.lean) - BACK.depth / 2);
     // The seat on its pan, a bracket back to the column, and the backrest on it.
     const seatMiddle = SEAT.front - SEAT.depth / 2;
     mesh(pad(SEAT.width, 0.075, SEAT.depth, M.vinyl, V(0, SEAT.top - 0.0375, seatMiddle), { soft: 0.024 }), 'seat');
     frame.push(pad(SEAT.width - 0.06, 0.012, SEAT.depth - 0.06, M.frame, V(0, SEAT.top - 0.081, seatMiddle), { soft: 0.003 }));
-    frame.push(tube(0.05, V(0, SEAT.top - 0.09, COLUMN.z), V(0, SEAT.top - 0.09, seatMiddle), M.frame));
-    frame.push(tube(0.08, V(0, 0.07, COLUMN.z), V(0, COLUMN.top, COLUMN.z), M.frame));
-    frame.push(pad(SEAT.width, BACK.to - BACK.from, BACK.depth, M.vinyl, V(0, (BACK.from + BACK.to) / 2, BACK.z - BACK.depth / 2), { soft: 0.024 }));
+    // The rear leg leans with the backrest; the seat's bracket meets it.
+    const legAt = (y) => LEG.z + (y - 0.07) / (LEG.top - 0.07) * (BACK.z - (LEG.top - BACK.from) * Math.tan(BACK.lean) - BACK.depth / Math.cos(BACK.lean) - 0.04 - LEG.z);
+    frame.push(tube(0.05, V(0, SEAT.top - 0.09, legAt(SEAT.top - 0.09)), V(0, SEAT.top - 0.09, seatMiddle), M.frame));
+    frame.push(tube(0.08, V(0, 0.07, LEG.z), V(0, LEG.top, legAt(LEG.top)), M.frame));
+    const back = pad(SEAT.width, BACK.length, BACK.depth, M.vinyl, backMiddle, { soft: 0.024 });
+    back.rotation.x = -BACK.lean;
+    mesh(back, 'backrest');
     // The side handles beside the seat, and the brace back to the stack.
     for (const { s } of sides) {
       frame.push(role(rod(0.015, V(s * HANDLE.x, HANDLE.y, 0), V(s * HANDLE.x, HANDLE.y, HANDLE.length), M.vinyl, { held: true }), 'handle'));
       frame.push(tube(0.03, V(s * HANDLE.x, HANDLE.y, 0), V(s * HANDLE.x, SEAT.top - 0.09, 0), M.frame));
     }
-    frame.push(tube(0.05, V(0, 0.65, COLUMN.z), V(0, 0.65, STACK_Z), M.frame));
-    const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: 0.7, toward: 1 });
+    const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: 1.1, toward: -1 });
     weights.idle();
-    frame.push(...stackFrame(STACK_Z, 0.62, M), ...weights.parts);
+    frame.push(...stackFrame(STACK_Z, TOWER, M), ...weights.parts);
     // The one axle both arms turn on.
     frame.push(role(tube(0.04, V(0, 0.07, 0), V(0, ARM_Y.r + 0.04, 0), M.metal), 'axle'));
 
@@ -148,7 +154,7 @@ export default recipe({
         const joints = {};
         const points = {
           seat: [V(0, SEAT.top, seatMiddle)],
-          back: [V(0, (BACK.from + BACK.to) / 2, BACK.z)],
+          back: [V(0, backMiddle.y, backMiddle.z + BACK.depth / 2)],
         };
         for (const { k, s } of sides) {
           arms[k].rotation.y = s * value;
