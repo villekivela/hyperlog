@@ -27,6 +27,7 @@ const MACHINES = {
   pec_deck: 'left',
   reverse_pec_deck: 'left',
   '1_arm_reverse_pec_deck': 'left',
+  machine_hip_thrust: 'carriage',
 };
 
 const kitOf = (stage) => Object.values(stage.kit.kits)[0];

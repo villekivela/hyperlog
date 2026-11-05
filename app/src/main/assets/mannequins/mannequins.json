@@ -2226,6 +2226,30 @@
         "kit_chest_press.bin"
       ]
     },
+    "machine_hip_thrust": {
+      "clip": "machine_hip_thrust.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.1
+        ],
+        "halfHeight": 1,
+        "azimuth": 70,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.5,
+        "lifting": 1,
+        "top": 1
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_hip_thrust_machine.bin"
+      ]
+    },
     "machine_preacher_curl": {
       "clip": "machine_preacher_curl.glb",
       "equipment": "machine",

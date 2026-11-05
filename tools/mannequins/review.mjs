@@ -48,6 +48,8 @@ export const BATCHES = {
   'pec-deck': ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The hip thrust machine's exercise (#229).
+  'hip-thrust': ['machine_hip_thrust'],
   // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).
   'power-rack': [
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
